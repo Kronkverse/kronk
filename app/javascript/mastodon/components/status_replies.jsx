@@ -4,9 +4,7 @@ import { defineMessages, injectIntl, FormattedMessage } from 'react-intl';
 import { Link } from 'react-router-dom';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import { connect } from 'react-redux';
-import classNames from 'classnames';
 
-import ChatBubbleIcon from '@/material-icons/400-24px/chat_bubble.svg?react';
 import ArrowIcon from '@/material-icons/400-24px/arrow_right_alt.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import { Avatar } from './avatar';
@@ -17,36 +15,117 @@ import { importFetchedStatuses } from '../actions/importer';
 import { showAlertForError } from '../actions/alerts';
 
 const messages = defineMessages({
-  viewReplies: { id: 'status.view_replies', defaultMessage: 'View {count} {count, plural, one {reply} other {replies}}' },
-  hideReplies: { id: 'status.hide_replies', defaultMessage: 'Hide replies' },
   replyPlaceholder: { id: 'status.reply_placeholder', defaultMessage: 'Write a reply...' },
   send: { id: 'status.send_reply', defaultMessage: 'Send' },
+  reply: { id: 'status.reply_inline', defaultMessage: 'Reply' },
 });
 
 const mapStateToProps = (state) => ({
   currentAccount: state.getIn(['accounts', state.getIn(['meta', 'me'])]),
 });
 
+const MAX_DEPTH = 4;
+const MAX_DIRECT_REPLIES = 5;
+const MAX_NESTED_REPLIES = 3;
+
+// Count all descendants in a reply tree node
+function countDescendants(node) {
+  if (!node.children || node.children.length === 0) return 0;
+  return node.children.reduce((sum, child) => sum + 1 + countDescendants(child), 0);
+}
+
+// Build a recursive reply tree from a flat list of descendants
+function buildReplyTree(descendants, parentId, depth = 0) {
+  if (depth >= MAX_DEPTH) return [];
+
+  const limit = depth === 0 ? MAX_DIRECT_REPLIES : MAX_NESTED_REPLIES;
+  const directReplies = descendants
+    .filter(s => s.in_reply_to_id === parentId)
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    .slice(0, limit);
+
+  return directReplies.map(reply => ({
+    ...reply,
+    children: buildReplyTree(descendants, reply.id, depth + 1),
+  }));
+}
+
 class ReplyItem extends PureComponent {
   static propTypes = {
     reply: PropTypes.object.isRequired,
     depth: PropTypes.number,
+    currentAccount: ImmutablePropTypes.map,
+    onReplySubmit: PropTypes.func.isRequired,
+    intl: PropTypes.object.isRequired,
   };
 
   static defaultProps = {
     depth: 0,
   };
 
+  state = {
+    showReplyInput: false,
+    replyText: '',
+    submitting: false,
+    childrenExpanded: false,
+  };
+
+  handleToggleReply = () => {
+    this.setState(state => ({ showReplyInput: !state.showReplyInput, replyText: '' }));
+  };
+
+  handleToggleChildren = () => {
+    this.setState(state => ({ childrenExpanded: !state.childrenExpanded }));
+  };
+
+  handleReplyChange = (e) => {
+    this.setState({ replyText: e.target.value });
+  };
+
+  handleReplyKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      this.handleSubmit();
+    }
+    if (e.key === 'Escape') {
+      this.setState({ showReplyInput: false, replyText: '' });
+    }
+  };
+
+  handleSubmit = () => {
+    const { reply, onReplySubmit } = this.props;
+    const { replyText } = this.state;
+
+    if (replyText.trim().length === 0 || this.state.submitting) return;
+
+    this.setState({ submitting: true });
+
+    const acct = reply.account.acct;
+    let text = replyText;
+    if (!text.includes(`@${acct}`)) {
+      text = `@${acct} ${text}`;
+    }
+
+    onReplySubmit(reply.id, text, reply.visibility).then(() => {
+      this.setState({ replyText: '', submitting: false, showReplyInput: false });
+    }).catch(() => {
+      this.setState({ submitting: false });
+    });
+  };
+
   render() {
-    const { reply, depth } = this.props;
+    const { reply, depth, currentAccount, onReplySubmit, intl } = this.props;
+    const { showReplyInput, replyText, submitting, childrenExpanded } = this.state;
     const account = reply.account;
-    const maxDepth = 2;
+    const avatarSize = depth === 0 ? 28 : 24;
+    const childCount = reply.children ? reply.children.length : 0;
+    const totalDescendants = countDescendants(reply);
 
     return (
-      <div className={`status-replies__item status-replies__item--depth-${Math.min(depth, maxDepth)}`}>
+      <div className={`status-replies__item status-replies__item--depth-${Math.min(depth, MAX_DEPTH)}`}>
         <div className='status-replies__item__main'>
           <Link to={`/@${account.acct}`} className='status-replies__item__avatar'>
-            <img src={account.avatar} alt='' width={depth === 0 ? 28 : 24} height={depth === 0 ? 28 : 24} />
+            <img src={account.avatar} alt='' width={avatarSize} height={avatarSize} />
           </Link>
           <div className='status-replies__item__content'>
             <div className='status-replies__item__header'>
@@ -54,7 +133,7 @@ class ReplyItem extends PureComponent {
                 {account.display_name || account.username}
               </Link>
               <span className='status-replies__item__acct'>@{account.acct}</span>
-              <span className='status-replies__item__dot'>·</span>
+              <span className='status-replies__item__dot'>&middot;</span>
               <Link to={`/@${account.acct}/${reply.id}`} className='status-replies__item__time'>
                 <RelativeTimestamp timestamp={reply.created_at} />
               </Link>
@@ -63,12 +142,63 @@ class ReplyItem extends PureComponent {
               className='status-replies__item__text'
               dangerouslySetInnerHTML={{ __html: reply.content }}
             />
+            <div className='status-replies__item__actions'>
+              {currentAccount && (
+                <button onClick={this.handleToggleReply}>
+                  {intl.formatMessage(messages.reply)}
+                </button>
+              )}
+              {childCount > 0 && (
+                <button onClick={this.handleToggleChildren} className='status-replies__item__actions__child-count'>
+                  {childrenExpanded ? (
+                    <FormattedMessage id='status.hide_replies' defaultMessage='Hide replies' />
+                  ) : (
+                    <FormattedMessage
+                      id='status.child_replies_count'
+                      defaultMessage='{count, plural, one {# reply} other {# replies}}'
+                      values={{ count: totalDescendants }}
+                    />
+                  )}
+                </button>
+              )}
+            </div>
+            {showReplyInput && (
+              <div className='status-replies__item__inline-reply'>
+                <div className='status-replies__item__inline-reply__input-wrapper'>
+                  <input
+                    type='text'
+                    placeholder={intl.formatMessage(messages.replyPlaceholder)}
+                    value={replyText}
+                    onChange={this.handleReplyChange}
+                    onKeyDown={this.handleReplyKeyDown}
+                    disabled={submitting}
+                    autoFocus
+                  />
+                  {replyText.length > 0 && (
+                    <IconButton
+                      icon='send'
+                      iconComponent={ArrowIcon}
+                      title={intl.formatMessage(messages.send)}
+                      onClick={this.handleSubmit}
+                      disabled={submitting || replyText.trim().length === 0}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
-        {reply.nested && reply.nested.length > 0 && depth < maxDepth && (
+        {childCount > 0 && childrenExpanded && (
           <div className='status-replies__item__nested'>
-            {reply.nested.map(nested => (
-              <ReplyItem key={nested.id} reply={nested} depth={depth + 1} />
+            {reply.children.map(child => (
+              <ReplyItem
+                key={child.id}
+                reply={child}
+                depth={depth + 1}
+                currentAccount={currentAccount}
+                onReplySubmit={onReplySubmit}
+                intl={intl}
+              />
             ))}
           </div>
         )}
@@ -94,19 +224,24 @@ class StatusReplies extends PureComponent {
   };
 
   state = {
-    expanded: false,
+    expanded: true,
     loading: false,
     replies: [],
     replyText: '',
     submitting: false,
   };
 
-  handleToggle = () => {
-    if (!this.state.expanded && this.state.replies.length === 0) {
+  componentDidMount() {
+    if (this.props.repliesCount > 0) {
       this.fetchReplies();
     }
-    this.setState(state => ({ expanded: !state.expanded }));
-  };
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.repliesCount === 0 && this.props.repliesCount > 0 && this.state.replies.length === 0) {
+      this.fetchReplies();
+    }
+  }
 
   fetchReplies = () => {
     const { statusId, dispatch } = this.props;
@@ -119,23 +254,12 @@ class StatusReplies extends PureComponent {
       // Import statuses to Redux store
       dispatch(importFetchedStatuses(descendants));
 
-      // Get direct replies only
-      const directReplies = descendants.filter(s => s.in_reply_to_id === statusId);
-
-      // Build nested structure (1 level deep)
-      const withNested = directReplies.map(reply => ({
-        ...reply,
-        nested: descendants
-          .filter(s => s.in_reply_to_id === reply.id)
-          .slice(0, 2), // Max 2 nested replies
-      }));
-
-      // Sort by date and take latest 2
-      withNested.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      // Build recursive reply tree
+      const tree = buildReplyTree(descendants, statusId);
 
       this.setState({
         loading: false,
-        replies: withNested.slice(0, 2),
+        replies: tree,
       });
     }).catch(() => {
       this.setState({ loading: false });
@@ -163,7 +287,6 @@ class StatusReplies extends PureComponent {
 
     this.setState({ submitting: true });
 
-    // Add @mention if not present
     let text = replyText;
     if (!text.includes(`@${statusAcct}`)) {
       text = `@${statusAcct} ${text}`;
@@ -176,7 +299,6 @@ class StatusReplies extends PureComponent {
     }).then(response => {
       this.setState({ replyText: '', submitting: false });
       dispatch(importFetchedStatuses([response.data]));
-      // Refresh replies to show the new one
       this.fetchReplies();
     }).catch(error => {
       this.setState({ submitting: false });
@@ -184,9 +306,26 @@ class StatusReplies extends PureComponent {
     });
   };
 
+  // Handler for inline reply on any comment in the tree
+  handleInlineReplySubmit = (inReplyToId, text, visibility) => {
+    const { dispatch } = this.props;
+
+    return api().post('/api/v1/statuses', {
+      status: text,
+      in_reply_to_id: inReplyToId,
+      visibility: visibility || this.props.statusVisibility,
+    }).then(response => {
+      dispatch(importFetchedStatuses([response.data]));
+      this.fetchReplies();
+    }).catch(error => {
+      dispatch(showAlertForError(error));
+      throw error;
+    });
+  };
+
   render() {
-    const { repliesCount, currentAccount, intl } = this.props;
-    const { expanded, loading, replies, replyText, submitting } = this.state;
+    const { repliesCount, currentAccount, intl, statusId } = this.props;
+    const { loading, replies, replyText, submitting } = this.state;
 
     // Don't show anything if no replies and not signed in
     if (repliesCount === 0 && !currentAccount) {
@@ -195,52 +334,42 @@ class StatusReplies extends PureComponent {
 
     return (
       <div className='status-replies'>
-        {repliesCount > 0 && (
-          <button
-            className='status-replies__toggle'
-            onClick={this.handleToggle}
-          >
-            <Icon id='chat' icon={ChatBubbleIcon} />
-            <span>
-              {expanded
-                ? intl.formatMessage(messages.hideReplies)
-                : intl.formatMessage(messages.viewReplies, { count: repliesCount })
-              }
-            </span>
-          </button>
-        )}
-
-        {expanded && (
-          <div className='status-replies__content'>
-            {loading ? (
-              <div className='status-replies__loading'>
-                <FormattedMessage id='status.loading_replies' defaultMessage='Loading replies...' />
-              </div>
-            ) : (
-              <>
-                {replies.length > 0 && (
-                  <div className='status-replies__list'>
-                    {replies.map(reply => (
-                      <ReplyItem key={reply.id} reply={reply} depth={0} />
-                    ))}
-                  </div>
-                )}
-                {repliesCount > replies.length && (
-                  <Link
-                    to={`/statuses/${this.props.statusId}`}
-                    className='status-replies__view-all'
-                  >
-                    <FormattedMessage
-                      id='status.view_all_replies'
-                      defaultMessage='View all {count} replies'
-                      values={{ count: repliesCount }}
+        <div className='status-replies__content'>
+          {loading ? (
+            <div className='status-replies__loading'>
+              <FormattedMessage id='status.loading_replies' defaultMessage='Loading replies...' />
+            </div>
+          ) : (
+            <>
+              {replies.length > 0 && (
+                <div className='status-replies__list'>
+                  {replies.map(reply => (
+                    <ReplyItem
+                      key={reply.id}
+                      reply={reply}
+                      depth={0}
+                      currentAccount={currentAccount}
+                      onReplySubmit={this.handleInlineReplySubmit}
+                      intl={intl}
                     />
-                  </Link>
-                )}
-              </>
-            )}
-          </div>
-        )}
+                  ))}
+                </div>
+              )}
+              {repliesCount > replies.length && replies.length > 0 && (
+                <Link
+                  to={`/statuses/${statusId}`}
+                  className='status-replies__view-all'
+                >
+                  <FormattedMessage
+                    id='status.view_all_replies'
+                    defaultMessage='View all {count} replies'
+                    values={{ count: repliesCount }}
+                  />
+                </Link>
+              )}
+            </>
+          )}
+        </div>
 
         {currentAccount && (
           <div className='status-replies__quick-reply'>

@@ -10478,7 +10478,9 @@ noscript {
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    transition:
+      background-color 0.2s ease,
+      transform 0.1s ease;
 
     &:hover {
       background: lighten($ui-highlight-color, 8%);
@@ -11804,7 +11806,9 @@ noscript {
   border: 1px solid #6364ff;
   background: rgba(99, 100, 255, 12%);
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.1s ease;
   flex-shrink: 0;
   width: auto;
   text-align: start;
@@ -11842,11 +11846,18 @@ noscript {
     font-weight: 800;
     letter-spacing: 0.08em;
     color: #fff;
-    background: #e53935;
+    background: #6364ff;
     padding: 2px 8px;
     border-radius: 4px;
     flex-shrink: 0;
     line-height: 1.4;
+  }
+
+  &__icon {
+    width: 24px;
+    height: 24px;
+    fill: #6364ff;
+    flex-shrink: 0;
   }
 
   &__content {
@@ -11859,7 +11870,7 @@ noscript {
 
   &__text {
     font-size: 14px;
-    color: var(--primary-text-color);
+    color: #e8e8ff;
 
     strong {
       font-weight: 700;
@@ -11877,7 +11888,8 @@ noscript {
   &__join {
     font-size: 13px;
     font-weight: 700;
-    color: #6364ff;
+    color: #fff;
+    background: #6364ff;
     flex-shrink: 0;
     padding: 4px 12px;
     border-radius: 6px;
@@ -11885,7 +11897,7 @@ noscript {
     transition: background 0.15s ease;
 
     .live-banner:hover & {
-      background: rgba(99, 100, 255, 15%);
+      background: #5253e0;
     }
   }
 }
@@ -11900,5 +11912,48 @@ noscript {
   50% {
     transform: scale(1.8);
     opacity: 0;
+  }
+}
+
+// Friends Activity Feed
+.friends-activity-item {
+  border-bottom: 1px solid var(--background-border-color);
+
+  &__interaction-bar {
+    padding: 8px 16px;
+    background: rgba(lighten($ui-base-color, 4%), 0.5);
+    border-bottom: 1px solid var(--background-border-color);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__interaction-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: $dark-text-color;
+  }
+
+  &__avatars {
+    display: inline-flex;
+    align-items: center;
+
+    .friends-activity-item__avatar {
+      display: inline-block;
+      margin-inline-end: -4px;
+      border-radius: 50%;
+      overflow: hidden;
+      line-height: 0;
+
+      &:last-child {
+        margin-inline-end: 0;
+      }
+    }
+  }
+
+  &__label {
+    white-space: nowrap;
   }
 }
