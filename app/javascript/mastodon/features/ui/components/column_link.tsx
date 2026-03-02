@@ -18,6 +18,7 @@ export const ColumnLink: React.FC<{
   transparent?: boolean;
   className?: string;
   id?: string;
+  tooltip?: string;
 }> = ({
   icon,
   activeIcon,
@@ -28,6 +29,7 @@ export const ColumnLink: React.FC<{
   href,
   method,
   badge,
+  tooltip,
   transparent,
   ...other
 }) => {
@@ -63,7 +65,13 @@ export const ColumnLink: React.FC<{
 
   if (href) {
     return (
-      <a href={href} className={className} data-method={method} {...other}>
+      <a
+        href={href}
+        className={className}
+        data-method={method}
+        title={tooltip ?? text}
+        {...other}
+      >
         {active ? activeIconElement : iconElement}
         <span>{text}</span>
         {badgeElement}
@@ -71,7 +79,7 @@ export const ColumnLink: React.FC<{
     );
   } else if (to) {
     return (
-      <NavLink to={to} className={className} {...other}>
+      <NavLink to={to} className={className} title={tooltip ?? text} {...other}>
         {active ? activeIconElement : iconElement}
         <span>{text}</span>
         {badgeElement}
