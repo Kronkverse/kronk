@@ -73,7 +73,7 @@ class Auth::RegistrationsController < Devise::RegistrationsController
   def after_sign_in_path_for(_resource)
     set_invite
 
-    if @invite&.autofollow?
+    if @invite&.present?
       short_account_path(@invite.user.account)
     else
       super

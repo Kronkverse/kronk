@@ -3025,6 +3025,7 @@ a.account__display-name {
       display: flex;
       justify-content: flex-end;
       min-width: 285px;
+      transition: min-width 200ms ease;
 
       &--start {
         justify-content: flex-start;
@@ -3034,6 +3035,7 @@ a.account__display-name {
         position: fixed;
         width: 285px;
         height: 100%;
+        transition: width 200ms ease;
       }
     }
 
@@ -3043,6 +3045,7 @@ a.account__display-name {
       box-sizing: border-box;
       width: 100%;
       flex: 0 1 auto;
+      transition: width 200ms ease;
       display: flex;
       flex-direction: column;
       contain: inline-size layout paint style;
@@ -3341,7 +3344,6 @@ a.account__display-name {
   }
 
   .navigation-panel__legal,
-  .navigation-panel__invite-button,
   .navigation-panel__compose-button,
   .navigation-panel .navigation-bar {
     display: none !important;
@@ -3446,7 +3448,20 @@ a.account__display-name {
 }
 
 .columns-area__panels__pane--navigational {
-  transition: background 500ms;
+  transition: background 500ms, min-width 200ms ease;
+}
+
+.columns-area__panels__pane--collapsed.columns-area__panels__pane--navigational {
+  min-width: 62px !important;
+
+  .columns-area__panels__pane__inner {
+    width: 62px !important;
+    border-inline-end: 1px solid var(--background-border-color);
+  }
+
+  & + .columns-area__panels__main {
+    width: calc(100% - 62px) !important;
+  }
 }
 
 .columns-area__panels__pane--overlay {
@@ -3808,6 +3823,34 @@ a.account__display-name {
     margin-bottom: 12px;
   }
 
+  &__collapse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(100% - 16px);
+    height: 28px;
+    padding: 0;
+    margin: 0 8px 8px;
+    border: 1px solid var(--background-border-color);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--secondary-text-color);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+    svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: var(--primary-text-color);
+    }
+  }
+
   .getting-started__trends h4 {
     padding: 10px 12px;
     padding-inline-start: 16px;
@@ -3840,6 +3883,76 @@ a.account__display-name {
     &__portal {
       display: none;
     }
+  }
+}
+
+// Collapsed sidebar styles
+.navigation-panel--collapsed {
+  .navigation-panel__logo {
+    display: none !important;
+  }
+
+  .navigation-panel__collapse-btn {
+    margin: 4px auto;
+  }
+
+  .navigation-panel__menu {
+    .column-link {
+      justify-content: center;
+      padding: 10px 0;
+      border-left: 4px solid transparent;
+
+      > span {
+        display: none;
+      }
+
+      .column-link__badge {
+        display: none;
+      }
+
+      .column-link__icon,
+      .icon-with-badge {
+        margin: 0;
+      }
+    }
+
+    hr {
+      margin: 4px 8px;
+    }
+  }
+
+  .navigation-panel__compose-button {
+    justify-content: center;
+    padding: 8px;
+    margin: 4px;
+
+    > span {
+      display: none;
+    }
+  }
+
+  .navigation-panel__invite-button {
+    justify-content: center;
+    width: calc(100% - 8px);
+    margin: 4px;
+    padding: 8px;
+
+    span,
+    & > :not(svg):not(.icon) {
+      display: none;
+    }
+  }
+
+  .navigation-bar,
+  .search,
+  .navigation-panel__banner,
+  .navigation-panel__sign-in-banner,
+  .navigation-panel__legal,
+  .getting-started__trends,
+  .navigation-panel__list-panel__items,
+  .navigation-panel__list-panel__header__sep,
+  .navigation-panel__list-panel__header .icon-button {
+    display: none !important;
   }
 }
 
@@ -10478,9 +10591,7 @@ noscript {
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
-    transition:
-      background-color 0.2s ease,
-      transform 0.1s ease;
+    transition: background-color 0.2s ease, transform 0.1s ease;
 
     &:hover {
       background: lighten($ui-highlight-color, 8%);
@@ -11757,6 +11868,18 @@ noscript {
     color: $error-red;
   }
 
+  &__qr-code {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding: 16px;
+    background: #ffffff;
+    border-radius: 12px;
+    align-self: center;
+    margin-inline: auto;
+    width: fit-content;
+  }
+
   &__link-row {
     display: flex;
     gap: 8px;
@@ -11806,9 +11929,7 @@ noscript {
   border: 1px solid #6364ff;
   background: rgba(99, 100, 255, 12%);
   cursor: pointer;
-  transition:
-    background 0.2s ease,
-    transform 0.1s ease;
+  transition: background 0.2s ease, transform 0.1s ease;
   flex-shrink: 0;
   width: auto;
   text-align: start;
