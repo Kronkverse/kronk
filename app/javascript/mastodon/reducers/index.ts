@@ -38,6 +38,7 @@ import statuses from './statuses';
 import { suggestionsReducer } from './suggestions';
 import { followedTagsReducer } from './tags';
 import timelines from './timelines';
+import friends_activity from './friends_activity';
 import trends from './trends';
 import user_lists from './user_lists';
 
@@ -45,6 +46,7 @@ const reducers = {
   announcements,
   dropdownMenu: dropdownMenuReducer,
   timelines,
+  friends_activity,
   meta,
   alerts: alertsReducer,
   loadingBar: loadingBarReducer,

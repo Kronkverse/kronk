@@ -86,6 +86,7 @@ export const MODAL_COMPONENTS = {
   'IGNORE_NOTIFICATIONS': IgnoreNotificationsModal,
   'ANNUAL_REPORT': AnnualReportModal,
   'COMPOSE_PRIVACY': () => Promise.resolve({ default: VisibilityModal }),
+  'INVITE': () => import('./invite_modal'),
 };
 
 export default class ModalRoot extends PureComponent {

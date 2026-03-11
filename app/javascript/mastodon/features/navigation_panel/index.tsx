@@ -13,12 +13,8 @@ import { useDrag } from '@use-gesture/react';
 import kronkWordmark from '@/images/kronk-wordmark-small.png';
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
-import BarChartActiveIcon from '@/material-icons/400-24px/bar_chart_4_bars-fill.svg?react';
-import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
 import BookmarksActiveIcon from '@/material-icons/400-24px/bookmarks-fill.svg?react';
 import BookmarksIcon from '@/material-icons/400-24px/bookmarks.svg?react';
-import Diversity2ActiveIcon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
-import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import HeartActiveIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
 import HeartIcon from '@/material-icons/400-24px/favorite.svg?react';
 import GroupActiveIcon from '@/material-icons/400-24px/group-fill.svg?react';
@@ -26,17 +22,26 @@ import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import HomeActiveIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import InfoIcon from '@/material-icons/400-24px/info.svg?react';
+import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import NotificationsActiveIcon from '@/material-icons/400-24px/notifications-fill.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
-import OrbitActiveIcon from '@/material-icons/400-24px/orbit-fill.svg?react';
-import OrbitIcon from '@/material-icons/400-24px/orbit.svg?react';
 import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
+import Diversity2ActiveIcon from "@/material-icons/400-24px/diversity_2-fill.svg?react";
+import Diversity2Icon from "@/material-icons/400-24px/diversity_2.svg?react";
+import OrbitActiveIcon from "@/material-icons/400-24px/orbit-fill.svg?react";
+import OrbitIcon from "@/material-icons/400-24px/orbit.svg?react";
+import BarChartActiveIcon from '@/material-icons/400-24px/bar_chart_4_bars-fill.svg?react';
+import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
+import CalendarMonthActiveIcon from "@/material-icons/400-24px/calendar_month-fill.svg?react";
+import CalendarMonthIcon from "@/material-icons/400-24px/calendar_month.svg?react";
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
-import ShareIcon from '@/material-icons/400-24px/share.svg?react';
+import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
+import MenuIcon from '@/material-icons/400-24px/menu.svg?react';
+import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import { fetchFollowRequests } from 'mastodon/actions/accounts';
 import { openModal } from 'mastodon/actions/modal';
-import { openNavigation, closeNavigation } from 'mastodon/actions/navigation';
+import { openNavigation, closeNavigation, toggleCollapse } from 'mastodon/actions/navigation';
 import { Account } from 'mastodon/components/account';
 import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { Search } from 'mastodon/features/compose/components/search';
@@ -75,6 +80,7 @@ const messages = defineMessages({
   direct: { id: 'navigation_bar.direct', defaultMessage: 'Private mentions' },
   live: { id: 'live.title', defaultMessage: 'Huddle' },
   market: { id: 'market.title', defaultMessage: 'Market' },
+  events: { id: 'events.title', defaultMessage: 'Events' },
   favourites: { id: 'navigation_bar.favourites', defaultMessage: 'Froths' },
   bookmarks: { id: 'navigation_bar.bookmarks', defaultMessage: 'Bookmarks' },
   preferences: {
@@ -212,7 +218,13 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
   const dispatch = useAppDispatch();
   const { signedIn, permissions, disabledAccountId } = useIdentity();
   const location = useLocation();
+  const collapsed = useAppSelector((state) => state.navigation.collapsed);
   const showSearch = useBreakpoint('full') && !multiColumn;
+  const collapsible = !useBreakpoint('openable');
+
+  const handleCollapseToggle = useCallback(() => {
+    dispatch(toggleCollapse());
+  }, [dispatch]);
 
   const handleInviteClick = useCallback(() => {
     dispatch(openModal({ modalType: 'INVITE', modalProps: {} }));
@@ -235,7 +247,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
   }
 
   return (
-    <div className='navigation-panel'>
+    <div className={classNames('navigation-panel', { 'navigation-panel--collapsed': collapsed && collapsible })}>
       <div className='navigation-panel__logo'>
         <Link to='/' className='column-link column-link--logo'>
           <img
@@ -245,6 +257,16 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
           />
         </Link>
       </div>
+
+      {collapsible && (
+        <button
+          className='navigation-panel__collapse-btn'
+          onClick={handleCollapseToggle}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed ? <MenuIcon /> : <MenuIcon />}
+        </button>
+      )}
 
       {showSearch && <Search singleColumn />}
 
@@ -304,7 +326,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
           <ColumnLink
             transparent
             to='/orbit'
-            icon='orbit'
+            icon="orbit"
             iconComponent={OrbitIcon}
             activeIconComponent={OrbitActiveIcon}
             text={intl.formatMessage(messages.orbit)}
@@ -321,6 +343,18 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             activeIconComponent={Diversity2ActiveIcon}
             text={intl.formatMessage(messages.live)}
             tooltip='Live video space'
+          />
+        )}
+
+        {signedIn && (
+          <ColumnLink
+            transparent
+            to="/events"
+            icon="calendar_month"
+            iconComponent={CalendarMonthIcon}
+            activeIconComponent={CalendarMonthActiveIcon}
+            text={intl.formatMessage(messages.events)}
+            tooltip="Events &amp; Huddles"
           />
         )}
 
@@ -396,8 +430,8 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             className='button navigation-panel__invite-button'
             onClick={handleInviteClick}
           >
-            <ShareIcon />
-            {intl.formatMessage(messages.invite)}
+            <PersonAddIcon />
+            <span>{intl.formatMessage(messages.invite)}</span>
           </button>
         )}
 
@@ -419,6 +453,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
 
 export const CollapsibleNavigationPanel: React.FC = () => {
   const open = useAppSelector((state) => state.navigation.open);
+  const collapsed = useAppSelector((state) => state.navigation.collapsed);
   const dispatch = useAppDispatch();
   const openable = useBreakpoint('openable');
   const location = useLocation();
@@ -529,7 +564,7 @@ export const CollapsibleNavigationPanel: React.FC = () => {
     <div
       className={classNames(
         'columns-area__panels__pane columns-area__panels__pane--start columns-area__panels__pane--navigational',
-        { 'columns-area__panels__pane--overlay': showOverlay },
+        { 'columns-area__panels__pane--overlay': showOverlay, 'columns-area__panels__pane--collapsed': collapsed && !openable },
       )}
       ref={overlayRef}
     >

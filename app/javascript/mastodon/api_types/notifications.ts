@@ -22,6 +22,7 @@ export const allNotificationTypes: NotificationType[] = [
   'moderation_warning',
   'severed_relationships',
   'annual_report',
+  'event_invitation',
 ];
 
 export type NotificationWithStatusType =
@@ -42,7 +43,8 @@ export type NotificationType =
   | 'severed_relationships'
   | 'admin.sign_up'
   | 'admin.report'
-  | 'annual_report';
+  | 'annual_report'
+  | 'event_invitation';
 
 export interface BaseNotificationJSON {
   id: string;
@@ -144,12 +146,30 @@ interface AnnualReportNotificationGroupJSON extends BaseNotificationGroupJSON {
   annual_report: ApiAnnualReportEventJSON;
 }
 
+export interface ApiEventInvitationJSON {
+  event_id: string;
+  event_title: string;
+  event_start_time: string;
+  event_type: string;
+}
+
+interface EventInvitationNotificationGroupJSON extends BaseNotificationGroupJSON {
+  type: 'event_invitation';
+  event_invitation: ApiEventInvitationJSON;
+}
+
+interface EventInvitationNotificationJSON extends BaseNotificationJSON {
+  type: 'event_invitation';
+  event_invitation: ApiEventInvitationJSON;
+}
+
 export type ApiNotificationJSON =
   | SimpleNotificationJSON
   | ReportNotificationJSON
   | AccountRelationshipSeveranceNotificationJSON
   | NotificationWithStatusJSON
-  | ModerationWarningNotificationJSON;
+  | ModerationWarningNotificationJSON
+  | EventInvitationNotificationJSON;
 
 export type ApiNotificationGroupJSON =
   | SimpleNotificationGroupJSON
@@ -157,7 +177,8 @@ export type ApiNotificationGroupJSON =
   | AccountRelationshipSeveranceNotificationGroupJSON
   | NotificationGroupWithStatusJSON
   | ModerationWarningNotificationGroupJSON
-  | AnnualReportNotificationGroupJSON;
+  | AnnualReportNotificationGroupJSON
+  | EventInvitationNotificationGroupJSON;
 
 export interface ApiNotificationGroupsResultJSON {
   accounts: ApiAccountJSON[];

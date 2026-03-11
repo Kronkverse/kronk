@@ -83,7 +83,7 @@ class Form::AdminSettings
     authorized_fetch: :authorized_fetch_mode?,
   }.freeze
 
-  DESCRIPTION_LIMIT = 200
+  DESCRIPTION_LIMIT = 1500
   DOMAIN_BLOCK_AUDIENCES = %w(disabled users all).freeze
   REGISTRATION_MODES = %w(open approved none).freeze
   FEED_ACCESS_MODES = %w(public authenticated disabled).freeze

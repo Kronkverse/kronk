@@ -1,3 +1,13 @@
+ӁЯѺƝ₭ doesn't track you, profile you, or sell your data. We collect only what's needed to make the service work—nothing more.
+
+You own what you create here. If that sounds right, welcome home.
+
+---
+
+For the complete privacy policy, please visit [kronk.info/privacy](https://kronk.info/privacy.html).
+
+---
+
 This privacy policy describes how %{domain} ("%{domain}", "we", "us") collects,
 protects and uses the personally identifiable information you may provide
 through the %{domain} website or its API. The policy also describes the choices

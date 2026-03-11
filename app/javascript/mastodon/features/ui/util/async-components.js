@@ -237,3 +237,23 @@ export function ListEdit () {
 export function ListMembers () {
   return import('../../lists/members');
 }
+
+export function Orbit () {
+  return import("../../activity");
+}
+
+export function Live () {
+  return import("../../live");
+}
+
+export function Events () {
+  return import("../../events");
+}
+
+export function EventDetail () {
+  return import("../../events/event_detail");
+}
+
+export function Market () {
+  return import("../../market");
+}

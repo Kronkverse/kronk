@@ -33,6 +33,7 @@ import { getHashtagBarForStatus } from './hashtag_bar';
 import { RelativeTimestamp } from './relative_timestamp';
 import StatusActionBar from './status_action_bar';
 import StatusContent from './status_content';
+import { StatusEventCard } from './status_event_card';
 import { StatusThreadLabel } from './status_thread_label';
 import { VisibilityIcon } from './visibility_icon';
 import { IconButton } from './icon_button';
@@ -537,6 +538,8 @@ class Status extends ImmutablePureComponent {
           </Bundle>
         );
       }
+    } else if (status.get('event')) {
+      media = <StatusEventCard event={status.get('event').toJS()} />;
     } else if (status.get('card') && !status.get('quote')) {
       media = (
         <Card
@@ -606,14 +609,16 @@ class Status extends ImmutablePureComponent {
 
             {expanded && (
               <>
-                <StatusContent
-                  status={status}
-                  onClick={this.handleClick}
-                  onTranslate={this.handleTranslate}
-                  collapsible
-                  onCollapsedToggle={this.handleCollapsedToggle}
-                  {...statusContentProps}
-                />
+                {!status.get("event") && (
+                  <StatusContent
+                    status={status}
+                    onClick={this.handleClick}
+                    onTranslate={this.handleTranslate}
+                    collapsible
+                    onCollapsedToggle={this.handleCollapsedToggle}
+                    {...statusContentProps}
+                  />
+                )}
 
                 {media}
                 {hashtagBar}
@@ -625,7 +630,7 @@ class Status extends ImmutablePureComponent {
             {!isQuotedPost && (
               <>
                 <StatusActionBar scrollKey={scrollKey} status={status} account={account}  {...other} />
-                {(showInlineReplies || contextType === 'home') && (
+                {contextType !== 'thread' && (
                   <StatusReplies
                     statusId={status.get('id')}
                     statusAcct={status.getIn(['account', 'acct'])}

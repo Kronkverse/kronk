@@ -5,6 +5,7 @@ import type {
   BaseNotificationGroupJSON,
   ApiNotificationGroupJSON,
   ApiNotificationJSON,
+  ApiEventInvitationJSON,
   NotificationType,
   NotificationWithStatusType,
 } from 'mastodon/api_types/notifications';
@@ -44,6 +45,12 @@ export type NotificationGroupQuotedUpdate =
 export type NotificationGroupFollow = BaseNotification<'follow'>;
 export type NotificationGroupFollowRequest = BaseNotification<'follow_request'>;
 export type NotificationGroupAdminSignUp = BaseNotification<'admin.sign_up'>;
+
+type EventInvitationData = ApiEventInvitationJSON;
+export interface NotificationGroupEventInvitation
+  extends BaseNotification<'event_invitation'> {
+  eventInvitation: EventInvitationData;
+}
 
 export type AccountWarningAction =
   | 'none'
@@ -100,7 +107,8 @@ export type NotificationGroup =
   | NotificationGroupSeveredRelationships
   | NotificationGroupAdminSignUp
   | NotificationGroupAdminReport
-  | NotificationGroupAnnualReport;
+  | NotificationGroupAnnualReport
+  | NotificationGroupEventInvitation;
 
 function createReportFromJSON(reportJSON: ApiReportJSON): Report {
   const { target_account, ...report } = reportJSON;
@@ -188,6 +196,13 @@ export function createNotificationGroupFromJSON(
         sampleAccountIds,
       };
     }
+    case 'event_invitation':
+      return {
+        ...group,
+        partial: false,
+        eventInvitation: group.event_invitation,
+        sampleAccountIds,
+      };
     default:
       return {
         sampleAccountIds,
@@ -246,6 +261,12 @@ export function createNotificationGroupFromNotificationJSON(
         moderationWarning: createAccountWarningFromJSON(
           notification.moderation_warning,
         ),
+      };
+    case 'event_invitation':
+      return {
+        ...group,
+        type: notification.type,
+        eventInvitation: notification.event_invitation,
       };
     default:
       return {

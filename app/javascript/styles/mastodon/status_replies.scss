@@ -2,31 +2,10 @@
 @use "functions" as *;
 @use "mixins" as *;
 
-// Status Replies - Simplified inline replies
+// Status Replies - Threaded inline comments
 .status-replies {
   padding: 0 14px 10px;
-
-  &__toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: none;
-    border: none;
-    padding: 8px 0;
-    color: $highlight-text-color;
-    font-size: 13px;
-    cursor: pointer;
-    transition: color 0.15s;
-
-    &:hover {
-      color: lighten($highlight-text-color, 8%);
-    }
-
-    .icon {
-      width: 16px;
-      height: 16px;
-    }
-  }
+  border-top: 1px solid var(--background-border-color);
 
   &__content {
     margin-top: 4px;
@@ -132,6 +111,91 @@
       }
     }
 
+    // Per-reply action buttons
+    &__actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 4px;
+
+      button {
+        background: none;
+        border: none;
+        padding: 0;
+        color: $darker-text-color;
+        font-size: 12px;
+        cursor: pointer;
+        transition: color 0.15s;
+
+        &:hover {
+          color: $highlight-text-color;
+        }
+      }
+
+      &__child-count {
+        font-weight: 500;
+        color: $highlight-text-color;
+        opacity: 0.8;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
+
+    // Per-reply inline reply input
+    &__inline-reply {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+
+      &__input-wrapper {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--background-color);
+        border: 1px solid var(--background-border-color);
+        border-radius: 14px;
+        padding: 4px 4px 4px 12px;
+        transition: border-color 0.15s;
+
+        &:focus-within {
+          border-color: $highlight-text-color;
+        }
+
+        input {
+          flex: 1;
+          background: none;
+          border: none;
+          outline: none;
+          color: $primary-text-color;
+          font-size: 13px;
+          padding: 0;
+          min-width: 0;
+
+          &::placeholder {
+            color: $darker-text-color;
+          }
+
+          &:disabled {
+            opacity: 0.6;
+          }
+        }
+
+        .icon-button {
+          flex-shrink: 0;
+          color: $highlight-text-color;
+          padding: 3px;
+
+          &:disabled {
+            opacity: 0.4;
+          }
+        }
+      }
+    }
+
     &__nested {
       margin-top: 10px;
       margin-left: 38px;
@@ -155,6 +219,22 @@
 
       .status-replies__item__nested {
         margin-left: 34px;
+      }
+    }
+
+    &--depth-3,
+    &--depth-4 {
+      .status-replies__item__text {
+        font-size: 12px;
+      }
+
+      .status-replies__item__header {
+        font-size: 11px;
+      }
+
+      .status-replies__item__nested {
+        margin-left: 28px;
+        padding-left: 8px;
       }
     }
   }

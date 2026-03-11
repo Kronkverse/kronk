@@ -80,6 +80,9 @@ class Notification < ApplicationRecord
     quoted_update: {
       filterable: false,
     }.freeze,
+    event_invitation: {
+      filterable: true,
+    }.freeze,
   }.freeze
 
   TYPES = PROPERTIES.keys.freeze
@@ -112,6 +115,7 @@ class Notification < ApplicationRecord
     belongs_to :account_warning, inverse_of: false
     belongs_to :generated_annual_report, inverse_of: false
     belongs_to :quote, inverse_of: :notification
+    belongs_to :event_invitation, inverse_of: false
   end
 
   validates :type, inclusion: { in: TYPES }
@@ -210,6 +214,8 @@ class Notification < ApplicationRecord
       self.from_account_id = type == :quoted_update ? activity&.quote&.quoted_account_id : activity&.account_id
     when 'Follow', 'Favourite', 'FollowRequest', 'Poll', 'Report', 'Quote'
       self.from_account_id = activity&.account_id
+    when 'EventInvitation'
+      self.from_account_id = activity&.invited_by_id
     when 'Mention'
       self.from_account_id = activity&.status&.account_id
     when 'Account'

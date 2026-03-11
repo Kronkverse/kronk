@@ -258,7 +258,7 @@ module ApplicationHelper
   end
 
   def app_store_url_android
-    'https://play.google.com/store/apps/details?id=org.joinmastodon.android'
+    'https://kronk.info/kronk.apk'
   end
 
   def within_authorization_flow?

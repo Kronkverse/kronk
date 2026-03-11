@@ -4,28 +4,27 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
+import Diversity2Icon from "@/material-icons/400-24px/diversity_2-fill.svg?react";
 import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { me } from 'mastodon/initial_state';
+import { me, getAccessToken } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({
-  heading: { id: 'live.title', defaultMessage: 'Live' },
-  join: { id: 'live.join', defaultMessage: 'Join Room' },
-  leave: { id: 'live.leave', defaultMessage: 'Leave' },
+  heading: { id: 'live.title', defaultMessage: 'Huddle' },
+  join: { id: 'live.join', defaultMessage: 'Huddle Up' },
+  leave: { id: 'live.leave', defaultMessage: 'Unhuddle' },
   roomDescription: {
     id: 'live.room_description',
     defaultMessage:
-      'Hang out with the Kronk community. Drop in, say hi, or just vibe.',
+      'Huddle is a live video space for the Kronk community to hang out, co-create, share wisdom, stories, art and more. Authentic presence is welcomed in the Huddle.',
   },
 });
 
 const JITSI_DOMAIN = 'meet.talitamoss.info';
-const ROOM_NAME = 'kronk';
+const ROOM_NAME = 'huddle';
 
-// Type for the Jitsi Meet External API instance
 interface JitsiApi {
   dispose: () => void;
   addListener: (event: string, callback: () => void) => void;
@@ -34,7 +33,6 @@ interface JitsiApi {
   _countInterval?: ReturnType<typeof setInterval>;
 }
 
-// Style constants to avoid inline object creation in JSX
 const scrollableStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -47,34 +45,32 @@ const lobbyContainerStyle: React.CSSProperties = {
   justifyContent: 'center',
   flex: 1,
   padding: '40px 20px',
-  gap: '32px',
+  gap: '24px',
 };
 const roomIconStyle: React.CSSProperties = {
-  width: '96px',
-  height: '96px',
-  borderRadius: '24px',
+  width: '80px',
+  height: '80px',
+  borderRadius: '20px',
   background: 'linear-gradient(135deg, #6364FF 0%, #563ACC 100%)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  boxShadow: '0 8px 32px rgba(99, 100, 255, 0.3)',
 };
 const roomInfoStyle: React.CSSProperties = {
   textAlign: 'center',
-  maxWidth: '320px',
+  maxWidth: '340px',
 };
 const headingStyle: React.CSSProperties = {
   fontSize: '24px',
-  fontWeight: 800,
+  fontWeight: 700,
   color: 'var(--primary-text-color)',
-  margin: '0 0 8px 0',
-  letterSpacing: '-0.02em',
+  margin: '0 0 10px 0',
 };
 const descriptionStyle: React.CSSProperties = {
   fontSize: '15px',
   color: 'var(--secondary-text-color)',
   margin: 0,
-  lineHeight: 1.5,
+  lineHeight: 1.6,
 };
 const participantBoxStyle: React.CSSProperties = {
   display: 'flex',
@@ -102,10 +98,8 @@ const greenDotStyle: React.CSSProperties = {
 };
 const participantCountLabelStyle: React.CSSProperties = {
   fontSize: '13px',
-  fontWeight: 700,
+  fontWeight: 600,
   color: 'var(--primary-text-color)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
 };
 const participantNamesStyle: React.CSSProperties = {
   display: 'flex',
@@ -121,10 +115,20 @@ const nameChipStyle: React.CSSProperties = {
   fontSize: '13px',
   fontWeight: 600,
 };
-const poweredByStyle: React.CSSProperties = {
+const emptyRoomStyle: React.CSSProperties = {
+  fontSize: '13px',
+  color: 'var(--secondary-text-color)',
+  fontStyle: 'italic',
+  opacity: 0.6,
+  margin: 0,
+};
+const footerStyle: React.CSSProperties = {
   fontSize: '12px',
   color: 'var(--secondary-text-color)',
-  opacity: 0.6,
+  opacity: 0.45,
+  textAlign: 'center',
+  letterSpacing: '0.04em',
+  marginTop: '12px',
 };
 const inRoomContainerStyle: React.CSSProperties = {
   display: 'flex',
@@ -157,9 +161,9 @@ const leaveButtonStyle: React.CSSProperties = {
   fontSize: '13px',
   fontWeight: 600,
   borderRadius: '8px',
-  border: '1px solid var(--background-border-color)',
-  backgroundColor: 'transparent',
-  color: 'var(--primary-text-color)',
+  border: 'none',
+  backgroundColor: '#e03131',
+  color: '#ffffff',
   cursor: 'pointer',
 };
 const jitsiWrapperStyle: React.CSSProperties = {
@@ -175,6 +179,7 @@ const jitsiContainerStyle: React.CSSProperties = {
 const Live: React.FC<{
   multiColumn: boolean;
 }> = ({ multiColumn }) => {
+  if (!me) {    window.location.href = '/auth/sign_in';    return null;  }
   const intl = useIntl();
   const columnRef = useRef<ColumnRef>(null);
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
@@ -191,7 +196,6 @@ const Live: React.FC<{
   const currentUsername = currentAccount?.get('username');
   const currentAvatar = currentAccount?.get('avatar');
 
-  // Load Jitsi external API script
   useEffect(() => {
     if (
       document.querySelector(
@@ -209,7 +213,6 @@ const Live: React.FC<{
     document.head.appendChild(script);
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (jitsiApiRef.current) {
@@ -219,7 +222,6 @@ const Live: React.FC<{
     };
   }, []);
 
-  // REST API polling to see who's in the room (replaces hidden Jitsi observer)
   useEffect(() => {
     if (inRoom) return undefined;
 
@@ -259,8 +261,23 @@ const Live: React.FC<{
     };
   }, [inRoom]);
 
-  const joinRoom = useCallback(() => {
+  const [jwtToken, setJwtToken] = useState<string | null>(null);
+
+  const joinRoom = useCallback(async () => {
     if (!apiLoaded) return;
+    try {
+      const response = await fetch('/api/v1/huddle_token', {
+        headers: {
+          'Authorization': `Bearer ${getAccessToken()}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json() as { token: string };
+        setJwtToken(data.token);
+      }
+    } catch {
+      // continue without token
+    }
     setInRoom(true);
   }, [apiLoaded]);
 
@@ -276,7 +293,6 @@ const Live: React.FC<{
     setInRoom(false);
   }, []);
 
-  // Initialize Jitsi after container mounts
   useEffect(() => {
     if (!inRoom || !apiLoaded || !jitsiContainerRef.current) return;
     if (jitsiApiRef.current) return;
@@ -288,6 +304,7 @@ const Live: React.FC<{
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const api = new JitsiMeetExternalAPI(JITSI_DOMAIN, {
       roomName: ROOM_NAME,
+      jwt: jwtToken || undefined,
       parentNode: jitsiContainerRef.current,
       width: '100%',
       height: '100%',
@@ -297,31 +314,64 @@ const Live: React.FC<{
       },
       configOverwrite: {
         prejoinPageEnabled: false,
+        disableDeepLinking: true,
         prejoinConfig: { enabled: false },
-        startWithAudioMuted: true,
+        startWithAudioMuted: false,
         startWithVideoMuted: false,
-        subject: 'Kronk',
+        subject: 'The Huddle',
         hideConferenceTimer: true,
+        defaultLogoUrl: 'https://meet.talitamoss.info/images/tal-watermark.png',
+        dynamicBrandingUrl: 'https://meet.talitamoss.info/branding.json',
         disableInviteFunctions: true,
         enableClosePage: false,
+        toolbarButtons: [
+          'microphone',
+          'camera',
+          'chat',
+          'desktop',
+          'fullscreen',
+          'raisehand',
+          'tileview',
+          'toggle-camera',
+          'select-background',
+          'settings',
+          'participants-pane',
+          'filmstrip',
+        ],
       },
       interfaceConfigOverwrite: {
-        SHOW_JITSI_WATERMARK: false,
+        SHOW_JITSI_WATERMARK: true,
         SHOW_BRAND_WATERMARK: false,
         SHOW_POWERED_BY: false,
         HIDE_INVITE_MORE_HEADER: true,
         DEFAULT_REMOTE_DISPLAY_NAME: 'Kronker',
+        DEFAULT_LOGO_URL: 'https://meet.talitamoss.info/images/tal-watermark.png',
+        DEFAULT_WELCOME_PAGE_LOGO_URL: 'https://meet.talitamoss.info/images/tal-watermark.png',
+        JITSI_WATERMARK_LINK: 'https://kronk.info',
       },
     }) as JitsiApi;
 
     jitsiApiRef.current = api;
+    let isGuest = false;
+
+    api.addListener('passwordRequired', () => {
+      isGuest = true;
+      if (jitsiApiRef.current) {
+        jitsiApiRef.current.executeCommand('password', 'kronkfam2026');
+      }
+    });
 
     api.addListener('videoConferenceJoined', () => {
-      if (jitsiApiRef.current && currentUsername) {
-        jitsiApiRef.current.executeCommand(
-          'displayName',
-          '@' + currentUsername,
-        );
+      if (jitsiApiRef.current) {
+        if (currentUsername) {
+          jitsiApiRef.current.executeCommand(
+            'displayName',
+            '@' + currentUsername,
+          );
+        }
+        if (!isGuest) {
+          jitsiApiRef.current.executeCommand('password', 'kronkfam2026');
+        }
       }
     });
 
@@ -335,7 +385,7 @@ const Live: React.FC<{
       }
     }, 5000);
     api._countInterval = countInterval;
-  }, [inRoom, apiLoaded, currentUsername, currentAvatar, leaveRoom]);
+  }, [inRoom, apiLoaded, currentUsername, currentAvatar, leaveRoom, jwtToken]);
 
   const handleHeaderClick = useCallback(() => {
     columnRef.current?.scrollTop();
@@ -345,7 +395,7 @@ const Live: React.FC<{
     (e: React.MouseEvent<HTMLButtonElement>) => {
       if (apiLoaded) {
         e.currentTarget.style.transform = 'translateY(-1px)';
-        e.currentTarget.style.boxShadow = '0 6px 24px rgba(99, 100, 255, 0.5)';
+        e.currentTarget.style.boxShadow = '0 6px 20px rgba(99, 100, 255, 0.5)';
       }
     },
     [apiLoaded],
@@ -354,7 +404,7 @@ const Live: React.FC<{
   const handleMouseLeave = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.currentTarget.style.transform = 'translateY(0)';
-      e.currentTarget.style.boxShadow = '0 4px 16px rgba(99, 100, 255, 0.4)';
+      e.currentTarget.style.boxShadow = '0 4px 16px rgba(99, 100, 255, 0.3)';
     },
     [],
   );
@@ -371,8 +421,8 @@ const Live: React.FC<{
         ? 'linear-gradient(135deg, #6364FF 0%, #563ACC 100%)'
         : 'var(--background-border-color)',
       color: '#fff',
-      boxShadow: apiLoaded ? '0 4px 16px rgba(99, 100, 255, 0.4)' : 'none',
-      transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+      boxShadow: apiLoaded ? '0 4px 16px rgba(99, 100, 255, 0.3)' : 'none',
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
       opacity: apiLoaded ? 1 : 0.5,
     }),
     [apiLoaded],
@@ -385,8 +435,8 @@ const Live: React.FC<{
       label={intl.formatMessage(messages.heading)}
     >
       <ColumnHeader
-        icon='play_arrow'
-        iconComponent={PlayArrowIcon}
+        icon='diversity_2'
+        iconComponent={Diversity2Icon}
         title={intl.formatMessage(messages.heading)}
         onClick={handleHeaderClick}
         multiColumn={multiColumn}
@@ -394,41 +444,25 @@ const Live: React.FC<{
 
       <div className='scrollable' style={scrollableStyle}>
         {!inRoom ? (
-          /* Landing / Lobby */
           <div style={lobbyContainerStyle}>
-            {/* Room icon */}
             <div style={roomIconStyle}>
-              <svg
-                width='48'
-                height='48'
-                viewBox='0 0 24 24'
-                fill='none'
-                xmlns='http://www.w3.org/2000/svg'
-              >
-                <path
-                  d='M17 10.5V7C17 6.45 16.55 6 16 6H4C3.45 6 3 6.45 3 7V17C3 17.55 3.45 18 4 18H16C16.55 18 17 17.55 17 17V13.5L21 17.5V6.5L17 10.5Z'
-                  fill='white'
-                />
-              </svg>
+              <Diversity2Icon style={{ width: 44, height: 44, fill: 'white' }} />
             </div>
 
-            {/* Room info */}
             <div style={roomInfoStyle}>
-              <h2 style={headingStyle}>Kronk Live Room</h2>
+              <h2 style={headingStyle}>The Huddle</h2>
               <p style={descriptionStyle}>
                 {intl.formatMessage(messages.roomDescription)}
               </p>
             </div>
 
-            {/* Who's in the room */}
-            {lobbyParticipants.length > 0 && (
+            {lobbyParticipants.length > 0 ? (
               <div style={participantBoxStyle}>
                 <div style={participantHeaderStyle}>
                   <div style={greenDotStyle} />
                   <span style={participantCountLabelStyle}>
                     {lobbyParticipants.length}{' '}
-                    {lobbyParticipants.length === 1 ? 'person' : 'people'} in
-                    room
+                    {lobbyParticipants.length === 1 ? 'person in room' : 'people in room'}
                   </span>
                 </div>
                 <div style={participantNamesStyle}>
@@ -439,9 +473,8 @@ const Live: React.FC<{
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
 
-            {/* Join button */}
             <button
               onClick={joinRoom}
               disabled={!apiLoaded}
@@ -452,16 +485,16 @@ const Live: React.FC<{
               {intl.formatMessage(messages.join)}
             </button>
 
-            {/* Powered by */}
-            <p style={poweredByStyle}>Powered by Jitsi Meet</p>
+            <p style={footerStyle}>
+              Powered by Jitsi Meet<br />End-to-end encrypted
+            </p>
           </div>
         ) : (
-          /* In-room view */
           <div style={inRoomContainerStyle}>
             <div style={inRoomHeaderStyle}>
               <div style={inRoomHeaderLeftStyle}>
                 <div style={greenDotStyle} />
-                <span style={inRoomTitleStyle}>Kronk Live Room</span>
+                <span style={inRoomTitleStyle}>The Huddle</span>
                 {participantCount > 0 && (
                   <span style={inRoomCountStyle}>
                     {participantCount}{' '}

@@ -15,6 +15,8 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
   belongs_to :account_warning, key: :moderation_warning, if: :moderation_warning_event?, serializer: REST::AccountWarningSerializer
   belongs_to :generated_annual_report, key: :annual_report, if: :annual_report_event?, serializer: REST::AnnualReportEventSerializer
 
+  attribute :event_invitation, if: :event_invitation_type?
+
   def sample_account_ids
     object.sample_accounts.pluck(:id).map(&:to_s)
   end
@@ -41,6 +43,22 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
 
   def annual_report_event?
     object.type == :annual_report
+  end
+
+  def event_invitation_type?
+    object.type == :event_invitation
+  end
+
+  def event_invitation
+    invitation = object.notification&.event_invitation
+    return nil unless invitation&.event
+
+    {
+      event_id: invitation.event.id.to_s,
+      event_title: invitation.event.title,
+      event_start_time: invitation.event.start_time,
+      event_type: invitation.event.event_type,
+    }
   end
 
   def page_min_id

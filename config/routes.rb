@@ -221,6 +221,8 @@ Rails.application.routes.draw do
 
   draw(:fasp)
 
+  get '/activity', to: redirect('/orbit')
+  get '/huddle', to: 'huddle#index'
   draw(:web_app)
 
   get '/web/(*any)', to: redirect('/%{any}', status: 302), as: :web, defaults: { any: '' }, format: false

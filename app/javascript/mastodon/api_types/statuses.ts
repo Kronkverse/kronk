@@ -122,6 +122,25 @@ export interface ApiStatusJSON {
   poll?: ApiPollJSON;
   quote?: ApiQuoteJSON;
   quote_approval?: ApiQuotePolicyJSON;
+
+  event?: {
+    id: string;
+    title: string;
+    description: string;
+    start_time: string;
+    end_time: string | null;
+    location_name: string | null;
+    location_url: string | null;
+    event_type: string;
+    huddle_url: string | null;
+    rsvp_enabled: boolean;
+    max_attendees: number | null;
+    going_count: number;
+    interested_count: number;
+    image_url: string | null;
+    rsvp?: string | null;
+    is_owner?: boolean;
+  };
 }
 
 export interface ApiContextJSON {
