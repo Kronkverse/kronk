@@ -148,7 +148,6 @@ class Status extends ImmutablePureComponent {
     'hidden',
     'unread',
     'pictureInPicture',
-    'onQuoteCancel',
   ];
 
   state = {
@@ -540,7 +539,12 @@ class Status extends ImmutablePureComponent {
         );
       }
     } else if (status.get('event')) {
-      media = <StatusEventCard event={status.get('event').toJS()} />;
+      const eventData = status.get('event');
+      media = (
+        <StatusEventCard
+          event={typeof eventData.toJS === 'function' ? eventData.toJS() : eventData}
+        />
+      );
     } else if (status.get('card') && !status.get('quote')) {
       media = (
         <Card
@@ -610,7 +614,7 @@ class Status extends ImmutablePureComponent {
 
             {expanded && (
               <>
-                {!status.get("event") && (
+                {!status.get('event') && (
                   <StatusContent
                     status={status}
                     onClick={this.handleClick}
@@ -620,6 +624,7 @@ class Status extends ImmutablePureComponent {
                     {...statusContentProps}
                   />
                 )}
+
 
                 {media}
                 {hashtagBar}
@@ -631,7 +636,7 @@ class Status extends ImmutablePureComponent {
             {!isQuotedPost && (
               <>
                 <StatusActionBar scrollKey={scrollKey} status={status} account={account}  {...other} />
-                {contextType !== 'thread' && (
+                {(showInlineReplies || contextType === 'home') && (
                   <StatusReplies
                     statusId={status.get('id')}
                     statusAcct={status.getIn(['account', 'acct'])}

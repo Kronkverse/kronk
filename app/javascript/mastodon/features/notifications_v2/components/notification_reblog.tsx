@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import { Link } from 'react-router-dom';
@@ -9,9 +10,15 @@ import { useAppSelector } from 'mastodon/store';
 import type { LabelRenderer } from './notification_group_with_status';
 import { NotificationGroupWithStatus } from './notification_group_with_status';
 
-const labelRenderer: LabelRenderer = (displayedName, total, seeMoreHref) => {
+const makeLabelRenderer = (isEvent: boolean): LabelRenderer => (displayedName, total, seeMoreHref) => {
   if (total === 1)
-    return (
+    return isEvent ? (
+      <FormattedMessage
+        id='notification.reblog.event'
+        defaultMessage='{name} shared your event'
+        values={{ name: displayedName }}
+      />
+    ) : (
       <FormattedMessage
         id='notification.reblog'
         defaultMessage='{name} boosted your post'
@@ -19,7 +26,18 @@ const labelRenderer: LabelRenderer = (displayedName, total, seeMoreHref) => {
       />
     );
 
-  return (
+  return isEvent ? (
+    <FormattedMessage
+      id='notification.reblog.event.name_and_others_with_link'
+      defaultMessage='{name} and <a>{count, plural, one {# other} other {# others}}</a> shared your event'
+      values={{
+        name: displayedName,
+        count: total - 1,
+        a: (chunks) =>
+          seeMoreHref ? <Link to={seeMoreHref}>{chunks}</Link> : chunks,
+      }}
+    />
+  ) : (
     <FormattedMessage
       id='notification.reblog.name_and_others_with_link'
       defaultMessage='{name} and <a>{count, plural, one {# other} other {# others}}</a> boosted your post'
@@ -43,6 +61,12 @@ export const NotificationReblog: React.FC<{
       state.accounts.get(state.statuses.getIn([statusId, 'account']) as string)
         ?.acct,
   );
+
+  const isEvent = useAppSelector(
+    (state) => !!state.statuses.getIn([statusId, 'event']),
+  );
+
+  const labelRenderer = useMemo(() => makeLabelRenderer(isEvent), [isEvent]);
 
   return (
     <NotificationGroupWithStatus

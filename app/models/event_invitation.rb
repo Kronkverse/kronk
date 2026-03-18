@@ -7,5 +7,5 @@ class EventInvitation < ApplicationRecord
 
   enum :status, { pending: 0, accepted: 1, declined: 2 }, prefix: true
 
-  validates :account_id, uniqueness: { scope: [:event_id, :invited_by_id] }
+  validates :account_id, uniqueness: { scope: :event_id }
 end

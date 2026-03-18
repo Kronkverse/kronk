@@ -360,6 +360,32 @@ $ev-interested-color: #b8945f;
     }
   }
 
+  &__action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border: 1px solid var(--background-border-color);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--secondary-text-color);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: $ev-purple-soft;
+      color: $ev-purple-soft;
+    }
+
+    &--active {
+      background: $ev-purple-faint;
+      border-color: $ev-purple-mid;
+      color: $ev-purple-soft;
+    }
+  }
+
   &__invite-panel {
     padding: 12px 16px 14px;
     border-top: 1px solid var(--background-border-color);
@@ -1875,3 +1901,10 @@ $ev-interested-color: #b8945f;
     }
   }
 }
+
+// Share buttons
+
+
+
+
+

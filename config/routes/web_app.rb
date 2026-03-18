@@ -5,7 +5,6 @@
 # - Have alternative format representations
 
 %w(
-  /orbit
   /blocks
   /bookmarks
   /conversations
@@ -13,8 +12,6 @@
   /directory
   /domain_blocks
   /explore/(*any)
-  /events
-  /events/(*any)
   /favourites
   /follow_requests
   /followed_tags
@@ -34,4 +31,6 @@
   /search
   /start/(*any)
   /statuses/(*any)
+  /events
+  /events/:id
 ).each { |path| get path, to: 'home#index' }

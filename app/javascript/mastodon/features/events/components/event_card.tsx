@@ -9,6 +9,10 @@ import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import ArrowRightIcon from '@/material-icons/400-24px/arrow_right_alt.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import api from 'mastodon/api';
+import { CopyIconButton } from '@/mastodon/components/copy_icon_button';
+import RepeatIcon from '@/material-icons/400-24px/repeat.svg?react';
+import { apiReblog, apiUnreblog } from '@/mastodon/api/interactions';
+import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 
 type Event = {
   id: string;
@@ -26,6 +30,7 @@ type Event = {
   image_url: string | null;
   rsvp_enabled: boolean;
   visibility?: string | null;
+  status_id?: string | null;
 };
 
 type SearchAccount = {
@@ -83,22 +88,43 @@ export const EventCard: React.FC<Props> = ({ event, onRsvp }) => {
   const [searching, setSearching] = useState(false);
   const [attendeesLoaded, setAttendeesLoaded] = useState(false);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shareUrl = `${window.location.origin}/events/${event.id}`;
+  const [shared, setShared] = useState(false);
+
+  const handleShareToTimeline = useCallback(async () => {
+    if (!event.status_id) return;
+    try {
+      if (shared) {
+        await apiUnreblog(event.status_id);
+        setShared(false);
+      } else {
+        await apiReblog(event.status_id, 'public');
+        setShared(true);
+      }
+    } catch (e) {
+      console.error('Failed to toggle event share:', e);
+    }
+  }, [event.status_id, shared]);
+
+  const handleShare = useCallback(() => {
+    void navigator.share({ url: shareUrl }).catch((e: unknown) => {
+      if (e instanceof Error && e.name !== 'AbortError') console.error(e);
+    });
+  }, [shareUrl]);
 
   const loadAttendees = useCallback(async () => {
     if (attendeesLoaded) return;
     try {
-      const [goingRes, interestedRes, notGoingRes, inviteesRes] = await Promise.all([
+      const [goingRes, interestedRes, notGoingRes] = await Promise.all([
         api().get(`/api/v1/events/${event.id}/attendees`, { params: { status: 'going' } }),
         api().get(`/api/v1/events/${event.id}/attendees`, { params: { status: 'interested' } }),
         api().get(`/api/v1/events/${event.id}/attendees`, { params: { status: 'not_going' } }),
-        api().get<{ account_ids: string[] }>(`/api/v1/events/${event.id}/my_invitees`),
       ]);
       const map = new Map<string, RsvpStatus>();
       (goingRes.data as Attendee[]).forEach(a => map.set(a.id, 'going'));
       (interestedRes.data as Attendee[]).forEach(a => map.set(a.id, 'interested'));
       (notGoingRes.data as Attendee[]).forEach(a => map.set(a.id, 'not_going'));
       setRsvpMap(map);
-      setInvitedIds(new Set(inviteesRes.data.account_ids));
       setAttendeesLoaded(true);
     } catch (err) {
       console.error('Failed to load attendees:', err);
@@ -274,6 +300,15 @@ export const EventCard: React.FC<Props> = ({ event, onRsvp }) => {
               >
                 <Icon id='videocam' icon={VideocamIcon} /> Join Huddle
               </a>
+            )}
+
+            {event.status_id && event.visibility !== 'direct' && (
+              <button
+                className={`event-card__action-btn ${shared ? 'event-card__action-btn--active' : ''}`}
+                onClick={handleShareToTimeline}
+              >
+                <Icon id='repeat' icon={RepeatIcon} /> {shared ? 'Unshare' : 'Share'}
+              </button>
             )}
 
             <Link to={`/events/${event.id}`} className='event-card__view-link'>

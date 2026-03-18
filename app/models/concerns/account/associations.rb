@@ -15,8 +15,8 @@ module Account::Associations
         has_many :bookmarks
         has_many :conversations, class_name: 'AccountConversation'
         has_many :custom_filters
-        has_many :events
         has_many :favourites
+        has_many :events
         has_many :featured_tags, -> { includes(:tag) }
         has_many :list_accounts
         has_many :instance_moderation_notes

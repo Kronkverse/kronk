@@ -37,6 +37,7 @@ const messages = defineMessages({
   ownPoll: { id: 'notification.own_poll', defaultMessage: 'Your poll has ended' },
   poll: { id: 'notification.poll', defaultMessage: 'A poll you voted in has ended' },
   reblog: { id: 'notification.reblog', defaultMessage: '{name} boosted your post' },
+  reblog_event: { id: 'notification.reblog.event', defaultMessage: '{name} shared your event' },
   status: { id: 'notification.status', defaultMessage: '{name} just posted' },
   update: { id: 'notification.update', defaultMessage: '{name} edited a post' },
   quoted_update: { id: 'notification.quoted_update', defaultMessage: '{name} edited a post you have quoted' },
@@ -209,16 +210,17 @@ class Notification extends ImmutablePureComponent {
   }
 
   renderReblog (notification, link) {
-    const { intl, unread } = this.props;
+    const { intl, unread, status } = this.props;
+    const isEvent = status && status.get('event');
 
     return (
       <Hotkeys handlers={this.getHandlers()}>
-        <div className={classNames('notification notification-reblog focusable', { unread })} tabIndex={0} aria-label={notificationForScreenReader(intl, intl.formatMessage(messages.reblog, { name: notification.getIn(['account', 'acct']) }), notification.get('created_at'))}>
+        <div className={classNames('notification notification-reblog focusable', { unread })} tabIndex={0} aria-label={notificationForScreenReader(intl, intl.formatMessage(isEvent ? messages.reblog_event : messages.reblog, { name: notification.getIn(['account', 'acct']) }), notification.get('created_at'))}>
           <div className='notification__message'>
             <Icon id='retweet' icon={RepeatIcon} />
 
             <span title={notification.get('created_at')}>
-              <FormattedMessage id='notification.reblog' defaultMessage='{name} boosted your post' values={{ name: link }} />
+              {isEvent ? <FormattedMessage id='notification.reblog.event' defaultMessage='{name} shared your event' values={{ name: link }} /> : <FormattedMessage id='notification.reblog' defaultMessage='{name} boosted your post' values={{ name: link }} />}
             </span>
           </div>
 

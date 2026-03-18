@@ -11,7 +11,6 @@ namespace :api, format: false do
 
   # JSON / REST API
   namespace :v1 do
-    get '/invites/personal', to: 'invites#personal'
     resources :statuses, only: [:index, :create, :show, :update, :destroy] do
       scope module: :statuses do
         resources :reblogged_by, controller: :reblogged_by_accounts, only: :index
@@ -54,7 +53,6 @@ namespace :api, format: false do
       resource :home, only: :show, controller: :home
       resource :public, only: :show, controller: :public
       resource :link, only: :show, controller: :link
-      resource :friends_activity, only: :show, controller: :friends_activity
       resources :tag, only: :show
       resources :list, only: :show
     end
@@ -69,7 +67,6 @@ namespace :api, format: false do
     resources :scheduled_statuses, only: [:index, :show, :update, :destroy]
     resources :preferences, only: [:index]
 
-    resource :huddle_token, only: [:show]
     resources :annual_reports, only: [:index, :show] do
       member do
         post :read
@@ -98,13 +95,11 @@ namespace :api, format: false do
     resources :mutes, only: [:index]
     resources :favourites, only: [:index]
     resources :bookmarks, only: [:index]
-
     resources :events, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :rsvp
         get :attendees
         post :invite
-        get :my_invitees
       end
     end
     resources :reports, only: [:create]

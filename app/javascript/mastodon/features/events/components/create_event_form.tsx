@@ -107,18 +107,10 @@ const ClickableInput: React.FC<{
   );
 };
 
-export const CreateEventForm: React.FC<Props> = ({
-  onEventCreated,
-  onCancel,
-  editEvent,
-}) => {
+export const CreateEventForm: React.FC<Props> = ({ onEventCreated, onCancel, editEvent }) => {
   const editing = !!editEvent;
-  const startInit = editEvent
-    ? toLocalDatetime(editEvent.start_time)
-    : { date: '', time: '' };
-  const endInit = editEvent?.end_time
-    ? toLocalDatetime(editEvent.end_time)
-    : { date: '', time: '' };
+  const startInit = editEvent ? toLocalDatetime(editEvent.start_time) : { date: '', time: '' };
+  const endInit = editEvent?.end_time ? toLocalDatetime(editEvent.end_time) : { date: '', time: '' };
 
   const [title, setTitle] = useState(editEvent?.title ?? '');
   const [description, setDescription] = useState(editEvent?.description ?? '');
@@ -126,36 +118,25 @@ export const CreateEventForm: React.FC<Props> = ({
   const [startTime, setStartTime] = useState(startInit.time);
   const [endDate, setEndDate] = useState(endInit.date);
   const [endTime, setEndTime] = useState(endInit.time);
-  const [locationName, setLocationName] = useState(
-    editEvent?.location_name ?? '',
-  );
+  const [locationName, setLocationName] = useState(editEvent?.location_name ?? '');
   const [locationUrl, setLocationUrl] = useState(editEvent?.location_url ?? '');
   const [eventType, setEventType] = useState(editEvent?.event_type ?? 'event');
   const [visibility, setVisibility] = useState('public');
-  const [rsvpEnabled, setRsvpEnabled] = useState(
-    editEvent?.rsvp_enabled ?? true,
-  );
-  const [recurrenceRule, setRecurrenceRule] = useState(
-    editEvent?.recurrence_rule ?? '',
-  );
+  const [rsvpEnabled, setRsvpEnabled] = useState(editEvent?.rsvp_enabled ?? true);
+  const [recurrenceRule, setRecurrenceRule] = useState(editEvent?.recurrence_rule ?? '');
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    editEvent?.image_url ?? null,
-  );
+  const [imagePreview, setImagePreview] = useState<string | null>(editEvent?.image_url ?? null);
   const [removeImage, setRemoveImage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const handleImageChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        setImageFile(file);
-        setImagePreview(URL.createObjectURL(file));
-        setRemoveImage(false);
-      }
-    },
-    [],
-  );
+  const handleImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+      setRemoveImage(false);
+    }
+  }, []);
 
   const handleRemoveImage = useCallback(() => {
     setImageFile(null);
@@ -163,173 +144,112 @@ export const CreateEventForm: React.FC<Props> = ({
     setRemoveImage(true);
   }, []);
 
-  const handleTitleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setTitle(e.target.value);
-    },
-    [],
-  );
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value);
+  }, []);
 
-  const handleDescriptionChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setDescription(e.target.value);
-    },
-    [],
-  );
+  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDescription(e.target.value);
+  }, []);
 
-  const handleStartDateChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setStartDate(e.target.value);
-    },
-    [],
-  );
+  const handleStartDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setStartDate(e.target.value);
+  }, []);
 
-  const handleStartTimeChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setStartTime(e.target.value);
-    },
-    [],
-  );
+  const handleStartTimeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setStartTime(e.target.value);
+  }, []);
 
-  const handleEndDateChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setEndDate(e.target.value);
-    },
-    [],
-  );
+  const handleEndDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEndDate(e.target.value);
+  }, []);
 
-  const handleEndTimeChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setEndTime(e.target.value);
-    },
-    [],
-  );
+  const handleEndTimeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEndTime(e.target.value);
+  }, []);
 
-  const handleLocationNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setLocationName(e.target.value);
-    },
-    [],
-  );
+  const handleLocationNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocationName(e.target.value);
+  }, []);
 
-  const handleLocationUrlChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setLocationUrl(e.target.value);
-    },
-    [],
-  );
+  const handleLocationUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocationUrl(e.target.value);
+  }, []);
 
-  const handleVisibilityChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setVisibility(e.target.value);
-    },
-    [],
-  );
+  const handleVisibilityChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setVisibility(e.target.value);
+  }, []);
 
-  const handleRecurrenceChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setRecurrenceRule(e.target.value);
-    },
-    [],
-  );
+  const handleRecurrenceChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setRecurrenceRule(e.target.value);
+  }, []);
 
-  const handleRsvpChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setRsvpEnabled(e.target.checked);
-    },
-    [],
-  );
+  const handleRsvpChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setRsvpEnabled(e.target.checked);
+  }, []);
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!title || !startDate || !startTime) return;
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title || !startDate || !startTime) return;
 
-      const startDt = new Date(`${startDate}T${startTime}`);
-      const endDt =
-        endDate && endTime ? new Date(`${endDate}T${endTime}`) : null;
+    const startDt = new Date(`${startDate}T${startTime}`);
+    const endDt = endDate && endTime ? new Date(`${endDate}T${endTime}`) : null;
 
-      if (endDt && endDt <= startDt) {
-        alert('End time must be after start time');
-        return;
+    if (endDt && endDt <= startDt) {
+      alert('End time must be after start time');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      let imageId: string | null = null;
+
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        const uploadRes = await api().post<MediaUploadResponse>('/api/v1/media', formData);
+        imageId = uploadRes.data.id;
       }
 
-      setSubmitting(true);
-      try {
-        let imageId: string | null = null;
+      const startDateTime = startDt.toISOString();
+      const endDateTime = endDt ? endDt.toISOString() : null;
 
-        if (imageFile) {
-          const formData = new FormData();
-          formData.append('file', imageFile);
-          const uploadRes = await api().post<MediaUploadResponse>(
-            '/api/v1/media',
-            formData,
-          );
-          imageId = uploadRes.data.id;
-        }
+      const payload: Record<string, string | boolean | null> = {
+        title,
+        description,
+        start_time: startDateTime,
+        end_time: endDateTime,
+        location_name: locationName || null,
+        location_url: locationUrl || null,
+        event_type: eventType,
+        rsvp_enabled: rsvpEnabled,
+        recurrence_rule: recurrenceRule || null,
+      };
 
-        const startDateTime = startDt.toISOString();
-        const endDateTime = endDt ? endDt.toISOString() : null;
-
-        const payload: Record<string, string | boolean | null> = {
-          title,
-          description,
-          start_time: startDateTime,
-          end_time: endDateTime,
-          location_name: locationName || null,
-          location_url: locationUrl || null,
-          event_type: eventType,
-          rsvp_enabled: rsvpEnabled,
-          recurrence_rule: recurrenceRule || null,
-        };
-
-        if (!editing) {
-          payload.visibility = visibility;
-        }
-
-        if (imageId) {
-          payload.image_id = imageId;
-        } else if (removeImage) {
-          payload.remove_image = 'true';
-        }
-
-        let response;
-        if (editEvent) {
-          response = await api().put<Event>(
-            `/api/v1/events/${editEvent.id}`,
-            payload,
-          );
-        } else {
-          response = await api().post<Event>('/api/v1/events', payload);
-        }
-
-        onEventCreated(response.data);
-      } catch (err) {
-        console.error('Failed to save event:', err);
-      } finally {
-        setSubmitting(false);
+      if (!editing) {
+        payload.visibility = visibility;
       }
-    },
-    [
-      title,
-      description,
-      startDate,
-      startTime,
-      endDate,
-      endTime,
-      locationName,
-      locationUrl,
-      eventType,
-      visibility,
-      rsvpEnabled,
-      recurrenceRule,
-      imageFile,
-      removeImage,
-      editing,
-      editEvent,
-      onEventCreated,
-    ],
-  );
+
+      if (imageId) {
+        payload.image_id = imageId;
+      } else if (removeImage) {
+        payload.remove_image = 'true';
+      }
+
+      let response;
+      if (editEvent) {
+        response = await api().put<Event>(`/api/v1/events/${editEvent.id}`, payload);
+      } else {
+        response = await api().post<Event>('/api/v1/events', payload);
+      }
+
+      onEventCreated(response.data);
+    } catch (err) {
+      console.error('Failed to save event:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [title, description, startDate, startTime, endDate, endTime, locationName, locationUrl, eventType, visibility, rsvpEnabled, recurrenceRule, imageFile, removeImage, editing, editEvent, onEventCreated]);
 
   const handleSelectEvent = useCallback(() => {
     setEventType('event');
@@ -351,39 +271,23 @@ export const CreateEventForm: React.FC<Props> = ({
   const endLabelId = 'event-form-end';
   const coverLabelId = 'event-form-cover';
 
-  const onSubmit = useCallback(
-    (e: React.FormEvent) => {
-      void handleSubmit(e);
-    },
-    [handleSubmit],
-  );
+  const onSubmit = useCallback((e: React.FormEvent) => {
+    void handleSubmit(e);
+  }, [handleSubmit]);
 
   return (
     <form className='create-event-form' onSubmit={onSubmit}>
       <div className='create-event-form__header'>
         <h3>
           {editing ? (
-            <FormattedMessage
-              id='events.edit_event'
-              defaultMessage='Edit Event'
-            />
+            <FormattedMessage id='events.edit_event' defaultMessage='Edit Event' />
           ) : eventType === 'huddle' ? (
-            <FormattedMessage
-              id='events.create_huddle'
-              defaultMessage='Schedule a Huddle'
-            />
+            <FormattedMessage id='events.create_huddle' defaultMessage='Schedule a Huddle' />
           ) : (
-            <FormattedMessage
-              id='events.create_event'
-              defaultMessage='Create Event'
-            />
+            <FormattedMessage id='events.create_event' defaultMessage='Create Event' />
           )}
         </h3>
-        <button
-          type='button'
-          className='create-event-form__close'
-          onClick={onCancel}
-        >
+        <button type='button' className='create-event-form__close' onClick={onCancel}>
           <Icon id='close' icon={CloseIcon} />
         </button>
       </div>
@@ -408,9 +312,7 @@ export const CreateEventForm: React.FC<Props> = ({
       )}
 
       <div className='create-event-form__field'>
-        <label htmlFor={titleInputId}>
-          <FormattedMessage id='events.form.title' defaultMessage='Title' />
-        </label>
+        <label htmlFor={titleInputId}><FormattedMessage id='events.form.title' defaultMessage='Title' /></label>
         <input
           id={titleInputId}
           type='text'
@@ -423,152 +325,62 @@ export const CreateEventForm: React.FC<Props> = ({
       </div>
 
       <div className='create-event-form__image-upload'>
-        <span id={coverLabelId}>
-          <FormattedMessage
-            id='events.form.cover_image'
-            defaultMessage='Cover image'
-          />
-        </span>
+        <span id={coverLabelId}><FormattedMessage id='events.form.cover_image' defaultMessage='Cover image' /></span>
         {imagePreview ? (
           <div className='create-event-form__image-preview'>
             <img src={imagePreview} alt='' />
-            <button
-              type='button'
-              className='create-event-form__image-remove'
-              onClick={handleRemoveImage}
-            >
+            <button type='button' className='create-event-form__image-remove' onClick={handleRemoveImage}>
               <Icon id='close' icon={CloseIcon} />
             </button>
           </div>
         ) : (
           <label className='create-event-form__image-picker'>
             <Icon id='add_photo' icon={AddPhotoIcon} />
-            <span>
-              <FormattedMessage
-                id='events.form.add_image'
-                defaultMessage='Add cover image'
-              />
-            </span>
-            <input
-              type='file'
-              accept='image/*'
-              onChange={handleImageChange}
-              hidden
-            />
+            <span><FormattedMessage id='events.form.add_image' defaultMessage='Add cover image' /></span>
+            <input type='file' accept='image/*' onChange={handleImageChange} hidden />
           </label>
         )}
       </div>
 
       <div className='create-event-form__row'>
         <div className='create-event-form__field'>
-          <span id={startLabelId}>
-            <FormattedMessage id='events.form.start' defaultMessage='Start' />
-          </span>
-          <div
-            className='create-event-form__datetime'
-            aria-labelledby={startLabelId}
-          >
-            <ClickableInput
-              type='date'
-              value={startDate}
-              onChange={handleStartDateChange}
-              required
-            />
-            <ClickableInput
-              type='time'
-              value={startTime}
-              onChange={handleStartTimeChange}
-              required
-            />
+          <span id={startLabelId}><FormattedMessage id='events.form.start' defaultMessage='Start' /></span>
+          <div className='create-event-form__datetime' aria-labelledby={startLabelId}>
+            <ClickableInput type='date' value={startDate} onChange={handleStartDateChange} required />
+            <ClickableInput type='time' value={startTime} onChange={handleStartTimeChange} required />
           </div>
         </div>
         <div className='create-event-form__field'>
-          <span id={endLabelId}>
-            <FormattedMessage id='events.form.end' defaultMessage='End' />
-          </span>
-          <div
-            className='create-event-form__datetime'
-            aria-labelledby={endLabelId}
-          >
-            <ClickableInput
-              type='date'
-              value={endDate}
-              onChange={handleEndDateChange}
-              min={startDate}
-            />
-            <ClickableInput
-              type='time'
-              value={endTime}
-              onChange={handleEndTimeChange}
-            />
+          <span id={endLabelId}><FormattedMessage id='events.form.end' defaultMessage='End' /></span>
+          <div className='create-event-form__datetime' aria-labelledby={endLabelId}>
+            <ClickableInput type='date' value={endDate} onChange={handleEndDateChange} min={startDate} />
+            <ClickableInput type='time' value={endTime} onChange={handleEndTimeChange} />
           </div>
         </div>
       </div>
 
       {eventType !== 'huddle' && (
         <div className='create-event-form__field'>
-          <label htmlFor={locationInputId}>
-            <FormattedMessage
-              id='events.form.location'
-              defaultMessage='Location'
-            />
-          </label>
-          <input
-            id={locationInputId}
-            type='text'
-            value={locationName}
-            onChange={handleLocationNameChange}
-            placeholder='Where is it?'
-            maxLength={200}
-          />
+          <label htmlFor={locationInputId}><FormattedMessage id='events.form.location' defaultMessage='Location' /></label>
+          <input id={locationInputId} type='text' value={locationName} onChange={handleLocationNameChange} placeholder='Where is it?' maxLength={200} />
         </div>
       )}
 
       <div className='create-event-form__field'>
-        <label htmlFor={linkInputId}>
-          <FormattedMessage id='events.form.link' defaultMessage='Link' />
-        </label>
-        <input
-          id={linkInputId}
-          type='url'
-          value={locationUrl}
-          onChange={handleLocationUrlChange}
-          placeholder='https://...'
-          maxLength={500}
-        />
+        <label htmlFor={linkInputId}><FormattedMessage id='events.form.link' defaultMessage='Link' /></label>
+        <input id={linkInputId} type='url' value={locationUrl} onChange={handleLocationUrlChange} placeholder='https://...' maxLength={500} />
       </div>
 
       <div className='create-event-form__field'>
-        <label htmlFor={descriptionInputId}>
-          <FormattedMessage
-            id='events.form.description'
-            defaultMessage='Description'
-          />
-        </label>
-        <textarea
-          id={descriptionInputId}
-          value={description}
-          onChange={handleDescriptionChange}
-          placeholder='Tell people about this event...'
-          rows={3}
-          maxLength={5000}
-        />
+        <label htmlFor={descriptionInputId}><FormattedMessage id='events.form.description' defaultMessage='Description' /></label>
+        <textarea id={descriptionInputId} value={description} onChange={handleDescriptionChange} placeholder='Tell people about this event...' rows={3} maxLength={5000} />
       </div>
 
       <div className='create-event-form__row'>
         {!editing && (
           <div className='create-event-form__field'>
-            <label htmlFor={visibilityInputId}>
-              <FormattedMessage
-                id='events.form.visibility'
-                defaultMessage='Visibility'
-              />
-            </label>
-            <select
-              id={visibilityInputId}
-              value={visibility}
-              onChange={handleVisibilityChange}
-            >
+            <label htmlFor={visibilityInputId}><FormattedMessage id='events.form.visibility' defaultMessage='Visibility' /></label>
+            <select id={visibilityInputId} value={visibility} onChange={handleVisibilityChange}>
               <option value='public'>Public</option>
               <option value='unlisted'>Unlisted</option>
               <option value='private'>Followers only</option>
@@ -577,14 +389,8 @@ export const CreateEventForm: React.FC<Props> = ({
           </div>
         )}
         <div className='create-event-form__field'>
-          <label htmlFor={repeatInputId}>
-            <FormattedMessage id='events.form.repeat' defaultMessage='Repeat' />
-          </label>
-          <select
-            id={repeatInputId}
-            value={recurrenceRule}
-            onChange={handleRecurrenceChange}
-          >
+          <label htmlFor={repeatInputId}><FormattedMessage id='events.form.repeat' defaultMessage='Repeat' /></label>
+          <select id={repeatInputId} value={recurrenceRule} onChange={handleRecurrenceChange}>
             <option value=''>None</option>
             <option value='FREQ=DAILY'>Daily</option>
             <option value='FREQ=WEEKLY'>Weekly</option>
@@ -595,43 +401,21 @@ export const CreateEventForm: React.FC<Props> = ({
       </div>
 
       <label htmlFor={rsvpInputId} className='create-event-form__checkbox'>
-        <input
-          id={rsvpInputId}
-          type='checkbox'
-          checked={rsvpEnabled}
-          onChange={handleRsvpChange}
-        />
+        <input id={rsvpInputId} type='checkbox' checked={rsvpEnabled} onChange={handleRsvpChange} />
         <FormattedMessage id='events.form.rsvp' defaultMessage='Enable RSVPs' />
       </label>
 
       <div className='create-event-form__actions'>
-        <button
-          type='button'
-          className='create-event-form__cancel'
-          onClick={onCancel}
-        >
+        <button type='button' className='create-event-form__cancel' onClick={onCancel}>
           <FormattedMessage id='events.form.cancel' defaultMessage='Cancel' />
         </button>
-        <button
-          type='submit'
-          className='create-event-form__submit'
-          disabled={submitting || !title || !startDate || !startTime}
-        >
+        <button type='submit' className='create-event-form__submit' disabled={submitting || !title || !startDate || !startTime}>
           {editing ? (
-            <FormattedMessage
-              id='events.form.save_changes'
-              defaultMessage='Save Changes'
-            />
+            <FormattedMessage id='events.form.save_changes' defaultMessage='Save Changes' />
           ) : eventType === 'huddle' ? (
-            <FormattedMessage
-              id='events.form.schedule_huddle'
-              defaultMessage='Schedule Huddle'
-            />
+            <FormattedMessage id='events.form.schedule_huddle' defaultMessage='Schedule Huddle' />
           ) : (
-            <FormattedMessage
-              id='events.form.create_event'
-              defaultMessage='Create Event'
-            />
+            <FormattedMessage id='events.form.create_event' defaultMessage='Create Event' />
           )}
         </button>
       </div>

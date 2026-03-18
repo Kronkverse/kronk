@@ -320,7 +320,7 @@ en:
       edit:
         title: Edit announcement
       empty: No announcements found.
-      live: Huddle
+      live: Live
       new:
         create: Create announcement
         title: New announcement
@@ -1014,7 +1014,7 @@ en:
         title: Terms of Service Setup
       going_live_on_html: Live, effective %{date}
       history: History
-      live: Huddle
+      live: Live
       no_history: There are no recorded changes of the terms of service yet.
       no_terms_of_service_html: You don't currently have any terms of service configured. Terms of service are meant to provide clarity and protect you from potential liabilities in disputes with your users.
       notified_on_html: Users notified on %{date}
@@ -1716,6 +1716,10 @@ en:
       body: 'Your post was boosted by %{name}:'
       subject: "%{name} boosted your post"
       title: New boost
+    reblog_event:
+      body: 'Your event was shared by %{name}:'
+      subject: "%{name} shared your event"
+      title: New event share
     status:
       subject: "%{name} just posted"
     update:

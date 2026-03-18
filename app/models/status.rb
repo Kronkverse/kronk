@@ -98,9 +98,9 @@ class Status < ApplicationRecord
   has_one :notification, as: :activity, dependent: :destroy
   has_one :status_stat, inverse_of: :status, dependent: nil
   has_one :poll, inverse_of: :status, dependent: :destroy
-  has_one :event, inverse_of: :status, dependent: :nullify
   has_one :trend, class_name: 'StatusTrend', inverse_of: :status, dependent: nil
   has_one :quote, inverse_of: :status, dependent: :destroy
+  has_one :event, inverse_of: :status, dependent: :destroy
 
   validates :uri, uniqueness: true, presence: true, unless: :local?
   validates :text, presence: true, unless: -> { with_media? || reblog? || with_quote? }
@@ -116,7 +116,7 @@ class Status < ApplicationRecord
   scope :remote, -> { where(local: false).where.not(uri: nil) }
   scope :local,  -> { where(local: true).or(where(uri: nil)) }
   scope :with_accounts, ->(ids) { where(id: ids).includes(:account) }
-  scope :without_replies, -> { not_reply }
+  scope :without_replies, -> { not_reply.or(reply_to_account) }
   scope :not_reply, -> { where(reply: false) }
   scope :only_reblogs, -> { where.not(reblog_of_id: nil) }
   scope :only_polls, -> { where.not(poll_id: nil) }
@@ -167,7 +167,6 @@ class Status < ApplicationRecord
                    :status_stat,
                    :tags,
                    :preloadable_poll,
-                   :event,
                    quote: { status: { account: [:account_stat, user: :role] } },
                    preview_cards_status: { preview_card: { author_account: [:account_stat, user: :role] } },
                    account: [:account_stat, user: :role],
@@ -179,7 +178,6 @@ class Status < ApplicationRecord
                      :status_stat,
                      :tags,
                      :preloadable_poll,
-                     :event,
                      quote: { status: { account: [:account_stat, user: :role] } },
                      preview_cards_status: { preview_card: { author_account: [:account_stat, user: :role] } },
                      account: [:account_stat, user: :role],

@@ -82,8 +82,14 @@ const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                 size={180}
                 bgColor='#ffffff'
                 fgColor='#000000'
-                level='M'
+                level='H'
                 marginSize={2}
+                imageSettings={{
+                  src: '/icon.png',
+                  height: 40,
+                  width: 40,
+                  excavate: true,
+                }}
               />
             </div>
 
