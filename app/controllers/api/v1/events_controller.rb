@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Api::V1::EventsController < Api::BaseController
-  before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show, :attendees]
+  before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show, :attendees, :my_invitees]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy, :rsvp, :invite]
   before_action :require_user!
   before_action :set_event, except: [:index, :create]
@@ -80,19 +80,24 @@ class Api::V1::EventsController < Api::BaseController
     accounts = Account.where(id: account_ids)
 
     accounts.each do |account|
-      invitation = @event.invitations.find_or_initialize_by(account: account)
-      invitation.invited_by = current_account
+      invitation = @event.invitations.find_or_initialize_by(account: account, invited_by: current_account)
 
       if invitation.new_record?
         invitation.save!
         NotifyService.new.call(account, :event_invitation, invitation)
-        send_event_invite_dm!(account)
       else
         invitation.save!
       end
     end
 
     render json: @event, serializer: REST::EventSerializer
+  end
+
+  def my_invitees
+    account_ids = @event.invitations
+                        .where(invited_by: current_account)
+                        .pluck(:account_id)
+    render json: { account_ids: account_ids.map(&:to_s) }
   end
 
   private
@@ -133,67 +138,17 @@ class Api::V1::EventsController < Api::BaseController
   end
 
   def create_status_for_event!(event)
-    status = PostStatusService.new.call(
+    status_text = event.title
+
+    visibility = params[:visibility] || current_account.user&.setting_default_privacy || 'public'
+
+    @status = PostStatusService.new.call(
       current_account,
-      text: event_status_text(event),
-      visibility: event_params[:visibility] || "public",
-      language: current_account.user&.preferred_posting_language
+      text: status_text,
+      visibility: visibility,
+      application: doorkeeper_token.application
     )
 
-    event.update!(status: status)
+    event.update!(status: @status)
   end
-
-  def event_status_text(event)
-    lines = []
-    lines << event.title
-    lines << ""
-
-    start_t = event.start_time&.in_time_zone(Time.zone)
-    if start_t
-      date_line = start_t.strftime("%A, %B %-d · %l:%M %p").squeeze(" ")
-      if event.end_time
-        end_t = event.end_time.in_time_zone(Time.zone)
-        if end_t.to_date == start_t.to_date
-          date_line += end_t.strftime(" – %l:%M %p").squeeze(" ")
-        else
-          date_line += end_t.strftime(" – %B %-d, %l:%M %p").squeeze(" ")
-        end
-      end
-      lines << date_line
-    end
-
-    lines << event.location_name if event.location_name.present?
-    lines << ""
-    lines << event_url(event)
-
-    lines.join("\n")
   end
-
-  def event_url(event)
-    domain = Rails.configuration.x.local_domain
-    base = domain.start_with?("http") ? domain : "https://#{domain}"
-    "#{base}/events/#{event.id}"
-  end
-
-def send_event_invite_dm!(account)
-    kronk_native_apps = %w[Kronk Web].freeze
-    authorized_apps = Doorkeeper::AccessToken
-      .where(resource_owner_id: account.user&.id)
-      .where(revoked_at: nil)
-      .joins(:application)
-      .pluck(Arel.sql('DISTINCT oauth_applications.name'))
-
-    return if authorized_apps.present? && authorized_apps.all? { |name| kronk_native_apps.include?(name) }
-
-    event_url = "https://#{Rails.configuration.x.local_domain}/events/#{@event.id}"
-    dm_text = "@#{account.username} You have been invited to \"#{@event.title}\"\n#{event_url}"
-
-    PostStatusService.new.call(
-      current_account,
-      text: dm_text,
-      visibility: :direct
-    )
-  rescue => e
-    Rails.logger.warn("Failed to send event invite DM to #{account.username}: #{e.message}")
-  end
-end

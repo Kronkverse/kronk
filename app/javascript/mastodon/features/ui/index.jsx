@@ -77,6 +77,9 @@ import {
   TermsOfService,
   AccountFeatured,
   Quotes,
+  Orbit,
+  Live,
+  Market,
   Events,
   EventDetail,
 } from './util/async-components';
@@ -195,14 +198,17 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/favourites' component={FavouritedStatuses} content={children} />
 
             <WrappedRoute path='/bookmarks' component={BookmarkedStatuses} content={children} />
-            <WrappedRoute path='/events' exact component={Events} content={children} />
-            <WrappedRoute path='/events/:id' component={EventDetail} content={children} />
             <WrappedRoute path='/pinned' component={PinnedStatuses} content={children} />
 
             <WrappedRoute path={['/start', '/start/profile']} exact component={OnboardingProfile} content={children} />
             <WrappedRoute path='/start/follows' component={OnboardingFollows} content={children} />
             <WrappedRoute path='/directory' component={Directory} content={children} />
             <WrappedRoute path='/explore' component={Explore} content={children} />
+            <WrappedRoute path="/orbit" component={Orbit} content={children} />
+            {signedIn && <WrappedRoute path="/huddle" component={Live} content={children} />}
+            <WrappedRoute path="/market" component={Market} content={children} />
+            {signedIn && <WrappedRoute path="/events/:id" component={EventDetail} content={children} />}
+            {signedIn && <WrappedRoute path="/events" component={Events} content={children} />}
             <WrappedRoute path='/search' component={Search} content={children} />
             <WrappedRoute path={['/publish', '/statuses/new']} component={Compose} content={children} />
 

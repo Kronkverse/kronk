@@ -29,11 +29,7 @@ class Web::NotificationSerializer < ActiveModel::Serializer
   end
 
   def title
-    notification_key = object.type.to_s
-    if object.type == :reblog && object.target_status&.event.present?
-      notification_key = "reblog_event"
-    end
-    I18n.t("notification_mailer.#{notification_key}.subject", name: object.from_account.display_name.presence || object.from_account.username)
+    I18n.t("notification_mailer.#{object.type}.subject", name: object.from_account.display_name.presence || object.from_account.username)
   end
 
   def body

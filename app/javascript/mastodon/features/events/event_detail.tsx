@@ -14,10 +14,7 @@ import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import RepeatIcon from '@/material-icons/400-24px/repeat.svg?react';
 import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
-import ShareIcon from '@/material-icons/400-24px/share.svg?react';
-import ContentCopyIcon from '@/material-icons/400-24px/content_copy.svg?react';
 import api from 'mastodon/api';
-import { apiReblog } from '@/mastodon/api/interactions';
 import { CreateEventForm } from './components/create_event_form';
 
 type Attendee = {
@@ -85,32 +82,6 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [searching, setSearching] = useState(false);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const [linkCopied, setLinkCopied] = useState(false);
-  const [shared, setShared] = useState(false);
-  const shareUrl = `${window.location.origin}/events/${id}`;
-
-  const handleShare = useCallback(() => {
-    void navigator.share({ url: shareUrl, title: event?.title ?? '' }).catch((e: unknown) => {
-      if (e instanceof Error && e.name !== 'AbortError') console.error(e);
-    });
-  }, [shareUrl, event?.title]);
-
-  const handleCopyLink = useCallback(() => {
-    void navigator.clipboard.writeText(shareUrl);
-    setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 2000);
-  }, [shareUrl]);
-
-  const handleShareToTimeline = useCallback(async () => {
-    if (!event?.status_id) return;
-    try {
-      await apiReblog(event.status_id, 'public');
-      setShared(true);
-    } catch (e) {
-      console.error('Failed to share event:', e);
-    }
-  }, [event?.status_id]);
 
   // Build a map of account_id -> rsvp status
   const rsvpMap = new Map<string, RsvpStatus>();
@@ -352,15 +323,6 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         )}
 
         <div className='event-detail__actions'>
-          {event.status_id && event.visibility !== 'direct' && (
-            <button
-              className={`event-detail__action-btn ${shared ? 'event-detail__action-btn--active' : ''}`}
-              onClick={handleShareToTimeline}
-              disabled={shared}
-            >
-              <Icon id='repeat' icon={RepeatIcon} /> {shared ? 'Shared!' : 'Share'}
-            </button>
-          )}
           {isPublic && (
             <button
               className={`event-detail__action-btn ${showInvite ? 'event-detail__action-btn--active' : ''}`}

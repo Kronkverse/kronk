@@ -1,6 +1,11 @@
 import { useEffect, useRef, useCallback } from 'react';
+
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+
 import { Helmet } from 'react-helmet';
+
+import type { List as ImmutableList, Map as ImmutableMap } from 'immutable';
+
 import GroupIcon from '@/material-icons/400-24px/group-fill.svg?react';
 import { addColumn, removeColumn, moveColumn } from 'mastodon/actions/columns';
 import { expandFriendsActivity } from 'mastodon/actions/friends_activity';
@@ -9,7 +14,7 @@ import type { ColumnRef } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import ScrollableList from 'mastodon/components/scrollable_list';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
-import type { List as ImmutableList, Map as ImmutableMap } from 'immutable';
+
 import ActivityItem from './components/activity_item';
 
 const messages = defineMessages({
@@ -62,7 +67,7 @@ const Activity: React.FC<{
 
   const handleLoadMore = useCallback(() => {
     if (items.size === 0) return;
-    const lastItem = items.last() as ImmutableMap<string, unknown> | undefined;
+    const lastItem = items.last();
     if (!lastItem) return;
     const maxId = lastItem.get('statusId') as string;
     dispatch(expandFriendsActivity({ maxId }));
@@ -103,18 +108,18 @@ const Activity: React.FC<{
         bindToDocument={!multiColumn}
       >
         {items.map((item: ImmutableMap<string, unknown>) => {
-            const statusId = item.get('statusId') as string;
-            const interactions = item.get('interactions') as ImmutableList<
-              ImmutableMap<string, string>
-            >;
-            return (
-              <ActivityItem
-                key={statusId}
-                statusId={statusId}
-                interactions={interactions}
-              />
-            );
-          })}
+          const statusId = item.get('statusId') as string;
+          const interactions = item.get('interactions') as ImmutableList<
+            ImmutableMap<string, string>
+          >;
+          return (
+            <ActivityItem
+              key={statusId}
+              statusId={statusId}
+              interactions={interactions}
+            />
+          );
+        })}
       </ScrollableList>
       <Helmet>
         <title>{intl.formatMessage(messages.heading)}</title>

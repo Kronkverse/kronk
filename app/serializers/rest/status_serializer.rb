@@ -34,9 +34,8 @@ class REST::StatusSerializer < ActiveModel::Serializer
   has_one :quote, key: :quote, serializer: REST::QuoteSerializer
   has_one :preview_card, key: :card, serializer: REST::PreviewCardSerializer
   has_one :preloadable_poll, key: :poll, serializer: REST::PollSerializer
+  has_one :event, serializer: REST::EventSerializer
   has_one :quote_approval
-
-  has_one :event, serializer: REST::EventSerializer, if: :event?
 
   def quote
     object.quote if object.quote&.acceptable?
@@ -158,10 +157,6 @@ class REST::StatusSerializer < ActiveModel::Serializer
       current_user.account_id == object.account_id &&
       !object.reblog? &&
       StatusRelationshipsPresenter::PINNABLE_VISIBILITIES.include?(object.visibility)
-  end
-
-  def event?
-    object.event.present?
   end
 
   def source_requested?

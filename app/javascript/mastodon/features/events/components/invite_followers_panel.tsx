@@ -22,18 +22,26 @@ interface Props {
 const FollowerRow: React.FC<{
   account: Account;
   selected: boolean;
+  invited: boolean;
   onToggle: (id: string) => void;
-}> = ({ account, selected, onToggle }) => {
+}> = ({ account, selected, invited, onToggle }) => {
   const handleChange = useCallback(() => {
-    onToggle(account.id);
-  }, [onToggle, account.id]);
+    if (!invited) {
+      onToggle(account.id);
+    }
+  }, [onToggle, account.id, invited]);
+
+  const className = invited
+    ? 'invite-followers-panel__account invite-followers-panel__account--invited'
+    : 'invite-followers-panel__account';
 
   return (
     // eslint-disable-next-line jsx-a11y/label-has-associated-control
-    <label className='invite-followers-panel__account'>
+    <label className={className}>
       <input
         type='checkbox'
-        checked={selected}
+        checked={invited || selected}
+        disabled={invited}
         onChange={handleChange}
       />
       <img
@@ -47,6 +55,11 @@ const FollowerRow: React.FC<{
         </span>
         <span className='invite-followers-panel__acct'>@{account.acct}</span>
       </div>
+      {invited && (
+        <span className='invite-followers-panel__invited-badge'>
+          <FormattedMessage id='events.already_invited' defaultMessage='Invited' />
+        </span>
+      )}
     </label>
   );
 };
@@ -59,12 +72,18 @@ export const InviteFollowersPanel: React.FC<Props> = ({ eventId, onDone }) => {
   const [sending, setSending] = useState(false);
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [alreadyInvited, setAlreadyInvited] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const fetchFollowers = async () => {
+    const fetchData = async () => {
       try {
-        const res = await api().get<Account>('/api/v1/accounts/verify_credentials');
-        const accountId = res.data.id;
+        const [credRes, inviteesRes] = await Promise.all([
+          api().get<Account>('/api/v1/accounts/verify_credentials'),
+          api().get<{ account_ids: string[] }>(`/api/v1/events/${eventId}/my_invitees`),
+        ]);
+        const accountId = credRes.data.id;
+        setAlreadyInvited(new Set(inviteesRes.data.account_ids));
+
         const followersRes = await api().get<Account[]>(`/api/v1/accounts/${accountId}/followers`, { params: { limit: 80 } });
         setFollowers(followersRes.data);
 
@@ -79,8 +98,8 @@ export const InviteFollowersPanel: React.FC<Props> = ({ eventId, onDone }) => {
         setLoading(false);
       }
     };
-    void fetchFollowers();
-  }, []);
+    void fetchData();
+  }, [eventId]);
 
   const loadMore = useCallback(async () => {
     if (!nextUrl || loadingMore) return;
@@ -133,7 +152,7 @@ export const InviteFollowersPanel: React.FC<Props> = ({ eventId, onDone }) => {
   }, [followers, search]);
 
   const selectAll = useCallback(() => {
-    const visible = filteredFollowers.map(a => a.id);
+    const visible = filteredFollowers.filter(a => !alreadyInvited.has(a.id)).map(a => a.id);
     setSelected(prev => {
       const next = new Set(prev);
       const allSelected = visible.every(id => next.has(id));
@@ -144,7 +163,7 @@ export const InviteFollowersPanel: React.FC<Props> = ({ eventId, onDone }) => {
       }
       return next;
     });
-  }, [filteredFollowers]);
+  }, [filteredFollowers, alreadyInvited]);
 
   const handleInvite = useCallback(async () => {
     if (selected.size === 0) return;
@@ -165,7 +184,8 @@ export const InviteFollowersPanel: React.FC<Props> = ({ eventId, onDone }) => {
     void handleInvite();
   }, [handleInvite]);
 
-  const allVisibleSelected = filteredFollowers.length > 0 && filteredFollowers.every(a => selected.has(a.id));
+  const selectableFollowers = filteredFollowers.filter(a => !alreadyInvited.has(a.id));
+  const allVisibleSelected = selectableFollowers.length > 0 && selectableFollowers.every(a => selected.has(a.id));
 
   return (
     <div className='invite-followers-panel'>
@@ -222,6 +242,7 @@ export const InviteFollowersPanel: React.FC<Props> = ({ eventId, onDone }) => {
                 key={account.id}
                 account={account}
                 selected={selected.has(account.id)}
+                invited={alreadyInvited.has(account.id)}
                 onToggle={toggleAccount}
               />
             ))}
