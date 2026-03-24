@@ -1,91 +1,71 @@
-# Contributing
+# Contributing to Kronk
 
-Thank you for considering contributing to Mastodon 🐘
+Kronk is a customized [Mastodon](https://github.com/mastodon/mastodon) instance at [mastodon.kronk.info](https://mastodon.kronk.info). We welcome contributions!
 
-You can contribute in the following ways:
+## Getting Started
 
-- Finding and reporting bugs
-- Translating the Mastodon interface into various languages
-- Contributing code to Mastodon by fixing bugs or implementing features
-- Improving the documentation
+1. **Fork** this repo on GitHub
+2. **Clone** your fork locally
+3. **Branch** off `main` (e.g. `git checkout -b feature/my-change`)
+4. **Make your changes**
+5. **Push** to your fork and **open a PR** against `main`
 
-Please review the org-level [contribution guidelines] for high-level acceptance
-criteria guidance and the [DEVELOPMENT] guide for environment-specific details.
+## Branch Structure
 
-## API Changes and Additions
+| Branch    | Purpose                                       |
+| --------- | --------------------------------------------- |
+| `main`    | Production — deployed to mastodon.kronk.info  |
+| `staging` | Testing — deployed to dev.mastodon.kronk.info |
 
-Any changes or additions made to the API should have an accompanying pull
-request on our [documentation repository].
+`main` is protected. All changes go through pull requests.
 
-## Bug Reports
+## Development Setup
 
-Bug reports and feature suggestions must use descriptive and concise titles and
-be submitted to [GitHub Issues]. Please use the search function to make sure
-there are not duplicate bug reports or feature requests.
+Kronk is a standard Mastodon fork. Follow the [Mastodon development guide](https://docs.joinmastodon.org/dev/setup/) to set up your local environment.
 
-## Security Issues
+Key differences from upstream Mastodon:
 
-If you believe you have identified a security issue in Mastodon or our own apps,
-check [SECURITY].
+- Custom branding (logos, colors, terminology)
+- Custom features (events, live rooms, invite system)
+- Extended limits (character counts, poll durations, trend thresholds)
 
-## Translations
+## Code Standards
 
-Translations are community contributed via [Crowdin]. They are periodically
-reviewed and merged into the codebase.
+This repo uses pre-commit hooks (husky + lint-staged) that run automatically:
 
-[![Crowdin](https://d322cqt584bo4o.cloudfront.net/mastodon/localized.svg)](https://crowdin.com/project/mastodon)
+- **Prettier** — code formatting
+- **ESLint** — strict TypeScript rules (`no-unsafe-*`, `no-non-null-assertion`, `prefer-nullish-coalescing`)
+- **Stylelint** — CSS linting
+- **TypeScript** — `tsc --noEmit` (project-wide type checking)
 
-## Pull Requests
+If TypeScript runs out of memory during commit, set:
 
-### Size and Scope
+```bash
+export NODE_OPTIONS=--max-old-space-size=2048
+```
 
-Our time is limited and PRs making large, unsolicited changes are unlikely to
-get a response. Changes which link to an existing confirmed issue, or which come
-from a "help wanted" issue or other request are more likely to be reviewed.
+## Testing Your Changes
 
-The smaller and more narrowly focused the changes in a PR are, the easier they
-are to review and potentially merge. If the change only makes sense in some
-larger context of future ongoing work, note that in the description, but still
-aim to keep each distinct PR to a "smallest viable change" chunk of work.
+When you open a PR, a maintainer will deploy your branch to the staging environment at `dev.mastodon.kronk.info` for testing. You don't need to worry about deployment — just make sure your code works locally.
 
-### Description of Changes
+## What We're Looking For
 
-Unless the Pull Request is about refactoring code, updating dependencies or
-other internal tasks, assume that the audience are not developers, but a
-Mastodon user or server admin, and try to describe it from their perspective.
+- Bug fixes
+- UI/UX improvements
+- New features that fit Kronk's community focus
+- Upstream Mastodon compatibility improvements
+- Performance improvements
 
-The final commit in the main branch will carry the title from the PR. The main
-branch is then fed into the changelog and ultimately into release notes. We try
-to follow the [keepachangelog] spec, and while that does not prescribe how
-exactly the entries ought to be named, starting titles using one of the verbs
-"Add", "Change", "Deprecate", "Remove", or "Fix" (present tense) is helpful.
+## What to Avoid
 
-Example:
+- Changes that break federation with other Mastodon/ActivityPub instances
+- Removing or weakening existing features without discussion
+- Large refactors without prior discussion in an issue
 
-| Not ideal                            | Better                                                        |
-| ------------------------------------ | ------------------------------------------------------------- |
-| Fixed NoMethodError in RemovalWorker | Fix nil error when removing statuses caused by race condition |
+## Upstream Syncing
 
-### Technical Requirements
+Kronk periodically merges upstream Mastodon releases. If your PR conflicts with an upcoming upstream merge, we may ask you to rebase.
 
-Pull requests that do not pass automated checks on CI may not be reviewed. In
-particular, please keep in mind:
+## Questions?
 
-- Unit and integration tests (rspec, vitest)
-- Code style rules (rubocop, eslint)
-- Normalization of locale files (i18n-tasks)
-- Relevant accessibility or performance concerns
-
-## Documentation
-
-The [Mastodon documentation] is a statically generated site that contains guides
-and API docs. Improvements are made via PRs to the [documentation repository].
-
-[contribution guidelines]: https://github.com/mastodon/.github/blob/main/CONTRIBUTING.md
-[Crowdin]: https://crowdin.com/project/mastodon
-[DEVELOPMENT]: docs/DEVELOPMENT.md
-[documentation repository]: https://github.com/mastodon/documentation
-[GitHub Issues]: https://github.com/mastodon/mastodon/issues
-[keepachangelog]: https://keepachangelog.com/en/1.0.0/
-[Mastodon documentation]: https://docs.joinmastodon.org
-[SECURITY]: SECURITY.md
+Open an issue if you're unsure about something. We'd rather help you get started than miss a good contribution.
