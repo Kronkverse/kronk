@@ -27,6 +27,8 @@ import NotificationsActiveIcon from '@/material-icons/400-24px/notifications-fil
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
+import GavelActiveIcon from '@/material-icons/400-24px/gavel-fill.svg?react';
+import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
 import Diversity2ActiveIcon from "@/material-icons/400-24px/diversity_2-fill.svg?react";
 import Diversity2Icon from "@/material-icons/400-24px/diversity_2.svg?react";
 import OrbitActiveIcon from "@/material-icons/400-24px/orbit-fill.svg?react";
@@ -79,6 +81,7 @@ const messages = defineMessages({
   },
   direct: { id: 'navigation_bar.direct', defaultMessage: 'Private mentions' },
   live: { id: 'live.title', defaultMessage: 'Huddle' },
+  commons: { id: 'governance.title', defaultMessage: 'Commons' },
   market: { id: 'market.title', defaultMessage: 'Market' },
   events: { id: 'events.title', defaultMessage: 'Events' },
   favourites: { id: 'navigation_bar.favourites', defaultMessage: 'Froths' },
@@ -363,6 +366,16 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             <hr />
 
             <NotificationsLink />
+
+            <ColumnLink
+              transparent
+              to='/governance'
+              icon='gavel'
+              iconComponent={GavelIcon}
+              activeIconComponent={GavelActiveIcon}
+              text={intl.formatMessage(messages.commons)}
+              tooltip='Community governance'
+            />
 
             <FollowRequestsLink />
 

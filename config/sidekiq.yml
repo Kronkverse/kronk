@@ -72,3 +72,7 @@
       interval: 1 day
       class: Scheduler::Fasp::FollowRecommendationCleanupScheduler
       queue: scheduler
+    proposal_close_worker:
+      every: '15m'
+      class: ProposalCloseWorker
+      queue: default
