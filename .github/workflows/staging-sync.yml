@@ -1,0 +1,19 @@
+name: Sync Staging with Main
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  sync-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy main to staging
+        env:
+          DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/key
+          chmod 600 ~/.ssh/key
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "deploy main"
+          rm -f ~/.ssh/key
