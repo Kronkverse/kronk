@@ -6,6 +6,9 @@ on:
 
 jobs:
   deploy-staging:
+    permissions:
+      issues: write
+      pull-requests: write
     if: |
       github.event.issue.pull_request &&
       contains(github.event.comment.body, '/deploy-staging')
@@ -69,6 +72,9 @@ jobs:
             });
 
   stop-staging:
+    permissions:
+      issues: write
+      pull-requests: write
     if: |
       github.event.issue.pull_request &&
       contains(github.event.comment.body, '/stop-staging')
