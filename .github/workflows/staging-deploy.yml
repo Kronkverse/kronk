@@ -45,7 +45,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/key
           chmod 600 ~/.ssh/key
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@134.199.146.139 "deploy $BRANCH"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "deploy $BRANCH"
           rm -f ~/.ssh/key
 
       - name: Comment with staging URL
@@ -98,7 +98,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/key
           chmod 600 ~/.ssh/key
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@134.199.146.139 "stop"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "stop"
           rm -f ~/.ssh/key
 
       - name: Comment confirmation
