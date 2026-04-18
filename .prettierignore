@@ -8,6 +8,9 @@
 /.bundle
 /vendor/bundle
 
+# Ignore committed AWS CLI binary distribution
+/aws
+
 # Ignore the default SQLite database.
 /db/*.sqlite3
 /db/*.sqlite3-journal

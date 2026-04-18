@@ -13,8 +13,14 @@ import { useDrag } from '@use-gesture/react';
 import kronkWordmark from '@/images/kronk-wordmark-small.png';
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
+import BarChartActiveIcon from '@/material-icons/400-24px/bar_chart_4_bars-fill.svg?react';
+import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
 import BookmarksActiveIcon from '@/material-icons/400-24px/bookmarks-fill.svg?react';
 import BookmarksIcon from '@/material-icons/400-24px/bookmarks.svg?react';
+import CalendarMonthActiveIcon from '@/material-icons/400-24px/calendar_month-fill.svg?react';
+import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
+import Diversity2ActiveIcon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
+import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import HeartActiveIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
 import HeartIcon from '@/material-icons/400-24px/favorite.svg?react';
 import GroupActiveIcon from '@/material-icons/400-24px/group-fill.svg?react';
@@ -22,26 +28,21 @@ import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import HomeActiveIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import InfoIcon from '@/material-icons/400-24px/info.svg?react';
-import ShareIcon from '@/material-icons/400-24px/share.svg?react';
+import MenuIcon from '@/material-icons/400-24px/menu.svg?react';
 import NotificationsActiveIcon from '@/material-icons/400-24px/notifications-fill.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
+import OrbitActiveIcon from '@/material-icons/400-24px/orbit-fill.svg?react';
+import OrbitIcon from '@/material-icons/400-24px/orbit.svg?react';
 import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
-import Diversity2ActiveIcon from "@/material-icons/400-24px/diversity_2-fill.svg?react";
-import Diversity2Icon from "@/material-icons/400-24px/diversity_2.svg?react";
-import OrbitActiveIcon from "@/material-icons/400-24px/orbit-fill.svg?react";
-import OrbitIcon from "@/material-icons/400-24px/orbit.svg?react";
-import BarChartActiveIcon from '@/material-icons/400-24px/bar_chart_4_bars-fill.svg?react';
-import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
-import CalendarMonthActiveIcon from "@/material-icons/400-24px/calendar_month-fill.svg?react";
-import CalendarMonthIcon from "@/material-icons/400-24px/calendar_month.svg?react";
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
-import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
-import MenuIcon from '@/material-icons/400-24px/menu.svg?react';
-import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import { fetchFollowRequests } from 'mastodon/actions/accounts';
 import { openModal } from 'mastodon/actions/modal';
-import { openNavigation, closeNavigation, toggleCollapse } from 'mastodon/actions/navigation';
+import {
+  openNavigation,
+  closeNavigation,
+  toggleCollapse,
+} from 'mastodon/actions/navigation';
 import { Account } from 'mastodon/components/account';
 import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { Search } from 'mastodon/features/compose/components/search';
@@ -72,9 +73,9 @@ const messages = defineMessages({
   },
   orbit: { id: 'orbit.title', defaultMessage: 'Orbit' },
   explore: { id: 'explore.title', defaultMessage: 'Trending' },
-  firehose: { id: 'column.firehose', defaultMessage: '₭ronk' },
+  firehose: { id: 'navigation.kronk_feed', defaultMessage: '₭ronk' },
   firehose_singular: {
-    id: 'column.firehose_singular',
+    id: 'navigation.kronk_feed_singular',
     defaultMessage: '₭ronk',
   },
   direct: { id: 'navigation_bar.direct', defaultMessage: 'Private mentions' },
@@ -247,7 +248,11 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
   }
 
   return (
-    <div className={classNames('navigation-panel', { 'navigation-panel--collapsed': collapsed && collapsible })}>
+    <div
+      className={classNames('navigation-panel', {
+        'navigation-panel--collapsed': collapsed && collapsible,
+      })}
+    >
       <div className='navigation-panel__logo'>
         <Link to='/' className='column-link column-link--logo'>
           <img
@@ -326,7 +331,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
           <ColumnLink
             transparent
             to='/orbit'
-            icon="orbit"
+            icon='orbit'
             iconComponent={OrbitIcon}
             activeIconComponent={OrbitActiveIcon}
             text={intl.formatMessage(messages.orbit)}
@@ -349,12 +354,12 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
         {signedIn && (
           <ColumnLink
             transparent
-            to="/events"
-            icon="calendar_month"
+            to='/events'
+            icon='calendar_month'
             iconComponent={CalendarMonthIcon}
             activeIconComponent={CalendarMonthActiveIcon}
             text={intl.formatMessage(messages.events)}
-            tooltip="Events &amp; Huddles"
+            tooltip='Events &amp; Huddles'
           />
         )}
 
@@ -564,7 +569,10 @@ export const CollapsibleNavigationPanel: React.FC = () => {
     <div
       className={classNames(
         'columns-area__panels__pane columns-area__panels__pane--start columns-area__panels__pane--navigational',
-        { 'columns-area__panels__pane--overlay': showOverlay, 'columns-area__panels__pane--collapsed': collapsed && !openable },
+        {
+          'columns-area__panels__pane--overlay': showOverlay,
+          'columns-area__panels__pane--collapsed': collapsed && !openable,
+        },
       )}
       ref={overlayRef}
     >
