@@ -15,5 +15,5 @@ jobs:
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/key
           chmod 600 ~/.ssh/key
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "bash -lc 'deploy main'"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "deploy main"
           rm -f ~/.ssh/key
