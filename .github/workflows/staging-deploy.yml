@@ -14,18 +14,6 @@ jobs:
       contains(github.event.comment.body, '/deploy-staging')
     runs-on: ubuntu-latest
     steps:
-      - name: Get PR branch
-        id: pr
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const pr = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number
-            });
-            core.setOutput('branch', pr.data.head.ref);
-
       - name: React to comment
         uses: actions/github-script@v7
         with:
@@ -37,18 +25,45 @@ jobs:
               content: 'rocket'
             });
 
-      - name: Deploy to staging
+      - name: Deploy PR to staging
+        id: deploy
         env:
           DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
-          BRANCH: ${{ steps.pr.outputs.branch }}
+          PR_NUMBER: ${{ github.event.issue.number }}
         run: |
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/key
           chmod 600 ~/.ssh/key
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "deploy $BRANCH"
+          set +e
+          OUTPUT=$(ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "deploy-pr $PR_NUMBER" 2>&1)
+          EXIT=$?
+          set -e
           rm -f ~/.ssh/key
+          echo "exit=$EXIT" >> "$GITHUB_OUTPUT"
+          if [ "$EXIT" -eq 2 ]; then
+            LOCK_MSG=$(echo "$OUTPUT" | grep '^LOCK:' | head -1 | sed 's/^LOCK: //')
+            echo "lock_message=$LOCK_MSG" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          exit "$EXIT"
 
       - name: Comment with staging URL
+        if: success() && steps.deploy.outputs.exit == '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.issue.number;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr,
+              body: `🚀 PR #${pr} deployed to staging.\n\nURL: https://dev.mastodon.kronk.info\n\nAuto-stops in 4h — comment \`/stop-staging\` to release sooner, or \`/deploy-staging\` again to pick up new commits.`
+            });
+
+      - name: Comment on lock refusal
+        if: success() && steps.deploy.outputs.exit == '2'
+        env:
+          LOCK_MSG: ${{ steps.deploy.outputs.lock_message }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -56,7 +71,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `Staging deployed with branch \`${{ steps.pr.outputs.branch }}\`\n\nURL: https://dev.mastodon.kronk.info\n\nTo stop staging, comment \`/stop-staging\``
+              body: `⛔ Cannot deploy: ${process.env.LOCK_MSG}.\n\nComment \`/stop-staging\` on the PR holding the slot, or wait for auto-release.`
             });
 
       - name: Comment on failure
@@ -68,7 +83,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `Staging deploy failed for branch \`${{ steps.pr.outputs.branch }}\`. Check the [action logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).`
+              body: `Staging deploy failed for PR #${context.issue.number}. Check the [action logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).`
             });
 
   stop-staging:
@@ -109,5 +124,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: 'Staging stopped. ~630MB RAM freed.'
+              body: '🛑 Staging stopped. Slot available.'
             });
