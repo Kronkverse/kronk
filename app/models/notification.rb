@@ -83,6 +83,9 @@ class Notification < ApplicationRecord
     event_invitation: {
       filterable: true,
     }.freeze,
+    nudge: {
+      filterable: true,
+    }.freeze,
   }.freeze
 
   TYPES = PROPERTIES.keys.freeze
@@ -116,6 +119,7 @@ class Notification < ApplicationRecord
     belongs_to :generated_annual_report, inverse_of: false
     belongs_to :quote, inverse_of: :notification
     belongs_to :event_invitation, inverse_of: false
+    belongs_to :nudge, inverse_of: false
   end
 
   validates :type, inclusion: { in: TYPES }

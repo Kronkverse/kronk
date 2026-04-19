@@ -226,6 +226,7 @@ namespace :api, format: false do
         post :unblock
         post :mute
         post :unmute
+        post :nudge
       end
 
       scope module: :accounts do

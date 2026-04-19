@@ -3,8 +3,9 @@
 class Api::V1::AccountsController < Api::BaseController
   include RegistrationHelper
 
-  before_action -> { authorize_if_got_token! :read, :'read:accounts' }, except: [:create, :follow, :unfollow, :remove_from_followers, :block, :unblock, :mute, :unmute]
+  before_action -> { authorize_if_got_token! :read, :'read:accounts' }, except: [:create, :follow, :unfollow, :remove_from_followers, :block, :unblock, :mute, :unmute, :nudge]
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:follows' }, only: [:follow, :unfollow, :remove_from_followers]
+  before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:nudge]
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:mutes' }, only: [:mute, :unmute]
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:blocks' }, only: [:block, :unblock]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:create]
@@ -79,6 +80,11 @@ class Api::V1::AccountsController < Api::BaseController
   def unmute
     UnmuteService.new.call(current_user.account, @account)
     render json: @account, serializer: REST::RelationshipSerializer, relationships: relationships
+  end
+
+  def nudge
+    NudgeService.new.call(current_user.account, @account)
+    render json: { streak: Nudge.between(current_user.account.id, @account.id).count }
   end
 
   private

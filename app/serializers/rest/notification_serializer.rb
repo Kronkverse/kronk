@@ -36,5 +36,15 @@ class REST::NotificationSerializer < ActiveModel::Serializer
     object.type == :moderation_warning
   end
 
+  attribute :nudge_streak, if: :nudge_type?
+
+  def nudge_type?
+    object.type == :nudge
+  end
+
+  def nudge_streak
+    Nudge.between(object.account_id, object.from_account_id).count
+  end
+
   delegate :filtered?, to: :object
 end

@@ -16,6 +16,7 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
   belongs_to :generated_annual_report, key: :annual_report, if: :annual_report_event?, serializer: REST::AnnualReportEventSerializer
 
   attribute :event_invitation, if: :event_invitation_type?
+  attribute :nudge_streak, if: :nudge_type?
 
   def sample_account_ids
     object.sample_accounts.pluck(:id).map(&:to_s)
@@ -47,6 +48,15 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
 
   def event_invitation_type?
     object.type == :event_invitation
+  end
+
+  def nudge_type?
+    object.type == :nudge
+  end
+
+  def nudge_streak
+    notif = object.notification
+    Nudge.between(notif.account_id, notif.from_account_id).count
   end
 
   def event_invitation
