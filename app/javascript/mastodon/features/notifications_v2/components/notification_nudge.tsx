@@ -4,7 +4,7 @@ import { FormattedMessage } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
-import NotificationsActiveIcon from '@/material-icons/400-24px/notifications_active-fill.svg?react';
+import PersonAlertIcon from '@/material-icons/400-24px/person_alert-fill.svg?react';
 import { apiNudgeAccount } from 'mastodon/api/accounts';
 import { Button } from 'mastodon/components/button';
 import type { NotificationGroupNudge } from 'mastodon/models/notification_group';
@@ -83,8 +83,8 @@ export const NotificationNudge: React.FC<{
   return (
     <NotificationGroupWithStatus
       type='nudge'
-      icon={NotificationsActiveIcon}
-      iconId='notifications-active'
+      icon={PersonAlertIcon}
+      iconId='person-alert'
       accountIds={notification.sampleAccountIds}
       timestamp={notification.latest_page_notification_at}
       count={notification.notifications_count}

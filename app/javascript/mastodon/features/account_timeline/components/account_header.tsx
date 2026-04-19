@@ -10,7 +10,7 @@ import { AccountBio } from '@/mastodon/components/account_bio';
 import { AccountFields } from '@/mastodon/components/account_fields';
 import { DisplayName } from '@/mastodon/components/display_name';
 import { AnimateEmojiProvider } from '@/mastodon/components/emoji/context';
-import CampaignIcon from '@/material-icons/400-24px/campaign.svg?react';
+import PersonAlertIcon from '@/material-icons/400-24px/person_alert.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
@@ -722,8 +722,8 @@ export const AccountHeader: React.FC<{
   if (me !== account.id && signedIn && !relationship?.blocking && !relationship?.blocked_by) {
     nudgeBtn = (
       <IconButton
-        icon='campaign'
-        iconComponent={CampaignIcon}
+        icon='person_alert'
+        iconComponent={PersonAlertIcon}
         active={nudgeSent}
         disabled={nudgeLoading || nudgeSent}
         title={intl.formatMessage(nudgeSent ? messages.nudgeSent : messages.nudge, { name: account.username })}

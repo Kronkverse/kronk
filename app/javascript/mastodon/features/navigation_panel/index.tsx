@@ -19,6 +19,8 @@ import BookmarksActiveIcon from '@/material-icons/400-24px/bookmarks-fill.svg?re
 import BookmarksIcon from '@/material-icons/400-24px/bookmarks.svg?react';
 import CalendarMonthActiveIcon from '@/material-icons/400-24px/calendar_month-fill.svg?react';
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
+import PersonAlertActiveIcon from '@/material-icons/400-24px/person_alert-fill.svg?react';
+import PersonAlertIcon from '@/material-icons/400-24px/person_alert.svg?react';
 import Diversity2ActiveIcon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import HeartActiveIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
@@ -82,6 +84,7 @@ const messages = defineMessages({
   live: { id: 'live.title', defaultMessage: 'Huddle' },
   market: { id: 'market.title', defaultMessage: 'Market' },
   events: { id: 'events.title', defaultMessage: 'Events' },
+  nudges: { id: 'nudges.title', defaultMessage: 'Nudges' },
   favourites: { id: 'navigation_bar.favourites', defaultMessage: 'Froths' },
   bookmarks: { id: 'navigation_bar.bookmarks', defaultMessage: 'Bookmarks' },
   preferences: {
@@ -360,6 +363,18 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             activeIconComponent={CalendarMonthActiveIcon}
             text={intl.formatMessage(messages.events)}
             tooltip='Events &amp; Huddles'
+          />
+        )}
+
+        {signedIn && (
+          <ColumnLink
+            transparent
+            to='/nudges'
+            icon='person_alert'
+            iconComponent={PersonAlertIcon}
+            activeIconComponent={PersonAlertActiveIcon}
+            text={intl.formatMessage(messages.nudges)}
+            tooltip='Nudges'
           />
         )}
 

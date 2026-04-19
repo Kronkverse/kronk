@@ -250,6 +250,10 @@ export function Events () {
   return import("../../events");
 }
 
+export function Nudges () {
+  return import("../../nudges");
+}
+
 export function EventDetail () {
   return import("../../events/event_detail");
 }
