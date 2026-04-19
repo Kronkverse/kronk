@@ -23,6 +23,7 @@ export const allNotificationTypes: NotificationType[] = [
   'severed_relationships',
   'annual_report',
   'event_invitation',
+  'nudge',
 ];
 
 export type NotificationWithStatusType =
@@ -44,7 +45,8 @@ export type NotificationType =
   | 'admin.sign_up'
   | 'admin.report'
   | 'annual_report'
-  | 'event_invitation';
+  | 'event_invitation'
+  | 'nudge';
 
 export interface BaseNotificationJSON {
   id: string;
@@ -163,13 +165,24 @@ interface EventInvitationNotificationJSON extends BaseNotificationJSON {
   event_invitation: ApiEventInvitationJSON;
 }
 
+interface NudgeNotificationGroupJSON extends BaseNotificationGroupJSON {
+  type: 'nudge';
+  nudge_streak: number;
+}
+
+interface NudgeNotificationJSON extends BaseNotificationJSON {
+  type: 'nudge';
+  nudge_streak: number;
+}
+
 export type ApiNotificationJSON =
   | SimpleNotificationJSON
   | ReportNotificationJSON
   | AccountRelationshipSeveranceNotificationJSON
   | NotificationWithStatusJSON
   | ModerationWarningNotificationJSON
-  | EventInvitationNotificationJSON;
+  | EventInvitationNotificationJSON
+  | NudgeNotificationJSON;
 
 export type ApiNotificationGroupJSON =
   | SimpleNotificationGroupJSON
@@ -178,7 +191,8 @@ export type ApiNotificationGroupJSON =
   | NotificationGroupWithStatusJSON
   | ModerationWarningNotificationGroupJSON
   | AnnualReportNotificationGroupJSON
-  | EventInvitationNotificationGroupJSON;
+  | EventInvitationNotificationGroupJSON
+  | NudgeNotificationGroupJSON;
 
 export interface ApiNotificationGroupsResultJSON {
   accounts: ApiAccountJSON[];

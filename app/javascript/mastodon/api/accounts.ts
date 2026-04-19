@@ -39,3 +39,6 @@ export const apiGetFamiliarFollowers = (id: string) =>
   apiRequestGet<ApiFamiliarFollowersJSON>('v1/accounts/familiar_followers', {
     id,
   });
+
+export const apiNudgeAccount = (id: string) =>
+  apiRequestPost<{ streak: number }>(`v1/accounts/${id}/nudge`);
