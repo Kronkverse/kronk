@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
@@ -10,6 +10,7 @@ import { AccountBio } from '@/mastodon/components/account_bio';
 import { AccountFields } from '@/mastodon/components/account_fields';
 import { DisplayName } from '@/mastodon/components/display_name';
 import { AnimateEmojiProvider } from '@/mastodon/components/emoji/context';
+import CampaignIcon from '@/material-icons/400-24px/campaign.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
@@ -23,6 +24,7 @@ import {
   unpinAccount,
   removeAccountFromFollowers,
 } from 'mastodon/actions/accounts';
+import { apiNudgeAccount } from 'mastodon/api/accounts';
 import { initBlockModal } from 'mastodon/actions/blocks';
 import { mentionCompose, directCompose } from 'mastodon/actions/compose';
 import {
@@ -154,6 +156,14 @@ const messages = defineMessages({
     id: 'account.open_original_page',
     defaultMessage: 'Open original page',
   },
+  nudge: {
+    id: 'account.nudge',
+    defaultMessage: 'Nudge @{name}',
+  },
+  nudgeSent: {
+    id: 'account.nudge_sent',
+    defaultMessage: 'Nudged!',
+  },
   removeFromFollowers: {
     id: 'account.remove_from_followers',
     defaultMessage: 'Remove {name} from followers',
@@ -197,6 +207,19 @@ export const AccountHeader: React.FC<{
     state.relationships.get(accountId),
   );
   const hidden = useAppSelector((state) => getAccountHidden(state, accountId));
+
+  const [nudgeLoading, setNudgeLoading] = useState(false);
+  const [nudgeSent, setNudgeSent] = useState(false);
+
+  const handleNudge = useCallback(() => {
+    if (nudgeLoading || nudgeSent) return;
+    setNudgeLoading(true);
+    apiNudgeAccount(accountId).then(() => {
+      setNudgeSent(true);
+    }).finally(() => {
+      setNudgeLoading(false);
+    });
+  }, [accountId, nudgeLoading, nudgeSent]);
 
   const handleBlock = useCallback(() => {
     if (!account) {
@@ -611,6 +634,7 @@ export const AccountHeader: React.FC<{
   let actionBtn: React.ReactNode,
     bellBtn: React.ReactNode,
     lockedIcon: React.ReactNode,
+    nudgeBtn: React.ReactNode,
     shareBtn: React.ReactNode;
 
   const info: React.ReactNode[] = [];
@@ -691,6 +715,19 @@ export const AccountHeader: React.FC<{
           { name: account.username },
         )}
         onClick={handleNotifyToggle}
+      />
+    );
+  }
+
+  if (me !== account.id && signedIn && !relationship?.blocking && !relationship?.blocked_by) {
+    nudgeBtn = (
+      <IconButton
+        icon='campaign'
+        iconComponent={CampaignIcon}
+        active={nudgeSent}
+        disabled={nudgeLoading || nudgeSent}
+        title={intl.formatMessage(nudgeSent ? messages.nudgeSent : messages.nudge, { name: account.username })}
+        onClick={handleNudge}
       />
     );
   }
@@ -811,6 +848,7 @@ export const AccountHeader: React.FC<{
             <div className='account__header__buttons account__header__buttons--desktop'>
               {!hidden && actionBtn}
               {!hidden && bellBtn}
+              {!hidden && nudgeBtn}
               {!hidden && shareBtn}
               {menu}
             </div>
@@ -845,6 +883,7 @@ export const AccountHeader: React.FC<{
           <div className='account__header__buttons account__header__buttons--mobile'>
             {!hidden && actionBtn}
             {!hidden && bellBtn}
+            {!hidden && nudgeBtn}
             {menu}
           </div>
 
