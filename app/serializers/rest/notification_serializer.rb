@@ -43,7 +43,10 @@ class REST::NotificationSerializer < ActiveModel::Serializer
   end
 
   def nudge_streak
-    Nudge.between(object.account_id, object.from_account_id).count
+    a, b = object.account_id, object.from_account_id
+    Notification.where(type: 'nudge')
+                .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
+                .count
   end
 
   delegate :filtered?, to: :object

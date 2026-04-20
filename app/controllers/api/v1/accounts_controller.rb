@@ -84,7 +84,11 @@ class Api::V1::AccountsController < Api::BaseController
 
   def nudge
     NudgeService.new.call(current_user.account, @account)
-    render json: { streak: Nudge.between(current_user.account.id, @account.id).count }
+    a, b = current_user.account.id, @account.id
+    streak = Notification.where(type: 'nudge')
+                         .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
+                         .count
+    render json: { streak: streak }
   end
 
   private

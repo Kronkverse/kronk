@@ -119,7 +119,6 @@ class Notification < ApplicationRecord
     belongs_to :generated_annual_report, inverse_of: false
     belongs_to :quote, inverse_of: :notification
     belongs_to :event_invitation, inverse_of: false
-    belongs_to :nudge, inverse_of: false
   end
 
   validates :type, inclusion: { in: TYPES }
@@ -229,8 +228,6 @@ class Notification < ApplicationRecord
       # in the data model, and the recipient's account will by definition
       # always exist
       self.from_account_id = account_id
-    when 'Nudge'
-      self.from_account_id = activity&.account_id
     end
   end
 
