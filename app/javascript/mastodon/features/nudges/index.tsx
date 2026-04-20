@@ -112,7 +112,7 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           <div className='empty-column-indicator'>
             <FormattedMessage
               id='nudges.empty'
-              defaultMessage="No nudges yet. Go hail someone!"
+              defaultMessage='No nudges yet. Go nudge someone cute!'
             />
           </div>
         )}
