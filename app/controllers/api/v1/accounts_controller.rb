@@ -84,11 +84,13 @@ class Api::V1::AccountsController < Api::BaseController
 
   def nudge
     NudgeService.new.call(current_user.account, @account)
-    render json: { streak: nudge_streak_count }
+    render json: { streak: nudge_streak_count, can_nudge: false }
+  rescue Mastodon::NotPermittedError
+    render json: { error: 'waiting_for_nudge_back' }, status: 422
   end
 
   def nudge_streak
-    render json: { streak: nudge_streak_count }
+    render json: { streak: nudge_streak_count, can_nudge: nudge_can_send? }
   end
 
   private
@@ -98,6 +100,14 @@ class Api::V1::AccountsController < Api::BaseController
     Notification.where(type: 'nudge')
                 .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
                 .count
+  end
+
+  def nudge_can_send?
+    a, b = current_user.account.id, @account.id
+    last = Notification.where(type: 'nudge')
+                       .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
+                       .order(id: :desc).first
+    last.nil? || last.from_account_id == b
   end
 
   def set_account
