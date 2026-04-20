@@ -738,28 +738,20 @@ export const AccountHeader: React.FC<{
   }
 
   if (me !== account.id && signedIn && !relationship?.blocking && !relationship?.blocked_by) {
-    const streakLabel = nudgeSent && nudgeStreak !== null && nudgeStreak > 0
-      ? ` · ${nudgeStreak}`
-      : '';
     const nudgeTitle = nudgeSent
       ? intl.formatMessage(messages.nudgeSent)
       : !canNudge
         ? intl.formatMessage(messages.nudgeWaiting, { name: account.username })
         : intl.formatMessage(messages.nudge, { name: account.username });
     nudgeBtn = (
-      <span className='account__nudge-btn'>
-        <IconButton
-          icon='hail'
-          iconComponent={HailIcon}
-          active={nudgeSent}
-          disabled={nudgeLoading || !canNudge}
-          title={nudgeTitle}
-          onClick={handleNudge}
-        />
-        {streakLabel && (
-          <span className='account__nudge-streak'>{streakLabel}</span>
-        )}
-      </span>
+      <IconButton
+        icon='hail'
+        iconComponent={HailIcon}
+        active={nudgeSent}
+        disabled={nudgeLoading || !canNudge}
+        title={nudgeTitle}
+        onClick={handleNudge}
+      />
     );
   }
 
