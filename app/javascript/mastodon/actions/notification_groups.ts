@@ -237,6 +237,8 @@ export const markNotificationsAsRead = createAction(
   'notificationGroups/markAsRead',
 );
 
+export const clearUnreadNudges = createAction('notificationGroups/clearUnreadNudges');
+
 export const mountNotifications = createAppAsyncThunk(
   'notificationGroups/mount',
   (_, { dispatch, getState }) => {

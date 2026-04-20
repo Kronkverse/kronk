@@ -101,6 +101,9 @@ export const selectAnyPendingNotification = createSelector(
   },
 );
 
+export const selectUnreadNudgesCount = (state: RootState) =>
+  state.notificationGroups.unreadNudgeCount;
+
 export const selectPendingNotificationGroupsCount = createSelector(
   [selectPendingNotificationGroups],
   (pendingGroups) =>

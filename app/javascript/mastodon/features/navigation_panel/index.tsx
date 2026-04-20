@@ -21,6 +21,8 @@ import CalendarMonthActiveIcon from '@/material-icons/400-24px/calendar_month-fi
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import HailActiveIcon from '@/material-icons/400-24px/hail-fill.svg?react';
 import HailIcon from '@/material-icons/400-24px/hail.svg?react';
+import { clearUnreadNudges } from 'mastodon/actions/notification_groups';
+import { selectUnreadNudgesCount } from 'mastodon/selectors/notifications';
 import Diversity2ActiveIcon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import HeartActiveIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
@@ -118,6 +120,41 @@ const messages = defineMessages({
   compose: { id: 'tabs_bar.publish', defaultMessage: 'New Post' },
   invite: { id: 'navigation_panel.invite', defaultMessage: 'Invite' },
 });
+
+const NudgesLink: React.FC = () => {
+  const count = useAppSelector(selectUnreadNudgesCount);
+  const dispatch = useAppDispatch();
+  const intl = useIntl();
+
+  const handleClick = useCallback(() => {
+    dispatch(clearUnreadNudges());
+  }, [dispatch]);
+
+  return (
+    <ColumnLink
+      transparent
+      to='/nudges'
+      icon={
+        <IconWithBadge
+          id='hail'
+          icon={HailIcon}
+          count={count}
+          className='column-link__icon'
+        />
+      }
+      activeIcon={
+        <IconWithBadge
+          id='hail'
+          icon={HailActiveIcon}
+          count={count}
+          className='column-link__icon'
+        />
+      }
+      text={intl.formatMessage(messages.nudges)}
+      onClick={handleClick}
+    />
+  );
+};
 
 const NotificationsLink = () => {
   const count = useAppSelector(selectUnreadNotificationGroupsCount);
@@ -393,15 +430,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               activeIconComponent={HeartActiveIcon}
               text={intl.formatMessage(messages.favourites)}
             />
-            <ColumnLink
-              transparent
-              to='/nudges'
-              icon='hail'
-              iconComponent={HailIcon}
-              activeIconComponent={HailActiveIcon}
-              text={intl.formatMessage(messages.nudges)}
-              tooltip='Nudges'
-            />
+            <NudgesLink />
             <ColumnLink
               transparent
               to='/bookmarks'

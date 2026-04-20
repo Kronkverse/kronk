@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import HailActiveIcon from '@/material-icons/400-24px/hail-fill.svg?react';
 import HailIcon from '@/material-icons/400-24px/hail.svg?react';
 import { importFetchedAccounts } from 'mastodon/actions/importer';
+import { clearUnreadNudges } from 'mastodon/actions/notification_groups';
 import { apiNudgeAccount, apiGetNudgeHistory } from 'mastodon/api/accounts';
 import type { ApiNudgeHistoryItem } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
@@ -129,8 +130,9 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   }, [dispatch]);
 
   useEffect(() => {
+    dispatch(clearUnreadNudges());
     void load();
-  }, [load]);
+  }, [load, dispatch]);
 
   // Re-fetch whenever a new nudge notification arrives via the streaming connection
   useEffect(() => {
