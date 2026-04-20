@@ -229,6 +229,8 @@ class Notification < ApplicationRecord
       # in the data model, and the recipient's account will by definition
       # always exist
       self.from_account_id = account_id
+    when 'Nudge'
+      self.from_account_id = activity&.account_id
     end
   end
 
