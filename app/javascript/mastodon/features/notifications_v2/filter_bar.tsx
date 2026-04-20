@@ -3,7 +3,6 @@ import { useCallback } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-import HailIcon from '@/material-icons/400-24px/hail.svg?react';
 import HeartIcon from '@/material-icons/400-24px/favorite.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import InsertChartIcon from '@/material-icons/400-24px/insert_chart.svg?react';
@@ -19,7 +18,6 @@ import {
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const tooltips = defineMessages({
-  nudges: { id: 'notifications.filter.nudges', defaultMessage: 'Nudges' },
   mentions: { id: 'notifications.filter.mentions', defaultMessage: 'Mentions' },
   favourites: {
     id: 'notifications.filter.favourites',
@@ -124,14 +122,6 @@ export const FilterBar: React.FC = () => {
           title={intl.formatMessage(tooltips.follows)}
         >
           <Icon id='user-plus' icon={PersonAddIcon} />
-        </BarButton>
-        <BarButton
-          selectedFilter={selectedFilter}
-          type='nudge'
-          key='nudge'
-          title={intl.formatMessage(tooltips.nudges)}
-        >
-          <Icon id='hail' icon={HailIcon} />
         </BarButton>
       </div>
     );
