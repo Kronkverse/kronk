@@ -220,6 +220,7 @@ namespace :api, format: false do
 
       collection do
         get :nudge_partners
+        get :nudge_history
       end
 
       member do

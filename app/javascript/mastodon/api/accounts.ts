@@ -56,3 +56,14 @@ export const apiGetNudgePartners = () =>
   apiRequestGet<{ accounts: ApiAccountJSON[]; partners: ApiNudgePartner[] }>(
     'v1/accounts/nudge_partners',
   );
+
+export interface ApiNudgeHistoryItem {
+  direction: 'sent' | 'received';
+  account_id: string;
+  created_at: string;
+}
+
+export const apiGetNudgeHistory = () =>
+  apiRequestGet<{ accounts: ApiAccountJSON[]; nudges: ApiNudgeHistoryItem[] }>(
+    'v1/accounts/nudge_history',
+  );

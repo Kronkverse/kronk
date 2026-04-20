@@ -6,84 +6,79 @@ import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 
 import HailActiveIcon from '@/material-icons/400-24px/hail-fill.svg?react';
-import { apiRequestGet } from 'mastodon/api';
-import type { ApiNotificationGroupJSON } from 'mastodon/api_types/notifications';
+import HailIcon from '@/material-icons/400-24px/hail.svg?react';
 import { importFetchedAccounts } from 'mastodon/actions/importer';
-import { apiGetNudgePartners } from 'mastodon/api/accounts';
-import type { ApiNudgePartner } from 'mastodon/api/accounts';
+import { apiGetNudgeHistory } from 'mastodon/api/accounts';
+import type { ApiNudgeHistoryItem } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { DisplayName } from 'mastodon/components/display_name';
-import ScrollableList from 'mastodon/components/scrollable_list';
-import {
-  createNotificationGroupFromJSON,
-  type NotificationGroupNudge,
-} from 'mastodon/models/notification_group';
+import { Icon } from 'mastodon/components/icon';
+import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
-
-import { NotificationNudge } from '../notifications_v2/components/notification_nudge';
 
 const messages = defineMessages({
   title: { id: 'nudges.title', defaultMessage: 'Nudges' },
 });
 
-const NudgePartnerItem: React.FC<{ partner: ApiNudgePartner }> = ({
-  partner,
+const NudgeHistoryItem: React.FC<{ item: ApiNudgeHistoryItem }> = ({
+  item,
 }) => {
   const account = useAppSelector((state) =>
-    state.accounts.get(partner.account_id),
+    state.accounts.get(item.account_id),
   );
 
   if (!account) return null;
 
   return (
-    <Link to={`/@${account.acct}/nudges`} className='nudge-partner'>
-      <Avatar account={account} size={36} />
-      <div className='nudge-partner__info'>
-        <DisplayName account={account} />
-        <span className='nudge-partner__count'>
-          <FormattedMessage
-            id='nudges.sent_count'
-            defaultMessage='{count, plural, one {nudged # time} other {nudged # times}}'
-            values={{ count: partner.sent_count }}
-          />
+    <div className={`nudge-history-item nudge-history-item--${item.direction}`}>
+      <Link to={`/@${account.acct}`} className='nudge-history-item__avatar'>
+        <Avatar account={account} size={36} />
+      </Link>
+      <div className='nudge-history-item__content'>
+        <span className='nudge-history-item__label'>
+          <Icon id='hail' icon={item.direction === 'sent' ? HailIcon : HailActiveIcon} />
+          {item.direction === 'sent' ? (
+            <FormattedMessage
+              id='nudges.history.sent'
+              defaultMessage='You nudged <a>@{acct}</a>'
+              values={{
+                acct: account.acct,
+                a: (chunks) => <Link to={`/@${account.acct}`}>{chunks}</Link>,
+              }}
+            />
+          ) : (
+            <FormattedMessage
+              id='nudges.history.received'
+              defaultMessage='<a>@{acct}</a> nudged you'
+              values={{
+                acct: account.acct,
+                a: (chunks) => <Link to={`/@${account.acct}`}>{chunks}</Link>,
+              }}
+            />
+          )}
+        </span>
+        <span className='nudge-history-item__time'>
+          <RelativeTimestamp timestamp={item.created_at} />
         </span>
       </div>
-    </Link>
+    </div>
   );
 };
 
 const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
-  const [nudgeGroups, setNudgeGroups] = useState<NotificationGroupNudge[]>([]);
-  const [partners, setPartners] = useState<ApiNudgePartner[]>([]);
+  const [history, setHistory] = useState<ApiNudgeHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [notifData, partnerData] = await Promise.all([
-        apiRequestGet<{
-          accounts: Parameters<typeof importFetchedAccounts>[0];
-          notification_groups: ApiNotificationGroupJSON[];
-        }>('v2/notifications', { types: ['nudge'], limit: 40 }),
-        apiGetNudgePartners(),
-      ]);
-
-      const allAccounts = [
-        ...(notifData.accounts ?? []),
-        ...(partnerData.accounts ?? []),
-      ];
-      if (allAccounts.length) dispatch(importFetchedAccounts(allAccounts));
-
-      const groups = (notifData.notification_groups ?? [])
-        .map(createNotificationGroupFromJSON)
-        .filter((g): g is NotificationGroupNudge => g.type === 'nudge');
-
-      setNudgeGroups(groups);
-      setPartners(partnerData.partners ?? []);
+      const data = await apiGetNudgeHistory();
+      if (data.accounts?.length) dispatch(importFetchedAccounts(data.accounts));
+      setHistory(data.nudges ?? []);
     } finally {
       setLoading(false);
     }
@@ -107,43 +102,28 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       />
 
       <div className='scrollable'>
-        {partners.length > 0 && (
-          <div className='nudges__partners'>
-            <h4 className='nudges__partners-heading'>
-              <FormattedMessage
-                id='nudges.partners_heading'
-                defaultMessage="You've nudged"
-              />
-            </h4>
-            {partners.map((p) => (
-              <NudgePartnerItem key={p.account_id} partner={p} />
-            ))}
+        {loading && (
+          <div className='loading-indicator'>
+            <div className='loading-indicator__figure' />
           </div>
         )}
 
-        <ScrollableList
-          scrollKey='nudges'
-          isLoading={loading}
-          showLoading={loading}
-          emptyMessage={
-            partners.length === 0 ? (
-              <div className='empty-column-indicator'>
-                <FormattedMessage
-                  id='nudges.empty'
-                  defaultMessage="You haven't been nudged yet."
-                />
-              </div>
-            ) : undefined
-          }
-        >
-          {nudgeGroups.map((group) => (
-            <NotificationNudge
-              key={group.group_key}
-              notification={group}
-              unread={false}
+        {!loading && history.length === 0 && (
+          <div className='empty-column-indicator'>
+            <FormattedMessage
+              id='nudges.empty'
+              defaultMessage="No nudges yet. Go hail someone!"
             />
-          ))}
-        </ScrollableList>
+          </div>
+        )}
+
+        {!loading && history.length > 0 && (
+          <div className='nudge-history'>
+            {history.map((item, i) => (
+              <NudgeHistoryItem key={`${item.direction}-${item.account_id}-${i}`} item={item} />
+            ))}
+          </div>
+        )}
       </div>
 
       <Helmet>

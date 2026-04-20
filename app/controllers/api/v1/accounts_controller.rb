@@ -3,7 +3,7 @@
 class Api::V1::AccountsController < Api::BaseController
   include RegistrationHelper
 
-  before_action -> { authorize_if_got_token! :read, :'read:accounts' }, except: [:create, :follow, :unfollow, :remove_from_followers, :block, :unblock, :mute, :unmute, :nudge, :nudge_streak, :nudge_partners]
+  before_action -> { authorize_if_got_token! :read, :'read:accounts' }, except: [:create, :follow, :unfollow, :remove_from_followers, :block, :unblock, :mute, :unmute, :nudge, :nudge_streak, :nudge_partners, :nudge_history]
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:follows' }, only: [:follow, :unfollow, :remove_from_followers]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:nudge]
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:mutes' }, only: [:mute, :unmute]
@@ -80,6 +80,34 @@ class Api::V1::AccountsController < Api::BaseController
   def unmute
     UnmuteService.new.call(current_user.account, @account)
     render json: @account, serializer: REST::RelationshipSerializer, relationships: relationships
+  end
+
+  def nudge_history
+    doorkeeper_authorize! :read, :'read:accounts'
+    a = current_user.account.id
+
+    received = Notification.where(type: 'nudge', account_id: a)
+                           .order(id: :desc).limit(200)
+                           .map { |n| { direction: 'received', account_id: n.from_account_id.to_s, created_at: n.created_at.iso8601 } }
+
+    sent = Notification.where(type: 'nudge', from_account_id: a)
+                       .order(id: :desc).limit(200)
+                       .map { |n| { direction: 'sent', account_id: n.account_id.to_s, created_at: n.created_at.iso8601 } }
+
+    all_nudges = (received + sent).sort_by { |n| n[:created_at] }.reverse.first(200)
+
+    partner_ids = all_nudges.map { |n| n[:account_id] }.uniq
+    accounts    = Account.where(id: partner_ids)
+
+    render json: {
+      accounts: ActiveModelSerializers::SerializableResource.new(
+        accounts,
+        each_serializer: REST::AccountSerializer,
+        scope: current_user,
+        scope_name: :current_user
+      ).as_json,
+      nudges: all_nudges,
+    }
   end
 
   def nudge_partners
