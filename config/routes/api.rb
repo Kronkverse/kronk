@@ -218,6 +218,10 @@ namespace :api, format: false do
         resources :endorsements, only: :index
       end
 
+      collection do
+        get :nudge_partners
+      end
+
       member do
         post :follow
         post :unfollow
