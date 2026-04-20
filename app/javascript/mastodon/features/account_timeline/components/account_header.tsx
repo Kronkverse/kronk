@@ -10,7 +10,7 @@ import { AccountBio } from '@/mastodon/components/account_bio';
 import { AccountFields } from '@/mastodon/components/account_fields';
 import { DisplayName } from '@/mastodon/components/display_name';
 import { AnimateEmojiProvider } from '@/mastodon/components/emoji/context';
-import PersonAlertIcon from '@/material-icons/400-24px/person_alert.svg?react';
+import RoomServiceIcon from '@/material-icons/400-24px/room_service.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
@@ -722,8 +722,8 @@ export const AccountHeader: React.FC<{
   if (me !== account.id && signedIn && !relationship?.blocking && !relationship?.blocked_by) {
     nudgeBtn = (
       <IconButton
-        icon='person_alert'
-        iconComponent={PersonAlertIcon}
+        icon='room_service'
+        iconComponent={RoomServiceIcon}
         active={nudgeSent}
         disabled={nudgeLoading || nudgeSent}
         title={intl.formatMessage(nudgeSent ? messages.nudgeSent : messages.nudge, { name: account.username })}
@@ -976,6 +976,11 @@ export const AccountHeader: React.FC<{
           <NavLink exact to={`/@${account.acct}/media`}>
             <FormattedMessage id='account.media' defaultMessage='Media' />
           </NavLink>
+          {me !== account.id && signedIn && (
+            <NavLink exact to={`/@${account.acct}/nudges`}>
+              <FormattedMessage id='account.nudges' defaultMessage='Nudges' />
+            </NavLink>
+          )}
         </div>
       )}
 

@@ -19,8 +19,8 @@ import BookmarksActiveIcon from '@/material-icons/400-24px/bookmarks-fill.svg?re
 import BookmarksIcon from '@/material-icons/400-24px/bookmarks.svg?react';
 import CalendarMonthActiveIcon from '@/material-icons/400-24px/calendar_month-fill.svg?react';
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
-import PersonAlertActiveIcon from '@/material-icons/400-24px/person_alert-fill.svg?react';
-import PersonAlertIcon from '@/material-icons/400-24px/person_alert.svg?react';
+import RoomServiceActiveIcon from '@/material-icons/400-24px/room_service-fill.svg?react';
+import RoomServiceIcon from '@/material-icons/400-24px/room_service.svg?react';
 import Diversity2ActiveIcon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import HeartActiveIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
@@ -367,18 +367,6 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
         )}
 
         {signedIn && (
-          <ColumnLink
-            transparent
-            to='/nudges'
-            icon='person_alert'
-            iconComponent={PersonAlertIcon}
-            activeIconComponent={PersonAlertActiveIcon}
-            text={intl.formatMessage(messages.nudges)}
-            tooltip='Nudges'
-          />
-        )}
-
-        {signedIn && (
           <>
             <hr />
 
@@ -404,6 +392,15 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               iconComponent={HeartIcon}
               activeIconComponent={HeartActiveIcon}
               text={intl.formatMessage(messages.favourites)}
+            />
+            <ColumnLink
+              transparent
+              to='/nudges'
+              icon='room_service'
+              iconComponent={RoomServiceIcon}
+              activeIconComponent={RoomServiceActiveIcon}
+              text={intl.formatMessage(messages.nudges)}
+              tooltip='Nudges'
             />
             <ColumnLink
               transparent

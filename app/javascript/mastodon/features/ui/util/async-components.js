@@ -66,6 +66,10 @@ export function AccountGallery () {
   return import('../../account_gallery');
 }
 
+export function AccountNudges () {
+  return import('../../account_nudges');
+}
+
 export function AccountFeatured() {
   return import('../../account_featured');
 }
