@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
@@ -10,7 +10,7 @@ import { AccountBio } from '@/mastodon/components/account_bio';
 import { AccountFields } from '@/mastodon/components/account_fields';
 import { DisplayName } from '@/mastodon/components/display_name';
 import { AnimateEmojiProvider } from '@/mastodon/components/emoji/context';
-import RoomServiceIcon from '@/material-icons/400-24px/room_service.svg?react';
+import AdsClickIcon from '@/material-icons/400-24px/ads_click.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
@@ -24,7 +24,7 @@ import {
   unpinAccount,
   removeAccountFromFollowers,
 } from 'mastodon/actions/accounts';
-import { apiNudgeAccount } from 'mastodon/api/accounts';
+import { apiNudgeAccount, apiGetNudgeStreak } from 'mastodon/api/accounts';
 import { initBlockModal } from 'mastodon/actions/blocks';
 import { mentionCompose, directCompose } from 'mastodon/actions/compose';
 import {
@@ -210,12 +210,21 @@ export const AccountHeader: React.FC<{
 
   const [nudgeLoading, setNudgeLoading] = useState(false);
   const [nudgeSent, setNudgeSent] = useState(false);
+  const [nudgeStreak, setNudgeStreak] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!accountId || !signedIn || accountId === me) return;
+    apiGetNudgeStreak(accountId)
+      .then((data) => { setNudgeStreak(data.streak); })
+      .catch(() => { /* silently ignore */ });
+  }, [accountId, signedIn]);
 
   const handleNudge = useCallback(() => {
     if (nudgeLoading || nudgeSent) return;
     setNudgeLoading(true);
-    apiNudgeAccount(accountId).then(() => {
+    apiNudgeAccount(accountId).then((data) => {
       setNudgeSent(true);
+      setNudgeStreak(data.streak);
     }).finally(() => {
       setNudgeLoading(false);
     });
@@ -720,15 +729,23 @@ export const AccountHeader: React.FC<{
   }
 
   if (me !== account.id && signedIn && !relationship?.blocking && !relationship?.blocked_by) {
+    const streakLabel = nudgeStreak !== null && nudgeStreak > 0
+      ? ` · ${nudgeStreak}`
+      : '';
     nudgeBtn = (
-      <IconButton
-        icon='room_service'
-        iconComponent={RoomServiceIcon}
-        active={nudgeSent}
-        disabled={nudgeLoading || nudgeSent}
-        title={intl.formatMessage(nudgeSent ? messages.nudgeSent : messages.nudge, { name: account.username })}
-        onClick={handleNudge}
-      />
+      <span className='account__nudge-btn'>
+        <IconButton
+          icon='ads_click'
+          iconComponent={AdsClickIcon}
+          active={nudgeSent}
+          disabled={nudgeLoading || nudgeSent}
+          title={intl.formatMessage(nudgeSent ? messages.nudgeSent : messages.nudge, { name: account.username })}
+          onClick={handleNudge}
+        />
+        {streakLabel && (
+          <span className='account__nudge-streak'>{streakLabel}</span>
+        )}
+      </span>
     );
   }
 

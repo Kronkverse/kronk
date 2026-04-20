@@ -227,6 +227,7 @@ namespace :api, format: false do
         post :mute
         post :unmute
         post :nudge
+        get :nudge_streak
       end
 
       scope module: :accounts do

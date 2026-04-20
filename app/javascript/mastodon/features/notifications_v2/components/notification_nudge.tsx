@@ -4,7 +4,7 @@ import { FormattedMessage } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
-import RoomServiceIcon from '@/material-icons/400-24px/room_service-fill.svg?react';
+import AdsClickIcon from '@/material-icons/400-24px/ads_click-fill.svg?react';
 import { apiNudgeAccount } from 'mastodon/api/accounts';
 import { Button } from 'mastodon/components/button';
 import type { NotificationGroupNudge } from 'mastodon/models/notification_group';
@@ -70,8 +70,9 @@ export const NotificationNudge: React.FC<{
     ) : undefined;
 
   const additionalContent =
-    streak > 1 ? (
+    streak > 0 ? (
       <span className='notification-nudge__streak'>
+        🔔{' '}
         <FormattedMessage
           id='notification.nudge.streak'
           defaultMessage='{count, plural, one {# nudge} other {# nudges}} exchanged'
@@ -83,8 +84,8 @@ export const NotificationNudge: React.FC<{
   return (
     <NotificationGroupWithStatus
       type='nudge'
-      icon={RoomServiceIcon}
-      iconId='room-service'
+      icon={AdsClickIcon}
+      iconId='ads-click'
       accountIds={notification.sampleAccountIds}
       timestamp={notification.latest_page_notification_at}
       count={notification.notifications_count}

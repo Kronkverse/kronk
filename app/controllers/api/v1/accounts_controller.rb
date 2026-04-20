@@ -3,7 +3,7 @@
 class Api::V1::AccountsController < Api::BaseController
   include RegistrationHelper
 
-  before_action -> { authorize_if_got_token! :read, :'read:accounts' }, except: [:create, :follow, :unfollow, :remove_from_followers, :block, :unblock, :mute, :unmute, :nudge]
+  before_action -> { authorize_if_got_token! :read, :'read:accounts' }, except: [:create, :follow, :unfollow, :remove_from_followers, :block, :unblock, :mute, :unmute, :nudge, :nudge_streak]
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:follows' }, only: [:follow, :unfollow, :remove_from_followers]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:nudge]
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:mutes' }, only: [:mute, :unmute]
@@ -84,14 +84,21 @@ class Api::V1::AccountsController < Api::BaseController
 
   def nudge
     NudgeService.new.call(current_user.account, @account)
-    a, b = current_user.account.id, @account.id
-    streak = Notification.where(type: 'nudge')
-                         .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
-                         .count
-    render json: { streak: streak }
+    render json: { streak: nudge_streak_count }
+  end
+
+  def nudge_streak
+    render json: { streak: nudge_streak_count }
   end
 
   private
+
+  def nudge_streak_count
+    a, b = current_user.account.id, @account.id
+    Notification.where(type: 'nudge')
+                .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
+                .count
+  end
 
   def set_account
     @account = Account.find(params[:id])

@@ -1,9 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import RoomServiceIcon from '@/material-icons/400-24px/room_service.svg?react';
-import { apiNudgeAccount } from 'mastodon/api/accounts';
+import AdsClickIcon from '@/material-icons/400-24px/ads_click.svg?react';
+import { apiNudgeAccount, apiGetNudgeStreak } from 'mastodon/api/accounts';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
 import { AccountHeader } from 'mastodon/features/account_timeline/components/account_header';
 import BundleColumnError from 'mastodon/features/ui/components/bundle_column_error';
@@ -23,6 +23,13 @@ const AccountNudges: React.FC = () => {
   const [streak, setStreak] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [nudgeSent, setNudgeSent] = useState(false);
+
+  useEffect(() => {
+    if (!accountId || accountId === me) return;
+    apiGetNudgeStreak(accountId)
+      .then((data) => { setStreak(data.streak); })
+      .catch(() => { /* silent */ });
+  }, [accountId]);
 
   const handleNudge = useCallback(async () => {
     if (!accountId || loading || nudgeSent) return;
@@ -46,7 +53,7 @@ const AccountNudges: React.FC = () => {
         {!suspended && account && accountId !== me && (
           <div className='account-nudges'>
             <div className='account-nudges__icon'>
-              <RoomServiceIcon />
+              <AdsClickIcon />
             </div>
             <h3 className='account-nudges__title'>
               <FormattedMessage
@@ -57,11 +64,18 @@ const AccountNudges: React.FC = () => {
             </h3>
             {streak !== null && (
               <p className='account-nudges__streak'>
-                <FormattedMessage
-                  id='account_nudges.streak'
-                  defaultMessage='{count, plural, one {# nudge exchanged} other {# nudges exchanged}}'
-                  values={{ count: streak }}
-                />
+                {streak === 0 ? (
+                  <FormattedMessage
+                    id='account_nudges.no_streak'
+                    defaultMessage="You haven't nudged each other yet"
+                  />
+                ) : (
+                  <FormattedMessage
+                    id='account_nudges.streak'
+                    defaultMessage='🔔 {count, plural, one {# nudge} other {# nudges}} exchanged'
+                    values={{ count: streak }}
+                  />
+                )}
               </p>
             )}
             <button
@@ -70,7 +84,7 @@ const AccountNudges: React.FC = () => {
               disabled={loading || nudgeSent}
             >
               {nudgeSent ? (
-                <FormattedMessage id='account_nudges.nudged' defaultMessage='Nudged!' />
+                <FormattedMessage id='account_nudges.nudged' defaultMessage='Nudged! 🔔' />
               ) : (
                 <FormattedMessage
                   id='account_nudges.nudge'
