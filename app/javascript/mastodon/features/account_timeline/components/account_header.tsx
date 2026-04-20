@@ -729,7 +729,7 @@ export const AccountHeader: React.FC<{
   }
 
   if (me !== account.id && signedIn && !relationship?.blocking && !relationship?.blocked_by) {
-    const streakLabel = nudgeStreak !== null && nudgeStreak > 0
+    const streakLabel = nudgeSent && nudgeStreak !== null && nudgeStreak > 0
       ? ` · ${nudgeStreak}`
       : '';
     nudgeBtn = (
