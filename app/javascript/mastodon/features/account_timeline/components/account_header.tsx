@@ -164,9 +164,9 @@ const messages = defineMessages({
     id: 'account.nudge_sent',
     defaultMessage: 'Nudged!',
   },
-  nudgeWaiting: {
-    id: 'account.nudge_waiting',
-    defaultMessage: 'Waiting for @{name} to nudge back',
+  nudgeMaxed: {
+    id: 'account.nudge_maxed',
+    defaultMessage: 'Maximum nudges reached',
   },
   removeFromFollowers: {
     id: 'account.remove_from_followers',
@@ -232,7 +232,7 @@ export const AccountHeader: React.FC<{
     setNudgeLoading(true);
     apiNudgeAccount(accountId).then((data) => {
       setNudgeSent(true);
-      setCanNudge(false);
+      setCanNudge(data.can_nudge);
       setNudgeStreak(data.streak);
     }).finally(() => {
       setNudgeLoading(false);
@@ -741,10 +741,10 @@ export const AccountHeader: React.FC<{
     const streakLabel = nudgeSent && nudgeStreak !== null && nudgeStreak > 0
       ? ` · ${nudgeStreak}`
       : '';
-    const nudgeTitle = nudgeSent
-      ? intl.formatMessage(messages.nudgeSent)
-      : !canNudge
-        ? intl.formatMessage(messages.nudgeWaiting, { name: account.username })
+    const nudgeTitle = !canNudge
+      ? intl.formatMessage(messages.nudgeMaxed)
+      : nudgeSent
+        ? intl.formatMessage(messages.nudgeSent)
         : intl.formatMessage(messages.nudge, { name: account.username });
     nudgeBtn = (
       <span className='account__nudge-btn'>

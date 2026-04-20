@@ -42,7 +42,7 @@ const AccountNudges: React.FC = () => {
       const result = await apiNudgeAccount(accountId);
       setStreak(result.streak);
       setNudgeSent(true);
-      setCanNudge(false);
+      setCanNudge(result.can_nudge);
     } finally {
       setLoading(false);
     }
@@ -88,14 +88,10 @@ const AccountNudges: React.FC = () => {
               onClick={handleNudge}
               disabled={loading || !canNudge}
             >
-              {nudgeSent ? (
+              {!canNudge ? (
+                <FormattedMessage id='account_nudges.maxed' defaultMessage='Maximum nudges reached' />
+              ) : nudgeSent ? (
                 <FormattedMessage id='account_nudges.nudged' defaultMessage='Nudged! 🔔' />
-              ) : !canNudge ? (
-                <FormattedMessage
-                  id='account_nudges.waiting'
-                  defaultMessage='Waiting for @{acct} to nudge back'
-                  values={{ acct: account.acct }}
-                />
               ) : (
                 <FormattedMessage
                   id='account_nudges.nudge'
