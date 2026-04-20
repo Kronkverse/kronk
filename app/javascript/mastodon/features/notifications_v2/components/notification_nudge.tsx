@@ -4,7 +4,7 @@ import { FormattedMessage } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
-import AdsClickIcon from '@/material-icons/400-24px/ads_click-fill.svg?react';
+import HailIcon from '@/material-icons/400-24px/hail-fill.svg?react';
 import { apiNudgeAccount } from 'mastodon/api/accounts';
 import { Button } from 'mastodon/components/button';
 import type { NotificationGroupNudge } from 'mastodon/models/notification_group';
@@ -84,8 +84,8 @@ export const NotificationNudge: React.FC<{
   return (
     <NotificationGroupWithStatus
       type='nudge'
-      icon={AdsClickIcon}
-      iconId='ads-click'
+      icon={HailIcon}
+      iconId='hail'
       accountIds={notification.sampleAccountIds}
       timestamp={notification.latest_page_notification_at}
       count={notification.notifications_count}

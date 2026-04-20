@@ -41,7 +41,7 @@ export const apiGetFamiliarFollowers = (id: string) =>
   });
 
 export const apiNudgeAccount = (id: string) =>
-  apiRequestPost<{ streak: number }>(`v1/accounts/${id}/nudge`);
+  apiRequestPost<{ streak: number; can_nudge: boolean }>(`v1/accounts/${id}/nudge`);
 
 export const apiGetNudgeStreak = (id: string) =>
-  apiRequestGet<{ streak: number }>(`v1/accounts/${id}/nudge_streak`);
+  apiRequestGet<{ streak: number; can_nudge: boolean }>(`v1/accounts/${id}/nudge_streak`);

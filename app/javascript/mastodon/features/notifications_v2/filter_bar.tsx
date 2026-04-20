@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-import AdsClickIcon from '@/material-icons/400-24px/ads_click.svg?react';
+import HailIcon from '@/material-icons/400-24px/hail.svg?react';
 import HeartIcon from '@/material-icons/400-24px/favorite.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import InsertChartIcon from '@/material-icons/400-24px/insert_chart.svg?react';
@@ -131,7 +131,7 @@ export const FilterBar: React.FC = () => {
           key='nudge'
           title={intl.formatMessage(tooltips.nudges)}
         >
-          <Icon id='ads-click' icon={AdsClickIcon} />
+          <Icon id='hail' icon={HailIcon} />
         </BarButton>
       </div>
     );

@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import AdsClickIcon from '@/material-icons/400-24px/ads_click.svg?react';
+import HailIcon from '@/material-icons/400-24px/hail.svg?react';
 import { apiNudgeAccount, apiGetNudgeStreak } from 'mastodon/api/accounts';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
 import { AccountHeader } from 'mastodon/features/account_timeline/components/account_header';
@@ -23,25 +23,30 @@ const AccountNudges: React.FC = () => {
   const [streak, setStreak] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [nudgeSent, setNudgeSent] = useState(false);
+  const [canNudge, setCanNudge] = useState(true);
 
   useEffect(() => {
     if (!accountId || accountId === me) return;
     apiGetNudgeStreak(accountId)
-      .then((data) => { setStreak(data.streak); })
+      .then((data) => {
+        setStreak(data.streak);
+        setCanNudge(data.can_nudge);
+      })
       .catch(() => { /* silent */ });
   }, [accountId]);
 
   const handleNudge = useCallback(async () => {
-    if (!accountId || loading || nudgeSent) return;
+    if (!accountId || loading || !canNudge) return;
     setLoading(true);
     try {
       const result = await apiNudgeAccount(accountId);
       setStreak(result.streak);
       setNudgeSent(true);
+      setCanNudge(false);
     } finally {
       setLoading(false);
     }
-  }, [accountId, loading, nudgeSent]);
+  }, [accountId, loading, canNudge]);
 
   if (!accountId) return <BundleColumnError multiColumn={false} errorType='routing' />;
 
@@ -53,7 +58,7 @@ const AccountNudges: React.FC = () => {
         {!suspended && account && accountId !== me && (
           <div className='account-nudges'>
             <div className='account-nudges__icon'>
-              <AdsClickIcon />
+              <HailIcon />
             </div>
             <h3 className='account-nudges__title'>
               <FormattedMessage
@@ -81,10 +86,16 @@ const AccountNudges: React.FC = () => {
             <button
               className='button account-nudges__button'
               onClick={handleNudge}
-              disabled={loading || nudgeSent}
+              disabled={loading || !canNudge}
             >
               {nudgeSent ? (
                 <FormattedMessage id='account_nudges.nudged' defaultMessage='Nudged! 🔔' />
+              ) : !canNudge ? (
+                <FormattedMessage
+                  id='account_nudges.waiting'
+                  defaultMessage='Waiting for @{acct} to nudge back'
+                  values={{ acct: account.acct }}
+                />
               ) : (
                 <FormattedMessage
                   id='account_nudges.nudge'

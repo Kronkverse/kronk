@@ -10,7 +10,7 @@ import { AccountBio } from '@/mastodon/components/account_bio';
 import { AccountFields } from '@/mastodon/components/account_fields';
 import { DisplayName } from '@/mastodon/components/display_name';
 import { AnimateEmojiProvider } from '@/mastodon/components/emoji/context';
-import AdsClickIcon from '@/material-icons/400-24px/ads_click.svg?react';
+import HailIcon from '@/material-icons/400-24px/hail.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
@@ -164,6 +164,10 @@ const messages = defineMessages({
     id: 'account.nudge_sent',
     defaultMessage: 'Nudged!',
   },
+  nudgeWaiting: {
+    id: 'account.nudge_waiting',
+    defaultMessage: 'Waiting for @{name} to nudge back',
+  },
   removeFromFollowers: {
     id: 'account.remove_from_followers',
     defaultMessage: 'Remove {name} from followers',
@@ -211,24 +215,29 @@ export const AccountHeader: React.FC<{
   const [nudgeLoading, setNudgeLoading] = useState(false);
   const [nudgeSent, setNudgeSent] = useState(false);
   const [nudgeStreak, setNudgeStreak] = useState<number | null>(null);
+  const [canNudge, setCanNudge] = useState(true);
 
   useEffect(() => {
     if (!accountId || !signedIn || accountId === me) return;
     apiGetNudgeStreak(accountId)
-      .then((data) => { setNudgeStreak(data.streak); })
+      .then((data) => {
+        setNudgeStreak(data.streak);
+        setCanNudge(data.can_nudge);
+      })
       .catch(() => { /* silently ignore */ });
   }, [accountId, signedIn]);
 
   const handleNudge = useCallback(() => {
-    if (nudgeLoading || nudgeSent) return;
+    if (nudgeLoading || !canNudge) return;
     setNudgeLoading(true);
     apiNudgeAccount(accountId).then((data) => {
       setNudgeSent(true);
+      setCanNudge(false);
       setNudgeStreak(data.streak);
     }).finally(() => {
       setNudgeLoading(false);
     });
-  }, [accountId, nudgeLoading, nudgeSent]);
+  }, [accountId, nudgeLoading, canNudge]);
 
   const handleBlock = useCallback(() => {
     if (!account) {
@@ -732,14 +741,19 @@ export const AccountHeader: React.FC<{
     const streakLabel = nudgeSent && nudgeStreak !== null && nudgeStreak > 0
       ? ` · ${nudgeStreak}`
       : '';
+    const nudgeTitle = nudgeSent
+      ? intl.formatMessage(messages.nudgeSent)
+      : !canNudge
+        ? intl.formatMessage(messages.nudgeWaiting, { name: account.username })
+        : intl.formatMessage(messages.nudge, { name: account.username });
     nudgeBtn = (
       <span className='account__nudge-btn'>
         <IconButton
-          icon='ads_click'
-          iconComponent={AdsClickIcon}
+          icon='hail'
+          iconComponent={HailIcon}
           active={nudgeSent}
-          disabled={nudgeLoading || nudgeSent}
-          title={intl.formatMessage(nudgeSent ? messages.nudgeSent : messages.nudge, { name: account.username })}
+          disabled={nudgeLoading || !canNudge}
+          title={nudgeTitle}
           onClick={handleNudge}
         />
         {streakLabel && (

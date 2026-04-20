@@ -19,8 +19,8 @@ import BookmarksActiveIcon from '@/material-icons/400-24px/bookmarks-fill.svg?re
 import BookmarksIcon from '@/material-icons/400-24px/bookmarks.svg?react';
 import CalendarMonthActiveIcon from '@/material-icons/400-24px/calendar_month-fill.svg?react';
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
-import AdsClickActiveIcon from '@/material-icons/400-24px/ads_click-fill.svg?react';
-import AdsClickIcon from '@/material-icons/400-24px/ads_click.svg?react';
+import HailActiveIcon from '@/material-icons/400-24px/hail-fill.svg?react';
+import HailIcon from '@/material-icons/400-24px/hail.svg?react';
 import Diversity2ActiveIcon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import HeartActiveIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
@@ -396,9 +396,9 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             <ColumnLink
               transparent
               to='/nudges'
-              icon='ads_click'
-              iconComponent={AdsClickIcon}
-              activeIconComponent={AdsClickActiveIcon}
+              icon='hail'
+              iconComponent={HailIcon}
+              activeIconComponent={HailActiveIcon}
               text={intl.formatMessage(messages.nudges)}
               tooltip='Nudges'
             />
