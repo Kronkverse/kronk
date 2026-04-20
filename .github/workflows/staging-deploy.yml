@@ -37,6 +37,10 @@ jobs:
           set +e
           OUTPUT=$(ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "deploy-pr $PR_NUMBER" 2>&1)
           EXIT=$?
+          if [ "$EXIT" -eq 0 ]; then
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 \
+              "bash -lc 'cd /home/mastodon/staging && RAILS_ENV=staging bundle exec rails db:migrate 2>&1'" || true
+          fi
           set -e
           rm -f ~/.ssh/key
           echo "exit=$EXIT" >> "$GITHUB_OUTPUT"
