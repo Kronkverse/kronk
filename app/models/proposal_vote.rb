@@ -6,6 +6,8 @@ class ProposalVote < ApplicationRecord
   belongs_to :proposal
   belongs_to :account
 
+  has_many :challenge_conditions, dependent: :destroy, inverse_of: :proposal_vote
+
   enum :position, { agree: 0, abstain: 1, block: 2 }
 
   validates :position, presence: true

@@ -671,6 +671,323 @@ $governance-amber: #f59e0b;
   &:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 
+// ─── Challenge modal — condition input rows + add/remove ───────────────────
+
+.governance-challenge-modal__label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $governance-purple;
+  margin: 18px 0 6px;
+}
+
+.governance-challenge-modal__condition-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.governance-challenge-modal__condition-input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--background-border-color);
+  border-radius: 6px;
+  background: var(--background-color);
+  color: $primary-text-color;
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: $governance-purple;
+    box-shadow: 0 0 0 2px rgba($governance-purple, 0.18);
+  }
+}
+
+.governance-challenge-modal__remove-cond {
+  background: transparent;
+  border: none;
+  color: $secondary-text-color;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+
+  &:hover { color: $governance-block; background: rgba($governance-block, 0.08); }
+}
+
+.governance-challenge-modal__add-cond {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px dashed rgba($governance-purple, 0.4);
+  border-radius: 6px;
+  padding: 6px 12px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: $governance-purple;
+  cursor: pointer;
+
+  &:hover { border-color: $governance-purple; background: rgba($governance-purple, 0.08); }
+}
+
+// ─── Active challenges display ─────────────────────────────────────────────
+
+.governance-challenges-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.governance-challenge {
+  border: 1px solid var(--background-border-color);
+  border-left: 3px solid $governance-block;
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: rgba($governance-block, 0.03);
+}
+
+.governance-challenge__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.governance-challenge__avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba($governance-block, 0.14);
+  color: $governance-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.governance-challenge__who {
+  font-size: 13px;
+  color: $primary-text-color;
+
+  span { color: $secondary-text-color; }
+}
+
+.governance-challenge__statement {
+  font-size: 14px;
+  font-style: italic;
+  color: $primary-text-color;
+  margin: 0 0 12px;
+  padding: 0 0 0 8px;
+  border-left: 2px solid rgba($governance-block, 0.3);
+}
+
+.governance-challenge__section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $secondary-text-color;
+  margin: 10px 0 8px;
+}
+
+.governance-challenge__conditions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+// ── Single condition block
+
+.governance-condition {
+  border: 1px solid var(--background-border-color);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--background-color);
+  transition: opacity 0.15s, border-color 0.15s;
+
+  &--met {
+    opacity: 0.85;
+    border-color: rgba($governance-agree, 0.4);
+  }
+}
+
+.governance-condition__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+
+  input[type='checkbox'] {
+    margin-top: 2px;
+    width: 16px;
+    height: 16px;
+    accent-color: $governance-agree;
+    cursor: pointer;
+  }
+
+  input[type='checkbox']:disabled { cursor: default; }
+}
+
+.governance-condition__text {
+  font-size: 14px;
+  color: $primary-text-color;
+  flex: 1;
+  line-height: 1.4;
+
+  .governance-condition--met & {
+    text-decoration: line-through;
+    color: $secondary-text-color;
+  }
+}
+
+.governance-condition__responses {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 10px 26px;
+  padding-left: 10px;
+  border-left: 2px solid var(--background-border-color);
+}
+
+.governance-challenge-response {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.governance-challenge-response__avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba($governance-purple, 0.12);
+  color: $governance-purple;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.governance-challenge-response__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.governance-challenge-response__meta {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  font-size: 11px;
+  color: $secondary-text-color;
+
+  strong { color: $primary-text-color; font-weight: 600; }
+}
+
+.governance-challenge-response__text {
+  font-size: 13px;
+  color: $primary-text-color;
+  margin: 2px 0 0;
+  line-height: 1.45;
+}
+
+// ── Reply composer
+
+.governance-condition__reply {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+  margin-top: 10px;
+}
+
+.governance-condition__reply-area {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--background-border-color);
+  border-radius: 6px;
+  background: var(--background-color);
+  color: $primary-text-color;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+  min-height: 32px;
+
+  &:focus {
+    outline: none;
+    border-color: $governance-purple;
+    box-shadow: 0 0 0 2px rgba($governance-purple, 0.18);
+  }
+}
+
+.governance-condition__reply-btn {
+  padding: 7px 14px;
+  border: 1px solid rgba($governance-purple, 0.5);
+  border-radius: 6px;
+  background: rgba($governance-purple, 0.12);
+  color: $governance-purple;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { opacity: 0.82; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+// ── Withdraw
+
+.governance-challenge__withdraw {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--background-border-color);
+  flex-wrap: wrap;
+}
+
+.governance-challenge__withdraw-hint {
+  font-size: 11px;
+  color: $governance-agree;
+  font-weight: 600;
+}
+
+.governance-challenge__withdraw-btn {
+  padding: 7px 16px;
+  border: 1px solid rgba($governance-block, 0.5);
+  border-radius: 6px;
+  background: transparent;
+  color: $governance-block;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: auto;
+
+  &:hover:not(:disabled) { background: rgba($governance-block, 0.08); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  &--ready {
+    background: rgba($governance-block, 0.12);
+    box-shadow: 0 0 0 2px rgba($governance-block, 0.25);
+  }
+}
+
 // ─── Tab: Proposal (cream) ──────────────────────────────────────────────────
 
 .governance-tab-proposal__body {

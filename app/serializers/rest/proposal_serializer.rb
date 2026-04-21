@@ -53,6 +53,40 @@ class REST::ProposalSerializer < ActiveModel::Serializer
     end
   end
 
+  attribute :challenges do
+    object.proposal_votes
+          .where(position: :block)
+          .includes(:account, challenge_conditions: { challenge_responses: :account })
+          .order(:created_at)
+          .map do |v|
+      {
+        id:         v.id.to_s,
+        statement:  v.statement,
+        account:    ActiveModelSerializers::SerializableResource.new(
+                      v.account, serializer: REST::AccountSerializer
+                    ).as_json,
+        conditions: v.challenge_conditions.sort_by(&:created_at).map do |c|
+          {
+            id:        c.id.to_s,
+            text:      c.text,
+            met:       c.met?,
+            met_at:    c.met_at,
+            responses: c.challenge_responses.sort_by(&:created_at).map do |r|
+              {
+                id:         r.id.to_s,
+                body:       r.body,
+                created_at: r.created_at,
+                account:    ActiveModelSerializers::SerializableResource.new(
+                              r.account, serializer: REST::AccountSerializer
+                            ).as_json,
+              }
+            end,
+          }
+        end,
+      }
+    end
+  end
+
   belongs_to :created_by_account, serializer: REST::AccountSerializer
 
   def id

@@ -44,6 +44,23 @@ export type Proposal = {
     statement: string | null;
     account: { id: string; username: string; display_name: string; avatar: string };
   }[];
+  challenges: {
+    id: string;
+    statement: string | null;
+    account: { id: string; username: string; display_name: string; avatar: string };
+    conditions: {
+      id: string;
+      text: string;
+      met: boolean;
+      met_at: string | null;
+      responses: {
+        id: string;
+        body: string;
+        created_at: string;
+        account: { id: string; username: string; display_name: string; avatar: string };
+      }[];
+    }[];
+  }[];
 };
 
 type FilterType = 'open' | 'vetoed' | 'delivered' | 'in_progress';

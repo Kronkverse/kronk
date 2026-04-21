@@ -56,12 +56,23 @@ class Api::V1::ProposalsController < Api::BaseController
 
     vote = ProposalVote.find_or_initialize_by(proposal: @proposal, account: current_account)
     vote.assign_attributes(vote_params)
-    if vote.save
-      reconcile_status!
-      render json: @proposal.reload, serializer: REST::ProposalSerializer
-    else
-      render json: { error: vote.errors.full_messages.to_sentence }, status: :unprocessable_entity
+
+    ActiveRecord::Base.transaction do
+      vote.save!
+
+      # If this is a block/challenge, replace the vote's conditions with the
+      # ones submitted (if any). Non-block positions never have conditions.
+      if vote.block?
+        condition_texts = Array(params.dig(:vote, :conditions)).map { |t| t.to_s.strip }.reject(&:blank?)
+        vote.challenge_conditions.destroy_all
+        condition_texts.each { |text| vote.challenge_conditions.create!(text: text) }
+      end
     end
+
+    reconcile_status!
+    render json: @proposal.reload, serializer: REST::ProposalSerializer
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
   end
 
   def unvote
