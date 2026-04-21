@@ -17,7 +17,7 @@ import { ProposalCard } from './components/proposal_card';
 import { ProposalDetail } from './components/proposal_detail';
 
 const messages = defineMessages({
-  title: { id: 'governance.title', defaultMessage: 'Commons' },
+  title: { id: 'governance.title', defaultMessage: 'Kommons' },
 });
 
 export type Proposal = {
