@@ -11,7 +11,7 @@ jobs:
       pull-requests: write
     if: |
       github.event.issue.pull_request &&
-      contains(github.event.comment.body, '/deploy-staging')
+      startsWith(github.event.comment.body, '/deploy-staging')
     runs-on: ubuntu-latest
     steps:
       - name: Deploy PR to staging
@@ -81,7 +81,7 @@ jobs:
       pull-requests: write
     if: |
       github.event.issue.pull_request &&
-      contains(github.event.comment.body, '/stop-staging')
+      startsWith(github.event.comment.body, '/stop-staging')
     runs-on: ubuntu-latest
     steps:
       - name: Stop staging
