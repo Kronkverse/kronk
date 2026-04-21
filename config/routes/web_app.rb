@@ -15,6 +15,8 @@
   /explore/(*any)
   /events
   /events/(*any)
+  /governance
+  /governance/(*any)
   /favourites
   /follow_requests
   /followed_tags

@@ -23,6 +23,8 @@ import Diversity2ActiveIcon from '@/material-icons/400-24px/diversity_2-fill.svg
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import HeartActiveIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
 import HeartIcon from '@/material-icons/400-24px/favorite.svg?react';
+import GavelActiveIcon from '@/material-icons/400-24px/gavel-fill.svg?react';
+import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
 import GroupActiveIcon from '@/material-icons/400-24px/group-fill.svg?react';
 import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import HomeActiveIcon from '@/material-icons/400-24px/home-fill.svg?react';
@@ -73,13 +75,14 @@ const messages = defineMessages({
   },
   orbit: { id: 'orbit.title', defaultMessage: 'Orbit' },
   explore: { id: 'explore.title', defaultMessage: 'Trending' },
-  firehose: { id: 'navigation.kronk_feed', defaultMessage: '₭ronk' },
+  firehose: { id: 'navigation_panel.firehose', defaultMessage: '₭ronk' },
   firehose_singular: {
-    id: 'navigation.kronk_feed_singular',
+    id: 'navigation_panel.firehose_singular',
     defaultMessage: '₭ronk',
   },
   direct: { id: 'navigation_bar.direct', defaultMessage: 'Private mentions' },
   live: { id: 'live.title', defaultMessage: 'Huddle' },
+  commons: { id: 'governance.title', defaultMessage: 'Commons' },
   market: { id: 'market.title', defaultMessage: 'Market' },
   events: { id: 'events.title', defaultMessage: 'Events' },
   favourites: { id: 'navigation_bar.favourites', defaultMessage: 'Froths' },
@@ -368,6 +371,16 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             <hr />
 
             <NotificationsLink />
+
+            <ColumnLink
+              transparent
+              to='/governance'
+              icon='gavel'
+              iconComponent={GavelIcon}
+              activeIconComponent={GavelActiveIcon}
+              text={intl.formatMessage(messages.commons)}
+              tooltip='Community governance'
+            />
 
             <FollowRequestsLink />
 
