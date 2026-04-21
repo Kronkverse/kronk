@@ -3,7 +3,6 @@ import { useState, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import api from 'mastodon/api';
-import { me } from 'mastodon/initial_state';
 
 import type { Proposal } from '../../index';
 
@@ -11,10 +10,12 @@ const POSITIONS = ['agree', 'abstain', 'block'] as const;
 type Position = (typeof POSITIONS)[number];
 
 const positionLabel = (p: Position): string =>
-  p === 'agree' ? 'Agree' : p === 'abstain' ? 'Abstain' : 'Raise a block';
+  p === 'agree' ? 'Back it' : p === 'abstain' ? 'Meh' : 'Challenge';
 
 const positionShort = (p: string): string =>
-  p === 'agree' ? 'Agree' : p === 'abstain' ? 'Abstain' : 'Block';
+  p === 'agree' ? 'Backed' : p === 'abstain' ? 'Meh' : 'Challenged';
+
+const CHALLENGE_MIN = 20;
 
 const VoteSummaryBar: React.FC<{ summary: Proposal['vote_summary'] }> = ({ summary }) => {
   const total = summary.agree + summary.abstain + summary.block;
@@ -52,23 +53,20 @@ export const TabProposal: React.FC<{
   const [position, setPosition] = useState<Position | null>(
     (proposal.current_vote?.position as Position | undefined) ?? null,
   );
-  const [statement, setStatement] = useState(proposal.current_vote?.statement ?? '');
   const [submitting, setSubmitting] = useState(false);
-  const [deliveryNotes, setDeliveryNotes] = useState('');
-  const [marking, setMarking] = useState(false);
+  const [challengeOpen, setChallengeOpen] = useState(false);
+  const [challengeText, setChallengeText] = useState(proposal.current_vote?.statement ?? '');
 
-  const isCreator = me !== undefined && proposal.created_by_account.id === me;
   const canVote = proposal.status !== 'delivered';
-  const canMarkDelivered = isCreator && proposal.status !== 'delivered';
 
-  const handleVote = useCallback(
-    async (pos: Position) => {
+  const submitVote = useCallback(
+    async (pos: Position, statement: string | null) => {
       setSubmitting(true);
       try {
-        if (position === pos) {
+        if (position === pos && pos !== 'block') {
+          // Toggle off (non-block). Blocks are withdrawn via clicking Challenge again -> cancel.
           const res = await api().delete(`/api/v1/proposals/${proposal.id}/vote`);
           setPosition(null);
-          setStatement('');
           onVoteUpdate(res.data as Proposal);
         } else {
           const res = await api().post(`/api/v1/proposals/${proposal.id}/vote`, {
@@ -83,25 +81,36 @@ export const TabProposal: React.FC<{
         setSubmitting(false);
       }
     },
-    [proposal.id, position, statement, onVoteUpdate],
+    [proposal.id, position, onVoteUpdate],
   );
 
-  const handleMarkDelivered = useCallback(async () => {
-    if (!window.confirm('Mark this proposal as delivered? This closes voting and cannot be undone.')) {
-      return;
+  const handleVoteClick = (pos: Position) => {
+    if (pos === 'block') {
+      setChallengeOpen(true);
+    } else {
+      void submitVote(pos, null);
     }
-    setMarking(true);
+  };
+
+  const submitChallenge = () => {
+    if (challengeText.trim().length < CHALLENGE_MIN) return;
+    setChallengeOpen(false);
+    void submitVote('block', challengeText.trim());
+  };
+
+  const withdrawChallenge = async () => {
+    setSubmitting(true);
     try {
-      const res = await api().post(`/api/v1/proposals/${proposal.id}/mark_delivered`, {
-        outcome_notes: deliveryNotes || null,
-      });
+      const res = await api().delete(`/api/v1/proposals/${proposal.id}/vote`);
+      setPosition(null);
+      setChallengeText('');
       onVoteUpdate(res.data as Proposal);
     } catch (err) {
-      console.error('Mark delivered failed:', err);
+      console.error('Withdraw failed:', err);
     } finally {
-      setMarking(false);
+      setSubmitting(false);
     }
-  }, [proposal.id, deliveryNotes, onVoteUpdate]);
+  };
 
   const total = proposal.participation_count;
 
@@ -112,12 +121,12 @@ export const TabProposal: React.FC<{
       {proposal.status === 'vetoed' && (
         <div className='governance-tab-proposal__banner governance-tab-proposal__banner--vetoed'>
           <strong>
-            <FormattedMessage id='governance.banner.vetoed' defaultMessage='Vetoed — discussion required' />
+            <FormattedMessage id='governance.banner.vetoed' defaultMessage='Challenged — discussion required' />
           </strong>
           <p>
             <FormattedMessage
               id='governance.banner.vetoed_body'
-              defaultMessage='One or more blocks have been raised. The proposal stays open for discussion; if every block is withdrawn, it returns to Open.'
+              defaultMessage='One or more members have raised a challenge. The proposal stays open for discussion; if every challenge is withdrawn, it returns to Open.'
             />
           </p>
         </div>
@@ -141,15 +150,15 @@ export const TabProposal: React.FC<{
       <div className='governance-vote-stats'>
         <div className='governance-vote-stat'>
           <span className='governance-vote-dot governance-vote-dot--agree' />
-          {proposal.vote_summary.agree} agree
+          {proposal.vote_summary.agree} backing
         </div>
         <div className='governance-vote-stat'>
           <span className='governance-vote-dot governance-vote-dot--abstain' />
-          {proposal.vote_summary.abstain} abstain
+          {proposal.vote_summary.abstain} meh
         </div>
         <div className='governance-vote-stat'>
           <span className='governance-vote-dot governance-vote-dot--block' />
-          {proposal.vote_summary.block} {proposal.vote_summary.block === 1 ? 'block' : 'blocks'}
+          {proposal.vote_summary.block} {proposal.vote_summary.block === 1 ? 'challenge' : 'challenges'}
         </div>
         <span className='governance-vote-total'>
           <FormattedMessage
@@ -171,9 +180,22 @@ export const TabProposal: React.FC<{
             <p className='governance-vote-current'>
               <FormattedMessage
                 id='governance.vote.current'
-                defaultMessage='Currently: {pos} — change below'
+                defaultMessage='Currently: {pos}'
                 values={{ pos: <strong>{positionShort(position)}</strong> }}
               />
+              {position === 'block' && (
+                <>
+                  {' — '}
+                  <button
+                    type='button'
+                    className='governance-vote-current__withdraw'
+                    onClick={() => void withdrawChallenge()}
+                    disabled={submitting}
+                  >
+                    <FormattedMessage id='governance.vote.withdraw_challenge' defaultMessage='withdraw challenge' />
+                  </button>
+                </>
+              )}
             </p>
           ) : (
             <p className='governance-vote-current'>
@@ -186,27 +208,13 @@ export const TabProposal: React.FC<{
               <button
                 key={pos}
                 className={`governance-vbtn governance-vbtn--${pos} ${position === pos ? 'active' : ''}`}
-                onClick={() => void handleVote(pos)}
+                onClick={() => handleVoteClick(pos)}
                 disabled={submitting}
               >
                 {positionLabel(pos)}
               </button>
             ))}
           </div>
-
-          <textarea
-            className='governance-statement-area'
-            value={statement}
-            onChange={(e) => setStatement(e.target.value)}
-            rows={3}
-            placeholder='Optional statement — required if raising a block'
-          />
-          <p className='governance-statement-hint'>
-            <FormattedMessage
-              id='governance.vote.block_hint'
-              defaultMessage='Blocks require a written statement explaining your principled objection.'
-            />
-          </p>
         </>
       )}
 
@@ -239,38 +247,71 @@ export const TabProposal: React.FC<{
         </>
       )}
 
-      {canMarkDelivered && (
-        <>
-          <hr className='governance-detail__divider' />
-          <div className='governance-detail__section-label'>
-            <FormattedMessage id='governance.delivery.heading' defaultMessage='Mark as delivered' />
-          </div>
-          <p className='governance-statement-hint'>
-            <FormattedMessage
-              id='governance.delivery.hint'
-              defaultMessage='Close voting once the work is complete. Optionally describe what was shipped.'
-            />
-          </p>
-          <textarea
-            className='governance-statement-area'
-            value={deliveryNotes}
-            onChange={(e) => setDeliveryNotes(e.target.value)}
-            rows={2}
-            placeholder='Delivery notes (optional)'
+      <hr className='governance-detail__divider' />
+      <div className='governance-detail__section-label'>
+        <FormattedMessage id='governance.discussion' defaultMessage='Discussion' />
+      </div>
+      <p className='governance-detail__placeholder'>
+        <FormattedMessage
+          id='governance.discussion.coming_soon'
+          defaultMessage='Comments thread coming in the next iteration — pending a decision on whether discussion lives as a native Mastodon thread or a standalone comments table.'
+        />
+      </p>
+
+      {challengeOpen && (
+        <div className='governance-challenge-modal'>
+          <div
+            className='governance-challenge-modal__backdrop'
+            onClick={() => setChallengeOpen(false)}
           />
-          <button
-            type='button'
-            className='governance-vbtn governance-vbtn--deliver'
-            onClick={() => void handleMarkDelivered()}
-            disabled={marking}
-          >
-            {marking ? (
-              <FormattedMessage id='governance.delivery.marking' defaultMessage='Marking…' />
-            ) : (
-              <FormattedMessage id='governance.delivery.mark' defaultMessage='Mark delivered' />
-            )}
-          </button>
-        </>
+          <div className='governance-challenge-modal__body'>
+            <h3 className='governance-challenge-modal__heading'>
+              <FormattedMessage
+                id='governance.challenge.heading'
+                defaultMessage='Raise a challenge'
+              />
+            </h3>
+            <p className='governance-challenge-modal__hint'>
+              <FormattedMessage
+                id='governance.challenge.hint'
+                defaultMessage='A challenge is a principled objection, not just disagreement. Explain what needs to change or be discussed. Minimum {min} characters.'
+                values={{ min: CHALLENGE_MIN }}
+              />
+            </p>
+            <textarea
+              className='governance-challenge-modal__textarea'
+              value={challengeText}
+              onChange={(e) => setChallengeText(e.target.value)}
+              rows={5}
+              placeholder='Your concern…'
+              autoFocus
+            />
+            <div className='governance-challenge-modal__counter'>
+              {challengeText.trim().length} / {CHALLENGE_MIN}+
+            </div>
+            <div className='governance-challenge-modal__actions'>
+              <button
+                type='button'
+                className='governance-challenge-modal__cancel'
+                onClick={() => setChallengeOpen(false)}
+                disabled={submitting}
+              >
+                <FormattedMessage id='governance.challenge.cancel' defaultMessage='Cancel' />
+              </button>
+              <button
+                type='button'
+                className='governance-challenge-modal__submit'
+                onClick={submitChallenge}
+                disabled={submitting || challengeText.trim().length < CHALLENGE_MIN}
+              >
+                <FormattedMessage
+                  id='governance.challenge.submit'
+                  defaultMessage='Submit challenge'
+                />
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

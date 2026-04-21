@@ -541,6 +541,136 @@ $governance-amber: #f59e0b;
   font-size: 13px;
 }
 
+// ─── Challenge modal (raise-a-block popup) ─────────────────────────────────
+
+.governance-challenge-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+  }
+
+  &__body {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    background: var(--background-color);
+    border: 1px solid var(--background-border-color);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  }
+
+  &__heading {
+    font-family: Georgia, 'Liberation Serif', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: $primary-text-color;
+    margin: 0 0 10px;
+  }
+
+  &__hint {
+    font-size: 13px;
+    color: $secondary-text-color;
+    line-height: 1.5;
+    margin: 0 0 14px;
+  }
+
+  &__textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--background-border-color);
+    border-radius: 8px;
+    background: var(--background-color);
+    color: $primary-text-color;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 100px;
+    box-sizing: border-box;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &:focus {
+      outline: none;
+      border-color: $governance-purple;
+      box-shadow: 0 0 0 3px rgba($governance-purple, 0.18);
+    }
+  }
+
+  &__counter {
+    font-size: 11px;
+    color: $secondary-text-color;
+    text-align: right;
+    margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--background-border-color);
+  }
+
+  &__cancel {
+    padding: 9px 20px;
+    border: 1px solid var(--background-border-color);
+    border-radius: 8px;
+    background: transparent;
+    color: $secondary-text-color;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+
+    &:hover:not(:disabled) {
+      border-color: $governance-purple;
+      color: $governance-purple;
+    }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+
+  &__submit {
+    padding: 9px 20px;
+    border: 1px solid rgba($governance-block, 0.5);
+    border-radius: 8px;
+    background: rgba($governance-block, 0.12);
+    color: $governance-block;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: opacity 0.15s;
+
+    &:hover:not(:disabled) { opacity: 0.82; }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+}
+
+// ─── Withdraw-challenge inline button (in "Your position") ─────────────────
+
+.governance-vote-current__withdraw {
+  background: transparent;
+  border: none;
+  color: $governance-block;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+  text-decoration: underline;
+
+  &:hover:not(:disabled) { opacity: 0.8; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
 // ─── Tab: Proposal (cream) ──────────────────────────────────────────────────
 
 .governance-tab-proposal__body {

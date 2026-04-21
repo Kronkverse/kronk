@@ -110,27 +110,6 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         ) : (
           <>
             <div className='governance-page__header'>
-              <div className='governance-page__filters'>
-                <button
-                  className={`governance-page__filter-btn ${filter === 'open' ? 'active' : ''}`}
-                  onClick={() => setFilter('open')}
-                >
-                  <FormattedMessage id='governance.filter.open' defaultMessage='Open' />
-                </button>
-                <button
-                  className={`governance-page__filter-btn ${filter === 'vetoed' ? 'active' : ''}`}
-                  onClick={() => setFilter('vetoed')}
-                >
-                  <FormattedMessage id='governance.filter.vetoed' defaultMessage='Vetoed' />
-                </button>
-                <button
-                  className={`governance-page__filter-btn ${filter === 'delivered' ? 'active' : ''}`}
-                  onClick={() => setFilter('delivered')}
-                >
-                  <FormattedMessage id='governance.filter.delivered' defaultMessage='Delivered' />
-                </button>
-              </div>
-
               {!showForm && (
                 <button className='governance-page__new-btn' onClick={() => setShowForm(true)}>
                   <Icon id='add' icon={AddIcon} />
