@@ -9,7 +9,7 @@ class Api::V1::ProposalsController < Api::BaseController
     scope = case params[:filter]
             when 'vetoed'    then Proposal.vetoed
             when 'delivered' then Proposal.delivered
-            else                  Proposal.open
+            else                  Proposal.where.not(status: :delivered)
             end
 
     scope = scope.with_category(params[:category]) if params[:category].present? && Proposal::CATEGORY_VALUES.include?(params[:category])
