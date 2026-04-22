@@ -12078,3 +12078,132 @@ noscript {
     white-space: nowrap;
   }
 }
+
+.nudge-section {
+  &__header {
+    padding: 8px 15px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $dark-text-color;
+    border-bottom: 1px solid lighten($ui-base-color, 8%);
+  }
+}
+
+.nudge-history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  border-bottom: 1px solid lighten($ui-base-color, 8%);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+    line-height: 0;
+  }
+
+  &__content {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: $primary-text-color;
+
+    a {
+      color: $highlight-text-color;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    .icon {
+      flex-shrink: 0;
+      color: $dark-text-color;
+    }
+  }
+
+  &__time {
+    font-size: 12px;
+    color: $dark-text-color;
+  }
+
+  &__action {
+    flex-shrink: 0;
+  }
+
+  &--received .nudge-history-item__label .icon {
+    color: $highlight-text-color;
+  }
+}
+
+.nudge-pending-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  border-bottom: 1px solid lighten($ui-base-color, 8%);
+  background: lighten($ui-base-color, 4%);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+    line-height: 0;
+    opacity: 0.8;
+  }
+
+  &__content {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: $dark-text-color;
+    font-style: italic;
+
+    a {
+      color: $secondary-text-color;
+      text-decoration: none;
+      font-style: normal;
+      font-weight: 500;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    .icon {
+      flex-shrink: 0;
+      color: $dark-text-color;
+    }
+  }
+
+  &__time {
+    font-size: 12px;
+    color: $dark-text-color;
+  }
+}

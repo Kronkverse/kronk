@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -15,13 +15,14 @@ import { Avatar } from 'mastodon/components/avatar';
 import { Button } from 'mastodon/components/button';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { DisplayName } from 'mastodon/components/display_name';
 import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({
   title: { id: 'nudges.title', defaultMessage: 'Nudges' },
+  pending: { id: 'nudges.pending', defaultMessage: 'Pending' },
+  history: { id: 'nudges.history_section', defaultMessage: 'History' },
 });
 
 const NudgeBackButton: React.FC<{ accountId: string }> = ({ accountId }) => {
@@ -103,11 +104,60 @@ const NudgeHistoryItem: React.FC<{ item: ApiNudgeHistoryItem }> = ({
   );
 };
 
+const NudgePendingItem: React.FC<{ item: ApiNudgeHistoryItem }> = ({
+  item,
+}) => {
+  const account = useAppSelector((state) =>
+    state.accounts.get(item.account_id),
+  );
+
+  if (!account) return null;
+
+  return (
+    <div className='nudge-pending-item'>
+      <Link to={`/@${account.acct}`} className='nudge-pending-item__avatar'>
+        <Avatar account={account} size={36} />
+      </Link>
+      <div className='nudge-pending-item__content'>
+        <span className='nudge-pending-item__label'>
+          <Icon id='hail' icon={HailIcon} />
+          <FormattedMessage
+            id='nudges.waiting_for'
+            defaultMessage='Waiting for <a>{name}</a> to nudge back'
+            values={{
+              name: account.display_name || account.acct,
+              a: (chunks) => (
+                <Link to={`/@${account.acct}`}>{chunks}</Link>
+              ),
+            }}
+          />
+        </span>
+        <span className='nudge-pending-item__time'>
+          <RelativeTimestamp timestamp={item.created_at} />
+        </span>
+      </div>
+    </div>
+  );
+};
+
 const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const [history, setHistory] = useState<ApiNudgeHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Pending = most recent nudge with a given partner was sent by us (waiting for reply)
+  const pendingPartners = useMemo(() => {
+    const seen = new Set<string>();
+    const pending: ApiNudgeHistoryItem[] = [];
+    for (const item of history) {
+      if (!seen.has(item.account_id)) {
+        seen.add(item.account_id);
+        if (item.direction === 'sent') pending.push(item);
+      }
+    }
+    return pending;
+  }, [history]);
 
   // Watch for nudge notifications arriving via streaming so we auto-refresh
   const streamingNudgeCount = useAppSelector((state) =>
@@ -172,14 +222,37 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         )}
 
         {!loading && history.length > 0 && (
-          <div className='nudge-history'>
-            {history.map((item, i) => (
-              <NudgeHistoryItem
-                key={`${item.direction}-${item.account_id}-${i}`}
-                item={item}
-              />
-            ))}
-          </div>
+          <>
+            {pendingPartners.length > 0 && (
+              <div className='nudge-section'>
+                <div className='nudge-section__header'>
+                  {intl.formatMessage(messages.pending)}
+                </div>
+                <div className='nudge-pending-list'>
+                  {pendingPartners.map((item) => (
+                    <NudgePendingItem
+                      key={item.account_id}
+                      item={item}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className='nudge-section'>
+              <div className='nudge-section__header'>
+                {intl.formatMessage(messages.history)}
+              </div>
+              <div className='nudge-history'>
+                {history.map((item, i) => (
+                  <NudgeHistoryItem
+                    key={`${item.direction}-${item.account_id}-${i}`}
+                    item={item}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
         )}
       </div>
 
