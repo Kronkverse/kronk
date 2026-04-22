@@ -11,10 +11,6 @@ import {
   selectSettingsNotificationsQuickFilterShow,
 } from './settings';
 
-// Nudge notifications are handled exclusively in the /nudges panel.
-// Always strip them from the main notifications view regardless of user settings.
-const MAIN_NOTIFICATIONS_EXCLUDED = ['nudge'];
-
 const filterNotificationsByAllowedTypes = (
   showFilterBar: boolean,
   allowedType: string,
@@ -26,17 +22,13 @@ const filterNotificationsByAllowedTypes = (
     // otherwise a list of notifications will come pre-filtered from the backend
     // we need to turn it off for FilterBar in order not to block ourselves from seeing a specific category
     return notifications.filter(
-      (item) =>
-        item.type === 'gap' ||
-        (!excludedTypes.includes(item.type) &&
-          !MAIN_NOTIFICATIONS_EXCLUDED.includes(item.type)),
+      (item) => item.type === 'gap' || !excludedTypes.includes(item.type),
     );
   }
   return notifications.filter(
     (item) =>
       item.type === 'gap' ||
-      (allowedType === item.type &&
-        !MAIN_NOTIFICATIONS_EXCLUDED.includes(item.type)) ||
+      allowedType === item.type ||
       (allowedType === 'mention' && item.type === 'quote'),
   );
 };
