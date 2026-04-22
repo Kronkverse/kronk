@@ -12164,3 +12164,72 @@ noscript {
     white-space: nowrap;
   }
 }
+
+.nudge-alerts {
+  border-bottom: 1px solid lighten($ui-base-color, 8%);
+}
+
+.nudge-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  background: mix($highlight-text-color, $ui-base-color, 12%);
+  border-bottom: 1px solid mix($highlight-text-color, $ui-base-color, 20%);
+  animation: nudge-alert-in 0.2s ease-out;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    color: $highlight-text-color;
+    width: 20px;
+    height: 20px;
+  }
+
+  &__text {
+    flex: 1 1 auto;
+    font-size: 14px;
+    color: $primary-text-color;
+    min-width: 0;
+
+    a {
+      color: $highlight-text-color;
+      font-weight: 600;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  &__dismiss {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: $dark-text-color;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+
+    &:hover {
+      color: $primary-text-color;
+    }
+  }
+}
+
+@keyframes nudge-alert-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

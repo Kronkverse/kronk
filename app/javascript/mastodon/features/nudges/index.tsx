@@ -18,11 +18,88 @@ import { ColumnHeader } from 'mastodon/components/column_header';
 import { DisplayName } from 'mastodon/components/display_name';
 import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
+import type { NotificationGroupNudge } from 'mastodon/models/notification_group';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
+
+interface NudgeAlertData {
+  id: string;
+  accountId: string;
+}
 
 const messages = defineMessages({
   title: { id: 'nudges.title', defaultMessage: 'Nudges' },
 });
+
+// ── Live nudge alert banner ───────────────────────────────────────────────────
+
+const NudgeAlert: React.FC<{
+  alert: NudgeAlertData;
+  onDismiss: (id: string) => void;
+}> = ({ alert, onDismiss }) => {
+  const account = useAppSelector((state) =>
+    state.accounts.get(alert.accountId),
+  );
+  const [nudgedBack, setNudgedBack] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => onDismiss(alert.id), 8000);
+    return () => window.clearTimeout(t);
+  }, [alert.id, onDismiss]);
+
+  const handleNudgeBack = useCallback(async () => {
+    if (loading || nudgedBack) return;
+    setLoading(true);
+    try {
+      await apiNudgeAccount(alert.accountId);
+      setNudgedBack(true);
+    } catch {
+      setNudgedBack(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [alert.accountId, loading, nudgedBack]);
+
+  if (!account) return null;
+
+  return (
+    <div className='nudge-alert'>
+      <Icon id='hail' icon={HailActiveIcon} className='nudge-alert__icon' />
+      <span className='nudge-alert__text'>
+        <FormattedMessage
+          id='nudges.alert.nudged_by'
+          defaultMessage='<a>@{acct}</a> nudged you!'
+          values={{
+            acct: account.acct,
+            a: (chunks) => (
+              <Link to={`/@${account.acct}`}>{chunks}</Link>
+            ),
+          }}
+        />
+      </span>
+      <Button
+        compact
+        disabled={loading || nudgedBack}
+        onClick={handleNudgeBack}
+      >
+        {nudgedBack ? (
+          <FormattedMessage id='nudges.nudged_back' defaultMessage='Nudged! 🔔' />
+        ) : (
+          <FormattedMessage id='nudges.nudge_back' defaultMessage='Nudge back' />
+        )}
+      </Button>
+      <button
+        className='nudge-alert__dismiss'
+        onClick={() => onDismiss(alert.id)}
+        aria-label='Dismiss'
+      >
+        ×
+      </button>
+    </div>
+  );
+};
+
+// ── Partner card ──────────────────────────────────────────────────────────────
 
 const NudgePartnerItem: React.FC<{ partner: ApiNudgePartner }> = ({
   partner,
@@ -64,7 +141,10 @@ const NudgePartnerItem: React.FC<{ partner: ApiNudgePartner }> = ({
 
         <div className='nudge-partner-item__meta'>
           <span className='nudge-partner-item__streak'>
-            <Icon id='hail' icon={partner.can_nudge_back && !nudgedBack ? HailActiveIcon : HailIcon} />
+            <Icon
+              id='hail'
+              icon={canNudge ? HailActiveIcon : HailIcon}
+            />
             <FormattedMessage
               id='nudges.streak_count'
               defaultMessage='{count, plural, one {# nudge} other {# nudges}}'
@@ -106,19 +186,30 @@ const NudgePartnerItem: React.FC<{ partner: ApiNudgePartner }> = ({
   );
 };
 
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const [partners, setPartners] = useState<ApiNudgePartner[]>([]);
   const [loading, setLoading] = useState(true);
+  const [alerts, setAlerts] = useState<NudgeAlertData[]>([]);
 
-  const streamingNudgeCount = useAppSelector((state) =>
+  // Track nudge groups from streaming — used to detect incoming nudges
+  const nudgeGroups = useAppSelector((state) =>
     [
       ...state.notificationGroups.groups,
       ...state.notificationGroups.pendingGroups,
-    ].filter((g) => g.type === 'nudge').length,
+    ].filter((g): g is NotificationGroupNudge => g.type === 'nudge'),
   );
-  const prevNudgeCountRef = useRef(streamingNudgeCount);
+
+  // group_key → latest_page_notification_at; seeded on first render so only
+  // nudges arriving AFTER the panel opens trigger alerts.
+  const seenGroupsRef = useRef<Map<string, string> | null>(null);
+
+  const dismissAlert = useCallback((id: string) => {
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -131,17 +222,48 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     }
   }, [dispatch]);
 
+  // On mount: clear badge, load partners, snapshot current groups as baseline
   useEffect(() => {
     dispatch(clearUnreadNudges());
     void load();
   }, [load, dispatch]);
 
+  // Watch nudge groups — show an alert for any group that arrives or updates
+  // after the panel was first rendered.
   useEffect(() => {
-    if (streamingNudgeCount > prevNudgeCountRef.current) {
-      prevNudgeCountRef.current = streamingNudgeCount;
+    if (seenGroupsRef.current === null) {
+      // First run — seed the baseline; no alerts yet
+      seenGroupsRef.current = new Map(
+        nudgeGroups.map((g) => [g.group_key, g.latest_page_notification_at]),
+      );
+      return;
+    }
+
+    const newAlerts: NudgeAlertData[] = [];
+
+    nudgeGroups.forEach((group) => {
+      const seen = seenGroupsRef.current!.get(group.group_key);
+      if (seen !== group.latest_page_notification_at) {
+        // New group or updated timestamp → someone nudged us
+        const accountId = group.sampleAccountIds[0];
+        if (accountId) {
+          newAlerts.push({
+            id: `${group.group_key}-${group.latest_page_notification_at}`,
+            accountId,
+          });
+        }
+        seenGroupsRef.current!.set(
+          group.group_key,
+          group.latest_page_notification_at,
+        );
+      }
+    });
+
+    if (newAlerts.length > 0) {
+      setAlerts((prev) => [...newAlerts, ...prev].slice(0, 5));
       void load();
     }
-  }, [streamingNudgeCount, load]);
+  }, [nudgeGroups, load]);
 
   return (
     <Column
@@ -155,6 +277,14 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         multiColumn={multiColumn}
         showBackButton
       />
+
+      {alerts.length > 0 && (
+        <div className='nudge-alerts'>
+          {alerts.map((alert) => (
+            <NudgeAlert key={alert.id} alert={alert} onDismiss={dismissAlert} />
+          ))}
+        </div>
+      )}
 
       <div className='scrollable'>
         {loading && (
