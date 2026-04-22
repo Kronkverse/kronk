@@ -21,8 +21,6 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({
   title: { id: 'nudges.title', defaultMessage: 'Nudges' },
-  pending: { id: 'nudges.pending', defaultMessage: 'Pending' },
-  history: { id: 'nudges.history_section', defaultMessage: 'History' },
 });
 
 const NudgeBackButton: React.FC<{ accountId: string }> = ({ accountId }) => {
@@ -36,7 +34,6 @@ const NudgeBackButton: React.FC<{ accountId: string }> = ({ accountId }) => {
       await apiNudgeAccount(accountId);
       setSent(true);
     } catch {
-      // 422 means ping-pong rule blocked it (already nudged back)
       setSent(true);
     } finally {
       setLoading(false);
@@ -54,9 +51,10 @@ const NudgeBackButton: React.FC<{ accountId: string }> = ({ accountId }) => {
   );
 };
 
-const NudgeHistoryItem: React.FC<{ item: ApiNudgeHistoryItem }> = ({
-  item,
-}) => {
+const NudgeHistoryItem: React.FC<{
+  item: ApiNudgeHistoryItem;
+  pending: boolean;
+}> = ({ item, pending }) => {
   const account = useAppSelector((state) =>
     state.accounts.get(item.account_id),
   );
@@ -70,7 +68,10 @@ const NudgeHistoryItem: React.FC<{ item: ApiNudgeHistoryItem }> = ({
       </Link>
       <div className='nudge-history-item__content'>
         <span className='nudge-history-item__label'>
-          <Icon id='hail' icon={item.direction === 'sent' ? HailIcon : HailActiveIcon} />
+          <Icon
+            id='hail'
+            icon={item.direction === 'sent' ? HailIcon : HailActiveIcon}
+          />
           {item.direction === 'sent' ? (
             <FormattedMessage
               id='nudges.history.sent'
@@ -90,6 +91,14 @@ const NudgeHistoryItem: React.FC<{ item: ApiNudgeHistoryItem }> = ({
               }}
             />
           )}
+          {pending && (
+            <span className='nudge-history-item__pending'>
+              <FormattedMessage
+                id='nudges.awaiting_reply'
+                defaultMessage='awaiting reply'
+              />
+            </span>
+          )}
         </span>
         <span className='nudge-history-item__time'>
           <RelativeTimestamp timestamp={item.created_at} />
@@ -104,62 +113,25 @@ const NudgeHistoryItem: React.FC<{ item: ApiNudgeHistoryItem }> = ({
   );
 };
 
-const NudgePendingItem: React.FC<{ item: ApiNudgeHistoryItem }> = ({
-  item,
-}) => {
-  const account = useAppSelector((state) =>
-    state.accounts.get(item.account_id),
-  );
-
-  if (!account) return null;
-
-  return (
-    <div className='nudge-pending-item'>
-      <Link to={`/@${account.acct}`} className='nudge-pending-item__avatar'>
-        <Avatar account={account} size={36} />
-      </Link>
-      <div className='nudge-pending-item__content'>
-        <span className='nudge-pending-item__label'>
-          <Icon id='hail' icon={HailIcon} />
-          <FormattedMessage
-            id='nudges.waiting_for'
-            defaultMessage='Waiting for <a>{name}</a> to nudge back'
-            values={{
-              name: account.display_name || account.acct,
-              a: (chunks) => (
-                <Link to={`/@${account.acct}`}>{chunks}</Link>
-              ),
-            }}
-          />
-        </span>
-        <span className='nudge-pending-item__time'>
-          <RelativeTimestamp timestamp={item.created_at} />
-        </span>
-      </div>
-    </div>
-  );
-};
-
 const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const [history, setHistory] = useState<ApiNudgeHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Pending = most recent nudge with a given partner was sent by us (waiting for reply)
-  const pendingPartners = useMemo(() => {
+  // For each partner where we sent the last nudge, mark the most recent sent item as pending
+  const pendingIndices = useMemo(() => {
+    const pending = new Set<number>();
     const seen = new Set<string>();
-    const pending: ApiNudgeHistoryItem[] = [];
-    for (const item of history) {
+    history.forEach((item, i) => {
       if (!seen.has(item.account_id)) {
         seen.add(item.account_id);
-        if (item.direction === 'sent') pending.push(item);
+        if (item.direction === 'sent') pending.add(i);
       }
-    }
+    });
     return pending;
   }, [history]);
 
-  // Watch for nudge notifications arriving via streaming so we auto-refresh
   const streamingNudgeCount = useAppSelector((state) =>
     [
       ...state.notificationGroups.groups,
@@ -184,7 +156,6 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     void load();
   }, [load, dispatch]);
 
-  // Re-fetch whenever a new nudge notification arrives via the streaming connection
   useEffect(() => {
     if (streamingNudgeCount > prevNudgeCountRef.current) {
       prevNudgeCountRef.current = streamingNudgeCount;
@@ -222,37 +193,15 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         )}
 
         {!loading && history.length > 0 && (
-          <>
-            {pendingPartners.length > 0 && (
-              <div className='nudge-section'>
-                <div className='nudge-section__header'>
-                  {intl.formatMessage(messages.pending)}
-                </div>
-                <div className='nudge-pending-list'>
-                  {pendingPartners.map((item) => (
-                    <NudgePendingItem
-                      key={item.account_id}
-                      item={item}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className='nudge-section'>
-              <div className='nudge-section__header'>
-                {intl.formatMessage(messages.history)}
-              </div>
-              <div className='nudge-history'>
-                {history.map((item, i) => (
-                  <NudgeHistoryItem
-                    key={`${item.direction}-${item.account_id}-${i}`}
-                    item={item}
-                  />
-                ))}
-              </div>
-            </div>
-          </>
+          <div className='nudge-history'>
+            {history.map((item, i) => (
+              <NudgeHistoryItem
+                key={`${item.direction}-${item.account_id}-${i}`}
+                item={item}
+                pending={pendingIndices.has(i)}
+              />
+            ))}
+          </div>
         )}
       </div>
 
