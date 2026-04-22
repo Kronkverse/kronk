@@ -12,10 +12,10 @@ class Api::V1::AccountsController < Api::BaseController
 
   before_action :require_user!, except: [:index, :show, :create]
   before_action :require_client_credentials!, only: [:create]
-  before_action :set_account, except: [:index, :create]
+  before_action :set_account, except: [:index, :create, :nudge_history, :nudge_partners]
   before_action :set_accounts, only: [:index]
-  before_action :check_account_approval, except: [:index, :create]
-  before_action :check_account_confirmation, except: [:index, :create]
+  before_action :check_account_approval, except: [:index, :create, :nudge_history, :nudge_partners]
+  before_action :check_account_confirmation, except: [:index, :create, :nudge_history, :nudge_partners]
   before_action :check_enabled_registrations, only: [:create]
   before_action :check_accounts_limit, only: [:index]
   before_action :check_following_self, only: [:follow]
