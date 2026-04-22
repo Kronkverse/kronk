@@ -118,11 +118,33 @@ class Api::V1::AccountsController < Api::BaseController
     received_counts = Notification.where(type: 'nudge', account_id: a).group(:from_account_id).count
 
     partner_ids = (sent_counts.keys + received_counts.keys).uniq
-    accounts    = Account.where(id: partner_ids).index_by(&:id)
+
+    # Fetch the most recent nudge per partner in one query
+    last_nudge_per_partner = {}
+    Notification.where(type: 'nudge')
+                .where('account_id = ? OR from_account_id = ?', a, a)
+                .order(id: :desc)
+                .each do |n|
+      partner_id = n.account_id == a ? n.from_account_id : n.account_id
+      last_nudge_per_partner[partner_id] ||= n
+    end
+
+    accounts = Account.where(id: partner_ids).index_by(&:id)
 
     partners = partner_ids
-      .filter_map { |id| accounts[id] && { account_id: id.to_s, sent_count: sent_counts[id] || 0, received_count: received_counts[id] || 0 } }
-      .sort_by { |p| -(p[:sent_count] + p[:received_count]) }
+      .filter_map do |id|
+        next unless accounts[id]
+        last = last_nudge_per_partner[id]
+        {
+          account_id: id.to_s,
+          sent_count: sent_counts[id] || 0,
+          received_count: received_counts[id] || 0,
+          streak: (sent_counts[id] || 0) + (received_counts[id] || 0),
+          last_nudge_at: last&.created_at&.iso8601,
+          can_nudge_back: last.nil? || last.from_account_id == id,
+        }
+      end
+      .sort_by { |p| [-p[:streak], p[:last_nudge_at] || ''] }
 
     render json: {
       accounts: ActiveModelSerializers::SerializableResource.new(

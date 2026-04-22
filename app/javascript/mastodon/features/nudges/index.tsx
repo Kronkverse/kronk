@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -9,12 +9,13 @@ import HailActiveIcon from '@/material-icons/400-24px/hail-fill.svg?react';
 import HailIcon from '@/material-icons/400-24px/hail.svg?react';
 import { importFetchedAccounts } from 'mastodon/actions/importer';
 import { clearUnreadNudges } from 'mastodon/actions/notification_groups';
-import { apiNudgeAccount, apiGetNudgeHistory } from 'mastodon/api/accounts';
-import type { ApiNudgeHistoryItem } from 'mastodon/api/accounts';
+import { apiNudgeAccount, apiGetNudgePartners } from 'mastodon/api/accounts';
+import type { ApiNudgePartner } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { Button } from 'mastodon/components/button';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
+import { DisplayName } from 'mastodon/components/display_name';
 import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
@@ -23,92 +24,84 @@ const messages = defineMessages({
   title: { id: 'nudges.title', defaultMessage: 'Nudges' },
 });
 
-const NudgeBackButton: React.FC<{ accountId: string }> = ({ accountId }) => {
-  const [sent, setSent] = useState(false);
+const NudgePartnerItem: React.FC<{ partner: ApiNudgePartner }> = ({
+  partner,
+}) => {
+  const account = useAppSelector((state) =>
+    state.accounts.get(partner.account_id),
+  );
+  const [nudgedBack, setNudgedBack] = useState(false);
   const [loading, setLoading] = useState(false);
+  const canNudge = partner.can_nudge_back && !nudgedBack;
 
-  const handleClick = useCallback(async () => {
-    if (loading || sent) return;
+  const handleNudgeBack = useCallback(async () => {
+    if (loading || !canNudge) return;
     setLoading(true);
     try {
-      await apiNudgeAccount(accountId);
-      setSent(true);
+      await apiNudgeAccount(partner.account_id);
+      setNudgedBack(true);
     } catch {
-      setSent(true);
+      setNudgedBack(true);
     } finally {
       setLoading(false);
     }
-  }, [accountId, loading, sent]);
-
-  return (
-    <Button compact disabled={loading || sent} onClick={handleClick}>
-      {sent ? (
-        <FormattedMessage id='nudges.nudged_back' defaultMessage='Nudged! 🔔' />
-      ) : (
-        <FormattedMessage id='nudges.nudge_back' defaultMessage='Nudge back' />
-      )}
-    </Button>
-  );
-};
-
-const NudgeHistoryItem: React.FC<{
-  item: ApiNudgeHistoryItem;
-  pending: boolean;
-}> = ({ item, pending }) => {
-  const account = useAppSelector((state) =>
-    state.accounts.get(item.account_id),
-  );
+  }, [partner.account_id, loading, canNudge]);
 
   if (!account) return null;
 
   return (
-    <div className={`nudge-history-item nudge-history-item--${item.direction}`}>
-      <Link to={`/@${account.acct}`} className='nudge-history-item__avatar'>
-        <Avatar account={account} size={36} />
+    <div className='nudge-partner-item'>
+      <Link to={`/@${account.acct}`} className='nudge-partner-item__avatar'>
+        <Avatar account={account} size={46} />
       </Link>
-      <div className='nudge-history-item__content'>
-        <span className='nudge-history-item__label'>
-          <Icon
-            id='hail'
-            icon={item.direction === 'sent' ? HailIcon : HailActiveIcon}
-          />
-          {item.direction === 'sent' ? (
+
+      <div className='nudge-partner-item__body'>
+        <div className='nudge-partner-item__name'>
+          <Link to={`/@${account.acct}`}>
+            <DisplayName account={account} />
+          </Link>
+        </div>
+
+        <div className='nudge-partner-item__meta'>
+          <span className='nudge-partner-item__streak'>
+            <Icon id='hail' icon={partner.can_nudge_back && !nudgedBack ? HailActiveIcon : HailIcon} />
             <FormattedMessage
-              id='nudges.history.sent'
-              defaultMessage='You nudged <a>@{acct}</a>'
-              values={{
-                acct: account.acct,
-                a: (chunks) => <Link to={`/@${account.acct}`}>{chunks}</Link>,
-              }}
+              id='nudges.streak_count'
+              defaultMessage='{count, plural, one {# nudge} other {# nudges}}'
+              values={{ count: partner.streak }}
             />
-          ) : (
-            <FormattedMessage
-              id='nudges.history.received'
-              defaultMessage='<a>@{acct}</a> nudged you'
-              values={{
-                acct: account.acct,
-                a: (chunks) => <Link to={`/@${account.acct}`}>{chunks}</Link>,
-              }}
-            />
-          )}
-          {pending && (
-            <span className='nudge-history-item__pending'>
-              <FormattedMessage
-                id='nudges.awaiting_reply'
-                defaultMessage='awaiting reply'
-              />
+          </span>
+          {partner.last_nudge_at && (
+            <span className='nudge-partner-item__time'>
+              <RelativeTimestamp timestamp={partner.last_nudge_at} />
             </span>
           )}
-        </span>
-        <span className='nudge-history-item__time'>
-          <RelativeTimestamp timestamp={item.created_at} />
-        </span>
-      </div>
-      {item.direction === 'received' && (
-        <div className='nudge-history-item__action'>
-          <NudgeBackButton accountId={item.account_id} />
         </div>
-      )}
+
+        <div className='nudge-partner-item__counts'>
+          <FormattedMessage
+            id='nudges.sent_received'
+            defaultMessage='{sent} sent · {received} received'
+            values={{ sent: partner.sent_count, received: partner.received_count }}
+          />
+        </div>
+      </div>
+
+      <div className='nudge-partner-item__action'>
+        {canNudge ? (
+          <Button compact disabled={loading} onClick={handleNudgeBack}>
+            <FormattedMessage id='nudges.nudge_back' defaultMessage='Nudge back' />
+          </Button>
+        ) : nudgedBack ? (
+          <Button compact disabled>
+            <FormattedMessage id='nudges.nudged_back' defaultMessage='Nudged! 🔔' />
+          </Button>
+        ) : (
+          <span className='nudge-partner-item__waiting'>
+            <FormattedMessage id='nudges.awaiting_reply' defaultMessage='awaiting reply' />
+          </span>
+        )}
+      </div>
     </div>
   );
 };
@@ -116,21 +109,8 @@ const NudgeHistoryItem: React.FC<{
 const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
-  const [history, setHistory] = useState<ApiNudgeHistoryItem[]>([]);
+  const [partners, setPartners] = useState<ApiNudgePartner[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // For each partner where we sent the last nudge, mark the most recent sent item as pending
-  const pendingIndices = useMemo(() => {
-    const pending = new Set<number>();
-    const seen = new Set<string>();
-    history.forEach((item, i) => {
-      if (!seen.has(item.account_id)) {
-        seen.add(item.account_id);
-        if (item.direction === 'sent') pending.add(i);
-      }
-    });
-    return pending;
-  }, [history]);
 
   const streamingNudgeCount = useAppSelector((state) =>
     [
@@ -143,9 +123,9 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await apiGetNudgeHistory();
+      const data = await apiGetNudgePartners();
       if (data.accounts?.length) dispatch(importFetchedAccounts(data.accounts));
-      setHistory(data.nudges ?? []);
+      setPartners(data.partners ?? []);
     } finally {
       setLoading(false);
     }
@@ -183,7 +163,7 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </div>
         )}
 
-        {!loading && history.length === 0 && (
+        {!loading && partners.length === 0 && (
           <div className='empty-column-indicator'>
             <FormattedMessage
               id='nudges.empty'
@@ -192,14 +172,10 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </div>
         )}
 
-        {!loading && history.length > 0 && (
-          <div className='nudge-history'>
-            {history.map((item, i) => (
-              <NudgeHistoryItem
-                key={`${item.direction}-${item.account_id}-${i}`}
-                item={item}
-                pending={pendingIndices.has(i)}
-              />
+        {!loading && partners.length > 0 && (
+          <div className='nudge-partners-list'>
+            {partners.map((partner) => (
+              <NudgePartnerItem key={partner.account_id} partner={partner} />
             ))}
           </div>
         )}

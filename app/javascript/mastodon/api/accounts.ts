@@ -50,6 +50,9 @@ export interface ApiNudgePartner {
   account_id: string;
   sent_count: number;
   received_count: number;
+  streak: number;
+  last_nudge_at: string;
+  can_nudge_back: boolean;
 }
 
 export const apiGetNudgePartners = () =>
