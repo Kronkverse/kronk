@@ -123,12 +123,7 @@ const messages = defineMessages({
 
 const NudgesLink: React.FC = () => {
   const count = useAppSelector(selectUnreadNudgesCount);
-  const dispatch = useAppDispatch();
   const intl = useIntl();
-
-  const handleClick = useCallback(() => {
-    dispatch(clearUnreadNudges());
-  }, [dispatch]);
 
   return (
     <ColumnLink
@@ -151,7 +146,6 @@ const NudgesLink: React.FC = () => {
         />
       }
       text={intl.formatMessage(messages.nudges)}
-      onClick={handleClick}
     />
   );
 };
