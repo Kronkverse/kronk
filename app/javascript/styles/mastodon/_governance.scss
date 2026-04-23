@@ -789,13 +789,14 @@ $governance-amber: #f59e0b;
 
 .governance-challenge-modal__label {
   display: inline-block;
+  align-self: flex-start;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   background: $governance-purple;
   color: #fff;
-  padding: 3px 10px;
+  padding: 3px 12px;
   border-radius: 999px;
   margin: 18px 0 6px;
 }
@@ -1747,13 +1748,14 @@ $governance-amber: #f59e0b;
 
 .governance-form__section-heading {
   display: inline-block;
+  align-self: flex-start;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   background: $governance-purple;
   color: #fff;
-  padding: 3px 10px;
+  padding: 3px 12px;
   border-radius: 999px;
   margin: 8px 0 4px;
   border: none;
@@ -1770,13 +1772,17 @@ $governance-amber: #f59e0b;
 
 .governance-form__label-text {
   display: inline-flex;
+  align-self: flex-start;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  color: $governance-purple;
+  background: $governance-purple;
+  color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  padding: 3px 12px;
+  border-radius: 999px;
 }
 
 .governance-form__required {
