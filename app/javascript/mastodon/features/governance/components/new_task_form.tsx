@@ -6,8 +6,6 @@ import api from 'mastodon/api';
 
 import type { Task } from './proposal_tabs/tab_kontribute';
 
-const SKILL_TAGS = ['code', 'aesthetic', 'governance'] as const;
-
 export const NewTaskForm: React.FC<{
   proposalId: string;
   onCreated: (task: Task) => void;
@@ -15,8 +13,6 @@ export const NewTaskForm: React.FC<{
 }> = ({ proposalId, onCreated, onCancel }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [skillTag, setSkillTag] = useState('');
-  const [effortEstimate, setEffortEstimate] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,8 +27,6 @@ export const NewTaskForm: React.FC<{
           task: {
             title: title.trim(),
             description: description.trim() || null,
-            skill_tag: skillTag || null,
-            effort_estimate: effortEstimate ? Number(effortEstimate) : null,
           },
         });
         onCreated(res.data as Task);
@@ -43,7 +37,7 @@ export const NewTaskForm: React.FC<{
         setSubmitting(false);
       }
     },
-    [proposalId, title, description, skillTag, effortEstimate, onCreated],
+    [proposalId, title, description, onCreated],
   );
 
   const handleFormSubmit = useCallback(
@@ -54,24 +48,16 @@ export const NewTaskForm: React.FC<{
   );
 
   const handleTitleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => { setTitle(e.target.value); },
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setTitle(e.target.value);
+    },
     [],
   );
 
   const handleDescriptionChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-      { setDescription(e.target.value); },
-    [],
-  );
-
-  const handleSkillChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => { setSkillTag(e.target.value); },
-    [],
-  );
-
-  const handleEffortChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      { setEffortEstimate(e.target.value); },
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setDescription(e.target.value);
+    },
     [],
   );
 
@@ -116,46 +102,6 @@ export const NewTaskForm: React.FC<{
           rows={3}
         />
       </label>
-
-      <div className='governance-form__row'>
-        <label className='governance-form__label'>
-          <span className='governance-form__label-text'>
-            <FormattedMessage
-              id='governance.task_form.skill'
-              defaultMessage='Skill'
-            />
-          </span>
-          <select
-            className='governance-form__select'
-            value={skillTag}
-            onChange={handleSkillChange}
-          >
-            <option value=''>—</option>
-            {SKILL_TAGS.map((t) => (
-              <option key={t} value={t}>
-                {t.charAt(0).toUpperCase() + t.slice(1)}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className='governance-form__label'>
-          <span className='governance-form__label-text'>
-            <FormattedMessage
-              id='governance.task_form.effort'
-              defaultMessage='Effort (hours)'
-            />
-          </span>
-          <input
-            className='governance-form__input'
-            type='number'
-            min='0'
-            step='0.5'
-            value={effortEstimate}
-            onChange={handleEffortChange}
-          />
-        </label>
-      </div>
 
       <div className='governance-form__actions'>
         <button
