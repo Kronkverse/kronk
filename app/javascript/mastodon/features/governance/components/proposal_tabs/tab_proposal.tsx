@@ -21,37 +21,6 @@ const CHALLENGE_MIN = 20;
 type Challenge = Proposal['challenges'][number];
 type ChallengeCondition = Challenge['conditions'][number];
 
-const VoteSummaryBar: React.FC<{ summary: Proposal['vote_summary'] }> = ({
-  summary,
-}) => {
-  const total = summary.agree + summary.abstain + summary.block;
-  if (total === 0) {
-    return <div className='governance-vote-bar governance-vote-bar--empty' />;
-  }
-  return (
-    <div className='governance-vote-bar'>
-      {summary.agree > 0 && (
-        <div
-          className='governance-vote-bar__seg governance-vote-bar__seg--agree'
-          style={{ width: `${(summary.agree / total) * 100}%` }}
-        />
-      )}
-      {summary.abstain > 0 && (
-        <div
-          className='governance-vote-bar__seg governance-vote-bar__seg--abstain'
-          style={{ width: `${(summary.abstain / total) * 100}%` }}
-        />
-      )}
-      {summary.block > 0 && (
-        <div
-          className='governance-vote-bar__seg governance-vote-bar__seg--block'
-          style={{ width: `${(summary.block / total) * 100}%` }}
-        />
-      )}
-    </div>
-  );
-};
-
 // ── Challenge response row ─────────────────────────────────────────────────
 
 const ChallengeResponseRow: React.FC<{
@@ -398,20 +367,11 @@ export const TabProposal: React.FC<{
     setConditions((prev) => [...prev, '']);
   }, []);
 
-  const total = proposal.participation_count;
-  const myChallenge = proposal.challenges.find((ch) => ch.account.id === me);
+  const { agree, abstain, block } = proposal.vote_summary;
 
   return (
     <div className='governance-tab-proposal'>
-      <section className='governance-zone governance-zone--body'>
-        <h4 className='governance-zone__heading'>
-          <FormattedMessage
-            id='governance.proposal_body'
-            defaultMessage='Proposal'
-          />
-        </h4>
-        <p className='governance-tab-proposal__body'>{proposal.body}</p>
-      </section>
+      <p className='governance-tab-proposal__body'>{proposal.body}</p>
 
       {proposal.status === 'vetoed' && (
         <div className='governance-tab-proposal__banner governance-tab-proposal__banner--vetoed'>
@@ -442,63 +402,16 @@ export const TabProposal: React.FC<{
         </div>
       )}
 
-      <section className='governance-zone governance-zone--vote'>
-        <h4 className='governance-zone__heading'>
-          <FormattedMessage
-            id='governance.community_position'
-            defaultMessage='Community position'
-          />
-        </h4>
-        <VoteSummaryBar summary={proposal.vote_summary} />
-        <div className='governance-vote-stats'>
-          <div className='governance-vote-stat'>
-            <span className='governance-vote-dot governance-vote-dot--agree' />
-            {proposal.vote_summary.agree} backing
-          </div>
-          <div className='governance-vote-stat'>
-            <span className='governance-vote-dot governance-vote-dot--abstain' />
-            {proposal.vote_summary.abstain} meh
-          </div>
-          <div className='governance-vote-stat'>
-            <span className='governance-vote-dot governance-vote-dot--block' />
-            {proposal.vote_summary.block}{' '}
-            {proposal.vote_summary.block === 1 ? 'challenge' : 'challenges'}
-          </div>
-          <span className='governance-vote-total'>
-            <FormattedMessage
-              id='governance.vote_total'
-              defaultMessage="{count, plural, one {# participant} other {# participants}}"
-              values={{ count: total }}
-            />
-          </span>
-        </div>
-      </section>
+      <div className='governance-tab-proposal__respond'>
+        <p className='governance-tab-proposal__support-line'>
+          <strong>{agree}</strong> backing
+          {' · '}
+          <strong>{abstain}</strong> meh
+          {' · '}
+          <strong>{block}</strong> {block === 1 ? 'challenge' : 'challenges'}
+        </p>
 
-      {canVote && (
-        <section className='governance-zone governance-zone--position'>
-          <h4 className='governance-zone__heading'>
-            <FormattedMessage
-              id='governance.your_position'
-              defaultMessage='Your position'
-            />
-          </h4>
-          {position ? (
-            <p className='governance-vote-current'>
-              <FormattedMessage
-                id='governance.vote.current'
-                defaultMessage='Currently: {pos}'
-                values={{ pos: <strong>{positionShort(position)}</strong> }}
-              />
-            </p>
-          ) : (
-            <p className='governance-vote-current'>
-              <FormattedMessage
-                id='governance.vote.cast'
-                defaultMessage='Cast your vote'
-              />
-            </p>
-          )}
-
+        {canVote && (
           <div className='governance-vote-btns'>
             {POSITIONS.map((pos) => (
               <button
@@ -512,17 +425,27 @@ export const TabProposal: React.FC<{
               </button>
             ))}
           </div>
-        </section>
-      )}
+        )}
+
+        {!canVote && position && (
+          <p className='governance-vote-current'>
+            <FormattedMessage
+              id='governance.vote.current'
+              defaultMessage='You: {pos}'
+              values={{ pos: <strong>{positionShort(position)}</strong> }}
+            />
+          </p>
+        )}
+      </div>
 
       {proposal.challenges.length > 0 && (
-        <section className='governance-zone governance-zone--challenges'>
-          <h4 className='governance-zone__heading governance-zone__heading--block'>
+        <div className='governance-tab-proposal__subsection'>
+          <h3 className='governance-tab-proposal__subsection-title'>
             <FormattedMessage
               id='governance.challenges_heading'
               defaultMessage='Active challenges'
             />
-          </h4>
+          </h3>
           <div className='governance-challenges-list'>
             {proposal.challenges.map((ch) => (
               <ChallengeBlock
@@ -535,20 +458,24 @@ export const TabProposal: React.FC<{
               />
             ))}
           </div>
-        </section>
+        </div>
       )}
 
       {proposal.voters.length > 0 && (
-        <section className='governance-zone governance-zone--voters'>
-          <h4 className='governance-zone__heading governance-zone__heading--neutral'>
+        <div className='governance-tab-proposal__subsection'>
+          <h3 className='governance-tab-proposal__subsection-title'>
             <FormattedMessage
-              id='governance.all_votes'
-              defaultMessage='All votes'
+              id='governance.voters_heading'
+              defaultMessage="Who's weighed in"
             />
-          </h4>
+          </h3>
           <div className='governance-voter-list'>
             {proposal.voters.map((v) => (
               <div key={v.account.id} className='governance-voter-row'>
+                <span
+                  className={`governance-voter-dot governance-voter-dot--${v.position}`}
+                  aria-label={positionShort(v.position)}
+                />
                 <div className='governance-voter-avatar'>
                   {v.account.avatar ? (
                     <img src={v.account.avatar} alt='' aria-hidden='true' />
@@ -557,17 +484,12 @@ export const TabProposal: React.FC<{
                   )}
                 </div>
                 <span className='governance-voter-name'>
-                  {v.account.username}
-                </span>
-                <span
-                  className={`governance-voter-pos governance-voter-pos--${v.position}`}
-                >
-                  {positionShort(v.position)}
+                  @{v.account.username}
                 </span>
               </div>
             ))}
           </div>
-        </section>
+        </div>
       )}
 
       {challengeOpen && (
@@ -684,23 +606,6 @@ export const TabProposal: React.FC<{
             </div>
           </div>
         </div>
-      )}
-
-      {!myChallenge && (
-        <section className='governance-zone governance-zone--discussion'>
-          <h4 className='governance-zone__heading'>
-            <FormattedMessage
-              id='governance.discussion'
-              defaultMessage='Discussion'
-            />
-          </h4>
-          <p className='governance-detail__placeholder'>
-            <FormattedMessage
-              id='governance.discussion.coming_soon'
-              defaultMessage='General discussion thread coming in a future iteration. For now, structured conversation happens inside individual challenges above.'
-            />
-          </p>
-        </section>
       )}
     </div>
   );

@@ -12,8 +12,6 @@ import { TabProposal } from './proposal_tabs/tab_proposal';
 
 type Tab = 'proposal' | 'kontribute' | 'discussion';
 
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-
 const statusLabels: Record<Proposal['status'], string> = {
   open: 'Open',
   in_progress: 'In progress',
@@ -28,9 +26,15 @@ export const ProposalDetail: React.FC<{
 }> = ({ proposal, onBack, onVoteUpdate }) => {
   const [activeTab, setActiveTab] = useState<Tab>('proposal');
 
-  const handleProposalTab = useCallback(() => { setActiveTab('proposal'); }, []);
-  const handleKontributeTab = useCallback(() => { setActiveTab('kontribute'); }, []);
-  const handleDiscussionTab = useCallback(() => { setActiveTab('discussion'); }, []);
+  const handleProposalTab = useCallback(() => {
+    setActiveTab('proposal');
+  }, []);
+  const handleKontributeTab = useCallback(() => {
+    setActiveTab('kontribute');
+  }, []);
+  const handleDiscussionTab = useCallback(() => {
+    setActiveTab('discussion');
+  }, []);
 
   return (
     <div className='governance-detail'>
@@ -44,34 +48,27 @@ export const ProposalDetail: React.FC<{
         </button>
 
         <div className='governance-detail__topbar'>
-          <h1 className='governance-detail__title'>{proposal.title}</h1>
           <span
             className={`governance-detail__status governance-detail__status--${proposal.status}`}
           >
             {statusLabels[proposal.status]}
           </span>
+          <h1 className='governance-detail__title'>{proposal.title}</h1>
+          <p className='governance-detail__meta'>
+            <FormattedMessage
+              id='governance.detail.proposed_by'
+              defaultMessage='by @{name}'
+              values={{ name: proposal.created_by_account.username }}
+            />
+            {' · '}
+            <FormattedDate
+              value={proposal.created_at}
+              day='numeric'
+              month='short'
+              year='numeric'
+            />
+          </p>
         </div>
-
-        <p className='governance-detail__meta'>
-          <FormattedMessage
-            id='governance.detail.proposed_by'
-            defaultMessage='Proposed by {name}'
-            values={{ name: proposal.created_by_account.username }}
-          />
-          {' · '}
-          <FormattedDate
-            value={proposal.created_at}
-            day='numeric'
-            month='short'
-            year='numeric'
-          />
-          {proposal.categories.length > 0 && (
-            <>
-              {' · '}
-              {proposal.categories.map(cap).join(', ')}
-            </>
-          )}
-        </p>
 
         <nav className='governance-detail__tabs'>
           <button

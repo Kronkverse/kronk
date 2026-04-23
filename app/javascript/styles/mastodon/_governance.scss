@@ -500,7 +500,7 @@ $governance-amber: #f59e0b;
 }
 
 .governance-detail__page {
-  max-width: 680px;
+  max-width: 580px;
   margin: 0 auto;
   padding: 24px 20px 60px;
 }
@@ -531,60 +531,62 @@ $governance-amber: #f59e0b;
 
 .governance-detail__topbar {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 6px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  text-align: center;
 }
 
 .governance-detail__title {
   font-family: Georgia, 'Times New Roman', 'Liberation Serif', serif;
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 500;
   color: #{$primary-text-color};
   line-height: 1.25;
-  flex: 1;
   margin: 0;
+  text-align: center;
 }
 
 .governance-detail__status {
+  display: inline-block;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 99px;
   white-space: nowrap;
-  margin-top: 4px;
-  flex-shrink: 0;
 
   &--open,
   &--in_progress {
-    background: rgba($governance-purple, 0.18);
-    color: $governance-purple;
+    background: $governance-purple;
+    color: #fff;
   }
 
   &--vetoed {
-    background: rgba($governance-block, 0.18);
-    color: $governance-block;
+    background: $governance-block;
+    color: #fff;
   }
 
   &--delivered {
-    background: rgba($governance-agree, 0.2);
-    color: $governance-agree;
+    background: $governance-agree;
+    color: #fff;
   }
 }
 
 .governance-detail__meta {
-  font-size: 12px;
+  font-size: 13px;
   color: #{$secondary-text-color};
-  margin: 0 0 20px;
+  margin: 0;
+  text-align: center;
 }
 
 .governance-detail__tabs {
   display: flex;
+  justify-content: center;
   border-bottom: 0.5px solid var(--background-border-color);
-  margin-bottom: 24px;
+  margin: 24px 0;
   gap: 0;
 }
 
@@ -636,80 +638,6 @@ $governance-amber: #f59e0b;
   font-size: 13px;
   line-height: 1.5;
   margin: 0;
-}
-
-// ─── Proposal zones (card-based layout for the detail tab) ──────────────────
-// Each logical section becomes its own bordered, tinted card with a coloured
-// left-accent indicating zone type. Reduces the flat "wall of text" feel.
-
-.governance-zone {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  background: var(--background-color);
-  border: 1px solid var(--background-border-color);
-  border-radius: 12px;
-  padding: 18px 20px;
-  margin-bottom: 14px;
-}
-
-.governance-zone__heading {
-  display: inline-block;
-  align-self: flex-start;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  background: $governance-purple;
-  color: #fff;
-  padding: 3px 12px;
-  border-radius: 999px;
-  margin: 0 0 14px;
-  border: none;
-}
-
-.governance-zone__heading--block {
-  background: $governance-block;
-}
-
-.governance-zone__heading--neutral {
-  background: $secondary-text-color;
-}
-
-.governance-zone--body {
-  background: rgba($governance-purple, 0.02);
-  border-color: rgba($governance-purple, 0.12);
-}
-
-.governance-zone--vote {
-  background: rgba($governance-purple, 0.04);
-  border-color: rgba($governance-purple, 0.18);
-  border-left: 3px solid $governance-purple;
-  padding-left: 18px;
-}
-
-.governance-zone--position {
-  background: rgba($governance-purple, 0.07);
-  border-color: rgba($governance-purple, 0.25);
-  border-left: 3px solid $governance-purple;
-  padding-left: 18px;
-}
-
-.governance-zone--challenges {
-  background: rgba($governance-block, 0.04);
-  border-color: rgba($governance-block, 0.2);
-  border-left: 3px solid $governance-block;
-  padding-left: 18px;
-}
-
-.governance-zone--voters {
-  background: var(--background-color);
-  border-color: var(--background-border-color);
-}
-
-.governance-zone--discussion {
-  background: rgba($governance-purple, 0.02);
-  border: 1px dashed rgba($governance-purple, 0.25);
 }
 
 // ─── Challenge modal (raise-a-block popup) ─────────────────────────────────
@@ -1225,11 +1153,68 @@ $governance-amber: #f59e0b;
 // ─── Tab: Proposal (cream) ──────────────────────────────────────────────────
 
 .governance-tab-proposal__body {
-  font-size: 14px;
+  font-size: 15px;
   color: #{$primary-text-color};
   line-height: 1.75;
-  margin: 0;
+  margin: 0 0 32px;
   white-space: pre-wrap;
+}
+
+.governance-tab-proposal__respond {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 0;
+  margin: 0 0 32px;
+  border-top: 1px solid var(--background-border-color);
+  border-bottom: 1px solid var(--background-border-color);
+}
+
+.governance-tab-proposal__support-line {
+  font-size: 14px;
+  color: $secondary-text-color;
+  text-align: center;
+  margin: 0;
+
+  strong {
+    color: $primary-text-color;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.governance-tab-proposal__subsection {
+  margin-top: 28px;
+}
+
+.governance-tab-proposal__subsection-title {
+  font-family: Georgia, 'Liberation Serif', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: $primary-text-color;
+  margin: 0 0 14px;
+  text-align: center;
+}
+
+.governance-voter-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+
+  &--agree {
+    background: $governance-purple;
+  }
+
+  &--abstain {
+    background: $secondary-text-color;
+  }
+
+  &--block {
+    background: $governance-block;
+  }
 }
 
 .governance-tab-proposal__banner {
