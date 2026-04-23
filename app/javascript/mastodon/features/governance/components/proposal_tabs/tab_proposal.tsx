@@ -21,7 +21,9 @@ const CHALLENGE_MIN = 20;
 type Challenge = Proposal['challenges'][number];
 type ChallengeCondition = Challenge['conditions'][number];
 
-const VoteSummaryBar: React.FC<{ summary: Proposal['vote_summary'] }> = ({ summary }) => {
+const VoteSummaryBar: React.FC<{ summary: Proposal['vote_summary'] }> = ({
+  summary,
+}) => {
   const total = summary.agree + summary.abstain + summary.block;
   if (total === 0) {
     return <div className='governance-vote-bar governance-vote-bar--empty' />;
@@ -55,7 +57,9 @@ const VoteSummaryBar: React.FC<{ summary: Proposal['vote_summary'] }> = ({ summa
 const ChallengeResponseRow: React.FC<{
   response: ChallengeCondition['responses'][number];
 }> = ({ response }) => {
-  const ageSeconds = Math.round((new Date(response.created_at).getTime() - Date.now()) / 1000);
+  const ageSeconds = Math.round(
+    (new Date(response.created_at).getTime() - Date.now()) / 1000,
+  );
   return (
     <div className='governance-challenge-response'>
       <div className='governance-challenge-response__avatar'>
@@ -69,7 +73,11 @@ const ChallengeResponseRow: React.FC<{
         <div className='governance-challenge-response__meta'>
           <strong>@{response.account.username}</strong>
           <span>·</span>
-          <FormattedRelativeTime value={ageSeconds} numeric='auto' updateIntervalInSeconds={60} />
+          <FormattedRelativeTime
+            value={ageSeconds}
+            numeric='auto'
+            updateIntervalInSeconds={60}
+          />
         </div>
         <p className='governance-challenge-response__text'>{response.body}</p>
       </div>
@@ -87,17 +95,19 @@ const ConditionBlock: React.FC<{
   const [replyText, setReplyText] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const toggleMet = async () => {
+  const toggleMet = useCallback(async () => {
     if (!canToggle) return;
     try {
-      const res = await api().post(`/api/v1/challenge_conditions/${condition.id}/toggle`);
+      const res = await api().post(
+        `/api/v1/challenge_conditions/${condition.id}/toggle`,
+      );
       onChanged(res.data as Proposal);
     } catch (err) {
       console.error('Toggle failed:', err);
     }
-  };
+  }, [canToggle, condition.id, onChanged]);
 
-  const submitReply = async () => {
+  const submitReply = useCallback(async () => {
     if (!replyText.trim()) return;
     setSubmitting(true);
     try {
@@ -112,15 +122,32 @@ const ConditionBlock: React.FC<{
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [condition.id, replyText, onChanged]);
+
+  const handleToggleChange = useCallback(() => {
+    void toggleMet();
+  }, [toggleMet]);
+
+  const handleReplyChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setReplyText(e.target.value);
+    },
+    [],
+  );
+
+  const handleReplyClick = useCallback(() => {
+    void submitReply();
+  }, [submitReply]);
 
   return (
-    <div className={`governance-condition ${condition.met ? 'governance-condition--met' : ''}`}>
+    <div
+      className={`governance-condition ${condition.met ? 'governance-condition--met' : ''}`}
+    >
       <label className='governance-condition__header'>
         <input
           type='checkbox'
           checked={condition.met}
-          onChange={toggleMet}
+          onChange={handleToggleChange}
           disabled={!canToggle}
           aria-label='Mark condition as addressed'
         />
@@ -140,16 +167,19 @@ const ConditionBlock: React.FC<{
           className='governance-condition__reply-area'
           placeholder='Respond to this condition…'
           value={replyText}
-          onChange={(e) => setReplyText(e.target.value)}
+          onChange={handleReplyChange}
           rows={2}
         />
         <button
           type='button'
           className='governance-condition__reply-btn'
           disabled={submitting || !replyText.trim()}
-          onClick={() => void submitReply()}
+          onClick={handleReplyClick}
         >
-          <FormattedMessage id='governance.challenge.reply' defaultMessage='Reply' />
+          <FormattedMessage
+            id='governance.challenge.reply'
+            defaultMessage='Reply'
+          />
         </button>
       </div>
     </div>
@@ -185,7 +215,9 @@ const ChallengeBlock: React.FC<{
       </div>
 
       {challenge.statement && (
-        <p className='governance-challenge__statement'>&ldquo;{challenge.statement}&rdquo;</p>
+        <p className='governance-challenge__statement'>
+          &ldquo;{challenge.statement}&rdquo;
+        </p>
       )}
 
       {challenge.conditions.length > 0 && (
@@ -245,28 +277,40 @@ export const TabProposal: React.FC<{
   );
   const [submitting, setSubmitting] = useState(false);
   const [challengeOpen, setChallengeOpen] = useState(false);
-  const [challengeText, setChallengeText] = useState(proposal.current_vote?.statement ?? '');
+  const [challengeText, setChallengeText] = useState(
+    proposal.current_vote?.statement ?? '',
+  );
   const [conditions, setConditions] = useState<string[]>(['']);
 
   const canVote = proposal.status !== 'delivered';
 
   const submitVote = useCallback(
-    async (pos: Position, statement: string | null, conditionList?: string[]) => {
+    async (
+      pos: Position,
+      statement: string | null,
+      conditionList?: string[],
+    ) => {
       setSubmitting(true);
       try {
         if (position === pos && pos !== 'block') {
-          const res = await api().delete(`/api/v1/proposals/${proposal.id}/vote`);
+          const res = await api().delete(
+            `/api/v1/proposals/${proposal.id}/vote`,
+          );
           setPosition(null);
           onVoteUpdate(res.data as Proposal);
         } else {
           const payload: Record<string, unknown> = {
             position: pos,
-            statement: statement || null,
+            statement: statement ?? null,
           };
-          if (pos === 'block' && conditionList) payload.conditions = conditionList;
-          const res = await api().post(`/api/v1/proposals/${proposal.id}/vote`, {
-            vote: payload,
-          });
+          if (pos === 'block' && conditionList)
+            payload.conditions = conditionList;
+          const res = await api().post(
+            `/api/v1/proposals/${proposal.id}/vote`,
+            {
+              vote: payload,
+            },
+          );
           setPosition(pos);
           onVoteUpdate(res.data as Proposal);
         }
@@ -279,23 +323,27 @@ export const TabProposal: React.FC<{
     [proposal.id, position, onVoteUpdate],
   );
 
-  const handleVoteClick = (pos: Position) => {
-    if (pos === 'block') {
-      setChallengeOpen(true);
-    } else {
-      void submitVote(pos, null);
-    }
-  };
+  const handleVoteClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const pos = e.currentTarget.dataset.pos as Position;
+      if (pos === 'block') {
+        setChallengeOpen(true);
+      } else {
+        void submitVote(pos, null);
+      }
+    },
+    [submitVote],
+  );
 
-  const submitChallenge = () => {
+  const submitChallenge = useCallback(() => {
     if (challengeText.trim().length < CHALLENGE_MIN) return;
     const filled = conditions.map((c) => c.trim()).filter(Boolean);
     if (filled.length === 0) return;
     setChallengeOpen(false);
     void submitVote('block', challengeText.trim(), filled);
-  };
+  }, [challengeText, conditions, submitVote]);
 
-  const withdrawChallenge = async () => {
+  const withdrawChallenge = useCallback(async () => {
     setSubmitting(true);
     try {
       const res = await api().delete(`/api/v1/proposals/${proposal.id}/vote`);
@@ -308,19 +356,70 @@ export const TabProposal: React.FC<{
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [proposal.id, onVoteUpdate]);
+
+  const handleWithdrawClick = useCallback(() => {
+    void withdrawChallenge();
+  }, [withdrawChallenge]);
+
+  const closeChallenge = useCallback(() => {
+    setChallengeOpen(false);
+  }, []);
+
+  const handleChallengeTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setChallengeText(e.target.value);
+    },
+    [],
+  );
+
+  const handleConditionChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const idx = Number(e.currentTarget.dataset.idx);
+      const value = e.target.value;
+      setConditions((prev) => {
+        const next = prev.slice();
+        next[idx] = value;
+        return next;
+      });
+    },
+    [],
+  );
+
+  const handleConditionRemove = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const idx = Number(e.currentTarget.dataset.idx);
+      setConditions((prev) => prev.filter((_, i) => i !== idx));
+    },
+    [],
+  );
+
+  const handleConditionAdd = useCallback(() => {
+    setConditions((prev) => [...prev, '']);
+  }, []);
 
   const total = proposal.participation_count;
   const myChallenge = proposal.challenges.find((ch) => ch.account.id === me);
 
   return (
     <div className='governance-tab-proposal'>
-      <p className='governance-tab-proposal__body'>{proposal.body}</p>
+      <section className='governance-zone governance-zone--body'>
+        <h4 className='governance-zone__heading'>
+          <FormattedMessage
+            id='governance.proposal_body'
+            defaultMessage='Proposal'
+          />
+        </h4>
+        <p className='governance-tab-proposal__body'>{proposal.body}</p>
+      </section>
 
       {proposal.status === 'vetoed' && (
         <div className='governance-tab-proposal__banner governance-tab-proposal__banner--vetoed'>
           <strong>
-            <FormattedMessage id='governance.banner.vetoed' defaultMessage='Challenged — discussion required' />
+            <FormattedMessage
+              id='governance.banner.vetoed'
+              defaultMessage='Challenged — discussion required'
+            />
           </strong>
           <p>
             <FormattedMessage
@@ -334,47 +433,55 @@ export const TabProposal: React.FC<{
       {proposal.status === 'delivered' && (
         <div className='governance-tab-proposal__banner governance-tab-proposal__banner--delivered'>
           <strong>
-            <FormattedMessage id='governance.banner.delivered' defaultMessage='Delivered' />
+            <FormattedMessage
+              id='governance.banner.delivered'
+              defaultMessage='Delivered'
+            />
           </strong>
           {proposal.outcome_notes && <p>{proposal.outcome_notes}</p>}
         </div>
       )}
 
-      <hr className='governance-detail__divider' />
-
-      <div className='governance-detail__section-label'>
-        <FormattedMessage id='governance.community_position' defaultMessage='Community position' />
-      </div>
-      <VoteSummaryBar summary={proposal.vote_summary} />
-      <div className='governance-vote-stats'>
-        <div className='governance-vote-stat'>
-          <span className='governance-vote-dot governance-vote-dot--agree' />
-          {proposal.vote_summary.agree} backing
-        </div>
-        <div className='governance-vote-stat'>
-          <span className='governance-vote-dot governance-vote-dot--abstain' />
-          {proposal.vote_summary.abstain} meh
-        </div>
-        <div className='governance-vote-stat'>
-          <span className='governance-vote-dot governance-vote-dot--block' />
-          {proposal.vote_summary.block} {proposal.vote_summary.block === 1 ? 'challenge' : 'challenges'}
-        </div>
-        <span className='governance-vote-total'>
+      <section className='governance-zone governance-zone--vote'>
+        <h4 className='governance-zone__heading'>
           <FormattedMessage
-            id='governance.vote_total'
-            defaultMessage='{count} {count, plural, one {participant} other {participants}}'
-            values={{ count: total }}
+            id='governance.community_position'
+            defaultMessage='Community position'
           />
-        </span>
-      </div>
+        </h4>
+        <VoteSummaryBar summary={proposal.vote_summary} />
+        <div className='governance-vote-stats'>
+          <div className='governance-vote-stat'>
+            <span className='governance-vote-dot governance-vote-dot--agree' />
+            {proposal.vote_summary.agree} backing
+          </div>
+          <div className='governance-vote-stat'>
+            <span className='governance-vote-dot governance-vote-dot--abstain' />
+            {proposal.vote_summary.abstain} meh
+          </div>
+          <div className='governance-vote-stat'>
+            <span className='governance-vote-dot governance-vote-dot--block' />
+            {proposal.vote_summary.block}{' '}
+            {proposal.vote_summary.block === 1 ? 'challenge' : 'challenges'}
+          </div>
+          <span className='governance-vote-total'>
+            <FormattedMessage
+              id='governance.vote_total'
+              defaultMessage="{count, plural, one {# participant} other {# participants}}"
+              values={{ count: total }}
+            />
+          </span>
+        </div>
+      </section>
 
       {canVote && (
-        <>
-          <hr className='governance-detail__divider' />
-
-          <div className='governance-detail__section-label'>
-            <FormattedMessage id='governance.your_position' defaultMessage='Your position' />
-          </div>
+        <section className='governance-zone governance-zone--position'>
+          <h4 className='governance-zone__heading'>
+            <FormattedMessage
+              id='governance.your_position'
+              defaultMessage='Your position'
+            />
+          </h4>
           {position ? (
             <p className='governance-vote-current'>
               <FormattedMessage
@@ -385,7 +492,10 @@ export const TabProposal: React.FC<{
             </p>
           ) : (
             <p className='governance-vote-current'>
-              <FormattedMessage id='governance.vote.cast' defaultMessage='Cast your vote' />
+              <FormattedMessage
+                id='governance.vote.cast'
+                defaultMessage='Cast your vote'
+              />
             </p>
           )}
 
@@ -394,25 +504,25 @@ export const TabProposal: React.FC<{
               <button
                 key={pos}
                 className={`governance-vbtn governance-vbtn--${pos} ${position === pos ? 'active' : ''}`}
-                onClick={() => handleVoteClick(pos)}
+                data-pos={pos}
+                onClick={handleVoteClick}
                 disabled={submitting}
               >
                 {positionLabel(pos)}
               </button>
             ))}
           </div>
-        </>
+        </section>
       )}
 
       {proposal.challenges.length > 0 && (
-        <>
-          <hr className='governance-detail__divider' />
-          <div className='governance-detail__section-label'>
+        <section className='governance-zone governance-zone--challenges'>
+          <h4 className='governance-zone__heading governance-zone__heading--block'>
             <FormattedMessage
               id='governance.challenges_heading'
               defaultMessage='Active challenges'
             />
-          </div>
+          </h4>
           <div className='governance-challenges-list'>
             {proposal.challenges.map((ch) => (
               <ChallengeBlock
@@ -420,20 +530,22 @@ export const TabProposal: React.FC<{
                 challenge={ch}
                 viewerIsAuthor={ch.account.id === me}
                 onChanged={onVoteUpdate}
-                onWithdraw={() => void withdrawChallenge()}
+                onWithdraw={handleWithdrawClick}
                 withdrawing={submitting}
               />
             ))}
           </div>
-        </>
+        </section>
       )}
 
-      {proposal.voters && proposal.voters.length > 0 && (
-        <>
-          <hr className='governance-detail__divider' />
-          <div className='governance-detail__section-label'>
-            <FormattedMessage id='governance.all_votes' defaultMessage='All votes' />
-          </div>
+      {proposal.voters.length > 0 && (
+        <section className='governance-zone governance-zone--voters'>
+          <h4 className='governance-zone__heading governance-zone__heading--neutral'>
+            <FormattedMessage
+              id='governance.all_votes'
+              defaultMessage='All votes'
+            />
+          </h4>
           <div className='governance-voter-list'>
             {proposal.voters.map((v) => (
               <div key={v.account.id} className='governance-voter-row'>
@@ -444,25 +556,34 @@ export const TabProposal: React.FC<{
                     v.account.username.charAt(0).toUpperCase()
                   )}
                 </div>
-                <span className='governance-voter-name'>{v.account.username}</span>
-                <span className={`governance-voter-pos governance-voter-pos--${v.position}`}>
+                <span className='governance-voter-name'>
+                  {v.account.username}
+                </span>
+                <span
+                  className={`governance-voter-pos governance-voter-pos--${v.position}`}
+                >
                   {positionShort(v.position)}
                 </span>
               </div>
             ))}
           </div>
-        </>
+        </section>
       )}
 
       {challengeOpen && (
         <div className='governance-challenge-modal'>
-          <div
+          <button
+            type='button'
             className='governance-challenge-modal__backdrop'
-            onClick={() => setChallengeOpen(false)}
+            onClick={closeChallenge}
+            aria-label='Close challenge dialog'
           />
           <div className='governance-challenge-modal__body'>
             <h3 className='governance-challenge-modal__heading'>
-              <FormattedMessage id='governance.challenge.heading' defaultMessage='Raise a challenge' />
+              <FormattedMessage
+                id='governance.challenge.heading'
+                defaultMessage='Raise a challenge'
+              />
             </h3>
             <p className='governance-challenge-modal__hint'>
               <FormattedMessage
@@ -472,45 +593,48 @@ export const TabProposal: React.FC<{
               />
             </p>
 
-            <label className='governance-challenge-modal__label'>
-              <FormattedMessage id='governance.challenge.summary' defaultMessage='Your concern' />
-            </label>
+            <div className='governance-challenge-modal__label'>
+              <FormattedMessage
+                id='governance.challenge.summary'
+                defaultMessage='Your concern'
+              />
+            </div>
             <textarea
               className='governance-challenge-modal__textarea'
               value={challengeText}
-              onChange={(e) => setChallengeText(e.target.value)}
+              onChange={handleChallengeTextChange}
               rows={3}
               placeholder='In one sentence, what is your concern?'
-              autoFocus
             />
             <div className='governance-challenge-modal__counter'>
               {challengeText.trim().length} / {CHALLENGE_MIN}+
             </div>
 
-            <label className='governance-challenge-modal__label'>
+            <div className='governance-challenge-modal__label'>
               <FormattedMessage
                 id='governance.challenge.conditions_label'
                 defaultMessage='Conditions for withdrawal'
               />
-            </label>
+            </div>
             {conditions.map((c, i) => (
-              <div key={i} className='governance-challenge-modal__condition-row'>
+              <div
+                key={i}
+                className='governance-challenge-modal__condition-row'
+              >
                 <input
                   className='governance-challenge-modal__condition-input'
                   type='text'
                   placeholder={`Condition ${i + 1}`}
                   value={c}
-                  onChange={(e) => {
-                    const next = conditions.slice();
-                    next[i] = e.target.value;
-                    setConditions(next);
-                  }}
+                  data-idx={i}
+                  onChange={handleConditionChange}
                 />
                 {conditions.length > 1 && (
                   <button
                     type='button'
                     className='governance-challenge-modal__remove-cond'
-                    onClick={() => setConditions(conditions.filter((_, idx) => idx !== i))}
+                    data-idx={i}
+                    onClick={handleConditionRemove}
                     aria-label='Remove condition'
                   >
                     ×
@@ -521,19 +645,26 @@ export const TabProposal: React.FC<{
             <button
               type='button'
               className='governance-challenge-modal__add-cond'
-              onClick={() => setConditions([...conditions, ''])}
+              onClick={handleConditionAdd}
             >
-              + <FormattedMessage id='governance.challenge.add_condition' defaultMessage='Add condition' />
+              +{' '}
+              <FormattedMessage
+                id='governance.challenge.add_condition'
+                defaultMessage='Add condition'
+              />
             </button>
 
             <div className='governance-challenge-modal__actions'>
               <button
                 type='button'
                 className='governance-challenge-modal__cancel'
-                onClick={() => setChallengeOpen(false)}
+                onClick={closeChallenge}
                 disabled={submitting}
               >
-                <FormattedMessage id='governance.challenge.cancel' defaultMessage='Cancel' />
+                <FormattedMessage
+                  id='governance.challenge.cancel'
+                  defaultMessage='Cancel'
+                />
               </button>
               <button
                 type='button'
@@ -556,18 +687,20 @@ export const TabProposal: React.FC<{
       )}
 
       {!myChallenge && (
-        <>
-          <hr className='governance-detail__divider' />
-          <div className='governance-detail__section-label'>
-            <FormattedMessage id='governance.discussion' defaultMessage='Discussion' />
-          </div>
+        <section className='governance-zone governance-zone--discussion'>
+          <h4 className='governance-zone__heading'>
+            <FormattedMessage
+              id='governance.discussion'
+              defaultMessage='Discussion'
+            />
+          </h4>
           <p className='governance-detail__placeholder'>
             <FormattedMessage
               id='governance.discussion.coming_soon'
               defaultMessage='General discussion thread coming in a future iteration. For now, structured conversation happens inside individual challenges above.'
             />
           </p>
-        </>
+        </section>
       )}
     </div>
   );

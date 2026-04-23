@@ -631,10 +631,85 @@ $governance-amber: #f59e0b;
 }
 
 .governance-detail__placeholder {
-  padding: 40px 0;
-  text-align: center;
+  padding: 20px 4px 4px;
   color: #{$secondary-text-color};
   font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+// ─── Proposal zones (card-based layout for the detail tab) ──────────────────
+// Each logical section becomes its own bordered, tinted card with a coloured
+// left-accent indicating zone type. Reduces the flat "wall of text" feel.
+
+.governance-zone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-color);
+  border: 1px solid var(--background-border-color);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+}
+
+.governance-zone__heading {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: $governance-purple;
+  color: #fff;
+  padding: 3px 12px;
+  border-radius: 999px;
+  margin: 0 0 14px;
+  border: none;
+}
+
+.governance-zone__heading--block {
+  background: $governance-block;
+}
+
+.governance-zone__heading--neutral {
+  background: $secondary-text-color;
+}
+
+.governance-zone--body {
+  background: rgba($governance-purple, 0.02);
+  border-color: rgba($governance-purple, 0.12);
+}
+
+.governance-zone--vote {
+  background: rgba($governance-purple, 0.04);
+  border-color: rgba($governance-purple, 0.18);
+  border-left: 3px solid $governance-purple;
+  padding-left: 18px;
+}
+
+.governance-zone--position {
+  background: rgba($governance-purple, 0.07);
+  border-color: rgba($governance-purple, 0.25);
+  border-left: 3px solid $governance-purple;
+  padding-left: 18px;
+}
+
+.governance-zone--challenges {
+  background: rgba($governance-block, 0.04);
+  border-color: rgba($governance-block, 0.2);
+  border-left: 3px solid $governance-block;
+  padding-left: 18px;
+}
+
+.governance-zone--voters {
+  background: var(--background-color);
+  border-color: var(--background-border-color);
+}
+
+.governance-zone--discussion {
+  background: rgba($governance-purple, 0.02);
+  border: 1px dashed rgba($governance-purple, 0.25);
 }
 
 // ─── Challenge modal (raise-a-block popup) ─────────────────────────────────
@@ -653,6 +728,10 @@ $governance-amber: #f59e0b;
     inset: 0;
     background: rgba(0, 0, 0, 55%);
     backdrop-filter: blur(2px);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    appearance: none;
   }
 
   &__body {
@@ -1149,7 +1228,7 @@ $governance-amber: #f59e0b;
   font-size: 14px;
   color: #{$primary-text-color};
   line-height: 1.75;
-  margin: 0 0 28px;
+  margin: 0;
   white-space: pre-wrap;
 }
 
