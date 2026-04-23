@@ -1,17 +1,16 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { FormattedMessage, FormattedDate } from 'react-intl';
 
 import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
-
 import { Icon } from 'mastodon/components/icon';
 
 import type { Proposal } from '../index';
-import { TabContribute } from './proposal_tabs/tab_contribute';
-import { TabPlan } from './proposal_tabs/tab_plan';
+
+import { TabKontribute } from './proposal_tabs/tab_kontribute';
 import { TabProposal } from './proposal_tabs/tab_proposal';
 
-type Tab = 'proposal' | 'plan' | 'contribute' | 'discussion';
+type Tab = 'proposal' | 'kontribute' | 'discussion';
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -29,17 +28,26 @@ export const ProposalDetail: React.FC<{
 }> = ({ proposal, onBack, onVoteUpdate }) => {
   const [activeTab, setActiveTab] = useState<Tab>('proposal');
 
+  const handleProposalTab = useCallback(() => { setActiveTab('proposal'); }, []);
+  const handleKontributeTab = useCallback(() => { setActiveTab('kontribute'); }, []);
+  const handleDiscussionTab = useCallback(() => { setActiveTab('discussion'); }, []);
+
   return (
     <div className='governance-detail'>
       <div className='governance-detail__page'>
         <button className='governance-detail__back' onClick={onBack}>
           <Icon id='arrow-back' icon={ArrowBackIcon} />
-          <FormattedMessage id='governance.back' defaultMessage='All proposals' />
+          <FormattedMessage
+            id='governance.back'
+            defaultMessage='All proposals'
+          />
         </button>
 
         <div className='governance-detail__topbar'>
           <h1 className='governance-detail__title'>{proposal.title}</h1>
-          <span className={`governance-detail__status governance-detail__status--${proposal.status}`}>
+          <span
+            className={`governance-detail__status governance-detail__status--${proposal.status}`}
+          >
             {statusLabels[proposal.status]}
           </span>
         </div>
@@ -51,7 +59,12 @@ export const ProposalDetail: React.FC<{
             values={{ name: proposal.created_by_account.username }}
           />
           {' · '}
-          <FormattedDate value={proposal.created_at} day='numeric' month='short' year='numeric' />
+          <FormattedDate
+            value={proposal.created_at}
+            day='numeric'
+            month='short'
+            year='numeric'
+          />
           {proposal.categories.length > 0 && (
             <>
               {' · '}
@@ -63,27 +76,30 @@ export const ProposalDetail: React.FC<{
         <nav className='governance-detail__tabs'>
           <button
             className={`governance-detail__tab ${activeTab === 'proposal' ? 'active' : ''}`}
-            onClick={() => setActiveTab('proposal')}
+            onClick={handleProposalTab}
           >
-            <FormattedMessage id='governance.tab.proposal' defaultMessage='Proposal' />
+            <FormattedMessage
+              id='governance.tab.proposal'
+              defaultMessage='Proposal'
+            />
           </button>
           <button
-            className={`governance-detail__tab ${activeTab === 'plan' ? 'active' : ''}`}
-            onClick={() => setActiveTab('plan')}
+            className={`governance-detail__tab ${activeTab === 'kontribute' ? 'active' : ''}`}
+            onClick={handleKontributeTab}
           >
-            <FormattedMessage id='governance.tab.plan' defaultMessage='Plan' />
-          </button>
-          <button
-            className={`governance-detail__tab ${activeTab === 'contribute' ? 'active' : ''}`}
-            onClick={() => setActiveTab('contribute')}
-          >
-            <FormattedMessage id='governance.tab.contribute' defaultMessage='Contribute' />
+            <FormattedMessage
+              id='governance.tab.kontribute'
+              defaultMessage='Kontribute'
+            />
           </button>
           <button
             className={`governance-detail__tab ${activeTab === 'discussion' ? 'active' : ''}`}
-            onClick={() => setActiveTab('discussion')}
+            onClick={handleDiscussionTab}
           >
-            <FormattedMessage id='governance.tab.discussion' defaultMessage='Discussion' />
+            <FormattedMessage
+              id='governance.tab.discussion'
+              defaultMessage='Discussion'
+            />
           </button>
         </nav>
 
@@ -91,8 +107,9 @@ export const ProposalDetail: React.FC<{
           {activeTab === 'proposal' && (
             <TabProposal proposal={proposal} onVoteUpdate={onVoteUpdate} />
           )}
-          {activeTab === 'plan' && <TabPlan proposalId={proposal.id} />}
-          {activeTab === 'contribute' && <TabContribute proposalId={proposal.id} />}
+          {activeTab === 'kontribute' && (
+            <TabKontribute proposalId={proposal.id} />
+          )}
           {activeTab === 'discussion' && (
             <p className='governance-detail__placeholder'>
               <FormattedMessage

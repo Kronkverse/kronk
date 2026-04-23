@@ -5,14 +5,33 @@ import type { Proposal } from '../index';
 const truncate = (text: string, maxLen: number) =>
   text.length > maxLen ? `${text.slice(0, maxLen)}…` : text;
 
-export const ProposalCard: React.FC<{ proposal: Proposal; onClick: () => void }> = ({
-  proposal,
-  onClick,
-}) => {
-  const ageSeconds = Math.round((new Date(proposal.created_at).getTime() - Date.now()) / 1000);
+const buildStripBackground = (summary: Proposal['vote_summary']) => {
+  const total = summary.agree + summary.abstain + summary.block;
+  if (total === 0) return undefined;
+  const agreeEnd = (summary.agree / total) * 100;
+  const abstainEnd = agreeEnd + (summary.abstain / total) * 100;
+  return `linear-gradient(to bottom, var(--vote-agree) 0 ${agreeEnd}%, var(--vote-abstain) ${agreeEnd}% ${abstainEnd}%, var(--vote-block) ${abstainEnd}% 100%)`;
+};
+
+export const ProposalCard: React.FC<{
+  proposal: Proposal;
+  onClick: () => void;
+}> = ({ proposal, onClick }) => {
+  const ageSeconds = Math.round(
+    (new Date(proposal.created_at).getTime() - Date.now()) / 1000,
+  );
+  const stripBackground = buildStripBackground(proposal.vote_summary);
 
   return (
-    <button className={`governance-card governance-card--${proposal.status}`} onClick={onClick}>
+    <button
+      className={`governance-card governance-card--${proposal.status}`}
+      onClick={onClick}
+    >
+      <span
+        className='governance-card__strip'
+        style={stripBackground ? { background: stripBackground } : undefined}
+        aria-hidden='true'
+      />
       <h3 className='governance-card__title'>{proposal.title}</h3>
 
       <p className='governance-card__body'>{truncate(proposal.body, 180)}</p>
@@ -31,7 +50,11 @@ export const ProposalCard: React.FC<{ proposal: Proposal; onClick: () => void }>
         </span>
         <span className='governance-card__author-dot'>·</span>
         <span className='governance-card__author-time'>
-          <FormattedRelativeTime value={ageSeconds} numeric='auto' updateIntervalInSeconds={60} />
+          <FormattedRelativeTime
+            value={ageSeconds}
+            numeric='auto'
+            updateIntervalInSeconds={60}
+          />
         </span>
       </div>
     </button>
