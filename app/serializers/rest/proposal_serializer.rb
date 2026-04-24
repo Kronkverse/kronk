@@ -18,22 +18,22 @@ class REST::ProposalSerializer < ActiveModel::Serializer
 
   attribute :current_vote do
     vote = object.proposal_votes.find_by(account: current_user&.account)
-    vote ? { position: vote.position, statement: vote.statement } : nil
+    vote ? { position: vote.position, title: vote.title, statement: vote.statement } : nil
   end
 
   attribute :vote_summary do
     {
-      agree:   object.proposal_votes.where(position: :agree).count,
+      agree: object.proposal_votes.where(position: :agree).count,
       abstain: object.proposal_votes.where(position: :abstain).count,
-      block:   object.proposal_votes.where(position: :block).count,
+      block: object.proposal_votes.where(position: :block).count,
     }
   end
 
   attribute :task_summary do
     {
-      open:        object.tasks.where(status: :open).count,
+      open: object.tasks.where(status: :open).count,
       in_progress: object.tasks.where(status: :in_progress).count,
-      done:        object.tasks.where(status: :done).count,
+      done: object.tasks.where(status: :done).count,
     }
   end
 
@@ -42,10 +42,13 @@ class REST::ProposalSerializer < ActiveModel::Serializer
   end
 
   attribute :voters do
-    object.proposal_votes.includes(:account).order(:created_at).map do |v|
+    object.proposal_votes.includes(:account).order(created_at: :desc).map do |v|
       {
+        id: v.id.to_s,
         position: v.position,
+        title: v.title,
         statement: v.statement,
+        created_at: v.created_at,
         account: ActiveModelSerializers::SerializableResource.new(
           v.account, serializer: REST::AccountSerializer
         ).as_json,
@@ -60,25 +63,26 @@ class REST::ProposalSerializer < ActiveModel::Serializer
           .order(:created_at)
           .map do |v|
       {
-        id:         v.id.to_s,
-        statement:  v.statement,
-        account:    ActiveModelSerializers::SerializableResource.new(
-                      v.account, serializer: REST::AccountSerializer
-                    ).as_json,
+        id: v.id.to_s,
+        title: v.title,
+        statement: v.statement,
+        account: ActiveModelSerializers::SerializableResource.new(
+          v.account, serializer: REST::AccountSerializer
+        ).as_json,
         conditions: v.challenge_conditions.sort_by(&:created_at).map do |c|
           {
-            id:        c.id.to_s,
-            text:      c.text,
-            met:       c.met?,
-            met_at:    c.met_at,
+            id: c.id.to_s,
+            text: c.text,
+            met: c.met?,
+            met_at: c.met_at,
             responses: c.challenge_responses.sort_by(&:created_at).map do |r|
               {
-                id:         r.id.to_s,
-                body:       r.body,
+                id: r.id.to_s,
+                body: r.body,
                 created_at: r.created_at,
-                account:    ActiveModelSerializers::SerializableResource.new(
-                              r.account, serializer: REST::AccountSerializer
-                            ).as_json,
+                account: ActiveModelSerializers::SerializableResource.new(
+                  r.account, serializer: REST::AccountSerializer
+                ).as_json,
               }
             end,
           }

@@ -37,7 +37,7 @@ class Api::V1::ProposalsController < Api::BaseController
       )
     )
     if @proposal.save
-      render json: @proposal, serializer: REST::ProposalSerializer, status: :created
+      render json: @proposal, serializer: REST::ProposalSerializer, status: 201
     else
       render json: { error: @proposal.errors.full_messages.to_sentence }, status: :unprocessable_entity
     end
@@ -52,7 +52,7 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   def vote
-    return render json: { error: 'This proposal has been delivered; voting is closed.' }, status: :unprocessable_entity if @proposal.delivered?
+    return render json: { error: 'This proposal has been delivered; voting is closed.' }, status: :unprocessable_entity if @proposal.delivered? # rubocop:disable I18n/RailsI18n/DecorateString
 
     vote = ProposalVote.find_or_initialize_by(proposal: @proposal, account: current_account)
     vote.assign_attributes(vote_params)
@@ -63,7 +63,7 @@ class Api::V1::ProposalsController < Api::BaseController
       # If this is a block/challenge, replace the vote's conditions with the
       # ones submitted (if any). Non-block positions never have conditions.
       if vote.block?
-        condition_texts = Array(params.dig(:vote, :conditions)).map { |t| t.to_s.strip }.reject(&:blank?)
+        condition_texts = Array(params.dig(:vote, :conditions)).map { |t| t.to_s.strip }.compact_blank
         vote.challenge_conditions.destroy_all
         condition_texts.each { |text| vote.challenge_conditions.create!(text: text) }
       end
@@ -76,7 +76,7 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   def unvote
-    return render json: { error: 'This proposal has been delivered; voting is closed.' }, status: :unprocessable_entity if @proposal.delivered?
+    return render json: { error: 'This proposal has been delivered; voting is closed.' }, status: :unprocessable_entity if @proposal.delivered? # rubocop:disable I18n/RailsI18n/DecorateString
 
     vote = @proposal.proposal_votes.find_by(account: current_account)
     vote&.destroy
@@ -96,11 +96,11 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   def proposal_params
-    params.require(:proposal).permit(:title, :body, :proposal_type, categories: [])
+    params.expect(proposal: [:title, :body, :proposal_type, categories: []])
   end
 
   def vote_params
-    params.require(:vote).permit(:position, :statement)
+    params.expect(vote: [:position, :title, :statement])
   end
 
   def require_creator_or_steward!
@@ -112,7 +112,7 @@ class Api::V1::ProposalsController < Api::BaseController
   def reconcile_status!
     return if @proposal.delivered?
 
-    has_block = @proposal.proposal_votes.where(position: :block).exists?
+    has_block = @proposal.proposal_votes.exists?(position: :block)
     if has_block && !@proposal.vetoed?
       @proposal.update!(status: :vetoed)
     elsif !has_block && @proposal.vetoed?
