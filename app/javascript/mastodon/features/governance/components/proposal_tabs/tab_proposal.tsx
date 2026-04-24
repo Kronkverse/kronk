@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 import { FormattedMessage, FormattedRelativeTime } from 'react-intl';
 
@@ -7,24 +7,37 @@ import { me } from 'mastodon/initial_state';
 
 import type { Proposal } from '../../index';
 
-const POSITIONS = ['agree', 'abstain', 'block'] as const;
-type Position = (typeof POSITIONS)[number];
+type ResponseType = 'support' | 'question' | 'challenge';
 
-const positionLabel = (p: Position): string =>
-  p === 'agree' ? 'Back it' : p === 'abstain' ? 'Meh' : 'Challenge';
-
-const positionShort = (p: string): string =>
-  p === 'agree' ? 'Backed' : p === 'abstain' ? 'Meh' : 'Challenged';
-
+const TITLE_MAX = 80;
 const CHALLENGE_MIN = 20;
 
-type Challenge = Proposal['challenges'][number];
-type ChallengeCondition = Challenge['conditions'][number];
+const TYPE_LABEL: Record<ResponseType, string> = {
+  support: 'Support',
+  question: 'Question',
+  challenge: 'Challenge',
+};
 
-// ── Challenge response row ─────────────────────────────────────────────────
+const positionToType = (pos: string): ResponseType =>
+  pos === 'agree' ? 'support' : pos === 'block' ? 'challenge' : 'question';
+
+const typeToPosition = (t: ResponseType): 'agree' | 'abstain' | 'block' =>
+  t === 'support' ? 'agree' : t === 'challenge' ? 'block' : 'abstain';
+
+interface UnifiedResponse {
+  id: string;
+  type: ResponseType;
+  title: string | null;
+  description: string | null;
+  created_at: string;
+  account: Proposal['voters'][number]['account'];
+  conditions?: Proposal['challenges'][number]['conditions'];
+}
+
+// ── Challenge condition reply row ─────────────────────────────────────────
 
 const ChallengeResponseRow: React.FC<{
-  response: ChallengeCondition['responses'][number];
+  response: Proposal['challenges'][number]['conditions'][number]['responses'][number];
 }> = ({ response }) => {
   const ageSeconds = Math.round(
     (new Date(response.created_at).getTime() - Date.now()) / 1000,
@@ -54,10 +67,10 @@ const ChallengeResponseRow: React.FC<{
   );
 };
 
-// ── One condition within a challenge ───────────────────────────────────────
+// ── One challenge condition ───────────────────────────────────────────────
 
 const ConditionBlock: React.FC<{
-  condition: ChallengeCondition;
+  condition: Proposal['challenges'][number]['conditions'][number];
   canToggle: boolean;
   onChanged: (updated: Proposal) => void;
 }> = ({ condition, canToggle, onChanged }) => {
@@ -155,78 +168,94 @@ const ConditionBlock: React.FC<{
   );
 };
 
-// ── One challenge (per challenger) ─────────────────────────────────────────
+// ── Response card ─────────────────────────────────────────────────────────
 
-const ChallengeBlock: React.FC<{
-  challenge: Challenge;
-  viewerIsAuthor: boolean;
+const ResponseCard: React.FC<{
+  response: UnifiedResponse;
+  isMine: boolean;
   onChanged: (updated: Proposal) => void;
-  onWithdraw: () => void;
-  withdrawing: boolean;
-}> = ({ challenge, viewerIsAuthor, onChanged, onWithdraw, withdrawing }) => {
-  const allMet =
-    challenge.conditions.length > 0 && challenge.conditions.every((c) => c.met);
+  onEdit: () => void;
+  onDelete: () => void;
+  busy: boolean;
+}> = ({ response, isMine, onChanged, onEdit, onDelete, busy }) => {
+  const ageSeconds = Math.round(
+    (new Date(response.created_at).getTime() - Date.now()) / 1000,
+  );
 
   return (
-    <div className='governance-challenge'>
-      <div className='governance-challenge__header'>
-        <div className='governance-challenge__avatar'>
-          {challenge.account.avatar ? (
-            <img src={challenge.account.avatar} alt='' aria-hidden='true' />
-          ) : (
-            challenge.account.username.charAt(0).toUpperCase()
-          )}
-        </div>
-        <div className='governance-challenge__who'>
-          <strong>@{challenge.account.username}</strong>
-          <span> challenged this proposal</span>
+    <div
+      className={`governance-response-card governance-response-card--${response.type}${isMine ? ' governance-response-card--mine' : ''}`}
+    >
+      <div className='governance-response-card__header'>
+        <span
+          className={`governance-response-card__type governance-response-card__type--${response.type}`}
+        >
+          {TYPE_LABEL[response.type]}
+        </span>
+        <div className='governance-response-card__who'>
+          <span className='governance-response-card__author'>
+            @{response.account.username}
+          </span>
+          <span className='governance-response-card__sep'>·</span>
+          <FormattedRelativeTime
+            value={ageSeconds}
+            numeric='auto'
+            updateIntervalInSeconds={60}
+          />
         </div>
       </div>
 
-      {challenge.statement && (
-        <p className='governance-challenge__statement'>
-          &ldquo;{challenge.statement}&rdquo;
-        </p>
+      {response.title && (
+        <h4 className='governance-response-card__title'>{response.title}</h4>
       )}
 
-      {challenge.conditions.length > 0 && (
-        <div className='governance-challenge__conditions'>
-          <div className='governance-challenge__section-label'>
-            <FormattedMessage
-              id='governance.challenge.conditions_heading'
-              defaultMessage='Conditions for withdrawal'
-            />
-          </div>
-          {challenge.conditions.map((c) => (
-            <ConditionBlock
-              key={c.id}
-              condition={c}
-              canToggle={viewerIsAuthor}
-              onChanged={onChanged}
-            />
-          ))}
-        </div>
+      {response.description && (
+        <p className='governance-response-card__body'>{response.description}</p>
       )}
 
-      {viewerIsAuthor && (
-        <div className='governance-challenge__withdraw'>
-          {allMet && (
-            <span className='governance-challenge__withdraw-hint'>
+      {response.type === 'challenge' &&
+        response.conditions &&
+        response.conditions.length > 0 && (
+          <div className='governance-response-card__conditions'>
+            <div className='governance-response-card__conditions-label'>
               <FormattedMessage
-                id='governance.challenge.all_addressed'
-                defaultMessage='All conditions marked addressed.'
+                id='governance.challenge.conditions_heading'
+                defaultMessage='Conditions for withdrawal'
               />
-            </span>
-          )}
+            </div>
+            {response.conditions.map((c) => (
+              <ConditionBlock
+                key={c.id}
+                condition={c}
+                canToggle={isMine}
+                onChanged={onChanged}
+              />
+            ))}
+          </div>
+        )}
+
+      {isMine && (
+        <div className='governance-response-card__actions'>
           <button
             type='button'
-            className={`governance-challenge__withdraw-btn ${allMet ? 'governance-challenge__withdraw-btn--ready' : ''}`}
-            onClick={onWithdraw}
-            disabled={withdrawing}
+            className='governance-response-card__edit-btn'
+            onClick={onEdit}
+            disabled={busy}
           >
             <FormattedMessage
-              id='governance.challenge.withdraw'
-              defaultMessage='Withdraw challenge'
+              id='governance.response.edit'
+              defaultMessage='Edit'
+            />
+          </button>
+          <button
+            type='button'
+            className='governance-response-card__delete-btn'
+            onClick={onDelete}
+            disabled={busy}
+          >
+            <FormattedMessage
+              id='governance.response.withdraw'
+              defaultMessage='Withdraw'
             />
           </button>
         </div>
@@ -235,109 +264,100 @@ const ChallengeBlock: React.FC<{
   );
 };
 
-// ── Main tab ───────────────────────────────────────────────────────────────
+// ── Main tab ──────────────────────────────────────────────────────────────
 
 export const TabProposal: React.FC<{
   proposal: Proposal;
   onVoteUpdate: (updated: Proposal) => void;
 }> = ({ proposal, onVoteUpdate }) => {
-  const [position, setPosition] = useState<Position | null>(
-    (proposal.current_vote?.position as Position | undefined) ?? null,
-  );
-  const [submitting, setSubmitting] = useState(false);
-  const [challengeOpen, setChallengeOpen] = useState(false);
-  const [challengeText, setChallengeText] = useState(
-    proposal.current_vote?.statement ?? '',
-  );
-  const [conditions, setConditions] = useState<string[]>(['']);
-
   const canVote = proposal.status !== 'delivered';
 
-  const submitVote = useCallback(
-    async (
-      pos: Position,
-      statement: string | null,
-      conditionList?: string[],
-    ) => {
-      setSubmitting(true);
-      try {
-        if (position === pos && pos !== 'block') {
-          const res = await api().delete(
-            `/api/v1/proposals/${proposal.id}/vote`,
-          );
-          setPosition(null);
-          onVoteUpdate(res.data as Proposal);
-        } else {
-          const payload: Record<string, unknown> = {
-            position: pos,
-            statement: statement ?? null,
-          };
-          if (pos === 'block' && conditionList)
-            payload.conditions = conditionList;
-          const res = await api().post(
-            `/api/v1/proposals/${proposal.id}/vote`,
-            {
-              vote: payload,
-            },
-          );
-          setPosition(pos);
-          onVoteUpdate(res.data as Proposal);
-        }
-      } catch (err) {
-        console.error('Vote failed:', err);
-      } finally {
-        setSubmitting(false);
-      }
-    },
-    [proposal.id, position, onVoteUpdate],
-  );
+  // My existing response (if any)
+  const myResponse = useMemo<UnifiedResponse | null>(() => {
+    if (!proposal.current_vote) return null;
+    const type = positionToType(proposal.current_vote.position);
+    const myVoter = proposal.voters.find((v) => v.account.id === me);
+    const myChallenge =
+      type === 'challenge'
+        ? proposal.challenges.find((c) => c.account.id === me)
+        : undefined;
+    if (!myVoter) return null;
+    return {
+      id: myVoter.id,
+      type,
+      title: myVoter.title,
+      description: myVoter.statement,
+      created_at: myVoter.created_at,
+      account: myVoter.account,
+      conditions: myChallenge?.conditions,
+    };
+  }, [proposal.current_vote, proposal.voters, proposal.challenges]);
 
-  const handleVoteClick = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
-      const pos = e.currentTarget.dataset.pos as Position;
-      if (pos === 'block') {
-        setChallengeOpen(true);
-      } else {
-        void submitVote(pos, null);
-      }
-    },
-    [submitVote],
-  );
+  // Composer state
+  const [editing, setEditing] = useState(false);
+  const [composerType, setComposerType] = useState<ResponseType>('support');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [conditions, setConditions] = useState<string[]>(['']);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const submitChallenge = useCallback(() => {
-    if (challengeText.trim().length < CHALLENGE_MIN) return;
-    const filled = conditions.map((c) => c.trim()).filter(Boolean);
-    if (filled.length === 0) return;
-    setChallengeOpen(false);
-    void submitVote('block', challengeText.trim(), filled);
-  }, [challengeText, conditions, submitVote]);
+  const composerOpen = !myResponse || editing;
 
-  const withdrawChallenge = useCallback(async () => {
-    setSubmitting(true);
-    try {
-      const res = await api().delete(`/api/v1/proposals/${proposal.id}/vote`);
-      setPosition(null);
-      setChallengeText('');
-      setConditions(['']);
-      onVoteUpdate(res.data as Proposal);
-    } catch (err) {
-      console.error('Withdraw failed:', err);
-    } finally {
-      setSubmitting(false);
-    }
-  }, [proposal.id, onVoteUpdate]);
-
-  const handleWithdrawClick = useCallback(() => {
-    void withdrawChallenge();
-  }, [withdrawChallenge]);
-
-  const closeChallenge = useCallback(() => {
-    setChallengeOpen(false);
+  const resetComposer = useCallback(() => {
+    setComposerType('support');
+    setTitle('');
+    setDescription('');
+    setConditions(['']);
+    setError(null);
   }, []);
 
-  const handleChallengeTextChange = useCallback(
+  const openEdit = useCallback(() => {
+    if (!myResponse) return;
+    setComposerType(myResponse.type);
+    setTitle(myResponse.title ?? '');
+    setDescription(myResponse.description ?? '');
+    setConditions(
+      myResponse.conditions && myResponse.conditions.length > 0
+        ? myResponse.conditions.map((c) => c.text)
+        : [''],
+    );
+    setError(null);
+    setEditing(true);
+  }, [myResponse]);
+
+  const closeEdit = useCallback(() => {
+    setEditing(false);
+    resetComposer();
+  }, [resetComposer]);
+
+  const handleTypeSelect = useCallback((type: ResponseType) => {
+    setComposerType(type);
+    setError(null);
+  }, []);
+
+  const handleSupportType = useCallback(() => {
+    handleTypeSelect('support');
+  }, [handleTypeSelect]);
+
+  const handleQuestionType = useCallback(() => {
+    handleTypeSelect('question');
+  }, [handleTypeSelect]);
+
+  const handleChallengeType = useCallback(() => {
+    handleTypeSelect('challenge');
+  }, [handleTypeSelect]);
+
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setTitle(e.target.value);
+    },
+    [],
+  );
+
+  const handleDescriptionChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setChallengeText(e.target.value);
+      setDescription(e.target.value);
     },
     [],
   );
@@ -366,6 +386,114 @@ export const TabProposal: React.FC<{
   const handleConditionAdd = useCallback(() => {
     setConditions((prev) => [...prev, '']);
   }, []);
+
+  const submit = useCallback(async () => {
+    const titleTrim = title.trim();
+    if (!titleTrim) {
+      setError('Title is required.');
+      return;
+    }
+    if (titleTrim.length > TITLE_MAX) {
+      setError(`Title must be ${TITLE_MAX} characters or fewer.`);
+      return;
+    }
+    if (composerType === 'challenge') {
+      if (description.trim().length < CHALLENGE_MIN) {
+        setError(`Challenge description must be ${CHALLENGE_MIN}+ characters.`);
+        return;
+      }
+      const filled = conditions.map((c) => c.trim()).filter(Boolean);
+      if (filled.length === 0) {
+        setError('Add at least one condition.');
+        return;
+      }
+    }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const payload: Record<string, unknown> = {
+        position: typeToPosition(composerType),
+        title: titleTrim,
+        statement: description.trim() || null,
+      };
+      if (composerType === 'challenge') {
+        payload.conditions = conditions.map((c) => c.trim()).filter(Boolean);
+      }
+      const res = await api().post(`/api/v1/proposals/${proposal.id}/vote`, {
+        vote: payload,
+      });
+      onVoteUpdate(res.data as Proposal);
+      setEditing(false);
+      resetComposer();
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : 'Failed to post response';
+      setError(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [
+    composerType,
+    title,
+    description,
+    conditions,
+    proposal.id,
+    onVoteUpdate,
+    resetComposer,
+  ]);
+
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      void submit();
+    },
+    [submit],
+  );
+
+  const withdrawResponse = useCallback(async () => {
+    setSubmitting(true);
+    try {
+      const res = await api().delete(`/api/v1/proposals/${proposal.id}/vote`);
+      onVoteUpdate(res.data as Proposal);
+      setEditing(false);
+      resetComposer();
+    } catch (err) {
+      console.error('Withdraw failed:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [proposal.id, onVoteUpdate, resetComposer]);
+
+  const handleDelete = useCallback(() => {
+    void withdrawResponse();
+  }, [withdrawResponse]);
+
+  // Build unified responses list (all voters, joined with challenge data for block votes)
+  const responses = useMemo<UnifiedResponse[]>(() => {
+    return proposal.voters.map((v) => {
+      const type = positionToType(v.position);
+      const challenge =
+        type === 'challenge'
+          ? proposal.challenges.find((c) => c.id === v.id)
+          : undefined;
+      return {
+        id: v.id,
+        type,
+        title: v.title,
+        description: v.statement,
+        created_at: v.created_at,
+        account: v.account,
+        conditions: challenge?.conditions,
+      };
+    });
+  }, [proposal.voters, proposal.challenges]);
+
+  // Other responses (excluding mine, which is rendered above)
+  const otherResponses = useMemo(
+    () => responses.filter((r) => r.account.id !== me),
+    [responses],
+  );
 
   const { agree, abstain, block } = proposal.vote_summary;
 
@@ -404,206 +532,204 @@ export const TabProposal: React.FC<{
 
       <div className='governance-tab-proposal__respond'>
         <p className='governance-tab-proposal__support-line'>
-          <strong>{agree}</strong> backing
+          <strong>{agree}</strong> support
           {' · '}
-          <strong>{abstain}</strong> meh
+          <strong>{abstain}</strong> {abstain === 1 ? 'question' : 'questions'}
           {' · '}
           <strong>{block}</strong> {block === 1 ? 'challenge' : 'challenges'}
         </p>
 
-        {canVote && (
-          <div className='governance-vote-btns'>
-            {POSITIONS.map((pos) => (
-              <button
-                key={pos}
-                className={`governance-vbtn governance-vbtn--${pos} ${position === pos ? 'active' : ''}`}
-                data-pos={pos}
-                onClick={handleVoteClick}
-                disabled={submitting}
-              >
-                {positionLabel(pos)}
-              </button>
-            ))}
-          </div>
+        {myResponse && !editing && (
+          <ResponseCard
+            response={myResponse}
+            isMine
+            onChanged={onVoteUpdate}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            busy={submitting}
+          />
         )}
 
-        {!canVote && position && (
-          <p className='governance-vote-current'>
-            <FormattedMessage
-              id='governance.vote.current'
-              defaultMessage='You: {pos}'
-              values={{ pos: <strong>{positionShort(position)}</strong> }}
-            />
-          </p>
+        {canVote && composerOpen && (
+          <form className='governance-composer' onSubmit={handleSubmit}>
+            <div className='governance-composer__type-selector'>
+              <button
+                type='button'
+                className={`governance-composer__type governance-composer__type--support ${composerType === 'support' ? 'active' : ''}`}
+                onClick={handleSupportType}
+                disabled={submitting}
+              >
+                Support
+              </button>
+              <button
+                type='button'
+                className={`governance-composer__type governance-composer__type--question ${composerType === 'question' ? 'active' : ''}`}
+                onClick={handleQuestionType}
+                disabled={submitting}
+              >
+                Question
+              </button>
+              <button
+                type='button'
+                className={`governance-composer__type governance-composer__type--challenge ${composerType === 'challenge' ? 'active' : ''}`}
+                onClick={handleChallengeType}
+                disabled={submitting}
+              >
+                Challenge
+              </button>
+            </div>
+
+            <label className='governance-composer__field'>
+              <span className='governance-composer__label'>
+                <FormattedMessage
+                  id='governance.composer.title'
+                  defaultMessage='Title'
+                />
+              </span>
+              <input
+                className='governance-composer__input'
+                type='text'
+                value={title}
+                onChange={handleTitleChange}
+                maxLength={TITLE_MAX}
+                placeholder='One-line summary'
+                required
+              />
+              <span className='governance-composer__counter'>
+                {title.length} / {TITLE_MAX}
+              </span>
+            </label>
+
+            <label className='governance-composer__field'>
+              <span className='governance-composer__label'>
+                <FormattedMessage
+                  id='governance.composer.description'
+                  defaultMessage='Description'
+                />
+                {composerType !== 'challenge' && (
+                  <span className='governance-composer__optional'>
+                    (optional)
+                  </span>
+                )}
+              </span>
+              <textarea
+                className='governance-composer__textarea'
+                value={description}
+                onChange={handleDescriptionChange}
+                rows={4}
+                placeholder={
+                  composerType === 'challenge'
+                    ? `Explain your concern (${CHALLENGE_MIN}+ chars)…`
+                    : composerType === 'question'
+                      ? 'What do you need clarified?'
+                      : 'Say more (optional)…'
+                }
+              />
+            </label>
+
+            {composerType === 'challenge' && (
+              <div className='governance-composer__conditions'>
+                <span className='governance-composer__label'>
+                  <FormattedMessage
+                    id='governance.composer.conditions_label'
+                    defaultMessage='Conditions for withdrawal'
+                  />
+                </span>
+                {conditions.map((c, i) => (
+                  <div key={i} className='governance-composer__condition-row'>
+                    <input
+                      className='governance-composer__condition-input'
+                      type='text'
+                      placeholder={`Condition ${i + 1}`}
+                      value={c}
+                      data-idx={i}
+                      onChange={handleConditionChange}
+                    />
+                    {conditions.length > 1 && (
+                      <button
+                        type='button'
+                        className='governance-composer__condition-remove'
+                        data-idx={i}
+                        onClick={handleConditionRemove}
+                        aria-label='Remove condition'
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type='button'
+                  className='governance-composer__condition-add'
+                  onClick={handleConditionAdd}
+                >
+                  +{' '}
+                  <FormattedMessage
+                    id='governance.composer.add_condition'
+                    defaultMessage='Add condition'
+                  />
+                </button>
+              </div>
+            )}
+
+            {error && <p className='governance-composer__error'>{error}</p>}
+
+            <div className='governance-composer__actions'>
+              {editing && (
+                <button
+                  type='button'
+                  className='governance-composer__cancel'
+                  onClick={closeEdit}
+                  disabled={submitting}
+                >
+                  <FormattedMessage
+                    id='governance.composer.cancel'
+                    defaultMessage='Cancel'
+                  />
+                </button>
+              )}
+              <button
+                type='submit'
+                className='governance-composer__submit'
+                disabled={submitting}
+              >
+                {editing ? (
+                  <FormattedMessage
+                    id='governance.composer.save'
+                    defaultMessage='Save'
+                  />
+                ) : (
+                  <FormattedMessage
+                    id='governance.composer.post'
+                    defaultMessage='Post'
+                  />
+                )}
+              </button>
+            </div>
+          </form>
         )}
       </div>
 
-      {proposal.challenges.length > 0 && (
+      {otherResponses.length > 0 && (
         <div className='governance-tab-proposal__subsection'>
           <h3 className='governance-tab-proposal__subsection-title'>
             <FormattedMessage
-              id='governance.challenges_heading'
-              defaultMessage='Active challenges'
+              id='governance.responses_heading'
+              defaultMessage='Discussion'
             />
           </h3>
-          <div className='governance-challenges-list'>
-            {proposal.challenges.map((ch) => (
-              <ChallengeBlock
-                key={ch.id}
-                challenge={ch}
-                viewerIsAuthor={ch.account.id === me}
+          <div className='governance-response-list'>
+            {otherResponses.map((r) => (
+              <ResponseCard
+                key={r.id}
+                response={r}
+                isMine={false}
                 onChanged={onVoteUpdate}
-                onWithdraw={handleWithdrawClick}
-                withdrawing={submitting}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+                busy={submitting}
               />
             ))}
-          </div>
-        </div>
-      )}
-
-      {proposal.voters.length > 0 && (
-        <div className='governance-tab-proposal__subsection'>
-          <h3 className='governance-tab-proposal__subsection-title'>
-            <FormattedMessage
-              id='governance.voters_heading'
-              defaultMessage="Who's weighed in"
-            />
-          </h3>
-          <div className='governance-voter-list'>
-            {proposal.voters.map((v) => (
-              <div key={v.account.id} className='governance-voter-row'>
-                <span
-                  className={`governance-voter-dot governance-voter-dot--${v.position}`}
-                  aria-label={positionShort(v.position)}
-                />
-                <div className='governance-voter-avatar'>
-                  {v.account.avatar ? (
-                    <img src={v.account.avatar} alt='' aria-hidden='true' />
-                  ) : (
-                    v.account.username.charAt(0).toUpperCase()
-                  )}
-                </div>
-                <span className='governance-voter-name'>
-                  @{v.account.username}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {challengeOpen && (
-        <div className='governance-challenge-modal'>
-          <button
-            type='button'
-            className='governance-challenge-modal__backdrop'
-            onClick={closeChallenge}
-            aria-label='Close challenge dialog'
-          />
-          <div className='governance-challenge-modal__body'>
-            <h3 className='governance-challenge-modal__heading'>
-              <FormattedMessage
-                id='governance.challenge.heading'
-                defaultMessage='Raise a challenge'
-              />
-            </h3>
-            <p className='governance-challenge-modal__hint'>
-              <FormattedMessage
-                id='governance.challenge.hint'
-                defaultMessage='A challenge is a principled objection, not just disagreement. Summarise your concern ({min}+ chars), then list the conditions that need to be met before you would withdraw.'
-                values={{ min: CHALLENGE_MIN }}
-              />
-            </p>
-
-            <div className='governance-challenge-modal__label'>
-              <FormattedMessage
-                id='governance.challenge.summary'
-                defaultMessage='Your concern'
-              />
-            </div>
-            <textarea
-              className='governance-challenge-modal__textarea'
-              value={challengeText}
-              onChange={handleChallengeTextChange}
-              rows={3}
-              placeholder='In one sentence, what is your concern?'
-            />
-            <div className='governance-challenge-modal__counter'>
-              {challengeText.trim().length} / {CHALLENGE_MIN}+
-            </div>
-
-            <div className='governance-challenge-modal__label'>
-              <FormattedMessage
-                id='governance.challenge.conditions_label'
-                defaultMessage='Conditions for withdrawal'
-              />
-            </div>
-            {conditions.map((c, i) => (
-              <div
-                key={i}
-                className='governance-challenge-modal__condition-row'
-              >
-                <input
-                  className='governance-challenge-modal__condition-input'
-                  type='text'
-                  placeholder={`Condition ${i + 1}`}
-                  value={c}
-                  data-idx={i}
-                  onChange={handleConditionChange}
-                />
-                {conditions.length > 1 && (
-                  <button
-                    type='button'
-                    className='governance-challenge-modal__remove-cond'
-                    data-idx={i}
-                    onClick={handleConditionRemove}
-                    aria-label='Remove condition'
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-            ))}
-            <button
-              type='button'
-              className='governance-challenge-modal__add-cond'
-              onClick={handleConditionAdd}
-            >
-              +{' '}
-              <FormattedMessage
-                id='governance.challenge.add_condition'
-                defaultMessage='Add condition'
-              />
-            </button>
-
-            <div className='governance-challenge-modal__actions'>
-              <button
-                type='button'
-                className='governance-challenge-modal__cancel'
-                onClick={closeChallenge}
-                disabled={submitting}
-              >
-                <FormattedMessage
-                  id='governance.challenge.cancel'
-                  defaultMessage='Cancel'
-                />
-              </button>
-              <button
-                type='button'
-                className='governance-challenge-modal__submit'
-                onClick={submitChallenge}
-                disabled={
-                  submitting ||
-                  challengeText.trim().length < CHALLENGE_MIN ||
-                  conditions.every((c) => !c.trim())
-                }
-              >
-                <FormattedMessage
-                  id='governance.challenge.submit'
-                  defaultMessage='Submit challenge'
-                />
-              </button>
-            </div>
           </div>
         </div>
       )}

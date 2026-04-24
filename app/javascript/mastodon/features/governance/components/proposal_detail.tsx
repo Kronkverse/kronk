@@ -10,7 +10,7 @@ import type { Proposal } from '../index';
 import { TabKontribute } from './proposal_tabs/tab_kontribute';
 import { TabProposal } from './proposal_tabs/tab_proposal';
 
-type Tab = 'proposal' | 'kontribute' | 'discussion';
+type Tab = 'proposal' | 'kontribute';
 
 const statusLabels: Record<Proposal['status'], string> = {
   open: 'Open',
@@ -31,9 +31,6 @@ export const ProposalDetail: React.FC<{
   }, []);
   const handleKontributeTab = useCallback(() => {
     setActiveTab('kontribute');
-  }, []);
-  const handleDiscussionTab = useCallback(() => {
-    setActiveTab('discussion');
   }, []);
 
   return (
@@ -89,15 +86,6 @@ export const ProposalDetail: React.FC<{
               defaultMessage='Kontribute'
             />
           </button>
-          <button
-            className={`governance-detail__tab ${activeTab === 'discussion' ? 'active' : ''}`}
-            onClick={handleDiscussionTab}
-          >
-            <FormattedMessage
-              id='governance.tab.discussion'
-              defaultMessage='Discussion'
-            />
-          </button>
         </nav>
 
         <div className='governance-detail__content'>
@@ -106,14 +94,6 @@ export const ProposalDetail: React.FC<{
           )}
           {activeTab === 'kontribute' && (
             <TabKontribute proposalId={proposal.id} />
-          )}
-          {activeTab === 'discussion' && (
-            <p className='governance-detail__placeholder'>
-              <FormattedMessage
-                id='governance.discussion.unavailable'
-                defaultMessage='Discussion not yet available.'
-              />
-            </p>
           )}
         </div>
       </div>

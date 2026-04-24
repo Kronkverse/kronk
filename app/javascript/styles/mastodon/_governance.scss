@@ -1217,6 +1217,399 @@ $governance-amber: #f59e0b;
   }
 }
 
+// ─── Response composer (post Support / Question / Challenge) ────────────────
+
+.governance-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 18px;
+  background: var(--background-color);
+  border: 1px solid var(--background-border-color);
+  border-radius: 12px;
+}
+
+.governance-composer__type-selector {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.governance-composer__type {
+  flex: 1;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--background-border-color);
+  background: transparent;
+  color: $secondary-text-color;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover:not(:disabled) {
+    border-color: $governance-purple;
+    color: $primary-text-color;
+  }
+
+  &--support.active {
+    background: $governance-purple;
+    border-color: $governance-purple;
+    color: #fff;
+  }
+
+  &--question.active {
+    background: $secondary-text-color;
+    border-color: $secondary-text-color;
+    color: #fff;
+  }
+
+  &--challenge.active {
+    background: $governance-block;
+    border-color: $governance-block;
+    color: #fff;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.governance-composer__field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  position: relative;
+}
+
+.governance-composer__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: $primary-text-color;
+}
+
+.governance-composer__optional {
+  color: $secondary-text-color;
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.governance-composer__input,
+.governance-composer__textarea {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--input-background-color, var(--background-color));
+  border: 1px solid var(--background-border-color);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  color: $primary-text-color;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+
+  &:focus {
+    outline: none;
+    border-color: $governance-purple;
+  }
+}
+
+.governance-composer__textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+
+.governance-composer__counter {
+  position: absolute;
+  right: 10px;
+  bottom: -18px;
+  font-size: 11px;
+  color: $secondary-text-color;
+  font-variant-numeric: tabular-nums;
+}
+
+.governance-composer__conditions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.governance-composer__condition-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.governance-composer__condition-input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--background-border-color);
+  border-radius: 6px;
+  background: var(--background-color);
+  color: $primary-text-color;
+  font-size: 13px;
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: $governance-block;
+  }
+}
+
+.governance-composer__condition-remove {
+  background: transparent;
+  border: none;
+  color: $secondary-text-color;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+
+  &:hover {
+    color: $governance-block;
+    background: rgba($governance-block, 0.08);
+  }
+}
+
+.governance-composer__condition-add {
+  align-self: flex-start;
+  background: $governance-purple;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.88;
+  }
+}
+
+.governance-composer__error {
+  margin: 0;
+  padding: 8px 12px;
+  background: rgba($governance-block, 0.08);
+  border: 1px solid rgba($governance-block, 0.3);
+  border-radius: 6px;
+  color: $governance-block;
+  font-size: 13px;
+}
+
+.governance-composer__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.governance-composer__cancel {
+  padding: 8px 16px;
+  border: 1px solid var(--background-border-color);
+  border-radius: 8px;
+  background: transparent;
+  color: $secondary-text-color;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: $governance-purple;
+    color: $governance-purple;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.governance-composer__submit {
+  padding: 8px 22px;
+  border: none;
+  border-radius: 8px;
+  background: $governance-purple;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ─── Response card (displays one response in the thread list) ───────────────
+
+.governance-response-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.governance-response-card {
+  background: var(--background-color);
+  border: 1px solid var(--background-border-color);
+  border-left: 3px solid transparent;
+  border-radius: 10px;
+  padding: 14px 16px;
+  transition: border-color 0.15s;
+
+  &--support {
+    border-left-color: $governance-purple;
+  }
+
+  &--question {
+    border-left-color: $secondary-text-color;
+  }
+
+  &--challenge {
+    border-left-color: $governance-block;
+  }
+
+  &--mine {
+    background: rgba($governance-purple, 0.03);
+  }
+}
+
+.governance-response-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.governance-response-card__type {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #fff;
+  flex-shrink: 0;
+
+  &--support {
+    background: $governance-purple;
+  }
+
+  &--question {
+    background: $secondary-text-color;
+  }
+
+  &--challenge {
+    background: $governance-block;
+  }
+}
+
+.governance-response-card__who {
+  font-size: 12px;
+  color: $secondary-text-color;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.governance-response-card__author {
+  color: $primary-text-color;
+  font-weight: 500;
+}
+
+.governance-response-card__sep {
+  opacity: 0.5;
+}
+
+.governance-response-card__title {
+  font-family: Georgia, 'Liberation Serif', serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: $primary-text-color;
+  margin: 0 0 6px;
+  line-height: 1.3;
+}
+
+.governance-response-card__body {
+  font-size: 13.5px;
+  color: $primary-text-color;
+  line-height: 1.55;
+  margin: 0 0 8px;
+  white-space: pre-wrap;
+}
+
+.governance-response-card__conditions {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--background-border-color);
+}
+
+.governance-response-card__conditions-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $secondary-text-color;
+  margin-bottom: 8px;
+}
+
+.governance-response-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--background-border-color);
+}
+
+.governance-response-card__edit-btn,
+.governance-response-card__delete-btn {
+  padding: 4px 12px;
+  border: 1px solid var(--background-border-color);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  color: $secondary-text-color;
+
+  &:hover:not(:disabled) {
+    border-color: $governance-purple;
+    color: $governance-purple;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.governance-response-card__delete-btn {
+  &:hover:not(:disabled) {
+    border-color: $governance-block;
+    color: $governance-block;
+  }
+}
+
+.governance-tab-proposal__footer-date {
+  margin: 28px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: $secondary-text-color;
+}
+
 .governance-tab-proposal__banner {
   border-radius: 8px;
   padding: 12px 14px;

@@ -1,3 +1,5 @@
+import { useCallback } from 'react';
+
 import { FormattedRelativeTime } from 'react-intl';
 
 import type { Proposal } from '../index';
@@ -15,17 +17,21 @@ const buildStripBackground = (summary: Proposal['vote_summary']) => {
 
 export const ProposalCard: React.FC<{
   proposal: Proposal;
-  onClick: () => void;
-}> = ({ proposal, onClick }) => {
+  onSelect: (id: string) => void;
+}> = ({ proposal, onSelect }) => {
   const ageSeconds = Math.round(
     (new Date(proposal.created_at).getTime() - Date.now()) / 1000,
   );
   const stripBackground = buildStripBackground(proposal.vote_summary);
 
+  const handleClick = useCallback(() => {
+    onSelect(proposal.id);
+  }, [onSelect, proposal.id]);
+
   return (
     <button
       className={`governance-card governance-card--${proposal.status}`}
-      onClick={onClick}
+      onClick={handleClick}
     >
       <span
         className='governance-card__strip'

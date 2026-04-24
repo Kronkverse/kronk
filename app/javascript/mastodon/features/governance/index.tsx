@@ -4,13 +4,12 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
-
+import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
+import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
-import api from 'mastodon/api';
 
 import { CreateProposalForm } from './components/create_proposal_form';
 import { ProposalCard } from './components/proposal_card';
@@ -20,7 +19,7 @@ const messages = defineMessages({
   title: { id: 'governance.title', defaultMessage: 'Kommons' },
 });
 
-export type Proposal = {
+export interface Proposal {
   id: string;
   title: string;
   body: string;
@@ -34,20 +33,43 @@ export type Proposal = {
   veto_count: number;
   participation_count: number;
   created_at: string;
-  current_vote: { position: string; statement: string | null } | null;
+  current_vote: {
+    position: string;
+    title: string | null;
+    statement: string | null;
+  } | null;
   vote_summary: { agree: number; abstain: number; block: number };
   task_summary: { open: number; in_progress: number; done: number };
   budget_total: number;
-  created_by_account: { id: string; username: string; display_name: string; avatar: string };
+  created_by_account: {
+    id: string;
+    username: string;
+    display_name: string;
+    avatar: string;
+  };
   voters: {
+    id: string;
     position: 'agree' | 'abstain' | 'block';
+    title: string | null;
     statement: string | null;
-    account: { id: string; username: string; display_name: string; avatar: string };
+    created_at: string;
+    account: {
+      id: string;
+      username: string;
+      display_name: string;
+      avatar: string;
+    };
   }[];
   challenges: {
     id: string;
+    title: string | null;
     statement: string | null;
-    account: { id: string; username: string; display_name: string; avatar: string };
+    account: {
+      id: string;
+      username: string;
+      display_name: string;
+      avatar: string;
+    };
     conditions: {
       id: string;
       text: string;
@@ -57,18 +79,23 @@ export type Proposal = {
         id: string;
         body: string;
         created_at: string;
-        account: { id: string; username: string; display_name: string; avatar: string };
+        account: {
+          id: string;
+          username: string;
+          display_name: string;
+          avatar: string;
+        };
       }[];
     }[];
   }[];
-};
+}
 
 type FilterType = 'open' | 'vetoed' | 'delivered' | 'in_progress';
 
 const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const [proposals, setProposals] = useState<Proposal[]>([]);
-  const [filter, setFilter] = useState<FilterType>('open');
+  const [filter, _setFilter] = useState<FilterType>('open');
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -89,17 +116,32 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     void fetchProposals();
   }, [fetchProposals]);
 
-  const handleProposalCreated = useCallback(
-    (proposal: Proposal) => {
-      setProposals((prev) => [proposal, ...prev]);
-      setShowForm(false);
-      setSelectedId(proposal.id);
-    },
-    [],
-  );
+  const handleProposalCreated = useCallback((proposal: Proposal) => {
+    setProposals((prev) => [proposal, ...prev]);
+    setShowForm(false);
+    setSelectedId(proposal.id);
+  }, []);
 
   const handleVoteUpdate = useCallback((updated: Proposal) => {
-    setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    setProposals((prev) =>
+      prev.map((p) => (p.id === updated.id ? updated : p)),
+    );
+  }, []);
+
+  const handleBack = useCallback(() => {
+    setSelectedId(null);
+  }, []);
+
+  const handleShowForm = useCallback(() => {
+    setShowForm(true);
+  }, []);
+
+  const handleHideForm = useCallback(() => {
+    setShowForm(false);
+  }, []);
+
+  const handleSelectProposal = useCallback((id: string) => {
+    setSelectedId(id);
   }, []);
 
   const selected = proposals.find((p) => p.id === selectedId) ?? null;
@@ -121,16 +163,22 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         {selectedId && selected ? (
           <ProposalDetail
             proposal={selected}
-            onBack={() => setSelectedId(null)}
+            onBack={handleBack}
             onVoteUpdate={handleVoteUpdate}
           />
         ) : (
           <>
             <div className='governance-page__header'>
               {!showForm && (
-                <button className='governance-page__new-btn' onClick={() => setShowForm(true)}>
+                <button
+                  className='governance-page__new-btn'
+                  onClick={handleShowForm}
+                >
                   <Icon id='add' icon={AddIcon} />
-                  <FormattedMessage id='governance.new_proposal' defaultMessage='New Proposal' />
+                  <FormattedMessage
+                    id='governance.new_proposal'
+                    defaultMessage='New Proposal'
+                  />
                 </button>
               )}
             </div>
@@ -148,13 +196,16 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             {showForm && (
               <CreateProposalForm
                 onCreated={handleProposalCreated}
-                onCancel={() => setShowForm(false)}
+                onCancel={handleHideForm}
               />
             )}
 
             {loading && proposals.length === 0 && (
               <div className='governance-page__empty'>
-                <FormattedMessage id='governance.loading' defaultMessage='Loading proposals…' />
+                <FormattedMessage
+                  id='governance.loading'
+                  defaultMessage='Loading proposals…'
+                />
               </div>
             )}
 
@@ -172,7 +223,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                 <ProposalCard
                   key={proposal.id}
                   proposal={proposal}
-                  onClick={() => setSelectedId(proposal.id)}
+                  onSelect={handleSelectProposal}
                 />
               ))}
             </div>
