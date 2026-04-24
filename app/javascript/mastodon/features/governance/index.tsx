@@ -168,6 +168,21 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           />
         ) : (
           <>
+            <section className='governance-page__hero'>
+              <h1 className='governance-page__hero-title'>
+                <FormattedMessage
+                  id='governance.hero_title'
+                  defaultMessage='Kommons'
+                />
+              </h1>
+              <p className='governance-page__hero-intro'>
+                <FormattedMessage
+                  id='governance.hero_intro'
+                  defaultMessage="Kommons is where we build Kronk together. Create Proposals, vote on what you think the space needs most, let's create Kronk as we want it."
+                />
+              </p>
+            </section>
+
             <div className='governance-page__header'>
               {!showForm && (
                 <button

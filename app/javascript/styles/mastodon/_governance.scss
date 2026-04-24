@@ -13,14 +13,39 @@ $governance-amber: #f59e0b;
 
 .governance-page {
   padding: 12px;
+  max-width: 580px;
+  margin: 0 auto;
   overflow-y: auto;
   flex: 1;
+  box-sizing: border-box;
+}
+
+.governance-page__hero {
+  text-align: center;
+  padding: 28px 8px;
+}
+
+.governance-page__hero-title {
+  font-family: Georgia, 'Liberation Serif', serif;
+  font-size: 36px;
+  font-weight: 500;
+  color: $primary-text-color;
+  margin: 0 0 14px;
+  line-height: 1.1;
+}
+
+.governance-page__hero-intro {
+  font-size: 15px;
+  color: $secondary-text-color;
+  line-height: 1.6;
+  margin: 0 auto;
+  max-width: 440px;
 }
 
 .governance-page__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   margin-bottom: 16px;
   gap: 8px;
   flex-wrap: wrap;
@@ -56,15 +81,16 @@ $governance-amber: #f59e0b;
 }
 
 .governance-page__new-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   background: $governance-purple;
   color: #fff;
   border: none;
-  border-radius: 6px;
-  padding: 6px 14px;
-  font-size: 13px;
+  border-radius: 999px;
+  padding: 9px 22px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   transition: opacity 0.15s;
 
@@ -80,6 +106,7 @@ $governance-amber: #f59e0b;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-weight: 600;
+  text-align: center;
 }
 
 .governance-page__empty {
