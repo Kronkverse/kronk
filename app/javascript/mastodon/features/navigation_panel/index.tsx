@@ -82,7 +82,7 @@ const messages = defineMessages({
   },
   direct: { id: 'navigation_bar.direct', defaultMessage: 'Private mentions' },
   live: { id: 'live.title', defaultMessage: 'Huddle' },
-  commons: { id: 'governance.title', defaultMessage: 'Kommons' },
+  commons: { id: 'governance.title', defaultMessage: '₭ommons' },
   market: { id: 'market.title', defaultMessage: 'Market' },
   events: { id: 'events.title', defaultMessage: 'Events' },
   favourites: { id: 'navigation_bar.favourites', defaultMessage: 'Froths' },
@@ -379,7 +379,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               iconComponent={GavelIcon}
               activeIconComponent={GavelActiveIcon}
               text={intl.formatMessage(messages.commons)}
-              tooltip='Kommons'
+              tooltip='₭ommons'
             />
 
             <FollowRequestsLink />

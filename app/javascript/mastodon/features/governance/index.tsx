@@ -16,7 +16,7 @@ import { ProposalCard } from './components/proposal_card';
 import { ProposalDetail } from './components/proposal_detail';
 
 const messages = defineMessages({
-  title: { id: 'governance.title', defaultMessage: 'Kommons' },
+  title: { id: 'governance.title', defaultMessage: '₭ommons' },
 });
 
 export interface Proposal {
@@ -172,13 +172,13 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               <h1 className='governance-page__hero-title'>
                 <FormattedMessage
                   id='governance.hero_title'
-                  defaultMessage='Kommons'
+                  defaultMessage='₭ommons'
                 />
               </h1>
               <p className='governance-page__hero-intro'>
                 <FormattedMessage
                   id='governance.hero_intro'
-                  defaultMessage="Kommons is where we build Kronk together. Create Proposals, vote on what you think the space needs most, let's create Kronk as we want it."
+                  defaultMessage="₭ommons is where we build Kronk together. Create Proposals, vote on what you think the space needs most, let's create Kronk as we want it."
                 />
               </p>
             </section>
