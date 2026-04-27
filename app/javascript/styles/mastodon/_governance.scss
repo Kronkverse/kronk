@@ -12,8 +12,8 @@ $governance-amber: #f59e0b;
 // ─── Page shell ────────────────────────────────────────────────────────────
 
 .governance-page {
-  padding: 12px;
-  max-width: 580px;
+  padding: 16px;
+  max-width: 680px;
   margin: 0 auto;
   overflow-y: auto;
   flex: 1;
@@ -39,7 +39,7 @@ $governance-amber: #f59e0b;
   color: $secondary-text-color;
   line-height: 1.6;
   margin: 0 auto;
-  max-width: 440px;
+  max-width: 540px;
 }
 
 .governance-page__header {
@@ -137,7 +137,7 @@ $governance-amber: #f59e0b;
   background: var(--background-color);
   border: 1px solid var(--background-border-color);
   border-radius: 10px;
-  padding: 16px 18px;
+  padding: 20px 24px;
   overflow: hidden;
   cursor: pointer;
   transition:
@@ -528,9 +528,9 @@ $governance-amber: #f59e0b;
 }
 
 .governance-detail__page {
-  max-width: 580px;
+  max-width: 680px;
   margin: 0 auto;
-  padding: 24px 20px 60px;
+  padding: 28px 28px 60px;
 }
 
 .governance-detail__back {
