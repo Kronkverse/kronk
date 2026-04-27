@@ -4,12 +4,12 @@ Kronk is a custom Mastodon instance at **mastodon.kronk.info**. This repo is a f
 
 ## Branch Strategy
 
-| Branch    | Purpose                           | Deploy target           |
-| --------- | --------------------------------- | ----------------------- |
-| `main`    | Production (protected — PRs only) | mastodon.kronk.info     |
-| `staging` | Testing PRs before merge          | dev.mastodon.kronk.info |
+| Branch    | Purpose                                       | Deploy target           |
+| --------- | --------------------------------------------- | ----------------------- |
+| `main`    | Production — promoted from `staging` only     | mastodon.kronk.info     |
+| `staging` | Integration branch — all PRs land here first  | dev.mastodon.kronk.info |
 
-**All changes go through pull requests to `main`.** Never push directly to main.
+Contributors open PRs against `staging`. Once changes on `staging` have soaked and the maintainer is comfortable, a single `staging` → `main` PR promotes to production. Never push directly to either branch.
 
 ## Building Locally
 
@@ -64,11 +64,12 @@ These are additions on top of upstream Mastodon:
 ## Contributing
 
 1. Fork `Kronkverse/kronk` on GitHub
-2. Branch off `main` (e.g. `feature/my-change`)
+2. Branch off `staging` (e.g. `feature/my-change`)
 3. Make changes, commit, push to your fork
-4. Open a PR to `main` on `Kronkverse/kronk`
-5. PR gets deployed to staging for testing
-6. After review, PR is merged and deployed to production
+4. Open a PR to `staging` on `Kronkverse/kronk`
+5. PR gets deployed to staging for testing via `/deploy-staging`
+6. After review, PR is merged into `staging`
+7. The maintainer periodically promotes `staging` → `main` once changes have soaked; production deploys off `main`
 
 ## Useful Links
 
