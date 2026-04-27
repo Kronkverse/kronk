@@ -257,7 +257,3 @@ export function EventDetail () {
 export function Market () {
   return import("../../market");
 }
-
-export function Governance () {
-  return import("../../governance");
-}

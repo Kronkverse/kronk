@@ -99,23 +99,6 @@ namespace :api, format: false do
     resources :favourites, only: [:index]
     resources :bookmarks, only: [:index]
 
-    resources :proposals, only: [:index, :show, :create, :update] do
-      member do
-        post   :vote
-        delete :vote, action: :unvote
-        post   :mark_delivered
-      end
-      resources :tasks,        only: [:index, :create, :update], shallow: true
-      resources :budget_items, only: [:index, :create, :update], shallow: true
-    end
-
-    resources :challenge_conditions, only: [] do
-      member do
-        post :toggle
-      end
-      resources :responses, only: [:create], controller: 'challenge_responses'
-    end
-
     resources :events, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :rsvp

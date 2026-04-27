@@ -82,7 +82,6 @@ import {
   Market,
   Events,
   EventDetail,
-  Governance,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
 import { focusColumn, getFocusedItemIndex, focusItemSibling } from './util/focusUtils';
@@ -210,7 +209,6 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path="/market" component={Market} content={children} />
             {signedIn && <WrappedRoute path="/events/:id" component={EventDetail} content={children} />}
             {signedIn && <WrappedRoute path="/events" component={Events} content={children} />}
-            {signedIn && <WrappedRoute path="/governance" component={Governance} content={children} />}
             <WrappedRoute path='/search' component={Search} content={children} />
             <WrappedRoute path={['/publish', '/statuses/new']} component={Compose} content={children} />
 
