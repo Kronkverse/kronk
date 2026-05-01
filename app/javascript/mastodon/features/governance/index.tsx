@@ -5,6 +5,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import ForestIcon from '@/material-icons/400-24px/forest.svg?react';
 import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
 import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
@@ -12,6 +13,7 @@ import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
 
 import { CreateProposalForm } from './components/create_proposal_form';
+import { ForestView } from './components/forest_view';
 import { ProposalCard } from './components/proposal_card';
 import { ProposalDetail } from './components/proposal_detail';
 
@@ -99,6 +101,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [showForest, setShowForest] = useState(false);
 
   const fetchProposals = useCallback(async () => {
     setLoading(true);
@@ -137,6 +140,9 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setSelectedId(null);
   }, []);
 
+  const handleShowForest = useCallback(() => { setShowForest(true); }, []);
+  const handleHideForest = useCallback(() => { setShowForest(false); }, []);
+
   const handleShowForm = useCallback(() => {
     setShowForm(true);
   }, []);
@@ -172,6 +178,8 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             onVoteUpdate={handleVoteUpdate}
             onArchived={handleArchived}
           />
+        ) : showForest ? (
+          <ForestView onBack={handleHideForest} onSelect={handleSelectProposal} />
         ) : showForm ? (
           <div className='governance-plant'>
             <button className='governance-plant__back' onClick={handleHideForm}>
@@ -208,6 +216,16 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                 <FormattedMessage
                   id='governance.new_proposal'
                   defaultMessage='Plant a seed'
+                />
+              </button>
+              <button
+                className='governance-page__forest-btn'
+                onClick={handleShowForest}
+              >
+                <Icon id='forest' icon={ForestIcon} />
+                <FormattedMessage
+                  id='governance.forest'
+                  defaultMessage='The Forest'
                 />
               </button>
             </div>

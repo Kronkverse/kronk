@@ -18,7 +18,7 @@ const statusLabels: Record<Proposal['status'], string> = {
   open: 'Open',
   in_progress: 'In progress',
   vetoed: 'Vetoed',
-  delivered: 'Delivered',
+  delivered: 'Matured',
 };
 
 const TITLE_MAX = 240;
@@ -35,6 +35,7 @@ export const ProposalDetail: React.FC<{
   const [editBody, setEditBody] = useState(proposal.body);
   const [saving, setSaving] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const [maturing, setMaturing] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
   const isSeeder = proposal.created_by_account.id === me;
@@ -104,6 +105,20 @@ export const ProposalDetail: React.FC<{
 
   const handleArchiveClick = useCallback(() => { void handleArchive(); }, [handleArchive]);
   const handleUnarchiveClick = useCallback(() => { void handleUnarchive(); }, [handleUnarchive]);
+
+  const handleMature = useCallback(async () => {
+    if (!window.confirm('Mark this seed as Matured? This closes it and moves it to the Forest.')) return;
+    setMaturing(true);
+    try {
+      const res = await api().post<Proposal>(`/api/v1/proposals/${proposal.id}/mark_delivered`);
+      onVoteUpdate(res.data);
+    } catch {
+    } finally {
+      setMaturing(false);
+    }
+  }, [proposal.id, onVoteUpdate]);
+
+  const handleMatureClick = useCallback(() => { void handleMature(); }, [handleMature]);
 
   return (
     <div className='governance-detail'>
@@ -240,6 +255,21 @@ export const ProposalDetail: React.FC<{
                 <TabKontribute proposalId={proposal.id} />
               )}
             </div>
+
+            {isSeeder && proposal.status !== 'delivered' && !proposal.archived_at && (
+              <div className='governance-detail__mature'>
+                <button
+                  type='button'
+                  className='governance-detail__mature-btn'
+                  onClick={handleMatureClick}
+                  disabled={maturing}
+                >
+                  {maturing
+                    ? <FormattedMessage id='governance.action.maturing' defaultMessage='Maturing…' />
+                    : <FormattedMessage id='governance.action.mature' defaultMessage='Mature this seed' />}
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
