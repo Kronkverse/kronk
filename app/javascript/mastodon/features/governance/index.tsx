@@ -132,6 +132,11 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setSelectedId(null);
   }, []);
 
+  const handleArchived = useCallback((id: string) => {
+    setProposals((prev) => prev.filter((p) => p.id !== id));
+    setSelectedId(null);
+  }, []);
+
   const handleShowForm = useCallback(() => {
     setShowForm(true);
   }, []);
@@ -165,6 +170,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             proposal={selected}
             onBack={handleBack}
             onVoteUpdate={handleVoteUpdate}
+            onArchived={handleArchived}
           />
         ) : showForm ? (
           <div className='governance-plant'>

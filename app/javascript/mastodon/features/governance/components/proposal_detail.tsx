@@ -27,7 +27,8 @@ export const ProposalDetail: React.FC<{
   proposal: Proposal;
   onBack: () => void;
   onVoteUpdate: (updated: Proposal) => void;
-}> = ({ proposal, onBack, onVoteUpdate }) => {
+  onArchived: (id: string) => void;
+}> = ({ proposal, onBack, onVoteUpdate, onArchived }) => {
   const [activeTab, setActiveTab] = useState<Tab>('proposal');
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(proposal.title);
@@ -84,11 +85,11 @@ export const ProposalDetail: React.FC<{
     setArchiving(true);
     try {
       await api().post(`/api/v1/proposals/${proposal.id}/archive`);
-      onBack();
+      onArchived(proposal.id);
     } catch {
       setArchiving(false);
     }
-  }, [proposal.id, onBack]);
+  }, [proposal.id, onArchived]);
 
   const handleArchiveClick = useCallback(() => { void handleArchive(); }, [handleArchive]);
 
