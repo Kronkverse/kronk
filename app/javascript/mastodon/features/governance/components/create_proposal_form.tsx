@@ -136,7 +136,7 @@ export const CreateProposalForm: React.FC<{
       <h3 className='governance-form__heading'>
         <FormattedMessage
           id='governance.new_proposal'
-          defaultMessage='New Proposal'
+          defaultMessage='Plant a seed'
         />
       </h3>
 
@@ -146,7 +146,7 @@ export const CreateProposalForm: React.FC<{
         <h4 className='governance-form__section-heading'>
           <FormattedMessage
             id='governance.form.proposal'
-            defaultMessage='Proposal'
+            defaultMessage='Seed'
           />
         </h4>
 
@@ -201,7 +201,7 @@ export const CreateProposalForm: React.FC<{
           <small className='governance-form__hint'>
             <FormattedMessage
               id='governance.form.body_hint'
-              defaultMessage='Describe the proposal, the rationale, and expected impact.'
+              defaultMessage='Describe the seed, the rationale, and expected impact.'
             />
           </small>
         </label>
@@ -217,7 +217,7 @@ export const CreateProposalForm: React.FC<{
         <small className='governance-form__hint'>
           <FormattedMessage
             id='governance.form.tasks_hint'
-            defaultMessage='Optional. Break the proposal into work units.'
+            defaultMessage='Optional. Break the seed into work units.'
           />
         </small>
 
@@ -289,7 +289,7 @@ export const CreateProposalForm: React.FC<{
           {step === 'proposal' && (
             <FormattedMessage
               id='governance.form.step_proposal'
-              defaultMessage='Creating proposal…'
+              defaultMessage='Planting seed…'
             />
           )}
           {step === 'tasks' && (
@@ -301,7 +301,7 @@ export const CreateProposalForm: React.FC<{
           {step === 'idle' && (
             <FormattedMessage
               id='governance.form.submit'
-              defaultMessage='Create proposal'
+              defaultMessage='Plant seed'
             />
           )}
         </button>

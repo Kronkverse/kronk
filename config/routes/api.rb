@@ -112,6 +112,7 @@ namespace :api, format: false do
         post :vote
         delete :unvote
         post :mark_delivered
+        post :archive
       end
       resources :tasks, only: [:index, :create, :update], shallow: true
     end
