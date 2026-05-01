@@ -70,62 +70,60 @@ export const ProposalCard: React.FC<{
         style={stripBackground ? { background: stripBackground } : undefined}
         aria-hidden='true'
       />
-      <h3 className='governance-card__title'>{proposal.title}</h3>
 
-      <p className='governance-card__body'>{truncate(proposal.body, 180)}</p>
-
-      <div className='governance-card__bump-row'>
-        <span className='governance-card__bump-count'>
-          <FormattedMessage
-            id='governance.card.bumps'
-            defaultMessage='{n, plural, one {# bump} other {# bumps}}'
-            values={{ n: proposal.vote_summary.agree }}
-          />
-        </span>
-        {proposal.vote_summary.block > 0 && (
-          <span className='governance-card__veto-count'>
+      <div className='governance-card__inner'>
+        <div className='governance-card__bump-col'>
+          <span className='governance-card__bump-count'>
+            {proposal.vote_summary.agree}
+          </span>
+          <span className='governance-card__bump-label'>
             <FormattedMessage
-              id='governance.card.blocking'
-              defaultMessage='· {n} blocking'
-              values={{ n: proposal.vote_summary.block }}
+              id='governance.card.bumps'
+              defaultMessage='{n, plural, one {bump} other {bumps}}'
+              values={{ n: proposal.vote_summary.agree }}
             />
           </span>
-        )}
-        {me && (
-          <button
-            type='button'
-            className={'governance-card__bump-btn' + (isBumped ? ' active' : '')}
-            onClick={handleBumpClick}
-            disabled={bumping}
-            aria-pressed={isBumped}
-          >
-            {isBumped
-              ? <FormattedMessage id='governance.card.bumped' defaultMessage='Bumped' />
-              : <FormattedMessage id='governance.card.bump' defaultMessage='Bump' />}
-          </button>
-        )}
-      </div>
+          {me && (
+            <button
+              type='button'
+              className={'governance-card__bump-btn' + (isBumped ? ' active' : '')}
+              onClick={handleBumpClick}
+              disabled={bumping}
+              aria-pressed={isBumped}
+            >
+              {isBumped
+                ? <FormattedMessage id='governance.card.bumped' defaultMessage='Bumped' />
+                : <FormattedMessage id='governance.card.bump' defaultMessage='Bump' />}
+            </button>
+          )}
+        </div>
 
-      <div className='governance-card__author'>
-        {proposal.created_by_account.avatar && (
-          <img
-            className='governance-card__avatar'
-            src={proposal.created_by_account.avatar}
-            alt=''
-            aria-hidden='true'
-          />
-        )}
+        <div className='governance-card__main'>
+          <h3 className='governance-card__title'>{proposal.title}</h3>
+          <p className='governance-card__body'>{truncate(proposal.body, 180)}</p>
+
+          <div className='governance-card__author'>
+            {proposal.created_by_account.avatar && (
+              <img
+                className='governance-card__avatar'
+                src={proposal.created_by_account.avatar}
+                alt=''
+                aria-hidden='true'
+              />
+            )}
         <span className='governance-card__author-name'>
-          @{proposal.created_by_account.username}
-        </span>
-        <span className='governance-card__author-dot'>·</span>
-        <span className='governance-card__author-time'>
-          <FormattedRelativeTime
-            value={ageSeconds}
-            numeric='auto'
-            updateIntervalInSeconds={60}
-          />
-        </span>
+              @{proposal.created_by_account.username}
+            </span>
+            <span className='governance-card__author-dot'>·</span>
+            <span className='governance-card__author-time'>
+              <FormattedRelativeTime
+                value={ageSeconds}
+                numeric='auto'
+                updateIntervalInSeconds={60}
+              />
+            </span>
+          </div>
+        </div>
       </div>
     </button>
   );
