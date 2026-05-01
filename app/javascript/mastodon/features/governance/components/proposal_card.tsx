@@ -1,6 +1,9 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { FormattedMessage, FormattedRelativeTime } from 'react-intl';
+
+import api from 'mastodon/api';
+import { me } from 'mastodon/initial_state';
 
 import type { Proposal } from '../types';
 
@@ -18,15 +21,44 @@ const buildStripBackground = (summary: Proposal['vote_summary']) => {
 export const ProposalCard: React.FC<{
   proposal: Proposal;
   onSelect: (id: string) => void;
-}> = ({ proposal, onSelect }) => {
+  onVoteUpdate: (updated: Proposal) => void;
+}> = ({ proposal, onSelect, onVoteUpdate }) => {
+  const [bumping, setBumping] = useState(false);
+
   const ageSeconds = Math.round(
     (new Date(proposal.created_at).getTime() - Date.now()) / 1000,
   );
   const stripBackground = buildStripBackground(proposal.vote_summary);
+  const isBumped = proposal.current_vote?.position === 'agree';
 
   const handleClick = useCallback(() => {
     onSelect(proposal.id);
   }, [onSelect, proposal.id]);
+
+  const handleBump = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!me || bumping) return;
+    setBumping(true);
+    try {
+      let res;
+      if (isBumped) {
+        res = await api().delete<Proposal>(`/api/v1/proposals/${proposal.id}/unvote`);
+      } else {
+        res = await api().post<Proposal>(`/api/v1/proposals/${proposal.id}/vote`, {
+          vote: { position: 'agree' },
+        });
+      }
+      onVoteUpdate(res.data);
+    } catch {
+      // silently ignore
+    } finally {
+      setBumping(false);
+    }
+  }, [proposal.id, isBumped, bumping, onVoteUpdate]);
+
+  const handleBumpClick = useCallback((e: React.MouseEvent) => {
+    void handleBump(e);
+  }, [handleBump]);
 
   return (
     <button
@@ -48,8 +80,9 @@ export const ProposalCard: React.FC<{
         </span>
         <span className='governance-card__support-label'>
           <FormattedMessage
-            id='governance.card.supporting'
-            defaultMessage='supporting'
+            id='governance.card.bumps'
+            defaultMessage='{n, plural, one {bump} other {bumps}}'
+            values={{ n: proposal.vote_summary.agree }}
           />
         </span>
         {proposal.vote_summary.block > 0 && (
@@ -62,6 +95,20 @@ export const ProposalCard: React.FC<{
           </span>
         )}
       </div>
+
+      {me && (
+        <button
+          type='button'
+          className={'governance-card__bump-btn' + (isBumped ? ' active' : '')}
+          onClick={handleBumpClick}
+          disabled={bumping}
+          aria-pressed={isBumped}
+        >
+          {isBumped
+            ? <FormattedMessage id='governance.card.bumped' defaultMessage='Bumped' />
+            : <FormattedMessage id='governance.card.bump' defaultMessage='Bump' />}
+        </button>
+      )}
 
       <div className='governance-card__author'>
         {proposal.created_by_account.avatar && (

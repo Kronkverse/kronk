@@ -13,6 +13,7 @@ class ProposalVote < ApplicationRecord
 
   validates :position, presence: true
   validates :account_id, uniqueness: { scope: :proposal_id }
-  validates :title, presence: true, length: { maximum: TITLE_MAX }
+  validates :title, length: { maximum: TITLE_MAX }, allow_blank: true
+  validates :title, presence: true, if: :block?
   validates :statement, presence: true, length: { minimum: BLOCK_STATEMENT_MIN }, if: :block?
 end
