@@ -566,6 +566,44 @@ $governance-amber: #f59e0b;
   text-align: center;
 }
 
+.governance-detail__seeder-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.governance-detail__action-btn {
+  background: transparent;
+  border: 1px solid var(--background-border-color);
+  border-radius: 6px;
+  padding: 5px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: $secondary-text-color;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover {
+    color: $primary-text-color;
+    border-color: $primary-text-color;
+  }
+
+  &--archive {
+    color: $governance-block;
+    border-color: $governance-block;
+
+    &:hover {
+      background: rgba($governance-block, 0.08);
+    }
+  }
+}
+
+.governance-form--inline {
+  margin: 0;
+  border: none;
+  padding: 0;
+}
+
 .governance-detail__title {
   font-family: Georgia, 'Times New Roman', 'Liberation Serif', serif;
   font-size: 28px;

@@ -17,7 +17,9 @@ class Proposal < ApplicationRecord
   validates :body,  presence: true
   validate  :categories_within_allowed_values
 
-  scope :recent, -> { order(created_at: :desc) }
+  scope :active,        -> { where(archived_at: nil) }
+  scope :archived,      -> { where.not(archived_at: nil) }
+  scope :recent,        -> { order(created_at: :desc) }
   scope :most_supported, lambda {
     left_joins(:proposal_votes)
       .select("proposals.*, COUNT(CASE WHEN proposal_votes.position = #{ProposalVote.positions[:agree]} THEN 1 END) AS agree_count")
@@ -31,6 +33,10 @@ class Proposal < ApplicationRecord
       .order(Arel.sql('total_votes DESC, proposals.created_at DESC'))
   }
   scope :with_category, ->(cat) { where('? = ANY(categories)', cat) }
+
+  def archived?
+    archived_at.present?
+  end
 
   def participation_count
     proposal_votes.count

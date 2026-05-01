@@ -178,7 +178,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               <p className='governance-page__hero-intro'>
                 <FormattedMessage
                   id='governance.hero_intro'
-                  defaultMessage="₭ommons is where we build Kronk together. Create Proposals, vote on what you think the space needs most, let's create Kronk as we want it."
+                  defaultMessage="₭ommons is where we build Kronk together. Plant seeds, support what matters most, let's grow Kronk as we want it."
                 />
               </p>
             </section>
@@ -192,7 +192,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                   <Icon id='add' icon={AddIcon} />
                   <FormattedMessage
                     id='governance.new_proposal'
-                    defaultMessage='New Proposal'
+                    defaultMessage='Plant a seed'
                   />
                 </button>
               )}
@@ -202,7 +202,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               <p className='governance-page__result-count'>
                 <FormattedMessage
                   id='governance.result_count'
-                  defaultMessage='{count, plural, one {# proposal} other {# proposals}}'
+                  defaultMessage='{count, plural, one {# seed} other {# seeds}}'
                   values={{ count: proposals.length }}
                 />
               </p>

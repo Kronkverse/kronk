@@ -8,6 +8,7 @@ export interface Proposal {
   discussion_status_id: string | null;
   opens_at: string | null;
   outcome_notes: string | null;
+  archived_at: string | null;
   support_count: number;
   veto_count: number;
   participation_count: number;

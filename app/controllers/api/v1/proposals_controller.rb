@@ -2,14 +2,17 @@
 
 class Api::V1::ProposalsController < Api::BaseController
   before_action :require_user!
-  before_action :set_proposal, only: [:show, :vote, :unvote, :mark_delivered, :update]
-  before_action :require_creator_or_steward!, only: [:mark_delivered, :update]
+  before_action :set_proposal, only: [:show, :vote, :unvote, :mark_delivered, :update, :archive]
+  before_action :require_creator_or_steward!, only: [:mark_delivered, :update, :archive]
 
   def index
+    scope = Proposal.active
+
     scope = case params[:filter]
-            when 'vetoed'    then Proposal.vetoed
-            when 'delivered' then Proposal.delivered
-            else                  Proposal.where.not(status: :delivered)
+            when 'vetoed'    then scope.vetoed
+            when 'delivered' then scope.delivered
+            when 'archived'  then Proposal.archived
+            else                  scope.where.not(status: :delivered)
             end
 
     scope = scope.with_category(params[:category]) if params[:category].present? && Proposal::CATEGORY_VALUES.include?(params[:category])
@@ -51,6 +54,11 @@ class Api::V1::ProposalsController < Api::BaseController
     end
   end
 
+  def archive
+    @proposal.update!(archived_at: Time.now.utc)
+    render json: @proposal, serializer: REST::ProposalSerializer
+  end
+
   def vote
     return render json: { error: 'This proposal has been delivered; voting is closed.' }, status: :unprocessable_entity if @proposal.delivered? # rubocop:disable I18n/RailsI18n/DecorateString
 
@@ -60,8 +68,6 @@ class Api::V1::ProposalsController < Api::BaseController
     ActiveRecord::Base.transaction do
       vote.save!
 
-      # If this is a block/challenge, replace the vote's conditions with the
-      # ones submitted (if any). Non-block positions never have conditions.
       if vote.block?
         condition_texts = Array(params.dig(:vote, :conditions)).map { |t| t.to_s.strip }.compact_blank
         vote.challenge_conditions.destroy_all
