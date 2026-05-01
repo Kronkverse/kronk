@@ -223,6 +223,8 @@ Rails.application.routes.draw do
 
   get '/activity', to: redirect('/orbit')
   get '/huddle', to: 'huddle#index'
+  get '/governance', to: 'home#index'
+  get '/governance/*path', to: 'home#index', format: false
   draw(:web_app)
 
   get '/web/(*any)', to: redirect('/%{any}', status: 302), as: :web, defaults: { any: '' }, format: false
