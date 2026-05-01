@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import { FormattedRelativeTime } from 'react-intl';
+import { FormattedMessage, FormattedRelativeTime } from 'react-intl';
 
 import type { Proposal } from '../types';
 
@@ -41,6 +41,27 @@ export const ProposalCard: React.FC<{
       <h3 className='governance-card__title'>{proposal.title}</h3>
 
       <p className='governance-card__body'>{truncate(proposal.body, 180)}</p>
+
+      <div className='governance-card__support'>
+        <span className='governance-card__support-count'>
+          {proposal.vote_summary.agree}
+        </span>
+        <span className='governance-card__support-label'>
+          <FormattedMessage
+            id='governance.card.supporting'
+            defaultMessage='supporting'
+          />
+        </span>
+        {proposal.vote_summary.block > 0 && (
+          <span className='governance-card__veto-count'>
+            <FormattedMessage
+              id='governance.card.blocking'
+              defaultMessage='· {n} blocking'
+              values={{ n: proposal.vote_summary.block }}
+            />
+          </span>
+        )}
+      </div>
 
       <div className='governance-card__author'>
         {proposal.created_by_account.avatar && (
