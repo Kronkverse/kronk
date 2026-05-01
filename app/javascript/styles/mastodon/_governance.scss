@@ -383,30 +383,22 @@ $governance-amber: #f59e0b;
   text-align: left;
 }
 
-.governance-card__bump-col {
+.governance-card__fan-col {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  min-width: 48px;
+  gap: 4px;
+  min-width: 40px;
   flex-shrink: 0;
   padding-top: 2px;
 }
 
-.governance-card__bump-count {
+.governance-card__fan-count {
   font-size: 18px;
   font-weight: 600;
   line-height: 1;
   color: $secondary-text-color;
   font-variant-numeric: tabular-nums;
-}
-
-.governance-card__bump-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: $secondary-text-color;
-  opacity: 0.7;
 }
 
 .governance-card__main {
@@ -420,31 +412,32 @@ $governance-amber: #f59e0b;
   margin-top: 2px;
 }
 
-.governance-card__bump-btn {
-  margin-top: 6px;
-  padding: 2px 8px;
-  border: 1px solid rgba($governance-purple, 0.5);
-  border-radius: 999px;
+.governance-card__fan-btn {
+  padding: 4px;
+  border: none;
   background: transparent;
-  color: $governance-purple;
-  font-size: 11px;
-  font-weight: 600;
+  color: $secondary-text-color;
   cursor: pointer;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  opacity: 0.6;
+  transition: color 0.12s, opacity 0.12s;
+
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
 
   &:hover {
-    border-color: $governance-purple;
-    background: rgba($governance-purple, 0.08);
+    opacity: 1;
+    color: $governance-purple;
   }
 
   &.active {
-    background: $governance-purple;
-    color: #fff;
-    border-color: $governance-purple;
+    color: $governance-purple;
+    opacity: 1;
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.3;
     cursor: default;
   }
 }

@@ -1,8 +1,10 @@
 import { useCallback, useState } from 'react';
 
-import { FormattedMessage, FormattedRelativeTime } from 'react-intl';
+import { FormattedRelativeTime } from 'react-intl';
 
+import ToysFanIcon from '@/material-icons/400-24px/toys_fan.svg?react';
 import api from 'mastodon/api';
+import { Icon } from 'mastodon/components/icon';
 import { me } from 'mastodon/initial_state';
 
 import type { Proposal } from '../types';
@@ -23,25 +25,25 @@ export const ProposalCard: React.FC<{
   onSelect: (id: string) => void;
   onVoteUpdate: (updated: Proposal) => void;
 }> = ({ proposal, onSelect, onVoteUpdate }) => {
-  const [bumping, setBumping] = useState(false);
+  const [fanning, setFanning] = useState(false);
 
   const ageSeconds = Math.round(
     (new Date(proposal.created_at).getTime() - Date.now()) / 1000,
   );
   const stripBackground = buildStripBackground(proposal.vote_summary);
-  const isBumped = proposal.current_vote?.position === 'agree';
+  const isFanned = proposal.current_vote?.position === 'agree';
 
   const handleClick = useCallback(() => {
     onSelect(proposal.id);
   }, [onSelect, proposal.id]);
 
-  const handleBump = useCallback(async (e: React.MouseEvent) => {
+  const handleFan = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!me || bumping) return;
-    setBumping(true);
+    if (!me || fanning) return;
+    setFanning(true);
     try {
       let res;
-      if (isBumped) {
+      if (isFanned) {
         res = await api().delete<Proposal>(`/api/v1/proposals/${proposal.id}/unvote`);
       } else {
         res = await api().post<Proposal>(`/api/v1/proposals/${proposal.id}/vote`, {
@@ -52,13 +54,13 @@ export const ProposalCard: React.FC<{
     } catch {
       // silently ignore
     } finally {
-      setBumping(false);
+      setFanning(false);
     }
-  }, [proposal.id, isBumped, bumping, onVoteUpdate]);
+  }, [proposal.id, isFanned, fanning, onVoteUpdate]);
 
-  const handleBumpClick = useCallback((e: React.MouseEvent) => {
-    void handleBump(e);
-  }, [handleBump]);
+  const handleFanClick = useCallback((e: React.MouseEvent) => {
+    void handleFan(e);
+  }, [handleFan]);
 
   return (
     <button
@@ -72,28 +74,20 @@ export const ProposalCard: React.FC<{
       />
 
       <div className='governance-card__inner'>
-        <div className='governance-card__bump-col'>
-          <span className='governance-card__bump-count'>
+        <div className='governance-card__fan-col'>
+          <span className='governance-card__fan-count'>
             {proposal.vote_summary.agree}
-          </span>
-          <span className='governance-card__bump-label'>
-            <FormattedMessage
-              id='governance.card.bumps'
-              defaultMessage='{n, plural, one {bump} other {bumps}}'
-              values={{ n: proposal.vote_summary.agree }}
-            />
           </span>
           {me && (
             <button
               type='button'
-              className={'governance-card__bump-btn' + (isBumped ? ' active' : '')}
-              onClick={handleBumpClick}
-              disabled={bumping}
-              aria-pressed={isBumped}
+              className={'governance-card__fan-btn' + (isFanned ? ' active' : '')}
+              onClick={handleFanClick}
+              disabled={fanning}
+              aria-pressed={isFanned}
+              aria-label={isFanned ? 'Unfan' : 'Fan'}
             >
-              {isBumped
-                ? <FormattedMessage id='governance.card.bumped' defaultMessage='Bumped' />
-                : <FormattedMessage id='governance.card.bump' defaultMessage='Bump' />}
+              <Icon id='toys-fan' icon={ToysFanIcon} />
             </button>
           )}
         </div>
@@ -111,7 +105,7 @@ export const ProposalCard: React.FC<{
                 aria-hidden='true'
               />
             )}
-        <span className='governance-card__author-name'>
+            <span className='governance-card__author-name'>
               @{proposal.created_by_account.username}
             </span>
             <span className='governance-card__author-dot'>·</span>
