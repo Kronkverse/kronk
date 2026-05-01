@@ -7,7 +7,7 @@ import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import api from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
 
-import type { Proposal } from '../index';
+import type { Proposal } from '../types';
 
 interface TaskRow {
   title: string;

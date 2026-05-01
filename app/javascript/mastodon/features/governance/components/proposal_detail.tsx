@@ -5,7 +5,7 @@ import { FormattedMessage, FormattedDate } from 'react-intl';
 import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
 import { Icon } from 'mastodon/components/icon';
 
-import type { Proposal } from '../index';
+import type { Proposal } from '../types';
 
 import { TabKontribute } from './proposal_tabs/tab_kontribute';
 import { TabProposal } from './proposal_tabs/tab_proposal';

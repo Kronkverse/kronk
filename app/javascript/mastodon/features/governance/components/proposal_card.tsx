@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 
 import { FormattedRelativeTime } from 'react-intl';
 
-import type { Proposal } from '../index';
+import type { Proposal } from '../types';
 
 const truncate = (text: string, maxLen: number) =>
   text.length > maxLen ? `${text.slice(0, maxLen)}…` : text;
