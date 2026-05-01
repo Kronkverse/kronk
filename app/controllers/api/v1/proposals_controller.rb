@@ -111,7 +111,7 @@ class Api::V1::ProposalsController < Api::BaseController
 
   def require_creator_or_steward!
     is_creator = @proposal.created_by_account_id == current_account.id
-    is_steward = current_user.role&.administrator? || current_user.role&.moderator?
+    is_steward = current_user.role&.can?(:administrator) || current_user.role&.can?(:manage_reports)
     forbidden unless is_creator || is_steward
   end
 
