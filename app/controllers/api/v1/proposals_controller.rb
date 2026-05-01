@@ -2,8 +2,8 @@
 
 class Api::V1::ProposalsController < Api::BaseController
   before_action :require_user!
-  before_action :set_proposal, only: [:show, :vote, :unvote, :mark_delivered, :update, :archive]
-  before_action :require_creator_or_steward!, only: [:mark_delivered, :update, :archive]
+  before_action :set_proposal, only: [:show, :vote, :unvote, :mark_delivered, :update, :archive, :unarchive]
+  before_action :require_creator_or_steward!, only: [:mark_delivered, :update, :archive, :unarchive]
 
   def index
     scope = Proposal.active
@@ -11,7 +11,6 @@ class Api::V1::ProposalsController < Api::BaseController
     scope = case params[:filter]
             when 'vetoed'    then scope.vetoed
             when 'delivered' then scope.delivered
-            when 'archived'  then Proposal.archived
             else                  scope.where.not(status: :delivered)
             end
 
@@ -23,7 +22,9 @@ class Api::V1::ProposalsController < Api::BaseController
             else                       scope.most_supported
             end
 
-    @proposals = scope.limit(40)
+    active = scope.limit(40).to_a
+    own_archived = Proposal.archived.where(created_by_account_id: current_account.id).order(archived_at: :desc).to_a
+    @proposals = active + own_archived
     render json: @proposals, each_serializer: REST::ProposalSerializer
   end
 
@@ -56,6 +57,11 @@ class Api::V1::ProposalsController < Api::BaseController
 
   def archive
     @proposal.update!(archived_at: Time.now.utc)
+    render json: @proposal, serializer: REST::ProposalSerializer
+  end
+
+  def unarchive
+    @proposal.update!(archived_at: nil)
     render json: @proposal, serializer: REST::ProposalSerializer
   end
 

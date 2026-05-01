@@ -27,7 +27,7 @@ export const ProposalDetail: React.FC<{
   proposal: Proposal;
   onBack: () => void;
   onVoteUpdate: (updated: Proposal) => void;
-  onArchived: (id: string) => void;
+  onArchived: (updated: Proposal) => void;
 }> = ({ proposal, onBack, onVoteUpdate, onArchived }) => {
   const [activeTab, setActiveTab] = useState<Tab>('proposal');
   const [editing, setEditing] = useState(false);
@@ -84,14 +84,26 @@ export const ProposalDetail: React.FC<{
     if (!window.confirm('Archive this seed? It will be hidden from the main list.')) return;
     setArchiving(true);
     try {
-      await api().post(`/api/v1/proposals/${proposal.id}/archive`);
-      onArchived(proposal.id);
+      const res = await api().post<Proposal>(`/api/v1/proposals/${proposal.id}/archive`);
+      onArchived(res.data);
     } catch {
       setArchiving(false);
     }
   }, [proposal.id, onArchived]);
 
+  const handleUnarchive = useCallback(async () => {
+    setArchiving(true);
+    try {
+      const res = await api().post<Proposal>(`/api/v1/proposals/${proposal.id}/unarchive`);
+      onVoteUpdate(res.data);
+    } catch {
+    } finally {
+      setArchiving(false);
+    }
+  }, [proposal.id, onVoteUpdate]);
+
   const handleArchiveClick = useCallback(() => { void handleArchive(); }, [handleArchive]);
+  const handleUnarchiveClick = useCallback(() => { void handleUnarchive(); }, [handleUnarchive]);
 
   return (
     <div className='governance-detail'>
@@ -169,23 +181,38 @@ export const ProposalDetail: React.FC<{
               </p>
               {isSeeder && (
                 <div className='governance-detail__seeder-actions'>
-                  <button
-                    type='button'
-                    className='governance-detail__action-btn governance-detail__action-btn--edit'
-                    onClick={handleEditOpen}
-                  >
-                    <FormattedMessage id='governance.action.edit' defaultMessage='Edit' />
-                  </button>
-                  <button
-                    type='button'
-                    className='governance-detail__action-btn governance-detail__action-btn--archive'
-                    onClick={handleArchiveClick}
-                    disabled={archiving}
-                  >
-                    {archiving
-                      ? <FormattedMessage id='governance.action.archiving' defaultMessage='Archiving…' />
-                      : <FormattedMessage id='governance.action.archive' defaultMessage='Archive' />}
-                  </button>
+                  {!proposal.archived_at && (
+                    <button
+                      type='button'
+                      className='governance-detail__action-btn governance-detail__action-btn--edit'
+                      onClick={handleEditOpen}
+                    >
+                      <FormattedMessage id='governance.action.edit' defaultMessage='Edit' />
+                    </button>
+                  )}
+                  {proposal.archived_at ? (
+                    <button
+                      type='button'
+                      className='governance-detail__action-btn governance-detail__action-btn--unarchive'
+                      onClick={handleUnarchiveClick}
+                      disabled={archiving}
+                    >
+                      {archiving
+                        ? <FormattedMessage id='governance.action.unarchiving' defaultMessage='Unarchiving…' />
+                        : <FormattedMessage id='governance.action.unarchive' defaultMessage='Unarchive' />}
+                    </button>
+                  ) : (
+                    <button
+                      type='button'
+                      className='governance-detail__action-btn governance-detail__action-btn--archive'
+                      onClick={handleArchiveClick}
+                      disabled={archiving}
+                    >
+                      {archiving
+                        ? <FormattedMessage id='governance.action.archiving' defaultMessage='Archiving…' />
+                        : <FormattedMessage id='governance.action.archive' defaultMessage='Archive' />}
+                    </button>
+                  )}
                 </div>
               )}
             </div>

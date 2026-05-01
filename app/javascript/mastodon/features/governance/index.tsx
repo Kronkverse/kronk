@@ -132,8 +132,8 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setSelectedId(null);
   }, []);
 
-  const handleArchived = useCallback((id: string) => {
-    setProposals((prev) => prev.filter((p) => p.id !== id));
+  const handleArchived = useCallback((updated: Proposal) => {
+    setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
     setSelectedId(null);
   }, []);
 
@@ -241,7 +241,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             )}
 
             <div className='governance-page__list'>
-              {proposals.map((proposal) => (
+              {[...proposals.filter((p) => !p.archived_at), ...proposals.filter((p) => p.archived_at)].map((proposal) => (
                 <ProposalCard
                   key={proposal.id}
                   proposal={proposal}
