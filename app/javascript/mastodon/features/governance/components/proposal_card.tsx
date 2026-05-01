@@ -1,6 +1,11 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
-import { FormattedMessage, FormattedRelativeTime } from 'react-intl';
+import { FormattedRelativeTime } from 'react-intl';
+
+import ToysFanIcon from '@/material-icons/400-24px/toys_fan.svg?react';
+import api from 'mastodon/api';
+import { Icon } from 'mastodon/components/icon';
+import { me } from 'mastodon/initial_state';
 
 import type { Proposal } from '../types';
 
@@ -18,15 +23,44 @@ const buildStripBackground = (summary: Proposal['vote_summary']) => {
 export const ProposalCard: React.FC<{
   proposal: Proposal;
   onSelect: (id: string) => void;
-}> = ({ proposal, onSelect }) => {
+  onVoteUpdate: (updated: Proposal) => void;
+}> = ({ proposal, onSelect, onVoteUpdate }) => {
+  const [fanning, setFanning] = useState(false);
+
   const ageSeconds = Math.round(
     (new Date(proposal.created_at).getTime() - Date.now()) / 1000,
   );
   const stripBackground = buildStripBackground(proposal.vote_summary);
+  const isFanned = proposal.current_vote?.position === 'agree';
 
   const handleClick = useCallback(() => {
     onSelect(proposal.id);
   }, [onSelect, proposal.id]);
+
+  const handleFan = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!me || fanning) return;
+    setFanning(true);
+    try {
+      let res;
+      if (isFanned) {
+        res = await api().delete<Proposal>(`/api/v1/proposals/${proposal.id}/unvote`);
+      } else {
+        res = await api().post<Proposal>(`/api/v1/proposals/${proposal.id}/vote`, {
+          vote: { position: 'agree' },
+        });
+      }
+      onVoteUpdate(res.data);
+    } catch {
+      // silently ignore
+    } finally {
+      setFanning(false);
+    }
+  }, [proposal.id, isFanned, fanning, onVoteUpdate]);
+
+  const handleFanClick = useCallback((e: React.MouseEvent) => {
+    void handleFan(e);
+  }, [handleFan]);
 
   return (
     <button
@@ -38,51 +72,52 @@ export const ProposalCard: React.FC<{
         style={stripBackground ? { background: stripBackground } : undefined}
         aria-hidden='true'
       />
-      <h3 className='governance-card__title'>{proposal.title}</h3>
 
-      <p className='governance-card__body'>{truncate(proposal.body, 180)}</p>
-
-      <div className='governance-card__support'>
-        <span className='governance-card__support-count'>
-          {proposal.vote_summary.agree}
-        </span>
-        <span className='governance-card__support-label'>
-          <FormattedMessage
-            id='governance.card.supporting'
-            defaultMessage='supporting'
-          />
-        </span>
-        {proposal.vote_summary.block > 0 && (
-          <span className='governance-card__veto-count'>
-            <FormattedMessage
-              id='governance.card.blocking'
-              defaultMessage='· {n} blocking'
-              values={{ n: proposal.vote_summary.block }}
-            />
+      <div className='governance-card__inner'>
+        <div className='governance-card__fan-col'>
+          <span className='governance-card__fan-count'>
+            {proposal.vote_summary.agree}
           </span>
-        )}
-      </div>
+          {me && (
+            <button
+              type='button'
+              className={'governance-card__fan-btn' + (isFanned ? ' active' : '')}
+              onClick={handleFanClick}
+              disabled={fanning}
+              aria-pressed={isFanned}
+              aria-label={isFanned ? 'Unfan' : 'Fan'}
+            >
+              <Icon id='toys-fan' icon={ToysFanIcon} />
+            </button>
+          )}
+        </div>
 
-      <div className='governance-card__author'>
-        {proposal.created_by_account.avatar && (
-          <img
-            className='governance-card__avatar'
-            src={proposal.created_by_account.avatar}
-            alt=''
-            aria-hidden='true'
-          />
-        )}
-        <span className='governance-card__author-name'>
-          @{proposal.created_by_account.username}
-        </span>
-        <span className='governance-card__author-dot'>·</span>
-        <span className='governance-card__author-time'>
-          <FormattedRelativeTime
-            value={ageSeconds}
-            numeric='auto'
-            updateIntervalInSeconds={60}
-          />
-        </span>
+        <div className='governance-card__main'>
+          <h3 className='governance-card__title'>{proposal.title}</h3>
+          <p className='governance-card__body'>{truncate(proposal.body, 180)}</p>
+
+          <div className='governance-card__author'>
+            {proposal.created_by_account.avatar && (
+              <img
+                className='governance-card__avatar'
+                src={proposal.created_by_account.avatar}
+                alt=''
+                aria-hidden='true'
+              />
+            )}
+            <span className='governance-card__author-name'>
+              @{proposal.created_by_account.username}
+            </span>
+            <span className='governance-card__author-dot'>·</span>
+            <span className='governance-card__author-time'>
+              <FormattedRelativeTime
+                value={ageSeconds}
+                numeric='auto'
+                updateIntervalInSeconds={60}
+              />
+            </span>
+          </div>
+        </div>
       </div>
     </button>
   );

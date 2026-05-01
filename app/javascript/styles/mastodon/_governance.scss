@@ -122,6 +122,29 @@ $governance-amber: #f59e0b;
   gap: 10px;
 }
 
+// ─── Plant a seed view ─────────────────────────────────────────────────────
+
+.governance-plant {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.governance-plant__back {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 14px;
+  color: $secondary-text-color;
+  cursor: pointer;
+  text-align: left;
+  align-self: flex-start;
+
+  &:hover {
+    color: $primary-text-color;
+  }
+}
+
 // ─── Proposal card ─────────────────────────────────────────────────────────
 
 .governance-card {
@@ -133,11 +156,11 @@ $governance-amber: #f59e0b;
   position: relative;
   display: block;
   width: 100%;
-  text-align: center;
+  text-align: left;
   background: var(--background-color);
   border: 1px solid var(--background-border-color);
   border-radius: 10px;
-  padding: 20px 24px;
+  padding: 16px 20px;
   overflow: hidden;
   cursor: pointer;
   transition:
@@ -350,33 +373,73 @@ $governance-amber: #f59e0b;
   }
 }
 
-// ─── Support count emphasis on cards ────────────────────────────────────────
+// ─── Card two-column layout ─────────────────────────────────────────────────
 
-.governance-card__support {
+.governance-card__inner {
   display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin: 6px 0 2px;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  text-align: left;
 }
 
-.governance-card__support-count {
-  font-size: 28px;
-  font-weight: 700;
+.governance-card__fan-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 40px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.governance-card__fan-count {
+  font-size: 18px;
+  font-weight: 600;
   line-height: 1;
-  color: $governance-purple;
+  color: $secondary-text-color;
   font-variant-numeric: tabular-nums;
 }
 
-.governance-card__support-label {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: $secondary-text-color;
+.governance-card__main {
+  flex: 1;
+  min-width: 0;
 }
 
 .governance-card__veto-count {
+  font-size: 11px;
   color: $governance-block;
-  font-weight: 600;
+  margin-top: 2px;
+}
+
+.governance-card__fan-btn {
+  padding: 4px;
+  border: none;
+  background: transparent;
+  color: $secondary-text-color;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: color 0.12s, opacity 0.12s;
+
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    opacity: 1;
+    color: $governance-purple;
+  }
+
+  &.active {
+    color: $governance-purple;
+    opacity: 1;
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
 }
 
 // ─── Tab banners for vetoed / delivered ─────────────────────────────────────

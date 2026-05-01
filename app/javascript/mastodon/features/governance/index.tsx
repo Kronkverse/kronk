@@ -166,6 +166,16 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             onBack={handleBack}
             onVoteUpdate={handleVoteUpdate}
           />
+        ) : showForm ? (
+          <div className='governance-plant'>
+            <button className='governance-plant__back' onClick={handleHideForm}>
+              <FormattedMessage id='governance.back_to_seeds' defaultMessage='← All seeds' />
+            </button>
+            <CreateProposalForm
+              onCreated={handleProposalCreated}
+              onCancel={handleHideForm}
+            />
+          </div>
         ) : (
           <>
             <section className='governance-page__hero'>
@@ -184,18 +194,16 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             </section>
 
             <div className='governance-page__header'>
-              {!showForm && (
-                <button
-                  className='governance-page__new-btn'
-                  onClick={handleShowForm}
-                >
-                  <Icon id='add' icon={AddIcon} />
-                  <FormattedMessage
-                    id='governance.new_proposal'
-                    defaultMessage='Plant a seed'
-                  />
-                </button>
-              )}
+              <button
+                className='governance-page__new-btn'
+                onClick={handleShowForm}
+              >
+                <Icon id='add' icon={AddIcon} />
+                <FormattedMessage
+                  id='governance.new_proposal'
+                  defaultMessage='Plant a seed'
+                />
+              </button>
             </div>
 
             {!loading && proposals.length > 0 && (
@@ -208,18 +216,11 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               </p>
             )}
 
-            {showForm && (
-              <CreateProposalForm
-                onCreated={handleProposalCreated}
-                onCancel={handleHideForm}
-              />
-            )}
-
             {loading && proposals.length === 0 && (
               <div className='governance-page__empty'>
                 <FormattedMessage
                   id='governance.loading'
-                  defaultMessage='Loading proposals…'
+                  defaultMessage='Loading seeds…'
                 />
               </div>
             )}
@@ -228,7 +229,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               <div className='governance-page__empty'>
                 <FormattedMessage
                   id='governance.empty'
-                  defaultMessage='No proposals yet. Check back soon.'
+                  defaultMessage='No seeds yet. Be the first to plant one.'
                 />
               </div>
             )}
@@ -239,6 +240,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                   key={proposal.id}
                   proposal={proposal}
                   onSelect={handleSelectProposal}
+                  onVoteUpdate={handleVoteUpdate}
                 />
               ))}
             </div>
