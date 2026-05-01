@@ -139,7 +139,9 @@ export const ProposalDetail: React.FC<{
                 <FormattedMessage id='governance.form.cancel' defaultMessage='Cancel' />
               </button>
               <button type='submit' className='governance-form__submit-btn' disabled={saving}>
-                <FormattedMessage id='governance.form.save' defaultMessage={saving ? 'Saving…' : 'Save changes'} />
+                {saving
+                  ? <FormattedMessage id='governance.form.saving' defaultMessage='Saving…' />
+                  : <FormattedMessage id='governance.form.save' defaultMessage='Save changes' />}
               </button>
             </div>
           </form>
@@ -179,7 +181,9 @@ export const ProposalDetail: React.FC<{
                     onClick={handleArchiveClick}
                     disabled={archiving}
                   >
-                    <FormattedMessage id='governance.action.archive' defaultMessage={archiving ? 'Archiving…' : 'Archive'} />
+                    {archiving
+                      ? <FormattedMessage id='governance.action.archiving' defaultMessage='Archiving…' />
+                      : <FormattedMessage id='governance.action.archive' defaultMessage='Archive' />}
                   </button>
                 </div>
               )}
