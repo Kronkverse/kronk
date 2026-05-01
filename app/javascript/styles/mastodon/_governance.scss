@@ -373,50 +373,40 @@ $governance-amber: #f59e0b;
   }
 }
 
-// ─── Support count emphasis on cards ────────────────────────────────────────
+// ─── Bump row on cards ──────────────────────────────────────────────────────
 
-.governance-card__support {
+.governance-card__bump-row {
   display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin: 6px 0 2px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 8px 0 4px;
 }
 
-.governance-card__support-count {
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1;
-  color: $governance-purple;
+.governance-card__bump-count {
+  font-size: 13px;
+  color: $secondary-text-color;
   font-variant-numeric: tabular-nums;
 }
 
-.governance-card__support-label {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: $secondary-text-color;
-}
-
 .governance-card__veto-count {
+  font-size: 13px;
   color: $governance-block;
-  font-weight: 600;
 }
 
 .governance-card__bump-btn {
-  display: inline-block;
-  margin-top: 10px;
-  padding: 6px 20px;
-  border: 2px solid $governance-purple;
+  padding: 2px 10px;
+  border: 1px solid $governance-purple;
   border-radius: 999px;
   background: transparent;
   color: $governance-purple;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.12s, color 0.12s;
 
   &:hover {
-    background: rgba($governance-purple, 0.1);
+    background: rgba($governance-purple, 0.08);
   }
 
   &.active {
@@ -425,7 +415,7 @@ $governance-amber: #f59e0b;
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: default;
   }
 }

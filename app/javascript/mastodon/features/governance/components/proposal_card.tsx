@@ -74,14 +74,11 @@ export const ProposalCard: React.FC<{
 
       <p className='governance-card__body'>{truncate(proposal.body, 180)}</p>
 
-      <div className='governance-card__support'>
-        <span className='governance-card__support-count'>
-          {proposal.vote_summary.agree}
-        </span>
-        <span className='governance-card__support-label'>
+      <div className='governance-card__bump-row'>
+        <span className='governance-card__bump-count'>
           <FormattedMessage
             id='governance.card.bumps'
-            defaultMessage='{n, plural, one {bump} other {bumps}}'
+            defaultMessage='{n, plural, one {# bump} other {# bumps}}'
             values={{ n: proposal.vote_summary.agree }}
           />
         </span>
@@ -94,21 +91,20 @@ export const ProposalCard: React.FC<{
             />
           </span>
         )}
+        {me && (
+          <button
+            type='button'
+            className={'governance-card__bump-btn' + (isBumped ? ' active' : '')}
+            onClick={handleBumpClick}
+            disabled={bumping}
+            aria-pressed={isBumped}
+          >
+            {isBumped
+              ? <FormattedMessage id='governance.card.bumped' defaultMessage='Bumped' />
+              : <FormattedMessage id='governance.card.bump' defaultMessage='Bump' />}
+          </button>
+        )}
       </div>
-
-      {me && (
-        <button
-          type='button'
-          className={'governance-card__bump-btn' + (isBumped ? ' active' : '')}
-          onClick={handleBumpClick}
-          disabled={bumping}
-          aria-pressed={isBumped}
-        >
-          {isBumped
-            ? <FormattedMessage id='governance.card.bumped' defaultMessage='Bumped' />
-            : <FormattedMessage id='governance.card.bump' defaultMessage='Bump' />}
-        </button>
-      )}
 
       <div className='governance-card__author'>
         {proposal.created_by_account.avatar && (
