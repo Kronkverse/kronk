@@ -37,8 +37,8 @@ const messages = defineMessages({
   show_announcements: { id: 'home.show_announcements', defaultMessage: 'Show announcements' },
   hide_announcements: { id: 'home.hide_announcements', defaultMessage: 'Hide announcements' },
   tab_friends: { id: 'home.tab.friends', defaultMessage: 'Friends' },
-  tab_fof: { id: 'home.tab.fof', defaultMessage: 'Orbit' },
-  tab_kommunity: { id: 'home.tab.kommunity', defaultMessage: 'Kommunity' },
+  tab_fof: { id: 'home.tab.fof', defaultMessage: 'Friends of Friends' },
+  tab_kommunity: { id: 'home.tab.kommunity', defaultMessage: '₭ommunity' },
 });
 
 const mapStateToProps = state => ({
