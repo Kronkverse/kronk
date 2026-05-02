@@ -19,9 +19,12 @@ import { criticalUpdatesPending } from 'mastodon/initial_state';
 import { withBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
 
 import { addColumn, removeColumn, moveColumn } from '../../actions/columns';
-import { expandHomeTimeline, expandPublicTimeline, expandCommunityTimeline } from '../../actions/timelines';
+import { expandFriendsActivity } from '../../actions/friends_activity';
+import { expandHomeTimeline, expandCommunityTimeline } from '../../actions/timelines';
 import Column from '../../components/column';
 import ColumnHeader from '../../components/column_header';
+import ScrollableList from '../../components/scrollable_list';
+import ActivityItem from '../activity/components/activity_item';
 import StatusListContainer from '../ui/containers/status_list_container';
 
 import { ColumnSettings } from './components/column_settings';
@@ -34,7 +37,7 @@ const messages = defineMessages({
   show_announcements: { id: 'home.show_announcements', defaultMessage: 'Show announcements' },
   hide_announcements: { id: 'home.hide_announcements', defaultMessage: 'Hide announcements' },
   tab_friends: { id: 'home.tab.friends', defaultMessage: 'Friends' },
-  tab_fof: { id: 'home.tab.fof', defaultMessage: 'Friends of Friends' },
+  tab_fof: { id: 'home.tab.fof', defaultMessage: 'Orbit' },
   tab_kommunity: { id: 'home.tab.kommunity', defaultMessage: 'Kommunity' },
 });
 
@@ -44,6 +47,9 @@ const mapStateToProps = state => ({
   hasAnnouncements: !state.getIn(['announcements', 'items']).isEmpty(),
   unreadAnnouncements: state.getIn(['announcements', 'items']).count(item => !item.get('read')),
   showAnnouncements: state.getIn(['announcements', 'show']),
+  fofItems: state.friends_activity.get('items'),
+  fofIsLoading: state.friends_activity.get('isLoading'),
+  fofHasMore: state.friends_activity.get('hasMore'),
 });
 
 class HomeTimeline extends PureComponent {
@@ -59,6 +65,9 @@ class HomeTimeline extends PureComponent {
     unreadAnnouncements: PropTypes.number,
     showAnnouncements: PropTypes.bool,
     matchesBreakpoint: PropTypes.bool,
+    fofItems: PropTypes.object,
+    fofIsLoading: PropTypes.bool,
+    fofHasMore: PropTypes.bool,
   };
 
   state = {
@@ -93,7 +102,7 @@ class HomeTimeline extends PureComponent {
     const { dispatch } = this.props;
     this.setState(prev => {
       if (!prev.initializedTabs[tab]) {
-        if (tab === 'fof') dispatch(expandPublicTimeline({}));
+        if (tab === 'fof') dispatch(expandFriendsActivity({}));
         if (tab === 'kommunity') dispatch(expandCommunityTimeline({}));
         return { activeTab: tab, initializedTabs: { ...prev.initializedTabs, [tab]: true } };
       }
@@ -105,8 +114,12 @@ class HomeTimeline extends PureComponent {
     this.props.dispatch(expandHomeTimeline({ maxId }));
   };
 
-  handleLoadMoreFof = maxId => {
-    this.props.dispatch(expandPublicTimeline({ maxId }));
+  handleLoadMoreFof = () => {
+    const { fofItems, dispatch } = this.props;
+    if (!fofItems || fofItems.size === 0) return;
+    const lastItem = fofItems.last();
+    if (!lastItem) return;
+    dispatch(expandFriendsActivity({ maxId: lastItem.get('statusId') }));
   };
 
   handleLoadMoreKommunity = maxId => {
@@ -153,7 +166,7 @@ class HomeTimeline extends PureComponent {
   };
 
   render () {
-    const { intl, hasUnread, columnId, multiColumn, hasAnnouncements, unreadAnnouncements, showAnnouncements, matchesBreakpoint } = this.props;
+    const { intl, hasUnread, columnId, multiColumn, hasAnnouncements, unreadAnnouncements, showAnnouncements, matchesBreakpoint, fofItems, fofIsLoading, fofHasMore } = this.props;
     const { activeTab } = this.state;
     const pinned = !!columnId;
     const { signedIn } = this.props.identity;
@@ -180,16 +193,11 @@ class HomeTimeline extends PureComponent {
       banners.push(<CriticalUpdateBanner key='critical-update-banner' />);
     }
 
-    const tabConfig = {
+    const statusTabConfig = {
       friends: {
         timelineId: 'home',
         onLoadMore: this.handleLoadMoreFriends,
         emptyMessage: <FormattedMessage id='empty_column.home' defaultMessage='Your home timeline is empty! Follow more people to fill it up.' />,
-      },
-      fof: {
-        timelineId: 'public',
-        onLoadMore: this.handleLoadMoreFof,
-        emptyMessage: <FormattedMessage id='empty_column.public' defaultMessage='There is nothing here! Write something publicly, or manually follow users from other servers to fill it up.' />,
       },
       kommunity: {
         timelineId: 'community',
@@ -198,7 +206,7 @@ class HomeTimeline extends PureComponent {
       },
     };
 
-    const currentTab = tabConfig[activeTab];
+    const fofEmptyMessage = <FormattedMessage id='orbit.empty' defaultMessage="Nothing in your orbit yet. When people you follow interact with posts, they'll show up here." />;
 
     return (
       <Column bindToDocument={!multiColumn} ref={this.setRef} label={intl.formatMessage(messages.title)}>
@@ -245,16 +253,40 @@ class HomeTimeline extends PureComponent {
         )}
 
         {signedIn ? (
-          <StatusListContainer
-            prepend={activeTab === 'friends' ? banners : []}
-            alwaysPrepend={activeTab === 'friends'}
-            trackScroll={!pinned}
-            scrollKey={`home_timeline-${activeTab}-${columnId}`}
-            onLoadMore={currentTab.onLoadMore}
-            timelineId={currentTab.timelineId}
-            emptyMessage={currentTab.emptyMessage}
-            bindToDocument={!multiColumn}
-          />
+          activeTab === 'fof' ? (
+            <ScrollableList
+              trackScroll={!pinned}
+              scrollKey={`home_timeline-fof-${columnId}`}
+              hasMore={fofHasMore}
+              isLoading={fofIsLoading}
+              onLoadMore={this.handleLoadMoreFof}
+              emptyMessage={fofEmptyMessage}
+              bindToDocument={!multiColumn}
+            >
+              {fofItems && fofItems.map((item) => {
+                const statusId = item.get('statusId');
+                const interactions = item.get('interactions');
+                return (
+                  <ActivityItem
+                    key={statusId}
+                    statusId={statusId}
+                    interactions={interactions}
+                  />
+                );
+              })}
+            </ScrollableList>
+          ) : (
+            <StatusListContainer
+              prepend={activeTab === 'friends' ? banners : []}
+              alwaysPrepend={activeTab === 'friends'}
+              trackScroll={!pinned}
+              scrollKey={`home_timeline-${activeTab}-${columnId}`}
+              onLoadMore={statusTabConfig[activeTab].onLoadMore}
+              timelineId={statusTabConfig[activeTab].timelineId}
+              emptyMessage={statusTabConfig[activeTab].emptyMessage}
+              bindToDocument={!multiColumn}
+            />
+          )
         ) : <NotSignedInIndicator />}
 
         <Helmet>
