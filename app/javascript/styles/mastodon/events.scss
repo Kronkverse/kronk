@@ -140,6 +140,12 @@ $ev-interested-color: #b8945f;
     font-size: 14px;
     font-style: italic;
   }
+
+  &__calendar-section {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 0.5px solid var(--background-border-color);
+  }
 }
 
 // Event card
