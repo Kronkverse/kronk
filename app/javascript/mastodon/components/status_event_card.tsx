@@ -1,15 +1,17 @@
 import { useCallback, useState } from 'react';
-import { FormattedDate, FormattedTime, FormattedMessage } from 'react-intl';
-import { Link } from 'react-router-dom';
-import { Icon } from 'mastodon/components/icon';
-import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
-import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
-import CheckIcon from '@/material-icons/400-24px/check.svg?react';
-import StarIcon from '@/material-icons/400-24px/star.svg?react';
-import ArrowRightIcon from '@/material-icons/400-24px/arrow_right_alt.svg?react';
-import api from 'mastodon/api';
 
-type EventData = {
+import { FormattedDate, FormattedTime } from 'react-intl';
+
+import { Link } from 'react-router-dom';
+
+import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
+import CheckIcon from '@/material-icons/400-24px/check.svg?react';
+import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
+import StarIcon from '@/material-icons/400-24px/star.svg?react';
+import api from 'mastodon/api';
+import { Icon } from 'mastodon/components/icon';
+
+interface EventData {
   id: string;
   title: string;
   description: string;
@@ -26,32 +28,70 @@ type EventData = {
   image_url: string | null;
   rsvp?: string | null;
   is_owner?: boolean;
-};
+}
 
-type Props = {
+interface Props {
   event: EventData;
-};
+}
 
 export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
   const [event, setEvent] = useState(initialEvent);
 
-  const isLive = event.event_type === 'huddle' &&
+  const isLive =
+    event.event_type === 'huddle' &&
     new Date(event.start_time) <= new Date() &&
     (!event.end_time || new Date(event.end_time) > new Date());
 
-  const handleRsvp = useCallback(async (status: string) => {
-    try {
-      const response = await api().post(`/api/v1/events/${event.id}/rsvp`, { status });
-      setEvent(response.data as EventData);
-    } catch (err) {
-      console.error('Failed to RSVP:', err);
-    }
-  }, [event.id]);
+  const handleRsvp = useCallback(
+    async (status: string) => {
+      try {
+        const response = await api().post(`/api/v1/events/${event.id}/rsvp`, {
+          status,
+        });
+        setEvent(response.data as EventData);
+      } catch (err) {
+        console.error('Failed to RSVP:', err);
+      }
+    },
+    [event.id],
+  );
+
+  const handleLocationClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const handleRsvpGoing = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleRsvp(event.rsvp === 'going' ? 'remove' : 'going');
+    },
+    [handleRsvp, event.rsvp],
+  );
+
+  const handleRsvpInterested = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void handleRsvp(event.rsvp === 'interested' ? 'remove' : 'interested');
+    },
+    [handleRsvp, event.rsvp],
+  );
+
+  const handleHuddleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
 
   return (
-    <Link to={`/events/${event.id}`} className={`status-event-card ${isLive ? 'status-event-card--live' : ''}`}>
+    <Link
+      to={`/kalendar/${event.id}`}
+      className={`status-event-card ${isLive ? 'status-event-card--live' : ''}`}
+    >
       {event.image_url && (
-        <div className='status-event-card__image' style={{ backgroundImage: `url(${event.image_url})` }} />
+        <div
+          className='status-event-card__image'
+          style={{ backgroundImage: `url(${event.image_url})` }}
+        />
       )}
 
       <div className='status-event-card__body'>
@@ -66,12 +106,22 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
 
         <div className='status-event-card__content'>
           <div className='status-event-card__header'>
-            {isLive && <span className='status-event-card__live-badge'>LIVE</span>}
+            {isLive && (
+              <span className='status-event-card__live-badge'>LIVE</span>
+            )}
             {event.event_type === 'huddle' && !isLive && (
-              <Icon id='videocam' icon={VideocamIcon} className='status-event-card__type-icon' />
+              <Icon
+                id='videocam'
+                icon={VideocamIcon}
+                className='status-event-card__type-icon'
+              />
             )}
             {event.event_type === 'event' && (
-              <Icon id='calendar_month' icon={CalendarMonthIcon} className='status-event-card__type-icon' />
+              <Icon
+                id='calendar_month'
+                icon={CalendarMonthIcon}
+                className='status-event-card__type-icon'
+              />
             )}
             <span className='status-event-card__title'>{event.title}</span>
           </div>
@@ -89,40 +139,50 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
             </span>
             {event.location_name && (
               <span className='status-event-card__location'>
-                {' · '}{event.location_url ? (
-                  <a href={event.location_url} target='_blank' rel='noopener noreferrer' onClick={e => e.stopPropagation()}>{event.location_name}</a>
-                ) : event.location_name}
+                {' · '}
+                {event.location_url ? (
+                  <a
+                    href={event.location_url}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    onClick={handleLocationClick}
+                  >
+                    {event.location_name}
+                  </a>
+                ) : (
+                  event.location_name
+                )}
               </span>
             )}
           </div>
 
           {event.description && (
             <p className='status-event-card__description'>
-              {event.description.length > 140 ? event.description.slice(0, 140) + '…' : event.description}
+              {event.description.length > 140
+                ? event.description.slice(0, 140) + '…'
+                : event.description}
             </p>
           )}
 
           <div className='status-event-card__footer'>
             <div className='status-event-card__counts'>
-              {event.going_count > 0 && (
-                <span>{event.going_count} going</span>
-              )}
+              {event.going_count > 0 && <span>{event.going_count} going</span>}
               {event.interested_count > 0 && (
                 <span>{event.interested_count} interested</span>
               )}
             </div>
 
             {event.rsvp_enabled && (
-              <div className='status-event-card__rsvp-buttons' onClick={e => e.preventDefault()}>
+              <div className='status-event-card__rsvp-buttons' role='group'>
                 <button
                   className={`status-event-card__rsvp-btn ${event.rsvp === 'going' ? 'active active--going' : ''}`}
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRsvp(event.rsvp === 'going' ? 'remove' : 'going'); }}
+                  onClick={handleRsvpGoing}
                 >
                   <Icon id='check' icon={CheckIcon} /> Going
                 </button>
                 <button
                   className={`status-event-card__rsvp-btn ${event.rsvp === 'interested' ? 'active active--interested' : ''}`}
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRsvp(event.rsvp === 'interested' ? 'remove' : 'interested'); }}
+                  onClick={handleRsvpInterested}
                 >
                   <Icon id='star' icon={StarIcon} /> Interested
                 </button>
@@ -130,7 +190,13 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
             )}
 
             {isLive && event.huddle_url && (
-              <a href={event.huddle_url} target='_blank' rel='noopener noreferrer' className='status-event-card__join-huddle' onClick={e => e.stopPropagation()}>
+              <a
+                href={event.huddle_url}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='status-event-card__join-huddle'
+                onClick={handleHuddleClick}
+              >
                 <Icon id='videocam' icon={VideocamIcon} /> Join Huddle
               </a>
             )}

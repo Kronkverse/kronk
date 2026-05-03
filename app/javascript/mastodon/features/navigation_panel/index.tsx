@@ -61,7 +61,7 @@ const messages = defineMessages({
   live: { id: 'live.title', defaultMessage: 'Huddle' },
   commons: { id: 'governance.title', defaultMessage: '₭ommons' },
   market: { id: 'market.title', defaultMessage: 'Market' },
-  events: { id: 'events.title', defaultMessage: 'Events' },
+  events: { id: 'events.title', defaultMessage: '₭alendar' },
   preferences: {
     id: 'navigation_bar.preferences',
     defaultMessage: 'Preferences',
@@ -290,12 +290,12 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
         {signedIn && (
           <ColumnLink
             transparent
-            to='/events'
+            to='/kalendar'
             icon='calendar_month'
             iconComponent={CalendarMonthIcon}
             activeIconComponent={CalendarMonthActiveIcon}
             text={intl.formatMessage(messages.events)}
-            tooltip='Events &amp; Huddles'
+            tooltip='₭alendar &amp; Huddles'
           />
         )}
 
