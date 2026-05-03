@@ -4,13 +4,10 @@ import { useIntl, defineMessages, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
-import ListIcon from '@/material-icons/400-24px/list.svg?react';
 import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { Icon } from 'mastodon/components/icon';
 
 import { CreateEventForm } from './components/create_event_form';
 import { EventCalendar } from './components/event_calendar';
@@ -199,29 +196,25 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </div>
 
           <div className='events-page__actions'>
-            <button
-              className={`events-page__view-toggle ${viewMode === 'list' ? 'active' : ''}`}
-              onClick={handleListView}
-              title='List view'
-            >
-              <Icon id='list' icon={ListIcon} />
-            </button>
-            <button
-              className={`events-page__view-toggle ${viewMode === 'calendar' ? 'active' : ''}`}
-              onClick={handleCalendarView}
-              title='Calendar view'
-            >
-              <Icon id='calendar_month' icon={CalendarMonthIcon} />
-            </button>
+            <div className='events-page__view-toggle-group'>
+              <button
+                className={`events-page__view-toggle ${viewMode === 'list' ? 'active' : ''}`}
+                onClick={handleListView}
+              >
+                List
+              </button>
+              <button
+                className={`events-page__view-toggle ${viewMode === 'calendar' ? 'active' : ''}`}
+                onClick={handleCalendarView}
+              >
+                Month
+              </button>
+            </div>
             <button
               className='events-page__create-btn'
               onClick={handleNewEvent}
             >
-              <Icon id='add' icon={AddIcon} />
-              <FormattedMessage
-                id='events.create'
-                defaultMessage='New ₭alendar Event'
-              />
+              <FormattedMessage id='events.create' defaultMessage='+ Host' />
             </button>
           </div>
         </div>
