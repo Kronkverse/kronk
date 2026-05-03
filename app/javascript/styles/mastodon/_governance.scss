@@ -424,7 +424,9 @@ $governance-amber: #f59e0b;
   color: $secondary-text-color;
   cursor: pointer;
   opacity: 0.6;
-  transition: color 0.12s, opacity 0.12s;
+  transition:
+    color 0.12s,
+    opacity 0.12s;
 
   .icon {
     width: 20px;
@@ -649,7 +651,9 @@ $governance-amber: #f59e0b;
   font-size: 13px;
   cursor: pointer;
   color: $secondary-text-color;
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
 
   &:hover {
     color: $primary-text-color;
@@ -662,6 +666,15 @@ $governance-amber: #f59e0b;
 
     &:hover {
       background: rgba($governance-block, 0.08);
+    }
+  }
+
+  &--deliver {
+    color: $governance-agree;
+    border-color: $governance-agree;
+
+    &:hover {
+      background: rgba($governance-agree, 0.08);
     }
   }
 }
@@ -2607,5 +2620,14 @@ $governance-amber: #f59e0b;
     opacity: 0.4;
     cursor: not-allowed;
     box-shadow: none;
+  }
+
+  &--deliver {
+    background: $governance-agree;
+
+    &:hover:not(:disabled) {
+      background: darken($governance-agree, 6%);
+      box-shadow: 0 2px 8px rgba($governance-agree, 0.25);
+    }
   }
 }
