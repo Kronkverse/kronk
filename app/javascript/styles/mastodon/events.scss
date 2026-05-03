@@ -131,6 +131,22 @@ $ev-interested-color: #b8945f;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    max-height: 480px;
+    overflow-y: auto;
+    padding-right: 4px;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--background-border-color);
+      border-radius: 4px;
+    }
   }
 
   &__empty {
