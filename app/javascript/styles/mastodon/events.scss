@@ -11,7 +11,7 @@ $ev-purple-faint: rgba($blurple-500, 0.08);
 $ev-purple-glow: rgba($blurple-500, 0.15);
 $ev-purple-hover: rgba($blurple-500, 0.12);
 $ev-live-color: #c75d6e;
-$ev-live-glow: rgba(199, 93, 110, 0.15);
+$ev-live-glow: rgba(199, 93, 110, 15%);
 $ev-going-color: #6a9f8a;
 $ev-interested-color: #b8945f;
 
@@ -56,7 +56,7 @@ $ev-interested-color: #b8945f;
     &.active {
       background: $ev-purple-deep;
       color: $ev-purple-light;
-      box-shadow: 0 1px 4px rgba(74, 61, 143, 0.3);
+      box-shadow: 0 1px 4px rgba(74, 61, 143, 30%);
     }
   }
 
@@ -108,7 +108,7 @@ $ev-interested-color: #b8945f;
 
     &:hover {
       background: $ev-purple-mid;
-      box-shadow: 0 2px 8px rgba(74, 61, 143, 0.25);
+      box-shadow: 0 2px 8px rgba(74, 61, 143, 25%);
     }
   }
 
@@ -136,12 +136,12 @@ $ev-interested-color: #b8945f;
   overflow: hidden;
 
   &:hover {
-    border-color: rgba(110, 95, 184, 0.3);
-    box-shadow: 0 2px 12px rgba(110, 95, 184, 0.08);
+    border-color: rgba(110, 95, 184, 30%);
+    box-shadow: 0 2px 12px rgba(110, 95, 184, 8%);
   }
 
   &--live {
-    border-color: rgba(199, 93, 110, 0.4);
+    border-color: rgba(199, 93, 110, 40%);
     box-shadow: 0 0 0 1px $ev-live-glow;
 
     &:hover {
@@ -163,7 +163,7 @@ $ev-interested-color: #b8945f;
       left: 0;
       right: 0;
       height: 40px;
-      background: linear-gradient(transparent, rgba(0, 0, 0, 0.3));
+      background: linear-gradient(transparent, rgba(0, 0, 0, 30%));
     }
   }
 
@@ -181,7 +181,7 @@ $ev-interested-color: #b8945f;
     min-width: 48px;
     height: 48px;
     background: $ev-purple-faint;
-    border: 1px solid rgba(110, 95, 184, 0.12);
+    border: 1px solid rgba(110, 95, 184, 12%);
     border-radius: 10px;
     flex-shrink: 0;
 
@@ -382,7 +382,12 @@ $ev-interested-color: #b8945f;
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, $ev-purple-deep, $ev-purple-mid, $ev-purple-soft);
+    background: linear-gradient(
+      90deg,
+      $ev-purple-deep,
+      $ev-purple-mid,
+      $ev-purple-soft
+    );
     border-radius: 14px 14px 0 0;
   }
 
@@ -448,7 +453,7 @@ $ev-interested-color: #b8945f;
       border-color: $ev-purple-mid;
       color: $ev-purple-soft;
       background: $ev-purple-faint;
-      box-shadow: 0 0 0 1px rgba(110, 95, 184, 0.08);
+      box-shadow: 0 0 0 1px rgba(110, 95, 184, 8%);
     }
   }
 
@@ -479,7 +484,9 @@ $ev-interested-color: #b8945f;
       font-size: 14px;
       font-family: inherit;
       box-sizing: border-box;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 
       &::placeholder {
         color: $ev-purple-muted;
@@ -524,7 +531,9 @@ $ev-interested-color: #b8945f;
       color: var(--primary-text-color);
       font-size: 14px;
       font-family: inherit;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 
       &:focus {
         border-color: $ev-purple-mid;
@@ -538,7 +547,9 @@ $ev-interested-color: #b8945f;
     flex: 1;
     cursor: pointer;
     border-radius: 8px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
 
     &:hover {
       input {
@@ -557,7 +568,9 @@ $ev-interested-color: #b8945f;
       font-family: inherit;
       cursor: pointer;
       box-sizing: border-box;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 
       &:focus {
         border-color: $ev-purple-mid;
@@ -611,7 +624,7 @@ $ev-interested-color: #b8945f;
     align-items: center;
     gap: 8px;
     padding: 20px;
-    border: 1px dashed rgba(110, 95, 184, 0.25);
+    border: 1px dashed rgba(110, 95, 184, 25%);
     border-radius: 10px;
     cursor: pointer;
     color: $ev-purple-muted;
@@ -643,7 +656,7 @@ $ev-interested-color: #b8945f;
       position: absolute;
       inset: 0;
       border-radius: 10px;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 8%);
       pointer-events: none;
     }
   }
@@ -656,7 +669,7 @@ $ev-interested-color: #b8945f;
     height: 28px;
     border-radius: 50%;
     border: none;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 50%);
     color: #fff;
     cursor: pointer;
     display: flex;
@@ -667,7 +680,7 @@ $ev-interested-color: #b8945f;
     transition: background 0.15s;
 
     &:hover {
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 70%);
     }
   }
 
@@ -711,7 +724,7 @@ $ev-interested-color: #b8945f;
 
     &:hover {
       background: $ev-purple-mid;
-      box-shadow: 0 2px 8px rgba(74, 61, 143, 0.25);
+      box-shadow: 0 2px 8px rgba(74, 61, 143, 25%);
     }
 
     &:disabled {
@@ -818,7 +831,9 @@ $ev-interested-color: #b8945f;
     text-overflow: ellipsis;
     cursor: pointer;
     text-align: left;
-    transition: opacity 0.15s, border-color 0.15s;
+    transition:
+      opacity 0.15s,
+      border-color 0.15s;
 
     &:hover {
       opacity: 0.85;
@@ -826,7 +841,7 @@ $ev-interested-color: #b8945f;
 
     &--selected {
       border-color: #fff;
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 30%);
     }
 
     &--huddle {
@@ -864,7 +879,13 @@ $ev-interested-color: #b8945f;
   &__event-dot--middle,
   &__event-dot--end {
     // Multi-day events use a softer purple unless overridden by RSVP color
-    &:not(.event-calendar__event-dot--going):not(.event-calendar__event-dot--interested):not(.event-calendar__event-dot--not-going):not(.event-calendar__event-dot--invited):not(.event-calendar__event-dot--huddle) {
+    &:not(
+      .event-calendar__event-dot--going,
+      .event-calendar__event-dot--interested,
+      .event-calendar__event-dot--not-going,
+      .event-calendar__event-dot--invited,
+      .event-calendar__event-dot--huddle
+    ) {
       background: $ev-purple-mid;
     }
   }
@@ -899,6 +920,7 @@ $ev-interested-color: #b8945f;
     opacity: 0;
     transform: translateY(-6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -922,7 +944,7 @@ $ev-interested-color: #b8945f;
       position: absolute;
       inset: 0;
       border-radius: 14px;
-      background: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.35));
+      background: linear-gradient(transparent 50%, rgba(0, 0, 0, 35%));
       pointer-events: none;
     }
   }
@@ -1124,7 +1146,7 @@ $ev-interested-color: #b8945f;
 
     &--danger {
       color: $ev-live-color;
-      border-color: rgba(199, 93, 110, 0.3);
+      border-color: rgba(199, 93, 110, 30%);
 
       &:hover {
         background: $ev-live-glow;
@@ -1182,8 +1204,13 @@ $ev-interested-color: #b8945f;
 }
 
 @keyframes ev-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.65; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
 }
 
 // Status event card — inline event embed in feed
@@ -1199,14 +1226,14 @@ $ev-interested-color: #b8945f;
   transition: all 0.25s ease;
 
   &:hover {
-    border-color: rgba(110, 95, 184, 0.3);
-    box-shadow: 0 2px 12px rgba(110, 95, 184, 0.08);
+    border-color: rgba(110, 95, 184, 30%);
+    box-shadow: 0 2px 12px rgba(110, 95, 184, 8%);
     text-decoration: none;
     color: inherit;
   }
 
   &--live {
-    border-color: rgba(199, 93, 110, 0.4);
+    border-color: rgba(199, 93, 110, 40%);
     box-shadow: 0 0 0 1px $ev-live-glow;
 
     &:hover {
@@ -1228,7 +1255,7 @@ $ev-interested-color: #b8945f;
       left: 0;
       right: 0;
       height: 40px;
-      background: linear-gradient(transparent, rgba(0, 0, 0, 0.25));
+      background: linear-gradient(transparent, rgba(0, 0, 0, 25%));
     }
   }
 
@@ -1246,7 +1273,7 @@ $ev-interested-color: #b8945f;
     min-width: 48px;
     height: 48px;
     background: $ev-purple-faint;
-    border: 1px solid rgba(110, 95, 184, 0.12);
+    border: 1px solid rgba(110, 95, 184, 12%);
     border-radius: 10px;
     flex-shrink: 0;
 
@@ -1434,7 +1461,9 @@ $ev-interested-color: #b8945f;
       font-size: 14px;
       font-family: inherit;
       box-sizing: border-box;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 
       &::placeholder {
         color: $ev-purple-muted;
@@ -1576,7 +1605,7 @@ $ev-interested-color: #b8945f;
   gap: 12px;
   padding: 10px 14px;
   background: $ev-purple-faint;
-  border: 1px solid rgba(110, 95, 184, 0.12);
+  border: 1px solid rgba(110, 95, 184, 12%);
   border-radius: 10px;
   text-decoration: none;
   color: inherit;
@@ -1584,7 +1613,7 @@ $ev-interested-color: #b8945f;
   margin-top: 4px;
 
   &:hover {
-    border-color: rgba(110, 95, 184, 0.3);
+    border-color: rgba(110, 95, 184, 30%);
     background: $ev-purple-hover;
     text-decoration: none;
     color: inherit;
@@ -1598,7 +1627,7 @@ $ev-interested-color: #b8945f;
     min-width: 42px;
     height: 42px;
     background: var(--background-color);
-    border: 1px solid rgba(110, 95, 184, 0.15);
+    border: 1px solid rgba(110, 95, 184, 15%);
     border-radius: 8px;
     flex-shrink: 0;
 
@@ -1645,7 +1674,6 @@ $ev-interested-color: #b8945f;
     margin-top: 1px;
   }
 }
-
 
 // Invite Followers Panel
 .invite-followers-panel {
@@ -1744,7 +1772,7 @@ $ev-interested-color: #b8945f;
     }
 
     &::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 15%);
       border-radius: 3px;
     }
   }
