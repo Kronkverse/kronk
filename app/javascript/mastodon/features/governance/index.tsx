@@ -33,6 +33,7 @@ export interface Proposal {
   veto_count: number;
   participation_count: number;
   created_at: string;
+  archived_at: string | null;
   current_vote: {
     position: string;
     title: string | null;
@@ -133,7 +134,9 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   }, []);
 
   const handleArchived = useCallback((updated: Proposal) => {
-    setProposals((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    setProposals((prev) =>
+      prev.map((p) => (p.id === updated.id ? updated : p)),
+    );
     setSelectedId(null);
   }, []);
 
@@ -175,7 +178,10 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         ) : showForm ? (
           <div className='governance-plant'>
             <button className='governance-plant__back' onClick={handleHideForm}>
-              <FormattedMessage id='governance.back_to_seeds' defaultMessage='← All seeds' />
+              <FormattedMessage
+                id='governance.back_to_seeds'
+                defaultMessage='← All seeds'
+              />
             </button>
             <CreateProposalForm
               onCreated={handleProposalCreated}
@@ -241,7 +247,10 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             )}
 
             <div className='governance-page__list'>
-              {[...proposals.filter((p) => !p.archived_at), ...proposals.filter((p) => p.archived_at)].map((proposal) => (
+              {[
+                ...proposals.filter((p) => !p.archived_at),
+                ...proposals.filter((p) => p.archived_at),
+              ].map((proposal) => (
                 <ProposalCard
                   key={proposal.id}
                   proposal={proposal}

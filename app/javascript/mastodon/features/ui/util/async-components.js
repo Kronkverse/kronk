@@ -261,3 +261,7 @@ export function Market () {
 export function Governance () {
   return import("../../governance");
 }
+
+export function Hub () {
+  return import("../../hub");
+}

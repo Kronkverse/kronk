@@ -78,6 +78,7 @@ import {
   AccountFeatured,
   Quotes,
   Orbit,
+  Hub,
   Live,
   Market,
   Events,
@@ -148,7 +149,7 @@ class SwitchingColumnsArea extends PureComponent {
       if (forceOnboarding) {
         redirect = <Redirect from='/' to='/start' exact />;
       } else if (singleColumn) {
-        redirect = <Redirect from='/' to='/home' exact />;
+        redirect = <Redirect from='/' to='/hub' exact />;
       } else {
         redirect = <Redirect from='/' to='/deck/getting-started' exact />;
       }
@@ -206,6 +207,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/directory' component={Directory} content={children} />
             <WrappedRoute path='/explore' component={Explore} content={children} />
             <WrappedRoute path="/orbit" component={Orbit} content={children} />
+            <WrappedRoute path="/hub" component={Hub} content={children} />
             {signedIn && <WrappedRoute path="/huddle" component={Live} content={children} />}
             <WrappedRoute path="/market" component={Market} content={children} />
             {signedIn && <WrappedRoute path="/events/:id" component={EventDetail} content={children} />}

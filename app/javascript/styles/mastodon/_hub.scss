@@ -1,0 +1,168 @@
+// Hub landing page — orbit-style home screen
+
+$hub-bg-top: #0d0b1e;
+$hub-bg-mid: #1a1245;
+$hub-bg-bottom: #2d1b69;
+$hub-accent: #b6a3ff;
+$hub-bubble-fill: #2a1f5c;
+$hub-bubble-border: rgba(182, 163, 255, 27%);
+$hub-brand-light: #7b5ea7;
+$hub-brand-dark: #3d2d5c;
+$hub-notif-red: #ff4757;
+$hub-text: rgba(232, 223, 245, 82%);
+
+@keyframes hub-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-9px);
+  }
+}
+
+.hub {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    $hub-bg-bottom 0%,
+    $hub-bg-mid 45%,
+    $hub-bg-top 100%
+  );
+  overflow: hidden;
+}
+
+.hub__stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hub__star {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(182, 163, 255, 67%);
+}
+
+.hub__notif-btn {
+  position: absolute;
+  top: max(24px, env(safe-area-inset-top, 0px) + 24px);
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid $hub-bubble-border;
+  background: rgba(42, 31, 92, 85%);
+  color: $hub-accent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: $hub-accent;
+  }
+
+  &:hover {
+    background: rgba(60, 45, 120, 90%);
+  }
+}
+
+.hub__notif-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  min-width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: $hub-notif-red;
+  font-size: 0;
+  line-height: 0;
+}
+
+.hub__orbit-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+}
+
+.hub__orbit {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.hub__bubble-col {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  animation: hub-float ease-in-out infinite alternate;
+}
+
+.hub__bubble {
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    $hub-bubble-fill 0%,
+    darken($hub-bubble-fill, 8%) 100%
+  );
+  border: 1px solid $hub-bubble-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 18px rgba(182, 163, 255, 15%);
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 0 28px rgba(182, 163, 255, 35%);
+  }
+}
+
+.hub__bubble-icon {
+  width: 30px;
+  height: 30px;
+  fill: $hub-accent;
+}
+
+.hub__bubble-label {
+  color: $hub-text;
+  font-size: 10px;
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.hub__profile {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 85%);
+  background: radial-gradient(circle, $hub-brand-light, $hub-brand-dark);
+  color: #fff;
+  font-size: 28px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 30px rgba(123, 94, 167, 40%);
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 0 40px rgba(123, 94, 167, 60%);
+  }
+}
