@@ -2631,3 +2631,156 @@ $governance-amber: #f59e0b;
     }
   }
 }
+
+// ─── Space proposal wizard ─────────────────────────────────────────────────
+
+.wizard-space-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.wizard-space-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  color: $primary-text-color;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+  min-width: 72px;
+
+  .icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  span {
+    font-size: 12px;
+    color: $secondary-text-color;
+  }
+
+  &:hover {
+    border-color: $governance-purple;
+    background: rgba(86, 58, 204, 7%);
+
+    span {
+      color: $governance-purple;
+    }
+  }
+
+  &--new {
+    border-style: dashed;
+    border-color: $secondary-text-color;
+    color: $secondary-text-color;
+
+    &:hover {
+      border-color: $governance-purple;
+    }
+  }
+}
+
+.wizard-type-picker {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.wizard-type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: 2px solid $ui-base-color;
+  border-radius: 12px;
+  padding: 28px 32px;
+  cursor: pointer;
+  color: $primary-text-color;
+  font-size: 15px;
+  font-weight: 600;
+  min-width: 120px;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+
+  .icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  &:hover {
+    border-color: $governance-purple;
+    background: rgba(86, 58, 204, 7%);
+  }
+}
+
+.wizard-back-btn {
+  display: block;
+  background: none;
+  border: none;
+  color: $secondary-text-color;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0 0 16px;
+
+  &:hover {
+    color: $primary-text-color;
+  }
+}
+
+.wizard-heading {
+  font-family: Georgia, 'Liberation Serif', serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: $primary-text-color;
+  margin: 0 0 20px;
+}
+
+.wizard-subheading {
+  font-size: 13px;
+  color: $secondary-text-color;
+  margin: 0 0 20px;
+}
+
+.wizard-severity {
+  margin: 8px 0 20px;
+
+  &__label {
+    display: block;
+    font-size: 14px;
+    color: $secondary-text-color;
+    margin-bottom: 12px;
+  }
+
+  &__track {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__input {
+    flex: 1;
+    accent-color: $governance-purple;
+    cursor: pointer;
+    height: 4px;
+  }
+
+  &__value {
+    font-size: 22px;
+    font-weight: 700;
+    color: $governance-purple;
+    min-width: 32px;
+    text-align: right;
+  }
+}
