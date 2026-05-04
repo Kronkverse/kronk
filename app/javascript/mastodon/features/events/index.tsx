@@ -239,45 +239,29 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             events={events}
             selectedMonth={selectedMonth}
             onMonthChange={handleMonthChange}
-            onRsvp={handleRsvpVoid}
           />
         ) : (
-          <>
-            <div className='events-page__list'>
-              {loading && events.length === 0 && (
-                <div className='events-page__empty'>
-                  <FormattedMessage
-                    id='events.loading'
-                    defaultMessage='Loading ₭alendar...'
-                  />
-                </div>
-              )}
-              {!loading && events.length === 0 && (
-                <div className='events-page__empty'>
-                  <FormattedMessage
-                    id='events.empty'
-                    defaultMessage='No events in ₭alendar'
-                  />
-                </div>
-              )}
-              {events.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  onRsvp={handleRsvpVoid}
+          <div className='events-page__list'>
+            {loading && events.length === 0 && (
+              <div className='events-page__empty'>
+                <FormattedMessage
+                  id='events.loading'
+                  defaultMessage='Loading ₭alendar...'
                 />
-              ))}
-            </div>
-
-            <div className='events-page__calendar-section'>
-              <EventCalendar
-                events={events}
-                selectedMonth={selectedMonth}
-                onMonthChange={handleMonthChange}
-                onRsvp={handleRsvpVoid}
-              />
-            </div>
-          </>
+              </div>
+            )}
+            {!loading && events.length === 0 && (
+              <div className='events-page__empty'>
+                <FormattedMessage
+                  id='events.empty'
+                  defaultMessage='No events in ₭alendar'
+                />
+              </div>
+            )}
+            {events.map((event) => (
+              <EventCard key={event.id} event={event} onRsvp={handleRsvpVoid} />
+            ))}
+          </div>
         )}
       </div>
     </Column>

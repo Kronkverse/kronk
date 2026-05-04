@@ -1,8 +1,8 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { FormattedDate } from 'react-intl';
 
-import { EventCard } from './event_card';
+import { Link } from 'react-router-dom';
 
 interface Account {
   id: string;
@@ -42,7 +42,6 @@ interface Props {
   events: Event[];
   selectedMonth: Date;
   onMonthChange: (date: Date) => void;
-  onRsvp: (eventId: string, status: string) => void;
 }
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -105,37 +104,26 @@ function getColorClass(event: Event): string {
   return '';
 }
 
-interface DotButtonProps {
+interface DotLinkProps {
   event: Event;
   position: SpanPosition;
-  isSelected: boolean;
-  onSelect: (id: string | null) => void;
 }
 
-const CalendarDotButton: React.FC<DotButtonProps> = ({
-  event,
-  position,
-  isSelected,
-  onSelect,
-}) => {
-  const handleClick = useCallback(() => {
-    onSelect(isSelected ? null : event.id);
-  }, [onSelect, isSelected, event.id]);
-
+const CalendarDotLink: React.FC<DotLinkProps> = ({ event, position }) => {
   const colorClass = getColorClass(event);
   const posClass =
     position !== 'single' ? `event-calendar__event-dot--${position}` : '';
 
   return (
-    <button
-      className={`event-calendar__event-dot ${colorClass} ${posClass} ${isSelected ? 'event-calendar__event-dot--selected' : ''}`}
+    <Link
+      to={`/kalendar/${event.id}`}
+      className={`event-calendar__event-dot ${colorClass} ${posClass}`}
       title={event.title}
-      onClick={handleClick}
     >
       {event.event_type === 'huddle' &&
         (position === 'start' || position === 'single') && <HuddleIcon />}
       {event.title.length > 10 ? event.title.slice(0, 10) + '…' : event.title}
-    </button>
+    </Link>
   );
 };
 
@@ -143,9 +131,7 @@ export const EventCalendar: React.FC<Props> = ({
   events,
   selectedMonth,
   onMonthChange,
-  onRsvp,
 }) => {
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const days = useMemo(() => getDaysInMonth(selectedMonth), [selectedMonth]);
 
   const eventsByDate = useMemo(() => {
@@ -186,25 +172,19 @@ export const EventCalendar: React.FC<Props> = ({
     return map;
   }, [events]);
 
-  const selectedEvent = selectedEventId
-    ? events.find((e) => e.id === selectedEventId)
-    : null;
-
   const prevMonth = useCallback(() => {
     const d = new Date(selectedMonth);
     d.setMonth(d.getMonth() - 1);
     onMonthChange(d);
-    setSelectedEventId(null);
   }, [selectedMonth, onMonthChange]);
 
   const nextMonth = useCallback(() => {
     const d = new Date(selectedMonth);
     d.setMonth(d.getMonth() + 1);
     onMonthChange(d);
-    setSelectedEventId(null);
   }, [selectedMonth, onMonthChange]);
 
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
 
   return (
     <div className='event-calendar'>
@@ -240,24 +220,16 @@ export const EventCalendar: React.FC<Props> = ({
             >
               <span className='event-calendar__cell-date'>{day.getDate()}</span>
               {dayEvents.map(({ event, position }) => (
-                <CalendarDotButton
+                <CalendarDotLink
                   key={event.id}
                   event={event}
                   position={position}
-                  isSelected={selectedEventId === event.id}
-                  onSelect={setSelectedEventId}
                 />
               ))}
             </div>
           );
         })}
       </div>
-
-      {selectedEvent && (
-        <div className='event-calendar__selected'>
-          <EventCard event={selectedEvent} onRsvp={onRsvp} />
-        </div>
-      )}
     </div>
   );
 };
