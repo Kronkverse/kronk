@@ -241,27 +241,40 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             onMonthChange={handleMonthChange}
           />
         ) : (
-          <div className='events-page__list'>
-            {loading && events.length === 0 && (
-              <div className='events-page__empty'>
-                <FormattedMessage
-                  id='events.loading'
-                  defaultMessage='Loading ₭alendar...'
+          <>
+            <div className='events-page__list'>
+              {loading && events.length === 0 && (
+                <div className='events-page__empty'>
+                  <FormattedMessage
+                    id='events.loading'
+                    defaultMessage='Loading ₭alendar...'
+                  />
+                </div>
+              )}
+              {!loading && events.length === 0 && (
+                <div className='events-page__empty'>
+                  <FormattedMessage
+                    id='events.empty'
+                    defaultMessage='No events in ₭alendar'
+                  />
+                </div>
+              )}
+              {events.map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  onRsvp={handleRsvpVoid}
                 />
-              </div>
-            )}
-            {!loading && events.length === 0 && (
-              <div className='events-page__empty'>
-                <FormattedMessage
-                  id='events.empty'
-                  defaultMessage='No events in ₭alendar'
-                />
-              </div>
-            )}
-            {events.map((event) => (
-              <EventCard key={event.id} event={event} onRsvp={handleRsvpVoid} />
-            ))}
-          </div>
+              ))}
+            </div>
+            <div className='events-page__calendar-section'>
+              <EventCalendar
+                events={events}
+                selectedMonth={selectedMonth}
+                onMonthChange={handleMonthChange}
+              />
+            </div>
+          </>
         )}
       </div>
     </Column>
