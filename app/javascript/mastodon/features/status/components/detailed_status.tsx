@@ -26,6 +26,7 @@ import { IconLogo } from 'mastodon/components/logo';
 import MediaGallery from 'mastodon/components/media_gallery';
 import { PictureInPicturePlaceholder } from 'mastodon/components/picture_in_picture_placeholder';
 import StatusContent from 'mastodon/components/status_content';
+import { StatusEventCard } from 'mastodon/components/status_event_card';
 import { QuotedStatus } from 'mastodon/components/status_quoted';
 import { VisibilityIcon } from 'mastodon/components/visibility_icon';
 import { Audio } from 'mastodon/features/audio';
@@ -267,6 +268,8 @@ export const DetailedStatus: React.FC<{
         card={status.get('card')}
       />
     );
+  } else if (status.get('event')) {
+    media = <StatusEventCard event={status.get('event').toJS()} />;
   }
 
   if (status.get('application')) {

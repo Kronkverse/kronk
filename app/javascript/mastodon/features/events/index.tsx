@@ -1,30 +1,40 @@
 import { useCallback, useEffect, useState } from 'react';
+
 import { useIntl, defineMessages, FormattedMessage } from 'react-intl';
+
 import { Helmet } from 'react-helmet';
-import Column from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { Icon } from 'mastodon/components/icon';
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
-import ListIcon from '@/material-icons/400-24px/list.svg?react';
+
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import api from 'mastodon/api';
-import { EventCard } from './components/event_card';
-import { EventCalendar } from './components/event_calendar';
+import Column from 'mastodon/components/column';
+import { ColumnHeader } from 'mastodon/components/column_header';
+
 import { CreateEventForm } from './components/create_event_form';
+import { EventCalendar } from './components/event_calendar';
+import { EventCard } from './components/event_card';
 import { InviteFollowersPanel } from './components/invite_followers_panel';
 
 const messages = defineMessages({
-  title: { id: 'events.title', defaultMessage: 'Events' },
+  title: { id: 'events.title', defaultMessage: '₭alendar' },
 });
 
 const filterMessages = {
-  upcoming: <FormattedMessage id='events.filter.upcoming' defaultMessage='Upcoming' />,
+  upcoming: (
+    <FormattedMessage id='events.filter.upcoming' defaultMessage='Upcoming' />
+  ),
   past: <FormattedMessage id='events.filter.past' defaultMessage='Past' />,
-  mine: <FormattedMessage id='events.filter.mine' defaultMessage='My Events' />,
-  invited: <FormattedMessage id='events.filter.invited' defaultMessage='Invited' />,
+  mine: (
+    <FormattedMessage
+      id='events.filter.mine'
+      defaultMessage='My ₭alendar Events'
+    />
+  ),
+  invited: (
+    <FormattedMessage id='events.filter.invited' defaultMessage='Invited' />
+  ),
 };
 
-type Event = {
+interface Event {
   id: string;
   title: string;
   description: string;
@@ -42,11 +52,19 @@ type Event = {
   rsvp: string | null;
   invited: boolean;
   cancelled: boolean;
-  account: any;
+  account: EventAccount;
   status_id: string | null;
   image_url: string | null;
   is_owner: boolean;
-};
+}
+
+interface EventAccount {
+  id: string;
+  username: string;
+  acct: string;
+  display_name: string;
+  url: string;
+}
 
 type FilterType = 'upcoming' | 'past' | 'mine' | 'invited';
 
@@ -64,7 +82,9 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api().get('/api/v1/events', { params: { filter } });
+      const response = await api().get('/api/v1/events', {
+        params: { filter },
+      });
       setEvents(response.data as Event[]);
     } catch (err) {
       console.error('Failed to fetch events:', err);
@@ -74,29 +94,36 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   }, [filter]);
 
   useEffect(() => {
-    fetchEvents();
+    void fetchEvents();
   }, [fetchEvents]);
 
   const handleRsvp = useCallback(async (eventId: string, status: string) => {
     try {
-      const response = await api().post(`/api/v1/events/${eventId}/rsvp`, { status });
-      setEvents(prev => prev.map(e => e.id === eventId ? response.data as Event : e));
+      const response = await api().post(`/api/v1/events/${eventId}/rsvp`, {
+        status,
+      });
+      setEvents((prev) =>
+        prev.map((e) => (e.id === eventId ? (response.data as Event) : e)),
+      );
     } catch (err) {
       console.error('Failed to RSVP:', err);
     }
   }, []);
 
-  const handleEventCreated = useCallback((event: Event) => {
-    if (editingEvent) {
-      setEvents(prev => prev.map(e => e.id === event.id ? event : e));
-      setShowForm(false);
-      setEditingEvent(null);
-    } else {
-      setEvents(prev => [event, ...prev]);
-      setShowForm(false);
-      setCreatedEventId(event.id);
-    }
-  }, [editingEvent]);
+  const handleEventCreated = useCallback(
+    (event: Event) => {
+      if (editingEvent) {
+        setEvents((prev) => prev.map((e) => (e.id === event.id ? event : e)));
+        setShowForm(false);
+        setEditingEvent(null);
+      } else {
+        setEvents((prev) => [event, ...prev]);
+        setShowForm(false);
+        setCreatedEventId(event.id);
+      }
+    },
+    [editingEvent],
+  );
 
   const handleInviteDone = useCallback(() => {
     setCreatedEventId(null);
@@ -111,6 +138,32 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setEditingEvent(null);
     setShowForm(true);
   }, []);
+
+  const handleSetFilter = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      setFilter(e.currentTarget.dataset.filter as FilterType);
+    },
+    [],
+  );
+
+  const handleListView = useCallback(() => {
+    setViewMode('list');
+  }, []);
+
+  const handleCalendarView = useCallback(() => {
+    setViewMode('calendar');
+  }, []);
+
+  const handleMonthChange = useCallback((m: Date) => {
+    setSelectedMonth(m);
+  }, []);
+
+  const handleRsvpVoid = useCallback(
+    (id: string, status: string) => {
+      void handleRsvp(id, status);
+    },
+    [handleRsvp],
+  );
 
   return (
     <Column>
@@ -128,35 +181,40 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       <div className='events-page'>
         <div className='events-page__header'>
           <div className='events-page__filters'>
-            {(['upcoming', 'past', 'mine', 'invited'] as FilterType[]).map(f => (
-              <button
-                key={f}
-                className={`events-page__filter ${filter === f ? 'active' : ''}`}
-                onClick={() => setFilter(f)}
-              >
-                {filterMessages[f]}
-              </button>
-            ))}
+            {(['upcoming', 'past', 'mine', 'invited'] as FilterType[]).map(
+              (f) => (
+                <button
+                  key={f}
+                  data-filter={f}
+                  className={`events-page__filter ${filter === f ? 'active' : ''}`}
+                  onClick={handleSetFilter}
+                >
+                  {filterMessages[f]}
+                </button>
+              ),
+            )}
           </div>
 
           <div className='events-page__actions'>
+            <div className='events-page__view-toggle-group'>
+              <button
+                className={`events-page__view-toggle ${viewMode === 'list' ? 'active' : ''}`}
+                onClick={handleListView}
+              >
+                List
+              </button>
+              <button
+                className={`events-page__view-toggle ${viewMode === 'calendar' ? 'active' : ''}`}
+                onClick={handleCalendarView}
+              >
+                Month
+              </button>
+            </div>
             <button
-              className={`events-page__view-toggle ${viewMode === 'list' ? 'active' : ''}`}
-              onClick={() => setViewMode('list')}
-              title='List view'
+              className='events-page__create-btn'
+              onClick={handleNewEvent}
             >
-              <Icon id='list' icon={ListIcon} />
-            </button>
-            <button
-              className={`events-page__view-toggle ${viewMode === 'calendar' ? 'active' : ''}`}
-              onClick={() => setViewMode('calendar')}
-              title='Calendar view'
-            >
-              <Icon id='calendar_month' icon={CalendarMonthIcon} />
-            </button>
-            <button className='events-page__create-btn' onClick={handleNewEvent}>
-              <Icon id='add' icon={AddIcon} />
-              <FormattedMessage id='events.create' defaultMessage='New Event' />
+              <FormattedMessage id='events.create' defaultMessage='+ Host' />
             </button>
           </div>
         </div>
@@ -177,23 +235,46 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         )}
 
         {viewMode === 'calendar' ? (
-          <EventCalendar events={events} selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} onRsvp={handleRsvp} />
+          <EventCalendar
+            events={events}
+            selectedMonth={selectedMonth}
+            onMonthChange={handleMonthChange}
+          />
         ) : (
-          <div className='events-page__list'>
-            {loading && events.length === 0 && (
-              <div className='events-page__empty'>
-                <FormattedMessage id='events.loading' defaultMessage='Loading events...' />
-              </div>
-            )}
-            {!loading && events.length === 0 && (
-              <div className='events-page__empty'>
-                <FormattedMessage id='events.empty' defaultMessage='No events to show' />
-              </div>
-            )}
-            {events.map(event => (
-              <EventCard key={event.id} event={event} onRsvp={handleRsvp} />
-            ))}
-          </div>
+          <>
+            <div className='events-page__list'>
+              {loading && events.length === 0 && (
+                <div className='events-page__empty'>
+                  <FormattedMessage
+                    id='events.loading'
+                    defaultMessage='Loading ₭alendar...'
+                  />
+                </div>
+              )}
+              {!loading && events.length === 0 && (
+                <div className='events-page__empty'>
+                  <FormattedMessage
+                    id='events.empty'
+                    defaultMessage='No events in ₭alendar'
+                  />
+                </div>
+              )}
+              {events.map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  onRsvp={handleRsvpVoid}
+                />
+              ))}
+            </div>
+            <div className='events-page__calendar-section'>
+              <EventCalendar
+                events={events}
+                selectedMonth={selectedMonth}
+                onMonthChange={handleMonthChange}
+              />
+            </div>
+          </>
         )}
       </div>
     </Column>
