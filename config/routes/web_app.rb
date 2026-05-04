@@ -13,8 +13,8 @@
   /directory
   /domain_blocks
   /explore/(*any)
-  /events
-  /events/(*any)
+  /kalendar
+  /kalendar/(*any)
   /favourites
   /follow_requests
   /followed_tags
