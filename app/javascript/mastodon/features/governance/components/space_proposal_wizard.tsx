@@ -4,10 +4,13 @@ import { FormattedMessage } from 'react-intl';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import CalendarIcon from '@/material-icons/400-24px/calendar_month.svg?react';
+import CodeIcon from '@/material-icons/400-24px/code.svg?react';
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
 import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
+import MailIcon from '@/material-icons/400-24px/mail.svg?react';
+import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import ReportIcon from '@/material-icons/400-24px/report.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import SmartphoneIcon from '@/material-icons/400-24px/smartphone.svg?react';
@@ -25,6 +28,8 @@ type SpaceKey =
   | 'app'
   | 'general'
   | 'new-space';
+
+type GeneralSubcategory = 'signup-flow' | 'invitations' | 'governance' | 'code';
 type ProposalType = 'bug' | 'feature';
 
 const SPACE_CATEGORY: Record<SpaceKey, string> = {
@@ -38,6 +43,13 @@ const SPACE_CATEGORY: Record<SpaceKey, string> = {
   'new-space': 'governance',
 };
 
+const GENERAL_SUBCATEGORY_LABELS: Record<GeneralSubcategory, string> = {
+  'signup-flow': 'Signup Flow',
+  invitations: 'Invitations',
+  governance: 'Governance',
+  code: 'Code',
+};
+
 interface Props {
   onCreated: (proposal: Proposal) => void;
   onCancel: () => void;
@@ -48,6 +60,8 @@ export const SpaceProposalWizard: React.FC<Props> = ({
   onCancel,
 }) => {
   const [selectedSpace, setSelectedSpace] = useState<SpaceKey | null>(null);
+  const [selectedSubcategory, setSelectedSubcategory] =
+    useState<GeneralSubcategory | null>(null);
   const [selectedType, setSelectedType] = useState<ProposalType | null>(null);
 
   const [bugName, setBugName] = useState('');
@@ -67,6 +81,17 @@ export const SpaceProposalWizard: React.FC<Props> = ({
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const space = e.currentTarget.dataset.space as SpaceKey;
       setSelectedSpace(space);
+      setSelectedSubcategory(null);
+      setSelectedType(null);
+      setError(null);
+    },
+    [],
+  );
+
+  const handleSubcategoryBtnClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const sub = e.currentTarget.dataset.sub as GeneralSubcategory;
+      setSelectedSubcategory(sub);
       setSelectedType(null);
       setError(null);
     },
@@ -154,23 +179,52 @@ export const SpaceProposalWizard: React.FC<Props> = ({
 
   const handleSubmitBug = useCallback(() => {
     if (!selectedSpace) return;
+    const subLabel =
+      selectedSubcategory !== null
+        ? `[${GENERAL_SUBCATEGORY_LABELS[selectedSubcategory]}] `
+        : '';
     void handleSubmit(
       bugName,
-      `[Severity: ${bugSeverity}/47]\n\n${bugDescription}`,
+      `${subLabel}[Severity: ${bugSeverity}/47]\n\n${bugDescription}`,
       selectedSpace,
     );
-  }, [selectedSpace, bugName, bugDescription, bugSeverity, handleSubmit]);
+  }, [
+    selectedSpace,
+    selectedSubcategory,
+    bugName,
+    bugDescription,
+    bugSeverity,
+    handleSubmit,
+  ]);
 
   const handleSubmitFeature = useCallback(() => {
     if (!selectedSpace) return;
-    void handleSubmit(featureName, featureDescription, selectedSpace);
-  }, [selectedSpace, featureName, featureDescription, handleSubmit]);
+    const subLabel =
+      selectedSubcategory !== null
+        ? `[${GENERAL_SUBCATEGORY_LABELS[selectedSubcategory]}] `
+        : '';
+    void handleSubmit(
+      featureName,
+      `${subLabel}${featureDescription}`,
+      selectedSpace,
+    );
+  }, [
+    selectedSpace,
+    selectedSubcategory,
+    featureName,
+    featureDescription,
+    handleSubmit,
+  ]);
 
   const handleSubmitNewSpace = useCallback(() => {
     void handleSubmit(spaceName, spaceProposal, 'new-space');
   }, [spaceName, spaceProposal, handleSubmit]);
 
-  const showTypeRow = selectedSpace !== null && selectedSpace !== 'new-space';
+  const showSubcategoryRow = selectedSpace === 'general';
+  const showTypeRow =
+    selectedSpace !== null &&
+    selectedSpace !== 'new-space' &&
+    (selectedSpace !== 'general' || selectedSubcategory !== null);
   const showNewSpaceForm = selectedSpace === 'new-space';
   const showBugForm = showTypeRow && selectedType === 'bug';
   const showFeatureForm = showTypeRow && selectedType === 'feature';
@@ -292,7 +346,60 @@ export const SpaceProposalWizard: React.FC<Props> = ({
         </button>
       </div>
 
-      {/* Row 2: Type picker — appears when a space (not new-space) is selected */}
+      {/* Row 2a: General subcategory picker */}
+      {showSubcategoryRow && (
+        <div className='wizard-type-picker'>
+          <button
+            className={`wizard-type-btn${selectedSubcategory === 'signup-flow' ? ' wizard-type-btn--selected' : ''}`}
+            data-sub='signup-flow'
+            onClick={handleSubcategoryBtnClick}
+          >
+            <Icon id='person_add' icon={PersonAddIcon} />
+            <FormattedMessage
+              id='governance.wizard.general.signup_flow'
+              defaultMessage='Signup Flow'
+            />
+          </button>
+
+          <button
+            className={`wizard-type-btn${selectedSubcategory === 'invitations' ? ' wizard-type-btn--selected' : ''}`}
+            data-sub='invitations'
+            onClick={handleSubcategoryBtnClick}
+          >
+            <Icon id='mail' icon={MailIcon} />
+            <FormattedMessage
+              id='governance.wizard.general.invitations'
+              defaultMessage='Invitations'
+            />
+          </button>
+
+          <button
+            className={`wizard-type-btn${selectedSubcategory === 'governance' ? ' wizard-type-btn--selected' : ''}`}
+            data-sub='governance'
+            onClick={handleSubcategoryBtnClick}
+          >
+            <Icon id='gavel' icon={GavelIcon} />
+            <FormattedMessage
+              id='governance.wizard.general.governance'
+              defaultMessage='Governance'
+            />
+          </button>
+
+          <button
+            className={`wizard-type-btn${selectedSubcategory === 'code' ? ' wizard-type-btn--selected' : ''}`}
+            data-sub='code'
+            onClick={handleSubcategoryBtnClick}
+          >
+            <Icon id='code' icon={CodeIcon} />
+            <FormattedMessage
+              id='governance.wizard.general.code'
+              defaultMessage='Code'
+            />
+          </button>
+        </div>
+      )}
+
+      {/* Row 2b: Bug / New Feature picker (all spaces except general-without-subcategory and new-space) */}
       {showTypeRow && (
         <div className='wizard-type-picker'>
           <button
@@ -473,7 +580,7 @@ export const SpaceProposalWizard: React.FC<Props> = ({
         </div>
       )}
 
-      {/* New space form — appears directly below space picker */}
+      {/* New space form */}
       {showNewSpaceForm && (
         <div className='wizard-form'>
           {error && <p className='governance-form__error'>{error}</p>}
