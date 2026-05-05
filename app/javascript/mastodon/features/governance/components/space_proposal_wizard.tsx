@@ -14,6 +14,7 @@ import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import ReportIcon from '@/material-icons/400-24px/report.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import SmartphoneIcon from '@/material-icons/400-24px/smartphone.svg?react';
+import TuneIcon from '@/material-icons/400-24px/tune.svg?react';
 import api from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
 
@@ -30,7 +31,7 @@ type SpaceKey =
   | 'new-space';
 
 type GeneralSubcategory = 'signup-flow' | 'invitations' | 'governance' | 'code';
-type ProposalType = 'bug' | 'feature';
+type ProposalType = 'bug' | 'feature' | 'refine';
 
 const SPACE_CATEGORY: Record<SpaceKey, string> = {
   feed: 'timeline',
@@ -70,6 +71,9 @@ export const SpaceProposalWizard: React.FC<Props> = ({
 
   const [featureName, setFeatureName] = useState('');
   const [featureDescription, setFeatureDescription] = useState('');
+
+  const [refineName, setRefineName] = useState('');
+  const [refineDescription, setRefineDescription] = useState('');
 
   const [spaceName, setSpaceName] = useState('');
   const [spaceProposal, setSpaceProposal] = useState('');
@@ -142,6 +146,19 @@ export const SpaceProposalWizard: React.FC<Props> = ({
     [],
   );
 
+  const handleRefineNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setRefineName(e.target.value);
+    },
+    [],
+  );
+
+  const handleRefineDescChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setRefineDescription(e.target.value);
+    },
+    [],
+  );
   const handleSpaceNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setSpaceName(e.target.value);
@@ -216,6 +233,24 @@ export const SpaceProposalWizard: React.FC<Props> = ({
     handleSubmit,
   ]);
 
+  const handleSubmitRefine = useCallback(() => {
+    if (!selectedSpace) return;
+    const subLabel =
+      selectedSubcategory !== null
+        ? `[${GENERAL_SUBCATEGORY_LABELS[selectedSubcategory]}] `
+        : '';
+    void handleSubmit(
+      refineName,
+      `${subLabel}[Refine]\n\n${refineDescription}`,
+      selectedSpace,
+    );
+  }, [
+    selectedSpace,
+    selectedSubcategory,
+    refineName,
+    refineDescription,
+    handleSubmit,
+  ]);
   const handleSubmitNewSpace = useCallback(() => {
     void handleSubmit(
       spaceName,
@@ -232,6 +267,7 @@ export const SpaceProposalWizard: React.FC<Props> = ({
   const showNewSpaceForm = selectedSpace === 'new-space';
   const showBugForm = showTypeRow && selectedType === 'bug';
   const showFeatureForm = showTypeRow && selectedType === 'feature';
+  const showRefineForm = showTypeRow && selectedType === 'refine';
 
   return (
     <div className='wizard'>
@@ -429,6 +465,85 @@ export const SpaceProposalWizard: React.FC<Props> = ({
               defaultMessage='New Feature'
             />
           </button>
+
+          <button
+            className={`wizard-type-btn${selectedType === 'refine' ? ' wizard-type-btn--selected' : ''}`}
+            data-type='refine'
+            onClick={handleTypeBtnClick}
+          >
+            <Icon id='tune' icon={TuneIcon} />
+            <FormattedMessage
+              id='governance.wizard.type.refine'
+              defaultMessage='Refine'
+            />
+          </button>
+        </div>
+      )}
+
+      {/* Refine form */}
+      {showRefineForm && (
+        <div className='wizard-form'>
+          {error && <p className='governance-form__error'>{error}</p>}
+
+          <label className='governance-form__label'>
+            <span className='governance-form__label-text'>
+              <FormattedMessage
+                id='governance.wizard.field.name'
+                defaultMessage='Name'
+              />
+            </span>
+            <input
+              className='governance-form__input'
+              type='text'
+              required
+              maxLength={240}
+              value={refineName}
+              onChange={handleRefineNameChange}
+              placeholder='Short title for what needs refining'
+            />
+          </label>
+
+          <label className='governance-form__label'>
+            <span className='governance-form__label-text'>
+              <FormattedMessage
+                id='governance.wizard.field.description'
+                defaultMessage='Description'
+              />
+            </span>
+            <textarea
+              className='governance-form__textarea'
+              required
+              value={refineDescription}
+              onChange={handleRefineDescChange}
+              placeholder='Describe how this feature could be improved'
+              rows={5}
+            />
+          </label>
+
+          <div className='governance-form__actions'>
+            <button
+              className='governance-form__cancel-btn'
+              onClick={onCancel}
+              disabled={submitting}
+            >
+              <FormattedMessage
+                id='governance.form.cancel'
+                defaultMessage='Cancel'
+              />
+            </button>
+            <button
+              className='governance-form__submit-btn'
+              onClick={handleSubmitRefine}
+              disabled={
+                submitting || !refineName.trim() || !refineDescription.trim()
+              }
+            >
+              <FormattedMessage
+                id='governance.wizard.submit'
+                defaultMessage='Plant seed'
+              />
+            </button>
+          </div>
         </div>
       )}
 
