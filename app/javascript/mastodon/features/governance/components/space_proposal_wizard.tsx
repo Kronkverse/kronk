@@ -22,12 +22,6 @@ type SpaceKey =
   | 'hub'
   | 'new-space';
 type ProposalType = 'bug' | 'feature';
-type WizardStep =
-  | 'space'
-  | 'type'
-  | 'bug-form'
-  | 'feature-form'
-  | 'new-space-form';
 
 const SPACE_CATEGORY: Record<SpaceKey, string> = {
   feed: 'timeline',
@@ -47,8 +41,8 @@ export const SpaceProposalWizard: React.FC<Props> = ({
   onCreated,
   onCancel,
 }) => {
-  const [step, setStep] = useState<WizardStep>('space');
   const [selectedSpace, setSelectedSpace] = useState<SpaceKey | null>(null);
+  const [selectedType, setSelectedType] = useState<ProposalType | null>(null);
 
   const [bugName, setBugName] = useState('');
   const [bugDescription, setBugDescription] = useState('');
@@ -63,37 +57,25 @@ export const SpaceProposalWizard: React.FC<Props> = ({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Space picker
   const handleSpaceBtnClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const space = e.currentTarget.dataset.space as SpaceKey;
       setSelectedSpace(space);
-      setStep(space === 'new-space' ? 'new-space-form' : 'type');
+      setSelectedType(null);
+      setError(null);
     },
     [],
   );
 
-  // Type picker
   const handleTypeBtnClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const type = e.currentTarget.dataset.type as ProposalType;
-      setStep(type === 'bug' ? 'bug-form' : 'feature-form');
+      setSelectedType(type);
+      setError(null);
     },
     [],
   );
 
-  const handleBackToSpace = useCallback(() => {
-    setStep('space');
-    setSelectedSpace(null);
-    setError(null);
-  }, []);
-
-  const handleBackToType = useCallback(() => {
-    setStep('type');
-    setError(null);
-  }, []);
-
-  // Field change handlers
   const handleBugNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setBugName(e.target.value);
@@ -143,7 +125,6 @@ export const SpaceProposalWizard: React.FC<Props> = ({
     [],
   );
 
-  // Submission
   const handleSubmit = useCallback(
     async (title: string, formattedBody: string, space: SpaceKey) => {
       setSubmitting(true);
@@ -183,138 +164,105 @@ export const SpaceProposalWizard: React.FC<Props> = ({
     void handleSubmit(spaceName, spaceProposal, 'new-space');
   }, [spaceName, spaceProposal, handleSubmit]);
 
-  if (step === 'space') {
-    return (
-      <div>
-        <h2 className='wizard-heading'>
-          <FormattedMessage
-            id='governance.wizard.pick_space'
-            defaultMessage='Where does this belong?'
-          />
-        </h2>
-        <p className='wizard-subheading'>
-          <FormattedMessage
-            id='governance.wizard.pick_space_hint'
-            defaultMessage='Choose the Kronk space this proposal is about.'
-          />
-        </p>
+  const showTypeRow = selectedSpace !== null && selectedSpace !== 'new-space';
+  const showNewSpaceForm = selectedSpace === 'new-space';
+  const showBugForm = showTypeRow && selectedType === 'bug';
+  const showFeatureForm = showTypeRow && selectedType === 'feature';
 
-        <div className='wizard-space-picker'>
-          <button
-            className='wizard-space-btn'
-            data-space='feed'
-            onClick={handleSpaceBtnClick}
-          >
-            <Icon id='home' icon={HomeIcon} />
-            <span>
-              <FormattedMessage
-                id='governance.wizard.space.feed'
-                defaultMessage='Feed'
-              />
-            </span>
-          </button>
+  return (
+    <div className='wizard'>
+      {/* Row 1: Space picker */}
+      <div className='wizard-space-picker'>
+        <button
+          className={`wizard-space-btn${selectedSpace === 'feed' ? ' wizard-space-btn--selected' : ''}`}
+          data-space='feed'
+          onClick={handleSpaceBtnClick}
+        >
+          <Icon id='home' icon={HomeIcon} />
+          <span>
+            <FormattedMessage
+              id='governance.wizard.space.feed'
+              defaultMessage='Feed'
+            />
+          </span>
+        </button>
 
-          <button
-            className='wizard-space-btn'
-            data-space='huddle'
-            onClick={handleSpaceBtnClick}
-          >
-            <Icon id='headphones' icon={HeadphonesIcon} />
-            <span>
-              <FormattedMessage
-                id='governance.wizard.space.huddle'
-                defaultMessage='Huddle'
-              />
-            </span>
-          </button>
+        <button
+          className={`wizard-space-btn${selectedSpace === 'huddle' ? ' wizard-space-btn--selected' : ''}`}
+          data-space='huddle'
+          onClick={handleSpaceBtnClick}
+        >
+          <Icon id='headphones' icon={HeadphonesIcon} />
+          <span>
+            <FormattedMessage
+              id='governance.wizard.space.huddle'
+              defaultMessage='Huddle'
+            />
+          </span>
+        </button>
 
-          <button
-            className='wizard-space-btn'
-            data-space='kalendar'
-            onClick={handleSpaceBtnClick}
-          >
-            <Icon id='calendar_month' icon={CalendarIcon} />
-            <span>
-              <FormattedMessage
-                id='governance.wizard.space.kalendar'
-                defaultMessage='₭alendar'
-              />
-            </span>
-          </button>
+        <button
+          className={`wizard-space-btn${selectedSpace === 'kalendar' ? ' wizard-space-btn--selected' : ''}`}
+          data-space='kalendar'
+          onClick={handleSpaceBtnClick}
+        >
+          <Icon id='calendar_month' icon={CalendarIcon} />
+          <span>
+            <FormattedMessage
+              id='governance.wizard.space.kalendar'
+              defaultMessage='₭alendar'
+            />
+          </span>
+        </button>
 
-          <button
-            className='wizard-space-btn'
-            data-space='kommons'
-            onClick={handleSpaceBtnClick}
-          >
-            <Icon id='gavel' icon={GavelIcon} />
-            <span>
-              <FormattedMessage
-                id='governance.wizard.space.kommons'
-                defaultMessage='₭ommons'
-              />
-            </span>
-          </button>
+        <button
+          className={`wizard-space-btn${selectedSpace === 'kommons' ? ' wizard-space-btn--selected' : ''}`}
+          data-space='kommons'
+          onClick={handleSpaceBtnClick}
+        >
+          <Icon id='gavel' icon={GavelIcon} />
+          <span>
+            <FormattedMessage
+              id='governance.wizard.space.kommons'
+              defaultMessage='₭ommons'
+            />
+          </span>
+        </button>
 
-          <button
-            className='wizard-space-btn'
-            data-space='hub'
-            onClick={handleSpaceBtnClick}
-          >
-            <Icon id='explore' icon={ExploreIcon} />
-            <span>
-              <FormattedMessage
-                id='governance.wizard.space.hub'
-                defaultMessage='Hub'
-              />
-            </span>
-          </button>
+        <button
+          className={`wizard-space-btn${selectedSpace === 'hub' ? ' wizard-space-btn--selected' : ''}`}
+          data-space='hub'
+          onClick={handleSpaceBtnClick}
+        >
+          <Icon id='explore' icon={ExploreIcon} />
+          <span>
+            <FormattedMessage
+              id='governance.wizard.space.hub'
+              defaultMessage='Hub'
+            />
+          </span>
+        </button>
 
-          <button
-            className='wizard-space-btn wizard-space-btn--new'
-            data-space='new-space'
-            onClick={handleSpaceBtnClick}
-          >
-            <Icon id='add' icon={AddIcon} />
-            <span>
-              <FormattedMessage
-                id='governance.wizard.space.new'
-                defaultMessage='New space'
-              />
-            </span>
-          </button>
-        </div>
-
-        <button className='wizard-back-btn' onClick={onCancel}>
-          <FormattedMessage
-            id='governance.wizard.cancel'
-            defaultMessage='Cancel'
-          />
+        <button
+          className={`wizard-space-btn wizard-space-btn--new${selectedSpace === 'new-space' ? ' wizard-space-btn--selected' : ''}`}
+          data-space='new-space'
+          onClick={handleSpaceBtnClick}
+        >
+          <Icon id='add' icon={AddIcon} />
+          <span>
+            <FormattedMessage
+              id='governance.wizard.space.new'
+              defaultMessage='New space'
+            />
+          </span>
         </button>
       </div>
-    );
-  }
 
-  if (step === 'type') {
-    return (
-      <div>
-        <button className='wizard-back-btn' onClick={handleBackToSpace}>
-          <FormattedMessage
-            id='governance.wizard.back'
-            defaultMessage='← Back'
-          />
-        </button>
-
-        <h2 className='wizard-heading'>
-          <FormattedMessage
-            id='governance.wizard.pick_type'
-            defaultMessage='What kind of seed?'
-          />
-        </h2>
-
+      {/* Row 2: Type picker — appears when a space (not new-space) is selected */}
+      {showTypeRow && (
         <div className='wizard-type-picker'>
           <button
-            className='wizard-type-btn'
+            className={`wizard-type-btn${selectedType === 'bug' ? ' wizard-type-btn--selected' : ''}`}
             data-type='bug'
             onClick={handleTypeBtnClick}
           >
@@ -326,7 +274,7 @@ export const SpaceProposalWizard: React.FC<Props> = ({
           </button>
 
           <button
-            className='wizard-type-btn'
+            className={`wizard-type-btn${selectedType === 'feature' ? ' wizard-type-btn--selected' : ''}`}
             data-type='feature'
             onClick={handleTypeBtnClick}
           >
@@ -337,264 +285,226 @@ export const SpaceProposalWizard: React.FC<Props> = ({
             />
           </button>
         </div>
-      </div>
-    );
-  }
+      )}
 
-  if (step === 'bug-form') {
-    return (
-      <div>
-        <button className='wizard-back-btn' onClick={handleBackToType}>
-          <FormattedMessage
-            id='governance.wizard.back'
-            defaultMessage='← Back'
-          />
-        </button>
+      {/* Bug form */}
+      {showBugForm && (
+        <div className='wizard-form'>
+          {error && <p className='governance-form__error'>{error}</p>}
 
-        <h2 className='wizard-heading'>
-          <FormattedMessage
-            id='governance.wizard.bug.heading'
-            defaultMessage='Report a bug'
-          />
-        </h2>
-
-        {error && <p className='governance-form__error'>{error}</p>}
-
-        <label className='governance-form__label'>
-          <span className='governance-form__label-text'>
-            <FormattedMessage
-              id='governance.wizard.field.name'
-              defaultMessage='Name'
-            />
-          </span>
-          <input
-            className='governance-form__input'
-            type='text'
-            required
-            maxLength={240}
-            value={bugName}
-            onChange={handleBugNameChange}
-            placeholder='Short title for the bug'
-          />
-        </label>
-
-        <label className='governance-form__label'>
-          <span className='governance-form__label-text'>
-            <FormattedMessage
-              id='governance.wizard.field.description'
-              defaultMessage='Description'
-            />
-          </span>
-          <textarea
-            className='governance-form__textarea'
-            required
-            value={bugDescription}
-            onChange={handleBugDescChange}
-            placeholder='Describe what happened and how to reproduce it'
-            rows={5}
-          />
-        </label>
-
-        <div className='wizard-severity'>
-          <span className='wizard-severity__label'>
-            <FormattedMessage
-              id='governance.wizard.bug.severity_label'
-              defaultMessage='How bad is the bug?'
-            />
-          </span>
-          <div className='wizard-severity__track'>
+          <label className='governance-form__label'>
+            <span className='governance-form__label-text'>
+              <FormattedMessage
+                id='governance.wizard.field.name'
+                defaultMessage='Name'
+              />
+            </span>
             <input
-              className='wizard-severity__input'
-              type='range'
-              min={1}
-              max={47}
-              value={bugSeverity}
-              onChange={handleBugSeverityChange}
+              className='governance-form__input'
+              type='text'
+              required
+              maxLength={240}
+              value={bugName}
+              onChange={handleBugNameChange}
+              placeholder='Short title for the bug'
             />
-            <span className='wizard-severity__value'>{bugSeverity}</span>
+          </label>
+
+          <label className='governance-form__label'>
+            <span className='governance-form__label-text'>
+              <FormattedMessage
+                id='governance.wizard.field.description'
+                defaultMessage='Description'
+              />
+            </span>
+            <textarea
+              className='governance-form__textarea'
+              required
+              value={bugDescription}
+              onChange={handleBugDescChange}
+              placeholder='Describe what happened and how to reproduce it'
+              rows={5}
+            />
+          </label>
+
+          <div className='wizard-severity'>
+            <span className='wizard-severity__label'>
+              <FormattedMessage
+                id='governance.wizard.bug.severity_label'
+                defaultMessage='How bad is the bug?'
+              />
+            </span>
+            <div className='wizard-severity__track'>
+              <input
+                className='wizard-severity__input'
+                type='range'
+                min={1}
+                max={47}
+                value={bugSeverity}
+                onChange={handleBugSeverityChange}
+              />
+              <span className='wizard-severity__value'>{bugSeverity}</span>
+            </div>
+          </div>
+
+          <div className='governance-form__actions'>
+            <button
+              className='governance-form__cancel-btn'
+              onClick={onCancel}
+              disabled={submitting}
+            >
+              <FormattedMessage
+                id='governance.form.cancel'
+                defaultMessage='Cancel'
+              />
+            </button>
+            <button
+              className='governance-form__submit-btn'
+              onClick={handleSubmitBug}
+              disabled={submitting || !bugName.trim() || !bugDescription.trim()}
+            >
+              <FormattedMessage
+                id='governance.wizard.submit'
+                defaultMessage='Plant seed'
+              />
+            </button>
           </div>
         </div>
+      )}
 
-        <div className='governance-form__actions'>
-          <button
-            className='governance-form__cancel-btn'
-            onClick={handleBackToType}
-            disabled={submitting}
-          >
-            <FormattedMessage
-              id='governance.wizard.back'
-              defaultMessage='← Back'
+      {/* Feature form */}
+      {showFeatureForm && (
+        <div className='wizard-form'>
+          {error && <p className='governance-form__error'>{error}</p>}
+
+          <label className='governance-form__label'>
+            <span className='governance-form__label-text'>
+              <FormattedMessage
+                id='governance.wizard.field.name'
+                defaultMessage='Name'
+              />
+            </span>
+            <input
+              className='governance-form__input'
+              type='text'
+              required
+              maxLength={240}
+              value={featureName}
+              onChange={handleFeatureNameChange}
+              placeholder='Short title for the feature'
             />
-          </button>
-          <button
-            className='governance-form__submit-btn'
-            onClick={handleSubmitBug}
-            disabled={submitting || !bugName.trim() || !bugDescription.trim()}
-          >
-            <FormattedMessage
-              id='governance.wizard.submit'
-              defaultMessage='Plant seed'
+          </label>
+
+          <label className='governance-form__label'>
+            <span className='governance-form__label-text'>
+              <FormattedMessage
+                id='governance.wizard.field.description'
+                defaultMessage='Description'
+              />
+            </span>
+            <textarea
+              className='governance-form__textarea'
+              required
+              value={featureDescription}
+              onChange={handleFeatureDescChange}
+              placeholder='Describe the feature and why it would be useful'
+              rows={5}
             />
-          </button>
+          </label>
+
+          <div className='governance-form__actions'>
+            <button
+              className='governance-form__cancel-btn'
+              onClick={onCancel}
+              disabled={submitting}
+            >
+              <FormattedMessage
+                id='governance.form.cancel'
+                defaultMessage='Cancel'
+              />
+            </button>
+            <button
+              className='governance-form__submit-btn'
+              onClick={handleSubmitFeature}
+              disabled={
+                submitting || !featureName.trim() || !featureDescription.trim()
+              }
+            >
+              <FormattedMessage
+                id='governance.wizard.submit'
+                defaultMessage='Plant seed'
+              />
+            </button>
+          </div>
         </div>
-      </div>
-    );
-  }
+      )}
 
-  if (step === 'feature-form') {
-    return (
-      <div>
-        <button className='wizard-back-btn' onClick={handleBackToType}>
-          <FormattedMessage
-            id='governance.wizard.back'
-            defaultMessage='← Back'
-          />
-        </button>
+      {/* New space form — appears directly below space picker */}
+      {showNewSpaceForm && (
+        <div className='wizard-form'>
+          {error && <p className='governance-form__error'>{error}</p>}
 
-        <h2 className='wizard-heading'>
-          <FormattedMessage
-            id='governance.wizard.feature.heading'
-            defaultMessage='New feature idea'
-          />
-        </h2>
-
-        {error && <p className='governance-form__error'>{error}</p>}
-
-        <label className='governance-form__label'>
-          <span className='governance-form__label-text'>
-            <FormattedMessage
-              id='governance.wizard.field.name'
-              defaultMessage='Name'
+          <label className='governance-form__label'>
+            <span className='governance-form__label-text'>
+              <FormattedMessage
+                id='governance.wizard.field.name'
+                defaultMessage='Name'
+              />
+            </span>
+            <input
+              className='governance-form__input'
+              type='text'
+              required
+              maxLength={240}
+              value={spaceName}
+              onChange={handleSpaceNameChange}
+              placeholder='Name of the proposed space'
             />
-          </span>
-          <input
-            className='governance-form__input'
-            type='text'
-            required
-            maxLength={240}
-            value={featureName}
-            onChange={handleFeatureNameChange}
-            placeholder='Short title for the feature'
-          />
-        </label>
+          </label>
 
-        <label className='governance-form__label'>
-          <span className='governance-form__label-text'>
-            <FormattedMessage
-              id='governance.wizard.field.description'
-              defaultMessage='Description'
+          <label className='governance-form__label'>
+            <span className='governance-form__label-text'>
+              <FormattedMessage
+                id='governance.wizard.field.proposal'
+                defaultMessage='Proposal'
+              />
+            </span>
+            <textarea
+              className='governance-form__textarea'
+              required
+              value={spaceProposal}
+              onChange={handleSpaceProposalChange}
+              placeholder='Describe what this space would be for and why Kronk needs it'
+              rows={5}
             />
-          </span>
-          <textarea
-            className='governance-form__textarea'
-            required
-            value={featureDescription}
-            onChange={handleFeatureDescChange}
-            placeholder='Describe the feature and why it would be useful'
-            rows={5}
-          />
-        </label>
+          </label>
 
-        <div className='governance-form__actions'>
-          <button
-            className='governance-form__cancel-btn'
-            onClick={handleBackToType}
-            disabled={submitting}
-          >
-            <FormattedMessage
-              id='governance.wizard.back'
-              defaultMessage='← Back'
-            />
-          </button>
-          <button
-            className='governance-form__submit-btn'
-            onClick={handleSubmitFeature}
-            disabled={
-              submitting || !featureName.trim() || !featureDescription.trim()
-            }
-          >
-            <FormattedMessage
-              id='governance.wizard.submit'
-              defaultMessage='Plant seed'
-            />
-          </button>
+          <div className='governance-form__actions'>
+            <button
+              className='governance-form__cancel-btn'
+              onClick={onCancel}
+              disabled={submitting}
+            >
+              <FormattedMessage
+                id='governance.form.cancel'
+                defaultMessage='Cancel'
+              />
+            </button>
+            <button
+              className='governance-form__submit-btn'
+              onClick={handleSubmitNewSpace}
+              disabled={
+                submitting || !spaceName.trim() || !spaceProposal.trim()
+              }
+            >
+              <FormattedMessage
+                id='governance.wizard.submit'
+                defaultMessage='Plant seed'
+              />
+            </button>
+          </div>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <button className='wizard-back-btn' onClick={handleBackToSpace}>
-        <FormattedMessage id='governance.wizard.back' defaultMessage='← Back' />
-      </button>
-
-      <h2 className='wizard-heading'>
-        <FormattedMessage
-          id='governance.wizard.new_space.heading'
-          defaultMessage='Propose a new space'
-        />
-      </h2>
-
-      {error && <p className='governance-form__error'>{error}</p>}
-
-      <label className='governance-form__label'>
-        <span className='governance-form__label-text'>
-          <FormattedMessage
-            id='governance.wizard.field.name'
-            defaultMessage='Name'
-          />
-        </span>
-        <input
-          className='governance-form__input'
-          type='text'
-          required
-          maxLength={240}
-          value={spaceName}
-          onChange={handleSpaceNameChange}
-          placeholder='Name of the proposed space'
-        />
-      </label>
-
-      <label className='governance-form__label'>
-        <span className='governance-form__label-text'>
-          <FormattedMessage
-            id='governance.wizard.field.proposal'
-            defaultMessage='Proposal'
-          />
-        </span>
-        <textarea
-          className='governance-form__textarea'
-          required
-          value={spaceProposal}
-          onChange={handleSpaceProposalChange}
-          placeholder='Describe what this space would be for and why Kronk needs it'
-          rows={5}
-        />
-      </label>
-
-      <div className='governance-form__actions'>
-        <button
-          className='governance-form__cancel-btn'
-          onClick={handleBackToSpace}
-          disabled={submitting}
-        >
-          <FormattedMessage
-            id='governance.wizard.back'
-            defaultMessage='← Back'
-          />
-        </button>
-        <button
-          className='governance-form__submit-btn'
-          onClick={handleSubmitNewSpace}
-          disabled={submitting || !spaceName.trim() || !spaceProposal.trim()}
-        >
-          <FormattedMessage
-            id='governance.wizard.submit'
-            defaultMessage='Plant seed'
-          />
-        </button>
-      </div>
+      )}
     </div>
   );
 };

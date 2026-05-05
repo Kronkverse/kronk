@@ -2687,6 +2687,15 @@ $governance-amber: #f59e0b;
       border-color: $governance-purple;
     }
   }
+
+  &--selected {
+    border-color: $governance-purple;
+    background: rgba(86, 58, 204, 7%);
+
+    span {
+      color: $governance-purple;
+    }
+  }
 }
 
 .wizard-type-picker {
@@ -2723,6 +2732,17 @@ $governance-amber: #f59e0b;
     border-color: $governance-purple;
     background: rgba(86, 58, 204, 7%);
   }
+
+  &--selected {
+    border-color: $governance-purple;
+    background: rgba(86, 58, 204, 7%);
+  }
+}
+
+.wizard-form {
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px solid $ui-base-color;
 }
 
 .wizard-back-btn {
