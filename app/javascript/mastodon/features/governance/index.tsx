@@ -11,9 +11,9 @@ import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
 
-import { CreateProposalForm } from './components/create_proposal_form';
 import { ProposalCard } from './components/proposal_card';
 import { ProposalDetail } from './components/proposal_detail';
+import { SpaceProposalWizard } from './components/space_proposal_wizard';
 import type { Proposal } from './types';
 
 const messages = defineMessages({
@@ -112,7 +112,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                 defaultMessage='← All seeds'
               />
             </button>
-            <CreateProposalForm
+            <SpaceProposalWizard
               onCreated={handleProposalCreated}
               onCancel={handleHideForm}
             />
