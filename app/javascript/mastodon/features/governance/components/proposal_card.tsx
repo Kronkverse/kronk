@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 
 import { FormattedRelativeTime } from 'react-intl';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import CalendarIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
@@ -56,9 +57,15 @@ export const ProposalCard: React.FC<{
   const isFanned = proposal.current_vote?.position === 'agree';
   const displayBody = truncate(stripBodyMeta(proposal.body), 160);
 
-  const spaceMeta = proposal.categories
-    .map((cat) => CATEGORY_META[cat])
-    .find((m): m is CategoryMeta => m !== undefined);
+  const isNewSpace = proposal.body.startsWith('[New Space]');
+  const spaceMeta: CategoryMeta = isNewSpace
+    ? { icon: AddIcon, id: 'add' }
+    : (proposal.categories
+        .map((cat) => CATEGORY_META[cat])
+        .find((m): m is CategoryMeta => m !== undefined) ?? {
+        icon: GavelIcon,
+        id: 'gavel',
+      });
 
   const handleClick = useCallback(() => {
     onSelect(proposal.id);
@@ -160,11 +167,9 @@ export const ProposalCard: React.FC<{
           </div>
         </div>
 
-        {spaceMeta && (
-          <div className='governance-card__space-icon' aria-hidden='true'>
-            <Icon id={spaceMeta.id} icon={spaceMeta.icon} />
-          </div>
-        )}
+        <div className='governance-card__space-icon' aria-hidden='true'>
+          <Icon id={spaceMeta.id} icon={spaceMeta.icon} />
+        </div>
       </div>
     </button>
   );

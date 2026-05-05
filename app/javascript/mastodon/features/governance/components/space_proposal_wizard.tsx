@@ -217,7 +217,11 @@ export const SpaceProposalWizard: React.FC<Props> = ({
   ]);
 
   const handleSubmitNewSpace = useCallback(() => {
-    void handleSubmit(spaceName, spaceProposal, 'new-space');
+    void handleSubmit(
+      spaceName,
+      '[New Space]\n\n' + spaceProposal,
+      'new-space',
+    );
   }, [spaceName, spaceProposal, handleSubmit]);
 
   const showSubcategoryRow = selectedSpace === 'general';
