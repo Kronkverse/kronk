@@ -76,9 +76,13 @@ class FetchLinkCardService < BaseService
     end
   end
 
+  MARKDOWN_LINK_RE = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/
+
   def parse_urls
     urls = if @status.local?
-             @status.text.scan(URL_PATTERN).map { |array| Addressable::URI.parse(array[1]).normalize }
+             raw_urls = @status.text.scan(URL_PATTERN).map { |array| Addressable::URI.parse(array[1]).normalize }
+             markdown_urls = @status.text.scan(MARKDOWN_LINK_RE).filter_map { |_, url| Addressable::URI.parse(url).normalize rescue nil }
+             raw_urls + markdown_urls
            else
              document = Nokogiri::HTML5(@status.text)
              links = document.css('a')
