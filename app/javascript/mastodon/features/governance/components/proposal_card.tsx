@@ -2,34 +2,30 @@ import { useCallback, useState } from 'react';
 
 import { FormattedRelativeTime } from 'react-intl';
 
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import CalendarIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
-import ReportIcon from '@/material-icons/400-24px/report.svg?react';
 import SmartphoneIcon from '@/material-icons/400-24px/smartphone.svg?react';
 import ToysFanIcon from '@/material-icons/400-24px/toys_fan.svg?react';
 import api from 'mastodon/api';
-import { Icon } from 'mastodon/components/icon';
 import type { IconProp } from 'mastodon/components/icon';
+import { Icon } from 'mastodon/components/icon';
 import { me } from 'mastodon/initial_state';
-
 
 import type { Proposal } from '../types';
 
 interface CategoryMeta {
   icon: IconProp;
   id: string;
-  label: string;
 }
 
 const CATEGORY_META: Record<string, CategoryMeta> = {
-  timeline: { icon: HomeIcon, id: 'home', label: 'Feed' },
-  huddle: { icon: Diversity2Icon, id: 'diversity_2', label: 'Huddle' },
-  events: { icon: CalendarIcon, id: 'calendar_month', label: '₭alendar' },
-  governance: { icon: GavelIcon, id: 'gavel', label: 'Governance' },
-  app: { icon: SmartphoneIcon, id: 'smartphone', label: 'App' },
+  timeline: { icon: HomeIcon, id: 'home' },
+  huddle: { icon: Diversity2Icon, id: 'diversity_2' },
+  events: { icon: CalendarIcon, id: 'calendar_month' },
+  governance: { icon: GavelIcon, id: 'gavel' },
+  app: { icon: SmartphoneIcon, id: 'smartphone' },
 };
 
 const stripBodyMeta = (body: string) =>
@@ -58,8 +54,11 @@ export const ProposalCard: React.FC<{
   );
   const stripBackground = buildStripBackground(proposal.vote_summary);
   const isFanned = proposal.current_vote?.position === 'agree';
-  const isBug = /\[Severity:/i.test(proposal.body);
   const displayBody = truncate(stripBodyMeta(proposal.body), 160);
+
+  const spaceMeta = proposal.categories
+    .map((cat) => CATEGORY_META[cat])
+    .find((m): m is CategoryMeta => m !== undefined);
 
   const handleClick = useCallback(() => {
     onSelect(proposal.id);
@@ -99,10 +98,6 @@ export const ProposalCard: React.FC<{
     [handleFan],
   );
 
-  const spaceTags = proposal.categories
-    .map((cat) => CATEGORY_META[cat])
-    .filter((m): m is CategoryMeta => m !== undefined);
-
   return (
     <button
       className={`governance-card governance-card--${proposal.status}${proposal.archived_at ? ' governance-card--archived' : ''}`}
@@ -136,27 +131,6 @@ export const ProposalCard: React.FC<{
         </div>
 
         <div className='governance-card__main'>
-          <div className='governance-card__tags'>
-            {spaceTags.map((meta) => (
-              <span
-                key={meta.id}
-                className='governance-card__tag governance-card__tag--space'
-              >
-                <Icon id={meta.id} icon={meta.icon} />
-                {meta.label}
-              </span>
-            ))}
-            <span
-              className={`governance-card__tag governance-card__tag--${isBug ? 'bug' : 'feature'}`}
-            >
-              <Icon
-                id={isBug ? 'report' : 'add'}
-                icon={isBug ? ReportIcon : AddIcon}
-              />
-              {isBug ? 'Bug' : 'Feature'}
-            </span>
-          </div>
-
           <h3 className='governance-card__title'>{proposal.title}</h3>
 
           {displayBody && (
@@ -185,6 +159,12 @@ export const ProposalCard: React.FC<{
             </span>
           </div>
         </div>
+
+        {spaceMeta && (
+          <div className='governance-card__space-icon' aria-hidden='true'>
+            <Icon id={spaceMeta.id} icon={spaceMeta.icon} />
+          </div>
+        )}
       </div>
     </button>
   );

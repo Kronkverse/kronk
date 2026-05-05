@@ -2807,40 +2807,18 @@ $governance-amber: #f59e0b;
   }
 }
 
-// ─── Proposal card: space + type tags ───────────────────────────────────────
+// ─── Proposal card: space icon ──────────────────────────────────────────────
 
-.governance-card__tags {
+.governance-card__space-icon {
+  flex-shrink: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-bottom: 8px;
-}
-
-.governance-card__tag {
-  display: inline-flex;
   align-items: center;
-  gap: 3px;
-  border: 1px solid var(--background-border-color);
-  border-radius: 999px;
-  padding: 2px 7px 2px 5px;
-  font-size: 11px;
-  font-weight: 500;
+  justify-content: center;
   color: $secondary-text-color;
-  line-height: 1.4;
+  opacity: 0.2;
 
   .icon {
-    width: 12px;
-    height: 12px;
-    flex-shrink: 0;
-  }
-
-  &--bug {
-    border-color: rgba($governance-block, 0.35);
-    color: $governance-block;
-  }
-
-  &--feature {
-    border-color: rgba($governance-purple, 0.35);
-    color: $governance-purple;
+    width: 40px;
+    height: 40px;
   }
 }
