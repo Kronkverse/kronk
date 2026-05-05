@@ -4,9 +4,9 @@ import { FormattedMessage } from 'react-intl';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import CalendarIcon from '@/material-icons/400-24px/calendar_month.svg?react';
+import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
 import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
-import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import ReportIcon from '@/material-icons/400-24px/report.svg?react';
 import api from 'mastodon/api';
@@ -192,7 +192,7 @@ export const SpaceProposalWizard: React.FC<Props> = ({
           data-space='huddle'
           onClick={handleSpaceBtnClick}
         >
-          <Icon id='headphones' icon={HeadphonesIcon} />
+          <Icon id='diversity_2' icon={Diversity2Icon} />
           <span>
             <FormattedMessage
               id='governance.wizard.space.huddle'
