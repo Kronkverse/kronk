@@ -9,6 +9,8 @@ import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
 import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import ReportIcon from '@/material-icons/400-24px/report.svg?react';
+import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
+import SmartphoneIcon from '@/material-icons/400-24px/smartphone.svg?react';
 import api from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
 
@@ -20,6 +22,8 @@ type SpaceKey =
   | 'kalendar'
   | 'kommons'
   | 'hub'
+  | 'app'
+  | 'general'
   | 'new-space';
 type ProposalType = 'bug' | 'feature';
 
@@ -29,6 +33,8 @@ const SPACE_CATEGORY: Record<SpaceKey, string> = {
   kalendar: 'events',
   kommons: 'governance',
   hub: 'app',
+  app: 'app',
+  general: 'governance',
   'new-space': 'governance',
 };
 
@@ -239,6 +245,34 @@ export const SpaceProposalWizard: React.FC<Props> = ({
             <FormattedMessage
               id='governance.wizard.space.hub'
               defaultMessage='Hub'
+            />
+          </span>
+        </button>
+
+        <button
+          className={`wizard-space-btn${selectedSpace === 'app' ? ' wizard-space-btn--selected' : ''}`}
+          data-space='app'
+          onClick={handleSpaceBtnClick}
+        >
+          <Icon id='smartphone' icon={SmartphoneIcon} />
+          <span>
+            <FormattedMessage
+              id='governance.wizard.space.app'
+              defaultMessage='App'
+            />
+          </span>
+        </button>
+
+        <button
+          className={`wizard-space-btn${selectedSpace === 'general' ? ' wizard-space-btn--selected' : ''}`}
+          data-space='general'
+          onClick={handleSpaceBtnClick}
+        >
+          <Icon id='settings' icon={SettingsIcon} />
+          <span>
+            <FormattedMessage
+              id='governance.wizard.space.general'
+              defaultMessage='General'
             />
           </span>
         </button>
