@@ -2825,7 +2825,7 @@ $governance-amber: #f59e0b;
   padding: 2px 7px 2px 5px;
   font-size: 11px;
   font-weight: 500;
-  color: -text-color;
+  color: $secondary-text-color;
   line-height: 1.4;
 
   .icon {
@@ -2835,12 +2835,12 @@ $governance-amber: #f59e0b;
   }
 
   &--bug {
-    border-color: rgba(-block, 0.35);
-    color: -block;
+    border-color: rgba($governance-block, 0.35);
+    color: $governance-block;
   }
 
   &--feature {
-    border-color: rgba(-purple, 0.35);
-    color: -purple;
+    border-color: rgba($governance-purple, 0.35);
+    color: $governance-purple;
   }
 }
