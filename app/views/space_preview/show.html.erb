@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1200">
+  <title><%= @space[:name] %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 1200px;
+      height: 630px;
+      overflow: hidden;
+    }
+
+    body {
+      background: #6364ff;
+      font-family: 'Inter', system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 72px 96px;
+      position: relative;
+    }
+
+    /* Subtle texture: darker ellipse bottom-right, lighter top-left */
+    body::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 60% at 10% 20%, rgba(255,255,255,0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 50% at 90% 85%, rgba(0,0,0,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .wordmark {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.55);
+      margin-bottom: 28px;
+    }
+
+    .space-name {
+      font-size: 96px;
+      font-weight: 800;
+      line-height: 1;
+      color: #ffffff;
+      letter-spacing: -2px;
+      margin-bottom: 24px;
+    }
+
+    .divider {
+      width: 64px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.35);
+      border-radius: 2px;
+      margin-bottom: 28px;
+    }
+
+    .tagline {
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 1.45;
+      color: rgba(255, 255, 255, 0.75);
+      max-width: 600px;
+    }
+
+    .domain {
+      position: absolute;
+      bottom: 40px;
+      left: 96px;
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.3);
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+  <div class="wordmark">Kronk</div>
+  <div class="space-name"><%= @space[:name] %></div>
+  <div class="divider"></div>
+  <div class="tagline"><%= @space[:tagline] %></div>
+  <div class="domain">mastodon.kronk.info</div>
+</body>
+</html>
