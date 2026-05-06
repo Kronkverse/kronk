@@ -4,7 +4,18 @@ class SpacePreviewController < ApplicationController
   skip_before_action :require_functional!
   content_security_policy false
 
+  # rubocop:disable I18n/RailsI18n/DecorateString
   SPACES = {
+    'home' => {
+      name: 'Home',
+      wordmark: 'HOME',
+      tagline: 'Connect, share and follow along with the Kronk community.',
+    },
+    'huddle' => {
+      name: 'Huddle',
+      wordmark: 'ĦUDDLE',
+      tagline: 'Live rooms, voice and video — gather with the Kronk community in real time.',
+    },
     'kalendar' => {
       name: '₭alendar',
       wordmark: '₭ALENDAR',
@@ -16,10 +27,12 @@ class SpacePreviewController < ApplicationController
       tagline: 'Propose ideas, vote on decisions and shape the direction of the Kronk community.',
     },
   }.freeze
+  # rubocop:enable I18n/RailsI18n/DecorateString
 
   def show
     @space = SPACES[params[:space]]
-    render status: :not_found and return if @space.nil?
+    render status: 404 and return if @space.nil?
+
     render layout: false
   end
 end
