@@ -222,7 +222,6 @@ Rails.application.routes.draw do
   draw(:fasp)
 
   get '/activity', to: redirect('/orbit')
-  get '/space-preview/:space', to: 'space_preview#show'
   get '/huddle', to: 'huddle#index'
   get '/kalendar', to: 'kalendar#index'
   get '/kalendar/*path', to: 'kalendar#index', format: false
