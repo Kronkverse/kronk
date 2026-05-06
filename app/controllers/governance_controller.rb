@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class HuddleController < ApplicationController
+class GovernanceController < ApplicationController
   include WebAppControllerConcern
 
   def index
