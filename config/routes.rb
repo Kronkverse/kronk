@@ -222,12 +222,11 @@ Rails.application.routes.draw do
   draw(:fasp)
 
   get '/activity', to: redirect('/orbit')
-  get '/space-preview/:space', to: 'space_preview#show'
   get '/huddle', to: 'huddle#index'
   get '/kalendar', to: 'kalendar#index'
   get '/kalendar/*path', to: 'kalendar#index', format: false
-  get '/governance', to: 'governance#index'
-  get '/governance/*path', to: 'governance#index', format: false
+  get '/governance', to: 'home#index'
+  get '/governance/*path', to: 'home#index', format: false
   draw(:web_app)
 
   get '/web/(*any)', to: redirect('/%{any}', status: 302), as: :web, defaults: { any: '' }, format: false
