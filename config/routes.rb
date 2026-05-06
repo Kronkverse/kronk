@@ -223,6 +223,8 @@ Rails.application.routes.draw do
 
   get '/activity', to: redirect('/orbit')
   get '/huddle', to: 'huddle#index'
+  get '/kalendar', to: 'kalendar#index'
+  get '/kalendar/*path', to: 'kalendar#index', format: false
   get '/governance', to: 'home#index'
   get '/governance/*path', to: 'home#index', format: false
   draw(:web_app)
