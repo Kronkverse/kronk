@@ -6,7 +6,7 @@
   <title><%= @space[:name] %></title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Tinos&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -14,72 +14,39 @@
       width: 1200px;
       height: 630px;
       overflow: hidden;
+      background: #563ACC;
     }
 
     body {
-      background: linear-gradient(to bottom, #6363fe, #563acd);
-      font-family: 'Playfair Display', Georgia, serif;
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
+      align-items: center;
       justify-content: center;
-      padding: 80px 96px;
-      position: relative;
     }
 
-    .label {
-      font-family: system-ui, sans-serif;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.5);
-      margin-bottom: 24px;
-    }
-
-    .space-name {
-      font-size: 108px;
-      font-weight: 900;
-      line-height: 1;
-      letter-spacing: -1px;
-      color: #ffffff;
-      margin-bottom: 28px;
-    }
-
-    .divider {
-      width: 56px;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.35);
-      border-radius: 2px;
-      margin-bottom: 28px;
-    }
-
-    .tagline {
-      font-family: system-ui, -apple-system, sans-serif;
-      font-size: 20px;
+    .wordmark {
+      font-family: 'Tinos', 'Liberation Serif', serif;
       font-weight: 400;
-      line-height: 1.5;
-      color: rgba(255, 255, 255, 0.65);
-      max-width: 560px;
-    }
-
-    .domain {
-      position: absolute;
-      bottom: 40px;
-      left: 96px;
-      font-family: system-ui, sans-serif;
-      font-size: 13px;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.3);
-      letter-spacing: 0.04em;
+      font-style: normal;
+      text-transform: uppercase;
+      color: #ffffff;
+      white-space: nowrap;
+      line-height: 1;
     }
   </style>
 </head>
 <body>
-  <div class="label">Kronk</div>
-  <div class="space-name"><%= @space[:name] %></div>
-  <div class="divider"></div>
-  <div class="tagline"><%= @space[:tagline] %></div>
-  <div class="domain">mastodon.kronk.info</div>
+  <div class="wordmark" id="wordmark"><%= @space[:wordmark] %></div>
+  <script>
+    window.addEventListener('load', function () {
+      var el = document.getElementById('wordmark');
+      var target = 1200 * 0.78;
+      var size = 300;
+      el.style.fontSize = size + 'px';
+      while (el.offsetWidth > target && size > 10) {
+        size -= 1;
+        el.style.fontSize = size + 'px';
+      }
+    });
+  </script>
 </body>
 </html>

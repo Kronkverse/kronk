@@ -7,10 +7,12 @@ class SpacePreviewController < ApplicationController
   SPACES = {
     'kalendar' => {
       name: '₭alendar',
+      wordmark: '₭ALENDAR',
       tagline: 'Events, gatherings & moments across the Kronk community.',
     },
     'kommons' => {
       name: '₭ommons',
+      wordmark: '₭OMMONS',
       tagline: 'Propose ideas, vote on decisions and shape the direction of the Kronk community.',
     },
   }.freeze
