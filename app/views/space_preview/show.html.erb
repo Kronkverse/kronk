@@ -5,13 +5,6 @@
   <meta name="viewport" content="width=1200">
   <title><%= @space[:name] %></title>
   <style>
-    @font-face {
-      font-family: Inter;
-      src: url('<%= asset_path("inter/inter-variable-font-slnt-wght.woff2") %>') format('woff2-variations');
-      font-weight: 100 900;
-      font-style: normal;
-    }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
@@ -22,7 +15,7 @@
 
     body {
       background: #6364ff;
-      font-family: Inter, system-ui, sans-serif;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
