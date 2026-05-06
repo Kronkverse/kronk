@@ -93,7 +93,7 @@ class FetchLinkCardService < BaseService
     urls.reject { |uri| bad_url?(uri) }.first
   end
 
-  ALLOWED_LOCAL_PATHS = %w[/kalendar].freeze
+  ALLOWED_LOCAL_PATHS = %w[/kalendar /governance].freeze
 
   def bad_url?(uri)
     return false if TagManager.instance.local_url?(uri.to_s) && ALLOWED_LOCAL_PATHS.any? { |path| uri.path.start_with?(path) }
