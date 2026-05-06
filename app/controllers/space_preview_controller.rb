@@ -2,6 +2,7 @@
 
 class SpacePreviewController < ApplicationController
   skip_before_action :require_functional!
+  content_security_policy false
 
   SPACES = {
     'kalendar' => {

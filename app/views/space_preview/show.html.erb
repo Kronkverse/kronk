@@ -4,10 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=1200">
   <title><%= @space[:name] %></title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
+    @font-face {
+      font-family: Inter;
+      src: url('<%= asset_path("inter/inter-variable-font-slnt-wght.woff2") %>') format('woff2-variations');
+      font-weight: 100 900;
+      font-style: normal;
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
@@ -18,7 +22,7 @@
 
     body {
       background: #6364ff;
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: Inter, system-ui, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
@@ -27,7 +31,6 @@
       position: relative;
     }
 
-    /* Subtle texture: darker ellipse bottom-right, lighter top-left */
     body::before {
       content: '';
       position: absolute;
