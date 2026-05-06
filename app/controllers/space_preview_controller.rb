@@ -13,7 +13,7 @@ class SpacePreviewController < ApplicationController
     },
     'huddle' => {
       name: 'Huddle',
-      wordmark: 'ĦUDDLE',
+      wordmark: 'HUDDLE',
       tagline: 'Live rooms, voice and video — gather with the Kronk community in real time.',
     },
     'kalendar' => {
