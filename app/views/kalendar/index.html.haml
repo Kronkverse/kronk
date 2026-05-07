@@ -3,8 +3,8 @@
   = opengraph 'og:url', "#{root_url.chomp('/')}#{request.path}"
   = opengraph 'og:type', 'website'
   = opengraph 'og:title', '₭alendar'
-  = opengraph 'og:description', 'Add events, invite people and see what\'s happening in the Kronk community.'
-  = opengraph 'og:image', full_asset_url(frontend_asset_path('images/preview.png'))
+  = opengraph 'og:description', 'Add events, invite people and see what\'s happening in the Kronk community.' # rubocop:disable I18n/RailsI18n/DecorateString
+  = opengraph 'og:image', "#{root_url.chomp('/')}/kalendar-preview.png"
   = opengraph 'og:image:width', '1200'
   = opengraph 'og:image:height', '630'
   = opengraph 'twitter:card', 'summary_large_image'
