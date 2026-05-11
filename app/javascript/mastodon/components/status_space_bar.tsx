@@ -71,7 +71,8 @@ function getConfig(
 export const StatusSpaceBar: React.FC<{
   postType?: string;
   hasEvent?: boolean;
-}> = ({ postType, hasEvent = false }) => {
+  inline?: boolean;
+}> = ({ postType, hasEvent = false, inline = false }) => {
   const intl = useIntl();
   const config = getConfig(postType, hasEvent);
 
@@ -80,6 +81,31 @@ export const StatusSpaceBar: React.FC<{
   }, []);
 
   if (!config) return null;
+
+  if (inline) {
+    return (
+      <span className='status-space-bar status-space-bar--inline'>
+        <Icon
+          id={config.iconId}
+          icon={config.iconComponent}
+          className='status-space-bar__icon'
+        />
+        <span className='status-space-bar__verb'>
+          {intl.formatMessage(messages[config.verbKey])}
+        </span>
+        <span className='status-space-bar__sep' aria-hidden='true'>
+          ·
+        </span>
+        <Link
+          to={config.spacePath}
+          className='status-space-bar__space-link'
+          onClick={handleLinkClick}
+        >
+          {config.spaceName}
+        </Link>
+      </span>
+    );
+  }
 
   return (
     <div className='status-space-bar'>

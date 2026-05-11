@@ -594,10 +594,6 @@ class Status extends ImmutablePureComponent {
           >
             {(connectReply || connectUp || connectToRoot) && <div className={classNames('status__line', { 'status__line--full': connectReply, 'status__line--first': !status.get('in_reply_to_id') && !connectToRoot })} />}
 
-            {status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && (
-              <StatusSpaceBar postType={status.get('post_type')} hasEvent={!!status.get('event')} />
-            )}
-
             <div onClick={this.handleHeaderClick} onAuxClick={this.handleHeaderClick} className='status__info'>
               <Link to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}`} className='status__relative-time'>
                 <span className='status__visibility-icon'><VisibilityIcon visibility={status.get('visibility')} /></span>
@@ -609,6 +605,10 @@ class Status extends ImmutablePureComponent {
                   {statusAvatar}
                 </div>
               </LinkedDisplayName>
+
+              {!!status.get('event') && (
+                <StatusSpaceBar hasEvent inline />
+              )}
 
               {isQuotedPost && !!this.props.onQuoteCancel &&  (
                 <IconButton
