@@ -34,6 +34,7 @@ import { RelativeTimestamp } from './relative_timestamp';
 import StatusActionBar from './status_action_bar';
 import StatusContent from './status_content';
 import { StatusEventCard } from './status_event_card';
+import { StatusQuestionCard } from './status_question_card';
 import { StatusSpaceBar } from './status_space_bar';
 import { StatusThreadLabel } from './status_thread_label';
 import { VisibilityIcon } from './visibility_icon';
@@ -542,6 +543,17 @@ class Status extends ImmutablePureComponent {
       }
     } else if (status.get('event')) {
       media = <StatusEventCard event={status.get('event').toJS()} />;
+    } else if (status.get('post_type') === 'question' || status.get('post_type') === 'answer') {
+      media = (
+        <StatusQuestionCard
+          postType={status.get('post_type')}
+          contentHtml={status.get('contentHtml')}
+          answersCount={status.get('answers_count')}
+          answerers={status.get('answerers')?.toJS()}
+          hasAnswered={status.get('has_answered')}
+          question={status.get('question')?.toJS()}
+        />
+      );
     } else if (status.get('card') && !status.get('quote')) {
       media = (
         <Card
@@ -613,7 +625,7 @@ class Status extends ImmutablePureComponent {
 
             {expanded && (
               <>
-                {!status.get("event") && (
+                {!status.get("event") && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && (
                   <StatusContent
                     status={status}
                     onClick={this.handleClick}
