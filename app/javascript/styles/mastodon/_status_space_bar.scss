@@ -50,13 +50,18 @@
     margin-inline-start: 6px;
     margin-inline-end: auto;
     white-space: nowrap;
-    background: rgba(#6d28d9, 0.18);
-    border: 1px solid rgba(#7c3aed, 0.35);
-    border-radius: 6px;
-    padding: 2px 7px;
 
     .status-space-bar__space-link {
       font-size: 11px;
     }
+  }
+}
+
+.status__info--space-tagged {
+  .status__display-name {
+    background: rgba(#6d28d9, 0.18);
+    border: 1px solid rgba(#7c3aed, 0.35);
+    border-radius: 8px;
+    padding: 3px 8px 3px 3px;
   }
 }
