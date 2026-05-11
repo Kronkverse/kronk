@@ -34,6 +34,7 @@ import { RelativeTimestamp } from './relative_timestamp';
 import StatusActionBar from './status_action_bar';
 import StatusContent from './status_content';
 import { StatusEventCard } from './status_event_card';
+import { StatusSpaceBar } from './status_space_bar';
 import { StatusThreadLabel } from './status_thread_label';
 import { VisibilityIcon } from './visibility_icon';
 import { IconButton } from './icon_button';
@@ -580,6 +581,8 @@ class Status extends ImmutablePureComponent {
             data-id={status.get('id')}
           >
             {(connectReply || connectUp || connectToRoot) && <div className={classNames('status__line', { 'status__line--full': connectReply, 'status__line--first': !status.get('in_reply_to_id') && !connectToRoot })} />}
+
+            <StatusSpaceBar postType={status.get('post_type')} hasEvent={!!status.get('event')} />
 
             <div onClick={this.handleHeaderClick} onAuxClick={this.handleHeaderClick} className='status__info'>
               <Link to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}`} className='status__relative-time'>

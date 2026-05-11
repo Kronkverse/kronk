@@ -1,0 +1,38 @@
+.status-space-bar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  line-height: 18px;
+  color: $dark-text-color;
+
+  &__icon {
+    flex-shrink: 0;
+
+    .icon {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  &__verb {
+    white-space: nowrap;
+  }
+
+  &__sep {
+    opacity: 0.5;
+  }
+
+  &__space-link {
+    color: $highlight-text-color;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover,
+    &:focus {
+      text-decoration: underline;
+    }
+  }
+}
