@@ -99,7 +99,11 @@ namespace :api, format: false do
     resources :favourites, only: [:index]
     resources :bookmarks, only: [:index]
 
-    resources :questions, only: [:index]
+    resources :questions, only: [:index, :show] do
+      member do
+        get :answers
+      end
+    end
 
     resources :events, only: [:index, :show, :create, :update, :destroy] do
       member do

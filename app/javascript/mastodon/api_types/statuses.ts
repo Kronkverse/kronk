@@ -125,6 +125,9 @@ export interface ApiStatusJSON {
 
   post_type?: 'normal' | 'question' | 'answer';
   question?: ApiStatusJSON;
+  answers_count?: number;
+  answerers?: { id: string; username: string; acct: string; avatar: string }[];
+  has_answered?: boolean;
 
   event?: {
     id: string;

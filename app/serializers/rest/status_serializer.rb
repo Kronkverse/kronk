@@ -39,6 +39,11 @@ class REST::StatusSerializer < ActiveModel::Serializer
   has_one :quote_approval
 
   attribute :question, if: :answer?
+  attribute :answers_count, if: :question?
+  attribute :answerers, if: :question?
+  attribute :has_answered, if: -> { question? && current_user? } do
+    Status.exists?(account_id: current_user.account_id, post_type: :answer, in_reply_to_id: object.id)
+  end
 
   def quote
     object.quote if object.quote&.acceptable?
@@ -52,11 +57,26 @@ class REST::StatusSerializer < ActiveModel::Serializer
     object.kronk_answer?
   end
 
+  def question?
+    object.kronk_question?
+  end
+
   def question
     parent = object.thread
     return nil unless parent&.kronk_question?
 
     REST::StatusSerializer.new(parent, scope: scope, scope_name: :current_user)
+  end
+
+  def answers_count
+    Status.where(post_type: :answer, in_reply_to_id: object.id).count
+  end
+
+  def answerers
+    Status.where(post_type: :answer, in_reply_to_id: object.id)
+          .joins(:account)
+          .limit(10)
+          .map { |s| { id: s.account.id.to_s, username: s.account.username, acct: s.account.acct, avatar: s.account.avatar_image_url } }
   end
 
   def id

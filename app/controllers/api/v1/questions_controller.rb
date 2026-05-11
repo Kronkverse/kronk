@@ -3,6 +3,7 @@
 class Api::V1::QuestionsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }
   before_action :require_user!
+  before_action :set_question, only: [:show, :answers]
 
   DEFAULT_LIMIT = 20
 
@@ -16,7 +17,35 @@ class Api::V1::QuestionsController < Api::BaseController
            relationships: StatusRelationshipsPresenter.new(@statuses, current_user.account_id)
   end
 
+  def show
+    render json: @question, serializer: REST::StatusSerializer,
+           relationships: StatusRelationshipsPresenter.new([@question], current_user.account_id)
+  end
+
+  def answers
+    unless current_account_has_answered?
+      render json: { answers: [], locked: true }, status: 200
+      return
+    end
+
+    @answers = Status.where(post_type: :answer, in_reply_to_id: @question.id)
+                     .includes(:account, account: :account_stat)
+                     .reorder(id: :asc)
+
+    render json: @answers,
+           each_serializer: REST::StatusSerializer,
+           relationships: StatusRelationshipsPresenter.new(@answers, current_user.account_id)
+  end
+
   private
+
+  def set_question
+    @question = Status.questions.find(params[:id])
+  end
+
+  def current_account_has_answered?
+    Status.exists?(account: current_account, post_type: :answer, in_reply_to_id: @question.id)
+  end
 
   def questions_scope
     Status.questions
