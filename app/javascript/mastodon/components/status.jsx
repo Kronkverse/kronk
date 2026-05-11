@@ -609,6 +609,9 @@ class Status extends ImmutablePureComponent {
               {!!status.get('event') && (
                 <StatusSpaceBar hasEvent inline />
               )}
+              {(status.get('post_type') === 'question' || status.get('post_type') === 'answer') && (
+                <StatusSpaceBar postType={status.get('post_type')} inline />
+              )}
 
               {isQuotedPost && !!this.props.onQuoteCancel &&  (
                 <IconButton
