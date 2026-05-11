@@ -11,7 +11,7 @@
   --modal-background-color: #{rgba(darken($ui-base-color, 8%), 0.7)};
   --modal-background-variant-color: #{color.change($ui-base-color, $alpha: 0.7)};
   --modal-border-color: #{lighten($ui-base-color, 4%)};
-  --background-border-color: #{lighten($ui-base-color, 4%)};
+  --background-border-color: #3d2a6e;
   --background-color: #{darken($ui-base-color, 8%)};
   --background-color-tint: #{rgba(darken($ui-base-color, 8%), 0.9)};
   --surface-background-color: #{darken($ui-base-color, 4%)};
