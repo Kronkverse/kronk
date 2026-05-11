@@ -1183,16 +1183,21 @@ $ev-interested-color: #b8945f;
   display: block;
   text-decoration: none;
   color: inherit;
-  background: var(--background-color);
-  border: 1px solid var(--background-border-color);
+  background: lighten($ui-base-color, 3%);
+  border: 2px solid $blurple-600;
   border-radius: 12px;
   margin-top: 10px;
   overflow: hidden;
   transition: all 0.25s ease;
+  box-shadow:
+    0 0 0 1px rgba($blurple-500, 0.3),
+    0 4px 16px rgba(#000, 0.4);
 
   &:hover {
-    border-color: rgba(110, 95, 184, 30%);
-    box-shadow: 0 2px 12px rgba(110, 95, 184, 8%);
+    border-color: $blurple-500;
+    box-shadow:
+      0 0 0 1px rgba($blurple-500, 0.5),
+      0 4px 20px rgba(#000, 0.5);
     text-decoration: none;
     color: inherit;
   }
