@@ -4,3 +4,11 @@ body {
   background-size: 300px 300px;
   background-attachment: fixed;
 }
+
+// Solid backgrounds on content panels so stars show only in the gaps between them
+.columns-area__panels__main,
+.columns-area__panels__pane__inner,
+.navigation-panel,
+.ui__navigation-bar {
+  background-color: var(--background-color);
+}
