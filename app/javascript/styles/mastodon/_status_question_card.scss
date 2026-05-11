@@ -1,24 +1,30 @@
 @use 'variables' as *;
 
+$kronk-purple: #6d28d9;
+$kronk-purple-light: #7c3aed;
+$kronk-purple-border: #4c1d95;
+
 .status-question-card {
-  border: 1px solid var(--background-border-color);
-  border-radius: 8px;
+  border: 2px solid $kronk-purple-border;
+  border-radius: 10px;
   overflow: hidden;
   margin-top: 12px;
-  background-color: var(--surface-background-color);
+  background-color: lighten($ui-base-color, 3%);
+  box-shadow:
+    0 0 0 1px rgba($kronk-purple-light, 0.3),
+    0 4px 16px rgba(#000, 0.4);
 
   &__badge {
     display: flex;
     align-items: center;
     gap: 6px;
     padding: 8px 14px;
-    background: rgba($ui-highlight-color, 0.1);
-    border-bottom: 1px solid var(--background-border-color);
+    background: $kronk-purple;
     font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: $highlight-text-color;
+    color: #fff;
 
     &-icon .icon {
       width: 14px;
@@ -28,15 +34,15 @@
 
   &__question-ref {
     padding: 10px 14px;
-    border-bottom: 1px solid var(--background-border-color);
-    background: rgba($ui-base-color, 0.5);
+    border-bottom: 1px solid $kronk-purple-border;
+    background: rgba($kronk-purple, 0.12);
 
     &-label {
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      color: $secondary-text-color;
+      color: rgba(#fff, 0.45);
       margin-bottom: 4px;
     }
 
@@ -71,8 +77,8 @@
     align-items: center;
     gap: 8px;
     padding: 10px 14px;
-    border-top: 1px solid var(--background-border-color);
-    background: rgba($ui-base-color, 0.4);
+    border-top: 1px solid $kronk-purple-border;
+    background: rgba($kronk-purple, 0.1);
   }
 
   &__lock {
