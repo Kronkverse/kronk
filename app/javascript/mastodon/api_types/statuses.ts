@@ -123,6 +123,9 @@ export interface ApiStatusJSON {
   quote?: ApiQuoteJSON;
   quote_approval?: ApiQuotePolicyJSON;
 
+  post_type?: 'normal' | 'question' | 'answer';
+  question?: ApiStatusJSON;
+
   event?: {
     id: string;
     title: string;

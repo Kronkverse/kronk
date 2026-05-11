@@ -99,6 +99,8 @@ namespace :api, format: false do
     resources :favourites, only: [:index]
     resources :bookmarks, only: [:index]
 
+    resources :questions, only: [:index]
+
     resources :events, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :rsvp

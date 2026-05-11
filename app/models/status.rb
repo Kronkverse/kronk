@@ -102,6 +102,10 @@ class Status < ApplicationRecord
   has_one :trend, class_name: 'StatusTrend', inverse_of: :status, dependent: nil
   has_one :quote, inverse_of: :status, dependent: :destroy
 
+  enum :post_type, { normal: 0, question: 1, answer: 2 }, prefix: :kronk
+
+  scope :questions, -> { where(post_type: :question) }
+
   validates :uri, uniqueness: true, presence: true, unless: :local?
   validates :text, presence: true, unless: -> { with_media? || reblog? || with_quote? }
   validates_with StatusLengthValidator
