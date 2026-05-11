@@ -76,7 +76,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
     Status.where(post_type: :answer, in_reply_to_id: object.id)
           .joins(:account)
           .limit(10)
-          .map { |s| { id: s.account.id.to_s, username: s.account.username, acct: s.account.acct, avatar: s.account.avatar_image_url } }
+          .map { |s| { id: s.account.id.to_s, username: s.account.username, acct: s.account.acct, avatar: s.account.avatar_original_url } }
   end
 
   def id

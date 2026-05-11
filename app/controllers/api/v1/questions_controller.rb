@@ -51,6 +51,6 @@ class Api::V1::QuestionsController < Api::BaseController
     Status.questions
           .not_excluded_by_account(current_account)
           .not_domain_blocked_by_account(current_account)
-          .includes(:account, :media_attachments, :tags, :preview_cards_status, :preview_card, :preloadable_poll, :quote, account: :account_stat)
+          .includes(:media_attachments, :tags, :preloadable_poll, :quote, preview_cards_status: :preview_card, account: :account_stat)
   end
 end
