@@ -28,6 +28,8 @@ import NotificationsActiveIcon from '@/material-icons/400-24px/notifications-fil
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
+import QuestionMarkActiveIcon from '@/material-icons/400-24px/question_mark-fill.svg?react';
+import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { fetchFollowRequests } from 'mastodon/actions/accounts';
 import { openModal } from 'mastodon/actions/modal';
@@ -60,6 +62,7 @@ const messages = defineMessages({
   },
   live: { id: 'live.title', defaultMessage: 'Huddle' },
   commons: { id: 'governance.title', defaultMessage: '₭ommons' },
+  questions: { id: 'questions.title', defaultMessage: '₭uestions' },
   market: { id: 'market.title', defaultMessage: 'Market' },
   events: { id: 'events.title', defaultMessage: '₭alendar' },
   preferences: {
@@ -304,6 +307,16 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             <hr />
 
             <NotificationsLink />
+
+            <ColumnLink
+              transparent
+              to='/questions'
+              icon='question_mark'
+              iconComponent={QuestionMarkIcon}
+              activeIconComponent={QuestionMarkActiveIcon}
+              text={intl.formatMessage(messages.questions)}
+              tooltip='₭uestions'
+            />
 
             <ColumnLink
               transparent
