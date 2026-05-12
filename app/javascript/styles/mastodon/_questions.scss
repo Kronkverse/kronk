@@ -15,24 +15,11 @@
 
 .questions-page__hero {
   text-align: center;
-  padding: 28px 8px;
-}
-
-.questions-page__hero-title {
-  font-family: Georgia, 'Liberation Serif', serif;
-  font-size: 36px;
-  font-weight: 500;
-  color: $primary-text-color;
-  margin: 0 0 14px;
-  line-height: 1.1;
-}
-
-.questions-page__hero-intro {
-  font-size: 15px;
-  color: $secondary-text-color;
-  line-height: 1.6;
-  margin: 0 auto;
-  max-width: 540px;
+  padding: 24px 8px 16px;
+  font-size: 72px;
+  line-height: 1;
+  color: #4844c0;
+  font-weight: 700;
 }
 
 .questions-page__empty {

@@ -16,11 +16,6 @@ import type { Question } from './types';
 
 const messages = defineMessages({
   title: { id: 'questions.title', defaultMessage: '₭uestions' },
-  description: {
-    id: 'questions.description',
-    defaultMessage:
-      'Ask the Kronk community anything. Questions are answered publicly and build shared knowledge.',
-  },
   empty: {
     id: 'questions.empty',
     defaultMessage: 'No questions yet. Ask something!',
@@ -100,14 +95,7 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           />
         ) : (
           <>
-            <section className='questions-page__hero'>
-              <h1 className='questions-page__hero-title'>
-                {intl.formatMessage(messages.title)}
-              </h1>
-              <p className='questions-page__hero-intro'>
-                {intl.formatMessage(messages.description)}
-              </p>
-            </section>
+            <div className='questions-page__hero'>{'?'}</div>
 
             <QuestionComposer onCreated={handleCreated} />
 
