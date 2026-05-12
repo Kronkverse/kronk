@@ -121,5 +121,101 @@
   &__count {
     font-size: 13px;
     color: $dark-text-color;
+    flex: 1;
+  }
+
+  &__answer-btn {
+    background: var(--space-color, #4844c0);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+    margin-inline-start: auto;
+
+    &:hover {
+      opacity: 0.88;
+    }
+  }
+
+  &__inline-composer {
+    padding: 12px 14px;
+    border-top: 1px solid
+      color-mix(in srgb, var(--space-color, #4844c0) 60%, black 40%);
+    background: color-mix(in srgb, var(--space-color, #4844c0) 6%, transparent);
+  }
+
+  &__composer-body {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  &__composer-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    resize: none;
+    font-size: 14px;
+    line-height: 1.5;
+    color: $primary-text-color;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+  }
+
+  &__composer-submit {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--space-color, #4844c0);
+    color: #fff;
+    border: none;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.15s ease;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    &:not(:disabled):hover {
+      opacity: 0.88;
+    }
+  }
+
+  &__composer-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+  }
+
+  &__composer-count {
+    font-size: 12px;
+    color: $secondary-text-color;
+    opacity: 0.7;
+  }
+
+  &__composer-cancel {
+    background: transparent;
+    border: none;
+    font-size: 13px;
+    color: $secondary-text-color;
+    cursor: pointer;
+    padding: 0;
+
+    &:hover {
+      color: $primary-text-color;
+    }
   }
 }

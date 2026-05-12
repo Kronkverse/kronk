@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -7,6 +7,8 @@ import LockOpenIcon from '@/material-icons/400-24px/lock_open.svg?react';
 import { Icon } from 'mastodon/components/icon';
 
 import type { Question } from '../types';
+
+import { AnswerComposer } from './answer_composer';
 
 const messages = defineMessages({
   answer: { id: 'questions.card.answer', defaultMessage: 'Answer' },
@@ -26,9 +28,9 @@ const parseContent = (html: string) => {
 export const QuestionCard: React.FC<{
   question: Question;
   onSelect: (id: string) => void;
-  onAnswer: (id: string) => void;
-}> = ({ question, onSelect, onAnswer }) => {
+}> = ({ question, onSelect }) => {
   const intl = useIntl();
+  const [answering, setAnswering] = useState(false);
 
   const handleCardClick = useCallback(() => {
     onSelect(question.id);
@@ -44,13 +46,22 @@ export const QuestionCard: React.FC<{
     [onSelect, question.id],
   );
 
-  const handleAnswerClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onAnswer(question.id);
-    },
-    [onAnswer, question.id],
-  );
+  const handleAnswerClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAnswering(true);
+  }, []);
+
+  const handleAnswerCancel = useCallback(() => {
+    setAnswering(false);
+  }, []);
+
+  const handleAnswered = useCallback(() => {
+    setAnswering(false);
+  }, []);
+
+  const handleComposerClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
 
   const plainText = parseContent(question.content);
 
@@ -123,6 +134,16 @@ export const QuestionCard: React.FC<{
           </button>
         )}
       </div>
+
+      {answering && (
+        <div onClick={handleComposerClick} role='presentation'>
+          <AnswerComposer
+            question={question}
+            onAnswered={handleAnswered}
+            onCancel={handleAnswerCancel}
+          />
+        </div>
+      )}
     </div>
   );
 };

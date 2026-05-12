@@ -1,8 +1,11 @@
+import { useCallback, useState } from 'react';
+
 import { defineMessages, useIntl } from 'react-intl';
 
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import LockOpenIcon from '@/material-icons/400-24px/lock_open.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
+import api from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
 import { spaceColor } from 'mastodon/planets';
 
@@ -30,6 +33,14 @@ const messages = defineMessages({
   locked: {
     id: 'status_question_card.locked',
     defaultMessage: 'Answer to unlock',
+  },
+  placeholder: {
+    id: 'status_question_card.placeholder',
+    defaultMessage: 'Share your answer…',
+  },
+  cancel: {
+    id: 'status_question_card.cancel',
+    defaultMessage: 'Cancel',
   },
 });
 
@@ -61,6 +72,7 @@ export const StatusQuestionCard: React.FC<{
   answerers?: Answerer[];
   hasAnswered?: boolean;
   question?: ParentQuestion;
+  statusId?: string;
 }> = ({
   postType,
   contentHtml,
@@ -68,8 +80,70 @@ export const StatusQuestionCard: React.FC<{
   answerers = [],
   hasAnswered = false,
   question,
+  statusId,
 }) => {
   const intl = useIntl();
+  const [answering, setAnswering] = useState(false);
+  const [answerText, setAnswerText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleAnswerClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAnswering(true);
+  }, []);
+
+  const handleCancel = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAnswering(false);
+    setAnswerText('');
+  }, []);
+
+  const handleTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setAnswerText(e.target.value);
+    },
+    [],
+  );
+
+  const handleSubmit = useCallback(async () => {
+    if (!answerText.trim() || submitting || !statusId) return;
+    setSubmitting(true);
+    try {
+      await api().post('/api/v1/statuses', {
+        status: answerText.trim(),
+        post_type: 'answer',
+        in_reply_to_id: statusId,
+        visibility: 'public',
+      });
+      setAnswerText('');
+      setAnswering(false);
+    } catch (err) {
+      console.error('Failed to post answer:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [answerText, submitting, statusId]);
+
+  const handleSubmitClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      void handleSubmit();
+    },
+    [handleSubmit],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+        void handleSubmit();
+      }
+    },
+    [handleSubmit],
+  );
+
+  const handleComposerClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
 
   return (
     <div
@@ -136,6 +210,54 @@ export const StatusQuestionCard: React.FC<{
                 ? intl.formatMessage(messages.answered)
                 : intl.formatMessage(messages.locked)}
           </span>
+
+          {!hasAnswered && statusId && !answering && (
+            <button
+              className='status-question-card__answer-btn'
+              onClick={handleAnswerClick}
+            >
+              {intl.formatMessage(messages.answer)}
+            </button>
+          )}
+        </div>
+      )}
+
+      {answering && (
+        <div
+          className='status-question-card__inline-composer'
+          onClick={handleComposerClick}
+          role='presentation'
+        >
+          <div className='status-question-card__composer-body'>
+            <textarea
+              className='status-question-card__composer-input'
+              placeholder={intl.formatMessage(messages.placeholder)}
+              value={answerText}
+              onChange={handleTextChange}
+              onKeyDown={handleKeyDown}
+              maxLength={500}
+              rows={2}
+            />
+            <button
+              className='status-question-card__composer-submit'
+              onClick={handleSubmitClick}
+              disabled={!answerText.trim() || submitting}
+              aria-label='Post answer'
+            >
+              {'!'}
+            </button>
+          </div>
+          <div className='status-question-card__composer-footer'>
+            <span className='status-question-card__composer-count'>
+              {500 - answerText.length}
+            </span>
+            <button
+              className='status-question-card__composer-cancel'
+              onClick={handleCancel}
+            >
+              {intl.formatMessage(messages.cancel)}
+            </button>
+          </div>
         </div>
       )}
     </div>

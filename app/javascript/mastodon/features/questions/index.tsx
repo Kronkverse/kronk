@@ -55,10 +55,6 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     // detail view TBD
   }, []);
 
-  const handleAnswer = useCallback(() => {
-    // detail view TBD
-  }, []);
-
   return (
     <Column>
       <ColumnHeader
@@ -96,7 +92,6 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               key={question.id}
               question={question}
               onSelect={handleSelect}
-              onAnswer={handleAnswer}
             />
           ))}
         </div>

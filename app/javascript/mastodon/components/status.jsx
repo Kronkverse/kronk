@@ -553,6 +553,7 @@ class Status extends ImmutablePureComponent {
           answerers={status.get('answerers')?.toJS()}
           hasAnswered={status.get('has_answered')}
           question={status.get('question')?.toJS()}
+          statusId={status.get('id')}
         />
       );
     } else if (status.get('post_type') === 'proposal' && status.get('proposal')) {
