@@ -18,6 +18,7 @@ import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
+import { spaceColor } from 'mastodon/planets';
 
 import { CreateEventForm } from './components/create_event_form';
 
@@ -350,7 +351,12 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         <title>{event.title}</title>
       </Helmet>
 
-      <div className='event-detail'>
+      <div
+        className='event-detail'
+        style={
+          { '--space-color': spaceColor('Kalendar') } as React.CSSProperties
+        }
+      >
         {event.image_url && (
           <div
             className='event-detail__cover'

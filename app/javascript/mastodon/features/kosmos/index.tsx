@@ -1186,7 +1186,7 @@ const Hub: React.FC = () => {
                           cx={moon.cx}
                           cy={moon.cy}
                           r={20}
-                          fill={BRAND_PURPLE}
+                          fill={planet.color}
                           opacity={0.18}
                           className='kosmos-moon-halo'
                         />
@@ -1194,7 +1194,7 @@ const Hub: React.FC = () => {
                           cx={moon.cx}
                           cy={moon.cy}
                           r={12}
-                          fill={BRAND_PURPLE}
+                          fill={planet.color}
                         />
                         <foreignObject
                           x={moon.cx - 12}

@@ -10,6 +10,7 @@ import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
+import { spaceColor } from 'mastodon/planets';
 
 import { ProposalCard } from './components/proposal_card';
 import { ProposalDetail } from './components/proposal_detail';
@@ -96,7 +97,12 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      <div className='governance-page'>
+      <div
+        className='governance-page'
+        style={
+          { '--space-color': spaceColor('Kommons') } as React.CSSProperties
+        }
+      >
         {selectedId && selected ? (
           <ProposalDetail
             proposal={selected}

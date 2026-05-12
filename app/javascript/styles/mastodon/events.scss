@@ -1,15 +1,6 @@
 @use 'variables' as *;
-@use 'sass:color';
 
-// Events — using site blurple palette
-$ev-purple-deep: $blurple-600;
-$ev-purple-mid: $blurple-500;
-$ev-purple-soft: $blurple-400;
-$ev-purple-muted: $blurple-300;
-$ev-purple-light: color.adjust($blurple-300, $lightness: 20%);
-$ev-purple-faint: rgba($blurple-500, 0.08);
-$ev-purple-glow: rgba($blurple-500, 0.15);
-$ev-purple-hover: rgba($blurple-500, 0.12);
+// Events — Kalendar space (Neptune)
 $ev-live-color: #c75d6e;
 $ev-live-glow: rgba(199, 93, 110, 15%);
 $ev-going-color: #6a9f8a;
@@ -61,7 +52,7 @@ $ev-interested-color: #b8945f;
         left: 0;
         right: 0;
         height: 2px;
-        background: $ev-purple-deep;
+        background: var(--space-color, #343070);
       }
     }
   }
@@ -96,8 +87,12 @@ $ev-interested-color: #b8945f;
     }
 
     &:hover:not(.active) {
-      background: $ev-purple-faint;
-      color: $ev-purple-soft;
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 8%,
+        transparent
+      );
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
     }
 
     &.active {
@@ -113,8 +108,8 @@ $ev-interested-color: #b8945f;
     padding: 8px 18px;
     border: none;
     border-radius: 10px;
-    background: $ev-purple-deep;
-    color: $ev-purple-light;
+    background: var(--space-color, #343070);
+    color: color-mix(in srgb, var(--space-color, #343070) 30%, #e5d9f5 70%);
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -122,7 +117,7 @@ $ev-interested-color: #b8945f;
     transition: all 0.2s ease;
 
     &:hover {
-      background: $ev-purple-mid;
+      background: var(--space-color, #343070);
       box-shadow: 0 2px 8px rgba(74, 61, 143, 25%);
     }
   }
@@ -152,7 +147,7 @@ $ev-interested-color: #b8945f;
   &__empty {
     padding: 60px 20px;
     text-align: center;
-    color: $ev-purple-muted;
+    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
     font-size: 14px;
     font-style: italic;
   }
@@ -178,8 +173,13 @@ $ev-interested-color: #b8945f;
     box-shadow 0.2s ease;
 
   &:hover {
-    border-color: rgba($ev-purple-mid, 0.3);
-    box-shadow: 0 2px 8px rgba($ev-purple-mid, 0.08);
+    border-color: color-mix(
+      in srgb,
+      var(--space-color, #343070) 30%,
+      transparent
+    );
+    box-shadow: 0 2px 8px
+      color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
   }
 
   &--live {
@@ -238,7 +238,7 @@ $ev-interested-color: #b8945f;
     text-overflow: ellipsis;
 
     &:hover {
-      color: $ev-purple-soft;
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
     }
   }
 
@@ -253,7 +253,7 @@ $ev-interested-color: #b8945f;
   }
 
   &__type-icon {
-    color: $ev-purple-muted;
+    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
     flex-shrink: 0;
   }
 
@@ -271,7 +271,7 @@ $ev-interested-color: #b8945f;
   }
 
   &__host {
-    color: $ev-purple-soft;
+    color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
   }
 
   &__rsvp {
@@ -300,12 +300,16 @@ $ev-interested-color: #b8945f;
     }
 
     &:hover:not(.active) {
-      background: $ev-purple-faint;
-      color: $ev-purple-soft;
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 8%,
+        transparent
+      );
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
     }
 
     &.active {
-      background: $ev-purple-deep;
+      background: var(--space-color, #343070);
       color: #fff;
     }
   }
@@ -348,9 +352,8 @@ $ev-interested-color: #b8945f;
     height: 3px;
     background: linear-gradient(
       90deg,
-      $ev-purple-deep,
-      $ev-purple-mid,
-      $ev-purple-soft
+      var(--space-color, #343070),
+      color-mix(in srgb, var(--space-color, #343070) 60%, #9a95b8 40%)
     );
     border-radius: 14px 14px 0 0;
   }
@@ -381,8 +384,12 @@ $ev-interested-color: #b8945f;
     transition: all 0.15s;
 
     &:hover {
-      background: $ev-purple-faint;
-      color: $ev-purple-soft;
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 8%,
+        transparent
+      );
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
     }
   }
 
@@ -409,14 +416,22 @@ $ev-interested-color: #b8945f;
     transition: all 0.2s ease;
 
     &:hover {
-      border-color: $ev-purple-muted;
-      color: $ev-purple-soft;
+      border-color: color-mix(
+        in srgb,
+        var(--space-color, #343070) 45%,
+        #9a95b8 55%
+      );
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
     }
 
     &.active {
-      border-color: $ev-purple-mid;
-      color: $ev-purple-soft;
-      background: $ev-purple-faint;
+      border-color: var(--space-color, #343070);
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 8%,
+        transparent
+      );
       box-shadow: 0 0 0 1px rgba(110, 95, 184, 8%);
     }
   }
@@ -428,7 +443,7 @@ $ev-interested-color: #b8945f;
       display: block;
       font-size: 12px;
       font-weight: 600;
-      color: $ev-purple-muted;
+      color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
       margin-bottom: 5px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -453,13 +468,14 @@ $ev-interested-color: #b8945f;
         box-shadow 0.2s ease;
 
       &::placeholder {
-        color: $ev-purple-muted;
+        color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
         opacity: 0.5;
       }
 
       &:focus {
-        border-color: $ev-purple-mid;
-        box-shadow: 0 0 0 3px $ev-purple-faint;
+        border-color: var(--space-color, #343070);
+        box-shadow: 0 0 0 3px
+          color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
         outline: none;
       }
     }
@@ -500,8 +516,9 @@ $ev-interested-color: #b8945f;
         box-shadow 0.2s ease;
 
       &:focus {
-        border-color: $ev-purple-mid;
-        box-shadow: 0 0 0 3px $ev-purple-faint;
+        border-color: var(--space-color, #343070);
+        box-shadow: 0 0 0 3px
+          color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
         outline: none;
       }
     }
@@ -517,7 +534,11 @@ $ev-interested-color: #b8945f;
 
     &:hover {
       input {
-        border-color: $ev-purple-soft;
+        border-color: color-mix(
+          in srgb,
+          var(--space-color, #343070) 65%,
+          #9a95b8 35%
+        );
       }
     }
 
@@ -537,8 +558,9 @@ $ev-interested-color: #b8945f;
         box-shadow 0.2s ease;
 
       &:focus {
-        border-color: $ev-purple-mid;
-        box-shadow: 0 0 0 3px $ev-purple-faint;
+        border-color: var(--space-color, #343070);
+        box-shadow: 0 0 0 3px
+          color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
         outline: none;
       }
     }
@@ -565,7 +587,7 @@ $ev-interested-color: #b8945f;
 
     input[type='checkbox'] {
       width: auto;
-      accent-color: $ev-purple-mid;
+      accent-color: var(--space-color, #343070);
     }
   }
 
@@ -576,7 +598,7 @@ $ev-interested-color: #b8945f;
       display: block;
       font-size: 12px;
       font-weight: 600;
-      color: $ev-purple-muted;
+      color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
       margin-bottom: 5px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -591,15 +613,23 @@ $ev-interested-color: #b8945f;
     border: 1px dashed rgba(110, 95, 184, 25%);
     border-radius: 10px;
     cursor: pointer;
-    color: $ev-purple-muted;
+    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
     font-size: 13px;
     transition: all 0.2s ease;
-    background: $ev-purple-faint;
+    background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
 
     &:hover {
-      border-color: $ev-purple-soft;
-      color: $ev-purple-soft;
-      background: $ev-purple-hover;
+      border-color: color-mix(
+        in srgb,
+        var(--space-color, #343070) 65%,
+        #9a95b8 35%
+      );
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 12%,
+        transparent
+      );
     }
   }
 
@@ -669,8 +699,12 @@ $ev-interested-color: #b8945f;
     transition: all 0.15s;
 
     &:hover {
-      border-color: $ev-purple-muted;
-      color: $ev-purple-soft;
+      border-color: color-mix(
+        in srgb,
+        var(--space-color, #343070) 45%,
+        #9a95b8 55%
+      );
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
     }
   }
 
@@ -678,8 +712,8 @@ $ev-interested-color: #b8945f;
     padding: 9px 24px;
     border: none;
     border-radius: 8px;
-    background: $ev-purple-deep;
-    color: $ev-purple-light;
+    background: var(--space-color, #343070);
+    color: color-mix(in srgb, var(--space-color, #343070) 30%, #e5d9f5 70%);
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -687,7 +721,7 @@ $ev-interested-color: #b8945f;
     transition: all 0.2s ease;
 
     &:hover {
-      background: $ev-purple-mid;
+      background: var(--space-color, #343070);
       box-shadow: 0 2px 8px rgba(74, 61, 143, 25%);
     }
 
@@ -720,9 +754,17 @@ $ev-interested-color: #b8945f;
     transition: all 0.15s;
 
     &:hover {
-      border-color: $ev-purple-soft;
-      color: $ev-purple-soft;
-      background: $ev-purple-faint;
+      border-color: color-mix(
+        in srgb,
+        var(--space-color, #343070) 65%,
+        #9a95b8 35%
+      );
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 8%,
+        transparent
+      );
     }
   }
 
@@ -745,7 +787,7 @@ $ev-interested-color: #b8945f;
     text-align: center;
     font-size: 11px;
     font-weight: 600;
-    color: $ev-purple-muted;
+    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -764,8 +806,12 @@ $ev-interested-color: #b8945f;
     }
 
     &--today {
-      border-color: $ev-purple-mid;
-      background: $ev-purple-faint;
+      border-color: var(--space-color, #343070);
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 8%,
+        transparent
+      );
     }
   }
 
@@ -788,8 +834,8 @@ $ev-interested-color: #b8945f;
     border-radius: 4px;
     font-size: 9px;
     font-weight: 500;
-    background: $ev-purple-deep;
-    color: $ev-purple-light;
+    background: var(--space-color, #343070);
+    color: color-mix(in srgb, var(--space-color, #343070) 30%, #e5d9f5 70%);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -809,8 +855,8 @@ $ev-interested-color: #b8945f;
     }
 
     &--huddle {
-      background: $ev-purple-deep;
-      color: $ev-purple-light;
+      background: var(--space-color, #343070);
+      color: color-mix(in srgb, var(--space-color, #343070) 30%, #e5d9f5 70%);
     }
 
     &--going {
@@ -850,7 +896,7 @@ $ev-interested-color: #b8945f;
       .event-calendar__event-dot--invited,
       .event-calendar__event-dot--huddle
     ) {
-      background: $ev-purple-mid;
+      background: var(--space-color, #343070);
     }
   }
 
@@ -918,13 +964,13 @@ $ev-interested-color: #b8945f;
     align-items: center;
     gap: 4px;
     font-size: 13px;
-    color: $ev-purple-soft;
+    color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
     text-decoration: none;
     margin-bottom: 16px;
     font-weight: 500;
 
     &:hover {
-      color: $ev-purple-mid;
+      color: var(--space-color, #343070);
     }
   }
 
@@ -959,7 +1005,7 @@ $ev-interested-color: #b8945f;
     letter-spacing: -0.02em;
 
     .icon {
-      color: $ev-purple-muted;
+      color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
       vertical-align: -2px;
     }
   }
@@ -969,12 +1015,12 @@ $ev-interested-color: #b8945f;
     color: var(--secondary-text-color);
 
     a {
-      color: $ev-purple-soft;
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
       text-decoration: none;
       font-weight: 500;
 
       &:hover {
-        color: $ev-purple-mid;
+        color: var(--space-color, #343070);
       }
     }
   }
@@ -993,16 +1039,16 @@ $ev-interested-color: #b8945f;
     font-size: 14px;
     color: var(--primary-text-color);
     padding: 6px 10px;
-    background: $ev-purple-faint;
+    background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
     border-radius: 8px;
 
     .icon {
-      color: $ev-purple-soft;
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
       flex-shrink: 0;
     }
 
     a {
-      color: $ev-purple-soft;
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
       font-weight: 500;
     }
   }
@@ -1037,9 +1083,17 @@ $ev-interested-color: #b8945f;
     transition: all 0.2s ease;
 
     &:hover {
-      border-color: $ev-purple-soft;
-      color: $ev-purple-soft;
-      background: $ev-purple-faint;
+      border-color: color-mix(
+        in srgb,
+        var(--space-color, #343070) 65%,
+        #9a95b8 35%
+      );
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 8%,
+        transparent
+      );
     }
 
     &.active--going {
@@ -1103,9 +1157,17 @@ $ev-interested-color: #b8945f;
     transition: all 0.15s;
 
     &:hover {
-      border-color: $ev-purple-soft;
-      color: $ev-purple-soft;
-      background: $ev-purple-faint;
+      border-color: color-mix(
+        in srgb,
+        var(--space-color, #343070) 65%,
+        #9a95b8 35%
+      );
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 8%,
+        transparent
+      );
     }
 
     &--danger {
@@ -1130,7 +1192,7 @@ $ev-interested-color: #b8945f;
     h3 {
       font-size: 13px;
       font-weight: 600;
-      color: $ev-purple-muted;
+      color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
       margin: 0 0 10px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -1154,8 +1216,12 @@ $ev-interested-color: #b8945f;
     transition: background 0.15s;
 
     &:hover {
-      background: $ev-purple-faint;
-      color: $ev-purple-soft;
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 8%,
+        transparent
+      );
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
     }
   }
 
@@ -1184,19 +1250,20 @@ $ev-interested-color: #b8945f;
   text-decoration: none;
   color: inherit;
   background: lighten($ui-base-color, 3%);
-  border: 2px solid $blurple-600;
+  border: 2px solid
+    color-mix(in srgb, var(--space-color, #343070) 60%, transparent);
   border-radius: 12px;
   margin-top: 10px;
   overflow: hidden;
   transition: all 0.25s ease;
   box-shadow:
-    0 0 0 1px rgba($blurple-500, 0.3),
+    0 0 0 1px color-mix(in srgb, var(--space-color, #343070) 30%, transparent),
     0 4px 16px rgba(#000, 0.4);
 
   &:hover {
-    border-color: $blurple-500;
+    border-color: var(--space-color, #343070);
     box-shadow:
-      0 0 0 1px rgba($blurple-500, 0.5),
+      0 0 0 1px color-mix(in srgb, var(--space-color, #343070) 50%, transparent),
       0 4px 20px rgba(#000, 0.5);
     text-decoration: none;
     color: inherit;
@@ -1242,7 +1309,7 @@ $ev-interested-color: #b8945f;
     justify-content: center;
     min-width: 48px;
     height: 48px;
-    background: $ev-purple-faint;
+    background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
     border: 1px solid rgba(110, 95, 184, 12%);
     border-radius: 10px;
     flex-shrink: 0;
@@ -1251,7 +1318,7 @@ $ev-interested-color: #b8945f;
       font-size: 10px;
       font-weight: 700;
       text-transform: uppercase;
-      color: $ev-purple-soft;
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
       line-height: 1;
       letter-spacing: 0.05em;
     }
@@ -1286,7 +1353,7 @@ $ev-interested-color: #b8945f;
   }
 
   &__type-icon {
-    color: $ev-purple-muted;
+    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
     flex-shrink: 0;
   }
 
@@ -1302,7 +1369,7 @@ $ev-interested-color: #b8945f;
 
   &__meta {
     font-size: 12px;
-    color: $ev-purple-muted;
+    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
     margin-bottom: 4px;
     display: flex;
     align-items: center;
@@ -1312,7 +1379,7 @@ $ev-interested-color: #b8945f;
 
   &__location {
     a {
-      color: $ev-purple-soft;
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
       text-decoration: none;
 
       &:hover {
@@ -1365,8 +1432,12 @@ $ev-interested-color: #b8945f;
     transition: all 0.2s ease;
 
     &:hover {
-      border-color: $ev-purple-soft;
-      color: $ev-purple-soft;
+      border-color: color-mix(
+        in srgb,
+        var(--space-color, #343070) 65%,
+        #9a95b8 35%
+      );
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
     }
 
     &.active--going {
@@ -1405,9 +1476,9 @@ $ev-interested-color: #b8945f;
 // Invite panel on event detail
 .event-detail {
   &__action-btn--active {
-    background: $ev-purple-faint;
-    border-color: $ev-purple-mid;
-    color: $ev-purple-soft;
+    background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+    border-color: var(--space-color, #343070);
+    color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
   }
 
   &__invite {
@@ -1436,13 +1507,14 @@ $ev-interested-color: #b8945f;
         box-shadow 0.2s ease;
 
       &::placeholder {
-        color: $ev-purple-muted;
+        color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
         opacity: 0.5;
       }
 
       &:focus {
-        border-color: $ev-purple-mid;
-        box-shadow: 0 0 0 3px $ev-purple-faint;
+        border-color: var(--space-color, #343070);
+        box-shadow: 0 0 0 3px
+          color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
         outline: none;
       }
     }
@@ -1451,7 +1523,7 @@ $ev-interested-color: #b8945f;
   &__invite-empty {
     padding: 12px;
     text-align: center;
-    color: $ev-purple-muted;
+    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
     font-size: 13px;
     font-style: italic;
   }
@@ -1498,7 +1570,11 @@ $ev-interested-color: #b8945f;
     transition: background 0.15s;
 
     &:hover {
-      background: $ev-purple-faint;
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 8%,
+        transparent
+      );
     }
   }
 
@@ -1528,7 +1604,7 @@ $ev-interested-color: #b8945f;
 
   &__invite-acct {
     font-size: 12px;
-    color: $ev-purple-muted;
+    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
   }
 
   &__invite-btn {
@@ -1548,9 +1624,17 @@ $ev-interested-color: #b8945f;
     transition: all 0.2s ease;
 
     &:hover {
-      border-color: $ev-purple-soft;
-      color: $ev-purple-soft;
-      background: $ev-purple-faint;
+      border-color: color-mix(
+        in srgb,
+        var(--space-color, #343070) 65%,
+        #9a95b8 35%
+      );
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 8%,
+        transparent
+      );
     }
 
     &--sent {
@@ -1574,7 +1658,7 @@ $ev-interested-color: #b8945f;
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: $ev-purple-faint;
+  background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
   border: 1px solid rgba(110, 95, 184, 12%);
   border-radius: 10px;
   text-decoration: none;
@@ -1584,7 +1668,11 @@ $ev-interested-color: #b8945f;
 
   &:hover {
     border-color: rgba(110, 95, 184, 30%);
-    background: $ev-purple-hover;
+    background: color-mix(
+      in srgb,
+      var(--space-color, #343070) 12%,
+      transparent
+    );
     text-decoration: none;
     color: inherit;
   }
@@ -1605,7 +1693,7 @@ $ev-interested-color: #b8945f;
       font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
-      color: $ev-purple-soft;
+      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
       line-height: 1;
       letter-spacing: 0.05em;
     }
@@ -1633,14 +1721,14 @@ $ev-interested-color: #b8945f;
     line-height: 1.3;
 
     .icon {
-      color: $ev-purple-muted;
+      color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
       flex-shrink: 0;
     }
   }
 
   &__meta {
     font-size: 12px;
-    color: $ev-purple-muted;
+    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
     margin-top: 1px;
   }
 }
@@ -1669,7 +1757,7 @@ $ev-interested-color: #b8945f;
 
   &__count {
     font-size: 13px;
-    color: $ev-purple-soft;
+    color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
     font-weight: 500;
   }
 
@@ -1684,7 +1772,11 @@ $ev-interested-color: #b8945f;
     transition: border-color 0.15s;
 
     &:focus-within {
-      border-color: $ev-purple-soft;
+      border-color: color-mix(
+        in srgb,
+        var(--space-color, #343070) 65%,
+        #9a95b8 35%
+      );
     }
 
     .icon {
@@ -1724,7 +1816,7 @@ $ev-interested-color: #b8945f;
       color: var(--secondary-text-color);
 
       input[type='checkbox'] {
-        accent-color: $ev-purple-mid;
+        accent-color: var(--space-color, #343070);
         width: 16px;
         height: 16px;
         cursor: pointer;
@@ -1757,11 +1849,15 @@ $ev-interested-color: #b8945f;
     transition: background 0.1s;
 
     &:hover {
-      background: $ev-purple-faint;
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 8%,
+        transparent
+      );
     }
 
     input[type='checkbox'] {
-      accent-color: $ev-purple-mid;
+      accent-color: var(--space-color, #343070);
       width: 16px;
       height: 16px;
       flex-shrink: 0;
@@ -1815,13 +1911,17 @@ $ev-interested-color: #b8945f;
     border: 1px solid var(--background-border-color);
     border-radius: 6px;
     background: transparent;
-    color: $ev-purple-soft;
+    color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
     font-size: 13px;
     cursor: pointer;
     transition: background 0.15s;
 
     &:hover {
-      background: $ev-purple-faint;
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 8%,
+        transparent
+      );
     }
 
     &:disabled {
@@ -1856,7 +1956,7 @@ $ev-interested-color: #b8945f;
     padding: 8px 20px;
     border: none;
     border-radius: 8px;
-    background: $ev-purple-deep;
+    background: var(--space-color, #343070);
     color: #fff;
     font-size: 14px;
     font-weight: 500;
@@ -1864,7 +1964,7 @@ $ev-interested-color: #b8945f;
     transition: background 0.15s;
 
     &:hover {
-      background: $ev-purple-mid;
+      background: var(--space-color, #343070);
     }
 
     &:disabled {

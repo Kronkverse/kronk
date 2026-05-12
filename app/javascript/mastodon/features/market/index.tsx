@@ -8,13 +8,15 @@ import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars-fill.svg?re
 import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
+import { spaceColor } from 'mastodon/planets';
 
 const messages = defineMessages({
   heading: { id: 'market.title', defaultMessage: 'Market' },
   comingSoon: { id: 'market.coming_soon', defaultMessage: 'Coming Soon' },
   description: {
     id: 'market.description',
-    defaultMessage: 'A marketplace for the Kronk community is on its way. Stay tuned!',
+    defaultMessage:
+      'A marketplace for the Kronk community is on its way. Stay tuned!',
   },
 });
 
@@ -44,15 +46,18 @@ const Market: React.FC<{
 
       <div
         className='scrollable'
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '40px 20px',
-          textAlign: 'center',
-          gap: '16px',
-        }}
+        style={
+          {
+            '--space-color': spaceColor('Market'),
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 20px',
+            textAlign: 'center',
+            gap: '16px',
+          } as React.CSSProperties
+        }
       >
         <BarChartIcon
           style={{

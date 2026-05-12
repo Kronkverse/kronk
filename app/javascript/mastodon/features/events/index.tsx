@@ -8,6 +8,7 @@ import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?reac
 import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
+import { spaceColor } from 'mastodon/planets';
 
 import { CreateEventForm } from './components/create_event_form';
 import { EventCalendar } from './components/event_calendar';
@@ -178,7 +179,12 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      <div className='events-page'>
+      <div
+        className='events-page'
+        style={
+          { '--space-color': spaceColor('Kalendar') } as React.CSSProperties
+        }
+      >
         <div className='events-page__header'>
           <div className='events-page__filters'>
             {(['upcoming', 'past', 'mine', 'invited'] as FilterType[]).map(

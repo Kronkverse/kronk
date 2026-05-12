@@ -10,6 +10,7 @@ import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
 import StarIcon from '@/material-icons/400-24px/star.svg?react';
 import api from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
+import { spaceColor } from 'mastodon/planets';
 
 interface EventData {
   id: string;
@@ -86,6 +87,7 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
     <Link
       to={`/kalendar/${event.id}`}
       className={`status-event-card ${isLive ? 'status-event-card--live' : ''}`}
+      style={{ '--space-color': spaceColor('Kalendar') } as React.CSSProperties}
     >
       {event.image_url && (
         <div
