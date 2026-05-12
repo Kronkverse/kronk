@@ -2328,8 +2328,8 @@ $governance-amber: #f59e0b;
     background: linear-gradient(
       90deg,
       var(--space-color, #36248c),
-      lighten(var(--space-color, #36248c), 12%),
-      lighten(var(--space-color, #36248c), 22%)
+      color-mix(in srgb, var(--space-color, #36248c) 75%, white 25%),
+      color-mix(in srgb, var(--space-color, #36248c) 55%, white 45%)
     );
     border-radius: 14px 14px 0 0;
   }
@@ -2627,7 +2627,7 @@ $governance-amber: #f59e0b;
   transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
-    background: darken(var(--space-color, #36248c), 6%);
+    background: color-mix(in srgb, var(--space-color, #36248c) 94%, black 6%);
     box-shadow: 0 2px 8px
       color-mix(in srgb, var(--space-color, #36248c) 25%, transparent);
   }
