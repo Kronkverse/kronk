@@ -1110,7 +1110,7 @@ const Hub: React.FC = () => {
                       cx={planet.cx}
                       cy={planet.cy}
                       r={planet.haloR}
-                      fill={BRAND_PURPLE}
+                      fill={planet.color}
                       opacity={0.14}
                       className='hub-planet-halo'
                     />
@@ -1130,7 +1130,7 @@ const Hub: React.FC = () => {
                       cx={planet.cx}
                       cy={planet.cy}
                       r={planet.bodyR}
-                      fill={BRAND_PURPLE}
+                      fill={planet.color}
                     />
                     <text
                       x={planet.cx}
