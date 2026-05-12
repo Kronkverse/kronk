@@ -1175,8 +1175,7 @@ const Hub: React.FC = () => {
                         style={{
                           transformBox: 'fill-box',
                           transformOrigin: 'center',
-                          transition:
-                            'transform 0.4s cubic-bezier(0.34, 1.5, 0.64, 1), opacity 0.3s',
+                          transition: 'opacity 0.3s, visibility 0.3s',
                         }}
                       >
                         <circle
@@ -1435,23 +1434,6 @@ const Hub: React.FC = () => {
           </button>
         )}
       </div>
-
-      <style>{`
-        .hub-moon-bloom--collapsed {
-          opacity: 0;
-          transform: scale(0.1);
-          pointer-events: none;
-        }
-        .hub-moon-tether--collapsed {
-          opacity: 0;
-        }
-        .hub-scroll--grabbing {
-          cursor: grabbing !important;
-        }
-        .hub-scroll::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </div>
   );
 };
