@@ -59,6 +59,7 @@ interface Planet {
   cy: number;
   bodyR: number;
   haloR: number;
+  color: string;
   isSol?: boolean;
   hasRings?: boolean;
 }
@@ -72,6 +73,7 @@ const PLANETS: Planet[] = [
     cy: 400,
     bodyR: 30,
     haloR: 38,
+    color: SOL_BODY,
     isSol: true,
   },
   {
@@ -82,6 +84,7 @@ const PLANETS: Planet[] = [
     cy: 348,
     bodyR: 14,
     haloR: 26,
+    color: '#9EB3C8',
   },
   {
     name: 'Venus',
@@ -91,6 +94,7 @@ const PLANETS: Planet[] = [
     cy: 329.5,
     bodyR: 15,
     haloR: 28,
+    color: '#E8A8C0',
   },
   {
     name: 'Earth',
@@ -100,6 +104,7 @@ const PLANETS: Planet[] = [
     cy: 441.7,
     bodyR: 15,
     haloR: 28,
+    color: '#6BBFA0',
   },
   {
     name: 'Mars',
@@ -109,6 +114,7 @@ const PLANETS: Planet[] = [
     cy: 542.9,
     bodyR: 14,
     haloR: 26,
+    color: '#D4705A',
   },
   {
     name: 'Jupiter',
@@ -118,6 +124,7 @@ const PLANETS: Planet[] = [
     cy: 300,
     bodyR: 22,
     haloR: 34,
+    color: BRAND_PURPLE,
   },
   {
     name: 'Saturn',
@@ -127,6 +134,7 @@ const PLANETS: Planet[] = [
     cy: 174.4,
     bodyR: 19,
     haloR: 32,
+    color: '#C8AA5A',
     hasRings: true,
   },
   {
@@ -137,6 +145,7 @@ const PLANETS: Planet[] = [
     cy: 400,
     bodyR: 17,
     haloR: 30,
+    color: '#5ABFCA',
   },
   {
     name: 'Neptune',
@@ -146,6 +155,7 @@ const PLANETS: Planet[] = [
     cy: 668.5,
     bodyR: 17,
     haloR: 30,
+    color: '#5080D8',
   },
   {
     name: 'Pluto',
@@ -155,6 +165,7 @@ const PLANETS: Planet[] = [
     cy: 516.3,
     bodyR: 13,
     haloR: 24,
+    color: '#9878C8',
   },
 ];
 
@@ -263,8 +274,7 @@ function planetBezierPos(
   progress: number,
 ) {
   const r = Math.hypot(cx - 400, cy - 400);
-  const order =
-    PLANET_ORDER.indexOf(planetName) + 1;
+  const order = PLANET_ORDER.indexOf(planetName) + 1;
   const listY = 400 + order * SPACING;
   const p0x = cx,
     p0y = cy;
@@ -280,7 +290,7 @@ function planetBezierPos(
   };
 }
 
-export const Hub: React.FC = () => {
+const Hub: React.FC = () => {
   const history = useHistory();
   const scrollRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -492,18 +502,17 @@ export const Hub: React.FC = () => {
 
   // ── Moon helpers ──────────────────────────────────────────────────────────
   const collapseAllMoons = useCallback(() => {
-    moonBloomsRef.current.forEach((el) =>
-      { el.classList.add('hub-moon-bloom--collapsed'); },
-    );
-    moonTethersRef.current.forEach((el) =>
-      { el.classList.add('hub-moon-tether--collapsed'); },
-    );
+    moonBloomsRef.current.forEach((el) => {
+      el.classList.add('hub-moon-bloom--collapsed');
+    });
+    moonTethersRef.current.forEach((el) => {
+      el.classList.add('hub-moon-tether--collapsed');
+    });
   }, []);
 
   const bloomPlanetMoons = useCallback((planetName: string) => {
     const isListMode = viewModeRef.current === 'list';
-    const order =
-      PLANET_ORDER.indexOf(planetName) + 1;
+    const order = PLANET_ORDER.indexOf(planetName) + 1;
     const listY = 400 + order * SPACING;
 
     let i = 0;
@@ -610,11 +619,7 @@ export const Hub: React.FC = () => {
       const hasMoons = MOONS.some((m) => m.parent === planetName);
 
       if (viewModeRef.current === 'list') {
-        const listY =
-          400 +
-          (PLANET_ORDER.indexOf(planetName) +
-            1) *
-            SPACING;
+        const listY = 400 + (PLANET_ORDER.indexOf(planetName) + 1) * SPACING;
         if (hasMoons) {
           if (openPlanetRef.current === planetName) {
             collapseAllMoons();
@@ -718,7 +723,9 @@ export const Hub: React.FC = () => {
     tryInit();
 
     scroll.addEventListener('scroll', updateMinimap);
-    return () => { scroll.removeEventListener('scroll', updateMinimap); };
+    return () => {
+      scroll.removeEventListener('scroll', updateMinimap);
+    };
   }, [applyZoom, applyCenter, updateMinimap, updateZoomBtns]);
 
   // ── Mouse drag ────────────────────────────────────────────────────────────
@@ -1444,3 +1451,5 @@ export const Hub: React.FC = () => {
     </div>
   );
 };
+
+export default Hub;
