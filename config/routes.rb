@@ -229,6 +229,7 @@ Rails.application.routes.draw do
   get '/kalendar/*path', to: 'kalendar#index', format: false
   get '/governance', to: 'home#index'
   get '/governance/*path', to: 'home#index', format: false
+  get '/hub', to: redirect('/kosmos', status: 301)
   get '/kosmos', to: 'home#index'
   get '/questions', to: 'home#index'
   get '/questions/*path', to: 'home#index', format: false
