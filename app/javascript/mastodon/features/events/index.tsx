@@ -17,6 +17,11 @@ import { InviteFollowersPanel } from './components/invite_followers_panel';
 
 const messages = defineMessages({
   title: { id: 'events.title', defaultMessage: '₭alendar' },
+  heroIntro: {
+    id: 'events.hero_intro',
+    defaultMessage:
+      'Find and share gatherings in the Kronk community. From live rooms to in-person meetups.',
+  },
 });
 
 const filterMessages = {
@@ -185,6 +190,15 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           { '--space-color': spaceColor('Kalendar') } as React.CSSProperties
         }
       >
+        <section className='events-page__hero'>
+          <h1 className='events-page__hero-title'>
+            {intl.formatMessage(messages.title)}
+          </h1>
+          <p className='events-page__hero-intro'>
+            {intl.formatMessage(messages.heroIntro)}
+          </p>
+        </section>
+
         <div className='events-page__header'>
           <div className='events-page__filters'>
             {(['upcoming', 'past', 'mine', 'invited'] as FilterType[]).map(

@@ -13,24 +13,26 @@
   padding-bottom: 80px;
 }
 
-.questions-page__header {
-  padding: 8px 0 20px;
-  border-bottom: 1px solid var(--background-border-color);
-  margin-bottom: 16px;
+.questions-page__hero {
+  text-align: center;
+  padding: 28px 8px;
 }
 
-.questions-page__header-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--primary-text-color);
-  margin: 0 0 6px;
+.questions-page__hero-title {
+  font-family: Georgia, 'Liberation Serif', serif;
+  font-size: 36px;
+  font-weight: 500;
+  color: $primary-text-color;
+  margin: 0 0 14px;
+  line-height: 1.1;
 }
 
-.questions-page__header-description {
-  font-size: 14px;
-  color: var(--secondary-text-color);
-  margin: 0;
-  line-height: 1.5;
+.questions-page__hero-intro {
+  font-size: 15px;
+  color: $secondary-text-color;
+  line-height: 1.6;
+  margin: 0 auto;
+  max-width: 540px;
 }
 
 .questions-page__empty {

@@ -116,14 +116,14 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           />
         ) : (
           <>
-            <div className='questions-page__header'>
-              <h1 className='questions-page__header-title'>
+            <section className='questions-page__hero'>
+              <h1 className='questions-page__hero-title'>
                 {intl.formatMessage(messages.title)}
               </h1>
-              <p className='questions-page__header-description'>
+              <p className='questions-page__hero-intro'>
                 {intl.formatMessage(messages.description)}
               </p>
-            </div>
+            </section>
 
             {showComposer && (
               <QuestionComposer

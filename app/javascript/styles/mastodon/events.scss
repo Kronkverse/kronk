@@ -7,6 +7,28 @@ $ev-going-color: #6a9f8a;
 $ev-interested-color: #b8945f;
 
 // Events page
+.events-page__hero {
+  text-align: center;
+  padding: 28px 8px;
+}
+
+.events-page__hero-title {
+  font-family: Georgia, 'Liberation Serif', serif;
+  font-size: 36px;
+  font-weight: 500;
+  color: $primary-text-color;
+  margin: 0 0 14px;
+  line-height: 1.1;
+}
+
+.events-page__hero-intro {
+  font-size: 15px;
+  color: $secondary-text-color;
+  line-height: 1.6;
+  margin: 0 auto;
+  max-width: 540px;
+}
+
 .events-page {
   padding: 20px;
 
