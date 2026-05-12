@@ -9,7 +9,7 @@ import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { me, getAccessToken } from 'mastodon/initial_state';
-import { spaceColor } from 'mastodon/planets';
+import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 import { useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({
@@ -450,9 +450,9 @@ const Live: React.FC<{
       label={intl.formatMessage(messages.heading)}
     >
       <ColumnHeader
-        icon='diversity_2'
-        iconComponent={Diversity2Icon}
-        title={intl.formatMessage(messages.heading)}
+        title={planetName('Huddle')}
+        icon='venus'
+        iconComponent={planetIcon('Huddle')}
         onClick={handleHeaderClick}
         multiColumn={multiColumn}
       />

@@ -8,7 +8,7 @@ import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars-fill.svg?re
 import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { spaceColor } from 'mastodon/planets';
+import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
 const messages = defineMessages({
   heading: { id: 'market.title', defaultMessage: 'Market' },
@@ -37,9 +37,9 @@ const Market: React.FC<{
       label={intl.formatMessage(messages.heading)}
     >
       <ColumnHeader
-        icon='bar_chart'
-        iconComponent={BarChartIcon}
-        title={intl.formatMessage(messages.heading)}
+        title={planetName('Market')}
+        icon='earth'
+        iconComponent={planetIcon('Market')}
         onClick={handleHeaderClick}
         multiColumn={multiColumn}
       />

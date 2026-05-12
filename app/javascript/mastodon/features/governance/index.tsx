@@ -5,12 +5,11 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
-import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
 import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
-import { spaceColor } from 'mastodon/planets';
+import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
 import { ProposalCard } from './components/proposal_card';
 import { ProposalDetail } from './components/proposal_detail';
@@ -87,9 +86,9 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   return (
     <Column>
       <ColumnHeader
-        title={intl.formatMessage(messages.title)}
-        icon='gavel'
-        iconComponent={GavelIcon}
+        title={planetName('Kommons')}
+        icon='jupiter'
+        iconComponent={planetIcon('Kommons')}
         multiColumn={multiColumn}
       />
 
