@@ -214,7 +214,7 @@
 // ── Composer ──────────────────────────────────────────────────
 
 .questions-composer {
-  background: var(--color-bg-elevated, var(--background-color));
+  background: lighten($ui-base-color, 3%);
   border: 1px solid
     color-mix(in srgb, var(--color-accent, #563acc) 40%, transparent);
   border-radius: 16px;
