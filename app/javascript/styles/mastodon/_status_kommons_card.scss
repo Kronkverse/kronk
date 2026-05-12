@@ -1,30 +1,32 @@
 @use 'variables' as *;
 
-$kommons-teal: #0f766e;
-$kommons-teal-light: #14b8a6;
-$kommons-teal-border: #134e4a;
+// Hub design tokens — Jupiter / brand purple
+$kommons-purple: #563acc;
+$kommons-purple-light: #a498ed;
+$kommons-purple-border: #2a2d45;
+$kommons-card-bg: #13162a;
 
 .status-kommons-card {
-  border: 2px solid $kommons-teal-border;
+  border: 2px solid $kommons-purple-border;
   border-radius: 10px;
   overflow: hidden;
   margin-top: 12px;
-  background-color: lighten($ui-base-color, 3%);
+  background-color: $kommons-card-bg;
   box-shadow:
-    0 0 0 1px rgba($kommons-teal-light, 0.3),
-    0 4px 16px rgba(#000, 0.4);
+    0 0 0 1px rgba($kommons-purple, 0.4),
+    0 4px 16px rgba(#000, 0.5);
 
   &__badge {
     display: flex;
     align-items: center;
     gap: 6px;
     padding: 8px 14px;
-    background: $kommons-teal;
+    background: $kommons-purple;
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: #fff;
+    color: #e5d9f5;
 
     &-icon .icon {
       width: 14px;
@@ -38,26 +40,26 @@ $kommons-teal-border: #134e4a;
     font-weight: 600;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    opacity: 0.75;
+    opacity: 0.7;
   }
 
   &__body {
     padding: 14px;
-    border-bottom: 1px solid $kommons-teal-border;
+    border-bottom: 1px solid $kommons-purple-border;
   }
 
   &__title {
     font-size: 15px;
     font-weight: 600;
     line-height: 1.4;
-    color: $primary-text-color;
+    color: #e8e6f5;
     margin-bottom: 4px;
   }
 
   &__summary {
     font-size: 13px;
     line-height: 1.5;
-    color: $dark-text-color;
+    color: #9a95b8;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -69,7 +71,7 @@ $kommons-teal-border: #134e4a;
     align-items: center;
     gap: 10px;
     padding: 10px 14px;
-    background: rgba($kommons-teal, 0.1);
+    background: rgba($kommons-purple, 0.12);
     flex-wrap: wrap;
   }
 
@@ -82,8 +84,8 @@ $kommons-teal-border: #134e4a;
     border-radius: 4px;
 
     &--open {
-      background: rgba($kommons-teal-light, 0.2);
-      color: $kommons-teal-light;
+      background: rgba($kommons-purple-light, 0.2);
+      color: $kommons-purple-light;
     }
 
     &--in_progress {
@@ -110,10 +112,10 @@ $kommons-teal-border: #134e4a;
 
   &__vote {
     font-size: 12px;
-    color: $dark-text-color;
+    color: #9a95b8;
 
     &--support {
-      color: $kommons-teal-light;
+      color: $kommons-purple-light;
       font-weight: 500;
     }
 
@@ -127,7 +129,7 @@ $kommons-teal-border: #134e4a;
     margin-inline-start: auto;
     font-size: 12px;
     font-weight: 500;
-    color: $kommons-teal-light;
+    color: $kommons-purple-light;
     text-decoration: none;
 
     &:hover,

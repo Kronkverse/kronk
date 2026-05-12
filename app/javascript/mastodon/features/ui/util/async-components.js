@@ -262,6 +262,10 @@ export function Governance () {
   return import("../../governance");
 }
 
+export function Hub () {
+  return import("../../hub");
+}
+
 export function Questions () {
   return import("../../questions");
 }

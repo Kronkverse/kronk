@@ -83,6 +83,7 @@ import {
   Events,
   EventDetail,
   Governance,
+  Hub,
   Questions,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
@@ -212,6 +213,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/kalendar/:id" component={EventDetail} content={children} />}
             {signedIn && <WrappedRoute path="/kalendar" component={Events} content={children} />}
             {signedIn && <WrappedRoute path="/governance" component={Governance} content={children} />}
+            {signedIn && <WrappedRoute path="/hub" component={Hub} content={children} />}
             {signedIn && <WrappedRoute path="/questions" component={Questions} content={children} />}
             <WrappedRoute path='/search' component={Search} content={children} />
             <WrappedRoute path={['/publish', '/statuses/new']} component={Compose} content={children} />

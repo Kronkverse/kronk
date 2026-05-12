@@ -26,6 +26,8 @@ import InfoIcon from '@/material-icons/400-24px/info.svg?react';
 import MenuIcon from '@/material-icons/400-24px/menu.svg?react';
 import NotificationsActiveIcon from '@/material-icons/400-24px/notifications-fill.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
+import OrbitActiveIcon from '@/material-icons/400-24px/orbit-fill.svg?react';
+import OrbitIcon from '@/material-icons/400-24px/orbit.svg?react';
 import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import QuestionMarkActiveIcon from '@/material-icons/400-24px/question_mark-fill.svg?react';
@@ -61,6 +63,7 @@ const messages = defineMessages({
     defaultMessage: 'Notifications',
   },
   live: { id: 'live.title', defaultMessage: 'Huddle' },
+  hub: { id: 'hub.title', defaultMessage: 'Hub' },
   commons: { id: 'governance.title', defaultMessage: '₭ommons' },
   questions: { id: 'questions.title', defaultMessage: '₭uestions' },
   market: { id: 'market.title', defaultMessage: 'Market' },
@@ -287,6 +290,18 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             activeIconComponent={Diversity2ActiveIcon}
             text={intl.formatMessage(messages.live)}
             tooltip='Live video space'
+          />
+        )}
+
+        {signedIn && (
+          <ColumnLink
+            transparent
+            to='/hub'
+            icon='orbit'
+            iconComponent={OrbitIcon}
+            activeIconComponent={OrbitActiveIcon}
+            text={intl.formatMessage(messages.hub)}
+            tooltip='Hub — celestial map'
           />
         )}
 

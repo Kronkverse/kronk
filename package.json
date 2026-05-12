@@ -51,6 +51,7 @@
     "@rails/ujs": "7.1.600",
     "@react-spring/web": "^9.7.5",
     "@reduxjs/toolkit": "^2.0.1",
+    "@tabler/icons-react": "^3.44.0",
     "@use-gesture/react": "^10.3.1",
     "@vitejs/plugin-legacy": "^7.2.1",
     "@vitejs/plugin-react": "^5.0.0",
