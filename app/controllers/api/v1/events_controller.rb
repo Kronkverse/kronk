@@ -150,5 +150,6 @@ class Api::V1::EventsController < Api::BaseController
     )
 
     event.update!(status: @status)
+    @status.touch
   end
-  end
+end
