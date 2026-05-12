@@ -84,7 +84,7 @@ const PLANETS: Planet[] = [
     cy: 348,
     bodyR: 14,
     haloR: 26,
-    color: '#9EB3C8',
+    color: '#A07AE8',
   },
   {
     name: 'Venus',
@@ -94,7 +94,7 @@ const PLANETS: Planet[] = [
     cy: 329.5,
     bodyR: 15,
     haloR: 28,
-    color: '#E8A8C0',
+    color: '#906ADA',
   },
   {
     name: 'Earth',
@@ -104,7 +104,7 @@ const PLANETS: Planet[] = [
     cy: 441.7,
     bodyR: 15,
     haloR: 28,
-    color: '#6BBFA0',
+    color: '#7C5CCA',
   },
   {
     name: 'Mars',
@@ -114,7 +114,7 @@ const PLANETS: Planet[] = [
     cy: 542.9,
     bodyR: 14,
     haloR: 26,
-    color: '#D4705A',
+    color: '#6C52B8',
   },
   {
     name: 'Jupiter',
@@ -124,7 +124,7 @@ const PLANETS: Planet[] = [
     cy: 300,
     bodyR: 22,
     haloR: 34,
-    color: BRAND_PURPLE,
+    color: '#5E4AA4',
   },
   {
     name: 'Saturn',
@@ -134,7 +134,7 @@ const PLANETS: Planet[] = [
     cy: 174.4,
     bodyR: 19,
     haloR: 32,
-    color: '#C8AA5A',
+    color: '#524292',
     hasRings: true,
   },
   {
@@ -145,7 +145,7 @@ const PLANETS: Planet[] = [
     cy: 400,
     bodyR: 17,
     haloR: 30,
-    color: '#5ABFCA',
+    color: '#483E80',
   },
   {
     name: 'Neptune',
@@ -155,7 +155,7 @@ const PLANETS: Planet[] = [
     cy: 668.5,
     bodyR: 17,
     haloR: 30,
-    color: '#5080D8',
+    color: '#3E3C6C',
   },
   {
     name: 'Pluto',
@@ -165,7 +165,7 @@ const PLANETS: Planet[] = [
     cy: 516.3,
     bodyR: 13,
     haloR: 24,
-    color: '#9878C8',
+    color: '#363558',
   },
 ];
 
@@ -274,7 +274,8 @@ function planetBezierPos(
   progress: number,
 ) {
   const r = Math.hypot(cx - 400, cy - 400);
-  const order = PLANET_ORDER.indexOf(planetName) + 1;
+  const order =
+    PLANET_ORDER.indexOf(planetName) + 1;
   const listY = 400 + order * SPACING;
   const p0x = cx,
     p0y = cy;
@@ -502,17 +503,18 @@ const Hub: React.FC = () => {
 
   // ── Moon helpers ──────────────────────────────────────────────────────────
   const collapseAllMoons = useCallback(() => {
-    moonBloomsRef.current.forEach((el) => {
-      el.classList.add('hub-moon-bloom--collapsed');
-    });
-    moonTethersRef.current.forEach((el) => {
-      el.classList.add('hub-moon-tether--collapsed');
-    });
+    moonBloomsRef.current.forEach((el) =>
+      { el.classList.add('hub-moon-bloom--collapsed'); },
+    );
+    moonTethersRef.current.forEach((el) =>
+      { el.classList.add('hub-moon-tether--collapsed'); },
+    );
   }, []);
 
   const bloomPlanetMoons = useCallback((planetName: string) => {
     const isListMode = viewModeRef.current === 'list';
-    const order = PLANET_ORDER.indexOf(planetName) + 1;
+    const order =
+      PLANET_ORDER.indexOf(planetName) + 1;
     const listY = 400 + order * SPACING;
 
     let i = 0;
@@ -619,7 +621,11 @@ const Hub: React.FC = () => {
       const hasMoons = MOONS.some((m) => m.parent === planetName);
 
       if (viewModeRef.current === 'list') {
-        const listY = 400 + (PLANET_ORDER.indexOf(planetName) + 1) * SPACING;
+        const listY =
+          400 +
+          (PLANET_ORDER.indexOf(planetName) +
+            1) *
+            SPACING;
         if (hasMoons) {
           if (openPlanetRef.current === planetName) {
             collapseAllMoons();
@@ -723,9 +729,7 @@ const Hub: React.FC = () => {
     tryInit();
 
     scroll.addEventListener('scroll', updateMinimap);
-    return () => {
-      scroll.removeEventListener('scroll', updateMinimap);
-    };
+    return () => { scroll.removeEventListener('scroll', updateMinimap); };
   }, [applyZoom, applyCenter, updateMinimap, updateZoomBtns]);
 
   // ── Mouse drag ────────────────────────────────────────────────────────────
