@@ -13,6 +13,26 @@
   padding-bottom: 80px;
 }
 
+.questions-page__header {
+  padding: 8px 0 20px;
+  border-bottom: 1px solid var(--background-border-color);
+  margin-bottom: 16px;
+}
+
+.questions-page__header-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary-text-color);
+  margin: 0 0 6px;
+}
+
+.questions-page__header-description {
+  font-size: 14px;
+  color: var(--secondary-text-color);
+  margin: 0;
+  line-height: 1.5;
+}
+
 .questions-page__empty {
   text-align: center;
   color: var(--color-fg-muted);
