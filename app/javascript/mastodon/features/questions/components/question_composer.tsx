@@ -74,8 +74,8 @@ export const QuestionComposer: React.FC<{
           value={text}
           onChange={handleTextChange}
           onKeyDown={handleKeyDown}
-          maxLength={500}
-          rows={3}
+          maxLength={140}
+          rows={1}
         />
         <button
           className='questions-composer__submit'
@@ -87,7 +87,7 @@ export const QuestionComposer: React.FC<{
         </button>
       </div>
       <span className='questions-composer__char-count'>
-        {500 - text.length}
+        {140 - text.length}
       </span>
     </div>
   );
