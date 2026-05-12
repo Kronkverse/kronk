@@ -15,7 +15,7 @@ const BRAND_PURPLE = '#563ACC';
 const PAGE_BG = '#0A0E1A';
 const CARD_BG = '#13162A';
 const CARD_BORDER = '#2A2D45';
-const SOL_BODY = '#B5A7E5';
+const SOL_BODY = '#C040E8';
 const SOL_GLYPH = '#3D2A8C';
 const SATURN_RINGS = '#8B7CD0';
 const TEXT_PRIMARY = '#E8E6F5';
@@ -84,7 +84,7 @@ const PLANETS: Planet[] = [
     cy: 348,
     bodyR: 14,
     haloR: 26,
-    color: '#A07AE8',
+    color: '#8C34D4',
   },
   {
     name: 'Venus',
@@ -94,7 +94,7 @@ const PLANETS: Planet[] = [
     cy: 329.5,
     bodyR: 15,
     haloR: 28,
-    color: '#906ADA',
+    color: '#6E2EC0',
   },
   {
     name: 'Earth',
@@ -104,7 +104,7 @@ const PLANETS: Planet[] = [
     cy: 441.7,
     bodyR: 15,
     haloR: 28,
-    color: '#7C5CCA',
+    color: BRAND_PURPLE,
   },
   {
     name: 'Mars',
@@ -114,7 +114,7 @@ const PLANETS: Planet[] = [
     cy: 542.9,
     bodyR: 14,
     haloR: 26,
-    color: '#6C52B8',
+    color: '#4830B4',
   },
   {
     name: 'Jupiter',
@@ -124,7 +124,7 @@ const PLANETS: Planet[] = [
     cy: 300,
     bodyR: 22,
     haloR: 34,
-    color: '#5E4AA4',
+    color: '#3C289C',
   },
   {
     name: 'Saturn',
@@ -134,7 +134,7 @@ const PLANETS: Planet[] = [
     cy: 174.4,
     bodyR: 19,
     haloR: 32,
-    color: '#524292',
+    color: '#302084',
     hasRings: true,
   },
   {
@@ -145,7 +145,7 @@ const PLANETS: Planet[] = [
     cy: 400,
     bodyR: 17,
     haloR: 30,
-    color: '#483E80',
+    color: '#26196E',
   },
   {
     name: 'Neptune',
@@ -155,7 +155,7 @@ const PLANETS: Planet[] = [
     cy: 668.5,
     bodyR: 17,
     haloR: 30,
-    color: '#3E3C6C',
+    color: '#1E1358',
   },
   {
     name: 'Pluto',
@@ -165,7 +165,7 @@ const PLANETS: Planet[] = [
     cy: 516.3,
     bodyR: 13,
     haloR: 24,
-    color: '#363558',
+    color: '#170E44',
   },
 ];
 
