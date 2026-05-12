@@ -7,10 +7,6 @@ import api from 'mastodon/api';
 import type { Question } from '../types';
 
 const messages = defineMessages({
-  prompt: {
-    id: 'questions.composer.prompt',
-    defaultMessage: 'Looking for answers?',
-  },
   placeholder: {
     id: 'questions.composer.placeholder',
     defaultMessage: 'What do you want to know?',
@@ -64,9 +60,6 @@ export const QuestionComposer: React.FC<{
 
   return (
     <div className='questions-composer'>
-      <p className='questions-composer__prompt'>
-        {intl.formatMessage(messages.prompt)}
-      </p>
       <div className='questions-composer__body'>
         <textarea
           className='questions-composer__input'
@@ -86,9 +79,6 @@ export const QuestionComposer: React.FC<{
           {'?'}
         </button>
       </div>
-      <span className='questions-composer__char-count'>
-        {140 - text.length}
-      </span>
     </div>
   );
 };
