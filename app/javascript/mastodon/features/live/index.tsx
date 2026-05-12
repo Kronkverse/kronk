@@ -4,11 +4,12 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import Diversity2Icon from "@/material-icons/400-24px/diversity_2-fill.svg?react";
+import Diversity2Icon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
 import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { me, getAccessToken } from 'mastodon/initial_state';
+import { spaceColor } from 'mastodon/planets';
 import { useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({
@@ -34,10 +35,11 @@ interface JitsiApi {
 }
 
 const scrollableStyle: React.CSSProperties = {
+  '--space-color': spaceColor('Huddle'),
   display: 'flex',
   flexDirection: 'column',
   height: '100%',
-};
+} as React.CSSProperties;
 const lobbyContainerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -51,7 +53,8 @@ const roomIconStyle: React.CSSProperties = {
   width: '80px',
   height: '80px',
   borderRadius: '20px',
-  background: 'linear-gradient(135deg, #6364FF 0%, #563ACC 100%)',
+  background:
+    'linear-gradient(135deg, color-mix(in srgb, var(--space-color) 65%, #B8A0FF 35%) 0%, var(--space-color) 100%)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -115,13 +118,6 @@ const nameChipStyle: React.CSSProperties = {
   fontSize: '13px',
   fontWeight: 600,
 };
-const emptyRoomStyle: React.CSSProperties = {
-  fontSize: '13px',
-  color: 'var(--secondary-text-color)',
-  fontStyle: 'italic',
-  opacity: 0.6,
-  margin: 0,
-};
 const footerStyle: React.CSSProperties = {
   fontSize: '12px',
   color: 'var(--secondary-text-color)',
@@ -179,7 +175,6 @@ const jitsiContainerStyle: React.CSSProperties = {
 const Live: React.FC<{
   multiColumn: boolean;
 }> = ({ multiColumn }) => {
-  if (!me) {    window.location.href = '/auth/sign_in';    return null;  }
   const intl = useIntl();
   const columnRef = useRef<ColumnRef>(null);
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
@@ -209,7 +204,9 @@ const Live: React.FC<{
     const script = document.createElement('script');
     script.src = 'https://' + JITSI_DOMAIN + '/external_api.js';
     script.async = true;
-    script.onload = () => { setApiLoaded(true); };
+    script.onload = () => {
+      setApiLoaded(true);
+    };
     document.head.appendChild(script);
   }, []);
 
@@ -268,11 +265,11 @@ const Live: React.FC<{
     try {
       const response = await fetch('/api/v1/huddle_token', {
         headers: {
-          'Authorization': `Bearer ${getAccessToken()}`,
+          Authorization: `Bearer ${getAccessToken()}`,
         },
       });
       if (response.ok) {
-        const data = await response.json() as { token: string };
+        const data = (await response.json()) as { token: string };
         setJwtToken(data.token);
       }
     } catch {
@@ -304,7 +301,7 @@ const Live: React.FC<{
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const api = new JitsiMeetExternalAPI(JITSI_DOMAIN, {
       roomName: ROOM_NAME,
-      jwt: jwtToken || undefined,
+      jwt: jwtToken ?? undefined,
       parentNode: jitsiContainerRef.current,
       width: '100%',
       height: '100%',
@@ -345,8 +342,10 @@ const Live: React.FC<{
         SHOW_POWERED_BY: false,
         HIDE_INVITE_MORE_HEADER: true,
         DEFAULT_REMOTE_DISPLAY_NAME: 'Kronker',
-        DEFAULT_LOGO_URL: 'https://meet.talitamoss.info/images/tal-watermark.png',
-        DEFAULT_WELCOME_PAGE_LOGO_URL: 'https://meet.talitamoss.info/images/tal-watermark.png',
+        DEFAULT_LOGO_URL:
+          'https://meet.talitamoss.info/images/tal-watermark.png',
+        DEFAULT_WELCOME_PAGE_LOGO_URL:
+          'https://meet.talitamoss.info/images/tal-watermark.png',
         JITSI_WATERMARK_LINK: 'https://kronk.info',
       },
     }) as JitsiApi;
@@ -391,11 +390,16 @@ const Live: React.FC<{
     columnRef.current?.scrollTop();
   }, []);
 
+  const handleJoinRoom = useCallback(() => {
+    void joinRoom();
+  }, [joinRoom]);
+
   const handleMouseEnter = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       if (apiLoaded) {
         e.currentTarget.style.transform = 'translateY(-1px)';
-        e.currentTarget.style.boxShadow = '0 6px 20px rgba(99, 100, 255, 0.5)';
+        e.currentTarget.style.boxShadow =
+          '0 6px 20px color-mix(in srgb, var(--space-color) 50%, transparent)';
       }
     },
     [apiLoaded],
@@ -404,7 +408,8 @@ const Live: React.FC<{
   const handleMouseLeave = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.currentTarget.style.transform = 'translateY(0)';
-      e.currentTarget.style.boxShadow = '0 4px 16px rgba(99, 100, 255, 0.3)';
+      e.currentTarget.style.boxShadow =
+        '0 4px 16px color-mix(in srgb, var(--space-color) 30%, transparent)';
     },
     [],
   );
@@ -418,15 +423,25 @@ const Live: React.FC<{
       border: 'none',
       cursor: apiLoaded ? 'pointer' : 'default',
       background: apiLoaded
-        ? 'linear-gradient(135deg, #6364FF 0%, #563ACC 100%)'
+        ? 'linear-gradient(135deg, color-mix(in srgb, var(--space-color) 65%, #B8A0FF 35%) 0%, var(--space-color) 100%)'
         : 'var(--background-border-color)',
       color: '#fff',
-      boxShadow: apiLoaded ? '0 4px 16px rgba(99, 100, 255, 0.3)' : 'none',
+      boxShadow: apiLoaded
+        ? '0 4px 16px color-mix(in srgb, var(--space-color) 30%, transparent)'
+        : 'none',
       transition: 'transform 0.2s ease, box-shadow 0.2s ease',
       opacity: apiLoaded ? 1 : 0.5,
     }),
     [apiLoaded],
   );
+
+  useEffect(() => {
+    if (!me) {
+      window.location.href = '/auth/sign_in';
+    }
+  }, []);
+
+  if (!me) return null;
 
   return (
     <Column
@@ -446,7 +461,9 @@ const Live: React.FC<{
         {!inRoom ? (
           <div style={lobbyContainerStyle}>
             <div style={roomIconStyle}>
-              <Diversity2Icon style={{ width: 44, height: 44, fill: 'white' }} />
+              <Diversity2Icon
+                style={{ width: 44, height: 44, fill: 'white' }}
+              />
             </div>
 
             <div style={roomInfoStyle}>
@@ -462,7 +479,9 @@ const Live: React.FC<{
                   <div style={greenDotStyle} />
                   <span style={participantCountLabelStyle}>
                     {lobbyParticipants.length}{' '}
-                    {lobbyParticipants.length === 1 ? 'person in room' : 'people in room'}
+                    {lobbyParticipants.length === 1
+                      ? 'person in room'
+                      : 'people in room'}
                   </span>
                 </div>
                 <div style={participantNamesStyle}>
@@ -476,7 +495,7 @@ const Live: React.FC<{
             ) : null}
 
             <button
-              onClick={joinRoom}
+              onClick={handleJoinRoom}
               disabled={!apiLoaded}
               style={joinButtonStyle}
               onMouseEnter={handleMouseEnter}
@@ -486,7 +505,9 @@ const Live: React.FC<{
             </button>
 
             <p style={footerStyle}>
-              Powered by Jitsi Meet<br />End-to-end encrypted
+              Powered by Jitsi Meet
+              <br />
+              End-to-end encrypted
             </p>
           </div>
         ) : (
