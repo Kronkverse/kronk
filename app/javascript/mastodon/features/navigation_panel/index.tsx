@@ -63,7 +63,7 @@ const messages = defineMessages({
     defaultMessage: 'Notifications',
   },
   live: { id: 'live.title', defaultMessage: 'Huddle' },
-  hub: { id: 'hub.title', defaultMessage: 'Hub' },
+  kosmos: { id: 'kosmos.title', defaultMessage: 'Kosmos' },
   commons: { id: 'governance.title', defaultMessage: '₭ommons' },
   questions: { id: 'questions.title', defaultMessage: '₭uestions' },
   market: { id: 'market.title', defaultMessage: 'Market' },
@@ -296,12 +296,12 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
         {signedIn && (
           <ColumnLink
             transparent
-            to='/hub'
+            to='/kosmos'
             icon='orbit'
             iconComponent={OrbitIcon}
             activeIconComponent={OrbitActiveIcon}
-            text={intl.formatMessage(messages.hub)}
-            tooltip='Hub — celestial map'
+            text={intl.formatMessage(messages.kosmos)}
+            tooltip='Kosmos — celestial map'
           />
         )}
 

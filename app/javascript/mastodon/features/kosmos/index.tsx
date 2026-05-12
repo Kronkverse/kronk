@@ -506,10 +506,10 @@ const Hub: React.FC = () => {
   // ── Moon helpers ──────────────────────────────────────────────────────────
   const collapseAllMoons = useCallback(() => {
     moonBloomsRef.current.forEach((el) =>
-      { el.classList.add('hub-moon-bloom--collapsed'); },
+      { el.classList.add('kosmos-moon-bloom--collapsed'); },
     );
     moonTethersRef.current.forEach((el) =>
-      { el.classList.add('hub-moon-tether--collapsed'); },
+      { el.classList.add('kosmos-moon-tether--collapsed'); },
     );
   }, []);
 
@@ -534,10 +534,10 @@ const Hub: React.FC = () => {
         g.removeAttribute('transform');
       }
       const bloom = moonBloomsRef.current.get(moon.space);
-      if (bloom) bloom.classList.remove('hub-moon-bloom--collapsed');
+      if (bloom) bloom.classList.remove('kosmos-moon-bloom--collapsed');
       if (!isListMode) {
         const tether = moonTethersRef.current.get(moon.space);
-        if (tether) tether.classList.remove('hub-moon-tether--collapsed');
+        if (tether) tether.classList.remove('kosmos-moon-tether--collapsed');
       }
       i++;
     });
@@ -758,7 +758,7 @@ const Hub: React.FC = () => {
       sT = scroll.scrollTop;
       moved = false;
       if (viewModeRef.current !== 'list')
-        scroll.classList.add('hub-scroll--grabbing');
+        scroll.classList.add('kosmos-scroll--grabbing');
     };
     const onMove = (e: MouseEvent) => {
       if (!isDown) return;
@@ -772,7 +772,7 @@ const Hub: React.FC = () => {
     };
     const onUp = () => {
       isDown = false;
-      scroll.classList.remove('hub-scroll--grabbing');
+      scroll.classList.remove('kosmos-scroll--grabbing');
     };
 
     scroll.addEventListener('mousedown', onDown);
@@ -969,7 +969,7 @@ const Hub: React.FC = () => {
           position: 'relative',
           margin: '0 2px',
         }}
-        className={listMode ? 'hub-area hub-area--list' : 'hub-area'}
+        className={listMode ? 'kosmos-area kosmos-area--list' : 'kosmos-area'}
       >
         <div
           ref={scrollRef}
@@ -981,7 +981,9 @@ const Hub: React.FC = () => {
             cursor: 'grab',
             touchAction: listMode ? 'pan-y' : 'pan-x pan-y',
           }}
-          className={listMode ? 'hub-scroll hub-scroll--list' : 'hub-scroll'}
+          className={
+            listMode ? 'kosmos-scroll kosmos-scroll--list' : 'kosmos-scroll'
+          }
         >
           <div
             ref={padRef}
@@ -1099,7 +1101,7 @@ const Hub: React.FC = () => {
                   strokeWidth={0.6}
                   strokeDasharray='2 3'
                   opacity={0.5}
-                  className='hub-moon-tether hub-moon-tether--collapsed'
+                  className='kosmos-moon-tether kosmos-moon-tether--collapsed'
                 />
               ))}
 
@@ -1118,7 +1120,7 @@ const Hub: React.FC = () => {
                       r={planet.haloR}
                       fill={planet.color}
                       opacity={0.14}
-                      className='hub-planet-halo'
+                      className='kosmos-planet-halo'
                     />
                     {planet.hasRings && (
                       <ellipse
@@ -1173,7 +1175,7 @@ const Hub: React.FC = () => {
                     >
                       <g
                         ref={setMoonBloomRef(moon.space)}
-                        className='hub-moon-bloom hub-moon-bloom--collapsed'
+                        className='kosmos-moon-bloom kosmos-moon-bloom--collapsed'
                         style={{
                           transformBox: 'fill-box',
                           transformOrigin: 'center',
@@ -1186,7 +1188,7 @@ const Hub: React.FC = () => {
                           r={20}
                           fill={BRAND_PURPLE}
                           opacity={0.18}
-                          className='hub-moon-halo'
+                          className='kosmos-moon-halo'
                         />
                         <circle
                           cx={moon.cx}
@@ -1244,7 +1246,9 @@ const Hub: React.FC = () => {
           onClick={handleMinimapClick}
           onKeyDown={handleMinimapKeyDown}
           className={
-            listMode ? 'hub-minimap hub-minimap--hidden' : 'hub-minimap'
+            listMode
+              ? 'kosmos-minimap kosmos-minimap--hidden'
+              : 'kosmos-minimap'
           }
           style={{
             position: 'absolute',

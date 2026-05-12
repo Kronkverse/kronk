@@ -47,7 +47,7 @@ This is already set in `/etc/profile.d/mainframe.sh` on the dev server.
 
 ## Spaces Architecture
 
-Kronk organises features into **spaces**, each orbiting a **planet** on the Hub (`/hub`). Every space inherits its accent colour from its parent planet.
+Kronk organises features into **spaces**, each orbiting a **planet** on the Kosmos (`/hub`). Every space inherits its accent colour from its parent planet.
 
 ### Planet → Space mapping
 
@@ -59,7 +59,7 @@ The canonical source of truth is `app/javascript/mastodon/planets.ts`:
 
 ### Adding a new space
 
-1. **Decide which planet it belongs to** based on the planet's meaning (see Hub for meanings).
+1. **Decide which planet it belongs to** based on the planet's meaning (see Kosmos for meanings).
 2. **Add it to `SPACE_PLANET`** in `app/javascript/mastodon/planets.ts`.
 3. **Add it as a moon** in the `MOONS` array in `app/javascript/mastodon/features/hub/index.tsx` — position it near its parent planet's orbit.
 4. **Theme the space UI** by setting `--space-color: spaceColor('YourSpace')` as an inline style on the space's root element. All accent colours (badges, borders, glows, tints) should derive from this variable via `color-mix()` — see `_status_kommons_card.scss` as the reference implementation.
@@ -87,7 +87,7 @@ These are additions on top of upstream Mastodon:
 
 ## Contributing
 
-1. Fork `Kronkverse/kronk` on GitHub
+1. Fork `Kronkverse/kronk` on GitKosmos
 2. Branch off `main` (e.g. `feature/my-change`)
 3. Make changes, commit, push to your fork
 4. Open a PR to `main` on `Kronkverse/kronk`

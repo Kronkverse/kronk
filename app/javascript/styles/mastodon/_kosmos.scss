@@ -1,17 +1,17 @@
-.hub-moon-bloom--collapsed {
+.kosmos-moon-bloom--collapsed {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
 }
 
-.hub-moon-tether--collapsed {
+.kosmos-moon-tether--collapsed {
   opacity: 0;
 }
 
-.hub-scroll--grabbing {
+.kosmos-scroll--grabbing {
   cursor: grabbing !important;
 }
 
-.hub-scroll::-webkit-scrollbar {
+.kosmos-scroll::-webkit-scrollbar {
   display: none;
 }
