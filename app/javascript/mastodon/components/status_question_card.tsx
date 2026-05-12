@@ -4,6 +4,7 @@ import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import LockOpenIcon from '@/material-icons/400-24px/lock_open.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import { Icon } from 'mastodon/components/icon';
+import { spaceColor } from 'mastodon/planets';
 
 const messages = defineMessages({
   question: {
@@ -71,7 +72,12 @@ export const StatusQuestionCard: React.FC<{
   const intl = useIntl();
 
   return (
-    <div className={`status-question-card status-question-card--${postType}`}>
+    <div
+      className={`status-question-card status-question-card--${postType}`}
+      style={
+        { '--space-color': spaceColor('Questions') } as React.CSSProperties
+      }
+    >
       <div className='status-question-card__badge'>
         <Icon
           id='question_mark'
