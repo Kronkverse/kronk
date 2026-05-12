@@ -36,6 +36,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
   has_one :preview_card, key: :card, serializer: REST::PreviewCardSerializer
   has_one :preloadable_poll, key: :poll, serializer: REST::PollSerializer
   has_one :event, serializer: REST::EventSerializer
+  has_one :proposal, serializer: REST::ProposalSummarySerializer
   has_one :quote_approval
 
   attribute :question, if: :answer?

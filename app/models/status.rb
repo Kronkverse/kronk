@@ -101,8 +101,9 @@ class Status < ApplicationRecord
   has_one :event, inverse_of: :status, dependent: :nullify
   has_one :trend, class_name: 'StatusTrend', inverse_of: :status, dependent: nil
   has_one :quote, inverse_of: :status, dependent: :destroy
+  has_one :proposal, foreign_key: :discussion_status_id, dependent: :nullify, inverse_of: :discussion_status
 
-  enum :post_type, { normal: 0, question: 1, answer: 2 }, prefix: :kronk
+  enum :post_type, { normal: 0, question: 1, answer: 2, proposal: 3 }, prefix: :kronk
 
   scope :questions, -> { where(post_type: :question) }
 
@@ -172,6 +173,7 @@ class Status < ApplicationRecord
                    :tags,
                    :preloadable_poll,
                    :event,
+                   :proposal,
                    quote: { status: { account: [:account_stat, user: :role] } },
                    preview_cards_status: { preview_card: { author_account: [:account_stat, user: :role] } },
                    account: [:account_stat, user: :role],
@@ -184,6 +186,7 @@ class Status < ApplicationRecord
                      :tags,
                      :preloadable_poll,
                      :event,
+                     :proposal,
                      quote: { status: { account: [:account_stat, user: :role] } },
                      preview_cards_status: { preview_card: { author_account: [:account_stat, user: :role] } },
                      account: [:account_stat, user: :role],

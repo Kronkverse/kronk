@@ -34,6 +34,7 @@ import { RelativeTimestamp } from './relative_timestamp';
 import StatusActionBar from './status_action_bar';
 import StatusContent from './status_content';
 import { StatusEventCard } from './status_event_card';
+import { StatusKommonsCard } from './status_kommons_card';
 import { StatusQuestionCard } from './status_question_card';
 import { StatusSpaceBar } from './status_space_bar';
 import { StatusThreadLabel } from './status_thread_label';
@@ -554,6 +555,10 @@ class Status extends ImmutablePureComponent {
           question={status.get('question')?.toJS()}
         />
       );
+    } else if (status.get('post_type') === 'proposal' && status.get('proposal')) {
+      media = (
+        <StatusKommonsCard proposal={status.get('proposal').toJS()} />
+      );
     } else if (status.get('card') && !status.get('quote')) {
       media = (
         <Card
@@ -610,7 +615,7 @@ class Status extends ImmutablePureComponent {
                 {!!status.get('event') && (
                   <StatusSpaceBar hasEvent inline />
                 )}
-                {(status.get('post_type') === 'question' || status.get('post_type') === 'answer') && (
+                {(status.get('post_type') === 'question' || status.get('post_type') === 'answer' || status.get('post_type') === 'proposal') && (
                   <StatusSpaceBar postType={status.get('post_type')} inline />
                 )}
               </div>
@@ -632,7 +637,7 @@ class Status extends ImmutablePureComponent {
 
             {expanded && (
               <>
-                {!status.get("event") && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && (
+                {!status.get("event") && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && status.get('post_type') !== 'proposal' && (
                   <StatusContent
                     status={status}
                     onClick={this.handleClick}

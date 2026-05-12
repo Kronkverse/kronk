@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
+import ToysFanIcon from '@/material-icons/400-24px/toys_fan.svg?react';
 import { Icon } from 'mastodon/components/icon';
 
 const messages = defineMessages({
@@ -20,6 +21,10 @@ const messages = defineMessages({
   createdEvent: {
     id: 'status_space_bar.created_event',
     defaultMessage: 'created an event',
+  },
+  plantedSeed: {
+    id: 'status_space_bar.planted_seed',
+    defaultMessage: 'planted a seed',
   },
 });
 
@@ -62,6 +67,16 @@ function getConfig(
       verbKey: 'createdEvent',
       spaceName: '₭alendar',
       spacePath: '/kalendar',
+    };
+  }
+
+  if (postType === 'proposal') {
+    return {
+      iconComponent: ToysFanIcon,
+      iconId: 'toys_fan',
+      verbKey: 'plantedSeed',
+      spaceName: '₭ommons',
+      spacePath: '/governance',
     };
   }
 

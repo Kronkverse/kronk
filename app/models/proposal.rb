@@ -5,6 +5,7 @@ class Proposal < ApplicationRecord
 
   belongs_to :created_by_account, class_name: 'Account'
   belongs_to :parent_proposal, class_name: 'Proposal', optional: true
+  belongs_to :discussion_status, class_name: 'Status', optional: true, inverse_of: :proposal
   has_many :child_proposals, class_name: 'Proposal', foreign_key: :parent_proposal_id, dependent: :nullify, inverse_of: :parent_proposal
   has_many :proposal_votes, dependent: :destroy
   has_many :tasks, dependent: :destroy

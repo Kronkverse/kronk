@@ -41,6 +41,7 @@ class Api::V1::ProposalsController < Api::BaseController
       )
     )
     if @proposal.save
+      create_feed_status_for_proposal!(@proposal)
       render json: @proposal, serializer: REST::ProposalSerializer, status: 201
     else
       render json: { error: @proposal.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -113,6 +114,19 @@ class Api::V1::ProposalsController < Api::BaseController
 
   def vote_params
     params.expect(vote: [:position, :title, :statement])
+  end
+
+  def create_feed_status_for_proposal!(proposal)
+    visibility = current_account.user&.setting_default_privacy || 'public'
+    feed_status = PostStatusService.new.call(
+      current_account,
+      text: proposal.title,
+      visibility: visibility,
+      post_type: :proposal
+    )
+    proposal.update_columns(discussion_status_id: feed_status.id)
+  rescue => e
+    Rails.logger.error("Failed to create feed status for proposal #{proposal.id}: #{e.message}")
   end
 
   def require_creator_or_steward!
