@@ -600,18 +600,20 @@ class Status extends ImmutablePureComponent {
                 <RelativeTimestamp timestamp={status.get('created_at')} />{status.get('edited_at') && <abbr title={intl.formatMessage(messages.edited, { date: intl.formatDate(status.get('edited_at'), { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }) })}> *</abbr>}
               </Link>
 
-              <LinkedDisplayName displayProps={{account: status.get('account')}} className='status__display-name'>
-                <div className='status__avatar'>
-                  {statusAvatar}
-                </div>
-              </LinkedDisplayName>
+              <div className='status__identity'>
+                <LinkedDisplayName displayProps={{account: status.get('account')}} className='status__display-name'>
+                  <div className='status__avatar'>
+                    {statusAvatar}
+                  </div>
+                </LinkedDisplayName>
 
-              {!!status.get('event') && (
-                <StatusSpaceBar hasEvent inline />
-              )}
-              {(status.get('post_type') === 'question' || status.get('post_type') === 'answer') && (
-                <StatusSpaceBar postType={status.get('post_type')} inline />
-              )}
+                {!!status.get('event') && (
+                  <StatusSpaceBar hasEvent inline />
+                )}
+                {(status.get('post_type') === 'question' || status.get('post_type') === 'answer') && (
+                  <StatusSpaceBar postType={status.get('post_type')} inline />
+                )}
+              </div>
 
               {isQuotedPost && !!this.props.onQuoteCancel &&  (
                 <IconButton
