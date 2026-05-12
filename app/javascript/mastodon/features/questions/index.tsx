@@ -11,7 +11,7 @@ import { planetIcon, planetName } from 'mastodon/planets';
 import { QuestionComposer } from './components/question_composer';
 
 const messages = defineMessages({
-  title: { id: 'questions.title', defaultMessage: '₭uestions' },
+  title: { id: 'questions.title', defaultMessage: 'Ƙuestions' },
 });
 
 const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
@@ -34,7 +34,7 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       </Helmet>
 
       <div className='questions-page'>
-        <div className='questions-page__hero'>{'₭uestions'}</div>
+        <div className='questions-page__hero'>{'Ƙuestions'}</div>
         <QuestionComposer onCreated={handleCreated} />
       </div>
     </Column>
