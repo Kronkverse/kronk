@@ -7,18 +7,19 @@ import api from 'mastodon/api';
 import type { Question } from '../types';
 
 const messages = defineMessages({
+  prompt: {
+    id: 'questions.composer.prompt',
+    defaultMessage: 'Looking for answers?',
+  },
   placeholder: {
     id: 'questions.composer.placeholder',
     defaultMessage: 'What do you want to know?',
   },
-  submit: { id: 'questions.composer.submit', defaultMessage: 'Ask' },
-  cancel: { id: 'questions.composer.cancel', defaultMessage: 'Cancel' },
 });
 
 export const QuestionComposer: React.FC<{
   onCreated: (question: Question) => void;
-  onCancel: () => void;
-}> = ({ onCreated, onCancel }) => {
+}> = ({ onCreated }) => {
   const intl = useIntl();
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -63,32 +64,31 @@ export const QuestionComposer: React.FC<{
 
   return (
     <div className='questions-composer'>
-      <textarea
-        className='questions-composer__input'
-        placeholder={intl.formatMessage(messages.placeholder)}
-        value={text}
-        onChange={handleTextChange}
-        onKeyDown={handleKeyDown}
-        maxLength={500}
-        rows={3}
-      />
-      <div className='questions-composer__footer'>
-        <span className='questions-composer__char-count'>
-          {500 - text.length}
-        </span>
-        <div className='questions-composer__actions'>
-          <button className='questions-composer__cancel' onClick={onCancel}>
-            {intl.formatMessage(messages.cancel)}
-          </button>
-          <button
-            className='questions-composer__submit'
-            onClick={handleSubmitClick}
-            disabled={!text.trim() || submitting}
-          >
-            {intl.formatMessage(messages.submit)}
-          </button>
-        </div>
+      <p className='questions-composer__prompt'>
+        {intl.formatMessage(messages.prompt)}
+      </p>
+      <div className='questions-composer__body'>
+        <textarea
+          className='questions-composer__input'
+          placeholder={intl.formatMessage(messages.placeholder)}
+          value={text}
+          onChange={handleTextChange}
+          onKeyDown={handleKeyDown}
+          maxLength={500}
+          rows={3}
+        />
+        <button
+          className='questions-composer__submit'
+          onClick={handleSubmitClick}
+          disabled={!text.trim() || submitting}
+          aria-label='Ask'
+        >
+          {'?'}
+        </button>
       </div>
+      <span className='questions-composer__char-count'>
+        {500 - text.length}
+      </span>
     </div>
   );
 };

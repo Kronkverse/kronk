@@ -4,11 +4,9 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { Icon } from 'mastodon/components/icon';
 import { planetIcon, planetName } from 'mastodon/planets';
 
 import { QuestionCard } from './components/question_card';
@@ -27,10 +25,6 @@ const messages = defineMessages({
     id: 'questions.empty',
     defaultMessage: 'No questions yet. Ask something!',
   },
-  askQuestion: {
-    id: 'questions.ask',
-    defaultMessage: 'Ask a question',
-  },
 });
 
 const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
@@ -38,7 +32,6 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [showComposer, setShowComposer] = useState(false);
   const [answeringId, setAnsweringId] = useState<string | null>(null);
 
   const fetchQuestions = useCallback(async () => {
@@ -59,7 +52,6 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
   const handleCreated = useCallback((question: Question) => {
     setQuestions((prev) => [question, ...prev]);
-    setShowComposer(false);
     setSelectedId(question.id);
   }, []);
 
@@ -82,14 +74,6 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setQuestions((prev) =>
       prev.map((q) => (q.id === updated.id ? updated : q)),
     );
-  }, []);
-
-  const handleShowComposer = useCallback(() => {
-    setShowComposer(true);
-  }, []);
-
-  const handleHideComposer = useCallback(() => {
-    setShowComposer(false);
   }, []);
 
   const selectedQuestion = questions.find((q) => q.id === selectedId) ?? null;
@@ -125,12 +109,7 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               </p>
             </section>
 
-            {showComposer && (
-              <QuestionComposer
-                onCreated={handleCreated}
-                onCancel={handleHideComposer}
-              />
-            )}
+            <QuestionComposer onCreated={handleCreated} />
 
             {loading && <div className='questions-page__loading' />}
 
@@ -148,14 +127,6 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                 onAnswer={handleAnswer}
               />
             ))}
-
-            <button
-              className='questions-page__fab'
-              onClick={handleShowComposer}
-              title={intl.formatMessage(messages.askQuestion)}
-            >
-              <Icon id='add' icon={AddIcon} />
-            </button>
           </>
         )}
       </div>
