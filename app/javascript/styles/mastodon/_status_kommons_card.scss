@@ -1,10 +1,7 @@
 @use 'variables' as *;
 
-// Hub design tokens — Jupiter / brand purple
-$kommons-purple: #563acc;
-$kommons-purple-light: #a498ed;
-$kommons-purple-border: #2a2d45;
 $kommons-card-bg: #13162a;
+$kommons-purple-border: #2a2d45;
 
 .status-kommons-card {
   border: 2px solid $kommons-purple-border;
@@ -13,7 +10,7 @@ $kommons-card-bg: #13162a;
   margin-top: 12px;
   background-color: $kommons-card-bg;
   box-shadow:
-    0 0 0 1px rgba($kommons-purple, 0.4),
+    0 0 0 1px color-mix(in srgb, var(--space-color) 40%, transparent),
     0 4px 16px rgba(#000, 0.5);
 
   &__badge {
@@ -21,7 +18,7 @@ $kommons-card-bg: #13162a;
     align-items: center;
     gap: 6px;
     padding: 8px 14px;
-    background: $kommons-purple;
+    background: var(--space-color);
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.07em;
@@ -71,7 +68,7 @@ $kommons-card-bg: #13162a;
     align-items: center;
     gap: 10px;
     padding: 10px 14px;
-    background: rgba($kommons-purple, 0.12);
+    background: color-mix(in srgb, var(--space-color) 12%, transparent);
     flex-wrap: wrap;
   }
 
@@ -84,8 +81,8 @@ $kommons-card-bg: #13162a;
     border-radius: 4px;
 
     &--open {
-      background: rgba($kommons-purple-light, 0.2);
-      color: $kommons-purple-light;
+      background: color-mix(in srgb, var(--space-color) 25%, transparent);
+      color: color-mix(in srgb, var(--space-color) 50%, #e5d9f5 50%);
     }
 
     &--in_progress {
@@ -115,7 +112,7 @@ $kommons-card-bg: #13162a;
     color: #9a95b8;
 
     &--support {
-      color: $kommons-purple-light;
+      color: color-mix(in srgb, var(--space-color) 50%, #e5d9f5 50%);
       font-weight: 500;
     }
 
@@ -129,7 +126,7 @@ $kommons-card-bg: #13162a;
     margin-inline-start: auto;
     font-size: 12px;
     font-weight: 500;
-    color: $kommons-purple-light;
+    color: color-mix(in srgb, var(--space-color) 50%, #e5d9f5 50%);
     text-decoration: none;
 
     &:hover,

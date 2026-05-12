@@ -10,12 +10,14 @@ import {
   IconShoppingBag,
 } from '@tabler/icons-react';
 
+import { PLANET_COLORS } from 'mastodon/planets';
+
 // ── Design tokens (Hub spec) ───────────────────────────────────────────────
-const BRAND_PURPLE = '#563ACC';
+const BRAND_PURPLE = PLANET_COLORS.Earth;
 const PAGE_BG = '#0A0E1A';
 const CARD_BG = '#13162A';
 const CARD_BORDER = '#2A2D45';
-const SOL_BODY = '#9040C8';
+const SOL_BODY = PLANET_COLORS.Sol;
 const SOL_GLYPH = '#3D2A8C';
 const SATURN_RINGS = '#8B7CD0';
 const TEXT_PRIMARY = '#E8E6F5';
@@ -84,7 +86,7 @@ const PLANETS: Planet[] = [
     cy: 348,
     bodyR: 14,
     haloR: 26,
-    color: '#6628C0',
+    color: PLANET_COLORS.Mercury,
   },
   {
     name: 'Venus',
@@ -94,7 +96,7 @@ const PLANETS: Planet[] = [
     cy: 329.5,
     bodyR: 15,
     haloR: 28,
-    color: '#6A10D0',
+    color: PLANET_COLORS.Venus,
   },
   {
     name: 'Earth',
@@ -114,7 +116,7 @@ const PLANETS: Planet[] = [
     cy: 542.9,
     bodyR: 14,
     haloR: 26,
-    color: '#422CA4',
+    color: PLANET_COLORS.Mars,
   },
   {
     name: 'Jupiter',
@@ -124,7 +126,7 @@ const PLANETS: Planet[] = [
     cy: 300,
     bodyR: 22,
     haloR: 34,
-    color: '#36248C',
+    color: PLANET_COLORS.Jupiter,
   },
   {
     name: 'Saturn',
@@ -134,7 +136,7 @@ const PLANETS: Planet[] = [
     cy: 174.4,
     bodyR: 19,
     haloR: 32,
-    color: '#4844C0',
+    color: PLANET_COLORS.Saturn,
     hasRings: true,
   },
   {
@@ -145,7 +147,7 @@ const PLANETS: Planet[] = [
     cy: 400,
     bodyR: 17,
     haloR: 30,
-    color: '#3034A0',
+    color: PLANET_COLORS.Uranus,
   },
   {
     name: 'Neptune',
@@ -155,7 +157,7 @@ const PLANETS: Planet[] = [
     cy: 668.5,
     bodyR: 17,
     haloR: 30,
-    color: '#343070',
+    color: PLANET_COLORS.Neptune,
   },
   {
     name: 'Pluto',
@@ -165,7 +167,7 @@ const PLANETS: Planet[] = [
     cy: 516.3,
     bodyR: 13,
     haloR: 24,
-    color: '#1C1858',
+    color: PLANET_COLORS.Pluto,
   },
 ];
 

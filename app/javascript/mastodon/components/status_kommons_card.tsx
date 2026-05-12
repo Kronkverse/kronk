@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 
 import ToysFanIcon from '@/material-icons/400-24px/toys_fan.svg?react';
 import { Icon } from 'mastodon/components/icon';
+import { spaceColor } from 'mastodon/planets';
 
 const messages = defineMessages({
   badge: {
@@ -62,7 +63,10 @@ export const StatusKommonsCard: React.FC<{ proposal: ProposalSummary }> = ({
   }, []);
 
   return (
-    <div className='status-kommons-card'>
+    <div
+      className='status-kommons-card'
+      style={{ '--space-color': spaceColor('Kommons') } as React.CSSProperties}
+    >
       <div className='status-kommons-card__badge'>
         <span className='status-kommons-card__badge-icon'>
           <Icon id='toys_fan' icon={ToysFanIcon} />
