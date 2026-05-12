@@ -7,7 +7,7 @@ import { Helmet } from 'react-helmet';
 import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { planetIcon, planetName } from 'mastodon/planets';
+import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
 import { QuestionCard } from './components/question_card';
 import { QuestionComposer } from './components/question_composer';
@@ -67,7 +67,12 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      <div className='questions-page'>
+      <div
+        className='questions-page'
+        style={
+          { '--space-color': spaceColor('Questions') } as React.CSSProperties
+        }
+      >
         <div className='questions-page__above-fold'>
           <div className='questions-page__hero'>{'Ƙuestions'}</div>
           <QuestionComposer onCreated={handleCreated} />
