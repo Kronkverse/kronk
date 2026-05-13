@@ -5,7 +5,7 @@ import { FormattedMessage } from 'react-intl';
 import { AxiosError } from 'axios';
 import { Link } from 'react-router-dom';
 
-import HailIcon from '@/material-icons/400-24px/hail-fill.svg?react';
+import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import { apiNudgeAccount } from 'mastodon/api/accounts';
 import { Button } from 'mastodon/components/button';
 import type { NotificationGroupNudge } from 'mastodon/models/notification_group';
@@ -89,8 +89,8 @@ export const NotificationNudge: React.FC<{
   return (
     <NotificationGroupWithStatus
       type='nudge'
-      icon={HailIcon}
-      iconId='hail'
+      icon={PartnerExchangeIcon}
+      iconId='partner_exchange'
       accountIds={notification.sampleAccountIds}
       timestamp={notification.latest_page_notification_at}
       count={notification.notifications_count}

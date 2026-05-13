@@ -19,8 +19,8 @@ import BookmarksActiveIcon from '@/material-icons/400-24px/bookmarks-fill.svg?re
 import BookmarksIcon from '@/material-icons/400-24px/bookmarks.svg?react';
 import CalendarMonthActiveIcon from '@/material-icons/400-24px/calendar_month-fill.svg?react';
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
-import HailActiveIcon from '@/material-icons/400-24px/hail-fill.svg?react';
-import HailIcon from '@/material-icons/400-24px/hail.svg?react';
+import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
+import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import { clearUnreadNudges } from 'mastodon/actions/notification_groups';
 import { selectUnreadNudgesCount } from 'mastodon/selectors/notifications';
 import Diversity2ActiveIcon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
@@ -131,16 +131,16 @@ const NudgesLink: React.FC = () => {
       to='/nudges'
       icon={
         <IconWithBadge
-          id='hail'
-          icon={HailIcon}
+          id='partner_exchange'
+          icon={PartnerExchangeIcon}
           count={count}
           className='column-link__icon'
         />
       }
       activeIcon={
         <IconWithBadge
-          id='hail'
-          icon={HailActiveIcon}
+          id='partner_exchange'
+          icon={PartnerExchangeActiveIcon}
           count={count}
           className='column-link__icon'
         />

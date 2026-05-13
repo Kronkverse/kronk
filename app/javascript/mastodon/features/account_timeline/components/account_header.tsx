@@ -11,7 +11,7 @@ import { AccountBio } from '@/mastodon/components/account_bio';
 import { AccountFields } from '@/mastodon/components/account_fields';
 import { DisplayName } from '@/mastodon/components/display_name';
 import { AnimateEmojiProvider } from '@/mastodon/components/emoji/context';
-import HailIcon from '@/material-icons/400-24px/hail.svg?react';
+import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
@@ -755,8 +755,8 @@ export const AccountHeader: React.FC<{
         : intl.formatMessage(messages.nudge, { name: account.username });
     nudgeBtn = (
       <IconButton
-        icon='hail'
-        iconComponent={HailIcon}
+        icon='partner_exchange'
+        iconComponent={PartnerExchangeIcon}
         active={nudgeSent}
         disabled={nudgeLoading || !canNudge}
         title={nudgeTitle}

@@ -7,8 +7,8 @@ import { AxiosError } from 'axios';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 
-import HailActiveIcon from '@/material-icons/400-24px/hail-fill.svg?react';
-import HailIcon from '@/material-icons/400-24px/hail.svg?react';
+import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
+import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import { importFetchedAccounts } from 'mastodon/actions/importer';
 import { clearUnreadNudges } from 'mastodon/actions/notification_groups';
 import { apiNudgeAccount, apiGetNudgePartners } from 'mastodon/api/accounts';
@@ -69,7 +69,7 @@ const NudgeAlert: React.FC<{
 
   return (
     <div className='nudge-alert'>
-      <Icon id='hail' icon={HailActiveIcon} className='nudge-alert__icon' />
+      <Icon id='partner_exchange' icon={PartnerExchangeActiveIcon} className='nudge-alert__icon' />
       <span className='nudge-alert__text'>
         <FormattedMessage
           id='nudges.alert.nudged_by'
@@ -150,8 +150,8 @@ const NudgePartnerItem: React.FC<{ partner: ApiNudgePartner }> = ({
         <div className='nudge-partner-item__meta'>
           <span className='nudge-partner-item__streak'>
             <Icon
-              id='hail'
-              icon={canNudge ? HailActiveIcon : HailIcon}
+              id='partner_exchange'
+              icon={canNudge ? PartnerExchangeActiveIcon : PartnerExchangeIcon}
             />
             <FormattedMessage
               id='nudges.streak_count'
@@ -279,8 +279,8 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       label={intl.formatMessage(messages.title)}
     >
       <ColumnHeader
-        icon='hail'
-        iconComponent={HailActiveIcon}
+        icon='partner_exchange'
+        iconComponent={PartnerExchangeActiveIcon}
         title={intl.formatMessage(messages.title)}
         multiColumn={multiColumn}
         showBackButton

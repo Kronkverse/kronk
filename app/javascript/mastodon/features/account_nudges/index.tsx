@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import HailIcon from '@/material-icons/400-24px/hail.svg?react';
+import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import { apiNudgeAccount, apiGetNudgeStreak } from 'mastodon/api/accounts';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
 import { AccountHeader } from 'mastodon/features/account_timeline/components/account_header';
@@ -58,7 +58,7 @@ const AccountNudges: React.FC = () => {
         {!suspended && account && accountId !== me && (
           <div className='account-nudges'>
             <div className='account-nudges__icon'>
-              <HailIcon />
+              <PartnerExchangeIcon />
             </div>
             <h3 className='account-nudges__title'>
               <FormattedMessage
