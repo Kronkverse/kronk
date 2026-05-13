@@ -12087,3 +12087,250 @@ noscript {
     white-space: nowrap;
   }
 }
+
+// Streak line shown inside a nudge notification in the main notifications panel
+.notification-nudge__streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: $dark-text-color;
+  margin-top: 4px;
+}
+
+// Grand total stat banner
+.nudge-grand-total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 15px 16px;
+  border-bottom: 1px solid lighten($ui-base-color, 8%);
+  background: lighten($ui-base-color, 4%);
+
+  &__label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $dark-text-color;
+    margin-bottom: 4px;
+  }
+
+  &__count {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+    color: $highlight-text-color;
+  }
+}
+
+// Partner card — works at any column width, stacks action below body on narrow screens
+.nudge-partner-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 15px;
+  border-bottom: 1px solid lighten($ui-base-color, 8%);
+  container-type: inline-size;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  // Active (can nudge back) gets a subtle tint
+  &--active {
+    background: mix($highlight-text-color, $ui-base-color, 5%);
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+    line-height: 0;
+  }
+
+  &__body {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  &__name {
+    font-size: 15px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    a {
+      color: $primary-text-color;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  &__streak {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: $highlight-text-color;
+
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &__time {
+    font-size: 12px;
+    color: $dark-text-color;
+  }
+
+  &__counts {
+    font-size: 12px;
+    color: $dark-text-color;
+  }
+
+  // Action sits on the same row when there's enough room; drops below on narrow columns
+  &__action {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+
+    // Ensure tap targets are at least 44 × 44 px on touch screens
+    .button {
+      min-height: 36px;
+      min-width: 44px;
+
+      @media (pointer: coarse) {
+        min-height: 44px;
+        padding-block: 0;
+      }
+    }
+  }
+
+  &__waiting {
+    font-size: 11px;
+    font-style: italic;
+    color: $dark-text-color;
+    background: lighten($ui-base-color, 8%);
+    border-radius: 4px;
+    padding: 4px 8px;
+    white-space: nowrap;
+  }
+
+  // Narrow container: push the action onto its own row, indented under the avatar
+  @container (width < 320px) {
+    align-items: flex-start;
+
+    &__action {
+      width: 100%;
+      padding-inline-start: 58px; // 46px avatar + 12px gap
+    }
+  }
+}
+
+// Live nudge-alert banners
+.nudge-alerts {
+  border-bottom: 1px solid lighten($ui-base-color, 8%);
+}
+
+.nudge-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 15px;
+  background: mix($highlight-text-color, $ui-base-color, 12%);
+  border-bottom: 1px solid mix($highlight-text-color, $ui-base-color, 20%);
+  animation: nudge-alert-in 0.2s ease-out;
+  flex-wrap: wrap;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    color: $highlight-text-color;
+    width: 20px;
+    height: 20px;
+  }
+
+  &__text {
+    flex: 1 1 120px; // allows wrapping when very narrow
+    font-size: 14px;
+    color: $primary-text-color;
+    min-width: 0;
+
+    a {
+      color: $highlight-text-color;
+      font-weight: 600;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  // Nudge back button inside alert — touch-friendly
+  .button {
+    flex-shrink: 0;
+
+    @media (pointer: coarse) {
+      min-height: 44px;
+      padding-block: 0;
+    }
+  }
+
+  &__dismiss {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: $dark-text-color;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    // Ensure adequate touch target
+    padding: 8px 4px;
+    margin: -8px -4px;
+
+    &:hover {
+      color: $primary-text-color;
+    }
+  }
+
+  // On very narrow screens, stack text + buttons vertically
+  @media screen and (max-width: 360px) {
+    &__text {
+      width: 100%;
+      flex-basis: 100%;
+    }
+  }
+}
+
+@keyframes nudge-alert-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -44,6 +44,7 @@ import {
   Firehose,
   AccountTimeline,
   AccountGallery,
+  AccountNudges,
   HomeTimeline,
   Followers,
   Following,
@@ -83,6 +84,7 @@ import {
   Events,
   EventDetail,
   Governance,
+  Nudges,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
 import { focusColumn, getFocusedItemIndex, focusItemSibling } from './util/focusUtils';
@@ -211,6 +213,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/kalendar/:id" component={EventDetail} content={children} />}
             {signedIn && <WrappedRoute path="/kalendar" component={Events} content={children} />}
             {signedIn && <WrappedRoute path="/governance" component={Governance} content={children} />}
+            {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} />}
             <WrappedRoute path='/search' component={Search} content={children} />
             <WrappedRoute path={['/publish', '/statuses/new']} component={Compose} content={children} />
 
@@ -221,6 +224,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path={['/accounts/:id/followers', '/users/:acct/followers', '/@:acct/followers']} component={Followers} content={children} />
             <WrappedRoute path={['/accounts/:id/following', '/users/:acct/following', '/@:acct/following']} component={Following} content={children} />
             <WrappedRoute path={['/@:acct/media', '/accounts/:id/media']} component={AccountGallery} content={children} />
+            {signedIn && <WrappedRoute path='/@:acct/nudges' component={AccountNudges} content={children} />}
             <WrappedRoute path='/@:acct/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/@:acct/:statusId/reblogs' component={Reblogs} content={children} />
             <WrappedRoute path='/@:acct/:statusId/favourites' component={Favourites} content={children} />
