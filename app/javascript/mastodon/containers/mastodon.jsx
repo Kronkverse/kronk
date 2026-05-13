@@ -7,6 +7,7 @@ import { Provider as ReduxProvider } from 'react-redux';
 
 
 import { fetchCustomEmojis } from 'mastodon/actions/custom_emojis';
+import { fetchInitialNudgeCount } from 'mastodon/actions/notification_groups';
 import { hydrateStore } from 'mastodon/actions/store';
 import { connectUserStream } from 'mastodon/actions/streaming';
 import ErrorBoundary from 'mastodon/components/error_boundary';
@@ -36,6 +37,7 @@ export default class Mastodon extends PureComponent {
   componentDidMount() {
     if (this.identity.signedIn) {
       this.disconnect = store.dispatch(connectUserStream());
+      void store.dispatch(fetchInitialNudgeCount());
     }
   }
 

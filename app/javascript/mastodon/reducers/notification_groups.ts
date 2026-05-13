@@ -12,6 +12,7 @@ import { fetchMarkers } from 'mastodon/actions/markers';
 import {
   clearNotifications,
   clearUnreadNudges,
+  fetchInitialNudgeCount,
   fetchNotifications,
   fetchNotificationsGap,
   processNewNotificationForGroups,
@@ -498,6 +499,12 @@ export const notificationGroupsReducer = createReducer<NotificationGroupsState>(
       })
       .addCase(clearUnreadNudges, (state) => {
         state.unreadNudgeCount = 0;
+      })
+      .addCase(fetchInitialNudgeCount.fulfilled, (state, action) => {
+        // Only seed; don't clobber streaming increments that arrived first
+        if (action.payload > state.unreadNudgeCount) {
+          state.unreadNudgeCount = action.payload;
+        }
       })
       .addCase(disconnectTimeline, (state, action) => {
         if (action.payload.timeline === 'home') {

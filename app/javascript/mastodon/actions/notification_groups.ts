@@ -3,6 +3,7 @@ import { createAction } from '@reduxjs/toolkit';
 import {
   apiClearNotifications,
   apiFetchNotificationGroups,
+  apiFetchNudgeUnreadCount,
 } from 'mastodon/api/notifications';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import type {
@@ -238,6 +239,11 @@ export const markNotificationsAsRead = createAction(
 );
 
 export const clearUnreadNudges = createAction('notificationGroups/clearUnreadNudges');
+
+export const fetchInitialNudgeCount = createAppAsyncThunk(
+  'notificationGroups/fetchInitialNudgeCount',
+  () => apiFetchNudgeUnreadCount(),
+);
 
 export const mountNotifications = createAppAsyncThunk(
   'notificationGroups/mount',
