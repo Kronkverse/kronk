@@ -11,7 +11,7 @@ $ev-purple-faint: rgba($blurple-500, 0.08);
 $ev-purple-glow: rgba($blurple-500, 0.15);
 $ev-purple-hover: rgba($blurple-500, 0.12);
 $ev-live-color: #c75d6e;
-$ev-live-glow: rgba(199, 93, 110, 0.15);
+$ev-live-glow: rgba(199, 93, 110, 15%);
 $ev-going-color: #6a9f8a;
 $ev-interested-color: #b8945f;
 
@@ -22,41 +22,47 @@ $ev-interested-color: #b8945f;
   &__header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
+    align-items: flex-end;
+    padding-bottom: 12px;
+    border-bottom: 1.5px solid var(--background-border-color);
+    margin-bottom: 20px;
     gap: 12px;
   }
 
   &__filters {
     display: flex;
-    gap: 2px;
-    background: $ev-purple-faint;
-    border-radius: 10px;
-    padding: 3px;
+    gap: 20px;
   }
 
   &__filter {
-    padding: 7px 16px;
+    padding: 4px 0;
+    padding-bottom: 10px;
     border: none;
-    border-radius: 8px;
     background: transparent;
-    color: $ev-purple-muted;
+    color: var(--secondary-text-color);
     cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 0.01em;
-    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 400;
+    position: relative;
+    transition: color 0.15s ease;
 
     &:hover {
-      color: $ev-purple-soft;
-      background: $ev-purple-hover;
+      color: var(--primary-text-color);
     }
 
     &.active {
-      background: $ev-purple-deep;
-      color: $ev-purple-light;
-      box-shadow: 0 1px 4px rgba(74, 61, 143, 0.3);
+      color: var(--primary-text-color);
+      font-weight: 500;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -13.5px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: $ev-purple-deep;
+      }
     }
   }
 
@@ -66,28 +72,37 @@ $ev-interested-color: #b8945f;
     align-items: center;
   }
 
+  &__view-toggle-group {
+    display: inline-flex;
+    border: 0.5px solid var(--background-border-color);
+    border-radius: 7px;
+    overflow: hidden;
+  }
+
   &__view-toggle {
-    padding: 7px 10px;
-    border: 1px solid var(--background-border-color);
+    padding: 5px 12px;
+    border: none;
     background: transparent;
     color: var(--secondary-text-color);
     cursor: pointer;
-    border-radius: 8px;
-    transition: all 0.2s ease;
+    font-size: 12px;
+    font-weight: 500;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
 
-    .icon {
-      display: block;
+    & + & {
+      border-left: 0.5px solid var(--background-border-color);
     }
 
-    &:hover {
-      border-color: $ev-purple-soft;
+    &:hover:not(.active) {
+      background: $ev-purple-faint;
       color: $ev-purple-soft;
     }
 
     &.active {
-      background: $ev-purple-faint;
-      border-color: $ev-purple-mid;
-      color: $ev-purple-soft;
+      background: var(--background-color);
+      color: var(--primary-text-color);
     }
   }
 
@@ -108,7 +123,7 @@ $ev-interested-color: #b8945f;
 
     &:hover {
       background: $ev-purple-mid;
-      box-shadow: 0 2px 8px rgba(74, 61, 143, 0.25);
+      box-shadow: 0 2px 8px rgba(74, 61, 143, 25%);
     }
   }
 
@@ -116,6 +131,22 @@ $ev-interested-color: #b8945f;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    max-height: 480px;
+    overflow-y: auto;
+    padding-right: 4px;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--background-border-color);
+      border-radius: 4px;
+    }
   }
 
   &__empty {
@@ -125,81 +156,65 @@ $ev-interested-color: #b8945f;
     font-size: 14px;
     font-style: italic;
   }
+
+  &__calendar-section {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 0.5px solid var(--background-border-color);
+  }
 }
 
 // Event card
 .event-card {
   background: var(--background-color);
-  border: 1px solid var(--background-border-color);
+  border: 0.5px solid var(--background-border-color);
   border-radius: 12px;
-  transition: all 0.25s ease;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 
   &:hover {
-    border-color: rgba(110, 95, 184, 0.3);
-    box-shadow: 0 2px 12px rgba(110, 95, 184, 0.08);
+    border-color: rgba($ev-purple-mid, 0.3);
+    box-shadow: 0 2px 8px rgba($ev-purple-mid, 0.08);
   }
 
   &--live {
-    border-color: rgba(199, 93, 110, 0.4);
-    box-shadow: 0 0 0 1px $ev-live-glow;
+    border-color: rgba($ev-live-color, 0.4);
 
     &:hover {
       border-color: $ev-live-color;
-      box-shadow: 0 2px 12px $ev-live-glow;
     }
   }
 
-  &__image {
-    height: 140px;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 40px;
-      background: linear-gradient(transparent, rgba(0, 0, 0, 0.3));
-    }
-  }
-
-  &__body {
-    display: flex;
-    gap: 14px;
-    padding: 14px 16px;
-  }
-
-  &__date-badge {
+  &__date {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    min-width: 48px;
-    height: 48px;
-    background: $ev-purple-faint;
-    border: 1px solid rgba(110, 95, 184, 0.12);
-    border-radius: 10px;
+    text-align: center;
+    min-width: 44px;
     flex-shrink: 0;
+    text-decoration: none;
+    color: inherit;
+  }
 
-    &__month {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: $ev-purple-soft;
-      line-height: 1;
-      letter-spacing: 0.05em;
-    }
+  &__date-day {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--primary-text-color);
+  }
 
-    &__day {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--primary-text-color);
-      line-height: 1.2;
-    }
+  &__date-month {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--secondary-text-color);
+    margin-top: 4px;
   }
 
   &__content {
@@ -207,162 +222,111 @@ $ev-interested-color: #b8945f;
     min-width: 0;
   }
 
-  &__header {
+  &__title {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-bottom: 3px;
-  }
-
-  &__live-badge {
-    font-size: 10px;
-    font-weight: 700;
-    color: $ev-live-color;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    animation: ev-pulse 2.5s ease-in-out infinite;
-  }
-
-  &__type-icon {
-    color: $ev-purple-muted;
-  }
-
-  &__title {
-    font-size: 15px;
-    font-weight: 600;
+    gap: 5px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 16px;
+    font-weight: 500;
     color: var(--primary-text-color);
     text-decoration: none;
-    line-height: 1.3;
+    line-height: 1.2;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
     &:hover {
       color: $ev-purple-soft;
     }
   }
 
-  &__meta {
-    font-size: 12px;
-    color: $ev-purple-muted;
-    margin-bottom: 4px;
+  &__live-badge {
+    font-size: 9px;
+    font-weight: 700;
+    color: $ev-live-color;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+    animation: ev-pulse 2.5s ease-in-out infinite;
   }
 
-  &__counts {
+  &__type-icon {
+    color: $ev-purple-muted;
+    flex-shrink: 0;
+  }
+
+  &__meta {
     font-size: 12px;
     color: var(--secondary-text-color);
-    margin-bottom: 8px;
-    display: flex;
-    gap: 10px;
-    opacity: 0.8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    strong {
+      color: var(--primary-text-color);
+      font-weight: 600;
+    }
   }
 
   &__host {
     color: $ev-purple-soft;
   }
 
-  &__actions {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  &__rsvp-buttons {
-    display: flex;
-    gap: 4px;
-  }
-
-  &__rsvp-btn {
+  &__rsvp {
     display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 12px;
-    border: 1px solid var(--background-border-color);
+    border: 0.5px solid var(--background-border-color);
     border-radius: 8px;
-    background: transparent;
-    color: var(--secondary-text-color);
-    cursor: pointer;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  &__rsvp-seg {
+    padding: 5px 11px;
     font-size: 12px;
     font-weight: 500;
-    transition: all 0.2s ease;
+    color: var(--secondary-text-color);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    line-height: 1.4;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
 
-    &:hover {
-      border-color: $ev-purple-soft;
+    & + & {
+      border-left: 0.5px solid var(--background-border-color);
+    }
+
+    &:hover:not(.active) {
+      background: $ev-purple-faint;
       color: $ev-purple-soft;
     }
 
     &.active {
       background: $ev-purple-deep;
-      color: $ev-purple-light;
-      border-color: $ev-purple-deep;
+      color: #fff;
     }
   }
 
   &__join-huddle {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 5px 14px;
+    gap: 4px;
+    padding: 5px 12px;
     background: $ev-live-color;
     color: #fff;
     border-radius: 8px;
     text-decoration: none;
     font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    flex-shrink: 0;
     animation: ev-pulse 2.5s ease-in-out infinite;
 
     &:hover {
       opacity: 0.9;
     }
-  }
-
-  &__view-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 12px;
-    color: $ev-purple-soft;
-    text-decoration: none;
-    font-weight: 500;
-    margin-inline-start: auto;
-
-    &:hover {
-      color: $ev-purple-mid;
-    }
-  }
-
-  &__invite-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 4px 12px;
-    border: 1px solid var(--background-border-color);
-    border-radius: 8px;
-    background: transparent;
-    color: var(--secondary-text-color);
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.2s ease;
-
-    .icon {
-      display: block;
-    }
-
-    &:hover {
-      border-color: $ev-purple-soft;
-      color: $ev-purple-soft;
-    }
-
-    &--active {
-      background: $ev-purple-faint;
-      border-color: $ev-purple-mid;
-      color: $ev-purple-soft;
-    }
-  }
-
-  &__invite-panel {
-    padding: 12px 16px 14px;
-    border-top: 1px solid var(--background-border-color);
   }
 }
 
@@ -382,7 +346,12 @@ $ev-interested-color: #b8945f;
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, $ev-purple-deep, $ev-purple-mid, $ev-purple-soft);
+    background: linear-gradient(
+      90deg,
+      $ev-purple-deep,
+      $ev-purple-mid,
+      $ev-purple-soft
+    );
     border-radius: 14px 14px 0 0;
   }
 
@@ -448,7 +417,7 @@ $ev-interested-color: #b8945f;
       border-color: $ev-purple-mid;
       color: $ev-purple-soft;
       background: $ev-purple-faint;
-      box-shadow: 0 0 0 1px rgba(110, 95, 184, 0.08);
+      box-shadow: 0 0 0 1px rgba(110, 95, 184, 8%);
     }
   }
 
@@ -479,7 +448,9 @@ $ev-interested-color: #b8945f;
       font-size: 14px;
       font-family: inherit;
       box-sizing: border-box;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 
       &::placeholder {
         color: $ev-purple-muted;
@@ -524,7 +495,9 @@ $ev-interested-color: #b8945f;
       color: var(--primary-text-color);
       font-size: 14px;
       font-family: inherit;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 
       &:focus {
         border-color: $ev-purple-mid;
@@ -538,7 +511,9 @@ $ev-interested-color: #b8945f;
     flex: 1;
     cursor: pointer;
     border-radius: 8px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
 
     &:hover {
       input {
@@ -557,7 +532,9 @@ $ev-interested-color: #b8945f;
       font-family: inherit;
       cursor: pointer;
       box-sizing: border-box;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 
       &:focus {
         border-color: $ev-purple-mid;
@@ -611,7 +588,7 @@ $ev-interested-color: #b8945f;
     align-items: center;
     gap: 8px;
     padding: 20px;
-    border: 1px dashed rgba(110, 95, 184, 0.25);
+    border: 1px dashed rgba(110, 95, 184, 25%);
     border-radius: 10px;
     cursor: pointer;
     color: $ev-purple-muted;
@@ -643,7 +620,7 @@ $ev-interested-color: #b8945f;
       position: absolute;
       inset: 0;
       border-radius: 10px;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 8%);
       pointer-events: none;
     }
   }
@@ -656,7 +633,7 @@ $ev-interested-color: #b8945f;
     height: 28px;
     border-radius: 50%;
     border: none;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 50%);
     color: #fff;
     cursor: pointer;
     display: flex;
@@ -667,7 +644,7 @@ $ev-interested-color: #b8945f;
     transition: background 0.15s;
 
     &:hover {
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 70%);
     }
   }
 
@@ -711,7 +688,7 @@ $ev-interested-color: #b8945f;
 
     &:hover {
       background: $ev-purple-mid;
-      box-shadow: 0 2px 8px rgba(74, 61, 143, 0.25);
+      box-shadow: 0 2px 8px rgba(74, 61, 143, 25%);
     }
 
     &:disabled {
@@ -818,7 +795,9 @@ $ev-interested-color: #b8945f;
     text-overflow: ellipsis;
     cursor: pointer;
     text-align: left;
-    transition: opacity 0.15s, border-color 0.15s;
+    transition:
+      opacity 0.15s,
+      border-color 0.15s;
 
     &:hover {
       opacity: 0.85;
@@ -826,7 +805,7 @@ $ev-interested-color: #b8945f;
 
     &--selected {
       border-color: #fff;
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 30%);
     }
 
     &--huddle {
@@ -864,7 +843,13 @@ $ev-interested-color: #b8945f;
   &__event-dot--middle,
   &__event-dot--end {
     // Multi-day events use a softer purple unless overridden by RSVP color
-    &:not(.event-calendar__event-dot--going):not(.event-calendar__event-dot--interested):not(.event-calendar__event-dot--not-going):not(.event-calendar__event-dot--invited):not(.event-calendar__event-dot--huddle) {
+    &:not(
+      .event-calendar__event-dot--going,
+      .event-calendar__event-dot--interested,
+      .event-calendar__event-dot--not-going,
+      .event-calendar__event-dot--invited,
+      .event-calendar__event-dot--huddle
+    ) {
       background: $ev-purple-mid;
     }
   }
@@ -899,6 +884,7 @@ $ev-interested-color: #b8945f;
     opacity: 0;
     transform: translateY(-6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -922,7 +908,7 @@ $ev-interested-color: #b8945f;
       position: absolute;
       inset: 0;
       border-radius: 14px;
-      background: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.35));
+      background: linear-gradient(transparent 50%, rgba(0, 0, 0, 35%));
       pointer-events: none;
     }
   }
@@ -1124,7 +1110,7 @@ $ev-interested-color: #b8945f;
 
     &--danger {
       color: $ev-live-color;
-      border-color: rgba(199, 93, 110, 0.3);
+      border-color: rgba(199, 93, 110, 30%);
 
       &:hover {
         background: $ev-live-glow;
@@ -1182,8 +1168,14 @@ $ev-interested-color: #b8945f;
 }
 
 @keyframes ev-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.65; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.65;
+  }
 }
 
 // Status event card — inline event embed in feed
@@ -1199,14 +1191,14 @@ $ev-interested-color: #b8945f;
   transition: all 0.25s ease;
 
   &:hover {
-    border-color: rgba(110, 95, 184, 0.3);
-    box-shadow: 0 2px 12px rgba(110, 95, 184, 0.08);
+    border-color: rgba(110, 95, 184, 30%);
+    box-shadow: 0 2px 12px rgba(110, 95, 184, 8%);
     text-decoration: none;
     color: inherit;
   }
 
   &--live {
-    border-color: rgba(199, 93, 110, 0.4);
+    border-color: rgba(199, 93, 110, 40%);
     box-shadow: 0 0 0 1px $ev-live-glow;
 
     &:hover {
@@ -1228,7 +1220,7 @@ $ev-interested-color: #b8945f;
       left: 0;
       right: 0;
       height: 40px;
-      background: linear-gradient(transparent, rgba(0, 0, 0, 0.25));
+      background: linear-gradient(transparent, rgba(0, 0, 0, 25%));
     }
   }
 
@@ -1246,7 +1238,7 @@ $ev-interested-color: #b8945f;
     min-width: 48px;
     height: 48px;
     background: $ev-purple-faint;
-    border: 1px solid rgba(110, 95, 184, 0.12);
+    border: 1px solid rgba(110, 95, 184, 12%);
     border-radius: 10px;
     flex-shrink: 0;
 
@@ -1434,7 +1426,9 @@ $ev-interested-color: #b8945f;
       font-size: 14px;
       font-family: inherit;
       box-sizing: border-box;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 
       &::placeholder {
         color: $ev-purple-muted;
@@ -1576,7 +1570,7 @@ $ev-interested-color: #b8945f;
   gap: 12px;
   padding: 10px 14px;
   background: $ev-purple-faint;
-  border: 1px solid rgba(110, 95, 184, 0.12);
+  border: 1px solid rgba(110, 95, 184, 12%);
   border-radius: 10px;
   text-decoration: none;
   color: inherit;
@@ -1584,7 +1578,7 @@ $ev-interested-color: #b8945f;
   margin-top: 4px;
 
   &:hover {
-    border-color: rgba(110, 95, 184, 0.3);
+    border-color: rgba(110, 95, 184, 30%);
     background: $ev-purple-hover;
     text-decoration: none;
     color: inherit;
@@ -1598,7 +1592,7 @@ $ev-interested-color: #b8945f;
     min-width: 42px;
     height: 42px;
     background: var(--background-color);
-    border: 1px solid rgba(110, 95, 184, 0.15);
+    border: 1px solid rgba(110, 95, 184, 15%);
     border-radius: 8px;
     flex-shrink: 0;
 
@@ -1645,7 +1639,6 @@ $ev-interested-color: #b8945f;
     margin-top: 1px;
   }
 }
-
 
 // Invite Followers Panel
 .invite-followers-panel {
@@ -1744,7 +1737,7 @@ $ev-interested-color: #b8945f;
     }
 
     &::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 15%);
       border-radius: 3px;
     }
   }
