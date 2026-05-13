@@ -52,6 +52,10 @@ export interface NotificationGroupEventInvitation
   eventInvitation: EventInvitationData;
 }
 
+export interface NotificationGroupNudge extends BaseNotification<'nudge'> {
+  nudgeStreak: number;
+}
+
 export type AccountWarningAction =
   | 'none'
   | 'disable'
@@ -108,7 +112,8 @@ export type NotificationGroup =
   | NotificationGroupAdminSignUp
   | NotificationGroupAdminReport
   | NotificationGroupAnnualReport
-  | NotificationGroupEventInvitation;
+  | NotificationGroupEventInvitation
+  | NotificationGroupNudge;
 
 function createReportFromJSON(reportJSON: ApiReportJSON): Report {
   const { target_account, ...report } = reportJSON;
@@ -203,6 +208,13 @@ export function createNotificationGroupFromJSON(
         eventInvitation: group.event_invitation,
         sampleAccountIds,
       };
+    case 'nudge':
+      return {
+        ...group,
+        partial: false,
+        nudgeStreak: group.nudge_streak,
+        sampleAccountIds,
+      };
     default:
       return {
         sampleAccountIds,
@@ -267,6 +279,12 @@ export function createNotificationGroupFromNotificationJSON(
         ...group,
         type: notification.type,
         eventInvitation: notification.event_invitation,
+      };
+    case 'nudge':
+      return {
+        ...group,
+        type: notification.type,
+        nudgeStreak: notification.nudge_streak,
       };
     default:
       return {

@@ -3,18 +3,19 @@
 class Api::V1::AccountsController < Api::BaseController
   include RegistrationHelper
 
-  before_action -> { authorize_if_got_token! :read, :'read:accounts' }, except: [:create, :follow, :unfollow, :remove_from_followers, :block, :unblock, :mute, :unmute]
+  before_action -> { authorize_if_got_token! :read, :'read:accounts' }, except: [:create, :follow, :unfollow, :remove_from_followers, :block, :unblock, :mute, :unmute, :nudge, :nudge_streak, :nudge_partners, :nudge_history, :nudge_pending_count]
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:follows' }, only: [:follow, :unfollow, :remove_from_followers]
+  before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:nudge]
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:mutes' }, only: [:mute, :unmute]
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:blocks' }, only: [:block, :unblock]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:create]
 
   before_action :require_user!, except: [:index, :show, :create]
   before_action :require_client_credentials!, only: [:create]
-  before_action :set_account, except: [:index, :create]
+  before_action :set_account, except: [:index, :create, :nudge_history, :nudge_partners, :nudge_pending_count]
   before_action :set_accounts, only: [:index]
-  before_action :check_account_approval, except: [:index, :create]
-  before_action :check_account_confirmation, except: [:index, :create]
+  before_action :check_account_approval, except: [:index, :create, :nudge_history, :nudge_partners, :nudge_pending_count]
+  before_action :check_account_confirmation, except: [:index, :create, :nudge_history, :nudge_partners, :nudge_pending_count]
   before_action :check_enabled_registrations, only: [:create]
   before_action :check_accounts_limit, only: [:index]
   before_action :check_following_self, only: [:follow]
@@ -81,7 +82,127 @@ class Api::V1::AccountsController < Api::BaseController
     render json: @account, serializer: REST::RelationshipSerializer, relationships: relationships
   end
 
+  def nudge_history
+    doorkeeper_authorize! :read, :'read:accounts'
+    a = current_user.account.id
+
+    received = Notification.where(type: 'nudge', account_id: a)
+                           .order(id: :desc).limit(200)
+                           .map { |n| { direction: 'received', account_id: n.from_account_id.to_s, created_at: n.created_at.iso8601 } }
+
+    sent = Notification.where(type: 'nudge', from_account_id: a)
+                       .order(id: :desc).limit(200)
+                       .map { |n| { direction: 'sent', account_id: n.account_id.to_s, created_at: n.created_at.iso8601 } }
+
+    all_nudges = (received + sent).sort_by { |n| n[:created_at] }.reverse.first(200)
+
+    partner_ids = all_nudges.map { |n| n[:account_id] }.uniq
+    accounts    = Account.where(id: partner_ids)
+
+    render json: {
+      accounts: ActiveModelSerializers::SerializableResource.new(
+        accounts,
+        each_serializer: REST::AccountSerializer,
+        scope: current_user,
+        scope_name: :current_user
+      ).as_json,
+      nudges: all_nudges,
+    }
+  end
+
+  def nudge_partners
+    doorkeeper_authorize! :read, :'read:accounts'
+    a = current_user.account.id
+
+    sent_counts     = Notification.where(type: 'nudge', from_account_id: a).group(:account_id).count
+    received_counts = Notification.where(type: 'nudge', account_id: a).group(:from_account_id).count
+
+    partner_ids = (sent_counts.keys + received_counts.keys).uniq
+
+    # Fetch the most recent nudge per partner in one query
+    last_nudge_per_partner = {}
+    Notification.where(type: 'nudge')
+                .where('account_id = ? OR from_account_id = ?', a, a)
+                .order(id: :desc)
+                .each do |n|
+      partner_id = n.account_id == a ? n.from_account_id : n.account_id
+      last_nudge_per_partner[partner_id] ||= n
+    end
+
+    accounts = Account.where(id: partner_ids).index_by(&:id)
+
+    partners = partner_ids
+      .filter_map do |id|
+        next unless accounts[id]
+        last = last_nudge_per_partner[id]
+        {
+          account_id: id.to_s,
+          sent_count: sent_counts[id] || 0,
+          received_count: received_counts[id] || 0,
+          streak: (sent_counts[id] || 0) + (received_counts[id] || 0),
+          last_nudge_at: last&.created_at&.iso8601,
+          can_nudge_back: last.nil? || last.from_account_id == id,
+        }
+      end
+      .sort_by { |p| [-p[:streak], p[:last_nudge_at] || ''] }
+
+    render json: {
+      accounts: ActiveModelSerializers::SerializableResource.new(
+        accounts.values,
+        each_serializer: REST::AccountSerializer,
+        scope: current_user,
+        scope_name: :current_user
+      ).as_json,
+      partners: partners,
+      pending_count: partners.count { |p| p[:can_nudge_back] },
+      grand_total: partners.sum { |p| p[:sent_count] + p[:received_count] },
+    }
+  end
+
+  def nudge_pending_count
+    doorkeeper_authorize! :read, :'read:accounts'
+    a = current_user.account.id
+    seen = {}
+    count = 0
+    Notification.where(type: 'nudge')
+                .where('account_id = ? OR from_account_id = ?', a, a)
+                .order(id: :desc)
+                .each do |n|
+      partner_id = n.account_id == a ? n.from_account_id : n.account_id
+      next if seen[partner_id]
+      seen[partner_id] = true
+      count += 1 if n.from_account_id == partner_id
+    end
+    render json: { count: count }
+  end
+
+  def nudge
+    NudgeService.new.call(current_user.account, @account)
+    render json: { streak: nudge_streak_count, can_nudge: false }
+  rescue Mastodon::NotPermittedError
+    render json: { error: 'waiting_for_nudge_back' }, status: 422
+  end
+
+  def nudge_streak
+    render json: { streak: nudge_streak_count, can_nudge: nudge_can_send? }
+  end
+
   private
+
+  def nudge_streak_count
+    a, b = current_user.account.id, @account.id
+    Notification.where(type: 'nudge')
+                .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
+                .count
+  end
+
+  def nudge_can_send?
+    a, b = current_user.account.id, @account.id
+    last = Notification.where(type: 'nudge')
+                       .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
+                       .order(id: :desc).first
+    last.nil? || last.from_account_id == b
+  end
 
   def set_account
     @account = Account.find(params[:id])

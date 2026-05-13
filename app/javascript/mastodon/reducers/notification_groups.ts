@@ -11,7 +11,11 @@ import { blockDomainSuccess } from 'mastodon/actions/domain_blocks_typed';
 import { fetchMarkers } from 'mastodon/actions/markers';
 import {
   clearNotifications,
+  clearUnreadNudges,
+  decrementNudgeCount,
+  fetchInitialNudgeCount,
   fetchNotifications,
+  setUnreadNudgeCount,
   fetchNotificationsGap,
   processNewNotificationForGroups,
   loadPending,
@@ -58,6 +62,7 @@ interface NotificationGroupsState {
   mounted: number;
   isTabVisible: boolean;
   mergedNotifications: 'ok' | 'pending' | 'needs-reload';
+  unreadNudgeCount: number;
 }
 
 const initialState: NotificationGroupsState = {
@@ -72,6 +77,7 @@ const initialState: NotificationGroupsState = {
   readMarkerId: '0', // user-facing and updated when focus changes
   mounted: 0, // number of mounted notification list components, usually 0 or 1
   isTabVisible: true,
+  unreadNudgeCount: 0,
 };
 
 function filterNotificationsForAccounts(
@@ -480,6 +486,10 @@ export const notificationGroupsReducer = createReducer<NotificationGroupsState>(
         if (action.payload) {
           const { notification, groupedTypes } = action.payload;
 
+          if (notification.type === 'nudge') {
+            state.unreadNudgeCount += 1;
+          }
+
           processNewNotification(
             usePendingItems ? state.pendingGroups : state.groups,
             notification,
@@ -488,6 +498,18 @@ export const notificationGroupsReducer = createReducer<NotificationGroupsState>(
           updateLastReadId(state);
           trimNotifications(state);
         }
+      })
+      .addCase(clearUnreadNudges, (state) => {
+        state.unreadNudgeCount = 0;
+      })
+      .addCase(setUnreadNudgeCount, (state, action) => {
+        state.unreadNudgeCount = action.payload;
+      })
+      .addCase(decrementNudgeCount, (state) => {
+        state.unreadNudgeCount = Math.max(0, state.unreadNudgeCount - 1);
+      })
+      .addCase(fetchInitialNudgeCount.fulfilled, (state, action) => {
+        state.unreadNudgeCount = action.payload;
       })
       .addCase(disconnectTimeline, (state, action) => {
         if (action.payload.timeline === 'home') {

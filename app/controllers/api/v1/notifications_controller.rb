@@ -56,9 +56,13 @@ class Api::V1::NotificationsController < Api::BaseController
   end
 
   def browserable_account_notifications
+    requested_types = Array(browserable_params[:types])
+    excluded = Array(browserable_params[:exclude_types])
+    excluded |= ['nudge'] unless requested_types.include?('nudge')
+
     current_account.notifications.without_suspended.browserable(
-      types: Array(browserable_params[:types]),
-      exclude_types: Array(browserable_params[:exclude_types]),
+      types: requested_types,
+      exclude_types: excluded,
       from_account_id: browserable_params[:account_id],
       include_filtered: truthy_param?(:include_filtered)
     )

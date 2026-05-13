@@ -229,6 +229,12 @@ namespace :api, format: false do
         resources :endorsements, only: :index
       end
 
+      collection do
+        get :nudge_partners
+        get :nudge_history
+        get :nudge_pending_count
+      end
+
       member do
         post :follow
         post :unfollow
@@ -237,6 +243,8 @@ namespace :api, format: false do
         post :unblock
         post :mute
         post :unmute
+        post :nudge
+        get :nudge_streak
       end
 
       scope module: :accounts do
