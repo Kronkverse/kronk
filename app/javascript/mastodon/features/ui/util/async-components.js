@@ -269,3 +269,7 @@ export function Kosmos () {
 export function Questions () {
   return import("../../questions");
 }
+
+export function QuestionPage () {
+  return import("../../questions/question_page");
+}

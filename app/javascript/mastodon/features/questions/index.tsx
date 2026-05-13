@@ -11,7 +11,6 @@ import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
 import { QuestionCard } from './components/question_card';
 import { QuestionComposer } from './components/question_composer';
-import { QuestionDetail } from './components/question_detail';
 import type { Question } from './types';
 
 const messages = defineMessages({
@@ -26,9 +25,6 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(
-    null,
-  );
   const listRef = useRef<HTMLDivElement>(null);
 
   const fetchQuestions = useCallback(async () => {
@@ -55,53 +51,11 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     listRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  const handleSelect = useCallback(
-    (id: string) => {
-      const q = questions.find((question) => question.id === id);
-      if (q) setSelectedQuestion(q);
-    },
-    [questions],
-  );
-
-  const handleBack = useCallback(() => {
-    setSelectedQuestion(null);
-  }, []);
-
-  const handleQuestionAnswered = useCallback((updated: Question) => {
+  const handleAnswered = useCallback((updated: Question) => {
     setQuestions((prev) =>
       prev.map((q) => (q.id === updated.id ? updated : q)),
     );
-    setSelectedQuestion((sel) => (sel?.id === updated.id ? updated : sel));
   }, []);
-
-  const spaceStyle = {
-    '--space-color': spaceColor('Questions'),
-  } as React.CSSProperties;
-
-  if (selectedQuestion) {
-    return (
-      <Column>
-        <ColumnHeader
-          title={planetName('Questions')}
-          icon='saturn'
-          iconComponent={planetIcon('Questions')}
-          multiColumn={multiColumn}
-        />
-        <Helmet>
-          <title>{intl.formatMessage(messages.title)}</title>
-        </Helmet>
-        <div className='questions-page' style={spaceStyle}>
-          <div className='questions-page__list'>
-            <QuestionDetail
-              question={selectedQuestion}
-              onBack={handleBack}
-              onAnswered={handleQuestionAnswered}
-            />
-          </div>
-        </div>
-      </Column>
-    );
-  }
 
   return (
     <Column>
@@ -115,7 +69,12 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      <div className='questions-page' style={spaceStyle}>
+      <div
+        className='questions-page'
+        style={
+          { '--space-color': spaceColor('Questions') } as React.CSSProperties
+        }
+      >
         <div className='questions-page__above-fold'>
           <div className='questions-page__hero'>{'Ƙuestions'}</div>
           <QuestionComposer onCreated={handleCreated} />
@@ -139,8 +98,7 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             <QuestionCard
               key={question.id}
               question={question}
-              onSelect={handleSelect}
-              onAnswered={handleQuestionAnswered}
+              onAnswered={handleAnswered}
             />
           ))}
         </div>

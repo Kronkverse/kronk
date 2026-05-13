@@ -2,6 +2,8 @@ import { useCallback, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import { useHistory } from 'react-router-dom';
+
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import LockOpenIcon from '@/material-icons/400-24px/lock_open.svg?react';
 import { Icon } from 'mastodon/components/icon';
@@ -31,26 +33,26 @@ const parseContent = (html: string) => {
 
 export const QuestionCard: React.FC<{
   question: Question;
-  onSelect: (id: string) => void;
   onAnswered?: (updated: Question) => void;
-}> = ({ question, onSelect, onAnswered }) => {
+}> = ({ question, onAnswered }) => {
   const intl = useIntl();
+  const history = useHistory();
   const [answering, setAnswering] = useState(false);
   const [hasAnswered, setHasAnswered] = useState(question.has_answered);
   const [answersCount, setAnswersCount] = useState(question.answers_count);
 
   const handleCardClick = useCallback(() => {
-    onSelect(question.id);
-  }, [onSelect, question.id]);
+    history.push(`/questions/${question.id}`);
+  }, [history, question.id]);
 
   const handleCardKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        onSelect(question.id);
+        history.push(`/questions/${question.id}`);
       }
     },
-    [onSelect, question.id],
+    [history, question.id],
   );
 
   const handleAnswerClick = useCallback((e: React.MouseEvent) => {
