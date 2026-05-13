@@ -112,7 +112,11 @@ export const connectTimelineStream = (timelineId, channelName, params = {}, opti
         case 'notification': {
           // @ts-expect-error
           const notificationJSON = JSON.parse(data.payload);
-          dispatch(updateNotifications(notificationJSON, messages, locale));
+          // Nudges are handled exclusively by the nudge panel — skip the
+          // bell alert, sound, and old notifications state for them.
+          if (notificationJSON.type !== 'nudge') {
+            dispatch(updateNotifications(notificationJSON, messages, locale));
+          }
           // TODO: remove this once the groups feature replaces the previous one
           dispatch(processNewNotificationForGroups(notificationJSON));
           break;
