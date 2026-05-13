@@ -12,10 +12,14 @@ import { AnswerComposer } from './answer_composer';
 
 const messages = defineMessages({
   answer: { id: 'questions.card.answer', defaultMessage: 'Answer' },
-  answered: { id: 'questions.card.answered', defaultMessage: 'Answered' },
+  answered: { id: 'questions.card.answered', defaultMessage: 'Answered ✓' },
   peopleAnswered: {
     id: 'questions.card.people_answered',
     defaultMessage: '{count, plural, one {# answer} other {# answers}}',
+  },
+  viewAnswers: {
+    id: 'questions.card.view_answers',
+    defaultMessage: '{count, plural, one {# answer} other {# answers}} →',
   },
 });
 
@@ -28,9 +32,12 @@ const parseContent = (html: string) => {
 export const QuestionCard: React.FC<{
   question: Question;
   onSelect: (id: string) => void;
-}> = ({ question, onSelect }) => {
+  onAnswered?: (updated: Question) => void;
+}> = ({ question, onSelect, onAnswered }) => {
   const intl = useIntl();
   const [answering, setAnswering] = useState(false);
+  const [hasAnswered, setHasAnswered] = useState(question.has_answered);
+  const [answersCount, setAnswersCount] = useState(question.answers_count);
 
   const handleCardClick = useCallback(() => {
     onSelect(question.id);
@@ -57,7 +64,17 @@ export const QuestionCard: React.FC<{
 
   const handleAnswered = useCallback(() => {
     setAnswering(false);
-  }, []);
+    setHasAnswered(true);
+    setAnswersCount((c) => {
+      const newCount = c + 1;
+      onAnswered?.({
+        ...question,
+        has_answered: true,
+        answers_count: newCount,
+      });
+      return newCount;
+    });
+  }, [question, onAnswered]);
 
   const handleComposerClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -92,16 +109,16 @@ export const QuestionCard: React.FC<{
       <div className='question-card__footer'>
         <div className='question-card__engagement'>
           <Icon
-            id={question.has_answered ? 'lock_open' : 'lock'}
-            icon={question.has_answered ? LockOpenIcon : LockIcon}
+            id={hasAnswered ? 'lock_open' : 'lock'}
+            icon={hasAnswered ? LockOpenIcon : LockIcon}
             className={
-              question.has_answered
+              hasAnswered
                 ? 'question-card__lock--open'
                 : 'question-card__lock--closed'
             }
           />
 
-          {question.answers_count > 0 && (
+          {answersCount > 0 && (
             <div className='question-card__answerers'>
               {question.answerers.slice(0, 5).map((a) => (
                 <img
@@ -113,15 +130,16 @@ export const QuestionCard: React.FC<{
                 />
               ))}
               <span className='question-card__answer-count'>
-                {intl.formatMessage(messages.peopleAnswered, {
-                  count: question.answers_count,
-                })}
+                {intl.formatMessage(
+                  hasAnswered ? messages.viewAnswers : messages.peopleAnswered,
+                  { count: answersCount },
+                )}
               </span>
             </div>
           )}
         </div>
 
-        {question.has_answered ? (
+        {hasAnswered ? (
           <span className='question-card__answered-badge'>
             {intl.formatMessage(messages.answered)}
           </span>
