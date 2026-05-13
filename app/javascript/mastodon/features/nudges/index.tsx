@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
+import { AxiosError } from 'axios';
+
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 
@@ -53,8 +55,11 @@ const NudgeAlert: React.FC<{
     try {
       await apiNudgeAccount(alert.accountId);
       setNudgedBack(true);
-    } catch {
-      setNudgedBack(true);
+    } catch (e: unknown) {
+      if (e instanceof AxiosError && e.response?.status === 422) {
+        setNudgedBack(true); // ping-pong: disable button
+      }
+      // Other errors: re-enable button so user can retry
     } finally {
       setLoading(false);
     }
@@ -117,8 +122,11 @@ const NudgePartnerItem: React.FC<{ partner: ApiNudgePartner }> = ({
     try {
       await apiNudgeAccount(partner.account_id);
       setNudgedBack(true);
-    } catch {
-      setNudgedBack(true);
+    } catch (e: unknown) {
+      if (e instanceof AxiosError && e.response?.status === 422) {
+        setNudgedBack(true); // ping-pong: disable button
+      }
+      // Other errors: re-enable button so user can retry
     } finally {
       setLoading(false);
     }

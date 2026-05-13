@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
+import { AxiosError } from 'axios';
 import { Link } from 'react-router-dom';
 
 import HailIcon from '@/material-icons/400-24px/hail-fill.svg?react';
@@ -53,6 +54,10 @@ export const NotificationNudge: React.FC<{
       const result = await apiNudgeAccount(senderId);
       setStreak(result.streak);
       setNudgedBack(true);
+    } catch (e: unknown) {
+      if (e instanceof AxiosError && e.response?.status === 422) {
+        setNudgedBack(true); // ping-pong: disable button
+      }
     } finally {
       setLoading(false);
     }

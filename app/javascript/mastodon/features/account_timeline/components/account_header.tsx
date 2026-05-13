@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
+import { AxiosError } from 'axios';
 import classNames from 'classnames';
 import { Helmet } from 'react-helmet';
 import { NavLink } from 'react-router-dom';
@@ -230,13 +231,22 @@ export const AccountHeader: React.FC<{
   const handleNudge = useCallback(() => {
     if (nudgeLoading || !canNudge) return;
     setNudgeLoading(true);
-    apiNudgeAccount(accountId).then((data) => {
-      setNudgeSent(true);
-      setCanNudge(false);
-      setNudgeStreak(data.streak);
-    }).finally(() => {
-      setNudgeLoading(false);
-    });
+    apiNudgeAccount(accountId)
+      .then((data) => {
+        setNudgeSent(true);
+        setCanNudge(false);
+        setNudgeStreak(data.streak);
+      })
+      .catch((e: unknown) => {
+        if (e instanceof AxiosError && e.response?.status === 422) {
+          // Ping-pong rule: already nudged, waiting for them to nudge back
+          setCanNudge(false);
+        }
+        // Other errors: silently ignore and re-enable button
+      })
+      .finally(() => {
+        setNudgeLoading(false);
+      });
   }, [accountId, nudgeLoading, canNudge]);
 
   const handleBlock = useCallback(() => {

@@ -12079,6 +12079,16 @@ noscript {
   }
 }
 
+// Streak line shown inside a nudge notification in the main notifications panel
+.notification-nudge__streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: $dark-text-color;
+  margin-top: 4px;
+}
+
 // Partner card — works at any column width, stacks action below body on narrow screens
 .nudge-partner-item {
   display: flex;
