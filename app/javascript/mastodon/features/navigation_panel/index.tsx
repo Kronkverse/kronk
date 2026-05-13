@@ -16,6 +16,10 @@ import BarChartActiveIcon from '@/material-icons/400-24px/bar_chart_4_bars-fill.
 import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
 import CalendarMonthActiveIcon from '@/material-icons/400-24px/calendar_month-fill.svg?react';
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
+import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
+import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
+import { clearUnreadNudges } from 'mastodon/actions/notification_groups';
+import { selectUnreadNudgesCount } from 'mastodon/selectors/notifications';
 import Diversity2ActiveIcon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import GavelActiveIcon from '@/material-icons/400-24px/gavel-fill.svg?react';
@@ -62,6 +66,9 @@ const messages = defineMessages({
   commons: { id: 'governance.title', defaultMessage: '₭ommons' },
   market: { id: 'market.title', defaultMessage: 'Market' },
   events: { id: 'events.title', defaultMessage: '₭alendar' },
+  nudges: { id: 'nudges.title', defaultMessage: 'Nudges' },
+  favourites: { id: 'navigation_bar.favourites', defaultMessage: 'Froths' },
+  bookmarks: { id: 'navigation_bar.bookmarks', defaultMessage: 'Bookmarks' },
   preferences: {
     id: 'navigation_bar.preferences',
     defaultMessage: 'Preferences',
@@ -93,6 +100,35 @@ const messages = defineMessages({
   compose: { id: 'tabs_bar.publish', defaultMessage: 'New Post' },
   invite: { id: 'navigation_panel.invite', defaultMessage: 'Invite' },
 });
+
+const NudgesLink: React.FC = () => {
+  const count = useAppSelector(selectUnreadNudgesCount);
+  const intl = useIntl();
+
+  return (
+    <ColumnLink
+      transparent
+      to='/nudges'
+      icon={
+        <IconWithBadge
+          id='partner_exchange'
+          icon={PartnerExchangeIcon}
+          count={count}
+          className='column-link__icon'
+        />
+      }
+      activeIcon={
+        <IconWithBadge
+          id='partner_exchange'
+          icon={PartnerExchangeActiveIcon}
+          count={count}
+          className='column-link__icon'
+        />
+      }
+      text={intl.formatMessage(messages.nudges)}
+    />
+  );
+};
 
 const NotificationsLink = () => {
   const count = useAppSelector(selectUnreadNotificationGroupsCount);
@@ -324,6 +360,34 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               iconComponent={BarChartIcon}
               activeIconComponent={BarChartActiveIcon}
               text={intl.formatMessage(messages.market)}
+            />
+
+
+            <FollowedTagsPanel />
+
+            <ColumnLink
+              transparent
+              to='/favourites'
+              icon='star'
+              iconComponent={HeartIcon}
+              activeIconComponent={HeartActiveIcon}
+              text={intl.formatMessage(messages.favourites)}
+            />
+            <NudgesLink />
+            <ColumnLink
+              transparent
+              to='/bookmarks'
+              icon='bookmarks'
+              iconComponent={BookmarksIcon}
+              activeIconComponent={BookmarksActiveIcon}
+              text={intl.formatMessage(messages.bookmarks)}
+            />
+            <ColumnLink
+              transparent
+              to='/conversations'
+              icon='at'
+              iconComponent={AlternateEmailIcon}
+              text={intl.formatMessage(messages.direct)}
             />
 
             <hr />
