@@ -92,7 +92,7 @@ const NudgeAlert: React.FC<{
         onClick={handleNudgeBack}
       >
         {nudgedBack ? (
-          <FormattedMessage id='nudges.nudged_back' defaultMessage='Nudged! 🔔' />
+          <FormattedMessage id='nudges.nudged_back' defaultMessage='Nudged!' />
         ) : (
           <FormattedMessage id='nudges.nudge_back' defaultMessage='Nudge back' />
         )}
@@ -187,7 +187,7 @@ const NudgePartnerItem: React.FC<{ partner: ApiNudgePartner }> = ({
           </Button>
         ) : nudgedBack ? (
           <Button compact disabled>
-            <FormattedMessage id='nudges.nudged_back' defaultMessage='Nudged! 🔔' />
+            <FormattedMessage id='nudges.nudged_back' defaultMessage='Nudged!' />
           </Button>
         ) : (
           <span className='nudge-partner-item__waiting'>

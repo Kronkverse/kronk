@@ -77,7 +77,7 @@ const AccountNudges: React.FC = () => {
                 ) : (
                   <FormattedMessage
                     id='account_nudges.streak'
-                    defaultMessage='🔔 {count, plural, one {# nudge} other {# nudges}} exchanged'
+                    defaultMessage='{count, plural, one {# nudge} other {# nudges}} exchanged'
                     values={{ count: streak }}
                   />
                 )}
@@ -89,7 +89,7 @@ const AccountNudges: React.FC = () => {
               disabled={loading || !canNudge}
             >
               {nudgeSent ? (
-                <FormattedMessage id='account_nudges.nudged' defaultMessage='Nudged! 🔔' />
+                <FormattedMessage id='account_nudges.nudged' defaultMessage='Nudged!' />
               ) : !canNudge ? (
                 <FormattedMessage
                   id='account_nudges.waiting'

@@ -81,7 +81,7 @@ export const NotificationNudge: React.FC<{
   const additionalContent =
     streak > 0 ? (
       <span className='notification-nudge__streak'>
-        🔔{' '}
+
         <FormattedMessage
           id='notification.nudge.streak'
           defaultMessage='{count, plural, one {# nudge} other {# nudges}} exchanged'
