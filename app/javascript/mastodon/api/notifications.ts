@@ -95,10 +95,3 @@ export const apiDismissNotificationRequests = async (id: string[]) => {
   return apiRequestPost('v1/notifications/requests/dismiss', { id });
 };
 
-export const apiFetchNudgeUnreadCount = async (): Promise<number> => {
-  const response = await api().get<{ count: number }>(
-    '/api/v2/notifications/unread_count',
-    { params: { types: ['nudge'] } },
-  );
-  return response.data.count;
-};

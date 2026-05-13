@@ -6,9 +6,11 @@ import { AxiosError } from 'axios';
 import { Link } from 'react-router-dom';
 
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
+import { decrementNudgeCount } from 'mastodon/actions/notification_groups';
 import { apiNudgeAccount } from 'mastodon/api/accounts';
 import { Button } from 'mastodon/components/button';
 import type { NotificationGroupNudge } from 'mastodon/models/notification_group';
+import { useAppDispatch } from 'mastodon/store';
 
 import type { LabelRenderer } from './notification_group_with_status';
 import { NotificationGroupWithStatus } from './notification_group_with_status';
@@ -41,6 +43,7 @@ export const NotificationNudge: React.FC<{
   notification: NotificationGroupNudge;
   unread: boolean;
 }> = ({ notification, unread }) => {
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const [nudgedBack, setNudgedBack] = useState(false);
   const [streak, setStreak] = useState(notification.nudgeStreak);
@@ -54,14 +57,15 @@ export const NotificationNudge: React.FC<{
       const result = await apiNudgeAccount(senderId);
       setStreak(result.streak);
       setNudgedBack(true);
+      dispatch(decrementNudgeCount());
     } catch (e: unknown) {
       if (e instanceof AxiosError && e.response?.status === 422) {
-        setNudgedBack(true); // ping-pong: disable button
+        setNudgedBack(true);
       }
     } finally {
       setLoading(false);
     }
-  }, [senderId, loading, nudgedBack]);
+  }, [senderId, loading, nudgedBack, dispatch]);
 
   const actions =
     notification.sampleAccountIds.length === 1 ? (

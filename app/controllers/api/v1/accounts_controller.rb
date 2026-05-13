@@ -3,7 +3,7 @@
 class Api::V1::AccountsController < Api::BaseController
   include RegistrationHelper
 
-  before_action -> { authorize_if_got_token! :read, :'read:accounts' }, except: [:create, :follow, :unfollow, :remove_from_followers, :block, :unblock, :mute, :unmute, :nudge, :nudge_streak, :nudge_partners, :nudge_history]
+  before_action -> { authorize_if_got_token! :read, :'read:accounts' }, except: [:create, :follow, :unfollow, :remove_from_followers, :block, :unblock, :mute, :unmute, :nudge, :nudge_streak, :nudge_partners, :nudge_history, :nudge_pending_count]
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:follows' }, only: [:follow, :unfollow, :remove_from_followers]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:nudge]
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:mutes' }, only: [:mute, :unmute]
@@ -12,10 +12,10 @@ class Api::V1::AccountsController < Api::BaseController
 
   before_action :require_user!, except: [:index, :show, :create]
   before_action :require_client_credentials!, only: [:create]
-  before_action :set_account, except: [:index, :create, :nudge_history, :nudge_partners]
+  before_action :set_account, except: [:index, :create, :nudge_history, :nudge_partners, :nudge_pending_count]
   before_action :set_accounts, only: [:index]
-  before_action :check_account_approval, except: [:index, :create, :nudge_history, :nudge_partners]
-  before_action :check_account_confirmation, except: [:index, :create, :nudge_history, :nudge_partners]
+  before_action :check_account_approval, except: [:index, :create, :nudge_history, :nudge_partners, :nudge_pending_count]
+  before_action :check_account_confirmation, except: [:index, :create, :nudge_history, :nudge_partners, :nudge_pending_count]
   before_action :check_enabled_registrations, only: [:create]
   before_action :check_accounts_limit, only: [:index]
   before_action :check_following_self, only: [:follow]
@@ -154,7 +154,26 @@ class Api::V1::AccountsController < Api::BaseController
         scope_name: :current_user
       ).as_json,
       partners: partners,
+      pending_count: partners.count { |p| p[:can_nudge_back] },
+      grand_total: partners.sum { |p| p[:sent_count] + p[:received_count] },
     }
+  end
+
+  def nudge_pending_count
+    doorkeeper_authorize! :read, :'read:accounts'
+    a = current_user.account.id
+    seen = {}
+    count = 0
+    Notification.where(type: 'nudge')
+                .where('account_id = ? OR from_account_id = ?', a, a)
+                .order(id: :desc)
+                .each do |n|
+      partner_id = n.account_id == a ? n.from_account_id : n.account_id
+      next if seen[partner_id]
+      seen[partner_id] = true
+      count += 1 if n.from_account_id == partner_id
+    end
+    render json: { count: count }
   end
 
   def nudge

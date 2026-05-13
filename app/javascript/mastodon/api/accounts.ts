@@ -56,9 +56,15 @@ export interface ApiNudgePartner {
 }
 
 export const apiGetNudgePartners = () =>
-  apiRequestGet<{ accounts: ApiAccountJSON[]; partners: ApiNudgePartner[] }>(
-    'v1/accounts/nudge_partners',
-  );
+  apiRequestGet<{
+    accounts: ApiAccountJSON[];
+    partners: ApiNudgePartner[];
+    pending_count: number;
+    grand_total: number;
+  }>('v1/accounts/nudge_partners');
+
+export const apiGetNudgePendingCount = () =>
+  apiRequestGet<{ count: number }>('v1/accounts/nudge_pending_count');
 
 export interface ApiNudgeHistoryItem {
   direction: 'sent' | 'received';

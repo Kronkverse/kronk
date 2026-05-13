@@ -10,7 +10,10 @@ import { Link } from 'react-router-dom';
 import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import { importFetchedAccounts } from 'mastodon/actions/importer';
-import { clearUnreadNudges } from 'mastodon/actions/notification_groups';
+import {
+  decrementNudgeCount,
+  setUnreadNudgeCount,
+} from 'mastodon/actions/notification_groups';
 import { apiNudgeAccount, apiGetNudgePartners } from 'mastodon/api/accounts';
 import type { ApiNudgePartner } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
@@ -38,6 +41,7 @@ const NudgeAlert: React.FC<{
   alert: NudgeAlertData;
   onDismiss: (id: string) => void;
 }> = ({ alert, onDismiss }) => {
+  const dispatch = useAppDispatch();
   const account = useAppSelector((state) =>
     state.accounts.get(alert.accountId),
   );
@@ -55,15 +59,15 @@ const NudgeAlert: React.FC<{
     try {
       await apiNudgeAccount(alert.accountId);
       setNudgedBack(true);
+      dispatch(decrementNudgeCount());
     } catch (e: unknown) {
       if (e instanceof AxiosError && e.response?.status === 422) {
-        setNudgedBack(true); // ping-pong: disable button
+        setNudgedBack(true);
       }
-      // Other errors: re-enable button so user can retry
     } finally {
       setLoading(false);
     }
-  }, [alert.accountId, loading, nudgedBack]);
+  }, [alert.accountId, loading, nudgedBack, dispatch]);
 
   if (!account) return null;
 
@@ -109,6 +113,7 @@ const NudgeAlert: React.FC<{
 const NudgePartnerItem: React.FC<{ partner: ApiNudgePartner }> = ({
   partner,
 }) => {
+  const dispatch = useAppDispatch();
   const account = useAppSelector((state) =>
     state.accounts.get(partner.account_id),
   );
@@ -122,15 +127,15 @@ const NudgePartnerItem: React.FC<{ partner: ApiNudgePartner }> = ({
     try {
       await apiNudgeAccount(partner.account_id);
       setNudgedBack(true);
+      dispatch(decrementNudgeCount());
     } catch (e: unknown) {
       if (e instanceof AxiosError && e.response?.status === 422) {
-        setNudgedBack(true); // ping-pong: disable button
+        setNudgedBack(true);
       }
-      // Other errors: re-enable button so user can retry
     } finally {
       setLoading(false);
     }
-  }, [partner.account_id, loading, canNudge]);
+  }, [partner.account_id, loading, canNudge, dispatch]);
 
   if (!account) return null;
 
@@ -200,6 +205,7 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const [partners, setPartners] = useState<ApiNudgePartner[]>([]);
+  const [grandTotal, setGrandTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState<NudgeAlertData[]>([]);
 
@@ -224,17 +230,20 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     try {
       const data = await apiGetNudgePartners();
       if (data.accounts?.length) dispatch(importFetchedAccounts(data.accounts));
-      setPartners(data.partners ?? []);
+      const loadedPartners = data.partners ?? [];
+      setPartners(loadedPartners);
+      setGrandTotal(data.grand_total ?? 0);
+      // Sync the nav badge to the real pending count
+      dispatch(setUnreadNudgeCount(data.pending_count ?? 0));
     } finally {
       setLoading(false);
     }
   }, [dispatch]);
 
-  // On mount: clear badge, load partners, snapshot current groups as baseline
+  // On mount: load partners (which syncs the badge)
   useEffect(() => {
-    dispatch(clearUnreadNudges());
     void load();
-  }, [load, dispatch]);
+  }, [load]);
 
   // Watch nudge groups — show an alert for any group that arrives or updates
   // after the panel was first rendered.
@@ -252,7 +261,6 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     nudgeGroups.forEach((group) => {
       const seen = seenGroupsRef.current!.get(group.group_key);
       if (seen !== group.latest_page_notification_at) {
-        // New group or updated timestamp → someone nudged us
         const accountId = group.sampleAccountIds[0];
         if (accountId) {
           newAlerts.push({
@@ -295,6 +303,18 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       )}
 
       <div className='scrollable'>
+        {!loading && (
+          <div className='nudge-grand-total'>
+            <span className='nudge-grand-total__label'>
+              <FormattedMessage
+                id='nudges.grand_total_label'
+                defaultMessage='Grand Total of Nudges'
+              />
+            </span>
+            <span className='nudge-grand-total__count'>{grandTotal}</span>
+          </div>
+        )}
+
         {loading && (
           <div className='loading-indicator'>
             <div className='loading-indicator__figure' />
