@@ -137,6 +137,11 @@ class Api::V1::AccountsController < Api::BaseController
         last = last_nudge_per_partner[id]
         {
           account_id: id.to_s,
+          account: REST::AccountSerializer.new(
+            accounts[id],
+            scope: current_user,
+            scope_name: :current_user
+          ).as_json,
           sent_count: sent_counts[id] || 0,
           received_count: received_counts[id] || 0,
           streak: (sent_counts[id] || 0) + (received_counts[id] || 0),
@@ -147,12 +152,9 @@ class Api::V1::AccountsController < Api::BaseController
       .sort_by { |p| [-p[:streak], p[:last_nudge_at] || ''] }
 
     render json: {
-      accounts: ActiveModelSerializers::SerializableResource.new(
-        accounts.values,
-        each_serializer: REST::AccountSerializer,
-        scope: current_user,
-        scope_name: :current_user
-      ).as_json,
+      accounts: accounts.values.map { |acc|
+        REST::AccountSerializer.new(acc, scope: current_user, scope_name: :current_user).as_json
+      },
       partners: partners,
       pending_count: partners.count { |p| p[:can_nudge_back] },
       grand_total: partners.sum { |p| p[:sent_count] + p[:received_count] },
