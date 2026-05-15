@@ -107,6 +107,17 @@ namespace :api, format: false do
         get :my_invitees
       end
     end
+    resources :proposals, only: [:index, :show, :create, :update] do
+      member do
+        post :vote
+        delete :unvote
+        post :mark_delivered
+        post :archive
+        post :unarchive
+      end
+      resources :tasks, only: [:index, :create, :update], shallow: true
+    end
+
     resources :reports, only: [:create]
     resources :trends, only: [:index], controller: 'trends/tags'
     resources :filters, only: [:index, :create, :show, :update, :destroy]
@@ -218,6 +229,12 @@ namespace :api, format: false do
         resources :endorsements, only: :index
       end
 
+      collection do
+        get :nudge_partners
+        get :nudge_history
+        get :nudge_pending_count
+      end
+
       member do
         post :follow
         post :unfollow
@@ -226,6 +243,8 @@ namespace :api, format: false do
         post :unblock
         post :mute
         post :unmute
+        post :nudge
+        get :nudge_streak
       end
 
       scope module: :accounts do

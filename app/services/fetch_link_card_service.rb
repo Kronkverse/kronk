@@ -34,6 +34,9 @@ class FetchLinkCardService < BaseService
     nil
   end
 
+  MARKDOWN_LINK_RE = %r{\[([^\]]+)\]\((https?://[^)]+)\)}
+  ALLOWED_LOCAL_PATHS = %w(/kalendar /governance /huddle /home).freeze
+
   private
 
   def process_url
@@ -78,7 +81,15 @@ class FetchLinkCardService < BaseService
 
   def parse_urls
     urls = if @status.local?
-             @status.text.scan(URL_PATTERN).map { |array| Addressable::URI.parse(array[1]).normalize }
+             raw_urls = @status.text.scan(URL_PATTERN).map { |array| Addressable::URI.parse(array[1]).normalize }
+             markdown_urls = @status.text.scan(MARKDOWN_LINK_RE).filter_map do |_, url|
+               begin
+                 Addressable::URI.parse(url).normalize
+               rescue
+                 nil
+               end
+             end
+             raw_urls + markdown_urls
            else
              document = Nokogiri::HTML5(@status.text)
              links = document.css('a')
@@ -90,7 +101,8 @@ class FetchLinkCardService < BaseService
   end
 
   def bad_url?(uri)
-    # Avoid local instance URLs and invalid URLs
+    return false if TagManager.instance.local_url?(uri.to_s) && ALLOWED_LOCAL_PATHS.any? { |path| uri.path.start_with?(path) }
+
     uri.host.blank? || TagManager.instance.local_url?(uri.to_s) || !%w(http https).include?(uri.scheme)
   end
 

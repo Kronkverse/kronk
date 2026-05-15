@@ -83,6 +83,9 @@ class Notification < ApplicationRecord
     event_invitation: {
       filterable: true,
     }.freeze,
+    nudge: {
+      filterable: true,
+    }.freeze,
   }.freeze
 
   TYPES = PROPERTIES.keys.freeze

@@ -37,7 +37,6 @@ export const NotificationEventInvitation: React.FC<{
   unread: boolean;
 }> = ({ notification, unread }) => {
   const inv = notification.eventInvitation;
-  if (!inv) return null;
 
   const isHuddle = inv.event_type === 'huddle';
 
@@ -52,7 +51,10 @@ export const NotificationEventInvitation: React.FC<{
       labelRenderer={labelRenderer}
       unread={unread}
       additionalContent={
-        <Link to={`/events/${inv.event_id}`} className='notification-event-card'>
+        <Link
+          to={`/kalendar/${inv.event_id}`}
+          className='notification-event-card'
+        >
           <div className='notification-event-card__date-badge'>
             <span className='notification-event-card__date-badge__month'>
               <FormattedDate value={inv.event_start_time} month='short' />
@@ -63,7 +65,10 @@ export const NotificationEventInvitation: React.FC<{
           </div>
           <div className='notification-event-card__info'>
             <div className='notification-event-card__title'>
-              <Icon id={isHuddle ? 'videocam' : 'calendar_month'} icon={isHuddle ? VideocamIcon : CalendarMonthIcon} />
+              <Icon
+                id={isHuddle ? 'videocam' : 'calendar_month'}
+                icon={isHuddle ? VideocamIcon : CalendarMonthIcon}
+              />
               {inv.event_title}
             </div>
             <div className='notification-event-card__meta'>

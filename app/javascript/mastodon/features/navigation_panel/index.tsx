@@ -12,27 +12,22 @@ import { useDrag } from '@use-gesture/react';
 
 import kronkWordmark from '@/images/kronk-wordmark-small.png';
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
-import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
 import BarChartActiveIcon from '@/material-icons/400-24px/bar_chart_4_bars-fill.svg?react';
 import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
-import BookmarksActiveIcon from '@/material-icons/400-24px/bookmarks-fill.svg?react';
-import BookmarksIcon from '@/material-icons/400-24px/bookmarks.svg?react';
 import CalendarMonthActiveIcon from '@/material-icons/400-24px/calendar_month-fill.svg?react';
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import Diversity2ActiveIcon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
-import HeartActiveIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
-import HeartIcon from '@/material-icons/400-24px/favorite.svg?react';
-import GroupActiveIcon from '@/material-icons/400-24px/group-fill.svg?react';
-import GroupIcon from '@/material-icons/400-24px/group.svg?react';
+import GavelActiveIcon from '@/material-icons/400-24px/gavel-fill.svg?react';
+import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
 import HomeActiveIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import InfoIcon from '@/material-icons/400-24px/info.svg?react';
 import MenuIcon from '@/material-icons/400-24px/menu.svg?react';
 import NotificationsActiveIcon from '@/material-icons/400-24px/notifications-fill.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
-import OrbitActiveIcon from '@/material-icons/400-24px/orbit-fill.svg?react';
-import OrbitIcon from '@/material-icons/400-24px/orbit.svg?react';
+import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
+import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
@@ -49,18 +44,15 @@ import { Search } from 'mastodon/features/compose/components/search';
 import { ColumnLink } from 'mastodon/features/ui/components/column_link';
 import { useBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
 import { useIdentity } from 'mastodon/identity_context';
-import {
-  localLiveFeedAccess,
-  remoteLiveFeedAccess,
-  me,
-} from 'mastodon/initial_state';
+import { me } from 'mastodon/initial_state';
 import { transientSingleColumn } from 'mastodon/is_mobile';
-import { canViewFeed } from 'mastodon/permissions';
-import { selectUnreadNotificationGroupsCount } from 'mastodon/selectors/notifications';
+import {
+  selectUnreadNotificationGroupsCount,
+  selectUnreadNudgesCount,
+} from 'mastodon/selectors/notifications';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
 import { DisabledAccountBanner } from './components/disabled_account_banner';
-import { FollowedTagsPanel } from './components/followed_tags_panel';
 import { MoreLink } from './components/more_link';
 import { SignInBanner } from './components/sign_in_banner';
 import { Trends } from './components/trends';
@@ -71,19 +63,11 @@ const messages = defineMessages({
     id: 'tabs_bar.notifications',
     defaultMessage: 'Notifications',
   },
-  orbit: { id: 'orbit.title', defaultMessage: 'Orbit' },
-  explore: { id: 'explore.title', defaultMessage: 'Trending' },
-  firehose: { id: 'navigation.kronk_feed', defaultMessage: '₭ronk' },
-  firehose_singular: {
-    id: 'navigation.kronk_feed_singular',
-    defaultMessage: '₭ronk',
-  },
-  direct: { id: 'navigation_bar.direct', defaultMessage: 'Private mentions' },
   live: { id: 'live.title', defaultMessage: 'Huddle' },
+  commons: { id: 'governance.title', defaultMessage: '₭ommons' },
   market: { id: 'market.title', defaultMessage: 'Market' },
-  events: { id: 'events.title', defaultMessage: 'Events' },
-  favourites: { id: 'navigation_bar.favourites', defaultMessage: 'Froths' },
-  bookmarks: { id: 'navigation_bar.bookmarks', defaultMessage: 'Bookmarks' },
+  events: { id: 'events.title', defaultMessage: '₭alendar' },
+  nudges: { id: 'nudges.title', defaultMessage: 'Nudges' },
   preferences: {
     id: 'navigation_bar.preferences',
     defaultMessage: 'Preferences',
@@ -115,6 +99,35 @@ const messages = defineMessages({
   compose: { id: 'tabs_bar.publish', defaultMessage: 'New Post' },
   invite: { id: 'navigation_panel.invite', defaultMessage: 'Invite' },
 });
+
+const NudgesLink: React.FC = () => {
+  const count = useAppSelector(selectUnreadNudgesCount);
+  const intl = useIntl();
+
+  return (
+    <ColumnLink
+      transparent
+      to='/nudges'
+      icon={
+        <IconWithBadge
+          id='partner_exchange'
+          icon={PartnerExchangeIcon}
+          count={count}
+          className='column-link__icon'
+        />
+      }
+      activeIcon={
+        <IconWithBadge
+          id='partner_exchange'
+          icon={PartnerExchangeActiveIcon}
+          count={count}
+          className='column-link__icon'
+        />
+      }
+      text={intl.formatMessage(messages.nudges)}
+    />
+  );
+};
 
 const NotificationsLink = () => {
   const count = useAppSelector(selectUnreadNotificationGroupsCount);
@@ -203,13 +216,6 @@ const ProfileCard: React.FC = () => {
   );
 };
 
-const isFirehoseActive = (
-  match: unknown,
-  { pathname }: { pathname: string },
-) => {
-  return !!match || pathname.startsWith('/public');
-};
-
 const MENU_WIDTH = 284;
 
 export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
@@ -217,7 +223,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
 }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
-  const { signedIn, permissions, disabledAccountId } = useIdentity();
+  const { signedIn, disabledAccountId } = useIdentity();
   const location = useLocation();
   const collapsed = useAppSelector((state) => state.navigation.collapsed);
   const showSearch = useBreakpoint('full') && !multiColumn;
@@ -304,41 +310,6 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
           </>
         )}
 
-        {(canViewFeed(signedIn, permissions, localLiveFeedAccess) ||
-          canViewFeed(signedIn, permissions, remoteLiveFeedAccess)) && (
-          <ColumnLink
-            transparent
-            to={
-              canViewFeed(signedIn, permissions, localLiveFeedAccess)
-                ? '/public/local'
-                : '/public/remote'
-            }
-            icon='group'
-            iconComponent={GroupIcon}
-            activeIconComponent={GroupActiveIcon}
-            isActive={isFirehoseActive}
-            text={intl.formatMessage(
-              canViewFeed(signedIn, permissions, localLiveFeedAccess) &&
-                canViewFeed(signedIn, permissions, remoteLiveFeedAccess)
-                ? messages.firehose
-                : messages.firehose_singular,
-            )}
-            tooltip='All Kronk posts'
-          />
-        )}
-
-        {signedIn && (
-          <ColumnLink
-            transparent
-            to='/orbit'
-            icon='orbit'
-            iconComponent={OrbitIcon}
-            activeIconComponent={OrbitActiveIcon}
-            text={intl.formatMessage(messages.orbit)}
-            tooltip="Your people's people"
-          />
-        )}
-
         {signedIn && (
           <ColumnLink
             transparent
@@ -354,12 +325,12 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
         {signedIn && (
           <ColumnLink
             transparent
-            to='/events'
+            to='/kalendar'
             icon='calendar_month'
             iconComponent={CalendarMonthIcon}
             activeIconComponent={CalendarMonthActiveIcon}
             text={intl.formatMessage(messages.events)}
-            tooltip='Events &amp; Huddles'
+            tooltip='₭alendar &amp; Huddles'
           />
         )}
 
@@ -368,6 +339,16 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             <hr />
 
             <NotificationsLink />
+
+            <ColumnLink
+              transparent
+              to='/governance'
+              icon='gavel'
+              iconComponent={GavelIcon}
+              activeIconComponent={GavelActiveIcon}
+              text={intl.formatMessage(messages.commons)}
+              tooltip='₭ommons'
+            />
 
             <FollowRequestsLink />
 
@@ -380,31 +361,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               text={intl.formatMessage(messages.market)}
             />
 
-            <FollowedTagsPanel />
-
-            <ColumnLink
-              transparent
-              to='/favourites'
-              icon='star'
-              iconComponent={HeartIcon}
-              activeIconComponent={HeartActiveIcon}
-              text={intl.formatMessage(messages.favourites)}
-            />
-            <ColumnLink
-              transparent
-              to='/bookmarks'
-              icon='bookmarks'
-              iconComponent={BookmarksIcon}
-              activeIconComponent={BookmarksActiveIcon}
-              text={intl.formatMessage(messages.bookmarks)}
-            />
-            <ColumnLink
-              transparent
-              to='/conversations'
-              icon='at'
-              iconComponent={AlternateEmailIcon}
-              text={intl.formatMessage(messages.direct)}
-            />
+            <NudgesLink />
 
             <hr />
 

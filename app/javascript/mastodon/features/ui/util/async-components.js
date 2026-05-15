@@ -66,6 +66,10 @@ export function AccountGallery () {
   return import('../../account_gallery');
 }
 
+export function AccountNudges () {
+  return import('../../account_nudges');
+}
+
 export function AccountFeatured() {
   return import('../../account_featured');
 }
@@ -250,10 +254,18 @@ export function Events () {
   return import("../../events");
 }
 
+export function Nudges () {
+  return import("../../nudges");
+}
+
 export function EventDetail () {
   return import("../../events/event_detail");
 }
 
 export function Market () {
   return import("../../market");
+}
+
+export function Governance () {
+  return import("../../governance");
 }
