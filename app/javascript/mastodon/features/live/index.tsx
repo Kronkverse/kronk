@@ -366,6 +366,7 @@ const Live: React.FC<{
 
     api.addListener('videoConferenceJoined', () => {
       if (jitsiApiRef.current) {
+        jitsiApiRef.current.executeCommand('password', '');
         if (currentUsername) {
           jitsiApiRef.current.executeCommand(
             'displayName',
