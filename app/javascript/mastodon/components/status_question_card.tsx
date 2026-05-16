@@ -84,6 +84,7 @@ export const StatusQuestionCard: React.FC<{
   hasAnswered?: boolean;
   question?: ParentQuestion;
   statusId?: string;
+  onCardClick?: (e: React.MouseEvent) => void;
 }> = ({
   postType,
   contentHtml,
@@ -92,6 +93,7 @@ export const StatusQuestionCard: React.FC<{
   hasAnswered = false,
   question,
   statusId,
+  onCardClick,
 }) => {
   const intl = useIntl();
   const [answering, setAnswering] = useState(false);
@@ -189,12 +191,25 @@ export const StatusQuestionCard: React.FC<{
     if (node) node.focus();
   }, []);
 
+  const handleCardKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if ((e.key === 'Enter' || e.key === ' ') && onCardClick) {
+        onCardClick(e as unknown as React.MouseEvent);
+      }
+    },
+    [onCardClick],
+  );
+
   return (
     <div
       className={`status-question-card status-question-card--${postType}`}
       style={
         { '--space-color': spaceColor('Questions') } as React.CSSProperties
       }
+      onClick={onCardClick}
+      onKeyDown={handleCardKeyDown}
+      role={onCardClick ? 'button' : undefined}
+      tabIndex={onCardClick ? 0 : undefined}
     >
       <div className='status-question-card__badge'>
         <Icon

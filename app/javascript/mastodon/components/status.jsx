@@ -561,6 +561,7 @@ class Status extends ImmutablePureComponent {
           hasAnswered={status.get('has_answered')}
           question={status.get('question')?.toJS()}
           statusId={status.get('id')}
+          onCardClick={this.handleClick}
         />
       );
     } else if (status.get('post_type') === 'proposal' && status.get('proposal')) {
