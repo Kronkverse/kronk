@@ -156,8 +156,9 @@
     outline: none;
     font-family: inherit;
     padding: 0;
-    height: 1.4em;
-    overflow: hidden;
+    height: 1.4em !important;
+    max-height: 1.4em !important;
+    overflow-y: auto;
   }
 
   &__footer-submit {
