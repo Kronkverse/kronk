@@ -32,7 +32,7 @@ const messages = defineMessages({
   },
   locked: {
     id: 'status_question_card.locked',
-    defaultMessage: 'Answer to unlock',
+    defaultMessage: 'Answer to access answers',
   },
   placeholder: {
     id: 'status_question_card.placeholder',
@@ -203,21 +203,21 @@ export const StatusQuestionCard: React.FC<{
             </div>
           )}
 
-          <span className='status-question-card__count'>
-            {answersCount > 0
-              ? intl.formatMessage(messages.answers, { count: answersCount })
-              : hasAnswered
-                ? intl.formatMessage(messages.answered)
-                : intl.formatMessage(messages.locked)}
-          </span>
-
-          {!hasAnswered && statusId && !answering && (
+          {!hasAnswered && !answering && statusId ? (
             <button
-              className='status-question-card__answer-btn'
+              className='status-question-card__count status-question-card__count--locked'
               onClick={handleAnswerClick}
             >
-              {intl.formatMessage(messages.answer)}
+              {answersCount > 0
+                ? intl.formatMessage(messages.answers, { count: answersCount })
+                : intl.formatMessage(messages.locked)}
             </button>
+          ) : (
+            <span className='status-question-card__count'>
+              {answersCount > 0
+                ? intl.formatMessage(messages.answers, { count: answersCount })
+                : intl.formatMessage(messages.answered)}
+            </span>
           )}
         </div>
       )}
