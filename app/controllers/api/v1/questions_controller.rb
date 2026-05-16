@@ -7,6 +7,16 @@ class Api::V1::QuestionsController < Api::BaseController
 
   DEFAULT_LIMIT = 20
 
+  def all_answers
+    @statuses = answers_scope.limit(limit_param(DEFAULT_LIMIT))
+    @statuses = @statuses.where(Status.arel_table[:id].lt(params[:max_id])) if params[:max_id].present?
+    @statuses = @statuses.where(Status.arel_table[:id].gt(params[:min_id])) if params[:min_id].present?
+
+    render json: @statuses,
+           each_serializer: REST::StatusSerializer,
+           relationships: StatusRelationshipsPresenter.new(@statuses, current_user.account_id)
+  end
+
   def index
     @statuses = questions_scope.limit(limit_param(DEFAULT_LIMIT))
     @statuses = @statuses.where(Status.arel_table[:id].lt(params[:max_id])) if params[:max_id].present?
@@ -45,6 +55,14 @@ class Api::V1::QuestionsController < Api::BaseController
 
   def current_account_has_answered?
     Status.exists?(account: current_account, post_type: :answer, in_reply_to_id: @question.id)
+  end
+
+  def answers_scope
+    Status.kronk_answer
+          .not_excluded_by_account(current_account)
+          .not_domain_blocked_by_account(current_account)
+          .includes(:media_attachments, :tags, :preloadable_poll, :quote, preview_cards_status: :preview_card, account: :account_stat)
+          .reorder(id: :desc)
   end
 
   def questions_scope

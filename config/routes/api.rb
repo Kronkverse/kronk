@@ -103,6 +103,9 @@ namespace :api, format: false do
       member do
         get :answers
       end
+      collection do
+        get :answers, action: :all_answers
+      end
     end
 
     resources :events, only: [:index, :show, :create, :update, :destroy] do

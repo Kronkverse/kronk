@@ -11,6 +11,7 @@ import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
 import { QuestionCard } from './components/question_card';
 import { QuestionComposer } from './components/question_composer';
+import { QuestionsTabNav } from './components/questions_tab_nav';
 import type { Question } from './types';
 
 const messages = defineMessages({
@@ -86,6 +87,8 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             {'↓'}
           </button>
         </div>
+
+        <QuestionsTabNav />
 
         <div className='questions-page__list' ref={listRef}>
           {loading && <div className='questions-page__loading' />}

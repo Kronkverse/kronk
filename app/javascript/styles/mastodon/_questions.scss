@@ -81,6 +81,42 @@
   border-radius: 2px;
 }
 
+// ── Tab navigation ────────────────────────────────────────────
+
+.questions-tab-nav {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+}
+
+.questions-tab-nav__tab {
+  background: transparent;
+  border: 1px solid
+    color-mix(in srgb, var(--space-color, #4844c0) 50%, transparent);
+  border-radius: 20px;
+  padding: 8px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: $secondary-text-color;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  &--active {
+    background: var(--space-color, #4844c0);
+    border-color: var(--space-color, #4844c0);
+    color: #fff;
+  }
+
+  &:not(&--active):hover {
+    border-color: var(--space-color, #4844c0);
+    color: $primary-text-color;
+  }
+}
+
 // ── Question card ──────────────────────────────────────────────
 
 .question-card {

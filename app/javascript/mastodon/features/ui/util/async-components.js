@@ -277,3 +277,7 @@ export function Questions () {
 export function QuestionPage () {
   return import("../../questions/question_page");
 }
+
+export function AnswersPage () {
+  return import("../../questions/answers_page");
+}
