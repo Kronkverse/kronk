@@ -1,3 +1,11 @@
+// Provide U+0198 (Ƙ) and U+0199 (ƙ) from a serif fallback since Roboto lacks them.
+@font-face {
+  font-family: mastodon-font-sans-serif;
+  src: local('Georgia'), local('Noto Serif'), local('Droid Serif');
+  unicode-range: U+0198-0199;
+  font-display: swap;
+}
+
 @font-face {
   font-family: mastodon-font-sans-serif;
   src:
