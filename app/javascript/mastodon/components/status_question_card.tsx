@@ -86,6 +86,7 @@ export const StatusQuestionCard: React.FC<{
   const [answering, setAnswering] = useState(false);
   const [answerText, setAnswerText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [postedAnswer, setPostedAnswer] = useState(false);
 
   const handleAnswerClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -117,6 +118,7 @@ export const StatusQuestionCard: React.FC<{
       });
       setAnswerText('');
       setAnswering(false);
+      setPostedAnswer(true);
     } catch (err) {
       console.error('Failed to post answer:', err);
     } finally {
@@ -134,7 +136,8 @@ export const StatusQuestionCard: React.FC<{
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
         void handleSubmit();
       }
     },
@@ -193,8 +196,8 @@ export const StatusQuestionCard: React.FC<{
         >
           <Icon
             id={hasAnswered ? 'lock_open' : 'lock'}
-            icon={hasAnswered ? LockOpenIcon : LockIcon}
-            className={`status-question-card__lock ${hasAnswered ? 'status-question-card__lock--open' : ''}`}
+            icon={(hasAnswered || postedAnswer) ? LockOpenIcon : LockIcon}
+            className={`status-question-card__lock ${(hasAnswered || postedAnswer) ? 'status-question-card__lock--open' : ''}`}
           />
 
           {answerers.length > 0 && !answering && (
@@ -236,7 +239,7 @@ export const StatusQuestionCard: React.FC<{
                 />
               </button>
             </>
-          ) : !hasAnswered && statusId ? (
+          ) : !(hasAnswered || postedAnswer) && statusId ? (
             <span
               className='status-question-card__count status-question-card__count--locked'
               onClick={handleAnswerClick}
@@ -252,7 +255,9 @@ export const StatusQuestionCard: React.FC<{
             <span className='status-question-card__count'>
               {answersCount > 0
                 ? intl.formatMessage(messages.answers, { count: answersCount })
-                : intl.formatMessage(messages.answered)}
+                : (hasAnswered || postedAnswer)
+                  ? intl.formatMessage(messages.answered)
+                  : intl.formatMessage(messages.locked)}
             </span>
           )}
         </div>
