@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -10,18 +10,11 @@ import { Icon } from 'mastodon/components/icon';
 
 import type { Question } from '../types';
 
-import { AnswerComposer } from './answer_composer';
-
 const messages = defineMessages({
-  answer: { id: 'questions.card.answer', defaultMessage: 'Answer' },
   answered: { id: 'questions.card.answered', defaultMessage: 'Answered ✓' },
   peopleAnswered: {
     id: 'questions.card.people_answered',
     defaultMessage: '{count, plural, one {# answer} other {# answers}}',
-  },
-  viewAnswers: {
-    id: 'questions.card.view_answers',
-    defaultMessage: '{count, plural, one {# answer} other {# answers}} →',
   },
 });
 
@@ -33,13 +26,11 @@ const parseContent = (html: string) => {
 
 export const QuestionCard: React.FC<{
   question: Question;
-  onAnswered?: (updated: Question) => void;
-}> = ({ question, onAnswered }) => {
+}> = ({ question }) => {
   const intl = useIntl();
   const history = useHistory();
-  const [answering, setAnswering] = useState(false);
-  const [hasAnswered, setHasAnswered] = useState(question.has_answered);
-  const [answersCount, setAnswersCount] = useState(question.answers_count);
+  const hasAnswered = question.has_answered;
+  const answersCount = question.answers_count;
 
   const handleCardClick = useCallback(() => {
     history.push(`/questions/${question.id}`);
@@ -54,33 +45,6 @@ export const QuestionCard: React.FC<{
     },
     [history, question.id],
   );
-
-  const handleAnswerClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setAnswering(true);
-  }, []);
-
-  const handleAnswerCancel = useCallback(() => {
-    setAnswering(false);
-  }, []);
-
-  const handleAnswered = useCallback(() => {
-    setAnswering(false);
-    setHasAnswered(true);
-    setAnswersCount((c) => {
-      const newCount = c + 1;
-      onAnswered?.({
-        ...question,
-        has_answered: true,
-        answers_count: newCount,
-      });
-      return newCount;
-    });
-  }, [question, onAnswered]);
-
-  const handleComposerClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
 
   const plainText = parseContent(question.content);
 
@@ -132,38 +96,20 @@ export const QuestionCard: React.FC<{
                 />
               ))}
               <span className='question-card__answer-count'>
-                {intl.formatMessage(
-                  hasAnswered ? messages.viewAnswers : messages.peopleAnswered,
-                  { count: answersCount },
-                )}
+                {intl.formatMessage(messages.peopleAnswered, {
+                  count: answersCount,
+                })}
               </span>
             </div>
           )}
         </div>
 
-        {hasAnswered ? (
+        {hasAnswered && (
           <span className='question-card__answered-badge'>
             {intl.formatMessage(messages.answered)}
           </span>
-        ) : (
-          <button
-            className='question-card__answer-btn'
-            onClick={handleAnswerClick}
-          >
-            {intl.formatMessage(messages.answer)}
-          </button>
         )}
       </div>
-
-      {answering && (
-        <div onClick={handleComposerClick} role='presentation'>
-          <AnswerComposer
-            question={question}
-            onAnswered={handleAnswered}
-            onCancel={handleAnswerCancel}
-          />
-        </div>
-      )}
     </div>
   );
 };

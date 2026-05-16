@@ -48,12 +48,6 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setActiveTab('browse');
   }, []);
 
-  const handleAnswered = useCallback((updated: Question) => {
-    setQuestions((prev) =>
-      prev.map((q) => (q.id === updated.id ? updated : q)),
-    );
-  }, []);
-
   const handleTabAsk = useCallback(() => {
     setActiveTab('ask');
   }, []);
@@ -110,11 +104,7 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               </p>
             )}
             {questions.map((question) => (
-              <QuestionCard
-                key={question.id}
-                question={question}
-                onAnswered={handleAnswered}
-              />
+              <QuestionCard key={question.id} question={question} />
             ))}
           </div>
         )}
