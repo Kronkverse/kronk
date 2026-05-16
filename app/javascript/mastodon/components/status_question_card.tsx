@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -59,17 +59,6 @@ interface ParentQuestion {
   };
 }
 
-interface UnlockedAnswer {
-  id: string;
-  content: string;
-  account: {
-    display_name: string;
-    username: string;
-    acct: string;
-    avatar: string;
-  };
-}
-
 const stripHtml = (html: string) => {
   const div = document.createElement('div');
   div.innerHTML = html;
@@ -100,29 +89,8 @@ export const StatusQuestionCard: React.FC<{
   const [answerText, setAnswerText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [postedAnswer, setPostedAnswer] = useState(false);
-  const [unlockedAnswers, setUnlockedAnswers] = useState<UnlockedAnswer[]>([]);
 
   const unlocked = hasAnswered || postedAnswer;
-
-  const fetchAnswers = useCallback(async () => {
-    if (!statusId) return;
-    try {
-      const response = await api().get<UnlockedAnswer[] | { locked: boolean }>(
-        `/api/v1/questions/${statusId}/answers`,
-      );
-      if (Array.isArray(response.data)) {
-        setUnlockedAnswers(response.data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch answers:', err);
-    }
-  }, [statusId]);
-
-  useEffect(() => {
-    if (hasAnswered && postType === 'question') {
-      void fetchAnswers();
-    }
-  }, [hasAnswered, postType, fetchAnswers]);
 
   const handleAnswerClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -149,13 +117,12 @@ export const StatusQuestionCard: React.FC<{
       setAnswerText('');
       setAnswering(false);
       setPostedAnswer(true);
-      void fetchAnswers();
     } catch (err) {
       console.error('Failed to post answer:', err);
     } finally {
       setSubmitting(false);
     }
-  }, [answerText, submitting, statusId, fetchAnswers]);
+  }, [answerText, submitting, statusId]);
 
   const handleSubmitClick = useCallback(
     (e: React.MouseEvent) => {
@@ -241,8 +208,7 @@ export const StatusQuestionCard: React.FC<{
       />
 
       {postType === 'question' && (
-        <>
-          <div
+        <div
             className='status-question-card__footer'
             onClick={handleFooterClick}
             role='presentation'
@@ -318,30 +284,6 @@ export const StatusQuestionCard: React.FC<{
               </span>
             )}
           </div>
-
-          {unlocked && unlockedAnswers.length > 0 && (
-            <div className='status-question-card__answers'>
-              {unlockedAnswers.map((a) => (
-                <div key={a.id} className='status-question-card__answer-item'>
-                  <img
-                    className='status-question-card__answer-avatar'
-                    src={a.account.avatar}
-                    alt={a.account.username}
-                    title={`@${a.account.acct}`}
-                  />
-                  <div className='status-question-card__answer-body'>
-                    <span className='status-question-card__answer-author'>
-                      {a.account.display_name || `@${a.account.username}`}
-                    </span>
-                    <span className='status-question-card__answer-text'>
-                      {stripHtml(a.content)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </>
       )}
     </div>
   );
