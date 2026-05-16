@@ -122,6 +122,16 @@
     font-size: 13px;
     color: $dark-text-color;
     flex: 1;
+
+    &--locked {
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: start;
+    }
   }
 
   &__answer-btn {
