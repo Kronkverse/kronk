@@ -308,8 +308,10 @@ class StatusActionBar extends ImmutablePureComponent {
 
       if (writtenByMe) {
         menu.push({ text: intl.formatMessage(messages.edit), action: this.handleEditClick });
-        menu.push({ text: intl.formatMessage(messages.delete), action: this.handleDeleteClick, dangerous: true });
-        menu.push({ text: intl.formatMessage(messages.redraft), action: this.handleRedraftClick, dangerous: true });
+        if (status.get('post_type') !== 'answer') {
+          menu.push({ text: intl.formatMessage(messages.delete), action: this.handleDeleteClick, dangerous: true });
+          menu.push({ text: intl.formatMessage(messages.redraft), action: this.handleRedraftClick, dangerous: true });
+        }
       } else {
         menu.push({ text: intl.formatMessage(messages.mention, { name: account.get('username') }), action: this.handleMentionClick });
         menu.push({ text: intl.formatMessage(messages.direct, { name: account.get('username') }), action: this.handleDirectClick });

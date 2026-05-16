@@ -126,6 +126,8 @@ class Api::V1::StatusesController < Api::BaseController
 
   def destroy
     @status = Status.where(account: current_account).find(params[:id])
+    return render json: { error: 'Answers cannot be deleted' }, status: :unprocessable_entity if @status.kronk_answer?
+
     authorize @status, :destroy?
 
     @status.discard_with_reblogs
