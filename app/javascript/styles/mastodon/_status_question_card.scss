@@ -10,6 +10,7 @@
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--space-color, #4844c0) 50%, transparent),
     0 4px 16px rgba(#000, 0.4);
+  cursor: pointer;
 
   &__badge {
     display: flex;
@@ -86,6 +87,7 @@
       var(--space-color, #4844c0) 10%,
       transparent
     );
+    cursor: default;
   }
 
   &__lock {
