@@ -4277,6 +4277,10 @@ a.account__display-name {
   }
 }
 
+.column-link--questions span {
+  font-family: Georgia, 'Liberation Serif', serif;
+}
+
 .column-link__badge {
   display: inline-block;
   border-radius: 4px;
@@ -12305,6 +12309,7 @@ noscript {
     font-size: 20px;
     line-height: 1;
     cursor: pointer;
+
     // Ensure adequate touch target
     padding: 8px 4px;
     margin: -8px -4px;
@@ -12315,7 +12320,7 @@ noscript {
   }
 
   // On very narrow screens, stack text + buttons vertically
-  @media screen and (max-width: 360px) {
+  @media screen and (width <= 360px) {
     &__text {
       width: 100%;
       flex-basis: 100%;

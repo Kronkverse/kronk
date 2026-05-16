@@ -366,6 +366,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               activeIconComponent={QuestionMarkActiveIcon}
               text={intl.formatMessage(messages.questions)}
               tooltip='Ƙuestions'
+              className='column-link--questions'
             />
 
             <ColumnLink
