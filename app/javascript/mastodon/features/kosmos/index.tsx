@@ -276,8 +276,7 @@ function planetBezierPos(
   progress: number,
 ) {
   const r = Math.hypot(cx - 400, cy - 400);
-  const order =
-    PLANET_ORDER.indexOf(planetName) + 1;
+  const order = PLANET_ORDER.indexOf(planetName) + 1;
   const listY = 400 + order * SPACING;
   const p0x = cx,
     p0y = cy;
@@ -505,18 +504,17 @@ const Hub: React.FC = () => {
 
   // ── Moon helpers ──────────────────────────────────────────────────────────
   const collapseAllMoons = useCallback(() => {
-    moonBloomsRef.current.forEach((el) =>
-      { el.classList.add('kosmos-moon-bloom--collapsed'); },
-    );
-    moonTethersRef.current.forEach((el) =>
-      { el.classList.add('kosmos-moon-tether--collapsed'); },
-    );
+    moonBloomsRef.current.forEach((el) => {
+      el.classList.add('kosmos-moon-bloom--collapsed');
+    });
+    moonTethersRef.current.forEach((el) => {
+      el.classList.add('kosmos-moon-tether--collapsed');
+    });
   }, []);
 
   const bloomPlanetMoons = useCallback((planetName: string) => {
     const isListMode = viewModeRef.current === 'list';
-    const order =
-      PLANET_ORDER.indexOf(planetName) + 1;
+    const order = PLANET_ORDER.indexOf(planetName) + 1;
     const listY = 400 + order * SPACING;
 
     let i = 0;
@@ -623,11 +621,7 @@ const Hub: React.FC = () => {
       const hasMoons = MOONS.some((m) => m.parent === planetName);
 
       if (viewModeRef.current === 'list') {
-        const listY =
-          400 +
-          (PLANET_ORDER.indexOf(planetName) +
-            1) *
-            SPACING;
+        const listY = 400 + (PLANET_ORDER.indexOf(planetName) + 1) * SPACING;
         if (hasMoons) {
           if (openPlanetRef.current === planetName) {
             collapseAllMoons();
@@ -731,7 +725,9 @@ const Hub: React.FC = () => {
     tryInit();
 
     scroll.addEventListener('scroll', updateMinimap);
-    return () => { scroll.removeEventListener('scroll', updateMinimap); };
+    return () => {
+      scroll.removeEventListener('scroll', updateMinimap);
+    };
   }, [applyZoom, applyCenter, updateMinimap, updateZoomBtns]);
 
   // ── Mouse drag ────────────────────────────────────────────────────────────
@@ -917,6 +913,7 @@ const Hub: React.FC = () => {
 
   return (
     <div
+      className='kosmos-page'
       style={{
         display: 'flex',
         flexDirection: 'column',
