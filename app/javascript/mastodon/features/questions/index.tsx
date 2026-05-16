@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -11,7 +11,6 @@ import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
 import { QuestionCard } from './components/question_card';
 import { QuestionComposer } from './components/question_composer';
-import { QuestionsTabNav } from './components/questions_tab_nav';
 import type { Question } from './types';
 
 const messages = defineMessages({
@@ -26,7 +25,7 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const listRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<'ask' | 'browse'>('ask');
 
   const fetchQuestions = useCallback(async () => {
     setLoading(true);
@@ -46,16 +45,20 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
   const handleCreated = useCallback((question: Question) => {
     setQuestions((prev) => [question, ...prev]);
-  }, []);
-
-  const handleScrollToList = useCallback(() => {
-    listRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setActiveTab('browse');
   }, []);
 
   const handleAnswered = useCallback((updated: Question) => {
     setQuestions((prev) =>
       prev.map((q) => (q.id === updated.id ? updated : q)),
     );
+  }, []);
+
+  const handleTabAsk = useCallback(() => {
+    setActiveTab('ask');
+  }, []);
+  const handleTabBrowse = useCallback(() => {
+    setActiveTab('browse');
   }, []);
 
   return (
@@ -76,35 +79,45 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           { '--space-color': spaceColor('Questions') } as React.CSSProperties
         }
       >
-        <QuestionsTabNav />
-
-        <div className='questions-page__above-fold'>
-          <div className='questions-page__hero'>{'Ƙuestions'}</div>
-          <QuestionComposer onCreated={handleCreated} />
+        <div className='questions-tab-nav'>
           <button
-            className='questions-page__scroll-cue'
-            onClick={handleScrollToList}
-            aria-label='Scroll to questions'
+            className={`questions-tab-nav__tab ${activeTab === 'ask' ? 'questions-tab-nav__tab--active' : ''}`}
+            onClick={handleTabAsk}
           >
-            {'↓'}
+            {'Ask'}
+          </button>
+          <button
+            className={`questions-tab-nav__tab ${activeTab === 'browse' ? 'questions-tab-nav__tab--active' : ''}`}
+            onClick={handleTabBrowse}
+          >
+            {'Ƙuestions'}
           </button>
         </div>
 
-        <div className='questions-page__list' ref={listRef}>
-          {loading && <div className='questions-page__loading' />}
-          {!loading && questions.length === 0 && (
-            <p className='questions-page__empty'>
-              {intl.formatMessage(messages.empty)}
-            </p>
-          )}
-          {questions.map((question) => (
-            <QuestionCard
-              key={question.id}
-              question={question}
-              onAnswered={handleAnswered}
-            />
-          ))}
-        </div>
+        {activeTab === 'ask' && (
+          <div className='questions-page__above-fold'>
+            <div className='questions-page__hero'>{'Ƙuestions'}</div>
+            <QuestionComposer onCreated={handleCreated} />
+          </div>
+        )}
+
+        {activeTab === 'browse' && (
+          <div className='questions-page__list'>
+            {loading && <div className='questions-page__loading' />}
+            {!loading && questions.length === 0 && (
+              <p className='questions-page__empty'>
+                {intl.formatMessage(messages.empty)}
+              </p>
+            )}
+            {questions.map((question) => (
+              <QuestionCard
+                key={question.id}
+                question={question}
+                onAnswered={handleAnswered}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </Column>
   );
