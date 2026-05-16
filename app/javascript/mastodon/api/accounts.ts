@@ -39,3 +39,40 @@ export const apiGetFamiliarFollowers = (id: string) =>
   apiRequestGet<ApiFamiliarFollowersJSON>('v1/accounts/familiar_followers', {
     id,
   });
+
+export const apiNudgeAccount = (id: string) =>
+  apiRequestPost<{ streak: number; can_nudge: boolean }>(`v1/accounts/${id}/nudge`);
+
+export const apiGetNudgeStreak = (id: string) =>
+  apiRequestGet<{ streak: number; can_nudge: boolean }>(`v1/accounts/${id}/nudge_streak`);
+
+export interface ApiNudgePartner {
+  account_id: string;
+  sent_count: number;
+  received_count: number;
+  streak: number;
+  last_nudge_at: string;
+  can_nudge_back: boolean;
+}
+
+export const apiGetNudgePartners = () =>
+  apiRequestGet<{
+    accounts: ApiAccountJSON[];
+    partners: ApiNudgePartner[];
+    pending_count: number;
+    grand_total: number;
+  }>('v1/accounts/nudge_partners');
+
+export const apiGetNudgePendingCount = () =>
+  apiRequestGet<{ count: number }>('v1/accounts/nudge_pending_count');
+
+export interface ApiNudgeHistoryItem {
+  direction: 'sent' | 'received';
+  account_id: string;
+  created_at: string;
+}
+
+export const apiGetNudgeHistory = () =>
+  apiRequestGet<{ accounts: ApiAccountJSON[]; nudges: ApiNudgeHistoryItem[] }>(
+    'v1/accounts/nudge_history',
+  );

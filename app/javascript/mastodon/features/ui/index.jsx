@@ -44,6 +44,7 @@ import {
   Firehose,
   AccountTimeline,
   AccountGallery,
+  AccountNudges,
   HomeTimeline,
   Followers,
   Following,
@@ -82,6 +83,7 @@ import {
   Market,
   Events,
   EventDetail,
+  Nudges,
   Governance,
   Kosmos,
   Questions,
@@ -213,6 +215,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path="/market" component={Market} content={children} />
             {signedIn && <WrappedRoute path="/kalendar/:id" component={EventDetail} content={children} />}
             {signedIn && <WrappedRoute path="/kalendar" component={Events} content={children} />}
+            {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} />}
             {signedIn && <WrappedRoute path="/governance" component={Governance} content={children} />}
             {signedIn && <WrappedRoute path="/kosmos" component={Kosmos} content={children} />}
             {signedIn && <WrappedRoute path="/questions/:id" component={QuestionPage} content={children} />}
@@ -227,6 +230,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path={['/accounts/:id/followers', '/users/:acct/followers', '/@:acct/followers']} component={Followers} content={children} />
             <WrappedRoute path={['/accounts/:id/following', '/users/:acct/following', '/@:acct/following']} component={Following} content={children} />
             <WrappedRoute path={['/@:acct/media', '/accounts/:id/media']} component={AccountGallery} content={children} />
+            {signedIn && <WrappedRoute path='/@:acct/nudges' component={AccountNudges} content={children} />}
             <WrappedRoute path='/@:acct/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/@:acct/:statusId/reblogs' component={Reblogs} content={children} />
             <WrappedRoute path='/@:acct/:statusId/favourites' component={Favourites} content={children} />

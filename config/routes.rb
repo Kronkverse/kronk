@@ -235,7 +235,7 @@ Rails.application.routes.draw do
   get '/questions/*path', to: 'home#index', format: false
   draw(:web_app)
 
-  get '/web/(*any)', to: redirect('/%{any}', status: 302), as: :web, defaults: { any: '' }, format: false
+  get '/web/(*any)', to: redirect(path: '/%{any}', status: 302), as: :web, defaults: { any: '' }, format: false
   get '/about',      to: 'about#show'
   get '/about/more', to: redirect('/about')
 

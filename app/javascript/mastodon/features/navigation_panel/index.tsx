@@ -28,6 +28,8 @@ import NotificationsActiveIcon from '@/material-icons/400-24px/notifications-fil
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import OrbitActiveIcon from '@/material-icons/400-24px/orbit-fill.svg?react';
 import OrbitIcon from '@/material-icons/400-24px/orbit.svg?react';
+import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
+import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import QuestionMarkActiveIcon from '@/material-icons/400-24px/question_mark-fill.svg?react';
@@ -48,7 +50,10 @@ import { useBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
 import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
 import { transientSingleColumn } from 'mastodon/is_mobile';
-import { selectUnreadNotificationGroupsCount } from 'mastodon/selectors/notifications';
+import {
+  selectUnreadNotificationGroupsCount,
+  selectUnreadNudgesCount,
+} from 'mastodon/selectors/notifications';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
 import { DisabledAccountBanner } from './components/disabled_account_banner';
@@ -68,6 +73,7 @@ const messages = defineMessages({
   questions: { id: 'questions.title', defaultMessage: '₭uestions' },
   market: { id: 'market.title', defaultMessage: 'Market' },
   events: { id: 'events.title', defaultMessage: '₭alendar' },
+  nudges: { id: 'nudges.title', defaultMessage: 'Nudges' },
   preferences: {
     id: 'navigation_bar.preferences',
     defaultMessage: 'Preferences',
@@ -99,6 +105,35 @@ const messages = defineMessages({
   compose: { id: 'tabs_bar.publish', defaultMessage: 'New Post' },
   invite: { id: 'navigation_panel.invite', defaultMessage: 'Invite' },
 });
+
+const NudgesLink: React.FC = () => {
+  const count = useAppSelector(selectUnreadNudgesCount);
+  const intl = useIntl();
+
+  return (
+    <ColumnLink
+      transparent
+      to='/nudges'
+      icon={
+        <IconWithBadge
+          id='partner_exchange'
+          icon={PartnerExchangeIcon}
+          count={count}
+          className='column-link__icon'
+        />
+      }
+      activeIcon={
+        <IconWithBadge
+          id='partner_exchange'
+          icon={PartnerExchangeActiveIcon}
+          count={count}
+          className='column-link__icon'
+        />
+      }
+      text={intl.formatMessage(messages.nudges)}
+    />
+  );
+};
 
 const NotificationsLink = () => {
   const count = useAppSelector(selectUnreadNotificationGroupsCount);
@@ -353,6 +388,8 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               activeIconComponent={BarChartActiveIcon}
               text={intl.formatMessage(messages.market)}
             />
+
+            <NudgesLink />
 
             <hr />
 

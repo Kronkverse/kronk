@@ -22,6 +22,7 @@ import { NotificationSeveredRelationships } from './notification_severed_relatio
 import { NotificationStatus } from './notification_status';
 import { NotificationUpdate } from './notification_update';
 import { NotificationEventInvitation } from './notification_event_invitation';
+import { NotificationNudge } from './notification_nudge';
 
 export const NotificationGroup: React.FC<{
   notificationGroupId: NotificationGroupModel['group_key'];
@@ -160,6 +161,14 @@ export const NotificationGroup: React.FC<{
     case 'event_invitation':
       content = (
         <NotificationEventInvitation
+          unread={unread}
+          notification={notificationGroup}
+        />
+      );
+      break;
+    case 'nudge':
+      content = (
+        <NotificationNudge
           unread={unread}
           notification={notificationGroup}
         />

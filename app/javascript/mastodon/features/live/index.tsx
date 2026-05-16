@@ -291,6 +291,16 @@ const Live: React.FC<{
   }, []);
 
   useEffect(() => {
+    if (!inRoom) return undefined;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => { window.removeEventListener('beforeunload', handleBeforeUnload); };
+  }, [inRoom]);
+
+  useEffect(() => {
     if (!inRoom || !apiLoaded || !jitsiContainerRef.current) return;
     if (jitsiApiRef.current) return;
 
@@ -321,6 +331,7 @@ const Live: React.FC<{
         dynamicBrandingUrl: 'https://meet.talitamoss.info/branding.json',
         disableInviteFunctions: true,
         enableClosePage: false,
+        disablePassword: true,
         toolbarButtons: [
           'microphone',
           'camera',
@@ -351,25 +362,15 @@ const Live: React.FC<{
     }) as JitsiApi;
 
     jitsiApiRef.current = api;
-    let isGuest = false;
-
-    api.addListener('passwordRequired', () => {
-      isGuest = true;
-      if (jitsiApiRef.current) {
-        jitsiApiRef.current.executeCommand('password', 'kronkfam2026');
-      }
-    });
 
     api.addListener('videoConferenceJoined', () => {
       if (jitsiApiRef.current) {
+        jitsiApiRef.current.executeCommand('password', '');
         if (currentUsername) {
           jitsiApiRef.current.executeCommand(
             'displayName',
             '@' + currentUsername,
           );
-        }
-        if (!isGuest) {
-          jitsiApiRef.current.executeCommand('password', 'kronkfam2026');
         }
       }
     });

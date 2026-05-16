@@ -1,5 +1,6 @@
 import { createAction } from '@reduxjs/toolkit';
 
+import { apiGetNudgePendingCount } from 'mastodon/api/accounts';
 import {
   apiClearNotifications,
   apiFetchNotificationGroups,
@@ -235,6 +236,18 @@ export const clearNotifications = createDataLoadingThunk(
 
 export const markNotificationsAsRead = createAction(
   'notificationGroups/markAsRead',
+);
+
+export const clearUnreadNudges = createAction('notificationGroups/clearUnreadNudges');
+export const setUnreadNudgeCount = createAction<number>('notificationGroups/setUnreadNudgeCount');
+export const decrementNudgeCount = createAction('notificationGroups/decrementNudgeCount');
+
+export const fetchInitialNudgeCount = createAppAsyncThunk(
+  'notificationGroups/fetchInitialNudgeCount',
+  async () => {
+    const data = await apiGetNudgePendingCount();
+    return data.count;
+  },
 );
 
 export const mountNotifications = createAppAsyncThunk(

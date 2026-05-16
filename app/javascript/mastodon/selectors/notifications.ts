@@ -11,6 +11,10 @@ import {
   selectSettingsNotificationsQuickFilterShow,
 } from './settings';
 
+// Nudge notifications belong exclusively in the /nudges tab.
+// Strip them from the main notifications view at all times.
+const NUDGES_ONLY_TYPES = ['nudge'];
+
 const filterNotificationsByAllowedTypes = (
   showFilterBar: boolean,
   allowedType: string,
@@ -22,13 +26,17 @@ const filterNotificationsByAllowedTypes = (
     // otherwise a list of notifications will come pre-filtered from the backend
     // we need to turn it off for FilterBar in order not to block ourselves from seeing a specific category
     return notifications.filter(
-      (item) => item.type === 'gap' || !excludedTypes.includes(item.type),
+      (item) =>
+        item.type === 'gap' ||
+        (!excludedTypes.includes(item.type) &&
+          !NUDGES_ONLY_TYPES.includes(item.type)),
     );
   }
   return notifications.filter(
     (item) =>
       item.type === 'gap' ||
-      allowedType === item.type ||
+      (allowedType === item.type &&
+        !NUDGES_ONLY_TYPES.includes(item.type)) ||
       (allowedType === 'mention' && item.type === 'quote'),
   );
 };
@@ -92,6 +100,9 @@ export const selectAnyPendingNotification = createSelector(
     );
   },
 );
+
+export const selectUnreadNudgesCount = (state: RootState) =>
+  state.notificationGroups.unreadNudgeCount;
 
 export const selectPendingNotificationGroupsCount = createSelector(
   [selectPendingNotificationGroups],
