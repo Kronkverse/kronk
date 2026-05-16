@@ -193,7 +193,7 @@
 }
 
 .question-card__lock--open {
-  color: var(--color-success, #22c55e);
+  color: var(--space-color, #4844c0);
   width: 18px;
   height: 18px;
 }
@@ -241,7 +241,7 @@
 
 .question-card__answered-badge {
   font-size: 12px;
-  color: var(--color-success, #22c55e);
+  color: var(--space-color, #4844c0);
   font-weight: 600;
 }
 
