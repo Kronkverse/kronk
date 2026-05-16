@@ -14,7 +14,6 @@ import { PLANET_COLORS } from 'mastodon/planets';
 
 // ── Design tokens (Hub spec) ───────────────────────────────────────────────
 const BRAND_PURPLE = PLANET_COLORS.Earth;
-const PAGE_BG = '#0A0E1A';
 const CARD_BG = '#13162A';
 const CARD_BORDER = '#2A2D45';
 const SOL_BODY = PLANET_COLORS.Sol;
@@ -918,7 +917,7 @@ const Hub: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        backgroundColor: PAGE_BG,
+        backgroundColor: 'var(--background-color)',
         color: TEXT_PRIMARY,
         fontFamily:
           "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
