@@ -141,8 +141,12 @@ export const StatusQuestionCard: React.FC<{
     [handleSubmit],
   );
 
-  const handleComposerClick = useCallback((e: React.MouseEvent) => {
+  const handleFooterClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+  }, []);
+
+  const textareaRef = useCallback((node: HTMLTextAreaElement | null) => {
+    if (node) node.focus();
   }, []);
 
   return (
@@ -182,14 +186,18 @@ export const StatusQuestionCard: React.FC<{
       />
 
       {postType === 'question' && (
-        <div className='status-question-card__footer'>
+        <div
+          className='status-question-card__footer'
+          onClick={handleFooterClick}
+          role='presentation'
+        >
           <Icon
             id={hasAnswered ? 'lock_open' : 'lock'}
             icon={hasAnswered ? LockOpenIcon : LockIcon}
             className={`status-question-card__lock ${hasAnswered ? 'status-question-card__lock--open' : ''}`}
           />
 
-          {answerers.length > 0 && (
+          {answerers.length > 0 && !answering && (
             <div className='status-question-card__answerers'>
               {answerers.slice(0, 5).map((a) => (
                 <img
@@ -203,7 +211,32 @@ export const StatusQuestionCard: React.FC<{
             </div>
           )}
 
-          {!hasAnswered && !answering && statusId ? (
+          {answering ? (
+            <>
+              <textarea
+                ref={textareaRef}
+                className='status-question-card__footer-input'
+                placeholder={intl.formatMessage(messages.placeholder)}
+                value={answerText}
+                onChange={handleTextChange}
+                onKeyDown={handleKeyDown}
+                maxLength={500}
+                rows={1}
+              />
+              <button
+                className='status-question-card__footer-submit'
+                onClick={handleSubmitClick}
+                disabled={!answerText.trim() || submitting}
+                aria-label='Post answer'
+              >
+                <Icon
+                  id='question_mark'
+                  icon={QuestionMarkIcon}
+                  className='status-question-card__footer-submit-icon'
+                />
+              </button>
+            </>
+          ) : !hasAnswered && statusId ? (
             <span
               className='status-question-card__count status-question-card__count--locked'
               onClick={handleAnswerClick}
@@ -222,45 +255,6 @@ export const StatusQuestionCard: React.FC<{
                 : intl.formatMessage(messages.answered)}
             </span>
           )}
-        </div>
-      )}
-
-      {answering && (
-        <div
-          className='status-question-card__inline-composer'
-          onClick={handleComposerClick}
-          role='presentation'
-        >
-          <div className='status-question-card__composer-body'>
-            <textarea
-              className='status-question-card__composer-input'
-              placeholder={intl.formatMessage(messages.placeholder)}
-              value={answerText}
-              onChange={handleTextChange}
-              onKeyDown={handleKeyDown}
-              maxLength={500}
-              rows={2}
-            />
-            <button
-              className='status-question-card__composer-submit'
-              onClick={handleSubmitClick}
-              disabled={!answerText.trim() || submitting}
-              aria-label='Post answer'
-            >
-              {'!'}
-            </button>
-          </div>
-          <div className='status-question-card__composer-footer'>
-            <span className='status-question-card__composer-count'>
-              {500 - answerText.length}
-            </span>
-            <button
-              className='status-question-card__composer-cancel'
-              onClick={handleCancel}
-            >
-              {intl.formatMessage(messages.cancel)}
-            </button>
-          </div>
         </div>
       )}
     </div>
