@@ -312,7 +312,14 @@ class Status extends ImmutablePureComponent {
       return;
     }
 
-    const path = `/@${status.getIn(['account', 'acct'])}/${status.get('id')}`;
+    let path;
+    if (status.get('post_type') === 'question') {
+      path = `/questions/${status.get('id')}`;
+    } else if (status.get('post_type') === 'answer') {
+      path = `/questions/${status.get('in_reply_to_id')}`;
+    } else {
+      path = `/@${status.getIn(['account', 'acct'])}/${status.get('id')}`;
+    }
 
     if (newTab) {
       window.open(path, '_blank', 'noopener');
