@@ -98,7 +98,7 @@
     }
 
     &--open .icon {
-      color: $valid-value-color;
+      color: var(--space-color, #4844c0);
     }
   }
 
