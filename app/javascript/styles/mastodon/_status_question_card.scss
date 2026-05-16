@@ -189,4 +189,51 @@
       height: 14px;
     }
   }
+
+  &__answers {
+    border-top: 1px solid
+      color-mix(in srgb, var(--space-color, #4844c0) 60%, black 40%);
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: color-mix(in srgb, var(--space-color, #4844c0) 6%, transparent);
+  }
+
+  &__answer-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  &__answer-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  &__answer-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__answer-author {
+    font-size: 12px;
+    font-weight: 600;
+    color: $secondary-text-color;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__answer-text {
+    font-size: 14px;
+    line-height: 1.4;
+    color: $primary-text-color;
+    overflow-wrap: break-word;
+  }
 }
