@@ -65,6 +65,8 @@ const AnswersPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           { '--space-color': spaceColor('Questions') } as React.CSSProperties
         }
       >
+        <QuestionsTabNav />
+
         <div className='questions-page__list'>
           {loading && <div className='questions-page__loading' />}
           {!loading && answers.length === 0 && (
@@ -94,8 +96,6 @@ const AnswersPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             </div>
           ))}
         </div>
-
-        <QuestionsTabNav />
       </div>
     </Column>
   );

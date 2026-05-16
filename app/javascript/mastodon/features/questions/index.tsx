@@ -76,6 +76,8 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           { '--space-color': spaceColor('Questions') } as React.CSSProperties
         }
       >
+        <QuestionsTabNav />
+
         <div className='questions-page__above-fold'>
           <div className='questions-page__hero'>{'Ƙuestions'}</div>
           <QuestionComposer onCreated={handleCreated} />
@@ -87,8 +89,6 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             {'↓'}
           </button>
         </div>
-
-        <QuestionsTabNav />
 
         <div className='questions-page__list' ref={listRef}>
           {loading && <div className='questions-page__loading' />}
