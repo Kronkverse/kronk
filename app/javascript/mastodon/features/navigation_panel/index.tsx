@@ -26,8 +26,6 @@ import InfoIcon from '@/material-icons/400-24px/info.svg?react';
 import MenuIcon from '@/material-icons/400-24px/menu.svg?react';
 import NotificationsActiveIcon from '@/material-icons/400-24px/notifications-fill.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
-import OrbitActiveIcon from '@/material-icons/400-24px/orbit-fill.svg?react';
-import OrbitIcon from '@/material-icons/400-24px/orbit.svg?react';
 import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
@@ -68,7 +66,6 @@ const messages = defineMessages({
     defaultMessage: 'Notifications',
   },
   live: { id: 'live.title', defaultMessage: 'Huddle' },
-  kosmos: { id: 'kosmos.title', defaultMessage: 'Kosmos' },
   commons: { id: 'governance.title', defaultMessage: '₭ommons' },
   questions: { id: 'questions.title', defaultMessage: '₭uestions' },
   market: { id: 'market.title', defaultMessage: 'Market' },
@@ -325,18 +322,6 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             activeIconComponent={Diversity2ActiveIcon}
             text={intl.formatMessage(messages.live)}
             tooltip='Live video space'
-          />
-        )}
-
-        {signedIn && (
-          <ColumnLink
-            transparent
-            to='/kosmos'
-            icon='orbit'
-            iconComponent={OrbitIcon}
-            activeIconComponent={OrbitActiveIcon}
-            text={intl.formatMessage(messages.kosmos)}
-            tooltip='Kosmos — celestial map'
           />
         )}
 

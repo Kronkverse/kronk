@@ -85,7 +85,6 @@ import {
   EventDetail,
   Nudges,
   Governance,
-  Kosmos,
   Questions,
   QuestionPage,
 } from './util/async-components';
@@ -217,7 +216,6 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/kalendar" component={Events} content={children} />}
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} />}
             {signedIn && <WrappedRoute path="/governance" component={Governance} content={children} />}
-            {signedIn && <WrappedRoute path="/kosmos" component={Kosmos} content={children} />}
             {signedIn && <WrappedRoute path="/questions/:id" component={QuestionPage} content={children} />}
             {signedIn && <WrappedRoute path="/questions" component={Questions} content={children} />}
             <WrappedRoute path='/search' component={Search} content={children} />

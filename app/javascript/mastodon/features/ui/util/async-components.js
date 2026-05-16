@@ -270,10 +270,6 @@ export function Governance () {
   return import("../../governance");
 }
 
-export function Kosmos () {
-  return import("../../kosmos");
-}
-
 export function Questions () {
   return import("../../questions");
 }
