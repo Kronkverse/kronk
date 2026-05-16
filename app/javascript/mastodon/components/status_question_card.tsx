@@ -204,14 +204,17 @@ export const StatusQuestionCard: React.FC<{
           )}
 
           {!hasAnswered && !answering && statusId ? (
-            <button
+            <span
               className='status-question-card__count status-question-card__count--locked'
               onClick={handleAnswerClick}
+              role='button'
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleAnswerClick(e as unknown as React.MouseEvent); }}
             >
               {answersCount > 0
                 ? intl.formatMessage(messages.answers, { count: answersCount })
                 : intl.formatMessage(messages.locked)}
-            </button>
+            </span>
           ) : (
             <span className='status-question-card__count'>
               {answersCount > 0
