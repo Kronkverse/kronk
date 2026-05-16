@@ -316,7 +316,7 @@ const Hub: React.FC = () => {
   const [selection, setSelection] = useState<Selection>({
     name: 'Sol',
     glyph: '☉︎',
-    nameLabel: 'Sol · Self',
+    nameLabel: 'Sol',
     domain: 'tap me to lay them out',
     route: null,
   });
@@ -590,7 +590,7 @@ const Hub: React.FC = () => {
           setSelection({
             name: 'Sol',
             glyph: '☉︎',
-            nameLabel: 'Sol · Self',
+            nameLabel: 'Sol',
             domain: 'tap again to scatter',
             route: null,
           });
@@ -599,7 +599,7 @@ const Hub: React.FC = () => {
           setSelection({
             name: 'Sol',
             glyph: '☉︎',
-            nameLabel: 'Sol · Self',
+            nameLabel: 'Sol',
             domain: 'the inner workings of self',
             route: null,
           });
@@ -1078,7 +1078,7 @@ const Hub: React.FC = () => {
                     pointerEvents: 'none',
                   }}
                 >
-                  Self
+                  Sol
                 </text>
               </g>
 
