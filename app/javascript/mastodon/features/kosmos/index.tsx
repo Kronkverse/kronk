@@ -917,7 +917,6 @@ const Hub: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        backgroundColor: 'var(--background-color)',
         color: TEXT_PRIMARY,
         fontFamily:
           "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
