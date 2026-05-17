@@ -544,6 +544,20 @@
   margin-bottom: 10px;
 }
 
+.question-detail__answer-thread-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--space-color, #4844c0);
+  text-decoration: none;
+  opacity: 0.8;
+
+  &:hover {
+    opacity: 1;
+    text-decoration: underline;
+  }
+}
+
 .question-detail__answer-content {
   font-size: 15px;
   line-height: 1.5;

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import { Link } from 'react-router-dom';
+
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import api from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
@@ -179,6 +181,12 @@ export const QuestionDetail: React.FC<{
                 className='question-detail__answer-content'
                 dangerouslySetInnerHTML={{ __html: answer.content }}
               />
+              <Link
+                to={`/statuses/${answer.id}`}
+                className='question-detail__answer-thread-link'
+              >
+                {'View thread'}
+              </Link>
             </div>
           ))}
         </div>
