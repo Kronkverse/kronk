@@ -49,6 +49,11 @@ export const AnswerComposer: React.FC<{
       });
       onAnswered(res.data as Answer);
       setText('');
+      void api().post('/api/v1/statuses', {
+        status: 'I answered this question',
+        quoted_status_id: question.id,
+        visibility: 'public',
+      });
     } catch (err) {
       console.error('Failed to post answer:', err);
     } finally {

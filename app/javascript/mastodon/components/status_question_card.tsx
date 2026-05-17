@@ -117,6 +117,11 @@ export const StatusQuestionCard: React.FC<{
       setAnswerText('');
       setAnswering(false);
       setPostedAnswer(true);
+      void api().post('/api/v1/statuses', {
+        status: 'I answered this question',
+        quoted_status_id: statusId,
+        visibility: 'public',
+      });
     } catch (err) {
       console.error('Failed to post answer:', err);
     } finally {
