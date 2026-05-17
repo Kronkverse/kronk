@@ -417,10 +417,16 @@
 }
 
 .question-detail__question {
-  background: var(--color-bg-elevated, var(--background-color));
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 10%));
+  background: color-mix(
+    in srgb,
+    var(--space-color, #4844c0) 8%,
+    var(--color-bg-elevated, var(--background-color))
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--space-color, #4844c0) 35%, transparent);
+  border-left: 3px solid var(--space-color, #4844c0);
   border-radius: 12px;
-  padding: 16px;
+  padding: 20px;
   margin-bottom: 16px;
 }
 
@@ -455,8 +461,9 @@
 }
 
 .question-detail__content {
-  font-size: 18px;
-  line-height: 1.6;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.5;
   color: var(--color-fg-default);
 
   p {
