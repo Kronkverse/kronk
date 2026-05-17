@@ -123,6 +123,25 @@ export interface ApiStatusJSON {
   quote?: ApiQuoteJSON;
   quote_approval?: ApiQuotePolicyJSON;
 
+  post_type?: 'normal' | 'question' | 'answer' | 'proposal';
+  question?: ApiStatusJSON;
+  answers_count?: number;
+  answerers?: { id: string; username: string; acct: string; avatar: string }[];
+  has_answered?: boolean;
+
+  proposal?: {
+    id: string;
+    title: string;
+    summary: string | null;
+    status: 'open' | 'in_progress' | 'delivered' | 'vetoed';
+    proposal_type: 'small' | 'medium' | 'large';
+    support_count: number;
+    veto_count: number;
+    participation_count: number;
+    categories: string[];
+    created_at: string;
+  };
+
   event?: {
     id: string;
     title: string;

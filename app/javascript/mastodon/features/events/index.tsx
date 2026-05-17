@@ -4,10 +4,10 @@ import { useIntl, defineMessages, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
+import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
 import { CreateEventForm } from './components/create_event_form';
 import { EventCalendar } from './components/event_calendar';
@@ -16,6 +16,11 @@ import { InviteFollowersPanel } from './components/invite_followers_panel';
 
 const messages = defineMessages({
   title: { id: 'events.title', defaultMessage: '₭alendar' },
+  heroIntro: {
+    id: 'events.hero_intro',
+    defaultMessage:
+      'Find and share gatherings in the Kronk community. From live rooms to in-person meetups.',
+  },
 });
 
 const filterMessages = {
@@ -168,9 +173,9 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   return (
     <Column>
       <ColumnHeader
-        title={intl.formatMessage(messages.title)}
-        icon='calendar_month'
-        iconComponent={CalendarMonthIcon}
+        title={planetName('Kalendar')}
+        icon='neptune'
+        iconComponent={planetIcon('Kalendar')}
         multiColumn={multiColumn}
       />
 
@@ -178,7 +183,21 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      <div className='events-page'>
+      <div
+        className='events-page'
+        style={
+          { '--space-color': spaceColor('Kalendar') } as React.CSSProperties
+        }
+      >
+        <section className='events-page__hero'>
+          <h1 className='events-page__hero-title'>
+            {intl.formatMessage(messages.title)}
+          </h1>
+          <p className='events-page__hero-intro'>
+            {intl.formatMessage(messages.heroIntro)}
+          </p>
+        </section>
+
         <div className='events-page__header'>
           <div className='events-page__filters'>
             {(['upcoming', 'past', 'mine', 'invited'] as FilterType[]).map(

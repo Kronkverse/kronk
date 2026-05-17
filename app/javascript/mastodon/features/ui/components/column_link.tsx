@@ -11,6 +11,7 @@ export const ColumnLink: React.FC<{
   activeIconComponent?: IconProp;
   isActive?: (match: unknown, location: { pathname: string }) => boolean;
   text: string;
+  label?: React.ReactNode;
   to?: string;
   href?: string;
   method?: string;
@@ -25,6 +26,7 @@ export const ColumnLink: React.FC<{
   iconComponent,
   activeIconComponent,
   text,
+  label,
   to,
   href,
   method,
@@ -73,7 +75,7 @@ export const ColumnLink: React.FC<{
         {...other}
       >
         {active ? activeIconElement : iconElement}
-        <span>{text}</span>
+        <span>{label ?? text}</span>
         {badgeElement}
       </a>
     );
@@ -81,7 +83,7 @@ export const ColumnLink: React.FC<{
     return (
       <NavLink to={to} className={className} title={tooltip ?? text} {...other}>
         {active ? activeIconElement : iconElement}
-        <span>{text}</span>
+        <span>{label ?? text}</span>
         {badgeElement}
       </NavLink>
     );

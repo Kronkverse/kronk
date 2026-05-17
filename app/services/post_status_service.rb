@@ -232,6 +232,7 @@ class PostStatusService < BaseService
       application: @options[:application],
       rate_limit: @options[:with_rate_limit],
       quote_approval_policy: @options[:quote_approval_policy],
+      post_type: @options[:post_type] || 'normal',
     }.compact
   end
 

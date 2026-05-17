@@ -1,9 +1,8 @@
 @use 'variables' as *;
 
 // Commons — governance feature styles
-// Kronk purple: #563ACC | Font: Liberation Serif | Theme-aware via SCSS variables
+// Theme-aware via --space-color CSS custom property (set by governance/index.tsx)
 
-$governance-purple: #563acc;
 $governance-agree: #22c55e;
 $governance-abstain: #94a3b8;
 $governance-block: #ef4444;
@@ -74,8 +73,8 @@ $governance-amber: #f59e0b;
   }
 
   &.active {
-    color: $governance-purple;
-    border-bottom-color: $governance-purple;
+    color: var(--space-color, #36248c);
+    border-bottom-color: var(--space-color, #36248c);
     font-weight: 600;
   }
 }
@@ -84,7 +83,7 @@ $governance-amber: #f59e0b;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: $governance-purple;
+  background: var(--space-color, #36248c);
   color: #fff;
   border: none;
   border-radius: 999px;
@@ -148,7 +147,7 @@ $governance-amber: #f59e0b;
 // ─── Proposal card ─────────────────────────────────────────────────────────
 
 .governance-card {
-  --vote-agree: #{$governance-purple};
+  --vote-agree: var(--space-color, #36248c);
   --vote-abstain: #{$dark-text-color};
   --vote-block: #{$governance-block};
   --strip-color: var(--background-border-color);
@@ -168,7 +167,7 @@ $governance-amber: #f59e0b;
     transform 0.05s;
 
   &--open {
-    --strip-color: #{$governance-purple};
+    --strip-color: var(--space-color, #36248c);
   }
 
   &--in_progress {
@@ -254,7 +253,7 @@ $governance-amber: #f59e0b;
   gap: 4px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: $governance-purple;
+  background: var(--space-color, #36248c);
   color: #fff;
   font-weight: 700;
   flex-shrink: 0;
@@ -362,7 +361,7 @@ $governance-amber: #f59e0b;
   color: #fff;
 
   &--open {
-    background: $governance-purple;
+    background: var(--space-color, #36248c);
   }
 
   &--in_progress {
@@ -435,11 +434,11 @@ $governance-amber: #f59e0b;
 
   &:hover {
     opacity: 1;
-    color: $governance-purple;
+    color: var(--space-color, #36248c);
   }
 
   &.active {
-    color: $governance-purple;
+    color: var(--space-color, #36248c);
     opacity: 1;
   }
 
@@ -587,7 +586,7 @@ $governance-amber: #f59e0b;
 
 // ─── Detail view — Kronk-aligned palette, mockup layout ────────────────────
 // Layout and proportions follow the reference mockup; colours use Mastodon's
-// theme-adaptive variables + $governance-purple accent so the view looks right
+// theme-adaptive variables + var(--space-color, #36248C) accent so the view looks right
 // in both light and dark Kronk themes.
 
 .governance-detail {
@@ -618,7 +617,7 @@ $governance-amber: #f59e0b;
   transition: color 0.15s;
 
   &:hover {
-    color: #{$governance-purple};
+    color: var(--space-color, #36248c);
   }
 
   svg {
@@ -707,7 +706,7 @@ $governance-amber: #f59e0b;
 
   &--open,
   &--in_progress {
-    background: $governance-purple;
+    background: var(--space-color, #36248c);
     color: #fff;
   }
 
@@ -751,8 +750,8 @@ $governance-amber: #f59e0b;
     border-color 0.15s;
 
   &.active {
-    color: #{$governance-purple};
-    border-bottom-color: #{$governance-purple};
+    color: var(--space-color, #36248c);
+    border-bottom-color: var(--space-color, #36248c);
   }
 
   &:hover:not(.active) {
@@ -853,8 +852,9 @@ $governance-amber: #f59e0b;
 
     &:focus {
       outline: none;
-      border-color: $governance-purple;
-      box-shadow: 0 0 0 3px rgba($governance-purple, 0.18);
+      border-color: var(--space-color, #36248c);
+      box-shadow: 0 0 0 3px
+        color-mix(in srgb, var(--space-color, #36248c) 18%, transparent);
     }
   }
 
@@ -886,8 +886,8 @@ $governance-amber: #f59e0b;
     font-weight: 500;
 
     &:hover:not(:disabled) {
-      border-color: $governance-purple;
-      color: $governance-purple;
+      border-color: var(--space-color, #36248c);
+      color: var(--space-color, #36248c);
     }
 
     &:disabled {
@@ -948,7 +948,7 @@ $governance-amber: #f59e0b;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  background: $governance-purple;
+  background: var(--space-color, #36248c);
   color: #fff;
   padding: 3px 12px;
   border-radius: 999px;
@@ -975,8 +975,9 @@ $governance-amber: #f59e0b;
 
   &:focus {
     outline: none;
-    border-color: $governance-purple;
-    box-shadow: 0 0 0 2px rgba($governance-purple, 0.18);
+    border-color: var(--space-color, #36248c);
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--space-color, #36248c) 18%, transparent);
   }
 }
 
@@ -1000,7 +1001,7 @@ $governance-amber: #f59e0b;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: $governance-purple;
+  background: var(--space-color, #36248c);
   border: none;
   border-radius: 999px;
   padding: 6px 14px;
@@ -1161,8 +1162,8 @@ $governance-amber: #f59e0b;
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: rgba($governance-purple, 0.12);
-  color: $governance-purple;
+  background: color-mix(in srgb, var(--space-color, #36248c) 12%, transparent);
+  color: var(--space-color, #36248c);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1227,8 +1228,9 @@ $governance-amber: #f59e0b;
 
   &:focus {
     outline: none;
-    border-color: $governance-purple;
-    box-shadow: 0 0 0 2px rgba($governance-purple, 0.18);
+    border-color: var(--space-color, #36248c);
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--space-color, #36248c) 18%, transparent);
   }
 }
 
@@ -1236,7 +1238,7 @@ $governance-amber: #f59e0b;
   padding: 7px 16px;
   border: none;
   border-radius: 999px;
-  background: $governance-purple;
+  background: var(--space-color, #36248c);
   color: #fff;
   font-size: 12px;
   font-weight: 600;
@@ -1352,7 +1354,7 @@ $governance-amber: #f59e0b;
   flex-shrink: 0;
 
   &--agree {
-    background: $governance-purple;
+    background: var(--space-color, #36248c);
   }
 
   &--abstain {
@@ -1399,13 +1401,13 @@ $governance-amber: #f59e0b;
   transition: all 0.15s;
 
   &:hover:not(:disabled) {
-    border-color: $governance-purple;
+    border-color: var(--space-color, #36248c);
     color: $primary-text-color;
   }
 
   &--support.active {
-    background: $governance-purple;
-    border-color: $governance-purple;
+    background: var(--space-color, #36248c);
+    border-color: var(--space-color, #36248c);
     color: #fff;
   }
 
@@ -1461,7 +1463,7 @@ $governance-amber: #f59e0b;
 
   &:focus {
     outline: none;
-    border-color: $governance-purple;
+    border-color: var(--space-color, #36248c);
   }
 }
 
@@ -1525,7 +1527,7 @@ $governance-amber: #f59e0b;
 
 .governance-composer__condition-add {
   align-self: flex-start;
-  background: $governance-purple;
+  background: var(--space-color, #36248c);
   color: #fff;
   border: none;
   border-radius: 999px;
@@ -1567,8 +1569,8 @@ $governance-amber: #f59e0b;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: $governance-purple;
-    color: $governance-purple;
+    border-color: var(--space-color, #36248c);
+    color: var(--space-color, #36248c);
   }
 
   &:disabled {
@@ -1581,7 +1583,7 @@ $governance-amber: #f59e0b;
   padding: 8px 22px;
   border: none;
   border-radius: 8px;
-  background: $governance-purple;
+  background: var(--space-color, #36248c);
   color: #fff;
   font-size: 13px;
   font-weight: 600;
@@ -1615,7 +1617,7 @@ $governance-amber: #f59e0b;
   transition: border-color 0.15s;
 
   &--support {
-    border-left-color: $governance-purple;
+    border-left-color: var(--space-color, #36248c);
   }
 
   &--question {
@@ -1627,7 +1629,7 @@ $governance-amber: #f59e0b;
   }
 
   &--mine {
-    background: rgba($governance-purple, 0.03);
+    background: color-mix(in srgb, var(--space-color, #36248c) 3%, transparent);
   }
 }
 
@@ -1651,7 +1653,7 @@ $governance-amber: #f59e0b;
   flex-shrink: 0;
 
   &--support {
-    background: $governance-purple;
+    background: var(--space-color, #36248c);
   }
 
   &--question {
@@ -1733,8 +1735,8 @@ $governance-amber: #f59e0b;
   color: $secondary-text-color;
 
   &:hover:not(:disabled) {
-    border-color: $governance-purple;
-    color: $governance-purple;
+    border-color: var(--space-color, #36248c);
+    color: var(--space-color, #36248c);
   }
 
   &:disabled {
@@ -1813,7 +1815,7 @@ $governance-amber: #f59e0b;
   transition: width 0.3s;
 
   &--agree {
-    background: #{$governance-purple};
+    background: var(--space-color, #36248c);
   }
 
   &--abstain {
@@ -1848,7 +1850,7 @@ $governance-amber: #f59e0b;
   flex-shrink: 0;
 
   &--agree {
-    background: #{$governance-purple};
+    background: var(--space-color, #36248c);
   }
 
   &--abstain {
@@ -1872,7 +1874,7 @@ $governance-amber: #f59e0b;
   margin: 0 0 16px;
 
   strong {
-    color: #{$governance-purple};
+    color: var(--space-color, #36248c);
   }
 }
 
@@ -1912,9 +1914,13 @@ $governance-amber: #f59e0b;
   }
 
   &--agree {
-    border-color: #{$governance-purple};
-    color: #{$governance-purple};
-    background: #{rgba($governance-purple, 0.12)};
+    border-color: var(--space-color, #36248c);
+    color: var(--space-color, #36248c);
+    background: color-mix(
+      in srgb,
+      var(--space-color, #36248c) 12%,
+      transparent
+    );
   }
 
   &--abstain {
@@ -1958,7 +1964,7 @@ $governance-amber: #f59e0b;
 
   &:focus {
     outline: none;
-    border-color: #{$governance-purple};
+    border-color: var(--space-color, #36248c);
   }
 }
 
@@ -1986,13 +1992,13 @@ $governance-amber: #f59e0b;
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #{rgba($governance-purple, 0.12)};
+  background: color-mix(in srgb, var(--space-color, #36248c) 12%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 600;
-  color: #{$governance-purple};
+  color: var(--space-color, #36248c);
   flex-shrink: 0;
   overflow: hidden;
 
@@ -2028,8 +2034,12 @@ $governance-amber: #f59e0b;
   flex-shrink: 0;
 
   &--agree {
-    background: #{rgba($governance-purple, 0.12)};
-    color: #{$governance-purple};
+    background: color-mix(
+      in srgb,
+      var(--space-color, #36248c) 12%,
+      transparent
+    );
+    color: var(--space-color, #36248c);
   }
 
   &--abstain {
@@ -2071,7 +2081,7 @@ $governance-amber: #f59e0b;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: $governance-purple;
+  background: var(--space-color, #36248c);
   border: none;
   color: #fff;
   border-radius: 999px;
@@ -2097,7 +2107,7 @@ $governance-amber: #f59e0b;
   padding: 14px;
   border: 1px solid var(--background-border-color);
   border-radius: 8px;
-  background: rgba($governance-purple, 0.03);
+  background: color-mix(in srgb, var(--space-color, #36248c) 3%, transparent);
 }
 
 .governance-form__row {
@@ -2126,7 +2136,7 @@ $governance-amber: #f59e0b;
   color: #fff;
 
   &--open {
-    background: $governance-purple;
+    background: var(--space-color, #36248c);
   }
 
   &--in_progress {
@@ -2259,14 +2269,18 @@ $governance-amber: #f59e0b;
   }
 
   &--spent {
-    background: rgba($governance-purple, 0.1);
-    color: $governance-purple;
+    background: color-mix(
+      in srgb,
+      var(--space-color, #36248c) 10%,
+      transparent
+    );
+    color: var(--space-color, #36248c);
   }
 }
 
 .governance-task-card__claim-btn {
   margin-top: 8px;
-  background: $governance-purple;
+  background: var(--space-color, #36248c);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -2313,9 +2327,9 @@ $governance-amber: #f59e0b;
     height: 3px;
     background: linear-gradient(
       90deg,
-      $governance-purple,
-      lighten($governance-purple, 12%),
-      lighten($governance-purple, 22%)
+      var(--space-color, #36248c),
+      color-mix(in srgb, var(--space-color, #36248c) 75%, white 25%),
+      color-mix(in srgb, var(--space-color, #36248c) 55%, white 45%)
     );
     border-radius: 14px 14px 0 0;
   }
@@ -2357,7 +2371,7 @@ $governance-amber: #f59e0b;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  background: $governance-purple;
+  background: var(--space-color, #36248c);
   color: #fff;
   padding: 3px 12px;
   border-radius: 999px;
@@ -2381,7 +2395,7 @@ $governance-amber: #f59e0b;
   gap: 4px;
   font-size: 11px;
   font-weight: 600;
-  background: $governance-purple;
+  background: var(--space-color, #36248c);
   color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -2433,13 +2447,13 @@ $governance-amber: #f59e0b;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: $governance-purple;
-    color: $governance-purple;
+    border-color: var(--space-color, #36248c);
+    color: var(--space-color, #36248c);
   }
 
   &.active {
-    background: $governance-purple;
-    border-color: $governance-purple;
+    background: var(--space-color, #36248c);
+    border-color: var(--space-color, #36248c);
     color: #fff;
     font-weight: 600;
   }
@@ -2468,8 +2482,9 @@ $governance-amber: #f59e0b;
 
   &:focus {
     outline: none;
-    border-color: $governance-purple;
-    box-shadow: 0 0 0 3px rgba($governance-purple, 0.08);
+    border-color: var(--space-color, #36248c);
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--space-color, #36248c) 8%, transparent);
   }
 }
 
@@ -2547,7 +2562,7 @@ $governance-amber: #f59e0b;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: $governance-purple;
+  background: var(--space-color, #36248c);
   border: none;
   border-radius: 999px;
   padding: 8px 18px;
@@ -2589,8 +2604,8 @@ $governance-amber: #f59e0b;
   transition: all 0.15s;
 
   &:hover:not(:disabled) {
-    border-color: $governance-purple;
-    color: $governance-purple;
+    border-color: var(--space-color, #36248c);
+    color: var(--space-color, #36248c);
   }
 
   &:disabled {
@@ -2603,7 +2618,7 @@ $governance-amber: #f59e0b;
   padding: 9px 24px;
   border: none;
   border-radius: 8px;
-  background: $governance-purple;
+  background: var(--space-color, #36248c);
   color: #fff;
   cursor: pointer;
   font-size: 13px;
@@ -2612,8 +2627,9 @@ $governance-amber: #f59e0b;
   transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
-    background: darken($governance-purple, 6%);
-    box-shadow: 0 2px 8px rgba($governance-purple, 0.25);
+    background: color-mix(in srgb, var(--space-color, #36248c) 94%, black 6%);
+    box-shadow: 0 2px 8px
+      color-mix(in srgb, var(--space-color, #36248c) 25%, transparent);
   }
 
   &:disabled {
@@ -2670,11 +2686,11 @@ $governance-amber: #f59e0b;
   }
 
   &:hover {
-    border-color: $governance-purple;
+    border-color: var(--space-color, #36248c);
     background: rgba(86, 58, 204, 7%);
 
     span {
-      color: $governance-purple;
+      color: var(--space-color, #36248c);
     }
   }
 
@@ -2684,16 +2700,16 @@ $governance-amber: #f59e0b;
     color: $secondary-text-color;
 
     &:hover {
-      border-color: $governance-purple;
+      border-color: var(--space-color, #36248c);
     }
   }
 
   &--selected {
-    border-color: $governance-purple;
+    border-color: var(--space-color, #36248c);
     background: rgba(86, 58, 204, 7%);
 
     span {
-      color: $governance-purple;
+      color: var(--space-color, #36248c);
     }
   }
 }
@@ -2731,12 +2747,12 @@ $governance-amber: #f59e0b;
   }
 
   &:hover {
-    border-color: $governance-purple;
+    border-color: var(--space-color, #36248c);
     background: rgba(86, 58, 204, 7%);
   }
 
   &--selected {
-    border-color: $governance-purple;
+    border-color: var(--space-color, #36248c);
     background: rgba(86, 58, 204, 7%);
   }
 }
@@ -2793,7 +2809,7 @@ $governance-amber: #f59e0b;
 
   &__input {
     flex: 1;
-    accent-color: $governance-purple;
+    accent-color: var(--space-color, #36248c);
     cursor: pointer;
     height: 4px;
   }
@@ -2801,7 +2817,7 @@ $governance-amber: #f59e0b;
   &__value {
     font-size: 22px;
     font-weight: 700;
-    color: $governance-purple;
+    color: var(--space-color, #36248c);
     min-width: 32px;
     text-align: right;
   }

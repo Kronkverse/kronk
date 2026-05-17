@@ -546,7 +546,7 @@ class Status extends ImmutablePureComponent {
       ancestors = <>{this.renderChildren(ancestorsIds, true)}</>;
     }
 
-    if (descendantsIds && descendantsIds.length > 0) {
+    if (descendantsIds && descendantsIds.length > 0 && status.get('post_type') !== 'question') {
       descendants = <>{this.renderChildren(descendantsIds)}</>;
     }
 
