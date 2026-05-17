@@ -676,7 +676,7 @@ class Status extends ImmutablePureComponent {
 
             {!isQuotedPost && (
               <>
-                {outerPostType !== 'answer' && (
+                {outerPostType !== 'answer' && status.get('post_type') !== 'question' && (
                   <StatusActionBar scrollKey={scrollKey} status={status} account={account}  {...other} />
                 )}
                 {contextType !== 'thread' && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && (
