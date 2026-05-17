@@ -76,7 +76,7 @@ export const QuestionComposer: React.FC<{
           disabled={!text.trim() || submitting}
           aria-label='Ask'
         >
-          {'?'}
+          {'!'}
         </button>
       </div>
     </div>
