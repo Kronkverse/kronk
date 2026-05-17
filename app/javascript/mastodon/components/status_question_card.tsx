@@ -18,10 +18,6 @@ const messages = defineMessages({
     id: 'status_question_card.answer',
     defaultMessage: 'Answer',
   },
-  originalQuestion: {
-    id: 'status_question_card.original_question',
-    defaultMessage: 'In answer to',
-  },
   answers: {
     id: 'status_question_card.answers',
     defaultMessage: '{count, plural, one {# answer} other {# answers}}',
@@ -51,27 +47,12 @@ interface Answerer {
   avatar: string;
 }
 
-interface ParentQuestion {
-  content: string;
-  account?: {
-    display_name?: string;
-    username: string;
-  };
-}
-
-const stripHtml = (html: string) => {
-  const div = document.createElement('div');
-  div.innerHTML = html;
-  return div.textContent || '';
-};
-
 export const StatusQuestionCard: React.FC<{
   postType: 'question' | 'answer';
   contentHtml: string;
   answersCount?: number;
   answerers?: Answerer[];
   hasAnswered?: boolean;
-  question?: ParentQuestion;
   statusId?: string;
   onCardClick?: (e: React.MouseEvent) => void;
 }> = ({
@@ -80,7 +61,6 @@ export const StatusQuestionCard: React.FC<{
   answersCount = 0,
   answerers = [],
   hasAnswered = false,
-  question,
   statusId,
   onCardClick,
 }) => {
@@ -192,17 +172,6 @@ export const StatusQuestionCard: React.FC<{
             : intl.formatMessage(messages.answer)}
         </span>
       </div>
-
-      {postType === 'answer' && question && (
-        <div className='status-question-card__question-ref'>
-          <div className='status-question-card__question-ref-label'>
-            {intl.formatMessage(messages.originalQuestion)}
-          </div>
-          <div className='status-question-card__question-ref-text'>
-            {stripHtml(question.content)}
-          </div>
-        </div>
-      )}
 
       <div
         className='status-question-card__body'

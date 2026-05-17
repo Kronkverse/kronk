@@ -552,15 +552,16 @@ class Status extends ImmutablePureComponent {
     } else if (status.get('event')) {
       media = <StatusEventCard event={status.get('event').toJS()} />;
     } else if (status.get('post_type') === 'question' || status.get('post_type') === 'answer') {
+      const isAnswer = status.get('post_type') === 'answer';
+      const questionObj = status.get('question');
       media = (
         <StatusQuestionCard
-          postType={status.get('post_type')}
-          contentHtml={status.get('contentHtml')}
-          answersCount={status.get('answers_count')}
-          answerers={status.get('answerers')?.toJS()}
-          hasAnswered={status.get('has_answered')}
-          question={status.get('question')?.toJS()}
-          statusId={status.get('id')}
+          postType='question'
+          contentHtml={isAnswer && questionObj ? questionObj.get('content') : status.get('contentHtml')}
+          answersCount={isAnswer && questionObj ? questionObj.get('answers_count') : status.get('answers_count')}
+          answerers={isAnswer && questionObj ? questionObj.get('answerers')?.toJS() : status.get('answerers')?.toJS()}
+          hasAnswered={isAnswer ? true : status.get('has_answered')}
+          statusId={isAnswer ? status.get('in_reply_to_id') : status.get('id')}
           onCardClick={this.handleClick}
         />
       );
@@ -667,7 +668,7 @@ class Status extends ImmutablePureComponent {
             {!isQuotedPost && (
               <>
                 <StatusActionBar scrollKey={scrollKey} status={status} account={account}  {...other} />
-                {contextType !== 'thread' && status.get('post_type') !== 'question' && (
+                {contextType !== 'thread' && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && (
                   <StatusReplies
                     statusId={status.get('id')}
                     statusAcct={status.getIn(['account', 'acct'])}
