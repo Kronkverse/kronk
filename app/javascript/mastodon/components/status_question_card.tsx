@@ -38,6 +38,10 @@ const messages = defineMessages({
     id: 'status_question_card.cancel',
     defaultMessage: 'Cancel',
   },
+  seeAnswers: {
+    id: 'status_question_card.see_answers',
+    defaultMessage: 'See all answers',
+  },
 });
 
 interface Answerer {
@@ -129,6 +133,14 @@ export const StatusQuestionCard: React.FC<{
   const handleFooterClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
+
+  const handleSeeAnswersClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onCardClick?.(e);
+    },
+    [onCardClick],
+  );
 
   const handleLockedKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -246,15 +258,25 @@ export const StatusQuestionCard: React.FC<{
                 : intl.formatMessage(messages.locked)}
             </span>
           ) : (
-            <span className='status-question-card__count'>
-              {answersCount > 0
-                ? intl.formatMessage(messages.answers, {
-                    count: answersCount,
-                  })
-                : unlocked
-                  ? intl.formatMessage(messages.answered)
-                  : intl.formatMessage(messages.locked)}
-            </span>
+            <>
+              <span className='status-question-card__count'>
+                {answersCount > 0
+                  ? intl.formatMessage(messages.answers, {
+                      count: answersCount,
+                    })
+                  : unlocked
+                    ? intl.formatMessage(messages.answered)
+                    : intl.formatMessage(messages.locked)}
+              </span>
+              {unlocked && onCardClick && (
+                <button
+                  className='status-question-card__see-answers'
+                  onClick={handleSeeAnswersClick}
+                >
+                  {intl.formatMessage(messages.seeAnswers)}
+                </button>
+              )}
+            </>
           )}
         </div>
       )}
