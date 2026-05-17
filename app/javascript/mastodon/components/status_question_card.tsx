@@ -228,11 +228,7 @@ export const StatusQuestionCard: React.FC<{
                 disabled={!answerText.trim() || submitting}
                 aria-label='Post answer'
               >
-                <Icon
-                  id='question_mark'
-                  icon={QuestionMarkIcon}
-                  className='status-question-card__footer-submit-icon'
-                />
+                {'!'}
               </button>
             </>
           ) : !unlocked && statusId ? (
