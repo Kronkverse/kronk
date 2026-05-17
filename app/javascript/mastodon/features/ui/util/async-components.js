@@ -269,3 +269,12 @@ export function Market () {
 export function Governance () {
   return import("../../governance");
 }
+
+
+export function Questions () {
+  return import("../../questions");
+}
+
+export function QuestionPage () {
+  return import("../../questions/question_page");
+}

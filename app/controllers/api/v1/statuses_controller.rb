@@ -84,6 +84,7 @@ class Api::V1::StatusesController < Api::BaseController
       thread: @thread,
       quoted_status: @quoted_status,
       quote_approval_policy: quote_approval_policy,
+      post_type: status_params[:post_type],
       media_ids: status_params[:media_ids],
       sensitive: status_params[:sensitive],
       spoiler_text: status_params[:spoiler_text],
@@ -125,6 +126,8 @@ class Api::V1::StatusesController < Api::BaseController
 
   def destroy
     @status = Status.where(account: current_account).find(params[:id])
+    return render json: { error: 'Answers cannot be deleted' }, status: :unprocessable_entity if @status.kronk_answer?
+
     authorize @status, :destroy?
 
     @status.discard_with_reblogs
@@ -183,6 +186,7 @@ class Api::V1::StatusesController < Api::BaseController
       :in_reply_to_id,
       :quoted_status_id,
       :quote_approval_policy,
+      :post_type,
       :sensitive,
       :spoiler_text,
       :visibility,

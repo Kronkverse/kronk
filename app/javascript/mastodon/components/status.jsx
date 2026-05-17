@@ -34,6 +34,9 @@ import { RelativeTimestamp } from './relative_timestamp';
 import StatusActionBar from './status_action_bar';
 import StatusContent from './status_content';
 import { StatusEventCard } from './status_event_card';
+import { StatusKommonsCard } from './status_kommons_card';
+import { StatusQuestionCard } from './status_question_card';
+import { StatusSpaceBar } from './status_space_bar';
 import { StatusThreadLabel } from './status_thread_label';
 import { VisibilityIcon } from './visibility_icon';
 import { IconButton } from './icon_button';
@@ -309,7 +312,14 @@ class Status extends ImmutablePureComponent {
       return;
     }
 
-    const path = `/@${status.getIn(['account', 'acct'])}/${status.get('id')}`;
+    let path;
+    if (status.get('post_type') === 'question') {
+      path = `/questions/${status.get('id')}`;
+    } else if (status.get('post_type') === 'answer') {
+      path = `/questions/${status.get('in_reply_to_id')}`;
+    } else {
+      path = `/@${status.getIn(['account', 'acct'])}/${status.get('id')}`;
+    }
 
     if (newTab) {
       window.open(path, '_blank', 'noopener');
@@ -393,6 +403,9 @@ class Status extends ImmutablePureComponent {
       return null;
     }
 
+    const outerPostType = status?.get('post_type');
+    let displayAccount = null;
+
     const handlers = this.props.muted ? {} : {
       reply: this.handleHotkeyReply,
       favourite: this.handleHotkeyFavourite,
@@ -415,26 +428,31 @@ class Status extends ImmutablePureComponent {
     const matchedFilters = status.get('matched_filters');
 
     if (status.get('reblog', null) !== null && typeof status.get('reblog') === 'object') {
-      const name = (
-        <LinkedDisplayName
-          displayProps={{
-            account: status.get('account'),
-            variant: 'simple'
-          }}
-          className='status__display-name muted'
-        />
-      )
+      if (outerPostType !== 'answer') {
+        const name = (
+          <LinkedDisplayName
+            displayProps={{
+              account: status.get('account'),
+              variant: 'simple'
+            }}
+            className='status__display-name muted'
+          />
+        );
 
-      prepend = (
-        <div className='status__prepend'>
-          <div className='status__prepend__icon'><Icon id='retweet' icon={RepeatIcon} /></div>
-          <FormattedMessage id='status.reblogged_by' defaultMessage='{name} boosted' values={{ name }} />
-        </div>
-      );
+        prepend = (
+          <div className='status__prepend'>
+            <div className='status__prepend__icon'><Icon id='retweet' icon={RepeatIcon} /></div>
+            <FormattedMessage id='status.reblogged_by' defaultMessage='{name} boosted' values={{ name }} />
+          </div>
+        );
 
-      rebloggedByText = intl.formatMessage({ id: 'status.reblogged_by', defaultMessage: '{name} boosted' }, { name: status.getIn(['account', 'acct']) });
+        rebloggedByText = intl.formatMessage({ id: 'status.reblogged_by', defaultMessage: '{name} boosted' }, { name: status.getIn(['account', 'acct']) });
+        account = status.get('account');
+      } else {
+        displayAccount = status.get('account');
+        account = undefined;
+      }
 
-      account = status.get('account');
       status  = status.get('reblog');
     } else if (status.get('visibility') === 'direct') {
       prepend = (
@@ -541,6 +559,24 @@ class Status extends ImmutablePureComponent {
       }
     } else if (status.get('event')) {
       media = <StatusEventCard event={status.get('event').toJS()} />;
+    } else if (status.get('post_type') === 'question' || status.get('post_type') === 'answer') {
+      const isAnswer = status.get('post_type') === 'answer';
+      const questionObj = isAnswer ? status.get('question') : null;
+      media = (
+        <StatusQuestionCard
+          postType='question'
+          contentHtml={isAnswer ? (questionObj ? questionObj.get('content') : '') : status.get('contentHtml')}
+          answersCount={isAnswer ? (questionObj ? questionObj.get('answers_count') : 0) : status.get('answers_count')}
+          answerers={isAnswer ? (questionObj ? questionObj.get('answerers')?.toJS() : []) : status.get('answerers')?.toJS()}
+          hasAnswered={isAnswer ? true : status.get('has_answered')}
+          statusId={isAnswer ? status.get('in_reply_to_id') : status.get('id')}
+          onCardClick={this.handleClick}
+        />
+      );
+    } else if (status.get('post_type') === 'proposal' && status.get('proposal')) {
+      media = (
+        <StatusKommonsCard proposal={status.get('proposal').toJS()} />
+      );
     } else if (status.get('card') && !status.get('quote')) {
       media = (
         <Card
@@ -552,10 +588,11 @@ class Status extends ImmutablePureComponent {
       );
     }
 
+    const avatarAccount = displayAccount ?? status.get('account');
     if (account === undefined || account === null) {
-      statusAvatar = <Avatar account={status.get('account')} size={avatarSize} />;
+      statusAvatar = <Avatar account={avatarAccount} size={avatarSize} />;
     } else {
-      statusAvatar = <AvatarOverlay account={status.get('account')} friend={account} />;
+      statusAvatar = <AvatarOverlay account={avatarAccount} friend={account} />;
     }
 
     const {statusContentProps, hashtagBar} = getHashtagBarForStatus(status);
@@ -587,11 +624,20 @@ class Status extends ImmutablePureComponent {
                 <RelativeTimestamp timestamp={status.get('created_at')} />{status.get('edited_at') && <abbr title={intl.formatMessage(messages.edited, { date: intl.formatDate(status.get('edited_at'), { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }) })}> *</abbr>}
               </Link>
 
-              <LinkedDisplayName displayProps={{account: status.get('account')}} className='status__display-name'>
-                <div className='status__avatar'>
-                  {statusAvatar}
-                </div>
-              </LinkedDisplayName>
+              <div className='status__identity'>
+                <LinkedDisplayName displayProps={{account: displayAccount ?? status.get('account')}} className='status__display-name'>
+                  <div className='status__avatar'>
+                    {statusAvatar}
+                  </div>
+                </LinkedDisplayName>
+
+                {!!status.get('event') && (
+                  <StatusSpaceBar hasEvent inline />
+                )}
+                {(status.get('post_type') === 'question' || status.get('post_type') === 'answer' || status.get('post_type') === 'proposal' || outerPostType === 'answer') && (
+                  <StatusSpaceBar postType={outerPostType === 'answer' ? 'answer' : status.get('post_type')} inline />
+                )}
+              </div>
 
               {isQuotedPost && !!this.props.onQuoteCancel &&  (
                 <IconButton
@@ -610,7 +656,7 @@ class Status extends ImmutablePureComponent {
 
             {expanded && (
               <>
-                {!status.get("event") && (
+                {!status.get("event") && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && status.get('post_type') !== 'proposal' && (
                   <StatusContent
                     status={status}
                     onClick={this.handleClick}
@@ -630,8 +676,10 @@ class Status extends ImmutablePureComponent {
 
             {!isQuotedPost && (
               <>
-                <StatusActionBar scrollKey={scrollKey} status={status} account={account}  {...other} />
-                {contextType !== 'thread' && (
+                {outerPostType !== 'answer' && status.get('post_type') !== 'question' && (
+                  <StatusActionBar scrollKey={scrollKey} status={status} account={account}  {...other} />
+                )}
+                {contextType !== 'thread' && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && (
                   <StatusReplies
                     statusId={status.get('id')}
                     statusAcct={status.getIn(['account', 'acct'])}

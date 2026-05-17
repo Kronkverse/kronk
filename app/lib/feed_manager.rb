@@ -285,6 +285,7 @@ class FeedManager
 
     account.statuses.limit(limit).each do |status|
       next if status.reply?
+
       add_to_feed(:home, account.id, status, aggregate_reblogs: aggregate)
     end
 
@@ -465,7 +466,7 @@ class FeedManager
     return :filter if check_for_blocks.any? { |target_account_id| crutches[:blocking][target_account_id] || crutches[:muting][target_account_id] }
     return :filter if crutches[:blocked_by][status.account_id]
 
-    if status.reply? && !status.in_reply_to_account_id.nil?                                                                      # Filter out if it's a reply
+    if status.reply? && !status.in_reply_to_account_id.nil? # Filter out if it's a reply
       should_filter   = !crutches[:following][status.in_reply_to_account_id]                                                     # and I'm not following the person it's a reply to
       should_filter &&= receiver_id != status.in_reply_to_account_id                                                             # and it's not a reply to me
       should_filter &&= status.account_id != status.in_reply_to_account_id                                                       # and it's not a self-reply
@@ -540,7 +541,7 @@ class FeedManager
     timeline_key = key(timeline_type, account_id)
     reblog_key   = key(timeline_type, account_id, 'reblogs')
 
-    if status.reblog? && (aggregate_reblogs.nil? || aggregate_reblogs)
+    if status.reblog? && (aggregate_reblogs.nil? || aggregate_reblogs) && !status.kronk_answer?
       # If the original status or a reblog of it is within
       # REBLOG_FALLOFF statuses from the top, do not re-insert it into
       # the feed

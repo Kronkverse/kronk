@@ -8,7 +8,8 @@ class REST::StatusSerializer < ActiveModel::Serializer
   attributes :id, :created_at, :in_reply_to_id, :in_reply_to_account_id,
              :sensitive, :spoiler_text, :visibility, :language,
              :uri, :url, :replies_count, :reblogs_count,
-             :favourites_count, :quotes_count, :edited_at
+             :favourites_count, :quotes_count, :edited_at,
+             :post_type
 
   attribute :favourited, if: :current_user?
   attribute :reblogged, if: :current_user?
@@ -35,10 +36,48 @@ class REST::StatusSerializer < ActiveModel::Serializer
   has_one :preview_card, key: :card, serializer: REST::PreviewCardSerializer
   has_one :preloadable_poll, key: :poll, serializer: REST::PollSerializer
   has_one :event, serializer: REST::EventSerializer
+  has_one :proposal, serializer: REST::ProposalSummarySerializer
   has_one :quote_approval
+
+  attribute :question, if: :answer?
+  attribute :answers_count, if: :question?
+  attribute :answerers, if: :question?
+  attribute :has_answered, if: -> { question? && current_user? } do
+    Status.exists?(account_id: current_user.account_id, post_type: :answer, in_reply_to_id: object.id)
+  end
 
   def quote
     object.quote if object.quote&.acceptable?
+  end
+
+  def post_type
+    object.post_type
+  end
+
+  def answer?
+    object.kronk_answer?
+  end
+
+  def question?
+    object.kronk_question?
+  end
+
+  def question
+    parent = object.thread
+    return nil unless parent&.kronk_question?
+
+    REST::StatusSerializer.new(parent, scope: scope, scope_name: :current_user)
+  end
+
+  def answers_count
+    Status.where(post_type: :answer, in_reply_to_id: object.id).count
+  end
+
+  def answerers
+    Status.where(post_type: :answer, in_reply_to_id: object.id)
+          .joins(:account)
+          .limit(10)
+          .map { |s| { id: s.account.id.to_s, username: s.account.username, acct: s.account.acct, avatar: s.account.avatar_original_url } }
   end
 
   def id
