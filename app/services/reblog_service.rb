@@ -9,6 +9,7 @@ class ReblogService < BaseService
   # @param [Status] reblogged_status Status to be reblogged
   # @param [Hash] options
   # @option [String]  :visibility
+  # @option [String]  :post_type
   # @option [Boolean] :with_rate_limit
   # @return [Status]
   def call(account, reblogged_status, options = {})
@@ -26,7 +27,7 @@ class ReblogService < BaseService
                    options[:visibility] || account.user&.setting_default_privacy
                  end
 
-    reblog = account.statuses.create!(reblog: reblogged_status, text: '', visibility: visibility, rate_limit: options[:with_rate_limit])
+    reblog = account.statuses.create!(reblog: reblogged_status, text: '', visibility: visibility, post_type: options[:post_type] || :normal, rate_limit: options[:with_rate_limit])
 
     Trends.register!(reblog)
     DistributionWorker.perform_async(reblog.id)

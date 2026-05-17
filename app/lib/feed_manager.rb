@@ -448,9 +448,9 @@ class FeedManager
   # @param [Hash] crutches
   # @return [void|Symbol] nil, :skip_home, or :filter
   def filter_from_home(status, receiver_id, crutches, timeline_type = :home)
-    return :filter    if status.reply? && !status.kronk_answer?
+    return :filter    if status.reply?
     return            if receiver_id == status.account_id
-    return :filter    if status.reply? && !status.kronk_answer? && (status.in_reply_to_id.nil? || status.in_reply_to_account_id.nil?)
+    return :filter    if status.reply? && (status.in_reply_to_id.nil? || status.in_reply_to_account_id.nil?)
     return :skip_home if timeline_type != :list && crutches[:exclusive_list_users][status.account_id].present?
     return :filter    if crutches[:languages][status.account_id].present? && status.language.present? && !crutches[:languages][status.account_id].include?(status.language)
     return :filter    if status.reblog? && status.reblog.blank?
@@ -466,7 +466,7 @@ class FeedManager
     return :filter if check_for_blocks.any? { |target_account_id| crutches[:blocking][target_account_id] || crutches[:muting][target_account_id] }
     return :filter if crutches[:blocked_by][status.account_id]
 
-    if status.reply? && !status.kronk_answer? && !status.in_reply_to_account_id.nil?                                             # Filter out if it's a reply
+    if status.reply? && !status.in_reply_to_account_id.nil? # Filter out if it's a reply
       should_filter   = !crutches[:following][status.in_reply_to_account_id]                                                     # and I'm not following the person it's a reply to
       should_filter &&= receiver_id != status.in_reply_to_account_id                                                             # and it's not a reply to me
       should_filter &&= status.account_id != status.in_reply_to_account_id                                                       # and it's not a self-reply

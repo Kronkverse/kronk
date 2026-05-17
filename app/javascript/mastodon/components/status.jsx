@@ -403,6 +403,9 @@ class Status extends ImmutablePureComponent {
       return null;
     }
 
+    const outerPostType = status?.get('post_type');
+    let displayAccount = null;
+
     const handlers = this.props.muted ? {} : {
       reply: this.handleHotkeyReply,
       favourite: this.handleHotkeyFavourite,
@@ -425,26 +428,31 @@ class Status extends ImmutablePureComponent {
     const matchedFilters = status.get('matched_filters');
 
     if (status.get('reblog', null) !== null && typeof status.get('reblog') === 'object') {
-      const name = (
-        <LinkedDisplayName
-          displayProps={{
-            account: status.get('account'),
-            variant: 'simple'
-          }}
-          className='status__display-name muted'
-        />
-      )
+      if (outerPostType !== 'answer') {
+        const name = (
+          <LinkedDisplayName
+            displayProps={{
+              account: status.get('account'),
+              variant: 'simple'
+            }}
+            className='status__display-name muted'
+          />
+        );
 
-      prepend = (
-        <div className='status__prepend'>
-          <div className='status__prepend__icon'><Icon id='retweet' icon={RepeatIcon} /></div>
-          <FormattedMessage id='status.reblogged_by' defaultMessage='{name} boosted' values={{ name }} />
-        </div>
-      );
+        prepend = (
+          <div className='status__prepend'>
+            <div className='status__prepend__icon'><Icon id='retweet' icon={RepeatIcon} /></div>
+            <FormattedMessage id='status.reblogged_by' defaultMessage='{name} boosted' values={{ name }} />
+          </div>
+        );
 
-      rebloggedByText = intl.formatMessage({ id: 'status.reblogged_by', defaultMessage: '{name} boosted' }, { name: status.getIn(['account', 'acct']) });
+        rebloggedByText = intl.formatMessage({ id: 'status.reblogged_by', defaultMessage: '{name} boosted' }, { name: status.getIn(['account', 'acct']) });
+        account = status.get('account');
+      } else {
+        displayAccount = status.get('account');
+        account = undefined;
+      }
 
-      account = status.get('account');
       status  = status.get('reblog');
     } else if (status.get('visibility') === 'direct') {
       prepend = (
@@ -580,10 +588,11 @@ class Status extends ImmutablePureComponent {
       );
     }
 
+    const avatarAccount = displayAccount ?? status.get('account');
     if (account === undefined || account === null) {
-      statusAvatar = <Avatar account={status.get('account')} size={avatarSize} />;
+      statusAvatar = <Avatar account={avatarAccount} size={avatarSize} />;
     } else {
-      statusAvatar = <AvatarOverlay account={status.get('account')} friend={account} />;
+      statusAvatar = <AvatarOverlay account={avatarAccount} friend={account} />;
     }
 
     const {statusContentProps, hashtagBar} = getHashtagBarForStatus(status);
@@ -616,7 +625,7 @@ class Status extends ImmutablePureComponent {
               </Link>
 
               <div className='status__identity'>
-                <LinkedDisplayName displayProps={{account: status.get('account')}} className='status__display-name'>
+                <LinkedDisplayName displayProps={{account: displayAccount ?? status.get('account')}} className='status__display-name'>
                   <div className='status__avatar'>
                     {statusAvatar}
                   </div>
@@ -625,8 +634,8 @@ class Status extends ImmutablePureComponent {
                 {!!status.get('event') && (
                   <StatusSpaceBar hasEvent inline />
                 )}
-                {(status.get('post_type') === 'question' || status.get('post_type') === 'answer' || status.get('post_type') === 'proposal') && (
-                  <StatusSpaceBar postType={status.get('post_type')} inline />
+                {(status.get('post_type') === 'question' || status.get('post_type') === 'answer' || status.get('post_type') === 'proposal' || outerPostType === 'answer') && (
+                  <StatusSpaceBar postType={outerPostType === 'answer' ? 'answer' : status.get('post_type')} inline />
                 )}
               </div>
 

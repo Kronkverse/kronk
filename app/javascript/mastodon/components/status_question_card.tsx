@@ -92,6 +92,10 @@ export const StatusQuestionCard: React.FC<{
         status: answerText.trim(),
         post_type: 'answer',
         in_reply_to_id: statusId,
+        visibility: 'unlisted',
+      });
+      await api().post(`/api/v1/statuses/${statusId}/reblog`, {
+        post_type: 'answer',
         visibility: 'public',
       });
       setAnswerText('');
