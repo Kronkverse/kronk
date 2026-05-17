@@ -365,6 +365,12 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               iconComponent={QuestionMarkIcon}
               activeIconComponent={QuestionMarkActiveIcon}
               text={intl.formatMessage(messages.questions)}
+              label={
+                <>
+                  <span style={{ fontFamily: 'Georgia, serif' }}>Ƙ</span>
+                  uestions
+                </>
+              }
               tooltip='Ƙuestions'
             />
 

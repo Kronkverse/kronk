@@ -12335,13 +12335,3 @@ noscript {
     transform: translateY(0);
   }
 }
-
-@font-face {
-  font-family: kuestions-k;
-  src: local('Georgia'), local('Liberation Serif'), local('Times New Roman');
-  unicode-range: U+0198;
-}
-
-a.column-link[href='/questions'] > span {
-  font-family: kuestions-k, $font-sans-serif, sans-serif;
-}
