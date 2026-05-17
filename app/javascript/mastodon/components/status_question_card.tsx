@@ -173,10 +173,12 @@ export const StatusQuestionCard: React.FC<{
         </span>
       </div>
 
-      <div
-        className='status-question-card__body'
-        dangerouslySetInnerHTML={{ __html: contentHtml }}
-      />
+      {contentHtml && (
+        <div
+          className='status-question-card__body'
+          dangerouslySetInnerHTML={{ __html: contentHtml }}
+        />
+      )}
 
       {postType === 'question' && (
         <div

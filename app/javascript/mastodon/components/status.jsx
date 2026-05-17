@@ -553,13 +553,13 @@ class Status extends ImmutablePureComponent {
       media = <StatusEventCard event={status.get('event').toJS()} />;
     } else if (status.get('post_type') === 'question' || status.get('post_type') === 'answer') {
       const isAnswer = status.get('post_type') === 'answer';
-      const questionObj = status.get('question');
+      const questionObj = isAnswer ? status.get('question') : null;
       media = (
         <StatusQuestionCard
           postType='question'
-          contentHtml={isAnswer && questionObj ? questionObj.get('content') : status.get('contentHtml')}
-          answersCount={isAnswer && questionObj ? questionObj.get('answers_count') : status.get('answers_count')}
-          answerers={isAnswer && questionObj ? questionObj.get('answerers')?.toJS() : status.get('answerers')?.toJS()}
+          contentHtml={isAnswer ? (questionObj ? questionObj.get('content') : '') : status.get('contentHtml')}
+          answersCount={isAnswer ? (questionObj ? questionObj.get('answers_count') : 0) : status.get('answers_count')}
+          answerers={isAnswer ? (questionObj ? questionObj.get('answerers')?.toJS() : []) : status.get('answerers')?.toJS()}
           hasAnswered={isAnswer ? true : status.get('has_answered')}
           statusId={isAnswer ? status.get('in_reply_to_id') : status.get('id')}
           onCardClick={this.handleClick}
