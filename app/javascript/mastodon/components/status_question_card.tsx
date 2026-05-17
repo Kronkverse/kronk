@@ -160,6 +160,8 @@ export const StatusQuestionCard: React.FC<{
 
   const handleCardKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') return;
       if ((e.key === 'Enter' || e.key === ' ') && onCardClick) {
         onCardClick(e as unknown as React.MouseEvent);
       }
@@ -209,81 +211,81 @@ export const StatusQuestionCard: React.FC<{
 
       {postType === 'question' && (
         <div
-            className='status-question-card__footer'
-            onClick={handleFooterClick}
-            role='presentation'
-          >
-            <Icon
-              id={unlocked ? 'lock_open' : 'lock'}
-              icon={unlocked ? LockOpenIcon : LockIcon}
-              className={`status-question-card__lock ${unlocked ? 'status-question-card__lock--open' : ''}`}
-            />
+          className='status-question-card__footer'
+          onClick={handleFooterClick}
+          role='presentation'
+        >
+          <Icon
+            id={unlocked ? 'lock_open' : 'lock'}
+            icon={unlocked ? LockOpenIcon : LockIcon}
+            className={`status-question-card__lock ${unlocked ? 'status-question-card__lock--open' : ''}`}
+          />
 
-            {answerers.length > 0 && !answering && (
-              <div className='status-question-card__answerers'>
-                {answerers.slice(0, 5).map((a) => (
-                  <img
-                    key={a.id}
-                    className='status-question-card__answerer-avatar'
-                    src={a.avatar}
-                    alt={a.username}
-                    title={`@${a.acct}`}
-                  />
-                ))}
-              </div>
-            )}
-
-            {answering ? (
-              <>
-                <textarea
-                  ref={textareaRef}
-                  className='status-question-card__footer-input'
-                  placeholder={intl.formatMessage(messages.placeholder)}
-                  value={answerText}
-                  onChange={handleTextChange}
-                  onKeyDown={handleKeyDown}
-                  maxLength={500}
-                  rows={1}
+          {answerers.length > 0 && !answering && (
+            <div className='status-question-card__answerers'>
+              {answerers.slice(0, 5).map((a) => (
+                <img
+                  key={a.id}
+                  className='status-question-card__answerer-avatar'
+                  src={a.avatar}
+                  alt={a.username}
+                  title={`@${a.acct}`}
                 />
-                <button
-                  className='status-question-card__footer-submit'
-                  onClick={handleSubmitClick}
-                  disabled={!answerText.trim() || submitting}
-                  aria-label='Post answer'
-                >
-                  <Icon
-                    id='question_mark'
-                    icon={QuestionMarkIcon}
-                    className='status-question-card__footer-submit-icon'
-                  />
-                </button>
-              </>
-            ) : !unlocked && statusId ? (
-              <span
-                className='status-question-card__count status-question-card__count--locked'
-                onClick={handleAnswerClick}
-                role='button'
-                tabIndex={0}
-                onKeyDown={handleLockedKeyDown}
+              ))}
+            </div>
+          )}
+
+          {answering ? (
+            <>
+              <textarea
+                ref={textareaRef}
+                className='status-question-card__footer-input'
+                placeholder={intl.formatMessage(messages.placeholder)}
+                value={answerText}
+                onChange={handleTextChange}
+                onKeyDown={handleKeyDown}
+                maxLength={500}
+                rows={1}
+              />
+              <button
+                className='status-question-card__footer-submit'
+                onClick={handleSubmitClick}
+                disabled={!answerText.trim() || submitting}
+                aria-label='Post answer'
               >
-                {answersCount > 0
-                  ? intl.formatMessage(messages.answers, {
-                      count: answersCount,
-                    })
+                <Icon
+                  id='question_mark'
+                  icon={QuestionMarkIcon}
+                  className='status-question-card__footer-submit-icon'
+                />
+              </button>
+            </>
+          ) : !unlocked && statusId ? (
+            <span
+              className='status-question-card__count status-question-card__count--locked'
+              onClick={handleAnswerClick}
+              role='button'
+              tabIndex={0}
+              onKeyDown={handleLockedKeyDown}
+            >
+              {answersCount > 0
+                ? intl.formatMessage(messages.answers, {
+                    count: answersCount,
+                  })
+                : intl.formatMessage(messages.locked)}
+            </span>
+          ) : (
+            <span className='status-question-card__count'>
+              {answersCount > 0
+                ? intl.formatMessage(messages.answers, {
+                    count: answersCount,
+                  })
+                : unlocked
+                  ? intl.formatMessage(messages.answered)
                   : intl.formatMessage(messages.locked)}
-              </span>
-            ) : (
-              <span className='status-question-card__count'>
-                {answersCount > 0
-                  ? intl.formatMessage(messages.answers, {
-                      count: answersCount,
-                    })
-                  : unlocked
-                    ? intl.formatMessage(messages.answered)
-                    : intl.formatMessage(messages.locked)}
-              </span>
-            )}
-          </div>
+            </span>
+          )}
+        </div>
       )}
     </div>
   );
