@@ -541,7 +541,7 @@ class FeedManager
     timeline_key = key(timeline_type, account_id)
     reblog_key   = key(timeline_type, account_id, 'reblogs')
 
-    if status.reblog? && (aggregate_reblogs.nil? || aggregate_reblogs)
+    if status.reblog? && (aggregate_reblogs.nil? || aggregate_reblogs) && !status.kronk_answer?
       # If the original status or a reblog of it is within
       # REBLOG_FALLOFF statuses from the top, do not re-insert it into
       # the feed
