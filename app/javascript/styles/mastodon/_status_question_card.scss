@@ -165,8 +165,8 @@
 
   &__footer-submit {
     flex-shrink: 0;
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     background: var(--space-color, #4844c0);
     color: #fff;
@@ -175,20 +175,25 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.15s ease;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 0 12px
+      color-mix(in srgb, var(--space-color, #4844c0) 70%, transparent);
+    transition:
+      opacity 0.15s ease,
+      box-shadow 0.15s ease;
 
     &:disabled {
-      opacity: 0.4;
+      opacity: 0.35;
       cursor: default;
+      box-shadow: none;
     }
 
     &:not(:disabled):hover {
-      opacity: 0.88;
-    }
-
-    &-icon .icon {
-      width: 14px;
-      height: 14px;
+      opacity: 0.9;
+      box-shadow: 0 0 18px
+        color-mix(in srgb, var(--space-color, #4844c0) 90%, transparent);
     }
   }
 
