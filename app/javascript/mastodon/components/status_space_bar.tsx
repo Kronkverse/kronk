@@ -1,8 +1,4 @@
-import { useCallback } from 'react';
-
 import { defineMessages, useIntl } from 'react-intl';
-
-import { Link } from 'react-router-dom';
 
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
@@ -32,8 +28,6 @@ interface SpaceConfig {
   iconComponent: React.FC<React.SVGProps<SVGSVGElement>>;
   iconId: string;
   verbKey: keyof typeof messages;
-  spaceName: string;
-  spacePath: string;
 }
 
 function getConfig(
@@ -45,8 +39,6 @@ function getConfig(
       iconComponent: QuestionMarkIcon,
       iconId: 'question_mark',
       verbKey: 'askedQuestion',
-      spaceName: '₭uestions',
-      spacePath: '/questions',
     };
   }
 
@@ -55,8 +47,6 @@ function getConfig(
       iconComponent: QuestionMarkIcon,
       iconId: 'question_mark',
       verbKey: 'answeredQuestion',
-      spaceName: '₭uestions',
-      spacePath: '/questions',
     };
   }
 
@@ -65,8 +55,6 @@ function getConfig(
       iconComponent: CalendarMonthIcon,
       iconId: 'calendar_month',
       verbKey: 'createdEvent',
-      spaceName: '₭alendar',
-      spacePath: '/kalendar',
     };
   }
 
@@ -75,8 +63,6 @@ function getConfig(
       iconComponent: ToysFanIcon,
       iconId: 'toys_fan',
       verbKey: 'plantedSeed',
-      spaceName: '₭ommons',
-      spacePath: '/governance',
     };
   }
 
@@ -91,10 +77,6 @@ export const StatusSpaceBar: React.FC<{
   const intl = useIntl();
   const config = getConfig(postType, hasEvent);
 
-  const handleLinkClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
-
   if (!config) return null;
 
   if (inline) {
@@ -108,16 +90,6 @@ export const StatusSpaceBar: React.FC<{
         <span className='status-space-bar__verb'>
           {intl.formatMessage(messages[config.verbKey])}
         </span>
-        <span className='status-space-bar__sep' aria-hidden='true'>
-          ·
-        </span>
-        <Link
-          to={config.spacePath}
-          className='status-space-bar__space-link'
-          onClick={handleLinkClick}
-        >
-          {config.spaceName}
-        </Link>
       </span>
     );
   }
@@ -132,16 +104,6 @@ export const StatusSpaceBar: React.FC<{
       <span className='status-space-bar__verb'>
         {intl.formatMessage(messages[config.verbKey])}
       </span>
-      <span className='status-space-bar__sep' aria-hidden='true'>
-        ·
-      </span>
-      <Link
-        to={config.spacePath}
-        className='status-space-bar__space-link'
-        onClick={handleLinkClick}
-      >
-        {config.spaceName}
-      </Link>
     </div>
   );
 };
