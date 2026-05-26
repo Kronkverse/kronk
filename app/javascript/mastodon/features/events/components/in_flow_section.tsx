@@ -5,17 +5,34 @@ import {
   getMoonPhaseName,
   getMoonIllumination,
   getZodiacForDate,
-  getSeasonEventsForYear
-  
-  
+  getSeasonEventsForYear,
 } from './celestial_calendar';
-import type {CelestialDayEvents, MoonPhaseName} from './celestial_calendar';
+import type { CelestialDayEvents, MoonPhaseName } from './celestial_calendar';
 
 const SYDNEY_TZ = 'Australia/Sydney';
 
 function nowInSydney(): Date {
-  const str = new Date().toLocaleString('en-AU', { timeZone: SYDNEY_TZ });
-  return new Date(str);
+  const fmt = new Intl.DateTimeFormat('en-AU', {
+    timeZone: SYDNEY_TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+  const parts = fmt.formatToParts(new Date());
+  const get = (type: string): number =>
+    parseInt(parts.find((p) => p.type === type)?.value ?? '0', 10);
+  return new Date(
+    get('year'),
+    get('month') - 1,
+    get('day'),
+    get('hour'),
+    get('minute'),
+    get('second'),
+  );
 }
 
 function formatSydneyTime(date: Date): string {
@@ -61,48 +78,128 @@ const MOON_EMOJIS: Record<MoonPhaseName, string> = {
   waning_crescent: '🌘',
 };
 
-interface UpcomingEvent {
+const MOON_DESCRIPTIONS: Record<MoonPhaseName, string> = {
+  new_moon:
+    'The sky holds its breath. Plant seeds in darkness — what you begin now takes root unseen.',
+  waxing_crescent:
+    'A silver sliver cuts the night. Take your first steps toward what you have been imagining.',
+  first_quarter:
+    'Half-lit, half-shadow. Push through resistance — the effort made now carries real weight.',
+  waxing_gibbous:
+    'Almost full. Refine and prepare; the light is gathering toward its peak.',
+  full_moon:
+    'The veil between worlds grows thin. Emotions run high — let what no longer serves you go.',
+  waning_gibbous:
+    'The light releases slowly. Share what you have learned with those around you.',
+  last_quarter:
+    'Clearing begins. Release, forgive, and make space for what is coming next.',
+  waning_crescent:
+    'Rest in the dark before the cycle turns. What you surrender now returns transformed.',
+};
+
+const SEASON_DESCRIPTIONS: Record<string, string> = {
+  'Spring Equinox':
+    'The land wakes and stretches. Life presses through the soil with quiet, irresistible force.',
+  'Summer Solstice':
+    'Light reigns at its longest hour. Step outside — the warmth is asking you to be present.',
+  'Autumn Equinox':
+    'The trees let their colours burn before letting go. There is beauty in this graceful release.',
+  'Winter Solstice':
+    'The world turns inward. In the stillness, something essential gathers strength.',
+};
+
+const ZODIAC_DESCRIPTIONS: Record<string, string> = {
+  Aries:
+    'Fire leads the way. Bold instincts are your guide — act before the moment passes.',
+  Taurus:
+    'A golden orb bathes the land. Savour the richness of simple pleasures.',
+  Gemini:
+    'Two minds at once, curious and quick. Let conversation carry you somewhere unexpected.',
+  Cancer:
+    'The tide pulls homeward. Tend to those you love and let yourself be tended in return.',
+  Leo: 'The sun pours itself into everything. Shine without apology — your warmth is needed.',
+  Virgo:
+    'Detail and devotion sharpen the work. The smallest care changes everything.',
+  Libra:
+    'The scales tip and balance and tip again. Beauty and fairness ask for your attention.',
+  Scorpio:
+    'Still waters run deep. What lies beneath is worth more than the surface suggests.',
+  Sagittarius:
+    'The arrow flies toward the horizon. Follow curiosity wherever it dares to point.',
+  Capricorn:
+    'The mountain does not hurry. Patient effort builds what endures through any season.',
+  Aquarius:
+    'Strange ideas arrive from strange angles. Welcome what you cannot yet explain.',
+  Pisces:
+    'Dream and reality soften into each other. What you feel knows more than you think.',
+};
+
+interface MonthEvent {
   date: Date;
   emoji: string;
   label: string;
+  description: string;
   type: 'moon' | 'season' | 'zodiac';
+  isPast: boolean;
 }
 
-function getUpcomingEvents(selectedMonth: Date, now: Date): UpcomingEvent[] {
+function getMonthEvents(selectedMonth: Date, now: Date): MonthEvent[] {
   const year = selectedMonth.getFullYear();
   const month = selectedMonth.getMonth();
   const celestialMap = getCelestialEventsForMonth(year, month);
-  const events: UpcomingEvent[] = [];
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const events: MonthEvent[] = [];
+
+  const addEvent = (
+    date: Date,
+    emoji: string,
+    label: string,
+    description: string,
+    type: MonthEvent['type'],
+  ) => {
+    events.push({
+      date,
+      emoji,
+      label,
+      description,
+      type,
+      isPast: date < todayStart,
+    });
+  };
 
   celestialMap.forEach((dayEvents: CelestialDayEvents, dateStr: string) => {
     const date = new Date(dateStr);
     if (dayEvents.moon) {
-      events.push({
+      addEvent(
         date,
-        emoji: dayEvents.moon.emoji,
-        label: dayEvents.moon.label,
-        type: 'moon',
-      });
+        dayEvents.moon.emoji,
+        dayEvents.moon.label,
+        MOON_DESCRIPTIONS[dayEvents.moon.phase],
+        'moon',
+      );
     }
     if (dayEvents.season) {
-      events.push({
+      addEvent(
         date,
-        emoji: dayEvents.season.emoji,
-        label: dayEvents.season.label,
-        type: 'season',
-      });
+        dayEvents.season.emoji,
+        dayEvents.season.label,
+        SEASON_DESCRIPTIONS[dayEvents.season.label] ?? '',
+        'season',
+      );
     }
     if (dayEvents.zodiac) {
-      events.push({
+      const signName = dayEvents.zodiac.sign;
+      addEvent(
         date,
-        emoji: dayEvents.zodiac.emoji,
-        label: dayEvents.zodiac.label,
-        type: 'zodiac',
-      });
+        dayEvents.zodiac.emoji,
+        dayEvents.zodiac.label,
+        ZODIAC_DESCRIPTIONS[signName] ?? '',
+        'zodiac',
+      );
     }
   });
 
-  // Also include season events that fall this month (more precise dates)
+  // Season events with precise times (deduplicated)
   const seasonEvents = getSeasonEventsForYear(year).filter(
     (e) => e.date.getMonth() === month,
   );
@@ -111,21 +208,17 @@ function getUpcomingEvents(selectedMonth: Date, now: Date): UpcomingEvent[] {
     if (
       !events.find((e) => e.type === 'season' && e.date.toDateString() === key)
     ) {
-      events.push({
-        date: s.date,
-        emoji: s.emoji,
-        label: s.label,
-        type: 'season',
-      });
+      addEvent(
+        s.date,
+        s.emoji,
+        s.label,
+        SEASON_DESCRIPTIONS[s.label] ?? '',
+        'season',
+      );
     }
   });
 
-  return events
-    .sort((a, b) => a.date.getTime() - b.date.getTime())
-    .filter(
-      (e) =>
-        e.date >= new Date(now.getFullYear(), now.getMonth(), now.getDate()),
-    );
+  return events.sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
 interface InFlowSectionProps {
@@ -137,10 +230,16 @@ export const InFlowSection: React.FC<InFlowSectionProps> = ({
 }) => {
   const [now, setNow] = useState<Date>(nowInSydney);
 
-  // Refresh current moment every hour
   useEffect(() => {
-    const id = setInterval(() => { setNow(nowInSydney()); }, 60 * 60 * 1000);
-    return () => { clearInterval(id); };
+    const id = setInterval(
+      () => {
+        setNow(nowInSydney());
+      },
+      60 * 60 * 1000,
+    );
+    return () => {
+      clearInterval(id);
+    };
   }, []);
 
   const moonPhase = useMemo(() => getMoonPhaseName(now), [now]);
@@ -149,16 +248,21 @@ export const InFlowSection: React.FC<InFlowSectionProps> = ({
     [now],
   );
   const zodiac = useMemo(() => getZodiacForDate(now), [now]);
-  const upcoming = useMemo(
-    () => getUpcomingEvents(selectedMonth, now),
+  const monthEvents = useMemo(
+    () => getMonthEvents(selectedMonth, now),
     [selectedMonth, now],
   );
+
+  const monthLabel = selectedMonth.toLocaleString('en-AU', {
+    month: 'long',
+    year: 'numeric',
+  });
 
   return (
     <section className='in-flow'>
       <div className='in-flow__header'>
         <span className='in-flow__header-label'>In Flow</span>
-        <span className='in-flow__header-tz'>Sydney / Melbourne</span>
+        <span className='in-flow__header-tz'>Sydney · Melbourne</span>
       </div>
 
       <div className='in-flow__now'>
@@ -178,14 +282,14 @@ export const InFlowSection: React.FC<InFlowSectionProps> = ({
         </div>
       </div>
 
-      {upcoming.length > 0 && (
+      {monthEvents.length > 0 && (
         <div className='in-flow__upcoming'>
-          <span className='in-flow__upcoming-label'>Coming up</span>
+          <span className='in-flow__upcoming-label'>{monthLabel}</span>
           <ul className='in-flow__upcoming-list'>
-            {upcoming.slice(0, 8).map((event, i) => (
+            {monthEvents.map((event, i) => (
               <li
                 key={i}
-                className={`in-flow__upcoming-item in-flow__upcoming-item--${event.type}`}
+                className={`in-flow__upcoming-item in-flow__upcoming-item--${event.type}${event.isPast ? ' in-flow__upcoming-item--past' : ''}`}
               >
                 <span className='in-flow__upcoming-emoji'>{event.emoji}</span>
                 <span className='in-flow__upcoming-text'>
@@ -196,6 +300,9 @@ export const InFlowSection: React.FC<InFlowSectionProps> = ({
                     {event.type === 'season'
                       ? formatSydneyTime(event.date)
                       : formatSydneyDate(event.date)}
+                  </span>
+                  <span className='in-flow__upcoming-description'>
+                    {event.description}
                   </span>
                 </span>
               </li>

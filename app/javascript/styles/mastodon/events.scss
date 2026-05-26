@@ -2012,16 +2012,18 @@ $ev-interested-color: #b8945f;
   }
 
   &__header-label {
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--space-color, #343070);
+    font-family: Georgia, 'Liberation Serif', serif;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: $primary-text-color;
   }
 
   &__header-tz {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--secondary-text-color);
+    align-self: flex-end;
+    padding-bottom: 4px;
   }
 
   &__now {
@@ -2105,14 +2107,14 @@ $ev-interested-color: #b8945f;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
   }
 
   &__upcoming-item {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 12px;
     border-radius: 8px;
     transition: background 0.1s;
 
@@ -2145,6 +2147,7 @@ $ev-interested-color: #b8945f;
     width: 24px;
     text-align: center;
     flex-shrink: 0;
+    padding-top: 1px;
   }
 
   &__upcoming-text {
@@ -2162,6 +2165,19 @@ $ev-interested-color: #b8945f;
   &__upcoming-date {
     font-size: 11px;
     color: var(--secondary-text-color);
+    margin-bottom: 3px;
+  }
+
+  &__upcoming-description {
+    font-size: 12px;
+    font-style: italic;
+    color: var(--secondary-text-color);
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+
+  &__upcoming-item--past {
+    opacity: 0.45;
   }
 }
 
