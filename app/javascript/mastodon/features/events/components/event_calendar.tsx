@@ -1,8 +1,15 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { FormattedDate } from 'react-intl';
 
 import { Link } from 'react-router-dom';
+
+import {
+  getCelestialEventsForMonth,
+  getCelestialEmojisForDay,
+  getZodiacForDate,
+  type CelestialDayEvents,
+} from './celestial_calendar';
 
 interface Account {
   id: string;
@@ -104,6 +111,90 @@ function getColorClass(event: Event): string {
   return '';
 }
 
+// ─── Celestial tooltip ────────────────────────────────────────────────────────
+
+type CelestialTooltipProps = {
+  celestial: CelestialDayEvents;
+  onClose: () => void;
+};
+
+const CelestialTooltip: React.FC<CelestialTooltipProps> = ({
+  celestial,
+  onClose,
+}) => {
+  const items = [
+    celestial.moon && {
+      emoji: celestial.moon.emoji,
+      label: celestial.moon.label,
+      key: 'moon',
+    },
+    celestial.season && {
+      emoji: celestial.season.emoji,
+      label: celestial.season.label,
+      key: 'season',
+    },
+    celestial.zodiac && {
+      emoji: celestial.zodiac.emoji,
+      label: celestial.zodiac.label,
+      key: 'zodiac',
+    },
+  ].filter(Boolean) as Array<{ emoji: string; label: string; key: string }>;
+
+  return (
+    <div className='event-calendar__celestial-tooltip' role='tooltip'>
+      <button
+        className='event-calendar__celestial-tooltip-close'
+        onClick={onClose}
+        aria-label='Close'
+      >
+        ×
+      </button>
+      {items.map((item) => (
+        <div key={item.key} className='event-calendar__celestial-tooltip-row'>
+          <span className='event-calendar__celestial-tooltip-emoji'>
+            {item.emoji}
+          </span>
+          <span className='event-calendar__celestial-tooltip-label'>
+            {item.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ─── Zodiac banner ────────────────────────────────────────────────────────────
+
+type ZodiacBannerProps = {
+  month: Date;
+};
+
+const ZodiacBanner: React.FC<ZodiacBannerProps> = ({ month }) => {
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
+  const lastDay = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+  const startSign = getZodiacForDate(firstDay);
+  const endSign = getZodiacForDate(lastDay);
+  const signs =
+    startSign.sign === endSign.sign ? [startSign] : [startSign, endSign];
+
+  return (
+    <div className='event-calendar__zodiac-banner'>
+      {signs.map((z) => (
+        <span
+          key={z.sign}
+          className='event-calendar__zodiac-chip'
+          title={z.sign}
+        >
+          <span className='event-calendar__zodiac-chip-emoji'>{z.emoji}</span>
+          <span className='event-calendar__zodiac-chip-name'>{z.sign}</span>
+        </span>
+      ))}
+    </div>
+  );
+};
+
+// ─── Dot link ─────────────────────────────────────────────────────────────────
+
 interface DotLinkProps {
   event: Event;
   position: SpanPosition;
@@ -127,12 +218,43 @@ const CalendarDotLink: React.FC<DotLinkProps> = ({ event, position }) => {
   );
 };
 
+// ─── Main calendar ────────────────────────────────────────────────────────────
+
 export const EventCalendar: React.FC<Props> = ({
   events,
   selectedMonth,
   onMonthChange,
 }) => {
+  const [celestialTooltipDay, setCelestialTooltipDay] = useState<string | null>(
+    null,
+  );
+
   const days = useMemo(() => getDaysInMonth(selectedMonth), [selectedMonth]);
+
+  const celestialEvents = useMemo(() => {
+    const year = selectedMonth.getFullYear();
+    const month = selectedMonth.getMonth();
+    const map = getCelestialEventsForMonth(year, month);
+
+    if (days.length > 0) {
+      const firstVisible = days[0];
+      const lastVisible = days[days.length - 1];
+      if (firstVisible.getMonth() !== month) {
+        getCelestialEventsForMonth(
+          firstVisible.getFullYear(),
+          firstVisible.getMonth(),
+        ).forEach((v, k) => map.set(k, v));
+      }
+      if (lastVisible.getMonth() !== month) {
+        getCelestialEventsForMonth(
+          lastVisible.getFullYear(),
+          lastVisible.getMonth(),
+        ).forEach((v, k) => map.set(k, v));
+      }
+    }
+
+    return map;
+  }, [selectedMonth, days]);
 
   const eventsByDate = useMemo(() => {
     const map = new Map<string, DayEvent[]>();
@@ -176,12 +298,14 @@ export const EventCalendar: React.FC<Props> = ({
     const d = new Date(selectedMonth);
     d.setMonth(d.getMonth() - 1);
     onMonthChange(d);
+    setCelestialTooltipDay(null);
   }, [selectedMonth, onMonthChange]);
 
   const nextMonth = useCallback(() => {
     const d = new Date(selectedMonth);
     d.setMonth(d.getMonth() + 1);
     onMonthChange(d);
+    setCelestialTooltipDay(null);
   }, [selectedMonth, onMonthChange]);
 
   const today = useMemo(() => new Date(), []);
@@ -192,9 +316,12 @@ export const EventCalendar: React.FC<Props> = ({
         <button onClick={prevMonth} className='event-calendar__nav-btn'>
           {'←'}
         </button>
-        <span className='event-calendar__month-label'>
-          <FormattedDate value={selectedMonth} month='long' year='numeric' />
-        </span>
+        <div className='event-calendar__nav-center'>
+          <span className='event-calendar__month-label'>
+            <FormattedDate value={selectedMonth} month='long' year='numeric' />
+          </span>
+          <ZodiacBanner month={selectedMonth} />
+        </div>
         <button onClick={nextMonth} className='event-calendar__nav-btn'>
           {'→'}
         </button>
@@ -209,16 +336,64 @@ export const EventCalendar: React.FC<Props> = ({
 
         {days.map((day, i) => {
           const dateKey = toDateKey(day);
+          const celestialKey = day.toDateString();
           const dayEvents = eventsByDate.get(dateKey) ?? [];
+          const celestial = celestialEvents.get(celestialKey);
+          const celestialEmojis = celestial
+            ? getCelestialEmojisForDay(celestial)
+            : '';
           const isCurrentMonth = day.getMonth() === selectedMonth.getMonth();
           const isToday = isSameDay(day, today);
+          const hasCelestial = Boolean(celestial);
+          const tooltipOpen = celestialTooltipDay === celestialKey;
 
           return (
             <div
               key={i}
-              className={`event-calendar__cell ${!isCurrentMonth ? 'event-calendar__cell--other-month' : ''} ${isToday ? 'event-calendar__cell--today' : ''}`}
+              className={[
+                'event-calendar__cell',
+                !isCurrentMonth ? 'event-calendar__cell--other-month' : '',
+                isToday ? 'event-calendar__cell--today' : '',
+                hasCelestial ? 'event-calendar__cell--celestial' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
             >
-              <span className='event-calendar__cell-date'>{day.getDate()}</span>
+              <div className='event-calendar__cell-top'>
+                <span className='event-calendar__cell-date'>
+                  {day.getDate()}
+                </span>
+                {hasCelestial && (
+                  <button
+                    className='event-calendar__celestial-badge'
+                    title={[
+                      celestial?.moon?.label,
+                      celestial?.season?.label,
+                      celestial?.zodiac?.label,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCelestialTooltipDay(
+                        tooltipOpen ? null : celestialKey,
+                      );
+                    }}
+                    aria-expanded={tooltipOpen}
+                    aria-label='Celestial events'
+                  >
+                    {celestialEmojis}
+                  </button>
+                )}
+              </div>
+
+              {tooltipOpen && celestial && (
+                <CelestialTooltip
+                  celestial={celestial}
+                  onClose={() => setCelestialTooltipDay(null)}
+                />
+              )}
+
               {dayEvents.map(({ event, position }) => (
                 <CalendarDotLink
                   key={event.id}

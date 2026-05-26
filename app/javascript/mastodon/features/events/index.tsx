@@ -12,6 +12,7 @@ import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 import { CreateEventForm } from './components/create_event_form';
 import { EventCalendar } from './components/event_calendar';
 import { EventCard } from './components/event_card';
+import { InFlowSection } from './components/in_flow_section';
 import { InviteFollowersPanel } from './components/invite_followers_panel';
 
 const messages = defineMessages({
@@ -293,6 +294,8 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                 onMonthChange={handleMonthChange}
               />
             </div>
+
+            <InFlowSection selectedMonth={selectedMonth} />
           </>
         )}
       </div>
