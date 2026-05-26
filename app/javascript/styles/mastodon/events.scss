@@ -2000,7 +2000,8 @@ $ev-interested-color: #b8945f;
 
 .in-flow {
   margin: 24px 0 8px;
-  border-top: 1px solid color-mix(in srgb, var(--space-color, #343070) 30%, transparent);
+  border-top: 1px solid
+    color-mix(in srgb, var(--space-color, #343070) 30%, transparent);
   padding-top: 20px;
 
   &__header {
@@ -2031,7 +2032,8 @@ $ev-interested-color: #b8945f;
     padding: 12px 16px;
     border-radius: 10px;
     background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--space-color, #343070) 20%, transparent);
+    border: 1px solid
+      color-mix(in srgb, var(--space-color, #343070) 20%, transparent);
   }
 
   &__moon {
@@ -2069,8 +2071,13 @@ $ev-interested-color: #b8945f;
     gap: 6px;
     padding: 6px 12px;
     border-radius: 20px;
-    background: color-mix(in srgb, var(--space-color, #343070) 12%, transparent);
-    border: 1px solid color-mix(in srgb, var(--space-color, #343070) 25%, transparent);
+    background: color-mix(
+      in srgb,
+      var(--space-color, #343070) 12%,
+      transparent
+    );
+    border: 1px solid
+      color-mix(in srgb, var(--space-color, #343070) 25%, transparent);
   }
 
   &__zodiac-emoji {
@@ -2110,19 +2117,26 @@ $ev-interested-color: #b8945f;
     transition: background 0.1s;
 
     &:hover {
-      background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 8%,
+        transparent
+      );
     }
 
     &--season {
-      border-left: 2px solid color-mix(in srgb, var(--space-color, #343070) 50%, transparent);
+      border-left: 2px solid
+        color-mix(in srgb, var(--space-color, #343070) 50%, transparent);
     }
 
     &--moon {
-      border-left: 2px solid color-mix(in srgb, var(--space-color, #343070) 25%, transparent);
+      border-left: 2px solid
+        color-mix(in srgb, var(--space-color, #343070) 25%, transparent);
     }
 
     &--zodiac {
-      border-left: 2px solid color-mix(in srgb, var(--space-color, #343070) 15%, transparent);
+      border-left: 2px solid
+        color-mix(in srgb, var(--space-color, #343070) 15%, transparent);
     }
   }
 
@@ -2172,8 +2186,13 @@ $ev-interested-color: #b8945f;
     gap: 3px;
     padding: 2px 7px;
     border-radius: 10px;
-    background: color-mix(in srgb, var(--space-color, #343070) 10%, transparent);
-    border: 1px solid color-mix(in srgb, var(--space-color, #343070) 20%, transparent);
+    background: color-mix(
+      in srgb,
+      var(--space-color, #343070) 10%,
+      transparent
+    );
+    border: 1px solid
+      color-mix(in srgb, var(--space-color, #343070) 20%, transparent);
   }
 
   &__zodiac-chip-emoji {
@@ -2221,7 +2240,8 @@ $ev-interested-color: #b8945f;
     padding: 8px 10px;
     border-radius: 8px;
     background: var(--background-color, #1a1a2e);
-    border: 1px solid color-mix(in srgb, var(--space-color, #343070) 40%, transparent);
+    border: 1px solid
+      color-mix(in srgb, var(--space-color, #343070) 40%, transparent);
     box-shadow: 0 4px 16px rgb(0 0 0 / 40%);
   }
 

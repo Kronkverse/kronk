@@ -5,10 +5,11 @@ import {
   getMoonPhaseName,
   getMoonIllumination,
   getZodiacForDate,
-  getSeasonEventsForYear,
-  type CelestialDayEvents,
-  type MoonPhaseName,
+  getSeasonEventsForYear
+  
+  
 } from './celestial_calendar';
+import type {CelestialDayEvents, MoonPhaseName} from './celestial_calendar';
 
 const SYDNEY_TZ = 'Australia/Sydney';
 
@@ -60,12 +61,12 @@ const MOON_EMOJIS: Record<MoonPhaseName, string> = {
   waning_crescent: '🌘',
 };
 
-type UpcomingEvent = {
+interface UpcomingEvent {
   date: Date;
   emoji: string;
   label: string;
   type: 'moon' | 'season' | 'zodiac';
-};
+}
 
 function getUpcomingEvents(selectedMonth: Date, now: Date): UpcomingEvent[] {
   const year = selectedMonth.getFullYear();
@@ -76,13 +77,28 @@ function getUpcomingEvents(selectedMonth: Date, now: Date): UpcomingEvent[] {
   celestialMap.forEach((dayEvents: CelestialDayEvents, dateStr: string) => {
     const date = new Date(dateStr);
     if (dayEvents.moon) {
-      events.push({ date, emoji: dayEvents.moon.emoji, label: dayEvents.moon.label, type: 'moon' });
+      events.push({
+        date,
+        emoji: dayEvents.moon.emoji,
+        label: dayEvents.moon.label,
+        type: 'moon',
+      });
     }
     if (dayEvents.season) {
-      events.push({ date, emoji: dayEvents.season.emoji, label: dayEvents.season.label, type: 'season' });
+      events.push({
+        date,
+        emoji: dayEvents.season.emoji,
+        label: dayEvents.season.label,
+        type: 'season',
+      });
     }
     if (dayEvents.zodiac) {
-      events.push({ date, emoji: dayEvents.zodiac.emoji, label: dayEvents.zodiac.label, type: 'zodiac' });
+      events.push({
+        date,
+        emoji: dayEvents.zodiac.emoji,
+        label: dayEvents.zodiac.label,
+        type: 'zodiac',
+      });
     }
   });
 
@@ -92,27 +108,39 @@ function getUpcomingEvents(selectedMonth: Date, now: Date): UpcomingEvent[] {
   );
   seasonEvents.forEach((s) => {
     const key = s.date.toDateString();
-    if (!events.find((e) => e.type === 'season' && e.date.toDateString() === key)) {
-      events.push({ date: s.date, emoji: s.emoji, label: s.label, type: 'season' });
+    if (
+      !events.find((e) => e.type === 'season' && e.date.toDateString() === key)
+    ) {
+      events.push({
+        date: s.date,
+        emoji: s.emoji,
+        label: s.label,
+        type: 'season',
+      });
     }
   });
 
   return events
     .sort((a, b) => a.date.getTime() - b.date.getTime())
-    .filter((e) => e.date >= new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+    .filter(
+      (e) =>
+        e.date >= new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+    );
 }
 
 interface InFlowSectionProps {
   selectedMonth: Date;
 }
 
-export const InFlowSection: React.FC<InFlowSectionProps> = ({ selectedMonth }) => {
+export const InFlowSection: React.FC<InFlowSectionProps> = ({
+  selectedMonth,
+}) => {
   const [now, setNow] = useState<Date>(nowInSydney);
 
   // Refresh current moment every hour
   useEffect(() => {
-    const id = setInterval(() => setNow(nowInSydney()), 60 * 60 * 1000);
-    return () => clearInterval(id);
+    const id = setInterval(() => { setNow(nowInSydney()); }, 60 * 60 * 1000);
+    return () => { clearInterval(id); };
   }, []);
 
   const moonPhase = useMemo(() => getMoonPhaseName(now), [now]);
@@ -135,9 +163,7 @@ export const InFlowSection: React.FC<InFlowSectionProps> = ({ selectedMonth }) =
 
       <div className='in-flow__now'>
         <div className='in-flow__moon'>
-          <span className='in-flow__moon-emoji'>
-            {MOON_EMOJIS[moonPhase]}
-          </span>
+          <span className='in-flow__moon-emoji'>{MOON_EMOJIS[moonPhase]}</span>
           <div className='in-flow__moon-info'>
             <span className='in-flow__moon-name'>{MOON_LABELS[moonPhase]}</span>
             <span className='in-flow__moon-illumination'>
@@ -157,10 +183,15 @@ export const InFlowSection: React.FC<InFlowSectionProps> = ({ selectedMonth }) =
           <span className='in-flow__upcoming-label'>Coming up</span>
           <ul className='in-flow__upcoming-list'>
             {upcoming.slice(0, 8).map((event, i) => (
-              <li key={i} className={`in-flow__upcoming-item in-flow__upcoming-item--${event.type}`}>
+              <li
+                key={i}
+                className={`in-flow__upcoming-item in-flow__upcoming-item--${event.type}`}
+              >
                 <span className='in-flow__upcoming-emoji'>{event.emoji}</span>
                 <span className='in-flow__upcoming-text'>
-                  <span className='in-flow__upcoming-event-label'>{event.label}</span>
+                  <span className='in-flow__upcoming-event-label'>
+                    {event.label}
+                  </span>
                   <span className='in-flow__upcoming-date'>
                     {event.type === 'season'
                       ? formatSydneyTime(event.date)

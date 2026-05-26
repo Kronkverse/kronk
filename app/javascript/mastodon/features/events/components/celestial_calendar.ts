@@ -51,7 +51,13 @@ function toJulianDay(date: Date): number {
   }
   const A = Math.floor(Y / 100);
   const B = 2 - A + Math.floor(A / 4);
-  return Math.floor(365.25 * (Y + 4716)) + Math.floor(30.6001 * (M + 1)) + d + B - 1524.5;
+  return (
+    Math.floor(365.25 * (Y + 4716)) +
+    Math.floor(30.6001 * (M + 1)) +
+    d +
+    B -
+    1524.5
+  );
 }
 
 /**
@@ -62,7 +68,8 @@ export function getMoonAge(date: Date): number {
   const jd = toJulianDay(date);
   const knownNewMoonJD = 2451550.1; // Jan 6 2000 new moon
   const daysSince = jd - knownNewMoonJD;
-  const age = ((daysSince % LUNAR_CYCLE_DAYS) + LUNAR_CYCLE_DAYS) % LUNAR_CYCLE_DAYS;
+  const age =
+    ((daysSince % LUNAR_CYCLE_DAYS) + LUNAR_CYCLE_DAYS) % LUNAR_CYCLE_DAYS;
   return age;
 }
 
@@ -115,12 +122,22 @@ const MOON_LABELS: Record<MoonPhaseName, string> = {
 export function getMoonEventDatesForMonth(
   year: number,
   month: number, // 0-indexed
-): Array<{ date: Date; phase: MoonPhaseName; emoji: string; label: string }> {
-  const results: Array<{ date: Date; phase: MoonPhaseName; emoji: string; label: string }> = [];
+): { date: Date; phase: MoonPhaseName; emoji: string; label: string }[] {
+  const results: {
+    date: Date;
+    phase: MoonPhaseName;
+    emoji: string;
+    label: string;
+  }[] = [];
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   // Key phases we want to surface
-  const keyPhases: MoonPhaseName[] = ['new_moon', 'first_quarter', 'full_moon', 'last_quarter'];
+  const keyPhases: MoonPhaseName[] = [
+    'new_moon',
+    'first_quarter',
+    'full_moon',
+    'last_quarter',
+  ];
   let prevPhase: MoonPhaseName | null = null;
 
   for (let d = 1; d <= daysInMonth; d++) {
@@ -151,17 +168,16 @@ export function getMoonEventDatesForMonth(
  */
 function seasonJDE(year: number, k: 0 | 1 | 2 | 3): number {
   const Y = (year - 2000) / 1000;
-  const tables: number[][] = [
-    // Spring equinox
-    [2451623.80984, 365242.37404, 0.05169, -0.00411, -0.00057],
-    // Summer solstice
-    [2451716.56767, 365241.62603, 0.00325, 0.00888, -0.00030],
-    // Autumn equinox
-    [2451810.21715, 365242.01767, -0.11575, 0.00337, 0.00078],
-    // Winter solstice
-    [2451900.05952, 365242.74049, -0.06223, -0.00823, 0.00032],
-  ];
-  const [J0, J1, J2, J3, J4] = tables[k];
+  const J0s = [2451623.80984, 2451716.56767, 2451810.21715, 2451900.05952];
+  const J1s = [365242.37404, 365241.62603, 365242.01767, 365242.74049];
+  const J2s = [0.05169, 0.00325, -0.11575, -0.06223];
+  const J3s = [-0.00411, 0.00888, 0.00337, -0.00823];
+  const J4s = [-0.00057, -0.0003, 0.00078, 0.00032];
+  const J0 = J0s[k] ?? 0;
+  const J1 = J1s[k] ?? 0;
+  const J2 = J2s[k] ?? 0;
+  const J3 = J3s[k] ?? 0;
+  const J4 = J4s[k] ?? 0;
   return J0 + J1 * Y + J2 * Y * Y + J3 * Y * Y * Y + J4 * Y * Y * Y * Y;
 }
 
@@ -191,59 +207,152 @@ function julianDayToDate(jd: number): Date {
   return new Date(Date.UTC(year, month - 1, day, hour, min));
 }
 
-export type SeasonEvent = {
+export interface SeasonEvent {
   date: Date;
   season: SeasonName;
   label: string;
   emoji: string;
-};
+}
 
-const SEASON_META: Array<{ season: SeasonName; label: string; emoji: string }> = [
-  { season: 'spring', label: 'Spring Equinox', emoji: '🌸' },
-  { season: 'summer', label: 'Summer Solstice', emoji: '☀️' },
-  { season: 'autumn', label: 'Autumn Equinox', emoji: '🍂' },
-  { season: 'winter', label: 'Winter Solstice', emoji: '❄️' },
-];
+const SEASON_META: { season: SeasonName; label: string; emoji: string }[] =
+  [
+    { season: 'spring', label: 'Spring Equinox', emoji: '🌸' },
+    { season: 'summer', label: 'Summer Solstice', emoji: '☀️' },
+    { season: 'autumn', label: 'Autumn Equinox', emoji: '🍂' },
+    { season: 'winter', label: 'Winter Solstice', emoji: '❄️' },
+  ];
 
 export function getSeasonEventsForYear(year: number): SeasonEvent[] {
   return ([0, 1, 2, 3] as const).map((k) => {
     const jde = seasonJDE(year, k);
     const date = julianDayToDate(jde);
     const meta = SEASON_META[k];
-    return { date, ...meta };
+    const season: SeasonName = meta?.season ?? 'spring';
+    const label = meta?.label ?? '';
+    const emoji = meta?.emoji ?? '';
+    return { date, season, label, emoji };
   });
 }
 
-export function getSeasonEventsForMonth(year: number, month: number): SeasonEvent[] {
-  return getSeasonEventsForYear(year).filter((e) => e.date.getMonth() === month);
+export function getSeasonEventsForMonth(
+  year: number,
+  month: number,
+): SeasonEvent[] {
+  return getSeasonEventsForYear(year).filter(
+    (e) => e.date.getMonth() === month,
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Zodiac signs — based on solar longitude (Western tropical astrology)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type ZodiacSign = {
+export interface ZodiacSign {
   sign: string;
   emoji: string;
   startMonth: number; // 0-indexed
   startDay: number;
   endMonth: number;
   endDay: number;
-};
+}
 
 const ZODIAC_SIGNS: ZodiacSign[] = [
-  { sign: 'Aries', emoji: '♈', startMonth: 2, startDay: 21, endMonth: 3, endDay: 19 },
-  { sign: 'Taurus', emoji: '♉', startMonth: 3, startDay: 20, endMonth: 4, endDay: 20 },
-  { sign: 'Gemini', emoji: '♊', startMonth: 4, startDay: 21, endMonth: 5, endDay: 20 },
-  { sign: 'Cancer', emoji: '♋', startMonth: 5, startDay: 21, endMonth: 6, endDay: 22 },
-  { sign: 'Leo', emoji: '♌', startMonth: 6, startDay: 23, endMonth: 7, endDay: 22 },
-  { sign: 'Virgo', emoji: '♍', startMonth: 7, startDay: 23, endMonth: 8, endDay: 22 },
-  { sign: 'Libra', emoji: '♎', startMonth: 8, startDay: 23, endMonth: 9, endDay: 22 },
-  { sign: 'Scorpio', emoji: '♏', startMonth: 9, startDay: 23, endMonth: 10, endDay: 21 },
-  { sign: 'Sagittarius', emoji: '♐', startMonth: 10, startDay: 22, endMonth: 11, endDay: 21 },
-  { sign: 'Capricorn', emoji: '♑', startMonth: 11, startDay: 22, endMonth: 0, endDay: 19 },
-  { sign: 'Aquarius', emoji: '♒', startMonth: 0, startDay: 20, endMonth: 1, endDay: 18 },
-  { sign: 'Pisces', emoji: '♓', startMonth: 1, startDay: 19, endMonth: 2, endDay: 20 },
+  {
+    sign: 'Aries',
+    emoji: '♈',
+    startMonth: 2,
+    startDay: 21,
+    endMonth: 3,
+    endDay: 19,
+  },
+  {
+    sign: 'Taurus',
+    emoji: '♉',
+    startMonth: 3,
+    startDay: 20,
+    endMonth: 4,
+    endDay: 20,
+  },
+  {
+    sign: 'Gemini',
+    emoji: '♊',
+    startMonth: 4,
+    startDay: 21,
+    endMonth: 5,
+    endDay: 20,
+  },
+  {
+    sign: 'Cancer',
+    emoji: '♋',
+    startMonth: 5,
+    startDay: 21,
+    endMonth: 6,
+    endDay: 22,
+  },
+  {
+    sign: 'Leo',
+    emoji: '♌',
+    startMonth: 6,
+    startDay: 23,
+    endMonth: 7,
+    endDay: 22,
+  },
+  {
+    sign: 'Virgo',
+    emoji: '♍',
+    startMonth: 7,
+    startDay: 23,
+    endMonth: 8,
+    endDay: 22,
+  },
+  {
+    sign: 'Libra',
+    emoji: '♎',
+    startMonth: 8,
+    startDay: 23,
+    endMonth: 9,
+    endDay: 22,
+  },
+  {
+    sign: 'Scorpio',
+    emoji: '♏',
+    startMonth: 9,
+    startDay: 23,
+    endMonth: 10,
+    endDay: 21,
+  },
+  {
+    sign: 'Sagittarius',
+    emoji: '♐',
+    startMonth: 10,
+    startDay: 22,
+    endMonth: 11,
+    endDay: 21,
+  },
+  {
+    sign: 'Capricorn',
+    emoji: '♑',
+    startMonth: 11,
+    startDay: 22,
+    endMonth: 0,
+    endDay: 19,
+  },
+  {
+    sign: 'Aquarius',
+    emoji: '♒',
+    startMonth: 0,
+    startDay: 20,
+    endMonth: 1,
+    endDay: 18,
+  },
+  {
+    sign: 'Pisces',
+    emoji: '♓',
+    startMonth: 1,
+    startDay: 19,
+    endMonth: 2,
+    endDay: 20,
+  },
 ];
 
 export function getZodiacForDate(date: Date): ZodiacSign {
@@ -256,8 +365,15 @@ export function getZodiacForDate(date: Date): ZodiacSign {
     // Same month end (if end month wraps or matches)
     if (z.endMonth === m && d <= z.endDay) return z;
   }
-  // Fallback — shouldn't happen
-  return ZODIAC_SIGNS[0];
+  const fallback: ZodiacSign = {
+    sign: 'Aries',
+    emoji: '♈',
+    startMonth: 2,
+    startDay: 21,
+    endMonth: 3,
+    endDay: 19,
+  };
+  return ZODIAC_SIGNS[0] ?? fallback;
 }
 
 /**
@@ -267,8 +383,8 @@ export function getZodiacForDate(date: Date): ZodiacSign {
 export function getZodiacTransitionsForMonth(
   year: number,
   month: number,
-): Array<{ date: Date; sign: ZodiacSign }> {
-  const results: Array<{ date: Date; sign: ZodiacSign }> = [];
+): { date: Date; sign: ZodiacSign }[] {
+  const results: { date: Date; sign: ZodiacSign }[] = [];
   for (const z of ZODIAC_SIGNS) {
     if (z.startMonth === month) {
       results.push({ date: new Date(year, month, z.startDay), sign: z });
@@ -281,11 +397,11 @@ export function getZodiacTransitionsForMonth(
 // Unified: get all celestial events for a given month
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type CelestialDayEvents = {
+export interface CelestialDayEvents {
   moon?: { phase: MoonPhaseName; emoji: string; label: string };
   season?: { season: SeasonName; emoji: string; label: string };
   zodiac?: { sign: string; emoji: string; label: string };
-};
+}
 
 /** Returns a Map<dateString, CelestialDayEvents> for the given month. */
 export function getCelestialEventsForMonth(
@@ -296,7 +412,9 @@ export function getCelestialEventsForMonth(
 
   const ensure = (dateStr: string): CelestialDayEvents => {
     if (!map.has(dateStr)) map.set(dateStr, {});
-    return map.get(dateStr)!;
+    const entry = map.get(dateStr) ?? {};
+    map.set(dateStr, entry);
+    return entry;
   };
 
   // Moon events
