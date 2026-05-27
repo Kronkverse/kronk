@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 
 import {
   getCelestialEventsForMonth,
+  getCelestialEmojisForDay,
   getZodiacForDate,
 } from './celestial_calendar';
 import type { CelestialDayEvents } from './celestial_calendar';
@@ -158,6 +159,7 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
   isToday,
 }) => {
   const hasCelestial = Boolean(celestial);
+  const celestialEmojis = celestial ? getCelestialEmojisForDay(celestial) : '';
 
   return (
     <div
@@ -172,6 +174,11 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
     >
       <div className='event-calendar__cell-top'>
         <span className='event-calendar__cell-date'>{day.getDate()}</span>
+        {hasCelestial && (
+          <span className='event-calendar__celestial-badge'>
+            {celestialEmojis}
+          </span>
+        )}
       </div>
 
       {dayEvents.map(({ event, position }) => (
