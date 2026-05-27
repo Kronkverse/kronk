@@ -174,41 +174,6 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
         <span className='event-calendar__cell-date'>{day.getDate()}</span>
       </div>
 
-      {celestial && (
-        <>
-          {celestial.moon && (
-            <div className='event-calendar__celestial-item'>
-              <span className='event-calendar__celestial-item-emoji'>
-                {celestial.moon.emoji}
-              </span>
-              <span className='event-calendar__celestial-item-label'>
-                {celestial.moon.label}
-              </span>
-            </div>
-          )}
-          {celestial.season && (
-            <div className='event-calendar__celestial-item'>
-              <span className='event-calendar__celestial-item-emoji'>
-                {celestial.season.emoji}
-              </span>
-              <span className='event-calendar__celestial-item-label'>
-                {celestial.season.label}
-              </span>
-            </div>
-          )}
-          {celestial.zodiac && (
-            <div className='event-calendar__celestial-item'>
-              <span className='event-calendar__celestial-item-emoji'>
-                {celestial.zodiac.emoji}
-              </span>
-              <span className='event-calendar__celestial-item-label'>
-                {celestial.zodiac.label}
-              </span>
-            </div>
-          )}
-        </>
-      )}
-
       {dayEvents.map(({ event, position }) => (
         <CalendarDotLink key={event.id} event={event} position={position} />
       ))}
