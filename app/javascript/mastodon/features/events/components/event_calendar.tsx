@@ -7,7 +7,6 @@ import { Link } from 'react-router-dom';
 import {
   getCelestialEventsForMonth,
   getCelestialEmojisForDay,
-  getZodiacForDate,
 } from './celestial_calendar';
 import type { CelestialDayEvents } from './celestial_calendar';
 
@@ -110,36 +109,6 @@ function getColorClass(event: Event): string {
   if (event.invited) return 'event-calendar__event-dot--invited';
   return '';
 }
-
-// ─── Zodiac banner ────────────────────────────────────────────────────────────
-
-interface ZodiacBannerProps {
-  month: Date;
-}
-
-const ZodiacBanner: React.FC<ZodiacBannerProps> = ({ month }) => {
-  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
-  const lastDay = new Date(month.getFullYear(), month.getMonth() + 1, 0);
-  const startSign = getZodiacForDate(firstDay);
-  const endSign = getZodiacForDate(lastDay);
-  const signs =
-    startSign.sign === endSign.sign ? [startSign] : [startSign, endSign];
-
-  return (
-    <div className='event-calendar__zodiac-banner'>
-      {signs.map((z) => (
-        <span
-          key={z.sign}
-          className='event-calendar__zodiac-chip'
-          title={z.sign}
-        >
-          <span className='event-calendar__zodiac-chip-emoji'>{z.emoji}</span>
-          <span className='event-calendar__zodiac-chip-name'>{z.sign}</span>
-        </span>
-      ))}
-    </div>
-  );
-};
 
 // ─── Calendar cell ───────────────────────────────────────────────────────────
 
@@ -303,12 +272,9 @@ export const EventCalendar: React.FC<Props> = ({
         <button onClick={prevMonth} className='event-calendar__nav-btn'>
           {'←'}
         </button>
-        <div className='event-calendar__nav-center'>
-          <span className='event-calendar__month-label'>
-            <FormattedDate value={selectedMonth} month='long' year='numeric' />
-          </span>
-          <ZodiacBanner month={selectedMonth} />
-        </div>
+        <span className='event-calendar__month-label'>
+          <FormattedDate value={selectedMonth} month='long' year='numeric' />
+        </span>
         <button onClick={nextMonth} className='event-calendar__nav-btn'>
           {'→'}
         </button>

@@ -510,7 +510,6 @@ export function getZodiacTransitionsForMonth(
 export interface CelestialDayEvents {
   moon?: { phase: MoonPhaseName; emoji: string; label: string };
   season?: { season: SeasonName; emoji: string; label: string };
-  zodiac?: { sign: string; emoji: string; label: string };
   crossQuarter?: { name: CrossQuarterName; emoji: string; label: string };
   orbital?: { type: 'perihelion' | 'aphelion'; emoji: string; label: string };
 }
@@ -539,16 +538,6 @@ export function getCelestialEventsForMonth(
   for (const s of getSeasonEventsForMonth(year, month)) {
     const key = new Date(year, month, s.date.getDate()).toDateString();
     ensure(key).season = { season: s.season, emoji: s.emoji, label: s.label };
-  }
-
-  // Zodiac transitions
-  for (const z of getZodiacTransitionsForMonth(year, month)) {
-    const key = z.date.toDateString();
-    ensure(key).zodiac = {
-      sign: z.sign.sign,
-      emoji: z.sign.emoji,
-      label: `${z.sign.sign} begins`,
-    };
   }
 
   // Cross-quarter days
@@ -581,6 +570,5 @@ export function getCelestialEmojisForDay(events: CelestialDayEvents): string {
   if (events.season) parts.push(events.season.emoji);
   if (events.crossQuarter) parts.push(events.crossQuarter.emoji);
   if (events.orbital) parts.push(events.orbital.emoji);
-  if (events.zodiac) parts.push(events.zodiac.emoji);
   return parts.join('');
 }
