@@ -311,6 +311,49 @@ export function getCrossQuarterEventsForMonth(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Perihelion & Aphelion — Earth's closest and farthest points from the Sun
+// Perihelion ~Jan 3-5, Aphelion ~Jul 4-6 each year.
+// Base JDE from known perihelion 2000-01-03 (JD 2451547.507).
+// ─────────────────────────────────────────────────────────────────────────────
+
+const PERIHELION_BASE_JDE = 2451547.507;
+const ANOMALISTIC_YEAR = 365.259636;
+
+export interface OrbitalEvent {
+  date: Date;
+  type: 'perihelion' | 'aphelion';
+  label: string;
+  emoji: string;
+}
+
+export function getOrbitalEventsForYear(year: number): OrbitalEvent[] {
+  const k = year - 2000;
+  return [
+    {
+      date: julianDayToDate(PERIHELION_BASE_JDE + ANOMALISTIC_YEAR * k),
+      type: 'perihelion' as const,
+      label: 'Perihelion',
+      emoji: '🔆',
+    },
+    {
+      date: julianDayToDate(PERIHELION_BASE_JDE + ANOMALISTIC_YEAR * (k + 0.5)),
+      type: 'aphelion' as const,
+      label: 'Aphelion',
+      emoji: '🔅',
+    },
+  ];
+}
+
+export function getOrbitalEventsForMonth(
+  year: number,
+  month: number,
+): OrbitalEvent[] {
+  return getOrbitalEventsForYear(year).filter(
+    (e) => e.date.getMonth() === month,
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Zodiac signs — based on solar longitude (Western tropical astrology)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -469,6 +512,7 @@ export interface CelestialDayEvents {
   season?: { season: SeasonName; emoji: string; label: string };
   zodiac?: { sign: string; emoji: string; label: string };
   crossQuarter?: { name: CrossQuarterName; emoji: string; label: string };
+  orbital?: { type: 'perihelion' | 'aphelion'; emoji: string; label: string };
 }
 
 /** Returns a Map<dateString, CelestialDayEvents> for the given month. */
@@ -517,6 +561,16 @@ export function getCelestialEventsForMonth(
     };
   }
 
+  // Orbital events (perihelion / aphelion)
+  for (const orb of getOrbitalEventsForMonth(year, month)) {
+    const key = new Date(year, month, orb.date.getDate()).toDateString();
+    ensure(key).orbital = {
+      type: orb.type,
+      emoji: orb.emoji,
+      label: orb.label,
+    };
+  }
+
   return map;
 }
 
@@ -526,6 +580,7 @@ export function getCelestialEmojisForDay(events: CelestialDayEvents): string {
   if (events.moon) parts.push(events.moon.emoji);
   if (events.season) parts.push(events.season.emoji);
   if (events.crossQuarter) parts.push(events.crossQuarter.emoji);
+  if (events.orbital) parts.push(events.orbital.emoji);
   if (events.zodiac) parts.push(events.zodiac.emoji);
   return parts.join('');
 }

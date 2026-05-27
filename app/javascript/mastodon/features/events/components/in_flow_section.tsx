@@ -13,6 +13,8 @@ import type {
   MoonPhaseName,
 } from './celestial_calendar';
 
+type OrbitalType = 'perihelion' | 'aphelion';
+
 const SYDNEY_TZ = 'Australia/Sydney';
 
 function nowInSydney(): Date {
@@ -138,6 +140,13 @@ const ZODIAC_DESCRIPTIONS: Record<string, string> = {
     'Dream and reality soften into each other. What you feel knows more than you think.',
 };
 
+const ORBITAL_DESCRIPTIONS: Record<OrbitalType, string> = {
+  perihelion:
+    'Earth draws into its closest embrace with the sun today. The pull is at its strongest — feel the warmth of being fully held.',
+  aphelion:
+    'Earth reaches the wide arc of its greatest distance. The spacious stretch outward is as necessary as the drawing in. The orbit sustains itself through both.',
+};
+
 const CROSS_QUARTER_DESCRIPTIONS: Record<CrossQuarterName, string> = {
   lammas:
     'The land offers what it has grown. Gather the abundance — this richness will carry you through.',
@@ -154,7 +163,7 @@ interface MonthEvent {
   emoji: string;
   label: string;
   description: string;
-  type: 'moon' | 'season' | 'zodiac' | 'cross_quarter';
+  type: 'moon' | 'season' | 'zodiac' | 'cross_quarter' | 'orbital';
   isPast: boolean;
 }
 
@@ -219,6 +228,15 @@ function getMonthEvents(selectedMonth: Date, now: Date): MonthEvent[] {
         dayEvents.crossQuarter.label,
         CROSS_QUARTER_DESCRIPTIONS[dayEvents.crossQuarter.name],
         'cross_quarter',
+      );
+    }
+    if (dayEvents.orbital) {
+      addEvent(
+        date,
+        dayEvents.orbital.emoji,
+        dayEvents.orbital.label,
+        ORBITAL_DESCRIPTIONS[dayEvents.orbital.type],
+        'orbital',
       );
     }
   });
