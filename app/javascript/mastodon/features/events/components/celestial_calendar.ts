@@ -245,6 +245,72 @@ export function getSeasonEventsForMonth(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Cross-quarter days — midpoints between solstices & equinoxes
+// Southern Hemisphere naming: Feb=Lammas, May=Samhain, Aug=Imbolc, Nov=Beltane
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type CrossQuarterName = 'lammas' | 'samhain' | 'imbolc' | 'beltane';
+
+export interface CrossQuarterEvent {
+  date: Date;
+  name: CrossQuarterName;
+  label: string;
+  emoji: string;
+}
+
+const CROSS_QUARTER_META: {
+  name: CrossQuarterName;
+  label: string;
+  emoji: string;
+}[] = [
+  { name: 'lammas', label: 'Lammas', emoji: '🌾' }, // ~Feb: mid-summer harvest
+  { name: 'samhain', label: 'Samhain', emoji: '🕯️' }, // ~May: mid-autumn descent
+  { name: 'imbolc', label: 'Imbolc', emoji: '🌱' }, // ~Aug: mid-winter stirring
+  { name: 'beltane', label: 'Beltane', emoji: '🔥' }, // ~Nov: mid-spring fire
+];
+
+export function getCrossQuarterEventsForYear(
+  year: number,
+): CrossQuarterEvent[] {
+  const prevDecJDE = seasonJDE(year - 1, 3);
+  const marJDE = seasonJDE(year, 0);
+  const junJDE = seasonJDE(year, 1);
+  const sepJDE = seasonJDE(year, 2);
+  const decJDE = seasonJDE(year, 3);
+
+  const midpoints = [
+    (prevDecJDE + marJDE) / 2,
+    (marJDE + junJDE) / 2,
+    (junJDE + sepJDE) / 2,
+    (sepJDE + decJDE) / 2,
+  ];
+
+  const fallback = {
+    name: 'lammas' as CrossQuarterName,
+    label: 'Lammas',
+    emoji: '🌾',
+  };
+  return midpoints.map((jde, i) => {
+    const meta = CROSS_QUARTER_META[i] ?? fallback;
+    return {
+      date: julianDayToDate(jde),
+      name: meta.name,
+      label: meta.label,
+      emoji: meta.emoji,
+    };
+  });
+}
+
+export function getCrossQuarterEventsForMonth(
+  year: number,
+  month: number,
+): CrossQuarterEvent[] {
+  return getCrossQuarterEventsForYear(year).filter(
+    (e) => e.date.getMonth() === month,
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Zodiac signs — based on solar longitude (Western tropical astrology)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -402,6 +468,7 @@ export interface CelestialDayEvents {
   moon?: { phase: MoonPhaseName; emoji: string; label: string };
   season?: { season: SeasonName; emoji: string; label: string };
   zodiac?: { sign: string; emoji: string; label: string };
+  crossQuarter?: { name: CrossQuarterName; emoji: string; label: string };
 }
 
 /** Returns a Map<dateString, CelestialDayEvents> for the given month. */
@@ -440,6 +507,16 @@ export function getCelestialEventsForMonth(
     };
   }
 
+  // Cross-quarter days
+  for (const cq of getCrossQuarterEventsForMonth(year, month)) {
+    const key = new Date(year, month, cq.date.getDate()).toDateString();
+    ensure(key).crossQuarter = {
+      name: cq.name,
+      emoji: cq.emoji,
+      label: cq.label,
+    };
+  }
+
   return map;
 }
 
@@ -448,6 +525,7 @@ export function getCelestialEmojisForDay(events: CelestialDayEvents): string {
   const parts: string[] = [];
   if (events.moon) parts.push(events.moon.emoji);
   if (events.season) parts.push(events.season.emoji);
+  if (events.crossQuarter) parts.push(events.crossQuarter.emoji);
   if (events.zodiac) parts.push(events.zodiac.emoji);
   return parts.join('');
 }

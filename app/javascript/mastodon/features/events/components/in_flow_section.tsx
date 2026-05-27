@@ -7,7 +7,11 @@ import {
   getZodiacForDate,
   getSeasonEventsForYear,
 } from './celestial_calendar';
-import type { CelestialDayEvents, MoonPhaseName } from './celestial_calendar';
+import type {
+  CelestialDayEvents,
+  CrossQuarterName,
+  MoonPhaseName,
+} from './celestial_calendar';
 
 const SYDNEY_TZ = 'Australia/Sydney';
 
@@ -134,12 +138,23 @@ const ZODIAC_DESCRIPTIONS: Record<string, string> = {
     'Dream and reality soften into each other. What you feel knows more than you think.',
 };
 
+const CROSS_QUARTER_DESCRIPTIONS: Record<CrossQuarterName, string> = {
+  lammas:
+    'The land offers what it has grown. Gather the abundance — this richness will carry you through.',
+  samhain:
+    'The veil between worlds grows thin. Honour what has passed and welcome what comes through the dark.',
+  imbolc:
+    'Beneath the frost, life stirs. The light is turning — tend the small flame within.',
+  beltane:
+    'Fire and blossom, the world awakens fully. Step into what calls you most alive.',
+};
+
 interface MonthEvent {
   date: Date;
   emoji: string;
   label: string;
   description: string;
-  type: 'moon' | 'season' | 'zodiac';
+  type: 'moon' | 'season' | 'zodiac' | 'cross_quarter';
   isPast: boolean;
 }
 
@@ -195,6 +210,15 @@ function getMonthEvents(selectedMonth: Date, now: Date): MonthEvent[] {
         dayEvents.zodiac.label,
         ZODIAC_DESCRIPTIONS[signName] ?? '',
         'zodiac',
+      );
+    }
+    if (dayEvents.crossQuarter) {
+      addEvent(
+        date,
+        dayEvents.crossQuarter.emoji,
+        dayEvents.crossQuarter.label,
+        CROSS_QUARTER_DESCRIPTIONS[dayEvents.crossQuarter.name],
+        'cross_quarter',
       );
     }
   });
