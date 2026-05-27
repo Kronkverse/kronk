@@ -263,6 +263,10 @@ export const InFlowSection: React.FC<InFlowSectionProps> = ({
       <div className='in-flow__header'>
         <span className='in-flow__header-label'>In Flow</span>
         <span className='in-flow__header-tz'>Sydney · Melbourne</span>
+        <p className='in-flow__header-tagline'>
+          Returning to the rhythm of the Kosmos returns us to the Syntropic
+          current of Life itself. Through this we come alive and belong again.
+        </p>
       </div>
 
       <div className='in-flow__now'>

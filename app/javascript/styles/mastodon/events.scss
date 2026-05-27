@@ -2007,14 +2007,16 @@ $ev-interested-color: #b8945f;
 
   &__header {
     display: flex;
-    align-items: baseline;
-    gap: 8px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
     margin-bottom: 16px;
   }
 
   &__header-label {
     font-family: Georgia, 'Liberation Serif', serif;
-    font-size: 28px;
+    font-size: 34px;
     font-weight: 500;
     letter-spacing: 0.01em;
     color: $primary-text-color;
@@ -2023,8 +2025,16 @@ $ev-interested-color: #b8945f;
   &__header-tz {
     font-size: 12px;
     color: var(--secondary-text-color);
-    align-self: flex-end;
-    padding-bottom: 4px;
+  }
+
+  &__header-tagline {
+    font-size: 13px;
+    font-style: italic;
+    color: var(--secondary-text-color);
+    line-height: 1.6;
+    margin: 6px 0 0;
+    opacity: 0.85;
+    max-width: 340px;
   }
 
   &__now {
@@ -2144,8 +2154,8 @@ $ev-interested-color: #b8945f;
   }
 
   &__upcoming-emoji {
-    font-size: 18px;
-    width: 24px;
+    font-size: 23px;
+    width: 28px;
     text-align: center;
     flex-shrink: 0;
     padding-top: 1px;
@@ -2158,19 +2168,19 @@ $ev-interested-color: #b8945f;
   }
 
   &__upcoming-event-label {
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 500;
     color: var(--primary-text-color);
   }
 
   &__upcoming-date {
-    font-size: 11px;
+    font-size: 14px;
     color: var(--secondary-text-color);
     margin-bottom: 3px;
   }
 
   &__upcoming-description {
-    font-size: 12px;
+    font-size: 15px;
     font-style: italic;
     color: var(--secondary-text-color);
     line-height: 1.5;
@@ -2242,6 +2252,30 @@ $ev-interested-color: #b8945f;
     &:hover {
       opacity: 1;
     }
+  }
+
+  &__celestial-item {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+    padding: 1px 3px;
+    margin-bottom: 1px;
+  }
+
+  &__celestial-item-emoji {
+    font-size: 9px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  &__celestial-item-label {
+    font-size: 8px;
+    color: var(--secondary-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.9;
   }
 
   &__cell--celestial {
