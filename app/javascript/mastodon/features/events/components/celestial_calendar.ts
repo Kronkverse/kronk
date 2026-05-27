@@ -214,13 +214,14 @@ export interface SeasonEvent {
   emoji: string;
 }
 
-const SEASON_META: { season: SeasonName; label: string; emoji: string }[] =
-  [
-    { season: 'spring', label: 'Spring Equinox', emoji: '🌸' },
-    { season: 'summer', label: 'Summer Solstice', emoji: '☀️' },
-    { season: 'autumn', label: 'Autumn Equinox', emoji: '🍂' },
-    { season: 'winter', label: 'Winter Solstice', emoji: '❄️' },
-  ];
+// Southern Hemisphere: March equinox = Autumn, June solstice = Winter,
+// September equinox = Spring, December solstice = Summer.
+const SEASON_META: { season: SeasonName; label: string; emoji: string }[] = [
+  { season: 'autumn', label: 'Autumn Equinox', emoji: '🍂' },
+  { season: 'winter', label: 'Winter Solstice', emoji: '❄️' },
+  { season: 'spring', label: 'Spring Equinox', emoji: '🌸' },
+  { season: 'summer', label: 'Summer Solstice', emoji: '☀️' },
+];
 
 export function getSeasonEventsForYear(year: number): SeasonEvent[] {
   return ([0, 1, 2, 3] as const).map((k) => {
