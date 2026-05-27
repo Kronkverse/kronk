@@ -1,8 +1,8 @@
 /**
  * celestial_calendar.ts
  * Pure-JS celestial date calculations — no external dependencies.
- * Covers: lunar phases, moon phase name, seasons (equinox/solstice),
- * solar terms, and Western astrology zodiac signs.
+ * Covers: lunar phases, seasons (equinox/solstice), cross-quarter days,
+ * perihelion/aphelion.
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -20,11 +20,6 @@ export type MoonPhaseName =
   | 'waning_crescent';
 
 export type SeasonName = 'spring' | 'summer' | 'autumn' | 'winter';
-
-export type CelestialEvent =
-  | { type: 'moon'; phase: MoonPhaseName; emoji: string; label: string }
-  | { type: 'season'; season: SeasonName; emoji: string; label: string }
-  | { type: 'zodiac'; sign: string; emoji: string; label: string };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Lunar phase calculation
@@ -351,156 +346,6 @@ export function getOrbitalEventsForMonth(
   return getOrbitalEventsForYear(year).filter(
     (e) => e.date.getMonth() === month,
   );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Zodiac signs — based on solar longitude (Western tropical astrology)
-// ─────────────────────────────────────────────────────────────────────────────
-
-export interface ZodiacSign {
-  sign: string;
-  emoji: string;
-  startMonth: number; // 0-indexed
-  startDay: number;
-  endMonth: number;
-  endDay: number;
-}
-
-const ZODIAC_SIGNS: ZodiacSign[] = [
-  {
-    sign: 'Aries',
-    emoji: '♈',
-    startMonth: 2,
-    startDay: 21,
-    endMonth: 3,
-    endDay: 19,
-  },
-  {
-    sign: 'Taurus',
-    emoji: '♉',
-    startMonth: 3,
-    startDay: 20,
-    endMonth: 4,
-    endDay: 20,
-  },
-  {
-    sign: 'Gemini',
-    emoji: '♊',
-    startMonth: 4,
-    startDay: 21,
-    endMonth: 5,
-    endDay: 20,
-  },
-  {
-    sign: 'Cancer',
-    emoji: '♋',
-    startMonth: 5,
-    startDay: 21,
-    endMonth: 6,
-    endDay: 22,
-  },
-  {
-    sign: 'Leo',
-    emoji: '♌',
-    startMonth: 6,
-    startDay: 23,
-    endMonth: 7,
-    endDay: 22,
-  },
-  {
-    sign: 'Virgo',
-    emoji: '♍',
-    startMonth: 7,
-    startDay: 23,
-    endMonth: 8,
-    endDay: 22,
-  },
-  {
-    sign: 'Libra',
-    emoji: '♎',
-    startMonth: 8,
-    startDay: 23,
-    endMonth: 9,
-    endDay: 22,
-  },
-  {
-    sign: 'Scorpio',
-    emoji: '♏',
-    startMonth: 9,
-    startDay: 23,
-    endMonth: 10,
-    endDay: 21,
-  },
-  {
-    sign: 'Sagittarius',
-    emoji: '♐',
-    startMonth: 10,
-    startDay: 22,
-    endMonth: 11,
-    endDay: 21,
-  },
-  {
-    sign: 'Capricorn',
-    emoji: '♑',
-    startMonth: 11,
-    startDay: 22,
-    endMonth: 0,
-    endDay: 19,
-  },
-  {
-    sign: 'Aquarius',
-    emoji: '♒',
-    startMonth: 0,
-    startDay: 20,
-    endMonth: 1,
-    endDay: 18,
-  },
-  {
-    sign: 'Pisces',
-    emoji: '♓',
-    startMonth: 1,
-    startDay: 19,
-    endMonth: 2,
-    endDay: 20,
-  },
-];
-
-export function getZodiacForDate(date: Date): ZodiacSign {
-  const m = date.getMonth();
-  const d = date.getDate();
-
-  for (const z of ZODIAC_SIGNS) {
-    // Same month start
-    if (z.startMonth === m && d >= z.startDay) return z;
-    // Same month end (if end month wraps or matches)
-    if (z.endMonth === m && d <= z.endDay) return z;
-  }
-  const fallback: ZodiacSign = {
-    sign: 'Aries',
-    emoji: '♈',
-    startMonth: 2,
-    startDay: 21,
-    endMonth: 3,
-    endDay: 19,
-  };
-  return ZODIAC_SIGNS[0] ?? fallback;
-}
-
-/**
- * Returns zodiac sign transition dates for a given month
- * (days when a new sign begins).
- */
-export function getZodiacTransitionsForMonth(
-  year: number,
-  month: number,
-): { date: Date; sign: ZodiacSign }[] {
-  const results: { date: Date; sign: ZodiacSign }[] = [];
-  for (const z of ZODIAC_SIGNS) {
-    if (z.startMonth === month) {
-      results.push({ date: new Date(year, month, z.startDay), sign: z });
-    }
-  }
-  return results;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
