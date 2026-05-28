@@ -33,6 +33,7 @@ export const SPACE_PLANET: Record<string, PlanetName> = {
   Kommons: 'Jupiter',
   Kalendar: 'Neptune',
   Questions: 'Saturn',
+  Booth: 'Uranus',
 };
 
 export function spaceColor(space: string): string {

@@ -105,6 +105,12 @@ namespace :api, format: false do
       end
     end
 
+    resources :booth_sets, only: [:index, :show, :create, :update, :destroy] do
+      member do
+        post :play
+      end
+    end
+
     resources :events, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :rsvp
