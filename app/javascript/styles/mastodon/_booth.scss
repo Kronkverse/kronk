@@ -1,0 +1,597 @@
+@use 'variables' as *;
+
+// The Booth — DJ set hosting space
+// Theme accent via --space-color (set by booth/index.tsx)
+
+$booth-bg: var(--background-color, #17101f);
+$booth-card-bg: var(--surface-background-color, #1e1433);
+$booth-accent: var(--space-color, #3034a0);
+
+// ─── Space shell ──────────────────────────────────────────────────────────────
+
+.booth {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 16px;
+  min-height: 100%;
+}
+
+.booth__upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--space-color, $boost-modal-background);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.88;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+  }
+}
+
+.booth__loading,
+.booth__empty {
+  text-align: center;
+  color: $secondary-text-color;
+  padding: 40px 16px;
+  font-size: 15px;
+}
+
+// ─── Now-playing strip ────────────────────────────────────────────────────────
+
+.booth__now-playing {
+  background: color-mix(in srgb, var(--space-color, $boost-modal-background) 15%, $ui-base-color);
+  border: 1px solid color-mix(in srgb, var(--space-color, $boost-modal-background) 30%, transparent);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.booth__now-playing-cover {
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--space-color, $boost-modal-background) 20%, $ui-base-color);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.booth__now-playing-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 60px;
+    height: 60px;
+    fill: color-mix(in srgb, var(--space-color, $boost-modal-background) 50%, $secondary-text-color);
+  }
+}
+
+.booth__now-playing-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: $primary-text-color;
+  line-height: 1.2;
+}
+
+.booth__now-playing-artist {
+  font-size: 14px;
+  color: $secondary-text-color;
+  margin-top: 2px;
+}
+
+.booth__now-playing-event {
+  font-size: 13px;
+  color: $darker-text-color;
+  margin-top: 2px;
+}
+
+.booth__now-playing-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.booth__action-btn {
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--space-color, $boost-modal-background) 50%, transparent);
+  color: color-mix(in srgb, var(--space-color, $boost-modal-background) 80%, $primary-text-color);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  display: inline-flex;
+  align-items: center;
+
+  &:hover {
+    background: color-mix(in srgb, var(--space-color, $boost-modal-background) 15%, transparent);
+    color: $primary-text-color;
+  }
+}
+
+// ─── Set list ─────────────────────────────────────────────────────────────────
+
+.booth__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+// ─── Set card ─────────────────────────────────────────────────────────────────
+
+.booth-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: $ui-base-color;
+  border: 1px solid $ui-base-lighter-color;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    border-color: color-mix(in srgb, var(--space-color, $boost-modal-background) 60%, transparent);
+    background: color-mix(in srgb, var(--space-color, $boost-modal-background) 8%, $ui-base-color);
+    outline: none;
+  }
+
+  &--active {
+    border-color: var(--space-color, $boost-modal-background);
+    background: color-mix(in srgb, var(--space-color, $boost-modal-background) 12%, $ui-base-color);
+  }
+}
+
+.booth-card__cover {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--space-color, $boost-modal-background) 20%, $ui-base-color);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.booth-card__cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 28px;
+    height: 28px;
+    fill: $secondary-text-color;
+  }
+}
+
+.booth-card__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.booth-card__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: $primary-text-color;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.booth-card__artist {
+  font-size: 13px;
+  color: $secondary-text-color;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.booth-card__event {
+  font-size: 12px;
+  color: $darker-text-color;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.booth-card__meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.booth-card__genre,
+.booth-card__duration,
+.booth-card__plays {
+  font-size: 12px;
+  color: $darker-text-color;
+}
+
+.booth-card__genre {
+  background: color-mix(in srgb, var(--space-color, $boost-modal-background) 20%, transparent);
+  color: color-mix(in srgb, var(--space-color, $boost-modal-background) 80%, $primary-text-color);
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+// ─── Audio player ─────────────────────────────────────────────────────────────
+
+.booth-player {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.booth-player__progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.booth-player__progress {
+  width: 100%;
+  height: 6px;
+  background: color-mix(in srgb, var(--space-color, $boost-modal-background) 20%, $ui-base-lighter-color);
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+
+  &:focus-visible {
+    outline: 2px solid var(--space-color, $boost-modal-background);
+    outline-offset: 3px;
+  }
+}
+
+.booth-player__progress-fill {
+  height: 100%;
+  background: var(--space-color, $boost-modal-background);
+  border-radius: 3px;
+  pointer-events: none;
+  transition: width 0.25s linear;
+}
+
+.booth-player__progress-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  background: var(--space-color, $boost-modal-background);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.booth-player__progress:hover .booth-player__progress-thumb {
+  opacity: 1;
+}
+
+.booth-player__times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: $secondary-text-color;
+  font-variant-numeric: tabular-nums;
+}
+
+.booth-player__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.booth-player__play-btn {
+  width: 56px;
+  height: 56px;
+  background: var(--space-color, $boost-modal-background);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.88;
+  }
+
+  svg {
+    width: 30px;
+    height: 30px;
+    fill: currentColor;
+  }
+}
+
+.booth-player__skip-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $secondary-text-color;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  transition: color 0.15s, background 0.15s;
+
+  &:hover {
+    color: $primary-text-color;
+    background: $ui-base-lighter-color;
+  }
+
+  svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+  }
+}
+
+// ─── Set detail page ──────────────────────────────────────────────────────────
+
+.booth--set-page {
+  gap: 20px;
+}
+
+.booth__back-link {
+  font-size: 14px;
+  color: $secondary-text-color;
+  text-decoration: none;
+
+  &:hover {
+    color: $primary-text-color;
+  }
+}
+
+.booth__set-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.booth__set-detail-cover {
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 280px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--space-color, $boost-modal-background) 20%, $ui-base-color);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.booth__set-detail-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 80px;
+    height: 80px;
+    fill: color-mix(in srgb, var(--space-color, $boost-modal-background) 40%, $secondary-text-color);
+  }
+}
+
+.booth__set-detail-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.booth__set-detail-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: $primary-text-color;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.booth__set-detail-artist {
+  font-size: 16px;
+  color: $secondary-text-color;
+}
+
+.booth__set-detail-event {
+  font-size: 14px;
+  color: $darker-text-color;
+}
+
+.booth__set-detail-genre {
+  display: inline-block;
+  background: color-mix(in srgb, var(--space-color, $boost-modal-background) 20%, transparent);
+  color: color-mix(in srgb, var(--space-color, $boost-modal-background) 80%, $primary-text-color);
+  border-radius: 12px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.booth__set-detail-description {
+  font-size: 14px;
+  color: $secondary-text-color;
+  line-height: 1.6;
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+}
+
+.booth__set-detail-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+// ─── Upload form ──────────────────────────────────────────────────────────────
+
+.booth-upload-form {
+  background: color-mix(in srgb, var(--space-color, $boost-modal-background) 10%, $ui-base-color);
+  border: 1px solid color-mix(in srgb, var(--space-color, $boost-modal-background) 25%, transparent);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.booth-upload-form__heading {
+  font-size: 18px;
+  font-weight: 700;
+  color: $primary-text-color;
+  margin: 0;
+}
+
+.booth-upload-form__error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.booth-upload-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  span {
+    font-size: 13px;
+    font-weight: 500;
+    color: $secondary-text-color;
+  }
+
+  input,
+  textarea {
+    background: $ui-base-color;
+    border: 1px solid $ui-base-lighter-color;
+    border-radius: 6px;
+    color: $primary-text-color;
+    font-size: 14px;
+    padding: 8px 10px;
+    font-family: inherit;
+    transition: border-color 0.15s;
+
+    &:focus {
+      outline: none;
+      border-color: var(--space-color, $boost-modal-background);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  input[type='file'] {
+    padding: 6px;
+    cursor: pointer;
+  }
+}
+
+.booth-upload-form__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.booth-upload-form__cancel {
+  background: none;
+  border: 1px solid $ui-base-lighter-color;
+  color: $secondary-text-color;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+
+  &:hover {
+    border-color: $primary-text-color;
+    color: $primary-text-color;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.booth-upload-form__submit {
+  background: var(--space-color, $boost-modal-background);
+  border: none;
+  color: #fff;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:hover:not(:disabled) {
+    opacity: 0.88;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

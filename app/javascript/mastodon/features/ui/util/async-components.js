@@ -278,3 +278,11 @@ export function Questions () {
 export function QuestionPage () {
   return import("../../questions/question_page");
 }
+
+export function Booth () {
+  return import("../../booth");
+}
+
+export function BoothSetPage () {
+  return import("../../booth/booth_set_page");
+}
