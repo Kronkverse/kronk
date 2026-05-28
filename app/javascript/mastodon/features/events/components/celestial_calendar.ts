@@ -417,3 +417,145 @@ export function getCelestialEmojisForDay(events: CelestialDayEvents): string {
   if (events.orbital) parts.push(events.orbital.emoji);
   return parts.join('');
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sunrise / Sunset — USNO algorithm (accurate ±2 min at mid-latitudes)
+// Based on the formula from the US Naval Observatory Circular No. 171.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const DEG = Math.PI / 180;
+
+/**
+ * Returns sunrise and sunset as UTC Date objects for a given local calendar date
+ * at the given latitude/longitude (degrees, positive = N/E).
+ * Returns null for rise or set if the sun doesn't rise/set (polar).
+ */
+export function getSunriseSunset(
+  year: number,
+  month: number, // 0-indexed
+  day: number,
+  lat: number,
+  lon: number,
+): { rise: Date | null; set: Date | null } {
+  // Day of year
+  const N1 = Math.floor((275 * (month + 1)) / 9);
+  const N2 = Math.floor((month + 10) / 12);
+  const N3 = 1 + Math.floor((year - 4 * Math.floor(year / 4) + 2) / 3);
+  const N = N1 - N2 * N3 + day - 30;
+
+  // Longitude hour value and approximate time
+  const lngHour = lon / 15;
+
+  function calc(isSunrise: boolean): Date | null {
+    const t = N + ((isSunrise ? 6 : 18) - lngHour) / 24;
+
+    // Sun's mean anomaly
+    const M = (0.9856 * t - 3.289) * DEG;
+
+    // Sun's true longitude
+    let L =
+      (M / DEG + 1.916 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 282.634) % 360;
+    if (L < 0) L += 360;
+    const Lrad = L * DEG;
+
+    // Sun's right ascension
+    let RA = (Math.atan(0.91764 * Math.tan(Lrad)) / DEG + 360) % 360;
+    const Lquad = Math.floor(L / 90) * 90;
+    const RAquad = Math.floor(RA / 90) * 90;
+    RA = (RA + Lquad - RAquad) / 15;
+
+    // Sun's declination
+    const sinDec = 0.39782 * Math.sin(Lrad);
+    const cosDec = Math.cos(Math.asin(sinDec));
+
+    // Sun's local hour angle (zenith = 90.833° for rise/set)
+    const cosH =
+      (Math.cos(90.833 * DEG) - sinDec * Math.sin(lat * DEG)) /
+      (cosDec * Math.cos(lat * DEG));
+
+    if (cosH > 1) return null; // never rises
+    if (cosH < -1) return null; // never sets
+
+    const H = isSunrise
+      ? (360 - Math.acos(cosH) / DEG) / 15
+      : Math.acos(cosH) / DEG / 15;
+
+    const T = H + RA - 0.06571 * t - 6.622;
+    const UT = (((T - lngHour) % 24) + 24) % 24;
+
+    const utHour = Math.floor(UT);
+    const utMin = Math.round((UT - utHour) * 60);
+
+    // Clamp overflow minutes
+    const totalMin = utHour * 60 + utMin;
+    const clampedHour = Math.floor(totalMin / 60) % 24;
+    const clampedMin = totalMin % 60;
+
+    return new Date(Date.UTC(year, month, day, clampedHour, clampedMin));
+  }
+
+  return { rise: calc(true), set: calc(false) };
+}
+
+export interface DaylightInfo {
+  rise: Date | null;
+  set: Date | null;
+  daylightMinutes: number;
+  deltaMinutes: number; // positive = days are lengthening
+  nextTurningPoint: { date: Date; label: string; emoji: string };
+}
+
+/**
+ * Returns daylight info for a given local date at lat/lon.
+ * deltaMinutes is the change from yesterday.
+ */
+export function getDaylightInfo(
+  year: number,
+  month: number,
+  day: number,
+  lat: number,
+  lon: number,
+): DaylightInfo {
+  const today = getSunriseSunset(year, month, day, lat, lon);
+  const yDate = new Date(year, month, day);
+  yDate.setDate(yDate.getDate() - 1);
+  const yesterday = getSunriseSunset(
+    yDate.getFullYear(),
+    yDate.getMonth(),
+    yDate.getDate(),
+    lat,
+    lon,
+  );
+
+  const todayMins =
+    today.rise && today.set
+      ? (today.set.getTime() - today.rise.getTime()) / 60000
+      : 0;
+  const yesterdayMins =
+    yesterday.rise && yesterday.set
+      ? (yesterday.set.getTime() - yesterday.rise.getTime()) / 60000
+      : 0;
+
+  const deltaMinutes = Math.round((todayMins - yesterdayMins) * 10) / 10;
+
+  // Next turning point: find the nearest season event after today
+  const todayDate = new Date(year, month, day);
+  const candidates = [
+    ...getSeasonEventsForYear(year),
+    ...getSeasonEventsForYear(year + 1),
+  ].filter((e) => e.date >= todayDate);
+  candidates.sort((a, b) => a.date.getTime() - b.date.getTime());
+  const next = candidates[0] ?? getSeasonEventsForYear(year + 1)[0];
+
+  return {
+    rise: today.rise,
+    set: today.set,
+    daylightMinutes: Math.round(todayMins),
+    deltaMinutes,
+    nextTurningPoint: {
+      date: next?.date ?? new Date(),
+      label: next?.label ?? '',
+      emoji: next?.emoji ?? '',
+    },
+  };
+}
