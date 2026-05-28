@@ -528,3 +528,57 @@
   color: $secondary-text-color;
   margin-top: 3px;
 }
+
+// ── Daily kosmic card (home timeline banner) ──────────────────────────────────
+
+.daily-kosmic-card {
+  display: block;
+  width: 100%;
+  text-align: start;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 10%, transparent);
+  border: none;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 16%,
+      transparent
+    );
+  }
+}
+
+.daily-kosmic-card__header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.daily-kosmic-card__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: $primary-text-color;
+}
+
+.daily-kosmic-card__date {
+  font-size: 12px;
+  color: $secondary-text-color;
+}
+
+.daily-kosmic-card__text {
+  font-size: 14px;
+  line-height: 1.65;
+  color: $primary-text-color;
+  margin: 0 0 10px;
+}
+
+.daily-kosmic-card__cta {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
+  font-weight: 500;
+}

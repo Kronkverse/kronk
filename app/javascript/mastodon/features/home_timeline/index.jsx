@@ -29,6 +29,7 @@ import StatusListContainer from '../ui/containers/status_list_container';
 
 import { ColumnSettings } from './components/column_settings';
 import { CriticalUpdateBanner } from './components/critical_update_banner';
+import { DailyKosmicCard } from './components/daily_kosmic_card';
 import { LiveBanner } from './components/live_banner';
 import { Announcements } from './components/announcements';
 
@@ -188,6 +189,7 @@ class HomeTimeline extends PureComponent {
       );
     }
 
+    banners.push(<DailyKosmicCard key='daily-kosmic-card' />);
     banners.push(<LiveBanner key='live-banner' />);
     if (criticalUpdatesPending) {
       banners.push(<CriticalUpdateBanner key='critical-update-banner' />);
