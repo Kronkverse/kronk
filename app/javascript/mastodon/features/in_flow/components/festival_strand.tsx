@@ -5,7 +5,7 @@ import {
   getCrossQuarterEventsForYear,
 } from 'mastodon/features/events/components/celestial_calendar';
 
-const SYDNEY_TZ = 'Australia/Sydney';
+import { LOCATION_TZ } from '../constants';
 
 const FESTIVAL_DESCRIPTIONS: Record<string, string> = {
   'Autumn Equinox':
@@ -28,7 +28,7 @@ const FESTIVAL_DESCRIPTIONS: Record<string, string> = {
 
 function nowInSydney(): { year: number; month: number; day: number } {
   const fmt = new Intl.DateTimeFormat('en-AU', {
-    timeZone: SYDNEY_TZ,
+    timeZone: LOCATION_TZ,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -42,7 +42,7 @@ function nowInSydney(): { year: number; month: number; day: number } {
 function formatFestivalDate(date: Date, isSeason: boolean): string {
   if (isSeason) {
     return date.toLocaleString('en-AU', {
-      timeZone: SYDNEY_TZ,
+      timeZone: LOCATION_TZ,
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -52,7 +52,7 @@ function formatFestivalDate(date: Date, isSeason: boolean): string {
     });
   }
   return date.toLocaleString('en-AU', {
-    timeZone: SYDNEY_TZ,
+    timeZone: LOCATION_TZ,
     weekday: 'short',
     month: 'short',
     day: 'numeric',

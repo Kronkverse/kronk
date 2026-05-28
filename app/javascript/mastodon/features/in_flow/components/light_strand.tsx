@@ -2,20 +2,18 @@ import { useMemo } from 'react';
 
 import { getDaylightInfo } from 'mastodon/features/events/components/celestial_calendar';
 
-// Sydney coordinates
-const LAT = -33.8688;
-const LON = 151.2093;
+import { LOCATION_TZ, LOCATION_LAT, LOCATION_LON } from '../constants';
 
-const SYDNEY_TZ = 'Australia/Sydney';
+import { SunIcon, SunsetIcon } from './celestial_icons';
 
-function nowInSydney(): {
+function nowInLocation(): {
   year: number;
   month: number;
   day: number;
   date: Date;
 } {
   const fmt = new Intl.DateTimeFormat('en-AU', {
-    timeZone: SYDNEY_TZ,
+    timeZone: LOCATION_TZ,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -31,18 +29,18 @@ function nowInSydney(): {
   };
 }
 
-function formatTimeInSydney(date: Date): string {
+function formatTimeInLocation(date: Date): string {
   return date.toLocaleTimeString('en-AU', {
-    timeZone: SYDNEY_TZ,
+    timeZone: LOCATION_TZ,
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
   });
 }
 
-function formatDateInSydney(date: Date): string {
+function formatDateInLocation(date: Date): string {
   return date.toLocaleDateString('en-AU', {
-    timeZone: SYDNEY_TZ,
+    timeZone: LOCATION_TZ,
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -68,20 +66,18 @@ function formatDelta(delta: number): string {
 }
 
 function daysUntil(target: Date, now: Date): number {
-  const msPerDay = 86400000;
-  return Math.ceil((target.getTime() - now.getTime()) / msPerDay);
+  return Math.ceil((target.getTime() - now.getTime()) / 86400000);
 }
 
 export const LightStrand: React.FC = () => {
-  const { year, month, day, date: now } = useMemo(nowInSydney, []);
+  const { year, month, day, date: now } = useMemo(nowInLocation, []);
 
   const info = useMemo(
-    () => getDaylightInfo(year, month, day, LAT, LON),
+    () => getDaylightInfo(year, month, day, LOCATION_LAT, LOCATION_LON),
     [year, month, day],
   );
 
   const days = daysUntil(info.nextTurningPoint.date, now);
-
   const deltaDir =
     info.deltaMinutes > 0.5
       ? 'lengthening'
@@ -92,10 +88,13 @@ export const LightStrand: React.FC = () => {
   return (
     <div className='in-flow-light'>
       <div className='in-flow-light__headline'>
-        <span className='in-flow-light__headline-number'>
-          {formatDaylight(info.daylightMinutes)}
-        </span>
-        <span className='in-flow-light__headline-label'>of daylight today</span>
+        <SunIcon size={32} className='in-flow-light__headline-icon' />
+        <div>
+          <span className='in-flow-light__headline-number'>
+            {formatDaylight(info.daylightMinutes)}
+          </span>
+          <span className='in-flow-light__headline-label'>of daylight</span>
+        </div>
       </div>
 
       <div className='in-flow-light__delta'>
@@ -110,18 +109,21 @@ export const LightStrand: React.FC = () => {
       {info.rise && info.set && (
         <div className='in-flow-light__sun-times'>
           <div className='in-flow-light__sun-time'>
-            <span className='in-flow-light__sun-emoji'>🌅</span>
+            <SunsetIcon size={20} className='in-flow-light__sun-icon' />
             <span className='in-flow-light__sun-label'>Rises</span>
             <span className='in-flow-light__sun-value'>
-              {formatTimeInSydney(info.rise)}
+              {formatTimeInLocation(info.rise)}
             </span>
           </div>
           <div className='in-flow-light__sun-divider' />
           <div className='in-flow-light__sun-time'>
-            <span className='in-flow-light__sun-emoji'>🌇</span>
+            <SunsetIcon
+              size={20}
+              className='in-flow-light__sun-icon in-flow-light__sun-icon--set'
+            />
             <span className='in-flow-light__sun-label'>Sets</span>
             <span className='in-flow-light__sun-value'>
-              {formatTimeInSydney(info.set)}
+              {formatTimeInLocation(info.set)}
             </span>
           </div>
         </div>
@@ -136,7 +138,7 @@ export const LightStrand: React.FC = () => {
             {info.nextTurningPoint.label}
           </span>
           <span className='in-flow-light__turning-date'>
-            {formatDateInSydney(info.nextTurningPoint.date)}
+            {formatDateInLocation(info.nextTurningPoint.date)}
           </span>
           <span className='in-flow-light__turning-countdown'>
             {days === 0

@@ -8,9 +8,10 @@ import {
   getWanderers,
 } from 'mastodon/features/events/components/celestial_calendar';
 
-const LAT = -33.8688;
-const LON = 151.2093;
-const SYDNEY_TZ = 'Australia/Sydney';
+import { LOCATION_TZ, LOCATION_LAT, LOCATION_LON } from '../constants';
+
+import { MoonPhaseIcon, StarIcon } from './celestial_icons';
+import { ConstellationSVG } from './constellation_map';
 
 const MOON_LABELS: Record<string, string> = {
   new_moon: 'New Moon',
@@ -23,38 +24,57 @@ const MOON_LABELS: Record<string, string> = {
   waning_crescent: 'Waning Crescent',
 };
 
-const MOON_EMOJIS: Record<string, string> = {
-  new_moon: '🌑',
-  waxing_crescent: '🌒',
-  first_quarter: '🌓',
-  waxing_gibbous: '🌔',
-  full_moon: '🌕',
-  waning_gibbous: '🌖',
-  last_quarter: '🌗',
-  waning_crescent: '🌘',
-};
-
 const MOON_DESCRIPTIONS: Record<string, string> = {
   new_moon:
-    'The moon withdraws its reflected light — the sky is at its darkest in the monthly cycle.',
+    'The moon is absent from the sky tonight — the darkest nights of the cycle. Good for looking deep into the Milky Way above the horizon.',
   waxing_crescent:
-    'The first sliver of reflected sunlight reappears in the western sky after sunset.',
+    'A thin crescent sits in the western sky after sunset, setting within a few hours of the sun. Watch for earthshine — the dim glow on the shadowed side lit by light reflected off the Earth.',
   first_quarter:
-    "Half the moon's face is lit, half in shadow — the month's first peak of tidal complexity.",
+    "Half the moon's face is lit — it transits the meridian around sunset and sets near midnight. Look along the terminator line for dramatic crater shadows.",
   waxing_gibbous:
-    'More than half the lunar face is lit, brightening night by night as the full phase approaches.',
+    'The moon dominates the evening sky, rising before sunset. The terminator is where the most dramatic lunar surface detail is visible.',
   full_moon:
-    'The moon stands opposite the sun — fully illuminated, at its strongest gravitational reach.',
+    'The moon rises at sunset and is up all night. It washes out faint objects — a good night for lunar features, planets, and bright clusters rather than deep sky.',
   waning_gibbous:
-    'The peak has passed. The lit face gradually withdrawing; light and tidal force begin their retreat.',
-  last_quarter: 'The lit face is halving — the cycle exhales toward its dark.',
+    'Rising after sunset, the moon now fills the late evening and early morning sky. The light retreats but the sky stays lit into the small hours.',
+  last_quarter:
+    'The moon rises around midnight — the late-night and pre-dawn sky is dark before it clears the horizon. The best early-evening window for faint objects.',
   waning_crescent:
-    'A thin crescent lingers in the pre-dawn sky. The month is completing its arc toward the dark.',
+    'A crescent in the pre-dawn eastern sky. Evenings are dark; the morning sky holds a delicate lit sliver before the sun rises.',
 };
 
-function nowInSydney(): { year: number; month: number; day: number } {
+// Observable constellation directions for Melbourne sky
+const CONSTELLATION_OBSERVABLE: Record<string, string> = {
+  Sagittarius:
+    "Face north after dark — Sagittarius sits low on the northern horizon from Melbourne. Its teapot asterism (six or seven stars in a kettle shape) is best seen on clear evenings from late autumn into winter. The Milky Way appears to rise from the teapot's spout.",
+  Capricornus:
+    'Look northeast after sunset. Capricornus is a faint constellation — no bright stars — but its distinctive triangular arc of dim points can be traced from about 60° above the northeastern horizon.',
+  Aquarius:
+    'Aquarius is large but faint. Find it in the northern sky: look for Sadalsuud, its brightest star (still only magnitude 2.9), roughly northeast at dusk. No prominent shape; best appreciated under dark skies away from city light.',
+  Pisces:
+    'Pisces is very faint. In the northern sky (near the equator as seen from Melbourne), its two loops of dim stars require dark skies. Look for the two circlets with a curving cord between them, near the celestial equator.',
+  Aries:
+    'Aries contains just three moderately bright stars in a shallow arc. Find Hamal (the brightest, magnitude 2.0) in the north-northeast sky. The arc opens toward Taurus to the east.',
+  Taurus:
+    'Taurus is prominent. Look north-northeast for the distinct V of the Hyades cluster with orange Aldebaran at its tip — the brightest star in that region of sky. The Pleiades (Seven Sisters) sparkle as a compact blue-white smudge to the upper-right of Aldebaran.',
+  Gemini:
+    'Find Gemini in the northern sky: Castor and Pollux are the two bright stars side by side near the top. From Melbourne they sit fairly low in the north but are still easy naked-eye objects. Pollux is slightly brighter and has a distinctly warm tint.',
+  Cancer:
+    'Cancer is faint — best located between the bright stars Pollux (in Gemini) to the west and Regulus (in Leo) to the east. Under dark skies, look for the Beehive Cluster (M44), a fuzzy patch visible to the naked eye.',
+  Leo: 'Leo is striking. Look north for the Sickle — a backward question-mark shape with bright Regulus at its base. Regulus sits on the ecliptic; the moon and planets regularly pass close to it. From Melbourne, Leo transits the northern sky at a reasonable altitude.',
+  Virgo:
+    'Virgo is the largest zodiacal constellation. Find brilliant blue-white Spica in the north-northwest (a spike of light, hard to miss). The rest of the constellation spreads westward and northward from Spica in a Y-shape.',
+  Libra:
+    'Libra sits between Virgo (to the west) and Scorpius (to the east). Its two brightest stars form a rough trapezoid. Zubenelgenubi is just wide enough to split into two stars with the naked eye under steady conditions.',
+  Ophiuchus:
+    "Ophiuchus is large and sits above Scorpius in the northern sky. Its brightest star Rasalhague marks the serpent bearer's head. The constellation straddles the Milky Way — look for a broad, slightly irregular polygon of stars between Scorpius below and Hercules above.",
+  Scorpius:
+    'Scorpius is one of the most beautiful constellations and from Melbourne it sits high — almost overhead in mid-winter evenings. Look for orange-red Antares at the heart, with the fishhook curve of stars sweeping to the south. The tail ends in two close stars (the stinger): Shaula and Lesath.',
+};
+
+function nowInLocation(): { year: number; month: number; day: number } {
   const fmt = new Intl.DateTimeFormat('en-AU', {
-    timeZone: SYDNEY_TZ,
+    timeZone: LOCATION_TZ,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -65,9 +85,9 @@ function nowInSydney(): { year: number; month: number; day: number } {
   return { year: get('year'), month: get('month') - 1, day: get('day') };
 }
 
-function formatTimeInSydney(date: Date): string {
+function formatTimeInLocation(date: Date): string {
   return date.toLocaleTimeString('en-AU', {
-    timeZone: SYDNEY_TZ,
+    timeZone: LOCATION_TZ,
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
@@ -75,7 +95,7 @@ function formatTimeInSydney(date: Date): string {
 }
 
 export const DarkStrand: React.FC = () => {
-  const { year, month, day } = useMemo(nowInSydney, []);
+  const { year, month, day } = useMemo(nowInLocation, []);
   const now = useMemo(() => new Date(), []);
 
   const phase = useMemo(() => getMoonPhaseName(now), [now]);
@@ -84,25 +104,28 @@ export const DarkStrand: React.FC = () => {
     [now],
   );
   const moonRiseSet = useMemo(
-    () => getMoonRiseSet(year, month, day, LAT, LON),
+    () => getMoonRiseSet(year, month, day, LOCATION_LAT, LOCATION_LON),
     [year, month, day],
   );
   const constellation = useMemo(() => getSunConstellation(now), [now]);
   const wanderers = useMemo(
-    () => getWanderers(year, month, day, LAT, LON),
+    () => getWanderers(year, month, day, LOCATION_LAT, LOCATION_LON),
     [year, month, day],
   );
 
-  const phaseEmoji = MOON_EMOJIS[phase] ?? '🌑';
   const phaseLabel = MOON_LABELS[phase] ?? phase;
   const phaseDesc = MOON_DESCRIPTIONS[phase] ?? '';
+  const dialObservable =
+    CONSTELLATION_OBSERVABLE[constellation.name] ?? constellation.description;
 
   return (
     <div className='in-flow-dark'>
       {/* Moon */}
       <div className='in-flow-dark__moon'>
         <div className='in-flow-dark__moon-header'>
-          <span className='in-flow-dark__moon-emoji'>{phaseEmoji}</span>
+          <div className='in-flow-dark__moon-icon'>
+            <MoonPhaseIcon phase={phase} size={40} />
+          </div>
           <div className='in-flow-dark__moon-meta'>
             <span className='in-flow-dark__moon-phase'>{phaseLabel}</span>
             <span className='in-flow-dark__moon-illumination'>
@@ -116,17 +139,17 @@ export const DarkStrand: React.FC = () => {
           <div className='in-flow-dark__moon-times'>
             {moonRiseSet.rise && (
               <div className='in-flow-dark__time-pair'>
-                <span className='in-flow-dark__time-icon'>🌙↑</span>
+                <span className='in-flow-dark__time-icon'>rises</span>
                 <span className='in-flow-dark__time-value'>
-                  {formatTimeInSydney(moonRiseSet.rise)}
+                  {formatTimeInLocation(moonRiseSet.rise)}
                 </span>
               </div>
             )}
             {moonRiseSet.set && (
               <div className='in-flow-dark__time-pair'>
-                <span className='in-flow-dark__time-icon'>🌙↓</span>
+                <span className='in-flow-dark__time-icon'>sets</span>
                 <span className='in-flow-dark__time-value'>
-                  {formatTimeInSydney(moonRiseSet.set)}
+                  {formatTimeInLocation(moonRiseSet.set)}
                 </span>
               </div>
             )}
@@ -138,16 +161,16 @@ export const DarkStrand: React.FC = () => {
       <div className='in-flow-dark__dial'>
         <div className='in-flow-dark__section-label'>The Dial</div>
         <div className='in-flow-dark__dial-body'>
-          <span className='in-flow-dark__dial-emoji'>
-            {constellation.emoji}
-          </span>
+          <ConstellationSVG
+            name={constellation.name}
+            width={180}
+            height={108}
+          />
           <div className='in-flow-dark__dial-text'>
             <span className='in-flow-dark__dial-name'>
               The sun is in {constellation.name}
             </span>
-            <span className='in-flow-dark__dial-desc'>
-              {constellation.description}
-            </span>
+            <span className='in-flow-dark__dial-desc'>{dialObservable}</span>
           </div>
         </div>
       </div>
@@ -157,13 +180,14 @@ export const DarkStrand: React.FC = () => {
         <div className='in-flow-dark__section-label'>Wanderers</div>
         {wanderers.length === 0 ? (
           <p className='in-flow-dark__wanderers-empty'>
-            No naked-eye planets are well-placed in the sky tonight.
+            No naked-eye planets are well-placed in the sky tonight from
+            Melbourne.
           </p>
         ) : (
           <ul className='in-flow-dark__wanderers-list'>
             {wanderers.map((w) => (
               <li key={w.name} className='in-flow-dark__wanderer'>
-                <span className='in-flow-dark__wanderer-emoji'>{w.emoji}</span>
+                <StarIcon size={14} className='in-flow-dark__wanderer-icon' />
                 <span className='in-flow-dark__wanderer-name'>{w.name}</span>
               </li>
             ))}
