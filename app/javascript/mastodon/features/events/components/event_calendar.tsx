@@ -10,6 +10,15 @@ import {
 } from './celestial_calendar';
 import type { CelestialDayEvents } from './celestial_calendar';
 
+function getCelestialTooltip(events: CelestialDayEvents): string {
+  const parts: string[] = [];
+  if (events.moon) parts.push(events.moon.label);
+  if (events.season) parts.push(events.season.label);
+  if (events.crossQuarter) parts.push(events.crossQuarter.label);
+  if (events.orbital) parts.push(events.orbital.label);
+  return parts.join(' · ');
+}
+
 interface Account {
   id: string;
   username: string;
@@ -143,8 +152,11 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
     >
       <div className='event-calendar__cell-top'>
         <span className='event-calendar__cell-date'>{day.getDate()}</span>
-        {hasCelestial && (
-          <span className='event-calendar__celestial-badge'>
+        {hasCelestial && celestial && (
+          <span
+            className='event-calendar__celestial-badge'
+            title={getCelestialTooltip(celestial)}
+          >
             {celestialEmojis}
           </span>
         )}
