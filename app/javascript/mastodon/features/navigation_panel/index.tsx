@@ -30,6 +30,8 @@ import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchang
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
+import PublicActiveIcon from '@/material-icons/400-24px/public-fill.svg?react';
+import PublicIcon from '@/material-icons/400-24px/public.svg?react';
 import QuestionMarkActiveIcon from '@/material-icons/400-24px/question_mark-fill.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
@@ -70,6 +72,7 @@ const messages = defineMessages({
   questions: { id: 'questions.title', defaultMessage: 'Ƙuestions' },
   market: { id: 'market.title', defaultMessage: 'Market' },
   events: { id: 'events.title', defaultMessage: '₭alendar' },
+  inFlow: { id: 'in_flow.title', defaultMessage: 'In Flow' },
   nudges: { id: 'nudges.title', defaultMessage: 'Nudges' },
   preferences: {
     id: 'navigation_bar.preferences',
@@ -334,6 +337,18 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             activeIconComponent={CalendarMonthActiveIcon}
             text={intl.formatMessage(messages.events)}
             tooltip='₭alendar &amp; Huddles'
+          />
+        )}
+
+        {signedIn && (
+          <ColumnLink
+            transparent
+            to='/in-flow'
+            icon='public'
+            iconComponent={PublicIcon}
+            activeIconComponent={PublicActiveIcon}
+            text={intl.formatMessage(messages.inFlow)}
+            tooltip='In Flow'
           />
         )}
 

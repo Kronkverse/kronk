@@ -28,6 +28,7 @@
 @use 'mastodon/status_replies';
 @use 'mastodon/pwa_install_prompt';
 @use 'mastodon/events';
+@use 'mastodon/in_flow';
 @use 'mastodon/governance';
 @use 'mastodon/questions';
 @use 'mastodon/status_space_bar';

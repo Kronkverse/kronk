@@ -32,6 +32,7 @@ export const SPACE_PLANET: Record<string, PlanetName> = {
   Market: 'Earth',
   Kommons: 'Jupiter',
   Kalendar: 'Neptune',
+  InFlow: 'Uranus',
   Questions: 'Saturn',
 };
 

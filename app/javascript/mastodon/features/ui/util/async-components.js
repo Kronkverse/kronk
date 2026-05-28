@@ -254,6 +254,10 @@ export function Events () {
   return import("../../events");
 }
 
+export function InFlow () {
+  return import("../../in_flow");
+}
+
 export function Nudges () {
   return import("../../nudges");
 }
