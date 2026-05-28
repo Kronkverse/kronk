@@ -6,6 +6,9 @@ import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
+import { DarkStrand } from './components/dark_strand';
+import { EarthStrand } from './components/earth_strand';
+import { FestivalStrand } from './components/festival_strand';
 import { LightStrand } from './components/light_strand';
 
 type Strand = 'light' | 'dark' | 'earth' | 'festival';
@@ -60,17 +63,9 @@ export const InFlow: React.FC<Props> = ({ multiColumn }) => {
 
         <div className='in-flow-tab__content scrollable'>
           {activeStrand === 'light' && <LightStrand />}
-          {activeStrand === 'dark' && (
-            <div className='in-flow-tab__placeholder'>Dark — coming soon</div>
-          )}
-          {activeStrand === 'earth' && (
-            <div className='in-flow-tab__placeholder'>Earth — coming soon</div>
-          )}
-          {activeStrand === 'festival' && (
-            <div className='in-flow-tab__placeholder'>
-              Festival — coming soon
-            </div>
-          )}
+          {activeStrand === 'dark' && <DarkStrand />}
+          {activeStrand === 'earth' && <EarthStrand />}
+          {activeStrand === 'festival' && <FestivalStrand />}
         </div>
       </div>
     </Column>

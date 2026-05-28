@@ -200,3 +200,291 @@
   color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
   font-weight: 500;
 }
+
+// ── Dark strand ───────────────────────────────────────────────────────────────
+
+.in-flow-dark {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.in-flow-dark__section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: $secondary-text-color;
+  margin-bottom: 10px;
+}
+
+.in-flow-dark__moon-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.in-flow-dark__moon-emoji {
+  font-size: 36px;
+  flex-shrink: 0;
+}
+
+.in-flow-dark__moon-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.in-flow-dark__moon-phase {
+  font-size: 18px;
+  font-weight: 600;
+  color: $primary-text-color;
+  font-family: Georgia, 'Liberation Serif', serif;
+}
+
+.in-flow-dark__moon-illumination {
+  font-size: 13px;
+  color: $secondary-text-color;
+}
+
+.in-flow-dark__moon-desc {
+  font-size: 14px;
+  line-height: 1.55;
+  color: $secondary-text-color;
+  margin: 0 0 12px;
+}
+
+.in-flow-dark__moon-times {
+  display: flex;
+  gap: 20px;
+}
+
+.in-flow-dark__time-pair {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.in-flow-dark__time-icon {
+  font-size: 14px;
+  color: $secondary-text-color;
+}
+
+.in-flow-dark__time-value {
+  font-size: 14px;
+  color: $primary-text-color;
+  font-weight: 500;
+}
+
+.in-flow-dark__dial-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 8%, transparent);
+  border-radius: 8px;
+}
+
+.in-flow-dark__dial-emoji {
+  font-size: 28px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.in-flow-dark__dial-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.in-flow-dark__dial-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: $primary-text-color;
+}
+
+.in-flow-dark__dial-desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: $secondary-text-color;
+}
+
+.in-flow-dark__wanderers-empty {
+  font-size: 14px;
+  color: $secondary-text-color;
+  margin: 0;
+}
+
+.in-flow-dark__wanderers-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.in-flow-dark__wanderer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 10%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  border-radius: 20px;
+}
+
+.in-flow-dark__wanderer-emoji {
+  font-size: 16px;
+}
+
+.in-flow-dark__wanderer-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: $primary-text-color;
+}
+
+// ── Earth strand ──────────────────────────────────────────────────────────────
+
+.in-flow-earth {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.in-flow-earth__header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.in-flow-earth__month {
+  font-family: Georgia, 'Liberation Serif', serif;
+  font-size: 28px;
+  color: $primary-text-color;
+}
+
+.in-flow-earth__season {
+  font-size: 14px;
+  color: $secondary-text-color;
+}
+
+.in-flow-earth__naturalist {
+  font-size: 15px;
+  line-height: 1.6;
+  color: $secondary-text-color;
+  margin: 0;
+  font-style: italic;
+}
+
+.in-flow-earth__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.in-flow-earth__section-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: $secondary-text-color;
+  font-weight: 500;
+}
+
+.in-flow-earth__chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.in-flow-earth__chip {
+  padding: 5px 10px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 500;
+
+  .in-flow-earth__chips--bloom & {
+    background: color-mix(in srgb, #c97eb0 15%, transparent);
+    color: #c97eb0;
+    border: 1px solid color-mix(in srgb, #c97eb0 30%, transparent);
+  }
+
+  .in-flow-earth__chips--sow & {
+    background: color-mix(in srgb, #6a9f6a 15%, transparent);
+    color: #6a9f6a;
+    border: 1px solid color-mix(in srgb, #6a9f6a 30%, transparent);
+  }
+
+  .in-flow-earth__chips--harvest & {
+    background: color-mix(in srgb, #b8945f 15%, transparent);
+    color: #b8945f;
+    border: 1px solid color-mix(in srgb, #b8945f 30%, transparent);
+  }
+}
+
+// ── Festival strand ───────────────────────────────────────────────────────────
+
+.in-flow-festival__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.in-flow-festival__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--background-border-color);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &--past {
+    opacity: 0.45;
+  }
+
+  &--next {
+    .in-flow-festival__label {
+      color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
+    }
+  }
+}
+
+.in-flow-festival__emoji {
+  font-size: 24px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.in-flow-festival__body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.in-flow-festival__label {
+  font-size: 15px;
+  font-weight: 600;
+  color: $primary-text-color;
+}
+
+.in-flow-festival__date {
+  font-size: 12px;
+  color: $secondary-text-color;
+}
+
+.in-flow-festival__desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: $secondary-text-color;
+  margin-top: 4px;
+}

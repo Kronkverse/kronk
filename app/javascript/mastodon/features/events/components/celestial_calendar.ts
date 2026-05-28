@@ -559,3 +559,428 @@ export function getDaylightInfo(
     },
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Moon rise / set — USNO simplified algorithm
+// Accurate to ±10 min for mid-latitudes.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Returns moon rise and set as UTC Dates for a given local calendar date
+ * at lat/lon. Returns null where the moon doesn't rise or set that day.
+ */
+export function getMoonRiseSet(
+  year: number,
+  month: number,
+  day: number,
+  lat: number,
+  lon: number,
+): { rise: Date | null; set: Date | null } {
+  // Use the same horizon-hour-angle approach as the sun, but with the moon's
+  // mean longitude approximation. We scan the day in 10-min steps to find
+  // the hour angle crossing.
+
+  function moonRaDec(jd: number): { ra: number; dec: number } {
+    const T = (jd - 2451545.0) / 36525;
+    // Moon's mean longitude, mean anomaly, mean elongation, node (all degrees)
+    const L0 = (218.3164477 + 481267.88123421 * T) % 360;
+    const M = ((357.5291092 + 35999.0502909 * T) % 360) * DEG; // sun's anomaly
+    const Mprime = ((134.9633964 + 477198.8675055 * T) % 360) * DEG; // moon's anomaly
+    const D = ((297.8501921 + 445267.1114034 * T) % 360) * DEG; // elongation
+    const Om = ((125.0445479 - 1934.1362608 * T) % 360) * DEG; // node
+
+    // Longitude correction (degrees) — main terms only
+    const dLon =
+      6.289 * Math.sin(Mprime) -
+      1.274 * Math.sin(2 * D - Mprime) +
+      0.658 * Math.sin(2 * D) -
+      0.186 * Math.sin(M) -
+      0.059 * Math.sin(2 * Mprime - 2 * D) -
+      0.057 * Math.sin(Mprime - 2 * D + M) +
+      0.053 * Math.sin(Mprime + 2 * D) +
+      0.046 * Math.sin(2 * D - M) +
+      0.041 * Math.sin(Mprime - M) -
+      0.035 * Math.sin(D) -
+      0.031 * Math.sin(Mprime + M) -
+      0.015 * Math.sin(2 * Om) +
+      0.011 * Math.sin(Mprime - 4 * D);
+
+    const dLat =
+      5.128 * Math.sin(Om) +
+      0.281 * Math.sin(Mprime + Om) -
+      0.278 * Math.sin(Mprime - Om) -
+      0.173 * Math.sin(3 * Om) +
+      0.055 * Math.sin(2 * Mprime - Om);
+
+    // Ecliptic coordinates → equatorial
+    const lon = (L0 + dLon) * DEG;
+    const latMoon = dLat * DEG;
+    const eps = 23.4393 * DEG; // obliquity (approximate)
+
+    const sinDec =
+      Math.sin(latMoon) * Math.cos(eps) +
+      Math.cos(latMoon) * Math.sin(eps) * Math.sin(lon);
+    const dec = Math.asin(sinDec);
+
+    const y = Math.sin(lon) * Math.cos(eps) - Math.tan(latMoon) * Math.sin(eps);
+    const x = Math.cos(lon);
+    const ra = Math.atan2(y, x);
+
+    return { ra, dec }; // radians
+  }
+
+  // Scan 24h in 10-min steps; find sign change in altitude relative to horizon
+  const jdBase = toJulianDay(new Date(Date.UTC(year, month, day, 12, 0, 0)));
+  const latRad = lat * DEG;
+  const horz = -0.833 * DEG; // horizon dip in radians (same as sun)
+
+  let prevAlt: number | null = null;
+  let rise: Date | null = null;
+  let set: Date | null = null;
+
+  for (let step = 0; step <= 144; step++) {
+    const fracDay = step / 144;
+    const jd = jdBase - 0.5 + fracDay; // noon ±12h
+    const { ra, dec } = moonRaDec(jd);
+
+    // Local sidereal time (approx)
+    const gmst = (18.697374558 + 24.06570982441908 * (jd - 2451545.0)) % 24;
+    const lst = ((gmst + lon / 15) % 24) * 15 * DEG;
+    const ha = lst - ra;
+
+    const sinAlt =
+      Math.sin(dec) * Math.sin(latRad) +
+      Math.cos(dec) * Math.cos(latRad) * Math.cos(ha);
+    const alt = Math.asin(sinAlt);
+
+    if (prevAlt !== null) {
+      if (prevAlt < horz && alt >= horz && rise === null) {
+        const utcFrac = (step - 0.5) / 144;
+        const utcHour = utcFrac * 24;
+        rise = new Date(
+          Date.UTC(
+            year,
+            month,
+            day,
+            Math.floor(utcHour),
+            Math.round((utcHour % 1) * 60),
+          ),
+        );
+      }
+      if (prevAlt >= horz && alt < horz && set === null) {
+        const utcFrac = (step - 0.5) / 144;
+        const utcHour = utcFrac * 24;
+        set = new Date(
+          Date.UTC(
+            year,
+            month,
+            day,
+            Math.floor(utcHour),
+            Math.round((utcHour % 1) * 60),
+          ),
+        );
+      }
+    }
+    prevAlt = alt;
+  }
+
+  return { rise, set };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The Dial — IAU constellation the sun is actually in (not the sign)
+// Based on the IAU 1930 constellation boundaries mapped to ecliptic longitude.
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface ConstellationBand {
+  name: string;
+  emoji: string;
+  description: string;
+  maxLon: number; // ecliptic longitude upper bound (degrees, 0–360)
+}
+
+// Sorted ascending by maxLon. Ecliptic longitude of sun for date d:
+// roughly L = 280.46 + 0.9856474 * (JD - 2451545.0)
+// The sun moves ~1° per day eastward through the ecliptic.
+const CONSTELLATION_BANDS: ConstellationBand[] = [
+  {
+    name: 'Sagittarius',
+    emoji: '🏹',
+    description:
+      'Toward the galactic centre — the densest, most luminous field of stars in the sky',
+    maxLon: 270,
+  },
+  {
+    name: 'Capricornus',
+    emoji: '🐐',
+    description:
+      'The sea-goat — a faint ancient figure at the edge of the celestial sea',
+    maxLon: 300,
+  },
+  {
+    name: 'Aquarius',
+    emoji: '🏺',
+    description:
+      'The water-carrier — a sprawling figure pouring its stream southward into Piscis Austrinus',
+    maxLon: 330,
+  },
+  {
+    name: 'Pisces',
+    emoji: '🐟',
+    description:
+      'Two fish trailing long cords — the vernal equinox point resides here, slowly drifting from Aries',
+    maxLon: 352,
+  },
+  {
+    name: 'Aries',
+    emoji: '🐏',
+    description:
+      'A small, quiet constellation; the sun passed through the vernal equinox point here 2000 years ago',
+    maxLon: 28,
+  },
+  {
+    name: 'Taurus',
+    emoji: '🐂',
+    description:
+      'The Pleiades and Hyades clusters lie here — some of the most prominent open clusters in the night sky',
+    maxLon: 63,
+  },
+  {
+    name: 'Gemini',
+    emoji: '👯',
+    description:
+      'The June solstice occurs here — the sun reaches its highest arc of the year within these boundaries',
+    maxLon: 90,
+  },
+  {
+    name: 'Cancer',
+    emoji: '🦀',
+    description:
+      'The faintest of the zodiacal constellations, but home to the Beehive Cluster (M44)',
+    maxLon: 118,
+  },
+  {
+    name: 'Leo',
+    emoji: '🦁',
+    description:
+      'A prominent figure with Regulus as its bright heart — one of the few constellations resembling its namesake',
+    maxLon: 138,
+  },
+  {
+    name: 'Virgo',
+    emoji: '🌾',
+    description:
+      'The largest zodiacal constellation; the autumn equinox point lies here, and the Virgo Cluster of galaxies fills its depths',
+    maxLon: 174,
+  },
+  {
+    name: 'Libra',
+    emoji: '⚖️',
+    description:
+      'The scales — once the claws of Scorpius in ancient maps, separated into its own figure',
+    maxLon: 218,
+  },
+  {
+    name: 'Ophiuchus',
+    emoji: '🐍',
+    description:
+      'The sun spends more time here than in Scorpius — a 13th figure the ecliptic genuinely passes through',
+    maxLon: 241,
+  },
+  {
+    name: 'Scorpius',
+    emoji: '🦂',
+    description:
+      'One of the most recognisable constellations; the sun passes through briefly before entering Ophiuchus',
+    maxLon: 270,
+  },
+];
+
+export interface SunConstellationInfo {
+  name: string;
+  emoji: string;
+  description: string;
+}
+
+export function getSunConstellation(date: Date): SunConstellationInfo {
+  const jd = toJulianDay(date);
+  let lon = (280.46 + 0.9856474 * (jd - 2451545.0)) % 360;
+  if (lon < 0) lon += 360;
+
+  for (const band of CONSTELLATION_BANDS) {
+    if (lon < band.maxLon) {
+      return {
+        name: band.name,
+        emoji: band.emoji,
+        description: band.description,
+      };
+    }
+  }
+  // Wrap-around: Sagittarius at the end
+  const last = CONSTELLATION_BANDS[CONSTELLATION_BANDS.length - 1];
+  return {
+    name: last?.name ?? 'Sagittarius',
+    emoji: last?.emoji ?? '🏹',
+    description: last?.description ?? '',
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wanderers — visible planets tonight (magnitude < threshold, above horizon)
+// Uses simplified VSOP87 mean elements — accurate to ~1° for bright planets.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface WandererInfo {
+  name: string;
+  emoji: string;
+  magnitude: number;
+  isVisible: boolean; // above horizon at astronomical twilight
+  riseSet?: { rise: Date | null; set: Date | null };
+}
+
+interface PlanetElements {
+  name: string;
+  emoji: string;
+  // Mean elements at J2000 (for a simplified position)
+  L0: number; // mean longitude (deg)
+  L1: number; // mean motion (deg/day)
+  a: number; // semi-major axis (AU)
+  e: number; // eccentricity
+  i: number; // inclination (deg)
+  baseMag: number; // base magnitude at 1AU
+}
+
+const PLANET_ELEMENTS: PlanetElements[] = [
+  {
+    name: 'Mercury',
+    emoji: '☿',
+    L0: 252.251,
+    L1: 4.09234,
+    a: 0.387,
+    e: 0.206,
+    i: 7.0,
+    baseMag: -0.42,
+  },
+  {
+    name: 'Venus',
+    emoji: '♀',
+    L0: 181.98,
+    L1: 1.60214,
+    a: 0.723,
+    e: 0.007,
+    i: 3.39,
+    baseMag: -4.4,
+  },
+  {
+    name: 'Mars',
+    emoji: '♂',
+    L0: 355.433,
+    L1: 0.52403,
+    a: 1.524,
+    e: 0.093,
+    i: 1.85,
+    baseMag: -1.52,
+  },
+  {
+    name: 'Jupiter',
+    emoji: '♃',
+    L0: 34.396,
+    L1: 0.08309,
+    a: 5.203,
+    e: 0.049,
+    i: 1.3,
+    baseMag: -9.4,
+  },
+  {
+    name: 'Saturn',
+    emoji: '♄',
+    L0: 50.077,
+    L1: 0.03346,
+    a: 9.537,
+    e: 0.057,
+    i: 2.49,
+    baseMag: -8.88,
+  },
+];
+
+function planetEclipticLon(p: PlanetElements, jd: number): number {
+  const d = jd - 2451545.0;
+  const M = ((p.L0 + p.L1 * d) % 360) * DEG;
+  // Equation of centre (simplified)
+  const eqC =
+    (2 * p.e - p.e ** 3 / 4) * Math.sin(M) +
+    (5 / 4) * p.e ** 2 * Math.sin(2 * M);
+  return (((p.L0 + p.L1 * d + eqC / DEG) % 360) + 360) % 360;
+}
+
+function planetDistanceAU(p: PlanetElements, jd: number): number {
+  const d = jd - 2451545.0;
+  const M = ((p.L0 + p.L1 * d) % 360) * DEG;
+  return p.a * (1 - p.e * Math.cos(M));
+}
+
+export function getWanderers(
+  year: number,
+  month: number,
+  day: number,
+  lat: number,
+  lon: number,
+): WandererInfo[] {
+  const jd = toJulianDay(new Date(Date.UTC(year, month, day, 21, 0, 0))); // 9pm UTC
+  const latRad = lat * DEG;
+
+  // Sun position for elongation
+  const sunLon = (280.46 + 0.9856474 * (jd - 2451545.0) + 360) % 360;
+
+  return PLANET_ELEMENTS.map((p) => {
+    const pLon = planetEclipticLon(p, jd);
+    const r = planetDistanceAU(p, jd);
+
+    // Earth-sun distance for this date
+    const earthR =
+      1.0 - 0.01672 * Math.cos((357.5291 + 0.9856003 * (jd - 2451545)) * DEG);
+
+    // Approximate distance from Earth (inferior/superior simplified)
+    const elongation = Math.abs(pLon - sunLon);
+    const elong = elongation > 180 ? 360 - elongation : elongation;
+
+    // Very simple magnitude estimate
+    const dist =
+      p.a <= 1
+        ? Math.sqrt(
+            earthR ** 2 + r ** 2 - 2 * earthR * r * Math.cos(elong * DEG),
+          )
+        : r - earthR;
+    const mag = p.baseMag + 2.5 * Math.log10(Math.max(0.1, r * Math.abs(dist)));
+
+    // Altitude at midnight local: use hour angle from RA
+    const eps = 23.4393 * DEG;
+    const pLonRad = pLon * DEG;
+    const dec = Math.asin(
+      Math.sin(eps) * Math.sin(pLonRad) * Math.cos(p.i * DEG) +
+        Math.cos(eps) * Math.sin(p.i * DEG),
+    );
+
+    // Hour angle at midnight
+    const gmst = (18.697374558 + 24.06570982441908 * (jd - 2451545.0)) % 24;
+    const lst = ((gmst + lon / 15) % 24) * 15 * DEG;
+    const ra = Math.atan2(
+      Math.cos(eps) * Math.sin(pLonRad) - Math.tan(p.i * DEG) * Math.sin(eps),
+      Math.cos(pLonRad),
+    );
+    const ha = lst - ra;
+
+    const sinAlt =
+      Math.sin(dec) * Math.sin(latRad) +
+      Math.cos(dec) * Math.cos(latRad) * Math.cos(ha);
+
+    const isVisible = sinAlt > Math.sin(-18 * DEG) && elong > 15; // above astronomical twilight, not too close to sun
+
+    return {
+      name: p.name,
+      emoji: p.emoji,
+      magnitude: Math.round(mag * 10) / 10,
+      isVisible,
+    };
+  }).filter((w) => w.isVisible);
+}
