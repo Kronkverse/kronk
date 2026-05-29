@@ -2,7 +2,7 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 
 import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
-import { api } from 'mastodon/api';
+import api from 'mastodon/api';
 import type { BoothSet } from '../types';
 
 interface Props {

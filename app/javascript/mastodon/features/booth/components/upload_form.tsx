@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { api } from 'mastodon/api';
+import api from 'mastodon/api';
 import type { BoothSet } from '../types';
 
 const messages = defineMessages({
