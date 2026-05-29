@@ -31,7 +31,6 @@ function getMoonContextDescription(
   constellationName: string,
   superMoon: { isSuper: boolean; distanceKm: number },
   meteorPeak: { name: string; zenithalHourlyRate: number } | undefined,
-  seasonLabel: string,
 ): string {
   const base: Record<string, string> = {
     new_moon:
@@ -64,8 +63,6 @@ function getMoonContextDescription(
       `The ${meteorPeak.name} shower peaks tonight, radiating from ${constellationName} — up to ${String(meteorPeak.zenithalHourlyRate)} meteors per hour if the sky is clear.`,
     );
   }
-
-  parts.push(`The sun is in ${constellationName} during ${seasonLabel}.`);
 
   return parts.join(' ');
 }
@@ -121,13 +118,6 @@ function formatTimeInLocation(date: Date): string {
   });
 }
 
-function getSeasonLabel(month: number): string {
-  if (month === 2 || month === 3 || month === 4) return 'Autumn';
-  if (month === 5 || month === 6 || month === 7) return 'Winter';
-  if (month === 8 || month === 9 || month === 10) return 'Spring';
-  return 'Summer';
-}
-
 export const DarkStrand: React.FC = () => {
   const { year, month, day } = useMemo(nowInLocation, []);
   const now = useMemo(() => new Date(), []);
@@ -153,13 +143,11 @@ export const DarkStrand: React.FC = () => {
   );
 
   const phaseLabel = MOON_LABELS[phase] ?? phase;
-  const seasonLabel = getSeasonLabel(month);
   const phaseDesc = getMoonContextDescription(
     phase,
     constellation.name,
     superMoon,
     meteorPeak ?? undefined,
-    seasonLabel,
   );
   const dialObservable =
     CONSTELLATION_OBSERVABLE[constellation.name] ?? constellation.description;

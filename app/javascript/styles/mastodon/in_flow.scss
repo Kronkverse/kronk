@@ -100,29 +100,73 @@
   line-height: 1.4;
 }
 
-// ── Section structure ─────────────────────────────────────────────────────────
+// ── Strand tabs ───────────────────────────────────────────────────────────────
 
-.in-flow__section {
-  padding: 28px 24px 0;
+.in-flow__strand-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  padding: 0 24px;
+}
 
-  & + & {
-    border-top: 1px solid var(--background-border-color);
-    margin-top: 28px;
+.in-flow__strand-tab {
+  background: none;
+  border: none;
+  padding: 14px 20px;
+  font-family: Georgia, 'Liberation Serif', serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 35%);
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--space-color, #3034a0);
+    transform: scaleX(0);
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    color: rgb(255 255 255 / 70%);
+  }
+
+  &--active {
+    color: #fff;
+
+    &::after {
+      transform: scaleX(1);
+    }
   }
 }
 
-.in-flow__section-heading {
-  font-family: Georgia, 'Liberation Serif', serif;
-  font-size: 15px;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: #fff;
-  margin: 0 0 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+.in-flow__strand-content {
+  padding: 28px 24px;
+  min-height: 200px;
+}
+
+.in-flow__strand-panel {
+  animation: strand-panel-in 0.25s ease forwards;
+}
+
+@keyframes strand-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 // ── Light strand ──────────────────────────────────────────────────────────────
@@ -134,58 +178,57 @@
   padding-bottom: 8px;
 }
 
-.in-flow-light__headline {
+.in-flow-light__bar-wrap {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.in-flow-light__bar-svg {
+  width: 100%;
+  height: 20px;
+  display: block;
+  overflow: visible;
+}
+
+.in-flow-light__bar-track {
+  fill: rgb(255 255 255 / 10%);
+}
+
+.in-flow-light__bar-fill {
+  fill: color-mix(in srgb, var(--space-color, #3034a0) 60%, #fff 40%);
+}
+
+.in-flow-light__bar-sun {
+  fill: #fff;
+  opacity: 0.9;
+}
+
+.in-flow-light__bar-labels {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  font-size: 11px;
 }
 
-.in-flow-light__headline-icon {
-  color: color-mix(in srgb, var(--space-color, #3034a0) 60%, #fff 40%);
-  flex-shrink: 0;
-}
-
-.in-flow-light__headline-number {
-  display: block;
-  font-family: Georgia, 'Liberation Serif', serif;
-  font-size: 40px;
-  font-weight: 400;
-  color: $primary-text-color;
-  line-height: 1.1;
-}
-
-.in-flow-light__headline-label {
-  display: block;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+.in-flow-light__bar-rise,
+.in-flow-light__bar-set {
   color: $secondary-text-color;
-  margin-top: 3px;
 }
 
-.in-flow-light__direction-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  margin-inline-start: auto;
+.in-flow-light__bar-duration {
+  font-size: 13px;
+  font-weight: 500;
+  color: $primary-text-color;
+}
 
-  &--lengthening {
-    background: color-mix(
-      in srgb,
-      var(--space-color, #3034a0) 20%,
-      transparent
-    );
-    color: color-mix(in srgb, var(--space-color, #3034a0) 90%, #fff 10%);
-  }
-
-  &--shortening,
-  &--balanced {
-    background: color-mix(in srgb, $secondary-text-color 12%, transparent);
-    color: $secondary-text-color;
-  }
+.in-flow-light__relation {
+  font-size: 13px;
+  line-height: 1.6;
+  color: $secondary-text-color;
+  margin: 0;
+  font-style: italic;
 }
 
 .in-flow-light__sun-times {
@@ -232,45 +275,6 @@
   font-size: 16px;
   font-weight: 500;
   color: $primary-text-color;
-}
-
-.in-flow-light__turning {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 14px 16px;
-  border-left: 2px solid
-    color-mix(in srgb, var(--space-color, #3034a0) 50%, transparent);
-}
-
-.in-flow-light__turning-icon {
-  font-size: 22px;
-  flex-shrink: 0;
-  margin-top: 1px;
-  color: color-mix(in srgb, var(--space-color, #3034a0) 60%, #fff 40%);
-}
-
-.in-flow-light__turning-body {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.in-flow-light__turning-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: $primary-text-color;
-}
-
-.in-flow-light__turning-date {
-  font-size: 12px;
-  color: $secondary-text-color;
-}
-
-.in-flow-light__turning-countdown {
-  font-size: 13px;
-  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
-  font-weight: 500;
 }
 
 // ── Dark strand ───────────────────────────────────────────────────────────────

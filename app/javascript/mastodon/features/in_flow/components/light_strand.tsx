@@ -4,22 +4,9 @@ import { getDaylightInfo } from 'mastodon/features/events/components/celestial_c
 
 import { LOCATION_TZ, LOCATION_LAT, LOCATION_LON } from '../constants';
 
-import {
-  SunIcon,
-  SunsetIcon,
-  SnowflakeIcon,
-  BlossomIcon,
-  LeafIcon,
-  OrbitIcon,
-  FlameIcon,
-} from './celestial_icons';
+import { SunsetIcon } from './celestial_icons';
 
-function nowInLocation(): {
-  year: number;
-  month: number;
-  day: number;
-  date: Date;
-} {
+function nowInLocation(): { year: number; month: number; day: number } {
   const fmt = new Intl.DateTimeFormat('en-AU', {
     timeZone: LOCATION_TZ,
     year: 'numeric',
@@ -29,12 +16,7 @@ function nowInLocation(): {
   const parts = fmt.formatToParts(new Date());
   const get = (type: string): number =>
     parseInt(parts.find((p) => p.type === type)?.value ?? '0', 10);
-  return {
-    year: get('year'),
-    month: get('month') - 1,
-    day: get('day'),
-    date: new Date(),
-  };
+  return { year: get('year'), month: get('month') - 1, day: get('day') };
 }
 
 function formatTimeInLocation(date: Date): string {
@@ -46,49 +28,116 @@ function formatTimeInLocation(date: Date): string {
   });
 }
 
-function formatDateInLocation(date: Date): string {
-  return date.toLocaleDateString('en-AU', {
+function toLocalMinutes(date: Date): number {
+  const fmt = new Intl.DateTimeFormat('en-AU', {
     timeZone: LOCATION_TZ,
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: false,
   });
+  const parts = fmt.formatToParts(date);
+  const h = parseInt(parts.find((p) => p.type === 'hour')?.value ?? '0', 10);
+  const m = parseInt(parts.find((p) => p.type === 'minute')?.value ?? '0', 10);
+  return h * 60 + m;
 }
 
-function formatDaylight(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${String(h)}h ${String(m).padStart(2, '0')}m`;
+interface DaylightBarProps {
+  daylightMinutes: number;
+  riseMinutesFromMidnight: number;
+  setMinutesFromMidnight: number;
+  riseLabel: string;
+  setLabel: string;
 }
 
-function daysUntil(target: Date, now: Date): number {
-  return Math.ceil((target.getTime() - now.getTime()) / 86400000);
-}
+const DaylightBar: React.FC<DaylightBarProps> = ({
+  daylightMinutes,
+  riseMinutesFromMidnight,
+  setMinutesFromMidnight,
+  riseLabel,
+  setLabel,
+}) => {
+  const total = 24 * 60;
+  const riseX = (riseMinutesFromMidnight / total) * 100;
+  const setX = (setMinutesFromMidnight / total) * 100;
+  const midX = (riseX + setX) / 2;
+  const h = Math.floor(daylightMinutes / 60);
+  const m = daylightMinutes % 60;
+  const daylightLabel = `${String(h)}h ${String(m).padStart(2, '0')}m`;
 
-const TurningIcon = ({ label, size = 22 }: { label: string; size?: number }) => {
-  const l = label.toLowerCase();
-  if (l.includes('winter') || l.includes('imbolc'))
-    return <SnowflakeIcon size={size} />;
-  if (l.includes('summer') || l.includes('lammas'))
-    return <SunIcon size={size} />;
-  if (l.includes('spring') || l.includes('beltane')) {
-    if (l.includes('beltane')) return <FlameIcon size={size} />;
-    return <BlossomIcon size={size} />;
+  return (
+    <div className='in-flow-light__bar-wrap'>
+      <svg
+        viewBox='0 0 100 20'
+        className='in-flow-light__bar-svg'
+        preserveAspectRatio='none'
+      >
+        {/* Track */}
+        <rect
+          x='0'
+          y='8'
+          width='100'
+          height='4'
+          rx='2'
+          className='in-flow-light__bar-track'
+        />
+        {/* Daylight fill */}
+        <rect
+          x={riseX}
+          y='7'
+          width={setX - riseX}
+          height='6'
+          rx='3'
+          className='in-flow-light__bar-fill'
+        />
+        {/* Sun dot */}
+        <circle cx={midX} cy='10' r='4' className='in-flow-light__bar-sun' />
+      </svg>
+      <div className='in-flow-light__bar-labels'>
+        <span className='in-flow-light__bar-rise'>{riseLabel}</span>
+        <span className='in-flow-light__bar-duration'>
+          {daylightLabel} of daylight
+        </span>
+        <span className='in-flow-light__bar-set'>{setLabel}</span>
+      </div>
+    </div>
+  );
+};
+
+function getLightRelation(direction: string, month: number): string {
+  // Southern Hemisphere seasons by month
+  if (month >= 5 && month <= 7) {
+    // Winter
+    if (direction === 'shortening')
+      return 'The light continues to withdraw — low angles, long shadows, a sky that holds its warmth close to the horizon.';
+    if (direction === 'lengthening')
+      return 'Winter light beginning its slow return — each day a little more sky before dark.';
+    return 'The light rests at its winter still-point.';
   }
-  if (l.includes('autumn') || l.includes('samhain'))
-    return <LeafIcon size={size} />;
-  return <OrbitIcon size={size} />;
+  if (month >= 8 && month <= 10) {
+    // Spring
+    if (direction === 'lengthening')
+      return 'Spring light surging — the angle steepens, the warmth arrives earlier each morning.';
+    return 'The light of spring, generous and climbing.';
+  }
+  if (month >= 11 || month <= 1) {
+    // Summer
+    if (direction === 'shortening')
+      return 'Long summer light beginning its slow retreat — still generous, but the turn has come.';
+    return 'Expansive summer light — the sun barely below the horizon at dusk.';
+  }
+  // Autumn
+  if (direction === 'shortening')
+    return 'Autumn light — softer and lower each week, the world turning amber at the edges.';
+  return 'The mellowing light of autumn, drawing down toward winter.';
 }
 
 export const LightStrand: React.FC = () => {
-  const { year, month, day, date: now } = useMemo(nowInLocation, []);
+  const { year, month, day } = useMemo(nowInLocation, []);
 
   const info = useMemo(
     () => getDaylightInfo(year, month, day, LOCATION_LAT, LOCATION_LON),
     [year, month, day],
   );
-
-  const days = daysUntil(info.nextTurningPoint.date, now);
 
   const direction =
     info.deltaMinutes > 0.5
@@ -97,29 +146,22 @@ export const LightStrand: React.FC = () => {
         ? 'shortening'
         : 'balanced';
 
-  const directionLabel =
-    direction === 'lengthening'
-      ? 'Lengthening ↑'
-      : direction === 'shortening'
-        ? 'Shortening ↓'
-        : 'Balanced';
+  const riseLabel = info.rise ? formatTimeInLocation(info.rise) : '';
+  const setLabel = info.set ? formatTimeInLocation(info.set) : '';
+  const riseMinutes = info.rise ? toLocalMinutes(info.rise) : 6 * 60;
+  const setMinutes = info.set ? toLocalMinutes(info.set) : 18 * 60;
+
+  const relationSentence = getLightRelation(direction, month);
 
   return (
     <div className='in-flow-light'>
-      <div className='in-flow-light__headline'>
-        <SunIcon size={32} className='in-flow-light__headline-icon' />
-        <div>
-          <span className='in-flow-light__headline-number'>
-            {formatDaylight(info.daylightMinutes)}
-          </span>
-          <span className='in-flow-light__headline-label'>of daylight</span>
-        </div>
-        <span
-          className={`in-flow-light__direction-badge in-flow-light__direction-badge--${direction}`}
-        >
-          {directionLabel}
-        </span>
-      </div>
+      <DaylightBar
+        daylightMinutes={info.daylightMinutes}
+        riseMinutesFromMidnight={riseMinutes}
+        setMinutesFromMidnight={setMinutes}
+        riseLabel={riseLabel}
+        setLabel={setLabel}
+      />
 
       {info.rise && info.set && (
         <div className='in-flow-light__sun-times'>
@@ -144,26 +186,7 @@ export const LightStrand: React.FC = () => {
         </div>
       )}
 
-      <div className='in-flow-light__turning'>
-        <span className='in-flow-light__turning-icon'>
-          <TurningIcon label={info.nextTurningPoint.label} size={22} />
-        </span>
-        <span className='in-flow-light__turning-body'>
-          <span className='in-flow-light__turning-label'>
-            {info.nextTurningPoint.label}
-          </span>
-          <span className='in-flow-light__turning-date'>
-            {formatDateInLocation(info.nextTurningPoint.date)}
-          </span>
-          <span className='in-flow-light__turning-countdown'>
-            {days === 0
-              ? 'today'
-              : days === 1
-                ? 'tomorrow'
-                : `in ${String(days)} days`}
-          </span>
-        </span>
-      </div>
+      <p className='in-flow-light__relation'>{relationSentence}</p>
     </div>
   );
 };
