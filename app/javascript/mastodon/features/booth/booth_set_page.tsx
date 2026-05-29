@@ -7,7 +7,7 @@ import { Helmet } from 'react-helmet';
 import { useParams, Link } from 'react-router-dom';
 
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
-import { api } from 'mastodon/api';
+import api from 'mastodon/api';
 import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
