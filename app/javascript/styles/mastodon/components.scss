@@ -12351,6 +12351,35 @@ noscript {
   }
 }
 
+// Profile page nudge widget
+.account-nudges {
+  padding: 20px 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+
+  &__counts {
+    display: flex;
+    gap: 16px;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  &__count-sent {
+    color: $highlight-text-color;
+  }
+
+  &__count-received {
+    color: $gold-star;
+  }
+
+  &__button {
+    width: 100%;
+    max-width: 280px;
+  }
+}
+
 // Live nudge-alert banners
 .nudge-alerts {
   border-bottom: 1px solid lighten($ui-base-color, 8%);

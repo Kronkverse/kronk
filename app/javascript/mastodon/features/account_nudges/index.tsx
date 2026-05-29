@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import { apiNudgeAccount, apiGetNudgeStreak } from 'mastodon/api/accounts';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
 import { AccountHeader } from 'mastodon/features/account_timeline/components/account_header';
@@ -20,7 +19,8 @@ const AccountNudges: React.FC = () => {
     accountId ? state.accounts.get(accountId) : undefined,
   );
 
-  const [streak, setStreak] = useState<number | null>(null);
+  const [sentCount, setSentCount] = useState<number | null>(null);
+  const [receivedCount, setReceivedCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [nudgeSent, setNudgeSent] = useState(false);
   const [canNudge, setCanNudge] = useState(true);
@@ -29,7 +29,8 @@ const AccountNudges: React.FC = () => {
     if (!accountId || accountId === me) return;
     apiGetNudgeStreak(accountId)
       .then((data) => {
-        setStreak(data.streak);
+        setSentCount(data.sent_count);
+        setReceivedCount(data.received_count);
         setCanNudge(data.can_nudge);
       })
       .catch(() => { /* silent */ });
@@ -39,8 +40,8 @@ const AccountNudges: React.FC = () => {
     if (!accountId || loading || !canNudge) return;
     setLoading(true);
     try {
-      const result = await apiNudgeAccount(accountId);
-      setStreak(result.streak);
+      await apiNudgeAccount(accountId);
+      setSentCount((c) => (c ?? 0) + 1);
       setNudgeSent(true);
       setCanNudge(false);
     } finally {
@@ -57,32 +58,13 @@ const AccountNudges: React.FC = () => {
         {accountId && <AccountHeader accountId={accountId} hideTabs />}
         {!suspended && account && accountId !== me && (
           <div className='account-nudges'>
-            <div className='account-nudges__icon'>
-              <PartnerExchangeIcon />
-            </div>
-            <h3 className='account-nudges__title'>
-              <FormattedMessage
-                id='account_nudges.title'
-                defaultMessage='Nudges with @{acct}'
-                values={{ acct: account.acct }}
-              />
-            </h3>
-            {streak !== null && (
-              <p className='account-nudges__streak'>
-                {streak === 0 ? (
-                  <FormattedMessage
-                    id='account_nudges.no_streak'
-                    defaultMessage="You haven't nudged each other yet"
-                  />
-                ) : (
-                  <FormattedMessage
-                    id='account_nudges.streak'
-                    defaultMessage='{count, plural, one {# nudge} other {# nudges}} exchanged'
-                    values={{ count: streak }}
-                  />
-                )}
-              </p>
+            {(sentCount !== null || receivedCount !== null) && (
+              <div className='account-nudges__counts'>
+                <span className='account-nudges__count-sent'>↑ {sentCount ?? 0}</span>
+                <span className='account-nudges__count-received'>↓ {receivedCount ?? 0}</span>
+              </div>
             )}
+
             <button
               className='button account-nudges__button'
               onClick={handleNudge}
