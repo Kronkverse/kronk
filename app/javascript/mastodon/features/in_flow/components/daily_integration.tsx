@@ -392,3 +392,85 @@ export function buildDailyIntegrationText(): string {
   const data = buildDailyData(year, month, day, now);
   return data.sentence;
 }
+
+// ── Tile data for DailyKosmicCard ─────────────────────────────────────────────
+
+export interface DailyTileData {
+  lightRise: string; // formatted rise time e.g. "7:18 am"
+  lightSet: string; // formatted set time e.g. "5:09 pm"
+  darkPhase: string; // e.g. "Waning Crescent"
+  darkIllumination: number; // 0–100 integer
+  soilText: string; // first sentence of ecological observable, max 70 chars
+  season: { label: string; days: number } | null; // only when ≤7 days
+}
+
+const MOON_PHASE_LABELS: Record<string, string> = {
+  new_moon: 'New Moon',
+  waxing_crescent: 'Waxing Crescent',
+  first_quarter: 'First Quarter',
+  waxing_gibbous: 'Waxing Gibbous',
+  full_moon: 'Full Moon',
+  waning_gibbous: 'Waning Gibbous',
+  last_quarter: 'Last Quarter',
+  waning_crescent: 'Waning Crescent',
+};
+
+export function buildDailyTileData(): DailyTileData {
+  const { year, month, day, now } = nowInLocation();
+  const daylight = getDaylightInfo(
+    year,
+    month,
+    day,
+    LOCATION_LAT,
+    LOCATION_LON,
+  );
+  const phase = getMoonPhaseName(now);
+  const illumination = getMoonIllumination(now);
+  const earthData = getEarthMonth(month);
+
+  const formatTile = (date: Date): string =>
+    date
+      .toLocaleTimeString('en-AU', {
+        timeZone: LOCATION_TZ,
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      })
+      .toLowerCase()
+      .replace(' ', '');
+
+  const lightRise = daylight.rise ? formatTile(daylight.rise) : '—';
+  const lightSet = daylight.set ? formatTile(daylight.set) : '—';
+
+  const darkPhase = MOON_PHASE_LABELS[phase] ?? phase.replace(/_/g, ' ');
+  const darkIllumination = Math.round(illumination * 100);
+
+  // First sentence of observable, capped at 70 chars
+  const observable = earthData.observable;
+  const firstSentence = observable.split(/(?<=[.!?])\s/)[0] ?? observable;
+  const soilText =
+    firstSentence.length > 70
+      ? firstSentence.slice(0, 69) + '…'
+      : firstSentence;
+
+  // Next turning point ≤7 days away (seasons + cross-quarters)
+  const allEvents = [
+    ...getSeasonEventsForYear(year),
+    ...getCrossQuarterEventsForYear(year),
+    ...getSeasonEventsForYear(year + 1),
+    ...getCrossQuarterEventsForYear(year + 1),
+  ]
+    .filter((e) => e.date >= now)
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  const next = allEvents[0];
+  let season: { label: string; days: number } | null = null;
+  if (next) {
+    const days = daysUntil(next.date, now);
+    if (days <= 7) {
+      season = { label: next.label, days };
+    }
+  }
+
+  return { lightRise, lightSet, darkPhase, darkIllumination, soilText, season };
+}

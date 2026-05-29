@@ -2,8 +2,9 @@ import { useCallback, useState } from 'react';
 
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
+import { planetName, spaceColor } from 'mastodon/planets';
 
+import { OrbitIcon } from './components/celestial_icons';
 import { DarkStrand } from './components/dark_strand';
 import { EarthStrand } from './components/earth_strand';
 import { FestivalStrand } from './components/festival_strand';
@@ -51,7 +52,7 @@ export const InFlow: React.FC<Props> = ({ multiColumn }) => {
       <ColumnHeader
         title={planetName('InFlow')}
         icon='public'
-        iconComponent={planetIcon('InFlow')}
+        iconComponent={OrbitIcon}
         multiColumn={multiColumn}
       />
 
