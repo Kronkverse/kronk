@@ -63,7 +63,7 @@ export const InFlow: React.FC<Props> = ({ multiColumn }) => {
           <h1 className='in-flow__title'>In Flow</h1>
           <p className='in-flow__subtitle'>{LOCATION_LABEL}</p>
           <p className='in-flow__tagline'>
-            In Flow is a way to attune to the Kosmos occurring us, and as it
+            In Flow is a way to attune to the Kosmos occurring around us, as it
             occurs within us. This relationship is ancient. The more we align
             with the cycles of light, dark, soil and season, the more we are{' '}
             <em>In Flow</em> — with ourselves, with each other, and with the
