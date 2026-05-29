@@ -1,8 +1,85 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { FormattedDate } from 'react-intl';
 
 import { Link } from 'react-router-dom';
+
+import {
+  SunIcon,
+  MoonPhaseIcon,
+  SnowflakeIcon,
+  BlossomIcon,
+  LeafIcon,
+  FlameIcon,
+  OrbitIcon,
+  StarIcon,
+} from 'mastodon/features/in_flow/components/celestial_icons';
+
+import { getCelestialEventsForMonth } from './celestial_calendar';
+import type { CelestialDayEvents } from './celestial_calendar';
+
+const SeasonBadgeIcon: React.FC<{ season: string; size: number }> = ({
+  season,
+  size,
+}) => {
+  if (season === 'winter') return <SnowflakeIcon size={size} />;
+  if (season === 'summer') return <SunIcon size={size} />;
+  if (season === 'spring') return <BlossomIcon size={size} />;
+  return <LeafIcon size={size} />;
+};
+
+const CrossQuarterBadgeIcon: React.FC<{ name: string; size: number }> = ({
+  name,
+  size,
+}) => {
+  if (name === 'imbolc') return <BlossomIcon size={size} />;
+  if (name === 'beltane') return <FlameIcon size={size} />;
+  if (name === 'lammas') return <LeafIcon size={size} />;
+  return <FlameIcon size={size} />; // samhain
+};
+
+const MOON_POPUP_DESCS: Partial<Record<string, string>> = {
+  new_moon: 'The moon is absent — the sky is at its darkest.',
+  waxing_crescent: 'A thin crescent follows the sun into the west.',
+  first_quarter: 'Half-lit, the moon sets near midnight.',
+  waxing_gibbous: 'Growing toward full, bright in the evening sky.',
+  full_moon: 'The moon rises at sunset and lights the whole night.',
+  waning_gibbous:
+    'Past full, the moon rises after sunset and fills the late sky.',
+  last_quarter: 'Half-lit again, rising near midnight — evenings are dark.',
+  waning_crescent: 'A sliver in the pre-dawn sky. Evenings remain dark.',
+};
+
+const SEASON_POPUP_DESCS: Partial<Record<string, string>> = {
+  spring: 'Spring Equinox — day and night balance. Light begins to dominate.',
+  summer:
+    'Summer Solstice — the longest day. The year turns toward dark from here.',
+  autumn: 'Autumn Equinox — balance again. The dark begins to grow.',
+  winter: 'Winter Solstice — the shortest day. Light begins its return.',
+};
+
+const CROSS_QUARTER_POPUP_DESCS: Partial<Record<string, string>> = {
+  imbolc:
+    'Imbolc — midpoint of winter. The first stirrings of spring are felt.',
+  beltane: 'Beltane — midpoint of spring. Life is at full surge.',
+  lammas: 'Lammas — midpoint of summer. The first harvest; the year tilts.',
+  samhain: 'Samhain — midpoint of autumn. The veil is thin; the dark deepens.',
+};
+
+const ORBITAL_POPUP_DESCS: Partial<Record<string, string>> = {
+  perihelion: 'Perihelion — Earth is closest to the sun in its annual orbit.',
+  aphelion:
+    'Aphelion — Earth is farthest from the sun. The orbit breathes out.',
+};
+
+function getCelestialTooltip(events: CelestialDayEvents): string {
+  const parts: string[] = [];
+  if (events.moon) parts.push(events.moon.label);
+  if (events.season) parts.push(events.season.label);
+  if (events.crossQuarter) parts.push(events.crossQuarter.label);
+  if (events.orbital) parts.push(events.orbital.label);
+  return parts.join(' · ');
+}
 
 interface Account {
   id: string;
@@ -104,6 +181,209 @@ function getColorClass(event: Event): string {
   return '';
 }
 
+// ─── Calendar cell ───────────────────────────────────────────────────────────
+
+interface CalendarCellProps {
+  day: Date;
+  dayEvents: DayEvent[];
+  celestial: CelestialDayEvents | undefined;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+}
+
+const CalendarCell: React.FC<CalendarCellProps> = ({
+  day,
+  dayEvents,
+  celestial,
+  isCurrentMonth,
+  isToday,
+}) => {
+  const hasCelestial = Boolean(celestial);
+  const [open, setOpen] = useState(false);
+  const badgeRef = useRef<HTMLButtonElement>(null);
+
+  const handleBadgeClick = useCallback(() => {
+    setOpen((o) => !o);
+  }, []);
+
+  const handleCloseClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (badgeRef.current && !badgeRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+    };
+  }, [open]);
+
+  return (
+    <div
+      className={[
+        'event-calendar__cell',
+        !isCurrentMonth ? 'event-calendar__cell--other-month' : '',
+        isToday ? 'event-calendar__cell--today' : '',
+        hasCelestial ? 'event-calendar__cell--celestial' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      <div className='event-calendar__cell-top'>
+        <span className='event-calendar__cell-date'>{day.getDate()}</span>
+        {hasCelestial && celestial && (
+          <button
+            ref={badgeRef}
+            className='event-calendar__celestial-badge'
+            title={getCelestialTooltip(celestial)}
+            type='button'
+            onClick={handleBadgeClick}
+          >
+            <span className='event-calendar__celestial-badge-icons'>
+              {celestial.moon && (
+                <MoonPhaseIcon phase={celestial.moon.phase} size={11} />
+              )}
+              {celestial.season && (
+                <SeasonBadgeIcon season={celestial.season.season} size={11} />
+              )}
+              {celestial.crossQuarter && (
+                <CrossQuarterBadgeIcon
+                  name={celestial.crossQuarter.name}
+                  size={11}
+                />
+              )}
+              {celestial.orbital && <OrbitIcon size={11} />}
+              {celestial.meteorShower && <StarIcon size={11} />}
+              {celestial.eclipse && <SunIcon size={11} />}
+            </span>
+            {open && (
+              <div className='event-calendar__celestial-popup'>
+                <button
+                  className='event-calendar__celestial-popup-close'
+                  onClick={handleCloseClick}
+                  type='button'
+                  aria-label='Close'
+                >
+                  ×
+                </button>
+                {celestial.moon && (
+                  <div className='event-calendar__celestial-popup-row'>
+                    <span className='event-calendar__celestial-popup-emoji'>
+                      <MoonPhaseIcon phase={celestial.moon.phase} size={18} />
+                    </span>
+                    <div>
+                      <div className='event-calendar__celestial-popup-title'>
+                        {celestial.moon.label}
+                      </div>
+                      <div className='event-calendar__celestial-popup-desc'>
+                        {MOON_POPUP_DESCS[celestial.moon.phase] ?? ''}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {celestial.season && (
+                  <div className='event-calendar__celestial-popup-row'>
+                    <span className='event-calendar__celestial-popup-emoji'>
+                      <SeasonBadgeIcon
+                        season={celestial.season.season}
+                        size={18}
+                      />
+                    </span>
+                    <div>
+                      <div className='event-calendar__celestial-popup-title'>
+                        {celestial.season.label}
+                      </div>
+                      <div className='event-calendar__celestial-popup-desc'>
+                        {SEASON_POPUP_DESCS[celestial.season.season] ?? ''}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {celestial.crossQuarter && (
+                  <div className='event-calendar__celestial-popup-row'>
+                    <span className='event-calendar__celestial-popup-emoji'>
+                      <CrossQuarterBadgeIcon
+                        name={celestial.crossQuarter.name}
+                        size={18}
+                      />
+                    </span>
+                    <div>
+                      <div className='event-calendar__celestial-popup-title'>
+                        {celestial.crossQuarter.label}
+                      </div>
+                      <div className='event-calendar__celestial-popup-desc'>
+                        {CROSS_QUARTER_POPUP_DESCS[
+                          celestial.crossQuarter.name
+                        ] ?? ''}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {celestial.orbital && (
+                  <div className='event-calendar__celestial-popup-row'>
+                    <span className='event-calendar__celestial-popup-emoji'>
+                      <OrbitIcon size={18} />
+                    </span>
+                    <div>
+                      <div className='event-calendar__celestial-popup-title'>
+                        {celestial.orbital.label}
+                      </div>
+                      <div className='event-calendar__celestial-popup-desc'>
+                        {ORBITAL_POPUP_DESCS[celestial.orbital.type] ?? ''}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {celestial.meteorShower && (
+                  <div className='event-calendar__celestial-popup-row'>
+                    <span className='event-calendar__celestial-popup-emoji'>
+                      <StarIcon size={18} />
+                    </span>
+                    <div>
+                      <div className='event-calendar__celestial-popup-title'>
+                        {celestial.meteorShower.name}
+                      </div>
+                      <div className='event-calendar__celestial-popup-desc'>
+                        Meteor shower peak — up to{' '}
+                        {celestial.meteorShower.zenithalHourlyRate} meteors per
+                        hour.
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {celestial.eclipse && (
+                  <div className='event-calendar__celestial-popup-row'>
+                    <span className='event-calendar__celestial-popup-emoji'>
+                      <SunIcon size={18} />
+                    </span>
+                    <div>
+                      <div className='event-calendar__celestial-popup-title'>
+                        {celestial.eclipse.label}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </button>
+        )}
+      </div>
+
+      {dayEvents.map(({ event, position }) => (
+        <CalendarDotLink key={event.id} event={event} position={position} />
+      ))}
+    </div>
+  );
+};
+
+// ─── Dot link ─────────────────────────────────────────────────────────────────
+
 interface DotLinkProps {
   event: Event;
   position: SpanPosition;
@@ -127,12 +407,37 @@ const CalendarDotLink: React.FC<DotLinkProps> = ({ event, position }) => {
   );
 };
 
+// ─── Main calendar ────────────────────────────────────────────────────────────
+
 export const EventCalendar: React.FC<Props> = ({
   events,
   selectedMonth,
   onMonthChange,
 }) => {
   const days = useMemo(() => getDaysInMonth(selectedMonth), [selectedMonth]);
+
+  const celestialEvents = useMemo(() => {
+    const year = selectedMonth.getFullYear();
+    const month = selectedMonth.getMonth();
+    const map = getCelestialEventsForMonth(year, month);
+
+    const firstVisible = days[0];
+    const lastVisible = days[days.length - 1];
+    if (firstVisible && firstVisible.getMonth() !== month) {
+      getCelestialEventsForMonth(
+        firstVisible.getFullYear(),
+        firstVisible.getMonth(),
+      ).forEach((v, k) => map.set(k, v));
+    }
+    if (lastVisible && lastVisible.getMonth() !== month) {
+      getCelestialEventsForMonth(
+        lastVisible.getFullYear(),
+        lastVisible.getMonth(),
+      ).forEach((v, k) => map.set(k, v));
+    }
+
+    return map;
+  }, [selectedMonth, days]);
 
   const eventsByDate = useMemo(() => {
     const map = new Map<string, DayEvent[]>();
@@ -209,24 +514,19 @@ export const EventCalendar: React.FC<Props> = ({
 
         {days.map((day, i) => {
           const dateKey = toDateKey(day);
+          const celestialKey = day.toDateString();
           const dayEvents = eventsByDate.get(dateKey) ?? [];
-          const isCurrentMonth = day.getMonth() === selectedMonth.getMonth();
-          const isToday = isSameDay(day, today);
+          const celestial = celestialEvents.get(celestialKey);
 
           return (
-            <div
+            <CalendarCell
               key={i}
-              className={`event-calendar__cell ${!isCurrentMonth ? 'event-calendar__cell--other-month' : ''} ${isToday ? 'event-calendar__cell--today' : ''}`}
-            >
-              <span className='event-calendar__cell-date'>{day.getDate()}</span>
-              {dayEvents.map(({ event, position }) => (
-                <CalendarDotLink
-                  key={event.id}
-                  event={event}
-                  position={position}
-                />
-              ))}
-            </div>
+              day={day}
+              dayEvents={dayEvents}
+              celestial={celestial}
+              isCurrentMonth={day.getMonth() === selectedMonth.getMonth()}
+              isToday={isSameDay(day, today)}
+            />
           );
         })}
       </div>

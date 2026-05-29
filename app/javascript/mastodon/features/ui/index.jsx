@@ -83,6 +83,7 @@ import {
   Market,
   Events,
   EventDetail,
+  InFlow,
   Nudges,
   Governance,
   Questions,
@@ -218,6 +219,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path="/booth" component={Booth} content={children} />
             {signedIn && <WrappedRoute path="/kalendar/:id" component={EventDetail} content={children} />}
             {signedIn && <WrappedRoute path="/kalendar" component={Events} content={children} />}
+            {signedIn && <WrappedRoute path="/in-flow" component={InFlow} content={children} />}
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} />}
             {signedIn && <WrappedRoute path="/governance" component={Governance} content={children} />}
             {signedIn && <WrappedRoute path="/questions/:id" component={QuestionPage} content={children} />}

@@ -1,0 +1,628 @@
+@use 'variables' as *;
+
+// ── In Flow page ──────────────────────────────────────────────────────────────
+
+.in-flow {
+  padding: 0 0 48px;
+}
+
+.in-flow__header {
+  padding: 36px 24px 28px;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+}
+
+.in-flow__title {
+  font-family: Georgia, 'Liberation Serif', serif;
+  font-size: 36px;
+  font-weight: 400;
+  color: $primary-text-color;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+
+.in-flow__subtitle {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
+  margin: 0 0 16px;
+}
+
+.in-flow__tagline {
+  font-size: 14px;
+  line-height: 1.65;
+  color: $secondary-text-color;
+  margin: 0;
+  font-style: italic;
+  max-width: 420px;
+}
+
+// ── Daily integration ─────────────────────────────────────────────────────────
+
+.in-flow__daily {
+  margin: 0;
+  padding: 20px 24px;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 12%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 15%, transparent);
+}
+
+// ── Daily tile grid ──────────────────────────────────────────────────────────
+
+.in-flow__daily-sentence {
+  font-size: 14px;
+  line-height: 1.65;
+  color: $primary-text-color;
+  margin: 0 0 16px;
+  font-style: italic;
+}
+
+.in-flow__daily-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.in-flow__daily-tile {
+  background: color-mix(in srgb, var(--space-color, #3034a0) 10%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.in-flow__daily-tile-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.in-flow__daily-tile-icon {
+  color: color-mix(in srgb, var(--space-color, #3034a0) 70%, #fff 30%);
+  flex-shrink: 0;
+}
+
+.in-flow__daily-tile-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: $secondary-text-color;
+}
+
+.in-flow__daily-tile-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: $primary-text-color;
+  line-height: 1.4;
+}
+
+// ── Strand tabs ───────────────────────────────────────────────────────────────
+
+.in-flow__strand-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  padding: 0 24px;
+}
+
+.in-flow__strand-tab {
+  background: none;
+  border: none;
+  padding: 14px 20px;
+  font-family: Georgia, 'Liberation Serif', serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 35%);
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--space-color, #3034a0);
+    transform: scaleX(0);
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    color: rgb(255 255 255 / 70%);
+  }
+
+  &--active {
+    color: #fff;
+
+    &::after {
+      transform: scaleX(1);
+    }
+  }
+}
+
+.in-flow__strand-content {
+  padding: 28px 24px;
+  min-height: 200px;
+}
+
+.in-flow__strand-panel {
+  animation: strand-panel-in 0.25s ease forwards;
+}
+
+@keyframes strand-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ── Light strand ──────────────────────────────────────────────────────────────
+
+.in-flow-light {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 8px;
+}
+
+.in-flow-light__bar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.in-flow-light__bar-svg {
+  width: 100%;
+  height: 20px;
+  display: block;
+  overflow: visible;
+}
+
+.in-flow-light__bar-track {
+  fill: rgb(255 255 255 / 10%);
+}
+
+.in-flow-light__bar-fill {
+  fill: color-mix(in srgb, var(--space-color, #3034a0) 60%, #fff 40%);
+}
+
+.in-flow-light__bar-sun {
+  fill: #fff;
+  opacity: 0.9;
+}
+
+.in-flow-light__bar-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.in-flow-light__bar-rise,
+.in-flow-light__bar-set {
+  color: $secondary-text-color;
+}
+
+.in-flow-light__bar-duration {
+  font-size: 13px;
+  font-weight: 500;
+  color: $primary-text-color;
+}
+
+.in-flow-light__relation {
+  font-size: 13px;
+  line-height: 1.6;
+  color: $secondary-text-color;
+  margin: 0;
+  font-style: italic;
+}
+
+.in-flow-light__sun-times {
+  display: flex;
+  align-items: center;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 8%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.in-flow-light__sun-time {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 16px;
+}
+
+.in-flow-light__sun-icon {
+  color: color-mix(in srgb, var(--space-color, #3034a0) 60%, #fff 40%);
+
+  &--set {
+    transform: scaleY(-1);
+  }
+}
+
+.in-flow-light__sun-divider {
+  width: 1px;
+  height: 48px;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+}
+
+.in-flow-light__sun-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: $secondary-text-color;
+}
+
+.in-flow-light__sun-value {
+  font-size: 16px;
+  font-weight: 500;
+  color: $primary-text-color;
+}
+
+// ── Dark strand ───────────────────────────────────────────────────────────────
+
+.in-flow-dark {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-bottom: 8px;
+}
+
+.in-flow-dark__section-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: $secondary-text-color;
+  margin-bottom: 10px;
+}
+
+.in-flow-dark__moon-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.in-flow-dark__moon-icon {
+  color: $primary-text-color;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.in-flow-dark__moon-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.in-flow-dark__moon-phase {
+  font-family: Georgia, 'Liberation Serif', serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: $primary-text-color;
+}
+
+.in-flow-dark__moon-illumination {
+  font-size: 12px;
+  color: $secondary-text-color;
+}
+
+.in-flow-dark__moon-desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: $secondary-text-color;
+  margin: 0 0 10px;
+}
+
+.in-flow-dark__moon-times {
+  display: flex;
+  gap: 24px;
+}
+
+.in-flow-dark__time-pair {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.in-flow-dark__time-icon {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $secondary-text-color;
+}
+
+.in-flow-dark__time-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: $primary-text-color;
+}
+
+.in-flow-dark__dial-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.in-flow-constellation-svg {
+  color: $primary-text-color;
+  opacity: 0.75;
+  display: block;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 10%, transparent);
+  border-radius: 8px;
+  padding: 12px;
+  box-sizing: content-box;
+}
+
+.in-flow-dark__dial-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.in-flow-dark__dial-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: $primary-text-color;
+}
+
+.in-flow-dark__dial-desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: $secondary-text-color;
+}
+
+.in-flow-dark__wanderers-empty {
+  font-size: 13px;
+  color: $secondary-text-color;
+  margin: 0;
+}
+
+.in-flow-dark__wanderers-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.in-flow-dark__wanderer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 10%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  border-radius: 20px;
+}
+
+.in-flow-dark__wanderer-icon {
+  color: color-mix(in srgb, var(--space-color, #3034a0) 70%, #fff 30%);
+}
+
+.in-flow-dark__wanderer-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: $primary-text-color;
+}
+
+// ── Earth strand ──────────────────────────────────────────────────────────────
+
+.in-flow-earth {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 8px;
+}
+
+.in-flow-earth__header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.in-flow-earth__header-icon {
+  color: color-mix(in srgb, #6a9f6a 80%, #fff 20%);
+  flex-shrink: 0;
+  margin-bottom: -2px;
+}
+
+.in-flow-earth__month {
+  font-family: Georgia, 'Liberation Serif', serif;
+  font-size: 24px;
+  color: $primary-text-color;
+}
+
+.in-flow-earth__season {
+  font-size: 13px;
+  color: $secondary-text-color;
+}
+
+.in-flow-earth__observable {
+  font-size: 14px;
+  line-height: 1.7;
+  color: $secondary-text-color;
+  margin: 0;
+  font-style: italic;
+}
+
+.in-flow-earth__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.in-flow-earth__section-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: $secondary-text-color;
+}
+
+.in-flow-earth__chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.in-flow-earth__chip {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+
+  .in-flow-earth__chips--bloom & {
+    background: color-mix(in srgb, #b87cb8 15%, transparent);
+    color: #b87cb8;
+    border: 1px solid color-mix(in srgb, #b87cb8 30%, transparent);
+  }
+
+  .in-flow-earth__chips--sow & {
+    background: color-mix(in srgb, #6a9f6a 15%, transparent);
+    color: #6a9f6a;
+    border: 1px solid color-mix(in srgb, #6a9f6a 30%, transparent);
+  }
+
+  .in-flow-earth__chips--harvest & {
+    background: color-mix(in srgb, #b8945f 15%, transparent);
+    color: #b8945f;
+    border: 1px solid color-mix(in srgb, #b8945f 30%, transparent);
+  }
+}
+
+// ── Festival strand ───────────────────────────────────────────────────────────
+
+.in-flow-festival__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.in-flow-festival__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--background-border-color);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &--past {
+    opacity: 0.4;
+  }
+
+  &--next .in-flow-festival__label {
+    color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
+  }
+}
+
+.in-flow-festival__emoji {
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.in-flow-festival__body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.in-flow-festival__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: $primary-text-color;
+}
+
+.in-flow-festival__date {
+  font-size: 12px;
+  color: $secondary-text-color;
+}
+
+.in-flow-festival__desc {
+  font-size: 13px;
+  line-height: 1.55;
+  color: $secondary-text-color;
+  margin-top: 3px;
+}
+
+// ── Daily kosmic card (home timeline banner) ──────────────────────────────────
+
+.daily-kosmic-card {
+  display: block;
+  width: 100%;
+  text-align: start;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 10%, transparent);
+  border: none;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 16%,
+      transparent
+    );
+  }
+}
+
+.daily-kosmic-card__header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.daily-kosmic-card__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: $primary-text-color;
+}
+
+.daily-kosmic-card__date {
+  font-size: 12px;
+  color: $secondary-text-color;
+}
+
+.daily-kosmic-card__text {
+  font-size: 14px;
+  line-height: 1.65;
+  color: $primary-text-color;
+  margin: 0 0 10px;
+}
+
+.daily-kosmic-card__cta {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
+  font-weight: 500;
+}
