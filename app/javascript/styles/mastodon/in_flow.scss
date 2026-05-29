@@ -76,14 +76,15 @@
 
 .in-flow__section-heading {
   font-family: Georgia, 'Liberation Serif', serif;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: color-mix(in srgb, var(--space-color, #3034a0) 70%, #fff 30%);
+  color: #fff;
   margin: 0 0 20px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
