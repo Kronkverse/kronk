@@ -8,7 +8,6 @@ import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 
 import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
-import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import { importFetchedAccounts } from 'mastodon/actions/importer';
 import {
   decrementNudgeCount,
@@ -82,28 +81,18 @@ const NudgeAlert: React.FC<{
           defaultMessage='<a>@{acct}</a> nudged you!'
           values={{
             acct: account.acct,
-            a: (chunks) => (
-              <Link to={`/@${account.acct}`}>{chunks}</Link>
-            ),
+            a: (chunks) => <Link to={`/@${account.acct}`}>{chunks}</Link>,
           }}
         />
       </span>
-      <Button
-        compact
-        disabled={loading || nudgedBack}
-        onClick={handleNudgeBack}
-      >
+      <Button compact disabled={loading || nudgedBack} onClick={handleNudgeBack}>
         {nudgedBack ? (
           <FormattedMessage id='nudges.nudged_back' defaultMessage='Nudged!' />
         ) : (
           <FormattedMessage id='nudges.nudge_back' defaultMessage='Nudge back' />
         )}
       </Button>
-      <button
-        className='nudge-alert__dismiss'
-        onClick={() => onDismiss(alert.id)}
-        aria-label='Dismiss'
-      >
+      <button className='nudge-alert__dismiss' onClick={() => onDismiss(alert.id)} aria-label='Dismiss'>
         ×
       </button>
     </div>
@@ -123,8 +112,7 @@ const NudgePartnerItem: React.FC<{
   const [nudgedBack, setNudgedBack] = useState(false);
   const [loading, setLoading] = useState(false);
   const canNudge = partner.can_nudge_back && !nudgedBack;
-  const total = partner.sent_count + partner.received_count;
-  const isMilestone = total >= MILESTONE_THRESHOLD;
+  const isMilestone = (partner.sent_count + partner.received_count) >= MILESTONE_THRESHOLD;
 
   const handleNudgeBack = useCallback(async () => {
     if (loading || !canNudge) return;
@@ -148,7 +136,7 @@ const NudgePartnerItem: React.FC<{
 
   return (
     <div className={`nudge-partner-item${canNudge ? ' nudge-partner-item--active' : ''}`}>
-      <Link to={`/@${account.acct}`} className={`nudge-partner-item__avatar${isMilestone ? ' nudge-partner-item__avatar--milestone' : ''}`}>
+      <Link to={`/@${account.acct}`} className='nudge-partner-item__avatar'>
         <Avatar account={account} size={46} />
       </Link>
 
@@ -157,15 +145,14 @@ const NudgePartnerItem: React.FC<{
           <Link to={`/@${account.acct}`}>
             <DisplayName account={account} />
           </Link>
+          {isMilestone && (
+            <span className='nudge-partner-item__milestone-star' aria-label='milestone'>★</span>
+          )}
         </div>
 
         <div className='nudge-partner-item__meta'>
-          <span className='nudge-partner-item__streak-sent'>
-            ↑ {partner.sent_count}
-          </span>
-          <span className='nudge-partner-item__streak-received'>
-            ↓ {partner.received_count}
-          </span>
+          <span className='nudge-partner-item__streak-sent'>↑ {partner.sent_count}</span>
+          <span className='nudge-partner-item__streak-received'>↓ {partner.received_count}</span>
           {partner.last_nudge_at && (
             <span className='nudge-partner-item__time'>
               <RelativeTimestamp timestamp={partner.last_nudge_at} />
@@ -200,6 +187,8 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const dispatch = useAppDispatch();
   const [partners, setPartners] = useState<ApiNudgePartner[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
+  const [totalSent, setTotalSent] = useState(0);
+  const [totalReceived, setTotalReceived] = useState(0);
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState<NudgeAlertData[]>([]);
 
@@ -216,7 +205,6 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setAlerts((prev) => prev.filter((a) => a.id !== id));
   }, []);
 
-  // Move a partner from received → sent section after nudging back
   const handlePartnerNudged = useCallback((accountId: string) => {
     setPartners((prev) =>
       prev.map((p) =>
@@ -230,9 +218,10 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     try {
       const data = await apiGetNudgePartners();
       if (data.accounts?.length) dispatch(importFetchedAccounts(data.accounts));
-      const loadedPartners = data.partners ?? [];
-      setPartners(loadedPartners);
+      setPartners(data.partners ?? []);
       setGrandTotal(data.grand_total ?? 0);
+      setTotalSent(data.total_sent ?? 0);
+      setTotalReceived(data.total_received ?? 0);
       dispatch(setUnreadNudgeCount(data.pending_count ?? 0));
     } finally {
       setLoading(false);
@@ -252,7 +241,6 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     }
 
     const newAlerts: NudgeAlertData[] = [];
-
     nudgeGroups.forEach((group) => {
       const seen = seenGroupsRef.current!.get(group.group_key);
       if (seen !== group.latest_page_notification_at) {
@@ -263,10 +251,7 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             accountId,
           });
         }
-        seenGroupsRef.current!.set(
-          group.group_key,
-          group.latest_page_notification_at,
-        );
+        seenGroupsRef.current!.set(group.group_key, group.latest_page_notification_at);
       }
     });
 
@@ -278,8 +263,6 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
   const received = partners.filter((p) => p.can_nudge_back);
   const sent = partners.filter((p) => !p.can_nudge_back);
-  const totalSent = partners.reduce((s, p) => s + p.sent_count, 0);
-  const totalReceived = partners.reduce((s, p) => s + p.received_count, 0);
 
   const handleNudgeAllBack = useCallback(async () => {
     await Promise.allSettled(
@@ -296,10 +279,7 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   }, [received, dispatch]);
 
   return (
-    <Column
-      bindToDocument={!multiColumn}
-      label={intl.formatMessage(messages.title)}
-    >
+    <Column bindToDocument={!multiColumn} label={intl.formatMessage(messages.title)}>
       <ColumnHeader
         icon='partner_exchange'
         iconComponent={PartnerExchangeActiveIcon}
@@ -320,10 +300,7 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         {!loading && (
           <div className='nudge-grand-total'>
             <span className='nudge-grand-total__label'>
-              <FormattedMessage
-                id='nudges.grand_total_label'
-                defaultMessage='Grand Total of Nudges'
-              />
+              <FormattedMessage id='nudges.grand_total_label' defaultMessage='Grand Total of Nudges' />
             </span>
             <span className='nudge-grand-total__count'>{grandTotal}</span>
             <div className='nudge-grand-total__divider' />
@@ -353,10 +330,7 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
         {!loading && partners.length === 0 && (
           <div className='empty-column-indicator'>
-            <FormattedMessage
-              id='nudges.empty'
-              defaultMessage='No nudges yet. Go nudge someone cute!'
-            />
+            <FormattedMessage id='nudges.empty' defaultMessage='No nudges yet. Go nudge someone cute!' />
           </div>
         )}
 
@@ -377,11 +351,7 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               </div>
             )}
             {received.map((partner) => (
-              <NudgePartnerItem
-                key={partner.account_id}
-                partner={partner}
-                onNudged={handlePartnerNudged}
-              />
+              <NudgePartnerItem key={partner.account_id} partner={partner} onNudged={handlePartnerNudged} />
             ))}
           </>
         )}
@@ -392,11 +362,7 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               <FormattedMessage id='nudges.section_sent' defaultMessage='NUDGES SENT' />
             </div>
             {sent.map((partner) => (
-              <NudgePartnerItem
-                key={partner.account_id}
-                partner={partner}
-                onNudged={handlePartnerNudged}
-              />
+              <NudgePartnerItem key={partner.account_id} partner={partner} onNudged={handlePartnerNudged} />
             ))}
           </>
         )}

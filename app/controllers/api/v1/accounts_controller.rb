@@ -158,6 +158,8 @@ class Api::V1::AccountsController < Api::BaseController
       partners: partners,
       pending_count: partners.count { |p| p[:can_nudge_back] },
       grand_total: partners.sum { |p| p[:sent_count] + p[:received_count] },
+      total_sent: sent_counts.values.sum,
+      total_received: received_counts.values.sum,
     }
   end
 
@@ -186,7 +188,15 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def nudge_streak
-    render json: { streak: nudge_streak_count, can_nudge: nudge_can_send? }
+    a, b = current_user.account.id, @account.id
+    sent    = Notification.where(type: 'nudge', from_account_id: a, account_id: b).count
+    received = Notification.where(type: 'nudge', from_account_id: b, account_id: a).count
+    render json: {
+      streak: sent + received,
+      can_nudge: nudge_can_send?,
+      sent_count: sent,
+      received_count: received,
+    }
   end
 
   private
