@@ -178,49 +178,46 @@
   padding-bottom: 8px;
 }
 
-.in-flow-light__bar-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 4px;
+.in-flow-light__arc-wrap {
+  width: 100%;
+  margin-bottom: 8px;
 }
 
-.in-flow-light__bar-svg {
+.in-flow-light__arc-svg {
   width: 100%;
-  height: 20px;
+  height: auto;
   display: block;
   overflow: visible;
 }
 
-.in-flow-light__bar-track {
-  fill: rgb(255 255 255 / 10%);
+.in-flow-light__arc-track {
+  fill: none;
+  stroke: rgb(255 255 255 / 12%);
+  stroke-width: 3;
+  stroke-linecap: round;
 }
 
-.in-flow-light__bar-fill {
-  fill: color-mix(in srgb, var(--space-color, #3034a0) 60%, #fff 40%);
+.in-flow-light__arc-fill {
+  fill: none;
+  stroke: color-mix(in srgb, var(--space-color, #3034a0) 70%, #fff 30%);
+  stroke-width: 4;
+  stroke-linecap: round;
 }
 
-.in-flow-light__bar-sun {
+.in-flow-light__arc-sun {
   fill: #fff;
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
-.in-flow-light__bar-labels {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11px;
+.in-flow-light__arc-time {
+  fill: $secondary-text-color;
+  font-size: 5px;
 }
 
-.in-flow-light__bar-rise,
-.in-flow-light__bar-set {
-  color: $secondary-text-color;
-}
-
-.in-flow-light__bar-duration {
-  font-size: 13px;
-  font-weight: 500;
-  color: $primary-text-color;
+.in-flow-light__arc-duration {
+  fill: $primary-text-color;
+  font-size: 6px;
+  font-weight: 600;
 }
 
 .in-flow-light__relation {
@@ -229,6 +226,61 @@
   color: $secondary-text-color;
   margin: 0;
   font-style: italic;
+}
+
+.in-flow-light__solstice {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.in-flow-light__solstice-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+}
+
+.in-flow-light__solstice-from,
+.in-flow-light__solstice-to {
+  color: $secondary-text-color;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.in-flow-light__solstice-countdown {
+  font-size: 11px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
+}
+
+.in-flow-light__solstice-bar {
+  position: relative;
+  height: 4px;
+  background: rgb(255 255 255 / 10%);
+  border-radius: 2px;
+  overflow: visible;
+}
+
+.in-flow-light__solstice-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 70%, #fff 30%);
+  border-radius: 2px;
+}
+
+.in-flow-light__solstice-dot {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 6px
+    color-mix(in srgb, var(--space-color, #3034a0) 60%, #fff 40%);
 }
 
 .in-flow-light__sun-times {
@@ -625,4 +677,36 @@
   font-size: 12px;
   color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
   font-weight: 500;
+}
+
+.daily-kosmic-card__tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.daily-kosmic-card__tile {
+  background: color-mix(in srgb, var(--space-color, #3034a0) 12%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.daily-kosmic-card__tile-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
+}
+
+.daily-kosmic-card__tile-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: $primary-text-color;
+  line-height: 1.4;
 }

@@ -558,14 +558,17 @@ export function getDaylightInfo(
     lon,
   );
 
-  const todayMins =
-    today.rise && today.set
-      ? (today.set.getTime() - today.rise.getTime()) / 60000
-      : 0;
-  const yesterdayMins =
-    yesterday.rise && yesterday.set
-      ? (yesterday.set.getTime() - yesterday.rise.getTime()) / 60000
-      : 0;
+  // Rise/set are UTC Date objects from the USNO algorithm, which always stamps
+  // them with the *requested* calendar date. For timezones ahead of UTC (e.g.
+  // Melbourne UTC+10), sunrise UTC wraps into the next UTC day, making the raw
+  // difference negative. Adding 24h when the diff is negative corrects this.
+  function daylightMins(r: Date | null, s: Date | null): number {
+    if (!r || !s) return 0;
+    const raw = (s.getTime() - r.getTime()) / 60000;
+    return raw < 0 ? raw + 24 * 60 : raw;
+  }
+  const todayMins = daylightMins(today.rise, today.set);
+  const yesterdayMins = daylightMins(yesterday.rise, yesterday.set);
 
   const deltaMinutes = Math.round((todayMins - yesterdayMins) * 10) / 10;
 

@@ -2,12 +2,16 @@ import { useCallback } from 'react';
 
 import { useHistory } from 'react-router-dom';
 
-import { buildDailyIntegrationText } from 'mastodon/features/in_flow/components/daily_integration';
+import {
+  buildDailyIntegrationText,
+  buildDailyTileData,
+} from 'mastodon/features/in_flow/components/daily_integration';
 import { spaceColor } from 'mastodon/planets';
 
 export const DailyKosmicCard: React.FC = () => {
   const history = useHistory();
   const text = buildDailyIntegrationText();
+  const tiles = buildDailyTileData();
 
   const today = new Date().toLocaleDateString('en-AU', {
     timeZone: 'Australia/Melbourne',
@@ -32,6 +36,39 @@ export const DailyKosmicCard: React.FC = () => {
         <span className='daily-kosmic-card__date'>{today}</span>
       </div>
       <p className='daily-kosmic-card__text'>{text}</p>
+      <div className='daily-kosmic-card__tiles'>
+        <div className='daily-kosmic-card__tile'>
+          <span className='daily-kosmic-card__tile-label'>Light</span>
+          <span className='daily-kosmic-card__tile-value'>
+            {tiles.lightRise} → {tiles.lightSet}
+          </span>
+        </div>
+        <div className='daily-kosmic-card__tile'>
+          <span className='daily-kosmic-card__tile-label'>Dark</span>
+          <span className='daily-kosmic-card__tile-value'>
+            {tiles.darkPhase} · {String(tiles.darkIllumination)}%
+          </span>
+        </div>
+        <div className='daily-kosmic-card__tile'>
+          <span className='daily-kosmic-card__tile-label'>Soil</span>
+          <span className='daily-kosmic-card__tile-value'>
+            {tiles.soilText}
+          </span>
+        </div>
+        {tiles.season && (
+          <div className='daily-kosmic-card__tile'>
+            <span className='daily-kosmic-card__tile-label'>Season</span>
+            <span className='daily-kosmic-card__tile-value'>
+              {tiles.season.label}{' '}
+              {tiles.season.days === 0
+                ? 'today'
+                : tiles.season.days === 1
+                  ? 'tomorrow'
+                  : `in ${String(tiles.season.days)} days`}
+            </span>
+          </div>
+        )}
+      </div>
       <span className='daily-kosmic-card__cta'>Open In Flow →</span>
     </button>
   );
