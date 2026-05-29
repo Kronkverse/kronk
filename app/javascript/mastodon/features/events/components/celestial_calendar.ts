@@ -357,6 +357,8 @@ export interface CelestialDayEvents {
   season?: { season: SeasonName; emoji: string; label: string };
   crossQuarter?: { name: CrossQuarterName; emoji: string; label: string };
   orbital?: { type: 'perihelion' | 'aphelion'; emoji: string; label: string };
+  meteorShower?: { name: string; zenithalHourlyRate: number };
+  eclipse?: { type: EclipseType; label: string; emoji: string };
 }
 
 /** Returns a Map<dateString, CelestialDayEvents> for the given month. */
@@ -405,6 +407,33 @@ export function getCelestialEventsForMonth(
     };
   }
 
+  // Meteor showers
+  const daysInMonth2 = new Date(year, month + 1, 0).getDate();
+  for (let d = 1; d <= daysInMonth2; d++) {
+    const peak = getMeteorShowerPeak(month, d);
+    if (peak) {
+      const key = new Date(year, month, d).toDateString();
+      ensure(key).meteorShower = {
+        name: peak.name,
+        zenithalHourlyRate: peak.zenithalHourlyRate,
+      };
+    }
+  }
+
+  // Eclipses
+  for (let d = 1; d <= daysInMonth2; d++) {
+    const dayDate = new Date(year, month, d, 12, 0, 0);
+    const eclipses = getEclipsesNear(dayDate, 0);
+    if (eclipses.length > 0 && eclipses[0]) {
+      const key = new Date(year, month, d).toDateString();
+      ensure(key).eclipse = {
+        type: eclipses[0].type,
+        label: eclipses[0].label,
+        emoji: eclipses[0].emoji,
+      };
+    }
+  }
+
   return map;
 }
 
@@ -415,6 +444,8 @@ export function getCelestialEmojisForDay(events: CelestialDayEvents): string {
   if (events.season) parts.push(events.season.emoji);
   if (events.crossQuarter) parts.push(events.crossQuarter.emoji);
   if (events.orbital) parts.push(events.orbital.emoji);
+  if (events.meteorShower) parts.push('✨');
+  if (events.eclipse) parts.push(events.eclipse.emoji);
   return parts.join('');
 }
 
@@ -983,4 +1014,400 @@ export function getWanderers(
       isVisible,
     };
   }).filter((w) => w.isVisible);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Moon distance and supermoon detection
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Approximate moon distance in km using the moon's anomaly.
+ * Accurate to ~1% — enough for supermoon classification.
+ */
+export function getMoonDistanceKm(date: Date): number {
+  const jd = toJulianDay(date);
+  const T = (jd - 2451545.0) / 36525;
+  // Moon's mean anomaly (degrees)
+  const Mprime = (((134.9633964 + 477198.8675055 * T) % 360) + 360) % 360;
+  const MprimeRad = Mprime * (Math.PI / 180);
+  // Simplified distance formula (km) — Jean Meeus, Astronomical Algorithms
+  const meanDist = 385000.56;
+  const correction =
+    -20905.355 * Math.cos(MprimeRad) +
+    -3699.111 *
+      Math.cos(
+        2 * MprimeRad -
+          2 * (Math.PI / 180) * ((297.8501921 + 445267.1114034 * T) % 360),
+      ) +
+    -2955.968 *
+      Math.cos(
+        2 * (Math.PI / 180) * ((297.8501921 + 445267.1114034 * T) % 360),
+      ) +
+    -569.925 * Math.cos(2 * MprimeRad);
+  return meanDist + correction;
+}
+
+export interface SuperMoonInfo {
+  isSuper: boolean;
+  distanceKm: number;
+}
+
+/**
+ * Returns whether today's moon is a supermoon (full or new moon within
+ * ~90% of closest perigee distance — threshold ~362,000 km).
+ */
+export function getSuperMoonInfo(date: Date): SuperMoonInfo {
+  const phase = getMoonPhaseName(date);
+  const distanceKm = getMoonDistanceKm(date);
+  const isNearFull = phase === 'full_moon' || phase === 'new_moon';
+  const isSuper = isNearFull && distanceKm < 362000;
+  return { isSuper, distanceKm: Math.round(distanceKm) };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Meteor showers (annual, fixed calendar peaks)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface MeteorShower {
+  name: string;
+  peakMonth: number; // 0-indexed
+  peakDay: number;
+  windowDays: number; // days either side of peak to show as active
+  zenithalHourlyRate: number;
+  radiant: string; // constellation
+}
+
+const METEOR_SHOWERS: MeteorShower[] = [
+  {
+    name: 'Quadrantids',
+    peakMonth: 0,
+    peakDay: 3,
+    windowDays: 2,
+    zenithalHourlyRate: 120,
+    radiant: 'Boötes',
+  },
+  {
+    name: 'Lyrids',
+    peakMonth: 3,
+    peakDay: 22,
+    windowDays: 3,
+    zenithalHourlyRate: 18,
+    radiant: 'Lyra',
+  },
+  {
+    name: 'Eta Aquariids',
+    peakMonth: 4,
+    peakDay: 6,
+    windowDays: 4,
+    zenithalHourlyRate: 50,
+    radiant: 'Aquarius',
+  },
+  {
+    name: 'Delta Aquariids',
+    peakMonth: 6,
+    peakDay: 30,
+    windowDays: 5,
+    zenithalHourlyRate: 20,
+    radiant: 'Aquarius',
+  },
+  {
+    name: 'Perseids',
+    peakMonth: 7,
+    peakDay: 12,
+    windowDays: 4,
+    zenithalHourlyRate: 100,
+    radiant: 'Perseus',
+  },
+  {
+    name: 'Orionids',
+    peakMonth: 9,
+    peakDay: 21,
+    windowDays: 3,
+    zenithalHourlyRate: 20,
+    radiant: 'Orion',
+  },
+  {
+    name: 'Leonids',
+    peakMonth: 10,
+    peakDay: 17,
+    windowDays: 2,
+    zenithalHourlyRate: 15,
+    radiant: 'Leo',
+  },
+  {
+    name: 'Geminids',
+    peakMonth: 11,
+    peakDay: 14,
+    windowDays: 3,
+    zenithalHourlyRate: 150,
+    radiant: 'Gemini',
+  },
+  {
+    name: 'Ursids',
+    peakMonth: 11,
+    peakDay: 22,
+    windowDays: 2,
+    zenithalHourlyRate: 10,
+    radiant: 'Ursa Minor',
+  },
+];
+
+/** Returns meteor showers active (within their window) on the given date. */
+export function getActiveMeteorShowers(
+  month: number,
+  day: number,
+): MeteorShower[] {
+  return METEOR_SHOWERS.filter((s) => {
+    const diff = Math.abs(month * 30 + day - (s.peakMonth * 30 + s.peakDay));
+    // Also handle year wrap (Ursids/Quadrantids boundary)
+    const diffWrapped = Math.min(diff, 365 - diff);
+    return diffWrapped <= s.windowDays;
+  });
+}
+
+/** Returns true if the given date is the peak day (±1 day) of any shower. */
+export function getMeteorShowerPeak(
+  month: number,
+  day: number,
+): MeteorShower | undefined {
+  return METEOR_SHOWERS.find((s) => {
+    const diff = Math.abs(month * 30 + day - (s.peakMonth * 30 + s.peakDay));
+    const diffWrapped = Math.min(diff, 365 - diff);
+    return diffWrapped <= 1;
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Eclipses — lookup table 2024–2032
+// Sources: NASA Eclipse Catalog, timeanddate.com
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type EclipseType =
+  | 'total_solar'
+  | 'annular_solar'
+  | 'partial_solar'
+  | 'total_lunar'
+  | 'partial_lunar'
+  | 'penumbral_lunar';
+
+export interface EclipseEvent {
+  date: Date;
+  type: EclipseType;
+  label: string;
+  emoji: string;
+  visibility: string; // brief region note
+}
+
+const ECLIPSE_TABLE: EclipseEvent[] = [
+  // 2024
+  {
+    date: new Date('2024-03-25'),
+    type: 'penumbral_lunar',
+    label: 'Penumbral Lunar Eclipse',
+    emoji: '🌕',
+    visibility: 'Americas, Europe, Africa',
+  },
+  {
+    date: new Date('2024-04-08'),
+    type: 'total_solar',
+    label: 'Total Solar Eclipse',
+    emoji: '🌑',
+    visibility: 'North America',
+  },
+  {
+    date: new Date('2024-09-18'),
+    type: 'partial_lunar',
+    label: 'Partial Lunar Eclipse',
+    emoji: '🌕',
+    visibility: 'Americas, Europe, Africa',
+  },
+  {
+    date: new Date('2024-10-02'),
+    type: 'annular_solar',
+    label: 'Annular Solar Eclipse',
+    emoji: '🌑',
+    visibility: 'South America',
+  },
+  // 2025
+  {
+    date: new Date('2025-03-14'),
+    type: 'total_lunar',
+    label: 'Total Lunar Eclipse',
+    emoji: '🌕',
+    visibility: 'Americas, Pacific, Australia',
+  },
+  {
+    date: new Date('2025-03-29'),
+    type: 'partial_solar',
+    label: 'Partial Solar Eclipse',
+    emoji: '🌑',
+    visibility: 'North Atlantic, Europe',
+  },
+  {
+    date: new Date('2025-09-07'),
+    type: 'total_lunar',
+    label: 'Total Lunar Eclipse',
+    emoji: '🌕',
+    visibility: 'Europe, Africa, Asia, Australia',
+  },
+  {
+    date: new Date('2025-09-21'),
+    type: 'partial_solar',
+    label: 'Partial Solar Eclipse',
+    emoji: '🌑',
+    visibility: 'Southern Ocean, New Zealand',
+  },
+  // 2026
+  {
+    date: new Date('2026-02-17'),
+    type: 'annular_solar',
+    label: 'Annular Solar Eclipse',
+    emoji: '🌑',
+    visibility: 'Antarctica, southern tip of South America',
+  },
+  {
+    date: new Date('2026-03-03'),
+    type: 'total_lunar',
+    label: 'Total Lunar Eclipse',
+    emoji: '🌕',
+    visibility: 'Americas, Europe, Africa, Asia',
+  },
+  {
+    date: new Date('2026-08-12'),
+    type: 'total_solar',
+    label: 'Total Solar Eclipse',
+    emoji: '🌑',
+    visibility: 'Greenland, Iceland, Spain',
+  },
+  {
+    date: new Date('2026-08-28'),
+    type: 'partial_lunar',
+    label: 'Partial Lunar Eclipse',
+    emoji: '🌕',
+    visibility: 'Pacific, Americas, Europe',
+  },
+  // 2027
+  {
+    date: new Date('2027-02-06'),
+    type: 'annular_solar',
+    label: 'Annular Solar Eclipse',
+    emoji: '🌑',
+    visibility: 'South America, Atlantic, Africa',
+  },
+  {
+    date: new Date('2027-07-18'),
+    type: 'penumbral_lunar',
+    label: 'Penumbral Lunar Eclipse',
+    emoji: '🌕',
+    visibility: 'Africa, Europe, Asia, Australia',
+  },
+  {
+    date: new Date('2027-08-02'),
+    type: 'total_solar',
+    label: 'Total Solar Eclipse',
+    emoji: '🌑',
+    visibility: 'Morocco, Spain, Libya, Egypt, Saudi Arabia',
+  },
+  // 2028
+  {
+    date: new Date('2028-01-12'),
+    type: 'partial_lunar',
+    label: 'Partial Lunar Eclipse',
+    emoji: '🌕',
+    visibility: 'Americas, Europe, Africa, Asia',
+  },
+  {
+    date: new Date('2028-01-26'),
+    type: 'annular_solar',
+    label: 'Annular Solar Eclipse',
+    emoji: '🌑',
+    visibility: 'Ecuador, Peru, Brazil',
+  },
+  {
+    date: new Date('2028-07-06'),
+    type: 'partial_lunar',
+    label: 'Partial Lunar Eclipse',
+    emoji: '🌕',
+    visibility: 'Pacific, Americas, Europe, Africa',
+  },
+  {
+    date: new Date('2028-07-22'),
+    type: 'total_solar',
+    label: 'Total Solar Eclipse',
+    emoji: '🌑',
+    visibility: 'Australia, New Zealand',
+  },
+  // 2029
+  {
+    date: new Date('2029-01-01'),
+    type: 'total_lunar',
+    label: 'Total Lunar Eclipse',
+    emoji: '🌕',
+    visibility: 'Europe, Africa, Asia, Australia',
+  },
+  {
+    date: new Date('2029-06-12'),
+    type: 'total_lunar',
+    label: 'Total Lunar Eclipse',
+    emoji: '🌕',
+    visibility: 'Americas, Europe, Africa',
+  },
+  {
+    date: new Date('2029-11-25'),
+    type: 'total_lunar',
+    label: 'Total Lunar Eclipse',
+    emoji: '🌕',
+    visibility: 'Americas, Europe, Africa, Asia',
+  },
+  // 2030
+  {
+    date: new Date('2030-04-21'),
+    type: 'annular_solar',
+    label: 'Annular Solar Eclipse',
+    emoji: '🌑',
+    visibility: 'Australia (ring visible from south-west WA)',
+  },
+  {
+    date: new Date('2030-10-15'),
+    type: 'annular_solar',
+    label: 'Annular Solar Eclipse',
+    emoji: '🌑',
+    visibility: 'Europe, North Africa, central Asia',
+  },
+  // 2031
+  {
+    date: new Date('2031-05-07'),
+    type: 'total_lunar',
+    label: 'Total Lunar Eclipse',
+    emoji: '🌕',
+    visibility: 'Americas, Europe, Africa, Asia',
+  },
+  {
+    date: new Date('2031-11-01'),
+    type: 'total_lunar',
+    label: 'Total Lunar Eclipse',
+    emoji: '🌕',
+    visibility: 'Asia, Australia, Pacific',
+  },
+  // 2032
+  {
+    date: new Date('2032-04-25'),
+    type: 'total_lunar',
+    label: 'Total Lunar Eclipse',
+    emoji: '🌕',
+    visibility: 'Asia, Australia, Pacific',
+  },
+];
+
+/** Returns eclipses occurring within ±3 days of the given date. */
+export function getEclipsesNear(date: Date, windowDays = 3): EclipseEvent[] {
+  const t = date.getTime();
+  const window = windowDays * 86400000;
+  return ECLIPSE_TABLE.filter((e) => Math.abs(e.date.getTime() - t) <= window);
+}
+
+/** Returns the next eclipse on or after the given date. */
+export function getNextEclipse(date: Date): EclipseEvent | undefined {
+  const t = date.getTime();
+  return ECLIPSE_TABLE.find((e) => e.date.getTime() >= t);
 }
