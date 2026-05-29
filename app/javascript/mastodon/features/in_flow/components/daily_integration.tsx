@@ -3,17 +3,21 @@ import { useMemo } from 'react';
 import {
   getDaylightInfo,
   getMoonPhaseName,
-  getSunConstellation,
+  getMoonIllumination,
   getSeasonEventsForYear,
   getCrossQuarterEventsForYear,
   getOrbitalEventsForYear,
-  getSuperMoonInfo,
-  getMeteorShowerPeak,
-  getEclipsesNear,
 } from 'mastodon/features/events/components/celestial_calendar';
 
 import { LOCATION_TZ, LOCATION_LAT, LOCATION_LON } from '../constants';
 
+import {
+  SunIcon,
+  MoonPhaseIcon,
+  LeafIcon,
+  SnowflakeIcon,
+  BlossomIcon,
+} from './celestial_icons';
 import { getEarthMonth } from './earth_calendar';
 
 function nowInLocation(): {
@@ -41,11 +45,34 @@ function formatDaylight(minutes: number): string {
   return `${String(h)}h ${String(m).padStart(2, '0')}m`;
 }
 
+function formatTimeShort(date: Date): string {
+  return date
+    .toLocaleTimeString('en-AU', {
+      timeZone: LOCATION_TZ,
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+    .toLowerCase()
+    .replace(' ', '');
+}
+
 function daysUntil(target: Date, now: Date): number {
   return Math.ceil((target.getTime() - now.getTime()) / 86400000);
 }
 
 const MOON_PHASE_SHORT: Record<string, string> = {
+  new_moon: 'New Moon',
+  waxing_crescent: 'Waxing Crescent',
+  first_quarter: 'First Quarter',
+  waxing_gibbous: 'Waxing Gibbous',
+  full_moon: 'Full Moon',
+  waning_gibbous: 'Waning Gibbous',
+  last_quarter: 'Last Quarter',
+  waning_crescent: 'Waning Crescent',
+};
+
+const MOON_PHASE_PROSE: Record<string, string> = {
   new_moon: 'new moon',
   waxing_crescent: 'waxing crescent',
   first_quarter: 'first quarter moon',
@@ -56,12 +83,114 @@ const MOON_PHASE_SHORT: Record<string, string> = {
   waning_crescent: 'waning crescent',
 };
 
-function buildIntegration(
+function pickSeasonIcon(label: string) {
+  const l = label.toLowerCase();
+  if (l.includes('winter') || l.includes('imbolc'))
+    return <SnowflakeIcon size={14} className='in-flow__daily-tile-icon' />;
+  if (l.includes('spring') || l.includes('beltane'))
+    return <BlossomIcon size={14} className='in-flow__daily-tile-icon' />;
+  if (l.includes('summer') || l.includes('lammas'))
+    return <SunIcon size={14} className='in-flow__daily-tile-icon' />;
+  return <LeafIcon size={14} className='in-flow__daily-tile-icon' />;
+}
+
+function buildSynthesizingSentence(
+  deltaMinutes: number,
+  phase: string,
+  turningLabel: string | null,
+  turningDays: number | null,
+  month: number,
+): string {
+  const phaseStr = MOON_PHASE_PROSE[phase] ?? phase.replace(/_/g, ' ');
+  const isWinter = month >= 5 && month <= 7; // Southern hemisphere: Jun–Aug
+  const isSummer = month === 11 || month <= 1; // Dec–Feb
+  const isFullOrNew = phase === 'full_moon' || phase === 'new_moon';
+  const nearTurning = turningDays !== null && turningDays <= 14;
+
+  const turningStr =
+    nearTurning && turningLabel
+      ? turningDays === 0
+        ? `as ${turningLabel} arrives today`
+        : turningDays === 1
+          ? `as ${turningLabel} comes tomorrow`
+          : `as ${turningLabel} approaches`
+      : null;
+
+  if (phase === 'full_moon') {
+    if (turningStr) {
+      return `The full moon lights the whole sky ${turningStr}.`;
+    }
+    if (isWinter) {
+      return `A full moon fills the long winter night with silver light.`;
+    }
+    return `Full moon — the sky carries a silver tide, the stars recede.`;
+  }
+
+  if (phase === 'new_moon') {
+    if (isWinter) {
+      return `No moon tonight — the winter sky is deep and the Milky Way comes forward.`;
+    }
+    return `A new moon leaves the sky dark — the stars are out in force.`;
+  }
+
+  if (isWinter) {
+    if (deltaMinutes < -0.5) {
+      if (turningStr) {
+        return `The days draw in under a ${phaseStr}, ${turningStr}.`;
+      }
+      return `The days are short and drawing in, a ${phaseStr} moving through the long night.`;
+    }
+    if (turningStr) {
+      return `Winter deepens under a ${phaseStr}, ${turningStr}.`;
+    }
+    return `The land settles into its winter quiet under a ${phaseStr}.`;
+  }
+
+  if (isSummer) {
+    if (deltaMinutes > 0.5) {
+      if (turningStr) {
+        return `Long, generous days and a ${phaseStr} overhead ${turningStr}.`;
+      }
+      return `The days are long and still lengthening, a ${phaseStr} in the summer sky.`;
+    }
+    if (turningStr) {
+      return `The land is at full surge under a ${phaseStr}, ${turningStr}.`;
+    }
+    return `Long summer days stretch out, a ${phaseStr} riding the warm sky.`;
+  }
+
+  // Shoulder seasons
+  if (isFullOrNew && turningStr) {
+    return `A ${phaseStr} marks the sky ${turningStr}.`;
+  }
+  if (turningStr) {
+    return `The days ${deltaMinutes >= 0 ? 'lengthen' : 'contract'} under a ${phaseStr}, ${turningStr}.`;
+  }
+  if (deltaMinutes > 0.5) {
+    return `The days are lengthening, a ${phaseStr} rising each night.`;
+  }
+  if (deltaMinutes < -0.5) {
+    return `The days are contracting, a ${phaseStr} moving through the darkening sky.`;
+  }
+  return `The days hold steady, a ${phaseStr} moving through the sky.`;
+}
+
+interface DailyData {
+  lightValue: string;
+  darkValue: string;
+  soilValue: string;
+  seasonValue: string | null;
+  seasonLabel: string | null;
+  phase: string;
+  sentence: string;
+}
+
+function buildDailyData(
   year: number,
   month: number,
   day: number,
   now: Date,
-): string {
+): DailyData {
   const daylight = getDaylightInfo(
     year,
     month,
@@ -70,66 +199,29 @@ function buildIntegration(
     LOCATION_LON,
   );
   const phase = getMoonPhaseName(now);
-  const constellation = getSunConstellation(now);
-  const superMoon = getSuperMoonInfo(now);
-  const meteorPeak = getMeteorShowerPeak(month, day);
-  const eclipses = getEclipsesNear(now, 1);
-  const eclipse = eclipses[0];
+  const illumination = getMoonIllumination(now);
   const earthData = getEarthMonth(month);
-  const ecologicalNote = earthData.observable;
 
-  const daylightStr = formatDaylight(daylight.daylightMinutes);
-  const deltaMin = daylight.deltaMinutes;
-  const phaseStr = MOON_PHASE_SHORT[phase] ?? phase;
-
-  // --- Daylight sentence ---
-  let daylightSentence: string;
-  if (Math.abs(deltaMin) < 0.5) {
-    daylightSentence = `The days rest at ${daylightStr} of light, neither growing nor retreating.`;
-  } else if (deltaMin > 0) {
-    const abs = Math.abs(deltaMin);
-    const mins = Math.floor(abs);
-    const secs = Math.round((abs - mins) * 60);
-    const amt =
-      mins > 0 && secs > 0
-        ? `${String(mins)}m ${String(secs)}s`
-        : mins > 0
-          ? `${String(mins)}m`
-          : `${String(secs)}s`;
-    daylightSentence = `The days hold ${daylightStr} of light now, and each one is a little longer than the last — ${amt} today.`;
+  // Light card value
+  let lightValue: string;
+  if (daylight.rise && daylight.set) {
+    lightValue = `${formatTimeShort(daylight.rise)} → ${formatTimeShort(daylight.set)}`;
   } else {
-    const abs = Math.abs(deltaMin);
-    const mins = Math.floor(abs);
-    const secs = Math.round((abs - mins) * 60);
-    const amt =
-      mins > 0 && secs > 0
-        ? `${String(mins)}m ${String(secs)}s`
-        : mins > 0
-          ? `${String(mins)}m`
-          : `${String(secs)}s`;
-    daylightSentence = `${daylightStr} of daylight, each day a little shorter — we are moving ${amt} deeper into the dark.`;
+    lightValue = formatDaylight(daylight.daylightMinutes);
   }
 
-  // --- Moon sentence ---
-  let moonSentence: string;
-  if (superMoon.isSuper && phase === 'full_moon') {
-    moonSentence = `A supermoon tonight — the full face of the moon at just ${String(Math.round(superMoon.distanceKm / 1000))}k km, pulling the tides and lighting the whole sky.`;
-  } else if (superMoon.isSuper && phase === 'new_moon') {
-    moonSentence = `A supermoon tonight — the moon at perigee, pulling the tides in silence, the sky dark and deep.`;
-  } else if (phase === 'full_moon') {
-    moonSentence = `Full moon tonight. The sky carries a silver tide; the stars recede.`;
-  } else if (phase === 'new_moon') {
-    moonSentence = `No moon tonight — the sky is deep and the Milky Way comes forward.`;
-  } else if (phase === 'waxing_crescent' || phase === 'waning_crescent') {
-    moonSentence = `A ${phaseStr} rises in the ${phase.includes('waxing') ? 'evening' : 'pre-dawn'} sky.`;
-  } else {
-    moonSentence = `A ${phaseStr} moves through the night.`;
-  }
+  // Dark card value
+  const phaseLabel = MOON_PHASE_SHORT[phase] ?? phase.replace(/_/g, ' ');
+  const illumPct = Math.round(illumination * 100);
+  const darkValue = `${phaseLabel} · ${String(illumPct)}%`;
 
-  // --- Constellation ---
-  const constellationSentence = `The sun is moving through ${constellation.name}.`;
+  // Soil card value — first clause of observable, max 60 chars
+  const observable = earthData.observable;
+  const firstClause = observable.split(/[.,;]/)[0] ?? observable;
+  const soilValue =
+    firstClause.length > 60 ? firstClause.slice(0, 57) + '...' : firstClause;
 
-  // --- Next turning point ---
+  // Next turning point
   const allEvents = [
     ...getSeasonEventsForYear(year),
     ...getCrossQuarterEventsForYear(year),
@@ -141,55 +233,111 @@ function buildIntegration(
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
   const next = allEvents[0];
-  let turningStr = '';
+  let seasonValue: string | null = null;
+  let seasonLabel: string | null = null;
+  let turningDays: number | null = null;
+  let turningLabelForSentence: string | null = null;
+
   if (next) {
     const days = daysUntil(next.date, now);
-    if (days === 0) turningStr = `${next.label} is today.`;
-    else if (days === 1) turningStr = `${next.label} arrives tomorrow.`;
-    else turningStr = `${next.label} comes in ${String(days)} days.`;
+    turningDays = days;
+    turningLabelForSentence = next.label;
+    if (days <= 7) {
+      seasonLabel = next.label;
+      if (days === 0) seasonValue = `${next.label} today`;
+      else if (days === 1) seasonValue = `${next.label} tomorrow`;
+      else seasonValue = `${next.label} in ${String(days)} days`;
+    }
   }
 
-  // --- Special events ---
-  const specials: string[] = [];
-  if (eclipse) {
-    specials.push(`${eclipse.label} — ${eclipse.visibility}.`);
-  }
-  if (meteorPeak) {
-    specials.push(
-      `The ${meteorPeak.name} meteor shower peaks tonight — up to ${String(meteorPeak.zenithalHourlyRate)} meteors per hour from the ${meteorPeak.radiant} radiant.`,
-    );
-  }
+  const sentence = buildSynthesizingSentence(
+    daylight.deltaMinutes,
+    phase,
+    turningLabelForSentence,
+    turningDays,
+    month,
+  );
 
-  // --- Ecological sentence ---
-  const firstSentence = ecologicalNote.split(/\.\s/)[0] ?? ecologicalNote;
-  const ecologicalSentence = firstSentence.endsWith('.')
-    ? firstSentence
-    : firstSentence + '.';
-
-  const parts = [daylightSentence, moonSentence, constellationSentence];
-  if (turningStr) parts.push(turningStr);
-  parts.push(...specials);
-
-  return parts.join(' ') + ' — ' + ecologicalSentence;
+  return {
+    lightValue,
+    darkValue,
+    soilValue,
+    seasonValue,
+    seasonLabel,
+    phase,
+    sentence,
+  };
 }
 
 export const DailyIntegration: React.FC = () => {
   const { year, month, day, now } = useMemo(nowInLocation, []);
-  const text = useMemo(
-    () => buildIntegration(year, month, day, now),
+  const data = useMemo(
+    () => buildDailyData(year, month, day, now),
     [year, month, day, now],
   );
 
+  const {
+    lightValue,
+    darkValue,
+    soilValue,
+    seasonValue,
+    seasonLabel,
+    phase,
+    sentence,
+  } = data;
+
   return (
     <div className='in-flow__daily'>
-      <div className='in-flow__daily-label'>Today</div>
-      <p className='in-flow__daily-text'>{text}</p>
+      <p className='in-flow__daily-sentence'>{sentence}</p>
+      <div className='in-flow__daily-grid'>
+        {/* Light card */}
+        <div className='in-flow__daily-tile in-flow__daily-tile--light'>
+          <div className='in-flow__daily-tile-header'>
+            <SunIcon size={14} className='in-flow__daily-tile-icon' />
+            <span className='in-flow__daily-tile-label'>Light</span>
+          </div>
+          <span className='in-flow__daily-tile-value'>{lightValue}</span>
+        </div>
+
+        {/* Dark card */}
+        <div className='in-flow__daily-tile in-flow__daily-tile--dark'>
+          <div className='in-flow__daily-tile-header'>
+            <MoonPhaseIcon
+              phase={phase as Parameters<typeof MoonPhaseIcon>[0]['phase']}
+              size={14}
+            />
+            <span className='in-flow__daily-tile-label'>Dark</span>
+          </div>
+          <span className='in-flow__daily-tile-value'>{darkValue}</span>
+        </div>
+
+        {/* Soil card */}
+        <div className='in-flow__daily-tile in-flow__daily-tile--soil'>
+          <div className='in-flow__daily-tile-header'>
+            <LeafIcon size={14} className='in-flow__daily-tile-icon' />
+            <span className='in-flow__daily-tile-label'>Soil</span>
+          </div>
+          <span className='in-flow__daily-tile-value'>{soilValue}</span>
+        </div>
+
+        {/* Season card — only when ≤7 days away */}
+        {seasonValue && seasonLabel && (
+          <div className='in-flow__daily-tile in-flow__daily-tile--season'>
+            <div className='in-flow__daily-tile-header'>
+              {pickSeasonIcon(seasonLabel)}
+              <span className='in-flow__daily-tile-label'>Season</span>
+            </div>
+            <span className='in-flow__daily-tile-value'>{seasonValue}</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
-// Export for use in home page card
+// Export for use in home page card — returns just the synthesizing sentence
 export function buildDailyIntegrationText(): string {
   const { year, month, day, now } = nowInLocation();
-  return buildIntegration(year, month, day, now);
+  const data = buildDailyData(year, month, day, now);
+  return data.sentence;
 }

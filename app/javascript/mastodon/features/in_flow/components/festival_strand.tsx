@@ -7,6 +7,27 @@ import {
 
 import { LOCATION_TZ } from '../constants';
 
+import {
+  SunIcon,
+  SnowflakeIcon,
+  LeafIcon,
+  BlossomIcon,
+  FlameIcon,
+  OrbitIcon,
+} from './celestial_icons';
+
+const FestivalIcon = ({ label, size = 22 }: { label: string; size?: number }) => {
+  if (label.includes('Winter')) return <SnowflakeIcon size={size} />;
+  if (label.includes('Summer') || label.includes('Lammas'))
+    return <SunIcon size={size} />;
+  if (label.includes('Spring') || label.includes('Imbolc'))
+    return <BlossomIcon size={size} />;
+  if (label.includes('Autumn') || label.includes('Samhain'))
+    return <LeafIcon size={size} />;
+  if (label.includes('Beltane')) return <FlameIcon size={size} />;
+  return <OrbitIcon size={size} />;
+}
+
 const FESTIVAL_DESCRIPTIONS: Record<string, string> = {
   'Autumn Equinox':
     'Day and night arrive at equal length. From here the days shorten — the sun withdraws its daily portion toward the winter solstice.',
@@ -121,7 +142,9 @@ export const FestivalStrand: React.FC = () => {
               .filter(Boolean)
               .join(' ')}
           >
-            <span className='in-flow-festival__emoji'>{event.emoji}</span>
+            <span className='in-flow-festival__emoji'>
+              <FestivalIcon label={event.label} size={22} />
+            </span>
             <span className='in-flow-festival__body'>
               <span className='in-flow-festival__label'>{event.label}</span>
               <span className='in-flow-festival__date'>

@@ -2200,6 +2200,12 @@ $ev-interested-color: #b8945f;
     }
   }
 
+  &__celestial-badge-icons {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
   &__celestial-popup {
     position: absolute;
     top: 100%;

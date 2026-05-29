@@ -4,7 +4,15 @@ import { getDaylightInfo } from 'mastodon/features/events/components/celestial_c
 
 import { LOCATION_TZ, LOCATION_LAT, LOCATION_LON } from '../constants';
 
-import { SunIcon, SunsetIcon } from './celestial_icons';
+import {
+  SunIcon,
+  SunsetIcon,
+  SnowflakeIcon,
+  BlossomIcon,
+  LeafIcon,
+  OrbitIcon,
+  FlameIcon,
+} from './celestial_icons';
 
 function nowInLocation(): {
   year: number;
@@ -53,20 +61,23 @@ function formatDaylight(minutes: number): string {
   return `${String(h)}h ${String(m).padStart(2, '0')}m`;
 }
 
-function formatDelta(delta: number): string {
-  if (Math.abs(delta) < 0.5) return 'unchanged today';
-  const abs = Math.abs(delta);
-  const mins = Math.floor(abs);
-  const secs = Math.round((abs - mins) * 60);
-  const parts = [];
-  if (mins > 0) parts.push(`${String(mins)}m`);
-  if (secs > 0) parts.push(`${String(secs)}s`);
-  const amount = parts.join(' ');
-  return delta > 0 ? `+${amount} today` : `−${amount} today`;
-}
-
 function daysUntil(target: Date, now: Date): number {
   return Math.ceil((target.getTime() - now.getTime()) / 86400000);
+}
+
+const TurningIcon = ({ label, size = 22 }: { label: string; size?: number }) => {
+  const l = label.toLowerCase();
+  if (l.includes('winter') || l.includes('imbolc'))
+    return <SnowflakeIcon size={size} />;
+  if (l.includes('summer') || l.includes('lammas'))
+    return <SunIcon size={size} />;
+  if (l.includes('spring') || l.includes('beltane')) {
+    if (l.includes('beltane')) return <FlameIcon size={size} />;
+    return <BlossomIcon size={size} />;
+  }
+  if (l.includes('autumn') || l.includes('samhain'))
+    return <LeafIcon size={size} />;
+  return <OrbitIcon size={size} />;
 }
 
 export const LightStrand: React.FC = () => {
@@ -78,12 +89,20 @@ export const LightStrand: React.FC = () => {
   );
 
   const days = daysUntil(info.nextTurningPoint.date, now);
-  const deltaDir =
+
+  const direction =
     info.deltaMinutes > 0.5
       ? 'lengthening'
       : info.deltaMinutes < -0.5
         ? 'shortening'
-        : 'at equilibrium';
+        : 'balanced';
+
+  const directionLabel =
+    direction === 'lengthening'
+      ? 'Lengthening ↑'
+      : direction === 'shortening'
+        ? 'Shortening ↓'
+        : 'Balanced';
 
   return (
     <div className='in-flow-light'>
@@ -95,15 +114,11 @@ export const LightStrand: React.FC = () => {
           </span>
           <span className='in-flow-light__headline-label'>of daylight</span>
         </div>
-      </div>
-
-      <div className='in-flow-light__delta'>
         <span
-          className={`in-flow-light__delta-value in-flow-light__delta-value--${deltaDir.replace(' ', '-')}`}
+          className={`in-flow-light__direction-badge in-flow-light__direction-badge--${direction}`}
         >
-          {formatDelta(info.deltaMinutes)}
+          {directionLabel}
         </span>
-        <span className='in-flow-light__delta-dir'>· days are {deltaDir}</span>
       </div>
 
       {info.rise && info.set && (
@@ -130,8 +145,8 @@ export const LightStrand: React.FC = () => {
       )}
 
       <div className='in-flow-light__turning'>
-        <span className='in-flow-light__turning-emoji'>
-          {info.nextTurningPoint.emoji}
+        <span className='in-flow-light__turning-icon'>
+          <TurningIcon label={info.nextTurningPoint.label} size={22} />
         </span>
         <span className='in-flow-light__turning-body'>
           <span className='in-flow-light__turning-label'>

@@ -5,10 +5,38 @@ import { FormattedDate } from 'react-intl';
 import { Link } from 'react-router-dom';
 
 import {
-  getCelestialEventsForMonth,
-  getCelestialEmojisForDay,
-} from './celestial_calendar';
+  SunIcon,
+  MoonPhaseIcon,
+  SnowflakeIcon,
+  BlossomIcon,
+  LeafIcon,
+  FlameIcon,
+  OrbitIcon,
+  StarIcon,
+} from 'mastodon/features/in_flow/components/celestial_icons';
+
+import { getCelestialEventsForMonth } from './celestial_calendar';
 import type { CelestialDayEvents } from './celestial_calendar';
+
+const SeasonBadgeIcon: React.FC<{ season: string; size: number }> = ({
+  season,
+  size,
+}) => {
+  if (season === 'winter') return <SnowflakeIcon size={size} />;
+  if (season === 'summer') return <SunIcon size={size} />;
+  if (season === 'spring') return <BlossomIcon size={size} />;
+  return <LeafIcon size={size} />;
+};
+
+const CrossQuarterBadgeIcon: React.FC<{ name: string; size: number }> = ({
+  name,
+  size,
+}) => {
+  if (name === 'imbolc') return <BlossomIcon size={size} />;
+  if (name === 'beltane') return <FlameIcon size={size} />;
+  if (name === 'lammas') return <LeafIcon size={size} />;
+  return <FlameIcon size={size} />; // samhain
+};
 
 const MOON_POPUP_DESCS: Partial<Record<string, string>> = {
   new_moon: 'The moon is absent — the sky is at its darkest.',
@@ -171,7 +199,6 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
   isToday,
 }) => {
   const hasCelestial = Boolean(celestial);
-  const celestialEmojis = celestial ? getCelestialEmojisForDay(celestial) : '';
   const [open, setOpen] = useState(false);
   const badgeRef = useRef<HTMLButtonElement>(null);
 
@@ -218,7 +245,23 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
             type='button'
             onClick={handleBadgeClick}
           >
-            {celestialEmojis}
+            <span className='event-calendar__celestial-badge-icons'>
+              {celestial.moon && (
+                <MoonPhaseIcon phase={celestial.moon.phase} size={11} />
+              )}
+              {celestial.season && (
+                <SeasonBadgeIcon season={celestial.season.season} size={11} />
+              )}
+              {celestial.crossQuarter && (
+                <CrossQuarterBadgeIcon
+                  name={celestial.crossQuarter.name}
+                  size={11}
+                />
+              )}
+              {celestial.orbital && <OrbitIcon size={11} />}
+              {celestial.meteorShower && <StarIcon size={11} />}
+              {celestial.eclipse && <SunIcon size={11} />}
+            </span>
             {open && (
               <div className='event-calendar__celestial-popup'>
                 <button
@@ -232,7 +275,7 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
                 {celestial.moon && (
                   <div className='event-calendar__celestial-popup-row'>
                     <span className='event-calendar__celestial-popup-emoji'>
-                      {celestial.moon.emoji}
+                      <MoonPhaseIcon phase={celestial.moon.phase} size={18} />
                     </span>
                     <div>
                       <div className='event-calendar__celestial-popup-title'>
@@ -247,7 +290,10 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
                 {celestial.season && (
                   <div className='event-calendar__celestial-popup-row'>
                     <span className='event-calendar__celestial-popup-emoji'>
-                      {celestial.season.emoji}
+                      <SeasonBadgeIcon
+                        season={celestial.season.season}
+                        size={18}
+                      />
                     </span>
                     <div>
                       <div className='event-calendar__celestial-popup-title'>
@@ -262,7 +308,10 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
                 {celestial.crossQuarter && (
                   <div className='event-calendar__celestial-popup-row'>
                     <span className='event-calendar__celestial-popup-emoji'>
-                      {celestial.crossQuarter.emoji}
+                      <CrossQuarterBadgeIcon
+                        name={celestial.crossQuarter.name}
+                        size={18}
+                      />
                     </span>
                     <div>
                       <div className='event-calendar__celestial-popup-title'>
@@ -279,7 +328,7 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
                 {celestial.orbital && (
                   <div className='event-calendar__celestial-popup-row'>
                     <span className='event-calendar__celestial-popup-emoji'>
-                      {celestial.orbital.emoji}
+                      <OrbitIcon size={18} />
                     </span>
                     <div>
                       <div className='event-calendar__celestial-popup-title'>
@@ -294,7 +343,7 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
                 {celestial.meteorShower && (
                   <div className='event-calendar__celestial-popup-row'>
                     <span className='event-calendar__celestial-popup-emoji'>
-                      ✨
+                      <StarIcon size={18} />
                     </span>
                     <div>
                       <div className='event-calendar__celestial-popup-title'>
@@ -311,7 +360,7 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
                 {celestial.eclipse && (
                   <div className='event-calendar__celestial-popup-row'>
                     <span className='event-calendar__celestial-popup-emoji'>
-                      {celestial.eclipse.emoji}
+                      <SunIcon size={18} />
                     </span>
                     <div>
                       <div className='event-calendar__celestial-popup-title'>
