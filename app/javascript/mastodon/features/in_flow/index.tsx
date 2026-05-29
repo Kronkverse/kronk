@@ -38,34 +38,22 @@ export const InFlow: React.FC<Props> = ({ multiColumn }) => (
       <DailyIntegration />
 
       <section className='in-flow__section'>
-        <h2 className='in-flow__section-heading'>
-          <span className='in-flow__section-heading-icon'>—</span>
-          Light
-        </h2>
+        <h2 className='in-flow__section-heading'>— Light —</h2>
         <LightStrand />
       </section>
 
       <section className='in-flow__section'>
-        <h2 className='in-flow__section-heading'>
-          <span className='in-flow__section-heading-icon'>—</span>
-          Dark
-        </h2>
+        <h2 className='in-flow__section-heading'>— Dark —</h2>
         <DarkStrand />
       </section>
 
       <section className='in-flow__section'>
-        <h2 className='in-flow__section-heading'>
-          <span className='in-flow__section-heading-icon'>—</span>
-          Earth
-        </h2>
+        <h2 className='in-flow__section-heading'>— Earth —</h2>
         <EarthStrand />
       </section>
 
       <section className='in-flow__section'>
-        <h2 className='in-flow__section-heading'>
-          <span className='in-flow__section-heading-icon'>—</span>
-          Festival
-        </h2>
+        <h2 className='in-flow__section-heading'>— Season —</h2>
         <FestivalStrand />
       </section>
     </div>

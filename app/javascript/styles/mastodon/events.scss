@@ -2206,12 +2206,12 @@ $ev-interested-color: #b8945f;
     right: 0;
     z-index: 100;
     width: 220px;
-    background: var(--background-color, #1a1a2e);
+    background: color-mix(in srgb, var(--space-color, #343070) 30%, #0d0d1a);
     border: 1px solid
-      color-mix(in srgb, var(--space-color, #343070) 40%, transparent);
+      color-mix(in srgb, var(--space-color, #343070) 50%, transparent);
     border-radius: 10px;
     padding: 12px;
-    box-shadow: 0 8px 24px rgb(0 0 0 / 40%);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 60%);
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -2223,15 +2223,14 @@ $ev-interested-color: #b8945f;
     right: 8px;
     background: none;
     border: none;
-    color: var(--secondary-text-color);
+    color: rgb(255 255 255 / 50%);
     font-size: 16px;
     line-height: 1;
     cursor: pointer;
     padding: 2px 4px;
-    opacity: 0.6;
 
     &:hover {
-      opacity: 1;
+      color: #fff;
     }
   }
 
@@ -2250,14 +2249,14 @@ $ev-interested-color: #b8945f;
   &__celestial-popup-title {
     font-size: 13px;
     font-weight: 600;
-    color: var(--primary-text-color);
+    color: #fff;
     margin-bottom: 2px;
   }
 
   &__celestial-popup-desc {
     font-size: 12px;
     line-height: 1.5;
-    color: var(--secondary-text-color);
+    color: rgb(255 255 255 / 70%);
   }
 
   &__celestial-item {
