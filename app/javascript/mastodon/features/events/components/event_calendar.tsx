@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { FormattedDate } from 'react-intl';
 
@@ -9,6 +9,40 @@ import {
   getCelestialEmojisForDay,
 } from './celestial_calendar';
 import type { CelestialDayEvents } from './celestial_calendar';
+
+const MOON_POPUP_DESCS: Partial<Record<string, string>> = {
+  new_moon: 'The moon is absent — the sky is at its darkest.',
+  waxing_crescent: 'A thin crescent follows the sun into the west.',
+  first_quarter: 'Half-lit, the moon sets near midnight.',
+  waxing_gibbous: 'Growing toward full, bright in the evening sky.',
+  full_moon: 'The moon rises at sunset and lights the whole night.',
+  waning_gibbous:
+    'Past full, the moon rises after sunset and fills the late sky.',
+  last_quarter: 'Half-lit again, rising near midnight — evenings are dark.',
+  waning_crescent: 'A sliver in the pre-dawn sky. Evenings remain dark.',
+};
+
+const SEASON_POPUP_DESCS: Partial<Record<string, string>> = {
+  spring: 'Spring Equinox — day and night balance. Light begins to dominate.',
+  summer:
+    'Summer Solstice — the longest day. The year turns toward dark from here.',
+  autumn: 'Autumn Equinox — balance again. The dark begins to grow.',
+  winter: 'Winter Solstice — the shortest day. Light begins its return.',
+};
+
+const CROSS_QUARTER_POPUP_DESCS: Partial<Record<string, string>> = {
+  imbolc:
+    'Imbolc — midpoint of winter. The first stirrings of spring are felt.',
+  beltane: 'Beltane — midpoint of spring. Life is at full surge.',
+  lammas: 'Lammas — midpoint of summer. The first harvest; the year tilts.',
+  samhain: 'Samhain — midpoint of autumn. The veil is thin; the dark deepens.',
+};
+
+const ORBITAL_POPUP_DESCS: Partial<Record<string, string>> = {
+  perihelion: 'Perihelion — Earth is closest to the sun in its annual orbit.',
+  aphelion:
+    'Aphelion — Earth is farthest from the sun. The orbit breathes out.',
+};
 
 function getCelestialTooltip(events: CelestialDayEvents): string {
   const parts: string[] = [];
@@ -138,6 +172,30 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
 }) => {
   const hasCelestial = Boolean(celestial);
   const celestialEmojis = celestial ? getCelestialEmojisForDay(celestial) : '';
+  const [open, setOpen] = useState(false);
+  const badgeRef = useRef<HTMLButtonElement>(null);
+
+  const handleBadgeClick = useCallback(() => {
+    setOpen((o) => !o);
+  }, []);
+
+  const handleCloseClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (badgeRef.current && !badgeRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+    };
+  }, [open]);
 
   return (
     <div
@@ -153,12 +211,118 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
       <div className='event-calendar__cell-top'>
         <span className='event-calendar__cell-date'>{day.getDate()}</span>
         {hasCelestial && celestial && (
-          <span
+          <button
+            ref={badgeRef}
             className='event-calendar__celestial-badge'
             title={getCelestialTooltip(celestial)}
+            type='button'
+            onClick={handleBadgeClick}
           >
             {celestialEmojis}
-          </span>
+            {open && (
+              <div className='event-calendar__celestial-popup'>
+                <button
+                  className='event-calendar__celestial-popup-close'
+                  onClick={handleCloseClick}
+                  type='button'
+                  aria-label='Close'
+                >
+                  ×
+                </button>
+                {celestial.moon && (
+                  <div className='event-calendar__celestial-popup-row'>
+                    <span className='event-calendar__celestial-popup-emoji'>
+                      {celestial.moon.emoji}
+                    </span>
+                    <div>
+                      <div className='event-calendar__celestial-popup-title'>
+                        {celestial.moon.label}
+                      </div>
+                      <div className='event-calendar__celestial-popup-desc'>
+                        {MOON_POPUP_DESCS[celestial.moon.phase] ?? ''}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {celestial.season && (
+                  <div className='event-calendar__celestial-popup-row'>
+                    <span className='event-calendar__celestial-popup-emoji'>
+                      {celestial.season.emoji}
+                    </span>
+                    <div>
+                      <div className='event-calendar__celestial-popup-title'>
+                        {celestial.season.label}
+                      </div>
+                      <div className='event-calendar__celestial-popup-desc'>
+                        {SEASON_POPUP_DESCS[celestial.season.season] ?? ''}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {celestial.crossQuarter && (
+                  <div className='event-calendar__celestial-popup-row'>
+                    <span className='event-calendar__celestial-popup-emoji'>
+                      {celestial.crossQuarter.emoji}
+                    </span>
+                    <div>
+                      <div className='event-calendar__celestial-popup-title'>
+                        {celestial.crossQuarter.label}
+                      </div>
+                      <div className='event-calendar__celestial-popup-desc'>
+                        {CROSS_QUARTER_POPUP_DESCS[
+                          celestial.crossQuarter.name
+                        ] ?? ''}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {celestial.orbital && (
+                  <div className='event-calendar__celestial-popup-row'>
+                    <span className='event-calendar__celestial-popup-emoji'>
+                      {celestial.orbital.emoji}
+                    </span>
+                    <div>
+                      <div className='event-calendar__celestial-popup-title'>
+                        {celestial.orbital.label}
+                      </div>
+                      <div className='event-calendar__celestial-popup-desc'>
+                        {ORBITAL_POPUP_DESCS[celestial.orbital.type] ?? ''}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {celestial.meteorShower && (
+                  <div className='event-calendar__celestial-popup-row'>
+                    <span className='event-calendar__celestial-popup-emoji'>
+                      ✨
+                    </span>
+                    <div>
+                      <div className='event-calendar__celestial-popup-title'>
+                        {celestial.meteorShower.name}
+                      </div>
+                      <div className='event-calendar__celestial-popup-desc'>
+                        Meteor shower peak — up to{' '}
+                        {celestial.meteorShower.zenithalHourlyRate} meteors per
+                        hour.
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {celestial.eclipse && (
+                  <div className='event-calendar__celestial-popup-row'>
+                    <span className='event-calendar__celestial-popup-emoji'>
+                      {celestial.eclipse.emoji}
+                    </span>
+                    <div>
+                      <div className='event-calendar__celestial-popup-title'>
+                        {celestial.eclipse.label}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </button>
         )}
       </div>
 

@@ -14,6 +14,8 @@ import {
 
 import { LOCATION_TZ, LOCATION_LAT, LOCATION_LON } from '../constants';
 
+import { getEarthMonth } from './earth_calendar';
+
 function nowInLocation(): {
   year: number;
   month: number;
@@ -73,6 +75,8 @@ function buildIntegration(
   const meteorPeak = getMeteorShowerPeak(month, day);
   const eclipses = getEclipsesNear(now, 1);
   const eclipse = eclipses[0];
+  const earthData = getEarthMonth(month);
+  const ecologicalNote = earthData.observable;
 
   const daylightStr = formatDaylight(daylight.daylightMinutes);
   const deltaMin = daylight.deltaMinutes;
@@ -81,7 +85,7 @@ function buildIntegration(
   // --- Daylight sentence ---
   let daylightSentence: string;
   if (Math.abs(deltaMin) < 0.5) {
-    daylightSentence = `${daylightStr} of daylight — the days are holding still.`;
+    daylightSentence = `The days rest at ${daylightStr} of light, neither growing nor retreating.`;
   } else if (deltaMin > 0) {
     const abs = Math.abs(deltaMin);
     const mins = Math.floor(abs);
@@ -92,7 +96,7 @@ function buildIntegration(
         : mins > 0
           ? `${String(mins)}m`
           : `${String(secs)}s`;
-    daylightSentence = `${daylightStr} of daylight, and we are gaining ${amt} each day.`;
+    daylightSentence = `The days hold ${daylightStr} of light now, and each one is a little longer than the last — ${amt} today.`;
   } else {
     const abs = Math.abs(deltaMin);
     const mins = Math.floor(abs);
@@ -103,25 +107,27 @@ function buildIntegration(
         : mins > 0
           ? `${String(mins)}m`
           : `${String(secs)}s`;
-    daylightSentence = `${daylightStr} of daylight, losing ${amt} each day as we move toward the dark.`;
+    daylightSentence = `${daylightStr} of daylight, each day a little shorter — we are moving ${amt} deeper into the dark.`;
   }
 
   // --- Moon sentence ---
   let moonSentence: string;
   if (superMoon.isSuper && phase === 'full_moon') {
-    moonSentence = `The full moon is at its closest — a supermoon at ${String(Math.round(superMoon.distanceKm / 1000))}k km, visibly larger and brighter in the sky.`;
+    moonSentence = `A supermoon tonight — the full face of the moon at just ${String(Math.round(superMoon.distanceKm / 1000))}k km, pulling the tides and lighting the whole sky.`;
   } else if (superMoon.isSuper && phase === 'new_moon') {
-    moonSentence = `A new moon at perigee — the sky is dark and the moon sits closest to Earth tonight.`;
+    moonSentence = `A supermoon tonight — the moon at perigee, pulling the tides in silence, the sky dark and deep.`;
   } else if (phase === 'full_moon') {
-    moonSentence = `The moon is full tonight — the whole sky is lit.`;
+    moonSentence = `Full moon tonight. The sky carries a silver tide; the stars recede.`;
   } else if (phase === 'new_moon') {
-    moonSentence = `No moon tonight — the sky opens to its deepest dark.`;
+    moonSentence = `No moon tonight — the sky is deep and the Milky Way comes forward.`;
+  } else if (phase === 'waxing_crescent' || phase === 'waning_crescent') {
+    moonSentence = `A ${phaseStr} rises in the ${phase.includes('waxing') ? 'evening' : 'pre-dawn'} sky.`;
   } else {
     moonSentence = `A ${phaseStr} moves through the night.`;
   }
 
   // --- Constellation ---
-  const constellationSentence = `The sun is passing through ${constellation.name}.`;
+  const constellationSentence = `The sun is moving through ${constellation.name}.`;
 
   // --- Next turning point ---
   const allEvents = [
@@ -138,9 +144,9 @@ function buildIntegration(
   let turningStr = '';
   if (next) {
     const days = daysUntil(next.date, now);
-    if (days === 0) turningStr = `${next.label} arrives today.`;
-    else if (days === 1) turningStr = `${next.label} is tomorrow.`;
-    else turningStr = `${next.label} in ${String(days)} days.`;
+    if (days === 0) turningStr = `${next.label} is today.`;
+    else if (days === 1) turningStr = `${next.label} arrives tomorrow.`;
+    else turningStr = `${next.label} comes in ${String(days)} days.`;
   }
 
   // --- Special events ---
@@ -154,11 +160,17 @@ function buildIntegration(
     );
   }
 
+  // --- Ecological sentence ---
+  const firstSentence = ecologicalNote.split(/\.\s/)[0] ?? ecologicalNote;
+  const ecologicalSentence = firstSentence.endsWith('.')
+    ? firstSentence
+    : firstSentence + '.';
+
   const parts = [daylightSentence, moonSentence, constellationSentence];
   if (turningStr) parts.push(turningStr);
   parts.push(...specials);
 
-  return parts.join(' ');
+  return parts.join(' ') + ' — ' + ecologicalSentence;
 }
 
 export const DailyIntegration: React.FC = () => {

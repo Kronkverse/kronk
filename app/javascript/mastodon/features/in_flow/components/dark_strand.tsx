@@ -6,6 +6,8 @@ import {
   getMoonRiseSet,
   getSunConstellation,
   getWanderers,
+  getSuperMoonInfo,
+  getMeteorShowerPeak,
 } from 'mastodon/features/events/components/celestial_calendar';
 
 import { LOCATION_TZ, LOCATION_LAT, LOCATION_LON } from '../constants';
@@ -24,24 +26,49 @@ const MOON_LABELS: Record<string, string> = {
   waning_crescent: 'Waning Crescent',
 };
 
-const MOON_DESCRIPTIONS: Record<string, string> = {
-  new_moon:
-    'The moon is absent from the sky tonight — the darkest nights of the cycle. Good for looking deep into the Milky Way above the horizon.',
-  waxing_crescent:
-    'A thin crescent sits in the western sky after sunset, setting within a few hours of the sun. Watch for earthshine — the dim glow on the shadowed side lit by light reflected off the Earth.',
-  first_quarter:
-    "Half the moon's face is lit — it transits the meridian around sunset and sets near midnight. Look along the terminator line for dramatic crater shadows.",
-  waxing_gibbous:
-    'The moon dominates the evening sky, rising before sunset. The terminator is where the most dramatic lunar surface detail is visible.',
-  full_moon:
-    'The moon rises at sunset and is up all night. It washes out faint objects — a good night for lunar features, planets, and bright clusters rather than deep sky.',
-  waning_gibbous:
-    'Rising after sunset, the moon now fills the late evening and early morning sky. The light retreats but the sky stays lit into the small hours.',
-  last_quarter:
-    'The moon rises around midnight — the late-night and pre-dawn sky is dark before it clears the horizon. The best early-evening window for faint objects.',
-  waning_crescent:
-    'A crescent in the pre-dawn eastern sky. Evenings are dark; the morning sky holds a delicate lit sliver before the sun rises.',
-};
+function getMoonContextDescription(
+  phase: string,
+  constellationName: string,
+  superMoon: { isSuper: boolean; distanceKm: number },
+  meteorPeak: { name: string; zenithalHourlyRate: number } | undefined,
+  seasonLabel: string,
+): string {
+  const base: Record<string, string> = {
+    new_moon:
+      'The moon is absent from the sky — the darkest nights of the cycle.',
+    waxing_crescent:
+      'A thin crescent follows the sun toward the western horizon after dusk.',
+    first_quarter:
+      'Half the face is lit, setting near midnight. Look along the terminator for deep crater shadows.',
+    waxing_gibbous:
+      'Growing toward full — the terminator retreats and the lunar surface opens up.',
+    full_moon: 'The moon rises at sunset and holds the sky all night.',
+    waning_gibbous:
+      'Past full now, the moon rises later into the evening and stays into morning.',
+    last_quarter:
+      'Rising near midnight, the half-lit moon leaves early evenings beautifully dark.',
+    waning_crescent:
+      'A sliver hangs in the pre-dawn east — evenings are quiet and dark.',
+  };
+
+  const parts: string[] = [base[phase] ?? ''];
+
+  if (superMoon.isSuper && (phase === 'full_moon' || phase === 'new_moon')) {
+    parts.push(
+      `At ${String(Math.round(superMoon.distanceKm / 1000))}k km away, the moon is at perigee — a supermoon, closer and brighter than usual.`,
+    );
+  }
+
+  if (meteorPeak) {
+    parts.push(
+      `The ${meteorPeak.name} shower peaks tonight, radiating from ${constellationName} — up to ${String(meteorPeak.zenithalHourlyRate)} meteors per hour if the sky is clear.`,
+    );
+  }
+
+  parts.push(`The sun is in ${constellationName} during ${seasonLabel}.`);
+
+  return parts.join(' ');
+}
 
 // Observable constellation directions for Melbourne sky
 const CONSTELLATION_OBSERVABLE: Record<string, string> = {
@@ -94,6 +121,13 @@ function formatTimeInLocation(date: Date): string {
   });
 }
 
+function getSeasonLabel(month: number): string {
+  if (month === 2 || month === 3 || month === 4) return 'Autumn';
+  if (month === 5 || month === 6 || month === 7) return 'Winter';
+  if (month === 8 || month === 9 || month === 10) return 'Spring';
+  return 'Summer';
+}
+
 export const DarkStrand: React.FC = () => {
   const { year, month, day } = useMemo(nowInLocation, []);
   const now = useMemo(() => new Date(), []);
@@ -112,9 +146,21 @@ export const DarkStrand: React.FC = () => {
     () => getWanderers(year, month, day, LOCATION_LAT, LOCATION_LON),
     [year, month, day],
   );
+  const superMoon = useMemo(() => getSuperMoonInfo(now), [now]);
+  const meteorPeak = useMemo(
+    () => getMeteorShowerPeak(month, day),
+    [month, day],
+  );
 
   const phaseLabel = MOON_LABELS[phase] ?? phase;
-  const phaseDesc = MOON_DESCRIPTIONS[phase] ?? '';
+  const seasonLabel = getSeasonLabel(month);
+  const phaseDesc = getMoonContextDescription(
+    phase,
+    constellation.name,
+    superMoon,
+    meteorPeak ?? undefined,
+    seasonLabel,
+  );
   const dialObservable =
     CONSTELLATION_OBSERVABLE[constellation.name] ?? constellation.description;
 
