@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import { LOCATION_TZ } from '../constants';
 
-import { LeafIcon } from './celestial_icons';
+import { OrbitIcon } from './celestial_icons';
 import { getEarthMonth } from './earth_calendar';
 
 function currentLocationMonth(): number {
@@ -44,7 +44,7 @@ export const EarthStrand: React.FC = () => {
   return (
     <div className='in-flow-earth'>
       <div className='in-flow-earth__header'>
-        <LeafIcon size={20} className='in-flow-earth__header-icon' />
+        <OrbitIcon size={20} className='in-flow-earth__header-icon' />
         <span className='in-flow-earth__month'>{monthName}</span>
         <span className='in-flow-earth__season'>{data.season}</span>
       </div>
