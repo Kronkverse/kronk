@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import {
   getDaylightInfo,
   getSeasonEventsForYear,
+  getCrossQuarterEventsForYear,
 } from 'mastodon/features/events/components/celestial_calendar';
 
 import { LOCATION_TZ, LOCATION_LAT, LOCATION_LON } from '../constants';
@@ -67,9 +68,9 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
   setLabel,
   currentMinutes,
 }) => {
-  const R = 34;
+  const R = 16;
   const cx = 50;
-  const cy = 42;
+  const cy = 20;
 
   // t=0 (midnight) → left endpoint; t=720 (noon) → top; t=1440 (midnight) → right
   const arcPoint = (t: number) => {
@@ -100,7 +101,7 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
   return (
     <div className='in-flow-light__arc-wrap'>
       <div className='in-flow-light__arc-duration'>{daylightLabel}</div>
-      <svg viewBox='0 0 100 56' className='in-flow-light__arc-svg'>
+      <svg viewBox='0 0 100 32' className='in-flow-light__arc-svg'>
         {/* Background arc — full day */}
         <path
           d={`M ${leftEnd.x} ${leftEnd.y} A ${R} ${R} 0 0 1 ${rightEnd.x} ${rightEnd.y}`}
@@ -111,18 +112,18 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
           d={`M ${riseP.x} ${riseP.y} A ${R} ${R} 0 ${largeArc} 1 ${setP.x} ${setP.y}`}
           className='in-flow-light__arc-fill'
         />
-        {/* Sun circle during day, 4-pointed star at night */}
+        {/* Sun circle during day, 6-pointed sparkle at night */}
         {sunIsUp ? (
           <circle
             cx={currentP.x}
             cy={currentP.y}
-            r='4'
+            r='3'
             className='in-flow-light__arc-sun'
           />
         ) : (
           <g transform={`translate(${currentP.x}, ${currentP.y})`}>
             <path
-              d='M 0,-4 L 1.2,-1.2 L 4,0 L 1.2,1.2 L 0,4 L -1.2,1.2 L -4,0 L -1.2,-1.2 Z'
+              d='M 0,-3.5 L 0.5,-0.5 L 3.5,0 L 0.5,0.5 L 0,3.5 L -0.5,0.5 L -3.5,0 L -0.5,-0.5 Z'
               className='in-flow-light__arc-star'
             />
           </g>
@@ -130,7 +131,7 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
         {/* Rise label */}
         <text
           x={riseP.x}
-          y={cy + 14}
+          y={cy + 10}
           textAnchor='middle'
           className='in-flow-light__arc-time'
         >
@@ -139,7 +140,7 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
         {/* Set label */}
         <text
           x={setP.x}
-          y={cy + 14}
+          y={cy + 10}
           textAnchor='middle'
           className='in-flow-light__arc-time'
         >
@@ -157,15 +158,17 @@ interface SolsticeProgressProps {
 
 const SolsticeProgress: React.FC<SolsticeProgressProps> = ({ year, now }) => {
   const allEvents = useMemo(() => {
-    const seasons = [
-      ...getSeasonEventsForYear(year - 1),
-      ...getSeasonEventsForYear(year),
-      ...getSeasonEventsForYear(year + 1),
-    ];
-    // Only solstices (winter + summer)
-    return seasons.filter(
-      (e) => e.season === 'winter' || e.season === 'summer',
-    );
+    const events: { date: Date; label: string }[] = [];
+    for (const y of [year - 1, year, year + 1]) {
+      for (const e of getSeasonEventsForYear(y)) {
+        events.push({ date: e.date, label: e.label });
+      }
+      for (const e of getCrossQuarterEventsForYear(y)) {
+        events.push({ date: e.date, label: e.label });
+      }
+    }
+    events.sort((a, b) => a.date.getTime() - b.date.getTime());
+    return events;
   }, [year]);
 
   const prev = allEvents.filter((e) => e.date <= now).at(-1);
