@@ -6,7 +6,6 @@ class NudgeMessage < ApplicationRecord
 
   MAX_WORDS = 100
 
-  validates :body, allow_blank: true
   validate :word_count_within_limit
 
   private
