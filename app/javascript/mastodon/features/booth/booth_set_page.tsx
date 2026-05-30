@@ -22,7 +22,6 @@ const messages = defineMessages({
   loading: { id: 'booth.loading', defaultMessage: 'Loading…' },
   notFound: { id: 'booth.not_found', defaultMessage: 'Set not found.' },
   shareLink: { id: 'booth.share_link', defaultMessage: 'Share player link' },
-  embedCode: { id: 'booth.embed_code', defaultMessage: 'Embed' },
   copyLink: { id: 'booth.copy_link', defaultMessage: 'Copied!' },
 });
 
@@ -125,14 +124,6 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
                   ? intl.formatMessage(messages.copyLink)
                   : intl.formatMessage(messages.shareLink)}
               </button>
-              <a
-                className='booth__action-btn'
-                href={`/booth/sets/${set.id}/embed`}
-                target='_blank'
-                rel='noopener noreferrer'
-              >
-                {intl.formatMessage(messages.embedCode)}
-              </a>
             </div>
           </div>
         )}

@@ -29,6 +29,13 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
   const [dragging, setDragging] = useState(false);
   const playCountedRef = useRef(false);
 
+  const getProgressPct = useCallback((clientX: number) => {
+    const bar = progressRef.current;
+    if (!bar) return 0;
+    const rect = bar.getBoundingClientRect();
+    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  }, []);
+
   const seekTo = useCallback((pct: number) => {
     const audio = audioRef.current;
     if (!audio || !audio.duration) return;
@@ -37,30 +44,23 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
 
   const handleProgressClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      const bar = progressRef.current;
-      if (!bar) return;
-      const rect = bar.getBoundingClientRect();
-      seekTo((e.clientX - rect.left) / rect.width);
+      seekTo(getProgressPct(e.clientX));
     },
-    [seekTo],
+    [seekTo, getProgressPct],
   );
 
   const handleProgressMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       setDragging(true);
-      handleProgressClick(e);
+      seekTo(getProgressPct(e.clientX));
     },
-    [handleProgressClick],
+    [seekTo, getProgressPct],
   );
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!dragging) return;
-      const bar = progressRef.current;
-      if (!bar) return;
-      const rect = bar.getBoundingClientRect();
-      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      seekTo(pct);
+      seekTo(getProgressPct(e.clientX));
     };
     const handleMouseUp = () => setDragging(false);
     if (dragging) {
@@ -71,7 +71,7 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [dragging, seekTo]);
+  }, [dragging, seekTo, getProgressPct]);
 
   const handlePlayPause = useCallback(() => {
     const audio = audioRef.current;
@@ -126,40 +126,16 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
     <div className='booth-player'>
       <audio ref={audioRef} src={set.audio_url ?? ''} preload='metadata' />
 
-      <div className='booth-player__progress-wrap'>
-        <div
-          ref={progressRef}
-          className='booth-player__progress'
-          onMouseDown={handleProgressMouseDown}
-          onClick={handleProgressClick}
-          role='slider'
-          aria-label='Seek'
-          aria-valuenow={Math.round(currentTime)}
-          aria-valuemin={0}
-          aria-valuemax={Math.round(duration)}
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'ArrowLeft') handleSkip(-10);
-            if (e.key === 'ArrowRight') handleSkip(10);
-          }}
+      <div className='booth-player__row'>
+        <button
+          className='booth-player__play-btn'
+          onClick={handlePlayPause}
+          aria-label={playing ? 'Pause' : 'Play'}
+          type='button'
         >
-          <div
-            className='booth-player__progress-fill'
-            style={{ width: `${progressPct}%` }}
-          />
-          <div
-            className='booth-player__progress-thumb'
-            style={{ left: `${progressPct}%` }}
-          />
-        </div>
+          {playing ? <PauseIcon /> : <PlayArrowIcon />}
+        </button>
 
-        <div className='booth-player__times'>
-          <span>{formatTime(currentTime)}</span>
-          <span>{duration > 0 ? formatTime(duration) : '—'}</span>
-        </div>
-      </div>
-
-      <div className='booth-player__controls'>
         <button
           className='booth-player__skip-btn'
           onClick={() => handleSkip(-30)}
@@ -172,14 +148,37 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
           <span>30</span>
         </button>
 
-        <button
-          className='booth-player__play-btn'
-          onClick={handlePlayPause}
-          aria-label={playing ? 'Pause' : 'Play'}
-          type='button'
-        >
-          {playing ? <PauseIcon /> : <PlayArrowIcon />}
-        </button>
+        <div className='booth-player__progress-wrap'>
+          <div
+            ref={progressRef}
+            className='booth-player__progress'
+            onMouseDown={handleProgressMouseDown}
+            onClick={handleProgressClick}
+            role='slider'
+            aria-label='Seek'
+            aria-valuenow={Math.round(currentTime)}
+            aria-valuemin={0}
+            aria-valuemax={Math.round(duration)}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') handleSkip(-10);
+              if (e.key === 'ArrowRight') handleSkip(10);
+            }}
+          >
+            <div
+              className='booth-player__progress-fill'
+              style={{ width: `${progressPct}%` }}
+            />
+            <div
+              className='booth-player__progress-thumb'
+              style={{ left: `${progressPct}%` }}
+            />
+          </div>
+          <div className='booth-player__times'>
+            <span>{formatTime(currentTime)}</span>
+            <span>{duration > 0 ? formatTime(duration) : '—'}</span>
+          </div>
+        </div>
 
         <button
           className='booth-player__skip-btn'

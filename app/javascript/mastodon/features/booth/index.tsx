@@ -23,9 +23,11 @@ const messages = defineMessages({
   empty: { id: 'booth.empty', defaultMessage: 'No sets yet. Be the first to upload!' },
   uploadSet: { id: 'booth.upload_set', defaultMessage: 'Upload set' },
   shareLink: { id: 'booth.share_link', defaultMessage: 'Share player link' },
-  embedCode: { id: 'booth.embed_code', defaultMessage: 'Embed' },
   copyLink: { id: 'booth.copy_link', defaultMessage: 'Copied!' },
   loading: { id: 'booth.loading', defaultMessage: 'Loading sets…' },
+  filterArtist: { id: 'booth.filter_artist', defaultMessage: 'Artist' },
+  filterGenre: { id: 'booth.filter_genre', defaultMessage: 'Genre' },
+  filterEvent: { id: 'booth.filter_event', defaultMessage: 'Event' },
 });
 
 const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
@@ -38,6 +40,11 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
   const [activeSet, setActiveSet] = useState<BoothSet | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const [filterArtist, setFilterArtist] = useState('');
+  const [filterGenre, setFilterGenre] = useState('');
+  const [filterEvent, setFilterEvent] = useState('');
+  const [filterDate, setFilterDate] = useState('');
 
   const handleHeaderClick = useCallback(() => {
     columnRef.current?.scrollTop();
@@ -72,6 +79,14 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
       setTimeout(() => setCopiedId(null), 2000);
     });
   }, []);
+
+  const filteredSets = sets.filter((set) => {
+    if (filterArtist && !set.artist_name.toLowerCase().includes(filterArtist.toLowerCase())) return false;
+    if (filterGenre && (!set.genre || !set.genre.toLowerCase().includes(filterGenre.toLowerCase()))) return false;
+    if (filterEvent && (!set.event_name || !set.event_name.toLowerCase().includes(filterEvent.toLowerCase()))) return false;
+    if (filterDate && set.event_date !== filterDate) return false;
+    return true;
+  });
 
   return (
     <Column bindToDocument={!multiColumn} ref={columnRef} label={intl.formatMessage(messages.heading)}>
@@ -108,6 +123,38 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
           />
         )}
 
+        {!showUpload && (
+          <div className='booth__filters'>
+            <input
+              className='booth__filter-input'
+              type='text'
+              placeholder={intl.formatMessage(messages.filterArtist)}
+              value={filterArtist}
+              onChange={(e) => setFilterArtist(e.target.value)}
+            />
+            <input
+              className='booth__filter-input'
+              type='text'
+              placeholder={intl.formatMessage(messages.filterGenre)}
+              value={filterGenre}
+              onChange={(e) => setFilterGenre(e.target.value)}
+            />
+            <input
+              className='booth__filter-input'
+              type='text'
+              placeholder={intl.formatMessage(messages.filterEvent)}
+              value={filterEvent}
+              onChange={(e) => setFilterEvent(e.target.value)}
+            />
+            <input
+              className='booth__filter-input booth__filter-input--date'
+              type='date'
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+            />
+          </div>
+        )}
+
         {activeSet && (
           <div className='booth__now-playing'>
             <div className='booth__now-playing-cover'>
@@ -141,14 +188,6 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
                   ? intl.formatMessage(messages.copyLink)
                   : intl.formatMessage(messages.shareLink)}
               </button>
-              <a
-                className='booth__action-btn'
-                href={`/booth/sets/${activeSet.id}/embed`}
-                target='_blank'
-                rel='noopener noreferrer'
-              >
-                {intl.formatMessage(messages.embedCode)}
-              </a>
             </div>
           </div>
         )}
@@ -157,10 +196,10 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
           {loading && (
             <div className='booth__loading'>{intl.formatMessage(messages.loading)}</div>
           )}
-          {!loading && sets.length === 0 && (
+          {!loading && filteredSets.length === 0 && (
             <div className='booth__empty'>{intl.formatMessage(messages.empty)}</div>
           )}
-          {sets.map((set) => (
+          {filteredSets.map((set) => (
             <BoothSetCard
               key={set.id}
               set={set}

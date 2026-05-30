@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -16,7 +16,6 @@ const messages = defineMessages({
   cover: { id: 'booth.upload.cover', defaultMessage: 'Cover image (optional)' },
   submit: { id: 'booth.upload.submit', defaultMessage: 'Upload set' },
   cancel: { id: 'booth.upload.cancel', defaultMessage: 'Cancel' },
-  uploading: { id: 'booth.upload.uploading', defaultMessage: 'Uploading…' },
 });
 
 interface Props {
@@ -24,10 +23,42 @@ interface Props {
   onCancel: () => void;
 }
 
-async function uploadMedia(file: File): Promise<string> {
+type UploadStage = 'audio' | 'cover' | 'saving' | null;
+
+function formatEta(remainingBytes: number, speedBps: number): string {
+  if (speedBps <= 0) return '';
+  const secs = Math.ceil(remainingBytes / speedBps);
+  if (secs < 60) return `~${secs}s`;
+  const mins = Math.ceil(secs / 60);
+  return `~${mins}m`;
+}
+
+function formatSize(bytes: number): string {
+  if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(1)} MB`;
+  return `${Math.round(bytes / 1_000)} KB`;
+}
+
+interface UploadMediaOptions {
+  onProgress: (pct: number, eta: string) => void;
+}
+
+async function uploadMedia(file: File, opts: UploadMediaOptions): Promise<string> {
   const form = new FormData();
   form.append('file', file);
-  const res = await api().post<{ id: string }>('/api/v1/media', form);
+
+  const startTime = Date.now();
+
+  const res = await api().post<{ id: string }>('/api/v1/media', form, {
+    onUploadProgress: (event) => {
+      if (!event.total) return;
+      const pct = Math.round((event.loaded / event.total) * 100);
+      const elapsed = (Date.now() - startTime) / 1000;
+      const speed = elapsed > 0 ? event.loaded / elapsed : 0;
+      const eta = speed > 0 ? formatEta(event.total - event.loaded, speed) : '';
+      opts.onProgress(pct, eta);
+    },
+  });
+
   return res.data.id;
 }
 
@@ -42,7 +73,19 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [stage, setStage] = useState<UploadStage>(null);
+  const [uploadPct, setUploadPct] = useState(0);
+  const [uploadEta, setUploadEta] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
+
+  const stageLabel = stage === 'audio'
+    ? 'Uploading audio'
+    : stage === 'cover'
+      ? 'Uploading cover'
+      : stage === 'saving'
+        ? 'Saving…'
+        : '';
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -53,9 +96,28 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
       setError(null);
 
       try {
-        const audioId = await uploadMedia(audioFile);
-        const coverId = coverFile ? await uploadMedia(coverFile) : null;
+        setStage('audio');
+        setUploadPct(0);
+        const audioId = await uploadMedia(audioFile, {
+          onProgress: (pct, eta) => {
+            setUploadPct(pct);
+            setUploadEta(eta);
+          },
+        });
 
+        let coverId: string | null = null;
+        if (coverFile) {
+          setStage('cover');
+          setUploadPct(0);
+          coverId = await uploadMedia(coverFile, {
+            onProgress: (pct, eta) => {
+              setUploadPct(pct);
+              setUploadEta(eta);
+            },
+          });
+        }
+
+        setStage('saving');
         const payload: Record<string, string> = {
           title,
           artist_name: artistName,
@@ -72,6 +134,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
       } catch {
         setError('Upload failed — please try again.');
         setSubmitting(false);
+        setStage(null);
       }
     },
     [title, artistName, eventName, eventDate, genre, description, audioFile, coverFile, onSuccess],
@@ -83,113 +146,136 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
 
       {error && <div className='booth-upload-form__error'>{error}</div>}
 
-      <label className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.title)} *</span>
-        <input
-          type='text'
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-          maxLength={200}
-          disabled={submitting}
-        />
-      </label>
+      {submitting && (
+        <div className='booth-upload-form__progress-wrap'>
+          <div className='booth-upload-form__progress-label'>
+            <span>{stageLabel}</span>
+            {stage !== 'saving' && (
+              <span className='booth-upload-form__progress-stats'>
+                {uploadPct}%{uploadEta ? ` · ${uploadEta} remaining` : ''}
+              </span>
+            )}
+          </div>
+          <div className='booth-upload-form__progress-track'>
+            <div
+              className='booth-upload-form__progress-fill'
+              style={{ width: stage === 'saving' ? '100%' : `${uploadPct}%` }}
+            />
+          </div>
+          {audioFile && stage === 'audio' && (
+            <div className='booth-upload-form__progress-size'>
+              {formatSize(Math.round((audioFile.size * uploadPct) / 100))} / {formatSize(audioFile.size)}
+            </div>
+          )}
+        </div>
+      )}
 
-      <label className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.artist)} *</span>
-        <input
-          type='text'
-          value={artistName}
-          onChange={(e) => setArtistName(e.target.value)}
-          required
-          maxLength={200}
-          disabled={submitting}
-        />
-      </label>
+      {!submitting && (
+        <>
+          <label className='booth-upload-form__field'>
+            <span>{intl.formatMessage(messages.title)} *</span>
+            <input
+              type='text'
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              maxLength={200}
+            />
+          </label>
 
-      <label className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.event)}</span>
-        <input
-          type='text'
-          value={eventName}
-          onChange={(e) => setEventName(e.target.value)}
-          maxLength={200}
-          disabled={submitting}
-        />
-      </label>
+          <label className='booth-upload-form__field'>
+            <span>{intl.formatMessage(messages.artist)} *</span>
+            <input
+              type='text'
+              value={artistName}
+              onChange={(e) => setArtistName(e.target.value)}
+              required
+              maxLength={200}
+            />
+          </label>
 
-      <label className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.eventDate)}</span>
-        <input
-          type='date'
-          value={eventDate}
-          onChange={(e) => setEventDate(e.target.value)}
-          disabled={submitting}
-        />
-      </label>
+          <label className='booth-upload-form__field'>
+            <span>{intl.formatMessage(messages.event)}</span>
+            <input
+              type='text'
+              value={eventName}
+              onChange={(e) => setEventName(e.target.value)}
+              maxLength={200}
+            />
+          </label>
 
-      <label className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.genre)}</span>
-        <input
-          type='text'
-          value={genre}
-          onChange={(e) => setGenre(e.target.value)}
-          maxLength={100}
-          disabled={submitting}
-        />
-      </label>
+          <label className='booth-upload-form__field'>
+            <span>{intl.formatMessage(messages.eventDate)}</span>
+            <input
+              type='date'
+              value={eventDate}
+              onChange={(e) => setEventDate(e.target.value)}
+            />
+          </label>
 
-      <label className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.description)}</span>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          maxLength={5000}
-          disabled={submitting}
-        />
-      </label>
+          <label className='booth-upload-form__field'>
+            <span>{intl.formatMessage(messages.genre)}</span>
+            <input
+              type='text'
+              value={genre}
+              onChange={(e) => setGenre(e.target.value)}
+              maxLength={100}
+            />
+          </label>
 
-      <label className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.audio)} *</span>
-        <input
-          type='file'
-          accept='audio/*'
-          onChange={(e) => setAudioFile(e.target.files?.[0] ?? null)}
-          required
-          disabled={submitting}
-        />
-      </label>
+          <label className='booth-upload-form__field'>
+            <span>{intl.formatMessage(messages.description)}</span>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              maxLength={5000}
+            />
+          </label>
 
-      <label className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.cover)}</span>
-        <input
-          type='file'
-          accept='image/*'
-          onChange={(e) => setCoverFile(e.target.files?.[0] ?? null)}
-          disabled={submitting}
-        />
-      </label>
+          <label className='booth-upload-form__field'>
+            <span>{intl.formatMessage(messages.audio)} *</span>
+            <input
+              ref={audioInputRef}
+              type='file'
+              accept='audio/*'
+              onChange={(e) => setAudioFile(e.target.files?.[0] ?? null)}
+              required
+            />
+            {audioFile && (
+              <span className='booth-upload-form__file-info'>
+                {audioFile.name} · {formatSize(audioFile.size)}
+              </span>
+            )}
+          </label>
 
-      <div className='booth-upload-form__actions'>
-        <button
-          type='button'
-          className='booth-upload-form__cancel'
-          onClick={onCancel}
-          disabled={submitting}
-        >
-          {intl.formatMessage(messages.cancel)}
-        </button>
-        <button
-          type='submit'
-          className='booth-upload-form__submit'
-          disabled={submitting || !title || !artistName || !audioFile}
-        >
-          {submitting
-            ? intl.formatMessage(messages.uploading)
-            : intl.formatMessage(messages.submit)}
-        </button>
-      </div>
+          <label className='booth-upload-form__field'>
+            <span>{intl.formatMessage(messages.cover)}</span>
+            <input
+              type='file'
+              accept='image/*'
+              onChange={(e) => setCoverFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
+
+          <div className='booth-upload-form__actions'>
+            <button
+              type='button'
+              className='booth-upload-form__cancel'
+              onClick={onCancel}
+            >
+              {intl.formatMessage(messages.cancel)}
+            </button>
+            <button
+              type='submit'
+              className='booth-upload-form__submit'
+              disabled={!title || !artistName || !audioFile}
+            >
+              {intl.formatMessage(messages.submit)}
+            </button>
+          </div>
+        </>
+      )}
     </form>
   );
 };

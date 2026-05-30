@@ -259,74 +259,19 @@ $booth-accent: var(--space-color, #3034a0);
 // ─── Audio player ─────────────────────────────────────────────────────────────
 
 .booth-player {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  padding: 4px 0;
 }
 
-.booth-player__progress-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.booth-player__progress {
-  width: 100%;
-  height: 6px;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, $ui-base-lighter-color);
-  border-radius: 3px;
-  cursor: pointer;
-  position: relative;
-
-  &:focus-visible {
-    outline: 2px solid var(--space-color, #3034a0);
-    outline-offset: 3px;
-  }
-}
-
-.booth-player__progress-fill {
-  height: 100%;
-  background: var(--space-color, #3034a0);
-  border-radius: 3px;
-  pointer-events: none;
-  transition: width 0.25s linear;
-}
-
-.booth-player__progress-thumb {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 14px;
-  height: 14px;
-  background: var(--space-color, #3034a0);
-  border-radius: 50%;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.booth-player__progress:hover .booth-player__progress-thumb {
-  opacity: 1;
-}
-
-.booth-player__times {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: $secondary-text-color;
-  font-variant-numeric: tabular-nums;
-}
-
-.booth-player__controls {
+.booth-player__row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 24px;
+  gap: 10px;
 }
 
 .booth-player__play-btn {
-  width: 56px;
-  height: 56px;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
   background: var(--space-color, #3034a0);
   border: none;
   border-radius: 50%;
@@ -342,24 +287,25 @@ $booth-accent: var(--space-color, #3034a0);
   }
 
   svg {
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
     fill: currentColor;
   }
 }
 
 .booth-player__skip-btn {
+  flex-shrink: 0;
   background: none;
   border: none;
   cursor: pointer;
   color: $secondary-text-color;
-  padding: 8px;
-  border-radius: 8px;
+  padding: 6px;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  font-size: 11px;
+  gap: 1px;
+  font-size: 10px;
   font-weight: 600;
   transition: color 0.15s, background 0.15s;
 
@@ -369,9 +315,100 @@ $booth-accent: var(--space-color, #3034a0);
   }
 
   svg {
-    width: 24px;
-    height: 24px;
+    width: 18px;
+    height: 18px;
     fill: currentColor;
+  }
+}
+
+.booth-player__progress-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.booth-player__progress {
+  width: 100%;
+  height: 5px;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, $ui-base-lighter-color);
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+
+  &:focus-visible {
+    outline: 2px solid var(--space-color, #3034a0);
+    outline-offset: 3px;
+  }
+
+  &:hover .booth-player__progress-thumb {
+    opacity: 1;
+  }
+}
+
+.booth-player__progress-fill {
+  height: 100%;
+  background: var(--space-color, #3034a0);
+  border-radius: 3px;
+  pointer-events: none;
+  transition: width 0.25s linear;
+}
+
+.booth-player__progress-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: var(--space-color, #3034a0);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.booth-player__times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: $secondary-text-color;
+  font-variant-numeric: tabular-nums;
+}
+
+// ─── Filter bar ───────────────────────────────────────────────────────────────
+
+.booth__filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.booth__filter-input {
+  flex: 1;
+  min-width: 80px;
+  background: $ui-base-color;
+  border: 1px solid $ui-base-lighter-color;
+  border-radius: 20px;
+  color: $primary-text-color;
+  font-size: 13px;
+  padding: 6px 12px;
+  font-family: inherit;
+  transition: border-color 0.15s;
+
+  &::placeholder {
+    color: $darker-text-color;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--space-color, #3034a0);
+  }
+
+  &--date {
+    color-scheme: dark;
+    min-width: 120px;
+    flex: 0 1 auto;
   }
 }
 
@@ -594,4 +631,50 @@ $booth-accent: var(--space-color, #3034a0);
     opacity: 0.5;
     cursor: not-allowed;
   }
+}
+
+.booth-upload-form__file-info {
+  font-size: 12px;
+  color: $darker-text-color;
+  margin-top: 2px;
+}
+
+.booth-upload-form__progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.booth-upload-form__progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: $secondary-text-color;
+}
+
+.booth-upload-form__progress-stats {
+  font-variant-numeric: tabular-nums;
+}
+
+.booth-upload-form__progress-track {
+  width: 100%;
+  height: 6px;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, $ui-base-lighter-color);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.booth-upload-form__progress-fill {
+  height: 100%;
+  background: var(--space-color, #3034a0);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.booth-upload-form__progress-size {
+  font-size: 12px;
+  color: $darker-text-color;
+  font-variant-numeric: tabular-nums;
 }
