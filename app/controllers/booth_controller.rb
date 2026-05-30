@@ -6,7 +6,7 @@ class BoothController < ApplicationController
   skip_before_action :require_functional!, only: [:index, :embed]
 
   content_security_policy only: :embed do |policy|
-    policy.frame_ancestors(false)
+    policy.frame_ancestors(:any)
   end
 
   def index; end
