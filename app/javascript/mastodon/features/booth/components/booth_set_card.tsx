@@ -114,9 +114,9 @@ export const BoothSetCard: React.FC<Props> = ({
           <div className='booth-card__event'>{set.event_name}</div>
         )}
         <div className='booth-card__meta'>
-          {set.genre && (
-            <span className='booth-card__genre'>{set.genre}</span>
-          )}
+          {set.genres.map((g) => (
+            <span key={g} className='booth-card__genre'>{g}</span>
+          ))}
           {set.duration_seconds != null && (
             <span className='booth-card__duration'>
               {formatDuration(set.duration_seconds)}

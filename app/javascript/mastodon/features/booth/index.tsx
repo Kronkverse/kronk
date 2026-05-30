@@ -112,8 +112,9 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
       return false;
     if (
       filterGenre &&
-      (!set.genre ||
-        !set.genre.toLowerCase().includes(filterGenre.toLowerCase()))
+      !set.genres.some((g) =>
+        g.toLowerCase().includes(filterGenre.toLowerCase()),
+      )
     )
       return false;
     if (

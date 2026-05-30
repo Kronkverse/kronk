@@ -5,7 +5,7 @@ export interface BoothSet {
   artist_name: string;
   event_name: string | null;
   event_date: string | null;
-  genre: string | null;
+  genres: string[];
   duration_seconds: number | null;
   play_count: number;
   audio_url: string | null;

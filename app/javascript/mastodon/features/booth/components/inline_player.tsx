@@ -153,8 +153,12 @@ export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
                 {set.artist_name}
                 {set.event_name ? ` · ${set.event_name}` : ''}
               </div>
-              {set.genre && (
-                <span className='booth-inline-player__genre'>{set.genre}</span>
+              {set.genres.length > 0 && (
+                <div className='booth-inline-player__genres'>
+                  {set.genres.map((g) => (
+                    <span key={g} className='booth-inline-player__genre'>{g}</span>
+                  ))}
+                </div>
               )}
               {set.description && (
                 <p className='booth-inline-player__description'>
