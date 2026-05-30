@@ -94,10 +94,10 @@ class Api::V1::AccountsController < Api::BaseController
                        .order(id: :desc).limit(200)
                        .map { |n| { direction: 'sent', account_id: n.account_id.to_s, created_at: n.created_at.iso8601 } }
 
-    all_nudges = (received + sent).sort_by { |n| n[:created_at] }.reverse.first(200)
+    all_nudges = (received + sent).sort_by { |n| n[:created_at] }.last(200).reverse
 
-    partner_ids = all_nudges.map { |n| n[:account_id] }.uniq
-    accounts    = Account.where(id: partner_ids)
+    partner_ids = all_nudges.map { |n| n[:account_id] }.uniq # rubocop:disable Rails/Pluck
+    accounts = Account.where(id: partner_ids)
 
     render json: {
       accounts: ActiveModelSerializers::SerializableResource.new(
@@ -114,7 +114,7 @@ class Api::V1::AccountsController < Api::BaseController
     doorkeeper_authorize! :read, :'read:accounts'
     a = current_user.account.id
 
-    sent_counts     = Notification.where(type: 'nudge', from_account_id: a).group(:account_id).count
+    sent_counts = Notification.where(type: 'nudge', from_account_id: a).group(:account_id).count
     received_counts = Notification.where(type: 'nudge', account_id: a).group(:from_account_id).count
 
     partner_ids = (sent_counts.keys + received_counts.keys).uniq
@@ -131,45 +131,48 @@ class Api::V1::AccountsController < Api::BaseController
 
     accounts = Account.where(id: partner_ids).index_by(&:id)
 
-    partners = partner_ids
-      .filter_map do |id|
-        next unless accounts[id]
-        last = last_nudge_per_partner[id]
-        {
-          account_id: id.to_s,
-          account: REST::AccountSerializer.new(
-            accounts[id],
-            scope: current_user,
-            scope_name: :current_user
-          ).as_json,
-          sent_count: sent_counts[id] || 0,
-          received_count: received_counts[id] || 0,
-          streak: (sent_counts[id] || 0) + (received_counts[id] || 0),
-          last_nudge_at: last&.created_at&.iso8601,
-          can_nudge_back: last.nil? || last.from_account_id == id,
-        }
-      end
-      .sort_by { |p| [-p[:streak], p[:last_nudge_at] || ''] }
+    partner_data = partner_ids.filter_map do |id|
+      next unless accounts[id]
+
+      last = last_nudge_per_partner[id]
+      {
+        account_id: id.to_s,
+        account: REST::AccountSerializer.new(
+          accounts[id],
+          scope: current_user,
+          scope_name: :current_user
+        ).as_json,
+        sent_count: sent_counts[id] || 0,
+        received_count: received_counts[id] || 0,
+        streak: (sent_counts[id] || 0) + (received_counts[id] || 0),
+        last_nudge_at: last&.created_at&.iso8601,
+        can_nudge_back: last.nil? || last.from_account_id == id,
+      }
+    end
+    partners = partner_data.sort_by { |p| [-p[:streak], p[:last_nudge_at] || ''] }
 
     followed_ids = Follow.where(account: current_user.account).pluck(:target_account_id)
     suggestion_ids = (followed_ids - partner_ids - [current_user.account.id]).sample(5)
     suggestion_accs = suggestion_ids.empty? ? [] : Account.where(id: suggestion_ids)
 
+    all_accounts = (accounts.values + suggestion_accs).map do |acc|
+      REST::AccountSerializer.new(acc, scope: current_user, scope_name: :current_user).as_json
+    end
+    suggestions_json = suggestion_accs.map do |acc|
+      {
+        account_id: acc.id.to_s,
+        account: REST::AccountSerializer.new(acc, scope: current_user, scope_name: :current_user).as_json,
+      }
+    end
+
     render json: {
-      accounts: (accounts.values + suggestion_accs).map { |acc|
-        REST::AccountSerializer.new(acc, scope: current_user, scope_name: :current_user).as_json
-      },
+      accounts: all_accounts,
       partners: partners,
       pending_count: partners.count { |p| p[:can_nudge_back] },
       grand_total: partners.sum { |p| p[:sent_count] + p[:received_count] },
       total_sent: sent_counts.values.sum,
       total_received: received_counts.values.sum,
-      suggestions: suggestion_accs.map { |acc|
-        {
-          account_id: acc.id.to_s,
-          account: REST::AccountSerializer.new(acc, scope: current_user, scope_name: :current_user).as_json,
-        }
-      },
+      suggestions: suggestions_json,
     }
   end
 
@@ -184,6 +187,7 @@ class Api::V1::AccountsController < Api::BaseController
                 .each do |n|
       partner_id = n.account_id == a ? n.from_account_id : n.account_id
       next if seen[partner_id]
+
       seen[partner_id] = true
       count += 1 if n.from_account_id == partner_id
     end
@@ -203,8 +207,9 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def nudge_streak
-    a, b = current_user.account.id, @account.id
-    sent    = Notification.where(type: 'nudge', from_account_id: a, account_id: b).count
+    a = current_user.account.id
+    b = @account.id
+    sent = Notification.where(type: 'nudge', from_account_id: a, account_id: b).count
     received = Notification.where(type: 'nudge', from_account_id: b, account_id: a).count
     render json: {
       streak: sent + received,
@@ -217,14 +222,16 @@ class Api::V1::AccountsController < Api::BaseController
   private
 
   def nudge_streak_count
-    a, b = current_user.account.id, @account.id
+    a = current_user.account.id
+    b = @account.id
     Notification.where(type: 'nudge')
                 .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
                 .count
   end
 
   def nudge_can_send?
-    a, b = current_user.account.id, @account.id
+    a = current_user.account.id
+    b = @account.id
     last = Notification.where(type: 'nudge')
                        .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
                        .order(id: :desc).first
