@@ -95,7 +95,7 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
   const sunIsUp =
     currentMinutes >= riseMinutesFromMidnight &&
     currentMinutes <= setMinutesFromMidnight;
-  const sunP = sunIsUp ? arcPoint(currentMinutes) : null;
+  const currentP = arcPoint(currentMinutes);
 
   return (
     <div className='in-flow-light__arc-wrap'>
@@ -111,14 +111,21 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
           d={`M ${riseP.x} ${riseP.y} A ${R} ${R} 0 ${largeArc} 1 ${setP.x} ${setP.y}`}
           className='in-flow-light__arc-fill'
         />
-        {/* Sun dot at current time */}
-        {sunP && (
+        {/* Sun circle during day, 4-pointed star at night */}
+        {sunIsUp ? (
           <circle
-            cx={sunP.x}
-            cy={sunP.y}
+            cx={currentP.x}
+            cy={currentP.y}
             r='4'
             className='in-flow-light__arc-sun'
           />
+        ) : (
+          <g transform={`translate(${currentP.x}, ${currentP.y})`}>
+            <path
+              d='M 0,-4 L 1.2,-1.2 L 4,0 L 1.2,1.2 L 0,4 L -1.2,1.2 L -4,0 L -1.2,-1.2 Z'
+              className='in-flow-light__arc-star'
+            />
+          </g>
         )}
         {/* Rise label */}
         <text
@@ -142,34 +149,6 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
     </div>
   );
 };
-
-function getLightRelation(direction: string, month: number): string {
-  // Southern Hemisphere seasons by month
-  if (month >= 5 && month <= 7) {
-    // Winter
-    if (direction === 'shortening')
-      return 'The light continues to withdraw — low angles, long shadows, a sky that holds its warmth close to the horizon.';
-    if (direction === 'lengthening')
-      return 'Winter light beginning its slow return — each day a little more sky before dark.';
-    return 'The light rests at its winter still-point.';
-  }
-  if (month >= 8 && month <= 10) {
-    // Spring
-    if (direction === 'lengthening')
-      return 'Spring light surging — the angle steepens, the warmth arrives earlier each morning.';
-    return 'The light of spring, generous and climbing.';
-  }
-  if (month >= 11 || month <= 1) {
-    // Summer
-    if (direction === 'shortening')
-      return 'Long summer light beginning its slow retreat — still generous, but the turn has come.';
-    return 'Expansive summer light — the sun barely below the horizon at dusk.';
-  }
-  // Autumn
-  if (direction === 'shortening')
-    return 'Autumn light — softer and lower each week, the world turning amber at the edges.';
-  return 'The mellowing light of autumn, drawing down toward winter.';
-}
 
 interface SolsticeProgressProps {
   year: number;
@@ -235,20 +214,11 @@ export const LightStrand: React.FC = () => {
     [year, month, day],
   );
 
-  const direction =
-    info.deltaMinutes > 0.5
-      ? 'lengthening'
-      : info.deltaMinutes < -0.5
-        ? 'shortening'
-        : 'balanced';
-
   const riseLabel = info.rise ? formatTimeInLocation(info.rise) : '';
   const setLabel = info.set ? formatTimeInLocation(info.set) : '';
   const riseMinutes = info.rise ? toLocalMinutes(info.rise) : 6 * 60;
   const setMinutes = info.set ? toLocalMinutes(info.set) : 18 * 60;
   const currentMinutes = useMemo(() => toLocalMinutes(date), [date]);
-
-  const relationSentence = getLightRelation(direction, month);
 
   return (
     <div className='in-flow-light'>
@@ -283,8 +253,6 @@ export const LightStrand: React.FC = () => {
           </div>
         </div>
       )}
-
-      <p className='in-flow-light__relation'>{relationSentence}</p>
 
       <SolsticeProgress year={year} now={date} />
     </div>

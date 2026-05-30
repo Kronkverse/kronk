@@ -302,6 +302,7 @@ export const MoonPhaseIcon = ({
 };
 
 // Renders the moon as a graphic showing the actual illuminated/dark portions.
+// Uses SVG mask: white circle minus offset shadow circle reveals the lit fraction.
 // illumination is 0–1; waning controls which side is lit.
 export const MoonIlluminationIcon: React.FC<{
   illumination: number;
@@ -312,22 +313,12 @@ export const MoonIlluminationIcon: React.FC<{
   const R = size * 0.42;
   const cx = size / 2;
   const cy = size / 2;
-  const rx = Math.abs(2 * illumination - 1) * R;
-
-  let litPath = '';
-  if (illumination >= 0.99) {
-    litPath = `M ${cx},${cy - R} A ${R},${R} 0 1,1 ${cx},${cy + R} A ${R},${R} 0 1,1 ${cx},${cy - R} Z`;
-  } else if (illumination > 0.01) {
-    if (!waning) {
-      // Waxing: right side lit
-      const sweep = illumination < 0.5 ? 1 : 0;
-      litPath = `M ${cx},${cy - R} A ${R},${R} 0 0,1 ${cx},${cy + R} A ${rx},${R} 0 0,${sweep} ${cx},${cy - R} Z`;
-    } else {
-      // Waning: left side lit
-      const sweep = illumination < 0.5 ? 0 : 1;
-      litPath = `M ${cx},${cy - R} A ${R},${R} 0 0,0 ${cx},${cy + R} A ${rx},${R} 0 0,${sweep} ${cx},${cy - R} Z`;
-    }
-  }
+  // Shadow circle offset: at illumination=0 shadow fully covers (offset=0),
+  // at illumination=1 shadow is fully off-screen (offset=2R).
+  // Waxing: shadow on left (negative x), waning: shadow on right (positive x).
+  const shadowOffset = 2 * R * illumination;
+  const shadowCx = waning ? cx + shadowOffset : cx - shadowOffset;
+  const maskId = `moon-mask-${size}`;
 
   return (
     <svg
@@ -336,9 +327,17 @@ export const MoonIlluminationIcon: React.FC<{
       viewBox={`0 0 ${size} ${size}`}
       className={className}
     >
-      {/* Dark face of the moon */}
+      <defs>
+        <mask id={maskId}>
+          <circle cx={cx} cy={cy} r={R} fill='white' />
+          {illumination < 0.99 && (
+            <circle cx={shadowCx} cy={cy} r={R} fill='black' />
+          )}
+        </mask>
+      </defs>
+      {/* Dark face */}
       <circle cx={cx} cy={cy} r={R} fill='currentColor' opacity='0.12' />
-      {/* Moon outline */}
+      {/* Outline */}
       <circle
         cx={cx}
         cy={cy}
@@ -348,8 +347,15 @@ export const MoonIlluminationIcon: React.FC<{
         strokeWidth='1'
         opacity='0.35'
       />
-      {/* Lit region */}
-      {litPath && <path d={litPath} fill='currentColor' opacity='0.92' />}
+      {/* Lit region via mask */}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={R}
+        fill='currentColor'
+        opacity='0.9'
+        mask={`url(#${maskId})`}
+      />
     </svg>
   );
 };

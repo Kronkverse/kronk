@@ -22,7 +22,10 @@ export const DailyKosmicCard: React.FC = () => {
   const history = useHistory();
   const text = buildDailyIntegrationText();
   const { month, day } = getMelbourneMonthDay();
-  const observation = getDailyObservable(month, day);
+  const fullObservation = getDailyObservable(month, day);
+  const observation =
+    (fullObservation.split('. ')[0] ?? fullObservation).replace(/\.$/, '') +
+    '.';
 
   const today = new Date().toLocaleDateString('en-AU', {
     timeZone: 'Australia/Melbourne',

@@ -209,6 +209,10 @@
   opacity: 0.95;
 }
 
+.in-flow-light__arc-star {
+  fill: rgb(255 255 255 / 70%);
+}
+
 .in-flow-light__arc-time {
   fill: $secondary-text-color;
   font-size: 4.5px;
@@ -221,14 +225,6 @@
   text-align: center;
   margin-bottom: 6px;
   letter-spacing: 0.02em;
-}
-
-.in-flow-light__relation {
-  font-size: 13px;
-  line-height: 1.6;
-  color: $secondary-text-color;
-  margin: 0;
-  font-style: italic;
 }
 
 .in-flow-light__solstice {
