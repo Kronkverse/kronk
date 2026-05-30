@@ -56,6 +56,7 @@ interface DaylightArcProps {
   setMinutesFromMidnight: number;
   riseLabel: string;
   setLabel: string;
+  currentMinutes: number;
 }
 
 const DaylightArc: React.FC<DaylightArcProps> = ({
@@ -64,28 +65,26 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
   setMinutesFromMidnight,
   riseLabel,
   setLabel,
+  currentMinutes,
 }) => {
-  const R = 40; // arc radius
+  const R = 34;
   const cx = 50;
-  const cy = 52; // center (below the arc, so arc curves upward)
+  const cy = 42;
 
-  // Convert minutes-from-midnight to a point on the semicircle
   // t=0 (midnight) → left endpoint; t=720 (noon) → top; t=1440 (midnight) → right
   const arcPoint = (t: number) => {
-    const angle = Math.PI * (1 - t / 1440); // π to 0 as t goes 0→1440
+    const angle = Math.PI * (1 - t / 1440);
     return {
       x: cx + R * Math.cos(angle),
       y: cy - R * Math.sin(angle),
     };
   };
 
-  const leftEnd = arcPoint(0); // (cx-R, cy) = (10, 52)
-  const rightEnd = arcPoint(1440); // (cx+R, cy) = (90, 52)
+  const leftEnd = arcPoint(0);
+  const rightEnd = arcPoint(1440);
   const riseP = arcPoint(riseMinutesFromMidnight);
   const setP = arcPoint(setMinutesFromMidnight);
-  const midP = arcPoint((riseMinutesFromMidnight + setMinutesFromMidnight) / 2);
 
-  // large-arc-flag: 1 if daylight > 12h (720 min)
   const largeArc =
     setMinutesFromMidnight - riseMinutesFromMidnight > 720 ? 1 : 0;
 
@@ -93,9 +92,23 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
   const m = daylightMinutes % 60;
   const daylightLabel = `${String(h)}h ${String(m).padStart(2, '0')}m`;
 
+  const sunIsUp =
+    currentMinutes >= riseMinutesFromMidnight &&
+    currentMinutes <= setMinutesFromMidnight;
+  const sunP = sunIsUp ? arcPoint(currentMinutes) : null;
+
   return (
     <div className='in-flow-light__arc-wrap'>
-      <svg viewBox='0 0 100 56' className='in-flow-light__arc-svg'>
+      <svg viewBox='0 0 100 62' className='in-flow-light__arc-svg'>
+        {/* Duration at top */}
+        <text
+          x='50'
+          y='7'
+          textAnchor='middle'
+          className='in-flow-light__arc-duration'
+        >
+          {daylightLabel}
+        </text>
         {/* Background arc — full day */}
         <path
           d={`M ${leftEnd.x} ${leftEnd.y} A ${R} ${R} 0 0 1 ${rightEnd.x} ${rightEnd.y}`}
@@ -106,17 +119,19 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
           d={`M ${riseP.x} ${riseP.y} A ${R} ${R} 0 ${largeArc} 1 ${setP.x} ${setP.y}`}
           className='in-flow-light__arc-fill'
         />
-        {/* Sun dot at midpoint */}
-        <circle
-          cx={midP.x}
-          cy={midP.y}
-          r='4'
-          className='in-flow-light__arc-sun'
-        />
+        {/* Sun dot at current time */}
+        {sunP && (
+          <circle
+            cx={sunP.x}
+            cy={sunP.y}
+            r='4'
+            className='in-flow-light__arc-sun'
+          />
+        )}
         {/* Rise label */}
         <text
           x={riseP.x}
-          y={cy + 8}
+          y={cy + 14}
           textAnchor='middle'
           className='in-flow-light__arc-time'
         >
@@ -125,20 +140,11 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
         {/* Set label */}
         <text
           x={setP.x}
-          y={cy + 8}
+          y={cy + 14}
           textAnchor='middle'
           className='in-flow-light__arc-time'
         >
           {setLabel}
-        </text>
-        {/* Duration at top */}
-        <text
-          x='50'
-          y='10'
-          textAnchor='middle'
-          className='in-flow-light__arc-duration'
-        >
-          {daylightLabel}
         </text>
       </svg>
     </div>
@@ -248,6 +254,7 @@ export const LightStrand: React.FC = () => {
   const setLabel = info.set ? formatTimeInLocation(info.set) : '';
   const riseMinutes = info.rise ? toLocalMinutes(info.rise) : 6 * 60;
   const setMinutes = info.set ? toLocalMinutes(info.set) : 18 * 60;
+  const currentMinutes = useMemo(() => toLocalMinutes(date), [date]);
 
   const relationSentence = getLightRelation(direction, month);
 
@@ -259,6 +266,7 @@ export const LightStrand: React.FC = () => {
         setMinutesFromMidnight={setMinutes}
         riseLabel={riseLabel}
         setLabel={setLabel}
+        currentMinutes={currentMinutes}
       />
 
       {info.rise && info.set && (

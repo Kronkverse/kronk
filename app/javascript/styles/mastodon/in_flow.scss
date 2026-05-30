@@ -211,12 +211,12 @@
 
 .in-flow-light__arc-time {
   fill: $secondary-text-color;
-  font-size: 5px;
+  font-size: 4.5px;
 }
 
 .in-flow-light__arc-duration {
   fill: $primary-text-color;
-  font-size: 6px;
+  font-size: 5.5px;
   font-weight: 600;
 }
 
@@ -673,40 +673,16 @@
   margin: 0 0 10px;
 }
 
+.daily-kosmic-card__observation {
+  font-size: 13px;
+  line-height: 1.6;
+  color: $secondary-text-color;
+  margin: 4px 0 10px;
+  font-style: italic;
+}
+
 .daily-kosmic-card__cta {
   font-size: 12px;
   color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
   font-weight: 500;
-}
-
-.daily-kosmic-card__tiles {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin: 10px 0;
-}
-
-.daily-kosmic-card__tile {
-  background: color-mix(in srgb, var(--space-color, #3034a0) 12%, transparent);
-  border: 1px solid
-    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
-  border-radius: 8px;
-  padding: 8px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.daily-kosmic-card__tile-label {
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
-}
-
-.daily-kosmic-card__tile-value {
-  font-size: 12px;
-  font-weight: 500;
-  color: $primary-text-color;
-  line-height: 1.4;
 }

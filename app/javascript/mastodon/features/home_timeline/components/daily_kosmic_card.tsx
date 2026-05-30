@@ -2,16 +2,27 @@ import { useCallback } from 'react';
 
 import { useHistory } from 'react-router-dom';
 
-import {
-  buildDailyIntegrationText,
-  buildDailyTileData,
-} from 'mastodon/features/in_flow/components/daily_integration';
+import { buildDailyIntegrationText } from 'mastodon/features/in_flow/components/daily_integration';
+import { getDailyObservable } from 'mastodon/features/in_flow/components/earth_calendar';
 import { spaceColor } from 'mastodon/planets';
+
+function getMelbourneMonthDay(): { month: number; day: number } {
+  const fmt = new Intl.DateTimeFormat('en-AU', {
+    timeZone: 'Australia/Melbourne',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const parts = fmt.formatToParts(new Date());
+  const get = (type: string): number =>
+    parseInt(parts.find((p) => p.type === type)?.value ?? '1', 10);
+  return { month: get('month') - 1, day: get('day') };
+}
 
 export const DailyKosmicCard: React.FC = () => {
   const history = useHistory();
   const text = buildDailyIntegrationText();
-  const tiles = buildDailyTileData();
+  const { month, day } = getMelbourneMonthDay();
+  const observation = getDailyObservable(month, day);
 
   const today = new Date().toLocaleDateString('en-AU', {
     timeZone: 'Australia/Melbourne',
@@ -36,39 +47,7 @@ export const DailyKosmicCard: React.FC = () => {
         <span className='daily-kosmic-card__date'>{today}</span>
       </div>
       <p className='daily-kosmic-card__text'>{text}</p>
-      <div className='daily-kosmic-card__tiles'>
-        <div className='daily-kosmic-card__tile'>
-          <span className='daily-kosmic-card__tile-label'>Light</span>
-          <span className='daily-kosmic-card__tile-value'>
-            {tiles.lightRise} → {tiles.lightSet}
-          </span>
-        </div>
-        <div className='daily-kosmic-card__tile'>
-          <span className='daily-kosmic-card__tile-label'>Dark</span>
-          <span className='daily-kosmic-card__tile-value'>
-            {tiles.darkPhase} · {String(tiles.darkIllumination)}%
-          </span>
-        </div>
-        <div className='daily-kosmic-card__tile'>
-          <span className='daily-kosmic-card__tile-label'>Soil</span>
-          <span className='daily-kosmic-card__tile-value'>
-            {tiles.soilText}
-          </span>
-        </div>
-        {tiles.season && (
-          <div className='daily-kosmic-card__tile'>
-            <span className='daily-kosmic-card__tile-label'>Season</span>
-            <span className='daily-kosmic-card__tile-value'>
-              {tiles.season.label}{' '}
-              {tiles.season.days === 0
-                ? 'today'
-                : tiles.season.days === 1
-                  ? 'tomorrow'
-                  : `in ${String(tiles.season.days)} days`}
-            </span>
-          </div>
-        )}
-      </div>
+      <p className='daily-kosmic-card__observation'>{observation}</p>
       <span className='daily-kosmic-card__cta'>Open In Flow →</span>
     </button>
   );

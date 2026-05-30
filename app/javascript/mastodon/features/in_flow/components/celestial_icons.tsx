@@ -300,3 +300,56 @@ export const MoonPhaseIcon = ({
       return <MoonCrescentIcon size={size} waning />;
   }
 };
+
+// Renders the moon as a graphic showing the actual illuminated/dark portions.
+// illumination is 0–1; waning controls which side is lit.
+export const MoonIlluminationIcon: React.FC<{
+  illumination: number;
+  waning?: boolean;
+  size?: number;
+  className?: string;
+}> = ({ illumination, waning = false, size = 48, className }) => {
+  const R = size * 0.42;
+  const cx = size / 2;
+  const cy = size / 2;
+  const rx = Math.abs(2 * illumination - 1) * R;
+
+  let litPath = '';
+  if (illumination >= 0.99) {
+    litPath = `M ${cx},${cy - R} A ${R},${R} 0 1,1 ${cx},${cy + R} A ${R},${R} 0 1,1 ${cx},${cy - R} Z`;
+  } else if (illumination > 0.01) {
+    if (!waning) {
+      // Waxing: right side lit
+      const sweep = illumination < 0.5 ? 1 : 0;
+      litPath = `M ${cx},${cy - R} A ${R},${R} 0 0,1 ${cx},${cy + R} A ${rx},${R} 0 0,${sweep} ${cx},${cy - R} Z`;
+    } else {
+      // Waning: left side lit
+      const sweep = illumination < 0.5 ? 0 : 1;
+      litPath = `M ${cx},${cy - R} A ${R},${R} 0 0,0 ${cx},${cy + R} A ${rx},${R} 0 0,${sweep} ${cx},${cy - R} Z`;
+    }
+  }
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className={className}
+    >
+      {/* Dark face of the moon */}
+      <circle cx={cx} cy={cy} r={R} fill='currentColor' opacity='0.12' />
+      {/* Moon outline */}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={R}
+        fill='none'
+        stroke='currentColor'
+        strokeWidth='1'
+        opacity='0.35'
+      />
+      {/* Lit region */}
+      {litPath && <path d={litPath} fill='currentColor' opacity='0.92' />}
+    </svg>
+  );
+};

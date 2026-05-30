@@ -12,7 +12,7 @@ import {
 
 import { LOCATION_TZ, LOCATION_LAT, LOCATION_LON } from '../constants';
 
-import { MoonPhaseIcon, StarIcon } from './celestial_icons';
+import { MoonIlluminationIcon, StarIcon } from './celestial_icons';
 import { ConstellationSVG } from './constellation_map';
 
 const MOON_LABELS: Record<string, string> = {
@@ -123,10 +123,12 @@ export const DarkStrand: React.FC = () => {
   const now = useMemo(() => new Date(), []);
 
   const phase = useMemo(() => getMoonPhaseName(now), [now]);
-  const illumination = useMemo(
-    () => Math.round(getMoonIllumination(now) * 100),
-    [now],
-  );
+  const illuminationRaw = useMemo(() => getMoonIllumination(now), [now]);
+  const illumination = Math.round(illuminationRaw * 100);
+  const waning =
+    phase === 'waning_gibbous' ||
+    phase === 'last_quarter' ||
+    phase === 'waning_crescent';
   const moonRiseSet = useMemo(
     () => getMoonRiseSet(year, month, day, LOCATION_LAT, LOCATION_LON),
     [year, month, day],
@@ -158,7 +160,11 @@ export const DarkStrand: React.FC = () => {
       <div className='in-flow-dark__moon'>
         <div className='in-flow-dark__moon-header'>
           <div className='in-flow-dark__moon-icon'>
-            <MoonPhaseIcon phase={phase} size={40} />
+            <MoonIlluminationIcon
+              illumination={illuminationRaw}
+              waning={waning}
+              size={52}
+            />
           </div>
           <div className='in-flow-dark__moon-meta'>
             <span className='in-flow-dark__moon-phase'>{phaseLabel}</span>
