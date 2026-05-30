@@ -2,6 +2,7 @@
 
 class Api::V1::AccountsController < Api::BaseController
   include RegistrationHelper
+  include RoutingHelper
 
   before_action -> { authorize_if_got_token! :read, :'read:accounts' }, except: [:create, :follow, :unfollow, :remove_from_followers, :block, :unblock, :mute, :unmute, :nudge, :nudge_streak, :nudge_partners, :nudge_history, :nudge_pending_count]
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:follows' }, only: [:follow, :unfollow, :remove_from_followers]
@@ -119,10 +120,11 @@ class Api::V1::AccountsController < Api::BaseController
 
     partner_ids = (sent_counts.keys + received_counts.keys).uniq
 
-    # Fetch the most recent nudge per partner in one query
+    # Fetch the most recent nudge per partner in one query (with message for preview)
     last_nudge_per_partner = {}
     Notification.where(type: 'nudge')
                 .where('account_id = ? OR from_account_id = ?', a, a)
+                .includes(nudge_message: [:media_attachment])
                 .order(id: :desc)
                 .each do |n|
       partner_id = n.account_id == a ? n.from_account_id : n.account_id
@@ -135,6 +137,23 @@ class Api::V1::AccountsController < Api::BaseController
       next unless accounts[id]
 
       last = last_nudge_per_partner[id]
+      msg = last&.nudge_message
+      msg_type = if msg&.voice_attachment_id.present?
+                   'voice'
+                 elsif msg&.media_attachment_id.present?
+                   'image'
+                 elsif msg&.body.present?
+                   'text'
+                 else
+                   'plain'
+                 end
+      direction = if last.nil?
+                    nil
+                  elsif last.from_account_id == a
+                    'sent'
+                  else
+                    'received'
+                  end
       {
         account_id: id.to_s,
         account: REST::AccountSerializer.new(
@@ -147,6 +166,12 @@ class Api::V1::AccountsController < Api::BaseController
         streak: (sent_counts[id] || 0) + (received_counts[id] || 0),
         last_nudge_at: last&.created_at&.iso8601,
         can_nudge_back: last.nil? || last.from_account_id == id,
+        last_message: {
+          type: msg_type,
+          body: msg_type == 'text' ? msg&.body&.truncate(60) : nil,
+          direction: direction,
+          created_at: last&.created_at&.iso8601,
+        },
       }
     end
     partners = partner_data.sort_by { |p| [-p[:streak], p[:last_nudge_at] || ''] }
@@ -218,6 +243,51 @@ class Api::V1::AccountsController < Api::BaseController
       can_nudge: nudge_can_send?,
       sent_count: sent,
       received_count: received,
+    }
+  end
+
+  def nudge_thread
+    doorkeeper_authorize! :read, :'read:accounts'
+    a = current_user.account.id
+    b = @account.id
+
+    notifications = Notification
+                    .where(type: 'nudge')
+                    .where(
+                      '(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)',
+                      a, b, b, a
+                    )
+                    .includes(nudge_message: [:media_attachment, :voice_attachment])
+                    .order(id: :asc)
+                    .limit(100)
+
+    last = notifications.last
+    can_nudge_back = last.nil? || last.from_account_id == b
+    streak = notifications.size
+
+    messages_json = notifications.map do |n|
+      direction = n.from_account_id == a ? 'sent' : 'received'
+      msg = n.nudge_message
+      reaction_counts = NudgeReaction.where(notification: n).group(:emoji).count
+      me_emoji = NudgeReaction.find_by(notification: n, account_id: a)&.emoji
+      reactions = NudgeReaction::ALLOWED_EMOJI.index_with { |emoji| { count: reaction_counts[emoji] || 0, me: me_emoji == emoji } }
+
+      {
+        notification_id: n.id.to_s,
+        direction: direction,
+        created_at: n.created_at.iso8601,
+        body: msg&.body,
+        media_url: msg&.media_attachment ? full_asset_url(msg.media_attachment.file.url(:original)) : nil,
+        voice_url: msg&.voice_attachment ? full_asset_url(msg.voice_attachment.file.url(:original)) : nil,
+        reactions: reactions,
+      }
+    end
+
+    render json: {
+      account: REST::AccountSerializer.new(@account, scope: current_user, scope_name: :current_user).as_json,
+      messages: messages_json,
+      can_nudge_back: can_nudge_back,
+      streak: streak,
     }
   end
 
