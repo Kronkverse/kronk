@@ -37,6 +37,7 @@ class REST::NotificationSerializer < ActiveModel::Serializer
   end
 
   attribute :nudge_streak, if: :nudge_type?
+  attribute :nudge_message, if: :nudge_type?
 
   def nudge_type?
     object.type == :nudge
@@ -47,6 +48,13 @@ class REST::NotificationSerializer < ActiveModel::Serializer
     Notification.where(type: 'nudge')
                 .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
                 .count
+  end
+
+  def nudge_message
+    msg = object.nudge_message
+    return nil unless msg
+
+    { body: msg.body, media_url: msg.media_attachment&.file&.url }
   end
 
   delegate :filtered?, to: :object

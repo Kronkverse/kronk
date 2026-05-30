@@ -2,12 +2,11 @@ import { useState, useCallback } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { AxiosError } from 'axios';
 import { Link } from 'react-router-dom';
 
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
+import { openModal } from 'mastodon/actions/modal';
 import { decrementNudgeCount } from 'mastodon/actions/notification_groups';
-import { apiNudgeAccount } from 'mastodon/api/accounts';
 import { Button } from 'mastodon/components/button';
 import type { NotificationGroupNudge } from 'mastodon/models/notification_group';
 import { useAppDispatch } from 'mastodon/store';
@@ -44,32 +43,31 @@ export const NotificationNudge: React.FC<{
   unread: boolean;
 }> = ({ notification, unread }) => {
   const dispatch = useAppDispatch();
-  const [loading, setLoading] = useState(false);
   const [nudgedBack, setNudgedBack] = useState(false);
   const [streak, setStreak] = useState(notification.nudgeStreak);
 
   const senderId = notification.sampleAccountIds[0];
 
-  const handleNudgeBack = useCallback(async () => {
-    if (!senderId || loading || nudgedBack) return;
-    setLoading(true);
-    try {
-      const result = await apiNudgeAccount(senderId);
-      setStreak(result.streak);
-      setNudgedBack(true);
-      dispatch(decrementNudgeCount());
-    } catch (e: unknown) {
-      if (e instanceof AxiosError && e.response?.status === 422) {
-        setNudgedBack(true);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [senderId, loading, nudgedBack, dispatch]);
+  const handleNudgeBack = useCallback(() => {
+    if (!senderId || nudgedBack) return;
+    dispatch(
+      openModal({
+        modalType: 'NUDGE_COMPOSE',
+        modalProps: {
+          accountId: senderId,
+          onSent: (newStreak: number) => {
+            setStreak(newStreak);
+            setNudgedBack(true);
+            dispatch(decrementNudgeCount());
+          },
+        },
+      }),
+    );
+  }, [senderId, nudgedBack, dispatch]);
 
   const actions =
     notification.sampleAccountIds.length === 1 ? (
-      <Button compact disabled={loading || nudgedBack} onClick={handleNudgeBack}>
+      <Button compact disabled={nudgedBack} onClick={handleNudgeBack}>
         {nudgedBack ? (
           <FormattedMessage id='notification.nudge.nudged_back' defaultMessage='Nudged!' />
         ) : (
@@ -78,17 +76,32 @@ export const NotificationNudge: React.FC<{
       </Button>
     ) : undefined;
 
-  const additionalContent =
-    streak > 0 ? (
-      <span className='notification-nudge__streak'>
+  const { nudgeMessage } = notification;
+  const hasExtra = streak > 0 || !!nudgeMessage?.body || !!nudgeMessage?.mediaUrl;
 
-        <FormattedMessage
-          id='notification.nudge.streak'
-          defaultMessage='{count, plural, one {# nudge} other {# nudges}} exchanged'
-          values={{ count: streak }}
+  const additionalContent = hasExtra ? (
+    <>
+      {streak > 0 && (
+        <span className='notification-nudge__streak'>
+          <FormattedMessage
+            id='notification.nudge.streak'
+            defaultMessage='{count, plural, one {# nudge} other {# nudges}} exchanged'
+            values={{ count: streak }}
+          />
+        </span>
+      )}
+      {nudgeMessage?.body && (
+        <p className='notification-nudge__message'>{nudgeMessage.body}</p>
+      )}
+      {nudgeMessage?.mediaUrl && (
+        <img
+          src={nudgeMessage.mediaUrl}
+          alt=''
+          className='notification-nudge__media'
         />
-      </span>
-    ) : undefined;
+      )}
+    </>
+  ) : undefined;
 
   return (
     <NotificationGroupWithStatus

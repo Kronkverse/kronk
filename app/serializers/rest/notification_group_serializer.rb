@@ -17,6 +17,7 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
 
   attribute :event_invitation, if: :event_invitation_type?
   attribute :nudge_streak, if: :nudge_type?
+  attribute :nudge_message, if: :nudge_type?
 
   def sample_account_ids
     object.sample_accounts.pluck(:id).map(&:to_s)
@@ -60,6 +61,13 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
     Notification.where(type: 'nudge')
                 .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
                 .count
+  end
+
+  def nudge_message
+    msg = object.notification&.nudge_message
+    return nil unless msg
+
+    { body: msg.body, media_url: msg.media_attachment&.file&.url }
   end
 
   def event_invitation

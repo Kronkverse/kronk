@@ -12247,7 +12247,9 @@ noscript {
     font-weight: 500;
     cursor: pointer;
 
-    &:hover { text-decoration: underline; }
+    &:hover {
+      text-decoration: underline;
+    }
   }
 }
 
@@ -12494,5 +12496,180 @@ noscript {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+// Nudge message body + media shown inside a notification
+.notification-nudge__message {
+  margin-top: 6px;
+  font-size: 14px;
+  color: $primary-text-color;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.notification-nudge__media {
+  display: block;
+  margin-top: 8px;
+  max-width: 100%;
+  border-radius: 8px;
+  max-height: 240px;
+  object-fit: cover;
+}
+
+// Compose-a-nudge modal
+.nudge-compose-modal {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 360px;
+  max-width: 480px;
+  width: 100%;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: $highlight-text-color;
+
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  &__recipient {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: $dark-text-color;
+
+    &-name {
+      font-weight: 500;
+      color: $primary-text-color;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__textarea {
+    width: 100%;
+    background: lighten($ui-base-color, 4%);
+    border: 1px solid lighten($ui-base-color, 16%);
+    border-radius: 6px;
+    color: $primary-text-color;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 10px 12px;
+    resize: vertical;
+    box-sizing: border-box;
+
+    &:focus {
+      outline: none;
+      border-color: $highlight-text-color;
+    }
+
+    &::placeholder {
+      color: $dark-text-color;
+    }
+  }
+
+  &__counter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__attach-btn {
+    background: none;
+    border: 1px solid lighten($ui-base-color, 16%);
+    border-radius: 4px;
+    color: $dark-text-color;
+    font-size: 12px;
+    padding: 4px 8px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: $highlight-text-color;
+      color: $highlight-text-color;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+
+  &__word-count {
+    font-size: 12px;
+    color: $dark-text-color;
+    font-variant-numeric: tabular-nums;
+
+    &--over {
+      color: $error-red;
+      font-weight: 700;
+    }
+  }
+
+  &__preview {
+    position: relative;
+    display: inline-block;
+    align-self: flex-start;
+  }
+
+  &__preview-img {
+    display: block;
+    max-width: 100%;
+    max-height: 160px;
+    border-radius: 6px;
+    object-fit: cover;
+  }
+
+  &__remove-img {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0, 0, 0, 0.7);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    width: 22px;
+    height: 22px;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.9);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 4px;
+  }
+
+  &__send-group {
+    display: flex;
+    gap: 8px;
   }
 }
