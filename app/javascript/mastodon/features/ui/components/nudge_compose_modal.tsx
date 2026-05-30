@@ -39,6 +39,13 @@ export const NudgeComposeModal: React.FC<{
   onSent?: (streak: number) => void;
 }> = ({ accountId, inReplyToNotificationId, onClose, onSent }) => {
   const account = useAppSelector((state) => state.accounts.get(accountId));
+
+  // 'choose' = picking between just-nudge and add-message
+  // 'compose' = writing a message
+  const [mode, setMode] = useState<'choose' | 'compose'>(
+    inReplyToNotificationId ? 'compose' : 'choose',
+  );
+
   const [text, setText] = useState('');
   const [mediaId, setMediaId] = useState<string | undefined>();
   const [mediaPreview, setMediaPreview] = useState<string | undefined>();
@@ -208,6 +215,9 @@ export const NudgeComposeModal: React.FC<{
 
   const handleJustNudge = useCallback(() => void send(false), [send]);
   const handleSendNudge = useCallback(() => void send(true), [send]);
+  const handleAddMessage = useCallback(() => {
+    setMode('compose');
+  }, []);
 
   if (!account) return null;
 
@@ -243,137 +253,165 @@ export const NudgeComposeModal: React.FC<{
         </span>
       </div>
 
-      <div className='nudge-compose-modal__body'>
-        <textarea
-          className='nudge-compose-modal__textarea'
-          placeholder='Add a message… (optional)'
-          value={text}
-          onChange={handleTextChange}
-          rows={4}
-          maxLength={2000}
-        />
+      {mode === 'choose' ? (
+        <div className='nudge-compose-modal__options'>
+          <Button disabled={sending} onClick={handleJustNudge}>
+            <FormattedMessage
+              id='nudge_compose.just_nudge'
+              defaultMessage='Just nudge'
+            />
+          </Button>
+          <button
+            type='button'
+            className='nudge-compose-modal__add-message-btn'
+            onClick={handleAddMessage}
+          >
+            <FormattedMessage
+              id='nudge_compose.add_message'
+              defaultMessage='Add a message'
+            />
+          </button>
+        </div>
+      ) : (
+        <div className='nudge-compose-modal__body'>
+          <textarea
+            className='nudge-compose-modal__textarea'
+            placeholder='Write something… (optional)'
+            value={text}
+            onChange={handleTextChange}
+            rows={4}
+            maxLength={2000}
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus
+          />
 
-        <div className='nudge-compose-modal__counter-row'>
-          <div className='nudge-compose-modal__attach-group'>
-            <button
-              className='nudge-compose-modal__attach-btn'
-              onClick={handleAttachClick}
-              disabled={uploading || !!mediaId}
-              type='button'
-            >
-              {uploading ? (
-                <FormattedMessage
-                  id='nudge_compose.uploading'
-                  defaultMessage='Uploading…'
-                />
-              ) : (
-                <FormattedMessage
-                  id='nudge_compose.attach_image'
-                  defaultMessage='Attach image'
-                />
-              )}
-            </button>
-
-            {!voiceBlob && !voiceId ? (
+          <div className='nudge-compose-modal__counter-row'>
+            <div className='nudge-compose-modal__attach-group'>
               <button
-                className={`nudge-compose-modal__voice-btn${recording ? ' nudge-compose-modal__voice-btn--recording' : ''}`}
-                onClick={recording ? stopRecording : startRecording}
+                className='nudge-compose-modal__attach-btn'
+                onClick={handleAttachClick}
+                disabled={uploading || !!mediaId}
                 type='button'
-                disabled={sending}
               >
-                <Icon
-                  icon={recording ? StopIcon : MicIcon}
-                  id={recording ? 'stop' : 'mic'}
-                />
-                {recording ? (
-                  <span>{voiceSeconds}s</span>
+                {uploading ? (
+                  <FormattedMessage
+                    id='nudge_compose.uploading'
+                    defaultMessage='Uploading…'
+                  />
                 ) : (
                   <FormattedMessage
-                    id='nudge_compose.voice'
-                    defaultMessage='Voice'
+                    id='nudge_compose.attach_image'
+                    defaultMessage='Attach image'
                   />
                 )}
               </button>
-            ) : (
-              <div className='nudge-compose-modal__voice-preview'>
-                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                <audio
-                  controls
-                  src={voiceBlob ? URL.createObjectURL(voiceBlob) : undefined}
-                  className='nudge-compose-modal__voice-audio'
-                />
+
+              {!voiceBlob && !voiceId ? (
                 <button
-                  className='nudge-compose-modal__remove-img'
-                  onClick={handleRemoveVoice}
+                  className={`nudge-compose-modal__voice-btn${recording ? ' nudge-compose-modal__voice-btn--recording' : ''}`}
+                  onClick={recording ? stopRecording : startRecording}
                   type='button'
-                  aria-label='Remove voice'
+                  disabled={sending}
                 >
-                  ×
+                  <Icon
+                    icon={recording ? StopIcon : MicIcon}
+                    id={recording ? 'stop' : 'mic'}
+                  />
+                  {recording ? (
+                    <span>{voiceSeconds}s</span>
+                  ) : (
+                    <FormattedMessage
+                      id='nudge_compose.voice'
+                      defaultMessage='Voice'
+                    />
+                  )}
                 </button>
-              </div>
-            )}
-          </div>
+              ) : (
+                <div className='nudge-compose-modal__voice-preview'>
+                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                  <audio
+                    controls
+                    src={voiceBlob ? URL.createObjectURL(voiceBlob) : undefined}
+                    className='nudge-compose-modal__voice-audio'
+                  />
+                  <button
+                    className='nudge-compose-modal__remove-img'
+                    onClick={handleRemoveVoice}
+                    type='button'
+                    aria-label='Remove voice'
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+            </div>
 
-          <span
-            className={`nudge-compose-modal__word-count${overLimit ? ' nudge-compose-modal__word-count--over' : ''}`}
-          >
-            {wordCount}/{MAX_WORDS}
-          </span>
-        </div>
-
-        <input
-          ref={fileInputRef}
-          type='file'
-          accept='image/*'
-          style={{ display: 'none' }}
-          onChange={handleFileChange}
-        />
-
-        {mediaPreview && (
-          <div className='nudge-compose-modal__preview'>
-            <img
-              src={mediaPreview}
-              alt=''
-              className='nudge-compose-modal__preview-img'
-            />
-            <button
-              className='nudge-compose-modal__remove-img'
-              onClick={handleRemoveImage}
-              type='button'
-              aria-label='Remove image'
+            <span
+              className={`nudge-compose-modal__word-count${overLimit ? ' nudge-compose-modal__word-count--over' : ''}`}
             >
-              ×
-            </button>
+              {wordCount}/{MAX_WORDS}
+            </span>
           </div>
-        )}
-      </div>
 
-      <div className='nudge-compose-modal__actions'>
-        <button className='link-button' onClick={onClose}>
-          <FormattedMessage
-            id='confirmation_modal.cancel'
-            defaultMessage='Cancel'
+          <input
+            ref={fileInputRef}
+            type='file'
+            accept='image/*'
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
           />
-        </button>
 
-        <div className='nudge-compose-modal__send-group'>
-          {hasMessage ? (
-            <Button disabled={sending || overLimit} onClick={handleSendNudge}>
-              <FormattedMessage
-                id='nudge_compose.send_nudge'
-                defaultMessage='Send nudge'
+          {mediaPreview && (
+            <div className='nudge-compose-modal__preview'>
+              <img
+                src={mediaPreview}
+                alt=''
+                className='nudge-compose-modal__preview-img'
               />
-            </Button>
-          ) : (
-            <Button disabled={sending} onClick={handleJustNudge}>
-              <FormattedMessage
-                id='nudge_compose.just_nudge'
-                defaultMessage='Just nudge'
-              />
-            </Button>
+              <button
+                className='nudge-compose-modal__remove-img'
+                onClick={handleRemoveImage}
+                type='button'
+                aria-label='Remove image'
+              >
+                ×
+              </button>
+            </div>
           )}
+
+          <div className='nudge-compose-modal__actions'>
+            <button className='link-button' onClick={onClose}>
+              <FormattedMessage
+                id='confirmation_modal.cancel'
+                defaultMessage='Cancel'
+              />
+            </button>
+
+            <div className='nudge-compose-modal__send-group'>
+              <Button
+                disabled={sending || overLimit}
+                onClick={hasMessage ? handleSendNudge : handleJustNudge}
+              >
+                <FormattedMessage
+                  id='nudge_compose.send_nudge'
+                  defaultMessage='Send nudge'
+                />
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {mode === 'choose' && (
+        <div className='nudge-compose-modal__choose-footer'>
+          <button className='link-button' onClick={onClose}>
+            <FormattedMessage
+              id='confirmation_modal.cancel'
+              defaultMessage='Cancel'
+            />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

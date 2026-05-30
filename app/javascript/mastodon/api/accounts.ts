@@ -62,13 +62,31 @@ export const apiGetNudgeStreak = (id: string) =>
     received_count: number;
   }>(`v1/accounts/${id}/nudge_streak`);
 
+export interface ApiNudgeLastMessage {
+  type: 'plain' | 'text' | 'image' | 'voice';
+  body: string | null;
+  direction: 'sent' | 'received' | null;
+  created_at: string | null;
+}
+
 export interface ApiNudgePartner {
   account_id: string;
   sent_count: number;
   received_count: number;
   streak: number;
-  last_nudge_at: string;
+  last_nudge_at: string | null;
   can_nudge_back: boolean;
+  last_message: ApiNudgeLastMessage;
+}
+
+export interface ApiNudgeThreadMessage {
+  notification_id: string;
+  direction: 'sent' | 'received';
+  created_at: string;
+  body: string | null;
+  media_url: string | null;
+  voice_url: string | null;
+  reactions: Record<string, { count: number; me: boolean }>;
 }
 
 export interface ApiNudgeSuggestion {
@@ -99,3 +117,11 @@ export const apiGetNudgeHistory = () =>
   apiRequestGet<{ accounts: ApiAccountJSON[]; nudges: ApiNudgeHistoryItem[] }>(
     'v1/accounts/nudge_history',
   );
+
+export const apiGetNudgeThread = (id: string) =>
+  apiRequestGet<{
+    account: ApiAccountJSON;
+    messages: ApiNudgeThreadMessage[];
+    can_nudge_back: boolean;
+    streak: number;
+  }>(`v1/accounts/${id}/nudge_thread`);

@@ -12175,6 +12175,26 @@ noscript {
   margin-top: 4px;
 }
 
+.notification-nudge__reveal-btn {
+  display: inline-block;
+  margin-top: 6px;
+  background: none;
+  border: 1px solid lighten($ui-base-color, 16%);
+  border-radius: 4px;
+  color: $highlight-text-color;
+  font-size: 13px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+
+  &:hover {
+    background: rgba($highlight-text-color, 0.08);
+    border-color: $highlight-text-color;
+  }
+}
+
 // Grand total stat banner
 .nudge-grand-total {
   display: flex;
@@ -12803,6 +12823,37 @@ noscript {
     height: 32px;
     max-width: 200px;
   }
+
+  &__options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  &__add-message-btn {
+    background: none;
+    border: 1px solid lighten($ui-base-color, 16%);
+    border-radius: 6px;
+    color: $dark-text-color;
+    font-size: 14px;
+    padding: 10px 16px;
+    cursor: pointer;
+    text-align: center;
+    transition:
+      border-color 0.15s,
+      color 0.15s;
+
+    &:hover {
+      border-color: $highlight-text-color;
+      color: $highlight-text-color;
+    }
+  }
+
+  &__choose-footer {
+    display: flex;
+    justify-content: center;
+  }
 }
 
 // Reaction bar on nudge notifications
@@ -12823,7 +12874,9 @@ noscript {
   display: flex;
   align-items: center;
   gap: 4px;
-  transition: border-color 0.1s, background 0.1s;
+  transition:
+    border-color 0.1s,
+    background 0.1s;
 
   &:hover {
     border-color: $highlight-text-color;
@@ -12872,4 +12925,419 @@ noscript {
   width: 100%;
   max-width: 280px;
   height: 36px;
+}
+
+// ── Messenger inbox (conversation list) ───────────────────────────────────────
+
+.nudge-inbox {
+  display: flex;
+  flex-direction: column;
+}
+
+.nudge-conversation-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  width: 100%;
+  text-align: start;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--background-border-color);
+  cursor: pointer;
+  transition: background 0.1s;
+
+  &:hover {
+    background: color-mix(
+      in srgb,
+      var(--background-color) 92%,
+      var(--primary-text-color) 8%
+    );
+  }
+
+  &--unread {
+    background: color-mix(
+      in srgb,
+      var(--background-color) 94%,
+      var(--highlight-text-color) 6%
+    );
+
+    .nudge-conversation-row__name {
+      font-weight: 700;
+    }
+
+    .nudge-conversation-row__preview {
+      color: var(--primary-text-color);
+      font-weight: 500;
+    }
+  }
+}
+
+.nudge-conversation-row__avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.nudge-conversation-row__unread-dot {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 10px;
+  height: 10px;
+  background: var(--highlight-text-color);
+  border-radius: 50%;
+  border: 2px solid var(--background-color);
+}
+
+.nudge-conversation-row__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.nudge-conversation-row__top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.nudge-conversation-row__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  color: var(--primary-text-color);
+}
+
+.nudge-conversation-row__time {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--secondary-text-color);
+}
+
+.nudge-conversation-row__preview {
+  font-size: 13px;
+  color: var(--secondary-text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ── Suggestion items in inbox ─────────────────────────────────────────────────
+
+.nudge-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--background-border-color);
+}
+
+.nudge-suggestion-item__avatar {
+  flex-shrink: 0;
+}
+
+.nudge-suggestion-item__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.nudge-suggestion-item__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary-text-color);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.nudge-suggestion-item__acct {
+  font-size: 12px;
+  color: var(--secondary-text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ── Thread view ───────────────────────────────────────────────────────────────
+
+.nudge-thread {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.nudge-thread__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--background-border-color);
+  flex-shrink: 0;
+}
+
+.nudge-thread__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--secondary-text-color);
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+
+  &:hover {
+    background: color-mix(
+      in srgb,
+      var(--background-color) 85%,
+      var(--primary-text-color) 15%
+    );
+    color: var(--primary-text-color);
+  }
+}
+
+.nudge-thread__header-avatar {
+  flex-shrink: 0;
+}
+
+.nudge-thread__header-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary-text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nudge-thread__streak-badge {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--highlight-text-color);
+  background: color-mix(in srgb, transparent, var(--highlight-text-color) 12%);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.nudge-thread__messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nudge-thread__compose {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--background-border-color);
+  flex-shrink: 0;
+}
+
+.nudge-thread__add-message-btn {
+  background: transparent;
+  border: 1px solid var(--background-border-color);
+  border-radius: 16px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--secondary-text-color);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+
+  &:hover {
+    background: color-mix(
+      in srgb,
+      var(--background-color) 88%,
+      var(--primary-text-color) 12%
+    );
+    color: var(--primary-text-color);
+  }
+}
+
+.nudge-thread__waiting {
+  font-size: 13px;
+  color: var(--secondary-text-color);
+  font-style: italic;
+}
+
+// ── Message bubbles ───────────────────────────────────────────────────────────
+
+.nudge-bubble {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 85%;
+
+  &--sent {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+  }
+
+  &--received {
+    align-self: flex-start;
+  }
+}
+
+.nudge-bubble__avatar {
+  flex-shrink: 0;
+  margin-bottom: 4px;
+}
+
+.nudge-bubble__content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.nudge-bubble__body {
+  padding: 8px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: break-word;
+
+  .nudge-bubble--sent & {
+    background: var(--highlight-text-color);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+
+  .nudge-bubble--received & {
+    background: color-mix(
+      in srgb,
+      var(--background-color) 88%,
+      var(--primary-text-color) 12%
+    );
+    color: var(--primary-text-color);
+    border-bottom-left-radius: 4px;
+  }
+}
+
+.nudge-bubble__plain {
+  opacity: 0.75;
+  font-style: italic;
+}
+
+.nudge-bubble__text {
+  margin: 0;
+}
+
+.nudge-bubble__media {
+  display: block;
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+  margin-top: 4px;
+}
+
+.nudge-bubble__voice {
+  display: block;
+  width: 200px;
+  height: 36px;
+  margin-top: 4px;
+}
+
+.nudge-bubble__reveal-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  font-style: italic;
+  cursor: pointer;
+  text-decoration: underline;
+
+  .nudge-bubble--received & {
+    color: var(--primary-text-color);
+    opacity: 0.75;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.nudge-bubble__time {
+  font-size: 11px;
+  color: var(--secondary-text-color);
+  padding: 0 4px;
+
+  .nudge-bubble--sent & {
+    text-align: right;
+  }
+}
+
+.nudge-bubble__reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 4px;
+
+  .nudge-bubble--sent & {
+    justify-content: flex-end;
+  }
+}
+
+.nudge-bubble__reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: color-mix(
+    in srgb,
+    var(--background-color) 90%,
+    var(--primary-text-color) 10%
+  );
+  border: 1px solid var(--background-border-color);
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: background 0.1s;
+
+  &:hover {
+    background: color-mix(
+      in srgb,
+      var(--background-color) 80%,
+      var(--primary-text-color) 20%
+    );
+  }
+
+  &--active {
+    background: color-mix(
+      in srgb,
+      transparent,
+      var(--highlight-text-color) 18%
+    );
+    border-color: var(--highlight-text-color);
+  }
+}
+
+.nudge-bubble__reaction-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--secondary-text-color);
 }
