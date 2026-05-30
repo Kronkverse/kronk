@@ -9,13 +9,26 @@ const messages = defineMessages({
   title: { id: 'booth.upload.title', defaultMessage: 'Title' },
   artist: { id: 'booth.upload.artist', defaultMessage: 'Artist / DJ name' },
   event: { id: 'booth.upload.event', defaultMessage: 'Event name (optional)' },
-  eventDate: { id: 'booth.upload.event_date', defaultMessage: 'Event date (optional)' },
+  eventDate: {
+    id: 'booth.upload.event_date',
+    defaultMessage: 'Event date (optional)',
+  },
   genre: { id: 'booth.upload.genre', defaultMessage: 'Genre (optional)' },
-  description: { id: 'booth.upload.description', defaultMessage: 'Description (optional)' },
+  description: {
+    id: 'booth.upload.description',
+    defaultMessage: 'Description (optional)',
+  },
   audio: { id: 'booth.upload.audio', defaultMessage: 'Audio file' },
-  cover: { id: 'booth.upload.cover', defaultMessage: 'Cover image (optional)' },
+  cover: {
+    id: 'booth.upload.cover',
+    defaultMessage: 'Cover image (optional)',
+  },
   submit: { id: 'booth.upload.submit', defaultMessage: 'Upload set' },
   cancel: { id: 'booth.upload.cancel', defaultMessage: 'Cancel' },
+  cancelUpload: {
+    id: 'booth.upload.cancel_upload',
+    defaultMessage: 'Cancel upload',
+  },
 });
 
 interface Props {
@@ -40,15 +53,20 @@ function formatSize(bytes: number): string {
 
 interface UploadMediaOptions {
   onProgress: (pct: number, eta: string) => void;
+  signal: AbortSignal;
 }
 
-async function uploadMedia(file: File, opts: UploadMediaOptions): Promise<string> {
+async function uploadMedia(
+  file: File,
+  opts: UploadMediaOptions,
+): Promise<string> {
   const form = new FormData();
   form.append('file', file);
 
   const startTime = Date.now();
 
   const res = await api().post<{ id: string }>('/api/v1/media', form, {
+    signal: opts.signal,
     onUploadProgress: (event) => {
       if (!event.total) return;
       const pct = Math.round((event.loaded / event.total) * 100);
@@ -78,19 +96,34 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
   const [uploadEta, setUploadEta] = useState('');
   const [error, setError] = useState<string | null>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const stageLabel = stage === 'audio'
-    ? 'Uploading audio'
-    : stage === 'cover'
-      ? 'Uploading cover'
-      : stage === 'saving'
-        ? 'Saving…'
-        : '';
+  const stageLabel =
+    stage === 'audio'
+      ? 'Uploading audio'
+      : stage === 'cover'
+        ? 'Uploading cover'
+        : stage === 'saving'
+          ? 'Saving…'
+          : '';
+
+  const handleCancelUpload = useCallback(() => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setSubmitting(false);
+    setStage(null);
+    setUploadPct(0);
+    setUploadEta('');
+    setError(null);
+  }, []);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!audioFile) return;
+
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
 
       setSubmitting(true);
       setError(null);
@@ -99,6 +132,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
         setStage('audio');
         setUploadPct(0);
         const audioId = await uploadMedia(audioFile, {
+          signal: controller.signal,
           onProgress: (pct, eta) => {
             setUploadPct(pct);
             setUploadEta(eta);
@@ -110,6 +144,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
           setStage('cover');
           setUploadPct(0);
           coverId = await uploadMedia(coverFile, {
+            signal: controller.signal,
             onProgress: (pct, eta) => {
               setUploadPct(pct);
               setUploadEta(eta);
@@ -129,19 +164,35 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
         if (description) payload.description = description;
         if (coverId) payload.cover_id = coverId;
 
-        const res = await api().post<BoothSet>('/api/v1/booth_sets', payload);
+        const res = await api().post<BoothSet>('/api/v1/booth_sets', payload, {
+          signal: controller.signal,
+        });
         onSuccess(res.data);
-      } catch {
+      } catch (err) {
+        if ((err as { name?: string }).name === 'CanceledError') return;
         setError('Upload failed — please try again.');
         setSubmitting(false);
         setStage(null);
       }
     },
-    [title, artistName, eventName, eventDate, genre, description, audioFile, coverFile, onSuccess],
+    [
+      title,
+      artistName,
+      eventName,
+      eventDate,
+      genre,
+      description,
+      audioFile,
+      coverFile,
+      onSuccess,
+    ],
   );
 
   return (
-    <form className='booth-upload-form' onSubmit={(e) => void handleSubmit(e)}>
+    <form
+      className='booth-upload-form'
+      onSubmit={(e) => void handleSubmit(e)}
+    >
       <h3 className='booth-upload-form__heading'>Upload a set</h3>
 
       {error && <div className='booth-upload-form__error'>{error}</div>}
@@ -159,13 +210,25 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
           <div className='booth-upload-form__progress-track'>
             <div
               className='booth-upload-form__progress-fill'
-              style={{ width: stage === 'saving' ? '100%' : `${uploadPct}%` }}
+              style={{
+                width: stage === 'saving' ? '100%' : `${uploadPct}%`,
+              }}
             />
           </div>
           {audioFile && stage === 'audio' && (
             <div className='booth-upload-form__progress-size'>
-              {formatSize(Math.round((audioFile.size * uploadPct) / 100))} / {formatSize(audioFile.size)}
+              {formatSize(Math.round((audioFile.size * uploadPct) / 100))} /{' '}
+              {formatSize(audioFile.size)}
             </div>
+          )}
+          {stage !== 'saving' && (
+            <button
+              type='button'
+              className='booth-upload-form__cancel-upload'
+              onClick={handleCancelUpload}
+            >
+              {intl.formatMessage(messages.cancelUpload)}
+            </button>
           )}
         </div>
       )}
