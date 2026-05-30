@@ -12850,6 +12850,11 @@ noscript {
   height: 36px;
 }
 
+// Column header title — white when on the nudges page
+.column:has(.nudge-inbox, .nudge-thread) .column-header__title {
+  color: #fff;
+}
+
 // ── Messenger inbox (conversation list) ───────────────────────────────────────
 
 .nudge-inbox {
