@@ -2,14 +2,17 @@ import { useCallback, useRef, useState } from 'react';
 
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
+import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
 import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 import type { BoothSet } from '../types';
 
 interface Props {
   set: BoothSet;
   onPlay: (set: BoothSet) => void;
+  onTogglePlay: () => void;
   onEdit: (set: BoothSet) => void;
   active: boolean;
+  playing: boolean;
 }
 
 function formatDuration(seconds: number | null): string {
@@ -20,7 +23,14 @@ function formatDuration(seconds: number | null): string {
   return `${m}m`;
 }
 
-export const BoothSetCard: React.FC<Props> = ({ set, onPlay, onEdit, active }) => {
+export const BoothSetCard: React.FC<Props> = ({
+  set,
+  onPlay,
+  onTogglePlay,
+  onEdit,
+  active,
+  playing,
+}) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -28,12 +38,16 @@ export const BoothSetCard: React.FC<Props> = ({ set, onPlay, onEdit, active }) =
     onPlay(set);
   }, [set, onPlay]);
 
-  const handlePlayClick = useCallback(
+  const handleOverlayClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      onPlay(set);
+      if (active) {
+        onTogglePlay();
+      } else {
+        onPlay(set);
+      }
     },
-    [set, onPlay],
+    [active, set, onPlay, onTogglePlay],
   );
 
   const handleMenuToggle = useCallback((e: React.MouseEvent) => {
@@ -85,11 +99,11 @@ export const BoothSetCard: React.FC<Props> = ({ set, onPlay, onEdit, active }) =
         )}
         <button
           className='booth-card__play-overlay'
-          onClick={handlePlayClick}
-          aria-label={`Play ${set.title}`}
+          onClick={handleOverlayClick}
+          aria-label={active && playing ? 'Pause' : `Play ${set.title}`}
           type='button'
         >
-          <PlayArrowIcon />
+          {active && playing ? <PauseIcon /> : <PlayArrowIcon />}
         </button>
       </div>
 

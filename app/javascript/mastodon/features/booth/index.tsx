@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -13,8 +13,11 @@ import { useIdentity } from 'mastodon/identity_context';
 import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
 import { BoothSetCard } from './components/booth_set_card';
-import { BottomPlayer } from './components/bottom_player';
 import { EditForm } from './components/edit_form';
+import {
+  InlinePlayer,
+  type InlinePlayerHandle,
+} from './components/inline_player';
 import { UploadForm } from './components/upload_form';
 import type { BoothSet } from './types';
 
@@ -35,10 +38,13 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const columnRef = useRef<ColumnRef>(null);
   const { signedIn } = useIdentity();
+  const playerRef = useRef<InlinePlayerHandle>(null);
 
   const [sets, setSets] = useState<BoothSet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [playingSet, setPlayingSet] = useState<BoothSet | null>(null);
+  const [activeSet, setActiveSet] = useState<BoothSet | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [editingSet, setEditingSet] = useState<BoothSet | null>(null);
   const [showUpload, setShowUpload] = useState(false);
 
@@ -62,9 +68,22 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
   }, []);
 
   const handlePlay = useCallback((set: BoothSet) => {
-    setPlayingSet(set);
+    setActiveSet((prev) => {
+      if (prev?.id === set.id) {
+        // Already active — just re-expand
+        setExpanded(true);
+        return prev;
+      }
+      setExpanded(true);
+      setIsPlaying(false);
+      return set;
+    });
     setEditingSet(null);
     setShowUpload(false);
+  }, []);
+
+  const handleTogglePlay = useCallback(() => {
+    playerRef.current?.togglePlayPause();
   }, []);
 
   const handleEdit = useCallback((set: BoothSet) => {
@@ -73,16 +92,15 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
   }, []);
 
   const handleEditSuccess = useCallback((updated: BoothSet) => {
-    setSets((prev) =>
-      prev.map((s) => (s.id === updated.id ? updated : s)),
-    );
+    setSets((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
     setEditingSet(null);
-    setPlayingSet((prev) => (prev?.id === updated.id ? updated : prev));
+    setActiveSet((prev) => (prev?.id === updated.id ? updated : prev));
   }, []);
 
   const handleUploadSuccess = useCallback((set: BoothSet) => {
     setSets((prev) => [set, ...prev]);
-    setPlayingSet(set);
+    setActiveSet(set);
+    setExpanded(true);
     setShowUpload(false);
   }, []);
 
@@ -129,9 +147,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         {signedIn && !showUpload && !editingSet && (
           <button
             className='booth__upload-btn'
-            onClick={() => {
-              setShowUpload(true);
-            }}
+            onClick={() => setShowUpload(true)}
             type='button'
           >
             <AddIcon />
@@ -186,7 +202,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
           </div>
         )}
 
-        <div className={`booth__list${playingSet ? ' booth__list--with-player' : ''}`}>
+        <div className='booth__list'>
           {loading && (
             <div className='booth__loading'>
               {intl.formatMessage(messages.loading)}
@@ -198,22 +214,27 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
             </div>
           )}
           {filteredSets.map((set) => (
-            <BoothSetCard
-              key={set.id}
-              set={set}
-              onPlay={handlePlay}
-              onEdit={handleEdit}
-              active={playingSet?.id === set.id}
-            />
+            <Fragment key={set.id}>
+              <BoothSetCard
+                set={set}
+                onPlay={handlePlay}
+                onTogglePlay={handleTogglePlay}
+                onEdit={handleEdit}
+                active={activeSet?.id === set.id}
+                playing={isPlaying && activeSet?.id === set.id}
+              />
+              {activeSet?.id === set.id && (
+                <InlinePlayer
+                  ref={playerRef}
+                  set={activeSet}
+                  hidden={!expanded}
+                  onCollapse={() => setExpanded(false)}
+                  onPlayingChange={setIsPlaying}
+                />
+              )}
+            </Fragment>
           ))}
         </div>
-
-        {playingSet && (
-          <BottomPlayer
-            set={playingSet}
-            onClose={() => setPlayingSet(null)}
-          />
-        )}
       </div>
 
       <Helmet>

@@ -511,6 +511,235 @@ $booth-accent: var(--space-color, #3034a0);
   }
 }
 
+// ─── Inline player ────────────────────────────────────────────────────────────
+
+.booth-inline-player {
+  background: color-mix(in srgb, var(--space-color, #3034a0) 12%, $ui-base-color);
+  border: 1px solid color-mix(in srgb, var(--space-color, #3034a0) 30%, transparent);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: -4px;
+}
+
+.booth-inline-player__header {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.booth-inline-player__cover {
+  flex-shrink: 0;
+  width: 88px;
+  height: 88px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 25%, $ui-base-color);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.booth-inline-player__cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 36px;
+    height: 36px;
+    fill: color-mix(in srgb, var(--space-color, #3034a0) 50%, $secondary-text-color);
+  }
+}
+
+.booth-inline-player__meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.booth-inline-player__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: $primary-text-color;
+  line-height: 1.2;
+}
+
+.booth-inline-player__artist {
+  font-size: 13px;
+  color: $secondary-text-color;
+}
+
+.booth-inline-player__genre {
+  display: inline-block;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, $primary-text-color);
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.booth-inline-player__description {
+  font-size: 12px;
+  color: $darker-text-color;
+  line-height: 1.5;
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.booth-inline-player__collapse-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $secondary-text-color;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+
+  &:hover {
+    color: $primary-text-color;
+    background: $ui-base-lighter-color;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+  }
+}
+
+.booth-inline-player__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.booth-inline-player__play-btn {
+  width: 48px;
+  height: 48px;
+  background: var(--space-color, #3034a0);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.88;
+  }
+
+  svg {
+    width: 26px;
+    height: 26px;
+    fill: currentColor;
+  }
+}
+
+.booth-inline-player__skip-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $secondary-text-color;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  font-size: 10px;
+  font-weight: 600;
+  transition: color 0.15s, background 0.15s;
+
+  &:hover {
+    color: $primary-text-color;
+    background: $ui-base-lighter-color;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+  }
+}
+
+.booth-inline-player__seek-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.booth-inline-player__times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: $secondary-text-color;
+  font-variant-numeric: tabular-nums;
+}
+
+// ─── Waveform ─────────────────────────────────────────────────────────────────
+
+.booth-waveform {
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  user-select: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--space-color, #3034a0);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+}
+
+.booth-waveform__bar {
+  flex: 1;
+  min-width: 0;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 30%, $ui-base-lighter-color);
+  transition: background 0.1s;
+
+  &--played {
+    background: var(--space-color, #3034a0);
+  }
+}
+
+.booth-waveform:hover .booth-waveform__bar {
+  background: color-mix(in srgb, var(--space-color, #3034a0) 45%, $ui-base-lighter-color);
+
+  &--played {
+    background: color-mix(in srgb, var(--space-color, #3034a0) 100%, #fff 10%);
+    filter: brightness(1.1);
+  }
+}
+
 // ─── Set detail page ──────────────────────────────────────────────────────────
 
 .booth--set-page {
