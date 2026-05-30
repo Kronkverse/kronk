@@ -516,27 +516,16 @@ $booth-accent: var(--space-color, #3034a0);
 .booth-inline-player {
   background: color-mix(in srgb, var(--space-color, #3034a0) 12%, $ui-base-color);
   border: 1px solid color-mix(in srgb, var(--space-color, #3034a0) 30%, transparent);
-  border-top: none;
-  border-radius: 0 0 12px 12px;
-  padding: 16px;
+  border-radius: 12px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-top: -4px;
 }
 
-.booth-inline-player__header {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-}
-
-.booth-inline-player__cover {
-  flex-shrink: 0;
-  width: 88px;
-  height: 88px;
-  border-radius: 8px;
-  overflow: hidden;
+.booth-inline-player__artwork {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
   background: color-mix(in srgb, var(--space-color, #3034a0) 25%, $ui-base-color);
 
   img {
@@ -547,7 +536,7 @@ $booth-accent: var(--space-color, #3034a0);
   }
 }
 
-.booth-inline-player__cover-placeholder {
+.booth-inline-player__artwork-placeholder {
   width: 100%;
   height: 100%;
   display: flex;
@@ -555,71 +544,31 @@ $booth-accent: var(--space-color, #3034a0);
   justify-content: center;
 
   svg {
-    width: 36px;
-    height: 36px;
+    width: 80px;
+    height: 80px;
     fill: color-mix(in srgb, var(--space-color, #3034a0) 50%, $secondary-text-color);
   }
 }
 
-.booth-inline-player__meta {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.booth-inline-player__title {
-  font-size: 16px;
-  font-weight: 700;
-  color: $primary-text-color;
-  line-height: 1.2;
-}
-
-.booth-inline-player__artist {
-  font-size: 13px;
-  color: $secondary-text-color;
-}
-
-.booth-inline-player__genre {
-  display: inline-block;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
-  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, $primary-text-color);
-  border-radius: 10px;
-  padding: 1px 8px;
-  font-size: 11px;
-  font-weight: 500;
-  margin-top: 2px;
-}
-
-.booth-inline-player__description {
-  font-size: 12px;
-  color: $darker-text-color;
-  line-height: 1.5;
-  margin: 4px 0 0;
-  white-space: pre-wrap;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-}
-
 .booth-inline-player__collapse-btn {
-  flex-shrink: 0;
-  background: none;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.5);
   border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
-  color: $secondary-text-color;
-  padding: 4px;
-  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s, background 0.15s;
+  color: #fff;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s;
 
   &:hover {
-    color: $primary-text-color;
-    background: $ui-base-lighter-color;
+    background: rgba(0, 0, 0, 0.72);
   }
 
   svg {
@@ -629,16 +578,55 @@ $booth-accent: var(--space-color, #3034a0);
   }
 }
 
+.booth-inline-player__info {
+  padding: 14px 16px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.booth-inline-player__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: $primary-text-color;
+  line-height: 1.2;
+}
+
+.booth-inline-player__artist {
+  font-size: 14px;
+  color: $secondary-text-color;
+}
+
+.booth-inline-player__genre {
+  display: inline-block;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, $primary-text-color);
+  border-radius: 10px;
+  padding: 2px 9px;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.booth-inline-player__description {
+  font-size: 13px;
+  color: $darker-text-color;
+  line-height: 1.5;
+  margin: 6px 0 0;
+  white-space: pre-wrap;
+}
+
 .booth-inline-player__controls {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 24px;
+  padding: 14px 16px 8px;
 }
 
 .booth-inline-player__play-btn {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   background: var(--space-color, #3034a0);
   border: none;
   border-radius: 50%;
@@ -654,8 +642,8 @@ $booth-accent: var(--space-color, #3034a0);
   }
 
   svg {
-    width: 26px;
-    height: 26px;
+    width: 30px;
+    height: 30px;
     fill: currentColor;
   }
 }
@@ -681,13 +669,14 @@ $booth-accent: var(--space-color, #3034a0);
   }
 
   svg {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     fill: currentColor;
   }
 }
 
 .booth-inline-player__seek-wrap {
+  padding: 4px 16px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;

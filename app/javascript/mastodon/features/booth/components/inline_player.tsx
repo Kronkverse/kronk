@@ -124,38 +124,19 @@ export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
 
     return (
       <>
-        {/* Audio element always in the DOM so playback survives collapse */}
+        {/* Always mounted so audio survives collapse */}
         <audio ref={audioRef} src={set.audio_url ?? ''} preload='metadata' />
 
         {!hidden && (
           <div className='booth-inline-player'>
-            <div className='booth-inline-player__header'>
-              <div className='booth-inline-player__cover'>
-                {set.cover_url ? (
-                  <img src={set.cover_url} alt='' />
-                ) : (
-                  <div className='booth-inline-player__cover-placeholder'>
-                    <HeadphonesIcon />
-                  </div>
-                )}
-              </div>
-
-              <div className='booth-inline-player__meta'>
-                <div className='booth-inline-player__title'>{set.title}</div>
-                <div className='booth-inline-player__artist'>
-                  {set.artist_name}
-                  {set.event_name ? ` · ${set.event_name}` : ''}
+            <div className='booth-inline-player__artwork'>
+              {set.cover_url ? (
+                <img src={set.cover_url} alt='' />
+              ) : (
+                <div className='booth-inline-player__artwork-placeholder'>
+                  <HeadphonesIcon />
                 </div>
-                {set.genre && (
-                  <span className='booth-inline-player__genre'>{set.genre}</span>
-                )}
-                {set.description && (
-                  <p className='booth-inline-player__description'>
-                    {set.description}
-                  </p>
-                )}
-              </div>
-
+              )}
               <button
                 className='booth-inline-player__collapse-btn'
                 onClick={onCollapse}
@@ -164,6 +145,22 @@ export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
               >
                 <CloseIcon />
               </button>
+            </div>
+
+            <div className='booth-inline-player__info'>
+              <div className='booth-inline-player__title'>{set.title}</div>
+              <div className='booth-inline-player__artist'>
+                {set.artist_name}
+                {set.event_name ? ` · ${set.event_name}` : ''}
+              </div>
+              {set.genre && (
+                <span className='booth-inline-player__genre'>{set.genre}</span>
+              )}
+              {set.description && (
+                <p className='booth-inline-player__description'>
+                  {set.description}
+                </p>
+              )}
             </div>
 
             <div className='booth-inline-player__controls'>
