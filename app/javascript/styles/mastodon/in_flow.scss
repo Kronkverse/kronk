@@ -215,9 +215,12 @@
 }
 
 .in-flow-light__arc-duration {
-  fill: $primary-text-color;
-  font-size: 5.5px;
+  font-size: 13px;
   font-weight: 600;
+  color: $primary-text-color;
+  text-align: center;
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
 }
 
 .in-flow-light__relation {

@@ -99,16 +99,8 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
 
   return (
     <div className='in-flow-light__arc-wrap'>
-      <svg viewBox='0 0 100 62' className='in-flow-light__arc-svg'>
-        {/* Duration at top */}
-        <text
-          x='50'
-          y='7'
-          textAnchor='middle'
-          className='in-flow-light__arc-duration'
-        >
-          {daylightLabel}
-        </text>
+      <div className='in-flow-light__arc-duration'>{daylightLabel}</div>
+      <svg viewBox='0 0 100 56' className='in-flow-light__arc-svg'>
         {/* Background arc — full day */}
         <path
           d={`M ${leftEnd.x} ${leftEnd.y} A ${R} ${R} 0 0 1 ${rightEnd.x} ${rightEnd.y}`}
