@@ -215,14 +215,17 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
           )}
           {filteredSets.map((set) => (
             <Fragment key={set.id}>
-              <BoothSetCard
-                set={set}
-                onPlay={handlePlay}
-                onTogglePlay={handleTogglePlay}
-                onEdit={handleEdit}
-                active={activeSet?.id === set.id}
-                playing={isPlaying && activeSet?.id === set.id}
-              />
+              {/* Hide the card while its player is expanded */}
+              {!(activeSet?.id === set.id && expanded) && (
+                <BoothSetCard
+                  set={set}
+                  onPlay={handlePlay}
+                  onTogglePlay={handleTogglePlay}
+                  onEdit={handleEdit}
+                  active={activeSet?.id === set.id}
+                  playing={isPlaying && activeSet?.id === set.id}
+                />
+              )}
               {activeSet?.id === set.id && (
                 <InlinePlayer
                   ref={playerRef}
