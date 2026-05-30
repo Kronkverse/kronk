@@ -23,4 +23,5 @@ jobs:
           echo "$DEPLOY_KEY" > ~/.ssh/key
           chmod 600 ~/.ssh/key
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "deploy $BRANCH"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "cd /home/mastodon/staging && RAILS_ENV=production bundle exec rails db:migrate"
           rm -f ~/.ssh/key
