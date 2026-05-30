@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class REST::NotificationSerializer < ActiveModel::Serializer
+  include RoutingHelper
+
   # Please update app/javascript/api_types/notification.ts when making changes to the attributes
   attributes :id, :type, :created_at, :group_key
 
@@ -59,9 +61,11 @@ class REST::NotificationSerializer < ActiveModel::Serializer
     reply_msg = msg.in_reply_to_notification&.nudge_message
     {
       body: msg.body,
-      media_url: msg.media_attachment&.file&.url,
-      voice_url: msg.voice_attachment&.file&.url,
-      in_reply_to: reply_msg ? { body: reply_msg.body, media_url: reply_msg.media_attachment&.file&.url } : nil,
+      media_url: msg.media_attachment ? full_asset_url(msg.media_attachment.file.url(:original)) : nil,
+      voice_url: msg.voice_attachment ? full_asset_url(msg.voice_attachment.file.url(:original)) : nil,
+      in_reply_to: if reply_msg
+                     { body: reply_msg.body, media_url: reply_msg.media_attachment ? full_asset_url(reply_msg.media_attachment.file.url(:original)) : nil }
+                   end,
     }
   end
 
