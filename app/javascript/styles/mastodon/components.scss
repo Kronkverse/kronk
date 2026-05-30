@@ -12212,6 +12212,14 @@ noscript {
       background: $highlight-text-color;
     }
   }
+
+  &--suggestions {
+    color: $dark-text-color;
+
+    &::before {
+      background: mix($highlight-text-color, $gold-star, 50%);
+    }
+  }
 }
 
 // Nudge all back button row
@@ -12223,6 +12231,23 @@ noscript {
   .button {
     width: 100%;
     justify-content: center;
+  }
+}
+
+.nudge-show-more {
+  padding: 10px 15px;
+  border-bottom: 1px solid lighten($ui-base-color, 8%);
+
+  &__btn {
+    background: none;
+    border: none;
+    padding: 0;
+    color: $highlight-text-color;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+
+    &:hover { text-decoration: underline; }
   }
 }
 
