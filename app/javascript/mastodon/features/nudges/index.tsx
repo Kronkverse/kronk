@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 
 import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import { importFetchedAccounts } from 'mastodon/actions/importer';
+import { openModal } from 'mastodon/actions/modal';
 import {
   decrementNudgeCount,
   setUnreadNudgeCount,
@@ -47,28 +48,27 @@ const NudgeAlert: React.FC<{
     state.accounts.get(alert.accountId),
   );
   const [nudgedBack, setNudgedBack] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const t = window.setTimeout(() => onDismiss(alert.id), 8000);
     return () => window.clearTimeout(t);
   }, [alert.id, onDismiss]);
 
-  const handleNudgeBack = useCallback(async () => {
-    if (loading || nudgedBack) return;
-    setLoading(true);
-    try {
-      await apiNudgeAccount(alert.accountId);
-      setNudgedBack(true);
-      dispatch(decrementNudgeCount());
-    } catch (e: unknown) {
-      if (e instanceof AxiosError && e.response?.status === 422) {
-        setNudgedBack(true);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [alert.accountId, loading, nudgedBack, dispatch]);
+  const handleNudgeBack = useCallback(() => {
+    if (nudgedBack) return;
+    dispatch(
+      openModal({
+        modalType: 'NUDGE_COMPOSE',
+        modalProps: {
+          accountId: alert.accountId,
+          onSent: () => {
+            setNudgedBack(true);
+            dispatch(decrementNudgeCount());
+          },
+        },
+      }),
+    );
+  }, [alert.accountId, nudgedBack, dispatch]);
 
   if (!account) return null;
 
@@ -85,7 +85,7 @@ const NudgeAlert: React.FC<{
           }}
         />
       </span>
-      <Button compact disabled={loading || nudgedBack} onClick={handleNudgeBack}>
+      <Button compact disabled={nudgedBack} onClick={handleNudgeBack}>
         {nudgedBack ? (
           <FormattedMessage id='nudges.nudged_back' defaultMessage='Nudged!' />
         ) : (
@@ -110,27 +110,25 @@ const NudgePartnerItem: React.FC<{
     state.accounts.get(partner.account_id),
   );
   const [nudgedBack, setNudgedBack] = useState(false);
-  const [loading, setLoading] = useState(false);
   const canNudge = partner.can_nudge_back && !nudgedBack;
   const isMilestone = (partner.sent_count + partner.received_count) >= MILESTONE_THRESHOLD;
 
-  const handleNudgeBack = useCallback(async () => {
-    if (loading || !canNudge) return;
-    setLoading(true);
-    try {
-      await apiNudgeAccount(partner.account_id);
-      setNudgedBack(true);
-      dispatch(decrementNudgeCount());
-      onNudged(partner.account_id);
-    } catch (e: unknown) {
-      if (e instanceof AxiosError && e.response?.status === 422) {
-        setNudgedBack(true);
-        onNudged(partner.account_id);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [partner.account_id, loading, canNudge, dispatch, onNudged]);
+  const handleNudgeBack = useCallback(() => {
+    if (!canNudge) return;
+    dispatch(
+      openModal({
+        modalType: 'NUDGE_COMPOSE',
+        modalProps: {
+          accountId: partner.account_id,
+          onSent: () => {
+            setNudgedBack(true);
+            dispatch(decrementNudgeCount());
+            onNudged(partner.account_id);
+          },
+        },
+      }),
+    );
+  }, [partner.account_id, canNudge, dispatch, onNudged]);
 
   if (!account) return null;
 
@@ -163,7 +161,7 @@ const NudgePartnerItem: React.FC<{
 
       <div className='nudge-partner-item__action'>
         {canNudge ? (
-          <Button compact disabled={loading} onClick={handleNudgeBack}>
+          <Button compact onClick={handleNudgeBack}>
             <FormattedMessage id='nudges.nudge_back' defaultMessage='Nudge back' />
           </Button>
         ) : nudgedBack ? (
@@ -185,20 +183,22 @@ const NudgePartnerItem: React.FC<{
 // ── Suggestion card ───────────────────────────────────────────────────────────
 
 const NudgeSuggestionItem: React.FC<{ suggestion: ApiNudgeSuggestion }> = ({ suggestion }) => {
+  const dispatch = useAppDispatch();
   const account = useAppSelector((state) => state.accounts.get(suggestion.account_id));
   const [nudged, setNudged] = useState(false);
-  const [loading, setLoading] = useState(false);
 
-  const handleNudge = useCallback(async () => {
-    if (loading || nudged) return;
-    setLoading(true);
-    try {
-      await apiNudgeAccount(suggestion.account_id);
-      setNudged(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [suggestion.account_id, loading, nudged]);
+  const handleNudge = useCallback(() => {
+    if (nudged) return;
+    dispatch(
+      openModal({
+        modalType: 'NUDGE_COMPOSE',
+        modalProps: {
+          accountId: suggestion.account_id,
+          onSent: () => { setNudged(true); },
+        },
+      }),
+    );
+  }, [suggestion.account_id, nudged, dispatch]);
 
   if (!account) return null;
 
@@ -223,7 +223,7 @@ const NudgeSuggestionItem: React.FC<{ suggestion: ApiNudgeSuggestion }> = ({ sug
             <FormattedMessage id='nudges.nudged_back' defaultMessage='Nudged!' />
           </Button>
         ) : (
-          <Button compact disabled={loading} onClick={handleNudge}>
+          <Button compact onClick={handleNudge}>
             <FormattedMessage id='account_nudges.nudge' defaultMessage='Nudge @{acct}' values={{ acct: account.acct }} />
           </Button>
         )}

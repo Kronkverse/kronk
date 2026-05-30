@@ -165,14 +165,21 @@ interface EventInvitationNotificationJSON extends BaseNotificationJSON {
   event_invitation: ApiEventInvitationJSON;
 }
 
+interface NudgeMessage {
+  body: string | null;
+  media_url: string | null;
+}
+
 interface NudgeNotificationGroupJSON extends BaseNotificationGroupJSON {
   type: 'nudge';
   nudge_streak: number;
+  nudge_message?: NudgeMessage;
 }
 
 interface NudgeNotificationJSON extends BaseNotificationJSON {
   type: 'nudge';
   nudge_streak: number;
+  nudge_message?: NudgeMessage;
 }
 
 export type ApiNotificationJSON =

@@ -191,7 +191,12 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def nudge
-    NudgeService.new.call(current_user.account, @account)
+    NudgeService.new.call(
+      current_user.account,
+      @account,
+      text: params[:text].presence,
+      media_attachment_id: params[:media_id].presence
+    )
     render json: { streak: nudge_streak_count, can_nudge: false }
   rescue Mastodon::NotPermittedError
     render json: { error: 'waiting_for_nudge_back' }, status: 422

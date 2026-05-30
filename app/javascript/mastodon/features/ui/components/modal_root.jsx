@@ -26,6 +26,7 @@ import BundleContainer from '../containers/bundle_container';
 import { ActionsModal } from './actions_modal';
 import AudioModal from './audio_modal';
 import { BoostModal } from './boost_modal';
+import { NudgeComposeModal } from './nudge_compose_modal';
 import {
   ConfirmationModal,
   ConfirmDeleteStatusModal,
@@ -87,6 +88,7 @@ export const MODAL_COMPONENTS = {
   'ANNUAL_REPORT': AnnualReportModal,
   'COMPOSE_PRIVACY': () => Promise.resolve({ default: VisibilityModal }),
   'INVITE': () => import('./invite_modal'),
+  'NUDGE_COMPOSE': () => Promise.resolve({ default: NudgeComposeModal }),
 };
 
 export default class ModalRoot extends PureComponent {
