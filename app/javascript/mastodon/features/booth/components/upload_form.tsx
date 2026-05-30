@@ -4,6 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import api from 'mastodon/api';
 import type { BoothSet } from '../types';
+import { GenreTagInput } from './genre_tag_input';
 
 const messages = defineMessages({
   title: { id: 'booth.upload.title', defaultMessage: 'Title' },
@@ -86,7 +87,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
   const [artistName, setArtistName] = useState('');
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
-  const [genre, setGenre] = useState('');
+  const [genres, setGenres] = useState<string[]>([]);
   const [description, setDescription] = useState('');
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -153,14 +154,14 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
         }
 
         setStage('saving');
-        const payload: Record<string, string> = {
+        const payload: Record<string, unknown> = {
           title,
           artist_name: artistName,
           audio_id: audioId,
+          genres,
         };
         if (eventName) payload.event_name = eventName;
         if (eventDate) payload.event_date = eventDate;
-        if (genre) payload.genre = genre;
         if (description) payload.description = description;
         if (coverId) payload.cover_id = coverId;
 
@@ -180,7 +181,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
       artistName,
       eventName,
       eventDate,
-      genre,
+      genres,
       description,
       audioFile,
       coverFile,
@@ -276,15 +277,10 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
             />
           </label>
 
-          <label className='booth-upload-form__field'>
+          <div className='booth-upload-form__field'>
             <span>{intl.formatMessage(messages.genre)}</span>
-            <input
-              type='text'
-              value={genre}
-              onChange={(e) => setGenre(e.target.value)}
-              maxLength={100}
-            />
-          </label>
+            <GenreTagInput value={genres} onChange={setGenres} />
+          </div>
 
           <label className='booth-upload-form__field'>
             <span>{intl.formatMessage(messages.description)}</span>

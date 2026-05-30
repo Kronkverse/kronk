@@ -525,7 +525,7 @@ $booth-accent: var(--space-color, #3034a0);
 .booth-inline-player__artwork {
   position: relative;
   width: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 16 / 9;
   background: color-mix(in srgb, var(--space-color, #3034a0) 25%, $ui-base-color);
 
   img {
@@ -597,15 +597,20 @@ $booth-accent: var(--space-color, #3034a0);
   color: $secondary-text-color;
 }
 
+.booth-inline-player__genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
 .booth-inline-player__genre {
-  display: inline-block;
   background: color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
   color: color-mix(in srgb, var(--space-color, #3034a0) 80%, $primary-text-color);
   border-radius: 10px;
   padding: 2px 9px;
   font-size: 11px;
   font-weight: 500;
-  margin-top: 4px;
 }
 
 .booth-inline-player__description {
@@ -1282,5 +1287,109 @@ $booth-accent: var(--space-color, #3034a0);
     width: 18px;
     height: 18px;
     fill: currentColor;
+  }
+}
+
+// ─── Genre tag input ──────────────────────────────────────────────────────────
+
+.booth-genre-input {
+  position: relative;
+}
+
+.booth-genre-input__field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 6px 8px;
+  background: $ui-base-color;
+  border: 1px solid $ui-base-lighter-color;
+  border-radius: 6px;
+  cursor: text;
+  transition: border-color 0.15s;
+
+  &:focus-within {
+    border-color: var(--space-color, #3034a0);
+  }
+}
+
+.booth-genre-input__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 25%, transparent);
+  color: color-mix(in srgb, var(--space-color, #3034a0) 85%, $primary-text-color);
+  border-radius: 12px;
+  padding: 2px 6px 2px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.booth-genre-input__tag-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  padding: 0 2px;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 50%;
+  transition: opacity 0.1s;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.booth-genre-input__text {
+  flex: 1;
+  min-width: 80px;
+  background: none;
+  border: none;
+  color: $primary-text-color;
+  font-size: 14px;
+  font-family: inherit;
+  padding: 0;
+  outline: none;
+
+  &::placeholder {
+    color: $darker-text-color;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.booth-genre-input__suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: $ui-base-color;
+  border: 1px solid $ui-base-lighter-color;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.booth-genre-input__suggestion {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  color: $primary-text-color;
+  font-size: 13px;
+  padding: 9px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--space-color, #3034a0) 12%, $ui-base-color);
   }
 }
