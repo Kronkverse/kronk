@@ -55,8 +55,6 @@ interface DaylightArcProps {
   daylightMinutes: number;
   riseMinutesFromMidnight: number;
   setMinutesFromMidnight: number;
-  riseLabel: string;
-  setLabel: string;
   currentMinutes: number;
 }
 
@@ -64,8 +62,6 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
   daylightMinutes,
   riseMinutesFromMidnight,
   setMinutesFromMidnight,
-  riseLabel,
-  setLabel,
   currentMinutes,
 }) => {
   const Rx = 44;
@@ -129,24 +125,6 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
             />
           </g>
         )}
-        {/* Rise label */}
-        <text
-          x={riseP.x}
-          y={cy + 10}
-          textAnchor='middle'
-          className='in-flow-light__arc-time'
-        >
-          {riseLabel}
-        </text>
-        {/* Set label */}
-        <text
-          x={setP.x}
-          y={cy + 10}
-          textAnchor='middle'
-          className='in-flow-light__arc-time'
-        >
-          {setLabel}
-        </text>
       </svg>
     </div>
   );
@@ -218,8 +196,6 @@ export const LightStrand: React.FC = () => {
     [year, month, day],
   );
 
-  const riseLabel = info.rise ? formatTimeInLocation(info.rise) : '';
-  const setLabel = info.set ? formatTimeInLocation(info.set) : '';
   const riseMinutes = info.rise ? toLocalMinutes(info.rise) : 6 * 60;
   const setMinutes = info.set ? toLocalMinutes(info.set) : 18 * 60;
   const currentMinutes = useMemo(() => toLocalMinutes(date), [date]);
@@ -230,8 +206,6 @@ export const LightStrand: React.FC = () => {
         daylightMinutes={info.daylightMinutes}
         riseMinutesFromMidnight={riseMinutes}
         setMinutesFromMidnight={setMinutes}
-        riseLabel={riseLabel}
-        setLabel={setLabel}
         currentMinutes={currentMinutes}
       />
 
