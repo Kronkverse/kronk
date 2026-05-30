@@ -17,6 +17,7 @@ import { INTRODUCTION_VERSION } from 'mastodon/actions/onboarding';
 import { AlertsController } from 'mastodon/components/alerts_controller';
 import { Hotkeys } from 'mastodon/components/hotkeys';
 import { HoverCardController } from 'mastodon/components/hover_card_controller';
+import { HuddlePip } from 'mastodon/features/huddle_pip';
 import { PictureInPicture } from 'mastodon/features/picture_in_picture';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { layoutFromWindow } from 'mastodon/is_mobile';
@@ -614,6 +615,7 @@ class UI extends PureComponent {
 
           <NavigationBar />
           {layout !== 'mobile' && <PictureInPicture />}
+          <HuddlePip />
           <AlertsController />
           {!disableHoverCards && <HoverCardController />}
           <HashtagMenuController />

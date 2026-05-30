@@ -5,12 +5,18 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
+import {
+  huddleJoined,
+  huddleLeft,
+  huddleMinimized,
+  huddleExpanded,
+} from 'mastodon/actions/huddle';
 import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { me, getAccessToken } from 'mastodon/initial_state';
 import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
-import { useAppSelector } from 'mastodon/store';
+import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({
   heading: { id: 'live.title', defaultMessage: 'Huddle' },
@@ -176,6 +182,7 @@ const Live: React.FC<{
   multiColumn: boolean;
 }> = ({ multiColumn }) => {
   const intl = useIntl();
+  const dispatch = useAppDispatch();
   const columnRef = useRef<ColumnRef>(null);
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const jitsiApiRef = useRef<JitsiApi | null>(null);
@@ -185,11 +192,49 @@ const Live: React.FC<{
   const [participantCount, setParticipantCount] = useState(0);
   const [lobbyParticipants, setLobbyParticipants] = useState<string[]>([]);
 
+  // Refs so the unmount cleanup can read the latest values
+  const inRoomRef = useRef(false);
+  const participantCountRef = useRef(0);
+
+  // Was the huddle minimized when we mounted? (user returned to /huddle)
+  const huddleWasMinimized = useAppSelector(
+    (state) => state.huddle.active && state.huddle.minimized,
+  );
+  const [autoJoining, setAutoJoining] = useState(false);
+  const autoJoinInitialisedRef = useRef(false);
+
   const currentAccount = useAppSelector((state) =>
     me ? state.accounts.get(me) : undefined,
   );
   const currentUsername = currentAccount?.get('username');
   const currentAvatar = currentAccount?.get('avatar');
+
+  // Keep refs in sync so cleanup can read latest values
+  useEffect(() => {
+    inRoomRef.current = inRoom;
+  }, [inRoom]);
+
+  useEffect(() => {
+    participantCountRef.current = participantCount;
+  }, [participantCount]);
+
+  // On mount: if returning from a minimized state, trigger auto-rejoin
+  useEffect(() => {
+    if (!autoJoinInitialisedRef.current) {
+      autoJoinInitialisedRef.current = true;
+      if (huddleWasMinimized) {
+        dispatch(huddleExpanded());
+        setAutoJoining(true);
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Dispatch huddleJoined when we enter the room
+  useEffect(() => {
+    if (inRoom) {
+      dispatch(huddleJoined());
+    }
+  }, [inRoom]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (
@@ -212,12 +257,21 @@ const Live: React.FC<{
 
   useEffect(() => {
     return () => {
+      if (inRoomRef.current) {
+        // Navigation away while in room — minimize to PIP instead of leaving
+        dispatch(
+          huddleMinimized({ participantCount: participantCountRef.current }),
+        );
+      }
       if (jitsiApiRef.current) {
+        if (jitsiApiRef.current._countInterval) {
+          clearInterval(jitsiApiRef.current._countInterval);
+        }
         jitsiApiRef.current.dispose();
         jitsiApiRef.current = null;
       }
     };
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     if (inRoom) return undefined;
@@ -278,6 +332,14 @@ const Live: React.FC<{
     setInRoom(true);
   }, [apiLoaded]);
 
+  // Trigger auto-rejoin once Jitsi API is loaded
+  useEffect(() => {
+    if (autoJoining && apiLoaded) {
+      setAutoJoining(false);
+      void joinRoom();
+    }
+  }, [autoJoining, apiLoaded, joinRoom]);
+
   const leaveRoom = useCallback(() => {
     if (jitsiApiRef.current) {
       if (jitsiApiRef.current._countInterval) {
@@ -288,17 +350,8 @@ const Live: React.FC<{
     }
     setParticipantCount(0);
     setInRoom(false);
-  }, []);
-
-  useEffect(() => {
-    if (!inRoom) return undefined;
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = '';
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => { window.removeEventListener('beforeunload', handleBeforeUnload); };
-  }, [inRoom]);
+    dispatch(huddleLeft());
+  }, [dispatch]);
 
   useEffect(() => {
     if (!inRoom || !apiLoaded || !jitsiContainerRef.current) return;
