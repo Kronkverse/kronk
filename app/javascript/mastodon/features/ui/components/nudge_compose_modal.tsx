@@ -38,29 +38,37 @@ export const NudgeComposeModal: React.FC<{
     [],
   );
 
+  const handleAttachClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
   const handleFileChange = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-
       setUploading(true);
-      try {
-        const data = new FormData();
-        data.append('file', file);
-        const response = await fetch('/api/v2/media', {
-          method: 'POST',
-          body: data,
-          headers: { 'X-CSRF-Token': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '' },
-          credentials: 'same-origin',
-        });
-        if (response.ok) {
-          const json = (await response.json()) as { id: string };
-          setMediaId(json.id);
-          setMediaPreview(URL.createObjectURL(file));
+      void (async () => {
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          const csrfMeta = document.querySelector(
+            'meta[name="csrf-token"]',
+          ) as HTMLMetaElement | null;
+          const response = await fetch('/api/v2/media', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRF-Token': csrfMeta?.content ?? '' },
+            credentials: 'same-origin',
+          });
+          if (response.ok) {
+            const json = (await response.json()) as { id: string };
+            setMediaId(json.id);
+            setMediaPreview(URL.createObjectURL(file));
+          }
+        } finally {
+          setUploading(false);
         }
-      } finally {
-        setUploading(false);
-      }
+      })();
     },
     [],
   );
@@ -111,7 +119,9 @@ export const NudgeComposeModal: React.FC<{
 
       <div className='nudge-compose-modal__recipient'>
         <Avatar account={account} size={36} />
-        <span className='nudge-compose-modal__recipient-name'>{account.display_name || account.acct}</span>
+        <span className='nudge-compose-modal__recipient-name'>
+          {account.display_name || account.acct}
+        </span>
       </div>
 
       <div className='nudge-compose-modal__body'>
@@ -127,18 +137,26 @@ export const NudgeComposeModal: React.FC<{
         <div className='nudge-compose-modal__counter-row'>
           <button
             className='nudge-compose-modal__attach-btn'
-            onClick={() => fileInputRef.current?.click()}
+            onClick={handleAttachClick}
             disabled={uploading || !!mediaId}
             type='button'
           >
             {uploading ? (
-              <FormattedMessage id='nudge_compose.uploading' defaultMessage='Uploading…' />
+              <FormattedMessage
+                id='nudge_compose.uploading'
+                defaultMessage='Uploading…'
+              />
             ) : (
-              <FormattedMessage id='nudge_compose.attach_image' defaultMessage='Attach image' />
+              <FormattedMessage
+                id='nudge_compose.attach_image'
+                defaultMessage='Attach image'
+              />
             )}
           </button>
 
-          <span className={`nudge-compose-modal__word-count${overLimit ? ' nudge-compose-modal__word-count--over' : ''}`}>
+          <span
+            className={`nudge-compose-modal__word-count${overLimit ? ' nudge-compose-modal__word-count--over' : ''}`}
+          >
             {wordCount}/{MAX_WORDS}
           </span>
         </div>
@@ -153,7 +171,11 @@ export const NudgeComposeModal: React.FC<{
 
         {mediaPreview && (
           <div className='nudge-compose-modal__preview'>
-            <img src={mediaPreview} alt='' className='nudge-compose-modal__preview-img' />
+            <img
+              src={mediaPreview}
+              alt=''
+              className='nudge-compose-modal__preview-img'
+            />
             <button
               className='nudge-compose-modal__remove-img'
               onClick={handleRemoveImage}
@@ -168,17 +190,26 @@ export const NudgeComposeModal: React.FC<{
 
       <div className='nudge-compose-modal__actions'>
         <button className='link-button' onClick={onClose}>
-          <FormattedMessage id='confirmation_modal.cancel' defaultMessage='Cancel' />
+          <FormattedMessage
+            id='confirmation_modal.cancel'
+            defaultMessage='Cancel'
+          />
         </button>
 
         <div className='nudge-compose-modal__send-group'>
           {hasMessage ? (
             <Button disabled={sending || overLimit} onClick={handleSendNudge}>
-              <FormattedMessage id='nudge_compose.send_nudge' defaultMessage='Send nudge' />
+              <FormattedMessage
+                id='nudge_compose.send_nudge'
+                defaultMessage='Send nudge'
+              />
             </Button>
           ) : (
             <Button disabled={sending} onClick={handleJustNudge}>
-              <FormattedMessage id='nudge_compose.just_nudge' defaultMessage='Just nudge' />
+              <FormattedMessage
+                id='nudge_compose.just_nudge'
+                defaultMessage='Just nudge'
+              />
             </Button>
           )}
         </div>

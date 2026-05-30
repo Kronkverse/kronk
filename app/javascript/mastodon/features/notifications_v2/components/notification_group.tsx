@@ -9,11 +9,13 @@ import { useAppSelector, useAppDispatch } from 'mastodon/store';
 import { NotificationAdminReport } from './notification_admin_report';
 import { NotificationAdminSignUp } from './notification_admin_sign_up';
 import { NotificationAnnualReport } from './notification_annual_report';
+import { NotificationEventInvitation } from './notification_event_invitation';
 import { NotificationFavourite } from './notification_favourite';
 import { NotificationFollow } from './notification_follow';
 import { NotificationFollowRequest } from './notification_follow_request';
 import { NotificationMention } from './notification_mention';
 import { NotificationModerationWarning } from './notification_moderation_warning';
+import { NotificationNudge } from './notification_nudge';
 import { NotificationPoll } from './notification_poll';
 import { NotificationQuote } from './notification_quote';
 import { NotificationQuotedUpdate } from './notification_quoted_update';
@@ -21,8 +23,6 @@ import { NotificationReblog } from './notification_reblog';
 import { NotificationSeveredRelationships } from './notification_severed_relationships';
 import { NotificationStatus } from './notification_status';
 import { NotificationUpdate } from './notification_update';
-import { NotificationEventInvitation } from './notification_event_invitation';
-import { NotificationNudge } from './notification_nudge';
 
 export const NotificationGroup: React.FC<{
   notificationGroupId: NotificationGroupModel['group_key'];
