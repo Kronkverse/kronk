@@ -44,7 +44,8 @@ class REST::NotificationSerializer < ActiveModel::Serializer
   end
 
   def nudge_streak
-    a, b = object.account_id, object.from_account_id
+    a = object.account_id
+    b = object.from_account_id
     Notification.where(type: 'nudge')
                 .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
                 .count
