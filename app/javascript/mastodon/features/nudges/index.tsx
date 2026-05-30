@@ -617,6 +617,9 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   // Inbox state
   const [partners, setPartners] = useState<ApiNudgePartner[]>([]);
   const [suggestions, setSuggestions] = useState<ApiNudgeSuggestion[]>([]);
+  const [grandTotal, setGrandTotal] = useState(0);
+  const [totalSent, setTotalSent] = useState(0);
+  const [totalReceived, setTotalReceived] = useState(0);
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState<NudgeAlertData[]>([]);
 
@@ -649,6 +652,9 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         ),
       );
       setSuggestions(data.suggestions);
+      setGrandTotal(data.grand_total);
+      setTotalSent(data.total_sent);
+      setTotalReceived(data.total_received);
       dispatch(setUnreadNudgeCount(data.pending_count));
     } finally {
       setLoading(false);
@@ -731,6 +737,23 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         />
       ) : (
         <div className='scrollable nudge-inbox'>
+          {!loading && grandTotal > 0 && (
+            <div className='nudge-inbox-stats'>
+              <span className='nudge-inbox-stats__total'>{grandTotal}</span>
+              <span className='nudge-inbox-stats__label'>
+                <FormattedMessage
+                  id='nudges.grand_total_label'
+                  defaultMessage='nudges exchanged'
+                />
+              </span>
+              <span className='nudge-inbox-stats__divider' />
+              <span className='nudge-inbox-stats__sent'>↑ {totalSent}</span>
+              <span className='nudge-inbox-stats__received'>
+                ↓ {totalReceived}
+              </span>
+            </div>
+          )}
+
           {loading && (
             <div className='loading-indicator'>
               <div className='loading-indicator__figure' />
