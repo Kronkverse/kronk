@@ -588,4 +588,5 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 };
 
+// eslint-disable-next-line import/no-default-export
 export default NudgesPage;

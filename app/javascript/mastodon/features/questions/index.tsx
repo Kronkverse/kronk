@@ -5,7 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import api from 'mastodon/api';
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
@@ -113,4 +113,5 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 };
 
+// eslint-disable-next-line import/no-default-export
 export default Questions;

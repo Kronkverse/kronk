@@ -28,7 +28,7 @@ class REST::EventSerializer < ActiveModel::Serializer
   end
 
   def image_url
-    return nil unless object.image_id.present?
+    return nil if object.image_id.blank?
 
     object.image&.file&.url(:small)
   end
@@ -42,7 +42,7 @@ class REST::EventSerializer < ActiveModel::Serializer
     object.invited?(current_user.account)
   end
 
-  def is_owner
+  def is_owner # rubocop:disable Naming/PredicatePrefix
     object.account_id == current_user.account.id
   end
 

@@ -6,7 +6,7 @@ import { Helmet } from 'react-helmet';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import api from 'mastodon/api';
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
 import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
@@ -200,4 +200,5 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 };
 
+// eslint-disable-next-line import/no-default-export
 export default Governance;

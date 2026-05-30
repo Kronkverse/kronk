@@ -16,7 +16,13 @@ import {
   OrbitIcon,
 } from './celestial_icons';
 
-const FestivalIcon = ({ label, size = 22 }: { label: string; size?: number }) => {
+const FestivalIcon = ({
+  label,
+  size = 22,
+}: {
+  label: string;
+  size?: number;
+}) => {
   if (label.includes('Winter')) return <SnowflakeIcon size={size} />;
   if (label.includes('Summer') || label.includes('Lammas'))
     return <SunIcon size={size} />;
@@ -26,7 +32,7 @@ const FestivalIcon = ({ label, size = 22 }: { label: string; size?: number }) =>
     return <LeafIcon size={size} />;
   if (label.includes('Beltane')) return <FlameIcon size={size} />;
   return <OrbitIcon size={size} />;
-}
+};
 
 const FESTIVAL_DESCRIPTIONS: Record<string, string> = {
   'Autumn Equinox':

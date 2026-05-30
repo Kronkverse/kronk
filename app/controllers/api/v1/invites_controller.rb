@@ -40,7 +40,7 @@ class Api::V1::InvitesController < Api::BaseController
 
     render json: {
       code: invite.code,
-      url: "https://#{Rails.configuration.x.local_domain}/invite/#{invite.code}"
+      url: "https://#{Rails.configuration.x.local_domain}/invite/#{invite.code}",
     }
   end
 

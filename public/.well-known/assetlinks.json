@@ -1,10 +1,12 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "info.kronk.app",
-    "sha256_cert_fingerprints": [
-      "4B:5A:40:0A:A0:FE:A1:A4:B2:7B:19:96:74:E1:0F:06:CD:FC:12:B2:A8:83:B4:A3:F5:65:12:25:1D:22:9D:7C"
-    ]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "info.kronk.app",
+      "sha256_cert_fingerprints": [
+        "4B:5A:40:0A:A0:FE:A1:A4:B2:7B:19:96:74:E1:0F:06:CD:FC:12:B2:A8:83:B4:A3:F5:65:12:25:1D:22:9D:7C"
+      ]
+    }
   }
-}]
+]

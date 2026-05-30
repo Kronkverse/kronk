@@ -94,4 +94,3 @@ export const apiAcceptNotificationRequests = async (id: string[]) => {
 export const apiDismissNotificationRequests = async (id: string[]) => {
   return apiRequestPost('v1/notifications/requests/dismiss', { id });
 };
-

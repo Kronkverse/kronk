@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { planetName, spaceColor } from 'mastodon/planets';
 
@@ -110,4 +110,5 @@ export const InFlow: React.FC<Props> = ({ multiColumn }) => {
   );
 };
 
+// eslint-disable-next-line import/no-default-export
 export default InFlow;

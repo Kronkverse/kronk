@@ -36,7 +36,6 @@ const FollowerRow: React.FC<{
     : 'invite-followers-panel__account';
 
   return (
-    // eslint-disable-next-line jsx-a11y/label-has-associated-control
     <label className={className}>
       <input
         type='checkbox'
@@ -57,7 +56,10 @@ const FollowerRow: React.FC<{
       </div>
       {invited && (
         <span className='invite-followers-panel__invited-badge'>
-          <FormattedMessage id='events.already_invited' defaultMessage='Invited' />
+          <FormattedMessage
+            id='events.already_invited'
+            defaultMessage='Invited'
+          />
         </span>
       )}
     </label>
@@ -79,12 +81,17 @@ export const InviteFollowersPanel: React.FC<Props> = ({ eventId, onDone }) => {
       try {
         const [credRes, inviteesRes] = await Promise.all([
           api().get<Account>('/api/v1/accounts/verify_credentials'),
-          api().get<{ account_ids: string[] }>(`/api/v1/events/${eventId}/my_invitees`),
+          api().get<{ account_ids: string[] }>(
+            `/api/v1/events/${eventId}/my_invitees`,
+          ),
         ]);
         const accountId = credRes.data.id;
         setAlreadyInvited(new Set(inviteesRes.data.account_ids));
 
-        const followersRes = await api().get<Account[]>(`/api/v1/accounts/${accountId}/followers`, { params: { limit: 80 } });
+        const followersRes = await api().get<Account[]>(
+          `/api/v1/accounts/${accountId}/followers`,
+          { params: { limit: 80 } },
+        );
         setFollowers(followersRes.data);
 
         const linkHeader = followersRes.headers.link as string | undefined;
@@ -106,7 +113,7 @@ export const InviteFollowersPanel: React.FC<Props> = ({ eventId, onDone }) => {
     setLoadingMore(true);
     try {
       const res = await api().get<Account[]>(nextUrl);
-      setFollowers(prev => [...prev, ...res.data]);
+      setFollowers((prev) => [...prev, ...res.data]);
 
       const linkHeader = res.headers.link as string | undefined;
       if (linkHeader) {
@@ -127,7 +134,7 @@ export const InviteFollowersPanel: React.FC<Props> = ({ eventId, onDone }) => {
   }, [loadMore]);
 
   const toggleAccount = useCallback((id: string) => {
-    setSelected(prev => {
+    setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
@@ -138,28 +145,34 @@ export const InviteFollowersPanel: React.FC<Props> = ({ eventId, onDone }) => {
     });
   }, []);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-  }, []);
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearch(e.target.value);
+    },
+    [],
+  );
 
   const filteredFollowers = useMemo(() => {
     if (!search) return followers;
     const lowerSearch = search.toLowerCase();
-    return followers.filter(a =>
-      a.display_name.toLowerCase().includes(lowerSearch) ||
-      a.acct.toLowerCase().includes(lowerSearch)
+    return followers.filter(
+      (a) =>
+        a.display_name.toLowerCase().includes(lowerSearch) ||
+        a.acct.toLowerCase().includes(lowerSearch),
     );
   }, [followers, search]);
 
   const selectAll = useCallback(() => {
-    const visible = filteredFollowers.filter(a => !alreadyInvited.has(a.id)).map(a => a.id);
-    setSelected(prev => {
+    const visible = filteredFollowers
+      .filter((a) => !alreadyInvited.has(a.id))
+      .map((a) => a.id);
+    setSelected((prev) => {
       const next = new Set(prev);
-      const allSelected = visible.every(id => next.has(id));
+      const allSelected = visible.every((id) => next.has(id));
       if (allSelected) {
-        visible.forEach(id => next.delete(id));
+        visible.forEach((id) => next.delete(id));
       } else {
-        visible.forEach(id => next.add(id));
+        visible.forEach((id) => next.add(id));
       }
       return next;
     });
@@ -184,14 +197,21 @@ export const InviteFollowersPanel: React.FC<Props> = ({ eventId, onDone }) => {
     void handleInvite();
   }, [handleInvite]);
 
-  const selectableFollowers = filteredFollowers.filter(a => !alreadyInvited.has(a.id));
-  const allVisibleSelected = selectableFollowers.length > 0 && selectableFollowers.every(a => selected.has(a.id));
+  const selectableFollowers = filteredFollowers.filter(
+    (a) => !alreadyInvited.has(a.id),
+  );
+  const allVisibleSelected =
+    selectableFollowers.length > 0 &&
+    selectableFollowers.every((a) => selected.has(a.id));
 
   return (
     <div className='invite-followers-panel'>
       <div className='invite-followers-panel__header'>
         <h3>
-          <FormattedMessage id='events.invite_followers' defaultMessage='Invite Followers' />
+          <FormattedMessage
+            id='events.invite_followers'
+            defaultMessage='Invite Followers'
+          />
         </h3>
         <span className='invite-followers-panel__count'>
           {selected.size > 0 && (
@@ -222,22 +242,31 @@ export const InviteFollowersPanel: React.FC<Props> = ({ eventId, onDone }) => {
             checked={allVisibleSelected}
             onChange={selectAll}
           />
-          <FormattedMessage id='events.select_all' defaultMessage='Select all' />
+          <FormattedMessage
+            id='events.select_all'
+            defaultMessage='Select all'
+          />
         </label>
       </div>
 
       <div className='invite-followers-panel__list'>
         {loading ? (
           <div className='invite-followers-panel__loading'>
-            <FormattedMessage id='events.loading_followers' defaultMessage='Loading followers...' />
+            <FormattedMessage
+              id='events.loading_followers'
+              defaultMessage='Loading followers...'
+            />
           </div>
         ) : filteredFollowers.length === 0 ? (
           <div className='invite-followers-panel__empty'>
-            <FormattedMessage id='events.no_followers' defaultMessage='No followers found' />
+            <FormattedMessage
+              id='events.no_followers'
+              defaultMessage='No followers found'
+            />
           </div>
         ) : (
           <>
-            {filteredFollowers.map(account => (
+            {filteredFollowers.map((account) => (
               <FollowerRow
                 key={account.id}
                 account={account}
@@ -269,7 +298,10 @@ export const InviteFollowersPanel: React.FC<Props> = ({ eventId, onDone }) => {
           disabled={sending || selected.size === 0}
         >
           {sending ? (
-            <FormattedMessage id='events.sending_invites' defaultMessage='Sending...' />
+            <FormattedMessage
+              id='events.sending_invites'
+              defaultMessage='Sending...'
+            />
           ) : (
             <FormattedMessage
               id='events.send_invites'

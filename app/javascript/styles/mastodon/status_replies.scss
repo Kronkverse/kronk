@@ -1,6 +1,6 @@
-@use "variables" as *;
-@use "functions" as *;
-@use "mixins" as *;
+@use 'variables' as *;
+@use 'functions' as *;
+@use 'mixins' as *;
 
 // Status Replies - Threaded inline comments
 .status-replies {

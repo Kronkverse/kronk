@@ -4,7 +4,7 @@ module Extractor
   MAX_DOMAIN_LENGTH = 253
 
   # Markdown link pattern: [text](url)
-  MARKDOWN_LINK_RE = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/
+  MARKDOWN_LINK_RE = %r{\[([^\]]+)\]\((https?://[^)]+)\)}
 
   extend Twitter::TwitterText::Extractor
 

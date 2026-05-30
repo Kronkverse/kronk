@@ -3,15 +3,22 @@ import { useState, useCallback } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import api from 'mastodon/api';
+
 import type { BoothSet } from '../types';
 
 const messages = defineMessages({
   title: { id: 'booth.upload.title', defaultMessage: 'Title' },
   artist: { id: 'booth.upload.artist', defaultMessage: 'Artist / DJ name' },
   event: { id: 'booth.upload.event', defaultMessage: 'Event name (optional)' },
-  eventDate: { id: 'booth.upload.event_date', defaultMessage: 'Event date (optional)' },
+  eventDate: {
+    id: 'booth.upload.event_date',
+    defaultMessage: 'Event date (optional)',
+  },
   genre: { id: 'booth.upload.genre', defaultMessage: 'Genre (optional)' },
-  description: { id: 'booth.upload.description', defaultMessage: 'Description (optional)' },
+  description: {
+    id: 'booth.upload.description',
+    defaultMessage: 'Description (optional)',
+  },
   audio: { id: 'booth.upload.audio', defaultMessage: 'Audio file' },
   cover: { id: 'booth.upload.cover', defaultMessage: 'Cover image (optional)' },
   submit: { id: 'booth.upload.submit', defaultMessage: 'Upload set' },
@@ -44,6 +51,55 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setTitle(e.target.value);
+    },
+    [],
+  );
+  const handleArtistNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setArtistName(e.target.value);
+    },
+    [],
+  );
+  const handleEventNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setEventName(e.target.value);
+    },
+    [],
+  );
+  const handleEventDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setEventDate(e.target.value);
+    },
+    [],
+  );
+  const handleGenreChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setGenre(e.target.value);
+    },
+    [],
+  );
+  const handleDescriptionChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setDescription(e.target.value);
+    },
+    [],
+  );
+  const handleAudioFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setAudioFile(e.target.files?.[0] ?? null);
+    },
+    [],
+  );
+  const handleCoverFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setCoverFile(e.target.files?.[0] ?? null);
+    },
+    [],
+  );
+
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -74,11 +130,28 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
         setSubmitting(false);
       }
     },
-    [title, artistName, eventName, eventDate, genre, description, audioFile, coverFile, onSuccess],
+    [
+      title,
+      artistName,
+      eventName,
+      eventDate,
+      genre,
+      description,
+      audioFile,
+      coverFile,
+      onSuccess,
+    ],
+  );
+
+  const handleFormSubmit = useCallback(
+    (e: React.FormEvent) => {
+      void handleSubmit(e);
+    },
+    [handleSubmit],
   );
 
   return (
-    <form className='booth-upload-form' onSubmit={(e) => void handleSubmit(e)}>
+    <form className='booth-upload-form' onSubmit={handleFormSubmit}>
       <h3 className='booth-upload-form__heading'>Upload a set</h3>
 
       {error && <div className='booth-upload-form__error'>{error}</div>}
@@ -88,7 +161,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
         <input
           type='text'
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={handleTitleChange}
           required
           maxLength={200}
           disabled={submitting}
@@ -100,7 +173,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
         <input
           type='text'
           value={artistName}
-          onChange={(e) => setArtistName(e.target.value)}
+          onChange={handleArtistNameChange}
           required
           maxLength={200}
           disabled={submitting}
@@ -112,7 +185,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
         <input
           type='text'
           value={eventName}
-          onChange={(e) => setEventName(e.target.value)}
+          onChange={handleEventNameChange}
           maxLength={200}
           disabled={submitting}
         />
@@ -123,7 +196,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
         <input
           type='date'
           value={eventDate}
-          onChange={(e) => setEventDate(e.target.value)}
+          onChange={handleEventDateChange}
           disabled={submitting}
         />
       </label>
@@ -133,7 +206,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
         <input
           type='text'
           value={genre}
-          onChange={(e) => setGenre(e.target.value)}
+          onChange={handleGenreChange}
           maxLength={100}
           disabled={submitting}
         />
@@ -143,7 +216,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
         <span>{intl.formatMessage(messages.description)}</span>
         <textarea
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={handleDescriptionChange}
           rows={3}
           maxLength={5000}
           disabled={submitting}
@@ -155,7 +228,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
         <input
           type='file'
           accept='audio/*'
-          onChange={(e) => setAudioFile(e.target.files?.[0] ?? null)}
+          onChange={handleAudioFileChange}
           required
           disabled={submitting}
         />
@@ -166,7 +239,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
         <input
           type='file'
           accept='image/*'
-          onChange={(e) => setCoverFile(e.target.files?.[0] ?? null)}
+          onChange={handleCoverFileChange}
           disabled={submitting}
         />
       </label>

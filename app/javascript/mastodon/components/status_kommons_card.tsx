@@ -15,12 +15,11 @@ const messages = defineMessages({
   },
   supports: {
     id: 'status_kommons_card.supports',
-    defaultMessage: "{count, plural, one {# support} other {# supports}}",
+    defaultMessage: '{count, plural, one {# support} other {# supports}}',
   },
   challenges: {
     id: 'status_kommons_card.challenges',
-    defaultMessage:
-      "{count, plural, one {# challenge} other {# challenges}}",
+    defaultMessage: '{count, plural, one {# challenge} other {# challenges}}',
   },
   viewSeed: {
     id: 'status_kommons_card.view_seed',

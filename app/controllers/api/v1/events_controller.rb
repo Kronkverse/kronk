@@ -18,9 +18,7 @@ class Api::V1::EventsController < Api::BaseController
   def create
     @event = current_account.events.new(event_params)
 
-    if @event.event_type_huddle?
-      @event.huddle_url = 'https://meet.talitamoss.info/huddle'
-    end
+    @event.huddle_url = 'https://meet.talitamoss.info/huddle' if @event.event_type_huddle?
 
     set_image! if params[:image_id].present?
 
@@ -43,9 +41,7 @@ class Api::V1::EventsController < Api::BaseController
 
     @event.update!(event_params)
 
-    if @event.event_type_huddle? && @event.huddle_url.blank?
-      @event.update!(huddle_url: 'https://meet.talitamoss.info/huddle')
-    end
+    @event.update!(huddle_url: 'https://meet.talitamoss.info/huddle') if @event.event_type_huddle? && @event.huddle_url.blank?
 
     render json: @event, serializer: REST::EventSerializer
   end

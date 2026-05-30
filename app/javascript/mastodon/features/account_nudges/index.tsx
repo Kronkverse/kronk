@@ -108,4 +108,5 @@ const AccountNudges: React.FC = () => {
   );
 };
 
+// eslint-disable-next-line import/no-default-export
 export default AccountNudges;

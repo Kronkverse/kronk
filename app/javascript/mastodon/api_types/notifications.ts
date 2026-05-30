@@ -155,7 +155,8 @@ export interface ApiEventInvitationJSON {
   event_type: string;
 }
 
-interface EventInvitationNotificationGroupJSON extends BaseNotificationGroupJSON {
+interface EventInvitationNotificationGroupJSON
+  extends BaseNotificationGroupJSON {
   type: 'event_invitation';
   event_invitation: ApiEventInvitationJSON;
 }

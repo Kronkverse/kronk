@@ -294,10 +294,11 @@ const Live: React.FC<{
     if (!inRoom) return undefined;
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
-      e.returnValue = '';
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => { window.removeEventListener('beforeunload', handleBeforeUnload); };
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, [inRoom]);
 
   useEffect(() => {

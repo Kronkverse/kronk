@@ -1,8 +1,9 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 
-import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
+import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 import api from 'mastodon/api';
+
 import type { BoothSet } from '../types';
 
 interface Props {
@@ -31,7 +32,7 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
 
   const seekTo = useCallback((pct: number) => {
     const audio = audioRef.current;
-    if (!audio || !audio.duration) return;
+    if (!audio?.duration) return;
     audio.currentTime = pct * audio.duration;
   }, []);
 
@@ -59,10 +60,15 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
       const bar = progressRef.current;
       if (!bar) return;
       const rect = bar.getBoundingClientRect();
-      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const pct = Math.max(
+        0,
+        Math.min(1, (e.clientX - rect.left) / rect.width),
+      );
       seekTo(pct);
     };
-    const handleMouseUp = () => setDragging(false);
+    const handleMouseUp = () => {
+      setDragging(false);
+    };
     if (dragging) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
@@ -90,18 +96,50 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
   const handleSkip = useCallback((delta: number) => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.currentTime = Math.max(0, Math.min(audio.duration || 0, audio.currentTime + delta));
+    audio.currentTime = Math.max(
+      0,
+      Math.min(audio.duration || 0, audio.currentTime + delta),
+    );
   }, []);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'ArrowLeft') {
+        handleSkip(-10);
+      }
+      if (e.key === 'ArrowRight') {
+        handleSkip(10);
+      }
+    },
+    [handleSkip],
+  );
+
+  const handleSkipBack = useCallback(() => {
+    handleSkip(-30);
+  }, [handleSkip]);
+  const handleSkipForward = useCallback(() => {
+    handleSkip(30);
+  }, [handleSkip]);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const onDurationChange = () => setDuration(audio.duration);
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-    const onEnded = () => setPlaying(false);
+    const onTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+    };
+    const onDurationChange = () => {
+      setDuration(audio.duration);
+    };
+    const onPlay = () => {
+      setPlaying(true);
+    };
+    const onPause = () => {
+      setPlaying(false);
+    };
+    const onEnded = () => {
+      setPlaying(false);
+    };
 
     audio.addEventListener('timeupdate', onTimeUpdate);
     audio.addEventListener('durationchange', onDurationChange);
@@ -124,6 +162,7 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
 
   return (
     <div className='booth-player'>
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio ref={audioRef} src={set.audio_url ?? ''} preload='metadata' />
 
       <div className='booth-player__progress-wrap'>
@@ -138,10 +177,7 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
           aria-valuemin={0}
           aria-valuemax={Math.round(duration)}
           tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'ArrowLeft') handleSkip(-10);
-            if (e.key === 'ArrowRight') handleSkip(10);
-          }}
+          onKeyDown={handleKeyDown}
         >
           <div
             className='booth-player__progress-fill'
@@ -162,7 +198,7 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
       <div className='booth-player__controls'>
         <button
           className='booth-player__skip-btn'
-          onClick={() => handleSkip(-30)}
+          onClick={handleSkipBack}
           aria-label='Back 30 seconds'
           type='button'
         >
@@ -183,7 +219,7 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
 
         <button
           className='booth-player__skip-btn'
-          onClick={() => handleSkip(30)}
+          onClick={handleSkipForward}
           aria-label='Forward 30 seconds'
           type='button'
         >

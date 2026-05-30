@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
+
 import type { BoothSet } from '../types';
 
 interface Props {

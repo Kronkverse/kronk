@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet';
 import { useHistory, useParams } from 'react-router-dom';
 
 import api from 'mastodon/api';
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
@@ -91,4 +91,5 @@ const QuestionPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 };
 
+// eslint-disable-next-line import/no-default-export
 export default QuestionPage;

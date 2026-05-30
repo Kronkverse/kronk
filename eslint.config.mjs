@@ -167,6 +167,7 @@ export const baseConfig = [
 export default tseslint.config([
   baseConfig,
   globalIgnores([
+    'aws/**/*',
     'build/**/*',
     'coverage/**/*',
     'db/**/*',

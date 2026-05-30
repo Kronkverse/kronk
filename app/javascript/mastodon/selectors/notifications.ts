@@ -35,8 +35,7 @@ const filterNotificationsByAllowedTypes = (
   return notifications.filter(
     (item) =>
       item.type === 'gap' ||
-      (allowedType === item.type &&
-        !NUDGES_ONLY_TYPES.includes(item.type)) ||
+      (allowedType === item.type && !NUDGES_ONLY_TYPES.includes(item.type)) ||
       (allowedType === 'mention' && item.type === 'quote'),
   );
 };

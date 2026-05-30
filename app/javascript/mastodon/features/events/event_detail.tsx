@@ -15,7 +15,7 @@ import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import RepeatIcon from '@/material-icons/400-24px/repeat.svg?react';
 import StarIcon from '@/material-icons/400-24px/star.svg?react';
 import api from 'mastodon/api';
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
 import { spaceColor } from 'mastodon/planets';
@@ -594,4 +594,5 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 };
 
+// eslint-disable-next-line import/no-default-export
 export default EventDetail;
