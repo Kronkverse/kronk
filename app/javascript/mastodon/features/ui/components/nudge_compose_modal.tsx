@@ -51,9 +51,9 @@ export const NudgeComposeModal: React.FC<{
         try {
           const formData = new FormData();
           formData.append('file', file);
-          const csrfMeta = document.querySelector(
+          const csrfMeta = document.querySelector<HTMLMetaElement>(
             'meta[name="csrf-token"]',
-          ) as HTMLMetaElement | null;
+          );
           const response = await fetch('/api/v2/media', {
             method: 'POST',
             body: formData,

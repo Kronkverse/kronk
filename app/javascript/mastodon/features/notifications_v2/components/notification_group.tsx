@@ -168,10 +168,7 @@ export const NotificationGroup: React.FC<{
       break;
     case 'nudge':
       content = (
-        <NotificationNudge
-          unread={unread}
-          notification={notificationGroup}
-        />
+        <NotificationNudge unread={unread} notification={notificationGroup} />
       );
       break;
     default:

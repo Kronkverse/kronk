@@ -740,7 +740,12 @@ export const AccountHeader: React.FC<{
     );
   }
 
-  if (me !== account.id && signedIn && !relationship?.blocking && !relationship?.blocked_by) {
+  if (
+    me !== account.id &&
+    signedIn &&
+    !relationship?.blocking &&
+    !relationship?.blocked_by
+  ) {
     const nudgeTitle = nudgeSent
       ? intl.formatMessage(messages.nudgeSent)
       : !canNudge
