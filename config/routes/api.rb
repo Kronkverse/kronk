@@ -218,6 +218,8 @@ namespace :api, format: false do
 
       member do
         post :dismiss
+        post :nudge_react, to: 'nudge_reactions#create'
+        delete :nudge_react, to: 'nudge_reactions#destroy'
       end
     end
 

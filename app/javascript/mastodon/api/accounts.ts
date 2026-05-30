@@ -42,7 +42,12 @@ export const apiGetFamiliarFollowers = (id: string) =>
 
 export const apiNudgeAccount = (
   id: string,
-  params?: { text?: string; media_id?: string },
+  params?: {
+    text?: string;
+    media_id?: string;
+    voice_id?: string;
+    in_reply_to_notification_id?: string;
+  },
 ) =>
   apiRequestPost<{ streak: number; can_nudge: boolean }>(
     `v1/accounts/${id}/nudge`,

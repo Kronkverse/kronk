@@ -199,7 +199,9 @@ class Api::V1::AccountsController < Api::BaseController
       current_user.account,
       @account,
       text: params[:text].presence,
-      media_attachment_id: params[:media_id].presence
+      media_attachment_id: params[:media_id].presence,
+      voice_attachment_id: params[:voice_id].presence,
+      in_reply_to_notification_id: params[:in_reply_to_notification_id].presence
     )
     render json: { streak: nudge_streak_count, can_nudge: false }
   rescue Mastodon::NotPermittedError
