@@ -53,8 +53,13 @@ $booth-accent: var(--space-color, #3034a0);
 // ─── Now-playing strip ────────────────────────────────────────────────────────
 
 .booth__now-playing {
-  background: color-mix(in srgb, var(--space-color, #3034a0) 15%, $ui-base-color);
-  border: 1px solid color-mix(in srgb, var(--space-color, #3034a0) 30%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 15%,
+    $ui-base-color
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 30%, transparent);
   border-radius: 12px;
   padding: 16px;
   display: flex;
@@ -68,7 +73,11 @@ $booth-accent: var(--space-color, #3034a0);
   max-height: 200px;
   border-radius: 8px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, $ui-base-color);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 20%,
+    $ui-base-color
+  );
 
   img {
     width: 100%;
@@ -88,7 +97,11 @@ $booth-accent: var(--space-color, #3034a0);
   svg {
     width: 60px;
     height: 60px;
-    fill: color-mix(in srgb, var(--space-color, #3034a0) 50%, $secondary-text-color);
+    fill: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 50%,
+      $secondary-text-color
+    );
   }
 }
 
@@ -119,20 +132,31 @@ $booth-accent: var(--space-color, #3034a0);
 
 .booth__action-btn {
   background: none;
-  border: 1px solid color-mix(in srgb, var(--space-color, #3034a0) 50%, transparent);
-  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, $primary-text-color);
+  border: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 50%, transparent);
+  color: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 80%,
+    $primary-text-color
+  );
   border-radius: 20px;
   padding: 6px 14px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   display: inline-flex;
   align-items: center;
 
   &:hover {
-    background: color-mix(in srgb, var(--space-color, #3034a0) 15%, transparent);
+    background: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 15%,
+      transparent
+    );
     color: $primary-text-color;
   }
 }
@@ -155,18 +179,32 @@ $booth-accent: var(--space-color, #3034a0);
   background: $ui-base-color;
   border: 1px solid $ui-base-lighter-color;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 
   &:hover,
   &:focus-visible {
-    border-color: color-mix(in srgb, var(--space-color, #3034a0) 60%, transparent);
-    background: color-mix(in srgb, var(--space-color, #3034a0) 8%, $ui-base-color);
+    border-color: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 60%,
+      transparent
+    );
+    background: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 8%,
+      $ui-base-color
+    );
     outline: none;
   }
 
   &--active {
     border-color: var(--space-color, #3034a0);
-    background: color-mix(in srgb, var(--space-color, #3034a0) 12%, $ui-base-color);
+    background: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 12%,
+      $ui-base-color
+    );
   }
 }
 
@@ -176,7 +214,11 @@ $booth-accent: var(--space-color, #3034a0);
   flex-shrink: 0;
   border-radius: 6px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, $ui-base-color);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 20%,
+    $ui-base-color
+  );
 
   img {
     width: 100%;
@@ -249,7 +291,11 @@ $booth-accent: var(--space-color, #3034a0);
 
 .booth-card__genre {
   background: color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
-  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, $primary-text-color);
+  color: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 80%,
+    $primary-text-color
+  );
   border-radius: 10px;
   padding: 1px 8px;
   font-size: 11px;
@@ -307,7 +353,9 @@ $booth-accent: var(--space-color, #3034a0);
   gap: 1px;
   font-size: 10px;
   font-weight: 600;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 
   &:hover {
     color: $primary-text-color;
@@ -332,7 +380,11 @@ $booth-accent: var(--space-color, #3034a0);
 .booth-player__progress {
   width: 100%;
   height: 5px;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, $ui-base-lighter-color);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 20%,
+    $ui-base-lighter-color
+  );
   border-radius: 3px;
   cursor: pointer;
   position: relative;
@@ -440,7 +492,11 @@ $booth-accent: var(--space-color, #3034a0);
   max-height: 280px;
   border-radius: 12px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, $ui-base-color);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 20%,
+    $ui-base-color
+  );
 
   img {
     width: 100%;
@@ -460,7 +516,11 @@ $booth-accent: var(--space-color, #3034a0);
   svg {
     width: 80px;
     height: 80px;
-    fill: color-mix(in srgb, var(--space-color, #3034a0) 40%, $secondary-text-color);
+    fill: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 40%,
+      $secondary-text-color
+    );
   }
 }
 
@@ -491,7 +551,11 @@ $booth-accent: var(--space-color, #3034a0);
 .booth__set-detail-genre {
   display: inline-block;
   background: color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
-  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, $primary-text-color);
+  color: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 80%,
+    $primary-text-color
+  );
   border-radius: 12px;
   padding: 2px 10px;
   font-size: 12px;
@@ -516,8 +580,13 @@ $booth-accent: var(--space-color, #3034a0);
 // ─── Upload form ──────────────────────────────────────────────────────────────
 
 .booth-upload-form {
-  background: color-mix(in srgb, var(--space-color, #3034a0) 10%, $ui-base-color);
-  border: 1px solid color-mix(in srgb, var(--space-color, #3034a0) 25%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 10%,
+    $ui-base-color
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 25%, transparent);
   border-radius: 12px;
   padding: 20px;
   display: flex;
@@ -533,8 +602,8 @@ $booth-accent: var(--space-color, #3034a0);
 }
 
 .booth-upload-form__error {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 15%);
+  border: 1px solid rgba(239, 68, 68, 40%);
   color: #fca5a5;
   border-radius: 6px;
   padding: 10px 14px;
@@ -599,7 +668,9 @@ $booth-accent: var(--space-color, #3034a0);
   padding: 8px 16px;
   font-size: 14px;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 
   &:hover {
     border-color: $primary-text-color;
@@ -661,7 +732,11 @@ $booth-accent: var(--space-color, #3034a0);
 .booth-upload-form__progress-track {
   width: 100%;
   height: 6px;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, $ui-base-lighter-color);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 20%,
+    $ui-base-lighter-color
+  );
   border-radius: 3px;
   overflow: hidden;
 }
