@@ -12856,44 +12856,6 @@ noscript {
   }
 }
 
-// Reaction bar on nudge notifications
-.notification-nudge__reactions {
-  display: flex;
-  gap: 4px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-}
-
-.notification-nudge__reaction {
-  background: lighten($ui-base-color, 4%);
-  border: 1px solid lighten($ui-base-color, 14%);
-  border-radius: 12px;
-  padding: 3px 8px;
-  font-size: 13px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transition:
-    border-color 0.1s,
-    background 0.1s;
-
-  &:hover {
-    border-color: $highlight-text-color;
-  }
-
-  &--active {
-    background: rgba($highlight-text-color, 0.12);
-    border-color: $highlight-text-color;
-  }
-}
-
-.notification-nudge__reaction-count {
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-  color: $dark-text-color;
-}
-
 // Reply quote shown inside a nudge notification
 .notification-nudge__reply-quote {
   margin-top: 4px;
@@ -13337,56 +13299,4 @@ noscript {
   .nudge-bubble--sent & {
     text-align: right;
   }
-}
-
-.nudge-bubble__reactions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 0 4px;
-
-  .nudge-bubble--sent & {
-    justify-content: flex-end;
-  }
-}
-
-.nudge-bubble__reaction {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  background: color-mix(
-    in srgb,
-    var(--background-color) 90%,
-    var(--primary-text-color) 10%
-  );
-  border: 1px solid var(--background-border-color);
-  border-radius: 10px;
-  padding: 2px 6px;
-  font-size: 13px;
-  cursor: pointer;
-  line-height: 1.4;
-  transition: background 0.1s;
-
-  &:hover {
-    background: color-mix(
-      in srgb,
-      var(--background-color) 80%,
-      var(--primary-text-color) 20%
-    );
-  }
-
-  &--active {
-    background: color-mix(
-      in srgb,
-      transparent,
-      var(--highlight-text-color) 18%
-    );
-    border-color: var(--highlight-text-color);
-  }
-}
-
-.nudge-bubble__reaction-count {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--secondary-text-color);
 }

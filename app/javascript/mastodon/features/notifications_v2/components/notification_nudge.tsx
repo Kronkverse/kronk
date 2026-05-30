@@ -11,15 +11,11 @@ import { Button } from 'mastodon/components/button';
 import type {
   NotificationGroupNudge,
   NudgeMessageData,
-  NudgeReactionEmoji,
-  NudgeReactions,
 } from 'mastodon/models/notification_group';
 import { useAppDispatch } from 'mastodon/store';
 
 import type { LabelRenderer } from './notification_group_with_status';
 import { NotificationGroupWithStatus } from './notification_group_with_status';
-
-const REACTION_EMOJI: NudgeReactionEmoji[] = ['❤️', '😂', '🙌', '🔥', '😢'];
 
 const labelRenderer: LabelRenderer = (displayedName, total, seeMoreHref) => {
   if (total === 1)
@@ -66,80 +62,6 @@ function revealLabel(msg: NudgeMessageData): React.ReactNode {
     />
   );
 }
-
-const NudgeReactionButton: React.FC<{
-  emoji: NudgeReactionEmoji;
-  count: number;
-  me: boolean;
-  onReact: (emoji: NudgeReactionEmoji) => void;
-}> = ({ emoji, count, me, onReact }) => {
-  const handleClick = useCallback(() => {
-    onReact(emoji);
-  }, [emoji, onReact]);
-  return (
-    <button
-      type='button'
-      className={`notification-nudge__reaction${me ? ' notification-nudge__reaction--active' : ''}`}
-      onClick={handleClick}
-    >
-      <span>{emoji}</span>
-      {count > 0 && (
-        <span className='notification-nudge__reaction-count'>{count}</span>
-      )}
-    </button>
-  );
-};
-
-const NudgeReactionBar: React.FC<{
-  notificationId: string;
-  reactions: NudgeReactions;
-}> = ({ notificationId, reactions }) => {
-  const [localReactions, setLocalReactions] = useState(reactions);
-
-  const handleReact = useCallback(
-    (emoji: NudgeReactionEmoji) => {
-      const alreadyReacted = localReactions[emoji].me;
-      const url = `/api/v1/notifications/${notificationId}/nudge_react`;
-
-      void (async () => {
-        const csrfMeta = document.querySelector<HTMLMetaElement>(
-          'meta[name="csrf-token"]',
-        );
-        const res = await fetch(url, {
-          method: alreadyReacted ? 'DELETE' : 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfMeta?.content ?? '',
-          },
-          credentials: 'same-origin',
-          body: alreadyReacted ? undefined : JSON.stringify({ emoji }),
-        });
-        if (res.ok) {
-          const updated = (await res.json()) as NudgeReactions;
-          setLocalReactions(updated);
-        }
-      })();
-    },
-    [notificationId, localReactions],
-  );
-
-  return (
-    <div className='notification-nudge__reactions'>
-      {REACTION_EMOJI.map((emoji) => {
-        const { count, me } = localReactions[emoji];
-        return (
-          <NudgeReactionButton
-            key={emoji}
-            emoji={emoji}
-            count={count}
-            me={me}
-            onReact={handleReact}
-          />
-        );
-      })}
-    </div>
-  );
-};
 
 const NudgeMessageContent: React.FC<{ msg: NudgeMessageData }> = ({ msg }) => (
   <>
@@ -226,7 +148,7 @@ export const NotificationNudge: React.FC<{
       </Button>
     ) : undefined;
 
-  const { nudgeMessage, nudgeReactions } = notification;
+  const { nudgeMessage } = notification;
 
   const additionalContent = (
     <>
@@ -254,11 +176,6 @@ export const NotificationNudge: React.FC<{
             {revealLabel(nudgeMessage)}
           </button>
         ))}
-
-      <NudgeReactionBar
-        notificationId={notification.most_recent_notification_id}
-        reactions={nudgeReactions}
-      />
     </>
   );
 

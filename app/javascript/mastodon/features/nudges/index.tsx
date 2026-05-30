@@ -30,96 +30,13 @@ import { ColumnHeader } from 'mastodon/components/column_header';
 import { DisplayName } from 'mastodon/components/display_name';
 import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
-import type {
-  NudgeReactionEmoji,
-  NudgeReactions,
-  NotificationGroupNudge,
-} from 'mastodon/models/notification_group';
+import type { NotificationGroupNudge } from 'mastodon/models/notification_group';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
-
-const REACTION_EMOJI: NudgeReactionEmoji[] = ['❤️', '😂', '🙌', '🔥', '😢'];
 
 const messages = defineMessages({
   title: { id: 'nudges.title', defaultMessage: 'Nudges' },
   back: { id: 'nudges.thread.back', defaultMessage: 'Back to inbox' },
 });
-
-// ── Reaction button (reusable in thread bubbles) ───────────────────────────────
-
-const ThreadReactionButton: React.FC<{
-  emoji: NudgeReactionEmoji;
-  count: number;
-  me: boolean;
-  onReact: (emoji: NudgeReactionEmoji) => void;
-}> = ({ emoji, count, me, onReact }) => {
-  const handleClick = useCallback(() => {
-    onReact(emoji);
-  }, [emoji, onReact]);
-  return (
-    <button
-      type='button'
-      className={`nudge-bubble__reaction${me ? ' nudge-bubble__reaction--active' : ''}`}
-      onClick={handleClick}
-    >
-      <span>{emoji}</span>
-      {count > 0 && (
-        <span className='nudge-bubble__reaction-count'>{count}</span>
-      )}
-    </button>
-  );
-};
-
-const ThreadReactionBar: React.FC<{
-  notificationId: string;
-  reactions: NudgeReactions;
-}> = ({ notificationId, reactions }) => {
-  const [local, setLocal] = useState<NudgeReactions>(reactions);
-
-  const handleReact = useCallback(
-    (emoji: NudgeReactionEmoji) => {
-      const already = local[emoji].me;
-      void (async () => {
-        const csrf = document.querySelector<HTMLMetaElement>(
-          'meta[name="csrf-token"]',
-        );
-        const res = await fetch(
-          `/api/v1/notifications/${notificationId}/nudge_react`,
-          {
-            method: already ? 'DELETE' : 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-Token': csrf?.content ?? '',
-            },
-            credentials: 'same-origin',
-            body: already ? undefined : JSON.stringify({ emoji }),
-          },
-        );
-        if (res.ok) {
-          const updated = (await res.json()) as NudgeReactions;
-          setLocal(updated);
-        }
-      })();
-    },
-    [notificationId, local],
-  );
-
-  return (
-    <div className='nudge-bubble__reactions'>
-      {REACTION_EMOJI.map((emoji) => {
-        const { count, me } = local[emoji];
-        return (
-          <ThreadReactionButton
-            key={emoji}
-            emoji={emoji}
-            count={count}
-            me={me}
-            onReact={handleReact}
-          />
-        );
-      })}
-    </div>
-  );
-};
 
 // ── Single message bubble ──────────────────────────────────────────────────────
 
@@ -159,8 +76,6 @@ const NudgeBubble: React.FC<{
       />
     );
   })();
-
-  const reactions = message.reactions as NudgeReactions;
 
   return (
     <div
@@ -227,10 +142,6 @@ const NudgeBubble: React.FC<{
         <time className='nudge-bubble__time'>
           <RelativeTimestamp timestamp={message.created_at} />
         </time>
-        <ThreadReactionBar
-          notificationId={message.notification_id}
-          reactions={reactions}
-        />
       </div>
     </div>
   );
