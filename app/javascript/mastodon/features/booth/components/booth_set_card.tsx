@@ -1,11 +1,14 @@
-import { useCallback } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
+import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
+import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 import type { BoothSet } from '../types';
 
 interface Props {
   set: BoothSet;
-  onSelect: (set: BoothSet) => void;
+  onPlay: (set: BoothSet) => void;
+  onEdit: (set: BoothSet) => void;
   active: boolean;
 }
 
@@ -17,25 +20,56 @@ function formatDuration(seconds: number | null): string {
   return `${m}m`;
 }
 
-export const BoothSetCard: React.FC<Props> = ({ set, onSelect, active }) => {
-  const handleClick = useCallback(() => {
-    onSelect(set);
-  }, [set, onSelect]);
+export const BoothSetCard: React.FC<Props> = ({ set, onPlay, onEdit, active }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const handleCardClick = useCallback(() => {
+    onPlay(set);
+  }, [set, onPlay]);
+
+  const handlePlayClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onPlay(set);
+    },
+    [set, onPlay],
+  );
+
+  const handleMenuToggle = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMenuOpen((prev) => !prev);
+  }, []);
+
+  const handleMenuBlur = useCallback((e: React.FocusEvent) => {
+    if (!menuRef.current?.contains(e.relatedTarget as Node)) {
+      setMenuOpen(false);
+    }
+  }, []);
+
+  const handleEdit = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setMenuOpen(false);
+      onEdit(set);
+    },
+    [set, onEdit],
+  );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        onSelect(set);
+        onPlay(set);
       }
     },
-    [set, onSelect],
+    [set, onPlay],
   );
 
   return (
     <div
       className={`booth-card${active ? ' booth-card--active' : ''}`}
-      onClick={handleClick}
+      onClick={handleCardClick}
       onKeyDown={handleKeyDown}
       role='button'
       tabIndex={0}
@@ -49,6 +83,14 @@ export const BoothSetCard: React.FC<Props> = ({ set, onSelect, active }) => {
             <HeadphonesIcon />
           </div>
         )}
+        <button
+          className='booth-card__play-overlay'
+          onClick={handlePlayClick}
+          aria-label={`Play ${set.title}`}
+          type='button'
+        >
+          <PlayArrowIcon />
+        </button>
       </div>
 
       <div className='booth-card__body'>
@@ -58,7 +100,9 @@ export const BoothSetCard: React.FC<Props> = ({ set, onSelect, active }) => {
           <div className='booth-card__event'>{set.event_name}</div>
         )}
         <div className='booth-card__meta'>
-          {set.genre && <span className='booth-card__genre'>{set.genre}</span>}
+          {set.genre && (
+            <span className='booth-card__genre'>{set.genre}</span>
+          )}
           {set.duration_seconds != null && (
             <span className='booth-card__duration'>
               {formatDuration(set.duration_seconds)}
@@ -69,6 +113,36 @@ export const BoothSetCard: React.FC<Props> = ({ set, onSelect, active }) => {
           </span>
         </div>
       </div>
+
+      {set.is_owner && (
+        <div
+          ref={menuRef}
+          className='booth-card__menu-wrap'
+          onBlur={handleMenuBlur}
+        >
+          <button
+            className='booth-card__menu-btn'
+            onClick={handleMenuToggle}
+            aria-label='Set options'
+            aria-expanded={menuOpen}
+            type='button'
+            tabIndex={0}
+          >
+            <MoreHorizIcon />
+          </button>
+          {menuOpen && (
+            <div className='booth-card__menu'>
+              <button
+                className='booth-card__menu-item'
+                onMouseDown={handleEdit}
+                type='button'
+              >
+                Edit
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
