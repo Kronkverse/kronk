@@ -4,12 +4,12 @@ Kronk is a custom Mastodon instance at **mastodon.kronk.info**. This repo is a f
 
 ## Branch Strategy
 
-| Branch    | Purpose                           | Deploy target           |
-| --------- | --------------------------------- | ----------------------- |
-| `main`    | Production (protected — PRs only) | mastodon.kronk.info     |
-| `staging` | Testing PRs before merge          | dev.mastodon.kronk.info |
+| Branch    | Purpose                                        | Deploy target           |
+| --------- | ---------------------------------------------- | ----------------------- |
+| `main`    | Production (protected — PRs only)              | mastodon.kronk.info     |
+| `staging` | Shared integration — all work accumulates here | dev.mastodon.kronk.info |
 
-**All changes go through pull requests to `main`.** Never push directly to main.
+**Never commit directly to `staging` or `main`.** Always work on a branch.
 
 ## Building Locally
 
@@ -85,17 +85,78 @@ These are additions on top of upstream Mastodon:
 - **Don't remove branding.** Kronk-specific branding (logo, wordmark, welcome email) should be preserved.
 - **Don't modify upstream files unnecessarily.** Keep diffs minimal to make future upstream merges easier.
 
-## Contributing
+## Contributor Workflow
 
-1. Fork `Kronkverse/kronk` on GitKosmos
-2. Branch off `main` (e.g. `feature/my-change`)
-3. Make changes, commit, push to your fork
-4. Open a PR to `main` on `Kronkverse/kronk`
-5. PR gets deployed to staging for testing
-6. After review, PR is merged and deployed to production
+### 1. Start from a branch
+
+Always branch off `staging`:
+
+```bash
+git fetch origin
+git checkout -b feature/my-change origin/staging
+```
+
+Use `feature/`, `fix/`, or `docs/` prefix. Keep branches small — one feature or fix per branch. Push directly to `Kronkverse/kronk` — no personal fork needed, you are a collaborator.
+
+### 2. Show work on the dev space
+
+Merge your branch into `staging` when you want it visible at https://dev.mastodon.kronk.info:
+
+```bash
+git checkout staging
+git pull origin staging
+git merge feature/my-change
+git push origin staging
+```
+
+The dev space auto-deploys within a few minutes. Multiple contributors' work accumulates simultaneously — don't worry about overwriting others.
+
+The dev space is transient and may be down. If it is, ask Tal to start it.
+
+### 3. Open a PR for production
+
+When your feature is tested on staging and ready to ship, open a PR from your **feature branch** to `main`. Tal reviews and merges — never run `gh pr merge` yourself.
+
+**Title:** short feature-name handle (`Nudges`, `The Booth`). Details go in the body.
+
+**Body must include:**
+
+- **What changed** — files and behaviour affected
+- **Why** — the problem being solved
+- **How to test** — concrete steps on the dev space
+- **Dependencies** — migrations, other PRs, or deploy steps required
+
+### 4. Clean up
+
+Delete your branch after it's merged to `main`.
+
+---
+
+## Hard Limits
+
+- **Never run `gh pr merge`** — PRs are always merged by Tal in the GitHub UI
+- **Never commit directly to `staging` or `main`** — always via a branch first
+- **Never edit, push to, or close another contributor's branch or PR** — you may read them for context but must not modify them
+- **Never query user personal data** from the database
+
+---
+
+## Technical Notes for Claude Agents
+
+**Committing on mainframe:** pre-commit hooks run rubocop, eslint, and a full `tsc` type check. `NODE_OPTIONS=--max-old-space-size=2048` is already set in `/etc/profile.d/mainframe.sh`. On portal, Ruby is not available — route commits through mainframe using `sudo -u chris bash -c 'cd ~chris/kronk && ...'`.
+
+**Asset compilation** (staging only, after JS/CSS changes):
+
+```bash
+RAILS_ENV=production NODE_OPTIONS=--max-old-space-size=2048 bundle exec rails assets:precompile
+```
+
+**Staging is a git worktree** of the live repo. `git checkout <branch>` silently fails in this context — always use `git reset --hard origin/<branch>` to update the working tree, and suppress fetch errors with `git fetch origin 2>/dev/null; true` before resetting.
+
+---
 
 ## Useful Links
 
 - Instance: https://mastodon.kronk.info
-- Staging: https://dev.mastodon.kronk.info
+- Dev space: https://dev.mastodon.kronk.info
 - Issues: https://github.com/Kronkverse/kronk/issues

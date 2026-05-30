@@ -8,6 +8,7 @@ class ApplicationController < ActionController::Base
   include Localized
   include UserTrackingConcern
   include SessionTrackingConcern
+  include KronkClientTrackingConcern
   include CacheConcern
   include PreloadingConcern
   include DomainControlHelper

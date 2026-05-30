@@ -52,8 +52,23 @@ export interface NotificationGroupEventInvitation
   eventInvitation: EventInvitationData;
 }
 
+export type NudgeReactionEmoji = '❤️' | '😂' | '🙌' | '🔥' | '😢';
+export type NudgeReactions = Record<
+  NudgeReactionEmoji,
+  { count: number; me: boolean }
+>;
+
+export interface NudgeMessageData {
+  body: string | null;
+  mediaUrl: string | null;
+  voiceUrl: string | null;
+  inReplyTo: { body: string | null; mediaUrl: string | null } | null;
+}
+
 export interface NotificationGroupNudge extends BaseNotification<'nudge'> {
   nudgeStreak: number;
+  nudgeMessage?: NudgeMessageData;
+  nudgeReactions: NudgeReactions;
 }
 
 export type AccountWarningAction =
@@ -213,6 +228,20 @@ export function createNotificationGroupFromJSON(
         ...group,
         partial: false,
         nudgeStreak: group.nudge_streak,
+        nudgeMessage: group.nudge_message
+          ? {
+              body: group.nudge_message.body,
+              mediaUrl: group.nudge_message.media_url,
+              voiceUrl: group.nudge_message.voice_url,
+              inReplyTo: group.nudge_message.in_reply_to
+                ? {
+                    body: group.nudge_message.in_reply_to.body,
+                    mediaUrl: group.nudge_message.in_reply_to.media_url,
+                  }
+                : null,
+            }
+          : undefined,
+        nudgeReactions: group.nudge_reactions,
         sampleAccountIds,
       };
     default:
@@ -285,6 +314,20 @@ export function createNotificationGroupFromNotificationJSON(
         ...group,
         type: notification.type,
         nudgeStreak: notification.nudge_streak,
+        nudgeMessage: notification.nudge_message
+          ? {
+              body: notification.nudge_message.body,
+              mediaUrl: notification.nudge_message.media_url,
+              voiceUrl: notification.nudge_message.voice_url,
+              inReplyTo: notification.nudge_message.in_reply_to
+                ? {
+                    body: notification.nudge_message.in_reply_to.body,
+                    mediaUrl: notification.nudge_message.in_reply_to.media_url,
+                  }
+                : null,
+            }
+          : undefined,
+        nudgeReactions: notification.nudge_reactions,
       };
     default:
       return {

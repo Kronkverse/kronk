@@ -1,14 +1,26 @@
 # frozen_string_literal: true
 
 class NudgeService < BaseService
-  def call(source_account, target_account)
+  def call(source_account, target_account, text: nil, media_attachment_id: nil, voice_attachment_id: nil, in_reply_to_notification_id: nil)
     return if source_account.id == target_account.id
     raise Mastodon::NotPermittedError unless nudge_allowed?(source_account, target_account)
 
     # Use the sender's Account record as the activity so no separate table is needed.
     # NotifyService is called directly (not via LocalNotificationWorker) to skip the
     # dedup guard, allowing multiple nudges between the same pair of users.
-    NotifyService.new.call(target_account, 'nudge', source_account)
+    notification = NotifyService.new.call(target_account, 'nudge', source_account)
+
+    if notification && (text.present? || media_attachment_id.present? || voice_attachment_id.present? || in_reply_to_notification_id.present?)
+      NudgeMessage.create!(
+        notification: notification,
+        body: text.presence,
+        media_attachment_id: media_attachment_id.presence,
+        voice_attachment_id: voice_attachment_id.presence,
+        in_reply_to_notification_id: in_reply_to_notification_id.presence
+      )
+    end
+
+    notification
   end
 
   private

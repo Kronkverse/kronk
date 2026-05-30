@@ -40,11 +40,27 @@ export const apiGetFamiliarFollowers = (id: string) =>
     id,
   });
 
-export const apiNudgeAccount = (id: string) =>
-  apiRequestPost<{ streak: number; can_nudge: boolean }>(`v1/accounts/${id}/nudge`);
+export const apiNudgeAccount = (
+  id: string,
+  params?: {
+    text?: string;
+    media_id?: string;
+    voice_id?: string;
+    in_reply_to_notification_id?: string;
+  },
+) =>
+  apiRequestPost<{ streak: number; can_nudge: boolean }>(
+    `v1/accounts/${id}/nudge`,
+    params ?? {},
+  );
 
 export const apiGetNudgeStreak = (id: string) =>
-  apiRequestGet<{ streak: number; can_nudge: boolean }>(`v1/accounts/${id}/nudge_streak`);
+  apiRequestGet<{
+    streak: number;
+    can_nudge: boolean;
+    sent_count: number;
+    received_count: number;
+  }>(`v1/accounts/${id}/nudge_streak`);
 
 export interface ApiNudgePartner {
   account_id: string;
@@ -55,12 +71,19 @@ export interface ApiNudgePartner {
   can_nudge_back: boolean;
 }
 
+export interface ApiNudgeSuggestion {
+  account_id: string;
+}
+
 export const apiGetNudgePartners = () =>
   apiRequestGet<{
     accounts: ApiAccountJSON[];
     partners: ApiNudgePartner[];
     pending_count: number;
     grand_total: number;
+    total_sent: number;
+    total_received: number;
+    suggestions: ApiNudgeSuggestion[];
   }>('v1/accounts/nudge_partners');
 
 export const apiGetNudgePendingCount = () =>

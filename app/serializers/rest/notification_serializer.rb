@@ -37,16 +37,41 @@ class REST::NotificationSerializer < ActiveModel::Serializer
   end
 
   attribute :nudge_streak, if: :nudge_type?
+  attribute :nudge_message, if: :nudge_type?
+  attribute :nudge_reactions, if: :nudge_type?
 
   def nudge_type?
     object.type == :nudge
   end
 
   def nudge_streak
-    a, b = object.account_id, object.from_account_id
+    a = object.account_id
+    b = object.from_account_id
     Notification.where(type: 'nudge')
                 .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
                 .count
+  end
+
+  def nudge_message
+    msg = object.nudge_message
+    return nil unless msg
+
+    reply_msg = msg.in_reply_to_notification&.nudge_message
+    {
+      body: msg.body,
+      media_url: msg.media_attachment&.file&.url,
+      voice_url: msg.voice_attachment&.file&.url,
+      in_reply_to: reply_msg ? { body: reply_msg.body, media_url: reply_msg.media_attachment&.file&.url } : nil,
+    }
+  end
+
+  def nudge_reactions
+    counts = NudgeReaction.where(notification: object).group(:emoji).count
+    viewer = scope
+    me = viewer ? NudgeReaction.find_by(notification: object, account: viewer.account)&.emoji : nil
+    NudgeReaction::ALLOWED_EMOJI.index_with do |emoji|
+      { count: counts[emoji] || 0, me: me == emoji }
+    end
   end
 
   delegate :filtered?, to: :object

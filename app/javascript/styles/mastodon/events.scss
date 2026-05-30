@@ -820,7 +820,8 @@ $ev-interested-color: #b8945f;
     background: var(--background-color);
     border: 1px solid var(--background-border-color);
     border-radius: 6px;
-    overflow: hidden;
+    overflow: visible;
+    position: relative;
     transition: border-color 0.15s;
 
     &--other-month {
@@ -1993,5 +1994,302 @@ $ev-interested-color: #b8945f;
       opacity: 0.5;
       cursor: not-allowed;
     }
+  }
+}
+
+// ─── In Flow ──────────────────────────────────────────────────────────────────
+
+.in-flow {
+  margin: 24px 0 8px;
+  border-top: 1px solid
+    color-mix(in srgb, var(--space-color, #343070) 30%, transparent);
+  padding-top: 20px;
+  padding-bottom: 32px;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+
+  &__header-label {
+    font-family: Georgia, 'Liberation Serif', serif;
+    font-size: 34px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: $primary-text-color;
+  }
+
+  &__header-tz {
+    font-size: 12px;
+    color: var(--secondary-text-color);
+  }
+
+  &__header-tagline {
+    font-size: 13px;
+    font-style: italic;
+    color: var(--secondary-text-color);
+    line-height: 1.6;
+    margin: 6px 0 0;
+    opacity: 0.85;
+    max-width: 340px;
+  }
+
+  &__now {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+    border: 1px solid
+      color-mix(in srgb, var(--space-color, #343070) 20%, transparent);
+  }
+
+  &__moon {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+  }
+
+  &__moon-emoji {
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  &__moon-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__moon-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--primary-text-color);
+  }
+
+  &__moon-illumination {
+    font-size: 12px;
+    color: var(--secondary-text-color);
+  }
+
+  &__upcoming-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--secondary-text-color);
+    margin-bottom: 10px;
+  }
+
+  &__upcoming-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__upcoming-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: background 0.1s;
+
+    &:hover {
+      background: color-mix(
+        in srgb,
+        var(--space-color, #343070) 8%,
+        transparent
+      );
+    }
+
+    &--season {
+      border-left: 2px solid
+        color-mix(in srgb, var(--space-color, #343070) 50%, transparent);
+    }
+
+    &--moon {
+      border-left: 2px solid
+        color-mix(in srgb, var(--space-color, #343070) 25%, transparent);
+    }
+
+    &--cross_quarter {
+      border-left: 2px solid
+        color-mix(in srgb, var(--space-color, #343070) 60%, transparent);
+    }
+
+    &--orbital {
+      border-left: 2px solid
+        color-mix(in srgb, var(--space-color, #343070) 40%, #e8c840 60%);
+    }
+  }
+
+  &__upcoming-emoji {
+    font-size: 23px;
+    width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+
+  &__upcoming-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  &__upcoming-event-label {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--primary-text-color);
+  }
+
+  &__upcoming-date {
+    font-size: 14px;
+    color: var(--secondary-text-color);
+    margin-bottom: 3px;
+  }
+
+  &__upcoming-description {
+    font-size: 15px;
+    font-style: italic;
+    color: var(--secondary-text-color);
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+
+  &__upcoming-item--past {
+    opacity: 0.45;
+  }
+}
+
+// ─── Celestial calendar additions ─────────────────────────────────────────────
+
+.event-calendar {
+  &__cell-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 2px;
+  }
+
+  &__celestial-badge {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+    opacity: 0.7;
+    transition: opacity 0.1s;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  &__celestial-badge-icons {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  &__celestial-popup {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 100;
+    width: 220px;
+    background: color-mix(in srgb, var(--space-color, #343070) 30%, #0d0d1a);
+    border: 1px solid
+      color-mix(in srgb, var(--space-color, #343070) 50%, transparent);
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 60%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__celestial-popup-close {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: rgb(255 255 255 / 50%);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 4px;
+
+    &:hover {
+      color: #fff;
+    }
+  }
+
+  &__celestial-popup-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  &__celestial-popup-emoji {
+    font-size: 18px;
+    flex-shrink: 0;
+    line-height: 1.2;
+  }
+
+  &__celestial-popup-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+
+  &__celestial-popup-desc {
+    font-size: 12px;
+    line-height: 1.5;
+    color: rgb(255 255 255 / 70%);
+  }
+
+  &__celestial-item {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+    padding: 1px 3px;
+    margin-bottom: 1px;
+  }
+
+  &__celestial-item-emoji {
+    font-size: 9px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  &__celestial-item-label {
+    font-size: 8px;
+    color: var(--secondary-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.9;
+  }
+
+  &__cell--celestial {
+    background: color-mix(in srgb, var(--space-color, #343070) 5%, transparent);
   }
 }

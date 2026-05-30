@@ -55,6 +55,7 @@ class Api::V1::StatusesController < Api::BaseController
     ancestors_results   = @status.in_reply_to_id.nil? ? [] : @status.ancestors(ancestors_limit, current_account)
     descendants_results = @status.descendants(descendants_limit, current_account, descendants_depth_limit)
     loaded_ancestors    = preload_collection(ancestors_results, Status)
+    descendants_results = filter_locked_answers(descendants_results)
     loaded_descendants  = preload_collection(descendants_results, Status)
 
     @context = Context.new(ancestors: loaded_ancestors, descendants: loaded_descendants)
@@ -144,6 +145,18 @@ class Api::V1::StatusesController < Api::BaseController
 
   def set_statuses
     @statuses = Status.permitted_statuses_from_ids(status_ids, current_account)
+  end
+
+  def filter_locked_answers(statuses)
+    return statuses if statuses.none?(&:kronk_answer?)
+    return statuses.reject(&:kronk_answer?) if current_account.nil?
+
+    answered_question_ids = Status.where(
+      account: current_account,
+      post_type: :answer
+    ).pluck(:in_reply_to_id).to_set
+
+    statuses.reject { |s| s.kronk_answer? && !answered_question_ids.include?(s.in_reply_to_id) }
   end
 
   def set_status

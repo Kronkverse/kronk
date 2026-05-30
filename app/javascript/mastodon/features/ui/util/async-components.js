@@ -254,6 +254,10 @@ export function Events () {
   return import("../../events");
 }
 
+export function InFlow () {
+  return import("../../in_flow");
+}
+
 export function Nudges () {
   return import("../../nudges");
 }
@@ -277,4 +281,12 @@ export function Questions () {
 
 export function QuestionPage () {
   return import("../../questions/question_page");
+}
+
+export function Booth () {
+  return import("../../booth");
+}
+
+export function BoothSetPage () {
+  return import("../../booth/booth_set_page");
 }

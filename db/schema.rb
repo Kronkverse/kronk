@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_23_210145) do
+ActiveRecord::Schema[8.0].define(version: 2026_05_30_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -771,6 +771,29 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_23_210145) do
     t.index ["from_account_id"], name: "index_notifications_on_from_account_id"
   end
 
+  create_table "nudge_messages", force: :cascade do |t|
+    t.bigint "notification_id", null: false
+    t.text "body"
+    t.bigint "media_attachment_id"
+    t.bigint "voice_attachment_id"
+    t.bigint "in_reply_to_notification_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["in_reply_to_notification_id"], name: "index_nudge_messages_on_in_reply_to_notification_id"
+    t.index ["media_attachment_id"], name: "index_nudge_messages_on_media_attachment_id"
+    t.index ["notification_id"], name: "index_nudge_messages_on_notification_id"
+    t.index ["voice_attachment_id"], name: "index_nudge_messages_on_voice_attachment_id"
+  end
+
+  create_table "nudge_reactions", force: :cascade do |t|
+    t.bigint "notification_id", null: false
+    t.bigint "account_id", null: false
+    t.string "emoji", limit: 32, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["notification_id", "account_id"], name: "index_nudge_reactions_on_notification_id_and_account_id", unique: true
+  end
+
   create_table "oauth_access_grants", force: :cascade do |t|
     t.string "token", null: false
     t.integer "expires_in", null: false
@@ -1435,6 +1458,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_23_210145) do
   add_foreign_key "notification_requests", "statuses", column: "last_status_id", on_delete: :nullify
   add_foreign_key "notifications", "accounts", column: "from_account_id", name: "fk_fbd6b0bf9e", on_delete: :cascade
   add_foreign_key "notifications", "accounts", name: "fk_c141c8ee55", on_delete: :cascade
+  add_foreign_key "nudge_messages", "media_attachments", column: "voice_attachment_id"
+  add_foreign_key "nudge_messages", "notifications"
+  add_foreign_key "nudge_messages", "notifications", column: "in_reply_to_notification_id"
+  add_foreign_key "nudge_reactions", "accounts", on_delete: :cascade
+  add_foreign_key "nudge_reactions", "notifications", on_delete: :cascade
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id", name: "fk_34d54b0a33", on_delete: :cascade
   add_foreign_key "oauth_access_grants", "users", column: "resource_owner_id", name: "fk_63b044929b", on_delete: :cascade
   add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id", name: "fk_f5fc4c1ee3", on_delete: :cascade

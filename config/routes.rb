@@ -223,6 +223,9 @@ Rails.application.routes.draw do
 
   get '/activity', to: redirect('/orbit')
   get '/space-preview/:space', to: 'space_preview#show'
+  get '/booth/sets/:id/embed', to: 'booth#embed', as: :embed_booth_set
+  get '/booth', to: 'booth#index'
+  get '/booth/*path', to: 'booth#index', format: false
   get '/home', to: 'home#index'
   get '/huddle', to: 'huddle#index'
   get '/kalendar', to: 'kalendar#index'
@@ -231,6 +234,8 @@ Rails.application.routes.draw do
   get '/governance/*path', to: 'home#index', format: false
   get '/questions', to: 'home#index'
   get '/questions/*path', to: 'home#index', format: false
+  get '/nudges', to: 'home#index'
+  get '/nudges/*path', to: 'home#index', format: false
   draw(:web_app)
 
   get '/web/(*any)', to: redirect(path: '/%{any}', status: 302), as: :web, defaults: { any: '' }, format: false

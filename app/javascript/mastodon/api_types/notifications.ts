@@ -155,7 +155,8 @@ export interface ApiEventInvitationJSON {
   event_type: string;
 }
 
-interface EventInvitationNotificationGroupJSON extends BaseNotificationGroupJSON {
+interface EventInvitationNotificationGroupJSON
+  extends BaseNotificationGroupJSON {
   type: 'event_invitation';
   event_invitation: ApiEventInvitationJSON;
 }
@@ -165,14 +166,32 @@ interface EventInvitationNotificationJSON extends BaseNotificationJSON {
   event_invitation: ApiEventInvitationJSON;
 }
 
+export interface NudgeMessageJSON {
+  body: string | null;
+  media_url: string | null;
+  voice_url: string | null;
+  in_reply_to: { body: string | null; media_url: string | null } | null;
+}
+
+export type NudgeReactionEmoji = '❤️' | '😂' | '🙌' | '🔥' | '😢';
+
+export type NudgeReactionsJSON = Record<
+  NudgeReactionEmoji,
+  { count: number; me: boolean }
+>;
+
 interface NudgeNotificationGroupJSON extends BaseNotificationGroupJSON {
   type: 'nudge';
   nudge_streak: number;
+  nudge_message?: NudgeMessageJSON;
+  nudge_reactions: NudgeReactionsJSON;
 }
 
 interface NudgeNotificationJSON extends BaseNotificationJSON {
   type: 'nudge';
   nudge_streak: number;
+  nudge_message?: NudgeMessageJSON;
+  nudge_reactions: NudgeReactionsJSON;
 }
 
 export type ApiNotificationJSON =
