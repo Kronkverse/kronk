@@ -68,7 +68,8 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
   setLabel,
   currentMinutes,
 }) => {
-  const R = 16;
+  const Rx = 44;
+  const Ry = 16;
   const cx = 50;
   const cy = 20;
 
@@ -76,8 +77,8 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
   const arcPoint = (t: number) => {
     const angle = Math.PI * (1 - t / 1440);
     return {
-      x: cx + R * Math.cos(angle),
-      y: cy - R * Math.sin(angle),
+      x: cx + Rx * Math.cos(angle),
+      y: cy - Ry * Math.sin(angle),
     };
   };
 
@@ -91,7 +92,7 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
 
   const h = Math.floor(daylightMinutes / 60);
   const m = daylightMinutes % 60;
-  const daylightLabel = `${String(h)}h ${String(m).padStart(2, '0')}m`;
+  const daylightLabel = `${String(h)}h ${String(m).padStart(2, '0')}m of daylight today`;
 
   const sunIsUp =
     currentMinutes >= riseMinutesFromMidnight &&
@@ -104,12 +105,12 @@ const DaylightArc: React.FC<DaylightArcProps> = ({
       <svg viewBox='0 0 100 32' className='in-flow-light__arc-svg'>
         {/* Background arc — full day */}
         <path
-          d={`M ${leftEnd.x} ${leftEnd.y} A ${R} ${R} 0 0 1 ${rightEnd.x} ${rightEnd.y}`}
+          d={`M ${leftEnd.x} ${leftEnd.y} A ${Rx} ${Ry} 0 0 1 ${rightEnd.x} ${rightEnd.y}`}
           className='in-flow-light__arc-track'
         />
         {/* Daylight arc */}
         <path
-          d={`M ${riseP.x} ${riseP.y} A ${R} ${R} 0 ${largeArc} 1 ${setP.x} ${setP.y}`}
+          d={`M ${riseP.x} ${riseP.y} A ${Rx} ${Ry} 0 ${largeArc} 1 ${setP.x} ${setP.y}`}
           className='in-flow-light__arc-fill'
         />
         {/* Sun circle during day, 6-pointed sparkle at night */}

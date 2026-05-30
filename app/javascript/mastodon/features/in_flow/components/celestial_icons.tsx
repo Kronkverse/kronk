@@ -356,6 +356,46 @@ export const MoonIlluminationIcon: React.FC<{
         opacity='0.9'
         mask={`url(#${maskId})`}
       />
+      {/* Lunar mare texture — dark patches visible only in lit region */}
+      {illumination > 0.15 && (
+        <g mask={`url(#${maskId})`} opacity='0.22'>
+          <ellipse
+            cx={cx - R * 0.32}
+            cy={cy - R * 0.24}
+            rx={R * 0.22}
+            ry={R * 0.2}
+            fill='black'
+          />
+          <ellipse
+            cx={cx - R * 0.5}
+            cy={cy + R * 0.08}
+            rx={R * 0.18}
+            ry={R * 0.28}
+            fill='black'
+          />
+          <ellipse
+            cx={cx - R * 0.1}
+            cy={cy + R * 0.38}
+            rx={R * 0.13}
+            ry={R * 0.11}
+            fill='black'
+          />
+          <ellipse
+            cx={cx + R * 0.24}
+            cy={cy + R * 0.06}
+            rx={R * 0.13}
+            ry={R * 0.15}
+            fill='black'
+          />
+          <ellipse
+            cx={cx + R * 0.12}
+            cy={cy - R * 0.28}
+            rx={R * 0.1}
+            ry={R * 0.1}
+            fill='black'
+          />
+        </g>
+      )}
     </svg>
   );
 };

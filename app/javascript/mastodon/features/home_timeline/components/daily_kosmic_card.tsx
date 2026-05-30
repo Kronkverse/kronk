@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { useHistory } from 'react-router-dom';
 
@@ -18,14 +18,25 @@ function getMelbourneMonthDay(): { month: number; day: number } {
   return { month: get('month') - 1, day: get('day') };
 }
 
+function firstSentence(text: string): string {
+  return (text.split('. ')[0] ?? text).replace(/\.$/, '') + '.';
+}
+
 export const DailyKosmicCard: React.FC = () => {
   const history = useHistory();
   const text = buildDailyIntegrationText();
   const { month, day } = getMelbourneMonthDay();
-  const fullObservation = getDailyObservable(month, day);
-  const observation =
-    (fullObservation.split('. ')[0] ?? fullObservation).replace(/\.$/, '') +
-    '.';
+  const staticObservation = firstSentence(getDailyObservable(month, day));
+  const [observation, setObservation] = useState<string>(staticObservation);
+
+  useEffect(() => {
+    fetch('/api/v1/in_flow/observation')
+      .then((r) => r.json())
+      .then((d: { text: string | null }) => {
+        if (d.text) setObservation(firstSentence(d.text));
+      })
+      .catch(() => undefined);
+  }, []);
 
   const today = new Date().toLocaleDateString('en-AU', {
     timeZone: 'Australia/Melbourne',

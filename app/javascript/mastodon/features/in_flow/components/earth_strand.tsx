@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { LOCATION_TZ } from '../constants';
 
@@ -43,10 +43,20 @@ export const EarthStrand: React.FC = () => {
   const { month, day } = useMemo(currentLocationDate, []);
   const monthName = useMemo(currentLocationMonthName, []);
   const data = useMemo(() => getEarthMonth(month), [month]);
-  const todayObservable = useMemo(
+  const staticObservable = useMemo(
     () => getDailyObservable(month, day),
     [month, day],
   );
+  const [observation, setObservation] = useState<string>(staticObservable);
+
+  useEffect(() => {
+    fetch('/api/v1/in_flow/observation')
+      .then((r) => r.json())
+      .then((d: { text: string | null }) => {
+        if (d.text) setObservation(d.text);
+      })
+      .catch(() => undefined);
+  }, []);
 
   return (
     <div className='in-flow-earth'>
@@ -56,7 +66,7 @@ export const EarthStrand: React.FC = () => {
         <span className='in-flow-earth__season'>{data.season}</span>
       </div>
 
-      <p className='in-flow-earth__observable'>{todayObservable}</p>
+      <p className='in-flow-earth__observable'>{observation}</p>
 
       {data.bloom.length > 0 && (
         <div className='in-flow-earth__section'>
