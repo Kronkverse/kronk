@@ -151,8 +151,12 @@ class Api::V1::AccountsController < Api::BaseController
       end
       .sort_by { |p| [-p[:streak], p[:last_nudge_at] || ''] }
 
+    followed_ids = Follow.where(account: current_user.account).pluck(:target_account_id)
+    suggestion_ids = (followed_ids - partner_ids - [current_user.account.id]).sample(5)
+    suggestion_accs = suggestion_ids.empty? ? [] : Account.where(id: suggestion_ids)
+
     render json: {
-      accounts: accounts.values.map { |acc|
+      accounts: (accounts.values + suggestion_accs).map { |acc|
         REST::AccountSerializer.new(acc, scope: current_user, scope_name: :current_user).as_json
       },
       partners: partners,
@@ -160,6 +164,12 @@ class Api::V1::AccountsController < Api::BaseController
       grand_total: partners.sum { |p| p[:sent_count] + p[:received_count] },
       total_sent: sent_counts.values.sum,
       total_received: received_counts.values.sum,
+      suggestions: suggestion_accs.map { |acc|
+        {
+          account_id: acc.id.to_s,
+          account: REST::AccountSerializer.new(acc, scope: current_user, scope_name: :current_user).as_json,
+        }
+      },
     }
   end
 

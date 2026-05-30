@@ -55,6 +55,10 @@ export interface ApiNudgePartner {
   can_nudge_back: boolean;
 }
 
+export interface ApiNudgeSuggestion {
+  account_id: string;
+}
+
 export const apiGetNudgePartners = () =>
   apiRequestGet<{
     accounts: ApiAccountJSON[];
@@ -63,6 +67,7 @@ export const apiGetNudgePartners = () =>
     grand_total: number;
     total_sent: number;
     total_received: number;
+    suggestions: ApiNudgeSuggestion[];
   }>('v1/accounts/nudge_partners');
 
 export const apiGetNudgePendingCount = () =>

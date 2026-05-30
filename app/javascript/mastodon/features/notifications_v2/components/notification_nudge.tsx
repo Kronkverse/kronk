@@ -20,7 +20,7 @@ const labelRenderer: LabelRenderer = (displayedName, total, seeMoreHref) => {
     return (
       <FormattedMessage
         id='notification.nudge'
-        defaultMessage='{name} nudged you'
+        defaultMessage='{name} has nudged you'
         values={{ name: displayedName }}
       />
     );
@@ -28,7 +28,7 @@ const labelRenderer: LabelRenderer = (displayedName, total, seeMoreHref) => {
   return (
     <FormattedMessage
       id='notification.nudge.name_and_others'
-      defaultMessage='{name} and <a>{count, plural, one {# other} other {# others}}</a> nudged you'
+      defaultMessage='{name} and <a>{count, plural, one {# other} other {# others}}</a> have nudged you'
       values={{
         name: displayedName,
         count: total - 1,

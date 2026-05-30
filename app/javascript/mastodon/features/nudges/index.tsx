@@ -14,7 +14,7 @@ import {
   setUnreadNudgeCount,
 } from 'mastodon/actions/notification_groups';
 import { apiNudgeAccount, apiGetNudgePartners } from 'mastodon/api/accounts';
-import type { ApiNudgePartner } from 'mastodon/api/accounts';
+import type { ApiNudgePartner, ApiNudgeSuggestion } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { Button } from 'mastodon/components/button';
 import { Column } from 'mastodon/components/column';
@@ -78,7 +78,7 @@ const NudgeAlert: React.FC<{
       <span className='nudge-alert__text'>
         <FormattedMessage
           id='nudges.alert.nudged_by'
-          defaultMessage='<a>@{acct}</a> nudged you!'
+          defaultMessage='<a>@{acct}</a> has nudged you'
           values={{
             acct: account.acct,
             a: (chunks) => <Link to={`/@${account.acct}`}>{chunks}</Link>,
@@ -182,14 +182,68 @@ const NudgePartnerItem: React.FC<{
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+// ── Suggestion card ───────────────────────────────────────────────────────────
+
+const NudgeSuggestionItem: React.FC<{ suggestion: ApiNudgeSuggestion }> = ({ suggestion }) => {
+  const account = useAppSelector((state) => state.accounts.get(suggestion.account_id));
+  const [nudged, setNudged] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleNudge = useCallback(async () => {
+    if (loading || nudged) return;
+    setLoading(true);
+    try {
+      await apiNudgeAccount(suggestion.account_id);
+      setNudged(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [suggestion.account_id, loading, nudged]);
+
+  if (!account) return null;
+
+  return (
+    <div className='nudge-partner-item'>
+      <Link to={`/@${account.acct}`} className='nudge-partner-item__avatar'>
+        <Avatar account={account} size={46} />
+      </Link>
+      <div className='nudge-partner-item__body'>
+        <div className='nudge-partner-item__name'>
+          <Link to={`/@${account.acct}`}>
+            <DisplayName account={account} />
+          </Link>
+        </div>
+        <div className='nudge-partner-item__meta'>
+          <span style={{ opacity: 0.5 }}>@{account.acct}</span>
+        </div>
+      </div>
+      <div className='nudge-partner-item__action'>
+        {nudged ? (
+          <Button compact disabled>
+            <FormattedMessage id='nudges.nudged_back' defaultMessage='Nudged!' />
+          </Button>
+        ) : (
+          <Button compact disabled={loading} onClick={handleNudge}>
+            <FormattedMessage id='account_nudges.nudge' defaultMessage='Nudge @{acct}' values={{ acct: account.acct }} />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const [partners, setPartners] = useState<ApiNudgePartner[]>([]);
+  const [suggestions, setSuggestions] = useState<ApiNudgeSuggestion[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
   const [totalSent, setTotalSent] = useState(0);
   const [totalReceived, setTotalReceived] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showMore, setShowMore] = useState(false);
   const [alerts, setAlerts] = useState<NudgeAlertData[]>([]);
 
   const nudgeGroups = useAppSelector((state) =>
@@ -219,6 +273,7 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       const data = await apiGetNudgePartners();
       if (data.accounts?.length) dispatch(importFetchedAccounts(data.accounts));
       setPartners(data.partners ?? []);
+      setSuggestions(data.suggestions ?? []);
       setGrandTotal(data.grand_total ?? 0);
       setTotalSent(data.total_sent ?? 0);
       setTotalReceived(data.total_received ?? 0);
@@ -261,12 +316,21 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     }
   }, [nudgeGroups, load]);
 
-  const received = partners.filter((p) => p.can_nudge_back);
-  const sent = partners.filter((p) => !p.can_nudge_back);
+  // Sort by streak desc, then split into top-3 / pending / hidden
+  const sorted = [...partners].sort(
+    (a, b) => (b.sent_count + b.received_count) - (a.sent_count + a.received_count),
+  );
+  const topThreeIds = new Set(sorted.slice(0, 3).map((p) => p.account_id));
+  const received = sorted.filter((p) => p.can_nudge_back && !topThreeIds.has(p.account_id));
+  const topStreaks = sorted.filter((p) => topThreeIds.has(p.account_id));
+  const hiddenPartners = sorted.filter((p) => !topThreeIds.has(p.account_id) && !p.can_nudge_back);
+
+  // "nudge all back" applies to pending (received) + top-streak items that are pending
+  const allPending = sorted.filter((p) => p.can_nudge_back);
 
   const handleNudgeAllBack = useCallback(async () => {
     await Promise.allSettled(
-      received.map(async (p) => {
+      allPending.map(async (p) => {
         try {
           await apiNudgeAccount(p.account_id);
           dispatch(decrementNudgeCount());
@@ -328,7 +392,7 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </div>
         )}
 
-        {!loading && partners.length === 0 && (
+        {!loading && partners.length === 0 && suggestions.length === 0 && (
           <div className='empty-column-indicator'>
             <FormattedMessage id='nudges.empty' defaultMessage='No nudges yet. Go nudge someone cute!' />
           </div>
@@ -339,13 +403,13 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             <div className='nudge-section-header nudge-section-header--received'>
               <FormattedMessage id='nudges.section_received' defaultMessage='NUDGES RECEIVED' />
             </div>
-            {received.length >= 2 && (
+            {allPending.length >= 2 && (
               <div className='nudge-all-back'>
                 <Button onClick={handleNudgeAllBack}>
                   <FormattedMessage
                     id='nudges.nudge_all_back'
                     defaultMessage='Nudge back all {count}'
-                    values={{ count: received.length }}
+                    values={{ count: allPending.length }}
                   />
                 </Button>
               </div>
@@ -356,13 +420,45 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </>
         )}
 
-        {!loading && sent.length > 0 && (
+        {!loading && topStreaks.length > 0 && (
           <>
             <div className='nudge-section-header nudge-section-header--sent'>
-              <FormattedMessage id='nudges.section_sent' defaultMessage='NUDGES SENT' />
+              <FormattedMessage id='nudges.section_top_streaks' defaultMessage='TOP STREAKS' />
             </div>
-            {sent.map((partner) => (
+            {topStreaks.map((partner) => (
               <NudgePartnerItem key={partner.account_id} partner={partner} onNudged={handlePartnerNudged} />
+            ))}
+          </>
+        )}
+
+        {!loading && hiddenPartners.length > 0 && (
+          <>
+            {showMore && hiddenPartners.map((partner) => (
+              <NudgePartnerItem key={partner.account_id} partner={partner} onNudged={handlePartnerNudged} />
+            ))}
+            <div className='nudge-show-more'>
+              <button className='nudge-show-more__btn' onClick={() => setShowMore((v) => !v)}>
+                {showMore ? (
+                  <FormattedMessage id='nudges.show_less' defaultMessage='Show less' />
+                ) : (
+                  <FormattedMessage
+                    id='nudges.show_more'
+                    defaultMessage='Show {count} more'
+                    values={{ count: hiddenPartners.length }}
+                  />
+                )}
+              </button>
+            </div>
+          </>
+        )}
+
+        {!loading && suggestions.length > 0 && (
+          <>
+            <div className='nudge-section-header nudge-section-header--suggestions'>
+              <FormattedMessage id='nudges.section_suggestions' defaultMessage='NUDGE SOMEONE' />
+            </div>
+            {suggestions.map((s) => (
+              <NudgeSuggestionItem key={s.account_id} suggestion={s} />
             ))}
           </>
         )}
