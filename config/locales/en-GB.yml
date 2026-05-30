@@ -1716,6 +1716,9 @@ en-GB:
       body: 'Your post was boosted by %{name}:'
       subject: "%{name} boosted your post"
       title: New boost
+    nudge:
+      subject: "%{name} nudged you"
+      title: New nudge
     status:
       subject: "%{name} just posted"
     update:
