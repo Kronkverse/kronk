@@ -56,7 +56,9 @@ const NudgeAlert: React.FC<{
     const t = window.setTimeout(() => {
       onDismiss(alert.id);
     }, 8000);
-    return () => { window.clearTimeout(t); };
+    return () => {
+      window.clearTimeout(t);
+    };
   }, [alert.id, onDismiss]);
 
   const handleDismiss = useCallback(() => {
