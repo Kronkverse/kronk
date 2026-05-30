@@ -3,6 +3,8 @@
 class NudgeMessage < ApplicationRecord
   belongs_to :notification
   belongs_to :media_attachment, optional: true
+  belongs_to :voice_attachment, class_name: 'MediaAttachment', optional: true
+  belongs_to :in_reply_to_notification, class_name: 'Notification', optional: true
 
   MAX_WORDS = 100
 

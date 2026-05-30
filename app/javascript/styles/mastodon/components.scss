@@ -12506,7 +12506,7 @@ noscript {
   color: $primary-text-color;
   line-height: 1.4;
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .notification-nudge__media {
@@ -12642,7 +12642,7 @@ noscript {
     position: absolute;
     top: 4px;
     right: 4px;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 70%);
     border: none;
     border-radius: 50%;
     color: #fff;
@@ -12656,7 +12656,7 @@ noscript {
     justify-content: center;
 
     &:hover {
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(0, 0, 0, 90%);
     }
   }
 
@@ -12672,4 +12672,127 @@ noscript {
     display: flex;
     gap: 8px;
   }
+
+  &__reply-banner {
+    font-size: 12px;
+    color: $highlight-text-color;
+    background: rgba($highlight-text-color, 0.08);
+    border-left: 3px solid $highlight-text-color;
+    padding: 6px 10px;
+    border-radius: 4px;
+  }
+
+  &__attach-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__voice-btn {
+    background: none;
+    border: 1px solid lighten($ui-base-color, 16%);
+    border-radius: 4px;
+    color: $dark-text-color;
+    font-size: 12px;
+    padding: 4px 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    &:hover:not(:disabled) {
+      border-color: $highlight-text-color;
+      color: $highlight-text-color;
+    }
+
+    &--recording {
+      border-color: $error-red;
+      color: $error-red;
+    }
+  }
+
+  &__voice-preview {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__voice-audio {
+    height: 32px;
+    max-width: 200px;
+  }
+}
+
+// Reaction bar on nudge notifications
+.notification-nudge__reactions {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.notification-nudge__reaction {
+  background: lighten($ui-base-color, 4%);
+  border: 1px solid lighten($ui-base-color, 14%);
+  border-radius: 12px;
+  padding: 3px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: border-color 0.1s, background 0.1s;
+
+  &:hover {
+    border-color: $highlight-text-color;
+  }
+
+  &--active {
+    background: rgba($highlight-text-color, 0.12);
+    border-color: $highlight-text-color;
+  }
+}
+
+.notification-nudge__reaction-count {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: $dark-text-color;
+}
+
+// Reply quote shown inside a nudge notification
+.notification-nudge__reply-quote {
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-left: 3px solid lighten($ui-base-color, 20%);
+  background: lighten($ui-base-color, 2%);
+  border-radius: 4px;
+}
+
+.notification-nudge__reply-quote-body {
+  font-size: 13px;
+  color: $dark-text-color;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.notification-nudge__reply-quote-img {
+  display: block;
+  margin-top: 4px;
+  max-width: 80px;
+  border-radius: 4px;
+}
+
+// Voice clip inside a nudge notification
+.notification-nudge__voice {
+  display: block;
+  margin-top: 8px;
+  width: 100%;
+  max-width: 280px;
+  height: 36px;
 }
