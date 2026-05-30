@@ -50,7 +50,12 @@ export const apiNudgeAccount = (
   );
 
 export const apiGetNudgeStreak = (id: string) =>
-  apiRequestGet<{ streak: number; can_nudge: boolean; sent_count: number; received_count: number }>(`v1/accounts/${id}/nudge_streak`);
+  apiRequestGet<{
+    streak: number;
+    can_nudge: boolean;
+    sent_count: number;
+    received_count: number;
+  }>(`v1/accounts/${id}/nudge_streak`);
 
 export interface ApiNudgePartner {
   account_id: string;

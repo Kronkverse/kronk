@@ -69,15 +69,22 @@ export const NotificationNudge: React.FC<{
     notification.sampleAccountIds.length === 1 ? (
       <Button compact disabled={nudgedBack} onClick={handleNudgeBack}>
         {nudgedBack ? (
-          <FormattedMessage id='notification.nudge.nudged_back' defaultMessage='Nudged!' />
+          <FormattedMessage
+            id='notification.nudge.nudged_back'
+            defaultMessage='Nudged!'
+          />
         ) : (
-          <FormattedMessage id='notification.nudge.nudge_back' defaultMessage='Nudge back' />
+          <FormattedMessage
+            id='notification.nudge.nudge_back'
+            defaultMessage='Nudge back'
+          />
         )}
       </Button>
     ) : undefined;
 
   const { nudgeMessage } = notification;
-  const hasExtra = streak > 0 || !!nudgeMessage?.body || !!nudgeMessage?.mediaUrl;
+  const hasExtra =
+    streak > 0 || !!nudgeMessage?.body || !!nudgeMessage?.mediaUrl;
 
   const additionalContent = hasExtra ? (
     <>

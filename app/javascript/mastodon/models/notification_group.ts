@@ -220,7 +220,10 @@ export function createNotificationGroupFromJSON(
         partial: false,
         nudgeStreak: group.nudge_streak,
         nudgeMessage: group.nudge_message
-          ? { body: group.nudge_message.body, mediaUrl: group.nudge_message.media_url }
+          ? {
+              body: group.nudge_message.body,
+              mediaUrl: group.nudge_message.media_url,
+            }
           : undefined,
         sampleAccountIds,
       };
@@ -295,7 +298,10 @@ export function createNotificationGroupFromNotificationJSON(
         type: notification.type,
         nudgeStreak: notification.nudge_streak,
         nudgeMessage: notification.nudge_message
-          ? { body: notification.nudge_message.body, mediaUrl: notification.nudge_message.media_url }
+          ? {
+              body: notification.nudge_message.body,
+              mediaUrl: notification.nudge_message.media_url,
+            }
           : undefined,
       };
     default:

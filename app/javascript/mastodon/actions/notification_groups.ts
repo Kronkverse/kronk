@@ -238,9 +238,15 @@ export const markNotificationsAsRead = createAction(
   'notificationGroups/markAsRead',
 );
 
-export const clearUnreadNudges = createAction('notificationGroups/clearUnreadNudges');
-export const setUnreadNudgeCount = createAction<number>('notificationGroups/setUnreadNudgeCount');
-export const decrementNudgeCount = createAction('notificationGroups/decrementNudgeCount');
+export const clearUnreadNudges = createAction(
+  'notificationGroups/clearUnreadNudges',
+);
+export const setUnreadNudgeCount = createAction<number>(
+  'notificationGroups/setUnreadNudgeCount',
+);
+export const decrementNudgeCount = createAction(
+  'notificationGroups/decrementNudgeCount',
+);
 
 export const fetchInitialNudgeCount = createAppAsyncThunk(
   'notificationGroups/fetchInitialNudgeCount',

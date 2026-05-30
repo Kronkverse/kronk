@@ -2,7 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import { apiNudgeAccount, apiGetNudgeStreak } from 'mastodon/api/accounts';
+import { openModal } from 'mastodon/actions/modal';
+import { apiGetNudgeStreak } from 'mastodon/api/accounts';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
 import { AccountHeader } from 'mastodon/features/account_timeline/components/account_header';
 import BundleColumnError from 'mastodon/features/ui/components/bundle_column_error';
@@ -10,10 +11,11 @@ import Column from 'mastodon/features/ui/components/column';
 import { useAccountId } from 'mastodon/hooks/useAccountId';
 import { useAccountVisibility } from 'mastodon/hooks/useAccountVisibility';
 import { me } from 'mastodon/initial_state';
-import { useAppSelector } from 'mastodon/store';
+import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const AccountNudges: React.FC = () => {
   const accountId = useAccountId();
+  const dispatch = useAppDispatch();
   const { suspended } = useAccountVisibility(accountId);
   const account = useAppSelector((state) =>
     accountId ? state.accounts.get(accountId) : undefined,
@@ -21,7 +23,6 @@ const AccountNudges: React.FC = () => {
 
   const [sentCount, setSentCount] = useState<number | null>(null);
   const [receivedCount, setReceivedCount] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
   const [nudgeSent, setNudgeSent] = useState(false);
   const [canNudge, setCanNudge] = useState(true);
 
@@ -33,23 +34,30 @@ const AccountNudges: React.FC = () => {
         setReceivedCount(data.received_count);
         setCanNudge(data.can_nudge);
       })
-      .catch(() => { /* silent */ });
+      .catch(() => {
+        /* silent */
+      });
   }, [accountId]);
 
-  const handleNudge = useCallback(async () => {
-    if (!accountId || loading || !canNudge) return;
-    setLoading(true);
-    try {
-      await apiNudgeAccount(accountId);
-      setSentCount((c) => (c ?? 0) + 1);
-      setNudgeSent(true);
-      setCanNudge(false);
-    } finally {
-      setLoading(false);
-    }
-  }, [accountId, loading, canNudge]);
+  const handleNudge = useCallback(() => {
+    if (!accountId || !canNudge) return;
+    dispatch(
+      openModal({
+        modalType: 'NUDGE_COMPOSE',
+        modalProps: {
+          accountId,
+          onSent: () => {
+            setSentCount((c) => (c ?? 0) + 1);
+            setNudgeSent(true);
+            setCanNudge(false);
+          },
+        },
+      }),
+    );
+  }, [accountId, canNudge, dispatch]);
 
-  if (!accountId) return <BundleColumnError multiColumn={false} errorType='routing' />;
+  if (!accountId)
+    return <BundleColumnError multiColumn={false} errorType='routing' />;
 
   return (
     <Column>
@@ -60,18 +68,25 @@ const AccountNudges: React.FC = () => {
           <div className='account-nudges'>
             {(sentCount !== null || receivedCount !== null) && (
               <div className='account-nudges__counts'>
-                <span className='account-nudges__count-sent'>↑ {sentCount ?? 0}</span>
-                <span className='account-nudges__count-received'>↓ {receivedCount ?? 0}</span>
+                <span className='account-nudges__count-sent'>
+                  ↑ {sentCount ?? 0}
+                </span>
+                <span className='account-nudges__count-received'>
+                  ↓ {receivedCount ?? 0}
+                </span>
               </div>
             )}
 
             <button
               className='button account-nudges__button'
               onClick={handleNudge}
-              disabled={loading || !canNudge}
+              disabled={!canNudge}
             >
               {nudgeSent ? (
-                <FormattedMessage id='account_nudges.nudged' defaultMessage='Nudged!' />
+                <FormattedMessage
+                  id='account_nudges.nudged'
+                  defaultMessage='Nudged!'
+                />
               ) : !canNudge ? (
                 <FormattedMessage
                   id='account_nudges.waiting'

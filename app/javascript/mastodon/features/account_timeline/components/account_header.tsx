@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { AxiosError } from 'axios';
 import classNames from 'classnames';
 import { Helmet } from 'react-helmet';
 import { NavLink } from 'react-router-dom';
@@ -11,11 +10,11 @@ import { AccountBio } from '@/mastodon/components/account_bio';
 import { AccountFields } from '@/mastodon/components/account_fields';
 import { DisplayName } from '@/mastodon/components/display_name';
 import { AnimateEmojiProvider } from '@/mastodon/components/emoji/context';
-import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import NotificationsActiveIcon from '@/material-icons/400-24px/notifications_active-fill.svg?react';
+import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import {
   followAccount,
@@ -25,7 +24,6 @@ import {
   unpinAccount,
   removeAccountFromFollowers,
 } from 'mastodon/actions/accounts';
-import { apiNudgeAccount, apiGetNudgeStreak } from 'mastodon/api/accounts';
 import { initBlockModal } from 'mastodon/actions/blocks';
 import { mentionCompose, directCompose } from 'mastodon/actions/compose';
 import {
@@ -35,6 +33,7 @@ import {
 import { openModal } from 'mastodon/actions/modal';
 import { initMuteModal } from 'mastodon/actions/mutes';
 import { initReport } from 'mastodon/actions/reports';
+import { apiGetNudgeStreak } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { Badge, AutomatedBadge, GroupBadge } from 'mastodon/components/badge';
 import { CopyIconButton } from 'mastodon/components/copy_icon_button';
@@ -213,41 +212,35 @@ export const AccountHeader: React.FC<{
   );
   const hidden = useAppSelector((state) => getAccountHidden(state, accountId));
 
-  const [nudgeLoading, setNudgeLoading] = useState(false);
   const [nudgeSent, setNudgeSent] = useState(false);
-  const [nudgeStreak, setNudgeStreak] = useState<number | null>(null);
   const [canNudge, setCanNudge] = useState(true);
 
   useEffect(() => {
     if (!accountId || !signedIn || accountId === me) return;
     apiGetNudgeStreak(accountId)
       .then((data) => {
-        setNudgeStreak(data.streak);
         setCanNudge(data.can_nudge);
       })
-      .catch(() => { /* silently ignore */ });
+      .catch(() => {
+        /* silently ignore */
+      });
   }, [accountId, signedIn]);
 
   const handleNudge = useCallback(() => {
-    if (nudgeLoading || !canNudge) return;
-    setNudgeLoading(true);
-    apiNudgeAccount(accountId)
-      .then((data) => {
-        setNudgeSent(true);
-        setCanNudge(false);
-        setNudgeStreak(data.streak);
-      })
-      .catch((e: unknown) => {
-        if (e instanceof AxiosError && e.response?.status === 422) {
-          // Ping-pong rule: already nudged, waiting for them to nudge back
-          setCanNudge(false);
-        }
-        // Other errors: silently ignore and re-enable button
-      })
-      .finally(() => {
-        setNudgeLoading(false);
-      });
-  }, [accountId, nudgeLoading, canNudge]);
+    if (!canNudge) return;
+    dispatch(
+      openModal({
+        modalType: 'NUDGE_COMPOSE',
+        modalProps: {
+          accountId,
+          onSent: () => {
+            setNudgeSent(true);
+            setCanNudge(false);
+          },
+        },
+      }),
+    );
+  }, [accountId, canNudge, dispatch]);
 
   const handleBlock = useCallback(() => {
     if (!account) {
@@ -747,7 +740,12 @@ export const AccountHeader: React.FC<{
     );
   }
 
-  if (me !== account.id && signedIn && !relationship?.blocking && !relationship?.blocked_by) {
+  if (
+    me !== account.id &&
+    signedIn &&
+    !relationship?.blocking &&
+    !relationship?.blocked_by
+  ) {
     const nudgeTitle = nudgeSent
       ? intl.formatMessage(messages.nudgeSent)
       : !canNudge
@@ -758,7 +756,7 @@ export const AccountHeader: React.FC<{
         icon='partner_exchange'
         iconComponent={PartnerExchangeIcon}
         active={nudgeSent}
-        disabled={nudgeLoading || !canNudge}
+        disabled={!canNudge}
         title={nudgeTitle}
         onClick={handleNudge}
       />
