@@ -12098,6 +12098,26 @@ noscript {
   margin-top: 4px;
 }
 
+.notification-nudge__reveal-btn {
+  display: inline-block;
+  margin-top: 6px;
+  background: none;
+  border: 1px solid lighten($ui-base-color, 16%);
+  border-radius: 4px;
+  color: $highlight-text-color;
+  font-size: 13px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+
+  &:hover {
+    background: rgba($highlight-text-color, 0.08);
+    border-color: $highlight-text-color;
+  }
+}
+
 // Grand total stat banner
 .nudge-grand-total {
   display: flex;
@@ -12726,6 +12746,37 @@ noscript {
     height: 32px;
     max-width: 200px;
   }
+
+  &__options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  &__add-message-btn {
+    background: none;
+    border: 1px solid lighten($ui-base-color, 16%);
+    border-radius: 6px;
+    color: $dark-text-color;
+    font-size: 14px;
+    padding: 10px 16px;
+    cursor: pointer;
+    text-align: center;
+    transition:
+      border-color 0.15s,
+      color 0.15s;
+
+    &:hover {
+      border-color: $highlight-text-color;
+      color: $highlight-text-color;
+    }
+  }
+
+  &__choose-footer {
+    display: flex;
+    justify-content: center;
+  }
 }
 
 // Reaction bar on nudge notifications
@@ -12746,7 +12797,9 @@ noscript {
   display: flex;
   align-items: center;
   gap: 4px;
-  transition: border-color 0.1s, background 0.1s;
+  transition:
+    border-color 0.1s,
+    background 0.1s;
 
   &:hover {
     border-color: $highlight-text-color;
