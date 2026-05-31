@@ -13156,6 +13156,12 @@ noscript {
     }
   }
 
+  &__avatar {
+    align-self: flex-end;
+    margin-inline-end: 6px;
+    flex-shrink: 0;
+  }
+
   &__text {
     margin: 0;
   }

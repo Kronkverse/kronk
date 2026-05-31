@@ -19,6 +19,7 @@ import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
+import type { Account } from 'mastodon/models/account';
 import type { NotificationGroupNudge } from 'mastodon/models/notification_group';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
@@ -56,14 +57,27 @@ function formatTime(dateStr: string): string {
   const now = new Date();
   const diff = now.getTime() - d.getTime();
   if (diff < 60_000) return 'now';
-  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m`;
-  if (diff < 86_400_000) {
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
+  const timeStr = d.toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+  const isToday = d.toDateString() === now.toDateString();
+  if (isToday) return timeStr;
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (d.toDateString() === yesterday.toDateString())
+    return `Yesterday ${timeStr}`;
+  if (diff < 7 * 86_400_000) {
+    return `${d.toLocaleDateString([], { weekday: 'short' })} ${timeStr}`;
   }
-  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${timeStr}`;
 }
 
-const MessageBubble: React.FC<{ msg: ApiNudgeThreadMessage }> = ({ msg }) => {
+const MessageBubble: React.FC<{
+  msg: ApiNudgeThreadMessage;
+  partnerAccount?: Account | null;
+}> = ({ msg, partnerAccount }) => {
   const isPing =
     msg.body == null && msg.media_url == null && msg.voice_url == null;
   const isSent = msg.direction === 'sent';
@@ -94,6 +108,11 @@ const MessageBubble: React.FC<{ msg: ApiNudgeThreadMessage }> = ({ msg }) => {
     <div
       className={`nudge-bubble nudge-bubble--${isSent ? 'sent' : 'received'}`}
     >
+      {!isSent && partnerAccount && (
+        <div className='nudge-bubble__avatar'>
+          <Avatar account={partnerAccount} size={28} />
+        </div>
+      )}
       <div className='nudge-bubble__content'>
         {msg.body && <p className='nudge-bubble__text'>{msg.body}</p>}
         {msg.media_url &&
@@ -161,6 +180,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const lastNudgeKeyRef = useRef<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const voiceSecondsRef = useRef(0);
+  const isFirstLoadRef = useRef(true);
 
   const account = useAppSelector((state) => state.accounts.get(accountId));
 
@@ -206,9 +226,20 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     void loadThread();
   }, [loadThread]);
 
-  // Auto-scroll to bottom when messages arrive
+  // Auto-focus compose input on mount
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    textareaRef.current?.focus();
+  }, []);
+
+  // Auto-scroll: instant on first load, smooth on new messages
+  useEffect(() => {
+    if (threadMessages.length === 0) return;
+    if (isFirstLoadRef.current) {
+      messagesEndRef.current?.scrollIntoView();
+      isFirstLoadRef.current = false;
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [threadMessages]);
 
   // Cleanup media recorder on unmount
@@ -305,7 +336,13 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
         });
-        const recorder = new MediaRecorder(stream);
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : 'audio/webm';
+        const recorder = new MediaRecorder(stream, {
+          mimeType,
+          audioBitsPerSecond: 128_000,
+        });
         chunksRef.current = [];
         recorder.ondataavailable = (e) => {
           if (e.data.size > 0) chunksRef.current.push(e.data);
@@ -314,7 +351,9 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           stream.getTracks().forEach((t) => {
             t.stop();
           });
-          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+          const blob = new Blob(chunksRef.current, {
+            type: recorder.mimeType || 'audio/webm',
+          });
           const seconds = voiceSecondsRef.current;
           setRecording(false);
           if (timerRef.current) clearInterval(timerRef.current);
@@ -504,7 +543,13 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         {!loading && threadMessages.length > 0 && (
           <div className='nudge-thread__messages'>
             {threadMessages.map((msg) => (
-              <MessageBubble key={msg.notification_id} msg={msg} />
+              <MessageBubble
+                key={msg.notification_id}
+                msg={msg}
+                partnerAccount={
+                  msg.direction === 'received' ? account : undefined
+                }
+              />
             ))}
             <div ref={messagesEndRef} />
           </div>
@@ -518,7 +563,6 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               {mediaPreview && (
                 <div className='nudge-compose-bar__attachment-preview'>
                   {mediaIsVideo ? (
-                     
                     <video
                       src={mediaPreview}
                       className='nudge-compose-bar__media-preview'
