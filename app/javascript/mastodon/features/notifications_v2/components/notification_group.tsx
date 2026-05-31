@@ -13,6 +13,7 @@ import { NotificationEventInvitation } from './notification_event_invitation';
 import { NotificationFavourite } from './notification_favourite';
 import { NotificationFollow } from './notification_follow';
 import { NotificationFollowRequest } from './notification_follow_request';
+import { NotificationMediaTag } from './notification_media_tag';
 import { NotificationMention } from './notification_mention';
 import { NotificationModerationWarning } from './notification_moderation_warning';
 import { NotificationNudge } from './notification_nudge';
@@ -169,6 +170,14 @@ export const NotificationGroup: React.FC<{
     case 'nudge':
       content = (
         <NotificationNudge unread={unread} notification={notificationGroup} />
+      );
+      break;
+    case 'media_tag':
+      content = (
+        <NotificationMediaTag
+          unread={unread}
+          notification={notificationGroup}
+        />
       );
       break;
     default:

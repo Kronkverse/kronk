@@ -24,6 +24,7 @@ export const allNotificationTypes: NotificationType[] = [
   'annual_report',
   'event_invitation',
   'nudge',
+  'media_tag',
 ];
 
 export type NotificationWithStatusType =
@@ -46,7 +47,8 @@ export type NotificationType =
   | 'admin.report'
   | 'annual_report'
   | 'event_invitation'
-  | 'nudge';
+  | 'nudge'
+  | 'media_tag';
 
 export interface BaseNotificationJSON {
   id: string;
@@ -194,6 +196,16 @@ interface NudgeNotificationJSON extends BaseNotificationJSON {
   nudge_reactions: NudgeReactionsJSON;
 }
 
+interface MediaTagNotificationGroupJSON extends BaseNotificationGroupJSON {
+  type: 'media_tag';
+  media_tag_preview_url: string | null;
+}
+
+interface MediaTagNotificationJSON extends BaseNotificationJSON {
+  type: 'media_tag';
+  media_tag_preview_url: string | null;
+}
+
 export type ApiNotificationJSON =
   | SimpleNotificationJSON
   | ReportNotificationJSON
@@ -201,7 +213,8 @@ export type ApiNotificationJSON =
   | NotificationWithStatusJSON
   | ModerationWarningNotificationJSON
   | EventInvitationNotificationJSON
-  | NudgeNotificationJSON;
+  | NudgeNotificationJSON
+  | MediaTagNotificationJSON;
 
 export type ApiNotificationGroupJSON =
   | SimpleNotificationGroupJSON
@@ -211,7 +224,8 @@ export type ApiNotificationGroupJSON =
   | ModerationWarningNotificationGroupJSON
   | AnnualReportNotificationGroupJSON
   | EventInvitationNotificationGroupJSON
-  | NudgeNotificationGroupJSON;
+  | NudgeNotificationGroupJSON
+  | MediaTagNotificationGroupJSON;
 
 export interface ApiNotificationGroupsResultJSON {
   accounts: ApiAccountJSON[];

@@ -45,6 +45,7 @@ import {
   Firehose,
   AccountTimeline,
   AccountGallery,
+  AccountTaggedGallery,
   AccountNudges,
   HomeTimeline,
   Followers,
@@ -237,6 +238,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path={['/accounts/:id/followers', '/users/:acct/followers', '/@:acct/followers']} component={Followers} content={children} />
             <WrappedRoute path={['/accounts/:id/following', '/users/:acct/following', '/@:acct/following']} component={Following} content={children} />
             <WrappedRoute path={['/@:acct/media', '/accounts/:id/media']} component={AccountGallery} content={children} />
+            <WrappedRoute path={['/@:acct/tagged-media', '/accounts/:id/tagged-media']} component={AccountTaggedGallery} content={children} />
             {signedIn && <WrappedRoute path='/@:acct/nudges' component={AccountNudges} content={children} />}
             <WrappedRoute path='/@:acct/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/@:acct/:statusId/reblogs' component={Reblogs} content={children} />
