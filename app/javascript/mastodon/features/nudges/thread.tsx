@@ -177,6 +177,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [mediaIsVideo, setMediaIsVideo] = useState(false);
   const [voiceId, setVoiceId] = useState<string | undefined>();
   const [voiceBlob, setVoiceBlob] = useState<Blob | undefined>();
+  const [voiceBlobUrl, setVoiceBlobUrl] = useState<string | undefined>();
   const [recording, setRecording] = useState(false);
   const [voiceSeconds, setVoiceSeconds] = useState(0);
   const [uploading, setUploading] = useState(false);
@@ -206,6 +207,17 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   useEffect(() => {
     textareaRef.current?.focus();
   }, []);
+
+  // Manage voice blob object URL — create once, revoke on change or unmount
+  useEffect(() => {
+    if (!voiceBlob) return;
+    const url = URL.createObjectURL(voiceBlob);
+    setVoiceBlobUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+      setVoiceBlobUrl(undefined);
+    };
+  }, [voiceBlob]);
 
   // Auto-scroll: instant on first load, smooth on new messages
   useEffect(() => {
@@ -280,8 +292,12 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             '/api/v2/media',
             formData,
           );
+          const previewUrl = URL.createObjectURL(file);
           setMediaId(data.id);
-          setMediaPreview(URL.createObjectURL(file));
+          setMediaPreview((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return previewUrl;
+          });
           setMediaIsVideo(file.type.startsWith('video/'));
         } catch (err) {
           setError(
@@ -297,12 +313,17 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
   const handleRemoveMedia = useCallback(() => {
     setMediaId(undefined);
-    setMediaPreview(undefined);
+    setMediaPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return undefined;
+    });
     setMediaIsVideo(false);
+    setError(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
   const startRecording = useCallback(() => {
+    setError(null);
     void (async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -364,13 +385,17 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setVoiceId(undefined);
     setVoiceBlob(undefined);
     setVoiceSeconds(0);
+    setError(null);
     voiceUploadRef.current = null;
   }, []);
 
   const clearCompose = useCallback(() => {
     setText('');
     setMediaId(undefined);
-    setMediaPreview(undefined);
+    setMediaPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return undefined;
+    });
     setMediaIsVideo(false);
     setVoiceId(undefined);
     setVoiceBlob(undefined);
@@ -553,10 +578,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               {(voiceBlob ?? voiceId) && (
                 <div className='nudge-compose-bar__attachment-preview nudge-compose-bar__attachment-preview--voice'>
                   {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                  <audio
-                    controls
-                    src={voiceBlob ? URL.createObjectURL(voiceBlob) : undefined}
-                  />
+                  <audio controls src={voiceBlobUrl} />
                   <button
                     type='button'
                     className='nudge-compose-bar__remove-btn'
