@@ -37,6 +37,7 @@ interface NudgeAlertData {
 const messages = defineMessages({
   title: { id: 'nudges.title', defaultMessage: 'Nudges' },
   previewImage: { id: 'nudges.preview.image', defaultMessage: 'Image' },
+  previewVideo: { id: 'nudges.preview.video', defaultMessage: 'Video' },
   previewVoice: { id: 'nudges.preview.voice', defaultMessage: 'Voice memo' },
   previewNudge: { id: 'nudges.preview.nudge', defaultMessage: 'Nudged' },
   dismiss: { id: 'nudges.alert.dismiss', defaultMessage: 'Dismiss' },
@@ -47,6 +48,7 @@ const messages = defineMessages({
 function lastMessagePreview(
   msg: ApiNudgeLastMessage,
   previewImage: string,
+  previewVideo: string,
   previewVoice: string,
   previewNudge: string,
 ): string {
@@ -56,6 +58,8 @@ function lastMessagePreview(
       return `${prefix}${msg.body ?? ''}`;
     case 'image':
       return `${prefix}${previewImage}`;
+    case 'video':
+      return `${prefix}${previewVideo}`;
     case 'voice':
       return `${prefix}${previewVoice}`;
     default:
@@ -185,9 +189,10 @@ const NudgeAlert: React.FC<{
 const ConversationRow: React.FC<{
   partner: ApiNudgePartner;
   previewImage: string;
+  previewVideo: string;
   previewVoice: string;
   previewNudge: string;
-}> = ({ partner, previewImage, previewVoice, previewNudge }) => {
+}> = ({ partner, previewImage, previewVideo, previewVoice, previewNudge }) => {
   const account = useAppSelector((state) =>
     state.accounts.get(partner.account_id),
   );
@@ -199,6 +204,7 @@ const ConversationRow: React.FC<{
   const preview = lastMessagePreview(
     partner.last_message,
     previewImage,
+    previewVideo,
     previewVoice,
     previewNudge,
   );
@@ -317,10 +323,13 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
   const [partners, setPartners] = useState<ApiNudgePartner[]>([]);
   const [suggestions, setSuggestions] = useState<ApiNudgeSuggestion[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
+  const [totalSent, setTotalSent] = useState(0);
+  const [totalReceived, setTotalReceived] = useState(0);
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState<NudgeAlertData[]>([]);
 
   const previewImage = intl.formatMessage(messages.previewImage);
+  const previewVideo = intl.formatMessage(messages.previewVideo);
   const previewVoice = intl.formatMessage(messages.previewVoice);
   const previewNudge = intl.formatMessage(messages.previewNudge);
 
@@ -343,6 +352,8 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
       setPartners(data.partners);
       setSuggestions(data.suggestions);
       setGrandTotal(data.grand_total);
+      setTotalSent(data.total_sent);
+      setTotalReceived(data.total_received);
       dispatch(setUnreadNudgeCount(data.pending_count));
     } finally {
       setLoading(false);
@@ -423,23 +434,57 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
 
       <div className='scrollable nudge-page'>
         {!loading && grandTotal > 0 && (
-          <div className='nudge-inbox-stats'>
-            <span className='nudge-inbox-stats__total'>
-              <FormattedMessage
-                id='nudges.total_nudges'
-                defaultMessage='{count} nudges total'
-                values={{ count: grandTotal }}
-              />
-            </span>
-            {unreadCount > 0 && (
-              <span className='nudge-inbox-stats__unread'>
+          <div className='nudge-grand-total'>
+            <div className='nudge-grand-total__headline'>
+              <span className='nudge-grand-total__count'>{grandTotal}</span>
+              <span className='nudge-grand-total__label'>
                 <FormattedMessage
-                  id='nudges.unread_count'
-                  defaultMessage='{count} new'
-                  values={{ count: unreadCount }}
+                  id='nudges.grand_total_label'
+                  defaultMessage='Grand Total of Nudges'
                 />
               </span>
-            )}
+            </div>
+            <div className='nudge-grand-total__breakdown'>
+              <div className='nudge-grand-total__stat'>
+                <span className='nudge-grand-total__stat-number nudge-grand-total__stat-number--sent'>
+                  {totalSent}
+                </span>
+                <span className='nudge-grand-total__stat-label'>
+                  <FormattedMessage
+                    id='nudges.total_sent'
+                    defaultMessage='SENT'
+                  />
+                </span>
+              </div>
+              <div className='nudge-grand-total__stat-divider' />
+              <div className='nudge-grand-total__stat'>
+                <span className='nudge-grand-total__stat-number nudge-grand-total__stat-number--received'>
+                  {totalReceived}
+                </span>
+                <span className='nudge-grand-total__stat-label'>
+                  <FormattedMessage
+                    id='nudges.total_received'
+                    defaultMessage='RECEIVED'
+                  />
+                </span>
+              </div>
+              {unreadCount > 0 && (
+                <>
+                  <div className='nudge-grand-total__stat-divider' />
+                  <div className='nudge-grand-total__stat'>
+                    <span className='nudge-grand-total__stat-number nudge-grand-total__stat-number--new'>
+                      {unreadCount}
+                    </span>
+                    <span className='nudge-grand-total__stat-label'>
+                      <FormattedMessage
+                        id='nudges.unread_count_label'
+                        defaultMessage='NEW'
+                      />
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
 
@@ -465,6 +510,7 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
                 key={partner.account_id}
                 partner={partner}
                 previewImage={previewImage}
+                previewVideo={previewVideo}
                 previewVoice={previewVoice}
                 previewNudge={previewNudge}
               />

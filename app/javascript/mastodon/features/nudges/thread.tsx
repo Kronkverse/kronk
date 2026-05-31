@@ -12,12 +12,8 @@ import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill
 import StopIcon from '@/material-icons/400-24px/stop.svg?react';
 import { importFetchedAccounts } from 'mastodon/actions/importer';
 import { decrementNudgeCount } from 'mastodon/actions/notification_groups';
-import {
-  apiGetNudgeThread,
-  apiNudgeAccount
-  
-} from 'mastodon/api/accounts';
-import type {ApiNudgeThreadMessage} from 'mastodon/api/accounts';
+import { apiGetNudgeThread, apiNudgeAccount } from 'mastodon/api/accounts';
+import type { ApiNudgeThreadMessage } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
@@ -27,7 +23,7 @@ import type { NotificationGroupNudge } from 'mastodon/models/notification_group'
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const MAX_WORDS = 100;
-const MAX_VOICE_SECONDS = 30;
+const MAX_VOICE_SECONDS = 60;
 
 function countWords(text: string): number {
   return text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
@@ -92,9 +88,17 @@ const MessageBubble: React.FC<{ msg: ApiNudgeThreadMessage }> = ({ msg }) => {
     >
       <div className='nudge-bubble__content'>
         {msg.body && <p className='nudge-bubble__text'>{msg.body}</p>}
-        {msg.media_url && (
-          <img src={msg.media_url} alt='' className='nudge-bubble__img' />
-        )}
+        {msg.media_url &&
+          (msg.media_content_type?.startsWith('video/') ? (
+            // eslint-disable-next-line jsx-a11y/media-has-caption
+            <video
+              controls
+              src={msg.media_url}
+              className='nudge-bubble__video'
+            />
+          ) : (
+            <img src={msg.media_url} alt='' className='nudge-bubble__img' />
+          ))}
         {msg.voice_url && (
           // eslint-disable-next-line jsx-a11y/media-has-caption
           <audio controls src={msg.voice_url} className='nudge-bubble__audio' />
@@ -153,6 +157,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [text, setText] = useState('');
   const [mediaId, setMediaId] = useState<string | undefined>();
   const [mediaPreview, setMediaPreview] = useState<string | undefined>();
+  const [mediaIsVideo, setMediaIsVideo] = useState(false);
   const [voiceId, setVoiceId] = useState<string | undefined>();
   const [voiceBlob, setVoiceBlob] = useState<Blob | undefined>();
   const [recording, setRecording] = useState(false);
@@ -251,6 +256,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             const json = (await response.json()) as { id: string };
             setMediaId(json.id);
             setMediaPreview(URL.createObjectURL(file));
+            setMediaIsVideo(file.type.startsWith('video/'));
           }
         } finally {
           setUploading(false);
@@ -263,6 +269,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const handleRemoveMedia = useCallback(() => {
     setMediaId(undefined);
     setMediaPreview(undefined);
+    setMediaIsVideo(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
@@ -319,6 +326,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setText('');
     setMediaId(undefined);
     setMediaPreview(undefined);
+    setMediaIsVideo(false);
     setVoiceId(undefined);
     setVoiceBlob(undefined);
     setVoiceSeconds(0);
@@ -457,7 +465,20 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             <div className='nudge-compose-bar__attachments'>
               {mediaPreview && (
                 <div className='nudge-compose-bar__attachment-preview'>
-                  <img src={mediaPreview} alt='' />
+                  {mediaIsVideo ? (
+                     
+                    <video
+                      src={mediaPreview}
+                      className='nudge-compose-bar__media-preview'
+                      muted
+                    />
+                  ) : (
+                    <img
+                      src={mediaPreview}
+                      alt=''
+                      className='nudge-compose-bar__media-preview'
+                    />
+                  )}
                   <button
                     type='button'
                     className='nudge-compose-bar__remove-btn'
@@ -503,7 +524,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             <input
               ref={fileInputRef}
               type='file'
-              accept='image/*'
+              accept='image/*,video/*'
               style={{ display: 'none' }}
               onChange={handleFileChange}
             />

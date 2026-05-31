@@ -141,7 +141,7 @@ class Api::V1::AccountsController < Api::BaseController
       msg_type = if msg&.voice_attachment_id.present?
                    'voice'
                  elsif msg&.media_attachment_id.present?
-                   'image'
+                   msg.media_attachment&.file_content_type&.start_with?('video/') ? 'video' : 'image'
                  elsif msg&.body.present?
                    'text'
                  else
@@ -278,6 +278,7 @@ class Api::V1::AccountsController < Api::BaseController
         created_at: n.created_at.iso8601,
         body: msg&.body,
         media_url: msg&.media_attachment ? full_asset_url(msg.media_attachment.file.url(:original)) : nil,
+        media_content_type: msg&.media_attachment&.file_content_type,
         voice_url: msg&.voice_attachment ? full_asset_url(msg.voice_attachment.file.url(:original)) : nil,
         reactions: reactions,
       }

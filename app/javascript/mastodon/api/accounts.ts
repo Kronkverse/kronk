@@ -63,7 +63,7 @@ export const apiGetNudgeStreak = (id: string) =>
   }>(`v1/accounts/${id}/nudge_streak`);
 
 export interface ApiNudgeLastMessage {
-  type: 'plain' | 'text' | 'image' | 'voice';
+  type: 'plain' | 'text' | 'image' | 'video' | 'voice';
   body: string | null;
   direction: 'sent' | 'received' | null;
   created_at: string | null;
@@ -85,6 +85,7 @@ export interface ApiNudgeThreadMessage {
   created_at: string;
   body: string | null;
   media_url: string | null;
+  media_content_type: string | null;
   voice_url: string | null;
   reactions: Record<string, { count: number; me: boolean }>;
 }
