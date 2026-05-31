@@ -3,9 +3,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link } from 'react-router-dom';
-
-import { AxiosError } from 'axios';
+import { Link, useHistory } from 'react-router-dom';
 
 import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import { importFetchedAccounts } from 'mastodon/actions/importer';
@@ -14,22 +12,22 @@ import {
   decrementNudgeCount,
   setUnreadNudgeCount,
 } from 'mastodon/actions/notification_groups';
-import { apiNudgeAccount, apiGetNudgePartners } from 'mastodon/api/accounts';
+import { apiGetNudgePartners } from 'mastodon/api/accounts';
 import type {
+  ApiNudgeLastMessage,
   ApiNudgePartner,
   ApiNudgeSuggestion,
 } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { Button } from 'mastodon/components/button';
 import { Column } from 'mastodon/components/column';
+import type { ColumnRef } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { DisplayName } from 'mastodon/components/display_name';
 import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import type { NotificationGroupNudge } from 'mastodon/models/notification_group';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
-
-const MILESTONE_THRESHOLD = 10;
 
 interface NudgeAlertData {
   id: string;
@@ -38,15 +36,41 @@ interface NudgeAlertData {
 
 const messages = defineMessages({
   title: { id: 'nudges.title', defaultMessage: 'Nudges' },
+  previewImage: { id: 'nudges.preview.image', defaultMessage: 'Image' },
+  previewVoice: { id: 'nudges.preview.voice', defaultMessage: 'Voice memo' },
+  previewNudge: { id: 'nudges.preview.nudge', defaultMessage: 'Nudged' },
+  dismiss: { id: 'nudges.alert.dismiss', defaultMessage: 'Dismiss' },
 });
 
-// ── Live nudge alert banner ───────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function lastMessagePreview(
+  msg: ApiNudgeLastMessage,
+  previewImage: string,
+  previewVoice: string,
+  previewNudge: string,
+): string {
+  const prefix = msg.direction === 'sent' ? 'You: ' : '';
+  switch (msg.type) {
+    case 'text':
+      return `${prefix}${msg.body ?? ''}`;
+    case 'image':
+      return `${prefix}${previewImage}`;
+    case 'voice':
+      return `${prefix}${previewVoice}`;
+    default:
+      return `${prefix}${previewNudge}`;
+  }
+}
+
+// ── Live alert banner ─────────────────────────────────────────────────────────
 
 const NudgeAlert: React.FC<{
   alert: NudgeAlertData;
   onDismiss: (id: string) => void;
 }> = ({ alert, onDismiss }) => {
   const dispatch = useAppDispatch();
+  const history = useHistory();
   const account = useAppSelector((state) =>
     state.accounts.get(alert.accountId),
   );
@@ -61,30 +85,60 @@ const NudgeAlert: React.FC<{
     };
   }, [alert.id, onDismiss]);
 
-  const handleDismiss = useCallback(() => {
-    onDismiss(alert.id);
-  }, [onDismiss, alert.id]);
+  const handleDismissClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onDismiss(alert.id);
+    },
+    [onDismiss, alert.id],
+  );
 
-  const handleNudgeBack = useCallback(() => {
-    if (nudgedBack) return;
-    dispatch(
-      openModal({
-        modalType: 'NUDGE_COMPOSE',
-        modalProps: {
-          accountId: alert.accountId,
-          onSent: () => {
-            setNudgedBack(true);
-            dispatch(decrementNudgeCount());
+  const handleOpen = useCallback(() => {
+    onDismiss(alert.id);
+    history.push(`/nudges/${alert.accountId}`);
+  }, [alert.id, alert.accountId, onDismiss, history]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') handleOpen();
+    },
+    [handleOpen],
+  );
+
+  const handleLinkClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const handleNudgeBackClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (nudgedBack) return;
+      dispatch(
+        openModal({
+          modalType: 'NUDGE_COMPOSE',
+          modalProps: {
+            accountId: alert.accountId,
+            onSent: () => {
+              setNudgedBack(true);
+              dispatch(decrementNudgeCount());
+            },
           },
-        },
-      }),
-    );
-  }, [alert.accountId, nudgedBack, dispatch]);
+        }),
+      );
+    },
+    [alert.accountId, nudgedBack, dispatch],
+  );
 
   if (!account) return null;
 
   return (
-    <div className='nudge-alert'>
+    <div
+      className='nudge-alert'
+      onClick={handleOpen}
+      role='button'
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
       <Icon
         id='partner_exchange'
         icon={PartnerExchangeActiveIcon}
@@ -96,11 +150,15 @@ const NudgeAlert: React.FC<{
           defaultMessage='<a>@{acct}</a> has nudged you'
           values={{
             acct: account.acct,
-            a: (chunks) => <Link to={`/@${account.acct}`}>{chunks}</Link>,
+            a: (chunks) => (
+              <Link to={`/@${account.acct}`} onClick={handleLinkClick}>
+                {chunks}
+              </Link>
+            ),
           }}
         />
       </span>
-      <Button compact disabled={nudgedBack} onClick={handleNudgeBack}>
+      <Button compact disabled={nudgedBack} onClick={handleNudgeBackClick}>
         {nudgedBack ? (
           <FormattedMessage id='nudges.nudged_back' defaultMessage='Nudged!' />
         ) : (
@@ -112,7 +170,8 @@ const NudgeAlert: React.FC<{
       </Button>
       <button
         className='nudge-alert__dismiss'
-        onClick={handleDismiss}
+        onClick={handleDismissClick}
+        type='button'
         aria-label='Dismiss'
       >
         ×
@@ -121,109 +180,72 @@ const NudgeAlert: React.FC<{
   );
 };
 
-// ── Partner card ──────────────────────────────────────────────────────────────
+// ── Conversation row ──────────────────────────────────────────────────────────
 
-const NudgePartnerItem: React.FC<{
+const ConversationRow: React.FC<{
   partner: ApiNudgePartner;
-  onNudged: (accountId: string) => void;
-}> = ({ partner, onNudged }) => {
-  const dispatch = useAppDispatch();
+  previewImage: string;
+  previewVoice: string;
+  previewNudge: string;
+}> = ({ partner, previewImage, previewVoice, previewNudge }) => {
   const account = useAppSelector((state) =>
     state.accounts.get(partner.account_id),
   );
-  const [nudgedBack, setNudgedBack] = useState(false);
-  const canNudge = partner.can_nudge_back && !nudgedBack;
-  const isMilestone =
-    partner.sent_count + partner.received_count >= MILESTONE_THRESHOLD;
-
-  const handleNudgeBack = useCallback(() => {
-    if (!canNudge) return;
-    dispatch(
-      openModal({
-        modalType: 'NUDGE_COMPOSE',
-        modalProps: {
-          accountId: partner.account_id,
-          onSent: () => {
-            setNudgedBack(true);
-            dispatch(decrementNudgeCount());
-            onNudged(partner.account_id);
-          },
-        },
-      }),
-    );
-  }, [partner.account_id, canNudge, dispatch, onNudged]);
+  const isUnread =
+    partner.can_nudge_back && partner.last_message.direction === 'received';
 
   if (!account) return null;
 
+  const preview = lastMessagePreview(
+    partner.last_message,
+    previewImage,
+    previewVoice,
+    previewNudge,
+  );
+
   return (
-    <div
-      className={`nudge-partner-item${canNudge ? ' nudge-partner-item--active' : ''}`}
+    <Link
+      to={`/nudges/${partner.account_id}`}
+      className={`nudge-conv-row${isUnread ? ' nudge-conv-row--unread' : ''}`}
     >
-      <Link to={`/@${account.acct}`} className='nudge-partner-item__avatar'>
-        <Avatar account={account} size={46} />
-      </Link>
+      <div className='nudge-conv-row__avatar'>
+        <Avatar account={account} size={48} />
+        {isUnread && <span className='nudge-conv-row__unread-dot' />}
+      </div>
 
-      <div className='nudge-partner-item__body'>
-        <div className='nudge-partner-item__name'>
-          <Link to={`/@${account.acct}`}>
+      <div className='nudge-conv-row__body'>
+        <div className='nudge-conv-row__top'>
+          <span className='nudge-conv-row__name'>
             <DisplayName account={account} />
-          </Link>
-          {isMilestone && (
-            <span
-              className='nudge-partner-item__milestone-star'
-              aria-label='milestone'
-            >
-              ★
-            </span>
-          )}
-        </div>
-
-        <div className='nudge-partner-item__meta'>
-          <span className='nudge-partner-item__streak-sent'>
-            ↑ {partner.sent_count}
-          </span>
-          <span className='nudge-partner-item__streak-received'>
-            ↓ {partner.received_count}
           </span>
           {partner.last_nudge_at && (
-            <span className='nudge-partner-item__time'>
+            <span className='nudge-conv-row__time'>
               <RelativeTimestamp timestamp={partner.last_nudge_at} />
             </span>
           )}
         </div>
-      </div>
 
-      <div className='nudge-partner-item__action'>
-        {canNudge ? (
-          <Button compact onClick={handleNudgeBack}>
-            <FormattedMessage
-              id='nudges.nudge_back'
-              defaultMessage='Nudge back'
-            />
-          </Button>
-        ) : nudgedBack ? (
-          <Button compact disabled>
-            <FormattedMessage
-              id='nudges.nudged_back'
-              defaultMessage='Nudged!'
-            />
-          </Button>
-        ) : (
-          <span className='nudge-partner-item__waiting'>
-            <FormattedMessage
-              id='nudges.awaiting_reply'
-              defaultMessage='awaiting reply'
-            />
+        <div className='nudge-conv-row__bottom'>
+          <span
+            className={`nudge-conv-row__preview${isUnread ? ' nudge-conv-row__preview--unread' : ''}`}
+          >
+            {preview}
           </span>
-        )}
+          {partner.streak > 1 && (
+            <span className='nudge-conv-row__streak'>
+              <Icon icon={PartnerExchangeActiveIcon} id='partner_exchange' />
+              {partner.streak}
+            </span>
+          )}
+        </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
-// ── Suggestion card ───────────────────────────────────────────────────────────
+// ── Suggestion row ────────────────────────────────────────────────────────────
 
-const NudgeSuggestionItem: React.FC<{ suggestion: ApiNudgeSuggestion }> = ({
+const SuggestionRow: React.FC<{ suggestion: ApiNudgeSuggestion }> = ({
   suggestion,
 }) => {
   const dispatch = useAppDispatch();
@@ -250,21 +272,21 @@ const NudgeSuggestionItem: React.FC<{ suggestion: ApiNudgeSuggestion }> = ({
   if (!account) return null;
 
   return (
-    <div className='nudge-partner-item'>
-      <Link to={`/@${account.acct}`} className='nudge-partner-item__avatar'>
-        <Avatar account={account} size={46} />
+    <div className='nudge-conv-row nudge-conv-row--suggestion'>
+      <Link to={`/@${account.acct}`} className='nudge-conv-row__avatar'>
+        <Avatar account={account} size={48} />
       </Link>
-      <div className='nudge-partner-item__body'>
-        <div className='nudge-partner-item__name'>
-          <Link to={`/@${account.acct}`}>
+      <div className='nudge-conv-row__body'>
+        <div className='nudge-conv-row__top'>
+          <span className='nudge-conv-row__name'>
             <DisplayName account={account} />
-          </Link>
+          </span>
         </div>
-        <div className='nudge-partner-item__meta'>
-          <span style={{ opacity: 0.5 }}>@{account.acct}</span>
+        <div className='nudge-conv-row__bottom'>
+          <span className='nudge-conv-row__preview'>@{account.acct}</span>
         </div>
       </div>
-      <div className='nudge-partner-item__action'>
+      <div className='nudge-conv-row__action'>
         {nudged ? (
           <Button compact disabled>
             <FormattedMessage
@@ -274,11 +296,7 @@ const NudgeSuggestionItem: React.FC<{ suggestion: ApiNudgeSuggestion }> = ({
           </Button>
         ) : (
           <Button compact onClick={handleNudge}>
-            <FormattedMessage
-              id='account_nudges.nudge'
-              defaultMessage='Nudge @{acct}'
-              values={{ acct: account.acct }}
-            />
+            <Icon icon={PartnerExchangeActiveIcon} id='partner_exchange' />
           </Button>
         )}
       </div>
@@ -288,21 +306,23 @@ const NudgeSuggestionItem: React.FC<{ suggestion: ApiNudgeSuggestion }> = ({
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
+  multiColumn,
+}) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
+  const columnRef = useRef<ColumnRef>(null);
+  const seenGroupsRef = useRef<Map<string, string> | null>(null);
+
   const [partners, setPartners] = useState<ApiNudgePartner[]>([]);
   const [suggestions, setSuggestions] = useState<ApiNudgeSuggestion[]>([]);
   const [grandTotal, setGrandTotal] = useState(0);
-  const [totalSent, setTotalSent] = useState(0);
-  const [totalReceived, setTotalReceived] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [showMore, setShowMore] = useState(false);
   const [alerts, setAlerts] = useState<NudgeAlertData[]>([]);
 
-  const handleToggleShowMore = useCallback(() => {
-    setShowMore((v) => !v);
-  }, []);
+  const previewImage = intl.formatMessage(messages.previewImage);
+  const previewVoice = intl.formatMessage(messages.previewVoice);
+  const previewNudge = intl.formatMessage(messages.previewNudge);
 
   const nudgeGroups = useAppSelector((state) =>
     [
@@ -311,18 +331,8 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     ].filter((g): g is NotificationGroupNudge => g.type === 'nudge'),
   );
 
-  const seenGroupsRef = useRef<Map<string, string> | null>(null);
-
   const dismissAlert = useCallback((id: string) => {
     setAlerts((prev) => prev.filter((a) => a.id !== id));
-  }, []);
-
-  const handlePartnerNudged = useCallback((accountId: string) => {
-    setPartners((prev) =>
-      prev.map((p) =>
-        p.account_id === accountId ? { ...p, can_nudge_back: false } : p,
-      ),
-    );
   }, []);
 
   const load = useCallback(async () => {
@@ -333,8 +343,6 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       setPartners(data.partners);
       setSuggestions(data.suggestions);
       setGrandTotal(data.grand_total);
-      setTotalSent(data.total_sent);
-      setTotalReceived(data.total_received);
       dispatch(setUnreadNudgeCount(data.pending_count));
     } finally {
       setLoading(false);
@@ -375,47 +383,32 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     }
   }, [nudgeGroups, load]);
 
-  const sorted = [...partners].sort(
-    (a, b) =>
-      b.sent_count + b.received_count - (a.sent_count + a.received_count),
-  );
-  const topThreeIds = new Set(sorted.slice(0, 3).map((p) => p.account_id));
-  const received = sorted.filter(
-    (p) => p.can_nudge_back && !topThreeIds.has(p.account_id),
-  );
-  const topStreaks = sorted.filter((p) => topThreeIds.has(p.account_id));
-  const hiddenPartners = sorted.filter(
-    (p) => !topThreeIds.has(p.account_id) && !p.can_nudge_back,
-  );
+  const handleHeaderClick = useCallback(() => {
+    columnRef.current?.scrollTop();
+  }, []);
 
-  const allPending = sorted.filter((p) => p.can_nudge_back);
+  // Sort conversations by most recent activity
+  const sortedPartners = [...partners].sort((a, b) => {
+    const tA = a.last_nudge_at ? new Date(a.last_nudge_at).getTime() : 0;
+    const tB = b.last_nudge_at ? new Date(b.last_nudge_at).getTime() : 0;
+    return tB - tA;
+  });
 
-  const handleNudgeAllBack = useCallback(() => {
-    void (async () => {
-      await Promise.allSettled(
-        allPending.map(async (p) => {
-          try {
-            await apiNudgeAccount(p.account_id);
-            dispatch(decrementNudgeCount());
-          } catch (e: unknown) {
-            if (!(e instanceof AxiosError && e.response?.status === 422))
-              throw e;
-          }
-        }),
-      );
-      setPartners((prev) => prev.map((p) => ({ ...p, can_nudge_back: false })));
-    })();
-  }, [allPending, dispatch]);
+  const unreadCount = partners.filter(
+    (p) => p.can_nudge_back && p.last_message.direction === 'received',
+  ).length;
 
   return (
     <Column
       bindToDocument={!multiColumn}
+      ref={columnRef}
       label={intl.formatMessage(messages.title)}
     >
       <ColumnHeader
         icon='partner_exchange'
         iconComponent={PartnerExchangeActiveIcon}
         title={intl.formatMessage(messages.title)}
+        onClick={handleHeaderClick}
         multiColumn={multiColumn}
         showBackButton
       />
@@ -429,41 +422,24 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       )}
 
       <div className='scrollable nudge-page'>
-        {!loading && (
-          <div className='nudge-grand-total'>
-            <span className='nudge-grand-total__label'>
+        {!loading && grandTotal > 0 && (
+          <div className='nudge-inbox-stats'>
+            <span className='nudge-inbox-stats__total'>
               <FormattedMessage
-                id='nudges.grand_total_label'
-                defaultMessage='Grand Total of Nudges'
+                id='nudges.total_nudges'
+                defaultMessage='{count} nudges total'
+                values={{ count: grandTotal }}
               />
             </span>
-            <span className='nudge-grand-total__count'>{grandTotal}</span>
-            <div className='nudge-grand-total__divider' />
-            <div className='nudge-grand-total__stats'>
-              <div className='nudge-grand-total__stat'>
-                <span className='nudge-grand-total__stat-number nudge-grand-total__stat-number--sent'>
-                  {totalSent}
-                </span>
-                <span className='nudge-grand-total__stat-label'>
-                  <FormattedMessage
-                    id='nudges.total_sent'
-                    defaultMessage='SENT'
-                  />
-                </span>
-              </div>
-              <div className='nudge-grand-total__stat-divider' />
-              <div className='nudge-grand-total__stat'>
-                <span className='nudge-grand-total__stat-number nudge-grand-total__stat-number--received'>
-                  {totalReceived}
-                </span>
-                <span className='nudge-grand-total__stat-label'>
-                  <FormattedMessage
-                    id='nudges.total_received'
-                    defaultMessage='RECEIVED'
-                  />
-                </span>
-              </div>
-            </div>
+            {unreadCount > 0 && (
+              <span className='nudge-inbox-stats__unread'>
+                <FormattedMessage
+                  id='nudges.unread_count'
+                  defaultMessage='{count} new'
+                  values={{ count: unreadCount }}
+                />
+              </span>
+            )}
           </div>
         )}
 
@@ -477,88 +453,23 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           <div className='empty-column-indicator'>
             <FormattedMessage
               id='nudges.empty'
-              defaultMessage='No nudges yet. Go nudge someone cute!'
+              defaultMessage='No nudges yet. Go nudge someone!'
             />
           </div>
         )}
 
-        {!loading && received.length > 0 && (
-          <>
-            <div className='nudge-section-header nudge-section-header--received'>
-              <FormattedMessage
-                id='nudges.section_received'
-                defaultMessage='NUDGES RECEIVED'
-              />
-            </div>
-            {allPending.length >= 2 && (
-              <div className='nudge-all-back'>
-                <Button onClick={handleNudgeAllBack}>
-                  <FormattedMessage
-                    id='nudges.nudge_all_back'
-                    defaultMessage='Nudge back all {count}'
-                    values={{ count: allPending.length }}
-                  />
-                </Button>
-              </div>
-            )}
-            {received.map((partner) => (
-              <NudgePartnerItem
+        {!loading && sortedPartners.length > 0 && (
+          <div className='nudge-conv-list'>
+            {sortedPartners.map((partner) => (
+              <ConversationRow
                 key={partner.account_id}
                 partner={partner}
-                onNudged={handlePartnerNudged}
+                previewImage={previewImage}
+                previewVoice={previewVoice}
+                previewNudge={previewNudge}
               />
             ))}
-          </>
-        )}
-
-        {!loading && topStreaks.length > 0 && (
-          <>
-            <div className='nudge-section-header nudge-section-header--sent'>
-              <FormattedMessage
-                id='nudges.section_top_streaks'
-                defaultMessage='TOP STREAKS'
-              />
-            </div>
-            {topStreaks.map((partner) => (
-              <NudgePartnerItem
-                key={partner.account_id}
-                partner={partner}
-                onNudged={handlePartnerNudged}
-              />
-            ))}
-          </>
-        )}
-
-        {!loading && hiddenPartners.length > 0 && (
-          <>
-            {showMore &&
-              hiddenPartners.map((partner) => (
-                <NudgePartnerItem
-                  key={partner.account_id}
-                  partner={partner}
-                  onNudged={handlePartnerNudged}
-                />
-              ))}
-            <div className='nudge-show-more'>
-              <button
-                className='nudge-show-more__btn'
-                onClick={handleToggleShowMore}
-              >
-                {showMore ? (
-                  <FormattedMessage
-                    id='nudges.show_less'
-                    defaultMessage='Show less'
-                  />
-                ) : (
-                  <FormattedMessage
-                    id='nudges.show_more'
-                    defaultMessage='Show {count} more'
-                    values={{ count: hiddenPartners.length }}
-                  />
-                )}
-              </button>
-            </div>
-          </>
+          </div>
         )}
 
         {!loading && suggestions.length > 0 && (
@@ -570,7 +481,7 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               />
             </div>
             {suggestions.map((s) => (
-              <NudgeSuggestionItem key={s.account_id} suggestion={s} />
+              <SuggestionRow key={s.account_id} suggestion={s} />
             ))}
           </>
         )}
@@ -584,4 +495,5 @@ const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 };
 
+// eslint-disable-next-line import/no-default-export
 export default NudgesPage;
