@@ -12,6 +12,7 @@ import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill
 import StopIcon from '@/material-icons/400-24px/stop.svg?react';
 import { importFetchedAccounts } from 'mastodon/actions/importer';
 import { decrementNudgeCount } from 'mastodon/actions/notification_groups';
+import api from 'mastodon/api';
 import { apiGetNudgeThread, apiNudgeAccount } from 'mastodon/api/accounts';
 import type { ApiNudgeThreadMessage } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
@@ -30,25 +31,11 @@ function countWords(text: string): number {
   return text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
 }
 
-function getCsrfToken(): string {
-  return (
-    document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
-      ?.content ?? ''
-  );
-}
-
 async function uploadBlob(blob: Blob): Promise<string> {
   const form = new FormData();
   form.append('file', blob, 'voice.webm');
-  const res = await fetch('/api/v2/media', {
-    method: 'POST',
-    body: form,
-    headers: { 'X-CSRF-Token': getCsrfToken() },
-    credentials: 'same-origin',
-  });
-  if (!res.ok) throw new Error('upload failed');
-  const json = (await res.json()) as { id: string };
-  return json.id;
+  const { data } = await api().post<{ id: string }>('/api/v2/media', form);
+  return data.id;
 }
 
 function formatTime(dateStr: string): string {
@@ -289,25 +276,13 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         try {
           const formData = new FormData();
           formData.append('file', file);
-          const response = await fetch('/api/v2/media', {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-CSRF-Token': getCsrfToken() },
-            credentials: 'same-origin',
-          });
-          if (response.ok) {
-            const json = (await response.json()) as { id: string };
-            setMediaId(json.id);
-            setMediaPreview(URL.createObjectURL(file));
-            setMediaIsVideo(file.type.startsWith('video/'));
-          } else {
-            const body = (await response.json().catch(() => ({}))) as {
-              error?: string;
-            };
-            setError(
-              `Upload failed (${response.status}): ${body.error ?? 'unknown error'}`,
-            );
-          }
+          const { data } = await api().post<{ id: string }>(
+            '/api/v2/media',
+            formData,
+          );
+          setMediaId(data.id);
+          setMediaPreview(URL.createObjectURL(file));
+          setMediaIsVideo(file.type.startsWith('video/'));
         } catch (err) {
           setError(
             `Upload failed: ${err instanceof Error ? err.message : String(err)}`,
