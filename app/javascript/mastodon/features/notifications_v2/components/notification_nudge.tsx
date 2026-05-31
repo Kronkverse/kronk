@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import { openModal } from 'mastodon/actions/modal';
 import { decrementNudgeCount } from 'mastodon/actions/notification_groups';
+import { apiGetNudgeThread } from 'mastodon/api/accounts';
 import { Button } from 'mastodon/components/button';
 import type {
   NotificationGroupNudge,
@@ -101,6 +102,10 @@ export const NotificationNudge: React.FC<{
   const [nudgedBack, setNudgedBack] = useState(false);
   const [streak, setStreak] = useState(notification.nudgeStreak);
   const [revealed, setRevealed] = useState(false);
+  const [fetchedBody, setFetchedBody] = useState<string | null | undefined>(
+    undefined,
+  );
+  const [loadingMessage, setLoadingMessage] = useState(false);
 
   const senderId = notification.sampleAccountIds[0];
 
@@ -130,6 +135,29 @@ export const NotificationNudge: React.FC<{
   const handleReveal = useCallback(() => {
     setRevealed(true);
   }, []);
+
+  const handleReadMessage = useCallback(() => {
+    if (!senderId || loadingMessage) return;
+    setLoadingMessage(true);
+    void apiGetNudgeThread(senderId)
+      .then((res) => {
+        const latest = [...res.messages]
+          .filter((m) => m.direction === 'received')
+          .sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          )
+          .at(0);
+        setFetchedBody(latest?.body ?? null);
+      })
+      .catch(() => {
+        setFetchedBody(null);
+      })
+      .finally(() => {
+        setLoadingMessage(false);
+      });
+  }, [senderId, loadingMessage]);
 
   const actions =
     notification.sampleAccountIds.length === 1 ? (
@@ -174,6 +202,26 @@ export const NotificationNudge: React.FC<{
             onClick={handleReveal}
           >
             {revealLabel(nudgeMessage)}
+          </button>
+        ))}
+
+      {nudgeMessage == null &&
+        notification.sampleAccountIds.length === 1 &&
+        (fetchedBody !== undefined ? (
+          fetchedBody != null ? (
+            <p className='notification-nudge__message'>{fetchedBody}</p>
+          ) : null
+        ) : (
+          <button
+            type='button'
+            className='notification-nudge__reveal-btn'
+            onClick={handleReadMessage}
+            disabled={loadingMessage}
+          >
+            <FormattedMessage
+              id='notification.nudge.read'
+              defaultMessage='Read message'
+            />
           </button>
         ))}
     </>
