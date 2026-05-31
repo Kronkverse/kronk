@@ -28,4 +28,7 @@ export interface ApiMediaAttachmentJSON {
   description?: string;
   blurhash: string;
   tags?: ApiMediaTagJSON[];
+  // Present only on tagged-media API responses
+  status_id?: string;
+  status_account_acct?: string;
 }

@@ -296,14 +296,15 @@ class Api::V1::AccountsController < Api::BaseController
     doorkeeper_authorize! :read, :'read:accounts'
 
     attachments = @account.tagged_in_media
-                          .includes(:media_tags, status: :account)
+                          .includes(status: :account)
                           .where.not(status_id: nil)
                           .joins(:status)
                           .merge(Status.where(visibility: %i(public unlisted)))
+                          .distinct
                           .order(id: :desc)
                           .limit(40)
 
-    render json: attachments, each_serializer: REST::MediaAttachmentSerializer
+    render json: attachments, each_serializer: REST::TaggedMediaSerializer
   end
 
   private
