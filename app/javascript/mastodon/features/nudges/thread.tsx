@@ -26,25 +26,24 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 const MAX_WORDS = 100;
 const MAX_VOICE_SECONDS = 60;
 
-interface ConfirmPayload {
-  type: 'image' | 'video' | 'voice';
-  src: string;
-  mediaId?: string;
-  blob?: Blob;
-  durationSeconds?: number;
-}
-
 function countWords(text: string): number {
   return text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
 }
 
-async function uploadBlob(blob: Blob, csrfToken: string): Promise<string> {
+function getCsrfToken(): string {
+  return (
+    document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
+      ?.content ?? ''
+  );
+}
+
+async function uploadBlob(blob: Blob): Promise<string> {
   const form = new FormData();
   form.append('file', blob, 'voice.webm');
   const res = await fetch('/api/v2/media', {
     method: 'POST',
     body: form,
-    headers: { 'X-CSRF-Token': csrfToken },
+    headers: { 'X-CSRF-Token': getCsrfToken() },
     credentials: 'same-origin',
   });
   if (!res.ok) throw new Error('upload failed');
@@ -157,14 +156,6 @@ const messages = defineMessages({
     id: 'nudges.thread.remove_attachment',
     defaultMessage: 'Remove',
   },
-  confirmSend: {
-    id: 'nudges.confirm.send',
-    defaultMessage: 'Send',
-  },
-  confirmCancel: {
-    id: 'nudges.confirm.cancel',
-    defaultMessage: 'Cancel',
-  },
 });
 
 const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
@@ -181,6 +172,8 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const voiceSecondsRef = useRef(0);
   const isFirstLoadRef = useRef(true);
+  // Optimistic upload: starts immediately when recording stops
+  const voiceUploadRef = useRef<Promise<string> | null>(null);
 
   const account = useAppSelector((state) => state.accounts.get(accountId));
 
@@ -201,11 +194,6 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [voiceSeconds, setVoiceSeconds] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
-
-  // Pre-send confirmation state
-  const [confirmPayload, setConfirmPayload] = useState<ConfirmPayload | null>(
-    null,
-  );
 
   const wordCount = countWords(text);
   const overLimit = wordCount > MAX_WORDS;
@@ -287,6 +275,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     fileInputRef.current?.click();
   }, []);
 
+  // Messenger-style: upload immediately, show thumbnail in compose bar — no modal
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -297,23 +286,17 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         try {
           const formData = new FormData();
           formData.append('file', file);
-          const csrfMeta = document.querySelector<HTMLMetaElement>(
-            'meta[name="csrf-token"]',
-          );
           const response = await fetch('/api/v2/media', {
             method: 'POST',
             body: formData,
-            headers: { 'X-CSRF-Token': csrfMeta?.content ?? '' },
+            headers: { 'X-CSRF-Token': getCsrfToken() },
             credentials: 'same-origin',
           });
           if (response.ok) {
             const json = (await response.json()) as { id: string };
-            const isVideo = file.type.startsWith('video/');
-            setConfirmPayload({
-              type: isVideo ? 'video' : 'image',
-              src: URL.createObjectURL(file),
-              mediaId: json.id,
-            });
+            setMediaId(json.id);
+            setMediaPreview(URL.createObjectURL(file));
+            setMediaIsVideo(file.type.startsWith('video/'));
           }
         } finally {
           setUploading(false);
@@ -357,12 +340,11 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           const seconds = voiceSecondsRef.current;
           setRecording(false);
           if (timerRef.current) clearInterval(timerRef.current);
-          setConfirmPayload({
-            type: 'voice',
-            src: URL.createObjectURL(blob),
-            blob,
-            durationSeconds: seconds,
-          });
+          // Set blob in compose bar immediately (Messenger-style)
+          setVoiceBlob(blob);
+          setVoiceSeconds(seconds);
+          // Start uploading in background so send() is instant
+          voiceUploadRef.current = uploadBlob(blob);
         };
         recorder.start();
         mediaRecorderRef.current = recorder;
@@ -393,24 +375,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setVoiceId(undefined);
     setVoiceBlob(undefined);
     setVoiceSeconds(0);
-  }, []);
-
-  // Confirm: move payload into compose state
-  const handleConfirmMedia = useCallback(() => {
-    if (!confirmPayload) return;
-    if (confirmPayload.type === 'voice' && confirmPayload.blob) {
-      setVoiceBlob(confirmPayload.blob);
-      setVoiceSeconds(confirmPayload.durationSeconds ?? 0);
-    } else {
-      setMediaId(confirmPayload.mediaId);
-      setMediaPreview(confirmPayload.src);
-      setMediaIsVideo(confirmPayload.type === 'video');
-    }
-    setConfirmPayload(null);
-  }, [confirmPayload]);
-
-  const handleCancelConfirm = useCallback(() => {
-    setConfirmPayload(null);
+    voiceUploadRef.current = null;
   }, []);
 
   const clearCompose = useCallback(() => {
@@ -421,6 +386,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setVoiceId(undefined);
     setVoiceBlob(undefined);
     setVoiceSeconds(0);
+    voiceUploadRef.current = null;
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -432,14 +398,12 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       if (accountId === '' || sending) return;
       setSending(true);
       try {
-        const csrfMeta = document.querySelector<HTMLMetaElement>(
-          'meta[name="csrf-token"]',
-        );
-        const csrfToken = csrfMeta?.content ?? '';
-
         let resolvedVoiceId = voiceId;
         if (withContent && voiceBlob && !voiceId) {
-          resolvedVoiceId = await uploadBlob(voiceBlob, csrfToken);
+          // Use optimistic upload if ready, otherwise upload now
+          resolvedVoiceId = await (voiceUploadRef.current ??
+            uploadBlob(voiceBlob));
+          voiceUploadRef.current = null;
           setVoiceId(resolvedVoiceId);
         }
 
@@ -563,6 +527,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               {mediaPreview && (
                 <div className='nudge-compose-bar__attachment-preview'>
                   {mediaIsVideo ? (
+                     
                     <video
                       src={mediaPreview}
                       className='nudge-compose-bar__media-preview'
@@ -682,80 +647,6 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             </button>
           </div>
         </div>
-
-        {/* Media / voice confirmation overlay */}
-        {confirmPayload && (
-          <div
-            className='nudge-confirm-overlay'
-            role='dialog'
-            aria-modal='true'
-          >
-            <div className='nudge-confirm-modal'>
-              <div className='nudge-confirm-modal__preview'>
-                {confirmPayload.type === 'voice' && (
-                  <div className='nudge-confirm-modal__voice'>
-                    {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                    <audio
-                      controls
-                      autoPlay={false}
-                      src={confirmPayload.src}
-                      className='nudge-confirm-modal__audio'
-                    />
-                    {confirmPayload.durationSeconds !== undefined && (
-                      <span className='nudge-confirm-modal__duration'>
-                        <FormattedMessage
-                          id='nudges.confirm.duration'
-                          defaultMessage='{s}s voice memo'
-                          values={{ s: confirmPayload.durationSeconds }}
-                        />
-                      </span>
-                    )}
-                  </div>
-                )}
-                {confirmPayload.type === 'video' && (
-                  // eslint-disable-next-line jsx-a11y/media-has-caption
-                  <video
-                    controls
-                    src={confirmPayload.src}
-                    className='nudge-confirm-modal__video'
-                  />
-                )}
-                {confirmPayload.type === 'image' && (
-                  <img
-                    src={confirmPayload.src}
-                    alt=''
-                    className='nudge-confirm-modal__image'
-                  />
-                )}
-              </div>
-
-              <p className='nudge-confirm-modal__caption'>
-                <FormattedMessage
-                  id='nudges.confirm.caption'
-                  defaultMessage='Send to {name}?'
-                  values={{ name: title }}
-                />
-              </p>
-
-              <div className='nudge-confirm-modal__actions'>
-                <button
-                  type='button'
-                  className='nudge-confirm-modal__btn nudge-confirm-modal__btn--cancel'
-                  onClick={handleCancelConfirm}
-                >
-                  {intl.formatMessage(messages.confirmCancel)}
-                </button>
-                <button
-                  type='button'
-                  className='nudge-confirm-modal__btn nudge-confirm-modal__btn--send'
-                  onClick={handleConfirmMedia}
-                >
-                  {intl.formatMessage(messages.confirmSend)}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       <Helmet>
