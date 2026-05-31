@@ -10,6 +10,8 @@ class Api::V1::MediaTagsController < Api::BaseController
   end
 
   def create
+    return render json: { error: 'Forbidden' }, status: 403 unless @media_attachment.account_id == current_account.id
+
     tag = @media_attachment.media_tags.create!(
       account_id: params[:account_id],
       created_by_account: current_account,

@@ -2,10 +2,15 @@ import { useEffect, useState, useCallback, memo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
+import { Link } from 'react-router-dom';
+
+import HeadphonesIcon from '@/material-icons/400-24px/headphones-fill.svg?react';
+import MovieIcon from '@/material-icons/400-24px/movie-fill.svg?react';
 import { openModal } from 'mastodon/actions/modal';
 import { apiGetTaggedMedia } from 'mastodon/api/media_tags';
 import type { ApiMediaAttachmentJSON } from 'mastodon/api_types/media_attachments';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
+import { Icon } from 'mastodon/components/icon';
 import ScrollableList from 'mastodon/components/scrollable_list';
 import { AccountHeader } from 'mastodon/features/account_timeline/components/account_header';
 import BundleColumnError from 'mastodon/features/ui/components/bundle_column_error';
@@ -15,18 +20,54 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const TaggedGalleryItem = memo<{
   attachment: ApiMediaAttachmentJSON;
-  onOpen: (attachment: ApiMediaAttachmentJSON) => void;
-}>(({ attachment, onOpen }) => {
+  onOpenImage: (attachment: ApiMediaAttachmentJSON) => void;
+}>(({ attachment, onOpenImage }) => {
+  const isVideo = attachment.type === 'video' || attachment.type === 'gifv';
+  const isAudio = attachment.type === 'audio';
+  const statusHref =
+    attachment.status_account_acct && attachment.status_id
+      ? `/@${attachment.status_account_acct}/${attachment.status_id}`
+      : undefined;
+
   const handleClick = useCallback(() => {
-    onOpen(attachment);
-  }, [attachment, onOpen]);
+    onOpenImage(attachment);
+  }, [attachment, onOpenImage]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter') onOpen(attachment);
+      if (e.key === 'Enter') onOpenImage(attachment);
     },
-    [attachment, onOpen],
+    [attachment, onOpenImage],
   );
+
+  const thumbnail = (
+    <img
+      src={attachment.preview_url}
+      alt={attachment.description ?? ''}
+      className='media-gallery__item-thumbnail'
+    />
+  );
+
+  const overlay = isVideo ? (
+    <div className='media-gallery__item__overlay media-gallery__item__overlay--corner'>
+      <Icon id='play' icon={MovieIcon} />
+    </div>
+  ) : isAudio ? (
+    <div className='media-gallery__item__overlay media-gallery__item__overlay--corner'>
+      <Icon id='music' icon={HeadphonesIcon} />
+    </div>
+  ) : null;
+
+  if (isVideo && statusHref) {
+    return (
+      <div className='media-gallery__item media-gallery__item--square'>
+        <Link to={statusHref} className='media-gallery__item-thumbnail'>
+          {thumbnail}
+          {overlay}
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -36,11 +77,8 @@ const TaggedGalleryItem = memo<{
       onClick={handleClick}
       onKeyDown={handleKeyDown}
     >
-      <img
-        src={attachment.preview_url}
-        alt={attachment.description ?? ''}
-        className='media-gallery__item-thumbnail'
-      />
+      {thumbnail}
+      {overlay}
     </div>
   );
 });
@@ -70,7 +108,7 @@ export const AccountTaggedGallery: React.FC<{
       });
   }, [accountId, isAccount]);
 
-  const handleOpenMedia = useCallback(
+  const handleOpenImage = useCallback(
     (attachment: ApiMediaAttachmentJSON) => {
       dispatch(
         openModal({
@@ -113,7 +151,7 @@ export const AccountTaggedGallery: React.FC<{
           <TaggedGalleryItem
             key={attachment.id}
             attachment={attachment}
-            onOpen={handleOpenMedia}
+            onOpenImage={handleOpenImage}
           />
         ))}
       </ScrollableList>

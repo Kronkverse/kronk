@@ -142,7 +142,7 @@ export const Upload: React.FC<{
             <Icon id='edit' icon={EditIcon} />{' '}
             <FormattedMessage id='upload_form.edit' defaultMessage='Edit' />
           </button>
-          {media.get('type') === 'image' && (
+          {media.get('type') !== 'audio' && media.get('type') !== 'unknown' && (
             <button
               type='button'
               className='icon-button'
