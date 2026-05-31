@@ -6,6 +6,7 @@ import classNames from 'classnames';
 
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
+import { connect } from 'react-redux';
 
 import ReactSwipeableViews from 'react-swipeable-views';
 
@@ -13,7 +14,9 @@ import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import FitScreenIcon from '@/material-icons/400-24px/fit_screen.svg?react';
+import TagIcon from '@/material-icons/400-24px/tag.svg?react';
 import ActualSizeIcon from '@/svg-icons/actual_size.svg?react';
+import { openModal } from 'mastodon/actions/modal';
 import { getAverageFromBlurhash } from 'mastodon/blurhash';
 import { GIFV } from 'mastodon/components/gifv';
 import { Icon }  from 'mastodon/components/icon';
@@ -30,6 +33,7 @@ const messages = defineMessages({
   next: { id: 'lightbox.next', defaultMessage: 'Next' },
   zoomIn: { id: 'lightbox.zoom_in', defaultMessage: 'Zoom to actual size' },
   zoomOut: { id: 'lightbox.zoom_out', defaultMessage: 'Zoom to fit' },
+  tagYourself: { id: 'lightbox.tag_yourself', defaultMessage: 'Tag yourself' },
 });
 
 class MediaModal extends ImmutablePureComponent {
@@ -42,6 +46,7 @@ class MediaModal extends ImmutablePureComponent {
     onClose: PropTypes.func.isRequired,
     intl: PropTypes.object.isRequired,
     onChangeBackgroundColor: PropTypes.func.isRequired,
+    dispatch: PropTypes.func.isRequired,
     currentTime: PropTypes.number,
     autoPlay: PropTypes.bool,
     volume: PropTypes.number,
@@ -155,6 +160,15 @@ class MediaModal extends ImmutablePureComponent {
     }));
   };
 
+  handleTagYourself = () => {
+    const { media, dispatch } = this.props;
+    const index = this.getIndex();
+    const current = media.get(index);
+    const mediaId = current.get('id');
+    const previewUrl = current.get('preview_url') || current.get('url');
+    dispatch(openModal({ modalType: 'SELF_TAG', modalProps: { mediaId, previewUrl } }));
+  };
+
   setRef = c => {
     this.setState({
       viewportWidth: c?.clientWidth,
@@ -257,6 +271,7 @@ class MediaModal extends ImmutablePureComponent {
 
     const currentMedia = media.get(index);
     const zoomable = currentMedia.get('type') === 'image' && (currentMedia.getIn(['meta', 'original', 'width']) > viewportWidth || currentMedia.getIn(['meta', 'original', 'height']) > viewportHeight);
+    const taggable = currentMedia.get('type') !== 'audio' && currentMedia.get('type') !== 'unknown';
 
     return (
       <div className='modal-root__modal media-modal' ref={this.setRef}>
@@ -276,6 +291,7 @@ class MediaModal extends ImmutablePureComponent {
         <div className={navigationClassName}>
           <div className='media-modal__buttons'>
             {zoomable && <IconButton title={intl.formatMessage(zoomedIn ? messages.zoomOut : messages.zoomIn)} iconComponent={zoomedIn ? FitScreenIcon : ActualSizeIcon} onClick={this.handleZoomClick} />}
+            {taggable && <IconButton title={intl.formatMessage(messages.tagYourself)} icon='tag' iconComponent={TagIcon} onClick={this.handleTagYourself} />}
             <IconButton title={intl.formatMessage(messages.close)} icon='times' iconComponent={CloseIcon} onClick={onClose} />
           </div>
 
@@ -293,4 +309,4 @@ class MediaModal extends ImmutablePureComponent {
 
 }
 
-export default injectIntl(MediaModal);
+export default connect()(injectIntl(MediaModal));

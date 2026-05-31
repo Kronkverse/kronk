@@ -27,6 +27,7 @@ import { ActionsModal } from './actions_modal';
 import AudioModal from './audio_modal';
 import { BoostModal } from './boost_modal';
 import { NudgeComposeModal } from './nudge_compose_modal';
+import { SelfTagModal } from './self_tag_modal';
 import { TagPeopleModal } from './tag_people_modal';
 import {
   ConfirmationModal,
@@ -91,6 +92,7 @@ export const MODAL_COMPONENTS = {
   'INVITE': () => import('./invite_modal'),
   'NUDGE_COMPOSE': () => Promise.resolve({ default: NudgeComposeModal }),
   'TAG_PEOPLE': () => Promise.resolve({ default: TagPeopleModal }),
+  'SELF_TAG': () => Promise.resolve({ default: SelfTagModal }),
 };
 
 export default class ModalRoot extends PureComponent {

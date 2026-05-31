@@ -10,7 +10,17 @@ class Api::V1::MediaTagsController < Api::BaseController
   end
 
   def create
-    return render json: { error: 'Forbidden' }, status: 403 unless @media_attachment.account_id == current_account.id
+    is_self_tag = params[:account_id].to_s == current_account.id.to_s
+
+    # Uploaders can tag anyone; everyone else can only tag themselves on public/unlisted media
+    if is_self_tag
+      unless @media_attachment.account_id == current_account.id
+        status = @media_attachment.status
+        return render json: { error: 'Forbidden' }, status: 403 unless status.present? && %w(public unlisted).include?(status.visibility)
+      end
+    else
+      return render json: { error: 'Forbidden' }, status: 403 unless @media_attachment.account_id == current_account.id
+    end
 
     tag = @media_attachment.media_tags.create!(
       account_id: params[:account_id],
