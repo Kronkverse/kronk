@@ -71,6 +71,11 @@ export interface NotificationGroupNudge extends BaseNotification<'nudge'> {
   nudgeReactions: NudgeReactions;
 }
 
+export interface NotificationGroupMediaTag
+  extends BaseNotification<'media_tag'> {
+  mediaTagPreviewUrl: string | null;
+}
+
 export type AccountWarningAction =
   | 'none'
   | 'disable'
@@ -128,7 +133,8 @@ export type NotificationGroup =
   | NotificationGroupAdminReport
   | NotificationGroupAnnualReport
   | NotificationGroupEventInvitation
-  | NotificationGroupNudge;
+  | NotificationGroupNudge
+  | NotificationGroupMediaTag;
 
 function createReportFromJSON(reportJSON: ApiReportJSON): Report {
   const { target_account, ...report } = reportJSON;
@@ -244,6 +250,13 @@ export function createNotificationGroupFromJSON(
         nudgeReactions: group.nudge_reactions,
         sampleAccountIds,
       };
+    case 'media_tag':
+      return {
+        ...group,
+        partial: false,
+        mediaTagPreviewUrl: group.media_tag_preview_url,
+        sampleAccountIds,
+      };
     default:
       return {
         sampleAccountIds,
@@ -328,6 +341,12 @@ export function createNotificationGroupFromNotificationJSON(
             }
           : undefined,
         nudgeReactions: notification.nudge_reactions,
+      };
+    case 'media_tag':
+      return {
+        ...group,
+        type: notification.type,
+        mediaTagPreviewUrl: notification.media_tag_preview_url,
       };
     default:
       return {

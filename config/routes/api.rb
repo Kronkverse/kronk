@@ -93,7 +93,9 @@ namespace :api, format: false do
       end
     end
 
-    resources :media, only: [:create, :update, :show, :destroy]
+    resources :media, only: [:create, :update, :show, :destroy] do
+      resources :tags, only: [:index, :create, :destroy], controller: 'media_tags'
+    end
     resources :blocks, only: [:index]
     resources :mutes, only: [:index]
     resources :favourites, only: [:index]
@@ -260,6 +262,7 @@ namespace :api, format: false do
         post :nudge
         get :nudge_streak
         get :nudge_thread
+        get :tagged_media
       end
 
       scope module: :accounts do

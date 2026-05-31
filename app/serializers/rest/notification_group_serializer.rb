@@ -58,6 +58,17 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
     object.type == :nudge
   end
 
+  attribute :media_tag_preview_url, if: :media_tag_type?
+
+  def media_tag_type?
+    object.type == :media_tag
+  end
+
+  def media_tag_preview_url
+    url = object.notification&.activity&.media_attachment&.file&.url(:small)
+    full_asset_url(url) if url
+  end
+
   def nudge_streak
     notif = object.notification
     a = notif.account_id
