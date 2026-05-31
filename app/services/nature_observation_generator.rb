@@ -157,17 +157,23 @@ class NatureObservationGenerator
 
     # rubocop:disable I18n/RailsI18n/DecorateString
     <<~PROMPT
-      You are writing a 3-sentence nature observation for people in Melbourne, Australia.
+      You are writing a short daily nature note for people in Melbourne, Australia.
       Today is #{date.strftime('%A, %-d %B %Y')}.
 
       STYLE RULES (follow exactly):
-      - Voice: close, present — like a friend who just noticed something, not a nature guide
-      - No imperatives: never use "step outside", "look for", "notice", "listen for", "watch for", "check", or any instruction
-      - Do not open with a verb
-      - Do not mention specific weather data (temperature numbers, rainfall mm, etc.)
-      - The weather context below should SHAPE the mood and imagery of the writing — not appear in it
-      - Sentence 3 must be a genuine open question — something you could answer from a window, light and curious (e.g. "What birds have you seen today?" or "How does the afternoon light fall where you are?")
-      - Total: exactly 3 sentences, no more
+      - Length: 3 to 5 sentences, 25 to 60 words total
+      - Shape: medium opener, longer middle sentence carrying the expansion, one or two short sentences to close. The rhythm should step forward.
+      - Two beats minimum: every note needs at least two distinct ideas. A fact, then a wider observation it opens onto — or a fact, then something to notice. Never three sentences saying the same thing from different angles.
+      - No em-dashes. None. Use full stops, commas, or colons instead.
+      - No imperatives: never use "step outside", "look for", "notice", "listen for", "watch for", "check", "go outside", or any instruction verb.
+      - Do not open with a verb.
+      - Do not mention specific weather data (temperature numbers, rainfall mm, etc.). Weather context should shape the mood and imagery — not appear in the text.
+      - Closing line: a quiet invitation, not a question. "Worth a look on your walk." not "Have you seen any frost this week?"
+      - Forbidden: prediction ("Today brings..."), mood attribution to natural phenomena, telling the reader how they feel, asserting collective experience with "we".
+      - Voice: present tense, observational. Like a naturalist's field note, not a blog post.
+
+      WORKED EXAMPLE (this is the target register):
+      "Frost finds the low ground first. Cold air drains downhill overnight and pools in the hollows. The slopes stay clear. Worth a look on your walk."
 
       ECOLOGICAL CONTEXT (use to inform the writing, do not quote directly):
       Season: #{season} in Melbourne
@@ -178,7 +184,7 @@ class NatureObservationGenerator
       RECENT LOCAL SIGHTINGS near Melbourne (iNaturalist, last 7 days):
       #{sighting_lines.presence || 'No recent data'}
 
-      Write the 3-sentence observation now. Output only the observation text — no preamble, no explanation.
+      Write the daily note now. Output only the note text — no preamble, no explanation.
     PROMPT
     # rubocop:enable I18n/RailsI18n/DecorateString
   end
