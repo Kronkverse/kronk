@@ -3,7 +3,6 @@ import { useRef, useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-
 import { useParams, Link } from 'react-router-dom';
 
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
@@ -45,7 +44,7 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         setSet(res.data);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => { setLoading(false); });
   }, [id]);
 
   const handleCopyLink = useCallback(() => {
@@ -53,12 +52,16 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
     const url = `${window.location.origin}/booth/sets/${set.id}/embed`;
     void navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => { setCopied(false); }, 2000);
     });
   }, [set]);
 
   return (
-    <Column bindToDocument={!multiColumn} ref={columnRef} label={intl.formatMessage(messages.heading)}>
+    <Column
+      bindToDocument={!multiColumn}
+      ref={columnRef}
+      label={intl.formatMessage(messages.heading)}
+    >
       <ColumnHeader
         title={planetName('Booth')}
         icon='headphones'
@@ -76,11 +79,15 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         </Link>
 
         {loading && (
-          <div className='booth__loading'>{intl.formatMessage(messages.loading)}</div>
+          <div className='booth__loading'>
+            {intl.formatMessage(messages.loading)}
+          </div>
         )}
 
         {!loading && !set && (
-          <div className='booth__empty'>{intl.formatMessage(messages.notFound)}</div>
+          <div className='booth__empty'>
+            {intl.formatMessage(messages.notFound)}
+          </div>
         )}
 
         {set && (
@@ -101,14 +108,19 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
               {set.event_name && (
                 <div className='booth__set-detail-event'>
                   {set.event_name}
-                  {set.event_date && ` · ${new Date(set.event_date).toLocaleDateString()}`}
+                  {set.event_date &&
+                    ` · ${new Date(set.event_date).toLocaleDateString()}`}
                 </div>
               )}
-              {set.genre && (
-                <span className='booth__set-detail-genre'>{set.genre}</span>
+              {set.genres.length > 0 && (
+                <span className='booth__set-detail-genre'>
+                  {set.genres.join(', ')}
+                </span>
               )}
               {set.description && (
-                <p className='booth__set-detail-description'>{set.description}</p>
+                <p className='booth__set-detail-description'>
+                  {set.description}
+                </p>
               )}
             </div>
 
@@ -131,7 +143,9 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
 
       <Helmet>
         <title>
-          {set ? `${set.title} — The Booth` : intl.formatMessage(messages.heading)}
+          {set
+            ? `${set.title} — The Booth`
+            : intl.formatMessage(messages.heading)}
         </title>
         <meta name='robots' content='noindex' />
       </Helmet>
