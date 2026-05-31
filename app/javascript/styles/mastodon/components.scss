@@ -13227,6 +13227,14 @@ noscript {
 
 // ── Compose bar ───────────────────────────────────────────────────────────────
 
+.nudge-compose-bar__error {
+  padding: 6px 12px;
+  font-size: 13px;
+  color: $error-value-color;
+  background: rgba($error-value-color, 0.08);
+  border-top: 1px solid rgba($error-value-color, 0.2);
+}
+
 .nudge-compose-bar {
   flex-shrink: 0;
   border-top: 1px solid lighten($ui-base-color, 8%);

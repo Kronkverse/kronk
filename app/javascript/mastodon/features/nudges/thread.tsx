@@ -194,6 +194,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [voiceSeconds, setVoiceSeconds] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const wordCount = countWords(text);
   const overLimit = wordCount > MAX_WORDS;
@@ -264,6 +265,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const handleTextChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setText(e.target.value);
+      setError(null);
       const el = e.target;
       el.style.height = 'auto';
       el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
@@ -281,6 +283,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       const file = e.target.files?.[0];
       if (!file) return;
       if (fileInputRef.current) fileInputRef.current.value = '';
+      setError(null);
       setUploading(true);
       void (async () => {
         try {
@@ -297,7 +300,18 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             setMediaId(json.id);
             setMediaPreview(URL.createObjectURL(file));
             setMediaIsVideo(file.type.startsWith('video/'));
+          } else {
+            const body = (await response.json().catch(() => ({}))) as {
+              error?: string;
+            };
+            setError(
+              `Upload failed (${response.status}): ${body.error ?? 'unknown error'}`,
+            );
           }
+        } catch (err) {
+          setError(
+            `Upload failed: ${err instanceof Error ? err.message : String(err)}`,
+          );
         } finally {
           setUploading(false);
         }
@@ -397,12 +411,18 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     async (withContent: boolean) => {
       if (accountId === '' || sending) return;
       setSending(true);
+      setError(null);
       try {
         let resolvedVoiceId = voiceId;
         if (withContent && voiceBlob && !voiceId) {
-          // Use optimistic upload if ready, otherwise upload now
-          resolvedVoiceId = await (voiceUploadRef.current ??
-            uploadBlob(voiceBlob));
+          try {
+            // Use optimistic upload if ready, otherwise upload now
+            resolvedVoiceId = await (voiceUploadRef.current ??
+              uploadBlob(voiceBlob));
+          } catch {
+            // Optimistic upload failed — retry synchronously
+            resolvedVoiceId = await uploadBlob(voiceBlob);
+          }
           voiceUploadRef.current = null;
           setVoiceId(resolvedVoiceId);
         }
@@ -420,6 +440,10 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         dispatch(decrementNudgeCount());
         clearCompose();
         await loadThread();
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : 'Failed to send — try again';
+        setError(msg);
       } finally {
         setSending(false);
       }
@@ -519,6 +543,8 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </div>
         )}
 
+        {error && <div className='nudge-compose-bar__error'>{error}</div>}
+
         <div className='nudge-compose-bar'>
           {(mediaPreview !== undefined ||
             voiceBlob !== undefined ||
@@ -527,7 +553,6 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               {mediaPreview && (
                 <div className='nudge-compose-bar__attachment-preview'>
                   {mediaIsVideo ? (
-                     
                     <video
                       src={mediaPreview}
                       className='nudge-compose-bar__media-preview'
