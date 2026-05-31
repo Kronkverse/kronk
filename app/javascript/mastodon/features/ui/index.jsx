@@ -86,6 +86,7 @@ import {
   EventDetail,
   InFlow,
   Nudges,
+  NudgesThread,
   Governance,
   Questions,
   QuestionPage,
@@ -221,6 +222,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/kalendar/:id" component={EventDetail} content={children} />}
             {signedIn && <WrappedRoute path="/kalendar" component={Events} content={children} />}
             {signedIn && <WrappedRoute path="/in-flow" component={InFlow} content={children} />}
+            {signedIn && <WrappedRoute path="/nudges/:accountId" component={NudgesThread} content={children} />}
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} />}
             {signedIn && <WrappedRoute path="/governance" component={Governance} content={children} />}
             {signedIn && <WrappedRoute path="/questions/:id" component={QuestionPage} content={children} />}

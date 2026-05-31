@@ -262,6 +262,10 @@ export function Nudges () {
   return import("../../nudges");
 }
 
+export function NudgesThread () {
+  return import("../../nudges/thread");
+}
+
 export function EventDetail () {
   return import("../../events/event_detail");
 }
