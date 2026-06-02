@@ -67,7 +67,7 @@ async function uploadMedia(
 
   const startTime = Date.now();
 
-  const res = await api().post<{ id: string }>('/api/v1/media', form, {
+  const res = await api().post<{ id: string }>('/api/v2/media', form, {
     signal: opts.signal,
     onUploadProgress: (event) => {
       if (!event.total) return;
