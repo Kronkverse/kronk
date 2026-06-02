@@ -171,7 +171,17 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
         onSuccess(res.data);
       } catch (err) {
         if ((err as { name?: string }).name === 'CanceledError') return;
-        setError('Upload failed — please try again.');
+        const axiosErr = err as { response?: { status?: number; data?: { error?: string } } };
+        const detail = axiosErr.response?.data?.error;
+        const status = axiosErr.response?.status;
+        const stageAtFailure = stage;
+        setError(
+          detail
+            ? `Failed at ${stageAtFailure ?? 'upload'}: ${detail}`
+            : status
+              ? `Failed at ${stageAtFailure ?? 'upload'} (${status}) — please try again.`
+              : `Failed at ${stageAtFailure ?? 'upload'} — please try again.`,
+        );
         setSubmitting(false);
         setStage(null);
       }
