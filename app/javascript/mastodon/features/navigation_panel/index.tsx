@@ -32,8 +32,6 @@ import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchang
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
-import PublicActiveIcon from '@/material-icons/400-24px/public-fill.svg?react';
-import PublicIcon from '@/material-icons/400-24px/public.svg?react';
 import QuestionMarkActiveIcon from '@/material-icons/400-24px/question_mark-fill.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
@@ -47,6 +45,7 @@ import {
 import { Account } from 'mastodon/components/account';
 import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { Search } from 'mastodon/features/compose/components/search';
+import { OrbitIcon } from 'mastodon/features/in_flow/components/celestial_icons';
 import { ColumnLink } from 'mastodon/features/ui/components/column_link';
 import { useBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
 import { useIdentity } from 'mastodon/identity_context';
@@ -344,22 +343,20 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
         )}
 
         {signedIn && (
-          <ColumnLink
-            transparent
-            to='/in-flow'
-            icon='public'
-            iconComponent={PublicIcon}
-            activeIconComponent={PublicActiveIcon}
-            text={intl.formatMessage(messages.inFlow)}
-            tooltip='In Flow'
-          />
-        )}
-
-        {signedIn && (
           <>
             <hr />
 
             <NotificationsLink />
+
+            <ColumnLink
+              transparent
+              to='/in-flow'
+              icon='public'
+              iconComponent={OrbitIcon}
+              activeIconComponent={OrbitIcon}
+              text={intl.formatMessage(messages.inFlow)}
+              tooltip='In Flow'
+            />
 
             <ColumnLink
               transparent

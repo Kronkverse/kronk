@@ -132,6 +132,10 @@ namespace :api, format: false do
       resources :tasks, only: [:index, :create, :update], shallow: true
     end
 
+    namespace :in_flow do
+      resource :observation, only: :show
+    end
+
     resources :reports, only: [:create]
     resources :trends, only: [:index], controller: 'trends/tags'
     resources :filters, only: [:index, :create, :show, :update, :destroy]
