@@ -248,7 +248,7 @@ $booth-accent: var(--space-color, #3034a0);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 35%);
   border: none;
   cursor: pointer;
   opacity: 0;
@@ -258,7 +258,7 @@ $booth-accent: var(--space-color, #3034a0);
     width: 48px;
     height: 48px;
     fill: #fff;
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 60%));
   }
 
   &--visible {
@@ -293,7 +293,10 @@ $booth-accent: var(--space-color, #3034a0);
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.15s, color 0.15s, background 0.15s;
+  transition:
+    opacity 0.15s,
+    color 0.15s,
+    background 0.15s;
 
   svg {
     width: 18px;
@@ -319,7 +322,7 @@ $booth-accent: var(--space-color, #3034a0);
   background: $ui-base-color;
   border: 1px solid $ui-base-lighter-color;
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 40%);
   min-width: 120px;
   z-index: 10;
   overflow: hidden;
@@ -345,7 +348,7 @@ $booth-accent: var(--space-color, #3034a0);
     color: #fca5a5;
 
     &:hover {
-      background: rgba(239, 68, 68, 0.12);
+      background: rgba(239, 68, 68, 12%);
     }
   }
 }
@@ -594,8 +597,13 @@ $booth-accent: var(--space-color, #3034a0);
 // ─── Inline player ────────────────────────────────────────────────────────────
 
 .booth-inline-player {
-  background: color-mix(in srgb, var(--space-color, #3034a0) 12%, $ui-base-color);
-  border: 1px solid color-mix(in srgb, var(--space-color, #3034a0) 30%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 12%,
+    $ui-base-color
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 30%, transparent);
   border-radius: 12px;
   overflow: hidden;
   display: flex;
@@ -606,9 +614,16 @@ $booth-accent: var(--space-color, #3034a0);
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 25%, $ui-base-color);
+  overflow: hidden;
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 25%,
+    $ui-base-color
+  );
 
   img {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -626,7 +641,11 @@ $booth-accent: var(--space-color, #3034a0);
   svg {
     width: 80px;
     height: 80px;
-    fill: color-mix(in srgb, var(--space-color, #3034a0) 50%, $secondary-text-color);
+    fill: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 50%,
+      $secondary-text-color
+    );
   }
 }
 
@@ -634,7 +653,7 @@ $booth-accent: var(--space-color, #3034a0);
   position: absolute;
   top: 10px;
   right: 10px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 50%);
   border: none;
   border-radius: 50%;
   width: 32px;
@@ -648,7 +667,7 @@ $booth-accent: var(--space-color, #3034a0);
   transition: background 0.15s;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.72);
+    background: rgba(0, 0, 0, 72%);
   }
 
   svg {
@@ -686,7 +705,11 @@ $booth-accent: var(--space-color, #3034a0);
 
 .booth-inline-player__genre {
   background: color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
-  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, $primary-text-color);
+  color: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 80%,
+    $primary-text-color
+  );
   border-radius: 10px;
   padding: 2px 9px;
   font-size: 11px;
@@ -746,7 +769,9 @@ $booth-accent: var(--space-color, #3034a0);
   gap: 1px;
   font-size: 10px;
   font-weight: 600;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 
   &:hover {
     color: $primary-text-color;
@@ -797,7 +822,11 @@ $booth-accent: var(--space-color, #3034a0);
   flex: 1;
   min-width: 0;
   border-radius: 1px;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 30%, $ui-base-lighter-color);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 30%,
+    $ui-base-lighter-color
+  );
   transition: background 0.1s;
 
   &--played {
@@ -806,7 +835,11 @@ $booth-accent: var(--space-color, #3034a0);
 }
 
 .booth-waveform:hover .booth-waveform__bar {
-  background: color-mix(in srgb, var(--space-color, #3034a0) 45%, $ui-base-lighter-color);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 45%,
+    $ui-base-lighter-color
+  );
 
   &--played {
     background: color-mix(in srgb, var(--space-color, #3034a0) 100%, #fff 10%);
@@ -1113,7 +1146,7 @@ $booth-accent: var(--space-color, #3034a0);
 .booth-upload-form__cancel-upload {
   align-self: flex-start;
   background: none;
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  border: 1px solid rgba(239, 68, 68, 40%);
   color: #fca5a5;
   border-radius: 6px;
   padding: 6px 14px;
@@ -1122,7 +1155,7 @@ $booth-accent: var(--space-color, #3034a0);
   transition: background 0.15s;
 
   &:hover {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(239, 68, 68, 10%);
   }
 }
 
@@ -1145,7 +1178,7 @@ $booth-accent: var(--space-color, #3034a0);
 
 .booth-edit-form__remove-cover {
   background: none;
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  border: 1px solid rgba(239, 68, 68, 40%);
   color: #fca5a5;
   border-radius: 6px;
   padding: 4px 10px;
@@ -1153,7 +1186,7 @@ $booth-accent: var(--space-color, #3034a0);
   cursor: pointer;
 
   &:hover {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(239, 68, 68, 10%);
   }
 }
 
@@ -1170,7 +1203,11 @@ $booth-accent: var(--space-color, #3034a0);
   border-radius: 6px;
   overflow: hidden;
   cursor: ns-resize;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, $ui-base-color);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 20%,
+    $ui-base-color
+  );
   user-select: none;
 
   &--disabled {
@@ -1192,10 +1229,10 @@ $booth-accent: var(--space-color, #3034a0);
   left: 0;
   right: 0;
   height: 2px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 80%);
   transform: translateY(-50%);
   pointer-events: none;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 50%);
 
   &::before,
   &::after {
@@ -1205,9 +1242,9 @@ $booth-accent: var(--space-color, #3034a0);
     transform: translateX(-50%);
     width: 32px;
     height: 6px;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 90%);
     border-radius: 3px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 40%);
   }
 
   &::before {
@@ -1224,7 +1261,7 @@ $booth-accent: var(--space-color, #3034a0);
   bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 55%);
   color: #fff;
   font-size: 11px;
   padding: 3px 8px;
@@ -1243,8 +1280,13 @@ $booth-accent: var(--space-color, #3034a0);
   align-items: flex-start;
   gap: 12px;
   padding: 12px 14px;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 18%, $ui-base-color);
-  border-top: 1px solid color-mix(in srgb, var(--space-color, #3034a0) 35%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 18%,
+    $ui-base-color
+  );
+  border-top: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 35%, transparent);
   backdrop-filter: blur(8px);
   z-index: 5;
   margin: 0 -16px -16px;
@@ -1265,7 +1307,11 @@ $booth-accent: var(--space-color, #3034a0);
   height: 48px;
   border-radius: 6px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 30%, $ui-base-color);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 30%,
+    $ui-base-color
+  );
 
   img {
     width: 100%;
@@ -1378,7 +1424,9 @@ $booth-accent: var(--space-color, #3034a0);
   gap: 1px;
   font-size: 9px;
   font-weight: 600;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
   flex-shrink: 0;
 
   &:hover {
@@ -1462,7 +1510,9 @@ $booth-accent: var(--space-color, #3034a0);
   align-items: center;
   justify-content: center;
   align-self: center;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 
   &:hover {
     color: $primary-text-color;
@@ -1505,7 +1555,11 @@ $booth-accent: var(--space-color, #3034a0);
   align-items: center;
   gap: 4px;
   background: color-mix(in srgb, var(--space-color, #3034a0) 25%, transparent);
-  color: color-mix(in srgb, var(--space-color, #3034a0) 85%, $primary-text-color);
+  color: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 85%,
+    $primary-text-color
+  );
   border-radius: 12px;
   padding: 2px 6px 2px 10px;
   font-size: 12px;
@@ -1558,7 +1612,7 @@ $booth-accent: var(--space-color, #3034a0);
   background: $ui-base-color;
   border: 1px solid $ui-base-lighter-color;
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 35%);
   z-index: 20;
   overflow: hidden;
 }
@@ -1576,6 +1630,10 @@ $booth-accent: var(--space-color, #3034a0);
   transition: background 0.1s;
 
   &:hover {
-    background: color-mix(in srgb, var(--space-color, #3034a0) 12%, $ui-base-color);
+    background: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 12%,
+      $ui-base-color
+    );
   }
 }
