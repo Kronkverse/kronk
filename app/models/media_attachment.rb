@@ -42,7 +42,7 @@ class MediaAttachment < ApplicationRecord
 
   IMAGE_LIMIT = 1.gigabyte
   VIDEO_LIMIT = 999.megabytes
-  AUDIO_LIMIT = 2.gigabytes
+  AUDIO_LIMIT = 4.gigabytes
 
   MAX_VIDEO_MATRIX_LIMIT = 8_294_400 # 3840x2160px
   MAX_VIDEO_FRAME_RATE   = 120

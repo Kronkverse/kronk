@@ -96,7 +96,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
   const [coverError, setCoverError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const AUDIO_LIMIT = 2 * 1024 * 1024 * 1024; // 2 GB
+  const AUDIO_LIMIT = 4 * 1024 * 1024 * 1024; // 4 GB
   const COVER_LIMIT = 1 * 1024 * 1024 * 1024; // 1 GB
   const [stage, setStage] = useState<UploadStage>(null);
   const [uploadPct, setUploadPct] = useState(0);
@@ -317,7 +317,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
               onChange={(e) => {
                 const file = e.target.files?.[0] ?? null;
                 if (file && file.size > AUDIO_LIMIT) {
-                  setAudioError(`File is too large (${formatSize(file.size)}). Maximum is 2 GB.`);
+                  setAudioError(`File is too large (${formatSize(file.size)}). Maximum is 4 GB.`);
                   setAudioFile(null);
                   e.target.value = '';
                 } else {
