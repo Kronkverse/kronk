@@ -988,6 +988,12 @@ $booth-accent: var(--space-color, #3034a0);
   margin-top: 2px;
 }
 
+.booth-upload-form__file-error {
+  font-size: 12px;
+  color: #fca5a5;
+  margin-top: 2px;
+}
+
 .booth-upload-form__progress-wrap {
   display: flex;
   flex-direction: column;

@@ -48,6 +48,7 @@ function formatEta(remainingBytes: number, speedBps: number): string {
 }
 
 function formatSize(bytes: number): string {
+  if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(1)} GB`;
   if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(1)} MB`;
   return `${Math.round(bytes / 1_000)} KB`;
 }
@@ -91,7 +92,12 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
   const [description, setDescription] = useState('');
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [audioError, setAudioError] = useState<string | null>(null);
+  const [coverError, setCoverError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const AUDIO_LIMIT = 2 * 1024 * 1024 * 1024; // 2 GB
+  const COVER_LIMIT = 1 * 1024 * 1024 * 1024; // 1 GB
   const [stage, setStage] = useState<UploadStage>(null);
   const [uploadPct, setUploadPct] = useState(0);
   const [uploadEta, setUploadEta] = useState('');
@@ -308,13 +314,26 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
               ref={audioInputRef}
               type='file'
               accept='audio/*'
-              onChange={(e) => setAudioFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                if (file && file.size > AUDIO_LIMIT) {
+                  setAudioError(`File is too large (${formatSize(file.size)}). Maximum is 2 GB.`);
+                  setAudioFile(null);
+                  e.target.value = '';
+                } else {
+                  setAudioError(null);
+                  setAudioFile(file);
+                }
+              }}
               required
             />
             {audioFile && (
               <span className='booth-upload-form__file-info'>
                 {audioFile.name} · {formatSize(audioFile.size)}
               </span>
+            )}
+            {audioError && (
+              <span className='booth-upload-form__file-error'>{audioError}</span>
             )}
           </label>
 
@@ -323,8 +342,21 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
             <input
               type='file'
               accept='image/*'
-              onChange={(e) => setCoverFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                if (file && file.size > COVER_LIMIT) {
+                  setCoverError(`File is too large (${formatSize(file.size)}). Maximum is 1 GB.`);
+                  setCoverFile(null);
+                  e.target.value = '';
+                } else {
+                  setCoverError(null);
+                  setCoverFile(file);
+                }
+              }}
             />
+            {coverError && (
+              <span className='booth-upload-form__file-error'>{coverError}</span>
+            )}
           </label>
 
           <div className='booth-upload-form__actions'>
