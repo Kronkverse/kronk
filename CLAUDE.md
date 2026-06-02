@@ -139,6 +139,18 @@ Delete your branch after it's merged to `main`.
 - **Never edit, push to, or close another contributor's branch or PR** — you may read them for context but must not modify them
 - **Never query user personal data** from the database
 
+## Leaving notes for Tal
+
+If you hit a blocker, need access, or find something that needs Tal's attention, append a note to the shared inbox:
+
+```bash
+cat >> /home/shared/inbox.md << 'EOF'
+
+### [YYYY-MM-DD] username — subject
+Your message here.
+EOF
+```
+
 ---
 
 ## Technical Notes for Claude Agents
