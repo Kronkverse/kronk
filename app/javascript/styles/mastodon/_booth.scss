@@ -177,12 +177,12 @@ $booth-accent: var(--space-color, #3034a0);
 
 .booth-card {
   display: flex;
-  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
   border-radius: 10px;
   background: $ui-base-color;
   border: 1px solid $ui-base-lighter-color;
   cursor: pointer;
-  overflow: hidden;
   transition:
     border-color 0.15s,
     background 0.15s;
@@ -194,11 +194,21 @@ $booth-accent: var(--space-color, #3034a0);
       var(--space-color, #3034a0) 60%,
       transparent
     );
+    background: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 8%,
+      $ui-base-color
+    );
     outline: none;
   }
 
   &--active {
     border-color: var(--space-color, #3034a0);
+    background: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 12%,
+      $ui-base-color
+    );
   }
 
   &--deleting {
@@ -209,14 +219,16 @@ $booth-accent: var(--space-color, #3034a0);
 
 .booth-card__cover {
   position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
   background: color-mix(
     in srgb,
     var(--space-color, #3034a0) 20%,
     $ui-base-color
   );
-  overflow: hidden;
 
   img {
     width: 100%;
@@ -265,10 +277,9 @@ $booth-accent: var(--space-color, #3034a0);
 }
 
 .booth-card__menu-wrap {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 2;
+  position: relative;
+  flex-shrink: 0;
+  align-self: flex-start;
 }
 
 .booth-card__menu-btn {
@@ -359,10 +370,11 @@ $booth-accent: var(--space-color, #3034a0);
 }
 
 .booth-card__body {
-  padding: 10px 12px 12px;
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .booth-card__title {

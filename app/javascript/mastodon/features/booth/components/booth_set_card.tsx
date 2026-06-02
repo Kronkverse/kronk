@@ -116,7 +116,6 @@ export const BoothSetCard: React.FC<Props> = ({
             <HeadphonesIcon />
           </div>
         )}
-
         <button
           className={`booth-card__play-overlay${active && playing ? ' booth-card__play-overlay--visible' : ''}`}
           onClick={handleOverlayClick}
@@ -125,43 +124,6 @@ export const BoothSetCard: React.FC<Props> = ({
         >
           {active && playing ? <PauseIcon /> : <PlayArrowIcon />}
         </button>
-
-        {set.is_owner && (
-          <div
-            ref={menuRef}
-            className='booth-card__menu-wrap'
-            onBlur={handleMenuBlur}
-          >
-            <button
-              className='booth-card__menu-btn'
-              onClick={handleMenuToggle}
-              aria-label='Set options'
-              aria-expanded={menuOpen}
-              type='button'
-              tabIndex={0}
-            >
-              <MoreHorizIcon />
-            </button>
-            {menuOpen && (
-              <div className='booth-card__menu'>
-                <button
-                  className='booth-card__menu-item'
-                  onMouseDown={handleEdit}
-                  type='button'
-                >
-                  Edit
-                </button>
-                <button
-                  className='booth-card__menu-item booth-card__menu-item--danger'
-                  onMouseDown={handleDelete}
-                  type='button'
-                >
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       <div className='booth-card__body'>
@@ -184,6 +146,43 @@ export const BoothSetCard: React.FC<Props> = ({
           </span>
         </div>
       </div>
+
+      {set.is_owner && (
+        <div
+          ref={menuRef}
+          className='booth-card__menu-wrap'
+          onBlur={handleMenuBlur}
+        >
+          <button
+            className='booth-card__menu-btn'
+            onClick={handleMenuToggle}
+            aria-label='Set options'
+            aria-expanded={menuOpen}
+            type='button'
+            tabIndex={0}
+          >
+            <MoreHorizIcon />
+          </button>
+          {menuOpen && (
+            <div className='booth-card__menu'>
+              <button
+                className='booth-card__menu-item'
+                onMouseDown={handleEdit}
+                type='button'
+              >
+                Edit
+              </button>
+              <button
+                className='booth-card__menu-item booth-card__menu-item--danger'
+                onMouseDown={handleDelete}
+                type='button'
+              >
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
