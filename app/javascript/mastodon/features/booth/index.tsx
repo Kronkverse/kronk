@@ -97,6 +97,12 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
     setActiveSet((prev) => (prev?.id === updated.id ? updated : prev));
   }, []);
 
+  const handleDelete = useCallback((id: string) => {
+    setSets((prev) => prev.filter((s) => s.id !== id));
+    setActiveSet((prev) => (prev?.id === id ? null : prev));
+    setExpanded(false);
+  }, []);
+
   const handleUploadSuccess = useCallback((set: BoothSet) => {
     setSets((prev) => [set, ...prev]);
     setActiveSet(set);
@@ -223,6 +229,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
                   onPlay={handlePlay}
                   onTogglePlay={handleTogglePlay}
                   onEdit={handleEdit}
+                  onDelete={handleDelete}
                   active={activeSet?.id === set.id}
                   playing={isPlaying && activeSet?.id === set.id}
                 />

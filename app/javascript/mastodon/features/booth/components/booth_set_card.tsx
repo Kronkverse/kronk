@@ -4,6 +4,7 @@ import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
 import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
+import api from 'mastodon/api';
 import type { BoothSet } from '../types';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
   onPlay: (set: BoothSet) => void;
   onTogglePlay: () => void;
   onEdit: (set: BoothSet) => void;
+  onDelete: (id: string) => void;
   active: boolean;
   playing: boolean;
 }
@@ -28,10 +30,12 @@ export const BoothSetCard: React.FC<Props> = ({
   onPlay,
   onTogglePlay,
   onEdit,
+  onDelete,
   active,
   playing,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleCardClick = useCallback(() => {
@@ -70,6 +74,19 @@ export const BoothSetCard: React.FC<Props> = ({
     [set, onEdit],
   );
 
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setMenuOpen(false);
+      setDeleting(true);
+      void api()
+        .delete(`/api/v1/booth_sets/${set.id}`)
+        .then(() => onDelete(set.id))
+        .catch(() => setDeleting(false));
+    },
+    [set.id, onDelete],
+  );
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -82,7 +99,7 @@ export const BoothSetCard: React.FC<Props> = ({
 
   return (
     <div
-      className={`booth-card${active ? ' booth-card--active' : ''}`}
+      className={`booth-card${active ? ' booth-card--active' : ''}${deleting ? ' booth-card--deleting' : ''}`}
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}
       role='button'
@@ -98,7 +115,7 @@ export const BoothSetCard: React.FC<Props> = ({
           </div>
         )}
         <button
-          className='booth-card__play-overlay'
+          className={`booth-card__play-overlay${active && playing ? ' booth-card__play-overlay--visible' : ''}`}
           onClick={handleOverlayClick}
           aria-label={active && playing ? 'Pause' : `Play ${set.title}`}
           type='button'
@@ -152,6 +169,13 @@ export const BoothSetCard: React.FC<Props> = ({
                 type='button'
               >
                 Edit
+              </button>
+              <button
+                className='booth-card__menu-item booth-card__menu-item--danger'
+                onMouseDown={handleDelete}
+                type='button'
+              >
+                Delete
               </button>
             </div>
           )}
