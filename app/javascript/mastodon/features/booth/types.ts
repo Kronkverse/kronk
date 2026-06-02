@@ -6,6 +6,7 @@ export interface BoothSet {
   event_name: string | null;
   event_date: string | null;
   genres: string[];
+  cover_offset_y: number;
   duration_seconds: number | null;
   play_count: number;
   audio_url: string | null;

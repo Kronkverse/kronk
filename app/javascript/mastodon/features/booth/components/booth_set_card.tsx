@@ -97,6 +97,8 @@ export const BoothSetCard: React.FC<Props> = ({
     [set, onPlay],
   );
 
+  const coverPosition = `50% ${set.cover_offset_y ?? 50}%`;
+
   return (
     <div
       className={`booth-card${active ? ' booth-card--active' : ''}${deleting ? ' booth-card--deleting' : ''}`}
@@ -108,12 +110,13 @@ export const BoothSetCard: React.FC<Props> = ({
     >
       <div className='booth-card__cover'>
         {set.cover_url ? (
-          <img src={set.cover_url} alt='' />
+          <img src={set.cover_url} alt='' style={{ objectPosition: coverPosition }} />
         ) : (
           <div className='booth-card__cover-placeholder'>
             <HeadphonesIcon />
           </div>
         )}
+
         <button
           className={`booth-card__play-overlay${active && playing ? ' booth-card__play-overlay--visible' : ''}`}
           onClick={handleOverlayClick}
@@ -122,6 +125,43 @@ export const BoothSetCard: React.FC<Props> = ({
         >
           {active && playing ? <PauseIcon /> : <PlayArrowIcon />}
         </button>
+
+        {set.is_owner && (
+          <div
+            ref={menuRef}
+            className='booth-card__menu-wrap'
+            onBlur={handleMenuBlur}
+          >
+            <button
+              className='booth-card__menu-btn'
+              onClick={handleMenuToggle}
+              aria-label='Set options'
+              aria-expanded={menuOpen}
+              type='button'
+              tabIndex={0}
+            >
+              <MoreHorizIcon />
+            </button>
+            {menuOpen && (
+              <div className='booth-card__menu'>
+                <button
+                  className='booth-card__menu-item'
+                  onMouseDown={handleEdit}
+                  type='button'
+                >
+                  Edit
+                </button>
+                <button
+                  className='booth-card__menu-item booth-card__menu-item--danger'
+                  onMouseDown={handleDelete}
+                  type='button'
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className='booth-card__body'>
@@ -144,43 +184,6 @@ export const BoothSetCard: React.FC<Props> = ({
           </span>
         </div>
       </div>
-
-      {set.is_owner && (
-        <div
-          ref={menuRef}
-          className='booth-card__menu-wrap'
-          onBlur={handleMenuBlur}
-        >
-          <button
-            className='booth-card__menu-btn'
-            onClick={handleMenuToggle}
-            aria-label='Set options'
-            aria-expanded={menuOpen}
-            type='button'
-            tabIndex={0}
-          >
-            <MoreHorizIcon />
-          </button>
-          {menuOpen && (
-            <div className='booth-card__menu'>
-              <button
-                className='booth-card__menu-item'
-                onMouseDown={handleEdit}
-                type='button'
-              >
-                Edit
-              </button>
-              <button
-                className='booth-card__menu-item booth-card__menu-item--danger'
-                onMouseDown={handleDelete}
-                type='button'
-              >
-                Delete
-              </button>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };
