@@ -38,6 +38,12 @@ interface Props {
   onCancel: () => void;
 }
 
+function formatSize(bytes: number): string {
+  if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(1)} GB`;
+  if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(1)} MB`;
+  return `${Math.round(bytes / 1_000)} KB`;
+}
+
 async function uploadMedia(file: File): Promise<string> {
   const form = new FormData();
   form.append('file', file);
@@ -54,9 +60,12 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
   const [genres, setGenres] = useState<string[]>(set.genres ?? []);
   const [description, setDescription] = useState(set.description ?? '');
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverError, setCoverError] = useState<string | null>(null);
   const [removeCover, setRemoveCover] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const COVER_LIMIT = 1 * 1024 * 1024 * 1024; // 1 GB
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -195,11 +204,22 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
           type='file'
           accept='image/*'
           onChange={(e) => {
-            setCoverFile(e.target.files?.[0] ?? null);
-            setRemoveCover(false);
+            const file = e.target.files?.[0] ?? null;
+            if (file && file.size > COVER_LIMIT) {
+              setCoverError(`File is too large (${formatSize(file.size)}). Maximum is 1 GB.`);
+              setCoverFile(null);
+              e.target.value = '';
+            } else {
+              setCoverError(null);
+              setCoverFile(file);
+              setRemoveCover(false);
+            }
           }}
           disabled={saving}
         />
+        {coverError && (
+          <span className='booth-upload-form__file-error'>{coverError}</span>
+        )}
       </div>
 
       <div className='booth-upload-form__actions'>

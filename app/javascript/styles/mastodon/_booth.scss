@@ -246,10 +246,14 @@ $booth-accent: var(--space-color, #3034a0);
   transition: opacity 0.15s;
 
   svg {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
     fill: #fff;
     filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+  }
+
+  &--visible {
+    opacity: 1;
   }
 }
 
@@ -257,6 +261,16 @@ $booth-accent: var(--space-color, #3034a0);
   position: relative;
 
   &:hover .booth-card__play-overlay {
+    opacity: 1;
+  }
+}
+
+@media (hover: none) {
+  .booth-card__cover:hover .booth-card__play-overlay {
+    opacity: 0;
+  }
+
+  .booth-card__play-overlay--visible {
     opacity: 1;
   }
 }
@@ -325,6 +339,19 @@ $booth-accent: var(--space-color, #3034a0);
   &:hover {
     background: $ui-base-lighter-color;
   }
+
+  &--danger {
+    color: #fca5a5;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.12);
+    }
+  }
+}
+
+.booth-card--deleting {
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 .booth-card__cover-placeholder {
@@ -1029,6 +1056,12 @@ $booth-accent: var(--space-color, #3034a0);
 .booth-upload-form__file-info {
   font-size: 12px;
   color: $darker-text-color;
+  margin-top: 2px;
+}
+
+.booth-upload-form__file-error {
+  font-size: 12px;
+  color: #fca5a5;
   margin-top: 2px;
 }
 
