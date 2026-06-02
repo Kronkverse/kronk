@@ -131,7 +131,7 @@ export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
           <div className='booth-inline-player'>
             <div className='booth-inline-player__artwork'>
               {set.cover_url ? (
-                <img src={set.cover_url} alt='' />
+                <img src={set.cover_url} alt='' style={{ objectPosition: `50% ${set.cover_offset_y ?? 50}%` }} />
               ) : (
                 <div className='booth-inline-player__artwork-placeholder'>
                   <HeadphonesIcon />

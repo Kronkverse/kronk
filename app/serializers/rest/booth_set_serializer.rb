@@ -3,7 +3,7 @@
 class REST::BoothSetSerializer < ActiveModel::Serializer
   attributes :id, :title, :description, :artist_name, :event_name, :event_date,
              :genres, :duration_seconds, :play_count, :audio_url, :cover_url,
-             :published, :created_at, :updated_at
+             :cover_offset_y, :published, :created_at, :updated_at
 
   belongs_to :account, serializer: REST::AccountSerializer
 

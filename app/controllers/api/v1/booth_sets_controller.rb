@@ -75,6 +75,6 @@ class Api::V1::BoothSetsController < Api::BaseController
 
   def booth_set_params
     params.permit(:title, :description, :artist_name, :event_name, :event_date,
-                  :duration_seconds, :published, genres: [])
+                  :duration_seconds, :published, :cover_offset_y, genres: [])
   end
 end

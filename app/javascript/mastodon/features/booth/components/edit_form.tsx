@@ -4,6 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import api from 'mastodon/api';
 import type { BoothSet } from '../types';
+import { CoverPositionEditor } from './cover_position_editor';
 import { GenreTagInput } from './genre_tag_input';
 
 const messages = defineMessages({
@@ -60,8 +61,10 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
   const [genres, setGenres] = useState<string[]>(set.genres ?? []);
   const [description, setDescription] = useState(set.description ?? '');
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
   const [coverError, setCoverError] = useState<string | null>(null);
   const [removeCover, setRemoveCover] = useState(false);
+  const [coverOffsetY, setCoverOffsetY] = useState(set.cover_offset_y ?? 50);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -78,6 +81,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
           title,
           artist_name: artistName,
           genres,
+          cover_offset_y: coverOffsetY,
         };
         if (eventName) payload.event_name = eventName;
         if (eventDate) payload.event_date = eventDate;
@@ -107,6 +111,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
       genres,
       description,
       coverFile,
+      coverOffsetY,
       removeCover,
       set.id,
       onSuccess,
@@ -187,19 +192,28 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
 
       <div className='booth-upload-form__field'>
         <span>{intl.formatMessage(messages.cover)}</span>
-        {set.cover_url && !removeCover && (
-          <div className='booth-edit-form__current-cover'>
-            <img src={set.cover_url} alt='' />
-            <button
-              type='button'
-              className='booth-edit-form__remove-cover'
-              onClick={() => setRemoveCover(true)}
-              disabled={saving}
-            >
-              {intl.formatMessage(messages.removeCover)}
-            </button>
-          </div>
+
+        {/* Position editor — shown whenever there's a cover to preview */}
+        {(coverPreviewUrl ?? (set.cover_url && !removeCover)) && (
+          <CoverPositionEditor
+            coverUrl={coverPreviewUrl ?? set.cover_url ?? ''}
+            offsetY={coverOffsetY}
+            onChange={setCoverOffsetY}
+            disabled={saving}
+          />
         )}
+
+        {set.cover_url && !removeCover && !coverPreviewUrl && (
+          <button
+            type='button'
+            className='booth-edit-form__remove-cover'
+            onClick={() => setRemoveCover(true)}
+            disabled={saving}
+          >
+            {intl.formatMessage(messages.removeCover)}
+          </button>
+        )}
+
         <input
           type='file'
           accept='image/*'
@@ -208,11 +222,13 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
             if (file && file.size > COVER_LIMIT) {
               setCoverError(`File is too large (${formatSize(file.size)}). Maximum is 1 GB.`);
               setCoverFile(null);
+              setCoverPreviewUrl(null);
               e.target.value = '';
             } else {
               setCoverError(null);
               setCoverFile(file);
               setRemoveCover(false);
+              setCoverPreviewUrl(file ? URL.createObjectURL(file) : null);
             }
           }}
           disabled={saving}
