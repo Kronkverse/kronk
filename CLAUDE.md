@@ -4,12 +4,16 @@ Kronk is a custom Mastodon instance at **mastodon.kronk.info**. This repo is a f
 
 ## Branch Strategy
 
-| Branch    | Purpose                                        | Deploy target           |
-| --------- | ---------------------------------------------- | ----------------------- |
-| `main`    | Production (protected — PRs only)              | mastodon.kronk.info     |
-| `staging` | Shared integration — all work accumulates here | dev.mastodon.kronk.info |
+| Branch | Purpose | Deploy target |
+|--------|---------|---------------|
+| `main` | Production — protected, requires Tal's review | mastodon.kronk.info |
+| `staging` | Shared test environment — anyone can merge here | dev.mastodon.kronk.info |
+| `dev/ash`, `dev/mango`, `dev/tomas` | Personal integration branches | — |
+| `feature/`, `fix/` | Short-lived feature/fix branches | — |
 
-**Never commit directly to `staging` or `main`.** Always work on a branch.
+**Never commit directly to `staging`, `dev/<username>`, or `main`.** Always work on a feature branch.
+
+**Staging is for testing, not for shipping.** Nothing goes to production from `staging` — PRs to `main` always come from feature branches directly.
 
 ## Building Locally
 
@@ -87,35 +91,51 @@ These are additions on top of upstream Mastodon:
 
 ## Contributor Workflow
 
-### 1. Start from a branch
-
-Always branch off `staging`:
+### 1. Start a feature branch off main
 
 ```bash
 git fetch origin
-git checkout -b feature/my-change origin/staging
+git checkout -b feature/my-change origin/main
 ```
 
-Use `feature/`, `fix/`, or `docs/` prefix. Keep branches small — one feature or fix per branch. Push directly to `Kronkverse/kronk` — no personal fork needed, you are a collaborator.
+Use `feature/`, `fix/`, or `docs/` prefix. Keep branches small — one feature or fix per branch. Push directly to `Kronkverse/kronk` — no personal fork needed for active work.
 
 ### 2. Show work on the dev space
 
-Merge your branch into `staging` when you want it visible at https://dev.mastodon.kronk.info:
+Merge your feature branch into your personal `dev/<username>` branch, then merge that into `staging`:
 
 ```bash
+# Merge into your dev branch
+git checkout dev/<username>
+git pull origin dev/<username>
+git merge feature/my-change
+git push origin dev/<username>
+
+# Merge dev branch into staging
 git checkout staging
 git pull origin staging
-git merge feature/my-change
+git merge dev/<username>
 git push origin staging
 ```
 
-The dev space auto-deploys within a few minutes. Multiple contributors' work accumulates simultaneously — don't worry about overwriting others.
+The dev space auto-deploys within a few minutes. Multiple contributors' work accumulates simultaneously.
 
 The dev space is transient and may be down. If it is, ask Tal to start it.
 
 ### 3. Open a PR for production
 
-When your feature is tested on staging and ready to ship, open a PR from your **feature branch** to `main`. Tal reviews and merges — never run `gh pr merge` yourself.
+When your feature is tested and ready to ship, **first sync your feature branch with main**:
+
+```bash
+git checkout feature/my-change
+git fetch origin
+git merge origin/main
+git push origin feature/my-change
+```
+
+Then open a PR from your **feature branch** to `main`. Tal reviews and merges — never run `gh pr merge` yourself.
+
+**Claude agents: always merge origin/main into the feature branch before opening a PR. Do not skip this.**
 
 **Title:** short feature-name handle (`Nudges`, `The Booth`). Details go in the body.
 
@@ -128,7 +148,11 @@ When your feature is tested on staging and ready to ship, open a PR from your **
 
 ### 4. Clean up
 
-Delete your branch after it's merged to `main`.
+Delete your feature branch after it's merged to `main`.
+
+### Personal forks for background work
+
+Use a personal GitHub fork for exploratory or long-running background work. Only push to `Kronkverse/kronk` when actively building something for the platform.
 
 ---
 
