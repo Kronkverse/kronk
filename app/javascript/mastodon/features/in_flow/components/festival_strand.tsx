@@ -16,7 +16,13 @@ import {
   OrbitIcon,
 } from './celestial_icons';
 
-const FestivalIcon = ({ label, size = 22 }: { label: string; size?: number }) => {
+const FestivalIcon = ({
+  label,
+  size = 22,
+}: {
+  label: string;
+  size?: number;
+}) => {
   if (label.includes('Winter')) return <SnowflakeIcon size={size} />;
   if (label.includes('Summer') || label.includes('Lammas'))
     return <SunIcon size={size} />;
@@ -26,23 +32,23 @@ const FestivalIcon = ({ label, size = 22 }: { label: string; size?: number }) =>
     return <LeafIcon size={size} />;
   if (label.includes('Beltane')) return <FlameIcon size={size} />;
   return <OrbitIcon size={size} />;
-}
+};
 
 const FESTIVAL_DESCRIPTIONS: Record<string, string> = {
   'Autumn Equinox':
-    'Day and night arrive at equal length. From here the days shorten — the sun withdraws its daily portion toward the winter solstice.',
+    'Day and night arrive at equal length. From here the days shorten - the sun withdraws its daily portion toward the winter solstice.',
   'Winter Solstice':
-    'The longest night. The sun reaches its lowest arc and pauses — solstice means sun stands still. The turn back toward light begins now.',
+    'The longest night. The sun reaches its lowest arc and pauses - solstice means sun stands still. The turn back toward light begins now.',
   'Spring Equinox':
     "Day and night equal again, the balance tipping toward the light. The sun's angle is climbing; the land's generative surge begins.",
   'Summer Solstice':
-    "The longest day. The sun reaches its highest annual arc. Maximum daylight — the year's peak before the gradual withdrawal.",
+    "The longest day. The sun reaches its highest annual arc. Maximum daylight - the year's peak before the gradual withdrawal.",
   Lammas:
     'Midpoint between summer solstice and autumn equinox. The heat remains but the days have begun their slow retreat from the peak.',
   Samhain:
     'The sun is past the equinox, the days measurably shorter than the nights. Light retreats at its quickest pace around the cross-quarters.',
   Imbolc:
-    'Midpoint between winter solstice and spring equinox. The days lengthen again — slowly, but the direction has reversed.',
+    'Midpoint between winter solstice and spring equinox. The days lengthen again - slowly, but the direction has reversed.',
   Beltane:
     "The light has returned to generous lengths. The sun's angle climbs steeply. Growth energy accelerates across the land.",
 };
