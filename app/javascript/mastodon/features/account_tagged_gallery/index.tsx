@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, memo } from 'react';
+import { useEffect, useState, memo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -6,7 +6,6 @@ import { Link } from 'react-router-dom';
 
 import HeadphonesIcon from '@/material-icons/400-24px/headphones-fill.svg?react';
 import MovieIcon from '@/material-icons/400-24px/movie-fill.svg?react';
-import { openModal } from 'mastodon/actions/modal';
 import { apiGetTaggedMedia } from 'mastodon/api/media_tags';
 import type { ApiMediaAttachmentJSON } from 'mastodon/api_types/media_attachments';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
@@ -16,29 +15,17 @@ import { AccountHeader } from 'mastodon/features/account_timeline/components/acc
 import BundleColumnError from 'mastodon/features/ui/components/bundle_column_error';
 import Column from 'mastodon/features/ui/components/column';
 import { useAccountId } from 'mastodon/hooks/useAccountId';
-import { useAppDispatch, useAppSelector } from 'mastodon/store';
+import { useAppSelector } from 'mastodon/store';
 
 const TaggedGalleryItem = memo<{
   attachment: ApiMediaAttachmentJSON;
-  onOpenImage: (attachment: ApiMediaAttachmentJSON) => void;
-}>(({ attachment, onOpenImage }) => {
+}>(({ attachment }) => {
   const isVideo = attachment.type === 'video' || attachment.type === 'gifv';
   const isAudio = attachment.type === 'audio';
   const statusHref =
     attachment.status_account_acct && attachment.status_id
       ? `/@${attachment.status_account_acct}/${attachment.status_id}`
       : undefined;
-
-  const handleClick = useCallback(() => {
-    onOpenImage(attachment);
-  }, [attachment, onOpenImage]);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter') onOpenImage(attachment);
-    },
-    [attachment, onOpenImage],
-  );
 
   const thumbnail = (
     <img
@@ -58,7 +45,7 @@ const TaggedGalleryItem = memo<{
     </div>
   ) : null;
 
-  if (isVideo && statusHref) {
+  if (statusHref) {
     return (
       <div className='media-gallery__item media-gallery__item--square'>
         <Link to={statusHref} className='media-gallery__item-thumbnail'>
@@ -70,13 +57,7 @@ const TaggedGalleryItem = memo<{
   }
 
   return (
-    <div
-      className='media-gallery__item media-gallery__item--square'
-      role='button'
-      tabIndex={0}
-      onClick={handleClick}
-      onKeyDown={handleKeyDown}
-    >
+    <div className='media-gallery__item media-gallery__item--square'>
       {thumbnail}
       {overlay}
     </div>
@@ -87,7 +68,6 @@ TaggedGalleryItem.displayName = 'TaggedGalleryItem';
 export const AccountTaggedGallery: React.FC<{
   multiColumn: boolean;
 }> = ({ multiColumn }) => {
-  const dispatch = useAppDispatch();
   const accountId = useAccountId();
   const isAccount = useAppSelector((state) =>
     accountId ? !!state.accounts.get(accountId) : false,
@@ -107,21 +87,6 @@ export const AccountTaggedGallery: React.FC<{
         setIsLoading(false);
       });
   }, [accountId, isAccount]);
-
-  const handleOpenImage = useCallback(
-    (attachment: ApiMediaAttachmentJSON) => {
-      dispatch(
-        openModal({
-          modalType: 'IMAGE',
-          modalProps: {
-            src: attachment.url,
-            alt: attachment.description ?? '',
-          },
-        }),
-      );
-    },
-    [dispatch],
-  );
 
   if (accountId === null) {
     return <BundleColumnError multiColumn={multiColumn} errorType='routing' />;
@@ -148,11 +113,7 @@ export const AccountTaggedGallery: React.FC<{
         bindToDocument={!multiColumn}
       >
         {attachments.map((attachment) => (
-          <TaggedGalleryItem
-            key={attachment.id}
-            attachment={attachment}
-            onOpenImage={handleOpenImage}
-          />
+          <TaggedGalleryItem key={attachment.id} attachment={attachment} />
         ))}
       </ScrollableList>
     </Column>
