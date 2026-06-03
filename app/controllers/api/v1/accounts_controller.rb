@@ -293,11 +293,19 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def tagged_media
+    viewer_is_subject = current_account&.id == @account.id
+
+    visible_visibilities = if viewer_is_subject
+                             %i(public unlisted private)
+                           else
+                             %i(public unlisted)
+                           end
+
     attachments = @account.tagged_in_media
                           .includes(status: :account)
                           .where.not(status_id: nil)
                           .joins(:status)
-                          .merge(Status.where(visibility: %i(public unlisted)))
+                          .merge(Status.where(visibility: visible_visibilities))
                           .distinct
                           .order(id: :desc)
                           .limit(40)
