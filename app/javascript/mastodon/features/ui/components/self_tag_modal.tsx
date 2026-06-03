@@ -215,6 +215,20 @@ export const SelfTagModal: React.FC<{
     <div className='modal-root__modal tag-people-modal'>
       <div className='tag-people-modal__header'>
         <h3>{intl.formatMessage(messages.title)}</h3>
+        <div className='tag-people-modal__header-actions'>
+          {myId && (
+            <button
+              type='button'
+              className='tag-people-modal__tag-myself-btn'
+              onClick={handleTagMyself}
+            >
+              <FormattedMessage
+                id='tag_media.tag_myself'
+                defaultMessage='Tag myself'
+              />
+            </button>
+          )}
+        </div>
         <p className='tag-people-modal__hint'>
           {intl.formatMessage(messages.clickToPlace)}
         </p>
@@ -264,18 +278,6 @@ export const SelfTagModal: React.FC<{
 
         {pendingPin && (
           <div className='tag-people-modal__search'>
-            <div className='tag-people-modal__search-actions'>
-              <button
-                type='button'
-                className='tag-people-modal__tag-myself-btn'
-                onClick={handleTagMyself}
-              >
-                <FormattedMessage
-                  id='tag_media.tag_myself'
-                  defaultMessage='Tag myself'
-                />
-              </button>
-            </div>
             <input
               // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
@@ -298,9 +300,9 @@ export const SelfTagModal: React.FC<{
                 ))}
               </ul>
             )}
-            {error && <p className='tag-people-modal__error'>{error}</p>}
           </div>
         )}
+        {error && <p className='tag-people-modal__error'>{error}</p>}
       </div>
 
       {existingTags.length > 0 && (
