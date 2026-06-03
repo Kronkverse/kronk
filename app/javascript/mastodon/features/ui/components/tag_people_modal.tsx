@@ -8,10 +8,9 @@ import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import {
   getPendingTags,
-  setPendingTags
-  
+  setPendingTags,
 } from 'mastodon/features/compose/utils/pending_media_tags';
-import type {PendingTag} from 'mastodon/features/compose/utils/pending_media_tags';
+import type { PendingTag } from 'mastodon/features/compose/utils/pending_media_tags';
 import { useAppDispatch } from 'mastodon/store';
 
 const messages = defineMessages({
@@ -36,7 +35,11 @@ const SuggestionItem = memo<{
     onSelect(account);
   }, [account, onSelect]);
   return (
-    <button type='button' onClick={handleClick}>
+    <button
+      type='button'
+      className='tag-people-modal__suggestion-btn'
+      onClick={handleClick}
+    >
       <Avatar account={account as never} size={24} />
       <span>{account.display_name || account.username}</span>
       <span className='tag-people-modal__acct'>@{account.acct}</span>
@@ -54,7 +57,12 @@ const RemoveTagButton = memo<{
     onRemove(accountId);
   }, [accountId, onRemove]);
   return (
-    <button type='button' onClick={handleClick} aria-label={label}>
+    <button
+      type='button'
+      className='tag-people-modal__remove-btn'
+      onClick={handleClick}
+      aria-label={label}
+    >
       ×
     </button>
   );

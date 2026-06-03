@@ -156,8 +156,9 @@ export const SelfTagModal: React.FC<{
   );
 
   const applyTag = useCallback(
-    (accountId: string) => {
-      if (!pendingPin) return;
+    (accountId: string, pinOverride?: { x: number; y: number }) => {
+      const effectivePin = pinOverride ?? pendingPin;
+      if (!effectivePin) return;
       const alreadyTagged = existingTags.some(
         (t) => t.account_id === accountId,
       );
@@ -165,7 +166,7 @@ export const SelfTagModal: React.FC<{
         setError(intl.formatMessage(messages.alreadyTagged));
         return;
       }
-      const { x, y } = pendingPin;
+      const { x, y } = effectivePin;
       apiAddMediaTag(mediaId, accountId, x, y)
         .then((tag) => {
           setExistingTags((prev) => [...prev, tag]);
@@ -192,8 +193,9 @@ export const SelfTagModal: React.FC<{
 
   const handleTagMyself = useCallback(() => {
     if (!myId) return;
-    if (!pendingPin) setPendingPin({ x: 0.5, y: 0.5 });
-    applyTag(myId);
+    const pin = pendingPin ?? { x: 0.5, y: 0.5 };
+    if (!pendingPin) setPendingPin(pin);
+    applyTag(myId, pin);
   }, [myId, pendingPin, applyTag]);
 
   const handleRemoveTag = useCallback(

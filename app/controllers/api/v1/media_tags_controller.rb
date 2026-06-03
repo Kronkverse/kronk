@@ -10,18 +10,21 @@ class Api::V1::MediaTagsController < Api::BaseController
   end
 
   def create
+    tagged_account = Account.find_by(id: params[:account_id])
+    return render json: { error: 'Account not found' }, status: 422 if tagged_account.nil?
+
     status = @media_attachment.status
 
     if status.present?
-      # Posted media — anyone can tag anyone as long as the post is public/unlisted
       return render json: { error: 'Forbidden' }, status: 403 unless %w(public unlisted).include?(status.visibility)
     else
-      # Unposted (compose flow) — only the uploader can tag
       return render json: { error: 'Forbidden' }, status: 403 unless @media_attachment.account_id == current_account.id
     end
 
+    return render json: { error: 'Already tagged' }, status: 422 if @media_attachment.media_tags.exists?(account_id: tagged_account.id)
+
     tag = @media_attachment.media_tags.create!(
-      account_id: params[:account_id],
+      account: tagged_account,
       created_by_account: current_account,
       x: params.fetch(:x, 0.5).to_f.clamp(0.0, 1.0),
       y: params.fetch(:y, 0.5).to_f.clamp(0.0, 1.0)
