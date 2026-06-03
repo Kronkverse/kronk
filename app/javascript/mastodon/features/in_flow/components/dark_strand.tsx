@@ -34,33 +34,33 @@ function getMoonContextDescription(
 ): string {
   const base: Record<string, string> = {
     new_moon:
-      'The moon is absent from the sky — the darkest nights of the cycle.',
+      'The moon is absent from the sky - the darkest nights of the cycle.',
     waxing_crescent:
       'A thin crescent follows the sun toward the western horizon after dusk.',
     first_quarter:
       'Half the face is lit, setting near midnight. Look along the terminator for deep crater shadows.',
     waxing_gibbous:
-      'Growing toward full — the terminator retreats and the lunar surface opens up.',
+      'Growing toward full - the terminator retreats and the lunar surface opens up.',
     full_moon: 'The moon rises at sunset and holds the sky all night.',
     waning_gibbous:
       'Past full now, the moon rises later into the evening and stays into morning.',
     last_quarter:
       'Rising near midnight, the half-lit moon leaves early evenings beautifully dark.',
     waning_crescent:
-      'A sliver hangs in the pre-dawn east — evenings are quiet and dark.',
+      'A sliver hangs in the pre-dawn east - evenings are quiet and dark.',
   };
 
   const parts: string[] = [base[phase] ?? ''];
 
   if (superMoon.isSuper && (phase === 'full_moon' || phase === 'new_moon')) {
     parts.push(
-      `At ${String(Math.round(superMoon.distanceKm / 1000))}k km away, the moon is at perigee — a supermoon, closer and brighter than usual.`,
+      `At ${String(Math.round(superMoon.distanceKm / 1000))}k km away, the moon is at perigee - a supermoon, closer and brighter than usual.`,
     );
   }
 
   if (meteorPeak) {
     parts.push(
-      `The ${meteorPeak.name} shower peaks tonight, radiating from ${constellationName} — up to ${String(meteorPeak.zenithalHourlyRate)} meteors per hour if the sky is clear.`,
+      `The ${meteorPeak.name} shower peaks tonight, radiating from ${constellationName} - up to ${String(meteorPeak.zenithalHourlyRate)} meteors per hour if the sky is clear.`,
     );
   }
 
@@ -70,9 +70,9 @@ function getMoonContextDescription(
 // Observable constellation directions for Melbourne sky
 const CONSTELLATION_OBSERVABLE: Record<string, string> = {
   Sagittarius:
-    "Face north after dark — Sagittarius sits low on the northern horizon from Melbourne. Its teapot asterism (six or seven stars in a kettle shape) is best seen on clear evenings from late autumn into winter. The Milky Way appears to rise from the teapot's spout.",
+    "Face north after dark - Sagittarius sits low on the northern horizon from Melbourne. Its teapot asterism (six or seven stars in a kettle shape) is best seen on clear evenings from late autumn into winter. The Milky Way appears to rise from the teapot's spout.",
   Capricornus:
-    'Look northeast after sunset. Capricornus is a faint constellation — no bright stars — but its distinctive triangular arc of dim points can be traced from about 60° above the northeastern horizon.',
+    'Look northeast after sunset. Capricornus is a faint constellation - no bright stars - but its distinctive triangular arc of dim points can be traced from about 60° above the northeastern horizon.',
   Aquarius:
     'Aquarius is large but faint. Find it in the northern sky: look for Sadalsuud, its brightest star (still only magnitude 2.9), roughly northeast at dusk. No prominent shape; best appreciated under dark skies away from city light.',
   Pisces:
@@ -80,20 +80,20 @@ const CONSTELLATION_OBSERVABLE: Record<string, string> = {
   Aries:
     'Aries contains just three moderately bright stars in a shallow arc. Find Hamal (the brightest, magnitude 2.0) in the north-northeast sky. The arc opens toward Taurus to the east.',
   Taurus:
-    'Taurus is prominent. Look north-northeast for the distinct V of the Hyades cluster with orange Aldebaran at its tip — the brightest star in that region of sky. The Pleiades (Seven Sisters) sparkle as a compact blue-white smudge to the upper-right of Aldebaran.',
+    'Taurus is prominent. Look north-northeast for the distinct V of the Hyades cluster with orange Aldebaran at its tip - the brightest star in that region of sky. The Pleiades (Seven Sisters) sparkle as a compact blue-white smudge to the upper-right of Aldebaran.',
   Gemini:
     'Find Gemini in the northern sky: Castor and Pollux are the two bright stars side by side near the top. From Melbourne they sit fairly low in the north but are still easy naked-eye objects. Pollux is slightly brighter and has a distinctly warm tint.',
   Cancer:
-    'Cancer is faint — best located between the bright stars Pollux (in Gemini) to the west and Regulus (in Leo) to the east. Under dark skies, look for the Beehive Cluster (M44), a fuzzy patch visible to the naked eye.',
-  Leo: 'Leo is striking. Look north for the Sickle — a backward question-mark shape with bright Regulus at its base. Regulus sits on the ecliptic; the moon and planets regularly pass close to it. From Melbourne, Leo transits the northern sky at a reasonable altitude.',
+    'Cancer is faint - best located between the bright stars Pollux (in Gemini) to the west and Regulus (in Leo) to the east. Under dark skies, look for the Beehive Cluster (M44), a fuzzy patch visible to the naked eye.',
+  Leo: 'Leo is striking. Look north for the Sickle - a backward question-mark shape with bright Regulus at its base. Regulus sits on the ecliptic; the moon and planets regularly pass close to it. From Melbourne, Leo transits the northern sky at a reasonable altitude.',
   Virgo:
     'Virgo is the largest zodiacal constellation. Find brilliant blue-white Spica in the north-northwest (a spike of light, hard to miss). The rest of the constellation spreads westward and northward from Spica in a Y-shape.',
   Libra:
     'Libra sits between Virgo (to the west) and Scorpius (to the east). Its two brightest stars form a rough trapezoid. Zubenelgenubi is just wide enough to split into two stars with the naked eye under steady conditions.',
   Ophiuchus:
-    "Ophiuchus is large and sits above Scorpius in the northern sky. Its brightest star Rasalhague marks the serpent bearer's head. The constellation straddles the Milky Way — look for a broad, slightly irregular polygon of stars between Scorpius below and Hercules above.",
+    "Ophiuchus is large and sits above Scorpius in the northern sky. Its brightest star Rasalhague marks the serpent bearer's head. The constellation straddles the Milky Way - look for a broad, slightly irregular polygon of stars between Scorpius below and Hercules above.",
   Scorpius:
-    'Scorpius is one of the most beautiful constellations and from Melbourne it sits high — almost overhead in mid-winter evenings. Look for orange-red Antares at the heart, with the fishhook curve of stars sweeping to the south. The tail ends in two close stars (the stinger): Shaula and Lesath.',
+    'Scorpius is one of the most beautiful constellations and from Melbourne it sits high - almost overhead in mid-winter evenings. Look for orange-red Antares at the heart, with the fishhook curve of stars sweeping to the south. The tail ends in two close stars (the stinger): Shaula and Lesath.',
 };
 
 function nowInLocation(): { year: number; month: number; day: number } {
