@@ -33,7 +33,7 @@ const messages = defineMessages({
   next: { id: 'lightbox.next', defaultMessage: 'Next' },
   zoomIn: { id: 'lightbox.zoom_in', defaultMessage: 'Zoom to actual size' },
   zoomOut: { id: 'lightbox.zoom_out', defaultMessage: 'Zoom to fit' },
-  tagYourself: { id: 'lightbox.tag_yourself', defaultMessage: 'Tag yourself' },
+  tagYourself: { id: 'lightbox.tag_people', defaultMessage: 'Tag people' },
 });
 
 class MediaModal extends ImmutablePureComponent {
