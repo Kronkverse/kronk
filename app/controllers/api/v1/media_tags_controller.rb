@@ -16,11 +16,14 @@ class Api::V1::MediaTagsController < Api::BaseController
     return render json: { error: 'Account not found' }, status: 422 if tagged_account.nil?
 
     status = @media_attachment.status
+    is_owner = @media_attachment.account_id == current_account.id
 
     if status.present?
-      return render json: { error: 'Forbidden' }, status: 403 unless %w(public unlisted).include?(status.visibility)
+      # Post owner can tag in any visibility; others only on public/unlisted
+      return render json: { error: 'Forbidden' }, status: 403 unless is_owner || %w(public unlisted).include?(status.visibility)
     else
-      return render json: { error: 'Forbidden' }, status: 403 unless @media_attachment.account_id == current_account.id
+      # Unattached media: only the uploader can tag
+      return render json: { error: 'Forbidden' }, status: 403 unless is_owner
     end
 
     return render json: { error: 'Already tagged' }, status: 422 if @media_attachment.media_tags.exists?(account_id: tagged_account.id)
