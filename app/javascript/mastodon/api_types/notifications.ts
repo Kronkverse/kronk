@@ -199,11 +199,13 @@ interface NudgeNotificationJSON extends BaseNotificationJSON {
 interface MediaTagNotificationGroupJSON extends BaseNotificationGroupJSON {
   type: 'media_tag';
   media_tag_preview_url: string | null;
+  media_tag_status_path: string | null;
 }
 
 interface MediaTagNotificationJSON extends BaseNotificationJSON {
   type: 'media_tag';
   media_tag_preview_url: string | null;
+  media_tag_status_path: string | null;
 }
 
 export type ApiNotificationJSON =
