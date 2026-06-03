@@ -11,7 +11,7 @@ class Api::V1::AccountsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:blocks' }, only: [:block, :unblock]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:create]
 
-  before_action :require_user!, except: [:index, :show, :create]
+  before_action :require_user!, except: [:index, :show, :create, :tagged_media]
   before_action :require_client_credentials!, only: [:create]
   before_action :set_account, except: [:index, :create, :nudge_history, :nudge_partners, :nudge_pending_count]
   before_action :set_accounts, only: [:index]
@@ -293,6 +293,8 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def tagged_media
+    cache_if_unauthenticated!
+
     viewer_is_subject = current_account&.id == @account.id
 
     visible_visibilities = if viewer_is_subject
@@ -302,7 +304,7 @@ class Api::V1::AccountsController < Api::BaseController
                            end
 
     attachments = @account.tagged_in_media
-                          .includes(status: :account)
+                          .includes(status: :account, media_tags: :account)
                           .where.not(status_id: nil)
                           .joins(:status)
                           .merge(Status.where(visibility: visible_visibilities))
