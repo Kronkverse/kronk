@@ -26,7 +26,12 @@ export const apiAddMediaTag = (
 export const apiRemoveMediaTag = (mediaId: string, accountId: string) =>
   api().delete(`/api/v1/media/${mediaId}/tags/${accountId}`);
 
-export const apiGetTaggedMedia = (accountId: string) =>
+export const apiGetTaggedMedia = (accountId: string, maxId?: string) =>
   api()
-    .get<ApiMediaAttachmentJSON[]>(`/api/v1/accounts/${accountId}/tagged_media`)
+    .get<ApiMediaAttachmentJSON[]>(
+      `/api/v1/accounts/${accountId}/tagged_media`,
+      {
+        params: maxId ? { max_id: maxId } : undefined,
+      },
+    )
     .then((r) => r.data);

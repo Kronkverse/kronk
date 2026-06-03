@@ -308,6 +308,7 @@ class Api::V1::AccountsController < Api::BaseController
                           .merge(Status.where(visibility: visible_visibilities))
                           .distinct
                           .order(id: :desc)
+                          .then { |q| params[:max_id].present? ? q.where(media_attachments: { id: ...params[:max_id].to_i }) : q }
                           .limit(40)
 
     render json: attachments, each_serializer: REST::TaggedMediaSerializer

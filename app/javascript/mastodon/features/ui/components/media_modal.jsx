@@ -17,6 +17,7 @@ import FitScreenIcon from '@/material-icons/400-24px/fit_screen.svg?react';
 import TagIcon from '@/material-icons/400-24px/tag.svg?react';
 import ActualSizeIcon from '@/svg-icons/actual_size.svg?react';
 import { openModal } from 'mastodon/actions/modal';
+import { apiGetMediaTags } from 'mastodon/api/media_tags';
 import { getAverageFromBlurhash } from 'mastodon/blurhash';
 import { GIFV } from 'mastodon/components/gifv';
 import { Icon }  from 'mastodon/components/icon';
@@ -56,6 +57,7 @@ class MediaModal extends ImmutablePureComponent {
     index: null,
     navigationHidden: false,
     zoomedIn: false,
+    mediaTags: {},
   };
 
   handleZoomClick = () => {
@@ -125,12 +127,36 @@ class MediaModal extends ImmutablePureComponent {
     window.addEventListener('keydown', this.handleKeyDown, false);
 
     this._sendBackgroundColor();
+    this._fetchTagsForCurrent();
   }
 
   componentDidUpdate (prevProps, prevState) {
-    if (prevState.index !== this.state.index) {
+    const index = this.getIndex();
+    const prevIndex = prevState.index !== null ? prevState.index : this.props.index;
+
+    if (prevIndex !== index) {
       this._sendBackgroundColor();
+      this._fetchTagsForCurrent();
     }
+  }
+
+  _fetchTagsForCurrent () {
+    const { media } = this.props;
+    const index = this.getIndex();
+    const current = media.get(index);
+    if (!current) return;
+    const type = current.get('type');
+    if (type !== 'image' && type !== 'gifv' && type !== 'video') return;
+    const mediaId = current.get('id');
+    if (!mediaId) return;
+    if (this.state.mediaTags[mediaId] !== undefined) return;
+    apiGetMediaTags(mediaId)
+      .then(tags => {
+        this.setState(prev => ({ mediaTags: { ...prev.mediaTags, [mediaId]: tags } }));
+      })
+      .catch(() => {
+        this.setState(prev => ({ mediaTags: { ...prev.mediaTags, [mediaId]: [] } }));
+      });
   }
 
   _sendBackgroundColor () {
@@ -178,7 +204,7 @@ class MediaModal extends ImmutablePureComponent {
 
   render () {
     const { media, statusId, lang, intl, onClose } = this.props;
-    const { navigationHidden, zoomedIn, viewportWidth, viewportHeight } = this.state;
+    const { navigationHidden, zoomedIn, viewportWidth, viewportHeight, mediaTags } = this.state;
 
     const index = this.getIndex();
 
@@ -270,8 +296,44 @@ class MediaModal extends ImmutablePureComponent {
     }
 
     const currentMedia = media.get(index);
-    const zoomable = currentMedia.get('type') === 'image' && (currentMedia.getIn(['meta', 'original', 'width']) > viewportWidth || currentMedia.getIn(['meta', 'original', 'height']) > viewportHeight);
-    const taggable = currentMedia.get('type') !== 'audio' && currentMedia.get('type') !== 'unknown';
+    const mediaType = currentMedia.get('type');
+    const zoomable = mediaType === 'image' && (currentMedia.getIn(['meta', 'original', 'width']) > viewportWidth || currentMedia.getIn(['meta', 'original', 'height']) > viewportHeight);
+    const taggable = mediaType !== 'audio' && mediaType !== 'unknown';
+
+    // Compute tag pin positions using object-fit: contain math
+    let tagPins = null;
+    const currentMediaId = currentMedia.get('id');
+    const currentTags = currentMediaId ? mediaTags[currentMediaId] : undefined;
+    if (!zoomedIn && currentTags && currentTags.length > 0 && viewportWidth && viewportHeight) {
+      const imgW = currentMedia.getIn(['meta', 'original', 'width']);
+      const imgH = currentMedia.getIn(['meta', 'original', 'height']);
+      if (imgW && imgH) {
+        const scale = Math.min(viewportWidth / imgW, viewportHeight / imgH);
+        const renderedW = imgW * scale;
+        const renderedH = imgH * scale;
+        const offsetX = (viewportWidth - renderedW) / 2;
+        const offsetY = (viewportHeight - renderedH) / 2;
+
+        tagPins = (
+          <div className='media-tag-pins' aria-hidden>
+            {currentTags.map(tag => {
+              const pinX = offsetX + tag.x * renderedW;
+              const pinY = offsetY + tag.y * renderedH;
+              const label = tag.account?.display_name ?? tag.account?.username ?? '';
+              return (
+                <div
+                  key={tag.account_id}
+                  className='media-tag-pin'
+                  style={{ left: pinX, top: pinY }}
+                >
+                  {label && <span className='media-tag-pin__label'>{label}</span>}
+                </div>
+              );
+            })}
+          </div>
+        );
+      }
+    }
 
     return (
       <div className='modal-root__modal media-modal' ref={this.setRef}>
@@ -286,6 +348,7 @@ class MediaModal extends ImmutablePureComponent {
           >
             {content}
           </ReactSwipeableViews>
+          {tagPins}
         </div>
 
         <div className={navigationClassName}>

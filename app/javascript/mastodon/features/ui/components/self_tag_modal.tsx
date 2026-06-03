@@ -205,8 +205,17 @@ export const SelfTagModal: React.FC<{
           setExistingTags((prev) =>
             prev.filter((t) => t.account_id !== accountId),
           );
+          setError(null);
         })
-        .catch(() => undefined);
+        .catch((err: unknown) => {
+          const status = (err as { response?: { status?: number } }).response
+            ?.status;
+          if (status === 403) {
+            setError('You can only remove your own tag');
+          } else {
+            setError('Could not remove tag');
+          }
+        });
     },
     [mediaId],
   );
@@ -253,14 +262,7 @@ export const SelfTagModal: React.FC<{
               style={{ left: `${tag.x * 100}%`, top: `${tag.y * 100}%` }}
             >
               <span className='tag-people-modal__pin-label'>
-                {(
-                  tag.account as {
-                    display_name?: string;
-                    username?: string;
-                  } | null
-                )?.display_name ??
-                  (tag.account as { username?: string } | null)?.username ??
-                  ''}
+                {tag.account?.display_name ?? tag.account?.username ?? ''}
               </span>
             </div>
           ))}
@@ -310,13 +312,8 @@ export const SelfTagModal: React.FC<{
           {existingTags.map((tag) => (
             <li key={tag.account_id}>
               <span>
-                {(
-                  tag.account as {
-                    display_name?: string;
-                    username?: string;
-                  } | null
-                )?.display_name ??
-                  (tag.account as { username?: string } | null)?.username ??
+                {tag.account?.display_name ??
+                  tag.account?.username ??
                   tag.account_id}
               </span>
               <RemoveTagButton
