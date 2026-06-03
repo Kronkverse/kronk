@@ -154,7 +154,7 @@ Rails.application.routes.draw do
       get '/@:username/featured'
       get '/@:username/with_replies', as: :short_account_with_replies
       get '/@:username/media', as: :short_account_media
-      get '/@:username/tagged-media', as: :short_account_tagged_media
+
       get '/@:username/nudges', as: :short_account_nudges
       get '/@:username/tagged/:tag', as: :short_account_tag
     end

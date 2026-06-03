@@ -74,9 +74,13 @@ class AccountStatusesFilter
     return Status.none if account.unavailable?
     return Status.none if !anonymous? && blocked?
 
-    # Own posts that have media
+    # Own posts that have media (visibility-filtered for non-authors)
     own = account.statuses
-    own = own.distributable_visibility if anonymous?
+    if anonymous?
+      own = own.distributable_visibility
+    elsif !author?
+      own = own.where(visibility: follower? ? %i(public unlisted private) : %i(public unlisted))
+    end
     own = own.joins(:media_attachments).where(media_attachments: { account_id: account.id })
 
     # Public/unlisted posts from other accounts where this account is tagged in media
