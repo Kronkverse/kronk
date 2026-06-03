@@ -1,4 +1,4 @@
-import { useEffect, useState, memo } from 'react';
+import { useEffect, useState, useCallback, memo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -16,6 +16,8 @@ import BundleColumnError from 'mastodon/features/ui/components/bundle_column_err
 import Column from 'mastodon/features/ui/components/column';
 import { useAccountId } from 'mastodon/hooks/useAccountId';
 import { useAppSelector } from 'mastodon/store';
+
+const PAGE_SIZE = 40;
 
 const TaggedGalleryItem = memo<{
   attachment: ApiMediaAttachmentJSON;
@@ -74,6 +76,7 @@ export const AccountTaggedGallery: React.FC<{
   );
   const [attachments, setAttachments] = useState<ApiMediaAttachmentJSON[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     if (!accountId || !isAccount) return;
@@ -81,12 +84,29 @@ export const AccountTaggedGallery: React.FC<{
     void apiGetTaggedMedia(accountId)
       .then((data) => {
         setAttachments(data);
+        setHasMore(data.length === PAGE_SIZE);
         setIsLoading(false);
       })
       .catch(() => {
         setIsLoading(false);
       });
   }, [accountId, isAccount]);
+
+  const handleLoadMore = useCallback(() => {
+    if (!accountId || isLoading || attachments.length === 0) return;
+    const lastId = attachments[attachments.length - 1]?.id;
+    if (!lastId) return;
+    setIsLoading(true);
+    void apiGetTaggedMedia(accountId, lastId)
+      .then((data) => {
+        setAttachments((prev) => [...prev, ...data]);
+        setHasMore(data.length === PAGE_SIZE);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setIsLoading(false);
+      });
+  }, [accountId, isLoading, attachments]);
 
   if (accountId === null) {
     return <BundleColumnError multiColumn={multiColumn} errorType='routing' />;
@@ -104,6 +124,8 @@ export const AccountTaggedGallery: React.FC<{
         alwaysPrepend
         scrollKey='account_tagged_gallery'
         isLoading={isLoading}
+        hasMore={hasMore}
+        onLoadMore={handleLoadMore}
         emptyMessage={
           <FormattedMessage
             id='empty_column.account_tagged_gallery'
