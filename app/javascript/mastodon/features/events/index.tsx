@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { useIntl, defineMessages, FormattedMessage } from 'react-intl';
 
@@ -7,20 +7,37 @@ import { Helmet } from 'react-helmet';
 import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { DarkStrand } from 'mastodon/features/in_flow/components/dark_strand';
-import { EarthStrand } from 'mastodon/features/in_flow/components/earth_strand';
-import { FestivalStrand } from 'mastodon/features/in_flow/components/festival_strand';
-import { LightStrand } from 'mastodon/features/in_flow/components/light_strand';
 import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
 import { CreateEventForm } from './components/create_event_form';
+import { EventCalendar } from './components/event_calendar';
 import { EventCard } from './components/event_card';
 import { InviteFollowersPanel } from './components/invite_followers_panel';
-import { TemporalArc } from './components/temporal_arc';
 
 const messages = defineMessages({
   title: { id: 'events.title', defaultMessage: '₭alendar' },
+  heroIntro: {
+    id: 'events.hero_intro',
+    defaultMessage:
+      'Find and share gatherings in the Kronk community. From live rooms to in-person meetups.',
+  },
 });
+
+const filterMessages = {
+  upcoming: (
+    <FormattedMessage id='events.filter.upcoming' defaultMessage='Upcoming' />
+  ),
+  past: <FormattedMessage id='events.filter.past' defaultMessage='Past' />,
+  mine: (
+    <FormattedMessage
+      id='events.filter.mine'
+      defaultMessage='My ₭alendar Events'
+    />
+  ),
+  invited: (
+    <FormattedMessage id='events.filter.invited' defaultMessage='Invited' />
+  ),
+};
 
 interface Event {
   id: string;
@@ -54,35 +71,24 @@ interface EventAccount {
   url: string;
 }
 
-type StrandTab = 'light' | 'dark' | 'soil' | 'season';
-const STRAND_TABS: StrandTab[] = ['light', 'dark', 'soil', 'season'];
-
-const STRAND_LABELS: Record<StrandTab, string> = {
-  light: 'Light',
-  dark: 'Dark',
-  soil: 'Soil',
-  season: 'Season',
-};
+type FilterType = 'upcoming' | 'past' | 'mine' | 'invited';
 
 const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const [events, setEvents] = useState<Event[]>([]);
+  const [filter, setFilter] = useState<FilterType>('upcoming');
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
-  const [focusedDate, setFocusedDate] = useState<Date>(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  });
-  const [activeStrand, setActiveStrand] = useState<StrandTab>('light');
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api().get('/api/v1/events', {
-        params: { filter: 'upcoming' },
+        params: { filter },
       });
       setEvents(response.data as Event[]);
     } catch (err) {
@@ -90,7 +96,7 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filter]);
 
   useEffect(() => {
     void fetchEvents();
@@ -138,38 +144,31 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setShowForm(true);
   }, []);
 
+  const handleSetFilter = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      setFilter(e.currentTarget.dataset.filter as FilterType);
+    },
+    [],
+  );
+
+  const handleListView = useCallback(() => {
+    setViewMode('list');
+  }, []);
+
+  const handleCalendarView = useCallback(() => {
+    setViewMode('calendar');
+  }, []);
+
+  const handleMonthChange = useCallback((m: Date) => {
+    setSelectedMonth(m);
+  }, []);
+
   const handleRsvpVoid = useCallback(
     (id: string, status: string) => {
       void handleRsvp(id, status);
     },
     [handleRsvp],
   );
-
-  const handleStrandSelect = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
-      setActiveStrand(e.currentTarget.dataset.strand as StrandTab);
-    },
-    [],
-  );
-
-  const eventsForDate = useMemo(() => {
-    return events.filter((ev) => {
-      const d = new Date(ev.start_time);
-      return (
-        d.getFullYear() === focusedDate.getFullYear() &&
-        d.getMonth() === focusedDate.getMonth() &&
-        d.getDate() === focusedDate.getDate()
-      );
-    });
-  }, [events, focusedDate]);
-
-  const focusedDateLabel = focusedDate.toLocaleDateString('en-AU', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
-
-  const isToday = focusedDate.toDateString() === new Date().toDateString();
 
   return (
     <Column>
@@ -185,18 +184,58 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       </Helmet>
 
       <div
-        className='events-page events-page--wheel'
+        className='events-page'
         style={
           { '--space-color': spaceColor('Kalendar') } as React.CSSProperties
         }
       >
-        <div className='events-page__wheel-header'>
-          <h1 className='events-page__wheel-title'>
+        <section className='events-page__hero'>
+          <h1 className='events-page__hero-title'>
             {intl.formatMessage(messages.title)}
           </h1>
-          <button className='events-page__create-btn' onClick={handleNewEvent}>
-            <FormattedMessage id='events.create' defaultMessage='+ Host' />
-          </button>
+          <p className='events-page__hero-intro'>
+            {intl.formatMessage(messages.heroIntro)}
+          </p>
+        </section>
+
+        <div className='events-page__header'>
+          <div className='events-page__filters'>
+            {(['upcoming', 'past', 'mine', 'invited'] as FilterType[]).map(
+              (f) => (
+                <button
+                  key={f}
+                  data-filter={f}
+                  className={`events-page__filter ${filter === f ? 'active' : ''}`}
+                  onClick={handleSetFilter}
+                >
+                  {filterMessages[f]}
+                </button>
+              ),
+            )}
+          </div>
+
+          <div className='events-page__actions'>
+            <div className='events-page__view-toggle-group'>
+              <button
+                className={`events-page__view-toggle ${viewMode === 'list' ? 'active' : ''}`}
+                onClick={handleListView}
+              >
+                List
+              </button>
+              <button
+                className={`events-page__view-toggle ${viewMode === 'calendar' ? 'active' : ''}`}
+                onClick={handleCalendarView}
+              >
+                Month
+              </button>
+            </div>
+            <button
+              className='events-page__create-btn'
+              onClick={handleNewEvent}
+            >
+              <FormattedMessage id='events.create' defaultMessage='+ Host' />
+            </button>
+          </div>
         </div>
 
         {showForm && (
@@ -214,77 +253,48 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           />
         )}
 
-        <TemporalArc events={events} onFocusDate={setFocusedDate} />
-
-        <div className='events-page__day-header'>
-          <span className='events-page__day-label'>
-            {isToday ? (
-              <FormattedMessage id='events.today' defaultMessage='Today' />
-            ) : (
-              focusedDateLabel
-            )}
-          </span>
-        </div>
-
-        <div className='events-page__day-events'>
-          {loading && events.length === 0 ? (
-            <div className='events-page__empty'>
-              <FormattedMessage
-                id='events.loading'
-                defaultMessage='Loading ₭alendar...'
+        {viewMode === 'calendar' ? (
+          <EventCalendar
+            events={events}
+            selectedMonth={selectedMonth}
+            onMonthChange={handleMonthChange}
+          />
+        ) : (
+          <>
+            <div className='events-page__list'>
+              {loading && events.length === 0 && (
+                <div className='events-page__empty'>
+                  <FormattedMessage
+                    id='events.loading'
+                    defaultMessage='Loading ₭alendar...'
+                  />
+                </div>
+              )}
+              {!loading && events.length === 0 && (
+                <div className='events-page__empty'>
+                  <FormattedMessage
+                    id='events.empty'
+                    defaultMessage='No events in ₭alendar'
+                  />
+                </div>
+              )}
+              {events.map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  onRsvp={handleRsvpVoid}
+                />
+              ))}
+            </div>
+            <div className='events-page__calendar-section'>
+              <EventCalendar
+                events={events}
+                selectedMonth={selectedMonth}
+                onMonthChange={handleMonthChange}
               />
             </div>
-          ) : eventsForDate.length === 0 ? (
-            <div className='events-page__no-events'>
-              <FormattedMessage
-                id='events.no_events_day'
-                defaultMessage='No gatherings on this day'
-              />
-            </div>
-          ) : (
-            eventsForDate.map((event) => (
-              <EventCard key={event.id} event={event} onRsvp={handleRsvpVoid} />
-            ))
-          )}
-        </div>
-
-        <div className='events-page__in-flow'>
-          <div className='events-page__strand-tabs'>
-            {STRAND_TABS.map((tab) => (
-              <button
-                key={tab}
-                data-strand={tab}
-                className={`events-page__strand-tab${activeStrand === tab ? ' events-page__strand-tab--active' : ''}`}
-                onClick={handleStrandSelect}
-              >
-                {STRAND_LABELS[tab]}
-              </button>
-            ))}
-          </div>
-
-          <div className='events-page__strand-content'>
-            {activeStrand === 'light' && (
-              <div className='events-page__strand-panel' key='light'>
-                <LightStrand />
-              </div>
-            )}
-            {activeStrand === 'dark' && (
-              <div className='events-page__strand-panel' key='dark'>
-                <DarkStrand />
-              </div>
-            )}
-            {activeStrand === 'soil' && (
-              <div className='events-page__strand-panel' key='soil'>
-                <EarthStrand />
-              </div>
-            )}
-            {activeStrand === 'season' && (
-              <div className='events-page__strand-panel' key='season'>
-                <FestivalStrand />
-              </div>
-            )}
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </Column>
   );
