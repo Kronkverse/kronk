@@ -56,7 +56,7 @@ class Api::V1::MediaTagsController < Api::BaseController
   private
 
   def set_media_attachment
-    @media_attachment = MediaAttachment.find(params[:media_id])
+    @media_attachment = MediaAttachment.find(params[:medium_id])
   rescue ActiveRecord::RecordNotFound
     not_found
   end
