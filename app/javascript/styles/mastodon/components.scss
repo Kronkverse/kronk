@@ -13429,6 +13429,12 @@ noscript {
     margin: 4px 0 0;
   }
 
+  &__error {
+    color: $error-red;
+    font-size: 13px;
+    padding: 8px 12px 0;
+  }
+
   &__image-wrapper {
     display: flex;
     flex-direction: column;

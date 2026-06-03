@@ -27,7 +27,11 @@ export const SelfTagModal: React.FC<{
     y: 0.5,
   });
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const close = useCallback(() => {
+    dispatch(closeModal({ modalType: 'SELF_TAG', ignoreFocus: false }));
+  }, [dispatch]);
 
   const handleImageClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -37,6 +41,7 @@ export const SelfTagModal: React.FC<{
         x: (e.clientX - rect.left) / rect.width,
         y: (e.clientY - rect.top) / rect.height,
       });
+      setError(null);
     },
     [],
   );
@@ -51,21 +56,22 @@ export const SelfTagModal: React.FC<{
   const handleConfirm = useCallback(() => {
     if (!myId || submitting) return;
     setSubmitting(true);
+    setError(null);
     apiAddMediaTag(mediaId, myId, pin.x, pin.y)
       .then(() => {
-        setDone(true);
-        setTimeout(() => {
-          dispatch(closeModal({ modalType: 'SELF_TAG', ignoreFocus: false }));
-        }, 800);
+        close();
       })
-      .catch(() => {
+      .catch((err: unknown) => {
+        const apiError = (err as { response?: { data?: { error?: string } } })
+          .response?.data?.error;
+        setError(
+          apiError === 'Record invalid'
+            ? 'You are already tagged here'
+            : (apiError ?? 'Something went wrong, please try again'),
+        );
         setSubmitting(false);
       });
-  }, [mediaId, myId, pin, submitting, dispatch]);
-
-  const handleCancel = useCallback(() => {
-    dispatch(closeModal({ modalType: 'SELF_TAG', ignoreFocus: false }));
-  }, [dispatch]);
+  }, [mediaId, myId, pin.x, pin.y, submitting, close]);
 
   return (
     <div className='modal-root__modal tag-people-modal'>
@@ -93,13 +99,15 @@ export const SelfTagModal: React.FC<{
             style={{ left: `${pin.x * 100}%`, top: `${pin.y * 100}%` }}
           />
         </div>
+
+        {error && <p className='tag-people-modal__error'>{error}</p>}
       </div>
 
       <div className='tag-people-modal__footer'>
         <button
           type='button'
           className='button button--secondary'
-          onClick={handleCancel}
+          onClick={close}
           disabled={submitting}
         >
           <FormattedMessage id='self_tag.cancel' defaultMessage='Cancel' />
@@ -108,10 +116,10 @@ export const SelfTagModal: React.FC<{
           type='button'
           className='button'
           onClick={handleConfirm}
-          disabled={submitting || done}
+          disabled={submitting}
         >
-          {done ? (
-            <FormattedMessage id='self_tag.tagged' defaultMessage='Tagged!' />
+          {submitting ? (
+            <FormattedMessage id='self_tag.tagging' defaultMessage='Tagging…' />
           ) : (
             <FormattedMessage
               id='self_tag.confirm'
