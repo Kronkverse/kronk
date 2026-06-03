@@ -10,15 +10,13 @@ class Api::V1::MediaTagsController < Api::BaseController
   end
 
   def create
-    is_self_tag = params[:account_id].to_s == current_account.id.to_s
+    status = @media_attachment.status
 
-    # Uploaders can tag anyone; everyone else can only tag themselves on public/unlisted media
-    if is_self_tag
-      unless @media_attachment.account_id == current_account.id
-        status = @media_attachment.status
-        return render json: { error: 'Forbidden' }, status: 403 unless status.present? && %w(public unlisted).include?(status.visibility)
-      end
+    if status.present?
+      # Posted media — anyone can tag anyone as long as the post is public/unlisted
+      return render json: { error: 'Forbidden' }, status: 403 unless %w(public unlisted).include?(status.visibility)
     else
+      # Unposted (compose flow) — only the uploader can tag
       return render json: { error: 'Forbidden' }, status: 403 unless @media_attachment.account_id == current_account.id
     end
 
@@ -29,7 +27,7 @@ class Api::V1::MediaTagsController < Api::BaseController
       y: params.fetch(:y, 0.5).to_f.clamp(0.0, 1.0)
     )
 
-    NotifyService.new.call(tag.account, :media_tag, tag) if @media_attachment.status.present? && tag.account_id != current_account.id
+    NotifyService.new.call(tag.account, :media_tag, tag) if status.present? && tag.account_id != current_account.id
 
     render json: tag, serializer: REST::MediaTagSerializer
   rescue ActiveRecord::RecordInvalid => e

@@ -13429,6 +13429,12 @@ noscript {
     margin: 4px 0 0;
   }
 
+  &__error {
+    color: $error-red;
+    font-size: 13px;
+    padding: 8px 12px 0;
+  }
+
   &__image-wrapper {
     display: flex;
     flex-direction: column;
@@ -13508,6 +13514,51 @@ noscript {
     border-top: 1px solid lighten($ui-base-color, 8%);
     padding: 12px;
     position: relative;
+  }
+
+  &__search-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  &__tag-myself-btn {
+    background: lighten($ui-base-color, 8%);
+    border: 1px solid lighten($ui-base-color, 16%);
+    border-radius: 20px;
+    color: $highlight-text-color;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    transition: background 0.15s;
+
+    &:hover {
+      background: lighten($ui-base-color, 12%);
+    }
+  }
+
+  &__suggestion-btn {
+    align-items: center;
+    background: none;
+    border: 0;
+    color: $primary-text-color;
+    cursor: pointer;
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    text-align: start;
+    width: 100%;
+
+    &:hover {
+      background: lighten($ui-base-color, 4%);
+    }
+  }
+
+  &__error {
+    color: $error-red;
+    font-size: 12px;
+    margin-top: 6px;
   }
 
   &__search-input {
