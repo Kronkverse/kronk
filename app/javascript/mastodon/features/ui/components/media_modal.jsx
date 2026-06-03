@@ -300,40 +300,11 @@ class MediaModal extends ImmutablePureComponent {
     const zoomable = mediaType === 'image' && (currentMedia.getIn(['meta', 'original', 'width']) > viewportWidth || currentMedia.getIn(['meta', 'original', 'height']) > viewportHeight);
     const taggable = mediaType !== 'audio' && mediaType !== 'unknown';
 
-    // Compute tag pin positions using object-fit: contain math
-    let tagPins = null;
     const currentMediaId = currentMedia.get('id');
     const currentTags = currentMediaId ? mediaTags[currentMediaId] : undefined;
-    if (!zoomedIn && currentTags && currentTags.length > 0 && viewportWidth && viewportHeight) {
-      const imgW = currentMedia.getIn(['meta', 'original', 'width']);
-      const imgH = currentMedia.getIn(['meta', 'original', 'height']);
-      if (imgW && imgH) {
-        const scale = Math.min(viewportWidth / imgW, viewportHeight / imgH);
-        const renderedW = imgW * scale;
-        const renderedH = imgH * scale;
-        const offsetX = (viewportWidth - renderedW) / 2;
-        const offsetY = (viewportHeight - renderedH) / 2;
-
-        tagPins = (
-          <div className='media-tag-pins' aria-hidden>
-            {currentTags.map(tag => {
-              const pinX = offsetX + tag.x * renderedW;
-              const pinY = offsetY + tag.y * renderedH;
-              const label = tag.account?.display_name ?? tag.account?.username ?? '';
-              return (
-                <div
-                  key={tag.account_id}
-                  className='media-tag-pin'
-                  style={{ left: pinX, top: pinY }}
-                >
-                  {label && <span className='media-tag-pin__label'>{label}</span>}
-                </div>
-              );
-            })}
-          </div>
-        );
-      }
-    }
+    const taggedNames = currentTags && currentTags.length > 0
+      ? currentTags.map(tag => tag.account?.display_name || tag.account?.username).filter(Boolean).join(', ')
+      : null;
 
     return (
       <div className='modal-root__modal media-modal' ref={this.setRef}>
@@ -348,7 +319,6 @@ class MediaModal extends ImmutablePureComponent {
           >
             {content}
           </ReactSwipeableViews>
-          {tagPins}
         </div>
 
         <div className={navigationClassName}>
@@ -363,6 +333,7 @@ class MediaModal extends ImmutablePureComponent {
 
           <div className='media-modal__overlay'>
             {pagination && <ul className='media-modal__pagination'>{pagination}</ul>}
+            {taggedNames && <p className='media-modal__tagged-names'>With: {taggedNames}</p>}
             {statusId && <Footer statusId={statusId} withOpenButton onClose={onClose} />}
           </div>
         </div>
