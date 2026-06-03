@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Api::V1::MediaTagsController < Api::BaseController
+  include Authorization
+
   before_action :require_user!
   before_action :set_media_attachment
 
@@ -30,7 +32,11 @@ class Api::V1::MediaTagsController < Api::BaseController
       y: params.fetch(:y, 0.5).to_f.clamp(0.0, 1.0)
     )
 
-    NotifyService.new.call(tag.account, :media_tag, tag) if status.present? && tag.account_id != current_account.id
+    begin
+      NotifyService.new.call(tag.account, :media_tag, tag) if status.present? && tag.account_id != current_account.id
+    rescue => e
+      Rails.logger.warn "MediaTag notification failed: #{e.message}"
+    end
 
     render json: tag, serializer: REST::MediaTagSerializer
   rescue ActiveRecord::RecordInvalid => e

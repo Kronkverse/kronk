@@ -293,8 +293,6 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def tagged_media
-    doorkeeper_authorize! :read, :'read:accounts'
-
     attachments = @account.tagged_in_media
                           .includes(status: :account)
                           .where.not(status_id: nil)
