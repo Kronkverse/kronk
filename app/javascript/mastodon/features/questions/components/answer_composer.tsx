@@ -84,12 +84,14 @@ export const AnswerComposer: React.FC<{
         value={text}
         onChange={handleTextChange}
         onKeyDown={handleKeyDown}
-        maxLength={500}
+        maxLength={5000}
         rows={4}
       />
 
       <div className='answer-composer__footer'>
-        <span className='answer-composer__char-count'>{500 - text.length}</span>
+        <span className='answer-composer__char-count'>
+          {5000 - text.length}
+        </span>
         <div className='answer-composer__actions'>
           <button className='answer-composer__cancel' onClick={onCancel}>
             {intl.formatMessage(messages.cancel)}
