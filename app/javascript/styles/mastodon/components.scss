@@ -13423,6 +13423,12 @@ noscript {
     }
   }
 
+  &__hint {
+    color: $secondary-text-color;
+    font-size: 13px;
+    margin: 4px 0 0;
+  }
+
   &__image-wrapper {
     display: flex;
     flex-direction: column;
@@ -13478,6 +13484,16 @@ noscript {
       height: 14px;
       padding: 0;
       width: 14px;
+    }
+
+    &--self {
+      background: rgba($valid-value-color, 0.9);
+      border-radius: 50%;
+      border: 3px solid $ui-base-color;
+      box-shadow: 0 1px 4px rgba($base-shadow-color, 0.4);
+      height: 18px;
+      padding: 0;
+      width: 18px;
     }
   }
 
@@ -13587,6 +13603,7 @@ noscript {
   &__footer {
     border-top: 1px solid lighten($ui-base-color, 8%);
     display: flex;
+    gap: 8px;
     justify-content: flex-end;
     padding: 12px 16px;
   }
