@@ -1,3 +1,5 @@
+import { useCallback } from 'react';
+
 import PropTypes from 'prop-types';
 
 import { defineMessages, injectIntl } from 'react-intl';
@@ -6,6 +8,7 @@ import classNames from 'classnames';
 
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
+import { useDispatch } from 'react-redux';
 
 import ReactSwipeableViews from 'react-swipeable-views';
 
@@ -13,7 +16,9 @@ import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import FitScreenIcon from '@/material-icons/400-24px/fit_screen.svg?react';
+import TagIcon from '@/material-icons/400-24px/tag.svg?react';
 import ActualSizeIcon from '@/svg-icons/actual_size.svg?react';
+import { openModal } from 'mastodon/actions/modal';
 import { getAverageFromBlurhash } from 'mastodon/blurhash';
 import { GIFV } from 'mastodon/components/gifv';
 import { Icon }  from 'mastodon/components/icon';
@@ -23,6 +28,16 @@ import { Video } from 'mastodon/features/video';
 import { disableSwiping } from 'mastodon/initial_state';
 
 import { ZoomableImage } from './zoomable_image';
+
+const TagButton = ({ mediaId, previewUrl }) => {
+  const dispatch = useDispatch();
+  const handleClick = useCallback(() => {
+    dispatch(openModal({ modalType: 'SELF_TAG', modalProps: { mediaId, previewUrl } }));
+  }, [dispatch, mediaId, previewUrl]);
+  return (
+    <IconButton title='Tag people' icon='tag' iconComponent={TagIcon} onClick={handleClick} />
+  );
+};
 
 const messages = defineMessages({
   close: { id: 'lightbox.close', defaultMessage: 'Close' },
@@ -276,6 +291,9 @@ class MediaModal extends ImmutablePureComponent {
         <div className={navigationClassName}>
           <div className='media-modal__buttons'>
             {zoomable && <IconButton title={intl.formatMessage(zoomedIn ? messages.zoomOut : messages.zoomIn)} iconComponent={zoomedIn ? FitScreenIcon : ActualSizeIcon} onClick={this.handleZoomClick} />}
+            {currentMedia.get('type') === 'image' && currentMedia.get('id') && (
+              <TagButton mediaId={currentMedia.get('id')} previewUrl={currentMedia.get('preview_url') || currentMedia.get('url')} />
+            )}
             <IconButton title={intl.formatMessage(messages.close)} icon='times' iconComponent={CloseIcon} onClick={onClose} />
           </div>
 

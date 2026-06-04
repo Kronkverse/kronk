@@ -588,6 +588,28 @@ class Status extends ImmutablePureComponent {
       );
     }
 
+    let tagCaption = null;
+    if (status.get('media_attachments')?.size > 0) {
+      const seen = new Set();
+      const names = [];
+      status.get('media_attachments').forEach((a) => {
+        const tags = a.get('tags');
+        if (!tags) return;
+        tags.forEach((tag) => {
+          const id = tag.get('account_id');
+          if (!seen.has(id)) {
+            seen.add(id);
+            const acct = tag.get('account');
+            const name = acct?.get('display_name') || acct?.get('username');
+            if (name) names.push(name);
+          }
+        });
+      });
+      if (names.length > 0) {
+        tagCaption = <div className='status__media-tags'>With: {names.join(', ')}</div>;
+      }
+    }
+
     const avatarAccount = displayAccount ?? status.get('account');
     if (account === undefined || account === null) {
       statusAvatar = <Avatar account={avatarAccount} size={avatarSize} />;
@@ -668,6 +690,7 @@ class Status extends ImmutablePureComponent {
                 )}
 
                 {media}
+                {tagCaption}
                 {hashtagBar}
 
                 {children}

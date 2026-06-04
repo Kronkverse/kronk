@@ -29,11 +29,11 @@ const TaggedGalleryItem = memo<{
       ? `/@${attachment.status_account_acct}/${attachment.status_id}`
       : undefined;
 
-  const thumbnail = (
+  const img = (
     <img
       src={attachment.preview_url}
       alt={attachment.description ?? ''}
-      className='media-gallery__item-thumbnail'
+      className='tagged-gallery__thumb'
     />
   );
 
@@ -47,23 +47,19 @@ const TaggedGalleryItem = memo<{
     </div>
   ) : null;
 
-  if (statusHref) {
-    return (
-      <div className='media-gallery__item media-gallery__item--square'>
-        <Link to={statusHref} className='media-gallery__item-thumbnail'>
-          {thumbnail}
-          {overlay}
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className='media-gallery__item media-gallery__item--square'>
-      {thumbnail}
+  const inner = statusHref ? (
+    <Link to={statusHref} className='tagged-gallery__link'>
+      {img}
       {overlay}
-    </div>
+    </Link>
+  ) : (
+    <>
+      {img}
+      {overlay}
+    </>
   );
+
+  return <div className='tagged-gallery__item'>{inner}</div>;
 });
 TaggedGalleryItem.displayName = 'TaggedGalleryItem';
 

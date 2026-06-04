@@ -12882,84 +12882,52 @@ noscript {
   display: flex;
   flex-direction: column;
   max-height: 90vh;
-  max-width: 600px;
+  max-width: 500px;
   overflow: hidden;
   width: 100%;
 
   &__header {
+    align-items: center;
     border-bottom: 1px solid lighten($ui-base-color, 8%);
+    display: flex;
+    gap: 12px;
     padding: 16px 20px;
 
     h3 {
       color: $primary-text-color;
+      flex: 1;
       font-size: 18px;
       font-weight: 700;
       margin: 0;
     }
   }
 
-  &__image-wrapper {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
-  }
-
-  &__image {
-    cursor: crosshair;
-    flex-shrink: 0;
-    max-height: 400px;
-    overflow: hidden;
-    position: relative;
-    user-select: none;
-
-    img {
-      display: block;
-      height: auto;
-      pointer-events: none;
-      width: 100%;
-    }
-  }
-
-  &__pin {
-    align-items: center;
-    background: rgba($highlight-text-color, 0.9);
-    border-radius: 12px;
-    color: $ui-base-color;
-    display: flex;
-    font-size: 12px;
-    font-weight: 600;
-    gap: 4px;
-    padding: 3px 8px;
-    pointer-events: none;
-    position: absolute;
-    transform: translate(-50%, -100%);
+  &__tag-myself-btn {
+    background: lighten($ui-base-color, 8%);
+    border: 0;
+    border-radius: 6px;
+    color: $primary-text-color;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 6px 12px;
     white-space: nowrap;
 
-    &::after {
-      border-left: 6px solid transparent;
-      border-right: 6px solid transparent;
-      border-top: 6px solid rgba($highlight-text-color, 0.9);
-      bottom: -6px;
-      content: '';
-      left: 50%;
-      position: absolute;
-      transform: translateX(-50%);
-    }
-
-    &--pending {
-      background: rgba($ui-highlight-color, 0.8);
-      border-radius: 50%;
-      height: 14px;
-      padding: 0;
-      width: 14px;
+    &:hover {
+      background: lighten($ui-base-color, 12%);
     }
   }
 
-  &__pin-label {
-    max-width: 120px;
+  &__image-wrapper {
+    flex-shrink: 0;
+    max-height: 260px;
     overflow: hidden;
-    text-overflow: ellipsis;
+  }
+
+  &__preview {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
   }
 
   &__search {
@@ -13074,4 +13042,33 @@ noscript {
   max-height: 100px;
   max-width: 100%;
   object-fit: cover;
+}
+
+.status__media-tags {
+  color: $secondary-text-color;
+  font-size: 13px;
+  margin-top: 6px;
+  padding: 0 2px;
+}
+
+.tagged-gallery {
+  &__item {
+    aspect-ratio: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  &__link {
+    display: block;
+    height: 100%;
+    width: 100%;
+  }
+
+  &__thumb {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    width: 100%;
+  }
 }
