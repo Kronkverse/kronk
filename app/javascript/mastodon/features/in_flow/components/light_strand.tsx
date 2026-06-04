@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import {
   getDaylightInfo,
   getSeasonEventsForYear,
+  getCrossQuarterEventsForYear,
 } from 'mastodon/features/events/components/celestial_calendar';
 
 import { LOCATION_TZ, LOCATION_LAT, LOCATION_LON } from '../constants';
@@ -54,124 +55,80 @@ interface DaylightArcProps {
   daylightMinutes: number;
   riseMinutesFromMidnight: number;
   setMinutesFromMidnight: number;
-  riseLabel: string;
-  setLabel: string;
+  currentMinutes: number;
 }
 
 const DaylightArc: React.FC<DaylightArcProps> = ({
   daylightMinutes,
   riseMinutesFromMidnight,
   setMinutesFromMidnight,
-  riseLabel,
-  setLabel,
+  currentMinutes,
 }) => {
-  const R = 40; // arc radius
+  const Rx = 44;
+  const Ry = 16;
   const cx = 50;
-  const cy = 52; // center (below the arc, so arc curves upward)
+  const cy = 20;
 
-  // Convert minutes-from-midnight to a point on the semicircle
   // t=0 (midnight) → left endpoint; t=720 (noon) → top; t=1440 (midnight) → right
   const arcPoint = (t: number) => {
-    const angle = Math.PI * (1 - t / 1440); // π to 0 as t goes 0→1440
+    const angle = Math.PI * (1 - t / 1440);
     return {
-      x: cx + R * Math.cos(angle),
-      y: cy - R * Math.sin(angle),
+      x: cx + Rx * Math.cos(angle),
+      y: cy - Ry * Math.sin(angle),
     };
   };
 
-  const leftEnd = arcPoint(0); // (cx-R, cy) = (10, 52)
-  const rightEnd = arcPoint(1440); // (cx+R, cy) = (90, 52)
+  const leftEnd = arcPoint(0);
+  const rightEnd = arcPoint(1440);
   const riseP = arcPoint(riseMinutesFromMidnight);
   const setP = arcPoint(setMinutesFromMidnight);
-  const midP = arcPoint((riseMinutesFromMidnight + setMinutesFromMidnight) / 2);
 
-  // large-arc-flag: 1 if daylight > 12h (720 min)
   const largeArc =
     setMinutesFromMidnight - riseMinutesFromMidnight > 720 ? 1 : 0;
 
   const h = Math.floor(daylightMinutes / 60);
   const m = daylightMinutes % 60;
-  const daylightLabel = `${String(h)}h ${String(m).padStart(2, '0')}m`;
+  const daylightLabel = `${String(h)}h ${String(m).padStart(2, '0')}m of daylight today`;
+
+  const sunIsUp =
+    currentMinutes >= riseMinutesFromMidnight &&
+    currentMinutes <= setMinutesFromMidnight;
+  const currentP = arcPoint(currentMinutes);
 
   return (
     <div className='in-flow-light__arc-wrap'>
-      <svg viewBox='0 0 100 56' className='in-flow-light__arc-svg'>
+      <div className='in-flow-light__arc-duration'>{daylightLabel}</div>
+      <svg viewBox='0 0 100 32' className='in-flow-light__arc-svg'>
         {/* Background arc — full day */}
         <path
-          d={`M ${leftEnd.x} ${leftEnd.y} A ${R} ${R} 0 0 1 ${rightEnd.x} ${rightEnd.y}`}
+          d={`M ${leftEnd.x} ${leftEnd.y} A ${Rx} ${Ry} 0 0 1 ${rightEnd.x} ${rightEnd.y}`}
           className='in-flow-light__arc-track'
         />
         {/* Daylight arc */}
         <path
-          d={`M ${riseP.x} ${riseP.y} A ${R} ${R} 0 ${largeArc} 1 ${setP.x} ${setP.y}`}
+          d={`M ${riseP.x} ${riseP.y} A ${Rx} ${Ry} 0 ${largeArc} 1 ${setP.x} ${setP.y}`}
           className='in-flow-light__arc-fill'
         />
-        {/* Sun dot at midpoint */}
-        <circle
-          cx={midP.x}
-          cy={midP.y}
-          r='4'
-          className='in-flow-light__arc-sun'
-        />
-        {/* Rise label */}
-        <text
-          x={riseP.x}
-          y={cy + 8}
-          textAnchor='middle'
-          className='in-flow-light__arc-time'
-        >
-          {riseLabel}
-        </text>
-        {/* Set label */}
-        <text
-          x={setP.x}
-          y={cy + 8}
-          textAnchor='middle'
-          className='in-flow-light__arc-time'
-        >
-          {setLabel}
-        </text>
-        {/* Duration at top */}
-        <text
-          x='50'
-          y='10'
-          textAnchor='middle'
-          className='in-flow-light__arc-duration'
-        >
-          {daylightLabel}
-        </text>
+        {/* Sun circle during day, 6-pointed sparkle at night */}
+        {sunIsUp ? (
+          <circle
+            cx={currentP.x}
+            cy={currentP.y}
+            r='3'
+            className='in-flow-light__arc-sun'
+          />
+        ) : (
+          <g transform={`translate(${currentP.x}, ${currentP.y})`}>
+            <path
+              d='M 0,-3.5 L 0.5,-0.5 L 3.5,0 L 0.5,0.5 L 0,3.5 L -0.5,0.5 L -3.5,0 L -0.5,-0.5 Z'
+              className='in-flow-light__arc-star'
+            />
+          </g>
+        )}
       </svg>
     </div>
   );
 };
-
-function getLightRelation(direction: string, month: number): string {
-  // Southern Hemisphere seasons by month
-  if (month >= 5 && month <= 7) {
-    // Winter
-    if (direction === 'shortening')
-      return 'The light continues to withdraw — low angles, long shadows, a sky that holds its warmth close to the horizon.';
-    if (direction === 'lengthening')
-      return 'Winter light beginning its slow return — each day a little more sky before dark.';
-    return 'The light rests at its winter still-point.';
-  }
-  if (month >= 8 && month <= 10) {
-    // Spring
-    if (direction === 'lengthening')
-      return 'Spring light surging — the angle steepens, the warmth arrives earlier each morning.';
-    return 'The light of spring, generous and climbing.';
-  }
-  if (month >= 11 || month <= 1) {
-    // Summer
-    if (direction === 'shortening')
-      return 'Long summer light beginning its slow retreat — still generous, but the turn has come.';
-    return 'Expansive summer light — the sun barely below the horizon at dusk.';
-  }
-  // Autumn
-  if (direction === 'shortening')
-    return 'Autumn light — softer and lower each week, the world turning amber at the edges.';
-  return 'The mellowing light of autumn, drawing down toward winter.';
-}
 
 interface SolsticeProgressProps {
   year: number;
@@ -180,15 +137,17 @@ interface SolsticeProgressProps {
 
 const SolsticeProgress: React.FC<SolsticeProgressProps> = ({ year, now }) => {
   const allEvents = useMemo(() => {
-    const seasons = [
-      ...getSeasonEventsForYear(year - 1),
-      ...getSeasonEventsForYear(year),
-      ...getSeasonEventsForYear(year + 1),
-    ];
-    // Only solstices (winter + summer)
-    return seasons.filter(
-      (e) => e.season === 'winter' || e.season === 'summer',
-    );
+    const events: { date: Date; label: string }[] = [];
+    for (const y of [year - 1, year, year + 1]) {
+      for (const e of getSeasonEventsForYear(y)) {
+        events.push({ date: e.date, label: e.label });
+      }
+      for (const e of getCrossQuarterEventsForYear(y)) {
+        events.push({ date: e.date, label: e.label });
+      }
+    }
+    events.sort((a, b) => a.date.getTime() - b.date.getTime());
+    return events;
   }, [year]);
 
   const prev = allEvents.filter((e) => e.date <= now).at(-1);
@@ -237,19 +196,9 @@ export const LightStrand: React.FC = () => {
     [year, month, day],
   );
 
-  const direction =
-    info.deltaMinutes > 0.5
-      ? 'lengthening'
-      : info.deltaMinutes < -0.5
-        ? 'shortening'
-        : 'balanced';
-
-  const riseLabel = info.rise ? formatTimeInLocation(info.rise) : '';
-  const setLabel = info.set ? formatTimeInLocation(info.set) : '';
   const riseMinutes = info.rise ? toLocalMinutes(info.rise) : 6 * 60;
   const setMinutes = info.set ? toLocalMinutes(info.set) : 18 * 60;
-
-  const relationSentence = getLightRelation(direction, month);
+  const currentMinutes = useMemo(() => toLocalMinutes(date), [date]);
 
   return (
     <div className='in-flow-light'>
@@ -257,8 +206,7 @@ export const LightStrand: React.FC = () => {
         daylightMinutes={info.daylightMinutes}
         riseMinutesFromMidnight={riseMinutes}
         setMinutesFromMidnight={setMinutes}
-        riseLabel={riseLabel}
-        setLabel={setLabel}
+        currentMinutes={currentMinutes}
       />
 
       {info.rise && info.set && (
@@ -283,8 +231,6 @@ export const LightStrand: React.FC = () => {
           </div>
         </div>
       )}
-
-      <p className='in-flow-light__relation'>{relationSentence}</p>
 
       <SolsticeProgress year={year} now={date} />
     </div>
