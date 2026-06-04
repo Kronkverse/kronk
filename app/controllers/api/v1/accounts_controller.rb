@@ -205,18 +205,20 @@ class Api::V1::AccountsController < Api::BaseController
   def nudge_pending_count
     doorkeeper_authorize! :read, :'read:accounts'
     a = current_user.account.id
-    seen = {}
-    count = 0
+
+    recent_per_partner = Hash.new { |h, k| h[k] = [] }
     Notification.where(type: 'nudge')
                 .where('account_id = ? OR from_account_id = ?', a, a)
                 .order(id: :desc)
                 .each do |n|
       partner_id = n.account_id == a ? n.from_account_id : n.account_id
-      next if seen[partner_id]
-
-      seen[partner_id] = true
-      count += 1 if n.from_account_id == partner_id
+      recent_per_partner[partner_id] << n if recent_per_partner[partner_id].length < NudgeService::CONSECUTIVE_LIMIT
     end
+
+    count = recent_per_partner.count do |partner_id, recent|
+      recent.length < NudgeService::CONSECUTIVE_LIMIT || recent.any? { |n| n.from_account_id == partner_id }
+    end
+
     render json: { count: count }
   end
 
@@ -229,7 +231,7 @@ class Api::V1::AccountsController < Api::BaseController
       voice_attachment_id: params[:voice_id].presence,
       in_reply_to_notification_id: params[:in_reply_to_notification_id].presence
     )
-    render json: { streak: nudge_streak_count, can_nudge: false }
+    render json: { streak: nudge_streak_count, can_nudge: nudge_can_send? }
   rescue Mastodon::NotPermittedError
     render json: { error: 'waiting_for_nudge_back' }, status: 422
   end
@@ -265,12 +267,17 @@ class Api::V1::AccountsController < Api::BaseController
     streak = notifications.size
     can_nudge_back = nudge_can_send_for?(a, b)
 
+    notification_ids = notifications.map(&:id)
+    reaction_counts = NudgeReaction.where(notification_id: notification_ids)
+                                   .group(:notification_id, :emoji).count
+    my_reactions = NudgeReaction.where(notification_id: notification_ids, account_id: a)
+                                .index_by(&:notification_id)
+
     messages_json = notifications.map do |n|
       direction = n.from_account_id == a ? 'sent' : 'received'
       msg = n.nudge_message
-      reaction_counts = NudgeReaction.where(notification: n).group(:emoji).count
-      me_emoji = NudgeReaction.find_by(notification: n, account_id: a)&.emoji
-      reactions = NudgeReaction::ALLOWED_EMOJI.index_with { |emoji| { count: reaction_counts[emoji] || 0, me: me_emoji == emoji } }
+      me_emoji = my_reactions[n.id]&.emoji
+      reactions = NudgeReaction::ALLOWED_EMOJI.index_with { |emoji| { count: reaction_counts[[n.id, emoji]] || 0, me: me_emoji == emoji } }
 
       {
         notification_id: n.id.to_s,
