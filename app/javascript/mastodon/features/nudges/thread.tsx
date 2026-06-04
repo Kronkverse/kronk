@@ -226,6 +226,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     [],
   );
   const [streak, setStreak] = useState(0);
+  const [canNudgeBack, setCanNudgeBack] = useState(true);
   const [loading, setLoading] = useState(true);
 
   // Compose state
@@ -252,6 +253,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       dispatch(importFetchedAccounts([data.account]));
       setThreadMessages(data.messages);
       setStreak(data.streak);
+      setCanNudgeBack(data.can_nudge_back);
     } finally {
       setLoading(false);
     }
@@ -545,12 +547,25 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
         const result = await apiNudgeAccount(accountId, params);
         setStreak(result.streak);
+        setCanNudgeBack(result.can_nudge);
         dispatch(decrementNudgeCount());
         clearCompose();
         await loadThread();
-      } catch (err) {
+      } catch (err: unknown) {
+        const status =
+          err != null &&
+          typeof err === 'object' &&
+          'response' in err &&
+          err.response != null &&
+          typeof err.response === 'object' &&
+          'data' in err.response
+            ? (err.response as { data?: { error?: string } }).data?.error
+            : null;
         const msg =
-          err instanceof Error ? err.message : 'Failed to send — try again';
+          status === 'waiting_for_nudge_back'
+            ? 'Waiting for them to nudge back first'
+            : 'Failed to send — try again';
+        setCanNudgeBack(status !== 'waiting_for_nudge_back');
         setError(msg);
       } finally {
         setSending(false);
@@ -652,9 +667,20 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </div>
         )}
 
+        {!canNudgeBack && !loading && (
+          <div className='nudge-compose-bar__waiting'>
+            <FormattedMessage
+              id='nudges.thread.waiting'
+              defaultMessage='Waiting for them to nudge back…'
+            />
+          </div>
+        )}
+
         {error && <div className='nudge-compose-bar__error'>{error}</div>}
 
-        <div className='nudge-compose-bar'>
+        <div
+          className={`nudge-compose-bar${!canNudgeBack ? ' nudge-compose-bar--disabled' : ''}`}
+        >
           {(mediaPreview !== undefined ||
             voiceBlob !== undefined ||
             voiceId !== undefined) && (
@@ -706,7 +732,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               type='button'
               className='nudge-compose-bar__icon-btn'
               onClick={handleAttachClick}
-              disabled={uploading || !!mediaId}
+              disabled={uploading || !!mediaId || !canNudgeBack}
               aria-label={intl.formatMessage(messages.attachMedia)}
               title={intl.formatMessage(messages.attachMedia)}
             >
@@ -729,7 +755,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               onChange={handleTextChange}
               onKeyDown={handleKeyDown}
               rows={1}
-              disabled={sending}
+              disabled={sending || !canNudgeBack}
             />
 
             {!voiceBlob && !voiceId && (
@@ -737,7 +763,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                 type='button'
                 className={`nudge-compose-bar__icon-btn${recording ? ' nudge-compose-bar__icon-btn--recording' : ''}`}
                 onClick={recording ? stopRecording : startRecording}
-                disabled={sending}
+                disabled={sending || !canNudgeBack}
                 aria-label={intl.formatMessage(
                   recording ? messages.stopRecording : messages.record,
                 )}
@@ -762,7 +788,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               type='button'
               className={`nudge-compose-bar__icon-btn nudge-compose-bar__icon-btn--send${sending ? ' nudge-compose-bar__icon-btn--sending' : ''}`}
               onClick={handleSend}
-              disabled={sending || overLimit}
+              disabled={sending || overLimit || !canNudgeBack}
               aria-label={intl.formatMessage(
                 hasContent ? messages.send : messages.nudge,
               )}

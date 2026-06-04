@@ -13225,7 +13225,9 @@ noscript {
     font-size: 14px;
     line-height: 1.2;
     color: $primary-text-color;
-    transition: background 0.1s, border-color 0.1s;
+    transition:
+      background 0.1s,
+      border-color 0.1s;
 
     .nudge-bubble--sent & {
       background: rgba(255, 255, 255, 15%);
@@ -13295,6 +13297,19 @@ noscript {
   color: $error-value-color;
   background: rgba($error-value-color, 0.08);
   border-top: 1px solid rgba($error-value-color, 0.2);
+}
+
+.nudge-compose-bar__waiting {
+  padding: 10px 16px;
+  font-size: 13px;
+  color: $dark-text-color;
+  text-align: center;
+  border-top: 1px solid lighten($ui-base-color, 8%);
+}
+
+.nudge-compose-bar--disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .nudge-compose-bar {
