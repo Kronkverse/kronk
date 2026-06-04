@@ -18,11 +18,10 @@ class Api::V1::MediaTagsController < Api::BaseController
     status = @media_attachment.status
     is_owner = @media_attachment.account_id == current_account.id
 
+    # Public/unlisted posts: anyone can tag. Private/direct: owner only. Unattached media: owner only.
     if status.present?
-      # Post owner can tag in any visibility; others only on public/unlisted
       return render json: { error: 'Forbidden' }, status: 403 unless is_owner || %w(public unlisted).include?(status.visibility)
     else
-      # Unattached media: only the uploader can tag
       return render json: { error: 'Forbidden' }, status: 403 unless is_owner
     end
 
@@ -31,15 +30,11 @@ class Api::V1::MediaTagsController < Api::BaseController
     tag = @media_attachment.media_tags.create!(
       account: tagged_account,
       created_by_account: current_account,
-      x: params.fetch(:x, 0.5).to_f.clamp(0.0, 1.0),
-      y: params.fetch(:y, 0.5).to_f.clamp(0.0, 1.0)
+      x: 0.5,
+      y: 0.5
     )
 
-    begin
-      NotifyService.new.call(tag.account, :media_tag, tag) if status.present? && tag.account_id != current_account.id
-    rescue => e
-      Rails.logger.warn "MediaTag notification failed: #{e.message}"
-    end
+    NotifyService.new.call(tag.account, :media_tag, tag) if status.present? && tag.account_id != current_account.id
 
     render json: tag, serializer: REST::MediaTagSerializer
   rescue ActiveRecord::RecordInvalid => e

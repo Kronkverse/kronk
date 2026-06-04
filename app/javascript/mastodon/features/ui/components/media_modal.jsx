@@ -1,3 +1,5 @@
+import { useCallback } from 'react';
+
 import PropTypes from 'prop-types';
 
 import { defineMessages, injectIntl } from 'react-intl';
@@ -6,7 +8,7 @@ import classNames from 'classnames';
 
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 
 import ReactSwipeableViews from 'react-swipeable-views';
 
@@ -27,6 +29,16 @@ import { Video } from 'mastodon/features/video';
 import { disableSwiping } from 'mastodon/initial_state';
 
 import { ZoomableImage } from './zoomable_image';
+
+const TagButton = ({ mediaId, previewUrl }) => {
+  const dispatch = useDispatch();
+  const handleClick = useCallback(() => {
+    dispatch(openModal({ modalType: 'SELF_TAG', modalProps: { mediaId, previewUrl } }));
+  }, [dispatch, mediaId, previewUrl]);
+  return (
+    <IconButton title='Tag people' icon='tag' iconComponent={TagIcon} onClick={handleClick} />
+  );
+};
 
 const messages = defineMessages({
   close: { id: 'lightbox.close', defaultMessage: 'Close' },

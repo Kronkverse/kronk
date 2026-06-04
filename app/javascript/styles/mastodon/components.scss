@@ -13412,11 +13412,15 @@ noscript {
   width: 100%;
 
   &__header {
+    align-items: center;
     border-bottom: 1px solid lighten($ui-base-color, 8%);
+    display: flex;
+    gap: 12px;
     padding: 16px 20px;
 
     h3 {
       color: $primary-text-color;
+      flex: 1;
       font-size: 18px;
       font-weight: 700;
       margin: 0;
@@ -13443,11 +13447,16 @@ noscript {
   }
 
   &__image-wrapper {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
+    flex-shrink: 0;
+    max-height: 260px;
+    overflow: hidden;
+  }
+
+  &__preview {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
   }
 
   &__image {
@@ -13686,4 +13695,33 @@ noscript {
   margin: 4px 0 0;
   padding: 0 16px;
   text-align: center;
+}
+
+.status__media-tags {
+  color: $secondary-text-color;
+  font-size: 13px;
+  margin-top: 6px;
+  padding: 0 2px;
+}
+
+.tagged-gallery {
+  &__item {
+    aspect-ratio: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  &__link {
+    display: block;
+    height: 100%;
+    width: 100%;
+  }
+
+  &__thumb {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    width: 100%;
+  }
 }
