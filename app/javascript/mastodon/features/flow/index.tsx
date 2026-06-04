@@ -46,6 +46,36 @@ const Flow: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
     columnRef.current?.scrollTop();
   }, []);
 
+  const handleTabMine = useCallback(() => {
+    setTab('mine');
+  }, []);
+
+  const handleTabShared = useCallback(() => {
+    setTab('shared');
+  }, []);
+
+  const handleShowForm = useCallback(() => {
+    setShowForm(true);
+  }, []);
+
+  const handleHideForm = useCallback(() => {
+    setShowForm(false);
+  }, []);
+
+  const handleCycleLengthChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormCycleLength(e.target.value);
+    },
+    [],
+  );
+
+  const handleNotesChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setFormNotes(e.target.value);
+    },
+    [],
+  );
+
   const loadCycles = useCallback(() => {
     setLoading(true);
     void api()
@@ -72,8 +102,8 @@ const Flow: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
     void api()
       .post<FlowCycle>('/api/v1/flow_cycles', {
         started_on: new Date().toISOString().split('T')[0],
-        notes: formNotes || null,
-        cycle_length: formCycleLength ? parseInt(formCycleLength, 10) : null,
+        notes: formNotes !== '' ? formNotes : null,
+        cycle_length: formCycleLength !== '' ? parseInt(formCycleLength, 10) : null,
       })
       .then((res) => {
         setCycles((prev) => [res.data, ...prev]);
@@ -135,13 +165,13 @@ const Flow: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         <div className='flow-space__tabs'>
           <button
             className={`flow-space__tab${tab === 'mine' ? ' flow-space__tab--active' : ''}`}
-            onClick={() => { setTab('mine'); }}
+            onClick={handleTabMine}
           >
             {intl.formatMessage(messages.myCycles)}
           </button>
           <button
             className={`flow-space__tab${tab === 'shared' ? ' flow-space__tab--active' : ''}`}
-            onClick={() => { setTab('shared'); }}
+            onClick={handleTabShared}
           >
             {intl.formatMessage(messages.sharedWithMe)}
           </button>
@@ -156,7 +186,7 @@ const Flow: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
                   className='flow-space__input'
                   placeholder={intl.formatMessage(messages.cycleLengthPlaceholder)}
                   value={formCycleLength}
-                  onChange={(e) => { setFormCycleLength(e.target.value); }}
+                  onChange={handleCycleLengthChange}
                   min={1}
                   max={99}
                 />
@@ -164,20 +194,29 @@ const Flow: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
                   className='flow-space__input flow-space__input--textarea'
                   placeholder={intl.formatMessage(messages.notesPlaceholder)}
                   value={formNotes}
-                  onChange={(e) => { setFormNotes(e.target.value); }}
+                  onChange={handleNotesChange}
                   rows={3}
                 />
                 <div className='flow-space__form-buttons'>
-                  <button className='flow-space__btn flow-space__btn--secondary' onClick={() => { setShowForm(false); }}>
+                  <button
+                    className='flow-space__btn flow-space__btn--secondary'
+                    onClick={handleHideForm}
+                  >
                     {intl.formatMessage(messages.cancel)}
                   </button>
-                  <button className='flow-space__btn flow-space__btn--primary' onClick={handleLogCycle}>
+                  <button
+                    className='flow-space__btn flow-space__btn--primary'
+                    onClick={handleLogCycle}
+                  >
                     {intl.formatMessage(messages.save)}
                   </button>
                 </div>
               </div>
             ) : (
-              <button className='flow-space__btn flow-space__btn--primary' onClick={() => { setShowForm(true); }}>
+              <button
+                className='flow-space__btn flow-space__btn--primary'
+                onClick={handleShowForm}
+              >
                 {intl.formatMessage(messages.logCycle)}
               </button>
             )}
@@ -185,7 +224,9 @@ const Flow: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         )}
 
         <div className='flow-space__list'>
-          {loading && <p className='flow-space__empty'>{intl.formatMessage(messages.loading)}</p>}
+          {loading && (
+            <p className='flow-space__empty'>{intl.formatMessage(messages.loading)}</p>
+          )}
           {!loading && displayedCycles.length === 0 && (
             <p className='flow-space__empty'>{intl.formatMessage(messages.empty)}</p>
           )}

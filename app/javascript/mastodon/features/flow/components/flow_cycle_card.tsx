@@ -1,25 +1,27 @@
-import { useIntl, defineMessages } from 'react-intl';
+import { useCallback } from 'react';
 
-import type { FlowCycle, CyclePhase } from '../types';
+import { defineMessages, useIntl } from 'react-intl';
+
+import type { CyclePhase, FlowCycle } from '../types';
 
 const messages = defineMessages({
-  menstrual: { id: 'flow.phase.menstrual', defaultMessage: 'Menstrual' },
-  follicular: { id: 'flow.phase.follicular', defaultMessage: 'Follicular' },
-  ovulation: { id: 'flow.phase.ovulation', defaultMessage: 'Ovulation' },
-  luteal: { id: 'flow.phase.luteal', defaultMessage: 'Luteal' },
-  fertile: { id: 'flow.fertile_window', defaultMessage: 'Fertile window' },
-  nextCycle: { id: 'flow.next_cycle', defaultMessage: 'Next cycle' },
-  markEnded: { id: 'flow.mark_ended', defaultMessage: 'Mark period ended' },
-  shareWith: { id: 'flow.share', defaultMessage: 'Share' },
   delete: { id: 'flow.delete', defaultMessage: 'Delete' },
+  fertile: { id: 'flow.fertile_window', defaultMessage: 'Fertile window' },
+  follicular: { id: 'flow.phase.follicular', defaultMessage: 'Follicular' },
+  luteal: { id: 'flow.phase.luteal', defaultMessage: 'Luteal' },
+  markEnded: { id: 'flow.mark_ended', defaultMessage: 'Mark period ended' },
+  menstrual: { id: 'flow.phase.menstrual', defaultMessage: 'Menstrual' },
+  nextCycle: { id: 'flow.next_cycle', defaultMessage: 'Next cycle' },
+  ovulation: { id: 'flow.phase.ovulation', defaultMessage: 'Ovulation' },
   ovulationDay: { id: 'flow.ovulation_day', defaultMessage: 'Ovulation' },
+  shareWith: { id: 'flow.share', defaultMessage: 'Share' },
 });
 
-const PHASE_LABELS: Record<CyclePhase, keyof typeof messages> = {
-  menstrual: 'menstrual',
+const PHASE_MESSAGES: Record<CyclePhase, keyof typeof messages> = {
   follicular: 'follicular',
-  ovulation: 'ovulation',
   luteal: 'luteal',
+  menstrual: 'menstrual',
+  ovulation: 'ovulation',
 };
 
 const formatDate = (iso: string) =>
@@ -27,24 +29,36 @@ const formatDate = (iso: string) =>
 
 interface Props {
   cycle: FlowCycle;
+  onDelete: (cycle: FlowCycle) => void;
   onMarkEnded: (cycle: FlowCycle) => void;
   onShare: (cycle: FlowCycle) => void;
-  onDelete: (cycle: FlowCycle) => void;
 }
 
 export const FlowCycleCard: React.FC<Props> = ({
   cycle,
+  onDelete,
   onMarkEnded,
   onShare,
-  onDelete,
 }) => {
   const intl = useIntl();
+
+  const handleMarkEnded = useCallback(() => {
+    onMarkEnded(cycle);
+  }, [onMarkEnded, cycle]);
+
+  const handleShare = useCallback(() => {
+    onShare(cycle);
+  }, [onShare, cycle]);
+
+  const handleDelete = useCallback(() => {
+    onDelete(cycle);
+  }, [onDelete, cycle]);
 
   return (
     <div className='flow-cycle-card'>
       <div className='flow-cycle-card__header'>
         <span className={`flow-cycle-card__phase flow-cycle-card__phase--${cycle.current_phase}`}>
-          {intl.formatMessage(messages[PHASE_LABELS[cycle.current_phase]])}
+          {intl.formatMessage(messages[PHASE_MESSAGES[cycle.current_phase]])}
         </span>
         <span className='flow-cycle-card__dates'>
           {formatDate(cycle.started_on)}
@@ -90,20 +104,20 @@ export const FlowCycleCard: React.FC<Props> = ({
           {!cycle.ended_on && (
             <button
               className='flow-cycle-card__action'
-              onClick={() => { onMarkEnded(cycle); }}
+              onClick={handleMarkEnded}
             >
               {intl.formatMessage(messages.markEnded)}
             </button>
           )}
           <button
             className='flow-cycle-card__action'
-            onClick={() => { onShare(cycle); }}
+            onClick={handleShare}
           >
             {intl.formatMessage(messages.shareWith)}
           </button>
           <button
             className='flow-cycle-card__action flow-cycle-card__action--danger'
-            onClick={() => { onDelete(cycle); }}
+            onClick={handleDelete}
           >
             {intl.formatMessage(messages.delete)}
           </button>
