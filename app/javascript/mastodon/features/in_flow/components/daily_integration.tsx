@@ -115,7 +115,7 @@ function buildIntegration(
   // Highest priority: meteor shower peak tonight
   if (meteorPeak) {
     if (phase === 'new_moon' || phase === 'waning_crescent') {
-      return `The ${meteorPeak.name} peak tonight into a dark sky — a hundred brief crossings before dawn.`;
+      return `The ${meteorPeak.name} peak tonight into a dark sky - a hundred brief crossings before dawn.`;
     }
     return `The ${meteorPeak.name} peak tonight under a ${phaseStr}, the sky alive with brief crossings.`;
   }
@@ -123,51 +123,51 @@ function buildIntegration(
   // Supermoon + full or new
   if (superMoon.isSuper && phase === 'full_moon') {
     if (nearTurning && turningLabel) {
-      return `A supermoon rises into the ${isWinter ? 'longest' : 'full'} nights as ${turningLabel} draws near — the sky at its most generous.`;
+      return `A supermoon rises into the ${isWinter ? 'longest' : 'full'} nights as ${turningLabel} draws near - the sky at its most generous.`;
     }
     if (isWinter)
-      return `A supermoon fills the long winter sky — closer and brighter, the night made luminous.`;
+      return `A supermoon fills the long winter sky - closer and brighter, the night made luminous.`;
     if (isSummer)
       return `A supermoon rides the warm summer dark, expansive and close.`;
-    return `A supermoon holds the sky — closer than usual, the night lit from edge to edge.`;
+    return `A supermoon holds the sky - closer than usual, the night lit from edge to edge.`;
   }
 
   // Turning point proximity (within 2 days = at the threshold)
   if (veryNearTurning && turningLabel) {
     if (phase === 'full_moon') {
-      return `As ${turningLabel} arrives, the full moon keeps the whole sky open — two great thresholds meeting.`;
+      return `As ${turningLabel} arrives, the full moon keeps the whole sky open - two great thresholds meeting.`;
     }
     if (phase === 'new_moon') {
-      return `The dark of the new moon holds the moment as ${turningLabel} arrives — the Kosmos drawn inward.`;
+      return `The dark of the new moon holds the moment as ${turningLabel} arrives - the Kosmos drawn inward.`;
     }
     if (isWinter)
-      return `We stand at the ${turningLabel} threshold — the long dark reaches its still-point under a ${phaseStr}.`;
+      return `We stand at the ${turningLabel} threshold - the long dark reaches its still-point under a ${phaseStr}.`;
     if (isSummer)
-      return `${turningLabel} is here — the land at full surge under a ${phaseStr}.`;
+      return `${turningLabel} is here - the land at full surge under a ${phaseStr}.`;
     return `${turningLabel} arrives under a ${phaseStr}, the year turning its page.`;
   }
 
   // Turning approaching (within 7 days)
   if (nearTurning && turningLabel) {
     if (phase === 'full_moon') {
-      return `As the solstice draws near, the full moon rises into the ${isWinter ? 'longest' : 'briefest'} nights — the sky at its most generous.`;
+      return `As the solstice draws near, the full moon rises into the ${isWinter ? 'longest' : 'briefest'} nights - the sky at its most generous.`;
     }
     if (phase === 'new_moon') {
       if (isWinter)
-        return `The dark of the new moon holds the winter sky open as ${turningLabel} approaches — the stars press close tonight.`;
+        return `The dark of the new moon holds the winter sky open as ${turningLabel} approaches - the stars press close tonight.`;
       return `Under a new moon, the Kosmos draws quiet as ${turningLabel} draws near.`;
     }
     if (deltaMinutes < -0.5)
       return `Under a waning ${phaseStr}, we move toward ${turningLabel}, the world contracting to its quiet centre.`;
-    return `A ${phaseStr} climbs toward ${turningLabel} — the year gathering itself.`;
+    return `A ${phaseStr} climbs toward ${turningLabel} - the year gathering itself.`;
   }
 
   // Moon phase + season direction without special events
   if (phase === 'full_moon') {
     if (isWinter)
-      return `The full moon rises into the long winter dark — silver on every surface, the night turned generous.`;
+      return `The full moon rises into the long winter dark - silver on every surface, the night turned generous.`;
     if (isSummer)
-      return `Full moon in summer — the sky barely dims, light folding over light.`;
+      return `Full moon in summer - the sky barely dims, light folding over light.`;
     if (isAutumn)
       return `A full moon floods the autumn night, the world distilled to silver and shadow.`;
     return `The full moon holds the sky open, the stars recede to its edges.`;
@@ -175,10 +175,10 @@ function buildIntegration(
 
   if (phase === 'new_moon') {
     if (isWinter)
-      return `The dark of the new moon holds the winter sky open — the stars press close tonight.`;
+      return `The dark of the new moon holds the winter sky open - the stars press close tonight.`;
     if (isSummer)
-      return `A new moon leaves the summer sky to starlight — the quietest night of the cycle.`;
-    return `A new moon, and the deep field opens — the Kosmos behind the Kosmos.`;
+      return `A new moon leaves the summer sky to starlight - the quietest night of the cycle.`;
+    return `A new moon, and the deep field opens - the Kosmos behind the Kosmos.`;
   }
 
   if (
@@ -190,7 +190,7 @@ function buildIntegration(
       return `A waxing ${phaseStr.replace('waxing ', '')} climbs through autumn, the light inside and outside both building.`;
     }
     if (deltaMinutes > 0.5) {
-      return `A ${phaseStr} rises as the days lengthen — two crescents, sky and season, opening together.`;
+      return `A ${phaseStr} rises as the days lengthen - two crescents, sky and season, opening together.`;
     }
   }
 
@@ -203,21 +203,21 @@ function buildIntegration(
       return `Under a waning crescent, we move toward the solstice dark, the world contracting to its quiet centre.`;
     }
     if (deltaMinutes < -0.5) {
-      return `A ${phaseStr} moves through the shortening days — the Kosmos drawing inward on both clocks.`;
+      return `A ${phaseStr} moves through the shortening days - the Kosmos drawing inward on both clocks.`;
     }
   }
 
   // Fallbacks by season
   if (isWinter)
-    return `The land rests under a ${phaseStr} — winter quiet, the sky turning slowly overhead.`;
+    return `The land rests under a ${phaseStr} - winter quiet, the sky turning slowly overhead.`;
   if (isSummer)
     return `A ${phaseStr} in the summer sky, riding the long arc of light.`;
   if (isAutumn)
-    return `Autumn and a ${phaseStr} — the world mellowing toward its quiet season.`;
+    return `Autumn and a ${phaseStr} - the world mellowing toward its quiet season.`;
 
   // Spring fallback
   if (deltaMinutes > 0.5)
-    return `Spring light surging under a ${phaseStr} — the year at full stretch.`;
+    return `Spring light surging under a ${phaseStr} - the year at full stretch.`;
   return `A ${phaseStr} moves through the spring sky, the world opening.`;
 }
 
@@ -371,7 +371,7 @@ export const DailyIntegration: React.FC = () => {
           <span className='in-flow__daily-tile-value'>{soilValue}</span>
         </div>
 
-        {/* Season card — only when ≤7 days away */}
+        {/* Season card - only when ≤7 days away */}
         {seasonValue && seasonLabel && (
           <div className='in-flow__daily-tile in-flow__daily-tile--season'>
             <div className='in-flow__daily-tile-header'>

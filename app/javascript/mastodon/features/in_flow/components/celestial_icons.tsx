@@ -300,3 +300,102 @@ export const MoonPhaseIcon = ({
       return <MoonCrescentIcon size={size} waning />;
   }
 };
+
+// Renders the moon as a graphic showing the actual illuminated/dark portions.
+// Uses SVG mask: white circle minus offset shadow circle reveals the lit fraction.
+// illumination is 0–1; waning controls which side is lit.
+export const MoonIlluminationIcon: React.FC<{
+  illumination: number;
+  waning?: boolean;
+  size?: number;
+  className?: string;
+}> = ({ illumination, waning = false, size = 48, className }) => {
+  const R = size * 0.42;
+  const cx = size / 2;
+  const cy = size / 2;
+  // Shadow circle offset: at illumination=0 shadow fully covers (offset=0),
+  // at illumination=1 shadow is fully off-screen (offset=2R).
+  // Waxing: shadow on left (negative x), waning: shadow on right (positive x).
+  const shadowOffset = 2 * R * illumination;
+  const shadowCx = waning ? cx + shadowOffset : cx - shadowOffset;
+  const maskId = `moon-mask-${size}`;
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className={className}
+    >
+      <defs>
+        <mask id={maskId}>
+          <circle cx={cx} cy={cy} r={R} fill='white' />
+          {illumination < 0.99 && (
+            <circle cx={shadowCx} cy={cy} r={R} fill='black' />
+          )}
+        </mask>
+      </defs>
+      {/* Dark face */}
+      <circle cx={cx} cy={cy} r={R} fill='currentColor' opacity='0.12' />
+      {/* Outline */}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={R}
+        fill='none'
+        stroke='currentColor'
+        strokeWidth='1'
+        opacity='0.35'
+      />
+      {/* Lit region via mask */}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={R}
+        fill='currentColor'
+        opacity='0.9'
+        mask={`url(#${maskId})`}
+      />
+      {/* Lunar mare texture — dark patches visible only in lit region */}
+      {illumination > 0.15 && (
+        <g mask={`url(#${maskId})`} opacity='0.22'>
+          <ellipse
+            cx={cx - R * 0.32}
+            cy={cy - R * 0.24}
+            rx={R * 0.22}
+            ry={R * 0.2}
+            fill='black'
+          />
+          <ellipse
+            cx={cx - R * 0.5}
+            cy={cy + R * 0.08}
+            rx={R * 0.18}
+            ry={R * 0.28}
+            fill='black'
+          />
+          <ellipse
+            cx={cx - R * 0.1}
+            cy={cy + R * 0.38}
+            rx={R * 0.13}
+            ry={R * 0.11}
+            fill='black'
+          />
+          <ellipse
+            cx={cx + R * 0.24}
+            cy={cy + R * 0.06}
+            rx={R * 0.13}
+            ry={R * 0.15}
+            fill='black'
+          />
+          <ellipse
+            cx={cx + R * 0.12}
+            cy={cy - R * 0.28}
+            rx={R * 0.1}
+            ry={R * 0.1}
+            fill='black'
+          />
+        </g>
+      )}
+    </svg>
+  );
+};
