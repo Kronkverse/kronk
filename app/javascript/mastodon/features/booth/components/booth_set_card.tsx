@@ -2,14 +2,21 @@ import { useCallback, useRef, useState } from 'react';
 
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
+import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
 import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
+import api from 'mastodon/api';
+
 import type { BoothSet } from '../types';
 
 interface Props {
   set: BoothSet;
+  onSelect: (set: BoothSet) => void;
   onPlay: (set: BoothSet) => void;
+  onTogglePlay: () => void;
   onEdit: (set: BoothSet) => void;
+  onDelete: (id: string) => void;
   active: boolean;
+  playing: boolean;
 }
 
 function formatDuration(seconds: number | null): string {
@@ -20,20 +27,35 @@ function formatDuration(seconds: number | null): string {
   return `${m}m`;
 }
 
-export const BoothSetCard: React.FC<Props> = ({ set, onPlay, onEdit, active }) => {
+export const BoothSetCard: React.FC<Props> = ({
+  set,
+  onSelect,
+  onPlay,
+  onTogglePlay,
+  onEdit,
+  onDelete,
+  active,
+  playing,
+}) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleCardClick = useCallback(() => {
-    onPlay(set);
-  }, [set, onPlay]);
+    onSelect(set);
+  }, [set, onSelect]);
 
-  const handlePlayClick = useCallback(
+  const handleOverlayClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      onPlay(set);
+      if (active) {
+        onTogglePlay();
+      } else {
+        onPlay(set);
+      }
     },
-    [set, onPlay],
+    [active, set, onPlay, onTogglePlay],
   );
 
   const handleMenuToggle = useCallback((e: React.MouseEvent) => {
@@ -44,6 +66,7 @@ export const BoothSetCard: React.FC<Props> = ({ set, onPlay, onEdit, active }) =
   const handleMenuBlur = useCallback((e: React.FocusEvent) => {
     if (!menuRef.current?.contains(e.relatedTarget as Node)) {
       setMenuOpen(false);
+      setConfirmingDelete(false);
     }
   }, []);
 
@@ -56,19 +79,49 @@ export const BoothSetCard: React.FC<Props> = ({ set, onPlay, onEdit, active }) =
     [set, onEdit],
   );
 
+  const handleDeleteClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConfirmingDelete(true);
+  }, []);
+
+  const handleDeleteCancel = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConfirmingDelete(false);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setMenuOpen(false);
+      setConfirmingDelete(false);
+      setDeleting(true);
+      void api()
+        .delete(`/api/v1/booth_sets/${set.id}`)
+        .then(() => {
+          onDelete(set.id);
+        })
+        .catch(() => {
+          setDeleting(false);
+        });
+    },
+    [set.id, onDelete],
+  );
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        onPlay(set);
+        onSelect(set);
       }
     },
-    [set, onPlay],
+    [set, onSelect],
   );
+
+  const coverPosition = `50% ${set.cover_offset_y ?? 50}%`;
 
   return (
     <div
-      className={`booth-card${active ? ' booth-card--active' : ''}`}
+      className={`booth-card${active ? ' booth-card--active' : ''}${deleting ? ' booth-card--deleting' : ''}`}
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}
       role='button'
@@ -77,19 +130,23 @@ export const BoothSetCard: React.FC<Props> = ({ set, onPlay, onEdit, active }) =
     >
       <div className='booth-card__cover'>
         {set.cover_url ? (
-          <img src={set.cover_url} alt='' />
+          <img
+            src={set.cover_url}
+            alt=''
+            style={{ objectPosition: coverPosition }}
+          />
         ) : (
           <div className='booth-card__cover-placeholder'>
             <HeadphonesIcon />
           </div>
         )}
         <button
-          className='booth-card__play-overlay'
-          onClick={handlePlayClick}
-          aria-label={`Play ${set.title}`}
+          className={`booth-card__play-overlay${active && playing ? ' booth-card__play-overlay--visible' : ''}`}
+          onClick={handleOverlayClick}
+          aria-label={active && playing ? 'Pause' : `Play ${set.title}`}
           type='button'
         >
-          <PlayArrowIcon />
+          {active && playing ? <PauseIcon /> : <PlayArrowIcon />}
         </button>
       </div>
 
@@ -100,9 +157,11 @@ export const BoothSetCard: React.FC<Props> = ({ set, onPlay, onEdit, active }) =
           <div className='booth-card__event'>{set.event_name}</div>
         )}
         <div className='booth-card__meta'>
-          {set.genre && (
-            <span className='booth-card__genre'>{set.genre}</span>
-          )}
+          {set.genres.map((g) => (
+            <span key={g} className='booth-card__genre'>
+              {g}
+            </span>
+          ))}
           {set.duration_seconds != null && (
             <span className='booth-card__duration'>
               {formatDuration(set.duration_seconds)}
@@ -132,13 +191,46 @@ export const BoothSetCard: React.FC<Props> = ({ set, onPlay, onEdit, active }) =
           </button>
           {menuOpen && (
             <div className='booth-card__menu'>
-              <button
-                className='booth-card__menu-item'
-                onMouseDown={handleEdit}
-                type='button'
-              >
-                Edit
-              </button>
+              {confirmingDelete ? (
+                <div className='booth-card__menu-confirm'>
+                  <span className='booth-card__menu-confirm-text'>
+                    Delete this set?
+                  </span>
+                  <div className='booth-card__menu-confirm-actions'>
+                    <button
+                      className='booth-card__menu-item'
+                      onMouseDown={handleDeleteCancel}
+                      type='button'
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className='booth-card__menu-item booth-card__menu-item--danger'
+                      onMouseDown={handleDeleteConfirm}
+                      type='button'
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    className='booth-card__menu-item'
+                    onMouseDown={handleEdit}
+                    type='button'
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className='booth-card__menu-item booth-card__menu-item--danger'
+                    onMouseDown={handleDeleteClick}
+                    type='button'
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>

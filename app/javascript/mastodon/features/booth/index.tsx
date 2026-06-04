@@ -1,10 +1,11 @@
-import { useRef, useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import api from 'mastodon/api';
 import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
@@ -13,8 +14,9 @@ import { useIdentity } from 'mastodon/identity_context';
 import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
 import { BoothSetCard } from './components/booth_set_card';
-import { BottomPlayer } from './components/bottom_player';
 import { EditForm } from './components/edit_form';
+import { InlinePlayer } from './components/inline_player';
+import type { InlinePlayerHandle } from './components/inline_player';
 import { UploadForm } from './components/upload_form';
 import type { BoothSet } from './types';
 
@@ -35,10 +37,14 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const columnRef = useRef<ColumnRef>(null);
   const { signedIn } = useIdentity();
+  const playerRef = useRef<InlinePlayerHandle>(null);
 
   const [sets, setSets] = useState<BoothSet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [playingSet, setPlayingSet] = useState<BoothSet | null>(null);
+  const [activeSet, setActiveSet] = useState<BoothSet | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playRequested, setPlayRequested] = useState(false);
   const [editingSet, setEditingSet] = useState<BoothSet | null>(null);
   const [showUpload, setShowUpload] = useState(false);
 
@@ -58,13 +64,44 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         setSets(res.data);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  const handleSelect = useCallback((set: BoothSet) => {
+    setPlayRequested(false);
+    setActiveSet((prev) => {
+      if (prev?.id === set.id) {
+        setExpanded(true);
+        return prev;
+      }
+      setExpanded(true);
+      setIsPlaying(false);
+      return set;
+    });
+    setEditingSet(null);
+    setShowUpload(false);
   }, []);
 
   const handlePlay = useCallback((set: BoothSet) => {
-    setPlayingSet(set);
+    setPlayRequested(true);
+    setActiveSet((prev) => {
+      if (prev?.id === set.id) {
+        setExpanded(true);
+        playerRef.current?.togglePlayPause();
+        return prev;
+      }
+      setExpanded(true);
+      setIsPlaying(false);
+      return set;
+    });
     setEditingSet(null);
     setShowUpload(false);
+  }, []);
+
+  const handleTogglePlay = useCallback(() => {
+    playerRef.current?.togglePlayPause();
   }, []);
 
   const handleEdit = useCallback((set: BoothSet) => {
@@ -73,17 +110,62 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
   }, []);
 
   const handleEditSuccess = useCallback((updated: BoothSet) => {
-    setSets((prev) =>
-      prev.map((s) => (s.id === updated.id ? updated : s)),
-    );
+    setSets((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
     setEditingSet(null);
-    setPlayingSet((prev) => (prev?.id === updated.id ? updated : prev));
+    setActiveSet((prev) => (prev?.id === updated.id ? updated : prev));
+  }, []);
+
+  const handleDelete = useCallback((id: string) => {
+    setSets((prev) => prev.filter((s) => s.id !== id));
+    setActiveSet((prev) => (prev?.id === id ? null : prev));
+    setExpanded(false);
   }, []);
 
   const handleUploadSuccess = useCallback((set: BoothSet) => {
     setSets((prev) => [set, ...prev]);
-    setPlayingSet(set);
+    setActiveSet(set);
+    setExpanded(true);
     setShowUpload(false);
+  }, []);
+
+  const handleShowUpload = useCallback(() => {
+    setShowUpload(true);
+  }, []);
+  const handleCancelUpload = useCallback(() => {
+    setShowUpload(false);
+  }, []);
+  const handleCancelEdit = useCallback(() => {
+    setEditingSet(null);
+  }, []);
+  const handleFilterArtistChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFilterArtist(e.target.value);
+    },
+    [],
+  );
+  const handleFilterGenreChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFilterGenre(e.target.value);
+    },
+    [],
+  );
+  const handleFilterEventChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFilterEvent(e.target.value);
+    },
+    [],
+  );
+  const handleFilterDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFilterDate(e.target.value);
+    },
+    [],
+  );
+  const handleClearDate = useCallback(() => {
+    setFilterDate('');
+  }, []);
+  const handleCollapse = useCallback(() => {
+    setExpanded(false);
   }, []);
 
   const filteredSets = sets.filter((set) => {
@@ -94,14 +176,14 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
       return false;
     if (
       filterGenre &&
-      (!set.genre ||
-        !set.genre.toLowerCase().includes(filterGenre.toLowerCase()))
+      !set.genres.some((g) =>
+        g.toLowerCase().includes(filterGenre.toLowerCase()),
+      )
     )
       return false;
     if (
       filterEvent &&
-      (!set.event_name ||
-        !set.event_name.toLowerCase().includes(filterEvent.toLowerCase()))
+      !set.event_name?.toLowerCase().includes(filterEvent.toLowerCase())
     )
       return false;
     if (filterDate && set.event_date !== filterDate) return false;
@@ -129,9 +211,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         {signedIn && !showUpload && !editingSet && (
           <button
             className='booth__upload-btn'
-            onClick={() => {
-              setShowUpload(true);
-            }}
+            onClick={handleShowUpload}
             type='button'
           >
             <AddIcon />
@@ -142,7 +222,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         {showUpload && (
           <UploadForm
             onSuccess={handleUploadSuccess}
-            onCancel={() => setShowUpload(false)}
+            onCancel={handleCancelUpload}
           />
         )}
 
@@ -150,7 +230,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
           <EditForm
             set={editingSet}
             onSuccess={handleEditSuccess}
-            onCancel={() => setEditingSet(null)}
+            onCancel={handleCancelEdit}
           />
         )}
 
@@ -161,32 +241,44 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
               type='text'
               placeholder={intl.formatMessage(messages.filterArtist)}
               value={filterArtist}
-              onChange={(e) => setFilterArtist(e.target.value)}
+              onChange={handleFilterArtistChange}
             />
             <input
               className='booth__filter-input'
               type='text'
               placeholder={intl.formatMessage(messages.filterGenre)}
               value={filterGenre}
-              onChange={(e) => setFilterGenre(e.target.value)}
+              onChange={handleFilterGenreChange}
             />
             <input
               className='booth__filter-input'
               type='text'
               placeholder={intl.formatMessage(messages.filterEvent)}
               value={filterEvent}
-              onChange={(e) => setFilterEvent(e.target.value)}
+              onChange={handleFilterEventChange}
             />
-            <input
-              className='booth__filter-input booth__filter-input--date'
-              type='date'
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-            />
+            <div className='booth__filter-date-wrap'>
+              <input
+                className='booth__filter-input booth__filter-input--date'
+                type='date'
+                value={filterDate}
+                onChange={handleFilterDateChange}
+              />
+              {filterDate && (
+                <button
+                  className='booth__filter-date-clear'
+                  onClick={handleClearDate}
+                  aria-label='Clear date filter'
+                  type='button'
+                >
+                  <CloseIcon />
+                </button>
+              )}
+            </div>
           </div>
         )}
 
-        <div className={`booth__list${playingSet ? ' booth__list--with-player' : ''}`}>
+        <div className='booth__list'>
           {loading && (
             <div className='booth__loading'>
               {intl.formatMessage(messages.loading)}
@@ -198,22 +290,33 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
             </div>
           )}
           {filteredSets.map((set) => (
-            <BoothSetCard
-              key={set.id}
-              set={set}
-              onPlay={handlePlay}
-              onEdit={handleEdit}
-              active={playingSet?.id === set.id}
-            />
+            <Fragment key={set.id}>
+              {/* Hide the card while its player is expanded */}
+              {!(activeSet?.id === set.id && expanded) && (
+                <BoothSetCard
+                  set={set}
+                  onSelect={handleSelect}
+                  onPlay={handlePlay}
+                  onTogglePlay={handleTogglePlay}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  active={activeSet?.id === set.id}
+                  playing={isPlaying && activeSet?.id === set.id}
+                />
+              )}
+              {activeSet?.id === set.id && (
+                <InlinePlayer
+                  ref={playerRef}
+                  set={activeSet}
+                  hidden={!expanded}
+                  autoPlay={playRequested}
+                  onCollapse={handleCollapse}
+                  onPlayingChange={setIsPlaying}
+                />
+              )}
+            </Fragment>
           ))}
         </div>
-
-        {playingSet && (
-          <BottomPlayer
-            set={playingSet}
-            onClose={() => setPlayingSet(null)}
-          />
-        )}
       </div>
 
       <Helmet>

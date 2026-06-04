@@ -208,7 +208,7 @@ class NotifyService < BaseService
     end
   end
 
-  def call(recipient, type, activity)
+  def call(recipient, type, activity, skip_push: false)
     return if recipient.user.nil?
 
     @recipient    = recipient
@@ -224,17 +224,30 @@ class NotifyService < BaseService
 
     # It's possible the underlying activity has been deleted
     # between the save call and now
-    return if @notification.activity.nil?
+    return @notification if @notification.activity.nil?
 
     if @notification.filtered?
       update_notification_request!
-    else
+    elsif !skip_push
       push_notification!
       push_to_conversation! if direct_message?
       send_email! if email_needed?
     end
+
+    @notification
   rescue ActiveRecord::RecordInvalid
     nil
+  end
+
+  # Dispatch streaming/push for a notification created with skip_push: true.
+  # Call this after attaching any associated data (e.g. NudgeMessage) so the
+  # serialized payload includes it.
+  def dispatch!
+    return if @notification.nil? || @notification.filtered? || @notification.activity.nil?
+
+    push_notification!
+    push_to_conversation! if direct_message?
+    send_email! if email_needed?
   end
 
   private
