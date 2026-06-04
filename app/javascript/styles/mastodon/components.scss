@@ -13098,6 +13098,40 @@ noscript {
       width: 14px;
       height: 14px;
     }
+
+    &--bump {
+      animation: nudge-streak-bump 0.5s ease-out both;
+    }
+  }
+}
+
+@keyframes nudge-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes nudge-streak-bump {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.35);
+  }
+
+  70% {
+    transform: scale(0.92);
+  }
+
+  100% {
+    transform: scale(1);
   }
 }
 
@@ -13194,6 +13228,74 @@ noscript {
     align-self: flex-end;
     margin-top: 2px;
   }
+
+  &__reactions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 4px;
+    opacity: 0.4;
+    transition: opacity 0.15s;
+
+    &--active {
+      opacity: 1;
+    }
+  }
+
+  &:hover &__reactions,
+  &__reactions--active {
+    opacity: 1;
+  }
+
+  &--new {
+    animation: nudge-bubble-in 0.3s ease-out both;
+  }
+
+  &__react-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: lighten($ui-base-color, 8%);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1.2;
+    color: $primary-text-color;
+    transition:
+      background 0.1s,
+      border-color 0.1s;
+
+    .nudge-bubble--sent & {
+      background: rgba(255, 255, 255, 15%);
+      color: #fff;
+    }
+
+    &--me {
+      background: $highlight-text-color;
+      border-color: $highlight-text-color;
+      color: #fff;
+
+      .nudge-bubble--sent & {
+        background: rgba(255, 255, 255, 35%);
+        border-color: rgba(255, 255, 255, 60%);
+      }
+    }
+
+    &:hover {
+      background: lighten($ui-base-color, 16%);
+
+      .nudge-bubble--sent & {
+        background: rgba(255, 255, 255, 25%);
+      }
+    }
+  }
+
+  &__react-count {
+    font-size: 11px;
+    font-weight: 600;
+  }
 }
 
 // ── Nudge ping divider ────────────────────────────────────────────────────────
@@ -13233,6 +13335,19 @@ noscript {
   color: $error-value-color;
   background: rgba($error-value-color, 0.08);
   border-top: 1px solid rgba($error-value-color, 0.2);
+}
+
+.nudge-compose-bar__waiting {
+  padding: 10px 16px;
+  font-size: 13px;
+  color: $dark-text-color;
+  text-align: center;
+  border-top: 1px solid lighten($ui-base-color, 8%);
+}
+
+.nudge-compose-bar--disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .nudge-compose-bar {
@@ -13398,6 +13513,147 @@ noscript {
 
   50% {
     opacity: 0.4;
+  }
+}
+
+// ── Signal-style voice waveform ───────────────────────────────────────────────
+
+.nudge-waveform {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  height: 36px;
+  overflow: hidden;
+
+  &__bar {
+    flex: 1;
+    min-width: 2px;
+    max-width: 5px;
+    height: calc(var(--bar-h) * 100%);
+    border-radius: 2px;
+    background: $highlight-text-color;
+    opacity: 0.55;
+    transition: height 0.07s ease;
+  }
+
+  &--live &__bar {
+    opacity: 0.85;
+    transition: height 0.05s ease;
+  }
+}
+
+// ── Recording bar (replaces compose row while mic is active) ─────────────────
+
+.nudge-voice-recording {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px;
+
+  &__dot {
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: $error-red;
+    animation: nudge-record-pulse 1s ease-in-out infinite;
+  }
+
+  &__timer {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: $dark-text-color;
+    min-width: 2.5ch;
+    text-align: right;
+  }
+
+  &__stop {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: $error-red;
+    border: none;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      background: lighten($error-red, 8%);
+    }
+  }
+}
+
+// ── Pre-send voice preview (Signal-style playback bar) ────────────────────────
+
+.nudge-voice-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px 10px;
+  border-bottom: 1px solid lighten($ui-base-color, 8%);
+  margin-bottom: 4px;
+
+  &__play {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: $highlight-text-color;
+    border: none;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background: lighten($highlight-text-color, 8%);
+    }
+  }
+
+  &__dur {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: $dark-text-color;
+    min-width: 2.5ch;
+    text-align: right;
+  }
+
+  &__del {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: lighten($ui-base-color, 10%);
+    border: none;
+    color: $dark-text-color;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
+
+    &:hover {
+      background: lighten($ui-base-color, 16%);
+      color: $primary-text-color;
+    }
   }
 }
 
