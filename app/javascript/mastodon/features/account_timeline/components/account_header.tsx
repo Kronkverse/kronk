@@ -1007,12 +1007,6 @@ export const AccountHeader: React.FC<{
           <NavLink exact to={`/@${account.acct}/media`}>
             <FormattedMessage id='account.media' defaultMessage='Media' />
           </NavLink>
-          <NavLink exact to={`/@${account.acct}/tagged-media`}>
-            <FormattedMessage
-              id='account.tagged_media'
-              defaultMessage='Tagged'
-            />
-          </NavLink>
           {me !== account.id && signedIn && (
             <NavLink exact to={`/@${account.acct}/nudges`}>
               <FormattedMessage id='account.nudges' defaultMessage='Nudges' />
