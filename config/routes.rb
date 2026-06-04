@@ -228,6 +228,8 @@ Rails.application.routes.draw do
   get '/booth/sets/:id/embed', to: 'booth#embed', as: :embed_booth_set
   get '/booth', to: 'booth#index'
   get '/booth/*path', to: 'booth#index', format: false
+  get '/flow', to: 'flow#index'
+  get '/flow/*path', to: 'flow#index', format: false
   get '/home', to: 'home#index'
   get '/huddle', to: 'huddle#index'
   get '/kalendar', to: 'kalendar#index'

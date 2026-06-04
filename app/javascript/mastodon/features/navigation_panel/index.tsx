@@ -14,6 +14,8 @@ import kronkWordmark from '@/images/kronk-wordmark-small.png';
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import BarChartActiveIcon from '@/material-icons/400-24px/bar_chart_4_bars-fill.svg?react';
 import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
+import FavoriteActiveIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
+import FavoriteIcon from '@/material-icons/400-24px/favorite.svg?react';
 import HeadphonesActiveIcon from '@/material-icons/400-24px/headphones-fill.svg?react';
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import CalendarMonthActiveIcon from '@/material-icons/400-24px/calendar_month-fill.svg?react';
@@ -73,6 +75,7 @@ const messages = defineMessages({
   questions: { id: 'questions.title', defaultMessage: 'Ƙuestions' },
   market: { id: 'market.title', defaultMessage: 'Market' },
   booth: { id: 'booth.title', defaultMessage: 'The Booth' },
+  flow: { id: 'flow.title', defaultMessage: 'Flow' },
   events: { id: 'events.title', defaultMessage: '₭alendar' },
   inFlow: { id: 'in_flow.title', defaultMessage: 'In Flow' },
   nudges: { id: 'nudges.title', defaultMessage: 'Nudges' },
@@ -403,6 +406,16 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               activeIconComponent={HeadphonesActiveIcon}
               text={intl.formatMessage(messages.booth)}
               tooltip='The Booth — DJ sets &amp; mixes'
+            />
+
+            <ColumnLink
+              transparent
+              to='/flow'
+              icon='favorite'
+              iconComponent={FavoriteIcon}
+              activeIconComponent={FavoriteActiveIcon}
+              text={intl.formatMessage(messages.flow)}
+              tooltip='Flow — cycle tracking'
             />
 
             <NudgesLink />
