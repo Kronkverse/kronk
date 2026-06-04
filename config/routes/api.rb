@@ -107,6 +107,10 @@ namespace :api, format: false do
       end
     end
 
+    namespace :in_flow do
+      resource :observation, only: [:show]
+    end
+
     resources :booth_sets, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :play
