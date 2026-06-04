@@ -1,30 +1,36 @@
-import { useState, useCallback, useRef, memo } from 'react';
+import { useState, useCallback, useRef, memo, useEffect } from 'react';
 
-import { defineMessages, useIntl } from 'react-intl';
+import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import { closeModal } from 'mastodon/actions/modal';
 import api from 'mastodon/api';
-import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
-import { Avatar } from 'mastodon/components/avatar';
 import {
-  getPendingTags,
-  setPendingTags,
-} from 'mastodon/features/compose/utils/pending_media_tags';
-import type { PendingTag } from 'mastodon/features/compose/utils/pending_media_tags';
-import { useAppDispatch } from 'mastodon/store';
+  apiAddMediaTag,
+  apiGetMediaTags,
+  apiRemoveMediaTag,
+} from 'mastodon/api/media_tags';
+import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+import type { ApiMediaTagJSON } from 'mastodon/api_types/media_attachments';
+import { Avatar } from 'mastodon/components/avatar';
+import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({
-  title: { id: 'tag_people.title', defaultMessage: 'Tag people' },
+  title: { id: 'tag_media.title', defaultMessage: 'Tag people' },
+  clickToPlace: {
+    id: 'tag_media.click_to_place',
+    defaultMessage: 'Click the photo to place a tag',
+  },
   searchPlaceholder: {
-    id: 'tag_people.search',
+    id: 'tag_media.search',
     defaultMessage: 'Search for a person…',
   },
-  done: { id: 'tag_people.done', defaultMessage: 'Done' },
-  clickToPlace: {
-    id: 'tag_people.click_to_place',
-    defaultMessage: 'Click the image to place a tag',
+  tagMyself: { id: 'tag_media.tag_myself', defaultMessage: 'Tag myself' },
+  remove: { id: 'tag_media.remove', defaultMessage: 'Remove' },
+  done: { id: 'tag_media.done', defaultMessage: 'Done' },
+  alreadyTagged: {
+    id: 'tag_media.already_tagged',
+    defaultMessage: 'Already tagged',
   },
-  remove: { id: 'tag_people.remove', defaultMessage: 'Remove' },
 });
 
 const SuggestionItem = memo<{
@@ -51,7 +57,7 @@ SuggestionItem.displayName = 'SuggestionItem';
 const RemoveTagButton = memo<{
   accountId: string;
   label: string;
-  onRemove: (accountId: string) => void;
+  onRemove: (id: string) => void;
 }>(({ accountId, label, onRemove }) => {
   const handleClick = useCallback(() => {
     onRemove(accountId);
@@ -69,32 +75,55 @@ const RemoveTagButton = memo<{
 });
 RemoveTagButton.displayName = 'RemoveTagButton';
 
-export const TagPeopleModal: React.FC<{
+export const SelfTagModal: React.FC<{
   mediaId: string;
   previewUrl: string;
 }> = ({ mediaId, previewUrl }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
-  const [tags, setTags] = useState<PendingTag[]>(() => getPendingTags(mediaId));
-  const [pendingPin, setPendingPin] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
+  const myId = useAppSelector((state) => state.meta.get('me') as string);
+
+  const imgRef = useRef<HTMLDivElement>(null);
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [existingTags, setExistingTags] = useState<ApiMediaTagJSON[]>([]);
+  const [pendingPin, setPendingPin] = useState<{ x: number; y: number } | null>(
+    null,
+  );
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<ApiAccountJSON[]>([]);
   const [searching, setSearching] = useState(false);
-  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const imgRef = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load existing tags on open
+  useEffect(() => {
+    apiGetMediaTags(mediaId)
+      .then(setExistingTags)
+      .catch(() => undefined);
+  }, [mediaId]);
+
+  const close = useCallback(() => {
+    dispatch(closeModal({ modalType: 'SELF_TAG', ignoreFocus: false }));
+  }, [dispatch]);
 
   const handleImageClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (!imgRef.current) return;
       const rect = imgRef.current.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
-      setPendingPin({ x, y });
+      setPendingPin({
+        x: (e.clientX - rect.left) / rect.width,
+        y: (e.clientY - rect.top) / rect.height,
+      });
       setQuery('');
       setSuggestions([]);
+      setError(null);
+    },
+    [],
+  );
+
+  const handleImageKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Enter') e.currentTarget.click();
     },
     [],
   );
@@ -126,56 +155,92 @@ export const TagPeopleModal: React.FC<{
     [],
   );
 
-  const handleSelectAccount = useCallback(
-    (account: ApiAccountJSON) => {
-      if (!pendingPin) return;
-      const already = tags.find((t) => t.accountId === account.id);
-      if (already) {
-        setPendingPin(null);
-        setQuery('');
-        setSuggestions([]);
+  const applyTag = useCallback(
+    (accountId: string, pinOverride?: { x: number; y: number }) => {
+      const effectivePin = pinOverride ?? pendingPin;
+      if (!effectivePin) return;
+      const alreadyTagged = existingTags.some(
+        (t) => t.account_id === accountId,
+      );
+      if (alreadyTagged) {
+        setError(intl.formatMessage(messages.alreadyTagged));
         return;
       }
-      const newTag: PendingTag = {
-        accountId: account.id,
-        accountName: account.display_name || account.username,
-        x: pendingPin.x,
-        y: pendingPin.y,
-      };
-      const next = [...tags, newTag];
-      setTags(next);
-      setPendingTags(mediaId, next);
-      setPendingPin(null);
-      setQuery('');
-      setSuggestions([]);
+      const { x, y } = effectivePin;
+      apiAddMediaTag(mediaId, accountId, x, y)
+        .then((tag) => {
+          setExistingTags((prev) => [...prev, tag]);
+          setPendingPin(null);
+          setQuery('');
+          setSuggestions([]);
+          setError(null);
+        })
+        .catch((err: unknown) => {
+          const msg = (err as { response?: { data?: { error?: string } } })
+            .response?.data?.error;
+          setError(msg ?? 'Could not add tag');
+        });
     },
-    [pendingPin, tags, mediaId],
+    [pendingPin, existingTags, mediaId, intl],
   );
+
+  const handleSelectAccount = useCallback(
+    (account: ApiAccountJSON) => {
+      applyTag(account.id);
+    },
+    [applyTag],
+  );
+
+  const handleTagMyself = useCallback(() => {
+    if (!myId) return;
+    const pin = pendingPin ?? { x: 0.5, y: 0.5 };
+    if (!pendingPin) setPendingPin(pin);
+    applyTag(myId, pin);
+  }, [myId, pendingPin, applyTag]);
 
   const handleRemoveTag = useCallback(
     (accountId: string) => {
-      const next = tags.filter((t) => t.accountId !== accountId);
-      setTags(next);
-      setPendingTags(mediaId, next);
+      apiRemoveMediaTag(mediaId, accountId)
+        .then(() => {
+          setExistingTags((prev) =>
+            prev.filter((t) => t.account_id !== accountId),
+          );
+          setError(null);
+        })
+        .catch((err: unknown) => {
+          const status = (err as { response?: { status?: number } }).response
+            ?.status;
+          if (status === 403) {
+            setError('You can only remove your own tag');
+          } else {
+            setError('Could not remove tag');
+          }
+        });
     },
-    [tags, mediaId],
-  );
-
-  const handleDone = useCallback(() => {
-    dispatch(closeModal({ modalType: 'TAG_PEOPLE', ignoreFocus: false }));
-  }, [dispatch]);
-
-  const handleImageKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (e.key === 'Enter') e.currentTarget.click();
-    },
-    [],
+    [mediaId],
   );
 
   return (
     <div className='modal-root__modal tag-people-modal'>
       <div className='tag-people-modal__header'>
         <h3>{intl.formatMessage(messages.title)}</h3>
+        <div className='tag-people-modal__header-actions'>
+          {myId && (
+            <button
+              type='button'
+              className='tag-people-modal__tag-myself-btn'
+              onClick={handleTagMyself}
+            >
+              <FormattedMessage
+                id='tag_media.tag_myself'
+                defaultMessage='Tag myself'
+              />
+            </button>
+          )}
+        </div>
+        <p className='tag-people-modal__hint'>
+          {intl.formatMessage(messages.clickToPlace)}
+        </p>
       </div>
 
       <div className='tag-people-modal__image-wrapper'>
@@ -190,17 +255,14 @@ export const TagPeopleModal: React.FC<{
         >
           <img src={previewUrl} alt='' draggable={false} />
 
-          {tags.map((tag) => (
+          {existingTags.map((tag) => (
             <div
-              key={tag.accountId}
+              key={tag.account_id}
               className='tag-people-modal__pin'
-              style={{
-                left: `${tag.x * 100}%`,
-                top: `${tag.y * 100}%`,
-              }}
+              style={{ left: `${tag.x * 100}%`, top: `${tag.y * 100}%` }}
             >
               <span className='tag-people-modal__pin-label'>
-                {tag.accountName}
+                {tag.account?.display_name ?? tag.account?.username ?? ''}
               </span>
             </div>
           ))}
@@ -242,15 +304,20 @@ export const TagPeopleModal: React.FC<{
             )}
           </div>
         )}
+        {error && <p className='tag-people-modal__error'>{error}</p>}
       </div>
 
-      {tags.length > 0 && (
+      {existingTags.length > 0 && (
         <ul className='tag-people-modal__tag-list'>
-          {tags.map((tag) => (
-            <li key={tag.accountId}>
-              <span>{tag.accountName}</span>
+          {existingTags.map((tag) => (
+            <li key={tag.account_id}>
+              <span>
+                {tag.account?.display_name ??
+                  tag.account?.username ??
+                  tag.account_id}
+              </span>
               <RemoveTagButton
-                accountId={tag.accountId}
+                accountId={tag.account_id}
                 label={intl.formatMessage(messages.remove)}
                 onRemove={handleRemoveTag}
               />
@@ -260,7 +327,7 @@ export const TagPeopleModal: React.FC<{
       )}
 
       <div className='tag-people-modal__footer'>
-        <button type='button' className='button' onClick={handleDone}>
+        <button type='button' className='button' onClick={close}>
           {intl.formatMessage(messages.done)}
         </button>
       </div>

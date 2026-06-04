@@ -36,12 +36,27 @@ export const NotificationMediaTag: React.FC<{
   notification: NotificationGroupMediaTag;
   unread: boolean;
 }> = ({ notification, unread }) => {
-  const additionalContent = notification.mediaTagPreviewUrl ? (
-    <img
-      src={notification.mediaTagPreviewUrl}
-      alt=''
-      className='notification-media-tag__preview'
-    />
+  const { mediaTagPreviewUrl, mediaTagStatusPath } = notification;
+
+  const additionalContent = mediaTagPreviewUrl ? (
+    mediaTagStatusPath ? (
+      <Link
+        to={mediaTagStatusPath}
+        className='notification-media-tag__preview-link'
+      >
+        <img
+          src={mediaTagPreviewUrl}
+          alt=''
+          className='notification-media-tag__preview'
+        />
+      </Link>
+    ) : (
+      <img
+        src={mediaTagPreviewUrl}
+        alt=''
+        className='notification-media-tag__preview'
+      />
+    )
   ) : undefined;
 
   return (

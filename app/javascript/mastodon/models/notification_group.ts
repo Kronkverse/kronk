@@ -74,6 +74,7 @@ export interface NotificationGroupNudge extends BaseNotification<'nudge'> {
 export interface NotificationGroupMediaTag
   extends BaseNotification<'media_tag'> {
   mediaTagPreviewUrl: string | null;
+  mediaTagStatusPath: string | null;
 }
 
 export type AccountWarningAction =
@@ -255,6 +256,7 @@ export function createNotificationGroupFromJSON(
         ...group,
         partial: false,
         mediaTagPreviewUrl: group.media_tag_preview_url,
+        mediaTagStatusPath: group.media_tag_status_path,
         sampleAccountIds,
       };
     default:
@@ -347,6 +349,7 @@ export function createNotificationGroupFromNotificationJSON(
         ...group,
         type: notification.type,
         mediaTagPreviewUrl: notification.media_tag_preview_url,
+        mediaTagStatusPath: notification.media_tag_status_path,
       };
     default:
       return {

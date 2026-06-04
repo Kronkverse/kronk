@@ -12,7 +12,7 @@ export interface ApiMediaTagJSON {
   account_id: string;
   x: number;
   y: number;
-  account: unknown;
+  account: { display_name: string; username: string } | null;
 }
 
 export interface ApiMediaAttachmentJSON {
@@ -28,7 +28,6 @@ export interface ApiMediaAttachmentJSON {
   description?: string;
   blurhash: string;
   tags?: ApiMediaTagJSON[];
-  // Present only on tagged-media API responses
-  status_id?: string;
-  status_account_acct?: string;
+  status_id?: string | null;
+  status_account_acct?: string | null;
 }

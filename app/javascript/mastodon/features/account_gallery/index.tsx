@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState, memo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -6,9 +6,14 @@ import { createSelector } from '@reduxjs/toolkit';
 import type { Map as ImmutableMap } from 'immutable';
 import { List as ImmutableList } from 'immutable';
 
+import HeadphonesIcon from '@/material-icons/400-24px/headphones-fill.svg?react';
+import MovieIcon from '@/material-icons/400-24px/movie-fill.svg?react';
 import { openModal } from 'mastodon/actions/modal';
 import { expandAccountMediaTimeline } from 'mastodon/actions/timelines';
+import { apiGetTaggedMedia } from 'mastodon/api/media_tags';
+import type { ApiMediaAttachmentJSON } from 'mastodon/api_types/media_attachments';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
+import { Icon } from 'mastodon/components/icon';
 import { RemoteHint } from 'mastodon/components/remote_hint';
 import ScrollableList from 'mastodon/components/scrollable_list';
 import { AccountHeader } from 'mastodon/features/account_timeline/components/account_header';
@@ -22,6 +27,51 @@ import type { RootState } from 'mastodon/store';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
 import { MediaItem } from './components/media_item';
+
+const TaggedMediaItem = memo<{ attachment: ApiMediaAttachmentJSON }>(
+  ({ attachment }) => {
+    const isVideo = attachment.type === 'video' || attachment.type === 'gifv';
+    const isAudio = attachment.type === 'audio';
+    const href =
+      attachment.status_account_acct && attachment.status_id
+        ? `/@${attachment.status_account_acct}/${attachment.status_id}`
+        : undefined;
+
+    const overlay = isVideo ? (
+      <div className='media-gallery__item__overlay media-gallery__item__overlay--corner'>
+        <Icon id='play' icon={MovieIcon} />
+      </div>
+    ) : isAudio ? (
+      <div className='media-gallery__item__overlay media-gallery__item__overlay--corner'>
+        <Icon id='music' icon={HeadphonesIcon} />
+      </div>
+    ) : null;
+
+    const inner = (
+      <>
+        <img
+          src={attachment.preview_url}
+          alt={attachment.description ?? ''}
+          className='media-gallery__item-thumbnail'
+        />
+        {overlay}
+      </>
+    );
+
+    return (
+      <div className='media-gallery__item media-gallery__item--square'>
+        {href ? (
+          <a href={href} className='media-gallery__item-thumbnail'>
+            {inner}
+          </a>
+        ) : (
+          inner
+        )}
+      </div>
+    );
+  },
+);
+TaggedMediaItem.displayName = 'TaggedMediaItem';
 
 const getAccountGallery = createSelector(
   [
@@ -79,6 +129,11 @@ export const AccountGallery: React.FC<{
     accountId ? state.accounts.get(accountId) : undefined,
   );
   const isAccount = !!account;
+  const [taggedAttachments, setTaggedAttachments] = useState<
+    ApiMediaAttachmentJSON[]
+  >([]);
+  const [taggedHasMore, setTaggedHasMore] = useState(false);
+  const [taggedLoading, setTaggedLoading] = useState(false);
 
   const { suspended, blockedBy, hidden } = useAccountVisibility(accountId);
 
@@ -91,6 +146,32 @@ export const AccountGallery: React.FC<{
       void dispatch(expandAccountMediaTimeline(accountId));
     }
   }, [dispatch, accountId, isAccount]);
+
+  useEffect(() => {
+    if (!accountId || !isAccount) return;
+    setTaggedLoading(true);
+    void apiGetTaggedMedia(accountId)
+      .then((data) => {
+        setTaggedAttachments(data);
+        setTaggedHasMore(data.length === 40);
+        setTaggedLoading(false);
+      })
+      .catch(() => { setTaggedLoading(false); });
+  }, [accountId, isAccount]);
+
+  const handleLoadMoreTagged = useCallback(() => {
+    if (!accountId || taggedLoading || taggedAttachments.length === 0) return;
+    const lastId = taggedAttachments[taggedAttachments.length - 1]?.id;
+    if (!lastId) return;
+    setTaggedLoading(true);
+    void apiGetTaggedMedia(accountId, lastId)
+      .then((data) => {
+        setTaggedAttachments((prev) => [...prev, ...data]);
+        setTaggedHasMore(data.length === 40);
+        setTaggedLoading(false);
+      })
+      .catch(() => { setTaggedLoading(false); });
+  }, [accountId, taggedLoading, taggedAttachments]);
 
   const handleLoadMore = useCallback(() => {
     if (maxId) {
@@ -196,7 +277,40 @@ export const AccountGallery: React.FC<{
           )
         }
         alwaysPrepend
-        append={accountId && <RemoteHint accountId={accountId} />}
+        append={
+          accountId && (
+            <>
+              <RemoteHint accountId={accountId} />
+              {taggedAttachments.length > 0 && (
+                <div className='account-gallery__tagged-section'>
+                  <div className='account-gallery__tagged-header'>
+                    <FormattedMessage
+                      id='account.tagged_in'
+                      defaultMessage='Also tagged in'
+                    />
+                  </div>
+                  <div className='account-gallery__container'>
+                    {taggedAttachments.map((a) => (
+                      <TaggedMediaItem key={a.id} attachment={a} />
+                    ))}
+                  </div>
+                  {taggedHasMore && (
+                    <button
+                      className='load-more'
+                      onClick={handleLoadMoreTagged}
+                      disabled={taggedLoading}
+                    >
+                      <FormattedMessage
+                        id='status.load_more'
+                        defaultMessage='Load more'
+                      />
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          )
+        }
         scrollKey='account_gallery'
         isLoading={isLoading}
         hasMore={!forceEmptyState && hasMore}

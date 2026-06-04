@@ -1,17 +1,20 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { LOCATION_TZ } from '../constants';
 
 import { OrbitIcon } from './celestial_icons';
-import { getEarthMonth } from './earth_calendar';
+import { getEarthMonth, getDailyObservable } from './earth_calendar';
 
-function currentLocationMonth(): number {
+function currentLocationDate(): { month: number; day: number } {
   const fmt = new Intl.DateTimeFormat('en-AU', {
     timeZone: LOCATION_TZ,
     month: '2-digit',
+    day: '2-digit',
   });
   const parts = fmt.formatToParts(new Date());
-  return parseInt(parts.find((p) => p.type === 'month')?.value ?? '1', 10) - 1;
+  const get = (type: string): number =>
+    parseInt(parts.find((p) => p.type === type)?.value ?? '1', 10);
+  return { month: get('month') - 1, day: get('day') };
 }
 
 function currentLocationMonthName(): string {
@@ -37,9 +40,23 @@ const ChipList: React.FC<ChipListProps> = ({ items, colorClass }) => (
 );
 
 export const EarthStrand: React.FC = () => {
-  const month = useMemo(currentLocationMonth, []);
+  const { month, day } = useMemo(currentLocationDate, []);
   const monthName = useMemo(currentLocationMonthName, []);
   const data = useMemo(() => getEarthMonth(month), [month]);
+  const staticObservable = useMemo(
+    () => getDailyObservable(month, day),
+    [month, day],
+  );
+  const [observation, setObservation] = useState<string>(staticObservable);
+
+  useEffect(() => {
+    fetch('/api/v1/in_flow/observation')
+      .then((r) => r.json())
+      .then((d: { text: string | null }) => {
+        if (d.text) setObservation(d.text);
+      })
+      .catch(() => undefined);
+  }, []);
 
   return (
     <div className='in-flow-earth'>
@@ -49,7 +66,7 @@ export const EarthStrand: React.FC = () => {
         <span className='in-flow-earth__season'>{data.season}</span>
       </div>
 
-      <p className='in-flow-earth__observable'>{data.observable}</p>
+      <p className='in-flow-earth__observable'>{observation}</p>
 
       {data.bloom.length > 0 && (
         <div className='in-flow-earth__section'>

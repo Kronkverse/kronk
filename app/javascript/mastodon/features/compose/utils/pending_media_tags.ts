@@ -25,4 +25,6 @@ export const setPendingTags = (mediaId: string, tags: PendingTag[]): void => {
 export const getAllPendingTags = (): Map<string, PendingTag[]> =>
   new Map(store);
 
-export const clearAllPendingTags = (): void => { store.clear(); };
+export const clearAllPendingTags = (): void => {
+  store.clear();
+};
