@@ -174,7 +174,7 @@ class Api::V1::AccountsController < Api::BaseController
         },
       }
     end
-    partners = partner_data.sort_by { |p| [-p[:streak], p[:last_nudge_at] || ''] }
+    partners = partner_data.sort_by { |p| [-(p[:last_nudge_at] ? Time.parse(p[:last_nudge_at]).to_i : 0)] }
 
     followed_ids = Follow.where(account: current_user.account).pluck(:target_account_id)
     suggestion_ids = (followed_ids - partner_ids - [current_user.account.id]).sample(5)
