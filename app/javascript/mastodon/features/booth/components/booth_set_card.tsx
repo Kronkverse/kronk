@@ -10,6 +10,7 @@ import type { BoothSet } from '../types';
 
 interface Props {
   set: BoothSet;
+  onSelect: (set: BoothSet) => void;
   onPlay: (set: BoothSet) => void;
   onTogglePlay: () => void;
   onEdit: (set: BoothSet) => void;
@@ -28,6 +29,7 @@ function formatDuration(seconds: number | null): string {
 
 export const BoothSetCard: React.FC<Props> = ({
   set,
+  onSelect,
   onPlay,
   onTogglePlay,
   onEdit,
@@ -41,8 +43,8 @@ export const BoothSetCard: React.FC<Props> = ({
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleCardClick = useCallback(() => {
-    onPlay(set);
-  }, [set, onPlay]);
+    onSelect(set);
+  }, [set, onSelect]);
 
   const handleOverlayClick = useCallback(
     (e: React.MouseEvent) => {
@@ -95,8 +97,12 @@ export const BoothSetCard: React.FC<Props> = ({
       setDeleting(true);
       void api()
         .delete(`/api/v1/booth_sets/${set.id}`)
-        .then(() => { onDelete(set.id); })
-        .catch(() => { setDeleting(false); });
+        .then(() => {
+          onDelete(set.id);
+        })
+        .catch(() => {
+          setDeleting(false);
+        });
     },
     [set.id, onDelete],
   );
@@ -105,10 +111,10 @@ export const BoothSetCard: React.FC<Props> = ({
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        onPlay(set);
+        onSelect(set);
       }
     },
-    [set, onPlay],
+    [set, onSelect],
   );
 
   const coverPosition = `50% ${set.cover_offset_y ?? 50}%`;

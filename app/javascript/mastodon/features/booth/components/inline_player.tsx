@@ -14,6 +14,7 @@ import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 import api from 'mastodon/api';
 
 import type { BoothSet } from '../types';
+
 import { Waveform } from './waveform';
 
 export interface InlinePlayerHandle {
@@ -23,6 +24,7 @@ export interface InlinePlayerHandle {
 interface Props {
   set: BoothSet;
   hidden: boolean;
+  autoPlay: boolean;
   onCollapse: () => void;
   onPlayingChange: (playing: boolean) => void;
 }
@@ -39,7 +41,7 @@ function formatTime(seconds: number): string {
 }
 
 export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
-  ({ set, hidden, onCollapse, onPlayingChange }, ref) => {
+  ({ set, hidden, autoPlay, onCollapse, onPlayingChange }, ref) => {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [playing, setPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -47,11 +49,15 @@ export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
     const playCountedRef = useRef(false);
     const onPlayingChangeRef = useRef(onPlayingChange);
     onPlayingChangeRef.current = onPlayingChange;
+    const autoPlayRef = useRef(autoPlay);
+    autoPlayRef.current = autoPlay;
 
     useEffect(() => {
       const audio = audioRef.current;
       if (!audio) return;
-      void audio.play().catch(() => undefined);
+      if (autoPlayRef.current) {
+        void audio.play().catch(() => undefined);
+      }
       if (!playCountedRef.current) {
         playCountedRef.current = true;
         void api().post(`/api/v1/booth_sets/${set.id}/play`);
@@ -61,8 +67,8 @@ export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
     useEffect(() => {
       const audio = audioRef.current;
       if (!audio) return;
-      const onTimeUpdate = () => setCurrentTime(audio.currentTime);
-      const onDurationChange = () => setDuration(audio.duration);
+      const onTimeUpdate = () => { setCurrentTime(audio.currentTime); };
+      const onDurationChange = () => { setDuration(audio.duration); };
       const onPlay = () => {
         setPlaying(true);
         onPlayingChangeRef.current(true);
@@ -114,9 +120,12 @@ export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
       );
     }, []);
 
+    const handleSkipBack = useCallback(() => { handleSkip(-30); }, [handleSkip]);
+    const handleSkipForward = useCallback(() => { handleSkip(30); }, [handleSkip]);
+
     const handleSeek = useCallback((pct: number) => {
       const audio = audioRef.current;
-      if (!audio || !audio.duration) return;
+      if (!audio?.duration) return;
       audio.currentTime = pct * audio.duration;
     }, []);
 
@@ -125,13 +134,18 @@ export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
     return (
       <>
         {/* Always mounted so audio survives collapse */}
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <audio ref={audioRef} src={set.audio_url ?? ''} preload='metadata' />
 
         {!hidden && (
           <div className='booth-inline-player'>
             <div className='booth-inline-player__artwork'>
               {set.cover_url ? (
-                <img src={set.cover_url} alt='' style={{ objectPosition: `50% ${set.cover_offset_y ?? 50}%` }} />
+                <img
+                  src={set.cover_url}
+                  alt=''
+                  style={{ objectPosition: `50% ${set.cover_offset_y ?? 50}%` }}
+                />
               ) : (
                 <div className='booth-inline-player__artwork-placeholder'>
                   <HeadphonesIcon />
@@ -156,7 +170,9 @@ export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
               {set.genres.length > 0 && (
                 <div className='booth-inline-player__genres'>
                   {set.genres.map((g) => (
-                    <span key={g} className='booth-inline-player__genre'>{g}</span>
+                    <span key={g} className='booth-inline-player__genre'>
+                      {g}
+                    </span>
                   ))}
                 </div>
               )}
@@ -170,7 +186,7 @@ export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
             <div className='booth-inline-player__controls'>
               <button
                 className='booth-inline-player__skip-btn'
-                onClick={() => handleSkip(-30)}
+                onClick={handleSkipBack}
                 aria-label='Back 30 seconds'
                 type='button'
               >
@@ -191,7 +207,7 @@ export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
 
               <button
                 className='booth-inline-player__skip-btn'
-                onClick={() => handleSkip(30)}
+                onClick={handleSkipForward}
                 aria-label='Forward 30 seconds'
                 type='button'
               >
