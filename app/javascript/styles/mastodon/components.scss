@@ -13098,6 +13098,37 @@ noscript {
       width: 14px;
       height: 14px;
     }
+
+    &--bump {
+      animation: nudge-streak-bump 0.5s ease-out both;
+    }
+  }
+}
+
+@keyframes nudge-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes nudge-streak-bump {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35);
+  }
+  70% {
+    transform: scale(0.92);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 
@@ -13200,7 +13231,7 @@ noscript {
     flex-wrap: wrap;
     gap: 3px;
     margin-top: 4px;
-    opacity: 0;
+    opacity: 0.4;
     transition: opacity 0.15s;
 
     &--active {
@@ -13211,6 +13242,10 @@ noscript {
   &:hover &__reactions,
   &__reactions--active {
     opacity: 1;
+  }
+
+  &--new {
+    animation: nudge-bubble-in 0.3s ease-out both;
   }
 
   &__react-btn {

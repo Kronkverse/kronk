@@ -65,7 +65,31 @@ async function uploadBlob(blob: Blob): Promise<string> {
   const form = new FormData();
   form.append('file', blob, 'voice.webm');
   const { data } = await api().post<{ id: string }>('/api/v2/media', form);
+  // Poll until the server has finished processing the audio file
+  for (let i = 0; i < 20; i++) {
+    const check = await api().get(`/api/v1/media/${data.id}`);
+    if (check.status === 200) break;
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+  }
   return data.id;
+}
+
+function pingSound(): void {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.25);
+  } catch {
+    // audio unavailable
+  }
 }
 
 function formatTime(dateStr: string): string {
@@ -93,12 +117,13 @@ function formatTime(dateStr: string): string {
 const MessageBubble: React.FC<{
   msg: ApiNudgeThreadMessage;
   partnerAccount?: Account | null;
+  isNew?: boolean;
   onReact: (
     notificationId: string,
     emoji: string,
     currentlyMe: boolean,
   ) => void;
-}> = ({ msg, partnerAccount, onReact }) => {
+}> = ({ msg, partnerAccount, isNew, onReact }) => {
   const isPing =
     msg.body == null && msg.media_url == null && msg.voice_url == null;
   const isSent = msg.direction === 'sent';
@@ -131,7 +156,7 @@ const MessageBubble: React.FC<{
 
   return (
     <div
-      className={`nudge-bubble nudge-bubble--${isSent ? 'sent' : 'received'}`}
+      className={`nudge-bubble nudge-bubble--${isSent ? 'sent' : 'received'}${isNew ? ' nudge-bubble--new' : ''}`}
     >
       {!isSent && partnerAccount && (
         <div className='nudge-bubble__avatar'>
@@ -217,6 +242,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const voiceSecondsRef = useRef(0);
   const isFirstLoadRef = useRef(true);
+  const prevMessageCountRef = useRef(0);
   // Optimistic upload: starts immediately when recording stops
   const voiceUploadRef = useRef<Promise<string> | null>(null);
 
@@ -242,6 +268,8 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [streakBumped, setStreakBumped] = useState(false);
+  const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
 
   const wordCount = countWords(text);
   const overLimit = wordCount > MAX_WORDS;
@@ -251,8 +279,30 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     try {
       const data = await apiGetNudgeThread(accountId);
       dispatch(importFetchedAccounts([data.account]));
-      setThreadMessages(data.messages);
-      setStreak(data.streak);
+      setThreadMessages((prev) => {
+        const prevIds = new Set(prev.map((m) => m.notification_id));
+        const incoming = data.messages.filter(
+          (m) => !prevIds.has(m.notification_id),
+        );
+        if (incoming.length > 0 && !isFirstLoadRef.current) {
+          const hasIncoming = incoming.some((m) => m.direction === 'received');
+          if (hasIncoming) pingSound();
+          setNewMessageIds(new Set(incoming.map((m) => m.notification_id)));
+          setTimeout(() => {
+            setNewMessageIds(new Set());
+          }, 600);
+        }
+        return data.messages;
+      });
+      setStreak((prev) => {
+        if (data.streak > prev && prev > 0) {
+          setStreakBumped(true);
+          setTimeout(() => {
+            setStreakBumped(false);
+          }, 800);
+        }
+        return data.streak;
+      });
       setCanNudgeBack(data.can_nudge_back);
     } finally {
       setLoading(false);
@@ -329,16 +379,29 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     };
   }, [voiceBlob]);
 
-  // Auto-scroll: instant on first load, smooth on new messages
+  // Auto-scroll: instant on first load, smooth only when count increases
   useEffect(() => {
     if (threadMessages.length === 0) return;
+    const count = threadMessages.length;
     if (isFirstLoadRef.current) {
       messagesEndRef.current?.scrollIntoView();
       isFirstLoadRef.current = false;
-    } else {
+      prevMessageCountRef.current = count;
+    } else if (count > prevMessageCountRef.current) {
+      prevMessageCountRef.current = count;
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [threadMessages]);
+
+  // 5-second auto-reload — paused while user is sending or recording
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!sending && !recording) void loadThread();
+    }, 5000);
+    return () => {
+      clearInterval(id);
+    };
+  }, [sending, recording, loadThread]);
 
   // Cleanup media recorder on unmount
   useEffect(
@@ -629,7 +692,9 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               <span className='nudge-thread-banner__acct'>@{account.acct}</span>
             </div>
             {streak > 0 && (
-              <span className='nudge-thread-banner__streak'>
+              <span
+                className={`nudge-thread-banner__streak${streakBumped ? ' nudge-thread-banner__streak--bump' : ''}`}
+              >
                 <Icon icon={PartnerExchangeIcon} id='partner_exchange' />
                 {streak}
               </span>
@@ -657,6 +722,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               <MessageBubble
                 key={msg.notification_id}
                 msg={msg}
+                isNew={newMessageIds.has(msg.notification_id)}
                 partnerAccount={
                   msg.direction === 'received' ? account : undefined
                 }
