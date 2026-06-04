@@ -80,11 +80,16 @@ function countWords(text: string): number {
 }
 
 async function uploadBlob(blob: Blob): Promise<string> {
+  // The `file` command (used by Paperclip's spoof detector) identifies any WebM
+  // container as video/webm regardless of content. Uploading as audio/webm causes
+  // a type mismatch → 422. Re-wrap as video/webm so the declared type matches.
+  const uploadType = blob.type.startsWith('audio/webm')
+    ? 'video/webm'
+    : blob.type;
+  const ext = uploadType.includes('webm') ? 'webm' : 'm4a';
   const form = new FormData();
-  form.append('file', blob, 'voice.webm');
+  form.append('file', new File([blob], `voice.${ext}`, { type: uploadType }));
   const { data } = await api().post<{ id: string }>('/api/v2/media', form);
-  // 202 is normal for audio — the original file is stored immediately and
-  // accessible at its URL even before Sidekiq finishes post-processing.
   return data.id;
 }
 
@@ -530,9 +535,10 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
         });
-        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-          ? 'audio/webm;codecs=opus'
-          : 'audio/webm';
+        const mimeType =
+          (['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'] as const).find(
+            (t) => MediaRecorder.isTypeSupported(t),
+          ) ?? 'audio/webm';
 
         // Wire up AnalyserNode for live waveform + amplitude sampling
         const audioCtx = new AudioContext();
