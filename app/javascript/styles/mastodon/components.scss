@@ -13121,12 +13121,15 @@ noscript {
   0% {
     transform: scale(1);
   }
+
   40% {
     transform: scale(1.35);
   }
+
   70% {
     transform: scale(0.92);
   }
+
   100% {
     transform: scale(1);
   }
@@ -13510,6 +13513,147 @@ noscript {
 
   50% {
     opacity: 0.4;
+  }
+}
+
+// ── Signal-style voice waveform ───────────────────────────────────────────────
+
+.nudge-waveform {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  height: 36px;
+  overflow: hidden;
+
+  &__bar {
+    flex: 1;
+    min-width: 2px;
+    max-width: 5px;
+    height: calc(var(--bar-h) * 100%);
+    border-radius: 2px;
+    background: $highlight-text-color;
+    opacity: 0.55;
+    transition: height 0.07s ease;
+  }
+
+  &--live &__bar {
+    opacity: 0.85;
+    transition: height 0.05s ease;
+  }
+}
+
+// ── Recording bar (replaces compose row while mic is active) ─────────────────
+
+.nudge-voice-recording {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px;
+
+  &__dot {
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: $error-red;
+    animation: nudge-record-pulse 1s ease-in-out infinite;
+  }
+
+  &__timer {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: $dark-text-color;
+    min-width: 2.5ch;
+    text-align: right;
+  }
+
+  &__stop {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: $error-red;
+    border: none;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      background: lighten($error-red, 8%);
+    }
+  }
+}
+
+// ── Pre-send voice preview (Signal-style playback bar) ────────────────────────
+
+.nudge-voice-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px 10px;
+  border-bottom: 1px solid lighten($ui-base-color, 8%);
+  margin-bottom: 4px;
+
+  &__play {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: $highlight-text-color;
+    border: none;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background: lighten($highlight-text-color, 8%);
+    }
+  }
+
+  &__dur {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: $dark-text-color;
+    min-width: 2.5ch;
+    text-align: right;
+  }
+
+  &__del {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: lighten($ui-base-color, 10%);
+    border: none;
+    color: $dark-text-color;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
+
+    &:hover {
+      background: lighten($ui-base-color, 16%);
+      color: $primary-text-color;
+    }
   }
 }
 
