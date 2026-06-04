@@ -5,6 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import api from 'mastodon/api';
 import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
@@ -15,9 +16,10 @@ import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 import { BoothSetCard } from './components/booth_set_card';
 import { EditForm } from './components/edit_form';
 import {
-  InlinePlayer,
-  type InlinePlayerHandle,
+  InlinePlayer
+  
 } from './components/inline_player';
+import type {InlinePlayerHandle} from './components/inline_player';
 import { UploadForm } from './components/upload_form';
 import type { BoothSet } from './types';
 
@@ -64,7 +66,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         setSets(res.data);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => { setLoading(false); });
   }, []);
 
   const handlePlay = useCallback((set: BoothSet) => {
@@ -110,6 +112,28 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
     setShowUpload(false);
   }, []);
 
+  const handleShowUpload = useCallback(() => { setShowUpload(true); }, []);
+  const handleCancelUpload = useCallback(() => { setShowUpload(false); }, []);
+  const handleCancelEdit = useCallback(() => { setEditingSet(null); }, []);
+  const handleFilterArtistChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => { setFilterArtist(e.target.value); },
+    [],
+  );
+  const handleFilterGenreChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => { setFilterGenre(e.target.value); },
+    [],
+  );
+  const handleFilterEventChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => { setFilterEvent(e.target.value); },
+    [],
+  );
+  const handleFilterDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => { setFilterDate(e.target.value); },
+    [],
+  );
+  const handleClearDate = useCallback(() => { setFilterDate(''); }, []);
+  const handleCollapse = useCallback(() => { setExpanded(false); }, []);
+
   const filteredSets = sets.filter((set) => {
     if (
       filterArtist &&
@@ -125,8 +149,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
       return false;
     if (
       filterEvent &&
-      (!set.event_name ||
-        !set.event_name.toLowerCase().includes(filterEvent.toLowerCase()))
+      (!set.event_name?.toLowerCase().includes(filterEvent.toLowerCase()))
     )
       return false;
     if (filterDate && set.event_date !== filterDate) return false;
@@ -154,7 +177,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         {signedIn && !showUpload && !editingSet && (
           <button
             className='booth__upload-btn'
-            onClick={() => setShowUpload(true)}
+            onClick={handleShowUpload}
             type='button'
           >
             <AddIcon />
@@ -165,7 +188,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         {showUpload && (
           <UploadForm
             onSuccess={handleUploadSuccess}
-            onCancel={() => setShowUpload(false)}
+            onCancel={handleCancelUpload}
           />
         )}
 
@@ -173,7 +196,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
           <EditForm
             set={editingSet}
             onSuccess={handleEditSuccess}
-            onCancel={() => setEditingSet(null)}
+            onCancel={handleCancelEdit}
           />
         )}
 
@@ -184,28 +207,40 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
               type='text'
               placeholder={intl.formatMessage(messages.filterArtist)}
               value={filterArtist}
-              onChange={(e) => setFilterArtist(e.target.value)}
+              onChange={handleFilterArtistChange}
             />
             <input
               className='booth__filter-input'
               type='text'
               placeholder={intl.formatMessage(messages.filterGenre)}
               value={filterGenre}
-              onChange={(e) => setFilterGenre(e.target.value)}
+              onChange={handleFilterGenreChange}
             />
             <input
               className='booth__filter-input'
               type='text'
               placeholder={intl.formatMessage(messages.filterEvent)}
               value={filterEvent}
-              onChange={(e) => setFilterEvent(e.target.value)}
+              onChange={handleFilterEventChange}
             />
-            <input
-              className='booth__filter-input booth__filter-input--date'
-              type='date'
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-            />
+            <div className='booth__filter-date-wrap'>
+              <input
+                className='booth__filter-input booth__filter-input--date'
+                type='date'
+                value={filterDate}
+                onChange={handleFilterDateChange}
+              />
+              {filterDate && (
+                <button
+                  className='booth__filter-date-clear'
+                  onClick={handleClearDate}
+                  aria-label='Clear date filter'
+                  type='button'
+                >
+                  <CloseIcon />
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -239,7 +274,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
                   ref={playerRef}
                   set={activeSet}
                   hidden={!expanded}
-                  onCollapse={() => setExpanded(false)}
+                  onCollapse={handleCollapse}
                   onPlayingChange={setIsPlaying}
                 />
               )}

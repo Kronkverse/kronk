@@ -353,6 +353,34 @@ $booth-accent: var(--space-color, #3034a0);
   }
 }
 
+.booth-card__menu-confirm {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 160px;
+}
+
+.booth-card__menu-confirm-text {
+  font-size: 13px;
+  color: $primary-text-color;
+  white-space: nowrap;
+}
+
+.booth-card__menu-confirm-actions {
+  display: flex;
+  gap: 6px;
+
+  .booth-card__menu-item {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-size: 13px;
+    text-align: center;
+    border: 1px solid $ui-base-lighter-color;
+  }
+}
+
 .booth-card--deleting {
   opacity: 0.4;
   pointer-events: none;
@@ -591,6 +619,34 @@ $booth-accent: var(--space-color, #3034a0);
     color-scheme: dark;
     min-width: 120px;
     flex: 0 1 auto;
+  }
+}
+
+.booth__filter-date-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.booth__filter-date-clear {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: $darker-text-color;
+  display: flex;
+  align-items: center;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+  }
+
+  &:hover {
+    color: $primary-text-color;
   }
 }
 

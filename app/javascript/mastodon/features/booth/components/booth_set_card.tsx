@@ -5,6 +5,7 @@ import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
 import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 import api from 'mastodon/api';
+
 import type { BoothSet } from '../types';
 
 interface Props {
@@ -35,6 +36,7 @@ export const BoothSetCard: React.FC<Props> = ({
   playing,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -62,6 +64,7 @@ export const BoothSetCard: React.FC<Props> = ({
   const handleMenuBlur = useCallback((e: React.FocusEvent) => {
     if (!menuRef.current?.contains(e.relatedTarget as Node)) {
       setMenuOpen(false);
+      setConfirmingDelete(false);
     }
   }, []);
 
@@ -74,15 +77,26 @@ export const BoothSetCard: React.FC<Props> = ({
     [set, onEdit],
   );
 
-  const handleDelete = useCallback(
+  const handleDeleteClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConfirmingDelete(true);
+  }, []);
+
+  const handleDeleteCancel = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConfirmingDelete(false);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
       setMenuOpen(false);
+      setConfirmingDelete(false);
       setDeleting(true);
       void api()
         .delete(`/api/v1/booth_sets/${set.id}`)
-        .then(() => onDelete(set.id))
-        .catch(() => setDeleting(false));
+        .then(() => { onDelete(set.id); })
+        .catch(() => { setDeleting(false); });
     },
     [set.id, onDelete],
   );
@@ -110,7 +124,11 @@ export const BoothSetCard: React.FC<Props> = ({
     >
       <div className='booth-card__cover'>
         {set.cover_url ? (
-          <img src={set.cover_url} alt='' style={{ objectPosition: coverPosition }} />
+          <img
+            src={set.cover_url}
+            alt=''
+            style={{ objectPosition: coverPosition }}
+          />
         ) : (
           <div className='booth-card__cover-placeholder'>
             <HeadphonesIcon />
@@ -134,7 +152,9 @@ export const BoothSetCard: React.FC<Props> = ({
         )}
         <div className='booth-card__meta'>
           {set.genres.map((g) => (
-            <span key={g} className='booth-card__genre'>{g}</span>
+            <span key={g} className='booth-card__genre'>
+              {g}
+            </span>
           ))}
           {set.duration_seconds != null && (
             <span className='booth-card__duration'>
@@ -165,20 +185,46 @@ export const BoothSetCard: React.FC<Props> = ({
           </button>
           {menuOpen && (
             <div className='booth-card__menu'>
-              <button
-                className='booth-card__menu-item'
-                onMouseDown={handleEdit}
-                type='button'
-              >
-                Edit
-              </button>
-              <button
-                className='booth-card__menu-item booth-card__menu-item--danger'
-                onMouseDown={handleDelete}
-                type='button'
-              >
-                Delete
-              </button>
+              {confirmingDelete ? (
+                <div className='booth-card__menu-confirm'>
+                  <span className='booth-card__menu-confirm-text'>
+                    Delete this set?
+                  </span>
+                  <div className='booth-card__menu-confirm-actions'>
+                    <button
+                      className='booth-card__menu-item'
+                      onMouseDown={handleDeleteCancel}
+                      type='button'
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className='booth-card__menu-item booth-card__menu-item--danger'
+                      onMouseDown={handleDeleteConfirm}
+                      type='button'
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    className='booth-card__menu-item'
+                    onMouseDown={handleEdit}
+                    type='button'
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className='booth-card__menu-item booth-card__menu-item--danger'
+                    onMouseDown={handleDeleteClick}
+                    type='button'
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>
