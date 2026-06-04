@@ -15,11 +15,8 @@ import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
 import { BoothSetCard } from './components/booth_set_card';
 import { EditForm } from './components/edit_form';
-import {
-  InlinePlayer
-  
-} from './components/inline_player';
-import type {InlinePlayerHandle} from './components/inline_player';
+import { InlinePlayer } from './components/inline_player';
+import type { InlinePlayerHandle } from './components/inline_player';
 import { UploadForm } from './components/upload_form';
 import type { BoothSet } from './types';
 
@@ -47,6 +44,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
   const [activeSet, setActiveSet] = useState<BoothSet | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playRequested, setPlayRequested] = useState(false);
   const [editingSet, setEditingSet] = useState<BoothSet | null>(null);
   const [showUpload, setShowUpload] = useState(false);
 
@@ -66,14 +64,32 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         setSets(res.data);
         setLoading(false);
       })
-      .catch(() => { setLoading(false); });
+      .catch(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  const handleSelect = useCallback((set: BoothSet) => {
+    setPlayRequested(false);
+    setActiveSet((prev) => {
+      if (prev?.id === set.id) {
+        setExpanded(true);
+        return prev;
+      }
+      setExpanded(true);
+      setIsPlaying(false);
+      return set;
+    });
+    setEditingSet(null);
+    setShowUpload(false);
   }, []);
 
   const handlePlay = useCallback((set: BoothSet) => {
+    setPlayRequested(true);
     setActiveSet((prev) => {
       if (prev?.id === set.id) {
-        // Already active — just re-expand
         setExpanded(true);
+        playerRef.current?.togglePlayPause();
         return prev;
       }
       setExpanded(true);
@@ -112,27 +128,45 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
     setShowUpload(false);
   }, []);
 
-  const handleShowUpload = useCallback(() => { setShowUpload(true); }, []);
-  const handleCancelUpload = useCallback(() => { setShowUpload(false); }, []);
-  const handleCancelEdit = useCallback(() => { setEditingSet(null); }, []);
+  const handleShowUpload = useCallback(() => {
+    setShowUpload(true);
+  }, []);
+  const handleCancelUpload = useCallback(() => {
+    setShowUpload(false);
+  }, []);
+  const handleCancelEdit = useCallback(() => {
+    setEditingSet(null);
+  }, []);
   const handleFilterArtistChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => { setFilterArtist(e.target.value); },
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFilterArtist(e.target.value);
+    },
     [],
   );
   const handleFilterGenreChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => { setFilterGenre(e.target.value); },
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFilterGenre(e.target.value);
+    },
     [],
   );
   const handleFilterEventChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => { setFilterEvent(e.target.value); },
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFilterEvent(e.target.value);
+    },
     [],
   );
   const handleFilterDateChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => { setFilterDate(e.target.value); },
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFilterDate(e.target.value);
+    },
     [],
   );
-  const handleClearDate = useCallback(() => { setFilterDate(''); }, []);
-  const handleCollapse = useCallback(() => { setExpanded(false); }, []);
+  const handleClearDate = useCallback(() => {
+    setFilterDate('');
+  }, []);
+  const handleCollapse = useCallback(() => {
+    setExpanded(false);
+  }, []);
 
   const filteredSets = sets.filter((set) => {
     if (
@@ -149,7 +183,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
       return false;
     if (
       filterEvent &&
-      (!set.event_name?.toLowerCase().includes(filterEvent.toLowerCase()))
+      !set.event_name?.toLowerCase().includes(filterEvent.toLowerCase())
     )
       return false;
     if (filterDate && set.event_date !== filterDate) return false;
@@ -261,6 +295,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
               {!(activeSet?.id === set.id && expanded) && (
                 <BoothSetCard
                   set={set}
+                  onSelect={handleSelect}
                   onPlay={handlePlay}
                   onTogglePlay={handleTogglePlay}
                   onEdit={handleEdit}
@@ -274,6 +309,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
                   ref={playerRef}
                   set={activeSet}
                   hidden={!expanded}
+                  autoPlay={playRequested}
                   onCollapse={handleCollapse}
                   onPlayingChange={setIsPlaying}
                 />
