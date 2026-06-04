@@ -87,16 +87,16 @@ These are additions on top of upstream Mastodon:
 
 ## Contributor Workflow
 
-### 1. Start from a branch
+### 1. Your personal dev branch
 
-Always branch off `staging`:
+Each contributor has a persistent personal branch named `dev/<username>` (e.g. `dev/ash`, `dev/tbone`). All your work lives here. Branch off `main` when starting something new:
 
 ```bash
 git fetch origin
-git checkout -b feature/my-change origin/staging
+git checkout -b dev/yourname origin/main
 ```
 
-Use `feature/`, `fix/`, or `docs/` prefix. Keep branches small — one feature or fix per branch. Push directly to `Kronkverse/kronk` — no personal fork needed, you are a collaborator.
+Push directly to `Kronkverse/kronk` — no personal fork needed, you are a collaborator.
 
 ### 2. Show work on the dev space
 
@@ -105,7 +105,7 @@ Merge your branch into `staging` when you want it visible at https://dev.mastodo
 ```bash
 git checkout staging
 git pull origin staging
-git merge feature/my-change
+git merge dev/yourname
 git push origin staging
 ```
 
@@ -115,7 +115,7 @@ The dev space is transient and may be down. If it is, ask Tal to start it.
 
 ### 3. Open a PR for production
 
-When your feature is tested on staging and ready to ship, open a PR from your **feature branch** to `main`. Tal reviews and merges — never run `gh pr merge` yourself.
+When your feature is tested on staging and ready to ship, open a PR from your **`dev/<username>` branch** to `main`. Tal reviews and merges — never run `gh pr merge` yourself.
 
 **Title:** short feature-name handle (`Nudges`, `The Booth`). Details go in the body.
 
@@ -126,9 +126,16 @@ When your feature is tested on staging and ready to ship, open a PR from your **
 - **How to test** — concrete steps on the dev space
 - **Dependencies** — migrations, other PRs, or deploy steps required
 
-### 4. Clean up
+### 4. After your PR merges
 
-Delete your branch after it's merged to `main`.
+Sync your dev branch back to `main` so it stays current for the next piece of work:
+
+```bash
+git checkout dev/yourname
+git fetch origin
+git reset --hard origin/main
+git push origin dev/yourname --force-with-lease
+```
 
 ---
 
