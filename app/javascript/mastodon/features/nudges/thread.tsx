@@ -9,6 +9,8 @@ import AddPhotoIcon from '@/material-icons/400-24px/add_photo_alternate.svg?reac
 import ArrowUpwardIcon from '@/material-icons/400-24px/arrow_upward-fill.svg?react';
 import MicIcon from '@/material-icons/400-24px/mic.svg?react';
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
+import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
+import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 import StopIcon from '@/material-icons/400-24px/stop.svg?react';
 import { importFetchedAccounts } from 'mastodon/actions/importer';
 import { decrementNudgeCount } from 'mastodon/actions/notification_groups';
@@ -27,7 +29,24 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const MAX_WORDS = 100;
 const MAX_VOICE_SECONDS = 60;
+const WAVEFORM_BARS = 40;
 const REACTION_EMOJIS = ['❤️', '😂', '🙌', '🔥', '😢'] as const;
+
+const WaveformBars: React.FC<{ bars: number[]; live?: boolean }> = ({
+  bars,
+  live,
+}) => (
+  <div className={`nudge-waveform${live ? ' nudge-waveform--live' : ''}`}>
+    {bars.map((h, i) => (
+      <span
+         
+        key={i}
+        className='nudge-waveform__bar'
+        style={{ '--bar-h': String(Math.max(0.06, h)) } as React.CSSProperties}
+      />
+    ))}
+  </div>
+);
 
 const ReactionButton: React.FC<{
   emoji: string;
@@ -243,6 +262,12 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const voiceSecondsRef = useRef(0);
   const isFirstLoadRef = useRef(true);
   const prevMessageCountRef = useRef(0);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const capturedSamplesRef = useRef<number[]>([]);
+  const sampleIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   // Optimistic upload: starts immediately when recording stops
   const voiceUploadRef = useRef<Promise<string> | null>(null);
 
@@ -270,6 +295,9 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [error, setError] = useState<string | null>(null);
   const [streakBumped, setStreakBumped] = useState(false);
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
+  const [liveWaveformBars, setLiveWaveformBars] = useState<number[]>([]);
+  const [capturedWaveform, setCapturedWaveform] = useState<number[]>([]);
+  const [isPlayingPreview, setIsPlayingPreview] = useState(false);
 
   const wordCount = countWords(text);
   const overLimit = wordCount > MAX_WORDS;
@@ -403,11 +431,16 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     };
   }, [sending, recording, loadThread]);
 
-  // Cleanup media recorder on unmount
+  // Cleanup media recorder + audio pipeline on unmount
   useEffect(
     () => () => {
       if (timerRef.current) clearInterval(timerRef.current);
       mediaRecorderRef.current?.stop();
+      if (animationFrameRef.current !== null)
+        cancelAnimationFrame(animationFrameRef.current);
+      if (sampleIntervalRef.current !== null)
+        clearInterval(sampleIntervalRef.current);
+      void audioCtxRef.current?.close();
     },
     [],
   );
@@ -505,6 +538,45 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
           ? 'audio/webm;codecs=opus'
           : 'audio/webm';
+
+        // Wire up AnalyserNode for live waveform + amplitude sampling
+        const audioCtx = new AudioContext();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 512;
+        analyser.smoothingTimeConstant = 0.8;
+        source.connect(analyser);
+        audioCtxRef.current = audioCtx;
+        analyserRef.current = analyser;
+
+        // rAF loop — drive the live waveform display
+        const freqData = new Uint8Array(analyser.frequencyBinCount);
+        const drawFrame = () => {
+          analyser.getByteFrequencyData(freqData);
+          const usable = Math.floor(freqData.length * 0.65);
+          setLiveWaveformBars(
+            Array.from({ length: WAVEFORM_BARS }, (_, i) => {
+              const idx = Math.floor((i / WAVEFORM_BARS) * usable);
+              return (freqData[idx] ?? 0) / 255;
+            }),
+          );
+          animationFrameRef.current = requestAnimationFrame(drawFrame);
+        };
+        animationFrameRef.current = requestAnimationFrame(drawFrame);
+
+        // Sample RMS amplitude every 100 ms — used for static waveform after stop
+        capturedSamplesRef.current = [];
+        const timeData = new Uint8Array(analyser.fftSize);
+        sampleIntervalRef.current = setInterval(() => {
+          analyserRef.current?.getByteTimeDomainData(timeData);
+          let sum = 0;
+          for (const v of timeData) {
+            const norm = v / 128 - 1;
+            sum += norm * norm;
+          }
+          capturedSamplesRef.current.push(Math.sqrt(sum / timeData.length));
+        }, 100);
+
         const recorder = new MediaRecorder(stream, {
           mimeType,
           audioBitsPerSecond: 128_000,
@@ -517,16 +589,40 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           stream.getTracks().forEach((t) => {
             t.stop();
           });
+
+          // Tear down audio pipeline
+          if (animationFrameRef.current !== null) {
+            cancelAnimationFrame(animationFrameRef.current);
+            animationFrameRef.current = null;
+          }
+          if (sampleIntervalRef.current !== null) {
+            clearInterval(sampleIntervalRef.current);
+            sampleIntervalRef.current = null;
+          }
+          void audioCtxRef.current?.close();
+          audioCtxRef.current = null;
+          setLiveWaveformBars([]);
+
+          // Build static waveform from captured RMS samples
+          const samples = capturedSamplesRef.current;
+          const maxVal = Math.max(...samples, 0.001);
+          const norm = samples.map((s) => s / maxVal);
+          setCapturedWaveform(
+            Array.from({ length: WAVEFORM_BARS }, (_, i) => {
+              const t = norm.length <= 1 ? 0 : i / (WAVEFORM_BARS - 1);
+              const si = Math.min(Math.floor(t * norm.length), norm.length - 1);
+              return Math.max(0.08, norm[si] ?? 0.08);
+            }),
+          );
+
           const blob = new Blob(chunksRef.current, {
             type: recorder.mimeType || 'audio/webm',
           });
           const seconds = voiceSecondsRef.current;
           setRecording(false);
           if (timerRef.current) clearInterval(timerRef.current);
-          // Set blob in compose bar immediately (Messenger-style)
           setVoiceBlob(blob);
           setVoiceSeconds(seconds);
-          // Start uploading in background so send() is instant
           voiceUploadRef.current = uploadBlob(blob);
         };
         recorder.start();
@@ -538,9 +634,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           setVoiceSeconds((s) => {
             const next = s + 1;
             voiceSecondsRef.current = next;
-            if (next >= MAX_VOICE_SECONDS) {
-              recorder.stop();
-            }
+            if (next >= MAX_VOICE_SECONDS) recorder.stop();
             return next;
           });
         }, 1000);
@@ -558,9 +652,28 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setVoiceId(undefined);
     setVoiceBlob(undefined);
     setVoiceSeconds(0);
+    setCapturedWaveform([]);
+    setIsPlayingPreview(false);
+    if (previewAudioRef.current) previewAudioRef.current.pause();
     setError(null);
     voiceUploadRef.current = null;
   }, []);
+
+  const onPreviewEnded = useCallback(() => {
+    setIsPlayingPreview(false);
+  }, []);
+
+  const handlePlayPreview = useCallback(() => {
+    const audio = previewAudioRef.current;
+    if (!audio) return;
+    if (isPlayingPreview) {
+      audio.pause();
+      setIsPlayingPreview(false);
+    } else {
+      void audio.play();
+      setIsPlayingPreview(true);
+    }
+  }, [isPlayingPreview]);
 
   const clearCompose = useCallback(() => {
     setText('');
@@ -573,6 +686,9 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setVoiceId(undefined);
     setVoiceBlob(undefined);
     setVoiceSeconds(0);
+    setCapturedWaveform([]);
+    setIsPlayingPreview(false);
+    if (previewAudioRef.current) previewAudioRef.current.pause();
     voiceUploadRef.current = null;
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (textareaRef.current) {
@@ -747,128 +863,167 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         <div
           className={`nudge-compose-bar${!canNudgeBack ? ' nudge-compose-bar--disabled' : ''}`}
         >
-          {(mediaPreview !== undefined ||
-            voiceBlob !== undefined ||
-            voiceId !== undefined) && (
+          {/* Media attachment preview */}
+          {mediaPreview !== undefined && (
             <div className='nudge-compose-bar__attachments'>
-              {mediaPreview && (
-                <div className='nudge-compose-bar__attachment-preview'>
-                  {mediaIsVideo ? (
-                    <video
-                      src={mediaPreview}
-                      className='nudge-compose-bar__media-preview'
-                      muted
-                    />
-                  ) : (
-                    <img
-                      src={mediaPreview}
-                      alt=''
-                      className='nudge-compose-bar__media-preview'
-                    />
-                  )}
-                  <button
-                    type='button'
-                    className='nudge-compose-bar__remove-btn'
-                    onClick={handleRemoveMedia}
-                    aria-label={intl.formatMessage(messages.removeAttachment)}
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-              {(voiceBlob ?? voiceId) && (
-                <div className='nudge-compose-bar__attachment-preview nudge-compose-bar__attachment-preview--voice'>
-                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                  <audio controls src={voiceBlobUrl} />
-                  <button
-                    type='button'
-                    className='nudge-compose-bar__remove-btn'
-                    onClick={handleRemoveVoice}
-                    aria-label={intl.formatMessage(messages.removeAttachment)}
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
+              <div className='nudge-compose-bar__attachment-preview'>
+                {mediaIsVideo ? (
+                  <video
+                    src={mediaPreview}
+                    className='nudge-compose-bar__media-preview'
+                    muted
+                  />
+                ) : (
+                  <img
+                    src={mediaPreview}
+                    alt=''
+                    className='nudge-compose-bar__media-preview'
+                  />
+                )}
+                <button
+                  type='button'
+                  className='nudge-compose-bar__remove-btn'
+                  onClick={handleRemoveMedia}
+                  aria-label={intl.formatMessage(messages.removeAttachment)}
+                >
+                  ×
+                </button>
+              </div>
             </div>
           )}
 
-          <div className='nudge-compose-bar__row'>
-            <button
-              type='button'
-              className='nudge-compose-bar__icon-btn'
-              onClick={handleAttachClick}
-              disabled={uploading || !!mediaId || !canNudgeBack}
-              aria-label={intl.formatMessage(messages.attachMedia)}
-              title={intl.formatMessage(messages.attachMedia)}
-            >
-              <Icon icon={AddPhotoIcon} id='add_photo_alternate' />
-            </button>
-
-            <input
-              ref={fileInputRef}
-              type='file'
-              accept='image/*,video/*'
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-            />
-
-            <textarea
-              ref={textareaRef}
-              className={`nudge-compose-bar__input${overLimit ? ' nudge-compose-bar__input--over' : ''}`}
-              placeholder={intl.formatMessage(messages.placeholder)}
-              value={text}
-              onChange={handleTextChange}
-              onKeyDown={handleKeyDown}
-              rows={1}
-              disabled={sending || !canNudgeBack}
-            />
-
-            {!voiceBlob && !voiceId && (
+          {/* Signal-style: recording in progress */}
+          {recording && (
+            <div className='nudge-voice-recording'>
+              <span className='nudge-voice-recording__dot' />
+              <WaveformBars
+                bars={
+                  liveWaveformBars.length > 0
+                    ? liveWaveformBars
+                    : Array<number>(WAVEFORM_BARS).fill(0.05)
+                }
+                live
+              />
+              <span className='nudge-voice-recording__timer'>
+                {voiceSeconds}s
+              </span>
               <button
                 type='button'
-                className={`nudge-compose-bar__icon-btn${recording ? ' nudge-compose-bar__icon-btn--recording' : ''}`}
-                onClick={recording ? stopRecording : startRecording}
+                className='nudge-voice-recording__stop'
+                onClick={stopRecording}
+                aria-label={intl.formatMessage(messages.stopRecording)}
+              >
+                <Icon icon={StopIcon} id='stop' />
+              </button>
+            </div>
+          )}
+
+          {/* Signal-style: pre-send voice preview */}
+          {!recording && (voiceBlob ?? voiceId) && (
+            <div className='nudge-voice-preview'>
+              <button
+                type='button'
+                className='nudge-voice-preview__play'
+                onClick={handlePlayPreview}
+                aria-label={isPlayingPreview ? 'Pause' : 'Play'}
+              >
+                <Icon
+                  icon={isPlayingPreview ? PauseIcon : PlayArrowIcon}
+                  id={isPlayingPreview ? 'pause' : 'play_arrow'}
+                />
+              </button>
+              <WaveformBars
+                bars={
+                  capturedWaveform.length > 0
+                    ? capturedWaveform
+                    : Array<number>(WAVEFORM_BARS).fill(0.3)
+                }
+              />
+              <span className='nudge-voice-preview__dur'>{voiceSeconds}s</span>
+              <button
+                type='button'
+                className='nudge-voice-preview__del'
+                onClick={handleRemoveVoice}
+                aria-label={intl.formatMessage(messages.removeAttachment)}
+              >
+                ×
+              </button>
+              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+              <audio
+                ref={previewAudioRef}
+                src={voiceBlobUrl}
+                onEnded={onPreviewEnded}
+                style={{ display: 'none' }}
+              />
+            </div>
+          )}
+
+          {/* Normal compose row — hidden during active recording */}
+          {!recording && (
+            <div className='nudge-compose-bar__row'>
+              <button
+                type='button'
+                className='nudge-compose-bar__icon-btn'
+                onClick={handleAttachClick}
+                disabled={uploading || !!mediaId || !canNudgeBack}
+                aria-label={intl.formatMessage(messages.attachMedia)}
+                title={intl.formatMessage(messages.attachMedia)}
+              >
+                <Icon icon={AddPhotoIcon} id='add_photo_alternate' />
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type='file'
+                accept='image/*,video/*'
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+              />
+
+              <textarea
+                ref={textareaRef}
+                className={`nudge-compose-bar__input${overLimit ? ' nudge-compose-bar__input--over' : ''}`}
+                placeholder={intl.formatMessage(messages.placeholder)}
+                value={text}
+                onChange={handleTextChange}
+                onKeyDown={handleKeyDown}
+                rows={1}
                 disabled={sending || !canNudgeBack}
+              />
+
+              {!voiceBlob && !voiceId && (
+                <button
+                  type='button'
+                  className='nudge-compose-bar__icon-btn'
+                  onClick={startRecording}
+                  disabled={sending || !canNudgeBack}
+                  aria-label={intl.formatMessage(messages.record)}
+                  title={intl.formatMessage(messages.record)}
+                >
+                  <Icon icon={MicIcon} id='mic' />
+                </button>
+              )}
+
+              <button
+                type='button'
+                className={`nudge-compose-bar__icon-btn nudge-compose-bar__icon-btn--send${sending ? ' nudge-compose-bar__icon-btn--sending' : ''}`}
+                onClick={handleSend}
+                disabled={sending || overLimit || !canNudgeBack}
                 aria-label={intl.formatMessage(
-                  recording ? messages.stopRecording : messages.record,
+                  hasContent ? messages.send : messages.nudge,
                 )}
                 title={intl.formatMessage(
-                  recording ? messages.stopRecording : messages.record,
+                  hasContent ? messages.send : messages.nudge,
                 )}
               >
-                {recording ? (
-                  <>
-                    <Icon icon={StopIcon} id='stop' />
-                    <span className='nudge-compose-bar__rec-timer'>
-                      {voiceSeconds}s
-                    </span>
-                  </>
+                {hasContent ? (
+                  <Icon icon={ArrowUpwardIcon} id='arrow_upward' />
                 ) : (
-                  <Icon icon={MicIcon} id='mic' />
+                  <Icon icon={PartnerExchangeIcon} id='partner_exchange' />
                 )}
               </button>
-            )}
-
-            <button
-              type='button'
-              className={`nudge-compose-bar__icon-btn nudge-compose-bar__icon-btn--send${sending ? ' nudge-compose-bar__icon-btn--sending' : ''}`}
-              onClick={handleSend}
-              disabled={sending || overLimit || !canNudgeBack}
-              aria-label={intl.formatMessage(
-                hasContent ? messages.send : messages.nudge,
-              )}
-              title={intl.formatMessage(
-                hasContent ? messages.send : messages.nudge,
-              )}
-            >
-              {hasContent ? (
-                <Icon icon={ArrowUpwardIcon} id='arrow_upward' />
-              ) : (
-                <Icon icon={PartnerExchangeIcon} id='partner_exchange' />
-              )}
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
