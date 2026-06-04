@@ -4,8 +4,13 @@ import axios from 'axios';
 import { throttle } from 'lodash';
 
 import api from 'mastodon/api';
+import { apiAddMediaTag } from 'mastodon/api/media_tags';
 import { browserHistory } from 'mastodon/components/router';
 import { countableText } from 'mastodon/features/compose/util/counter';
+import {
+  getAllPendingTags,
+  clearAllPendingTags,
+} from 'mastodon/features/compose/utils/pending_media_tags';
 import { search as emojiSearch } from 'mastodon/features/emoji/emoji_mart_search_light';
 import { tagHistory } from 'mastodon/settings';
 
@@ -259,6 +264,17 @@ export function submitCompose(successCallback) {
 
       dispatch(insertIntoTagHistory(response.data.tags, status));
       dispatch(submitComposeSuccess({ ...response.data }));
+
+      if (statusId === null) {
+        const pendingTags = getAllPendingTags();
+        pendingTags.forEach((tags, mediaId) => {
+          tags.forEach((tag) => {
+            apiAddMediaTag(mediaId, tag.accountId, tag.x, tag.y).catch(() => {});
+          });
+        });
+        clearAllPendingTags();
+      }
+
       if (typeof successCallback === 'function') {
         successCallback(response.data);
       }

@@ -12,6 +12,7 @@ import { CSS } from '@dnd-kit/utilities';
 import CloseIcon from '@/material-icons/400-20px/close.svg?react';
 import SoundIcon from '@/material-icons/400-24px/audio.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+import TagIcon from '@/material-icons/400-24px/tag.svg?react';
 import WarningIcon from '@/material-icons/400-24px/warning.svg?react';
 import { undoUploadCompose } from 'mastodon/actions/compose';
 import { openModal } from 'mastodon/actions/modal';
@@ -61,6 +62,16 @@ export const Upload: React.FC<{
       openModal({ modalType: 'FOCAL_POINT', modalProps: { mediaId: id } }),
     );
   }, [dispatch, id]);
+
+  const handleTagPeopleClick = useCallback(() => {
+    const previewUrl = (media?.get('preview_url') as string | undefined) ?? '';
+    dispatch(
+      openModal({
+        modalType: 'TAG_PEOPLE',
+        modalProps: { mediaId: id, previewUrl },
+      }),
+    );
+  }, [dispatch, id, media]);
 
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id });
@@ -131,6 +142,19 @@ export const Upload: React.FC<{
             <Icon id='edit' icon={EditIcon} />{' '}
             <FormattedMessage id='upload_form.edit' defaultMessage='Edit' />
           </button>
+          {media.get('type') !== 'audio' && media.get('type') !== 'unknown' && (
+            <button
+              type='button'
+              className='icon-button'
+              onClick={handleTagPeopleClick}
+            >
+              <Icon id='tag' icon={TagIcon} />{' '}
+              <FormattedMessage
+                id='upload_form.tag_people'
+                defaultMessage='Tag'
+              />
+            </button>
+          )}
         </div>
 
         <div className='compose-form__upload__warning'>

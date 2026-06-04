@@ -9,7 +9,7 @@ class BoothSet < ApplicationRecord
   validates :artist_name, presence: true, length: { maximum: 200 }
   validates :description, length: { maximum: 5000 }
   validates :event_name, length: { maximum: 200 }
-  validates :genre, length: { maximum: 100 }
+  validates :genres, length: { maximum: 10 }
 
   scope :published, -> { where(published: true) }
   scope :recent, -> { order(created_at: :desc) }

@@ -22,6 +22,8 @@ module Account::Associations
         has_many :list_accounts
         has_many :instance_moderation_notes
         has_many :media_attachments
+        has_many :media_tags, dependent: :destroy
+        has_many :tagged_in_media, through: :media_tags, source: :media_attachment
         has_many :mentions
         has_many :migrations, class_name: 'AccountMigration'
         has_many :notification_permissions

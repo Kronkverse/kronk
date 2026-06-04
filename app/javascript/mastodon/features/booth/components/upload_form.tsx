@@ -4,6 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import api from 'mastodon/api';
 import type { BoothSet } from '../types';
+import { GenreTagInput } from './genre_tag_input';
 
 const messages = defineMessages({
   title: { id: 'booth.upload.title', defaultMessage: 'Title' },
@@ -47,6 +48,7 @@ function formatEta(remainingBytes: number, speedBps: number): string {
 }
 
 function formatSize(bytes: number): string {
+  if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(1)} GB`;
   if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(1)} MB`;
   return `${Math.round(bytes / 1_000)} KB`;
 }
@@ -65,7 +67,7 @@ async function uploadMedia(
 
   const startTime = Date.now();
 
-  const res = await api().post<{ id: string }>('/api/v1/media', form, {
+  const res = await api().post<{ id: string }>('/api/v2/media', form, {
     signal: opts.signal,
     onUploadProgress: (event) => {
       if (!event.total) return;
@@ -86,11 +88,16 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
   const [artistName, setArtistName] = useState('');
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
-  const [genre, setGenre] = useState('');
+  const [genres, setGenres] = useState<string[]>([]);
   const [description, setDescription] = useState('');
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [audioError, setAudioError] = useState<string | null>(null);
+  const [coverError, setCoverError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const AUDIO_LIMIT = 4 * 1024 * 1024 * 1024; // 4 GB
+  const COVER_LIMIT = 1 * 1024 * 1024 * 1024; // 1 GB
   const [stage, setStage] = useState<UploadStage>(null);
   const [uploadPct, setUploadPct] = useState(0);
   const [uploadEta, setUploadEta] = useState('');
@@ -153,14 +160,14 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
         }
 
         setStage('saving');
-        const payload: Record<string, string> = {
+        const payload: Record<string, unknown> = {
           title,
           artist_name: artistName,
           audio_id: audioId,
+          genres,
         };
         if (eventName) payload.event_name = eventName;
         if (eventDate) payload.event_date = eventDate;
-        if (genre) payload.genre = genre;
         if (description) payload.description = description;
         if (coverId) payload.cover_id = coverId;
 
@@ -170,7 +177,17 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
         onSuccess(res.data);
       } catch (err) {
         if ((err as { name?: string }).name === 'CanceledError') return;
-        setError('Upload failed — please try again.');
+        const axiosErr = err as { response?: { status?: number; data?: { error?: string } } };
+        const detail = axiosErr.response?.data?.error;
+        const status = axiosErr.response?.status;
+        const stageAtFailure = stage;
+        setError(
+          detail
+            ? `Failed at ${stageAtFailure ?? 'upload'}: ${detail}`
+            : status
+              ? `Failed at ${stageAtFailure ?? 'upload'} (${status}) — please try again.`
+              : `Failed at ${stageAtFailure ?? 'upload'} — please try again.`,
+        );
         setSubmitting(false);
         setStage(null);
       }
@@ -180,7 +197,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
       artistName,
       eventName,
       eventDate,
-      genre,
+      genres,
       description,
       audioFile,
       coverFile,
@@ -276,15 +293,10 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
             />
           </label>
 
-          <label className='booth-upload-form__field'>
+          <div className='booth-upload-form__field'>
             <span>{intl.formatMessage(messages.genre)}</span>
-            <input
-              type='text'
-              value={genre}
-              onChange={(e) => setGenre(e.target.value)}
-              maxLength={100}
-            />
-          </label>
+            <GenreTagInput value={genres} onChange={setGenres} />
+          </div>
 
           <label className='booth-upload-form__field'>
             <span>{intl.formatMessage(messages.description)}</span>
@@ -302,13 +314,26 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
               ref={audioInputRef}
               type='file'
               accept='audio/*'
-              onChange={(e) => setAudioFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                if (file && file.size > AUDIO_LIMIT) {
+                  setAudioError(`File is too large (${formatSize(file.size)}). Maximum is 4 GB.`);
+                  setAudioFile(null);
+                  e.target.value = '';
+                } else {
+                  setAudioError(null);
+                  setAudioFile(file);
+                }
+              }}
               required
             />
             {audioFile && (
               <span className='booth-upload-form__file-info'>
                 {audioFile.name} · {formatSize(audioFile.size)}
               </span>
+            )}
+            {audioError && (
+              <span className='booth-upload-form__file-error'>{audioError}</span>
             )}
           </label>
 
@@ -317,8 +342,21 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
             <input
               type='file'
               accept='image/*'
-              onChange={(e) => setCoverFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                if (file && file.size > COVER_LIMIT) {
+                  setCoverError(`File is too large (${formatSize(file.size)}). Maximum is 1 GB.`);
+                  setCoverFile(null);
+                  e.target.value = '';
+                } else {
+                  setCoverError(null);
+                  setCoverFile(file);
+                }
+              }}
             />
+            {coverError && (
+              <span className='booth-upload-form__file-error'>{coverError}</span>
+            )}
           </label>
 
           <div className='booth-upload-form__actions'>

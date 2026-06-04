@@ -7,18 +7,16 @@ import { Link } from 'react-router-dom';
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import { openModal } from 'mastodon/actions/modal';
 import { decrementNudgeCount } from 'mastodon/actions/notification_groups';
+import { apiGetNudgeThread } from 'mastodon/api/accounts';
 import { Button } from 'mastodon/components/button';
 import type {
   NotificationGroupNudge,
-  NudgeReactionEmoji,
-  NudgeReactions,
+  NudgeMessageData,
 } from 'mastodon/models/notification_group';
 import { useAppDispatch } from 'mastodon/store';
 
 import type { LabelRenderer } from './notification_group_with_status';
 import { NotificationGroupWithStatus } from './notification_group_with_status';
-
-const REACTION_EMOJI: NudgeReactionEmoji[] = ['❤️', '😂', '🙌', '🔥', '😢'];
 
 const labelRenderer: LabelRenderer = (displayedName, total, seeMoreHref) => {
   if (total === 1)
@@ -44,79 +42,57 @@ const labelRenderer: LabelRenderer = (displayedName, total, seeMoreHref) => {
   );
 };
 
-const NudgeReactionButton: React.FC<{
-  emoji: NudgeReactionEmoji;
-  count: number;
-  me: boolean;
-  onReact: (emoji: NudgeReactionEmoji) => void;
-}> = ({ emoji, count, me, onReact }) => {
-  const handleClick = useCallback(() => {
-    onReact(emoji);
-  }, [emoji, onReact]);
+function revealLabel(msg: NudgeMessageData): React.ReactNode {
+  if (msg.voiceUrl && !msg.body && !msg.mediaUrl) {
+    return (
+      <FormattedMessage
+        id='notification.nudge.listen'
+        defaultMessage='Listen'
+      />
+    );
+  }
+  if (msg.mediaUrl && !msg.body && !msg.voiceUrl) {
+    return (
+      <FormattedMessage id='notification.nudge.view' defaultMessage='View' />
+    );
+  }
   return (
-    <button
-      type='button'
-      className={`notification-nudge__reaction${me ? ' notification-nudge__reaction--active' : ''}`}
-      onClick={handleClick}
-    >
-      <span>{emoji}</span>
-      {count > 0 && (
-        <span className='notification-nudge__reaction-count'>{count}</span>
-      )}
-    </button>
+    <FormattedMessage
+      id='notification.nudge.read'
+      defaultMessage='Read message'
+    />
   );
-};
+}
 
-const NudgeReactionBar: React.FC<{
-  notificationId: string;
-  reactions: NudgeReactions;
-}> = ({ notificationId, reactions }) => {
-  const [localReactions, setLocalReactions] = useState(reactions);
-
-  const handleReact = useCallback(
-    (emoji: NudgeReactionEmoji) => {
-      const alreadyReacted = localReactions[emoji].me;
-      const url = `/api/v1/notifications/${notificationId}/nudge_react`;
-
-      void (async () => {
-        const csrfMeta = document.querySelector<HTMLMetaElement>(
-          'meta[name="csrf-token"]',
-        );
-        const res = await fetch(url, {
-          method: alreadyReacted ? 'DELETE' : 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfMeta?.content ?? '',
-          },
-          credentials: 'same-origin',
-          body: alreadyReacted ? undefined : JSON.stringify({ emoji }),
-        });
-        if (res.ok) {
-          const updated = (await res.json()) as NudgeReactions;
-          setLocalReactions(updated);
-        }
-      })();
-    },
-    [notificationId, localReactions],
-  );
-
-  return (
-    <div className='notification-nudge__reactions'>
-      {REACTION_EMOJI.map((emoji) => {
-        const { count, me } = localReactions[emoji];
-        return (
-          <NudgeReactionButton
-            key={emoji}
-            emoji={emoji}
-            count={count}
-            me={me}
-            onReact={handleReact}
+const NudgeMessageContent: React.FC<{ msg: NudgeMessageData }> = ({ msg }) => (
+  <>
+    {msg.inReplyTo && (
+      <div className='notification-nudge__reply-quote'>
+        {msg.inReplyTo.body && (
+          <p className='notification-nudge__reply-quote-body'>
+            {msg.inReplyTo.body}
+          </p>
+        )}
+        {msg.inReplyTo.mediaUrl && (
+          <img
+            src={msg.inReplyTo.mediaUrl}
+            alt=''
+            className='notification-nudge__reply-quote-img'
           />
-        );
-      })}
-    </div>
-  );
-};
+        )}
+      </div>
+    )}
+    {msg.body && <p className='notification-nudge__message'>{msg.body}</p>}
+    {msg.mediaUrl && (
+      <img src={msg.mediaUrl} alt='' className='notification-nudge__media' />
+    )}
+    {msg.voiceUrl && (
+      <audio controls className='notification-nudge__voice' src={msg.voiceUrl}>
+        <track kind='captions' />
+      </audio>
+    )}
+  </>
+);
 
 export const NotificationNudge: React.FC<{
   notification: NotificationGroupNudge;
@@ -125,6 +101,11 @@ export const NotificationNudge: React.FC<{
   const dispatch = useAppDispatch();
   const [nudgedBack, setNudgedBack] = useState(false);
   const [streak, setStreak] = useState(notification.nudgeStreak);
+  const [revealed, setRevealed] = useState(false);
+  const [fetchedBody, setFetchedBody] = useState<string | null | undefined>(
+    undefined,
+  );
+  const [loadingMessage, setLoadingMessage] = useState(false);
 
   const senderId = notification.sampleAccountIds[0];
 
@@ -151,6 +132,33 @@ export const NotificationNudge: React.FC<{
     notification.most_recent_notification_id,
   ]);
 
+  const handleReveal = useCallback(() => {
+    setRevealed(true);
+  }, []);
+
+  const handleReadMessage = useCallback(() => {
+    if (!senderId || loadingMessage) return;
+    setLoadingMessage(true);
+    void apiGetNudgeThread(senderId)
+      .then((res) => {
+        const latest = [...res.messages]
+          .filter((m) => m.direction === 'received')
+          .sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          )
+          .at(0);
+        setFetchedBody(latest?.body ?? null);
+      })
+      .catch(() => {
+        setFetchedBody(null);
+      })
+      .finally(() => {
+        setLoadingMessage(false);
+      });
+  }, [senderId, loadingMessage]);
+
   const actions =
     notification.sampleAccountIds.length === 1 ? (
       <Button compact disabled={nudgedBack} onClick={handleNudgeBack}>
@@ -168,14 +176,9 @@ export const NotificationNudge: React.FC<{
       </Button>
     ) : undefined;
 
-  const { nudgeMessage, nudgeReactions } = notification;
-  const hasExtra =
-    streak > 0 ||
-    !!nudgeMessage?.body ||
-    !!nudgeMessage?.mediaUrl ||
-    !!nudgeMessage?.voiceUrl;
+  const { nudgeMessage } = notification;
 
-  const additionalContent = hasExtra ? (
+  const additionalContent = (
     <>
       {streak > 0 && (
         <span className='notification-nudge__streak'>
@@ -186,51 +189,42 @@ export const NotificationNudge: React.FC<{
           />
         </span>
       )}
-      {nudgeMessage?.inReplyTo && (
-        <div className='notification-nudge__reply-quote'>
-          {nudgeMessage.inReplyTo.body && (
-            <p className='notification-nudge__reply-quote-body'>
-              {nudgeMessage.inReplyTo.body}
-            </p>
-          )}
-          {nudgeMessage.inReplyTo.mediaUrl && (
-            <img
-              src={nudgeMessage.inReplyTo.mediaUrl}
-              alt=''
-              className='notification-nudge__reply-quote-img'
+
+      {nudgeMessage != null &&
+        (nudgeMessage.body ?? nudgeMessage.mediaUrl ?? nudgeMessage.voiceUrl) !=
+          null &&
+        (revealed ? (
+          <NudgeMessageContent msg={nudgeMessage} />
+        ) : (
+          <button
+            type='button'
+            className='notification-nudge__reveal-btn'
+            onClick={handleReveal}
+          >
+            {revealLabel(nudgeMessage)}
+          </button>
+        ))}
+
+      {nudgeMessage == null &&
+        notification.sampleAccountIds.length === 1 &&
+        (fetchedBody !== undefined ? (
+          fetchedBody != null ? (
+            <p className='notification-nudge__message'>{fetchedBody}</p>
+          ) : null
+        ) : (
+          <button
+            type='button'
+            className='notification-nudge__reveal-btn'
+            onClick={handleReadMessage}
+            disabled={loadingMessage}
+          >
+            <FormattedMessage
+              id='notification.nudge.read'
+              defaultMessage='Read message'
             />
-          )}
-        </div>
-      )}
-      {nudgeMessage?.body && (
-        <p className='notification-nudge__message'>{nudgeMessage.body}</p>
-      )}
-      {nudgeMessage?.mediaUrl && (
-        <img
-          src={nudgeMessage.mediaUrl}
-          alt=''
-          className='notification-nudge__media'
-        />
-      )}
-      {nudgeMessage?.voiceUrl && (
-        <audio
-          controls
-          className='notification-nudge__voice'
-          src={nudgeMessage.voiceUrl}
-        >
-          <track kind='captions' />
-        </audio>
-      )}
-      <NudgeReactionBar
-        notificationId={notification.most_recent_notification_id}
-        reactions={nudgeReactions}
-      />
+          </button>
+        ))}
     </>
-  ) : (
-    <NudgeReactionBar
-      notificationId={notification.most_recent_notification_id}
-      reactions={nudgeReactions}
-    />
   );
 
   return (

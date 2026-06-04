@@ -53,8 +53,13 @@ $booth-accent: var(--space-color, #3034a0);
 // ─── Now-playing strip ────────────────────────────────────────────────────────
 
 .booth__now-playing {
-  background: color-mix(in srgb, var(--space-color, #3034a0) 15%, $ui-base-color);
-  border: 1px solid color-mix(in srgb, var(--space-color, #3034a0) 30%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 15%,
+    $ui-base-color
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 30%, transparent);
   border-radius: 12px;
   padding: 16px;
   display: flex;
@@ -68,7 +73,11 @@ $booth-accent: var(--space-color, #3034a0);
   max-height: 200px;
   border-radius: 8px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, $ui-base-color);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 20%,
+    $ui-base-color
+  );
 
   img {
     width: 100%;
@@ -88,7 +97,11 @@ $booth-accent: var(--space-color, #3034a0);
   svg {
     width: 60px;
     height: 60px;
-    fill: color-mix(in srgb, var(--space-color, #3034a0) 50%, $secondary-text-color);
+    fill: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 50%,
+      $secondary-text-color
+    );
   }
 }
 
@@ -119,20 +132,31 @@ $booth-accent: var(--space-color, #3034a0);
 
 .booth__action-btn {
   background: none;
-  border: 1px solid color-mix(in srgb, var(--space-color, #3034a0) 50%, transparent);
-  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, $primary-text-color);
+  border: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 50%, transparent);
+  color: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 80%,
+    $primary-text-color
+  );
   border-radius: 20px;
   padding: 6px 14px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   display: inline-flex;
   align-items: center;
 
   &:hover {
-    background: color-mix(in srgb, var(--space-color, #3034a0) 15%, transparent);
+    background: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 15%,
+      transparent
+    );
     color: $primary-text-color;
   }
 }
@@ -159,34 +183,62 @@ $booth-accent: var(--space-color, #3034a0);
   background: $ui-base-color;
   border: 1px solid $ui-base-lighter-color;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 
   &:hover,
   &:focus-visible {
-    border-color: color-mix(in srgb, var(--space-color, #3034a0) 60%, transparent);
-    background: color-mix(in srgb, var(--space-color, #3034a0) 8%, $ui-base-color);
+    border-color: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 60%,
+      transparent
+    );
+    background: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 8%,
+      $ui-base-color
+    );
     outline: none;
   }
 
   &--active {
     border-color: var(--space-color, #3034a0);
-    background: color-mix(in srgb, var(--space-color, #3034a0) 12%, $ui-base-color);
+    background: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 12%,
+      $ui-base-color
+    );
+  }
+
+  &--deleting {
+    opacity: 0.4;
+    pointer-events: none;
   }
 }
 
 .booth-card__cover {
+  position: relative;
   width: 64px;
   height: 64px;
   flex-shrink: 0;
   border-radius: 6px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, $ui-base-color);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 20%,
+    $ui-base-color
+  );
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+  }
+
+  &:hover .booth-card__play-overlay {
+    opacity: 1;
   }
 }
 
@@ -196,25 +248,30 @@ $booth-accent: var(--space-color, #3034a0);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 35%);
   border: none;
-  border-radius: inherit;
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.15s;
 
   svg {
-    width: 28px;
-    height: 28px;
+    width: 48px;
+    height: 48px;
     fill: #fff;
-    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 60%));
+  }
+
+  &--visible {
+    opacity: 1;
   }
 }
 
-.booth-card__cover {
-  position: relative;
+@media (hover: none) {
+  .booth-card__cover:hover .booth-card__play-overlay {
+    opacity: 0;
+  }
 
-  &:hover .booth-card__play-overlay {
+  .booth-card__play-overlay--visible {
     opacity: 1;
   }
 }
@@ -236,7 +293,10 @@ $booth-accent: var(--space-color, #3034a0);
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.15s, color 0.15s, background 0.15s;
+  transition:
+    opacity 0.15s,
+    color 0.15s,
+    background 0.15s;
 
   svg {
     width: 18px;
@@ -262,7 +322,7 @@ $booth-accent: var(--space-color, #3034a0);
   background: $ui-base-color;
   border: 1px solid $ui-base-lighter-color;
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 40%);
   min-width: 120px;
   z-index: 10;
   overflow: hidden;
@@ -283,6 +343,47 @@ $booth-accent: var(--space-color, #3034a0);
   &:hover {
     background: $ui-base-lighter-color;
   }
+
+  &--danger {
+    color: #fca5a5;
+
+    &:hover {
+      background: rgba(239, 68, 68, 12%);
+    }
+  }
+}
+
+.booth-card__menu-confirm {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 160px;
+}
+
+.booth-card__menu-confirm-text {
+  font-size: 13px;
+  color: $primary-text-color;
+  white-space: nowrap;
+}
+
+.booth-card__menu-confirm-actions {
+  display: flex;
+  gap: 6px;
+
+  .booth-card__menu-item {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-size: 13px;
+    text-align: center;
+    border: 1px solid $ui-base-lighter-color;
+  }
+}
+
+.booth-card--deleting {
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 .booth-card__cover-placeholder {
@@ -348,7 +449,11 @@ $booth-accent: var(--space-color, #3034a0);
 
 .booth-card__genre {
   background: color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
-  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, $primary-text-color);
+  color: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 80%,
+    $primary-text-color
+  );
   border-radius: 10px;
   padding: 1px 8px;
   font-size: 11px;
@@ -406,7 +511,9 @@ $booth-accent: var(--space-color, #3034a0);
   gap: 1px;
   font-size: 10px;
   font-weight: 600;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 
   &:hover {
     color: $primary-text-color;
@@ -431,7 +538,11 @@ $booth-accent: var(--space-color, #3034a0);
 .booth-player__progress {
   width: 100%;
   height: 5px;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, $ui-base-lighter-color);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 20%,
+    $ui-base-lighter-color
+  );
   border-radius: 3px;
   cursor: pointer;
   position: relative;
@@ -511,6 +622,287 @@ $booth-accent: var(--space-color, #3034a0);
   }
 }
 
+.booth__filter-date-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.booth__filter-date-clear {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: $darker-text-color;
+  display: flex;
+  align-items: center;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+  }
+
+  &:hover {
+    color: $primary-text-color;
+  }
+}
+
+// ─── Inline player ────────────────────────────────────────────────────────────
+
+.booth-inline-player {
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 12%,
+    $ui-base-color
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 30%, transparent);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.booth-inline-player__artwork {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 25%,
+    $ui-base-color
+  );
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.booth-inline-player__artwork-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 80px;
+    height: 80px;
+    fill: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 50%,
+      $secondary-text-color
+    );
+  }
+}
+
+.booth-inline-player__collapse-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 50%);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba(0, 0, 0, 72%);
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+  }
+}
+
+.booth-inline-player__info {
+  padding: 14px 16px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.booth-inline-player__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: $primary-text-color;
+  line-height: 1.2;
+}
+
+.booth-inline-player__artist {
+  font-size: 14px;
+  color: $secondary-text-color;
+}
+
+.booth-inline-player__genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.booth-inline-player__genre {
+  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  color: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 80%,
+    $primary-text-color
+  );
+  border-radius: 10px;
+  padding: 2px 9px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.booth-inline-player__description {
+  font-size: 13px;
+  color: $darker-text-color;
+  line-height: 1.5;
+  margin: 6px 0 0;
+  white-space: pre-wrap;
+}
+
+.booth-inline-player__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 14px 16px 8px;
+}
+
+.booth-inline-player__play-btn {
+  width: 56px;
+  height: 56px;
+  background: var(--space-color, #3034a0);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.88;
+  }
+
+  svg {
+    width: 30px;
+    height: 30px;
+    fill: currentColor;
+  }
+}
+
+.booth-inline-player__skip-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $secondary-text-color;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  font-size: 10px;
+  font-weight: 600;
+  transition:
+    color 0.15s,
+    background 0.15s;
+
+  &:hover {
+    color: $primary-text-color;
+    background: $ui-base-lighter-color;
+  }
+
+  svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+  }
+}
+
+.booth-inline-player__seek-wrap {
+  padding: 4px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.booth-inline-player__times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: $secondary-text-color;
+  font-variant-numeric: tabular-nums;
+}
+
+// ─── Waveform ─────────────────────────────────────────────────────────────────
+
+.booth-waveform {
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  user-select: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--space-color, #3034a0);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+}
+
+.booth-waveform__bar {
+  flex: 1;
+  min-width: 0;
+  border-radius: 1px;
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 30%,
+    $ui-base-lighter-color
+  );
+  transition: background 0.1s;
+
+  &--played {
+    background: var(--space-color, #3034a0);
+  }
+}
+
+.booth-waveform:hover .booth-waveform__bar {
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 45%,
+    $ui-base-lighter-color
+  );
+
+  &--played {
+    background: color-mix(in srgb, var(--space-color, #3034a0) 100%, #fff 10%);
+    filter: brightness(1.1);
+  }
+}
+
 // ─── Set detail page ──────────────────────────────────────────────────────────
 
 .booth--set-page {
@@ -539,7 +931,11 @@ $booth-accent: var(--space-color, #3034a0);
   max-height: 280px;
   border-radius: 12px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, $ui-base-color);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 20%,
+    $ui-base-color
+  );
 
   img {
     width: 100%;
@@ -559,7 +955,11 @@ $booth-accent: var(--space-color, #3034a0);
   svg {
     width: 80px;
     height: 80px;
-    fill: color-mix(in srgb, var(--space-color, #3034a0) 40%, $secondary-text-color);
+    fill: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 40%,
+      $secondary-text-color
+    );
   }
 }
 
@@ -590,7 +990,11 @@ $booth-accent: var(--space-color, #3034a0);
 .booth__set-detail-genre {
   display: inline-block;
   background: color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
-  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, $primary-text-color);
+  color: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 80%,
+    $primary-text-color
+  );
   border-radius: 12px;
   padding: 2px 10px;
   font-size: 12px;
@@ -615,8 +1019,13 @@ $booth-accent: var(--space-color, #3034a0);
 // ─── Upload form ──────────────────────────────────────────────────────────────
 
 .booth-upload-form {
-  background: color-mix(in srgb, var(--space-color, #3034a0) 10%, $ui-base-color);
-  border: 1px solid color-mix(in srgb, var(--space-color, #3034a0) 25%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 10%,
+    $ui-base-color
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 25%, transparent);
   border-radius: 12px;
   padding: 20px;
   display: flex;
@@ -632,8 +1041,8 @@ $booth-accent: var(--space-color, #3034a0);
 }
 
 .booth-upload-form__error {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 15%);
+  border: 1px solid rgba(239, 68, 68, 40%);
   color: #fca5a5;
   border-radius: 6px;
   padding: 10px 14px;
@@ -698,7 +1107,9 @@ $booth-accent: var(--space-color, #3034a0);
   padding: 8px 16px;
   font-size: 14px;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 
   &:hover {
     border-color: $primary-text-color;
@@ -738,6 +1149,12 @@ $booth-accent: var(--space-color, #3034a0);
   margin-top: 2px;
 }
 
+.booth-upload-form__file-error {
+  font-size: 12px;
+  color: #fca5a5;
+  margin-top: 2px;
+}
+
 .booth-upload-form__progress-wrap {
   display: flex;
   flex-direction: column;
@@ -760,7 +1177,11 @@ $booth-accent: var(--space-color, #3034a0);
 .booth-upload-form__progress-track {
   width: 100%;
   height: 6px;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, $ui-base-lighter-color);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 20%,
+    $ui-base-lighter-color
+  );
   border-radius: 3px;
   overflow: hidden;
 }
@@ -781,7 +1202,7 @@ $booth-accent: var(--space-color, #3034a0);
 .booth-upload-form__cancel-upload {
   align-self: flex-start;
   background: none;
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  border: 1px solid rgba(239, 68, 68, 40%);
   color: #fca5a5;
   border-radius: 6px;
   padding: 6px 14px;
@@ -790,7 +1211,7 @@ $booth-accent: var(--space-color, #3034a0);
   transition: background 0.15s;
 
   &:hover {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(239, 68, 68, 10%);
   }
 }
 
@@ -813,7 +1234,7 @@ $booth-accent: var(--space-color, #3034a0);
 
 .booth-edit-form__remove-cover {
   background: none;
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  border: 1px solid rgba(239, 68, 68, 40%);
   color: #fca5a5;
   border-radius: 6px;
   padding: 4px 10px;
@@ -821,8 +1242,89 @@ $booth-accent: var(--space-color, #3034a0);
   cursor: pointer;
 
   &:hover {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(239, 68, 68, 10%);
   }
+}
+
+// ─── Cover position editor ────────────────────────────────────────────────────
+
+.booth-cover-editor {
+  margin-bottom: 8px;
+}
+
+.booth-cover-editor__frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: ns-resize;
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 20%,
+    $ui-base-color
+  );
+  user-select: none;
+
+  &--disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.booth-cover-editor__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.booth-cover-editor__handle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 80%);
+  transform: translateY(-50%);
+  pointer-events: none;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 50%);
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 6px;
+    background: rgba(255, 255, 255, 90%);
+    border-radius: 3px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 40%);
+  }
+
+  &::before {
+    bottom: 5px;
+  }
+
+  &::after {
+    top: 5px;
+  }
+}
+
+.booth-cover-editor__hint {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 55%);
+  color: #fff;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
 }
 
 // ─── Bottom player ────────────────────────────────────────────────────────────
@@ -834,8 +1336,13 @@ $booth-accent: var(--space-color, #3034a0);
   align-items: flex-start;
   gap: 12px;
   padding: 12px 14px;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 18%, $ui-base-color);
-  border-top: 1px solid color-mix(in srgb, var(--space-color, #3034a0) 35%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 18%,
+    $ui-base-color
+  );
+  border-top: 1px solid
+    color-mix(in srgb, var(--space-color, #3034a0) 35%, transparent);
   backdrop-filter: blur(8px);
   z-index: 5;
   margin: 0 -16px -16px;
@@ -856,7 +1363,11 @@ $booth-accent: var(--space-color, #3034a0);
   height: 48px;
   border-radius: 6px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 30%, $ui-base-color);
+  background: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 30%,
+    $ui-base-color
+  );
 
   img {
     width: 100%;
@@ -969,7 +1480,9 @@ $booth-accent: var(--space-color, #3034a0);
   gap: 1px;
   font-size: 9px;
   font-weight: 600;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
   flex-shrink: 0;
 
   &:hover {
@@ -1053,7 +1566,9 @@ $booth-accent: var(--space-color, #3034a0);
   align-items: center;
   justify-content: center;
   align-self: center;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 
   &:hover {
     color: $primary-text-color;
@@ -1064,5 +1579,117 @@ $booth-accent: var(--space-color, #3034a0);
     width: 18px;
     height: 18px;
     fill: currentColor;
+  }
+}
+
+// ─── Genre tag input ──────────────────────────────────────────────────────────
+
+.booth-genre-input {
+  position: relative;
+}
+
+.booth-genre-input__field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 6px 8px;
+  background: $ui-base-color;
+  border: 1px solid $ui-base-lighter-color;
+  border-radius: 6px;
+  cursor: text;
+  transition: border-color 0.15s;
+
+  &:focus-within {
+    border-color: var(--space-color, #3034a0);
+  }
+}
+
+.booth-genre-input__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: color-mix(in srgb, var(--space-color, #3034a0) 25%, transparent);
+  color: color-mix(
+    in srgb,
+    var(--space-color, #3034a0) 85%,
+    $primary-text-color
+  );
+  border-radius: 12px;
+  padding: 2px 6px 2px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.booth-genre-input__tag-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  padding: 0 2px;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 50%;
+  transition: opacity 0.1s;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.booth-genre-input__text {
+  flex: 1;
+  min-width: 80px;
+  background: none;
+  border: none;
+  color: $primary-text-color;
+  font-size: 14px;
+  font-family: inherit;
+  padding: 0;
+  outline: none;
+
+  &::placeholder {
+    color: $darker-text-color;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.booth-genre-input__suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: $ui-base-color;
+  border: 1px solid $ui-base-lighter-color;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 35%);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.booth-genre-input__suggestion {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  color: $primary-text-color;
+  font-size: 13px;
+  padding: 9px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+
+  &:hover {
+    background: color-mix(
+      in srgb,
+      var(--space-color, #3034a0) 12%,
+      $ui-base-color
+    );
   }
 }

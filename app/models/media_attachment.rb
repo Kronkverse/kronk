@@ -40,8 +40,9 @@ class MediaAttachment < ApplicationRecord
   MAX_DESCRIPTION_LENGTH = 1_500
   MAX_DESCRIPTION_HARD_LENGTH_LIMIT = 10_000
 
-  IMAGE_LIMIT = 99.megabytes
+  IMAGE_LIMIT = 1.gigabyte
   VIDEO_LIMIT = 999.megabytes
+  AUDIO_LIMIT = 4.gigabytes
 
   MAX_VIDEO_MATRIX_LIMIT = 8_294_400 # 3840x2160px
   MAX_VIDEO_FRAME_RATE   = 120
@@ -180,6 +181,9 @@ class MediaAttachment < ApplicationRecord
   belongs_to :status,           inverse_of: :media_attachments, optional: true
   belongs_to :scheduled_status, inverse_of: :media_attachments, optional: true
 
+  has_many :media_tags, dependent: :destroy
+  has_many :tagged_accounts, through: :media_tags, source: :account
+
   has_attached_file :file,
                     styles: ->(f) { file_styles f },
                     processors: ->(f) { file_processors f },
@@ -189,8 +193,8 @@ class MediaAttachment < ApplicationRecord
   before_file_validate :check_video_dimensions
 
   validates_attachment_content_type :file, content_type: IMAGE_MIME_TYPES + VIDEO_MIME_TYPES + AUDIO_MIME_TYPES
-  validates_attachment_size :file, less_than: ->(m) { m.larger_media_format? ? VIDEO_LIMIT : IMAGE_LIMIT }
-  remotable_attachment :file, VIDEO_LIMIT, suppress_errors: false, download_on_assign: false, attribute_name: :remote_url
+  validates_attachment_size :file, less_than: ->(m) { m.audio? ? AUDIO_LIMIT : m.larger_media_format? ? VIDEO_LIMIT : IMAGE_LIMIT }
+  remotable_attachment :file, AUDIO_LIMIT, suppress_errors: false, download_on_assign: false, attribute_name: :remote_url
 
   has_attached_file :thumbnail,
                     styles: THUMBNAIL_STYLES,

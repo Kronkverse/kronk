@@ -7,6 +7,14 @@ export type MediaAttachmentType =
   | 'unknown'
   | 'audio';
 
+export interface ApiMediaTagJSON {
+  id: string;
+  account_id: string;
+  x: number;
+  y: number;
+  account: unknown;
+}
+
 export interface ApiMediaAttachmentJSON {
   id: string;
   type: MediaAttachmentType;
@@ -19,4 +27,8 @@ export interface ApiMediaAttachmentJSON {
   meta: unknown;
   description?: string;
   blurhash: string;
+  tags?: ApiMediaTagJSON[];
+  // Present only on tagged-media API responses
+  status_id?: string;
+  status_account_acct?: string;
 }
