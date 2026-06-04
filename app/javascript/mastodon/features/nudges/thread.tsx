@@ -39,7 +39,6 @@ const WaveformBars: React.FC<{ bars: number[]; live?: boolean }> = ({
   <div className={`nudge-waveform${live ? ' nudge-waveform--live' : ''}`}>
     {bars.map((h, i) => (
       <span
-         
         key={i}
         className='nudge-waveform__bar'
         style={{ '--bar-h': String(Math.max(0.06, h)) } as React.CSSProperties}
@@ -84,12 +83,8 @@ async function uploadBlob(blob: Blob): Promise<string> {
   const form = new FormData();
   form.append('file', blob, 'voice.webm');
   const { data } = await api().post<{ id: string }>('/api/v2/media', form);
-  // Poll until the server has finished processing the audio file
-  for (let i = 0; i < 20; i++) {
-    const check = await api().get(`/api/v1/media/${data.id}`);
-    if (check.status === 200) break;
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-  }
+  // 202 is normal for audio — the original file is stored immediately and
+  // accessible at its URL even before Sidekiq finishes post-processing.
   return data.id;
 }
 
