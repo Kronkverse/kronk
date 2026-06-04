@@ -15,7 +15,6 @@ import { decrementNudgeCount } from 'mastodon/actions/notification_groups';
 import api from 'mastodon/api';
 import { apiGetNudgeThread, apiNudgeAccount } from 'mastodon/api/accounts';
 import type { ApiNudgeThreadMessage } from 'mastodon/api/accounts';
-import { apiNudgeReact, apiNudgeUnreact } from 'mastodon/api/notifications';
 import { Avatar } from 'mastodon/components/avatar';
 import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
@@ -27,35 +26,6 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const MAX_WORDS = 100;
 const MAX_VOICE_SECONDS = 60;
-const REACTION_EMOJIS = ['❤️', '😂', '🙌', '🔥', '😢'] as const;
-
-const ReactionButton: React.FC<{
-  emoji: string;
-  count: number;
-  me: boolean;
-  notificationId: string;
-  onReact: (
-    notificationId: string,
-    emoji: string,
-    currentlyMe: boolean,
-  ) => void;
-}> = ({ emoji, count, me, notificationId, onReact }) => {
-  const handleClick = useCallback(() => {
-    onReact(notificationId, emoji, me);
-  }, [onReact, notificationId, emoji, me]);
-
-  return (
-    <button
-      type='button'
-      className={`nudge-bubble__react-btn${me ? ' nudge-bubble__react-btn--me' : ''}`}
-      onClick={handleClick}
-      aria-label={`${emoji}${count > 0 ? ` ${count}` : ''}`}
-    >
-      <span>{emoji}</span>
-      {count > 0 && <span className='nudge-bubble__react-count'>{count}</span>}
-    </button>
-  );
-};
 
 function countWords(text: string): number {
   return text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
@@ -93,12 +63,7 @@ function formatTime(dateStr: string): string {
 const MessageBubble: React.FC<{
   msg: ApiNudgeThreadMessage;
   partnerAccount?: Account | null;
-  onReact: (
-    notificationId: string,
-    emoji: string,
-    currentlyMe: boolean,
-  ) => void;
-}> = ({ msg, partnerAccount, onReact }) => {
+}> = ({ msg, partnerAccount }) => {
   const isPing =
     msg.body == null && msg.media_url == null && msg.voice_url == null;
   const isSent = msg.direction === 'sent';
@@ -124,10 +89,6 @@ const MessageBubble: React.FC<{
       </div>
     );
   }
-
-  const hasReactions = REACTION_EMOJIS.some(
-    (e) => (msg.reactions[e]?.count ?? 0) > 0,
-  );
 
   return (
     <div
@@ -156,25 +117,6 @@ const MessageBubble: React.FC<{
           <audio controls src={msg.voice_url} className='nudge-bubble__audio' />
         )}
         <span className='nudge-bubble__time'>{formatTime(msg.created_at)}</span>
-        <div
-          className={`nudge-bubble__reactions${hasReactions ? ' nudge-bubble__reactions--active' : ''}`}
-        >
-          {REACTION_EMOJIS.map((emoji) => {
-            const r = msg.reactions[emoji];
-            const count = r ? r.count : 0;
-            const me = r ? r.me : false;
-            return (
-              <ReactionButton
-                key={emoji}
-                emoji={emoji}
-                count={count}
-                me={me}
-                notificationId={msg.notification_id}
-                onReact={onReact}
-              />
-            );
-          })}
-        </div>
       </div>
     </div>
   );
@@ -256,56 +198,6 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       setLoading(false);
     }
   }, [accountId, dispatch]);
-
-  const handleReact = useCallback(
-    (notificationId: string, emoji: string, currentlyMe: boolean) => {
-      // Optimistic update
-      setThreadMessages((prev) =>
-        prev.map((m) => {
-          if (m.notification_id !== notificationId) return m;
-          const updated = { ...m, reactions: { ...m.reactions } };
-          if (currentlyMe) {
-            // Remove reaction
-            const r = updated.reactions[emoji];
-            updated.reactions[emoji] = {
-              count: Math.max(0, (r ? r.count : 1) - 1),
-              me: false,
-            };
-          } else {
-            // Clear any existing my-reaction, add new one
-            for (const e of REACTION_EMOJIS) {
-              const er = updated.reactions[e];
-              if (er?.me) {
-                updated.reactions[e] = {
-                  count: Math.max(0, er.count - 1),
-                  me: false,
-                };
-              }
-            }
-            const r = updated.reactions[emoji];
-            updated.reactions[emoji] = {
-              count: (r ? r.count : 0) + 1,
-              me: true,
-            };
-          }
-          return updated;
-        }),
-      );
-      void (async () => {
-        try {
-          if (currentlyMe) {
-            await apiNudgeUnreact(notificationId);
-          } else {
-            await apiNudgeReact(notificationId, emoji);
-          }
-        } catch {
-          // revert on failure
-          void loadThread();
-        }
-      })();
-    },
-    [loadThread],
-  );
 
   useEffect(() => {
     void loadThread();
@@ -645,7 +537,6 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                 partnerAccount={
                   msg.direction === 'received' ? account : undefined
                 }
-                onReact={handleReact}
               />
             ))}
             <div ref={messagesEndRef} />

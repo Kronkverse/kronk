@@ -13194,68 +13194,6 @@ noscript {
     align-self: flex-end;
     margin-top: 2px;
   }
-
-  &__reactions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 3px;
-    margin-top: 4px;
-    opacity: 0;
-    transition: opacity 0.15s;
-
-    &--active {
-      opacity: 1;
-    }
-  }
-
-  &:hover &__reactions,
-  &__reactions--active {
-    opacity: 1;
-  }
-
-  &__react-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    padding: 2px 6px;
-    border-radius: 10px;
-    border: 1px solid transparent;
-    background: lighten($ui-base-color, 8%);
-    cursor: pointer;
-    font-size: 14px;
-    line-height: 1.2;
-    color: $primary-text-color;
-    transition: background 0.1s, border-color 0.1s;
-
-    .nudge-bubble--sent & {
-      background: rgba(255, 255, 255, 15%);
-      color: #fff;
-    }
-
-    &--me {
-      background: $highlight-text-color;
-      border-color: $highlight-text-color;
-      color: #fff;
-
-      .nudge-bubble--sent & {
-        background: rgba(255, 255, 255, 35%);
-        border-color: rgba(255, 255, 255, 60%);
-      }
-    }
-
-    &:hover {
-      background: lighten($ui-base-color, 16%);
-
-      .nudge-bubble--sent & {
-        background: rgba(255, 255, 255, 25%);
-      }
-    }
-  }
-
-  &__react-count {
-    font-size: 11px;
-    font-weight: 600;
-  }
 }
 
 // ── Nudge ping divider ────────────────────────────────────────────────────────
