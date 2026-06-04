@@ -9,6 +9,8 @@ class REST::MediaAttachmentSerializer < ActiveModel::Serializer
              :remote_url, :preview_remote_url, :text_url, :meta,
              :description, :blurhash
 
+  has_many :media_tags, key: :tags, serializer: REST::MediaTagSerializer
+
   def id
     object.id.to_s
   end
