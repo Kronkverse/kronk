@@ -250,7 +250,6 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def nudge_thread
-    doorkeeper_authorize! :read, :'read:accounts'
     a = current_user.account.id
     b = @account.id
 
