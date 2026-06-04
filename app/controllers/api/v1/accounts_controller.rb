@@ -3,7 +3,7 @@
 class Api::V1::AccountsController < Api::BaseController
   include RegistrationHelper
 
-  before_action -> { authorize_if_got_token! :read, :'read:accounts' }, except: [:create, :follow, :unfollow, :remove_from_followers, :block, :unblock, :mute, :unmute, :nudge, :nudge_streak, :nudge_partners, :nudge_history, :nudge_pending_count, :nudge_thread]
+  before_action -> { authorize_if_got_token! :read, :'read:accounts' }, except: [:create, :follow, :unfollow, :remove_from_followers, :block, :unblock, :mute, :unmute, :nudge, :nudge_streak, :nudge_partners, :nudge_history, :nudge_pending_count]
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:follows' }, only: [:follow, :unfollow, :remove_from_followers]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:nudge]
   before_action -> { doorkeeper_authorize! :follow, :write, :'write:mutes' }, only: [:mute, :unmute]
@@ -13,7 +13,6 @@ class Api::V1::AccountsController < Api::BaseController
   before_action :require_user!, except: [:index, :show, :create]
   before_action :require_client_credentials!, only: [:create]
   before_action :set_account, except: [:index, :create, :nudge_history, :nudge_partners, :nudge_pending_count]
-  before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: [:nudge_thread]
   before_action :set_accounts, only: [:index]
   before_action :check_account_approval, except: [:index, :create, :nudge_history, :nudge_partners, :nudge_pending_count]
   before_action :check_account_confirmation, except: [:index, :create, :nudge_history, :nudge_partners, :nudge_pending_count]
@@ -124,7 +123,7 @@ class Api::V1::AccountsController < Api::BaseController
     last_nudge_per_partner = {}
     Notification.where(type: 'nudge')
                 .where('account_id = ? OR from_account_id = ?', a, a)
-                .includes(:nudge_message)
+                .includes(nudge_message: [:media_attachment, :voice_attachment])
                 .order(id: :desc)
                 .each do |n|
       partner_id = n.account_id == a ? n.from_account_id : n.account_id
@@ -235,20 +234,25 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def nudge_thread
-    doorkeeper_authorize! :read, :'read:accounts'
-
     a = current_user.account.id
     b = @account.id
 
     notifications = Notification.where(type: 'nudge')
                                 .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
-                                .includes(:nudge_message)
+                                .includes(nudge_message: [:media_attachment, :voice_attachment])
                                 .order(id: :asc)
                                 .last(100)
 
+    notification_ids = notifications.map(&:id)
+    reaction_counts = NudgeReaction.where(notification_id: notification_ids).group(:notification_id, :emoji).count
+    my_reactions = NudgeReaction.where(notification_id: notification_ids, account: current_user.account).index_by(&:notification_id)
+
     messages = notifications.map do |n|
       msg = n.nudge_message
-      reactions = NudgeReaction.where(notification: n).group(:emoji).count
+      my_emoji = my_reactions[n.id]&.emoji
+      reactions = NudgeReaction::ALLOWED_EMOJI.index_with do |emoji|
+        { count: reaction_counts[[n.id, emoji]] || 0, me: my_emoji == emoji }
+      end
       {
         notification_id: n.id.to_s,
         direction: n.from_account_id == a ? 'sent' : 'received',
@@ -257,7 +261,7 @@ class Api::V1::AccountsController < Api::BaseController
         media_url: msg&.media_attachment&.file&.url(:original),
         media_content_type: msg&.media_attachment&.file_content_type,
         voice_url: msg&.voice_attachment&.file&.url(:original),
-        reactions: NudgeReaction::ALLOWED_EMOJI.index_with { |emoji| { count: reactions[emoji] || 0, me: false } },
+        reactions: reactions,
       }
     end
 
