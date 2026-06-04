@@ -132,6 +132,8 @@ export const AccountGallery: React.FC<{
   const [taggedAttachments, setTaggedAttachments] = useState<
     ApiMediaAttachmentJSON[]
   >([]);
+  const [taggedHasMore, setTaggedHasMore] = useState(false);
+  const [taggedLoading, setTaggedLoading] = useState(false);
 
   const { suspended, blockedBy, hidden } = useAccountVisibility(accountId);
 
@@ -147,10 +149,29 @@ export const AccountGallery: React.FC<{
 
   useEffect(() => {
     if (!accountId || !isAccount) return;
+    setTaggedLoading(true);
     void apiGetTaggedMedia(accountId)
-      .then(setTaggedAttachments)
-      .catch(() => undefined);
+      .then((data) => {
+        setTaggedAttachments(data);
+        setTaggedHasMore(data.length === 40);
+        setTaggedLoading(false);
+      })
+      .catch(() => { setTaggedLoading(false); });
   }, [accountId, isAccount]);
+
+  const handleLoadMoreTagged = useCallback(() => {
+    if (!accountId || taggedLoading || taggedAttachments.length === 0) return;
+    const lastId = taggedAttachments[taggedAttachments.length - 1]?.id;
+    if (!lastId) return;
+    setTaggedLoading(true);
+    void apiGetTaggedMedia(accountId, lastId)
+      .then((data) => {
+        setTaggedAttachments((prev) => [...prev, ...data]);
+        setTaggedHasMore(data.length === 40);
+        setTaggedLoading(false);
+      })
+      .catch(() => { setTaggedLoading(false); });
+  }, [accountId, taggedLoading, taggedAttachments]);
 
   const handleLoadMore = useCallback(() => {
     if (maxId) {
@@ -273,6 +294,18 @@ export const AccountGallery: React.FC<{
                       <TaggedMediaItem key={a.id} attachment={a} />
                     ))}
                   </div>
+                  {taggedHasMore && (
+                    <button
+                      className='load-more'
+                      onClick={handleLoadMoreTagged}
+                      disabled={taggedLoading}
+                    >
+                      <FormattedMessage
+                        id='status.load_more'
+                        defaultMessage='Load more'
+                      />
+                    </button>
+                  )}
                 </div>
               )}
             </>
