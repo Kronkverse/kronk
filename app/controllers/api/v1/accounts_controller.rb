@@ -221,6 +221,20 @@ class Api::V1::AccountsController < Api::BaseController
     }
   end
 
+  def tagged_media
+    doorkeeper_authorize! :read, :'read:accounts'
+
+    attachments = @account.tagged_in_media
+                          .includes(:media_tags, status: :account)
+                          .where.not(status_id: nil)
+                          .joins(:status)
+                          .merge(Status.where(visibility: %i(public unlisted)))
+                          .order(id: :desc)
+                          .limit(40)
+
+    render json: attachments, each_serializer: REST::MediaAttachmentSerializer
+  end
+
   private
 
   def nudge_streak_count

@@ -70,6 +70,10 @@ export function AccountNudges () {
   return import('../../account_nudges');
 }
 
+export function AccountTaggedGallery () {
+  return import('../../account_tagged_gallery');
+}
+
 export function AccountFeatured() {
   return import('../../account_featured');
 }

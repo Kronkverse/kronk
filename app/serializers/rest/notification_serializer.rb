@@ -44,6 +44,27 @@ class REST::NotificationSerializer < ActiveModel::Serializer
     object.type == :nudge
   end
 
+  attribute :media_tag_preview_url, if: :media_tag_type?
+  attribute :media_tag_status_path, if: :media_tag_type?
+
+  def media_tag_type?
+    object.type == :media_tag
+  end
+
+  def media_tag_preview_url
+    url = object.activity&.media_attachment&.file&.url(:small)
+    full_asset_url(url) if url
+  end
+
+  def media_tag_status_path
+    tag = object.activity
+    return nil unless tag&.media_attachment&.status_id
+
+    acct = tag.media_attachment.status&.account&.acct
+    status_id = tag.media_attachment.status_id
+    "/@#{acct}/#{status_id}" if acct && status_id
+  end
+
   def nudge_streak
     a = object.account_id
     b = object.from_account_id
