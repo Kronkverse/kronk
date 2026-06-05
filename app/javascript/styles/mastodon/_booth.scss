@@ -7,6 +7,22 @@ $booth-bg: var(--background-color, #17101f);
 $booth-card-bg: var(--surface-background-color, #1e1433);
 $booth-accent: var(--space-color, #3034a0);
 
+// ─── Hero title ───────────────────────────────────────────────────────────────
+
+.booth__hero {
+  text-align: center;
+  padding: 28px 8px;
+}
+
+.booth__hero-title {
+  font-family: Georgia, 'Liberation Serif', serif;
+  font-size: 36px;
+  font-weight: 500;
+  color: $primary-text-color;
+  margin: 0 0 14px;
+  line-height: 1.1;
+}
+
 // ─── Space shell ──────────────────────────────────────────────────────────────
 
 .booth {
