@@ -13,6 +13,10 @@ class REST::BoothSetSerializer < ActiveModel::Serializer
     object.id.to_s
   end
 
+  def event_date
+    object.event_date&.strftime('%Y-%m-%d')
+  end
+
   def audio_url
     object.audio_url
   end
