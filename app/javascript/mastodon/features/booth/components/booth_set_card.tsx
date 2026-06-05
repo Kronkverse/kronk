@@ -63,11 +63,16 @@ export const BoothSetCard: React.FC<Props> = ({
     setMenuOpen((prev) => !prev);
   }, []);
 
-  const handleMenuBlur = useCallback((e: React.FocusEvent) => {
-    if (!menuRef.current?.contains(e.relatedTarget as Node)) {
-      setMenuOpen(false);
-      setConfirmingDelete(false);
-    }
+  const handleMenuBlur = useCallback(() => {
+    setTimeout(() => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(document.activeElement)
+      ) {
+        setMenuOpen(false);
+        setConfirmingDelete(false);
+      }
+    }, 0);
   }, []);
 
   const handleEdit = useCallback(

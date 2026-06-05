@@ -135,6 +135,14 @@ namespace :api, format: false do
         get :my_invitees
       end
     end
+    resources :whatchuneed_listings, only: [:index, :show, :create, :update, :destroy] do
+      member do
+        post :fulfill
+        post :close
+      end
+      resources :whatchuneed_responses, only: [:create, :destroy], shallow: true
+    end
+
     resources :proposals, only: [:index, :show, :create, :update] do
       member do
         post :vote
