@@ -29,7 +29,7 @@ export const PLANET_COLORS: Record<PlanetName, string> = {
 export const SPACE_PLANET: Record<string, PlanetName> = {
   Feed: 'Mercury',
   Huddle: 'Venus',
-  Market: 'Earth',
+  WatchuNeed: 'Earth',
   Kommons: 'Jupiter',
   Kalendar: 'Neptune',
   InFlow: 'Uranus',

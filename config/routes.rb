@@ -238,8 +238,8 @@ Rails.application.routes.draw do
   get '/nudges/*path', to: 'home#index', format: false
   get '/in-flow', to: 'home#index'
   get '/in-flow/*path', to: 'home#index', format: false
-  get '/market', to: 'home#index'
-  get '/market/*path', to: 'home#index', format: false
+  get '/whatchuneed', to: 'home#index'
+  get '/whatchuneed/*path', to: 'home#index', format: false
   draw(:web_app)
 
   get '/web/(*any)', to: redirect(path: '/%{any}', status: 302), as: :web, defaults: { any: '' }, format: false

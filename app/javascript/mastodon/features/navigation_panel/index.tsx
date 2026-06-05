@@ -12,8 +12,7 @@ import { useDrag } from '@use-gesture/react';
 
 import kronkWordmark from '@/images/kronk-wordmark-small.png';
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
-import BarChartActiveIcon from '@/material-icons/400-24px/bar_chart_4_bars-fill.svg?react';
-import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
+
 import HeadphonesActiveIcon from '@/material-icons/400-24px/headphones-fill.svg?react';
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import CalendarMonthActiveIcon from '@/material-icons/400-24px/calendar_month-fill.svg?react';
@@ -72,7 +71,7 @@ const messages = defineMessages({
   live: { id: 'live.title', defaultMessage: 'Huddle' },
   commons: { id: 'governance.title', defaultMessage: '₭ommons' },
   questions: { id: 'questions.title', defaultMessage: 'Ƙuestions' },
-  market: { id: 'market.title', defaultMessage: 'Market' },
+  whatchuneed: { id: 'whatchuneed.title', defaultMessage: 'WatchuNeed' },
   booth: { id: 'booth.title', defaultMessage: 'The Booth' },
   events: { id: 'events.title', defaultMessage: '₭alendar' },
   inFlow: { id: 'in_flow.title', defaultMessage: 'In Flow' },
@@ -391,11 +390,12 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
 
             <ColumnLink
               transparent
-              to='/market'
-              icon='bar_chart'
-              iconComponent={BarChartIcon}
-              activeIconComponent={BarChartActiveIcon}
-              text={intl.formatMessage(messages.market)}
+              to='/whatchuneed'
+              icon='partner_exchange'
+              iconComponent={PartnerExchangeIcon}
+              activeIconComponent={PartnerExchangeActiveIcon}
+              text={intl.formatMessage(messages.whatchuneed)}
+              tooltip='WatchuNeed'
             />
 
             <ColumnLink
