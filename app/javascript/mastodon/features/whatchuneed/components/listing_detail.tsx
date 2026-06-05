@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { FormattedMessage, defineMessages, useIntl } from 'react-intl';
 
 import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
-import CheckCircleIcon from '@/material-icons/400-24px/check_circle.svg?react';
+import DoneIcon from '@/material-icons/400-24px/done.svg?react';
 
 import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
@@ -100,7 +100,7 @@ export const ListingDetail: React.FC<Props> = ({ listing, currentAccountId, onBa
 
         {isOwner && listing.status === 'open' && (
           <button className='wtn-detail__fulfill-btn' onClick={handleFulfill} type='button'>
-            <Icon id='check-circle' icon={CheckCircleIcon} />
+            <Icon id='done' icon={DoneIcon} />
             <FormattedMessage id='whatchuneed.mark_fulfilled' defaultMessage='Mark as fulfilled' />
           </button>
         )}
