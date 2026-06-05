@@ -8,7 +8,7 @@ class Api::V1::BoothSetsController < Api::BaseController
 
   def index
     @booth_sets = BoothSet.published
-                          .includes(:account, :audio_attachment, :cover_attachment)
+                          .includes(:account, :event, :audio_attachment, :cover_attachment)
                           .recent
                           .limit(40)
     render json: @booth_sets, each_serializer: REST::BoothSetSerializer
@@ -74,7 +74,7 @@ class Api::V1::BoothSetsController < Api::BaseController
   end
 
   def booth_set_params
-    params.permit(:title, :description, :artist_name, :event_name, :event_date,
+    params.permit(:title, :description, :artist_name, :event_id, :event_name, :event_date,
                   :duration_seconds, :published, :cover_offset_y, genres: [])
   end
 end
