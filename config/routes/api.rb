@@ -117,6 +117,16 @@ namespace :api, format: false do
       end
     end
 
+    resources :flow_cycles, only: [:index, :show, :create, :update, :destroy] do
+      collection do
+        get :shared_with_me
+      end
+      member do
+        post :share
+        delete 'share/:account_id', action: :unshare
+      end
+    end
+
     resources :events, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :rsvp
@@ -142,6 +152,10 @@ namespace :api, format: false do
         post :unarchive
       end
       resources :tasks, only: [:index, :create, :update], shallow: true
+    end
+
+    namespace :in_flow do
+      resource :observation, only: :show
     end
 
     resources :reports, only: [:create]
