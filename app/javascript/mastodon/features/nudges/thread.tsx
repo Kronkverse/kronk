@@ -279,6 +279,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [streak, setStreak] = useState(0);
   const [canNudgeBack, setCanNudgeBack] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   // Compose state
   const [text, setText] = useState('');
@@ -306,6 +307,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     if (accountId === '') return;
     try {
       const data = await apiGetNudgeThread(accountId);
+      setLoadError(false);
       dispatch(importFetchedAccounts([data.account]));
       setThreadMessages((prev) => {
         const prevIds = new Set(prev.map((m) => m.notification_id));
@@ -332,6 +334,8 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         return data.streak;
       });
       setCanNudgeBack(data.can_nudge_back);
+    } catch {
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -824,7 +828,16 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </div>
         )}
 
-        {!loading && threadMessages.length === 0 && (
+        {!loading && loadError && (
+          <div className='empty-column-indicator'>
+            <FormattedMessage
+              id='nudges.thread.error'
+              defaultMessage='Could not load messages. Try refreshing.'
+            />
+          </div>
+        )}
+
+        {!loading && !loadError && threadMessages.length === 0 && (
           <div className='empty-column-indicator'>
             <FormattedMessage
               id='nudges.thread.empty'
@@ -833,7 +846,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </div>
         )}
 
-        {!loading && threadMessages.length > 0 && (
+        {!loading && !loadError && threadMessages.length > 0 && (
           <div className='nudge-thread__messages'>
             {threadMessages.map((msg) => (
               <MessageBubble
