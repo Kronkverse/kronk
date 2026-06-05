@@ -208,6 +208,12 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         className='booth scrollable'
         style={{ '--space-color': spaceColor('Booth') } as React.CSSProperties}
       >
+        <section className='booth__hero'>
+          <h1 className='booth__hero-title'>
+            {intl.formatMessage(messages.heading)}
+          </h1>
+        </section>
+
         {signedIn && !showUpload && !editingSet && (
           <button
             className='booth__upload-btn'
