@@ -6485,6 +6485,39 @@ a.status-card {
   margin-bottom: 20px;
 }
 
+.media-modal__tagged-names {
+  color: $white;
+  filter: var(--overlay-icon-shadow);
+  font-size: 13px;
+  margin: 0 0 8px;
+  padding: 0 16px;
+  text-align: center;
+}
+
+.media-modal__untag-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  margin-inline-start: 2px;
+  opacity: 0.7;
+  padding: 0 2px;
+  vertical-align: middle;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.status__media-tags {
+  color: $secondary-text-color;
+  font-size: 13px;
+  margin-top: 6px;
+  padding: 0 2px;
+}
+
 .media-modal__page-dot {
   flex: 0 0 auto;
   background-color: $white;
@@ -8245,6 +8278,20 @@ a.status-card {
   .timeline-hint {
     grid-column: span 3;
   }
+}
+
+.account-gallery__tagged-section {
+  border-top: 1px solid var(--background-border-color);
+  margin-top: 2px;
+}
+
+.account-gallery__tagged-header {
+  color: $secondary-text-color;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 15px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .notification__filter-bar,
@@ -12175,43 +12222,15 @@ noscript {
   margin-top: 4px;
 }
 
-.notification-nudge__reveal-btn {
-  display: inline-block;
-  margin-top: 6px;
-  background: none;
-  border: 1px solid lighten($ui-base-color, 16%);
-  border-radius: 4px;
-  color: $highlight-text-color;
-  font-size: 13px;
-  padding: 4px 12px;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    border-color 0.15s;
-
-  &:hover {
-    background: rgba($highlight-text-color, 0.08);
-    border-color: $highlight-text-color;
-  }
-}
-
 // Grand total stat banner
 .nudge-grand-total {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
+  justify-content: center;
+  padding: 14px 15px 12px;
   border-bottom: 1px solid lighten($ui-base-color, 8%);
   background: lighten($ui-base-color, 4%);
-
-  &__headline {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 16px 15px 14px;
-    width: 100%;
-  }
 
   &__label {
     font-size: 11px;
@@ -12219,23 +12238,29 @@ noscript {
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: $dark-text-color;
+    margin-bottom: 4px;
   }
 
   &__count {
-    font-size: 36px;
+    font-size: 28px;
     font-weight: 700;
     line-height: 1;
     color: $highlight-text-color;
   }
 
-  &__breakdown {
+  &__divider {
+    width: 100%;
+    height: 1px;
+    background: lighten($ui-base-color, 8%);
+    margin: 10px 0 8px;
+  }
+
+  &__stats {
     display: flex;
     align-items: center;
     gap: 0;
     width: 100%;
     justify-content: center;
-    border-top: 1px solid lighten($ui-base-color, 8%);
-    padding: 12px 0;
   }
 
   &__stat {
@@ -12248,8 +12273,7 @@ noscript {
   &__stat-divider {
     width: 1px;
     height: 32px;
-    background: lighten($ui-base-color, 10%);
-    flex-shrink: 0;
+    background: lighten($ui-base-color, 8%);
   }
 
   &__stat-number {
@@ -12263,10 +12287,6 @@ noscript {
 
     &--received {
       color: $gold-star;
-    }
-
-    &--new {
-      color: $valid-value-color;
     }
   }
 
@@ -12830,37 +12850,44 @@ noscript {
     height: 32px;
     max-width: 200px;
   }
+}
 
-  &__options {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: stretch;
+// Reaction bar on nudge notifications
+.notification-nudge__reactions {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.notification-nudge__reaction {
+  background: lighten($ui-base-color, 4%);
+  border: 1px solid lighten($ui-base-color, 14%);
+  border-radius: 12px;
+  padding: 3px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition:
+    border-color 0.1s,
+    background 0.1s;
+
+  &:hover {
+    border-color: $highlight-text-color;
   }
 
-  &__add-message-btn {
-    background: none;
-    border: 1px solid lighten($ui-base-color, 16%);
-    border-radius: 6px;
-    color: $dark-text-color;
-    font-size: 14px;
-    padding: 10px 16px;
-    cursor: pointer;
-    text-align: center;
-    transition:
-      border-color 0.15s,
-      color 0.15s;
-
-    &:hover {
-      border-color: $highlight-text-color;
-      color: $highlight-text-color;
-    }
+  &--active {
+    background: rgba($highlight-text-color, 0.12);
+    border-color: $highlight-text-color;
   }
+}
 
-  &__choose-footer {
-    display: flex;
-    justify-content: center;
-  }
+.notification-nudge__reaction-count {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: $dark-text-color;
 }
 
 // Reply quote shown inside a nudge notification
@@ -12896,767 +12923,6 @@ noscript {
   height: 36px;
 }
 
-// Column header title — white when on the nudges page
-.column:has(.nudge-page) .column-header__title,
-.column:has(.nudge-thread) .column-header__title {
-  color: #fff;
-}
-
-// ── Nudges inbox — conversation list ────────────────────────────────────────
-
-.nudge-inbox-stats {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 15px;
-  border-bottom: 1px solid lighten($ui-base-color, 8%);
-  font-size: 13px;
-
-  &__total {
-    color: $dark-text-color;
-  }
-
-  &__unread {
-    color: $highlight-text-color;
-    font-weight: 600;
-    background: rgba($highlight-text-color, 0.12);
-    border-radius: 10px;
-    padding: 2px 8px;
-  }
-}
-
-.nudge-conv-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.nudge-conv-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 15px;
-  border-bottom: 1px solid lighten($ui-base-color, 6%);
-  text-decoration: none;
-  color: $primary-text-color;
-  cursor: pointer;
-  transition: background 0.1s;
-
-  &:hover {
-    background: lighten($ui-base-color, 4%);
-    text-decoration: none;
-  }
-
-  &--unread {
-    background: lighten($ui-base-color, 3%);
-  }
-
-  &--suggestion {
-    cursor: default;
-
-    &:hover {
-      background: none;
-    }
-  }
-
-  &__avatar {
-    position: relative;
-    flex-shrink: 0;
-    display: block;
-    text-decoration: none;
-  }
-
-  &__unread-dot {
-    position: absolute;
-    bottom: 1px;
-    right: 1px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: $highlight-text-color;
-    border: 2px solid $ui-base-color;
-  }
-
-  &__body {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  &__top {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 8px;
-  }
-
-  &__name {
-    font-size: 15px;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: $primary-text-color;
-  }
-
-  &__time {
-    font-size: 12px;
-    color: $dark-text-color;
-    flex-shrink: 0;
-  }
-
-  &__bottom {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  &__preview {
-    font-size: 13px;
-    color: $dark-text-color;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    &--unread {
-      color: $primary-text-color;
-      font-weight: 500;
-    }
-  }
-
-  &__streak {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 12px;
-    color: $highlight-text-color;
-    background: rgba($highlight-text-color, 0.1);
-    border-radius: 10px;
-    padding: 2px 6px;
-    flex-shrink: 0;
-
-    svg {
-      width: 13px;
-      height: 13px;
-    }
-  }
-
-  &__action {
-    flex-shrink: 0;
-    margin-inline-start: 4px;
-  }
-}
-
-// ── Nudges thread ─────────────────────────────────────────────────────────────
-
-.nudge-thread-banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 15px;
-  border-bottom: 1px solid lighten($ui-base-color, 8%);
-  background: lighten($ui-base-color, 3%);
-  flex-shrink: 0;
-
-  &__info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-
-  &__name {
-    font-size: 15px;
-    font-weight: 600;
-    color: $primary-text-color;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__acct {
-    font-size: 12px;
-    color: $dark-text-color;
-  }
-
-  &__streak {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 13px;
-    font-weight: 600;
-    color: $highlight-text-color;
-    background: rgba($highlight-text-color, 0.12);
-    border-radius: 10px;
-    padding: 3px 8px;
-    flex-shrink: 0;
-
-    svg {
-      width: 14px;
-      height: 14px;
-    }
-
-    &--bump {
-      animation: nudge-streak-bump 0.5s ease-out both;
-    }
-  }
-}
-
-@keyframes nudge-bubble-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes nudge-streak-bump {
-  0% {
-    transform: scale(1);
-  }
-
-  40% {
-    transform: scale(1.35);
-  }
-
-  70% {
-    transform: scale(0.92);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
-.nudge-thread {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-
-  &__messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    overscroll-behavior: contain;
-  }
-}
-
-// ── Message bubbles ───────────────────────────────────────────────────────────
-
-.nudge-bubble {
-  display: flex;
-  max-width: 78%;
-
-  &--sent {
-    align-self: flex-end;
-    flex-direction: row-reverse;
-  }
-
-  &--received {
-    align-self: flex-start;
-  }
-
-  &__content {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 9px 13px;
-    border-radius: 18px;
-    font-size: 14px;
-    line-height: 1.4;
-    overflow-wrap: break-word;
-
-    .nudge-bubble--sent & {
-      background: $highlight-text-color;
-      color: #fff;
-      border-bottom-right-radius: 4px;
-    }
-
-    .nudge-bubble--received & {
-      background: lighten($ui-base-color, 14%);
-      color: $primary-text-color;
-      border-bottom-left-radius: 4px;
-    }
-  }
-
-  &__avatar {
-    align-self: flex-end;
-    margin-inline-end: 6px;
-    flex-shrink: 0;
-  }
-
-  &__text {
-    margin: 0;
-  }
-
-  &__img {
-    max-width: 220px;
-    max-height: 220px;
-    border-radius: 10px;
-    object-fit: cover;
-    display: block;
-  }
-
-  &__audio {
-    display: block;
-    height: 36px;
-    width: 200px;
-  }
-
-  &__video {
-    display: block;
-    max-width: 240px;
-    max-height: 180px;
-    border-radius: 10px;
-    object-fit: cover;
-  }
-
-  &__time {
-    font-size: 11px;
-    opacity: 0.7;
-    align-self: flex-end;
-    margin-top: 2px;
-  }
-
-  &__reactions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 3px;
-    margin-top: 4px;
-    opacity: 0.4;
-    transition: opacity 0.15s;
-
-    &--active {
-      opacity: 1;
-    }
-  }
-
-  &:hover &__reactions,
-  &__reactions--active {
-    opacity: 1;
-  }
-
-  &--new {
-    animation: nudge-bubble-in 0.3s ease-out both;
-  }
-
-  &__react-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    padding: 2px 6px;
-    border-radius: 10px;
-    border: 1px solid transparent;
-    background: lighten($ui-base-color, 8%);
-    cursor: pointer;
-    font-size: 14px;
-    line-height: 1.2;
-    color: $primary-text-color;
-    transition:
-      background 0.1s,
-      border-color 0.1s;
-
-    .nudge-bubble--sent & {
-      background: rgba(255, 255, 255, 15%);
-      color: #fff;
-    }
-
-    &--me {
-      background: $highlight-text-color;
-      border-color: $highlight-text-color;
-      color: #fff;
-
-      .nudge-bubble--sent & {
-        background: rgba(255, 255, 255, 35%);
-        border-color: rgba(255, 255, 255, 60%);
-      }
-    }
-
-    &:hover {
-      background: lighten($ui-base-color, 16%);
-
-      .nudge-bubble--sent & {
-        background: rgba(255, 255, 255, 25%);
-      }
-    }
-  }
-
-  &__react-count {
-    font-size: 11px;
-    font-weight: 600;
-  }
-}
-
-// ── Nudge ping divider ────────────────────────────────────────────────────────
-
-.nudge-ping {
-  align-self: center;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  color: $dark-text-color;
-  background: lighten($ui-base-color, 8%);
-  border-radius: 12px;
-  padding: 4px 10px;
-  margin: 4px 0;
-
-  svg {
-    width: 14px;
-    height: 14px;
-    opacity: 0.7;
-  }
-
-  &__time {
-    opacity: 0.6;
-
-    &::before {
-      content: '· ';
-    }
-  }
-}
-
-// ── Compose bar ───────────────────────────────────────────────────────────────
-
-.nudge-compose-bar__error {
-  padding: 6px 12px;
-  font-size: 13px;
-  color: $error-value-color;
-  background: rgba($error-value-color, 0.08);
-  border-top: 1px solid rgba($error-value-color, 0.2);
-}
-
-.nudge-compose-bar__waiting {
-  padding: 10px 16px;
-  font-size: 13px;
-  color: $dark-text-color;
-  text-align: center;
-  border-top: 1px solid lighten($ui-base-color, 8%);
-}
-
-.nudge-compose-bar--disabled {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.nudge-compose-bar {
-  flex-shrink: 0;
-  border-top: 1px solid lighten($ui-base-color, 8%);
-  padding: 8px 10px;
-  background: $ui-base-color;
-
-  &__attachments {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding-bottom: 8px;
-  }
-
-  &__attachment-preview {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-
-    &--voice {
-      audio {
-        height: 36px;
-        width: 200px;
-      }
-    }
-  }
-
-  &__media-preview {
-    max-height: 80px;
-    max-width: 120px;
-    border-radius: 8px;
-    object-fit: cover;
-    display: block;
-  }
-
-  &__remove-btn {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    width: 18px;
-    height: 18px;
-    background: $ui-highlight-color;
-    border: none;
-    border-radius: 50%;
-    color: #fff;
-    font-size: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    line-height: 1;
-  }
-
-  &__row {
-    display: flex;
-    align-items: flex-end;
-    gap: 6px;
-  }
-
-  &__input {
-    flex: 1;
-    background: lighten($ui-base-color, 10%);
-    border: 1px solid lighten($ui-base-color, 18%);
-    border-radius: 20px;
-    padding: 8px 14px;
-    color: $primary-text-color;
-    font-size: 14px;
-    font-family: inherit;
-    resize: none;
-    min-height: 38px;
-    max-height: 120px;
-    overflow-y: auto;
-    line-height: 1.4;
-    transition: border-color 0.15s;
-
-    &::placeholder {
-      color: $dark-text-color;
-    }
-
-    &:focus {
-      outline: none;
-      border-color: lighten($ui-base-color, 28%);
-    }
-
-    &--over {
-      border-color: $error-red;
-    }
-  }
-
-  &__icon-btn {
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: none;
-    border: none;
-    color: $dark-text-color;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition:
-      color 0.15s,
-      background 0.15s;
-
-    svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    &:hover:not(:disabled) {
-      color: $primary-text-color;
-      background: lighten($ui-base-color, 8%);
-    }
-
-    &:disabled {
-      opacity: 0.4;
-      cursor: default;
-    }
-
-    &--recording {
-      color: $error-red;
-      animation: nudge-record-pulse 1s ease-in-out infinite;
-    }
-
-    &--send {
-      background: $highlight-text-color;
-      color: #fff;
-
-      &:hover:not(:disabled) {
-        background: lighten($highlight-text-color, 8%);
-        color: #fff;
-      }
-
-      &--sending {
-        opacity: 0.7;
-      }
-    }
-  }
-
-  &__rec-timer {
-    font-size: 10px;
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    transform: translate(50%, 50%);
-    background: $error-red;
-    color: #fff;
-    border-radius: 8px;
-    padding: 0 3px;
-    pointer-events: none;
-  }
-}
-
-@keyframes nudge-record-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.4;
-  }
-}
-
-// ── Signal-style voice waveform ───────────────────────────────────────────────
-
-.nudge-waveform {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex: 1;
-  height: 36px;
-  overflow: hidden;
-
-  &__bar {
-    flex: 1;
-    min-width: 2px;
-    max-width: 5px;
-    height: calc(var(--bar-h) * 100%);
-    border-radius: 2px;
-    background: $highlight-text-color;
-    opacity: 0.55;
-    transition: height 0.07s ease;
-  }
-
-  &--live &__bar {
-    opacity: 0.85;
-    transition: height 0.05s ease;
-  }
-}
-
-// ── Recording bar (replaces compose row while mic is active) ─────────────────
-
-.nudge-voice-recording {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 2px;
-
-  &__dot {
-    flex-shrink: 0;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: $error-red;
-    animation: nudge-record-pulse 1s ease-in-out infinite;
-  }
-
-  &__timer {
-    flex-shrink: 0;
-    font-size: 13px;
-    font-variant-numeric: tabular-nums;
-    color: $dark-text-color;
-    min-width: 2.5ch;
-    text-align: right;
-  }
-
-  &__stop {
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: $error-red;
-    border: none;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-
-    svg {
-      width: 18px;
-      height: 18px;
-    }
-
-    &:hover {
-      background: lighten($error-red, 8%);
-    }
-  }
-}
-
-// ── Pre-send voice preview (Signal-style playback bar) ────────────────────────
-
-.nudge-voice-preview {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 2px 10px;
-  border-bottom: 1px solid lighten($ui-base-color, 8%);
-  margin-bottom: 4px;
-
-  &__play {
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: $highlight-text-color;
-    border: none;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-
-    svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    &:hover {
-      background: lighten($highlight-text-color, 8%);
-    }
-  }
-
-  &__dur {
-    flex-shrink: 0;
-    font-size: 13px;
-    font-variant-numeric: tabular-nums;
-    color: $dark-text-color;
-    min-width: 2.5ch;
-    text-align: right;
-  }
-
-  &__del {
-    flex-shrink: 0;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: lighten($ui-base-color, 10%);
-    border: none;
-    color: $dark-text-color;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    line-height: 1;
-
-    &:hover {
-      background: lighten($ui-base-color, 16%);
-      color: $primary-text-color;
-    }
-  }
-}
-
 .tag-people-modal {
   background: $ui-base-color;
   border-radius: 8px;
@@ -13668,51 +12934,22 @@ noscript {
   width: 100%;
 
   &__header {
-    align-items: center;
     border-bottom: 1px solid lighten($ui-base-color, 8%);
-    display: flex;
-    gap: 12px;
     padding: 16px 20px;
 
     h3 {
       color: $primary-text-color;
-      flex: 1;
       font-size: 18px;
       font-weight: 700;
       margin: 0;
     }
   }
 
-  &__header-actions {
-    align-items: center;
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
-
-  &__hint {
-    color: $secondary-text-color;
-    font-size: 13px;
-    margin: 4px 0 0;
-  }
-
-  &__error {
-    color: $error-red;
-    font-size: 13px;
-    padding: 8px 12px 0;
-  }
-
   &__image-wrapper {
-    flex-shrink: 0;
-    max-height: 260px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
     overflow: hidden;
-  }
-
-  &__preview {
-    display: block;
-    height: 100%;
-    object-fit: cover;
-    width: 100%;
   }
 
   &__image {
@@ -13764,16 +13001,6 @@ noscript {
       padding: 0;
       width: 14px;
     }
-
-    &--self {
-      background: rgba($valid-value-color, 0.9);
-      border-radius: 50%;
-      border: 3px solid $ui-base-color;
-      box-shadow: 0 1px 4px rgba($base-shadow-color, 0.4);
-      height: 18px;
-      padding: 0;
-      width: 18px;
-    }
   }
 
   &__pin-label {
@@ -13787,45 +13014,6 @@ noscript {
     border-top: 1px solid lighten($ui-base-color, 8%);
     padding: 12px;
     position: relative;
-  }
-
-  &__tag-myself-btn {
-    background: lighten($ui-base-color, 8%);
-    border: 1px solid lighten($ui-base-color, 16%);
-    border-radius: 20px;
-    color: $highlight-text-color;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 4px 12px;
-    transition: background 0.15s;
-
-    &:hover {
-      background: lighten($ui-base-color, 12%);
-    }
-  }
-
-  &__suggestion-btn {
-    align-items: center;
-    background: none;
-    border: 0;
-    color: $primary-text-color;
-    cursor: pointer;
-    display: flex;
-    gap: 8px;
-    padding: 8px 12px;
-    text-align: start;
-    width: 100%;
-
-    &:hover {
-      background: lighten($ui-base-color, 4%);
-    }
-  }
-
-  &__error {
-    color: $error-red;
-    font-size: 12px;
-    margin-top: 6px;
   }
 
   &__search-input {
@@ -13921,63 +13109,16 @@ noscript {
   &__footer {
     border-top: 1px solid lighten($ui-base-color, 8%);
     display: flex;
-    gap: 8px;
     justify-content: flex-end;
     padding: 12px 16px;
   }
 }
 
-.notification-media-tag__preview-link {
-  display: inline-block;
-  margin-top: 6px;
-
-  &:hover .notification-media-tag__preview {
-    opacity: 0.85;
-  }
-}
-
 .notification-media-tag__preview {
-  border-radius: 6px;
+  border-radius: 4px;
   display: block;
-  max-height: 120px;
-  max-width: 180px;
-  object-fit: cover;
-  transition: opacity 0.15s;
-}
-
-.media-modal__tagged-names {
-  color: $darker-text-color;
-  font-size: 13px;
-  margin: 4px 0 0;
-  padding: 0 16px;
-  text-align: center;
-}
-
-.status__media-tags {
-  color: $secondary-text-color;
-  font-size: 13px;
   margin-top: 6px;
-  padding: 0 2px;
-}
-
-.tagged-gallery {
-  &__item {
-    aspect-ratio: 1;
-    overflow: hidden;
-    position: relative;
-  }
-
-  &__link {
-    display: block;
-    height: 100%;
-    width: 100%;
-  }
-
-  &__thumb {
-    display: block;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    width: 100%;
-  }
+  max-height: 100px;
+  max-width: 100%;
+  object-fit: cover;
 }

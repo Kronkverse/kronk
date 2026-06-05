@@ -619,6 +619,29 @@ class Status extends ImmutablePureComponent {
 
     const {statusContentProps, hashtagBar} = getHashtagBarForStatus(status);
 
+    let tagCaption = null;
+    const mediaAttachments = status.get('media_attachments');
+    if (mediaAttachments?.size > 0) {
+      const seen = new Set();
+      const names = [];
+      mediaAttachments.forEach((a) => {
+        const tags = a.get('tags');
+        if (!tags) return;
+        tags.forEach((tag) => {
+          const id = tag.get('account_id');
+          if (!seen.has(id)) {
+            seen.add(id);
+            const acct = tag.get('account');
+            const name = acct?.get('display_name') || acct?.get('username');
+            if (name) names.push(name);
+          }
+        });
+      });
+      if (names.length > 0) {
+        tagCaption = <div className='status__media-tags'>With: {names.join(', ')}</div>;
+      }
+    }
+
     return (
       <Hotkeys handlers={handlers} focusable={!unfocusable}>
         <div className={classNames('status__wrapper', `status__wrapper-${status.get('visibility')}`, { 'status__wrapper-reply': !!status.get('in_reply_to_id'), unread, focusable: !this.props.muted })} tabIndex={this.props.muted || unfocusable ? null : 0} data-featured={featured ? 'true' : null} aria-label={textForScreenReader({intl, status, rebloggedByText, isQuote: isQuotedPost})} ref={this.handleRef} data-nosnippet={status.getIn(['account', 'noindex'], true) || undefined}>

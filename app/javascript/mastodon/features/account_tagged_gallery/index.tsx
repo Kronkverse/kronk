@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 
 import HeadphonesIcon from '@/material-icons/400-24px/headphones-fill.svg?react';
 import MovieIcon from '@/material-icons/400-24px/movie-fill.svg?react';
+import { openModal } from 'mastodon/actions/modal';
 import { apiGetTaggedMedia } from 'mastodon/api/media_tags';
 import type { ApiMediaAttachmentJSON } from 'mastodon/api_types/media_attachments';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
@@ -15,13 +16,12 @@ import { AccountHeader } from 'mastodon/features/account_timeline/components/acc
 import BundleColumnError from 'mastodon/features/ui/components/bundle_column_error';
 import Column from 'mastodon/features/ui/components/column';
 import { useAccountId } from 'mastodon/hooks/useAccountId';
-import { useAppSelector } from 'mastodon/store';
-
-const PAGE_SIZE = 40;
+import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const TaggedGalleryItem = memo<{
   attachment: ApiMediaAttachmentJSON;
-}>(({ attachment }) => {
+  onOpenImage: (attachment: ApiMediaAttachmentJSON) => void;
+}>(({ attachment, onOpenImage }) => {
   const isVideo = attachment.type === 'video' || attachment.type === 'gifv';
   const isAudio = attachment.type === 'audio';
   const statusHref =
@@ -29,11 +29,22 @@ const TaggedGalleryItem = memo<{
       ? `/@${attachment.status_account_acct}/${attachment.status_id}`
       : undefined;
 
-  const img = (
+  const handleClick = useCallback(() => {
+    onOpenImage(attachment);
+  }, [attachment, onOpenImage]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') onOpenImage(attachment);
+    },
+    [attachment, onOpenImage],
+  );
+
+  const thumbnail = (
     <img
       src={attachment.preview_url}
       alt={attachment.description ?? ''}
-      className='tagged-gallery__thumb'
+      className='media-gallery__item-thumbnail'
     />
   );
 
@@ -47,32 +58,42 @@ const TaggedGalleryItem = memo<{
     </div>
   ) : null;
 
-  const inner = statusHref ? (
-    <Link to={statusHref} className='tagged-gallery__link'>
-      {img}
-      {overlay}
-    </Link>
-  ) : (
-    <>
-      {img}
-      {overlay}
-    </>
-  );
+  if (isVideo && statusHref) {
+    return (
+      <div className='media-gallery__item media-gallery__item--square'>
+        <Link to={statusHref} className='media-gallery__item-thumbnail'>
+          {thumbnail}
+          {overlay}
+        </Link>
+      </div>
+    );
+  }
 
-  return <div className='tagged-gallery__item'>{inner}</div>;
+  return (
+    <div
+      className='media-gallery__item media-gallery__item--square'
+      role='button'
+      tabIndex={0}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+    >
+      {thumbnail}
+      {overlay}
+    </div>
+  );
 });
 TaggedGalleryItem.displayName = 'TaggedGalleryItem';
 
 export const AccountTaggedGallery: React.FC<{
   multiColumn: boolean;
 }> = ({ multiColumn }) => {
+  const dispatch = useAppDispatch();
   const accountId = useAccountId();
   const isAccount = useAppSelector((state) =>
     accountId ? !!state.accounts.get(accountId) : false,
   );
   const [attachments, setAttachments] = useState<ApiMediaAttachmentJSON[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     if (!accountId || !isAccount) return;
@@ -80,7 +101,6 @@ export const AccountTaggedGallery: React.FC<{
     void apiGetTaggedMedia(accountId)
       .then((data) => {
         setAttachments(data);
-        setHasMore(data.length === PAGE_SIZE);
         setIsLoading(false);
       })
       .catch(() => {
@@ -88,21 +108,20 @@ export const AccountTaggedGallery: React.FC<{
       });
   }, [accountId, isAccount]);
 
-  const handleLoadMore = useCallback(() => {
-    if (!accountId || isLoading || attachments.length === 0) return;
-    const lastId = attachments[attachments.length - 1]?.id;
-    if (!lastId) return;
-    setIsLoading(true);
-    void apiGetTaggedMedia(accountId, lastId)
-      .then((data) => {
-        setAttachments((prev) => [...prev, ...data]);
-        setHasMore(data.length === PAGE_SIZE);
-        setIsLoading(false);
-      })
-      .catch(() => {
-        setIsLoading(false);
-      });
-  }, [accountId, isLoading, attachments]);
+  const handleOpenImage = useCallback(
+    (attachment: ApiMediaAttachmentJSON) => {
+      dispatch(
+        openModal({
+          modalType: 'IMAGE',
+          modalProps: {
+            src: attachment.url,
+            alt: attachment.description ?? '',
+          },
+        }),
+      );
+    },
+    [dispatch],
+  );
 
   if (accountId === null) {
     return <BundleColumnError multiColumn={multiColumn} errorType='routing' />;
@@ -120,8 +139,6 @@ export const AccountTaggedGallery: React.FC<{
         alwaysPrepend
         scrollKey='account_tagged_gallery'
         isLoading={isLoading}
-        hasMore={hasMore}
-        onLoadMore={handleLoadMore}
         emptyMessage={
           <FormattedMessage
             id='empty_column.account_tagged_gallery'
@@ -131,7 +148,11 @@ export const AccountTaggedGallery: React.FC<{
         bindToDocument={!multiColumn}
       >
         {attachments.map((attachment) => (
-          <TaggedGalleryItem key={attachment.id} attachment={attachment} />
+          <TaggedGalleryItem
+            key={attachment.id}
+            attachment={attachment}
+            onOpenImage={handleOpenImage}
+          />
         ))}
       </ScrollableList>
     </Column>

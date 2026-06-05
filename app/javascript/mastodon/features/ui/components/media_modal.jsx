@@ -8,7 +8,7 @@ import classNames from 'classnames';
 
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
-import { connect, useDispatch } from 'react-redux';
+import { connect } from 'react-redux';
 
 import ReactSwipeableViews from 'react-swipeable-views';
 
@@ -19,26 +19,16 @@ import FitScreenIcon from '@/material-icons/400-24px/fit_screen.svg?react';
 import TagIcon from '@/material-icons/400-24px/tag.svg?react';
 import ActualSizeIcon from '@/svg-icons/actual_size.svg?react';
 import { openModal } from 'mastodon/actions/modal';
-import { apiGetMediaTags } from 'mastodon/api/media_tags';
+import { apiGetMediaTags, apiRemoveMediaTag } from 'mastodon/api/media_tags';
 import { getAverageFromBlurhash } from 'mastodon/blurhash';
 import { GIFV } from 'mastodon/components/gifv';
 import { Icon }  from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
 import { Footer } from 'mastodon/features/picture_in_picture/components/footer';
 import { Video } from 'mastodon/features/video';
-import { disableSwiping } from 'mastodon/initial_state';
+import { disableSwiping, me } from 'mastodon/initial_state';
 
 import { ZoomableImage } from './zoomable_image';
-
-const TagButton = ({ mediaId, previewUrl }) => {
-  const dispatch = useDispatch();
-  const handleClick = useCallback(() => {
-    dispatch(openModal({ modalType: 'SELF_TAG', modalProps: { mediaId, previewUrl } }));
-  }, [dispatch, mediaId, previewUrl]);
-  return (
-    <IconButton title='Tag people' icon='tag' iconComponent={TagIcon} onClick={handleClick} />
-  );
-};
 
 const messages = defineMessages({
   close: { id: 'lightbox.close', defaultMessage: 'Close' },
@@ -46,8 +36,47 @@ const messages = defineMessages({
   next: { id: 'lightbox.next', defaultMessage: 'Next' },
   zoomIn: { id: 'lightbox.zoom_in', defaultMessage: 'Zoom to actual size' },
   zoomOut: { id: 'lightbox.zoom_out', defaultMessage: 'Zoom to fit' },
-  tagYourself: { id: 'lightbox.tag_people', defaultMessage: 'Tag people' },
+  tagPeople: { id: 'lightbox.tag_people', defaultMessage: 'Tag people' },
 });
+
+const TaggedNames = ({ tags, mediaId, onRemove }) => {
+  const handleRemove = useCallback(
+    (accountId) => {
+      apiRemoveMediaTag(mediaId, accountId)
+        .then(() => onRemove(mediaId, accountId))
+        .catch(() => undefined);
+    },
+    [mediaId, onRemove],
+  );
+
+  if (!tags || tags.length === 0) return null;
+
+  return (
+    <p className='media-modal__tagged-names'>
+      {'With: '}
+      {tags.map((tag, i) => {
+        const name = tag.account?.display_name || tag.account?.username || tag.account_id;
+        const isSelf = tag.account_id === me;
+        return (
+          <span key={tag.account_id}>
+            {i > 0 && ', '}
+            {name}
+            {isSelf && (
+              <button
+                type='button'
+                className='media-modal__untag-btn'
+                onClick={() => handleRemove(tag.account_id)}
+                title='Remove tag'
+              >
+                ×
+              </button>
+            )}
+          </span>
+        );
+      })}
+    </p>
+  );
+};
 
 class MediaModal extends ImmutablePureComponent {
 
@@ -157,8 +186,6 @@ class MediaModal extends ImmutablePureComponent {
     const index = this.getIndex();
     const current = media.get(index);
     if (!current) return;
-    const type = current.get('type');
-    if (type !== 'image' && type !== 'gifv' && type !== 'video') return;
     const mediaId = current.get('id');
     if (!mediaId) return;
     if (this.state.mediaTags[mediaId] !== undefined) return;
@@ -170,6 +197,38 @@ class MediaModal extends ImmutablePureComponent {
         this.setState(prev => ({ mediaTags: { ...prev.mediaTags, [mediaId]: [] } }));
       });
   }
+
+  handleTagYourself = () => {
+    const { media, dispatch } = this.props;
+    const index = this.getIndex();
+    const current = media.get(index);
+    if (!current) return;
+    dispatch(openModal({
+      modalType: 'SELF_TAG',
+      modalProps: {
+        mediaId: current.get('id'),
+        previewUrl: current.get('preview_url') || current.get('url'),
+        onTagAdded: (tag) => {
+          const mediaId = current.get('id');
+          this.setState(prev => ({
+            mediaTags: {
+              ...prev.mediaTags,
+              [mediaId]: [...(prev.mediaTags[mediaId] ?? []), tag],
+            },
+          }));
+        },
+      },
+    }));
+  };
+
+  handleTagRemoved = (mediaId, accountId) => {
+    this.setState(prev => ({
+      mediaTags: {
+        ...prev.mediaTags,
+        [mediaId]: (prev.mediaTags[mediaId] ?? []).filter(t => t.account_id !== accountId),
+      },
+    }));
+  };
 
   _sendBackgroundColor () {
     const { media, onChangeBackgroundColor } = this.props;
@@ -196,15 +255,6 @@ class MediaModal extends ImmutablePureComponent {
     this.setState(prevState => ({
       navigationHidden: !prevState.navigationHidden,
     }));
-  };
-
-  handleTagYourself = () => {
-    const { media, dispatch } = this.props;
-    const index = this.getIndex();
-    const current = media.get(index);
-    const mediaId = current.get('id');
-    const previewUrl = current.get('preview_url') || current.get('url');
-    dispatch(openModal({ modalType: 'SELF_TAG', modalProps: { mediaId, previewUrl } }));
   };
 
   setRef = c => {
@@ -309,14 +359,10 @@ class MediaModal extends ImmutablePureComponent {
 
     const currentMedia = media.get(index);
     const mediaType = currentMedia.get('type');
-    const zoomable = mediaType === 'image' && (currentMedia.getIn(['meta', 'original', 'width']) > viewportWidth || currentMedia.getIn(['meta', 'original', 'height']) > viewportHeight);
-    const taggable = mediaType !== 'audio' && mediaType !== 'unknown';
-
     const currentMediaId = currentMedia.get('id');
-    const currentTags = currentMediaId ? mediaTags[currentMediaId] : undefined;
-    const taggedNames = currentTags && currentTags.length > 0
-      ? currentTags.map(tag => tag.account?.display_name || tag.account?.username).filter(Boolean).join(', ')
-      : null;
+    const zoomable = mediaType === 'image' && (currentMedia.getIn(['meta', 'original', 'width']) > viewportWidth || currentMedia.getIn(['meta', 'original', 'height']) > viewportHeight);
+    const taggable = mediaType !== 'audio' && mediaType !== 'unknown' && !!currentMediaId;
+    const currentTags = currentMediaId ? (mediaTags[currentMediaId] ?? null) : null;
 
     return (
       <div className='modal-root__modal media-modal' ref={this.setRef}>
@@ -336,7 +382,7 @@ class MediaModal extends ImmutablePureComponent {
         <div className={navigationClassName}>
           <div className='media-modal__buttons'>
             {zoomable && <IconButton title={intl.formatMessage(zoomedIn ? messages.zoomOut : messages.zoomIn)} iconComponent={zoomedIn ? FitScreenIcon : ActualSizeIcon} onClick={this.handleZoomClick} />}
-            {taggable && <IconButton title={intl.formatMessage(messages.tagYourself)} icon='tag' iconComponent={TagIcon} onClick={this.handleTagYourself} />}
+            {taggable && <IconButton title={intl.formatMessage(messages.tagPeople)} icon='tag' iconComponent={TagIcon} onClick={this.handleTagYourself} />}
             <IconButton title={intl.formatMessage(messages.close)} icon='times' iconComponent={CloseIcon} onClick={onClose} />
           </div>
 
@@ -345,7 +391,13 @@ class MediaModal extends ImmutablePureComponent {
 
           <div className='media-modal__overlay'>
             {pagination && <ul className='media-modal__pagination'>{pagination}</ul>}
-            {taggedNames && <p className='media-modal__tagged-names'>With: {taggedNames}</p>}
+            {currentTags && currentTags.length > 0 && (
+              <TaggedNames
+                tags={currentTags}
+                mediaId={currentMediaId}
+                onRemove={this.handleTagRemoved}
+              />
+            )}
             {statusId && <Footer statusId={statusId} withOpenButton onClose={onClose} />}
           </div>
         </div>

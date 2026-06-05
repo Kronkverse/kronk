@@ -93,11 +93,9 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
     reply_msg = msg.in_reply_to_notification&.nudge_message
     {
       body: msg.body,
-      media_url: msg.media_attachment ? full_asset_url(msg.media_attachment.file.url(:original)) : nil,
-      voice_url: msg.voice_attachment ? full_asset_url(msg.voice_attachment.file.url(:original)) : nil,
-      in_reply_to: if reply_msg
-                     { body: reply_msg.body, media_url: reply_msg.media_attachment ? full_asset_url(reply_msg.media_attachment.file.url(:original)) : nil }
-                   end,
+      media_url: msg.media_attachment&.file&.url,
+      voice_url: msg.voice_attachment&.file&.url,
+      in_reply_to: reply_msg ? { body: reply_msg.body, media_url: reply_msg.media_attachment&.file&.url } : nil,
     }
   end
 
