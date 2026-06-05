@@ -747,9 +747,9 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         const result = await apiNudgeAccount(accountId, params);
         setStreak(result.streak);
         setCanNudgeBack(result.can_nudge);
-        dispatch(decrementNudgeCount());
         clearCompose();
-        await loadThread();
+        void loadThread();
+        dispatch(decrementNudgeCount());
       } catch (err: unknown) {
         const status =
           err != null &&
