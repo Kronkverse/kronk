@@ -153,6 +153,31 @@ RAILS_ENV=production NODE_OPTIONS=--max-old-space-size=2048 bundle exec rails as
 
 **Staging is a git worktree** of the live repo. `git checkout <branch>` silently fails in this context — always use `git reset --hard origin/<branch>` to update the working tree, and suppress fetch errors with `git fetch origin 2>/dev/null; true` before resetting.
 
+**Migrations must use real timestamps.** Always generate migrations with `rails generate migration MigrationName` — never hand-write the filename with a sequential suffix like `20260605000001`. Rails generates a timestamp from the current time (e.g. `20260605143022`), which is unique. Hand-written sequential suffixes collide when two contributors create migrations on the same day.
+
+**Foreign keys and indexes must satisfy `strong_migrations`.** This repo blocks any operation that locks a table. Always use this pattern when adding a reference column:
+
+```ruby
+# Migration 1 — add column + concurrent index + deferred FK
+class AddThingToWidgets < ActiveRecord::Migration[8.0]
+  disable_ddl_transaction!
+
+  def change
+    add_reference :widgets, :thing, null: true, foreign_key: false, index: { algorithm: :concurrently }
+    add_foreign_key :widgets, :things, validate: false
+  end
+end
+
+# Migration 2 — validate FK (safe, no lock)
+class ValidateWidgetThingForeignKey < ActiveRecord::Migration[8.0]
+  def change
+    validate_foreign_key :widgets, :things
+  end
+end
+```
+
+`disable_ddl_transaction!` is required for concurrent index creation. `foreign_key: false` + deferred `add_foreign_key validate: false` is required for the FK. Skipping either will abort the deploy.
+
 ---
 
 ## Useful Links
