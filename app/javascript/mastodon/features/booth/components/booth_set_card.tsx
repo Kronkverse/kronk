@@ -19,6 +19,15 @@ interface Props {
   playing: boolean;
 }
 
+function formatDate(dateStr: string): string {
+  const d = new Date(`${dateStr}T00:00:00`);
+  return d.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
 function formatDuration(seconds: number | null): string {
   if (seconds == null) return '';
   const h = Math.floor(seconds / 3600);
@@ -158,8 +167,12 @@ export const BoothSetCard: React.FC<Props> = ({
       <div className='booth-card__body'>
         <div className='booth-card__title'>{set.title}</div>
         <div className='booth-card__artist'>{set.artist_name}</div>
-        {set.event_name && (
-          <div className='booth-card__event'>{set.event_name}</div>
+        {(set.event_name ?? set.event_date) && (
+          <div className='booth-card__event'>
+            {set.event_name}
+            {set.event_name && set.event_date && ' · '}
+            {set.event_date && formatDate(set.event_date)}
+          </div>
         )}
         <div className='booth-card__meta'>
           {set.genres.map((g) => (
