@@ -25,6 +25,7 @@ import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
 import type { Account } from 'mastodon/models/account';
 import type { NotificationGroupNudge } from 'mastodon/models/notification_group';
+import { selectUnreadNudgesCount } from 'mastodon/selectors/notifications';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const MAX_WORDS = 100;
@@ -272,6 +273,8 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const voiceUploadRef = useRef<Promise<string> | null>(null);
 
   const account = useAppSelector((state) => state.accounts.get(accountId));
+  const unreadNudgeCount = useAppSelector(selectUnreadNudgesCount);
+  const prevNudgeCountRef = useRef<number>(unreadNudgeCount);
 
   const [threadMessages, setThreadMessages] = useState<ApiNudgeThreadMessage[]>(
     [],
@@ -425,11 +428,23 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     }
   }, [threadMessages]);
 
-  // 5-second auto-reload — paused while user is sending or recording
+  // Real-time: reload immediately when a new nudge arrives via streaming
+  useEffect(() => {
+    if (
+      unreadNudgeCount > prevNudgeCountRef.current &&
+      !sending &&
+      !recording
+    ) {
+      void loadThread();
+    }
+    prevNudgeCountRef.current = unreadNudgeCount;
+  }, [unreadNudgeCount, sending, recording, loadThread]);
+
+  // Fallback poll every 3s in case streaming is unavailable
   useEffect(() => {
     const id = setInterval(() => {
       if (!sending && !recording) void loadThread();
-    }, 5000);
+    }, 3000);
     return () => {
       clearInterval(id);
     };
