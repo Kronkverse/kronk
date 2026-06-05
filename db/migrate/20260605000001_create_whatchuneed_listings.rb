@@ -14,6 +14,6 @@ class CreateWhatchuneedListings < ActiveRecord::Migration[8.0]
 
     add_index :whatchuneed_listings, :account_id
     add_index :whatchuneed_listings, [:status, :created_at]
-    add_foreign_key :whatchuneed_listings, :accounts, on_delete: :cascade
+    add_foreign_key :whatchuneed_listings, :accounts, on_delete: :cascade, validate: false
   end
 end
