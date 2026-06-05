@@ -12,6 +12,7 @@ import { useDrag } from '@use-gesture/react';
 
 import kronkWordmark from '@/images/kronk-wordmark-small.png';
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
+
 import BarChartActiveIcon from '@/material-icons/400-24px/bar_chart_4_bars-fill.svg?react';
 import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
 import FavoriteActiveIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
@@ -73,7 +74,7 @@ const messages = defineMessages({
   live: { id: 'live.title', defaultMessage: 'Huddle' },
   commons: { id: 'governance.title', defaultMessage: '₭ommons' },
   questions: { id: 'questions.title', defaultMessage: 'Ƙuestions' },
-  market: { id: 'market.title', defaultMessage: 'Market' },
+  whatchuneed: { id: 'whatchuneed.title', defaultMessage: 'WatchuNeed' },
   booth: { id: 'booth.title', defaultMessage: 'The Booth' },
   flow: { id: 'flow.title', defaultMessage: 'Flow' },
   events: { id: 'events.title', defaultMessage: '₭alendar' },
@@ -391,11 +392,12 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
 
             <ColumnLink
               transparent
-              to='/market'
-              icon='bar_chart'
-              iconComponent={BarChartIcon}
-              activeIconComponent={BarChartActiveIcon}
-              text={intl.formatMessage(messages.market)}
+              to='/whatchuneed'
+              icon='partner_exchange'
+              iconComponent={PartnerExchangeIcon}
+              activeIconComponent={PartnerExchangeActiveIcon}
+              text={intl.formatMessage(messages.whatchuneed)}
+              tooltip='WatchuNeed'
             />
 
             <ColumnLink
