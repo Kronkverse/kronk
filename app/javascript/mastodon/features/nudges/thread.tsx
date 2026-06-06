@@ -253,11 +253,18 @@ const MessageBubble: React.FC<{
               {formatExpiry(msg.expires_at)}
             </span>
           )}
-          {isSent && isLastSent && partnerRead && (
-            <span className='nudge-bubble__seen'>
-              <FormattedMessage id='nudges.thread.seen' defaultMessage='Seen' />
-            </span>
-          )}
+          {isSent &&
+            isLastSent &&
+            (partnerRead ? (
+              <span className='nudge-bubble__seen'>
+                <FormattedMessage
+                  id='nudges.thread.seen'
+                  defaultMessage='Seen'
+                />
+              </span>
+            ) : (
+              <span className='nudge-bubble__tick'>✓</span>
+            ))}
         </div>
         <div
           className={`nudge-bubble__reactions${hasReactions ? ' nudge-bubble__reactions--active' : ''}`}
@@ -312,7 +319,57 @@ const messages = defineMessages({
 interface NudgeLocationState {
   attachStatusUrl?: string;
   attachStatusBody?: string | null;
+  attachStatusAuthorName?: string;
+  attachStatusAuthorAcct?: string;
+  attachStatusAuthorAvatar?: string;
 }
+
+interface PostAttachment {
+  url: string;
+  body?: string | null;
+  authorName?: string;
+  authorAcct?: string;
+  authorAvatar?: string;
+}
+
+const PostShareCard: React.FC<{
+  attachment: PostAttachment;
+  onDismiss: () => void;
+}> = ({ attachment, onDismiss }) => (
+  <div className='nudge-post-card'>
+    <div className='nudge-post-card__header'>
+      {attachment.authorAvatar && (
+        <img
+          src={attachment.authorAvatar}
+          alt=''
+          className='nudge-post-card__avatar'
+        />
+      )}
+      <div className='nudge-post-card__author'>
+        {attachment.authorName && (
+          <span className='nudge-post-card__name'>{attachment.authorName}</span>
+        )}
+        {attachment.authorAcct && (
+          <span className='nudge-post-card__acct'>
+            @{attachment.authorAcct}
+          </span>
+        )}
+      </div>
+      <button
+        type='button'
+        className='nudge-post-card__dismiss'
+        onClick={onDismiss}
+        aria-label='Remove post'
+      >
+        ×
+      </button>
+    </div>
+    {attachment.body && (
+      <p className='nudge-post-card__body'>{attachment.body}</p>
+    )}
+    <span className='nudge-post-card__url'>{attachment.url}</span>
+  </div>
+);
 
 const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const { accountId = '' } = useParams<{ accountId: string }>();
@@ -339,18 +396,26 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
-  // Attached status from "nudge on post" navigation
-  // location.state is typed as NudgeLocationState but is undefined when navigating directly
+  // Post attached from "nudge on post" navigation
   const navState = location.state as NudgeLocationState | undefined;
-  const [attachedStatusUrl] = useState<string | undefined>(
-    navState?.attachStatusUrl,
-  );
-  const [attachedStatusBody] = useState<string | null | undefined>(
-    navState?.attachStatusBody,
+  const [postAttachment, setPostAttachment] = useState<PostAttachment | null>(
+    navState?.attachStatusUrl
+      ? {
+          url: navState.attachStatusUrl,
+          body: navState.attachStatusBody,
+          authorName: navState.attachStatusAuthorName,
+          authorAcct: navState.attachStatusAuthorAcct,
+          authorAvatar: navState.attachStatusAuthorAvatar,
+        }
+      : null,
   );
 
+  const handleDismissPostAttachment = useCallback(() => {
+    setPostAttachment(null);
+  }, []);
+
   // Compose state
-  const [text, setText] = useState(navState?.attachStatusUrl ?? '');
+  const [text, setText] = useState('');
   const [mediaId, setMediaId] = useState<string | undefined>();
   const [mediaPreview, setMediaPreview] = useState<string | undefined>();
   const [mediaIsVideo, setMediaIsVideo] = useState(false);
@@ -629,18 +694,23 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       setSending(true);
       setError(null);
       try {
-        const params = withContent
-          ? {
-              text: text.trim() || undefined,
-              media_id: mediaId,
-              in_reply_to_notification_id: replyTo?.notification_id,
-            }
-          : {};
+        const textWithUrl = [text.trim(), postAttachment?.url]
+          .filter(Boolean)
+          .join('\n');
+        const params =
+          withContent || postAttachment
+            ? {
+                text: textWithUrl || undefined,
+                media_id: mediaId,
+                in_reply_to_notification_id: replyTo?.notification_id,
+              }
+            : {};
 
         const result = await apiNudgeAccount(accountId, params);
         setStreak(result.streak);
         setCanNudgeBack(result.can_nudge);
         setReplyTo(null);
+        setPostAttachment(null);
         clearCompose();
         void loadThread();
         dispatch(decrementNudgeCount());
@@ -669,6 +739,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       sending,
       text,
       mediaId,
+      postAttachment,
       replyTo,
       dispatch,
       clearCompose,
@@ -676,7 +747,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     ],
   );
 
-  const hasContent = text.trim().length > 0 || !!mediaId;
+  const hasContent = text.trim().length > 0 || !!mediaId || !!postAttachment;
 
   const handleSend = useCallback(() => {
     void send(hasContent);
@@ -805,20 +876,11 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </div>
         )}
 
-        {attachedStatusUrl && (
-          <div className='nudge-compose-bar__post-share'>
-            <span className='nudge-compose-bar__post-share__label'>
-              <FormattedMessage
-                id='nudges.thread.sharing_post'
-                defaultMessage='Sharing post'
-              />
-            </span>
-            {attachedStatusBody && (
-              <span className='nudge-compose-bar__post-share__body'>
-                {attachedStatusBody}
-              </span>
-            )}
-          </div>
+        {postAttachment && (
+          <PostShareCard
+            attachment={postAttachment}
+            onDismiss={handleDismissPostAttachment}
+          />
         )}
 
         {replyTo && (
