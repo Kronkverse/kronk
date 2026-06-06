@@ -588,11 +588,21 @@ class Status extends ImmutablePureComponent {
       );
     }
 
+    const avatarAccount = displayAccount ?? status.get('account');
+    if (account === undefined || account === null) {
+      statusAvatar = <Avatar account={avatarAccount} size={avatarSize} />;
+    } else {
+      statusAvatar = <AvatarOverlay account={avatarAccount} friend={account} />;
+    }
+
+    const {statusContentProps, hashtagBar} = getHashtagBarForStatus(status);
+
     let tagCaption = null;
-    if (status.get('media_attachments')?.size > 0) {
+    const mediaAttachments = status.get('media_attachments');
+    if (mediaAttachments?.size > 0) {
       const seen = new Set();
       const names = [];
-      status.get('media_attachments').forEach((a) => {
+      mediaAttachments.forEach((a) => {
         const tags = a.get('tags');
         if (!tags) return;
         tags.forEach((tag) => {
@@ -609,15 +619,6 @@ class Status extends ImmutablePureComponent {
         tagCaption = <div className='status__media-tags'>With: {names.join(', ')}</div>;
       }
     }
-
-    const avatarAccount = displayAccount ?? status.get('account');
-    if (account === undefined || account === null) {
-      statusAvatar = <Avatar account={avatarAccount} size={avatarSize} />;
-    } else {
-      statusAvatar = <AvatarOverlay account={avatarAccount} friend={account} />;
-    }
-
-    const {statusContentProps, hashtagBar} = getHashtagBarForStatus(status);
 
     return (
       <Hotkeys handlers={handlers} focusable={!unfocusable}>
