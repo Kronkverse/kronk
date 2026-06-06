@@ -326,6 +326,7 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
   const [totalSent, setTotalSent] = useState(0);
   const [totalReceived, setTotalReceived] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [alerts, setAlerts] = useState<NudgeAlertData[]>([]);
 
   const previewImage = intl.formatMessage(messages.previewImage);
@@ -355,6 +356,9 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
       setTotalSent(data.total_sent);
       setTotalReceived(data.total_received);
       dispatch(setUnreadNudgeCount(data.pending_count));
+      setLoadError(false);
+    } catch {
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -362,6 +366,16 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
 
   useEffect(() => {
     void load();
+  }, [load]);
+
+  // Fallback poll — keeps inbox fresh if streaming misses an event
+  useEffect(() => {
+    const id = setInterval(() => {
+      void load();
+    }, 15000);
+    return () => {
+      clearInterval(id);
+    };
   }, [load]);
 
   useEffect(() => {
@@ -494,16 +508,28 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
           </div>
         )}
 
-        {!loading && partners.length === 0 && suggestions.length === 0 && (
+        {!loading && loadError && (
           <div className='empty-column-indicator'>
             <FormattedMessage
-              id='nudges.empty'
-              defaultMessage='No nudges yet. Go nudge someone!'
+              id='nudges.error'
+              defaultMessage='Could not load nudges. Try refreshing.'
             />
           </div>
         )}
 
-        {!loading && sortedPartners.length > 0 && (
+        {!loading &&
+          !loadError &&
+          partners.length === 0 &&
+          suggestions.length === 0 && (
+            <div className='empty-column-indicator'>
+              <FormattedMessage
+                id='nudges.empty'
+                defaultMessage='No nudges yet. Go nudge someone!'
+              />
+            </div>
+          )}
+
+        {!loading && !loadError && sortedPartners.length > 0 && (
           <div className='nudge-conv-list'>
             {sortedPartners.map((partner) => (
               <ConversationRow
@@ -518,7 +544,7 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
           </div>
         )}
 
-        {!loading && suggestions.length > 0 && (
+        {!loading && !loadError && suggestions.length > 0 && (
           <>
             <div className='nudge-section-header nudge-section-header--suggestions'>
               <FormattedMessage

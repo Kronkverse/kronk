@@ -83,7 +83,6 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def nudge_history
-    doorkeeper_authorize! :read, :'read:accounts'
     a = current_user.account.id
 
     received = Notification.where(type: 'nudge', account_id: a)
@@ -111,7 +110,6 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def nudge_partners
-    doorkeeper_authorize! :read, :'read:accounts'
     a = current_user.account.id
 
     sent_counts = Notification.where(type: 'nudge', from_account_id: a).group(:account_id).count
@@ -136,7 +134,11 @@ class Api::V1::AccountsController < Api::BaseController
       next unless accounts[id]
 
       last = last_nudge_per_partner[id]
-      direction = last.nil? ? nil : (last.from_account_id == a ? 'sent' : 'received')
+      direction = if last.nil?
+                    nil
+                  else
+                    (last.from_account_id == a ? 'sent' : 'received')
+                  end
       msg = last&.nudge_message
 
       last_message = {
@@ -189,7 +191,6 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def nudge_pending_count
-    doorkeeper_authorize! :read, :'read:accounts'
     a = current_user.account.id
     seen = {}
     count = 0

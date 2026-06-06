@@ -440,11 +440,11 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     prevNudgeCountRef.current = unreadNudgeCount;
   }, [unreadNudgeCount, sending, recording, loadThread]);
 
-  // Fallback poll every 3s in case streaming is unavailable
+  // Fallback poll every 15s in case streaming is unavailable
   useEffect(() => {
     const id = setInterval(() => {
       if (!sending && !recording) void loadThread();
-    }, 3000);
+    }, 15000);
     return () => {
       clearInterval(id);
     };
