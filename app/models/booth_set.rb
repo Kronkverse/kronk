@@ -2,6 +2,7 @@
 
 class BoothSet < ApplicationRecord
   belongs_to :account
+  belongs_to :event, optional: true
   belongs_to :audio_attachment, class_name: 'MediaAttachment', optional: true
   belongs_to :cover_attachment, class_name: 'MediaAttachment', optional: true
 

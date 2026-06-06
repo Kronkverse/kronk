@@ -31,6 +31,11 @@ const messages = defineMessages({
   filterArtist: { id: 'booth.filter_artist', defaultMessage: 'Artist' },
   filterGenre: { id: 'booth.filter_genre', defaultMessage: 'Genre' },
   filterEvent: { id: 'booth.filter_event', defaultMessage: 'Event' },
+  heroIntro: {
+    id: 'booth.hero_intro',
+    defaultMessage:
+      'The Booth is where we can express our art in sonic form. DJ sets, original music, poetry or any other auditory experience.',
+  },
 });
 
 const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
@@ -208,6 +213,15 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         className='booth scrollable'
         style={{ '--space-color': spaceColor('Booth') } as React.CSSProperties}
       >
+        <section className='booth__hero'>
+          <h1 className='booth__hero-title'>
+            {intl.formatMessage(messages.heading)}
+          </h1>
+          <p className='booth__hero-intro'>
+            {intl.formatMessage(messages.heroIntro)}
+          </p>
+        </section>
+
         {signedIn && !showUpload && !editingSet && (
           <button
             className='booth__upload-btn'

@@ -7,6 +7,9 @@ on:
       - 'main'
       - 'stable-*'
   pull_request:
+    branches:
+      - 'main'
+      - 'stable-*'
 
 env:
   BUNDLE_CLEAN: true
