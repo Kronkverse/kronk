@@ -11,10 +11,12 @@ import { connect } from 'react-redux';
 import BookmarkIcon from '@/material-icons/400-24px/bookmark-fill.svg?react';
 import BookmarkBorderIcon from '@/material-icons/400-24px/bookmark.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
+import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import ReplyIcon from '@/material-icons/400-24px/reply.svg?react';
 import ReplyAllIcon from '@/material-icons/400-24px/reply_all.svg?react';
 import HeartIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
 import HeartBorderIcon from '@/material-icons/400-24px/favorite.svg?react';
+import { openModal } from 'mastodon/actions/modal';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { PERMISSION_MANAGE_USERS, PERMISSION_MANAGE_FEDERATION } from 'mastodon/permissions';
 import { WithRouterPropTypes } from 'mastodon/utils/react_router';
@@ -60,7 +62,8 @@ const messages = defineMessages({
   unblock: { id: 'account.unblock', defaultMessage: 'Unblock @{name}' },
   filter: { id: 'status.filter', defaultMessage: 'Filter this post' },
   openOriginalPage: { id: 'account.open_original_page', defaultMessage: 'Open original page' },
-  revokeQuote: { id: 'status.revoke_quote', defaultMessage: 'Remove my post from @{name}’s post' },
+  nudge: { id: 'status.nudge', defaultMessage: 'Nudge @{name}' },
+  revokeQuote: { id: 'status.revoke_quote', defaultMessage: "Remove my post from @{name}'s post" },
   quotePolicyChange: { id: 'status.quote_policy_change', defaultMessage: 'Change who can quote' },
 });
 
@@ -72,6 +75,15 @@ const mapStateToProps = (state, { status }) => {
     statusQuoteState: selectStatusState(state, status),
   });
 };
+
+const mapDispatchToProps = (dispatch) => ({
+  onNudge: (accountId) => {
+    dispatch(openModal({
+      modalType: 'NUDGE_COMPOSE',
+      modalProps: { accountId },
+    }));
+  },
+});
 
 class StatusActionBar extends ImmutablePureComponent {
   static propTypes = {
@@ -102,6 +114,7 @@ class StatusActionBar extends ImmutablePureComponent {
     onFilter: PropTypes.func,
     onAddFilter: PropTypes.func,
     onInteractionModal: PropTypes.func,
+    onNudge: PropTypes.func,
     withDismiss: PropTypes.bool,
     withCounters: PropTypes.bool,
     scrollKey: PropTypes.string,
@@ -245,6 +258,11 @@ class StatusActionBar extends ImmutablePureComponent {
   handleCopy = () => {
     const url = this.props.status.get('url');
     navigator.clipboard.writeText(url);
+  };
+
+  handleNudgeClick = () => {
+    const accountId = this.props.status.getIn(['account', 'id']);
+    this.props.onNudge(accountId);
   };
 
   render () {
@@ -401,6 +419,11 @@ class StatusActionBar extends ImmutablePureComponent {
         <div className='status__action-bar__button-wrapper'>
           <IconButton className='status__action-bar__button bookmark-icon' disabled={!signedIn} active={status.get('bookmarked')} title={bookmarkTitle} icon='bookmark' iconComponent={status.get('bookmarked') ? BookmarkIcon : BookmarkBorderIcon} onClick={this.handleBookmarkClick} />
         </div>
+        {signedIn && !writtenByMe && relationship && relationship.get('following') && (
+          <div className='status__action-bar__button-wrapper'>
+            <IconButton className='status__action-bar__button' title={intl.formatMessage(messages.nudge, { name: account.get('username') })} icon='partner_exchange' iconComponent={PartnerExchangeIcon} onClick={this.handleNudgeClick} />
+          </div>
+        )}
         <RemoveQuoteHint className='status__action-bar__button-wrapper' canShowHint={shouldShowQuoteRemovalHint}>
           {(dismissQuoteHint) => (
             <Dropdown
@@ -425,4 +448,4 @@ class StatusActionBar extends ImmutablePureComponent {
 
 }
 
-export default withRouter(withIdentity(connect(mapStateToProps)(injectIntl(StatusActionBar))));
+export default withRouter(withIdentity(connect(mapStateToProps, mapDispatchToProps)(injectIntl(StatusActionBar))));
