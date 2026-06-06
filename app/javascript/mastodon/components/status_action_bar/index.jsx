@@ -416,7 +416,7 @@ class StatusActionBar extends ImmutablePureComponent {
         <div className='status__action-bar__button-wrapper'>
           <IconButton className='status__action-bar__button bookmark-icon' disabled={!signedIn} active={status.get('bookmarked')} title={bookmarkTitle} icon='bookmark' iconComponent={status.get('bookmarked') ? BookmarkIcon : BookmarkBorderIcon} onClick={this.handleBookmarkClick} />
         </div>
-        {signedIn && !writtenByMe && relationship && relationship.get('following') && (
+        {signedIn && !writtenByMe && (
           <div className='status__action-bar__button-wrapper'>
             <IconButton className='status__action-bar__button' title={intl.formatMessage(messages.nudge, { name: account.get('username') })} icon='partner_exchange' iconComponent={PartnerExchangeIcon} onClick={this.handleNudgeClick} />
           </div>

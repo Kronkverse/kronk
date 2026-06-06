@@ -614,7 +614,7 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
                 defaultMessage='NUDGE SOMEONE'
               />
             </div>
-            {suggestions.map((s) => (
+            {suggestions.slice(0, 3).map((s) => (
               <SuggestionRow key={s.account_id} suggestion={s} />
             ))}
           </>

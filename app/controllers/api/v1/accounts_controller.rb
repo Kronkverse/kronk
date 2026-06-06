@@ -220,7 +220,7 @@ class Api::V1::AccountsController < Api::BaseController
       voice_attachment_id: params[:voice_id].presence,
       in_reply_to_notification_id: params[:in_reply_to_notification_id].presence
     )
-    render json: { streak: nudge_streak_count, can_nudge: false }
+    render json: { streak: nudge_streak_count, can_nudge: nudge_can_send? }
   rescue Mastodon::NotPermittedError
     render json: { error: 'waiting_for_nudge_back' }, status: 422
   end

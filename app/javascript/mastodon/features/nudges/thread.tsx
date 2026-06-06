@@ -30,137 +30,7 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const CONSECUTIVE_LIMIT = 5;
 
-const EMOJI_QUICK_PICKS = [
-  '❤️',
-  '😂',
-  '🤣',
-  '😍',
-  '🥰',
-  '😊',
-  '😎',
-  '🤔',
-  '😢',
-  '😭',
-  '😡',
-  '🤯',
-  '🥳',
-  '🤗',
-  '😅',
-  '😬',
-  '🙄',
-  '😇',
-  '🤩',
-  '🫠',
-  '👍',
-  '👎',
-  '🙌',
-  '👏',
-  '🤝',
-  '🫶',
-  '🤙',
-  '💪',
-  '🙏',
-  '🤞',
-  '🔥',
-  '💯',
-  '✨',
-  '⚡',
-  '💥',
-  '🎉',
-  '🎊',
-  '🌟',
-  '💎',
-  '🏆',
-];
-
-const EmojiOption: React.FC<{
-  emoji: string;
-  isMe: boolean;
-  notificationId: string;
-  onPick: (emoji: string) => void;
-}> = ({ emoji, isMe, onPick }) => {
-  const handleClick = useCallback(() => {
-    onPick(emoji);
-  }, [onPick, emoji]);
-
-  return (
-    <button
-      type='button'
-      className={`nudge-emoji-picker__option${isMe ? ' nudge-emoji-picker__option--me' : ''}`}
-      onClick={handleClick}
-      aria-label={emoji}
-    >
-      {emoji}
-    </button>
-  );
-};
-
-const EmojiPicker: React.FC<{
-  notificationId: string;
-  currentMyReaction: string | undefined;
-  onReact: (
-    notificationId: string,
-    emoji: string,
-    currentlyMe: boolean,
-  ) => void;
-}> = ({ notificationId, currentMyReaction, onReact }) => {
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleOutside = (e: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleOutside);
-    };
-  }, [open]);
-
-  const handleToggle = useCallback(() => {
-    setOpen((v) => !v);
-  }, []);
-
-  const handlePick = useCallback(
-    (emoji: string) => {
-      onReact(notificationId, emoji, currentMyReaction === emoji);
-      setOpen(false);
-    },
-    [onReact, notificationId, currentMyReaction],
-  );
-
-  return (
-    <div ref={containerRef} className='nudge-emoji-picker'>
-      <button
-        type='button'
-        className='nudge-bubble__react-btn nudge-bubble__react-btn--add'
-        onClick={handleToggle}
-        aria-label='Add reaction'
-      >
-        +
-      </button>
-      {open && (
-        <div className='nudge-emoji-picker__popover'>
-          {EMOJI_QUICK_PICKS.map((emoji) => (
-            <EmojiOption
-              key={emoji}
-              emoji={emoji}
-              isMe={currentMyReaction === emoji}
-              notificationId={notificationId}
-              onPick={handlePick}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
+const REACTION_EMOJIS = ['💛', '⭐', '😊'] as const;
 
 const ReactionButton: React.FC<{
   emoji: string;
@@ -327,13 +197,9 @@ const MessageBubble: React.FC<{
     );
   }
 
-  const activeReactions = Object.entries(msg.reactions).filter(
-    ([, r]) => r.count > 0 || r.me,
+  const hasReactions = REACTION_EMOJIS.some(
+    (e) => (msg.reactions[e]?.count ?? 0) > 0,
   );
-  const hasReactions = activeReactions.some(([, r]) => r.count > 0);
-  const currentMyReaction = Object.entries(msg.reactions).find(
-    ([, r]) => r.me,
-  )?.[0];
 
   return (
     <div
@@ -396,21 +262,19 @@ const MessageBubble: React.FC<{
         <div
           className={`nudge-bubble__reactions${hasReactions ? ' nudge-bubble__reactions--active' : ''}`}
         >
-          {activeReactions.map(([emoji, r]) => (
-            <ReactionButton
-              key={emoji}
-              emoji={emoji}
-              count={r.count}
-              me={r.me}
-              notificationId={msg.notification_id}
-              onReact={onReact}
-            />
-          ))}
-          <EmojiPicker
-            notificationId={msg.notification_id}
-            currentMyReaction={currentMyReaction}
-            onReact={onReact}
-          />
+          {REACTION_EMOJIS.map((emoji) => {
+            const r = msg.reactions[emoji];
+            return (
+              <ReactionButton
+                key={emoji}
+                emoji={emoji}
+                count={r?.count ?? 0}
+                me={r?.me ?? false}
+                notificationId={msg.notification_id}
+                onReact={onReact}
+              />
+            );
+          })}
         </div>
       </div>
       <button
