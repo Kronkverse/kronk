@@ -244,9 +244,13 @@ class Api::V1::AccountsController < Api::BaseController
 
     notifications = Notification.where(type: 'nudge')
                                 .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
-                                .includes(nudge_message: [:media_attachment, :voice_attachment])
+                                .includes(nudge_message: [:media_attachment, :voice_attachment, :in_reply_to_notification])
                                 .order(id: :asc)
                                 .last(100)
+
+    # Mark all received messages in this thread as read
+    received_ids = notifications.select { |n| n.account_id == a }.map(&:id)
+    NudgeMessage.where(notification_id: received_ids, read_at: nil).update_all(read_at: Time.current) if received_ids.any?
 
     notification_ids = notifications.map(&:id)
     reaction_counts = NudgeReaction.where(notification_id: notification_ids).group(:notification_id, :emoji).count
@@ -258,14 +262,30 @@ class Api::V1::AccountsController < Api::BaseController
       reactions = NudgeReaction::ALLOWED_EMOJI.index_with do |emoji|
         { count: reaction_counts[[n.id, emoji]] || 0, me: my_emoji == emoji }
       end
+
+      reply_msg = msg&.in_reply_to_notification&.nudge_message
+      in_reply_to = if reply_msg
+                      {
+                        notification_id: msg.in_reply_to_notification_id.to_s,
+                        body: reply_msg.body,
+                        voice: reply_msg.voice_attachment_id.present?,
+                        image: reply_msg.media_attachment_id.present?,
+                      }
+                    end
+
+      is_expired = msg&.expired?
+
       {
         notification_id: n.id.to_s,
         direction: n.from_account_id == a ? 'sent' : 'received',
         created_at: n.created_at.iso8601,
-        body: msg&.body,
-        media_url: msg&.media_attachment&.file&.url(:original),
+        body: is_expired ? nil : msg&.body,
+        media_url: is_expired ? nil : msg&.media_attachment&.file&.url(:original),
         media_content_type: msg&.media_attachment&.file_content_type,
-        voice_url: msg&.voice_attachment&.file&.url(:original),
+        voice_url: is_expired ? nil : msg&.voice_attachment&.file&.url(:original),
+        expires_at: msg&.expires_at&.iso8601,
+        read_at: msg&.read_at&.iso8601,
+        in_reply_to: in_reply_to,
         reactions: reactions,
       }
     end
