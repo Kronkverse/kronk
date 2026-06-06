@@ -521,11 +521,24 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
           !loadError &&
           partners.length === 0 &&
           suggestions.length === 0 && (
-            <div className='empty-column-indicator'>
-              <FormattedMessage
-                id='nudges.empty'
-                defaultMessage='No nudges yet. Go nudge someone!'
+            <div className='nudge-empty-state'>
+              <Icon
+                icon={PartnerExchangeActiveIcon}
+                id='partner_exchange'
+                className='nudge-empty-state__icon'
               />
+              <p className='nudge-empty-state__title'>
+                <FormattedMessage
+                  id='nudges.empty_title'
+                  defaultMessage='No nudges yet'
+                />
+              </p>
+              <p className='nudge-empty-state__body'>
+                <FormattedMessage
+                  id='nudges.empty_body'
+                  defaultMessage='Nudge someone to start a conversation. Find people to follow first if this list is empty.'
+                />
+              </p>
             </div>
           )}
 

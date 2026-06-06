@@ -166,7 +166,11 @@ class Api::V1::AccountsController < Api::BaseController
     partners = partner_data.sort_by { |p| [-p[:streak], p[:last_nudge_at] || ''] }
 
     followed_ids = Follow.where(account: current_user.account).pluck(:target_account_id)
-    suggestion_ids = (followed_ids - partner_ids - [current_user.account.id]).sample(5)
+    follower_ids = Follow.where(target_account: current_user.account).pluck(:account_id)
+    candidates = followed_ids - partner_ids - [current_user.account.id]
+    mutuals = candidates & follower_ids
+    non_mutuals = candidates - mutuals
+    suggestion_ids = (mutuals.first(3) + non_mutuals.first(2)).first(5)
     suggestion_accs = suggestion_ids.empty? ? [] : Account.where(id: suggestion_ids)
 
     all_accounts = (accounts.values + suggestion_accs).map do |acc|

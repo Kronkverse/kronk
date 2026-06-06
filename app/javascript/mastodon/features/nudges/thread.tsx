@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom';
 
 import AddPhotoIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import ArrowUpwardIcon from '@/material-icons/400-24px/arrow_upward-fill.svg?react';
+import CelebrationIcon from '@/material-icons/400-24px/celebration-fill.svg?react';
 import MicIcon from '@/material-icons/400-24px/mic.svg?react';
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
@@ -31,7 +32,95 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 const MAX_WORDS = 100;
 const MAX_VOICE_SECONDS = 60;
 const WAVEFORM_BARS = 40;
+const VOICE_PLAYER_BARS = 30;
+const CONSECUTIVE_LIMIT = 5;
 const REACTION_EMOJIS = ['❤️', '😂', '🙌', '🔥', '😢'] as const;
+
+// Decorative waveform used for received voice messages (no amplitude data available)
+const decorativeWaveform = Array.from({ length: VOICE_PLAYER_BARS }, (_, i) => {
+  const x = i / (VOICE_PLAYER_BARS - 1);
+  return 0.2 + 0.65 * Math.abs(Math.sin(x * Math.PI * 4 + 0.8));
+});
+
+const VoicePlayer: React.FC<{ src: string; isSent: boolean }> = ({
+  src,
+  isSent,
+}) => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  useEffect(() => {
+    const audio = new Audio(src);
+    audioRef.current = audio;
+    audio.onloadedmetadata = () => {
+      setDuration(audio.duration);
+    };
+    audio.ontimeupdate = () => {
+      setElapsed(audio.currentTime);
+      setProgress(audio.duration > 0 ? audio.currentTime / audio.duration : 0);
+    };
+    audio.onended = () => {
+      setPlaying(false);
+      setElapsed(0);
+      setProgress(0);
+    };
+    return () => {
+      audio.pause();
+      audio.src = '';
+    };
+  }, [src]);
+
+  const toggle = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (playing) {
+      audio.pause();
+      setPlaying(false);
+    } else {
+      void audio.play();
+      setPlaying(true);
+    }
+  }, [playing]);
+
+  const fmtTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div
+      className={`nudge-voice-player${isSent ? ' nudge-voice-player--sent' : ''}`}
+    >
+      <button
+        type='button'
+        className='nudge-voice-player__play'
+        onClick={toggle}
+        aria-label={playing ? 'Pause' : 'Play'}
+      >
+        <Icon
+          icon={playing ? PauseIcon : PlayArrowIcon}
+          id={playing ? 'pause' : 'play_arrow'}
+        />
+      </button>
+      <div className='nudge-voice-player__waveform'>
+        {decorativeWaveform.map((h, i) => (
+          <span
+            key={i}
+            className={`nudge-voice-player__bar${i / VOICE_PLAYER_BARS < progress ? ' nudge-voice-player__bar--played' : ''}`}
+            style={{ '--bar-h': String(h) } as React.CSSProperties}
+          />
+        ))}
+      </div>
+      <span className='nudge-voice-player__time'>
+        {fmtTime(playing || elapsed > 0 ? elapsed : duration)}
+      </span>
+    </div>
+  );
+};
 
 const WaveformBars: React.FC<{ bars: number[]; live?: boolean }> = ({
   bars,
@@ -151,7 +240,7 @@ const MessageBubble: React.FC<{
   if (isPing) {
     return (
       <div className='nudge-ping'>
-        <Icon icon={PartnerExchangeIcon} id='partner_exchange' />
+        <Icon icon={CelebrationIcon} id='celebration' />
         <span>
           {isSent ? (
             <FormattedMessage
@@ -197,8 +286,7 @@ const MessageBubble: React.FC<{
             <img src={msg.media_url} alt='' className='nudge-bubble__img' />
           ))}
         {msg.voice_url && (
-          // eslint-disable-next-line jsx-a11y/media-has-caption
-          <audio controls src={msg.voice_url} className='nudge-bubble__audio' />
+          <VoicePlayer src={msg.voice_url} isSent={isSent} />
         )}
         <span className='nudge-bubble__time'>{formatTime(msg.created_at)}</span>
         <div
@@ -305,6 +393,15 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
   const wordCount = countWords(text);
   const overLimit = wordCount > MAX_WORDS;
+
+  const consecutiveSent = useMemo(() => {
+    let count = 0;
+    for (let i = threadMessages.length - 1; i >= 0; i--) {
+      if (threadMessages[i]?.direction === 'sent') count++;
+      else break;
+    }
+    return count;
+  }, [threadMessages]);
 
   const loadThread = useCallback(async () => {
     if (accountId === '') return;
@@ -883,6 +980,16 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             <FormattedMessage
               id='nudges.thread.waiting'
               defaultMessage='Waiting for them to nudge back…'
+            />
+          </div>
+        )}
+
+        {canNudgeBack && !loading && consecutiveSent >= 3 && (
+          <div className='nudge-compose-bar__limit'>
+            <FormattedMessage
+              id='nudges.thread.consecutive_warning'
+              defaultMessage='{count} of {limit} — they need to reply before you can send more'
+              values={{ count: consecutiveSent, limit: CONSECUTIVE_LIMIT }}
             />
           </div>
         )}
