@@ -61,9 +61,9 @@ const messages = defineMessages({
   unmute: { id: 'account.unmute', defaultMessage: 'Unmute @{name}' },
   unblock: { id: 'account.unblock', defaultMessage: 'Unblock @{name}' },
   filter: { id: 'status.filter', defaultMessage: 'Filter this post' },
-  openOriginalPage: { id: ‘account.open_original_page’, defaultMessage: ‘Open original page’ },
-  nudge: { id: ‘status.nudge’, defaultMessage: ‘Nudge @{name}’ },
-  revokeQuote: { id: ‘status.revoke_quote’, defaultMessage: "Remove my post from @{name}’s post" },
+  openOriginalPage: { id: 'account.open_original_page', defaultMessage: 'Open original page' },
+  nudge: { id: 'status.nudge', defaultMessage: 'Nudge @{name}' },
+  revokeQuote: { id: 'status.revoke_quote', defaultMessage: "Remove my post from @{name}'s post" },
   quotePolicyChange: { id: 'status.quote_policy_change', defaultMessage: 'Change who can quote' },
 });
 
