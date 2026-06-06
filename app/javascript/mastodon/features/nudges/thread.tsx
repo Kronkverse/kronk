@@ -170,13 +170,27 @@ function countWords(text: string): number {
 }
 
 async function uploadBlob(blob: Blob): Promise<string> {
-  // The `file` command (used by Paperclip's spoof detector) identifies any WebM
-  // container as video/webm regardless of content. Uploading as audio/webm causes
-  // a type mismatch → 422. Re-wrap as video/webm so the declared type matches.
-  const uploadType = blob.type.startsWith('audio/webm')
-    ? 'video/webm'
-    : blob.type;
-  const ext = uploadType.includes('webm') ? 'webm' : 'm4a';
+  // Prefer ogg and mp4 — Paperclip's spoof detector correctly identifies both
+  // as audio, so no type mismatch. WebM is a last resort: the `file` command
+  // always reports WebM as video/webm regardless of content, which causes a 422
+  // when declared as audio/webm. Spoofing as video/webm works around the check
+  // but routes the file through Mastodon's video transcoder, breaking playback.
+  let uploadType: string;
+  let ext: string;
+  if (blob.type.startsWith('audio/ogg')) {
+    uploadType = 'audio/ogg';
+    ext = 'ogg';
+  } else if (
+    blob.type.startsWith('audio/mp4') ||
+    blob.type.startsWith('audio/x-m4a')
+  ) {
+    uploadType = 'audio/mp4';
+    ext = 'm4a';
+  } else {
+    // WebM fallback — spoof as video/webm to pass Paperclip's spoof check
+    uploadType = 'video/webm';
+    ext = 'webm';
+  }
   const form = new FormData();
   form.append('file', new File([blob], `voice.${ext}`, { type: uploadType }));
   const { data } = await api().post<{ id: string }>('/api/v2/media', form);
@@ -652,9 +666,14 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           audio: true,
         });
         const mimeType =
-          (['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'] as const).find(
-            (t) => MediaRecorder.isTypeSupported(t),
-          ) ?? 'audio/webm';
+          (
+            [
+              'audio/ogg;codecs=opus', // Chrome, Firefox — clean audio, passes Paperclip spoof check
+              'audio/mp4', // Safari, iOS
+              'audio/webm;codecs=opus', // legacy fallback
+              'audio/webm',
+            ] as const
+          ).find((t) => MediaRecorder.isTypeSupported(t)) ?? 'audio/webm';
 
         // Wire up AnalyserNode for live waveform + amplitude sampling
         const audioCtx = new AudioContext();
