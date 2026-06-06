@@ -25,7 +25,7 @@ class Api::V1::NudgeReactionsController < Api::BaseController
   private
 
   def set_notification
-    @notification = Notification.find(params[:notification_id])
+    @notification = Notification.find(params[:id])
     return if @notification.account_id == current_user.account_id || @notification.from_account_id == current_user.account_id
 
     render json: { error: 'Not found' }, status: 404

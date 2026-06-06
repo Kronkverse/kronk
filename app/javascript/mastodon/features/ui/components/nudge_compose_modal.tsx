@@ -19,8 +19,14 @@ function countWords(text: string): number {
 }
 
 async function uploadBlob(blob: Blob, csrfToken: string): Promise<string> {
+  // WebM containers are always detected as video/webm by Paperclip's spoof checker.
+  // Re-wrap as video/webm so the declared type matches the detected type.
+  const uploadType = blob.type.startsWith('audio/webm')
+    ? 'video/webm'
+    : blob.type;
+  const ext = uploadType.includes('webm') ? 'webm' : 'm4a';
   const form = new FormData();
-  form.append('file', blob, 'voice.webm');
+  form.append('file', new File([blob], `voice.${ext}`, { type: uploadType }));
   const res = await fetch('/api/v2/media', {
     method: 'POST',
     body: form,
@@ -55,6 +61,7 @@ export const NudgeComposeModal: React.FC<{
   const [voiceSeconds, setVoiceSeconds] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -132,7 +139,14 @@ export const NudgeComposeModal: React.FC<{
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
         });
-        const recorder = new MediaRecorder(stream);
+        const mimeType =
+          (['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'] as const).find(
+            (t) => MediaRecorder.isTypeSupported(t),
+          ) ?? 'audio/webm';
+        const recorder = new MediaRecorder(stream, {
+          mimeType,
+          audioBitsPerSecond: 128_000,
+        });
         chunksRef.current = [];
         recorder.ondataavailable = (e) => {
           if (e.data.size > 0) chunksRef.current.push(e.data);
@@ -141,7 +155,9 @@ export const NudgeComposeModal: React.FC<{
           stream.getTracks().forEach((t) => {
             t.stop();
           });
-          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+          const blob = new Blob(chunksRef.current, {
+            type: recorder.mimeType || 'audio/webm',
+          });
           setVoiceBlob(blob);
           setRecording(false);
           if (timerRef.current) clearInterval(timerRef.current);
@@ -173,6 +189,7 @@ export const NudgeComposeModal: React.FC<{
     async (withMessage: boolean) => {
       if (sending) return;
       setSending(true);
+      setError(null);
       try {
         const csrfMeta = document.querySelector<HTMLMetaElement>(
           'meta[name="csrf-token"]',
@@ -196,6 +213,17 @@ export const NudgeComposeModal: React.FC<{
         const result = await apiNudgeAccount(accountId, params);
         onSent?.(result.streak);
         onClose();
+      } catch (err: unknown) {
+        const errData =
+          err != null && typeof err === 'object' && 'response' in err
+            ? (err as { response?: { data?: { error?: string } } }).response
+                ?.data?.error
+            : null;
+        setError(
+          errData === 'waiting_for_nudge_back'
+            ? 'Waiting for them to nudge back first'
+            : 'Failed to send — try again',
+        );
       } finally {
         setSending(false);
       }
@@ -378,6 +406,8 @@ export const NudgeComposeModal: React.FC<{
               </button>
             </div>
           )}
+
+          {error && <p className='nudge-compose-modal__error'>{error}</p>}
 
           <div className='nudge-compose-modal__actions'>
             <button className='link-button' onClick={onClose}>
