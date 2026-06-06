@@ -259,6 +259,9 @@ class StatusActionBar extends ImmutablePureComponent {
     this.props.history.push(`/nudges/${accountId}`, {
       attachStatusUrl: statusUrl,
       attachStatusBody: statusBody || null,
+      attachStatusAuthorName: status.getIn(['account', 'display_name']) || status.getIn(['account', 'username']),
+      attachStatusAuthorAcct: status.getIn(['account', 'acct']),
+      attachStatusAuthorAvatar: status.getIn(['account', 'avatar']),
     });
   };
 
