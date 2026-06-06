@@ -12,7 +12,7 @@ import {
   decrementNudgeCount,
   setUnreadNudgeCount,
 } from 'mastodon/actions/notification_groups';
-import { apiGetNudgePartners } from 'mastodon/api/accounts';
+import { apiGetNudgePartners, apiNudgeAccount } from 'mastodon/api/accounts';
 import type {
   ApiNudgeLastMessage,
   ApiNudgePartner,
@@ -41,6 +41,14 @@ const messages = defineMessages({
   previewVoice: { id: 'nudges.preview.voice', defaultMessage: 'Voice memo' },
   previewNudge: { id: 'nudges.preview.nudge', defaultMessage: 'Nudged' },
   dismiss: { id: 'nudges.alert.dismiss', defaultMessage: 'Dismiss' },
+  nudgeAllBack: {
+    id: 'nudges.nudge_all_back',
+    defaultMessage: 'Nudge all back',
+  },
+  nudgeAllBackDone: {
+    id: 'nudges.nudge_all_back_done',
+    defaultMessage: 'Done!',
+  },
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -328,6 +336,8 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [alerts, setAlerts] = useState<NudgeAlertData[]>([]);
+  const [nudgingAll, setNudgingAll] = useState(false);
+  const [nudgedAll, setNudgedAll] = useState(false);
 
   const previewImage = intl.formatMessage(messages.previewImage);
   const previewVideo = intl.formatMessage(messages.previewVideo);
@@ -411,6 +421,30 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
   const handleHeaderClick = useCallback(() => {
     columnRef.current?.scrollTop();
   }, []);
+
+  const handleNudgeAllBack = useCallback(() => {
+    const pending = partners.filter(
+      (p) => p.can_nudge_back && p.last_message.direction === 'received',
+    );
+    if (pending.length === 0 || nudgingAll || nudgedAll) return;
+    setNudgingAll(true);
+    void (async () => {
+      for (const p of pending) {
+        try {
+          await apiNudgeAccount(p.account_id);
+          dispatch(decrementNudgeCount());
+        } catch {
+          // skip failed individual nudges
+        }
+      }
+      setNudgingAll(false);
+      setNudgedAll(true);
+      setTimeout(() => {
+        setNudgedAll(false);
+      }, 3000);
+      void load();
+    })();
+  }, [partners, nudgingAll, nudgedAll, dispatch, load]);
 
   // Sort conversations by most recent activity
   const sortedPartners = [...partners].sort((a, b) => {
@@ -499,6 +533,21 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
                 </>
               )}
             </div>
+            {unreadCount > 0 && (
+              <div className='nudge-grand-total__actions'>
+                <Button
+                  compact
+                  disabled={nudgingAll || nudgedAll}
+                  onClick={handleNudgeAllBack}
+                >
+                  {nudgedAll
+                    ? intl.formatMessage(messages.nudgeAllBackDone)
+                    : nudgingAll
+                      ? '…'
+                      : intl.formatMessage(messages.nudgeAllBack)}
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
@@ -521,11 +570,24 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
           !loadError &&
           partners.length === 0 &&
           suggestions.length === 0 && (
-            <div className='empty-column-indicator'>
-              <FormattedMessage
-                id='nudges.empty'
-                defaultMessage='No nudges yet. Go nudge someone!'
+            <div className='nudge-empty-state'>
+              <Icon
+                icon={PartnerExchangeActiveIcon}
+                id='partner_exchange'
+                className='nudge-empty-state__icon'
               />
+              <p className='nudge-empty-state__title'>
+                <FormattedMessage
+                  id='nudges.empty_title'
+                  defaultMessage='No nudges yet'
+                />
+              </p>
+              <p className='nudge-empty-state__body'>
+                <FormattedMessage
+                  id='nudges.empty_body'
+                  defaultMessage='Nudge someone to start a conversation. Find people to follow first if this list is empty.'
+                />
+              </p>
             </div>
           )}
 

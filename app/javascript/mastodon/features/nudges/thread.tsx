@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom';
 
 import AddPhotoIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import ArrowUpwardIcon from '@/material-icons/400-24px/arrow_upward-fill.svg?react';
+import CelebrationIcon from '@/material-icons/400-24px/celebration-fill.svg?react';
 import MicIcon from '@/material-icons/400-24px/mic.svg?react';
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
@@ -16,7 +17,10 @@ import { importFetchedAccounts } from 'mastodon/actions/importer';
 import { decrementNudgeCount } from 'mastodon/actions/notification_groups';
 import api from 'mastodon/api';
 import { apiGetNudgeThread, apiNudgeAccount } from 'mastodon/api/accounts';
-import type { ApiNudgeThreadMessage } from 'mastodon/api/accounts';
+import type {
+  ApiNudgeThreadMessage,
+  ApiNudgeInReplyTo,
+} from 'mastodon/api/accounts';
 import { apiNudgeReact, apiNudgeUnreact } from 'mastodon/api/notifications';
 import { Avatar } from 'mastodon/components/avatar';
 import { Column } from 'mastodon/components/column';
@@ -31,7 +35,95 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 const MAX_WORDS = 100;
 const MAX_VOICE_SECONDS = 60;
 const WAVEFORM_BARS = 40;
+const VOICE_PLAYER_BARS = 30;
+const CONSECUTIVE_LIMIT = 5;
 const REACTION_EMOJIS = ['❤️', '😂', '🙌', '🔥', '😢'] as const;
+
+// Decorative waveform used for received voice messages (no amplitude data available)
+const decorativeWaveform = Array.from({ length: VOICE_PLAYER_BARS }, (_, i) => {
+  const x = i / (VOICE_PLAYER_BARS - 1);
+  return 0.2 + 0.65 * Math.abs(Math.sin(x * Math.PI * 4 + 0.8));
+});
+
+const VoicePlayer: React.FC<{ src: string; isSent: boolean }> = ({
+  src,
+  isSent,
+}) => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  useEffect(() => {
+    const audio = new Audio(src);
+    audioRef.current = audio;
+    audio.onloadedmetadata = () => {
+      setDuration(audio.duration);
+    };
+    audio.ontimeupdate = () => {
+      setElapsed(audio.currentTime);
+      setProgress(audio.duration > 0 ? audio.currentTime / audio.duration : 0);
+    };
+    audio.onended = () => {
+      setPlaying(false);
+      setElapsed(0);
+      setProgress(0);
+    };
+    return () => {
+      audio.pause();
+      audio.src = '';
+    };
+  }, [src]);
+
+  const toggle = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (playing) {
+      audio.pause();
+      setPlaying(false);
+    } else {
+      void audio.play();
+      setPlaying(true);
+    }
+  }, [playing]);
+
+  const fmtTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div
+      className={`nudge-voice-player${isSent ? ' nudge-voice-player--sent' : ''}`}
+    >
+      <button
+        type='button'
+        className='nudge-voice-player__play'
+        onClick={toggle}
+        aria-label={playing ? 'Pause' : 'Play'}
+      >
+        <Icon
+          icon={playing ? PauseIcon : PlayArrowIcon}
+          id={playing ? 'pause' : 'play_arrow'}
+        />
+      </button>
+      <div className='nudge-voice-player__waveform'>
+        {decorativeWaveform.map((h, i) => (
+          <span
+            key={i}
+            className={`nudge-voice-player__bar${i / VOICE_PLAYER_BARS < progress ? ' nudge-voice-player__bar--played' : ''}`}
+            style={{ '--bar-h': String(h) } as React.CSSProperties}
+          />
+        ))}
+      </div>
+      <span className='nudge-voice-player__time'>
+        {fmtTime(playing || elapsed > 0 ? elapsed : duration)}
+      </span>
+    </div>
+  );
+};
 
 const WaveformBars: React.FC<{ bars: number[]; live?: boolean }> = ({
   bars,
@@ -81,13 +173,27 @@ function countWords(text: string): number {
 }
 
 async function uploadBlob(blob: Blob): Promise<string> {
-  // The `file` command (used by Paperclip's spoof detector) identifies any WebM
-  // container as video/webm regardless of content. Uploading as audio/webm causes
-  // a type mismatch → 422. Re-wrap as video/webm so the declared type matches.
-  const uploadType = blob.type.startsWith('audio/webm')
-    ? 'video/webm'
-    : blob.type;
-  const ext = uploadType.includes('webm') ? 'webm' : 'm4a';
+  // Prefer ogg and mp4 — Paperclip's spoof detector correctly identifies both
+  // as audio, so no type mismatch. WebM is a last resort: the `file` command
+  // always reports WebM as video/webm regardless of content, which causes a 422
+  // when declared as audio/webm. Spoofing as video/webm works around the check
+  // but routes the file through Mastodon's video transcoder, breaking playback.
+  let uploadType: string;
+  let ext: string;
+  if (blob.type.startsWith('audio/ogg')) {
+    uploadType = 'audio/ogg';
+    ext = 'ogg';
+  } else if (
+    blob.type.startsWith('audio/mp4') ||
+    blob.type.startsWith('audio/x-m4a')
+  ) {
+    uploadType = 'audio/mp4';
+    ext = 'm4a';
+  } else {
+    // WebM fallback — spoof as video/webm to pass Paperclip's spoof check
+    uploadType = 'video/webm';
+    ext = 'webm';
+  }
   const form = new FormData();
   form.append('file', new File([blob], `voice.${ext}`, { type: uploadType }));
   const { data } = await api().post<{ id: string }>('/api/v2/media', form);
@@ -134,24 +240,81 @@ function formatTime(dateStr: string): string {
   return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${timeStr}`;
 }
 
+function formatExpiry(expiresAt: string): string {
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) return 'Expired';
+  const h = Math.floor(ms / 3_600_000);
+  const m = Math.floor((ms % 3_600_000) / 60_000);
+  if (h > 0) return `${h}h left`;
+  return `${m}m left`;
+}
+
+const ReplyQuote: React.FC<{ reply: ApiNudgeInReplyTo; isSent: boolean }> = ({
+  reply,
+  isSent,
+}) => (
+  <div
+    className={`nudge-reply-quote${isSent ? ' nudge-reply-quote--sent' : ''}`}
+  >
+    {reply.voice && <span className='nudge-reply-quote__icon'>🎤</span>}
+    {reply.image && !reply.voice && (
+      <span className='nudge-reply-quote__icon'>🖼️</span>
+    )}
+    <span className='nudge-reply-quote__body'>
+      {reply.body ??
+        (reply.voice ? 'Voice message' : reply.image ? 'Image' : 'Nudge')}
+    </span>
+  </div>
+);
+
 const MessageBubble: React.FC<{
   msg: ApiNudgeThreadMessage;
   partnerAccount?: Account | null;
   isNew?: boolean;
+  isLastSent?: boolean;
+  partnerRead?: boolean;
   onReact: (
     notificationId: string,
     emoji: string,
     currentlyMe: boolean,
   ) => void;
-}> = ({ msg, partnerAccount, isNew, onReact }) => {
+  onReply: (msg: ApiNudgeThreadMessage) => void;
+}> = ({
+  msg,
+  partnerAccount,
+  isNew,
+  isLastSent,
+  partnerRead,
+  onReact,
+  onReply,
+}) => {
+  const touchStartXRef = useRef(0);
   const isPing =
     msg.body == null && msg.media_url == null && msg.voice_url == null;
   const isSent = msg.direction === 'sent';
+  const isExpired =
+    msg.expires_at != null && new Date(msg.expires_at) <= new Date();
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0]?.clientX ?? 0;
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      const dx = (e.changedTouches[0]?.clientX ?? 0) - touchStartXRef.current;
+      if (Math.abs(dx) > 48) onReply(msg);
+    },
+    [msg, onReply],
+  );
+
+  const handleReplyClick = useCallback(() => {
+    onReply(msg);
+  }, [msg, onReply]);
 
   if (isPing) {
     return (
       <div className='nudge-ping'>
-        <Icon icon={PartnerExchangeIcon} id='partner_exchange' />
+        <Icon icon={CelebrationIcon} id='celebration' />
         <span>
           {isSent ? (
             <FormattedMessage
@@ -176,7 +339,9 @@ const MessageBubble: React.FC<{
 
   return (
     <div
-      className={`nudge-bubble nudge-bubble--${isSent ? 'sent' : 'received'}${isNew ? ' nudge-bubble--new' : ''}`}
+      className={`nudge-bubble nudge-bubble--${isSent ? 'sent' : 'received'}${isNew ? ' nudge-bubble--new' : ''}${isExpired ? ' nudge-bubble--expired' : ''}`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {!isSent && partnerAccount && (
         <div className='nudge-bubble__avatar'>
@@ -184,23 +349,50 @@ const MessageBubble: React.FC<{
         </div>
       )}
       <div className='nudge-bubble__content'>
-        {msg.body && <p className='nudge-bubble__text'>{msg.body}</p>}
-        {msg.media_url &&
-          (msg.media_content_type?.startsWith('video/') ? (
-            // eslint-disable-next-line jsx-a11y/media-has-caption
-            <video
-              controls
-              src={msg.media_url}
-              className='nudge-bubble__video'
-            />
-          ) : (
-            <img src={msg.media_url} alt='' className='nudge-bubble__img' />
-          ))}
-        {msg.voice_url && (
-          // eslint-disable-next-line jsx-a11y/media-has-caption
-          <audio controls src={msg.voice_url} className='nudge-bubble__audio' />
+        {msg.in_reply_to && (
+          <ReplyQuote reply={msg.in_reply_to} isSent={isSent} />
         )}
-        <span className='nudge-bubble__time'>{formatTime(msg.created_at)}</span>
+        {isExpired ? (
+          <p className='nudge-bubble__expired'>
+            <FormattedMessage
+              id='nudges.thread.expired'
+              defaultMessage='This message has expired'
+            />
+          </p>
+        ) : (
+          <>
+            {msg.body && <p className='nudge-bubble__text'>{msg.body}</p>}
+            {msg.media_url &&
+              (msg.media_content_type?.startsWith('video/') ? (
+                // eslint-disable-next-line jsx-a11y/media-has-caption
+                <video
+                  controls
+                  src={msg.media_url}
+                  className='nudge-bubble__video'
+                />
+              ) : (
+                <img src={msg.media_url} alt='' className='nudge-bubble__img' />
+              ))}
+            {msg.voice_url && (
+              <VoicePlayer src={msg.voice_url} isSent={isSent} />
+            )}
+          </>
+        )}
+        <div className='nudge-bubble__footer'>
+          <span className='nudge-bubble__time'>
+            {formatTime(msg.created_at)}
+          </span>
+          {msg.expires_at && !isExpired && (
+            <span className='nudge-bubble__expiry'>
+              {formatExpiry(msg.expires_at)}
+            </span>
+          )}
+          {isSent && isLastSent && partnerRead && (
+            <span className='nudge-bubble__seen'>
+              <FormattedMessage id='nudges.thread.seen' defaultMessage='Seen' />
+            </span>
+          )}
+        </div>
         <div
           className={`nudge-bubble__reactions${hasReactions ? ' nudge-bubble__reactions--active' : ''}`}
         >
@@ -221,6 +413,14 @@ const MessageBubble: React.FC<{
           })}
         </div>
       </div>
+      <button
+        type='button'
+        className='nudge-bubble__reply-btn'
+        onClick={handleReplyClick}
+        aria-label='Reply'
+      >
+        ↩
+      </button>
     </div>
   );
 };
@@ -302,9 +502,28 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [liveWaveformBars, setLiveWaveformBars] = useState<number[]>([]);
   const [capturedWaveform, setCapturedWaveform] = useState<number[]>([]);
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
+  const [replyTo, setReplyTo] = useState<ApiNudgeThreadMessage | null>(null);
 
   const wordCount = countWords(text);
   const overLimit = wordCount > MAX_WORDS;
+
+  const consecutiveSent = useMemo(() => {
+    let count = 0;
+    for (let i = threadMessages.length - 1; i >= 0; i--) {
+      if (threadMessages[i]?.direction === 'sent') count++;
+      else break;
+    }
+    return count;
+  }, [threadMessages]);
+
+  const lastSentMsg = useMemo(() => {
+    for (let i = threadMessages.length - 1; i >= 0; i--) {
+      if (threadMessages[i]?.direction === 'sent') return threadMessages[i];
+    }
+    return null;
+  }, [threadMessages]);
+
+  const [milestone, setMilestone] = useState<number | null>(null);
 
   const loadThread = useCallback(async () => {
     if (accountId === '') return;
@@ -328,13 +547,20 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         return data.messages;
       });
       setStreak((prev) => {
-        if (data.streak > prev && prev > 0) {
+        const next = data.streak;
+        if (next > prev && prev > 0) {
           setStreakBumped(true);
           setTimeout(() => {
             setStreakBumped(false);
           }, 800);
+          if ([10, 25, 50, 100].includes(next)) {
+            setMilestone(next);
+            setTimeout(() => {
+              setMilestone(null);
+            }, 3000);
+          }
         }
-        return data.streak;
+        return next;
       });
       setCanNudgeBack(data.can_nudge_back);
     } catch {
@@ -393,6 +619,15 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     },
     [loadThread],
   );
+
+  const handleReply = useCallback((msg: ApiNudgeThreadMessage) => {
+    setReplyTo(msg);
+    textareaRef.current?.focus();
+  }, []);
+
+  const handleDismissReply = useCallback(() => {
+    setReplyTo(null);
+  }, []);
 
   useEffect(() => {
     void loadThread();
@@ -555,9 +790,14 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           audio: true,
         });
         const mimeType =
-          (['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'] as const).find(
-            (t) => MediaRecorder.isTypeSupported(t),
-          ) ?? 'audio/webm';
+          (
+            [
+              'audio/ogg;codecs=opus', // Chrome, Firefox — clean audio, passes Paperclip spoof check
+              'audio/mp4', // Safari, iOS
+              'audio/webm;codecs=opus', // legacy fallback
+              'audio/webm',
+            ] as const
+          ).find((t) => MediaRecorder.isTypeSupported(t)) ?? 'audio/webm';
 
         // Wire up AnalyserNode for live waveform + amplitude sampling
         const audioCtx = new AudioContext();
@@ -741,12 +981,14 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               text: text.trim() || undefined,
               media_id: mediaId,
               voice_id: resolvedVoiceId,
+              in_reply_to_notification_id: replyTo?.notification_id,
             }
           : {};
 
         const result = await apiNudgeAccount(accountId, params);
         setStreak(result.streak);
         setCanNudgeBack(result.can_nudge);
+        setReplyTo(null);
         clearCompose();
         void loadThread();
         dispatch(decrementNudgeCount());
@@ -777,6 +1019,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       mediaId,
       voiceId,
       voiceBlob,
+      replyTo,
       dispatch,
       clearCompose,
       loadThread,
@@ -837,6 +1080,17 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             )}
           </div>
         )}
+
+        {milestone && (
+          <div className='nudge-milestone'>
+            <Icon icon={CelebrationIcon} id='celebration' />
+            <FormattedMessage
+              id='nudges.thread.milestone'
+              defaultMessage='{count} nudges!'
+              values={{ count: milestone }}
+            />
+          </div>
+        )}
         {loading && (
           <div className='loading-indicator'>
             <div className='loading-indicator__figure' />
@@ -868,10 +1122,15 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                 key={msg.notification_id}
                 msg={msg}
                 isNew={newMessageIds.has(msg.notification_id)}
+                isLastSent={
+                  msg.notification_id === lastSentMsg?.notification_id
+                }
+                partnerRead={lastSentMsg?.read_at != null}
                 partnerAccount={
                   msg.direction === 'received' ? account : undefined
                 }
                 onReact={handleReact}
+                onReply={handleReply}
               />
             ))}
             <div ref={messagesEndRef} />
@@ -884,6 +1143,38 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               id='nudges.thread.waiting'
               defaultMessage='Waiting for them to nudge back…'
             />
+          </div>
+        )}
+
+        {canNudgeBack && !loading && consecutiveSent >= 3 && (
+          <div className='nudge-compose-bar__limit'>
+            <FormattedMessage
+              id='nudges.thread.consecutive_warning'
+              defaultMessage='{count} of {limit} — they need to reply before you can send more'
+              values={{ count: consecutiveSent, limit: CONSECUTIVE_LIMIT }}
+            />
+          </div>
+        )}
+
+        {replyTo && (
+          <div className='nudge-compose-bar__reply-banner'>
+            <ReplyQuote
+              reply={{
+                notification_id: replyTo.notification_id,
+                body: replyTo.body,
+                voice: replyTo.voice_url != null,
+                image: replyTo.media_url != null,
+              }}
+              isSent={false}
+            />
+            <button
+              type='button'
+              className='nudge-compose-bar__reply-dismiss'
+              onClick={handleDismissReply}
+              aria-label='Cancel reply'
+            >
+              ×
+            </button>
           </div>
         )}
 

@@ -79,6 +79,13 @@ export interface ApiNudgePartner {
   last_message: ApiNudgeLastMessage;
 }
 
+export interface ApiNudgeInReplyTo {
+  notification_id: string;
+  body: string | null;
+  voice: boolean;
+  image: boolean;
+}
+
 export interface ApiNudgeThreadMessage {
   notification_id: string;
   direction: 'sent' | 'received';
@@ -87,6 +94,9 @@ export interface ApiNudgeThreadMessage {
   media_url: string | null;
   media_content_type: string | null;
   voice_url: string | null;
+  expires_at: string | null;
+  read_at: string | null;
+  in_reply_to: ApiNudgeInReplyTo | null;
   reactions: Record<string, { count: number; me: boolean }>;
 }
 
