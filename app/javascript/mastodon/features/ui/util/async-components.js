@@ -274,8 +274,8 @@ export function EventDetail () {
   return import("../../events/event_detail");
 }
 
-export function WatchuNeed () {
-  return import("../../whatchuneed");
+export function Market () {
+  return import("../../market");
 }
 
 export function Governance () {
@@ -297,8 +297,4 @@ export function Booth () {
 
 export function BoothSetPage () {
   return import("../../booth/booth_set_page");
-}
-
-export function Flow () {
-  return import("../../flow");
 }

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class REST::BoothSetSerializer < ActiveModel::Serializer
-  attributes :id, :title, :description, :artist_name, :event_id, :event_name, :event_date,
+  attributes :id, :title, :description, :artist_name, :event_name, :event_date,
              :genres, :duration_seconds, :play_count, :audio_url, :cover_url,
              :cover_offset_y, :published, :created_at, :updated_at
 
@@ -11,14 +11,6 @@ class REST::BoothSetSerializer < ActiveModel::Serializer
 
   def id
     object.id.to_s
-  end
-
-  def event_id
-    object.event_id&.to_s
-  end
-
-  def event_date
-    object.event_date&.strftime('%Y-%m-%d')
   end
 
   def audio_url

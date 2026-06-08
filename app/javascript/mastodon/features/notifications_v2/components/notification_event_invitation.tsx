@@ -38,8 +38,6 @@ export const NotificationEventInvitation: React.FC<{
 }> = ({ notification, unread }) => {
   const inv = notification.eventInvitation;
 
-  if (!inv) return null;
-
   const isHuddle = inv.event_type === 'huddle';
 
   return (

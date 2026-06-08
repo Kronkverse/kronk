@@ -29,15 +29,6 @@ interface Props {
   onPlayingChange: (playing: boolean) => void;
 }
 
-function formatDate(dateStr: string): string {
-  const d = new Date(`${dateStr}T00:00:00`);
-  return d.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
 function formatTime(seconds: number): string {
   const s = Math.floor(seconds);
   const h = Math.floor(s / 3600);
@@ -76,12 +67,8 @@ export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
     useEffect(() => {
       const audio = audioRef.current;
       if (!audio) return;
-      const onTimeUpdate = () => {
-        setCurrentTime(audio.currentTime);
-      };
-      const onDurationChange = () => {
-        setDuration(audio.duration);
-      };
+      const onTimeUpdate = () => { setCurrentTime(audio.currentTime); };
+      const onDurationChange = () => { setDuration(audio.duration); };
       const onPlay = () => {
         setPlaying(true);
         onPlayingChangeRef.current(true);
@@ -133,12 +120,8 @@ export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
       );
     }, []);
 
-    const handleSkipBack = useCallback(() => {
-      handleSkip(-30);
-    }, [handleSkip]);
-    const handleSkipForward = useCallback(() => {
-      handleSkip(30);
-    }, [handleSkip]);
+    const handleSkipBack = useCallback(() => { handleSkip(-30); }, [handleSkip]);
+    const handleSkipForward = useCallback(() => { handleSkip(30); }, [handleSkip]);
 
     const handleSeek = useCallback((pct: number) => {
       const audio = audioRef.current;
@@ -183,7 +166,6 @@ export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
               <div className='booth-inline-player__artist'>
                 {set.artist_name}
                 {set.event_name ? ` · ${set.event_name}` : ''}
-                {set.event_date ? ` · ${formatDate(set.event_date)}` : ''}
               </div>
               {set.genres.length > 0 && (
                 <div className='booth-inline-player__genres'>

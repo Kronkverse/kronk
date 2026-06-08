@@ -3,11 +3,7 @@ import { useState, useCallback, useRef } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import api from 'mastodon/api';
-
 import type { BoothSet } from '../types';
-
-import { EventCombobox } from './event_combobox';
-import type { EventSelection } from './event_combobox';
 import { GenreTagInput } from './genre_tag_input';
 
 const messages = defineMessages({
@@ -42,9 +38,6 @@ interface Props {
 }
 
 type UploadStage = 'audio' | 'cover' | 'saving' | null;
-
-const AUDIO_LIMIT = 4 * 1024 * 1024 * 1024;
-const COVER_LIMIT = 1 * 1024 * 1024 * 1024;
 
 function formatEta(remainingBytes: number, speedBps: number): string {
   if (speedBps <= 0) return '';
@@ -93,7 +86,6 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
   const intl = useIntl();
   const [title, setTitle] = useState('');
   const [artistName, setArtistName] = useState('');
-  const [eventId, setEventId] = useState<string | null>(null);
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [genres, setGenres] = useState<string[]>([]);
@@ -103,13 +95,15 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
   const [audioError, setAudioError] = useState<string | null>(null);
   const [coverError, setCoverError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const AUDIO_LIMIT = 4 * 1024 * 1024 * 1024; // 4 GB
+  const COVER_LIMIT = 1 * 1024 * 1024 * 1024; // 1 GB
   const [stage, setStage] = useState<UploadStage>(null);
   const [uploadPct, setUploadPct] = useState(0);
   const [uploadEta, setUploadEta] = useState('');
   const [error, setError] = useState<string | null>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const stageRef = useRef<UploadStage>(null);
 
   const stageLabel =
     stage === 'audio'
@@ -120,98 +114,18 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
           ? 'Saving…'
           : '';
 
-  const handleTitleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setTitle(e.target.value);
-    },
-    [],
-  );
-
-  const handleArtistChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setArtistName(e.target.value);
-    },
-    [],
-  );
-
-  const handleDescriptionChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setDescription(e.target.value);
-    },
-    [],
-  );
-
-  const handleEventLink = useCallback((data: EventSelection) => {
-    setEventId(data.id);
-    setEventName(data.name);
-    setEventDate(data.date);
-  }, []);
-
-  const handleEventNameChange = useCallback((name: string) => {
-    setEventId(null);
-    setEventName(name);
-  }, []);
-
-  const handleEventClear = useCallback(() => {
-    setEventId(null);
-    setEventName('');
-    setEventDate('');
-  }, []);
-
-  const handleEventDateChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setEventDate(e.target.value);
-    },
-    [],
-  );
-
-  const handleAudioFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0] ?? null;
-      if (file && file.size > AUDIO_LIMIT) {
-        setAudioError(
-          `File is too large (${formatSize(file.size)}). Maximum is 4 GB.`,
-        );
-        setAudioFile(null);
-        e.target.value = '';
-      } else {
-        setAudioError(null);
-        setAudioFile(file);
-      }
-    },
-    [],
-  );
-
-  const handleCoverFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0] ?? null;
-      if (file && file.size > COVER_LIMIT) {
-        setCoverError(
-          `File is too large (${formatSize(file.size)}). Maximum is 1 GB.`,
-        );
-        setCoverFile(null);
-        e.target.value = '';
-      } else {
-        setCoverError(null);
-        setCoverFile(file);
-      }
-    },
-    [],
-  );
-
   const handleCancelUpload = useCallback(() => {
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
     setSubmitting(false);
     setStage(null);
-    stageRef.current = null;
     setUploadPct(0);
     setUploadEta('');
     setError(null);
   }, []);
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+    async (e: React.FormEvent) => {
       e.preventDefault();
       if (!audioFile) return;
 
@@ -221,82 +135,66 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
       setSubmitting(true);
       setError(null);
 
-      void (async () => {
-        try {
-          const updateStage = (s: UploadStage) => {
-            stageRef.current = s;
-            setStage(s);
-          };
+      try {
+        setStage('audio');
+        setUploadPct(0);
+        const audioId = await uploadMedia(audioFile, {
+          signal: controller.signal,
+          onProgress: (pct, eta) => {
+            setUploadPct(pct);
+            setUploadEta(eta);
+          },
+        });
 
-          updateStage('audio');
+        let coverId: string | null = null;
+        if (coverFile) {
+          setStage('cover');
           setUploadPct(0);
-          const audioId = await uploadMedia(audioFile, {
+          coverId = await uploadMedia(coverFile, {
             signal: controller.signal,
             onProgress: (pct, eta) => {
               setUploadPct(pct);
               setUploadEta(eta);
             },
           });
-
-          let coverId: string | null = null;
-          if (coverFile) {
-            updateStage('cover');
-            setUploadPct(0);
-            coverId = await uploadMedia(coverFile, {
-              signal: controller.signal,
-              onProgress: (pct, eta) => {
-                setUploadPct(pct);
-                setUploadEta(eta);
-              },
-            });
-          }
-
-          updateStage('saving');
-          const payload: Record<string, unknown> = {
-            title,
-            artist_name: artistName,
-            audio_id: audioId,
-            genres,
-          };
-          if (eventId) payload.event_id = eventId;
-          if (eventName) payload.event_name = eventName;
-          if (eventDate) payload.event_date = eventDate;
-          if (description) payload.description = description;
-          if (coverId) payload.cover_id = coverId;
-
-          const res = await api().post<BoothSet>(
-            '/api/v1/booth_sets',
-            payload,
-            {
-              signal: controller.signal,
-            },
-          );
-          onSuccess(res.data);
-        } catch (err) {
-          if ((err as { name?: string }).name === 'CanceledError') return;
-          const axiosErr = err as {
-            response?: { status?: number; data?: { error?: string } };
-          };
-          const detail = axiosErr.response?.data?.error;
-          const status = axiosErr.response?.status;
-          const stageName = stageRef.current ?? 'upload';
-          setError(
-            detail
-              ? `Failed at ${stageName}: ${detail}`
-              : status
-                ? `Failed at ${stageName} (${status}) — please try again.`
-                : `Failed at ${stageName} — please try again.`,
-          );
-          setSubmitting(false);
-          setStage(null);
-          stageRef.current = null;
         }
-      })();
+
+        setStage('saving');
+        const payload: Record<string, unknown> = {
+          title,
+          artist_name: artistName,
+          audio_id: audioId,
+          genres,
+        };
+        if (eventName) payload.event_name = eventName;
+        if (eventDate) payload.event_date = eventDate;
+        if (description) payload.description = description;
+        if (coverId) payload.cover_id = coverId;
+
+        const res = await api().post<BoothSet>('/api/v1/booth_sets', payload, {
+          signal: controller.signal,
+        });
+        onSuccess(res.data);
+      } catch (err) {
+        if ((err as { name?: string }).name === 'CanceledError') return;
+        const axiosErr = err as { response?: { status?: number; data?: { error?: string } } };
+        const detail = axiosErr.response?.data?.error;
+        const status = axiosErr.response?.status;
+        const stageAtFailure = stage;
+        setError(
+          detail
+            ? `Failed at ${stageAtFailure ?? 'upload'}: ${detail}`
+            : status
+              ? `Failed at ${stageAtFailure ?? 'upload'} (${status}) — please try again.`
+              : `Failed at ${stageAtFailure ?? 'upload'} — please try again.`,
+        );
+        setSubmitting(false);
+        setStage(null);
+      }
     },
     [
       title,
       artistName,
-      eventId,
       eventName,
       eventDate,
       genres,
@@ -308,7 +206,10 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
   );
 
   return (
-    <form className='booth-upload-form' onSubmit={handleSubmit}>
+    <form
+      className='booth-upload-form'
+      onSubmit={(e) => void handleSubmit(e)}
+    >
       <h3 className='booth-upload-form__heading'>Upload a set</h3>
 
       {error && <div className='booth-upload-form__error'>{error}</div>}
@@ -356,7 +257,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
             <input
               type='text'
               value={title}
-              onChange={handleTitleChange}
+              onChange={(e) => setTitle(e.target.value)}
               required
               maxLength={200}
             />
@@ -367,33 +268,30 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
             <input
               type='text'
               value={artistName}
-              onChange={handleArtistChange}
+              onChange={(e) => setArtistName(e.target.value)}
               required
               maxLength={200}
             />
           </label>
 
-          <div className='booth-upload-form__field'>
+          <label className='booth-upload-form__field'>
             <span>{intl.formatMessage(messages.event)}</span>
-            <EventCombobox
-              eventId={eventId}
-              eventName={eventName}
-              onLink={handleEventLink}
-              onNameChange={handleEventNameChange}
-              onClear={handleEventClear}
+            <input
+              type='text'
+              value={eventName}
+              onChange={(e) => setEventName(e.target.value)}
+              maxLength={200}
             />
-          </div>
+          </label>
 
-          {!eventId && (
-            <label className='booth-upload-form__field'>
-              <span>{intl.formatMessage(messages.eventDate)}</span>
-              <input
-                type='date'
-                value={eventDate}
-                onChange={handleEventDateChange}
-              />
-            </label>
-          )}
+          <label className='booth-upload-form__field'>
+            <span>{intl.formatMessage(messages.eventDate)}</span>
+            <input
+              type='date'
+              value={eventDate}
+              onChange={(e) => setEventDate(e.target.value)}
+            />
+          </label>
 
           <div className='booth-upload-form__field'>
             <span>{intl.formatMessage(messages.genre)}</span>
@@ -404,7 +302,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
             <span>{intl.formatMessage(messages.description)}</span>
             <textarea
               value={description}
-              onChange={handleDescriptionChange}
+              onChange={(e) => setDescription(e.target.value)}
               rows={3}
               maxLength={5000}
             />
@@ -416,7 +314,17 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
               ref={audioInputRef}
               type='file'
               accept='audio/*'
-              onChange={handleAudioFileChange}
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                if (file && file.size > AUDIO_LIMIT) {
+                  setAudioError(`File is too large (${formatSize(file.size)}). Maximum is 4 GB.`);
+                  setAudioFile(null);
+                  e.target.value = '';
+                } else {
+                  setAudioError(null);
+                  setAudioFile(file);
+                }
+              }}
               required
             />
             {audioFile && (
@@ -425,9 +333,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
               </span>
             )}
             {audioError && (
-              <span className='booth-upload-form__file-error'>
-                {audioError}
-              </span>
+              <span className='booth-upload-form__file-error'>{audioError}</span>
             )}
           </label>
 
@@ -436,12 +342,20 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
             <input
               type='file'
               accept='image/*'
-              onChange={handleCoverFileChange}
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                if (file && file.size > COVER_LIMIT) {
+                  setCoverError(`File is too large (${formatSize(file.size)}). Maximum is 1 GB.`);
+                  setCoverFile(null);
+                  e.target.value = '';
+                } else {
+                  setCoverError(null);
+                  setCoverFile(file);
+                }
+              }}
             />
             {coverError && (
-              <span className='booth-upload-form__file-error'>
-                {coverError}
-              </span>
+              <span className='booth-upload-form__file-error'>{coverError}</span>
             )}
           </label>
 

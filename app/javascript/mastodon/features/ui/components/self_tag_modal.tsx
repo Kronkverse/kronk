@@ -16,6 +16,10 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({
   title: { id: 'tag_media.title', defaultMessage: 'Tag people' },
+  clickToPlace: {
+    id: 'tag_media.click_to_place',
+    defaultMessage: 'Click the photo to place a tag',
+  },
   searchPlaceholder: {
     id: 'tag_media.search',
     defaultMessage: 'Search for a person…',
@@ -78,14 +82,20 @@ export const SelfTagModal: React.FC<{
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const myId = useAppSelector((state) => state.meta.get('me') as string);
+
+  const imgRef = useRef<HTMLDivElement>(null);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [existingTags, setExistingTags] = useState<ApiMediaTagJSON[]>([]);
+  const [pendingPin, setPendingPin] = useState<{ x: number; y: number } | null>(
+    null,
+  );
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<ApiAccountJSON[]>([]);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Load existing tags on open
   useEffect(() => {
     apiGetMediaTags(mediaId)
       .then(setExistingTags)
@@ -95,6 +105,28 @@ export const SelfTagModal: React.FC<{
   const close = useCallback(() => {
     dispatch(closeModal({ modalType: 'SELF_TAG', ignoreFocus: false }));
   }, [dispatch]);
+
+  const handleImageClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!imgRef.current) return;
+      const rect = imgRef.current.getBoundingClientRect();
+      setPendingPin({
+        x: (e.clientX - rect.left) / rect.width,
+        y: (e.clientY - rect.top) / rect.height,
+      });
+      setQuery('');
+      setSuggestions([]);
+      setError(null);
+    },
+    [],
+  );
+
+  const handleImageKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Enter') e.currentTarget.click();
+    },
+    [],
+  );
 
   const handleQueryChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,15 +155,22 @@ export const SelfTagModal: React.FC<{
     [],
   );
 
-  const addTag = useCallback(
-    (accountId: string) => {
-      if (existingTags.some((t) => t.account_id === accountId)) {
+  const applyTag = useCallback(
+    (accountId: string, pinOverride?: { x: number; y: number }) => {
+      const effectivePin = pinOverride ?? pendingPin;
+      if (!effectivePin) return;
+      const alreadyTagged = existingTags.some(
+        (t) => t.account_id === accountId,
+      );
+      if (alreadyTagged) {
         setError(intl.formatMessage(messages.alreadyTagged));
         return;
       }
-      apiAddMediaTag(mediaId, accountId, 0.5, 0.5)
+      const { x, y } = effectivePin;
+      apiAddMediaTag(mediaId, accountId, x, y)
         .then((tag) => {
           setExistingTags((prev) => [...prev, tag]);
+          setPendingPin(null);
           setQuery('');
           setSuggestions([]);
           setError(null);
@@ -142,19 +181,22 @@ export const SelfTagModal: React.FC<{
           setError(msg ?? 'Could not add tag');
         });
     },
-    [existingTags, mediaId, intl],
+    [pendingPin, existingTags, mediaId, intl],
   );
 
   const handleSelectAccount = useCallback(
     (account: ApiAccountJSON) => {
-      addTag(account.id);
+      applyTag(account.id);
     },
-    [addTag],
+    [applyTag],
   );
 
   const handleTagMyself = useCallback(() => {
-    if (myId) addTag(myId);
-  }, [myId, addTag]);
+    if (!myId) return;
+    const pin = pendingPin ?? { x: 0.5, y: 0.5 };
+    if (!pendingPin) setPendingPin(pin);
+    applyTag(myId, pin);
+  }, [myId, pendingPin, applyTag]);
 
   const handleRemoveTag = useCallback(
     (accountId: string) => {
@@ -168,11 +210,11 @@ export const SelfTagModal: React.FC<{
         .catch((err: unknown) => {
           const status = (err as { response?: { status?: number } }).response
             ?.status;
-          setError(
-            status === 403
-              ? 'You can only remove your own tag'
-              : 'Could not remove tag',
-          );
+          if (status === 403) {
+            setError('You can only remove your own tag');
+          } else {
+            setError('Could not remove tag');
+          }
         });
     },
     [mediaId],
@@ -182,52 +224,88 @@ export const SelfTagModal: React.FC<{
     <div className='modal-root__modal tag-people-modal'>
       <div className='tag-people-modal__header'>
         <h3>{intl.formatMessage(messages.title)}</h3>
-        {myId && (
-          <button
-            type='button'
-            className='tag-people-modal__tag-myself-btn'
-            onClick={handleTagMyself}
-          >
-            <FormattedMessage
-              id='tag_media.tag_myself'
-              defaultMessage='Tag myself'
-            />
-          </button>
-        )}
+        <div className='tag-people-modal__header-actions'>
+          {myId && (
+            <button
+              type='button'
+              className='tag-people-modal__tag-myself-btn'
+              onClick={handleTagMyself}
+            >
+              <FormattedMessage
+                id='tag_media.tag_myself'
+                defaultMessage='Tag myself'
+              />
+            </button>
+          )}
+        </div>
+        <p className='tag-people-modal__hint'>
+          {intl.formatMessage(messages.clickToPlace)}
+        </p>
       </div>
 
       <div className='tag-people-modal__image-wrapper'>
-        <img
-          src={previewUrl}
-          alt=''
-          draggable={false}
-          className='tag-people-modal__preview'
-        />
-      </div>
+        <div
+          ref={imgRef}
+          className='tag-people-modal__image'
+          onClick={handleImageClick}
+          role='button'
+          tabIndex={0}
+          aria-label={intl.formatMessage(messages.clickToPlace)}
+          onKeyDown={handleImageKeyDown}
+        >
+          <img src={previewUrl} alt='' draggable={false} />
 
-      <div className='tag-people-modal__search'>
-        <input
-          // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus
-          type='text'
-          value={query}
-          onChange={handleQueryChange}
-          placeholder={intl.formatMessage(messages.searchPlaceholder)}
-          className='tag-people-modal__search-input'
-        />
-        {searching && <div className='tag-people-modal__search-loading' />}
-        {suggestions.length > 0 && (
-          <ul className='tag-people-modal__suggestions'>
-            {suggestions.map((acct) => (
-              <li key={acct.id}>
-                <SuggestionItem account={acct} onSelect={handleSelectAccount} />
-              </li>
-            ))}
-          </ul>
+          {existingTags.map((tag) => (
+            <div
+              key={tag.account_id}
+              className='tag-people-modal__pin'
+              style={{ left: `${tag.x * 100}%`, top: `${tag.y * 100}%` }}
+            >
+              <span className='tag-people-modal__pin-label'>
+                {tag.account?.display_name ?? tag.account?.username ?? ''}
+              </span>
+            </div>
+          ))}
+
+          {pendingPin && (
+            <div
+              className='tag-people-modal__pin tag-people-modal__pin--pending'
+              style={{
+                left: `${pendingPin.x * 100}%`,
+                top: `${pendingPin.y * 100}%`,
+              }}
+            />
+          )}
+        </div>
+
+        {pendingPin && (
+          <div className='tag-people-modal__search'>
+            <input
+              // eslint-disable-next-line jsx-a11y/no-autofocus
+              autoFocus
+              type='text'
+              value={query}
+              onChange={handleQueryChange}
+              placeholder={intl.formatMessage(messages.searchPlaceholder)}
+              className='tag-people-modal__search-input'
+            />
+            {searching && <div className='tag-people-modal__search-loading' />}
+            {suggestions.length > 0 && (
+              <ul className='tag-people-modal__suggestions'>
+                {suggestions.map((acct) => (
+                  <li key={acct.id}>
+                    <SuggestionItem
+                      account={acct}
+                      onSelect={handleSelectAccount}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         )}
+        {error && <p className='tag-people-modal__error'>{error}</p>}
       </div>
-
-      {error && <p className='tag-people-modal__error'>{error}</p>}
 
       {existingTags.length > 0 && (
         <ul className='tag-people-modal__tag-list'>

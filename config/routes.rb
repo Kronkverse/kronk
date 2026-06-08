@@ -154,8 +154,6 @@ Rails.application.routes.draw do
       get '/@:username/featured'
       get '/@:username/with_replies', as: :short_account_with_replies
       get '/@:username/media', as: :short_account_media
-
-      get '/@:username/nudges', as: :short_account_nudges
       get '/@:username/tagged/:tag', as: :short_account_tag
     end
   end
@@ -228,8 +226,6 @@ Rails.application.routes.draw do
   get '/booth/sets/:id/embed', to: 'booth#embed', as: :embed_booth_set
   get '/booth', to: 'booth#index'
   get '/booth/*path', to: 'booth#index', format: false
-  get '/flow', to: 'flow#index'
-  get '/flow/*path', to: 'flow#index', format: false
   get '/home', to: 'home#index'
   get '/huddle', to: 'huddle#index'
   get '/kalendar', to: 'kalendar#index'
@@ -242,8 +238,8 @@ Rails.application.routes.draw do
   get '/nudges/*path', to: 'home#index', format: false
   get '/in-flow', to: 'home#index'
   get '/in-flow/*path', to: 'home#index', format: false
-  get '/whatchuneed', to: 'home#index'
-  get '/whatchuneed/*path', to: 'home#index', format: false
+  get '/market', to: 'home#index'
+  get '/market/*path', to: 'home#index', format: false
   draw(:web_app)
 
   get '/web/(*any)', to: redirect(path: '/%{any}', status: 302), as: :web, defaults: { any: '' }, format: false
