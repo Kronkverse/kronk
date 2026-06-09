@@ -3,6 +3,7 @@ export interface BoothSet {
   title: string;
   description: string;
   artist_name: string;
+  event_id: string | null;
   event_name: string | null;
   event_date: string | null;
   genres: string[];
