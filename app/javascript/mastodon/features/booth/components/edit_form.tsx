@@ -3,8 +3,12 @@ import { useState, useCallback } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import api from 'mastodon/api';
+
 import type { BoothSet } from '../types';
+
 import { CoverPositionEditor } from './cover_position_editor';
+import { EventCombobox } from './event_combobox';
+import type { EventSelection } from './event_combobox';
 import { GenreTagInput } from './genre_tag_input';
 
 const messages = defineMessages({
@@ -39,6 +43,8 @@ interface Props {
   onCancel: () => void;
 }
 
+const COVER_LIMIT = 1 * 1024 * 1024 * 1024;
+
 function formatSize(bytes: number): string {
   if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(1)} GB`;
   if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(1)} MB`;
@@ -56,10 +62,11 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
   const intl = useIntl();
   const [title, setTitle] = useState(set.title);
   const [artistName, setArtistName] = useState(set.artist_name);
+  const [eventId, setEventId] = useState<string | null>(set.event_id);
   const [eventName, setEventName] = useState(set.event_name ?? '');
   const [eventDate, setEventDate] = useState(set.event_date ?? '');
-  const [genres, setGenres] = useState<string[]>(set.genres ?? []);
-  const [description, setDescription] = useState(set.description ?? '');
+  const [genres, setGenres] = useState<string[]>(set.genres);
+  const [description, setDescription] = useState(set.description);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
   const [coverError, setCoverError] = useState<string | null>(null);
@@ -68,44 +75,115 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const COVER_LIMIT = 1 * 1024 * 1024 * 1024; // 1 GB
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setTitle(e.target.value);
+    },
+    [],
+  );
+
+  const handleArtistChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setArtistName(e.target.value);
+    },
+    [],
+  );
+
+  const handleDescriptionChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setDescription(e.target.value);
+    },
+    [],
+  );
+
+  const handleEventLink = useCallback((data: EventSelection) => {
+    setEventId(data.id);
+    setEventName(data.name);
+    setEventDate(data.date);
+  }, []);
+
+  const handleEventNameChange = useCallback((name: string) => {
+    setEventId(null);
+    setEventName(name);
+  }, []);
+
+  const handleEventClear = useCallback(() => {
+    setEventId(null);
+    setEventName('');
+    setEventDate('');
+  }, []);
+
+  const handleEventDateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setEventDate(e.target.value);
+    },
+    [],
+  );
+
+  const handleRemoveCoverClick = useCallback(() => {
+    setRemoveCover(true);
+  }, []);
+
+  const handleCoverFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0] ?? null;
+      if (file && file.size > COVER_LIMIT) {
+        setCoverError(
+          `File is too large (${formatSize(file.size)}). Maximum is 1 GB.`,
+        );
+        setCoverFile(null);
+        setCoverPreviewUrl(null);
+        e.target.value = '';
+      } else {
+        setCoverError(null);
+        setCoverFile(file);
+        setRemoveCover(false);
+        setCoverPreviewUrl(file ? URL.createObjectURL(file) : null);
+      }
+    },
+    [],
+  );
 
   const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
+    (e: React.FormEvent) => {
       e.preventDefault();
       setSaving(true);
       setError(null);
 
-      try {
-        const payload: Record<string, unknown> = {
-          title,
-          artist_name: artistName,
-          genres,
-          cover_offset_y: coverOffsetY,
-        };
-        if (eventName) payload.event_name = eventName;
-        if (eventDate) payload.event_date = eventDate;
-        if (description) payload.description = description;
+      void (async () => {
+        try {
+          const payload: Record<string, unknown> = {
+            title,
+            artist_name: artistName,
+            genres,
+            cover_offset_y: coverOffsetY,
+            event_id: eventId,
+          };
+          if (eventName) payload.event_name = eventName;
+          if (eventDate) payload.event_date = eventDate;
+          if (description) payload.description = description;
 
-        if (removeCover) {
-          payload.remove_cover = 'true';
-        } else if (coverFile) {
-          payload.cover_id = await uploadMedia(coverFile);
+          if (removeCover) {
+            payload.remove_cover = 'true';
+          } else if (coverFile) {
+            payload.cover_id = await uploadMedia(coverFile);
+          }
+
+          const res = await api().patch<BoothSet>(
+            `/api/v1/booth_sets/${set.id}`,
+            payload,
+          );
+          onSuccess(res.data);
+        } catch {
+          setError('Could not save changes — please try again.');
+          setSaving(false);
         }
-
-        const res = await api().patch<BoothSet>(
-          `/api/v1/booth_sets/${set.id}`,
-          payload,
-        );
-        onSuccess(res.data);
-      } catch {
-        setError('Could not save changes — please try again.');
-        setSaving(false);
-      }
+      })();
     },
     [
       title,
       artistName,
+      eventId,
       eventName,
       eventDate,
       genres,
@@ -119,10 +197,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
   );
 
   return (
-    <form
-      className='booth-upload-form'
-      onSubmit={(e) => void handleSubmit(e)}
-    >
+    <form className='booth-upload-form' onSubmit={handleSubmit}>
       <h3 className='booth-upload-form__heading'>
         {intl.formatMessage(messages.heading)}
       </h3>
@@ -134,7 +209,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
         <input
           type='text'
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={handleTitleChange}
           required
           maxLength={200}
           disabled={saving}
@@ -146,33 +221,36 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
         <input
           type='text'
           value={artistName}
-          onChange={(e) => setArtistName(e.target.value)}
+          onChange={handleArtistChange}
           required
           maxLength={200}
           disabled={saving}
         />
       </label>
 
-      <label className='booth-upload-form__field'>
+      <div className='booth-upload-form__field'>
         <span>{intl.formatMessage(messages.event)}</span>
-        <input
-          type='text'
-          value={eventName}
-          onChange={(e) => setEventName(e.target.value)}
-          maxLength={200}
+        <EventCombobox
+          eventId={eventId}
+          eventName={eventName}
+          onLink={handleEventLink}
+          onNameChange={handleEventNameChange}
+          onClear={handleEventClear}
           disabled={saving}
         />
-      </label>
+      </div>
 
-      <label className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.eventDate)}</span>
-        <input
-          type='date'
-          value={eventDate}
-          onChange={(e) => setEventDate(e.target.value)}
-          disabled={saving}
-        />
-      </label>
+      {!eventId && (
+        <label className='booth-upload-form__field'>
+          <span>{intl.formatMessage(messages.eventDate)}</span>
+          <input
+            type='date'
+            value={eventDate}
+            onChange={handleEventDateChange}
+            disabled={saving}
+          />
+        </label>
+      )}
 
       <div className='booth-upload-form__field'>
         <span>{intl.formatMessage(messages.genre)}</span>
@@ -183,7 +261,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
         <span>{intl.formatMessage(messages.description)}</span>
         <textarea
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={handleDescriptionChange}
           rows={3}
           maxLength={5000}
           disabled={saving}
@@ -193,7 +271,6 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
       <div className='booth-upload-form__field'>
         <span>{intl.formatMessage(messages.cover)}</span>
 
-        {/* Position editor — shown whenever there's a cover to preview */}
         {(coverPreviewUrl ?? (set.cover_url && !removeCover)) && (
           <CoverPositionEditor
             coverUrl={coverPreviewUrl ?? set.cover_url ?? ''}
@@ -207,7 +284,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
           <button
             type='button'
             className='booth-edit-form__remove-cover'
-            onClick={() => setRemoveCover(true)}
+            onClick={handleRemoveCoverClick}
             disabled={saving}
           >
             {intl.formatMessage(messages.removeCover)}
@@ -217,20 +294,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
         <input
           type='file'
           accept='image/*'
-          onChange={(e) => {
-            const file = e.target.files?.[0] ?? null;
-            if (file && file.size > COVER_LIMIT) {
-              setCoverError(`File is too large (${formatSize(file.size)}). Maximum is 1 GB.`);
-              setCoverFile(null);
-              setCoverPreviewUrl(null);
-              e.target.value = '';
-            } else {
-              setCoverError(null);
-              setCoverFile(file);
-              setRemoveCover(false);
-              setCoverPreviewUrl(file ? URL.createObjectURL(file) : null);
-            }
-          }}
+          onChange={handleCoverFileChange}
           disabled={saving}
         />
         {coverError && (
