@@ -12,8 +12,11 @@ import { useDrag } from '@use-gesture/react';
 
 import kronkWordmark from '@/images/kronk-wordmark-small.png';
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
+
 import BarChartActiveIcon from '@/material-icons/400-24px/bar_chart_4_bars-fill.svg?react';
 import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
+import FavoriteActiveIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
+import FavoriteIcon from '@/material-icons/400-24px/favorite.svg?react';
 import HeadphonesActiveIcon from '@/material-icons/400-24px/headphones-fill.svg?react';
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import CalendarMonthActiveIcon from '@/material-icons/400-24px/calendar_month-fill.svg?react';
@@ -32,8 +35,6 @@ import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchang
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
-import PublicActiveIcon from '@/material-icons/400-24px/public-fill.svg?react';
-import PublicIcon from '@/material-icons/400-24px/public.svg?react';
 import QuestionMarkActiveIcon from '@/material-icons/400-24px/question_mark-fill.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
@@ -47,6 +48,7 @@ import {
 import { Account } from 'mastodon/components/account';
 import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { Search } from 'mastodon/features/compose/components/search';
+import { OrbitIcon } from 'mastodon/features/in_flow/components/celestial_icons';
 import { ColumnLink } from 'mastodon/features/ui/components/column_link';
 import { useBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
 import { useIdentity } from 'mastodon/identity_context';
@@ -72,8 +74,9 @@ const messages = defineMessages({
   live: { id: 'live.title', defaultMessage: 'Huddle' },
   commons: { id: 'governance.title', defaultMessage: '₭ommons' },
   questions: { id: 'questions.title', defaultMessage: 'Ƙuestions' },
-  market: { id: 'market.title', defaultMessage: 'Market' },
+  whatchuneed: { id: 'whatchuneed.title', defaultMessage: 'WatchuNeed' },
   booth: { id: 'booth.title', defaultMessage: 'The Booth' },
+  flow: { id: 'flow.title', defaultMessage: 'Flow' },
   events: { id: 'events.title', defaultMessage: '₭alendar' },
   inFlow: { id: 'in_flow.title', defaultMessage: 'In Flow' },
   nudges: { id: 'nudges.title', defaultMessage: 'Nudges' },
@@ -344,22 +347,20 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
         )}
 
         {signedIn && (
-          <ColumnLink
-            transparent
-            to='/in-flow'
-            icon='public'
-            iconComponent={PublicIcon}
-            activeIconComponent={PublicActiveIcon}
-            text={intl.formatMessage(messages.inFlow)}
-            tooltip='In Flow'
-          />
-        )}
-
-        {signedIn && (
           <>
             <hr />
 
             <NotificationsLink />
+
+            <ColumnLink
+              transparent
+              to='/in-flow'
+              icon='public'
+              iconComponent={OrbitIcon}
+              activeIconComponent={OrbitIcon}
+              text={intl.formatMessage(messages.inFlow)}
+              tooltip='In Flow'
+            />
 
             <ColumnLink
               transparent
@@ -391,11 +392,12 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
 
             <ColumnLink
               transparent
-              to='/market'
-              icon='bar_chart'
-              iconComponent={BarChartIcon}
-              activeIconComponent={BarChartActiveIcon}
-              text={intl.formatMessage(messages.market)}
+              to='/whatchuneed'
+              icon='partner_exchange'
+              iconComponent={PartnerExchangeIcon}
+              activeIconComponent={PartnerExchangeActiveIcon}
+              text={intl.formatMessage(messages.whatchuneed)}
+              tooltip='WatchuNeed'
             />
 
             <ColumnLink
@@ -406,6 +408,16 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               activeIconComponent={HeadphonesActiveIcon}
               text={intl.formatMessage(messages.booth)}
               tooltip='The Booth — DJ sets &amp; mixes'
+            />
+
+            <ColumnLink
+              transparent
+              to='/flow'
+              icon='favorite'
+              iconComponent={FavoriteIcon}
+              activeIconComponent={FavoriteActiveIcon}
+              text={intl.formatMessage(messages.flow)}
+              tooltip='Flow — cycle tracking'
             />
 
             <NudgesLink />

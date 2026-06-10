@@ -156,7 +156,9 @@ export const AccountGallery: React.FC<{
         setTaggedHasMore(data.length === 40);
         setTaggedLoading(false);
       })
-      .catch(() => { setTaggedLoading(false); });
+      .catch(() => {
+        setTaggedLoading(false);
+      });
   }, [accountId, isAccount]);
 
   const handleLoadMoreTagged = useCallback(() => {
@@ -170,7 +172,9 @@ export const AccountGallery: React.FC<{
         setTaggedHasMore(data.length === 40);
         setTaggedLoading(false);
       })
-      .catch(() => { setTaggedLoading(false); });
+      .catch(() => {
+        setTaggedLoading(false);
+      });
   }, [accountId, taggedLoading, taggedAttachments]);
 
   const handleLoadMore = useCallback(() => {

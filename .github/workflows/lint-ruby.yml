@@ -16,6 +16,9 @@ on:
       - '.github/workflows/lint-ruby.yml'
 
   pull_request:
+    branches:
+      - 'main'
+      - 'stable-*'
     paths:
       - 'Gemfile*'
       - '.rubocop*.yml'
