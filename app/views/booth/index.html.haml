@@ -1,0 +1,12 @@
+- content_for :header_tags do
+  = opengraph 'og:site_name', site_title
+  = opengraph 'og:url', "#{root_url.chomp('/')}#{request.path}"
+  = opengraph 'og:type', 'website'
+  = opengraph 'og:title', 'The Booth'
+  = opengraph 'og:description', 'DJ sets and mixes from the Kronk community.'
+  = opengraph 'og:image', "#{root_url.chomp('/')}/booth-preview.png"
+  = opengraph 'og:image:width', '1200'
+  = opengraph 'og:image:height', '630'
+  = opengraph 'twitter:card', 'summary_large_image'
+
+= render 'shared/web_app'

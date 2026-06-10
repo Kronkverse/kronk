@@ -15,6 +15,9 @@ on:
       - 'lib/tasks/db.rake'
 
   pull_request:
+    branches:
+      - 'main'
+      - 'stable-*'
     paths:
       - 'Gemfile*'
       - '.ruby-version'

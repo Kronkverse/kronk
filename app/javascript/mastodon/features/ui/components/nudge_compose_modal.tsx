@@ -19,12 +19,21 @@ function countWords(text: string): number {
 }
 
 async function uploadBlob(blob: Blob, csrfToken: string): Promise<string> {
-  // WebM containers are always detected as video/webm by Paperclip's spoof checker.
-  // Re-wrap as video/webm so the declared type matches the detected type.
-  const uploadType = blob.type.startsWith('audio/webm')
-    ? 'video/webm'
-    : blob.type;
-  const ext = uploadType.includes('webm') ? 'webm' : 'm4a';
+  let uploadType: string;
+  let ext: string;
+  if (blob.type.startsWith('audio/ogg')) {
+    uploadType = 'audio/ogg';
+    ext = 'ogg';
+  } else if (
+    blob.type.startsWith('audio/mp4') ||
+    blob.type.startsWith('audio/x-m4a')
+  ) {
+    uploadType = 'audio/mp4';
+    ext = 'm4a';
+  } else {
+    uploadType = 'video/webm';
+    ext = 'webm';
+  }
   const form = new FormData();
   form.append('file', new File([blob], `voice.${ext}`, { type: uploadType }));
   const res = await fetch('/api/v2/media', {
@@ -140,9 +149,14 @@ export const NudgeComposeModal: React.FC<{
           audio: true,
         });
         const mimeType =
-          (['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'] as const).find(
-            (t) => MediaRecorder.isTypeSupported(t),
-          ) ?? 'audio/webm';
+          (
+            [
+              'audio/ogg;codecs=opus',
+              'audio/mp4',
+              'audio/webm;codecs=opus',
+              'audio/webm',
+            ] as const
+          ).find((t) => MediaRecorder.isTypeSupported(t)) ?? 'audio/webm';
         const recorder = new MediaRecorder(stream, {
           mimeType,
           audioBitsPerSecond: 128_000,

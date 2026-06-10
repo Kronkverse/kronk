@@ -1,7 +1,5 @@
 // See app/serializers/rest/media_attachment_serializer.rb
 
-import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
-
 export type MediaAttachmentType =
   | 'image'
   | 'gifv'
@@ -14,7 +12,7 @@ export interface ApiMediaTagJSON {
   account_id: string;
   x: number;
   y: number;
-  account: ApiAccountJSON | null;
+  account: { display_name: string; username: string } | null;
 }
 
 export interface ApiMediaAttachmentJSON {

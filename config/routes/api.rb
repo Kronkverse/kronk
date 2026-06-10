@@ -107,6 +107,10 @@ namespace :api, format: false do
       end
     end
 
+    namespace :in_flow do
+      resource :observation, only: [:show]
+    end
+
     resources :booth_sets, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :play
@@ -131,6 +135,14 @@ namespace :api, format: false do
         get :my_invitees
       end
     end
+    resources :whatchuneed_listings, only: [:index, :show, :create, :update, :destroy] do
+      member do
+        post :fulfill
+        post :close
+      end
+      resources :whatchuneed_responses, only: [:create, :destroy], shallow: true
+    end
+
     resources :proposals, only: [:index, :show, :create, :update] do
       member do
         post :vote
