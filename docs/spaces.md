@@ -87,7 +87,7 @@ const browser = await puppeteer.launch({
 });
 const page = await browser.newPage();
 await page.setViewport({ width: 1200, height: 630 });
-await page.goto('https://dev.mastodon.kronk.info/space-preview/market', {
+await page.goto('https://shadow.kronk.info/space-preview/market', {
   waitUntil: 'networkidle0',
   timeout: 30000,
 });

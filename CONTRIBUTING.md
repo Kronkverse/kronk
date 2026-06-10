@@ -15,7 +15,7 @@ Kronk is a customized [Mastodon](https://github.com/mastodon/mastodon) instance 
 | Branch    | Purpose                                       |
 | --------- | --------------------------------------------- |
 | `main`    | Production — deployed to mastodon.kronk.info  |
-| `staging` | Testing — deployed to dev.mastodon.kronk.info |
+| `staging` | Testing — deployed to shadow.kronk.info |
 
 `main` is protected. All changes go through pull requests.
 
@@ -46,7 +46,7 @@ export NODE_OPTIONS=--max-old-space-size=2048
 
 ## Testing Your Changes
 
-When you open a PR, a maintainer will deploy your branch to the staging environment at `dev.mastodon.kronk.info` for testing. You don't need to worry about deployment — just make sure your code works locally.
+When you open a PR, a maintainer will deploy your branch to the staging environment at `shadow.kronk.info` for testing. You don't need to worry about deployment — just make sure your code works locally.
 
 ## What We're Looking For
 

@@ -7,7 +7,7 @@ Kronk is a custom Mastodon instance at **mastodon.kronk.info**. This repo is a f
 | Branch    | Purpose                                        | Deploy target           |
 | --------- | ---------------------------------------------- | ----------------------- |
 | `main`    | Production (protected — PRs only)              | mastodon.kronk.info     |
-| `staging` | Shared integration — all work accumulates here | dev.mastodon.kronk.info |
+| `staging` | Shared integration — all work accumulates here | shadow.kronk.info |
 
 **Never commit directly to `staging` or `main`.** Always work on a branch.
 
@@ -98,9 +98,9 @@ git checkout -b feature/my-change origin/staging
 
 Use `feature/`, `fix/`, or `docs/` prefix. Keep branches small — one feature or fix per branch. Push directly to `Kronkverse/kronk` — no personal fork needed, you are a collaborator.
 
-### 2. Show work on the dev space
+### 2. Show work on the shadow
 
-Merge your branch into `staging` when you want it visible at https://dev.mastodon.kronk.info:
+Merge your branch into `staging` when you want it visible at https://shadow.kronk.info:
 
 ```bash
 git checkout staging
@@ -109,9 +109,9 @@ git merge feature/my-change
 git push origin staging
 ```
 
-The dev space auto-deploys within a few minutes. Multiple contributors' work accumulates simultaneously — don't worry about overwriting others.
+The shadow auto-deploys within a few minutes. Multiple contributors' work accumulates simultaneously — don't worry about overwriting others.
 
-The dev space is transient and may be down. If it is, ask Tal to start it.
+The shadow is transient and may be down. If it is, ask Tal to start it.
 
 ### 3. Open a PR for production
 
@@ -123,7 +123,7 @@ When your feature is tested on staging and ready to ship, open a PR from your **
 
 - **What changed** — files and behaviour affected
 - **Why** — the problem being solved
-- **How to test** — concrete steps on the dev space
+- **How to test** — concrete steps on the shadow
 - **Dependencies** — migrations, other PRs, or deploy steps required
 
 ### 4. Clean up
@@ -158,5 +158,5 @@ RAILS_ENV=production NODE_OPTIONS=--max-old-space-size=2048 bundle exec rails as
 ## Useful Links
 
 - Instance: https://mastodon.kronk.info
-- Dev space: https://dev.mastodon.kronk.info
+- Shadow: https://shadow.kronk.info
 - Issues: https://github.com/Kronkverse/kronk/issues
