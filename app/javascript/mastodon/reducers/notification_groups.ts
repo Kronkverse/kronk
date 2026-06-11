@@ -13,7 +13,6 @@ import {
   clearNotifications,
   clearUnreadNudges,
   decrementNudgeCount,
-  incrementNudgeCount,
   fetchInitialNudgeCount,
   fetchNotifications,
   setUnreadNudgeCount,
@@ -508,9 +507,6 @@ export const notificationGroupsReducer = createReducer<NotificationGroupsState>(
       })
       .addCase(decrementNudgeCount, (state) => {
         state.unreadNudgeCount = Math.max(0, state.unreadNudgeCount - 1);
-      })
-      .addCase(incrementNudgeCount, (state) => {
-        state.unreadNudgeCount += 1;
       })
       .addCase(fetchInitialNudgeCount.fulfilled, (state, action) => {
         state.unreadNudgeCount = action.payload;
