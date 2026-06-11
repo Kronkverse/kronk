@@ -71,10 +71,12 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
   end
 
   def media_tag_status_path
-    status = object.notification&.activity&.media_attachment&.status
-    return nil unless status&.account
+    tag = object.notification&.activity
+    return nil unless tag&.media_attachment&.status_id
 
-    "/@#{status.account.acct}/#{status.id}"
+    acct = tag.media_attachment.status&.account&.acct
+    status_id = tag.media_attachment.status_id
+    "/@#{acct}/#{status_id}" if acct && status_id
   end
 
   def nudge_streak

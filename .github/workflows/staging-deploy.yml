@@ -16,11 +16,9 @@ jobs:
       - name: Deploy PR to staging
         env:
           DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/key
           chmod 600 ~/.ssh/key
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "deploy-pr ${{ inputs.pr_number }}"
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "grep -q '^ANTHROPIC_API_KEY=' /home/mastodon/staging/.env.production || echo \"ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY\" >> /home/mastodon/staging/.env.production; sudo systemctl restart mastodon-sidekiq mastodon-web"
           rm -f ~/.ssh/key

@@ -17,7 +17,6 @@ module Account::Associations
         has_many :custom_filters
         has_many :booth_sets
         has_many :events
-        has_many :flow_cycles
         has_many :favourites
         has_many :featured_tags, -> { includes(:tag) }
         has_many :list_accounts

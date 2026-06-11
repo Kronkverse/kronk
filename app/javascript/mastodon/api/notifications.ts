@@ -3,7 +3,6 @@ import api, {
   getLinks,
   apiRequestGet,
   apiRequestPost,
-  apiRequestDelete,
 } from 'mastodon/api';
 import type {
   ApiNotificationGroupsResultJSON,
@@ -96,13 +95,3 @@ export const apiDismissNotificationRequests = async (id: string[]) => {
   return apiRequestPost('v1/notifications/requests/dismiss', { id });
 };
 
-export const apiNudgeReact = (notificationId: string, emoji: string) =>
-  apiRequestPost<Record<string, { count: number; me: boolean }>>(
-    `v1/notifications/${notificationId}/nudge_react`,
-    { emoji },
-  );
-
-export const apiNudgeUnreact = (notificationId: string) =>
-  apiRequestDelete<Record<string, { count: number; me: boolean }>>(
-    `v1/notifications/${notificationId}/nudge_react`,
-  );

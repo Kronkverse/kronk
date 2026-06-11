@@ -14,7 +14,6 @@ class NotifyService < BaseService
     moderation_warning
     severed_relationships
     annual_report
-    media_tag
   ).freeze
 
   class BaseCondition
