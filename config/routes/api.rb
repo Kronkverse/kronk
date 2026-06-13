@@ -43,6 +43,11 @@ namespace :api, format: false do
         resource :interaction_policy, only: :update
 
         post :translate, to: 'translations#create'
+
+        scope module: :statuses do
+          post 'story_react/:emoji',   to: 'story_reactions#create',  as: :story_react
+          delete 'story_react/:emoji', to: 'story_reactions#destroy', as: :story_unreact
+        end
       end
 
       member do

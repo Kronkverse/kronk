@@ -31,6 +31,7 @@ import { ColumnSettings } from './components/column_settings';
 import { CriticalUpdateBanner } from './components/critical_update_banner';
 import { DailyKosmicCard } from './components/daily_kosmic_card';
 import { LiveBanner } from './components/live_banner';
+import { StoryComposerBanner } from './components/story_composer_banner';
 import { Announcements } from './components/announcements';
 
 const messages = defineMessages({
@@ -189,6 +190,7 @@ class HomeTimeline extends PureComponent {
       );
     }
 
+    banners.push(<StoryComposerBanner key='story-composer-banner' />);
     banners.push(<DailyKosmicCard key='daily-kosmic-card' />);
     banners.push(<LiveBanner key='live-banner' />);
     if (criticalUpdatesPending) {

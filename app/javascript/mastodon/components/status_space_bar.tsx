@@ -1,6 +1,7 @@
 import { defineMessages, useIntl } from 'react-intl';
 
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
+import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import ToysFanIcon from '@/material-icons/400-24px/toys_fan.svg?react';
 import { Icon } from 'mastodon/components/icon';
@@ -21,6 +22,10 @@ const messages = defineMessages({
   plantedSeed: {
     id: 'status_space_bar.planted_seed',
     defaultMessage: 'planted a seed',
+  },
+  sharedAMoment: {
+    id: 'status_space_bar.shared_a_moment',
+    defaultMessage: 'shared a moment',
   },
 });
 
@@ -63,6 +68,14 @@ function getConfig(
       iconComponent: ToysFanIcon,
       iconId: 'toys_fan',
       verbKey: 'plantedSeed',
+    };
+  }
+
+  if (postType === 'story') {
+    return {
+      iconComponent: PhotoCameraIcon,
+      iconId: 'photo_camera',
+      verbKey: 'sharedAMoment',
     };
   }
 
