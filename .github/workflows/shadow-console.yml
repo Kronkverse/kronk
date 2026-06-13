@@ -1,0 +1,24 @@
+name: Shadow Console
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Rails runner command to execute on shadow'
+        required: true
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Run command on shadow
+        env:
+          DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/key
+          chmod 600 ~/.ssh/key
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "cd /home/mastodon/staging && RAILS_ENV=production bundle exec rails runner \"${{ inputs.command }}\""
+          rm -f ~/.ssh/key
