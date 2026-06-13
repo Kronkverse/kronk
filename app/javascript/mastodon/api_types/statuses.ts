@@ -123,7 +123,12 @@ export interface ApiStatusJSON {
   quote?: ApiQuoteJSON;
   quote_approval?: ApiQuotePolicyJSON;
 
-  post_type?: 'normal' | 'question' | 'answer' | 'proposal';
+  expires_at?: string | null;
+  post_type?: 'normal' | 'question' | 'answer' | 'proposal' | 'story';
+  story_reactions?: Record<
+    'froth' | 'heart' | 'laugh' | 'cry',
+    { me: boolean; others: boolean }
+  >;
   question?: ApiStatusJSON;
   answers_count?: number;
   answerers?: { id: string; username: string; acct: string; avatar: string }[];
