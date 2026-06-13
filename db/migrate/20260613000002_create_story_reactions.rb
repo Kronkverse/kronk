@@ -11,7 +11,10 @@ class CreateStoryReactions < ActiveRecord::Migration[8.0]
 
     add_index :story_reactions, %i(status_id account_id emoji), unique: true
     add_index :story_reactions, :account_id
-    add_foreign_key :story_reactions, :statuses, on_delete: :cascade
-    add_foreign_key :story_reactions, :accounts, on_delete: :cascade
+
+    safety_assured do
+      add_foreign_key :story_reactions, :statuses, on_delete: :cascade
+      add_foreign_key :story_reactions, :accounts, on_delete: :cascade
+    end
   end
 end
