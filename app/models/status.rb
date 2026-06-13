@@ -103,9 +103,13 @@ class Status < ApplicationRecord
   has_one :quote, inverse_of: :status, dependent: :destroy
   has_one :proposal, foreign_key: :discussion_status_id, dependent: :nullify, inverse_of: :discussion_status
 
-  enum :post_type, { normal: 0, question: 1, answer: 2, proposal: 3 }, prefix: :kronk
+  enum :post_type, { normal: 0, question: 1, answer: 2, proposal: 3, story: 4 }, prefix: :kronk
+
+  has_many :story_reactions, dependent: :destroy
 
   scope :questions, -> { where(post_type: :question) }
+  scope :stories,   -> { where(post_type: :story) }
+  scope :expired_stories, -> { stories.where(expires_at: ..Time.current) }
 
   validates :uri, uniqueness: true, presence: true, unless: :local?
   validates :text, presence: true, unless: -> { with_media? || reblog? || with_quote? }
@@ -224,6 +228,10 @@ class Status < ApplicationRecord
 
   def reblog?
     !reblog_of_id.nil?
+  end
+
+  def story?
+    kronk_story?
   end
 
   def within_realtime_window?

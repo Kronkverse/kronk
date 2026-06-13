@@ -153,8 +153,10 @@ class PostStatusService < BaseService
     process_hashtags_service.call(@status)
     Trends.tags.register(@status)
     LinkCrawlWorker.perform_async(@status.id)
-    DistributionWorker.perform_async(@status.id) unless @status.kronk_answer?
-    ActivityPub::DistributionWorker.perform_async(@status.id) unless @status.kronk_answer?
+    unless @status.kronk_answer? || @status.story?
+      DistributionWorker.perform_async(@status.id)
+      ActivityPub::DistributionWorker.perform_async(@status.id)
+    end
     PollExpirationNotifyWorker.perform_at(@status.poll.expires_at, @status.poll.id) if @status.poll
     ActivityPub::QuoteRequestWorker.perform_async(@status.quote.id) if @status.quote&.quoted_status.present? && !@status.quote&.quoted_status&.local?
   end
@@ -233,6 +235,7 @@ class PostStatusService < BaseService
       rate_limit: @options[:with_rate_limit],
       quote_approval_policy: @options[:quote_approval_policy],
       post_type: @options[:post_type] || 'normal',
+      expires_at: (@options[:post_type].to_s == 'story' ? 24.hours.from_now : nil),
     }.compact
   end
 

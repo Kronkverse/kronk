@@ -56,6 +56,10 @@
       interval: 1 minute
       class: Scheduler::AccountsStatusesCleanupScheduler
       queue: scheduler
+    expire_stories_worker:
+      interval: 15 minutes
+      class: ExpireStoriesWorker
+      queue: default
     suspended_user_cleanup_scheduler:
       interval: 1 minute
       class: Scheduler::SuspendedUserCleanupScheduler
