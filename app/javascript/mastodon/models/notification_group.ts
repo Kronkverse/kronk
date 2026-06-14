@@ -77,6 +77,9 @@ export interface NotificationGroupMediaTag
   mediaTagStatusPath: string | null;
 }
 
+export type NotificationGroupMomentReaction =
+  BaseNotificationWithStatus<'moment_reaction'>;
+
 export type AccountWarningAction =
   | 'none'
   | 'disable'
@@ -135,7 +138,8 @@ export type NotificationGroup =
   | NotificationGroupAnnualReport
   | NotificationGroupEventInvitation
   | NotificationGroupNudge
-  | NotificationGroupMediaTag;
+  | NotificationGroupMediaTag
+  | NotificationGroupMomentReaction;
 
 function createReportFromJSON(reportJSON: ApiReportJSON): Report {
   const { target_account, ...report } = reportJSON;
@@ -180,7 +184,8 @@ export function createNotificationGroupFromJSON(
     case 'quote':
     case 'poll':
     case 'update':
-    case 'quoted_update': {
+    case 'quoted_update':
+    case 'moment_reaction': {
       const { status_id: statusId, ...groupWithoutStatus } = group;
       return {
         statusId: statusId ?? undefined,
@@ -291,6 +296,7 @@ export function createNotificationGroupFromNotificationJSON(
     case 'poll':
     case 'update':
     case 'quoted_update':
+    case 'moment_reaction':
       return {
         ...group,
         type: notification.type,

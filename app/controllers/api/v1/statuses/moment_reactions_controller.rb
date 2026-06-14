@@ -16,6 +16,8 @@ class Api::V1::Statuses::MomentReactionsController < Api::BaseController
       emoji: emoji
     )
 
+    MomentReactionNotifyWorker.perform_async(@status.account_id, current_user.account_id, @status.id) if @status.account != current_user.account
+
     render json: serialize_reactions
   end
 

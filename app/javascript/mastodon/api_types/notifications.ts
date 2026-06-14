@@ -25,6 +25,7 @@ export const allNotificationTypes: NotificationType[] = [
   'event_invitation',
   'nudge',
   'media_tag',
+  'moment_reaction',
 ];
 
 export type NotificationWithStatusType =
@@ -35,7 +36,8 @@ export type NotificationWithStatusType =
   | 'quote'
   | 'poll'
   | 'update'
-  | 'quoted_update';
+  | 'quoted_update'
+  | 'moment_reaction';
 
 export type NotificationType =
   | NotificationWithStatusType
@@ -48,7 +50,8 @@ export type NotificationType =
   | 'annual_report'
   | 'event_invitation'
   | 'nudge'
-  | 'media_tag';
+  | 'media_tag'
+  | 'moment_reaction';
 
 export interface BaseNotificationJSON {
   id: string;

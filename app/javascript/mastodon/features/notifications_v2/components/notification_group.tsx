@@ -16,6 +16,7 @@ import { NotificationFollowRequest } from './notification_follow_request';
 import { NotificationMediaTag } from './notification_media_tag';
 import { NotificationMention } from './notification_mention';
 import { NotificationModerationWarning } from './notification_moderation_warning';
+import { NotificationMomentReaction } from './notification_moment_reaction';
 import { NotificationNudge } from './notification_nudge';
 import { NotificationPoll } from './notification_poll';
 import { NotificationQuote } from './notification_quote';
@@ -175,6 +176,14 @@ export const NotificationGroup: React.FC<{
     case 'media_tag':
       content = (
         <NotificationMediaTag
+          unread={unread}
+          notification={notificationGroup}
+        />
+      );
+      break;
+    case 'moment_reaction':
+      content = (
+        <NotificationMomentReaction
           unread={unread}
           notification={notificationGroup}
         />

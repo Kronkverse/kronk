@@ -8,6 +8,7 @@ class REST::NotificationSerializer < ActiveModel::Serializer
 
   belongs_to :from_account, key: :account, serializer: REST::AccountSerializer
   belongs_to :target_status, key: :status, if: :status_type?, serializer: REST::StatusSerializer
+  belongs_to :moment_reaction_status, key: :status, if: :moment_reaction_type?, serializer: REST::StatusSerializer
   belongs_to :report, if: :report_type?, serializer: REST::ReportSerializer
   belongs_to :account_relationship_severance_event, key: :event, if: :relationship_severance_event?, serializer: REST::AccountRelationshipSeveranceEventSerializer
   belongs_to :account_warning, key: :moderation_warning, if: :moderation_warning_event?, serializer: REST::AccountWarningSerializer
@@ -34,6 +35,14 @@ class REST::NotificationSerializer < ActiveModel::Serializer
 
   def moderation_warning_event?
     object.type == :moderation_warning
+  end
+
+  def moment_reaction_type?
+    object.type == :moment_reaction
+  end
+
+  def moment_reaction_status
+    object.activity&.status
   end
 
   attribute :nudge_streak, if: :nudge_type?

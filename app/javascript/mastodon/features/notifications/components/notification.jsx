@@ -33,6 +33,7 @@ import Report from './report';
 
 const messages = defineMessages({
   favourite: { id: 'notification.favourite', defaultMessage: '{name} frothed your post' },
+  momentReaction: { id: 'notification.moment_reaction', defaultMessage: '{name} reacted to your Moment' },
   follow: { id: 'notification.follow', defaultMessage: '{name} followed you' },
   ownPoll: { id: 'notification.own_poll', defaultMessage: 'Your poll has ended' },
   poll: { id: 'notification.poll', defaultMessage: 'A poll you voted in has ended' },
@@ -458,6 +459,36 @@ class Notification extends ImmutablePureComponent {
     );
   }
 
+  renderMomentReaction (notification, link) {
+    const { intl, unread } = this.props;
+
+    return (
+      <Hotkeys handlers={this.getHandlers()}>
+        <div className={classNames('notification notification-favourite focusable', { unread })} tabIndex={0} aria-label={notificationForScreenReader(intl, intl.formatMessage(messages.momentReaction, { name: notification.getIn(['account', 'acct']) }), notification.get('created_at'))}>
+          <div className='notification__message'>
+            <Icon id='star' icon={HeartIcon} className='star-icon' />
+
+            <span title={notification.get('created_at')}>
+              <FormattedMessage id='notification.moment_reaction' defaultMessage='{name} reacted to your Moment' values={{ name: link }} />
+            </span>
+          </div>
+
+          <StatusQuoteManager
+            id={notification.get('status')}
+            account={notification.get('account')}
+            muted
+            withDismiss
+            hidden={!!this.props.hidden}
+            getScrollPosition={this.props.getScrollPosition}
+            updateScrollBottom={this.props.updateScrollBottom}
+            cachedMediaWidth={this.props.cachedMediaWidth}
+            cacheMediaWidth={this.props.cacheMediaWidth}
+          />
+        </div>
+      </Hotkeys>
+    );
+  }
+
   renderAdminSignUp (notification, account, link) {
     const { intl, unread } = this.props;
 
@@ -542,6 +573,8 @@ class Notification extends ImmutablePureComponent {
       return this.renderAdminSignUp(notification, account, link);
     case 'admin.report':
       return this.renderAdminReport(notification, account, link);
+    case 'moment_reaction':
+      return this.renderMomentReaction(notification, link);
     }
 
     return null;

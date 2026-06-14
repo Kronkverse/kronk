@@ -89,6 +89,9 @@ class Notification < ApplicationRecord
     media_tag: {
       filterable: true,
     }.freeze,
+    moment_reaction: {
+      filterable: true,
+    }.freeze,
   }.freeze
 
   TYPES = PROPERTIES.keys.freeze
@@ -125,6 +128,7 @@ class Notification < ApplicationRecord
     belongs_to :quote, inverse_of: :notification
     belongs_to :event_invitation, inverse_of: false
     belongs_to :media_tag, inverse_of: false
+    belongs_to :moment_reaction, inverse_of: false
   end
 
   validates :type, inclusion: { in: TYPES }
