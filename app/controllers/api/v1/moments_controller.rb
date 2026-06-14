@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 class Api::V1::MomentsController < Api::BaseController
   before_action :require_user!
 

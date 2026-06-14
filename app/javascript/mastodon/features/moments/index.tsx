@@ -5,10 +5,10 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import api from 'mastodon/api';
+import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { planetIcon, spaceColor } from 'mastodon/planets';
-import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 
 import { MomentCard } from './components/moment_card';
 
@@ -16,7 +16,8 @@ const messages = defineMessages({
   title: { id: 'moments.title', defaultMessage: 'Moments' },
   empty: {
     id: 'moments.empty',
-    defaultMessage: 'No moments yet. Share something that will only last 24 hours.',
+    defaultMessage:
+      'No moments yet. Share something that will only last 24 hours.',
   },
 });
 
@@ -52,7 +53,9 @@ const Moments: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
       <div
         className='moments-page scrollable'
-        style={{ '--space-color': spaceColor('Moments') } as React.CSSProperties}
+        style={
+          { '--space-color': spaceColor('Moments') } as React.CSSProperties
+        }
       >
         {loading ? (
           <div className='moments-page__loading' />

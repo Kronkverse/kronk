@@ -24,7 +24,7 @@ export const MomentCard: React.FC<{ moment: ApiStatusJSON }> = ({ moment }) => {
           dangerouslySetInnerHTML={{ __html: moment.content }}
         />
       )}
-      {moment.media_attachments && moment.media_attachments.length > 0 && (
+      {moment.media_attachments.length > 0 && (
         <div className='moment-card__media'>
           {moment.media_attachments.map((attachment) => (
             <img
