@@ -113,6 +113,7 @@ namespace :api, format: false do
     end
 
     resources :moments, only: [:index]
+    resources :saved_moments, only: [:index]
 
     namespace :in_flow do
       resource :observation, only: [:show]

@@ -1018,6 +1018,11 @@ export const AccountHeader: React.FC<{
               <FormattedMessage id='account.nudges' defaultMessage='Nudges' />
             </NavLink>
           )}
+          {me === account.id && (
+            <NavLink exact to={`/@${account.acct}/saved`}>
+              <FormattedMessage id='account.saved' defaultMessage='Saved' />
+            </NavLink>
+          )}
         </div>
       )}
 
