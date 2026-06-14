@@ -40,6 +40,7 @@ const messages = defineMessages({
   publish: { id: 'compose_form.publish', defaultMessage: 'Post' },
   saveChanges: { id: 'compose_form.save_changes', defaultMessage: 'Update' },
   reply: { id: 'compose_form.reply', defaultMessage: 'Reply' },
+  shareAsMoment: { id: 'compose_form.share_as_moment', defaultMessage: 'Share as a Moment' },
 });
 
 class ComposeForm extends ImmutablePureComponent {
@@ -59,6 +60,7 @@ class ComposeForm extends ImmutablePureComponent {
     isUploading: PropTypes.bool,
     onChange: PropTypes.func.isRequired,
     onSubmit: PropTypes.func.isRequired,
+    onSubmitMoment: PropTypes.func.isRequired,
     onClearSuggestions: PropTypes.func.isRequired,
     onFetchSuggestions: PropTypes.func.isRequired,
     onSuggestionSelected: PropTypes.func.isRequired,
@@ -82,6 +84,7 @@ class ComposeForm extends ImmutablePureComponent {
 
   state = {
     highlighted: false,
+    showMomentTooltip: false,
   };
 
   constructor(props) {
@@ -149,6 +152,36 @@ class ComposeForm extends ImmutablePureComponent {
     if (e) {
       e.preventDefault();
     }
+  };
+
+  handleSubmitMoment = (e) => {
+    if (e) e.preventDefault();
+    if (!this.canSubmit()) return;
+
+    const MOMENT_TIP_KEY = 'mastodon_moments_tip_count';
+    const count = parseInt(localStorage.getItem(MOMENT_TIP_KEY) ?? '0', 10);
+
+    if (count < 3) {
+      localStorage.setItem(MOMENT_TIP_KEY, String(count + 1));
+      this.setState({ showMomentTooltip: true });
+      return;
+    }
+
+    this.props.onSubmitMoment({
+      missingAltText: missingAltTextModal && this.props.missingAltText && this.props.privacy !== 'direct',
+    });
+  };
+
+  handleMomentTooltipConfirm = () => {
+    this.setState({ showMomentTooltip: false });
+    this.props.onSubmitMoment({
+      missingAltText: missingAltTextModal && this.props.missingAltText && this.props.privacy !== 'direct',
+    });
+  };
+
+  handleMomentTooltipDismiss = () => {
+    this.setState({ showMomentTooltip: false });
+    localStorage.setItem('mastodon_moments_tip_count', '3');
   };
 
   onSuggestionsClearRequested = () => {
@@ -250,7 +283,7 @@ class ComposeForm extends ImmutablePureComponent {
 
   render () {
     const { intl, onPaste, autoFocus, withoutNavigation, maxChars, isSubmitting } = this.props;
-    const { highlighted } = this.state;
+    const { highlighted, showMomentTooltip } = this.state;
 
     return (
       <form className='compose-form' onSubmit={this.handleSubmit}>
@@ -340,6 +373,30 @@ class ComposeForm extends ImmutablePureComponent {
               </div>
             </div>
           </div>
+
+          {!this.props.isEditing && (
+            <div className='compose-form__moment-submit'>
+              <Button
+                type='button'
+                compact
+                secondary
+                disabled={!this.canSubmit()}
+                onClick={this.handleSubmitMoment}
+              >
+                {intl.formatMessage(messages.shareAsMoment)}
+              </Button>
+            </div>
+          )}
+
+          {showMomentTooltip && (
+            <div className='compose-form__moment-tooltip'>
+              <p>This post will only be visible for 24 hours, then automatically deleted. You can save any moment to your profile from the Moments tab.</p>
+              <div className='compose-form__moment-tooltip-actions'>
+                <button type='button' onClick={this.handleMomentTooltipDismiss}>Got it</button>
+                <button type='button' onClick={this.handleMomentTooltipConfirm}>Share now</button>
+              </div>
+            </div>
+          )}
         </div>
       </form>
     );

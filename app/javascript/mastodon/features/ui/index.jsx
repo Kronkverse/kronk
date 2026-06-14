@@ -91,6 +91,7 @@ import {
   Governance,
   Questions,
   QuestionPage,
+  Moments,
   Booth,
   BoothSetPage,
 } from './util/async-components';
@@ -228,6 +229,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/governance" component={Governance} content={children} />}
             {signedIn && <WrappedRoute path="/questions/:id" component={QuestionPage} content={children} />}
             {signedIn && <WrappedRoute path="/questions" component={Questions} content={children} />}
+            {signedIn && <WrappedRoute path="/moments" component={Moments} content={children} />}
             <WrappedRoute path='/search' component={Search} content={children} />
             <WrappedRoute path={['/publish', '/statuses/new']} component={Compose} content={children} />
 

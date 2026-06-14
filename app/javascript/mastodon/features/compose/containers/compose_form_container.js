@@ -70,6 +70,21 @@ const mapDispatchToProps = (dispatch, props) => ({
     }
   },
 
+  onSubmitMoment ({ missingAltText }) {
+    if (missingAltText) {
+      dispatch(openModal({
+        modalType: 'CONFIRM_MISSING_ALT_TEXT',
+        modalProps: {},
+      }));
+    } else {
+      dispatch(submitCompose((status) => {
+        if (props.redirectOnSuccess) {
+          window.location.assign(status.url);
+        }
+      }, { postType: 'moment' }));
+    }
+  },
+
   onClearSuggestions () {
     dispatch(clearComposeSuggestions());
   },

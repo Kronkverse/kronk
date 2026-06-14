@@ -291,6 +291,10 @@ export function QuestionPage () {
   return import("../../questions/question_page");
 }
 
+export function Moments () {
+  return import("../../moments");
+}
+
 export function Booth () {
   return import("../../booth");
 }

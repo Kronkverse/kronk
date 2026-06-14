@@ -52,6 +52,7 @@ import {
   COMPOSE_CHANGE_MEDIA_ORDER,
   COMPOSE_SET_STATUS,
   COMPOSE_FOCUS,
+  COMPOSE_SET_POST_TYPE,
 } from '../actions/compose';
 import { REDRAFT } from '../actions/statuses';
 import { STORE_HYDRATE } from '../actions/store';
@@ -91,6 +92,8 @@ const initialState = ImmutableMap({
   idempotencyKey: null,
   tagHistory: ImmutableList(),
 
+  post_type: null,
+
   // Quotes
   quoted_status_id: null,
   quote_policy: 'public',
@@ -124,6 +127,7 @@ function clearAll(state) {
     map.set('idempotencyKey', uuid());
     map.set('quoted_status_id', null);
     map.set('quote_policy', state.get('default_quote_policy'));
+    map.set('post_type', null);
   });
 }
 
@@ -500,6 +504,8 @@ export const composeReducer = (state = initialState, action) => {
     return updateSuggestionTags(state, action.token);
   case COMPOSE_TAG_HISTORY_UPDATE:
     return state.set('tagHistory', fromJS(action.tags));
+  case COMPOSE_SET_POST_TYPE:
+    return state.set('post_type', action.postType);
   case timelineDelete.type:
     if (action.payload.statusId === state.get('in_reply_to')) {
       return state.set('in_reply_to', null);
