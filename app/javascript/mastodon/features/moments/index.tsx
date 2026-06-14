@@ -10,7 +10,7 @@ import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { planetIcon, spaceColor } from 'mastodon/planets';
 
-import { MomentCard } from './components/moment_card';
+import { StoryViewer } from './components/story_viewer';
 
 const messages = defineMessages({
   title: { id: 'moments.title', defaultMessage: 'Moments' },
@@ -60,15 +60,11 @@ const Moments: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         {loading ? (
           <div className='moments-page__loading' />
         ) : moments.length === 0 ? (
-          <div className='moments-page__empty'>
+          <div className='moment-viewer__empty'>
             {intl.formatMessage(messages.empty)}
           </div>
         ) : (
-          <div className='moments-page__grid'>
-            {moments.map((moment) => (
-              <MomentCard key={moment.id} moment={moment} />
-            ))}
-          </div>
+          <StoryViewer moments={moments} />
         )}
       </div>
 
