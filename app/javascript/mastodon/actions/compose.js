@@ -34,6 +34,7 @@ export const COMPOSE_REPLY_CANCEL    = 'COMPOSE_REPLY_CANCEL';
 export const COMPOSE_DIRECT          = 'COMPOSE_DIRECT';
 export const COMPOSE_MENTION         = 'COMPOSE_MENTION';
 export const COMPOSE_RESET           = 'COMPOSE_RESET';
+export const COMPOSE_SET_POST_TYPE   = 'COMPOSE_SET_POST_TYPE';
 
 export const COMPOSE_UPLOAD_REQUEST    = 'COMPOSE_UPLOAD_REQUEST';
 export const COMPOSE_UPLOAD_SUCCESS    = 'COMPOSE_UPLOAD_SUCCESS';
@@ -158,6 +159,11 @@ export function resetCompose() {
   };
 }
 
+export const setComposePostType = (postType) => ({
+  type: COMPOSE_SET_POST_TYPE,
+  postType,
+});
+
 export const focusCompose = (defaultText = '') => (dispatch, getState) => {
   dispatch({
     type: COMPOSE_FOCUS,
@@ -195,7 +201,7 @@ export function directCompose(account) {
   };
 }
 
-export function submitCompose(successCallback) {
+export function submitCompose(successCallback, options = {}) {
   return function (dispatch, getState) {
     const status   = getState().getIn(['compose', 'text'], '');
     const media    = getState().getIn(['compose', 'media_attachments']);
@@ -253,6 +259,7 @@ export function submitCompose(successCallback) {
         language: getState().getIn(['compose', 'language']),
         quoted_status_id: getState().getIn(['compose', 'quoted_status_id']),
         quote_approval_policy: visibility === 'private' || visibility === 'direct' ? 'nobody' : getState().getIn(['compose', 'quote_policy']),
+        post_type: options.postType ?? getState().getIn(['compose', 'post_type'], null) ?? undefined,
       },
       headers: {
         'Idempotency-Key': getState().getIn(['compose', 'idempotencyKey']),

@@ -45,8 +45,8 @@ namespace :api, format: false do
         post :translate, to: 'translations#create'
 
         scope module: :statuses do
-          post 'story_react/:emoji',   to: 'story_reactions#create',  as: :story_react
-          delete 'story_react/:emoji', to: 'story_reactions#destroy', as: :story_unreact
+          post 'moment_react/:emoji',   to: 'moment_reactions#create',  as: :moment_react
+          delete 'moment_react/:emoji', to: 'moment_reactions#destroy', as: :moment_unreact
         end
       end
 
@@ -111,6 +111,8 @@ namespace :api, format: false do
         get :answers
       end
     end
+
+    resources :moments, only: [:index]
 
     namespace :in_flow do
       resource :observation, only: [:show]

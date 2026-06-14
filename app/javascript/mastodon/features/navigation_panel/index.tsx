@@ -34,6 +34,8 @@ import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?r
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import PublicActiveIcon from '@/material-icons/400-24px/public-fill.svg?react';
 import PublicIcon from '@/material-icons/400-24px/public.svg?react';
+import PhotoLibraryActiveIcon from '@/material-icons/400-24px/photo_library-fill.svg?react';
+import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library.svg?react';
 import QuestionMarkActiveIcon from '@/material-icons/400-24px/question_mark-fill.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
@@ -77,6 +79,7 @@ const messages = defineMessages({
   events: { id: 'events.title', defaultMessage: '₭alendar' },
   inFlow: { id: 'in_flow.title', defaultMessage: 'In Flow' },
   nudges: { id: 'nudges.title', defaultMessage: 'Nudges' },
+  moments: { id: 'navigation_panel.moments', defaultMessage: 'Moments' },
   preferences: {
     id: 'navigation_bar.preferences',
     defaultMessage: 'Preferences',
@@ -108,6 +111,20 @@ const messages = defineMessages({
   compose: { id: 'tabs_bar.publish', defaultMessage: 'New Post' },
   invite: { id: 'navigation_panel.invite', defaultMessage: 'Invite' },
 });
+
+const MomentsLink: React.FC = () => {
+  const intl = useIntl();
+  return (
+    <ColumnLink
+      transparent
+      to='/moments'
+      icon='photo_library'
+      iconComponent={PhotoLibraryIcon}
+      activeIconComponent={PhotoLibraryActiveIcon}
+      text={intl.formatMessage(messages.moments)}
+    />
+  );
+};
 
 const NudgesLink: React.FC = () => {
   const count = useAppSelector(selectUnreadNudgesCount);
@@ -408,6 +425,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               tooltip='The Booth — DJ sets &amp; mixes'
             />
 
+            <MomentsLink />
             <NudgesLink />
 
             <hr />

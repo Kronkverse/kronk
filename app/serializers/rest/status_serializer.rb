@@ -16,7 +16,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
   attribute :muted, if: :current_user?
   attribute :bookmarked, if: :current_user?
   attribute :pinned, if: :pinnable?
-  attribute :story_reactions, if: -> { object.story? && current_user? }
+  attribute :moment_reactions, if: -> { object.moment? && current_user? }
   has_many :filtered, serializer: REST::FilterResultSerializer, if: :current_user?
 
   attribute :content, unless: :source_requested?
@@ -55,17 +55,17 @@ class REST::StatusSerializer < ActiveModel::Serializer
     object.post_type
   end
 
-  def story_reactions
-    my_reactions = StoryReaction.where(status: object, account: current_user.account).pluck(:emoji)
-    others = StoryReaction.where(status: object).where.not(account: current_user.account).group(:emoji).count
+  def moment_reactions
+    my_reactions = MomentReaction.where(status: object, account: current_user.account).pluck(:emoji)
+    others = MomentReaction.where(status: object).where.not(account: current_user.account).group(:emoji).count
 
-    StoryReaction::ALLOWED_EMOJI.index_with do |emoji|
+    MomentReaction::ALLOWED_EMOJI.index_with do |emoji|
       { me: my_reactions.include?(emoji), others: (others[emoji] || 0).positive? }
     end
   end
 
   def replies_count
-    object.story? ? 0 : object.replies_count
+    object.moment? ? 0 : object.replies_count
   end
 
   def answer?
@@ -146,13 +146,13 @@ class REST::StatusSerializer < ActiveModel::Serializer
   end
 
   def reblogs_count
-    return 0 if object.story?
+    return 0 if object.moment?
 
     object.untrusted_reblogs_count || relationships&.attributes_map&.dig(object.id, :reblogs_count) || object.reblogs_count
   end
 
   def favourites_count
-    return 0 if object.story?
+    return 0 if object.moment?
 
     object.untrusted_favourites_count || relationships&.attributes_map&.dig(object.id, :favourites_count) || object.favourites_count
   end

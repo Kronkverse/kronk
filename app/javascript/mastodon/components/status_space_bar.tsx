@@ -71,7 +71,7 @@ function getConfig(
     };
   }
 
-  if (postType === 'story') {
+  if (postType === 'moment') {
     return {
       iconComponent: PhotoCameraIcon,
       iconId: 'photo_camera',

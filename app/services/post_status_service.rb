@@ -153,7 +153,7 @@ class PostStatusService < BaseService
     process_hashtags_service.call(@status)
     Trends.tags.register(@status)
     LinkCrawlWorker.perform_async(@status.id)
-    unless @status.kronk_answer? || @status.story?
+    unless @status.kronk_answer? || @status.moment?
       DistributionWorker.perform_async(@status.id)
       ActivityPub::DistributionWorker.perform_async(@status.id)
     end
@@ -235,7 +235,7 @@ class PostStatusService < BaseService
       rate_limit: @options[:with_rate_limit],
       quote_approval_policy: @options[:quote_approval_policy],
       post_type: @options[:post_type] || 'normal',
-      expires_at: (@options[:post_type].to_s == 'story' ? 24.hours.from_now : nil),
+      expires_at: (@options[:post_type].to_s == 'moment' ? 24.hours.from_now : nil),
     }.compact
   end
 

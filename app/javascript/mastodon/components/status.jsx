@@ -36,7 +36,7 @@ import StatusContent from './status_content';
 import { StatusEventCard } from './status_event_card';
 import { StatusKommonsCard } from './status_kommons_card';
 import { StatusQuestionCard } from './status_question_card';
-import { StatusStoryCard } from './status_story_card';
+import { StatusMomentCard } from './status_moment_card';
 import { StatusSpaceBar } from './status_space_bar';
 import { StatusThreadLabel } from './status_thread_label';
 import { VisibilityIcon } from './visibility_icon';
@@ -578,12 +578,12 @@ class Status extends ImmutablePureComponent {
       media = (
         <StatusKommonsCard proposal={status.get('proposal').toJS()} />
       );
-    } else if (status.get('post_type') === 'story') {
+    } else if (status.get('post_type') === 'moment') {
       media = (
-        <StatusStoryCard
+        <StatusMomentCard
           statusId={status.get('id')}
           contentHtml={status.get('contentHtml') || status.get('content') || ''}
-          reactions={status.get('story_reactions')?.toJS()}
+          reactions={status.get('moment_reactions')?.toJS()}
           onCardClick={this.handleClick}
         />
       );
@@ -667,7 +667,7 @@ class Status extends ImmutablePureComponent {
                 {!!status.get('event') && (
                   <StatusSpaceBar hasEvent inline />
                 )}
-                {(status.get('post_type') === 'question' || status.get('post_type') === 'answer' || status.get('post_type') === 'proposal' || status.get('post_type') === 'story' || outerPostType === 'answer') && (
+                {(status.get('post_type') === 'question' || status.get('post_type') === 'answer' || status.get('post_type') === 'proposal' || status.get('post_type') === 'moment' || outerPostType === 'answer') && (
                   <StatusSpaceBar postType={outerPostType === 'answer' ? 'answer' : status.get('post_type')} inline />
                 )}
               </div>
@@ -689,7 +689,7 @@ class Status extends ImmutablePureComponent {
 
             {expanded && (
               <>
-                {!status.get("event") && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && status.get('post_type') !== 'proposal' && status.get('post_type') !== 'story' && (
+                {!status.get("event") && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && status.get('post_type') !== 'proposal' && status.get('post_type') !== 'moment' && (
                   <StatusContent
                     status={status}
                     onClick={this.handleClick}
@@ -710,10 +710,10 @@ class Status extends ImmutablePureComponent {
 
             {!isQuotedPost && (
               <>
-                {outerPostType !== 'answer' && status.get('post_type') !== 'question' && status.get('post_type') !== 'story' && (
+                {outerPostType !== 'answer' && status.get('post_type') !== 'question' && status.get('post_type') !== 'moment' && (
                   <StatusActionBar scrollKey={scrollKey} status={status} account={account}  {...other} />
                 )}
-                {contextType !== 'thread' && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && status.get('post_type') !== 'story' && (
+                {contextType !== 'thread' && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && status.get('post_type') !== 'moment' && (
                   <StatusReplies
                     statusId={status.get('id')}
                     statusAcct={status.getIn(['account', 'acct'])}

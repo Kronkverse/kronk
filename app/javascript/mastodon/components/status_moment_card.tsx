@@ -9,12 +9,12 @@ const EMOJI_MAP: Record<string, string> = {
   cry: '😢',
 };
 
-type StoryEmoji = 'froth' | 'heart' | 'laugh' | 'cry';
+type MomentEmoji = 'froth' | 'heart' | 'laugh' | 'cry';
 
-type Reactions = Record<StoryEmoji, { me: boolean; others: boolean }>;
+type Reactions = Record<MomentEmoji, { me: boolean; others: boolean }>;
 
 const ReactionButton: React.FC<{
-  emoji: StoryEmoji;
+  emoji: MomentEmoji;
   me: boolean;
   others: boolean;
   statusId: string;
@@ -26,7 +26,7 @@ const ReactionButton: React.FC<{
       const method = me ? 'delete' : 'post';
       try {
         const res = await api()[method]<Reactions>(
-          `/api/v1/statuses/${statusId}/story_react/${emoji}`,
+          `/api/v1/statuses/${statusId}/moment_react/${emoji}`,
         );
         onReacted(res.data);
       } catch {
@@ -46,20 +46,20 @@ const ReactionButton: React.FC<{
   return (
     <button
       type='button'
-      className={`status-story-card__reaction${me ? ' status-story-card__reaction--active' : ''}`}
+      className={`status-moment-card__reaction${me ? ' status-moment-card__reaction--active' : ''}`}
       onClick={handleClick}
       aria-pressed={me}
       aria-label={emoji}
     >
-      <span className='status-story-card__reaction-emoji'>
+      <span className='status-moment-card__reaction-emoji'>
         {EMOJI_MAP[emoji]}
       </span>
-      {others && <span className='status-story-card__reaction-dot' />}
+      {others && <span className='status-moment-card__reaction-dot' />}
     </button>
   );
 };
 
-export const StatusStoryCard: React.FC<{
+export const StatusMomentCard: React.FC<{
   statusId: string;
   contentHtml: string;
   reactions?: Reactions;
@@ -80,7 +80,7 @@ export const StatusStoryCard: React.FC<{
 
   return (
     <div
-      className='status-story-card'
+      className='status-moment-card'
       onClick={onCardClick}
       onKeyDown={handleCardKeyDown}
       role={onCardClick ? 'button' : undefined}
@@ -88,14 +88,14 @@ export const StatusStoryCard: React.FC<{
     >
       {contentHtml && (
         <div
-          className='status-story-card__body'
+          className='status-moment-card__body'
           dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
       )}
 
       {reactions && (
-        <div className='status-story-card__reactions'>
-          {(Object.keys(EMOJI_MAP) as StoryEmoji[]).map((emoji) => (
+        <div className='status-moment-card__reactions'>
+          {(Object.keys(EMOJI_MAP) as MomentEmoji[]).map((emoji) => (
             <ReactionButton
               key={emoji}
               emoji={emoji}
