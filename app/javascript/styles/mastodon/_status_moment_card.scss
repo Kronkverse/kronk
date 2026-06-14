@@ -74,6 +74,95 @@ $moment-reaction-active: #c97d3a;
   }
 }
 
+.moment-card {
+  border: 1px solid $moment-border;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: $moment-bg;
+
+  &__body {
+    padding: 16px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: $moment-text;
+
+    p {
+      margin: 0;
+    }
+
+    a {
+      color: $moment-reaction-active;
+    }
+  }
+
+  &__media {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 0 16px 12px;
+  }
+
+  &__image {
+    max-width: 100%;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+
+  &__reactions {
+    display: flex;
+    gap: 6px;
+    padding: 10px 16px;
+    border-top: 1px solid $moment-border;
+    background: rgba(#fff, 0.4);
+  }
+
+  &__reaction {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    border-radius: 20px;
+    border: 1px solid $moment-border;
+    background: rgba(#fff, 0.6);
+    cursor: pointer;
+    transition:
+      background 120ms ease-out,
+      border-color 120ms ease-out;
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(#fff, 0.9);
+      border-color: $moment-reaction-active;
+      outline: none;
+    }
+
+    &--active {
+      background: rgba($moment-reaction-active, 0.12);
+      border-color: $moment-reaction-active;
+    }
+  }
+
+  &__reaction-emoji {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  &__reaction-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: $moment-reaction-active;
+    flex-shrink: 0;
+  }
+
+  &__expiry {
+    padding: 8px 16px;
+    font-size: 12px;
+    color: rgba($moment-text, 0.5);
+    border-top: 1px solid $moment-border;
+  }
+}
+
 .moment-composer-banner {
   display: block;
   width: 100%;
