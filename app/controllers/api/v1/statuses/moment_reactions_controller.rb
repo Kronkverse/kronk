@@ -36,11 +36,8 @@ class Api::V1::Statuses::MomentReactionsController < Api::BaseController
   end
 
   def serialize_reactions
-    my_reactions = MomentReaction.where(status: @status, account: current_user.account).pluck(:emoji)
-    others = MomentReaction.where(status: @status).where.not(account: current_user.account).exists_per_emoji
-
-    MomentReaction::ALLOWED_EMOJI.index_with do |emoji|
-      { me: my_reactions.include?(emoji), others: others[emoji] || false }
-    end
+    reacted = MomentReaction.exists?(status: @status, account: current_user.account, emoji: 'heart')
+    others  = MomentReaction.where(status: @status).where.not(account: current_user.account).exists?
+    { heart: { me: reacted, others: others } }
   end
 end

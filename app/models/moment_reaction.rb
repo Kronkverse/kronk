@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class MomentReaction < ApplicationRecord
-  ALLOWED_EMOJI = %w(froth heart laugh cry).freeze
+  ALLOWED_EMOJI = %w(heart).freeze
 
   belongs_to :status
   belongs_to :account

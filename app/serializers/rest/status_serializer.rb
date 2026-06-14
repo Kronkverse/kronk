@@ -56,12 +56,9 @@ class REST::StatusSerializer < ActiveModel::Serializer
   end
 
   def moment_reactions
-    my_reactions = MomentReaction.where(status: object, account: current_user.account).pluck(:emoji)
-    others = MomentReaction.where(status: object).where.not(account: current_user.account).group(:emoji).count
-
-    MomentReaction::ALLOWED_EMOJI.index_with do |emoji|
-      { me: my_reactions.include?(emoji), others: (others[emoji] || 0).positive? }
-    end
+    reacted = MomentReaction.exists?(status: object, account: current_user.account, emoji: 'heart')
+    others  = MomentReaction.where(status: object).where.not(account: current_user.account).exists?
+    { heart: { me: reacted, others: others } }
   end
 
   def replies_count

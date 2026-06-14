@@ -325,6 +325,114 @@ $moment-reaction-active: #c97d3a;
     flex-shrink: 0;
   }
 
+  // Single heart button in controls row
+  &__heart-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__heart-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+
+    &:hover {
+      background: rgba(#fff, 0.1);
+    }
+
+    &--active {
+      color: #c97d3a;
+    }
+
+    svg {
+      fill: currentColor;
+    }
+  }
+
+  // Floating heart animation on react
+  @keyframes heart-float {
+    0% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateY(-60px) scale(1.4);
+    }
+  }
+
+  &__heart-float {
+    position: absolute;
+    pointer-events: none;
+    animation: heart-float 0.7s ease-out forwards;
+    font-size: 28px;
+    z-index: 10;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  // Reply input row
+  &__reply {
+    display: flex;
+    gap: 8px;
+    padding: 0 12px 8px;
+
+    &-input {
+      flex: 1;
+      background: rgba(#fff, 0.1);
+      border: 1px solid rgba(#fff, 0.2);
+      border-radius: 20px;
+      padding: 8px 14px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      resize: none;
+      font-family: inherit;
+
+      &::placeholder {
+        color: rgba(#fff, 0.4);
+      }
+
+      &:focus {
+        border-color: rgba(#fff, 0.4);
+      }
+    }
+
+    &-send {
+      background: #c97d3a;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+
+      svg {
+        width: 18px;
+        height: 18px;
+        fill: #fff;
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+  }
+
   &__empty {
     display: flex;
     align-items: center;

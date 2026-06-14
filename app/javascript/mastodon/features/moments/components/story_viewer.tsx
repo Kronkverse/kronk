@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import SendIcon from '@/material-icons/400-24px/arrow_upward-fill.svg?react';
+import FavoriteIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
+import FavoriteBorderIcon from '@/material-icons/400-24px/favorite.svg?react';
 import PrevIcon from '@/material-icons/400-24px/navigate_before-fill.svg?react';
 import NextIcon from '@/material-icons/400-24px/navigate_next-fill.svg?react';
 import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
@@ -7,62 +10,11 @@ import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 import api from 'mastodon/api';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 
-const EMOJI_MAP = {
-  froth: '🥹',
-  heart: '❤️',
-  laugh: '😂',
-  cry: '😢',
-} as const;
-
-type MomentEmoji = keyof typeof EMOJI_MAP;
-type Reactions = Record<MomentEmoji, { me: boolean; others: boolean }>;
+interface Reactions {
+  heart: { me: boolean; others: boolean };
+}
 
 const AUTO_ADVANCE_MS = 7000;
-
-// ── Reaction button ───────────────────────────────────────────────────────────
-
-const ReactionButton: React.FC<{
-  emoji: MomentEmoji;
-  me: boolean;
-  others: boolean;
-  statusId: string;
-  onReacted: (reactions: Reactions) => void;
-}> = ({ emoji, me, others, statusId, onReacted }) => {
-  const handleClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      const client = api();
-      const request = me
-        ? client.delete<Reactions>(
-            `/api/v1/statuses/${statusId}/moment_react/${emoji}`,
-          )
-        : client.post<Reactions>(
-            `/api/v1/statuses/${statusId}/moment_react/${emoji}`,
-          );
-      void request
-        .then((res) => {
-          onReacted(res.data);
-        })
-        .catch(() => {
-          // ignore
-        });
-    },
-    [emoji, me, statusId, onReacted],
-  );
-
-  return (
-    <button
-      type='button'
-      className={`moment-viewer__reaction${me ? ' moment-viewer__reaction--active' : ''}`}
-      onClick={handleClick}
-      aria-pressed={me}
-      aria-label={emoji}
-    >
-      {EMOJI_MAP[emoji]}
-      {others && <span className='moment-viewer__reaction-dot' />}
-    </button>
-  );
-};
 
 // ── Media renderer ────────────────────────────────────────────────────────────
 
@@ -162,6 +114,10 @@ export const StoryViewer: React.FC<{
     }
     return map;
   });
+  const [showHeartFloat, setShowHeartFloat] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [submittingReply, setSubmittingReply] = useState(false);
+  const [replyFocused, setReplyFocused] = useState(false);
 
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -184,11 +140,101 @@ export const StoryViewer: React.FC<{
     setPaused((p) => !p);
   }, []);
 
-  const handleReacted = useCallback(
-    (id: string) => (reactions: Reactions) => {
-      setReactionsMap((prev) => ({ ...prev, [id]: reactions }));
+  const handleReactionsUpdate = useCallback(
+    (id: string, updated: Reactions) => {
+      setReactionsMap((prev) => ({ ...prev, [id]: updated }));
     },
     [],
+  );
+
+  const handleHeartClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const momentId = moments[index]?.id;
+      if (!momentId) return;
+      const currentReactions = reactionsMap[momentId];
+      const me = currentReactions?.heart.me ?? false;
+      const client = api();
+      const request = me
+        ? client.delete<Reactions>(
+            `/api/v1/statuses/${momentId}/moment_react/heart`,
+          )
+        : client.post<Reactions>(
+            `/api/v1/statuses/${momentId}/moment_react/heart`,
+          );
+      void request
+        .then((res) => {
+          const updated = res.data;
+          handleReactionsUpdate(momentId, updated);
+          if (!me && updated.heart.me) {
+            setShowHeartFloat(true);
+            setTimeout(() => {
+              setShowHeartFloat(false);
+            }, 700);
+          }
+        })
+        .catch(() => {
+          // ignore
+        });
+    },
+    [moments, index, reactionsMap, handleReactionsUpdate],
+  );
+
+  const handleReplyFocus = useCallback(() => {
+    setReplyFocused(true);
+    setPaused(true);
+  }, []);
+
+  const handleReplyBlur = useCallback(() => {
+    setReplyFocused(false);
+    if (replyText.trim() === '') {
+      setPaused(false);
+    }
+  }, [replyText]);
+
+  const handleReplyChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setReplyText(e.target.value);
+    },
+    [],
+  );
+
+  const handleReply = useCallback(async () => {
+    if (!replyText.trim() || submittingReply) return;
+    const moment = moments[index];
+    if (!moment) return;
+    setSubmittingReply(true);
+    try {
+      await api().post('/api/v1/statuses', {
+        status: replyText,
+        in_reply_to_id: moment.id,
+        visibility: 'public',
+      });
+      setReplyText('');
+      setPaused(false);
+    } catch {
+      // ignore
+    } finally {
+      setSubmittingReply(false);
+    }
+  }, [replyText, submittingReply, moments, index]);
+
+  const handleReplySubmit = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      void handleReply();
+    },
+    [handleReply],
+  );
+
+  const handleReplyKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        void handleReply();
+      }
+    },
+    [handleReply],
   );
 
   const handleTapLeft = useCallback(
@@ -226,6 +272,7 @@ export const StoryViewer: React.FC<{
     startTimeRef.current = Date.now();
     elapsedRef.current = 0;
     setFillPct(0);
+    setShowHeartFloat(false);
   }, [index]);
 
   const moment = moments[index];
@@ -235,10 +282,13 @@ export const StoryViewer: React.FC<{
       moment?.media_attachments[0]?.type === 'gifv' ||
       moment?.media_attachments[0]?.type === 'audio');
 
+  // Pause when reply is focused
+  const effectivePaused = paused || replyFocused;
+
   // Auto-advance timer for text/image moments
   useEffect(() => {
     if (isMediaMoment) return; // media elements fire onEnded themselves
-    if (paused) {
+    if (effectivePaused) {
       // store how much elapsed so we can resume from there
       elapsedRef.current += Date.now() - startTimeRef.current;
       if (timerRef.current) clearInterval(timerRef.current);
@@ -259,7 +309,7 @@ export const StoryViewer: React.FC<{
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isMediaMoment, paused, goNext, index]);
+  }, [isMediaMoment, effectivePaused, goNext, index]);
 
   if (!moment) {
     onEmpty?.();
@@ -268,6 +318,8 @@ export const StoryViewer: React.FC<{
 
   const attachment = moment.media_attachments[0];
   const reactions = reactionsMap[moment.id];
+  const heartMe = reactions?.heart.me ?? false;
+  const heartOthers = reactions?.heart.others ?? false;
 
   return (
     <div className='moment-viewer'>
@@ -302,22 +354,49 @@ export const StoryViewer: React.FC<{
           aria-label='Next moment'
         />
 
-        {attachment ? (
+        {/* Text always shown if present */}
+        {moment.content && (
+          <div
+            className='moment-viewer__text'
+            dangerouslySetInnerHTML={{ __html: moment.content }}
+          />
+        )}
+
+        {/* Media shown below text */}
+        {attachment && (
           <MomentMedia
             moment={moment}
             onEnded={goNext}
-            paused={paused}
+            paused={effectivePaused}
             mediaRef={mediaRef}
-          />
-        ) : (
-          <div
-            className='moment-viewer__text'
-            dangerouslySetInnerHTML={{ __html: moment.content ?? '' }}
           />
         )}
       </div>
 
-      {/* Playback controls */}
+      {/* Reply input */}
+      <div className='moment-viewer__reply'>
+        <textarea
+          className='moment-viewer__reply-input'
+          placeholder='Reply...'
+          value={replyText}
+          rows={1}
+          onChange={handleReplyChange}
+          onFocus={handleReplyFocus}
+          onBlur={handleReplyBlur}
+          onKeyDown={handleReplyKeyDown}
+        />
+        <button
+          type='button'
+          className='moment-viewer__reply-send'
+          onClick={handleReplySubmit}
+          disabled={!replyText.trim() || submittingReply}
+          aria-label='Send reply'
+        >
+          <SendIcon />
+        </button>
+      </div>
+
+      {/* Playback controls + heart */}
       <div className='moment-viewer__controls'>
         <button type='button' onClick={goPrev} aria-label='Previous'>
           <PrevIcon />
@@ -325,30 +404,39 @@ export const StoryViewer: React.FC<{
         <button
           type='button'
           onClick={handlePlayPause}
-          aria-label={paused ? 'Play' : 'Pause'}
+          aria-label={effectivePaused ? 'Play' : 'Pause'}
         >
-          {paused ? <PlayArrowIcon /> : <PauseIcon />}
+          {effectivePaused ? <PlayArrowIcon /> : <PauseIcon />}
         </button>
         <button type='button' onClick={goNext} aria-label='Next'>
           <NextIcon />
         </button>
-      </div>
 
-      {/* Reaction row */}
-      {reactions && (
-        <div className='moment-viewer__reactions'>
-          {(Object.keys(EMOJI_MAP) as MomentEmoji[]).map((emoji) => (
-            <ReactionButton
-              key={emoji}
-              emoji={emoji}
-              me={reactions[emoji].me}
-              others={reactions[emoji].others}
-              statusId={moment.id}
-              onReacted={handleReacted(moment.id)}
-            />
-          ))}
-        </div>
-      )}
+        {/* Single heart button */}
+        {reactions !== undefined && (
+          <div className='moment-viewer__heart-wrapper'>
+            {showHeartFloat && (
+              <span className='moment-viewer__heart-float'>❤️</span>
+            )}
+            <button
+              type='button'
+              className={`moment-viewer__heart-btn${heartMe ? ' moment-viewer__heart-btn--active' : ''}`}
+              onClick={handleHeartClick}
+              aria-pressed={heartMe}
+              aria-label='heart'
+            >
+              {heartMe ? (
+                <FavoriteIcon
+                  style={{ fill: '#c97d3a', width: 24, height: 24 }}
+                />
+              ) : (
+                <FavoriteBorderIcon style={{ width: 24, height: 24 }} />
+              )}
+              {heartOthers && <span className='moment-viewer__reaction-dot' />}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
