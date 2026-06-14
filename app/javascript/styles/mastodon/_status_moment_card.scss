@@ -1,28 +1,28 @@
-// Story composer banner and story card share the same warm palette
-$story-bg: #f5f0e8;
-$story-text: #3a2e1e;
-$story-border: #e0d8cc;
-$story-reaction-active: #c97d3a;
+// Moment composer banner and moment card share the same warm palette
+$moment-bg: #f5f0e8;
+$moment-text: #3a2e1e;
+$moment-border: #e0d8cc;
+$moment-reaction-active: #c97d3a;
 
-.status-story-card {
-  border: 1px solid $story-border;
+.status-moment-card {
+  border: 1px solid $moment-border;
   border-radius: 12px;
   overflow: hidden;
   margin-top: 12px;
-  background-color: $story-bg;
+  background-color: $moment-bg;
 
   &__body {
     padding: 16px;
     font-size: 15px;
     line-height: 1.6;
-    color: $story-text;
+    color: $moment-text;
 
     p {
       margin: 0;
     }
 
     a {
-      color: $story-reaction-active;
+      color: $moment-reaction-active;
     }
   }
 
@@ -30,7 +30,7 @@ $story-reaction-active: #c97d3a;
     display: flex;
     gap: 6px;
     padding: 10px 16px;
-    border-top: 1px solid $story-border;
+    border-top: 1px solid $moment-border;
     background: rgba(#fff, 0.4);
   }
 
@@ -40,7 +40,7 @@ $story-reaction-active: #c97d3a;
     gap: 4px;
     padding: 6px 10px;
     border-radius: 20px;
-    border: 1px solid $story-border;
+    border: 1px solid $moment-border;
     background: rgba(#fff, 0.6);
     cursor: pointer;
     transition:
@@ -50,13 +50,13 @@ $story-reaction-active: #c97d3a;
     &:hover,
     &:focus-visible {
       background: rgba(#fff, 0.9);
-      border-color: $story-reaction-active;
+      border-color: $moment-reaction-active;
       outline: none;
     }
 
     &--active {
-      background: rgba($story-reaction-active, 0.12);
-      border-color: $story-reaction-active;
+      background: rgba($moment-reaction-active, 0.12);
+      border-color: $moment-reaction-active;
     }
   }
 
@@ -69,17 +69,17 @@ $story-reaction-active: #c97d3a;
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: $story-reaction-active;
+    background: $moment-reaction-active;
     flex-shrink: 0;
   }
 }
 
-.story-composer-banner {
+.moment-composer-banner {
   display: block;
   width: 100%;
   padding: 14px 16px;
-  background: $story-bg;
-  border: 1px solid $story-border;
+  background: $moment-bg;
+  border: 1px solid $moment-border;
   border-radius: 12px;
   cursor: pointer;
   text-align: start;
@@ -88,7 +88,7 @@ $story-reaction-active: #c97d3a;
 
   &:hover,
   &:focus-visible {
-    background: darken($story-bg, 3%);
+    background: darken($moment-bg, 3%);
     outline: none;
   }
 
@@ -98,12 +98,12 @@ $story-reaction-active: #c97d3a;
 
     &:hover,
     &:focus-visible {
-      background: $story-bg;
+      background: $moment-bg;
     }
   }
 
   &__prompt {
-    color: rgba($story-text, 0.55);
+    color: rgba($moment-text, 0.55);
     font-size: 14px;
   }
 
@@ -114,12 +114,12 @@ $story-reaction-active: #c97d3a;
     resize: none;
     font-size: 15px;
     line-height: 1.5;
-    color: $story-text;
+    color: $moment-text;
     outline: none;
     font-family: inherit;
 
     &::placeholder {
-      color: rgba($story-text, 0.45);
+      color: rgba($moment-text, 0.45);
     }
   }
 
@@ -133,9 +133,9 @@ $story-reaction-active: #c97d3a;
   &__cancel {
     padding: 6px 14px;
     border-radius: 20px;
-    border: 1px solid $story-border;
+    border: 1px solid $moment-border;
     background: transparent;
-    color: rgba($story-text, 0.6);
+    color: rgba($moment-text, 0.6);
     font-size: 13px;
     cursor: pointer;
 
@@ -148,7 +148,7 @@ $story-reaction-active: #c97d3a;
     padding: 6px 14px;
     border-radius: 20px;
     border: none;
-    background: $story-reaction-active;
+    background: $moment-reaction-active;
     color: #fff;
     font-size: 13px;
     font-weight: 600;
@@ -160,7 +160,7 @@ $story-reaction-active: #c97d3a;
     }
 
     &:not(:disabled):hover {
-      background: darken($story-reaction-active, 8%);
+      background: darken($moment-reaction-active, 8%);
     }
   }
 }

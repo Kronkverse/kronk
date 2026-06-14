@@ -124,8 +124,8 @@ export interface ApiStatusJSON {
   quote_approval?: ApiQuotePolicyJSON;
 
   expires_at?: string | null;
-  post_type?: 'normal' | 'question' | 'answer' | 'proposal' | 'story';
-  story_reactions?: Record<
+  post_type?: 'normal' | 'question' | 'answer' | 'proposal' | 'moment';
+  moment_reactions?: Record<
     'froth' | 'heart' | 'laugh' | 'cry',
     { me: boolean; others: boolean }
   >;

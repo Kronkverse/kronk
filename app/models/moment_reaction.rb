@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class StoryReaction < ApplicationRecord
+class MomentReaction < ApplicationRecord
   ALLOWED_EMOJI = %w(froth heart laugh cry).freeze
 
   belongs_to :status
