@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import {
   changeCompose,
   submitCompose,
+  setComposePostType,
   clearComposeSuggestions,
   fetchComposeSuggestions,
   selectComposeSuggestion,
@@ -71,6 +72,9 @@ const mapDispatchToProps = (dispatch, props) => ({
   },
 
   onSubmitMoment ({ missingAltText }) {
+    // Store post_type in Redux state before any modal/tooltip so that
+    // any submit path (including alt-text confirmation) carries 'moment'.
+    dispatch(setComposePostType('moment'));
     if (missingAltText) {
       dispatch(openModal({
         modalType: 'CONFIRM_MISSING_ALT_TEXT',
