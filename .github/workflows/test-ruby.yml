@@ -6,7 +6,23 @@ on:
     branches:
       - 'main'
       - 'stable-*'
+    paths:
+      - '**/*.rb'
+      - 'db/**'
+      - 'config/**'
+      - 'Gemfile'
+      - 'Gemfile.lock'
+      - '.github/workflows/test-ruby.yml'
+      - '.github/actions/setup-ruby/**'
   pull_request:
+    paths:
+      - '**/*.rb'
+      - 'db/**'
+      - 'config/**'
+      - 'Gemfile'
+      - 'Gemfile.lock'
+      - '.github/workflows/test-ruby.yml'
+      - '.github/actions/setup-ruby/**'
 
 env:
   BUNDLE_CLEAN: true
