@@ -83,7 +83,6 @@ import {
   Quotes,
   Orbit,
   Live,
-  Market,
   Events,
   EventDetail,
   InFlow,
@@ -219,7 +218,6 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/explore' component={Explore} content={children} />
             <WrappedRoute path="/orbit" component={Orbit} content={children} />
             {signedIn && <WrappedRoute path="/huddle" component={Live} content={children} />}
-            <WrappedRoute path="/market" component={Market} content={children} />
             <WrappedRoute path="/booth/sets/:id" component={BoothSetPage} content={children} />
             <WrappedRoute path="/booth" component={Booth} content={children} />
             {signedIn && <WrappedRoute path="/kalendar/:id" component={EventDetail} content={children} />}
