@@ -10,14 +10,14 @@ import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { planetIcon, spaceColor } from 'mastodon/planets';
 
+import { MomentComposer } from './components/moment_composer';
 import { StoryViewer } from './components/story_viewer';
 
 const messages = defineMessages({
   title: { id: 'moments.title', defaultMessage: 'Moments' },
   empty: {
     id: 'moments.empty',
-    defaultMessage:
-      'No moments yet. Share something that will only last 24 hours.',
+    defaultMessage: 'No moments yet. Share something that will only last 24 hours.',
   },
 });
 
@@ -42,6 +42,10 @@ const Moments: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     void fetchMoments();
   }, [fetchMoments]);
 
+  const handleMomentCreated = useCallback((moment: ApiStatusJSON) => {
+    setMoments((prev) => [moment, ...prev]);
+  }, []);
+
   return (
     <Column bindToDocument={!multiColumn}>
       <ColumnHeader
@@ -57,6 +61,10 @@ const Moments: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           { '--space-color': spaceColor('Moments') } as React.CSSProperties
         }
       >
+        <div className='moments-page__composer'>
+          <MomentComposer onCreated={handleMomentCreated} />
+        </div>
+
         {loading ? (
           <div className='moments-page__loading' />
         ) : moments.length === 0 ? (
