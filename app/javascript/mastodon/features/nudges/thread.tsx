@@ -28,8 +28,6 @@ import type { NotificationGroupNudge } from 'mastodon/models/notification_group'
 import { selectUnreadNudgesCount } from 'mastodon/selectors/notifications';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
-const CONSECUTIVE_LIMIT = 5;
-
 const REACTION_EMOJIS = ['💛', '⭐', '😊'] as const;
 
 const ReactionButton: React.FC<{
@@ -392,7 +390,6 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     [],
   );
   const [streak, setStreak] = useState(0);
-  const [canNudgeBack, setCanNudgeBack] = useState(true);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
@@ -428,15 +425,6 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
   const wordCount = countWords(text);
   const overLimit = wordCount > MAX_WORDS;
-
-  const consecutiveSent = useMemo(() => {
-    let count = 0;
-    for (let i = threadMessages.length - 1; i >= 0; i--) {
-      if (threadMessages[i]?.direction === 'sent') count++;
-      else break;
-    }
-    return count;
-  }, [threadMessages]);
 
   const lastSentMsg = useMemo(() => {
     for (let i = threadMessages.length - 1; i >= 0; i--) {
@@ -484,7 +472,6 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         }
         return next;
       });
-      setCanNudgeBack(data.can_nudge_back);
     } catch {
       setLoadError(true);
     } finally {
@@ -708,28 +695,13 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
         const result = await apiNudgeAccount(accountId, params);
         setStreak(result.streak);
-        setCanNudgeBack(result.can_nudge);
         setReplyTo(null);
         setPostAttachment(null);
         clearCompose();
         void loadThread();
         dispatch(decrementNudgeCount());
-      } catch (err: unknown) {
-        const status =
-          err != null &&
-          typeof err === 'object' &&
-          'response' in err &&
-          err.response != null &&
-          typeof err.response === 'object' &&
-          'data' in err.response
-            ? (err.response as { data?: { error?: string } }).data?.error
-            : null;
-        const msg =
-          status === 'waiting_for_nudge_back'
-            ? 'Waiting for them to nudge back first'
-            : 'Failed to send — try again';
-        setCanNudgeBack(status !== 'waiting_for_nudge_back');
-        setError(msg);
+      } catch {
+        setError('Failed to send — try again');
       } finally {
         setSending(false);
       }
@@ -857,25 +829,6 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </div>
         )}
 
-        {!canNudgeBack && !loading && (
-          <div className='nudge-compose-bar__waiting'>
-            <FormattedMessage
-              id='nudges.thread.waiting'
-              defaultMessage='Waiting for them to nudge back…'
-            />
-          </div>
-        )}
-
-        {canNudgeBack && !loading && consecutiveSent >= 3 && (
-          <div className='nudge-compose-bar__limit'>
-            <FormattedMessage
-              id='nudges.thread.consecutive_warning'
-              defaultMessage='{count} of {limit} — they need to reply before you can send more'
-              values={{ count: consecutiveSent, limit: CONSECUTIVE_LIMIT }}
-            />
-          </div>
-        )}
-
         {postAttachment && (
           <PostShareCard
             attachment={postAttachment}
@@ -907,9 +860,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
         {error && <div className='nudge-compose-bar__error'>{error}</div>}
 
-        <div
-          className={`nudge-compose-bar${!canNudgeBack ? ' nudge-compose-bar--disabled' : ''}`}
-        >
+        <div className='nudge-compose-bar'>
           {/* Media attachment preview */}
           {mediaPreview !== undefined && (
             <div className='nudge-compose-bar__attachments'>
@@ -944,7 +895,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               type='button'
               className='nudge-compose-bar__icon-btn'
               onClick={handleAttachClick}
-              disabled={uploading || !!mediaId || !canNudgeBack}
+              disabled={uploading || !!mediaId}
               aria-label={intl.formatMessage(messages.attachMedia)}
               title={intl.formatMessage(messages.attachMedia)}
             >
@@ -967,14 +918,14 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               onChange={handleTextChange}
               onKeyDown={handleKeyDown}
               rows={1}
-              disabled={sending || !canNudgeBack}
+              disabled={sending}
             />
 
             <button
               type='button'
               className={`nudge-compose-bar__icon-btn nudge-compose-bar__icon-btn--send${sending ? ' nudge-compose-bar__icon-btn--sending' : ''}`}
               onClick={handleSend}
-              disabled={sending || overLimit || !canNudgeBack}
+              disabled={sending || overLimit}
               aria-label={intl.formatMessage(
                 hasContent ? messages.send : messages.nudge,
               )}
