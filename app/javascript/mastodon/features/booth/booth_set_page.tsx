@@ -18,7 +18,7 @@ import type { BoothSet } from './types';
 const messages = defineMessages({
   heading: { id: 'booth.title', defaultMessage: 'The Booth' },
   back: { id: 'booth.back', defaultMessage: 'Back to The Booth' },
-  loading: { id: 'booth.loading', defaultMessage: 'Loading…' },
+  loading: { id: 'booth.set_page.loading', defaultMessage: 'Loading…' },
   notFound: { id: 'booth.not_found', defaultMessage: 'Set not found.' },
   shareLink: { id: 'booth.share_link', defaultMessage: 'Share player link' },
   copyLink: { id: 'booth.copy_link', defaultMessage: 'Copied!' },

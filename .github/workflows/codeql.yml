@@ -10,6 +10,12 @@ on:
     branches:
       - 'main'
       - 'stable-*'
+    paths:
+      - '**/*.rb'
+      - '**/*.ts'
+      - '**/*.tsx'
+      - '**/*.js'
+      - '.github/workflows/codeql.yml'
   schedule:
     - cron: '22 6 * * 1'
 

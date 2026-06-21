@@ -154,6 +154,8 @@ Rails.application.routes.draw do
       get '/@:username/featured'
       get '/@:username/with_replies', as: :short_account_with_replies
       get '/@:username/media', as: :short_account_media
+
+      get '/@:username/nudges', as: :short_account_nudges
       get '/@:username/tagged/:tag', as: :short_account_tag
     end
   end
@@ -236,6 +238,10 @@ Rails.application.routes.draw do
   get '/questions/*path', to: 'home#index', format: false
   get '/nudges', to: 'home#index'
   get '/nudges/*path', to: 'home#index', format: false
+  get '/in-flow', to: 'home#index'
+  get '/in-flow/*path', to: 'home#index', format: false
+  get '/market', to: 'home#index'
+  get '/market/*path', to: 'home#index', format: false
   draw(:web_app)
 
   get '/web/(*any)', to: redirect(path: '/%{any}', status: 302), as: :web, defaults: { any: '' }, format: false

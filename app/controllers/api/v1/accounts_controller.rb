@@ -83,7 +83,6 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def nudge_history
-    doorkeeper_authorize! :read, :'read:accounts'
     a = current_user.account.id
 
     received = Notification.where(type: 'nudge', account_id: a)
@@ -111,7 +110,6 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def nudge_partners
-    doorkeeper_authorize! :read, :'read:accounts'
     a = current_user.account.id
 
     sent_counts = Notification.where(type: 'nudge', from_account_id: a).group(:account_id).count
@@ -123,6 +121,7 @@ class Api::V1::AccountsController < Api::BaseController
     last_nudge_per_partner = {}
     Notification.where(type: 'nudge')
                 .where('account_id = ? OR from_account_id = ?', a, a)
+                .includes(nudge_message: [:media_attachment, :voice_attachment])
                 .order(id: :desc)
                 .each do |n|
       partner_id = n.account_id == a ? n.from_account_id : n.account_id
@@ -135,6 +134,20 @@ class Api::V1::AccountsController < Api::BaseController
       next unless accounts[id]
 
       last = last_nudge_per_partner[id]
+      direction = if last.nil?
+                    nil
+                  else
+                    (last.from_account_id == a ? 'sent' : 'received')
+                  end
+      msg = last&.nudge_message
+
+      last_message = {
+        type: nudge_message_type(msg),
+        body: msg&.body,
+        direction: direction,
+        created_at: last&.created_at&.iso8601,
+      }
+
       {
         account_id: id.to_s,
         account: REST::AccountSerializer.new(
@@ -147,12 +160,17 @@ class Api::V1::AccountsController < Api::BaseController
         streak: (sent_counts[id] || 0) + (received_counts[id] || 0),
         last_nudge_at: last&.created_at&.iso8601,
         can_nudge_back: last.nil? || last.from_account_id == id,
+        last_message: last_message,
       }
     end
     partners = partner_data.sort_by { |p| [-p[:streak], p[:last_nudge_at] || ''] }
 
     followed_ids = Follow.where(account: current_user.account).pluck(:target_account_id)
-    suggestion_ids = (followed_ids - partner_ids - [current_user.account.id]).sample(5)
+    follower_ids = Follow.where(target_account: current_user.account).pluck(:account_id)
+    candidates = followed_ids - partner_ids - [current_user.account.id]
+    mutuals = candidates & follower_ids
+    non_mutuals = candidates - mutuals
+    suggestion_ids = (mutuals.first(3) + non_mutuals.first(2)).first(5)
     suggestion_accs = suggestion_ids.empty? ? [] : Account.where(id: suggestion_ids)
 
     all_accounts = (accounts.values + suggestion_accs).map do |acc|
@@ -177,7 +195,6 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   def nudge_pending_count
-    doorkeeper_authorize! :read, :'read:accounts'
     a = current_user.account.id
     seen = {}
     count = 0
@@ -203,7 +220,7 @@ class Api::V1::AccountsController < Api::BaseController
       voice_attachment_id: params[:voice_id].presence,
       in_reply_to_notification_id: params[:in_reply_to_notification_id].presence
     )
-    render json: { streak: nudge_streak_count, can_nudge: false }
+    render json: { streak: nudge_streak_count, can_nudge: nudge_can_send? }
   rescue Mastodon::NotPermittedError
     render json: { error: 'waiting_for_nudge_back' }, status: 422
   end
@@ -218,6 +235,67 @@ class Api::V1::AccountsController < Api::BaseController
       can_nudge: nudge_can_send?,
       sent_count: sent,
       received_count: received,
+    }
+  end
+
+  def nudge_thread
+    a = current_user.account.id
+    b = @account.id
+
+    notifications = Notification.where(type: 'nudge')
+                                .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
+                                .includes(nudge_message: [:media_attachment, :voice_attachment, :in_reply_to_notification])
+                                .order(id: :asc)
+                                .last(100)
+
+    # Mark all received messages in this thread as read
+    received_ids = notifications.select { |n| n.account_id == a }.map(&:id)
+    NudgeMessage.where(notification_id: received_ids, read_at: nil).update_all(read_at: Time.current) if received_ids.any?
+
+    notification_ids = notifications.map(&:id)
+    reaction_counts = NudgeReaction.where(notification_id: notification_ids).group(:notification_id, :emoji).count
+    my_reactions = NudgeReaction.where(notification_id: notification_ids, account: current_user.account).index_by(&:notification_id)
+
+    messages = notifications.map do |n|
+      msg = n.nudge_message
+      my_emoji = my_reactions[n.id]&.emoji
+      emoji_counts = reaction_counts.select { |(nid, _), _| nid == n.id }
+      reactions = emoji_counts.each_with_object({}) do |((_, emoji), count), hash|
+        hash[emoji] = { count: count, me: my_emoji == emoji }
+      end
+
+      reply_msg = msg&.in_reply_to_notification&.nudge_message
+      in_reply_to = if reply_msg
+                      {
+                        notification_id: msg.in_reply_to_notification_id.to_s,
+                        body: reply_msg.body,
+                        voice: reply_msg.voice_attachment_id.present?,
+                        image: reply_msg.media_attachment_id.present?,
+                      }
+                    end
+
+      is_expired = msg&.expired?
+
+      {
+        notification_id: n.id.to_s,
+        direction: n.from_account_id == a ? 'sent' : 'received',
+        created_at: n.created_at.iso8601,
+        body: is_expired ? nil : msg&.body,
+        media_url: is_expired ? nil : msg&.media_attachment&.file&.url(:original),
+        media_content_type: msg&.media_attachment&.file_content_type,
+        voice_url: is_expired ? nil : msg&.voice_attachment&.file&.url(:original),
+        expires_at: msg&.expires_at&.iso8601,
+        read_at: msg&.read_at&.iso8601,
+        in_reply_to: in_reply_to,
+        reactions: reactions,
+      }
+    end
+
+    render json: {
+      account: REST::AccountSerializer.new(@account, scope: current_user, scope_name: :current_user),
+      messages: messages,
+      can_nudge_back: nudge_can_send?,
+      streak: notifications.size,
     }
   end
 
@@ -236,6 +314,16 @@ class Api::V1::AccountsController < Api::BaseController
   end
 
   private
+
+  def nudge_message_type(msg)
+    return 'plain' if msg.nil?
+    return 'voice' if msg.voice_attachment_id.present?
+    return 'video' if msg.media_attachment&.file_content_type&.start_with?('video/')
+    return 'image' if msg.media_attachment_id.present?
+    return 'text' if msg.body.present?
+
+    'plain'
+  end
 
   def nudge_streak_count
     a = current_user.account.id

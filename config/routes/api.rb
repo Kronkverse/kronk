@@ -265,6 +265,7 @@ namespace :api, format: false do
         post :unmute
         post :nudge
         get :nudge_streak
+        get :nudge_thread
         get :tagged_media
       end
 

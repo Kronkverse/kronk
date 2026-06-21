@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class REST::NotificationGroupSerializer < ActiveModel::Serializer
+  include RoutingHelper
+
   # Please update app/javascript/api_types/notification.ts when making changes to the attributes
   attributes :group_key, :notifications_count, :type, :most_recent_notification_id
 
@@ -69,12 +71,10 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
   end
 
   def media_tag_status_path
-    tag = object.notification&.activity
-    return nil unless tag&.media_attachment&.status_id
+    status = object.notification&.activity&.media_attachment&.status
+    return nil unless status&.account
 
-    acct = tag.media_attachment.status&.account&.acct
-    status_id = tag.media_attachment.status_id
-    "/@#{acct}/#{status_id}" if acct && status_id
+    "/@#{status.account.acct}/#{status.id}"
   end
 
   def nudge_streak
