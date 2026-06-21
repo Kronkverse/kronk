@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
@@ -72,17 +72,21 @@ export const BoothSetCard: React.FC<Props> = ({
     setMenuOpen((prev) => !prev);
   }, []);
 
-  const handleMenuBlur = useCallback(() => {
-    setTimeout(() => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(document.activeElement)
-      ) {
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+
+    const handleDocMouseDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
         setConfirmingDelete(false);
       }
-    }, 0);
-  }, []);
+    };
+
+    document.addEventListener('mousedown', handleDocMouseDown);
+    return () => {
+      document.removeEventListener('mousedown', handleDocMouseDown);
+    };
+  }, [menuOpen]);
 
   const handleEdit = useCallback(
     (e: React.MouseEvent) => {
@@ -192,11 +196,7 @@ export const BoothSetCard: React.FC<Props> = ({
       </div>
 
       {set.is_owner && (
-        <div
-          ref={menuRef}
-          className='booth-card__menu-wrap'
-          onBlur={handleMenuBlur}
-        >
+        <div ref={menuRef} className='booth-card__menu-wrap'>
           <button
             className='booth-card__menu-btn'
             onClick={handleMenuToggle}
