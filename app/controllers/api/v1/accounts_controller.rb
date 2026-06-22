@@ -302,11 +302,16 @@ class Api::V1::AccountsController < Api::BaseController
   def tagged_media
     doorkeeper_authorize! :read, :'read:accounts'
 
+    # Exclude attachments from this account's own posts — they're already
+    # surfaced through the regular Media tab (account statuses with media),
+    # and showing them again here causes duplicates in the merged grid.
     attachments = @account.tagged_in_media
                           .includes(:media_tags, status: :account)
                           .where.not(status_id: nil)
                           .joins(:status)
                           .merge(Status.where(visibility: %i(public unlisted)))
+                          .where.not(statuses: { account_id: @account.id })
+                          .distinct
                           .order(id: :desc)
                           .limit(40)
 
