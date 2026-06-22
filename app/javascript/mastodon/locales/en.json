@@ -806,7 +806,6 @@
   "nudges.thread.send": "Send",
   "nudges.thread.stop_recording": "Stop recording",
   "nudges.thread.consecutive_warning": "{count} of {limit} — they need to reply before you can send more",
-  "nudges.thread.expired": "This message has expired",
   "nudges.thread.milestone": "{count} nudges!",
   "nudges.thread.seen": "Seen",
   "nudges.thread.sharing_post": "Sharing post",

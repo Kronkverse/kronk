@@ -220,9 +220,7 @@ class Api::V1::AccountsController < Api::BaseController
       voice_attachment_id: params[:voice_id].presence,
       in_reply_to_notification_id: params[:in_reply_to_notification_id].presence
     )
-    render json: { streak: nudge_streak_count, can_nudge: nudge_can_send? }
-  rescue Mastodon::NotPermittedError
-    render json: { error: 'waiting_for_nudge_back' }, status: 422
+    render json: { streak: nudge_streak_count, can_nudge: true }
   end
 
   def nudge_streak
@@ -232,7 +230,7 @@ class Api::V1::AccountsController < Api::BaseController
     received = Notification.where(type: 'nudge', from_account_id: b, account_id: a).count
     render json: {
       streak: sent + received,
-      can_nudge: nudge_can_send?,
+      can_nudge: true,
       sent_count: sent,
       received_count: received,
     }
@@ -274,17 +272,14 @@ class Api::V1::AccountsController < Api::BaseController
                       }
                     end
 
-      is_expired = msg&.expired?
-
       {
         notification_id: n.id.to_s,
         direction: n.from_account_id == a ? 'sent' : 'received',
         created_at: n.created_at.iso8601,
-        body: is_expired ? nil : msg&.body,
-        media_url: is_expired ? nil : msg&.media_attachment&.file&.url(:original),
+        body: msg&.body,
+        media_url: msg&.media_attachment&.file&.url(:original),
         media_content_type: msg&.media_attachment&.file_content_type,
-        voice_url: is_expired ? nil : msg&.voice_attachment&.file&.url(:original),
-        expires_at: msg&.expires_at&.iso8601,
+        voice_url: msg&.voice_attachment&.file&.url(:original),
         read_at: msg&.read_at&.iso8601,
         in_reply_to: in_reply_to,
         reactions: reactions,
@@ -294,7 +289,7 @@ class Api::V1::AccountsController < Api::BaseController
     render json: {
       account: REST::AccountSerializer.new(@account, scope: current_user, scope_name: :current_user),
       messages: messages,
-      can_nudge_back: nudge_can_send?,
+      can_nudge_back: true,
       streak: notifications.size,
     }
   end
@@ -336,15 +331,6 @@ class Api::V1::AccountsController < Api::BaseController
     Notification.where(type: 'nudge')
                 .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
                 .count
-  end
-
-  def nudge_can_send?
-    a = current_user.account.id
-    b = @account.id
-    last = Notification.where(type: 'nudge')
-                       .where('(account_id = ? AND from_account_id = ?) OR (account_id = ? AND from_account_id = ?)', a, b, b, a)
-                       .order(id: :desc).first
-    last.nil? || last.from_account_id == b
   end
 
   def set_account
