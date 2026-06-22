@@ -104,15 +104,6 @@ function formatTime(dateStr: string): string {
   return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${timeStr}`;
 }
 
-function formatExpiry(expiresAt: string): string {
-  const ms = new Date(expiresAt).getTime() - Date.now();
-  if (ms <= 0) return 'Expired';
-  const h = Math.floor(ms / 3_600_000);
-  const m = Math.floor((ms % 3_600_000) / 60_000);
-  if (h > 0) return `${h}h left`;
-  return `${m}m left`;
-}
-
 const ReplyQuote: React.FC<{ reply: ApiNudgeInReplyTo; isSent: boolean }> = ({
   reply,
   isSent,
@@ -156,8 +147,6 @@ const MessageBubble: React.FC<{
   const isPing =
     msg.body == null && msg.media_url == null && msg.voice_url == null;
   const isSent = msg.direction === 'sent';
-  const isExpired =
-    msg.expires_at != null && new Date(msg.expires_at) <= new Date();
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartXRef.current = e.touches[0]?.clientX ?? 0;
@@ -203,7 +192,7 @@ const MessageBubble: React.FC<{
 
   return (
     <div
-      className={`nudge-bubble nudge-bubble--${isSent ? 'sent' : 'received'}${isNew ? ' nudge-bubble--new' : ''}${isExpired ? ' nudge-bubble--expired' : ''}`}
+      className={`nudge-bubble nudge-bubble--${isSent ? 'sent' : 'received'}${isNew ? ' nudge-bubble--new' : ''}`}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -216,43 +205,27 @@ const MessageBubble: React.FC<{
         {msg.in_reply_to && (
           <ReplyQuote reply={msg.in_reply_to} isSent={isSent} />
         )}
-        {isExpired ? (
-          <p className='nudge-bubble__expired'>
-            <FormattedMessage
-              id='nudges.thread.expired'
-              defaultMessage='This message has expired'
+        {msg.body && <p className='nudge-bubble__text'>{msg.body}</p>}
+        {msg.media_url &&
+          (msg.media_content_type?.startsWith('video/') ? (
+            // eslint-disable-next-line jsx-a11y/media-has-caption
+            <video
+              controls
+              src={msg.media_url}
+              className='nudge-bubble__video'
             />
+          ) : (
+            <img src={msg.media_url} alt='' className='nudge-bubble__img' />
+          ))}
+        {msg.voice_url && (
+          <p className='nudge-bubble__text nudge-bubble__voice-legacy'>
+            🎤 Voice message
           </p>
-        ) : (
-          <>
-            {msg.body && <p className='nudge-bubble__text'>{msg.body}</p>}
-            {msg.media_url &&
-              (msg.media_content_type?.startsWith('video/') ? (
-                // eslint-disable-next-line jsx-a11y/media-has-caption
-                <video
-                  controls
-                  src={msg.media_url}
-                  className='nudge-bubble__video'
-                />
-              ) : (
-                <img src={msg.media_url} alt='' className='nudge-bubble__img' />
-              ))}
-            {msg.voice_url && (
-              <p className='nudge-bubble__text nudge-bubble__voice-legacy'>
-                🎤 Voice message
-              </p>
-            )}
-          </>
         )}
         <div className='nudge-bubble__footer'>
           <span className='nudge-bubble__time'>
             {formatTime(msg.created_at)}
           </span>
-          {msg.expires_at && !isExpired && (
-            <span className='nudge-bubble__expiry'>
-              {formatExpiry(msg.expires_at)}
-            </span>
-          )}
           {isSent &&
             isLastSent &&
             (partnerRead ? (
