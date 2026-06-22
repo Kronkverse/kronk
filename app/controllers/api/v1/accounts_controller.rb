@@ -272,17 +272,14 @@ class Api::V1::AccountsController < Api::BaseController
                       }
                     end
 
-      is_expired = msg&.expired?
-
       {
         notification_id: n.id.to_s,
         direction: n.from_account_id == a ? 'sent' : 'received',
         created_at: n.created_at.iso8601,
-        body: is_expired ? nil : msg&.body,
-        media_url: is_expired ? nil : msg&.media_attachment&.file&.url(:original),
+        body: msg&.body,
+        media_url: msg&.media_attachment&.file&.url(:original),
         media_content_type: msg&.media_attachment&.file_content_type,
-        voice_url: is_expired ? nil : msg&.voice_attachment&.file&.url(:original),
-        expires_at: msg&.expires_at&.iso8601,
+        voice_url: msg&.voice_attachment&.file&.url(:original),
         read_at: msg&.read_at&.iso8601,
         in_reply_to: in_reply_to,
         reactions: reactions,

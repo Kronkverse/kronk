@@ -18,8 +18,7 @@ class NudgeService < BaseService
         body: text.presence,
         media_attachment_id: media_attachment_id.presence,
         voice_attachment_id: voice_attachment_id.presence,
-        in_reply_to_notification_id: in_reply_to_notification_id.presence,
-        expires_at: NudgeMessage::EXPIRY_HOURS.hours.from_now
+        in_reply_to_notification_id: in_reply_to_notification_id.presence
       )
     end
 
