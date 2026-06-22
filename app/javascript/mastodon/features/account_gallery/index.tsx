@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, memo } from 'react';
+import { useEffect, useCallback, useMemo, useState, memo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -156,7 +156,9 @@ export const AccountGallery: React.FC<{
         setTaggedHasMore(data.length === 40);
         setTaggedLoading(false);
       })
-      .catch(() => { setTaggedLoading(false); });
+      .catch(() => {
+        setTaggedLoading(false);
+      });
   }, [accountId, isAccount]);
 
   const handleLoadMoreTagged = useCallback(() => {
@@ -170,14 +172,27 @@ export const AccountGallery: React.FC<{
         setTaggedHasMore(data.length === 40);
         setTaggedLoading(false);
       })
-      .catch(() => { setTaggedLoading(false); });
+      .catch(() => {
+        setTaggedLoading(false);
+      });
   }, [accountId, taggedLoading, taggedAttachments]);
 
   const handleLoadMore = useCallback(() => {
     if (maxId) {
       void dispatch(expandAccountMediaTimeline(accountId, { maxId }));
     }
-  }, [dispatch, accountId, maxId]);
+    if (taggedHasMore && !taggedLoading && taggedAttachments.length > 0) {
+      handleLoadMoreTagged();
+    }
+  }, [
+    dispatch,
+    accountId,
+    maxId,
+    taggedHasMore,
+    taggedLoading,
+    taggedAttachments,
+    handleLoadMoreTagged,
+  ]);
 
   const handleOpenMedia = useCallback(
     (attachment: MediaAttachment) => {
@@ -228,6 +243,52 @@ export const AccountGallery: React.FC<{
     [dispatch],
   );
 
+  const mergedItems = useMemo(() => {
+    interface Item {
+      sortKey: string;
+      key: string;
+      node: React.ReactElement;
+    }
+    const items: Item[] = [];
+    const ownAttachmentIds = new Set<string>();
+
+    attachments.forEach((attachment) => {
+      const id = attachment.get('id') as string;
+      ownAttachmentIds.add(id);
+      const sortKey = (attachment.getIn(['status', 'id']) as string) || id;
+      items.push({
+        sortKey,
+        key: `o-${id}`,
+        node: (
+          <MediaItem
+            key={`o-${id}`}
+            attachment={attachment}
+            onOpenMedia={handleOpenMedia}
+          />
+        ),
+      });
+    });
+
+    taggedAttachments.forEach((a) => {
+      // Skip attachments the viewer already owns — they're rendered above as
+      // a regular MediaItem. Tag-of-self on your own post would otherwise
+      // double up.
+      if (ownAttachmentIds.has(a.id)) return;
+      items.push({
+        sortKey: a.status_id ?? a.id,
+        key: `t-${a.id}`,
+        node: <TaggedMediaItem key={`t-${a.id}`} attachment={a} />,
+      });
+    });
+
+    // Snowflake IDs sort lexicographically when same length; use numeric
+    // compare for safety across mixed lengths. DESC = newest first.
+    items.sort((a, b) =>
+      b.sortKey.localeCompare(a.sortKey, undefined, { numeric: true }),
+    );
+    return items;
+  }, [attachments, taggedAttachments, handleOpenMedia]);
+
   if (accountId === null) {
     return <BundleColumnError multiColumn={multiColumn} errorType='routing' />;
   }
@@ -277,54 +338,15 @@ export const AccountGallery: React.FC<{
           )
         }
         alwaysPrepend
-        append={
-          accountId && (
-            <>
-              <RemoteHint accountId={accountId} />
-              {taggedAttachments.length > 0 && (
-                <div className='account-gallery__tagged-section'>
-                  <div className='account-gallery__tagged-header'>
-                    <FormattedMessage
-                      id='account.tagged_in'
-                      defaultMessage='Also tagged in'
-                    />
-                  </div>
-                  <div className='account-gallery__container'>
-                    {taggedAttachments.map((a) => (
-                      <TaggedMediaItem key={a.id} attachment={a} />
-                    ))}
-                  </div>
-                  {taggedHasMore && (
-                    <button
-                      className='load-more'
-                      onClick={handleLoadMoreTagged}
-                      disabled={taggedLoading}
-                    >
-                      <FormattedMessage
-                        id='status.load_more'
-                        defaultMessage='Load more'
-                      />
-                    </button>
-                  )}
-                </div>
-              )}
-            </>
-          )
-        }
+        append={accountId && <RemoteHint accountId={accountId} />}
         scrollKey='account_gallery'
-        isLoading={isLoading}
-        hasMore={!forceEmptyState && hasMore}
+        isLoading={isLoading || taggedLoading}
+        hasMore={!forceEmptyState && (hasMore || taggedHasMore)}
         onLoadMore={handleLoadMore}
         emptyMessage={emptyMessage}
         bindToDocument={!multiColumn}
       >
-        {attachments.map((attachment) => (
-          <MediaItem
-            key={attachment.get('id') as string}
-            attachment={attachment}
-            onOpenMedia={handleOpenMedia}
-          />
-        ))}
+        {mergedItems.map((item) => item.node)}
       </ScrollableList>
     </Column>
   );
