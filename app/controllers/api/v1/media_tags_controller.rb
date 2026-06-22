@@ -19,10 +19,13 @@ class Api::V1::MediaTagsController < Api::BaseController
     is_owner = @media_attachment.account_id == current_account.id
 
     if status.present?
-      # Post owner can tag in any visibility; others only on public/unlisted
-      return render json: { error: 'Forbidden' }, status: 403 unless is_owner || %w(public unlisted).include?(status.visibility)
+      # Anyone who can see the post can tag in it. StatusPolicy#show? is
+      # the canonical visibility check — handles public/unlisted (anyone),
+      # private (owner + followers + mentions), direct (owner + mentions).
+      return render json: { error: 'Forbidden' }, status: 403 unless StatusPolicy.new(current_account, status).show?
     else
-      # Unattached media: only the uploader can tag
+      # Unattached media (in-compose, before the post is created):
+      # only the uploader can tag.
       return render json: { error: 'Forbidden' }, status: 403 unless is_owner
     end
 
