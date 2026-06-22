@@ -13,17 +13,33 @@ class NudgeService < BaseService
     notification = notify_service.call(target_account, 'nudge', source_account, skip_push: true)
 
     if notification && (text.present? || media_attachment_id.present? || voice_attachment_id.present? || in_reply_to_notification_id.present?)
-      NudgeMessage.create!(
-        notification: notification,
-        body: text.presence,
-        media_attachment_id: media_attachment_id.presence,
-        voice_attachment_id: voice_attachment_id.presence,
-        in_reply_to_notification_id: in_reply_to_notification_id.presence
-      )
+      begin
+        NudgeMessage.create!(
+          notification: notification,
+          body: text.presence,
+          media_attachment_id: media_attachment_id.presence,
+          voice_attachment_id: voice_attachment_id.presence,
+          in_reply_to_notification_id: in_reply_to_notification_id.presence
+        )
+      rescue ActiveRecord::RecordInvalid => e
+        # Message body is the only validated field (word count). Log and
+        # keep the bare notification — caller still gets a successful response.
+        Rails.logger.warn("NudgeService: message create failed (#{e.message}); kept plain nudge")
+      end
     end
 
     # Dispatch streaming + push now that the message is in the database.
-    notify_service.dispatch! if notification
+    # If the streaming/push hop fails (Redis hiccup, push gateway timeout,
+    # etc.) the notification + message are already committed, so swallow
+    # the error rather than letting the controller render 500 — the receiver
+    # will still see the message on next thread load / poll.
+    if notification
+      begin
+        notify_service.dispatch!
+      rescue => e
+        Rails.logger.warn("NudgeService: dispatch failed for notification #{notification.id} (#{e.class}: #{e.message})")
+      end
+    end
 
     notification
   end
