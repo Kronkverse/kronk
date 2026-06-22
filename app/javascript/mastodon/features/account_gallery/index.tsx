@@ -250,9 +250,11 @@ export const AccountGallery: React.FC<{
       node: React.ReactElement;
     }
     const items: Item[] = [];
+    const ownAttachmentIds = new Set<string>();
 
     attachments.forEach((attachment) => {
       const id = attachment.get('id') as string;
+      ownAttachmentIds.add(id);
       const sortKey = (attachment.getIn(['status', 'id']) as string) || id;
       items.push({
         sortKey,
@@ -268,6 +270,10 @@ export const AccountGallery: React.FC<{
     });
 
     taggedAttachments.forEach((a) => {
+      // Skip attachments the viewer already owns — they're rendered above as
+      // a regular MediaItem. Tag-of-self on your own post would otherwise
+      // double up.
+      if (ownAttachmentIds.has(a.id)) return;
       items.push({
         sortKey: a.status_id ?? a.id,
         key: `t-${a.id}`,
