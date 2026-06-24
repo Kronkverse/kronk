@@ -62,7 +62,7 @@ class Api::V1::BoothSetsController < Api::BaseController
   end
 
   def staff?
-    current_user&.role&.administrator? || current_user&.role&.moderator?
+    current_user&.role&.can?(:manage_reports)
   end
 
   def authorize_owner!

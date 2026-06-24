@@ -35,7 +35,7 @@ class REST::BoothSetSerializer < ActiveModel::Serializer
   end
 
   def can_moderate
-    current_user.role&.administrator? || current_user.role&.moderator? || false
+    current_user.role&.can?(:manage_reports) || false
   end
 
   def current_user?
