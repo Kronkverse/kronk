@@ -15,8 +15,6 @@ class BoothSet < ApplicationRecord
   scope :published, -> { where(published: true) }
   scope :recent, -> { order(created_at: :desc) }
 
-  after_save :ensure_attachments_public, if: :saved_change_to_attachment_ids?
-
   def audio_url
     audio_attachment&.file&.url(:original)
   end
@@ -27,18 +25,5 @@ class BoothSet < ApplicationRecord
 
   def increment_play_count!
     increment!(:play_count)
-  end
-
-  private
-
-  def saved_change_to_attachment_ids?
-    saved_change_to_audio_attachment_id? || saved_change_to_cover_attachment_id?
-  end
-
-  # Audio is reprocessed async by PostProcessMediaWorker, which can leave the
-  # re-uploaded file with a non-public ACL on S3. Defer to a worker that waits
-  # for processing to complete, then re-applies public-read.
-  def ensure_attachments_public
-    EnsureBoothMediaPublicAclWorker.perform_async(id)
   end
 end
