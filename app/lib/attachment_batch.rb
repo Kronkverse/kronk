@@ -31,19 +31,37 @@ class AttachmentBatch
   end
 
   def delete
-    remove_files
-    batch.delete_all
+    # Deletion order matters: DB rows go first inside a transaction so that any
+    # failure (e.g. FK violation from another table referencing these records)
+    # rolls back cleanly and leaves the underlying files intact. File deletion
+    # happens only after the DB commit succeeds — and if it fails we log + carry
+    # on, since the DB is canonical and orphaned storage objects can be cleaned
+    # up later by a list-vs-DB reconciliation job.
+    ActiveRecord::Base.transaction do
+      batch.delete_all
+    end
+
+    remove_files_with_logging
   end
 
   def clear
-    remove_files
-    batch.update_all(nullified_attributes)
+    ActiveRecord::Base.transaction do
+      batch.update_all(nullified_attributes)
+    end
+
+    remove_files_with_logging
   end
 
   private
 
   def batch
     klass.where(id: records.map(&:id))
+  end
+
+  def remove_files_with_logging
+    remove_files
+  rescue StandardError => e
+    logger.error "AttachmentBatch: file cleanup failed for #{records.size} records after DB change; leaving orphaned storage: #{e.class}: #{e.message}"
   end
 
   def remove_files
