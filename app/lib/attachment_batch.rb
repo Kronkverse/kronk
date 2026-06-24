@@ -60,7 +60,7 @@ class AttachmentBatch
 
   def remove_files_with_logging
     remove_files
-  rescue StandardError => e
+  rescue => e
     logger.error "AttachmentBatch: file cleanup failed for #{records.size} records after DB change; leaving orphaned storage: #{e.class}: #{e.message}"
   end
 
