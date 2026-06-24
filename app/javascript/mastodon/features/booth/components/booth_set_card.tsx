@@ -178,6 +178,9 @@ export const BoothSetCard: React.FC<Props> = ({
             {set.event_date && formatDate(set.event_date)}
           </div>
         )}
+        {set.description && (
+          <p className='booth-card__description'>{set.description}</p>
+        )}
         <div className='booth-card__meta'>
           {set.genres.map((g) => (
             <span key={g} className='booth-card__genre'>
