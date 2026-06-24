@@ -35,8 +35,12 @@ RSpec.describe Vacuum::MediaAttachmentsVacuum do
     end
 
     context 'with attachments referenced by a BoothSet' do
-      let!(:booth_audio) { Fabricate(:media_attachment, account_id: nil, created_at: 10.days.ago) }
-      let!(:booth_cover) { Fabricate(:media_attachment, account_id: nil, created_at: 10.days.ago) }
+      around do |example|
+        Sidekiq::Testing.inline! { example.run }
+      end
+
+      let!(:booth_audio) { Fabricate(:media_attachment, account_id: nil, created_at: 1.day.ago - 1.hour) }
+      let!(:booth_cover) { Fabricate(:media_attachment, account_id: nil, created_at: 1.day.ago - 1.hour) }
 
       before do
         Fabricate(:booth_set, audio_attachment: booth_audio, cover_attachment: booth_cover)
