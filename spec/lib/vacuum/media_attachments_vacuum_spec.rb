@@ -33,5 +33,21 @@ RSpec.describe Vacuum::MediaAttachmentsVacuum do
       expect(new_unattached_media.reload) # Unattached and within TTL
         .to be_persisted
     end
+
+    context 'with attachments referenced by a BoothSet' do
+      let!(:booth_audio) { Fabricate(:media_attachment, account_id: nil, created_at: 10.days.ago) }
+      let!(:booth_cover) { Fabricate(:media_attachment, account_id: nil, created_at: 10.days.ago) }
+
+      before do
+        Fabricate(:booth_set, audio_attachment: booth_audio, cover_attachment: booth_cover)
+      end
+
+      it 'does not delete booth audio or cover even though they look unattached' do
+        subject.perform
+
+        expect(booth_audio.reload).to be_persisted
+        expect(booth_cover.reload).to be_persisted
+      end
+    end
   end
 end

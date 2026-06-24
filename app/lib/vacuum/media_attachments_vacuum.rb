@@ -39,12 +39,13 @@ class Vacuum::MediaAttachmentsVacuum
   end
 
   def orphaned_media_attachments
-    booth_set_attachment_ids = BoothSet.where.not(audio_attachment_id: nil).select(:audio_attachment_id)
-      .union(BoothSet.where.not(cover_attachment_id: nil).select(:cover_attachment_id))
+    booth_audio_ids = BoothSet.where.not(audio_attachment_id: nil).select(:audio_attachment_id)
+    booth_cover_ids = BoothSet.where.not(cover_attachment_id: nil).select(:cover_attachment_id)
 
     MediaAttachment
       .unattached
-      .where.not(id: booth_set_attachment_ids)
+      .where.not(id: booth_audio_ids)
+      .where.not(id: booth_cover_ids)
       .created_before(TTL.ago)
   end
 
