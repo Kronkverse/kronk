@@ -195,7 +195,7 @@ export const BoothSetCard: React.FC<Props> = ({
         </div>
       </div>
 
-      {set.is_owner && (
+      {(set.is_owner || set.can_moderate) && (
         <div ref={menuRef} className='booth-card__menu-wrap'>
           <button
             className='booth-card__menu-btn'

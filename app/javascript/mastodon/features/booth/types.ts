@@ -14,6 +14,7 @@ export interface BoothSet {
   cover_url: string | null;
   published: boolean;
   is_owner?: boolean;
+  can_moderate?: boolean;
   account: {
     id: string;
     username: string;
