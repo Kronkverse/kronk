@@ -61,8 +61,12 @@ class Api::V1::BoothSetsController < Api::BaseController
     current_account&.id == @booth_set.account_id
   end
 
+  def staff?
+    current_user&.role&.can?(:manage_reports)
+  end
+
   def authorize_owner!
-    raise Mastodon::NotPermittedError unless owner?
+    raise Mastodon::NotPermittedError unless owner? || staff?
   end
 
   def set_audio!

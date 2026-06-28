@@ -8,6 +8,7 @@ class REST::BoothSetSerializer < ActiveModel::Serializer
   belongs_to :account, serializer: REST::AccountSerializer
 
   attribute :is_owner, if: :current_user?
+  attribute :can_moderate, if: :current_user?
 
   def id
     object.id.to_s
@@ -31,6 +32,10 @@ class REST::BoothSetSerializer < ActiveModel::Serializer
 
   def is_owner
     object.account_id == current_user.account.id
+  end
+
+  def can_moderate
+    current_user.role&.can?(:manage_reports) || false
   end
 
   def current_user?
