@@ -7,12 +7,12 @@
     = opengraph 'og:description', @booth_set.description.truncate(200)
   - else
     = opengraph 'og:description', "#{@booth_set.title} by #{@booth_set.artist_name} on The Booth"
-  - if @booth_set.cover_url.present?
-    = opengraph 'og:image', @booth_set.cover_url
+  - if @booth_set.cover_attachment.present?
+    = opengraph 'og:image', @booth_set.cover_attachment.file.url(:original)
   - else
     = opengraph 'og:image', "#{root_url.chomp('/')}/booth-preview.png"
-  = opengraph 'og:image:width', '1200'
-  = opengraph 'og:image:height', '630'
+    = opengraph 'og:image:width', '1200'
+    = opengraph 'og:image:height', '630'
   = opengraph 'twitter:card', 'summary_large_image'
 
 = render 'shared/web_app'
