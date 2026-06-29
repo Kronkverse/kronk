@@ -15,6 +15,7 @@ interface Props {
   onTogglePlay: () => void;
   onEdit: (set: BoothSet) => void;
   onDelete: (id: string) => void;
+  onShare: (set: BoothSet) => void;
   active: boolean;
   playing: boolean;
 }
@@ -43,13 +44,16 @@ export const BoothSetCard: React.FC<Props> = ({
   onTogglePlay,
   onEdit,
   onDelete,
+  onShare,
   active,
   playing,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [copied, setCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const canManage = set.is_owner === true || set.can_moderate === true;
 
   const handleCardClick = useCallback(() => {
     onSelect(set);
@@ -125,6 +129,30 @@ export const BoothSetCard: React.FC<Props> = ({
     [set.id, onDelete],
   );
 
+  const handleShare = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setMenuOpen(false);
+      onShare(set);
+    },
+    [set, onShare],
+  );
+
+  const handleCopyLink = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const url = `${window.location.origin}/booth/sets/${set.id}`;
+      void navigator.clipboard.writeText(url).then(() => {
+        setCopied(true);
+        setTimeout(() => {
+          setCopied(false);
+          setMenuOpen(false);
+        }, 1200);
+      });
+    },
+    [set.id],
+  );
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -198,64 +226,80 @@ export const BoothSetCard: React.FC<Props> = ({
         </div>
       </div>
 
-      {(set.is_owner || set.can_moderate) && (
-        <div ref={menuRef} className='booth-card__menu-wrap'>
-          <button
-            className='booth-card__menu-btn'
-            onClick={handleMenuToggle}
-            aria-label='Set options'
-            aria-expanded={menuOpen}
-            type='button'
-            tabIndex={0}
-          >
-            <MoreHorizIcon />
-          </button>
-          {menuOpen && (
-            <div className='booth-card__menu'>
-              {confirmingDelete ? (
-                <div className='booth-card__menu-confirm'>
-                  <span className='booth-card__menu-confirm-text'>
-                    Delete this set?
-                  </span>
-                  <div className='booth-card__menu-confirm-actions'>
-                    <button
-                      className='booth-card__menu-item'
-                      onMouseDown={handleDeleteCancel}
-                      type='button'
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className='booth-card__menu-item booth-card__menu-item--danger'
-                      onMouseDown={handleDeleteConfirm}
-                      type='button'
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
+      <div ref={menuRef} className='booth-card__menu-wrap'>
+        <button
+          className='booth-card__menu-btn'
+          onClick={handleMenuToggle}
+          aria-label='Set options'
+          aria-expanded={menuOpen}
+          type='button'
+          tabIndex={0}
+        >
+          <MoreHorizIcon />
+        </button>
+        {menuOpen && (
+          <div className='booth-card__menu'>
+            {confirmingDelete ? (
+              <div className='booth-card__menu-confirm'>
+                <span className='booth-card__menu-confirm-text'>
+                  Delete this set?
+                </span>
+                <div className='booth-card__menu-confirm-actions'>
                   <button
                     className='booth-card__menu-item'
-                    onMouseDown={handleEdit}
+                    onMouseDown={handleDeleteCancel}
                     type='button'
                   >
-                    Edit
+                    Cancel
                   </button>
                   <button
                     className='booth-card__menu-item booth-card__menu-item--danger'
-                    onMouseDown={handleDeleteClick}
+                    onMouseDown={handleDeleteConfirm}
                     type='button'
                   >
                     Delete
                   </button>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+                </div>
+              </div>
+            ) : (
+              <>
+                <button
+                  className='booth-card__menu-item'
+                  onMouseDown={handleShare}
+                  type='button'
+                >
+                  Share to feed
+                </button>
+                <button
+                  className='booth-card__menu-item'
+                  onMouseDown={handleCopyLink}
+                  type='button'
+                >
+                  {copied ? 'Copied!' : 'Copy link'}
+                </button>
+                {canManage && (
+                  <>
+                    <button
+                      className='booth-card__menu-item'
+                      onMouseDown={handleEdit}
+                      type='button'
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className='booth-card__menu-item booth-card__menu-item--danger'
+                      onMouseDown={handleDeleteClick}
+                      type='button'
+                    >
+                      Delete
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

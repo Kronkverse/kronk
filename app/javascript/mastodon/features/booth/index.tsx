@@ -17,6 +17,7 @@ import { BoothSetCard } from './components/booth_set_card';
 import { EditForm } from './components/edit_form';
 import { InlinePlayer } from './components/inline_player';
 import type { InlinePlayerHandle } from './components/inline_player';
+import { ShareForm } from './components/share_form';
 import { UploadForm } from './components/upload_form';
 import type { BoothSet } from './types';
 
@@ -51,7 +52,9 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playRequested, setPlayRequested] = useState(false);
   const [editingSet, setEditingSet] = useState<BoothSet | null>(null);
+  const [sharingSet, setSharingSet] = useState<BoothSet | null>(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [shareToast, setShareToast] = useState(false);
 
   const [filterArtist, setFilterArtist] = useState('');
   const [filterGenre, setFilterGenre] = useState('');
@@ -124,6 +127,24 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
     setSets((prev) => prev.filter((s) => s.id !== id));
     setActiveSet((prev) => (prev?.id === id ? null : prev));
     setExpanded(false);
+  }, []);
+
+  const handleShare = useCallback((set: BoothSet) => {
+    setSharingSet(set);
+    setEditingSet(null);
+    setShowUpload(false);
+  }, []);
+
+  const handleShareSuccess = useCallback(() => {
+    setSharingSet(null);
+    setShareToast(true);
+    setTimeout(() => {
+      setShareToast(false);
+    }, 2500);
+  }, []);
+
+  const handleCancelShare = useCallback(() => {
+    setSharingSet(null);
   }, []);
 
   const handleUploadSuccess = useCallback((set: BoothSet) => {
@@ -222,7 +243,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
           </p>
         </section>
 
-        {signedIn && !showUpload && !editingSet && (
+        {signedIn && !showUpload && !editingSet && !sharingSet && (
           <button
             className='booth__upload-btn'
             onClick={handleShowUpload}
@@ -248,7 +269,19 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
           />
         )}
 
-        {!showUpload && !editingSet && (
+        {sharingSet && (
+          <ShareForm
+            set={sharingSet}
+            onSuccess={handleShareSuccess}
+            onCancel={handleCancelShare}
+          />
+        )}
+
+        {shareToast && (
+          <div className='booth__share-toast'>Shared to your feed</div>
+        )}
+
+        {!showUpload && !editingSet && !sharingSet && (
           <div className='booth__filters'>
             <input
               className='booth__filter-input'
@@ -314,6 +347,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
                   onTogglePlay={handleTogglePlay}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  onShare={handleShare}
                   active={activeSet?.id === set.id}
                   playing={isPlaying && activeSet?.id === set.id}
                 />

@@ -1,0 +1,18 @@
+- content_for :header_tags do
+  = opengraph 'og:site_name', site_title
+  = opengraph 'og:url', "#{root_url.chomp('/')}#{request.path}"
+  = opengraph 'og:type', 'music.song'
+  = opengraph 'og:title', "#{@booth_set.title} — #{@booth_set.artist_name}"
+  - if @booth_set.description.present?
+    = opengraph 'og:description', @booth_set.description.truncate(200)
+  - else
+    = opengraph 'og:description', "#{@booth_set.title} by #{@booth_set.artist_name} on The Booth"
+  - if @booth_set.cover_url.present?
+    = opengraph 'og:image', @booth_set.cover_url
+  - else
+    = opengraph 'og:image', "#{root_url.chomp('/')}/booth-preview.png"
+  = opengraph 'og:image:width', '1200'
+  = opengraph 'og:image:height', '630'
+  = opengraph 'twitter:card', 'summary_large_image'
+
+= render 'shared/web_app'

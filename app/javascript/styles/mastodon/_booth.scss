@@ -1879,3 +1879,34 @@ $booth-accent: var(--space-color, #3034a0);
   font-size: 13px;
   color: $secondary-text-color;
 }
+
+// ─── Share Form preview + toast ───────────────────────────────────────────────
+
+.booth-share-form__preview {
+  background: $ui-base-color;
+  border: 1px solid lighten($ui-base-color, 6%);
+  border-radius: 4px;
+  color: $secondary-text-color;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.booth__share-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--space-color, #3034a0);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+}

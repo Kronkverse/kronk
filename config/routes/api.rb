@@ -114,6 +114,7 @@ namespace :api, format: false do
     resources :booth_sets, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :play
+        post :share
       end
     end
 
