@@ -35,7 +35,7 @@ class FetchLinkCardService < BaseService
   end
 
   MARKDOWN_LINK_RE = %r{\[([^\]]+)\]\((https?://[^)]+)\)}
-  ALLOWED_LOCAL_PATHS = %w(/kalendar /governance /huddle /home).freeze
+  ALLOWED_LOCAL_PATHS = %w(/kalendar /governance /huddle /home /booth).freeze
 
   private
 
