@@ -44,6 +44,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
   const columnRef = useRef<ColumnRef>(null);
   const { signedIn } = useIdentity();
   const playerRef = useRef<InlinePlayerHandle>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   const [sets, setSets] = useState<BoothSet[]>([]);
   const [loading, setLoading] = useState(true);
@@ -187,8 +188,15 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
     },
     [],
   );
-  const handleClearDate = useCallback(() => {
+  const handleClearDate = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setFilterDate('');
+    // Force-clear the DOM value directly. Some browsers (Chrome especially) don't
+    // visually clear <input type="date"> when React sets value=''.
+    if (dateInputRef.current) {
+      dateInputRef.current.value = '';
+    }
   }, []);
   const handleCollapse = useCallback(() => {
     setExpanded(false);
@@ -306,6 +314,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
             />
             <div className='booth__filter-date-wrap'>
               <input
+                ref={dateInputRef}
                 className='booth__filter-input booth__filter-input--date'
                 type='date'
                 value={filterDate}
@@ -314,7 +323,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
               {filterDate && (
                 <button
                   className='booth__filter-date-clear'
-                  onClick={handleClearDate}
+                  onMouseDown={handleClearDate}
                   aria-label='Clear date filter'
                   type='button'
                 >

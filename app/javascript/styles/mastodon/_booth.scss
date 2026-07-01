@@ -666,14 +666,16 @@ $booth-accent: var(--space-color, #3034a0);
 
 .booth__filter-date-clear {
   position: absolute;
-  right: 8px;
-  background: none;
+  right: 28px;
+  background: $ui-base-color;
   border: none;
-  padding: 0;
+  padding: 2px;
   cursor: pointer;
   color: $darker-text-color;
   display: flex;
   align-items: center;
+  border-radius: 4px;
+  z-index: 2;
 
   svg {
     width: 14px;
