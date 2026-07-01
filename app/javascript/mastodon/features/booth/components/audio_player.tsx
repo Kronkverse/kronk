@@ -1,8 +1,9 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
-import api from 'mastodon/api';
+import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
+
+import { useBoothPlayback } from '../booth_playback_context';
 import type { BoothSet } from '../types';
 
 interface Props {
@@ -21,13 +22,25 @@ function formatTime(seconds: number): string {
 }
 
 export const AudioPlayer: React.FC<Props> = ({ set }) => {
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const {
+    activeSet,
+    playing,
+    currentTime,
+    duration,
+    play,
+    toggle,
+    seekPct,
+    skip,
+  } = useBoothPlayback();
+
   const progressRef = useRef<HTMLDivElement>(null);
-  const [playing, setPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(set.duration_seconds ?? 0);
   const [dragging, setDragging] = useState(false);
-  const playCountedRef = useRef(false);
+
+  const isActive = activeSet?.id === set.id;
+  const displayTime = isActive ? currentTime : 0;
+  const displayDuration = isActive ? duration : (set.duration_seconds ?? 0);
+  const displayPlaying = isActive && playing;
+  const progressPct = displayDuration > 0 ? (displayTime / displayDuration) * 100 : 0;
 
   const getProgressPct = useCallback((clientX: number) => {
     const bar = progressRef.current;
@@ -36,109 +49,78 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
     return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
   }, []);
 
-  const seekTo = useCallback((pct: number) => {
-    const audio = audioRef.current;
-    if (!audio || !audio.duration) return;
-    audio.currentTime = pct * audio.duration;
-  }, []);
-
   const handleProgressClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      seekTo(getProgressPct(e.clientX));
+      if (isActive) seekPct(getProgressPct(e.clientX));
     },
-    [seekTo, getProgressPct],
+    [isActive, seekPct, getProgressPct],
   );
 
   const handleProgressMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!isActive) return;
       setDragging(true);
-      seekTo(getProgressPct(e.clientX));
+      seekPct(getProgressPct(e.clientX));
     },
-    [seekTo, getProgressPct],
+    [isActive, seekPct, getProgressPct],
   );
 
   useEffect(() => {
+    if (!dragging) return undefined;
     const handleMouseMove = (e: MouseEvent) => {
-      if (!dragging) return;
-      seekTo(getProgressPct(e.clientX));
+      seekPct(getProgressPct(e.clientX));
     };
-    const handleMouseUp = () => setDragging(false);
-    if (dragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    }
+    const handleMouseUp = () => {
+      setDragging(false);
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [dragging, seekTo, getProgressPct]);
+  }, [dragging, seekPct, getProgressPct]);
 
   const handlePlayPause = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (audio.paused) {
-      void audio.play();
-      if (!playCountedRef.current) {
-        playCountedRef.current = true;
-        void api().post(`/api/v1/booth_sets/${set.id}/play`);
-      }
+    if (!isActive) {
+      play(set);
     } else {
-      audio.pause();
+      toggle();
     }
-  }, [set.id]);
+  }, [isActive, play, toggle, set]);
 
-  const handleSkip = useCallback((delta: number) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.currentTime = Math.max(0, Math.min(audio.duration || 0, audio.currentTime + delta));
-  }, []);
+  const handleSkipBack = useCallback(() => {
+    if (isActive) skip(-30);
+  }, [isActive, skip]);
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+  const handleSkipForward = useCallback(() => {
+    if (isActive) skip(30);
+  }, [isActive, skip]);
 
-    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const onDurationChange = () => setDuration(audio.duration);
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-    const onEnded = () => setPlaying(false);
-
-    audio.addEventListener('timeupdate', onTimeUpdate);
-    audio.addEventListener('durationchange', onDurationChange);
-    audio.addEventListener('loadedmetadata', onDurationChange);
-    audio.addEventListener('play', onPlay);
-    audio.addEventListener('pause', onPause);
-    audio.addEventListener('ended', onEnded);
-
-    return () => {
-      audio.removeEventListener('timeupdate', onTimeUpdate);
-      audio.removeEventListener('durationchange', onDurationChange);
-      audio.removeEventListener('loadedmetadata', onDurationChange);
-      audio.removeEventListener('play', onPlay);
-      audio.removeEventListener('pause', onPause);
-      audio.removeEventListener('ended', onEnded);
-    };
-  }, []);
-
-  const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const handleProgressKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (!isActive) return;
+      if (e.key === 'ArrowLeft') skip(-10);
+      if (e.key === 'ArrowRight') skip(10);
+    },
+    [isActive, skip],
+  );
 
   return (
     <div className='booth-player'>
-      <audio ref={audioRef} src={set.audio_url ?? ''} preload='metadata' />
-
       <div className='booth-player__row'>
         <button
           className='booth-player__play-btn'
           onClick={handlePlayPause}
-          aria-label={playing ? 'Pause' : 'Play'}
+          aria-label={displayPlaying ? 'Pause' : 'Play'}
           type='button'
         >
-          {playing ? <PauseIcon /> : <PlayArrowIcon />}
+          {displayPlaying ? <PauseIcon /> : <PlayArrowIcon />}
         </button>
 
         <button
           className='booth-player__skip-btn'
-          onClick={() => handleSkip(-30)}
+          onClick={handleSkipBack}
           aria-label='Back 30 seconds'
           type='button'
         >
@@ -154,16 +136,13 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
             className='booth-player__progress'
             onMouseDown={handleProgressMouseDown}
             onClick={handleProgressClick}
+            onKeyDown={handleProgressKeyDown}
             role='slider'
             aria-label='Seek'
-            aria-valuenow={Math.round(currentTime)}
+            aria-valuenow={Math.round(displayTime)}
             aria-valuemin={0}
-            aria-valuemax={Math.round(duration)}
+            aria-valuemax={Math.round(displayDuration)}
             tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') handleSkip(-10);
-              if (e.key === 'ArrowRight') handleSkip(10);
-            }}
           >
             <div
               className='booth-player__progress-fill'
@@ -175,14 +154,14 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
             />
           </div>
           <div className='booth-player__times'>
-            <span>{formatTime(currentTime)}</span>
-            <span>{duration > 0 ? formatTime(duration) : '—'}</span>
+            <span>{formatTime(displayTime)}</span>
+            <span>{displayDuration > 0 ? formatTime(displayDuration) : '—'}</span>
           </div>
         </div>
 
         <button
           className='booth-player__skip-btn'
-          onClick={() => handleSkip(30)}
+          onClick={handleSkipForward}
           aria-label='Forward 30 seconds'
           type='button'
         >

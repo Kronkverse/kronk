@@ -13,6 +13,7 @@ import { ColumnHeader } from 'mastodon/components/column_header';
 import { useIdentity } from 'mastodon/identity_context';
 import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
+import { useBoothPlayback } from './booth_playback_context';
 import { BoothSetCard } from './components/booth_set_card';
 import { EditForm } from './components/edit_form';
 import { InlinePlayer } from './components/inline_player';
@@ -61,6 +62,20 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
   const [filterGenre, setFilterGenre] = useState('');
   const [filterEvent, setFilterEvent] = useState('');
   const [filterDate, setFilterDate] = useState('');
+
+  const { activeSet: globallyPlayingSet } = useBoothPlayback();
+
+  // On mount, if audio is already playing globally (user came back from
+  // another page), expand that set's inline player so the UI reflects
+  // what's playing.
+  useEffect(() => {
+    if (globallyPlayingSet) {
+      setActiveSet(globallyPlayingSet);
+      setExpanded(true);
+    }
+    // Only on mount — subsequent global changes shouldn't force-expand.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleHeaderClick = useCallback(() => {
     columnRef.current?.scrollTop();

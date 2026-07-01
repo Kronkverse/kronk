@@ -17,6 +17,8 @@ import { INTRODUCTION_VERSION } from 'mastodon/actions/onboarding';
 import { AlertsController } from 'mastodon/components/alerts_controller';
 import { Hotkeys } from 'mastodon/components/hotkeys';
 import { HoverCardController } from 'mastodon/components/hover_card_controller';
+import { BoothPlaybackProvider } from 'mastodon/features/booth/booth_playback_context';
+import { BoothMiniPlayer } from 'mastodon/features/booth/components/booth_mini_player';
 import { HuddlePip } from 'mastodon/features/huddle_pip';
 import { PictureInPicture } from 'mastodon/features/picture_in_picture';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
@@ -608,6 +610,7 @@ class UI extends PureComponent {
 
     return (
       <Hotkeys global handlers={handlers}>
+        <BoothPlaybackProvider>
         <div className={classNames('ui', { 'is-composing': isComposing })} ref={this.setRef}>
           <SwitchingColumnsArea identity={this.props.identity} location={location} singleColumn={layout === 'mobile' || layout === 'single-column'} forceOnboarding={firstLaunch && newAccount}>
             {children}
@@ -615,6 +618,7 @@ class UI extends PureComponent {
 
           <NavigationBar />
           {layout !== 'mobile' && <PictureInPicture />}
+          <BoothMiniPlayer />
           <HuddlePip />
           <AlertsController />
           {!disableHoverCards && <HoverCardController />}
@@ -624,6 +628,7 @@ class UI extends PureComponent {
           <ModalContainer />
           <UploadArea active={draggingOver} onClose={this.closeUploadModal} />
         </div>
+        </BoothPlaybackProvider>
       </Hotkeys>
     );
   }
