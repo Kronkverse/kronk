@@ -659,23 +659,24 @@ $booth-accent: var(--space-color, #3034a0);
 }
 
 .booth__filter-date-wrap {
-  position: relative;
   display: flex;
   align-items: center;
+  gap: 6px;
 }
 
 .booth__filter-date-clear {
-  position: absolute;
-  right: 28px;
+  flex-shrink: 0;
   background: $ui-base-color;
-  border: none;
-  padding: 2px;
+  border: 1px solid lighten($ui-base-color, 6%);
+  padding: 6px;
   cursor: pointer;
   color: $darker-text-color;
   display: flex;
   align-items: center;
+  justify-content: center;
   border-radius: 4px;
-  z-index: 2;
+  min-width: 30px;
+  min-height: 30px;
 
   svg {
     width: 14px;
