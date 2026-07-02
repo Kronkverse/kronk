@@ -2,7 +2,7 @@
 
 class Api::V1::BoothSetsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy, :play]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy, :play, :share]
   before_action :require_user!, except: [:index, :show]
   before_action :set_booth_set, except: [:index, :create]
 
@@ -51,7 +51,26 @@ class Api::V1::BoothSetsController < Api::BaseController
     render_empty
   end
 
+  def share
+    raise Mastodon::NotPermittedError unless @booth_set.published?
+
+    status = PostStatusService.new.call(
+      current_account,
+      text: share_text,
+      visibility: params[:visibility] || current_account.user&.setting_default_privacy || 'public',
+      application: doorkeeper_token.application
+    )
+
+    render json: status, serializer: REST::StatusSerializer
+  end
+
   private
+
+  def share_text
+    body = "#{@booth_set.title} — #{@booth_set.artist_name}\n\n#{booth_set_url(@booth_set)}"
+    comment = params[:comment].to_s.strip
+    comment.present? ? "#{comment}\n\n#{body}" : body
+  end
 
   def set_booth_set
     @booth_set = BoothSet.find(params[:id])

@@ -3,13 +3,19 @@
 class BoothController < ApplicationController
   include WebAppControllerConcern
 
-  skip_before_action :require_functional!, only: [:index, :embed]
+  skip_before_action :require_functional!, only: [:index, :show, :embed]
 
   content_security_policy only: :embed do |policy|
     policy.frame_ancestors(:any)
   end
 
   def index; end
+
+  def show
+    @booth_set = BoothSet.published.find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    not_found
+  end
 
   def embed
     @booth_set = BoothSet.published.find(params[:id])

@@ -1,18 +1,11 @@
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle } from 'react';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
 import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
-import api from 'mastodon/api';
 
+import { useBoothPlayback } from '../booth_playback_context';
 import type { BoothSet } from '../types';
 
 import { Waveform } from './waveform';
@@ -51,205 +44,181 @@ function formatTime(seconds: number): string {
 
 export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
   ({ set, hidden, autoPlay, onCollapse, onPlayingChange }, ref) => {
-    const audioRef = useRef<HTMLAudioElement>(null);
-    const [playing, setPlaying] = useState(false);
-    const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(set.duration_seconds ?? 0);
-    const playCountedRef = useRef(false);
-    const onPlayingChangeRef = useRef(onPlayingChange);
-    onPlayingChangeRef.current = onPlayingChange;
-    const autoPlayRef = useRef(autoPlay);
-    autoPlayRef.current = autoPlay;
+    const {
+      activeSet,
+      playing,
+      currentTime,
+      duration,
+      play,
+      toggle,
+      seekPct,
+      skip,
+    } = useBoothPlayback();
 
+    // If our set is the currently active one, prefer the live-audio time and
+    // duration. Otherwise fall back to the set's metadata so the UI still
+    // displays sensible defaults before playback begins.
+    const isActive = activeSet?.id === set.id;
+    const displayTime = isActive ? currentTime : 0;
+    const displayDuration = isActive
+      ? duration
+      : (set.duration_seconds ?? 0);
+    const displayPlaying = isActive && playing;
+    const progressPct = displayDuration > 0 ? displayTime / displayDuration : 0;
+
+    // If this component mounts with autoPlay=true (user clicked Play on the
+    // card) and our set isn't already the active one, start playback.
     useEffect(() => {
-      const audio = audioRef.current;
-      if (!audio) return;
-      if (autoPlayRef.current) {
-        void audio.play().catch(() => undefined);
+      if (autoPlay && !isActive) {
+        play(set);
       }
-      if (!playCountedRef.current) {
-        playCountedRef.current = true;
-        void api().post(`/api/v1/booth_sets/${set.id}/play`);
-      }
+      // Only run once per set change to avoid restart loops
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [set.id]);
 
-    useEffect(() => {
-      const audio = audioRef.current;
-      if (!audio) return;
-      const onTimeUpdate = () => {
-        setCurrentTime(audio.currentTime);
-      };
-      const onDurationChange = () => {
-        setDuration(audio.duration);
-      };
-      const onPlay = () => {
-        setPlaying(true);
-        onPlayingChangeRef.current(true);
-      };
-      const onPause = () => {
-        setPlaying(false);
-        onPlayingChangeRef.current(false);
-      };
-      const onEnded = () => {
-        setPlaying(false);
-        onPlayingChangeRef.current(false);
-      };
-      audio.addEventListener('timeupdate', onTimeUpdate);
-      audio.addEventListener('durationchange', onDurationChange);
-      audio.addEventListener('loadedmetadata', onDurationChange);
-      audio.addEventListener('play', onPlay);
-      audio.addEventListener('pause', onPause);
-      audio.addEventListener('ended', onEnded);
-      return () => {
-        audio.removeEventListener('timeupdate', onTimeUpdate);
-        audio.removeEventListener('durationchange', onDurationChange);
-        audio.removeEventListener('loadedmetadata', onDurationChange);
-        audio.removeEventListener('play', onPlay);
-        audio.removeEventListener('pause', onPause);
-        audio.removeEventListener('ended', onEnded);
-      };
-    }, []);
+    useImperativeHandle(
+      ref,
+      () => ({
+        togglePlayPause: () => {
+          if (!isActive) {
+            play(set);
+          } else {
+            toggle();
+          }
+        },
+      }),
+      [isActive, play, toggle, set],
+    );
 
     const handlePlayPause = useCallback(() => {
-      const audio = audioRef.current;
-      if (!audio) return;
-      if (audio.paused) {
-        void audio.play();
+      if (!isActive) {
+        play(set);
       } else {
-        audio.pause();
+        toggle();
       }
-    }, []);
-
-    useImperativeHandle(ref, () => ({ togglePlayPause: handlePlayPause }), [
-      handlePlayPause,
-    ]);
-
-    const handleSkip = useCallback((delta: number) => {
-      const audio = audioRef.current;
-      if (!audio) return;
-      audio.currentTime = Math.max(
-        0,
-        Math.min(audio.duration || 0, audio.currentTime + delta),
-      );
-    }, []);
+    }, [isActive, play, toggle, set]);
 
     const handleSkipBack = useCallback(() => {
-      handleSkip(-30);
-    }, [handleSkip]);
+      skip(-30);
+    }, [skip]);
+
     const handleSkipForward = useCallback(() => {
-      handleSkip(30);
-    }, [handleSkip]);
+      skip(30);
+    }, [skip]);
 
-    const handleSeek = useCallback((pct: number) => {
-      const audio = audioRef.current;
-      if (!audio?.duration) return;
-      audio.currentTime = pct * audio.duration;
-    }, []);
+    const handleSeek = useCallback(
+      (pct: number) => {
+        seekPct(pct);
+      },
+      [seekPct],
+    );
 
-    const progressPct = duration > 0 ? currentTime / duration : 0;
+    // Notify parent when playback state flips so it can style the card overlay
+    // without needing to consume the context itself.
+    useEffect(() => {
+      if (isActive) {
+        onPlayingChange(playing);
+      }
+    }, [isActive, playing, onPlayingChange]);
+
+    if (hidden) return null;
 
     return (
-      <>
-        {/* Always mounted so audio survives collapse */}
-        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-        <audio ref={audioRef} src={set.audio_url ?? ''} preload='metadata' />
-
-        {!hidden && (
-          <div className='booth-inline-player'>
-            <div className='booth-inline-player__artwork'>
-              {set.cover_url ? (
-                <img
-                  src={set.cover_url}
-                  alt=''
-                  style={{ objectPosition: `50% ${set.cover_offset_y ?? 50}%` }}
-                />
-              ) : (
-                <div className='booth-inline-player__artwork-placeholder'>
-                  <HeadphonesIcon />
-                </div>
-              )}
-              <button
-                className='booth-inline-player__collapse-btn'
-                onClick={onCollapse}
-                aria-label='Collapse player'
-                type='button'
-              >
-                <CloseIcon />
-              </button>
+      <div className='booth-inline-player'>
+        <div className='booth-inline-player__artwork'>
+          {set.cover_url ? (
+            <img
+              src={set.cover_url}
+              alt=''
+              style={{ objectPosition: `50% ${set.cover_offset_y ?? 50}%` }}
+            />
+          ) : (
+            <div className='booth-inline-player__artwork-placeholder'>
+              <HeadphonesIcon />
             </div>
+          )}
+          <button
+            className='booth-inline-player__collapse-btn'
+            onClick={onCollapse}
+            aria-label='Collapse player'
+            type='button'
+          >
+            <CloseIcon />
+          </button>
+        </div>
 
-            <div className='booth-inline-player__info'>
-              <div className='booth-inline-player__title'>{set.title}</div>
-              <div className='booth-inline-player__artist'>
-                {set.artist_name}
-                {set.event_name ? ` · ${set.event_name}` : ''}
-                {set.event_date ? ` · ${formatDate(set.event_date)}` : ''}
-              </div>
-              {set.genres.length > 0 && (
-                <div className='booth-inline-player__genres'>
-                  {set.genres.map((g) => (
-                    <span key={g} className='booth-inline-player__genre'>
-                      {g}
-                    </span>
-                  ))}
-                </div>
-              )}
-              {set.description && (
-                <p className='booth-inline-player__description'>
-                  {set.description}
-                </p>
-              )}
-            </div>
-
-            <div className='booth-inline-player__controls'>
-              <button
-                className='booth-inline-player__skip-btn'
-                onClick={handleSkipBack}
-                aria-label='Back 30 seconds'
-                type='button'
-              >
-                <svg viewBox='0 0 24 24' aria-hidden='true'>
-                  <path d='M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z' />
-                </svg>
-                <span>30</span>
-              </button>
-
-              <button
-                className='booth-inline-player__play-btn'
-                onClick={handlePlayPause}
-                aria-label={playing ? 'Pause' : 'Play'}
-                type='button'
-              >
-                {playing ? <PauseIcon /> : <PlayArrowIcon />}
-              </button>
-
-              <button
-                className='booth-inline-player__skip-btn'
-                onClick={handleSkipForward}
-                aria-label='Forward 30 seconds'
-                type='button'
-              >
-                <svg viewBox='0 0 24 24' aria-hidden='true'>
-                  <path d='M18 13c0 3.31-2.69 6-6 6s-6-2.69-6-6 2.69-6 6-6v4l5-5-5-5v4c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8h-2z' />
-                </svg>
-                <span>30</span>
-              </button>
-            </div>
-
-            <div className='booth-inline-player__seek-wrap'>
-              <Waveform
-                setId={set.id}
-                progressPct={progressPct}
-                onSeek={handleSeek}
-              />
-              <div className='booth-inline-player__times'>
-                <span>{formatTime(currentTime)}</span>
-                <span>{duration > 0 ? formatTime(duration) : '—'}</span>
-              </div>
-            </div>
+        <div className='booth-inline-player__info'>
+          <div className='booth-inline-player__title'>{set.title}</div>
+          <div className='booth-inline-player__artist'>
+            {set.artist_name}
+            {set.event_name ? ` · ${set.event_name}` : ''}
+            {set.event_date ? ` · ${formatDate(set.event_date)}` : ''}
           </div>
-        )}
-      </>
+          {set.genres.length > 0 && (
+            <div className='booth-inline-player__genres'>
+              {set.genres.map((g) => (
+                <span key={g} className='booth-inline-player__genre'>
+                  {g}
+                </span>
+              ))}
+            </div>
+          )}
+          {set.description && (
+            <p className='booth-inline-player__description'>
+              {set.description}
+            </p>
+          )}
+        </div>
+
+        <div className='booth-inline-player__controls'>
+          <button
+            className='booth-inline-player__skip-btn'
+            onClick={handleSkipBack}
+            aria-label='Back 30 seconds'
+            type='button'
+          >
+            <svg viewBox='0 0 24 24' aria-hidden='true'>
+              <path d='M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z' />
+            </svg>
+            <span>30</span>
+          </button>
+
+          <button
+            className='booth-inline-player__play-btn'
+            onClick={handlePlayPause}
+            aria-label={displayPlaying ? 'Pause' : 'Play'}
+            type='button'
+          >
+            {displayPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+          </button>
+
+          <button
+            className='booth-inline-player__skip-btn'
+            onClick={handleSkipForward}
+            aria-label='Forward 30 seconds'
+            type='button'
+          >
+            <svg viewBox='0 0 24 24' aria-hidden='true'>
+              <path d='M18 13c0 3.31-2.69 6-6 6s-6-2.69-6-6 2.69-6 6-6v4l5-5-5-5v4c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8h-2z' />
+            </svg>
+            <span>30</span>
+          </button>
+        </div>
+
+        <div className='booth-inline-player__seek-wrap'>
+          <Waveform
+            setId={set.id}
+            progressPct={progressPct}
+            onSeek={handleSeek}
+          />
+          <div className='booth-inline-player__times'>
+            <span>{formatTime(displayTime)}</span>
+            <span>
+              {displayDuration > 0 ? formatTime(displayDuration) : '—'}
+            </span>
+          </div>
+        </div>
+      </div>
     );
   },
 );
