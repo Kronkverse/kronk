@@ -1,6 +1,6 @@
 import { FormattedMessage } from 'react-intl';
 
-import { useHistory } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 import { useIdentity } from 'mastodon/identity_context';
 
@@ -128,18 +128,12 @@ export const DoorsLanding: React.FC = () => {
           />
         </p>
         {signedIn && (
-          <button
-            type='button'
-            className='marketplace-hero__cta'
-            onClick={() => {
-              history.push('/marketplace/new');
-            }}
-          >
+          <Link to='/marketplace/new' className='marketplace-hero__cta'>
             <FormattedMessage
               id='marketplace.hero.share_cta'
               defaultMessage='Share something'
             />
-          </button>
+          </Link>
         )}
       </section>
 

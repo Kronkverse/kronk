@@ -22,7 +22,20 @@ class MarketplaceListing < ApplicationRecord
   CATEGORIES = %w(creation marketplace service).freeze
   STATUSES   = %w(active paused sold archived).freeze
 
+  CATEGORY_SLUGS = {
+    'creation'    => 'creations',
+    'marketplace' => 'marketplace',
+    'service'     => 'services',
+  }.freeze
+
+  CATEGORY_LABELS = {
+    'creation'    => 'Creation',
+    'marketplace' => 'Marketplace listing',
+    'service'     => 'Service',
+  }.freeze
+
   belongs_to :account
+  belongs_to :status, optional: true
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :description, length: { maximum: 5_000 }
@@ -35,4 +48,12 @@ class MarketplaceListing < ApplicationRecord
   scope :active,        -> { where(status: 'active') }
   scope :in_category,   ->(category) { where(category: category) }
   scope :recent,        -> { order(created_at: :desc) }
+
+  def category_slug
+    CATEGORY_SLUGS[category]
+  end
+
+  def category_label
+    CATEGORY_LABELS[category]
+  end
 end

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import { useHistory } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
@@ -129,11 +129,11 @@ export const SectionView: React.FC<{ category: MarketplaceCategory }> = ({
         <h2 className='marketplace-section__title'>{meta.title}</h2>
         <p className='marketplace-section__desc'>{meta.desc}</p>
         {signedIn && (
-          <button
-            type='button'
+          <Link
             className='marketplace-section__add'
-            onClick={() => {
-              history.push(`/marketplace/new?section=${SECTION_URL_SLUG[category]}`);
+            to={{
+              pathname: '/marketplace/new',
+              search: `?section=${SECTION_URL_SLUG[category]}`,
             }}
           >
             <AddIcon width={14} height={14} />
@@ -144,7 +144,7 @@ export const SectionView: React.FC<{ category: MarketplaceCategory }> = ({
                 values={{ section: category }}
               />
             </span>
-          </button>
+          </Link>
         )}
       </header>
 
