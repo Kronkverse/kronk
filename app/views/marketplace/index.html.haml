@@ -1,0 +1,9 @@
+- content_for :header_tags do
+  = opengraph 'og:site_name', site_title
+  = opengraph 'og:url', "#{root_url.chomp('/')}#{request.path}"
+  = opengraph 'og:type', 'website'
+  = opengraph 'og:title', 'Marketplace'
+  = opengraph 'og:description', 'Creations, listings, and services from the Kronk community.'
+  = opengraph 'twitter:card', 'summary'
+
+= render 'shared/web_app'
