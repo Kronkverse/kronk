@@ -126,6 +126,10 @@ namespace :api, format: false do
         get :my_invitees
       end
     end
+
+    namespace :marketplace do
+      resources :listings, only: [:index, :show]
+    end
     resources :proposals, only: [:index, :show, :create, :update] do
       member do
         post :vote
