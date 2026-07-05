@@ -1,58 +1,324 @@
 @use 'variables' as *;
 
-.marketplace-page {
-  padding: 0;
+// Load Kashka's typography — only when the marketplace bundle is used
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
 
+// ── Kashka's design tokens, scoped to the marketplace page ──────────────────
+.marketplace-page {
+  --mkt-bg:                #07060f;
+  --mkt-surface:           #0f0e1c;
+  --mkt-surface-2:         #161428;
+  --mkt-surface-3:         #1c1a34;
+
+  --mkt-accent-you:        #c8a96e;
+  --mkt-accent-kronk:      #6e9fc8;
+  --mkt-accent-portal:     #9b7fd4;
+  --mkt-accent-creation:   #c87a9b;
+  --mkt-accent-market:     #7ac8a0;
+  --mkt-accent-service:    #c8a96e;
+  --mkt-accent-event:      #9b7fd4;
+
+  --mkt-text-primary:      #e8e4d9;
+  --mkt-text-secondary:    #a09aab;
+  --mkt-text-muted:        #6b6880;
+
+  --mkt-border:            rgba(255, 255, 255, 0.06);
+  --mkt-border-hover:      rgba(255, 255, 255, 0.12);
+
+  --mkt-font-display:      'Cormorant Garamond', Georgia, serif;
+  --mkt-font-body:         'DM Sans', system-ui, sans-serif;
+
+  background: var(--mkt-bg);
+  color: var(--mkt-text-primary);
+  font-family: var(--mkt-font-body);
+  padding: 0;
+  min-height: 60vh;
+}
+
+// ── Shared bits ─────────────────────────────────────────────────────────────
+.marketplace-eyebrow {
+  font-family: var(--mkt-font-body);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mkt-text-muted);
+  margin: 0;
+}
+
+// ── Landing hero ────────────────────────────────────────────────────────────
+.marketplace-hero {
+  padding: 40px 24px 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--mkt-border);
+
+  &__eyebrow {
+    color: var(--mkt-accent-kronk);
+  }
+
+  &__title {
+    font-family: var(--mkt-font-display);
+    font-weight: 300;
+    font-size: 44px;
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+    color: var(--mkt-text-primary);
+    margin: 0;
+
+    em {
+      font-style: italic;
+      color: var(--mkt-accent-you);
+      display: block;
+    }
+  }
+
+  &__sub {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--mkt-text-muted);
+    max-width: 420px;
+    margin: 0;
+  }
+}
+
+// ── Doors section ───────────────────────────────────────────────────────────
+.marketplace-doors-section {
+  padding: 32px 20px 40px;
+  text-align: center;
+
+  &__eyebrow {
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  &__heading {
+    font-family: var(--mkt-font-display);
+    font-weight: 300;
+    font-size: 28px;
+    letter-spacing: 0.01em;
+    color: var(--mkt-text-primary);
+    margin: 0 0 28px;
+  }
+}
+
+.marketplace-doors {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+  background: var(--mkt-border);
+}
+
+.marketplace-door {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--mkt-surface);
+  border: none;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px;
+  text-decoration: none;
+  color: var(--mkt-text-primary);
+  outline: none;
+  transition: background 280ms ease-out;
+  text-align: left;
+
+  &--creation { --door-color: var(--mkt-accent-creation); }
+  &--market   { --door-color: var(--mkt-accent-market);   }
+  &--service  { --door-color: var(--mkt-accent-service);  }
+  &--event    { --door-color: var(--mkt-accent-event);    }
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--door-color);
+    opacity: 0;
+    transition: opacity 280ms ease-out;
+    pointer-events: none;
+  }
+
+  &:hover::before,
+  &:focus-visible::before {
+    opacity: 0.055;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: var(--mkt-surface-2);
+  }
+
+  &__arch,
+  &__arch-inner {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 1px solid var(--door-color);
+    border-bottom: none;
+    pointer-events: none;
+    transition:
+      opacity 280ms ease-out,
+      height 280ms ease-out;
+  }
+
+  &__arch {
+    width: 96px;
+    height: 140px;
+    border-radius: 48px 48px 0 0;
+    opacity: 0.14;
+  }
+
+  &__arch-inner {
+    width: 64px;
+    height: 100px;
+    border-radius: 32px 32px 0 0;
+    opacity: 0.07;
+    top: 14px;
+  }
+
+  &:hover &__arch,
+  &:focus-visible &__arch {
+    opacity: 0.32;
+    height: 170px;
+  }
+
+  &:hover &__arch-inner,
+  &:focus-visible &__arch-inner {
+    opacity: 0.18;
+  }
+
+  &__enter {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    font-family: var(--mkt-font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--door-color);
+    opacity: 0;
+    transform: translateX(-6px);
+    transition:
+      opacity 220ms ease-out,
+      transform 220ms ease-out;
+  }
+
+  &:hover &__enter,
+  &:focus-visible &__enter {
+    opacity: 0.9;
+    transform: translateX(0);
+  }
+
+  &__numeral {
+    color: var(--door-color);
+    opacity: 0.7;
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+
+  &__title {
+    font-family: var(--mkt-font-display);
+    font-weight: 400;
+    font-size: 26px;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+    margin: 0 0 8px;
+    color: var(--mkt-text-primary);
+  }
+
+  &__desc {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--mkt-text-muted);
+    margin: 0;
+    max-width: 32ch;
+  }
+}
+
+// ── Section view (after clicking a door) ────────────────────────────────────
+.marketplace-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px 4px;
+  background: none;
+  border: none;
+  color: var(--mkt-text-muted);
+  font-family: var(--mkt-font-body);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: color 160ms ease-out;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--mkt-text-primary);
+    outline: none;
+  }
+}
+
+.marketplace-section {
+  padding-bottom: 24px;
+
+  &__header {
+    padding: 8px 20px 24px;
+    border-bottom: 1px solid var(--mkt-border);
+    margin-bottom: 20px;
+
+    .marketplace-eyebrow {
+      color: var(--mkt-accent-kronk);
+      margin-bottom: 4px;
+    }
+  }
+
+  &__title {
+    font-family: var(--mkt-font-display);
+    font-weight: 300;
+    font-size: 34px;
+    line-height: 1.1;
+    color: var(--mkt-text-primary);
+    margin: 0 0 8px;
+  }
+
+  &__desc {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--mkt-text-muted);
+    margin: 0;
+    max-width: 60ch;
+  }
+
+  // Per-section accent on the header eyebrow
+  &--creation .marketplace-section__header .marketplace-eyebrow { color: var(--mkt-accent-creation); }
+  &--market   .marketplace-section__header .marketplace-eyebrow { color: var(--mkt-accent-market);   }
+  &--service  .marketplace-section__header .marketplace-eyebrow { color: var(--mkt-accent-service);  }
+}
+
+// ── Listings grid + card ────────────────────────────────────────────────────
+.marketplace-page {
   &__loading,
   &__empty {
-    padding: 40px 16px;
+    padding: 40px 20px;
     text-align: center;
-    color: $darker-text-color;
-    font-size: 14px;
+    color: var(--mkt-text-muted);
+    font-size: 13px;
+    font-family: var(--mkt-font-body);
   }
 
   &__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 12px;
-    padding: 12px;
-  }
-}
-
-.marketplace-tabs {
-  display: flex;
-  gap: 4px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--background-border-color);
-  background: var(--surface-background-color);
-
-  &__tab {
-    flex: 0 0 auto;
-    padding: 6px 14px;
-    border: 1px solid transparent;
-    border-radius: 20px;
-    background: transparent;
-    color: $secondary-text-color;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition:
-      background 120ms ease-out,
-      border-color 120ms ease-out,
-      color 120ms ease-out;
-
-    &:hover,
-    &:focus-visible {
-      color: $primary-text-color;
-      background: color-mix(in srgb, var(--space-color, #{$ui-highlight-color}) 8%, transparent);
-      outline: none;
-    }
-
-    &--active {
-      color: #fff;
-      background: color-mix(in srgb, var(--space-color, #{$ui-highlight-color}) 80%, transparent);
-      border-color: color-mix(in srgb, var(--space-color, #{$ui-highlight-color}) 90%, transparent);
-    }
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 2px;
+    background: var(--mkt-border);
+    padding: 0;
   }
 }
 
@@ -60,56 +326,59 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 14px 16px;
-  border: 1px solid color-mix(in srgb, var(--space-color, #{$ui-highlight-color}) 25%, var(--background-border-color));
-  border-radius: 8px;
-  background: var(--surface-background-color);
-  box-shadow: 0 1px 2px rgba(#000, 0.15);
-  transition:
-    border-color 120ms ease-out,
-    box-shadow 120ms ease-out;
+  padding: 18px 20px 20px;
+  border: none;
+  background: var(--mkt-surface);
+  transition: background 200ms ease-out;
 
   &:hover,
   &:focus-visible {
-    border-color: color-mix(in srgb, var(--space-color, #{$ui-highlight-color}) 55%, transparent);
-    box-shadow: 0 2px 6px rgba(#000, 0.25);
+    background: var(--mkt-surface-2);
     outline: none;
   }
 
   &__header {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
     gap: 8px;
+    margin-bottom: 4px;
   }
 
   &__category {
+    font-family: var(--mkt-font-body);
     font-size: 10px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--space-color, #{$ui-highlight-color}) 90%, #fff);
-    font-weight: 700;
+    font-weight: 500;
   }
 
+  &--creation .marketplace-card__category { color: var(--mkt-accent-creation); }
+  &--marketplace .marketplace-card__category { color: var(--mkt-accent-market); }
+  &--service .marketplace-card__category { color: var(--mkt-accent-service); }
+
   &__price {
-    font-size: 13px;
-    font-weight: 600;
-    color: $primary-text-color;
+    font-family: var(--mkt-font-display);
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    color: var(--mkt-text-primary);
   }
 
   &__title {
+    font-family: var(--mkt-font-display);
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 1.2;
+    color: var(--mkt-text-primary);
     margin: 0;
-    font-size: 15px;
-    font-weight: 600;
-    line-height: 1.35;
-    color: $primary-text-color;
   }
 
   &__description {
-    margin: 0;
     font-size: 13px;
-    line-height: 1.45;
-    color: $secondary-text-color;
+    line-height: 1.55;
+    color: var(--mkt-text-muted);
+    margin: 0;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     line-clamp: 3;
@@ -120,11 +389,20 @@
   &__meta {
     display: flex;
     gap: 6px;
+    align-items: baseline;
+    font-family: var(--mkt-font-body);
     font-size: 11px;
-    color: $darker-text-color;
+    color: var(--mkt-text-muted);
+    letter-spacing: 0.04em;
+    margin-top: 4px;
   }
 
   &__author {
+    color: var(--mkt-accent-kronk);
     font-weight: 500;
+  }
+
+  &__location {
+    color: var(--mkt-text-muted);
   }
 }
