@@ -7,6 +7,7 @@ import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { planetIcon, spaceColor } from 'mastodon/planets';
 
+import { ComposeForm } from './components/compose_form';
 import { DoorsLanding } from './components/doors_landing';
 import { SectionView } from './components/section_view';
 import type { MarketplaceCategory } from './types';
@@ -34,6 +35,7 @@ const Marketplace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const params = useParams<{ section?: string }>();
 
   const rawSection = params.section;
+  const isCompose = rawSection === 'new';
   const category = rawSection ? SECTION_ALIAS[rawSection] : undefined;
   const isValidSection = category && VALID_SECTIONS.includes(category);
 
@@ -52,7 +54,9 @@ const Marketplace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           { '--space-color': spaceColor('Marketplace') } as React.CSSProperties
         }
       >
-        {isValidSection ? (
+        {isCompose ? (
+          <ComposeForm />
+        ) : isValidSection ? (
           <SectionView category={category} />
         ) : (
           <DoorsLanding />

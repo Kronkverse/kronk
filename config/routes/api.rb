@@ -128,7 +128,7 @@ namespace :api, format: false do
     end
 
     namespace :marketplace do
-      resources :listings, only: [:index, :show]
+      resources :listings, only: [:index, :show, :create]
     end
     resources :proposals, only: [:index, :show, :create, :update] do
       member do

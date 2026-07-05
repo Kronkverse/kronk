@@ -4,11 +4,19 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
 import api from 'mastodon/api';
+import { useIdentity } from 'mastodon/identity_context';
 
 import type { MarketplaceCategory, MarketplaceListing } from '../types';
 import { ListingCard } from './listing_card';
+
+const SECTION_URL_SLUG: Record<MarketplaceCategory, string> = {
+  creation: 'creations',
+  marketplace: 'marketplace',
+  service: 'services',
+};
 
 const SECTION_META: Record<
   MarketplaceCategory,
@@ -66,6 +74,7 @@ export const SectionView: React.FC<{ category: MarketplaceCategory }> = ({
 }) => {
   const intl = useIntl();
   const history = useHistory();
+  const { signedIn } = useIdentity();
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -119,6 +128,24 @@ export const SectionView: React.FC<{ category: MarketplaceCategory }> = ({
         </p>
         <h2 className='marketplace-section__title'>{meta.title}</h2>
         <p className='marketplace-section__desc'>{meta.desc}</p>
+        {signedIn && (
+          <button
+            type='button'
+            className='marketplace-section__add'
+            onClick={() => {
+              history.push(`/marketplace/new?section=${SECTION_URL_SLUG[category]}`);
+            }}
+          >
+            <AddIcon width={14} height={14} />
+            <span>
+              <FormattedMessage
+                id='marketplace.section.add'
+                defaultMessage='Add {section, select, creation {a creation} marketplace {a listing} service {a service} other {a listing}}'
+                values={{ section: category }}
+              />
+            </span>
+          </button>
+        )}
       </header>
 
       {loading ? (

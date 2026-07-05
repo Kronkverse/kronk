@@ -83,6 +83,29 @@
     max-width: 420px;
     margin: 0;
   }
+
+  &__cta {
+    margin-top: 8px;
+    padding: 10px 22px;
+    background: transparent;
+    border: 1px solid var(--mkt-accent-you);
+    color: var(--mkt-accent-you);
+    font-family: var(--mkt-font-body);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background 200ms ease-out,
+      color 200ms ease-out;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in srgb, var(--mkt-accent-you) 12%, transparent);
+      outline: none;
+    }
+  }
 }
 
 // ── Doors section ───────────────────────────────────────────────────────────
@@ -300,6 +323,239 @@
   &--creation .marketplace-section__header .marketplace-eyebrow { color: var(--mkt-accent-creation); }
   &--market   .marketplace-section__header .marketplace-eyebrow { color: var(--mkt-accent-market);   }
   &--service  .marketplace-section__header .marketplace-eyebrow { color: var(--mkt-accent-service);  }
+
+  &__add {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--mkt-border-hover);
+    color: var(--mkt-text-primary);
+    font-family: var(--mkt-font-body);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background 180ms ease-out,
+      border-color 180ms ease-out;
+
+    svg { fill: currentColor; }
+
+    &:hover,
+    &:focus-visible {
+      background: var(--mkt-surface-2);
+      border-color: var(--mkt-border-hover);
+      outline: none;
+    }
+  }
+}
+
+// ── Compose form ────────────────────────────────────────────────────────────
+.marketplace-compose {
+  padding-bottom: 32px;
+
+  &__header {
+    padding: 8px 20px 20px;
+    border-bottom: 1px solid var(--mkt-border);
+    margin-bottom: 20px;
+
+    .marketplace-eyebrow {
+      color: var(--mkt-accent-kronk);
+      margin-bottom: 4px;
+    }
+  }
+
+  &__heading {
+    font-family: var(--mkt-font-display);
+    font-weight: 300;
+    font-size: 30px;
+    line-height: 1.1;
+    color: var(--mkt-text-primary);
+    margin: 0;
+  }
+
+  &__form {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  &__section {
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__legend {
+    display: block;
+    color: var(--mkt-text-secondary);
+    margin-bottom: 10px;
+  }
+
+  &__categories {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+
+    @media (max-width: 520px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__category-option {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 12px 14px;
+    background: var(--mkt-surface);
+    border: 1px solid var(--mkt-border);
+    cursor: pointer;
+    transition:
+      background 160ms ease-out,
+      border-color 160ms ease-out;
+
+    input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    &--creation { --option-color: var(--mkt-accent-creation); }
+    &--market   { --option-color: var(--mkt-accent-market);   }
+    &--service  { --option-color: var(--mkt-accent-service);  }
+
+    &:hover,
+    &:focus-visible {
+      background: var(--mkt-surface-2);
+      border-color: var(--mkt-border-hover);
+      outline: none;
+    }
+
+    &--active {
+      border-color: var(--option-color);
+      background: color-mix(in srgb, var(--option-color) 8%, var(--mkt-surface));
+    }
+  }
+
+  &__category-title {
+    font-family: var(--mkt-font-display);
+    font-size: 18px;
+    color: var(--mkt-text-primary);
+  }
+
+  &__category-desc {
+    font-family: var(--mkt-font-body);
+    font-size: 11px;
+    color: var(--mkt-text-muted);
+    letter-spacing: 0.02em;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    input,
+    textarea {
+      background: var(--mkt-surface);
+      border: 1px solid var(--mkt-border);
+      color: var(--mkt-text-primary);
+      padding: 10px 12px;
+      font-family: var(--mkt-font-body);
+      font-size: 14px;
+      line-height: 1.4;
+      transition: border-color 160ms ease-out;
+
+      &::placeholder { color: var(--mkt-text-muted); }
+
+      &:focus {
+        border-color: var(--mkt-accent-kronk);
+        outline: none;
+      }
+    }
+
+    textarea { resize: vertical; min-height: 90px; font-family: var(--mkt-font-body); }
+  }
+
+  &__label {
+    color: var(--mkt-text-secondary);
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+
+    @media (max-width: 520px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__error {
+    color: #eb5757;
+    font-size: 13px;
+    padding: 8px 12px;
+    background: color-mix(in srgb, #eb5757 12%, transparent);
+    border-left: 2px solid #eb5757;
+    margin: 0;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  &__cancel {
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid var(--mkt-border);
+    color: var(--mkt-text-muted);
+    font-family: var(--mkt-font-body);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--mkt-text-primary);
+      border-color: var(--mkt-border-hover);
+      outline: none;
+    }
+  }
+
+  &__submit {
+    padding: 10px 24px;
+    background: var(--mkt-accent-you);
+    color: #17130a;
+    border: none;
+    font-family: var(--mkt-font-body);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      background: color-mix(in srgb, var(--mkt-accent-you) 85%, #fff);
+      outline: none;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
 }
 
 // ── Listings grid + card ────────────────────────────────────────────────────

@@ -2,6 +2,8 @@ import { FormattedMessage } from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 
+import { useIdentity } from 'mastodon/identity_context';
+
 interface Door {
   key: string;
   variant: 'creation' | 'market' | 'service' | 'event';
@@ -88,6 +90,7 @@ const DOORS: Door[] = [
 
 export const DoorsLanding: React.FC = () => {
   const history = useHistory();
+  const { signedIn } = useIdentity();
 
   const handleEnter = (href: string) => {
     history.push(href);
@@ -124,6 +127,20 @@ export const DoorsLanding: React.FC = () => {
             defaultMessage='A threshold space for creators, makers, guides, and gatherers. Buy, sell, offer, and gather — within the Kronk community.'
           />
         </p>
+        {signedIn && (
+          <button
+            type='button'
+            className='marketplace-hero__cta'
+            onClick={() => {
+              history.push('/marketplace/new');
+            }}
+          >
+            <FormattedMessage
+              id='marketplace.hero.share_cta'
+              defaultMessage='Share something'
+            />
+          </button>
+        )}
       </section>
 
       <section className='marketplace-doors-section'>
