@@ -1,0 +1,130 @@
+@use 'variables' as *;
+
+.marketplace-page {
+  padding: 0;
+
+  &__loading,
+  &__empty {
+    padding: 40px 16px;
+    text-align: center;
+    color: $darker-text-color;
+    font-size: 14px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    padding: 12px;
+  }
+}
+
+.marketplace-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--background-border-color);
+  background: var(--surface-background-color);
+
+  &__tab {
+    flex: 0 0 auto;
+    padding: 6px 14px;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    background: transparent;
+    color: $secondary-text-color;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background 120ms ease-out,
+      border-color 120ms ease-out,
+      color 120ms ease-out;
+
+    &:hover,
+    &:focus-visible {
+      color: $primary-text-color;
+      background: color-mix(in srgb, var(--space-color, #{$ui-highlight-color}) 8%, transparent);
+      outline: none;
+    }
+
+    &--active {
+      color: #fff;
+      background: color-mix(in srgb, var(--space-color, #{$ui-highlight-color}) 80%, transparent);
+      border-color: color-mix(in srgb, var(--space-color, #{$ui-highlight-color}) 90%, transparent);
+    }
+  }
+}
+
+.marketplace-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--space-color, #{$ui-highlight-color}) 25%, var(--background-border-color));
+  border-radius: 8px;
+  background: var(--surface-background-color);
+  box-shadow: 0 1px 2px rgba(#000, 0.15);
+  transition:
+    border-color 120ms ease-out,
+    box-shadow 120ms ease-out;
+
+  &:hover,
+  &:focus-visible {
+    border-color: color-mix(in srgb, var(--space-color, #{$ui-highlight-color}) 55%, transparent);
+    box-shadow: 0 2px 6px rgba(#000, 0.25);
+    outline: none;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__category {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--space-color, #{$ui-highlight-color}) 90%, #fff);
+    font-weight: 700;
+  }
+
+  &__price {
+    font-size: 13px;
+    font-weight: 600;
+    color: $primary-text-color;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: $primary-text-color;
+  }
+
+  &__description {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: $secondary-text-color;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__meta {
+    display: flex;
+    gap: 6px;
+    font-size: 11px;
+    color: $darker-text-color;
+  }
+
+  &__author {
+    font-weight: 500;
+  }
+}

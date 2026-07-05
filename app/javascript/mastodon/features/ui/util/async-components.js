@@ -292,3 +292,7 @@ export function BoothSetPage () {
   return import("../../booth/booth_set_page");
 }
 
+export function Marketplace () {
+  return import("../../marketplace");
+}
+
