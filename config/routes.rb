@@ -229,6 +229,8 @@ Rails.application.routes.draw do
   get '/booth/sets/:id', to: 'booth#show', as: :booth_set, constraints: { id: /\d+/ }
   get '/booth', to: 'booth#index'
   get '/booth/*path', to: 'booth#index', format: false
+  get '/marketplace', to: 'marketplace#index'
+  get '/marketplace/*path', to: 'marketplace#index', format: false
   get '/home', to: 'home#index'
   get '/huddle', to: 'huddle#index'
   get '/kalendar', to: 'kalendar#index'

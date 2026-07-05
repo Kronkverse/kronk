@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Api::V1::Marketplace::ListingsController < Api::BaseController
-  before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
+  before_action -> { authorize_if_got_token! :read, :'read:statuses' }, only: [:index, :show]
   before_action :set_listing, only: [:show]
 
   LIMIT = 40
