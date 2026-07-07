@@ -1,5 +1,7 @@
 import { FormattedMessage } from 'react-intl';
 
+import { Link } from 'react-router-dom';
+
 import type { MarketplaceListing } from '../types';
 
 const CATEGORY_LABEL: Record<MarketplaceListing['category'], React.ReactNode> = {
@@ -29,7 +31,10 @@ export const ListingCard: React.FC<{ listing: MarketplaceListing }> = ({
   const price = listing.price_display ?? '';
 
   return (
-    <article className={`marketplace-card marketplace-card--${listing.category}`}>
+    <Link
+      to={`/marketplace/listing/${listing.id}`}
+      className={`marketplace-card marketplace-card--${listing.category} marketplace-card--link`}
+    >
       <header className='marketplace-card__header'>
         <span className='marketplace-card__category'>
           {CATEGORY_LABEL[listing.category]}
@@ -51,6 +56,6 @@ export const ListingCard: React.FC<{ listing: MarketplaceListing }> = ({
           <span className='marketplace-card__location'>· {listing.location}</span>
         )}
       </footer>
-    </article>
+    </Link>
   );
 };

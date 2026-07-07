@@ -296,3 +296,7 @@ export function Marketplace () {
   return import("../../marketplace");
 }
 
+export function MarketplaceListingDetail () {
+  return import("../../marketplace/components/listing_detail");
+}
+

@@ -94,6 +94,7 @@ import {
   Booth,
   BoothSetPage,
   Marketplace,
+  MarketplaceListingDetail,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
 import { focusColumn, getFocusedItemIndex, focusItemSibling } from './util/focusUtils';
@@ -220,6 +221,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/huddle" component={Live} content={children} />}
             <WrappedRoute path="/booth/sets/:id" component={BoothSetPage} content={children} />
             <WrappedRoute path="/booth" component={Booth} content={children} />
+            <WrappedRoute path="/marketplace/listing/:id" component={MarketplaceListingDetail} content={children} />
             <WrappedRoute path="/marketplace/:section" component={Marketplace} content={children} />
             <WrappedRoute path="/marketplace" component={Marketplace} content={children} />
             {signedIn && <WrappedRoute path="/kalendar/:id" component={EventDetail} content={children} />}
