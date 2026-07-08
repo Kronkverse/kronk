@@ -1,0 +1,164 @@
+// Tree — Kronk's pipeline mind-map / list space.
+// Reference prototype: public/tree.html (design tokens copied here).
+// Full brief: docs/tree-brief.md.
+
+.tree-page {
+  --tree-canvas: #0a0a0a;
+  --tree-ink: #ededf2;
+  --tree-muted: #8a8a99;
+  --tree-hair: rgba(255, 255, 255, 0.08);
+  --tree-hair-strong: rgba(255, 255, 255, 0.16);
+  --tree-panel: #121216;
+
+  min-height: 100%;
+  background: var(--tree-canvas);
+  color: var(--tree-ink);
+  padding: 32px clamp(20px, 4vw, 48px) 64px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+
+  .serif {
+    font-family: Georgia, 'Liberation Serif', 'Times New Roman', serif;
+  }
+}
+
+.tree-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--space-color) 65%, var(--tree-muted));
+  margin: 0;
+}
+
+.tree-hero {
+  max-width: 720px;
+  margin: 0 auto 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &__title {
+    font-weight: 400;
+    font-size: 44px;
+    line-height: 1.1;
+    color: var(--tree-ink);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  &__lede {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--tree-muted);
+    margin: 4px 0 0;
+  }
+
+  &__phase {
+    font-size: 13px;
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--tree-muted) 80%, transparent);
+    margin: 12px 0 0;
+    padding: 12px 16px;
+    border: 1px solid var(--tree-hair);
+    border-left: 3px solid var(--space-color);
+    border-radius: 2px;
+    background: var(--tree-panel);
+  }
+
+  &__proto-link {
+    color: color-mix(in srgb, var(--space-color) 60%, var(--tree-ink));
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--space-color) 40%, transparent);
+    text-underline-offset: 3px;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--tree-ink);
+      text-decoration-color: var(--space-color);
+    }
+  }
+}
+
+.tree-branches {
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.tree-branch {
+  padding: 24px;
+  background: var(--tree-panel);
+  border: 1px solid var(--tree-hair);
+  border-radius: 4px;
+  position: relative;
+  transition: border-color 200ms ease-out;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--branch-color, var(--space-color));
+    border-radius: 2px 0 0 2px;
+    opacity: 0.85;
+  }
+
+  &:hover {
+    border-color: var(--tree-hair-strong);
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 20px;
+  }
+
+  &__name {
+    font-weight: 400;
+    font-size: 26px;
+    line-height: 1.2;
+    color: var(--branch-color, var(--tree-ink));
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  &__tagline {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--tree-muted);
+    margin: 0;
+  }
+
+  &__sublayers {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--tree-hair);
+  }
+}
+
+.tree-sublayer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 4px;
+  background: var(--tree-panel);
+  font-size: 14px;
+
+  &__name {
+    color: var(--tree-ink);
+  }
+
+  &__ideas-count {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: color-mix(in srgb, var(--tree-muted) 80%, transparent);
+    font-variant-numeric: tabular-nums;
+  }
+}

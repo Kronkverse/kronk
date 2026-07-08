@@ -20,6 +20,8 @@ import CalendarMonthActiveIcon from '@/material-icons/400-24px/calendar_month-fi
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import Diversity2ActiveIcon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
+import AccountTreeActiveIcon from '@/material-icons/400-24px/account_tree-fill.svg?react';
+import AccountTreeIcon from '@/material-icons/400-24px/account_tree.svg?react';
 import GavelActiveIcon from '@/material-icons/400-24px/gavel-fill.svg?react';
 import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
 import HomeActiveIcon from '@/material-icons/400-24px/home-fill.svg?react';
@@ -71,6 +73,7 @@ const messages = defineMessages({
   },
   live: { id: 'live.title', defaultMessage: 'Huddle' },
   commons: { id: 'governance.title', defaultMessage: '₭ommons' },
+  tree: { id: 'tree.title', defaultMessage: 'Tree' },
   questions: { id: 'questions.title', defaultMessage: 'Ƙuestions' },
   market: { id: 'market.title', defaultMessage: 'Market' },
   booth: { id: 'booth.title', defaultMessage: 'The Booth' },
@@ -385,6 +388,16 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               activeIconComponent={GavelActiveIcon}
               text={intl.formatMessage(messages.commons)}
               tooltip='₭ommons'
+            />
+
+            <ColumnLink
+              transparent
+              to='/tree'
+              icon='account_tree'
+              iconComponent={AccountTreeIcon}
+              activeIconComponent={AccountTreeActiveIcon}
+              text={intl.formatMessage(messages.tree)}
+              tooltip='Tree — Kronk’s pipeline'
             />
 
             <FollowRequestsLink />
