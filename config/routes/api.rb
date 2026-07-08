@@ -126,6 +126,17 @@ namespace :api, format: false do
         get :my_invitees
       end
     end
+
+    namespace :tree do
+      resources :nodes, only: [:index, :show, :create, :update, :destroy] do
+        member do
+          patch :move
+        end
+        resources :comments, only: [:index, :create], controller: 'comments'
+      end
+      resources :dependencies, only: [:index, :create, :destroy]
+      resources :comments, only: [:destroy]
+    end
     resources :proposals, only: [:index, :show, :create, :update] do
       member do
         post :vote
