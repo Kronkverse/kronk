@@ -1,41 +1,66 @@
 // See docs/tree-brief.md for the full model.
-//
-// Two node kinds:
-//   - Sub-layer = a place. Curated skeleton, ~3 per branch.
-//   - Idea     = a thing to build. Unlimited leaf inside a place.
 
-export type TopLayer = 'digital' | 'community' | 'platform';
-
+export type NodeKind = 'layer' | 'idea';
 export type Readiness =
   | 'blocked'
   | 'provisional'
   | 'ready'
   | 'building'
   | 'done';
-
 export type Priority = 'low' | 'medium' | 'high';
-
 export type DepKind = 'needs' | 'secures' | 'relates';
 
-export interface SubLayer {
+export const READINESS_ORDER: Readiness[] = [
+  'ready',
+  'building',
+  'provisional',
+  'blocked',
+  'done',
+];
+
+export const PRIORITIES: Priority[] = ['low', 'medium', 'high'];
+export const READINESSES: Readiness[] = [
+  'blocked',
+  'provisional',
+  'ready',
+  'building',
+  'done',
+];
+
+export interface TreeNode {
   id: string;
+  parent_id: string | null;
+  kind: NodeKind;
   name: string;
-  ideas: Idea[];
-  children?: SubLayer[];
+  description: string;
+  status: Readiness | null;
+  priority: Priority | null;
+  framework: string | null;
+  steps: string[];
+  position: number;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface Idea {
+export interface TreeDependency {
   id: string;
-  name: string;
-  description?: string;
-  status: Readiness;
-  priority: Priority;
+  from_node_id: string;
+  to_node_id: string;
+  kind: DepKind;
+  created_at: string;
 }
 
-export interface TopBranch {
-  key: TopLayer;
-  name: string;
-  tagline: string;
-  color: string;
-  sublayers: SubLayer[];
+export interface TreeCommentAccount {
+  id: string;
+  acct: string;
+  display_name: string;
+  avatar: string;
+}
+
+export interface TreeComment {
+  id: string;
+  node_id: string;
+  body: string;
+  created_at: string;
+  account: TreeCommentAccount;
 }

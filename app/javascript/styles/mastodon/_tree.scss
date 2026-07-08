@@ -44,38 +44,6 @@
     margin: 0;
     letter-spacing: -0.01em;
   }
-
-  &__lede {
-    font-size: 15px;
-    line-height: 1.6;
-    color: var(--tree-muted);
-    margin: 4px 0 0;
-  }
-
-  &__phase {
-    font-size: 13px;
-    line-height: 1.5;
-    color: color-mix(in srgb, var(--tree-muted) 80%, transparent);
-    margin: 12px 0 0;
-    padding: 12px 16px;
-    border: 1px solid var(--tree-hair);
-    border-left: 3px solid var(--space-color);
-    border-radius: 2px;
-    background: var(--tree-panel);
-  }
-
-  &__proto-link {
-    color: color-mix(in srgb, var(--space-color) 60%, var(--tree-ink));
-    text-decoration: underline;
-    text-decoration-color: color-mix(in srgb, var(--space-color) 40%, transparent);
-    text-underline-offset: 3px;
-
-    &:hover,
-    &:focus-visible {
-      color: var(--tree-ink);
-      text-decoration-color: var(--space-color);
-    }
-  }
 }
 
 .tree-branches {
@@ -113,6 +81,7 @@
     flex-direction: column;
     gap: 4px;
     margin-bottom: 20px;
+    cursor: pointer;
   }
 
   &__name {
@@ -143,13 +112,26 @@
 }
 
 .tree-sublayer {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
+  display: block;
   padding: 12px 4px;
   background: var(--tree-panel);
   font-size: 14px;
+
+  &__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    padding: 4px;
+    margin: -4px;
+    border-radius: 2px;
+    transition: background 120ms ease-out;
+
+    &:hover {
+      background: color-mix(in srgb, var(--branch-color, var(--space-color)) 8%, transparent);
+    }
+  }
 
   &__name {
     color: var(--tree-ink);
@@ -160,5 +142,447 @@
     letter-spacing: 0.06em;
     color: color-mix(in srgb, var(--tree-muted) 80%, transparent);
     font-variant-numeric: tabular-nums;
+  }
+
+  &__actions {
+    padding: 8px 0 0;
+  }
+
+  &--add,
+  &--planting {
+    padding: 8px 4px;
+  }
+}
+
+// ── Loading / empty / error states ──────────────────────────────────────────
+.tree-page__loading,
+.tree-page__error,
+.tree-page__empty {
+  max-width: 720px;
+  margin: 24px auto;
+  padding: 32px;
+  text-align: center;
+  color: var(--tree-muted);
+  border: 1px solid var(--tree-hair);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.tree-page__error {
+  color: #ff6b5b;
+}
+
+// ── View toggle ─────────────────────────────────────────────────────────────
+.tree-view-toggle {
+  display: inline-flex;
+  gap: 2px;
+  margin-top: 20px;
+  padding: 3px;
+  background: var(--tree-panel);
+  border: 1px solid var(--tree-hair);
+  border-radius: 3px;
+  align-self: flex-start;
+
+  &__btn {
+    background: transparent;
+    border: none;
+    color: var(--tree-muted);
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--tree-ink);
+      outline: none;
+    }
+
+    &--active {
+      background: var(--space-color);
+      color: var(--tree-ink);
+    }
+  }
+}
+
+// ── Ideas ──────────────────────────────────────────────────────────────────
+.tree-ideas {
+  list-style: none;
+  padding: 8px 0 0 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tree-idea {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--tree-canvas) 60%, var(--tree-panel));
+  border-left: 2px solid var(--branch-color, var(--tree-muted));
+  border-radius: 2px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 120ms ease-out;
+
+  &:hover {
+    background: color-mix(in srgb, var(--branch-color, var(--tree-panel)) 15%, var(--tree-panel));
+  }
+
+  &__name {
+    color: var(--tree-ink);
+  }
+
+  &__badge {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 2px;
+
+    &--blocked { background: rgba(255, 107, 91, 0.18); color: #ff8b7b; }
+    &--provisional { background: rgba(95, 208, 224, 0.15); color: #7fd8e8; }
+    &--ready { background: rgba(111, 224, 176, 0.18); color: #8fe8c8; }
+    &--building { background: rgba(232, 176, 75, 0.18); color: #f0c86b; }
+    &--done { background: rgba(180, 180, 200, 0.12); color: var(--tree-muted); }
+  }
+}
+
+// ── Plant form ──────────────────────────────────────────────────────────────
+.tree-plant {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px;
+
+  &__input {
+    flex: 1;
+    padding: 6px 8px;
+    background: var(--tree-canvas);
+    border: 1px solid var(--space-color);
+    border-radius: 2px;
+    color: var(--tree-ink);
+    font-family: inherit;
+    font-size: 13px;
+  }
+
+  &__submit,
+  &__cancel {
+    padding: 6px 10px;
+    background: var(--space-color);
+    color: var(--tree-ink);
+    border: none;
+    border-radius: 2px;
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+
+  &__cancel {
+    background: transparent;
+    color: var(--tree-muted);
+    border: 1px solid var(--tree-hair);
+    padding: 4px 8px;
+    font-size: 14px;
+  }
+}
+
+.tree-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px dashed var(--tree-hair-strong);
+  color: var(--tree-muted);
+  padding: 6px 10px;
+  border-radius: 2px;
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--tree-ink);
+    border-color: var(--space-color);
+    outline: none;
+  }
+}
+
+// ── Detail panel ────────────────────────────────────────────────────────────
+.tree-panel {
+  max-width: 720px;
+  margin: 24px auto;
+  padding: 20px 24px;
+  background: var(--tree-panel);
+  border: 1px solid var(--tree-hair);
+  border-left: 3px solid var(--panel-accent, var(--space-color));
+  border-radius: 2px;
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  &__crumbs {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tree-muted);
+    flex: 1;
+    line-height: 1.4;
+  }
+
+  &__close {
+    background: transparent;
+    border: none;
+    color: var(--tree-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 2px;
+
+    &:hover, &:focus-visible {
+      color: var(--tree-ink);
+      background: var(--tree-hair);
+      outline: none;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__label {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--tree-muted);
+  }
+
+  &__hint {
+    font-size: 12px;
+    color: var(--tree-muted);
+    margin: 0 0 4px;
+  }
+
+  &__input {
+    padding: 8px 10px;
+    background: var(--tree-canvas);
+    border: 1px solid var(--tree-hair);
+    border-radius: 2px;
+    color: var(--tree-ink);
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+
+    &:focus {
+      outline: none;
+      border-color: var(--panel-accent, var(--space-color));
+    }
+
+    &--title {
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      padding: 10px 12px;
+    }
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--tree-hair);
+  }
+
+  &__delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    color: color-mix(in srgb, #ff6b5b 80%, transparent);
+    border: 1px solid var(--tree-hair);
+    padding: 6px 12px;
+    border-radius: 2px;
+    font-family: inherit;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+
+    &:hover, &:focus-visible {
+      color: #ff6b5b;
+      border-color: rgba(255, 107, 91, 0.4);
+      outline: none;
+    }
+  }
+
+  &__save {
+    background: var(--panel-accent, var(--space-color));
+    color: var(--tree-ink);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 2px;
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+
+  &__section-title {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--tree-muted);
+    margin: 24px 0 12px;
+  }
+
+  &__comment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__comment {
+    padding: 10px 12px;
+    background: var(--tree-canvas);
+    border-radius: 2px;
+    border-left: 2px solid var(--tree-hair-strong);
+  }
+
+  &__comment-author {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: color-mix(in srgb, var(--panel-accent, var(--space-color)) 65%, var(--tree-ink));
+    font-weight: 500;
+  }
+
+  &__comment-body {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--tree-ink);
+    margin: 4px 0 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  &__comment-empty {
+    color: var(--tree-muted);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  &__comment-composer {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    margin-top: 16px;
+  }
+
+  &__comment-post {
+    padding: 6px 14px;
+    background: var(--panel-accent, var(--space-color));
+    color: var(--tree-ink);
+    border: none;
+    border-radius: 2px;
+    font-family: inherit;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+}
+
+// ── Mind map ────────────────────────────────────────────────────────────────
+.tree-mindmap {
+  max-width: 100%;
+  overflow: auto;
+  margin: 12px auto 0;
+  padding: 16px 0;
+  background: color-mix(in srgb, var(--tree-canvas) 90%, black);
+  border: 1px solid var(--tree-hair);
+  border-radius: 4px;
+
+  &__svg { display: block; max-width: none; }
+
+  &__link {
+    stroke: var(--tree-hair-strong);
+    stroke-width: 1.2;
+  }
+
+  &__box {
+    fill: var(--tree-panel);
+    stroke-width: 1.5;
+    transition: fill 120ms ease-out, stroke-width 120ms ease-out;
+  }
+
+  &__node {
+    cursor: pointer;
+
+    &:hover .tree-mindmap__box {
+      fill: color-mix(in srgb, var(--tree-panel) 70%, var(--tree-ink));
+    }
+
+    &--selected .tree-mindmap__box {
+      stroke-width: 2.5;
+      fill: color-mix(in srgb, var(--tree-panel) 60%, var(--space-color));
+    }
+
+    &--idea .tree-mindmap__box {
+      fill: color-mix(in srgb, var(--tree-canvas) 40%, var(--tree-panel));
+    }
+  }
+
+  &__label {
+    fill: var(--tree-ink);
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 12px;
+    pointer-events: none;
+  }
+
+  &__badge {
+    fill: var(--tree-muted);
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 10px;
+    pointer-events: none;
   }
 }
