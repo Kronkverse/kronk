@@ -98,128 +98,91 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  min-height: 260px;
-  padding: 28px 24px 24px;
-  background: linear-gradient(
-    155deg,
-    color-mix(in srgb, var(--branch-color) 14%, var(--tree-panel)) 0%,
-    var(--tree-panel) 55%,
-    var(--tree-canvas) 100%
-  );
+  align-items: center;
+  gap: 6px;
+  min-height: 300px;
+  padding: 32px 24px 24px;
+  background: var(--tree-panel);
   border: 1px solid var(--tree-hair);
   border-radius: 4px;
   color: var(--tree-ink);
   font-family: inherit;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
   overflow: hidden;
   transition: transform 200ms ease-out, border-color 200ms ease-out,
-    box-shadow 200ms ease-out;
-
-  // Bar on the left edge in the branch colour — the "door frame".
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 3px;
-    background: var(--branch-color);
-    opacity: 0.9;
-    transition: width 200ms ease-out, opacity 200ms ease-out;
-  }
-
-  // Ambient glow that intensifies on hover.
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(
-      circle at 12% 30%,
-      color-mix(in srgb, var(--branch-color) 22%, transparent) 0%,
-      transparent 55%
-    );
-    opacity: 0.5;
-    pointer-events: none;
-    transition: opacity 250ms ease-out;
-  }
+    background 200ms ease-out;
 
   &:hover,
   &:focus-visible {
     transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--branch-color) 40%, var(--tree-hair-strong));
-    box-shadow: 0 8px 32px -12px color-mix(in srgb, var(--branch-color) 40%, transparent);
+    border-color: var(--tree-hair-strong);
+    background: color-mix(in srgb, var(--tree-panel) 85%, var(--tree-ink));
     outline: none;
 
-    &::before { width: 5px; opacity: 1; }
-    &::after { opacity: 0.85; }
-
-    .tree-door__eyebrow {
-      color: color-mix(in srgb, var(--branch-color) 85%, var(--tree-ink));
+    .tree-door__symbol {
+      color: var(--tree-ink);
+      transform: scale(1.02);
     }
   }
 
-  &__eyebrow {
-    position: relative;
-    z-index: 1;
-    font-size: 10px;
-    letter-spacing: 0.28em;
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--branch-color) 55%, var(--tree-muted));
-    transition: color 200ms ease-out;
-    margin-bottom: 4px;
+  &__symbol {
+    color: color-mix(in srgb, var(--tree-ink) 72%, var(--tree-muted));
+    margin-bottom: 14px;
+    transition: color 220ms ease-out, transform 220ms ease-out;
+
+    svg {
+      display: block;
+      width: 84px;
+      height: 84px;
+    }
   }
 
   &__name {
-    position: relative;
-    z-index: 1;
     font-weight: 400;
-    font-size: 34px;
-    line-height: 1.05;
+    font-size: 30px;
+    line-height: 1.1;
     color: var(--tree-ink);
     margin: 0;
     letter-spacing: -0.015em;
   }
 
   &__tagline {
-    position: relative;
-    z-index: 1;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     font-size: 11px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--branch-color) 45%, var(--tree-muted));
-    margin: 4px 0 0;
+    color: var(--tree-muted);
+    margin: 6px 0 0;
     line-height: 1.5;
   }
 
   &__intro {
-    position: relative;
-    z-index: 1;
     font-family: Georgia, 'Liberation Serif', 'Times New Roman', serif;
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.55;
-    color: color-mix(in srgb, var(--tree-ink) 78%, var(--tree-muted));
+    color: color-mix(in srgb, var(--tree-ink) 70%, var(--tree-muted));
     margin: 12px 0 0;
     flex: 1;
     font-style: italic;
+    max-width: 260px;
   }
 
   &__stats {
-    position: relative;
-    z-index: 1;
     display: flex;
-    gap: 20px;
-    padding-top: 14px;
+    gap: 24px;
+    padding-top: 16px;
     border-top: 1px solid var(--tree-hair);
     width: 100%;
     margin-top: auto;
+    justify-content: center;
   }
 
   &__stat {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    align-items: center;
   }
 
   &__stat-value {
@@ -250,26 +213,33 @@
     border-bottom: 1px solid var(--tree-hair);
     margin-bottom: 24px;
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    position: relative;
+    align-items: center;
+    gap: 20px;
+  }
 
-    &::before {
-      content: '';
-      position: absolute;
-      inset: 0 auto 0 -20px;
-      width: 3px;
-      background: var(--branch-color);
-      opacity: 0.6;
-      border-radius: 2px;
+  &__symbol {
+    flex-shrink: 0;
+    color: color-mix(in srgb, var(--tree-ink) 78%, var(--tree-muted));
+
+    svg {
+      display: block;
+      width: 56px;
+      height: 56px;
     }
+  }
+
+  &__heading {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
   }
 
   &__name {
     font-weight: 400;
     font-size: 40px;
-    line-height: 1.1;
-    color: var(--branch-color);
+    line-height: 1.05;
+    color: var(--tree-ink);
     margin: 0;
     letter-spacing: -0.015em;
   }

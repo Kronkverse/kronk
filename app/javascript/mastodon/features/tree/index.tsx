@@ -12,14 +12,31 @@ import { planetIcon, spaceColor } from 'mastodon/planets';
 
 import type { TreeNode, TreeDependency } from './types';
 import { fetchNodes, fetchDependencies } from './api';
-import {
-  childrenOf,
-  ideaDescendantCount,
-  branchColorFor,
-} from './helpers';
+import { childrenOf, ideaDescendantCount } from './helpers';
 import { DetailPanel } from './components/detail_panel';
 import { PlantForm } from './components/plant_form';
 import { MindMap } from './components/mind_map';
+
+import DigitalIcon from './icons/digital.svg?react';
+import CommunityIcon from './icons/community.svg?react';
+import PlatformIcon from './icons/platform.svg?react';
+
+// Symbol per top branch — used as the visual identifier for each door
+// on the landing and for the focused-branch header. Keyed on branch name
+// so a real DB-side "kind" would fold into this map cleanly.
+const BRANCH_ICONS: Record<
+  string,
+  React.FC<React.SVGProps<SVGSVGElement>>
+> = {
+  Digital: DigitalIcon,
+  Community: CommunityIcon,
+  Platform: PlatformIcon,
+};
+
+const iconFor = (
+  node: TreeNode,
+): React.FC<React.SVGProps<SVGSVGElement>> | null =>
+  BRANCH_ICONS[node.name] ?? null;
 
 const messages = defineMessages({
   heading: { id: 'tree.title', defaultMessage: 'Tree' },
@@ -227,30 +244,23 @@ const Tree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
             <ul className='tree-doors'>
               {topBranches.map((branch) => {
-                const branchColor = branchColorFor(nodes, branch);
                 const subLayers = childrenOf(nodes, branch.id);
                 const ideaCount = ideaDescendantCount(nodes, branch.id);
+                const Icon = iconFor(branch);
+                const slug = branch.name.toLowerCase();
 
                 return (
                   <li key={branch.id} className='tree-door-wrap'>
                     <button
                       type='button'
-                      className='tree-door'
-                      style={
-                        {
-                          '--branch-color': branchColor,
-                        } as React.CSSProperties
-                      }
+                      className={`tree-door tree-door--${slug}`}
                       onClick={() => {
                         setFocusedBranchId(branch.id);
                       }}
                     >
-                      <span className='tree-door__eyebrow'>
-                        <FormattedMessage
-                          id='tree.door.enter'
-                          defaultMessage='Enter'
-                        />
-                      </span>
+                      <div className='tree-door__symbol'>
+                        {Icon && <Icon />}
+                      </div>
                       <h4 className='tree-door__name serif'>{branch.name}</h4>
                       <p className='tree-door__tagline'>
                         {taglineFor(branch)}
@@ -291,15 +301,12 @@ const Tree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         )}
 
         {/* ── List view: focused branch ────────────────────────────────── */}
-        {!loading && !error && mode === 'list' && focusedBranch && (
-          <section
-            className='tree-focused'
-            style={
-              {
-                '--branch-color': branchColorFor(nodes, focusedBranch),
-              } as React.CSSProperties
-            }
-          >
+        {!loading && !error && mode === 'list' && focusedBranch && (() => {
+          const FocusedIcon = iconFor(focusedBranch);
+          const slug = focusedBranch.name.toLowerCase();
+
+          return (
+          <section className={`tree-focused tree-focused--${slug}`}>
             <button
               type='button'
               className='tree-back'
@@ -313,11 +320,20 @@ const Tree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             </button>
 
             <header className='tree-focused__header'>
-              <p className='tree-eyebrow'>{taglineFor(focusedBranch)}</p>
-              <h3 className='tree-focused__name serif'>
-                {focusedBranch.name}
-              </h3>
-              <p className='tree-focused__intro'>{introFor(focusedBranch)}</p>
+              {FocusedIcon && (
+                <div className='tree-focused__symbol'>
+                  <FocusedIcon />
+                </div>
+              )}
+              <div className='tree-focused__heading'>
+                <p className='tree-eyebrow'>{taglineFor(focusedBranch)}</p>
+                <h3 className='tree-focused__name serif'>
+                  {focusedBranch.name}
+                </h3>
+                <p className='tree-focused__intro'>
+                  {introFor(focusedBranch)}
+                </p>
+              </div>
             </header>
 
             <ul className='tree-focused__sublayers'>
@@ -428,7 +444,8 @@ const Tree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               )}
             </ul>
           </section>
-        )}
+          );
+        })()}
 
         {/* ── Map view ─────────────────────────────────────────────────── */}
         {!loading && !error && mode === 'map' && root && (
