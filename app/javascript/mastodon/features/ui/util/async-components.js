@@ -302,3 +302,7 @@ export function BoothSetPage () {
 export function Flow () {
   return import("../../flow");
 }
+
+export function Klot () {
+  return import("../../klot");
+}

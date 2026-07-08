@@ -1,0 +1,492 @@
+// Klot — cycle tracker. Tones are lifted from public/tides prototype:
+// deep-violet canvas, single accent that follows the current phase,
+// serif + sans pairing.
+
+.klot-page {
+  --klot-bg: #0D0A1F;
+  --klot-bg-2: #120E2A;
+  --klot-surface: #181336;
+  --klot-surface-2: #1F1846;
+  --klot-line: #2C2557;
+  --klot-ink: #EDEAFB;
+  --klot-muted: #A79FD0;
+  --klot-faint: #6F679B;
+  --klot-brand: #563ACC;
+  --klot-brand-lift: #8C74F2;
+
+  min-height: 100%;
+  background:
+    radial-gradient(1100px 620px at 50% -8%, rgba(86, 58, 204, 0.28), transparent 60%),
+    radial-gradient(700px 500px at 88% 12%, rgba(140, 116, 242, 0.12), transparent 55%),
+    var(--klot-bg);
+  color: var(--klot-ink);
+  padding: 26px clamp(16px, 4vw, 32px) 60px;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+
+  .serif {
+    font-family: 'Liberation Serif', Georgia, 'Times New Roman', serif;
+  }
+}
+
+.klot-hero {
+  max-width: 520px;
+  margin: 0 auto 22px;
+
+  &__title {
+    font-family: 'Liberation Serif', Georgia, serif;
+    font-weight: 400;
+    font-size: 40px;
+    margin: 2px 0 4px;
+    letter-spacing: 0.5px;
+  }
+
+  &__lede {
+    color: var(--klot-muted);
+    font-size: 14px;
+    margin: 0 0 20px;
+  }
+}
+
+.klot-eyebrow {
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--klot-faint);
+  margin: 0;
+}
+
+.klot-page__loading {
+  max-width: 520px;
+  margin: 40px auto;
+  text-align: center;
+  color: var(--klot-muted);
+  font-size: 14px;
+}
+
+// ── Cycle ring ──────────────────────────────────────────────────────────────
+.klot-ringwrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 340px;
+  margin: 6px auto 4px;
+}
+
+.klot-ring {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  touch-action: manipulation;
+  user-select: none;
+
+  &__halo {
+    animation: klot-pulse 3.4s ease-in-out infinite;
+  }
+}
+
+@keyframes klot-pulse {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 0.18; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .klot-ring__halo { animation: none; }
+}
+
+.klot-ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+
+  &__phase {
+    font-size: 30px;
+    line-height: 1;
+  }
+
+  &__day {
+    font-size: 12.5px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--klot-muted);
+    margin-top: 9px;
+  }
+
+  &__reading {
+    color: var(--klot-brand-lift);
+  }
+
+  &__tag {
+    font-size: 13px;
+    color: var(--klot-faint);
+    margin-top: 3px;
+  }
+}
+
+.klot-ringhint {
+  text-align: center;
+  font-size: 12px;
+  color: var(--klot-faint);
+  margin: 2px 0 0;
+}
+
+.klot-rowcenter {
+  text-align: center;
+  margin-top: 6px;
+}
+
+.klot-todaybtn {
+  display: inline-block;
+  background: none;
+  border: 1px solid var(--klot-line);
+  color: var(--klot-muted);
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+
+  &:hover, &:focus-visible {
+    border-color: var(--klot-brand-lift);
+    color: var(--klot-ink);
+    outline: none;
+  }
+}
+
+// ── Card frame shared by the phase / log / settings / share cards ──────────
+.klot-card {
+  max-width: 520px;
+  margin: 16px auto 0;
+  background: var(--klot-surface);
+  border: 1px solid var(--klot-line);
+  border-radius: 16px;
+  padding: 18px 18px;
+
+  &__title {
+    font-family: 'Liberation Serif', Georgia, serif;
+    font-weight: 400;
+    font-size: 19px;
+    margin: 0 0 3px;
+  }
+
+  &__lead {
+    color: var(--klot-muted);
+    font-size: 13.5px;
+    margin: 0 0 14px;
+  }
+
+  &__toast {
+    font-size: 12.5px;
+    color: var(--klot-brand-lift);
+    margin: 10px 0 0;
+    min-height: 16px;
+  }
+
+  &__empty {
+    color: var(--klot-faint);
+    font-size: 13.5px;
+    padding: 8px 2px;
+  }
+
+  &__error {
+    font-size: 12.5px;
+    color: #C25E7E;
+    margin: 10px 0 0;
+  }
+}
+
+// Phase description card
+.klot-phasecard {
+  border-left: 3px solid var(--klot-accent, var(--klot-brand));
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  &__name {
+    font-family: 'Liberation Serif', Georgia, serif;
+    font-size: 22px;
+  }
+
+  &__tag {
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--klot-faint);
+    margin-left: auto;
+  }
+
+  &__body {
+    color: var(--klot-ink);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  &__note {
+    color: var(--klot-faint);
+    font-size: 11.5px;
+    margin: 10px 0 0;
+    font-style: italic;
+  }
+}
+
+// Form primitives shared by log + settings cards
+.klot-primary-btn {
+  width: 100%;
+  background: var(--klot-brand);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 13px;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+
+  &:hover, &:focus-visible {
+    background: #6348e0;
+    outline: none;
+  }
+
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+.klot-secondary-btn {
+  background: var(--klot-surface-2);
+  color: var(--klot-ink);
+  border: 1px solid var(--klot-line);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+
+  &:hover, &:focus-visible {
+    border-color: var(--klot-brand-lift);
+    outline: none;
+  }
+
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.klot-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.klot-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  &--full { grid-column: 1 / -1; }
+
+  &__label {
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--klot-faint);
+  }
+
+  &__input {
+    background: var(--klot-bg-2);
+    border: 1px solid var(--klot-line);
+    color: var(--klot-ink);
+    border-radius: 10px;
+    padding: 9px 11px;
+    font-family: inherit;
+    font-size: 14px;
+    color-scheme: dark;
+
+    &:focus {
+      outline: none;
+      border-color: var(--klot-brand-lift);
+    }
+  }
+}
+
+// Log list
+.klot-log-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13.5px;
+    color: var(--klot-muted);
+    padding: 6px 2px;
+    border-top: 1px solid var(--klot-line);
+
+    &:first-child { border-top: none; }
+  }
+
+  &__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #C25E7E;
+    flex: none;
+  }
+
+  &__current {
+    color: var(--klot-faint);
+    font-size: 12px;
+  }
+
+  &__remove {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--klot-faint);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+
+    &:hover, &:focus-visible {
+      color: #C25E7E;
+      outline: none;
+    }
+  }
+}
+
+// Share badge + viewer list
+.klot-badge-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--klot-bg-2);
+  border: 1px solid var(--klot-line);
+  border-radius: 12px;
+  padding: 11px 13px;
+  margin-bottom: 14px;
+
+  &__label {
+    font-size: 13.5px;
+    color: var(--klot-muted);
+  }
+
+  &__phase {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--klot-accent, var(--klot-brand-lift));
+    font-family: 'Liberation Serif', Georgia, serif;
+  }
+}
+
+.klot-viewers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    background: var(--klot-surface-2);
+    border: 1px solid var(--klot-line);
+    border-radius: 12px;
+    padding: 9px 11px;
+  }
+
+  &__avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, var(--klot-brand), var(--klot-brand-lift));
+  }
+
+  &__name {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+
+    span:first-child { font-size: 14px; }
+  }
+
+  &__handle {
+    font-size: 12px;
+    color: var(--klot-faint);
+  }
+
+  &__remove {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--klot-faint);
+    cursor: pointer;
+    font-size: 18px;
+
+    &:hover, &:focus-visible {
+      color: #C25E7E;
+      outline: none;
+    }
+  }
+}
+
+.klot-share-add {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+
+  .klot-field__input { flex: 1; }
+}
+
+.klot-sov {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin: 22px auto 0;
+  max-width: 520px;
+  color: var(--klot-faint);
+  font-size: 12px;
+  line-height: 1.45;
+
+  &__icon {
+    flex: none;
+    margin-top: 1px;
+  }
+
+  &__prov {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 7px;
+    border: 1px solid var(--klot-line);
+    border-radius: 10px;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: var(--klot-brand-lift);
+    vertical-align: middle;
+  }
+}

@@ -230,6 +230,8 @@ Rails.application.routes.draw do
   get '/booth/*path', to: 'booth#index', format: false
   get '/flow', to: 'flow#index'
   get '/flow/*path', to: 'flow#index', format: false
+  get '/klot', to: 'klot#index'
+  get '/klot/*path', to: 'klot#index', format: false
   get '/home', to: 'home#index'
   get '/huddle', to: 'huddle#index'
   get '/kalendar', to: 'kalendar#index'

@@ -16,6 +16,8 @@ import BarChartActiveIcon from '@/material-icons/400-24px/bar_chart_4_bars-fill.
 import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
 import FavoriteActiveIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
 import FavoriteIcon from '@/material-icons/400-24px/favorite.svg?react';
+import NightsStayActiveIcon from '@/material-icons/400-24px/nights_stay-fill.svg?react';
+import NightsStayIcon from '@/material-icons/400-24px/nights_stay.svg?react';
 import HeadphonesActiveIcon from '@/material-icons/400-24px/headphones-fill.svg?react';
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import CalendarMonthActiveIcon from '@/material-icons/400-24px/calendar_month-fill.svg?react';
@@ -76,6 +78,7 @@ const messages = defineMessages({
   market: { id: 'market.title', defaultMessage: 'Market' },
   booth: { id: 'booth.title', defaultMessage: 'The Booth' },
   flow: { id: 'flow.title', defaultMessage: 'Flow' },
+  klot: { id: 'klot.title', defaultMessage: 'Klot' },
   events: { id: 'events.title', defaultMessage: '₭alendar' },
   inFlow: { id: 'in_flow.title', defaultMessage: 'In Flow' },
   nudges: { id: 'nudges.title', defaultMessage: 'Nudges' },
@@ -416,6 +419,16 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               activeIconComponent={FavoriteActiveIcon}
               text={intl.formatMessage(messages.flow)}
               tooltip='Flow — cycle tracking'
+            />
+
+            <ColumnLink
+              transparent
+              to='/klot'
+              icon='nights_stay'
+              iconComponent={NightsStayIcon}
+              activeIconComponent={NightsStayActiveIcon}
+              text={intl.formatMessage(messages.klot)}
+              tooltip='Klot — cycle & tides'
             />
 
             <NudgesLink />

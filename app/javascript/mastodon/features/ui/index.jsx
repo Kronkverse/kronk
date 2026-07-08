@@ -94,6 +94,7 @@ import {
   Booth,
   BoothSetPage,
   Flow,
+  Klot,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
 import { focusColumn, getFocusedItemIndex, focusItemSibling } from './util/focusUtils';
@@ -222,6 +223,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path="/booth/sets/:id" component={BoothSetPage} content={children} />
             <WrappedRoute path="/booth" component={Booth} content={children} />
             <WrappedRoute path="/flow" component={Flow} content={children} />
+            {signedIn && <WrappedRoute path="/klot" component={Klot} content={children} />}
             {signedIn && <WrappedRoute path="/kalendar/:id" component={EventDetail} content={children} />}
             {signedIn && <WrappedRoute path="/kalendar" component={Events} content={children} />}
             {signedIn && <WrappedRoute path="/in-flow" component={InFlow} content={children} />}

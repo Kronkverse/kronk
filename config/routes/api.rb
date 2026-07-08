@@ -123,6 +123,13 @@ namespace :api, format: false do
       end
     end
 
+    namespace :klot do
+      resources :periods, only: [:index, :create, :destroy]
+      resource :settings, only: [:show, :update]
+      resources :shares, only: [:index, :create, :destroy]
+      resources :phases, only: [:show], param: :account_id
+    end
+
     resources :events, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :rsvp
