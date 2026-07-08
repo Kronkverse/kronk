@@ -29,12 +29,23 @@ export const ListingCard: React.FC<{ listing: MarketplaceListing }> = ({
   listing,
 }) => {
   const price = listing.price_display ?? '';
+  const thumbnail = listing.media_attachments[0];
 
   return (
     <Link
       to={`/marketplace/listing/${listing.id}`}
-      className={`marketplace-card marketplace-card--${listing.category} marketplace-card--link`}
+      className={`marketplace-card marketplace-card--${listing.category} marketplace-card--link${thumbnail ? ' marketplace-card--has-thumb' : ''}`}
     >
+      {thumbnail && (
+        <div className='marketplace-card__thumb'>
+          <img
+            src={thumbnail.preview_url ?? thumbnail.url ?? ''}
+            alt={thumbnail.description ?? ''}
+            loading='lazy'
+          />
+        </div>
+      )}
+
       <header className='marketplace-card__header'>
         <span className='marketplace-card__category'>
           {CATEGORY_LABEL[listing.category]}

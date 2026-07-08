@@ -6,6 +6,7 @@ class REST::MarketplaceListingSerializer < ActiveModel::Serializer
              :created_at, :updated_at, :status_id
 
   belongs_to :account, serializer: REST::AccountSerializer
+  has_many :media_attachments, serializer: REST::MediaAttachmentSerializer
 
   def id
     object.id.to_s

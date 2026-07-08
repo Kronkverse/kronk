@@ -1,13 +1,32 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { FormattedMessage, defineMessages, useIntl } from 'react-intl';
 
 import { useHistory, useLocation } from 'react-router-dom';
 
+import AddPhotoIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
+import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import api from 'mastodon/api';
 
-import type { MarketplaceCategory, MarketplaceListing } from '../types';
+import type {
+  MarketplaceCategory,
+  MarketplaceListing,
+  MarketplaceMediaAttachment,
+} from '../types';
+
+const MAX_PHOTOS = 4;
+const ACCEPTED_IMAGE_TYPES =
+  'image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,image/avif';
+
+type PhotoStatus = 'uploading' | 'done' | 'failed';
+
+interface PhotoUpload {
+  localId: string;
+  previewUrl: string;
+  mediaId: string | null;
+  status: PhotoStatus;
+}
 
 const messages = defineMessages({
   title: { id: 'marketplace.compose.title', defaultMessage: 'Title' },
@@ -46,6 +65,30 @@ const messages = defineMessages({
   locationPlaceholder: {
     id: 'marketplace.compose.location_placeholder',
     defaultMessage: 'e.g. Sydney, AU',
+  },
+  photos: {
+    id: 'marketplace.compose.photos',
+    defaultMessage: 'Photos (optional)',
+  },
+  addPhotos: {
+    id: 'marketplace.compose.add_photos',
+    defaultMessage: 'Add photos',
+  },
+  photosHint: {
+    id: 'marketplace.compose.photos_hint',
+    defaultMessage: 'Up to {max} photos.',
+  },
+  removePhoto: {
+    id: 'marketplace.compose.remove_photo',
+    defaultMessage: 'Remove photo',
+  },
+  photoUploading: {
+    id: 'marketplace.compose.photo_uploading',
+    defaultMessage: 'Uploading…',
+  },
+  photoFailed: {
+    id: 'marketplace.compose.photo_failed',
+    defaultMessage: 'Upload failed',
   },
 });
 
@@ -135,10 +178,86 @@ export const ComposeForm: React.FC = () => {
   const [subcategory, setSubcategory] = useState('');
   const [price, setPrice] = useState('');
   const [locationText, setLocationText] = useState('');
+  const [photos, setPhotos] = useState<PhotoUpload[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canSubmit = title.trim().length > 0 && !submitting;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploading = photos.some((p) => p.status === 'uploading');
+
+  const canSubmit = title.trim().length > 0 && !submitting && !uploading;
+
+  // Revoke any live blob URLs on unmount so the browser can free them.
+  useEffect(() => {
+    return () => {
+      setPhotos((prev) => {
+        prev.forEach((p) => {
+          URL.revokeObjectURL(p.previewUrl);
+        });
+        return prev;
+      });
+    };
+  }, []);
+
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(e.target.files ?? []);
+      e.target.value = '';
+      if (files.length === 0) return;
+
+      setPhotos((prev) => {
+        const remaining = MAX_PHOTOS - prev.length;
+        const toUpload = files.slice(0, remaining);
+
+        const newUploads: PhotoUpload[] = toUpload.map((file) => ({
+          localId: `${Date.now().toString()}-${Math.random().toString(36).slice(2)}`,
+          previewUrl: URL.createObjectURL(file),
+          mediaId: null,
+          status: 'uploading',
+        }));
+
+        toUpload.forEach((file, i) => {
+          const upload = newUploads[i];
+          if (!upload) return;
+
+          const fd = new FormData();
+          fd.append('file', file);
+
+          api()
+            .post<MarketplaceMediaAttachment>('/api/v1/media', fd)
+            .then((res) => {
+              setPhotos((current) =>
+                current.map((p) =>
+                  p.localId === upload.localId
+                    ? { ...p, mediaId: res.data.id, status: 'done' }
+                    : p,
+                ),
+              );
+            })
+            .catch(() => {
+              setPhotos((current) =>
+                current.map((p) =>
+                  p.localId === upload.localId
+                    ? { ...p, status: 'failed' }
+                    : p,
+                ),
+              );
+            });
+        });
+
+        return [...prev, ...newUploads];
+      });
+    },
+    [],
+  );
+
+  const handleRemovePhoto = useCallback((localId: string) => {
+    setPhotos((prev) => {
+      const removed = prev.find((p) => p.localId === localId);
+      if (removed) URL.revokeObjectURL(removed.previewUrl);
+      return prev.filter((p) => p.localId !== localId);
+    });
+  }, []);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -147,7 +266,7 @@ export const ComposeForm: React.FC = () => {
       setSubmitting(true);
       setError(null);
       try {
-        const body: Record<string, string> = {
+        const body: Record<string, string | string[]> = {
           title: title.trim(),
           description: description.trim(),
           category,
@@ -155,6 +274,11 @@ export const ComposeForm: React.FC = () => {
         if (subcategory.trim()) body.subcategory = subcategory.trim();
         if (price.trim()) body.price_display = price.trim();
         if (locationText.trim()) body.location = locationText.trim();
+
+        const mediaIds = photos
+          .filter((p) => p.status === 'done' && p.mediaId)
+          .map((p) => p.mediaId as string);
+        if (mediaIds.length > 0) body.media_ids = mediaIds;
 
         await api().post<MarketplaceListing>(
           '/api/v1/marketplace/listings',
@@ -182,6 +306,7 @@ export const ComposeForm: React.FC = () => {
       price,
       locationText,
       category,
+      photos,
       history,
       intl,
     ],
@@ -338,6 +463,70 @@ export const ComposeForm: React.FC = () => {
             placeholder={intl.formatMessage(messages.subcategoryPlaceholder)}
           />
         </label>
+
+        <fieldset className='marketplace-compose__section marketplace-compose__photos'>
+          <legend className='marketplace-eyebrow marketplace-compose__legend'>
+            {intl.formatMessage(messages.photos)}
+          </legend>
+          <p className='marketplace-compose__photos-hint'>
+            {intl.formatMessage(messages.photosHint, { max: MAX_PHOTOS })}
+          </p>
+
+          <div className='marketplace-compose__photo-grid'>
+            {photos.map((photo) => (
+              <div
+                key={photo.localId}
+                className={`marketplace-compose__photo marketplace-compose__photo--${photo.status}`}
+              >
+                <img
+                  src={photo.previewUrl}
+                  alt=''
+                  className='marketplace-compose__photo-image'
+                />
+                {photo.status === 'uploading' && (
+                  <span className='marketplace-compose__photo-state'>
+                    {intl.formatMessage(messages.photoUploading)}
+                  </span>
+                )}
+                {photo.status === 'failed' && (
+                  <span className='marketplace-compose__photo-state marketplace-compose__photo-state--failed'>
+                    {intl.formatMessage(messages.photoFailed)}
+                  </span>
+                )}
+                <button
+                  type='button'
+                  className='marketplace-compose__photo-remove'
+                  aria-label={intl.formatMessage(messages.removePhoto)}
+                  onClick={() => {
+                    handleRemovePhoto(photo.localId);
+                  }}
+                >
+                  <CloseIcon width={14} height={14} />
+                </button>
+              </div>
+            ))}
+
+            {photos.length < MAX_PHOTOS && (
+              <button
+                type='button'
+                className='marketplace-compose__photo-add'
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <AddPhotoIcon width={20} height={20} />
+                <span>{intl.formatMessage(messages.addPhotos)}</span>
+              </button>
+            )}
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type='file'
+            accept={ACCEPTED_IMAGE_TYPES}
+            multiple
+            hidden
+            onChange={handleFileSelect}
+          />
+        </fieldset>
 
         {error && <p className='marketplace-compose__error'>{error}</p>}
 

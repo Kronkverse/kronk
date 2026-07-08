@@ -138,6 +138,28 @@ const ListingDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => 
               </p>
             )}
 
+            {listing.media_attachments.length > 0 && (
+              <div
+                className={`marketplace-detail__gallery marketplace-detail__gallery--count-${Math.min(listing.media_attachments.length, 4)}`}
+              >
+                {listing.media_attachments.map((media) => (
+                  <a
+                    key={media.id}
+                    href={media.url ?? '#'}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='marketplace-detail__gallery-item'
+                  >
+                    <img
+                      src={media.preview_url ?? media.url ?? ''}
+                      alt={media.description ?? ''}
+                      loading='lazy'
+                    />
+                  </a>
+                ))}
+              </div>
+            )}
+
             {listing.description && (
               <div className='marketplace-detail__description'>
                 {listing.description}

@@ -37,6 +37,10 @@ class MarketplaceListing < ApplicationRecord
   belongs_to :account
   belongs_to :shared_status, class_name: 'Status', foreign_key: :status_id, optional: true
 
+  # Photos attached to the listing live on the shared_status — Mastodon's
+  # native MediaAttachment infra handles storage, federation, and moderation.
+  has_many :media_attachments, through: :shared_status
+
   validates :title, presence: true, length: { maximum: 200 }
   validates :description, length: { maximum: 5_000 }
   validates :category, inclusion: { in: CATEGORIES }
