@@ -5,6 +5,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { planetIcon, spaceColor } from 'mastodon/planets';
@@ -25,7 +26,8 @@ const messages = defineMessages({
   loading: { id: 'tree.loading', defaultMessage: 'Loading tree…' },
   empty: {
     id: 'tree.empty',
-    defaultMessage: 'The tree is empty. Seed will appear when the first user visits.',
+    defaultMessage:
+      'The tree is empty. Seed will appear when the first user visits.',
   },
   viewList: { id: 'tree.view.list', defaultMessage: 'List' },
   viewMap: { id: 'tree.view.map', defaultMessage: 'Map' },
@@ -34,10 +36,37 @@ const messages = defineMessages({
     id: 'tree.plant_layer',
     defaultMessage: 'Add a sub-layer',
   },
+  back: {
+    id: 'tree.back_to_landing',
+    defaultMessage: 'Back to the three doors',
+  },
 });
 
 type ViewMode = 'list' | 'map';
 type PlantTarget = { parentId: string; kind: 'layer' | 'idea' } | null;
+
+// Client-side taglines for the seeded top branches. These live here (not
+// in the DB) because the seeded structure is a UI concern, not model state.
+// If a branch has a real `description` set it wins over this fallback.
+const BRANCH_TAGLINES: Record<string, string> = {
+  Digital: 'Development · Sovereignty · Infrastructure',
+  Community: 'User Experience · Relationships · Community',
+  Platform: 'Governance · Structure · Vision',
+};
+
+// One-line "what happens if I enter this door" text, again client-side
+// so the UI copy stays here rather than baked into the seed.
+const BRANCH_INTROS: Record<string, string> = {
+  Digital: 'Where Kronk gets built — code, infrastructure, sovereignty.',
+  Community: 'Where Kronk feels alive — people, experience, relationships.',
+  Platform: 'Where Kronk decides itself — governance, structure, vision.',
+};
+
+const taglineFor = (node: TreeNode): string =>
+  node.description || BRANCH_TAGLINES[node.name] || '';
+
+const introFor = (node: TreeNode): string =>
+  BRANCH_INTROS[node.name] ?? '';
 
 const Tree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
@@ -49,6 +78,8 @@ const Tree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mode, setMode] = useState<ViewMode>('list');
   const [planting, setPlanting] = useState<PlantTarget>(null);
+  // Which top branch the user has "entered". null = landing (three doors).
+  const [focusedBranchId, setFocusedBranchId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -103,6 +134,10 @@ const Tree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const roots = childrenOf(nodes, null);
   const root = roots[0];
   const topBranches = root ? childrenOf(nodes, root.id) : [];
+  const focusedBranch =
+    focusedBranchId != null
+      ? topBranches.find((b) => b.id === focusedBranchId) ?? null
+      : null;
 
   return (
     <Column bindToDocument={!multiColumn}>
@@ -166,153 +201,236 @@ const Tree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </div>
         )}
 
-        {!loading && !error && mode === 'list' && root && (
-          <div className='tree-branches'>
-            {topBranches.map((branch) => {
-              const branchColor = branchColorFor(nodes, branch);
-              const subLayers = childrenOf(nodes, branch.id);
+        {/* ── List view: landing (three doors) ─────────────────────────── */}
+        {!loading && !error && mode === 'list' && root && !focusedBranch && (
+          <section className='tree-landing'>
+            <div className='tree-landing__intro'>
+              <p className='tree-eyebrow'>
+                <FormattedMessage
+                  id='tree.landing.eyebrow'
+                  defaultMessage='Three doors'
+                />
+              </p>
+              <h3 className='tree-landing__title serif'>
+                <FormattedMessage
+                  id='tree.landing.title'
+                  defaultMessage='Which space are you contributing in?'
+                />
+              </h3>
+              <p className='tree-landing__lede'>
+                <FormattedMessage
+                  id='tree.landing.lede'
+                  defaultMessage='Kronk grows in three concurrent directions. Enter a door to see the places inside it and plant an idea.'
+                />
+              </p>
+            </div>
 
-              return (
-                <section
-                  key={branch.id}
-                  className='tree-branch'
-                  style={
-                    { '--branch-color': branchColor } as React.CSSProperties
-                  }
-                >
-                  <header
-                    className='tree-branch__header'
-                    onClick={() => {
-                      setSelectedId(branch.id);
-                    }}
-                  >
-                    <h3 className='tree-branch__name serif'>{branch.name}</h3>
-                    {branch.description && (
-                      <p className='tree-branch__tagline'>
-                        {branch.description}
+            <ul className='tree-doors'>
+              {topBranches.map((branch) => {
+                const branchColor = branchColorFor(nodes, branch);
+                const subLayers = childrenOf(nodes, branch.id);
+                const ideaCount = ideaDescendantCount(nodes, branch.id);
+
+                return (
+                  <li key={branch.id} className='tree-door-wrap'>
+                    <button
+                      type='button'
+                      className='tree-door'
+                      style={
+                        {
+                          '--branch-color': branchColor,
+                        } as React.CSSProperties
+                      }
+                      onClick={() => {
+                        setFocusedBranchId(branch.id);
+                      }}
+                    >
+                      <span className='tree-door__eyebrow'>
+                        <FormattedMessage
+                          id='tree.door.enter'
+                          defaultMessage='Enter'
+                        />
+                      </span>
+                      <h4 className='tree-door__name serif'>{branch.name}</h4>
+                      <p className='tree-door__tagline'>
+                        {taglineFor(branch)}
                       </p>
-                    )}
-                  </header>
+                      <p className='tree-door__intro'>{introFor(branch)}</p>
+                      <div className='tree-door__stats'>
+                        <span className='tree-door__stat'>
+                          <span className='tree-door__stat-value'>
+                            {subLayers.length}
+                          </span>
+                          <span className='tree-door__stat-label'>
+                            <FormattedMessage
+                              id='tree.door.places'
+                              defaultMessage='{count, plural, one {place} other {places}}'
+                              values={{ count: subLayers.length }}
+                            />
+                          </span>
+                        </span>
+                        <span className='tree-door__stat'>
+                          <span className='tree-door__stat-value'>
+                            {ideaCount}
+                          </span>
+                          <span className='tree-door__stat-label'>
+                            <FormattedMessage
+                              id='tree.door.ideas'
+                              defaultMessage='{count, plural, one {idea} other {ideas}}'
+                              values={{ count: ideaCount }}
+                            />
+                          </span>
+                        </span>
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
 
-                  <ul className='tree-branch__sublayers'>
-                    {subLayers.map((sl) => {
-                      const ideas = childrenOf(nodes, sl.id).filter(
-                        (c) => c.kind === 'idea',
-                      );
-                      const ideaCount = ideaDescendantCount(nodes, sl.id);
-                      const isPlantingHere =
-                        planting?.parentId === sl.id;
+        {/* ── List view: focused branch ────────────────────────────────── */}
+        {!loading && !error && mode === 'list' && focusedBranch && (
+          <section
+            className='tree-focused'
+            style={
+              {
+                '--branch-color': branchColorFor(nodes, focusedBranch),
+              } as React.CSSProperties
+            }
+          >
+            <button
+              type='button'
+              className='tree-back'
+              onClick={() => {
+                setFocusedBranchId(null);
+                setPlanting(null);
+              }}
+            >
+              <ArrowBackIcon width={14} height={14} />
+              <span>{intl.formatMessage(messages.back)}</span>
+            </button>
 
-                      return (
-                        <li key={sl.id} className='tree-sublayer'>
-                          <div
-                            className='tree-sublayer__row'
+            <header className='tree-focused__header'>
+              <p className='tree-eyebrow'>{taglineFor(focusedBranch)}</p>
+              <h3 className='tree-focused__name serif'>
+                {focusedBranch.name}
+              </h3>
+              <p className='tree-focused__intro'>{introFor(focusedBranch)}</p>
+            </header>
+
+            <ul className='tree-focused__sublayers'>
+              {childrenOf(nodes, focusedBranch.id).map((sl) => {
+                const ideas = childrenOf(nodes, sl.id).filter(
+                  (c) => c.kind === 'idea',
+                );
+                const ideaCount = ideaDescendantCount(nodes, sl.id);
+                const isPlantingHere = planting?.parentId === sl.id;
+
+                return (
+                  <li key={sl.id} className='tree-sublayer'>
+                    <div
+                      className='tree-sublayer__row'
+                      onClick={() => {
+                        setSelectedId(sl.id);
+                      }}
+                    >
+                      <span className='tree-sublayer__name'>{sl.name}</span>
+                      <span className='tree-sublayer__ideas-count'>
+                        <FormattedMessage
+                          id='tree.sublayer.ideas_count'
+                          defaultMessage='{count, plural, =0 {no ideas yet} one {# idea} other {# ideas}}'
+                          values={{ count: ideaCount }}
+                        />
+                      </span>
+                    </div>
+
+                    {ideas.length > 0 && (
+                      <ul className='tree-ideas'>
+                        {ideas.map((idea) => (
+                          <li
+                            key={idea.id}
+                            className={`tree-idea tree-idea--${idea.status ?? 'unset'}`}
                             onClick={() => {
-                              setSelectedId(sl.id);
+                              setSelectedId(idea.id);
                             }}
                           >
-                            <span className='tree-sublayer__name'>
-                              {sl.name}
+                            <span className='tree-idea__name'>
+                              {idea.name}
                             </span>
-                            <span className='tree-sublayer__ideas-count'>
-                              <FormattedMessage
-                                id='tree.sublayer.ideas_count'
-                                defaultMessage='{count, plural, =0 {no ideas yet} one {# idea} other {# ideas}}'
-                                values={{ count: ideaCount }}
-                              />
-                            </span>
-                          </div>
-
-                          {ideas.length > 0 && (
-                            <ul className='tree-ideas'>
-                              {ideas.map((idea) => (
-                                <li
-                                  key={idea.id}
-                                  className={`tree-idea tree-idea--${idea.status ?? 'unset'}`}
-                                  onClick={() => {
-                                    setSelectedId(idea.id);
-                                  }}
-                                >
-                                  <span className='tree-idea__name'>
-                                    {idea.name}
-                                  </span>
-                                  {idea.status && (
-                                    <span
-                                      className={`tree-idea__badge tree-idea__badge--${idea.status}`}
-                                    >
-                                      {idea.status}
-                                    </span>
-                                  )}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-
-                          {isPlantingHere ? (
-                            <PlantForm
-                              parent={sl}
-                              kind={planting?.kind ?? 'idea'}
-                              onCreated={handleNodeCreated}
-                              onCancel={() => {
-                                setPlanting(null);
-                              }}
-                            />
-                          ) : (
-                            <div className='tree-sublayer__actions'>
-                              <button
-                                type='button'
-                                className='tree-add'
-                                onClick={() => {
-                                  setPlanting({
-                                    parentId: sl.id,
-                                    kind: 'idea',
-                                  });
-                                }}
+                            {idea.status && (
+                              <span
+                                className={`tree-idea__badge tree-idea__badge--${idea.status}`}
                               >
-                                <AddIcon width={12} height={12} />
-                                {intl.formatMessage(messages.plantIdea)}
-                              </button>
-                            </div>
-                          )}
-                        </li>
-                      );
-                    })}
+                                {idea.status}
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
 
-                    {planting?.parentId === branch.id ? (
-                      <li className='tree-sublayer tree-sublayer--planting'>
-                        <PlantForm
-                          parent={branch}
-                          kind='layer'
-                          onCreated={handleNodeCreated}
-                          onCancel={() => {
-                            setPlanting(null);
-                          }}
-                        />
-                      </li>
+                    {isPlantingHere ? (
+                      <PlantForm
+                        parent={sl}
+                        kind={planting?.kind ?? 'idea'}
+                        onCreated={handleNodeCreated}
+                        onCancel={() => {
+                          setPlanting(null);
+                        }}
+                      />
                     ) : (
-                      <li className='tree-sublayer tree-sublayer--add'>
+                      <div className='tree-sublayer__actions'>
                         <button
                           type='button'
                           className='tree-add'
                           onClick={() => {
-                            setPlanting({
-                              parentId: branch.id,
-                              kind: 'layer',
-                            });
+                            setPlanting({ parentId: sl.id, kind: 'idea' });
                           }}
                         >
                           <AddIcon width={12} height={12} />
-                          {intl.formatMessage(messages.plantLayer)}
+                          {intl.formatMessage(messages.plantIdea)}
                         </button>
-                      </li>
+                      </div>
                     )}
-                  </ul>
-                </section>
-              );
-            })}
-          </div>
+                  </li>
+                );
+              })}
+
+              {planting?.parentId === focusedBranch.id ? (
+                <li className='tree-sublayer tree-sublayer--planting'>
+                  <PlantForm
+                    parent={focusedBranch}
+                    kind='layer'
+                    onCreated={handleNodeCreated}
+                    onCancel={() => {
+                      setPlanting(null);
+                    }}
+                  />
+                </li>
+              ) : (
+                <li className='tree-sublayer tree-sublayer--add'>
+                  <button
+                    type='button'
+                    className='tree-add'
+                    onClick={() => {
+                      setPlanting({
+                        parentId: focusedBranch.id,
+                        kind: 'layer',
+                      });
+                    }}
+                  >
+                    <AddIcon width={12} height={12} />
+                    {intl.formatMessage(messages.plantLayer)}
+                  </button>
+                </li>
+              )}
+            </ul>
+          </section>
         )}
 
+        {/* ── Map view ─────────────────────────────────────────────────── */}
         {!loading && !error && mode === 'map' && root && (
           <MindMap
             nodes={nodes}

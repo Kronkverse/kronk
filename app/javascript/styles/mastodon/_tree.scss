@@ -46,6 +46,279 @@
   }
 }
 
+// ── Landing (three doors) ───────────────────────────────────────────────────
+.tree-landing {
+  max-width: 1100px;
+  margin: 0 auto;
+
+  &__intro {
+    max-width: 640px;
+    margin: 0 auto 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  &__title {
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 1.25;
+    color: var(--tree-ink);
+    margin: 0;
+    letter-spacing: -0.005em;
+  }
+
+  &__lede {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--tree-muted);
+    margin: 0;
+  }
+}
+
+.tree-doors {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+
+  @media (min-width: 900px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.tree-door-wrap {
+  display: contents;
+}
+
+.tree-door {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 260px;
+  padding: 28px 24px 24px;
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--branch-color) 14%, var(--tree-panel)) 0%,
+    var(--tree-panel) 55%,
+    var(--tree-canvas) 100%
+  );
+  border: 1px solid var(--tree-hair);
+  border-radius: 4px;
+  color: var(--tree-ink);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 200ms ease-out, border-color 200ms ease-out,
+    box-shadow 200ms ease-out;
+
+  // Bar on the left edge in the branch colour — the "door frame".
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--branch-color);
+    opacity: 0.9;
+    transition: width 200ms ease-out, opacity 200ms ease-out;
+  }
+
+  // Ambient glow that intensifies on hover.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at 12% 30%,
+      color-mix(in srgb, var(--branch-color) 22%, transparent) 0%,
+      transparent 55%
+    );
+    opacity: 0.5;
+    pointer-events: none;
+    transition: opacity 250ms ease-out;
+  }
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--branch-color) 40%, var(--tree-hair-strong));
+    box-shadow: 0 8px 32px -12px color-mix(in srgb, var(--branch-color) 40%, transparent);
+    outline: none;
+
+    &::before { width: 5px; opacity: 1; }
+    &::after { opacity: 0.85; }
+
+    .tree-door__eyebrow {
+      color: color-mix(in srgb, var(--branch-color) 85%, var(--tree-ink));
+    }
+  }
+
+  &__eyebrow {
+    position: relative;
+    z-index: 1;
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--branch-color) 55%, var(--tree-muted));
+    transition: color 200ms ease-out;
+    margin-bottom: 4px;
+  }
+
+  &__name {
+    position: relative;
+    z-index: 1;
+    font-weight: 400;
+    font-size: 34px;
+    line-height: 1.05;
+    color: var(--tree-ink);
+    margin: 0;
+    letter-spacing: -0.015em;
+  }
+
+  &__tagline {
+    position: relative;
+    z-index: 1;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--branch-color) 45%, var(--tree-muted));
+    margin: 4px 0 0;
+    line-height: 1.5;
+  }
+
+  &__intro {
+    position: relative;
+    z-index: 1;
+    font-family: Georgia, 'Liberation Serif', 'Times New Roman', serif;
+    font-size: 15px;
+    line-height: 1.55;
+    color: color-mix(in srgb, var(--tree-ink) 78%, var(--tree-muted));
+    margin: 12px 0 0;
+    flex: 1;
+    font-style: italic;
+  }
+
+  &__stats {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 20px;
+    padding-top: 14px;
+    border-top: 1px solid var(--tree-hair);
+    width: 100%;
+    margin-top: auto;
+  }
+
+  &__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__stat-value {
+    font-family: Georgia, 'Liberation Serif', 'Times New Roman', serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--tree-ink);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__stat-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tree-muted);
+  }
+}
+
+// ── Focused branch (after entering a door) ──────────────────────────────────
+.tree-focused {
+  max-width: 720px;
+  margin: 0 auto;
+  padding-top: 4px;
+
+  &__header {
+    padding: 24px 0 32px;
+    border-bottom: 1px solid var(--tree-hair);
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0 auto 0 -20px;
+      width: 3px;
+      background: var(--branch-color);
+      opacity: 0.6;
+      border-radius: 2px;
+    }
+  }
+
+  &__name {
+    font-weight: 400;
+    font-size: 40px;
+    line-height: 1.1;
+    color: var(--branch-color);
+    margin: 0;
+    letter-spacing: -0.015em;
+  }
+
+  &__intro {
+    font-family: Georgia, 'Liberation Serif', 'Times New Roman', serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--tree-muted);
+    margin: 4px 0 0;
+    font-style: italic;
+    max-width: 520px;
+  }
+
+  &__sublayers {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--tree-hair);
+  }
+}
+
+.tree-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--tree-muted);
+  padding: 4px 0;
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-bottom: 8px;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--tree-ink);
+    outline: none;
+  }
+}
+
+// Old three-card grid — kept for now in case something references it, but
+// no longer rendered from index.tsx after the landing/focused refactor.
 .tree-branches {
   max-width: 960px;
   margin: 0 auto;
