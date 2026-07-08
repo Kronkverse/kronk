@@ -1,8 +1,8 @@
-# Kronk Pipeline Map — Build Brief
+# Kronk Tree — Build Brief
 
 A navigable map of everything in Kronk's pipeline: what exists, what's planned, what depends on what, and what a dev can pick up right now. Two lenses (Map + List) over one editable tree.
 
-Reference prototype: `kronk_mindmap.html` (self-contained, vanilla JS/SVG, **in-memory only — no persistence**). Treat it as the behavioural + visual spec, not code to port line-for-line.
+Reference prototype: `tree.html` (self-contained, vanilla JS/SVG, **in-memory only — no persistence**). Treat it as the behavioural + visual spec, not code to port line-for-line.
 
 ---
 
@@ -45,10 +45,10 @@ Nesting is unlimited below that (e.g. `Community / UX / Profile / Visibility`). 
 ## Delivery phases
 
 **Phase 0 — Ship the prototype as a static reference (today, zero backend).**
-Drop `kronk_mindmap.html` into the kronk repo's `public/` as `public/pipeline.html`. Mastodon serves `public/` statically, so it's live at `/pipeline.html` behind the invite wall. The team can click it immediately. State resets per session — reference only.
+Drop `tree.html` into the kronk repo's `public/` as `public/tree.html`. Mastodon serves `public/` statically, so it's live at `/tree.html` behind the invite wall. The team can click it immediately. State resets per session — reference only.
 
 **Phase 1 — Recon + spec (no code).**
-Map where a real React feature mounts (mirror the Cosmos Hub: `app/javascript/mastodon/features/…`, route e.g. `/pipeline`), how assets build, and where a small persistence store would live.
+Map where a real React feature mounts (mirror the Cosmos Hub: `app/javascript/mastodon/features/…`, route e.g. `/tree`), how assets build, and where a small persistence store would live.
 
 **Phase 2 — Build the real feature.**
 React/TS port of Map + List + panel, plus **minimal persistence** (tree, deps, ideas, comments). Backend before UI for anything introducing shared state. Persistence = a Rails model/controller in the fork over the existing Postgres, exposing a small JSON API. **Local-only; no federation.**
