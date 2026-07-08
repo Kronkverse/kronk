@@ -239,6 +239,8 @@ Rails.application.routes.draw do
   get '/questions/*path', to: 'home#index', format: false
   get '/nudges', to: 'home#index'
   get '/nudges/*path', to: 'home#index', format: false
+  get '/tree', to: 'home#index'
+  get '/tree/*path', to: 'home#index', format: false
   get '/in-flow', to: 'home#index'
   get '/in-flow/*path', to: 'home#index', format: false
   get '/market', to: 'home#index'
