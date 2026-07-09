@@ -10,8 +10,9 @@
 //
 // See docs/korners/anatomy.md and docs/korners/adding_a_korner.md.
 
-import type { Map as ImmutableMap } from 'immutable';
 import type { ReactElement } from 'react';
+
+import type { Map as ImmutableMap } from 'immutable';
 
 import { StatusBoothCard } from './status_booth_card';
 import { StatusEventCard } from './status_event_card';
@@ -27,36 +28,47 @@ interface KornerCardEntry {
   card: (status: StatusLike) => ReactElement;
 }
 
-// Dynamic dispatch means we lose type specificity at the registry boundary.
-// Each entry's `card` function narrows back to the specific card's typed
-// props inside its own body via toJS().
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const assocData = (s: StatusLike, key: string): any =>
+/* This registry is dynamic dispatch by design: each entry pulls a specific
+ * Status association out of an ImmutableMap and hands it — as a plain JS
+ * object via toJS() — to a specifically-typed card component. TypeScript
+ * cannot verify at the registry boundary that the association's shape
+ * matches the card's props, so the four card factories widen through `any`.
+ * That widening is why the rule is disabled for this block.
+ */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment,
+                  @typescript-eslint/no-explicit-any */
+
+const dataFrom = (s: StatusLike, key: string): any =>
   (s.get(key) as ImmutableMap<string, unknown>).toJS();
 
 export const KORNER_CARDS: KornerCardEntry[] = [
   {
     slug: 'kalendar',
     association: 'event',
-    card: (s) => <StatusEventCard event={assocData(s, 'event')} />,
+    card: (s) => <StatusEventCard event={dataFrom(s, 'event')} />,
   },
   {
     slug: 'kommons',
     association: 'proposal',
     postType: 'proposal',
-    card: (s) => <StatusKommonsCard proposal={assocData(s, 'proposal')} />,
+    card: (s) => <StatusKommonsCard proposal={dataFrom(s, 'proposal')} />,
   },
   {
     slug: 'marketplace',
     association: 'marketplace_listing',
-    card: (s) => <StatusMarketplaceCard listing={assocData(s, 'marketplace_listing')} />,
+    card: (s) => (
+      <StatusMarketplaceCard listing={dataFrom(s, 'marketplace_listing')} />
+    ),
   },
   {
     slug: 'booth',
     association: 'booth_set',
-    card: (s) => <StatusBoothCard set={assocData(s, 'booth_set')} />,
+    card: (s) => <StatusBoothCard set={dataFrom(s, 'booth_set')} />,
   },
 ];
+
+/* eslint-enable @typescript-eslint/no-unsafe-assignment,
+                 @typescript-eslint/no-explicit-any */
 
 export function pickKornerCard(status: StatusLike): KornerCardEntry | null {
   for (const entry of KORNER_CARDS) {
