@@ -143,28 +143,9 @@ export const StatusQuestionCard: React.FC<{
     [onCardClick],
   );
 
-  const handleLockedKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ')
-        handleAnswerClick(e as unknown as React.MouseEvent);
-    },
-    [handleAnswerClick],
-  );
-
   const textareaRef = useCallback((node: HTMLTextAreaElement | null) => {
     if (node) node.focus();
   }, []);
-
-  const handleCardKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') return;
-      if ((e.key === 'Enter' || e.key === ' ') && onCardClick) {
-        onCardClick(e as unknown as React.MouseEvent);
-      }
-    },
-    [onCardClick],
-  );
 
   return (
     <StatusKornerCard
@@ -179,10 +160,6 @@ export const StatusQuestionCard: React.FC<{
             ? intl.formatMessage(messages.question)
             : intl.formatMessage(messages.answer),
       }}
-      onClick={onCardClick}
-      onKeyDown={handleCardKeyDown}
-      role={onCardClick ? 'button' : undefined}
-      tabIndex={onCardClick ? 0 : undefined}
     >
       {contentHtml && (
         <div
@@ -197,26 +174,6 @@ export const StatusQuestionCard: React.FC<{
           onClick={handleFooterClick}
           role='presentation'
         >
-          <Icon
-            id={unlocked ? 'lock_open' : 'lock'}
-            icon={unlocked ? LockOpenIcon : LockIcon}
-            className={`status-question-card__lock ${unlocked ? 'status-question-card__lock--open' : ''}`}
-          />
-
-          {answerers.length > 0 && !answering && (
-            <div className='status-question-card__answerers'>
-              {answerers.slice(0, 5).map((a) => (
-                <img
-                  key={a.id}
-                  className='status-question-card__answerer-avatar'
-                  src={a.avatar}
-                  alt={a.username}
-                  title={`@${a.acct}`}
-                />
-              ))}
-            </div>
-          )}
-
           {answering ? (
             <>
               <textarea
@@ -238,39 +195,55 @@ export const StatusQuestionCard: React.FC<{
                 {'!'}
               </button>
             </>
-          ) : !unlocked && statusId ? (
-            <span
-              className='status-question-card__count status-question-card__count--locked'
-              onClick={handleAnswerClick}
-              role='button'
-              tabIndex={0}
-              onKeyDown={handleLockedKeyDown}
-            >
-              {answersCount > 0
-                ? intl.formatMessage(messages.answers, {
-                    count: answersCount,
-                  })
-                : intl.formatMessage(messages.locked)}
-            </span>
           ) : (
             <>
-              <span className='status-question-card__count'>
-                {answersCount > 0
-                  ? intl.formatMessage(messages.answers, {
-                      count: answersCount,
-                    })
-                  : unlocked
-                    ? intl.formatMessage(messages.answered)
-                    : intl.formatMessage(messages.locked)}
-              </span>
-              {unlocked && onCardClick && (
+              <div className='status-korner-card__meta'>
+                <Icon
+                  id={unlocked ? 'lock_open' : 'lock'}
+                  icon={unlocked ? LockOpenIcon : LockIcon}
+                  className={`status-question-card__lock ${unlocked ? 'status-question-card__lock--open' : ''}`}
+                />
+                {answerers.length > 0 && (
+                  <div className='status-question-card__answerers'>
+                    {answerers.slice(0, 5).map((a) => (
+                      <img
+                        key={a.id}
+                        className='status-question-card__answerer-avatar'
+                        src={a.avatar}
+                        alt={a.username}
+                        title={`@${a.acct}`}
+                      />
+                    ))}
+                  </div>
+                )}
+                <span className='status-question-card__count'>
+                  {answersCount > 0
+                    ? intl.formatMessage(messages.answers, {
+                        count: answersCount,
+                      })
+                    : unlocked
+                      ? intl.formatMessage(messages.answered)
+                      : intl.formatMessage(messages.locked)}
+                </span>
+              </div>
+
+              {unlocked && onCardClick ? (
                 <button
-                  className='status-question-card__see-answers'
+                  type='button'
+                  className='status-korner-card__action'
                   onClick={handleSeeAnswersClick}
                 >
                   {intl.formatMessage(messages.seeAnswers)}
                 </button>
-              )}
+              ) : !unlocked && statusId ? (
+                <button
+                  type='button'
+                  className='status-korner-card__action'
+                  onClick={handleAnswerClick}
+                >
+                  {intl.formatMessage(messages.answer)}
+                </button>
+              ) : null}
             </>
           )}
         </div>

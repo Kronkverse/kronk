@@ -1,11 +1,10 @@
 @use 'variables' as *;
 
 // Kuestions-only overrides and per-variant styles.
-// Container + badge frame live in _status_korner_card.scss.
+// Container, badge, body, footer, meta, action live in
+// _status_korner_card.scss. Only Kuestions-unique visuals remain.
 
 .status-question-card {
-  cursor: pointer;
-
   &__question-ref {
     padding: 10px 14px;
     border-bottom: 1px solid
@@ -35,36 +34,6 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
-  }
-
-  &__body {
-    padding: 16px 14px;
-    font-size: 16px;
-    line-height: 1.5;
-    color: $primary-text-color;
-
-    p {
-      margin: 0 0 10px;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-  }
-
-  &__footer {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    border-top: 1px solid
-      color-mix(in srgb, var(--space-color, #4844c0) 60%, black 40%);
-    background: color-mix(
-      in srgb,
-      var(--space-color, #4844c0) 10%,
-      transparent
-    );
-    cursor: default;
   }
 
   &__lock {
@@ -100,31 +69,9 @@
   &__count {
     font-size: 13px;
     color: $dark-text-color;
-    flex: 1;
 
     &--locked {
       cursor: pointer;
-    }
-  }
-
-  &__see-answers {
-    margin-inline-start: auto;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--space-color, #4844c0);
-    padding: 0;
-    white-space: nowrap;
-    transition: opacity 0.15s ease;
-
-    &:hover {
-      opacity: 0.75;
-    }
-
-    &::after {
-      content: ' →';
     }
   }
 

@@ -81,12 +81,12 @@ export const StatusKommonsCard: React.FC<{ proposal: ProposalSummary }> = ({
       </div>
 
       <div className='status-korner-card__footer status-kommons-card__footer'>
-        <span
-          className={`status-kommons-card__status status-kommons-card__status--${proposal.status}`}
-        >
-          {STATUS_LABELS[proposal.status] ?? proposal.status}
-        </span>
-        <span className='status-kommons-card__votes'>
+        <div className='status-korner-card__meta'>
+          <span
+            className={`status-kommons-card__status status-kommons-card__status--${proposal.status}`}
+          >
+            {STATUS_LABELS[proposal.status] ?? proposal.status}
+          </span>
           <span className='status-kommons-card__vote status-kommons-card__vote--support'>
             {intl.formatMessage(messages.supports, {
               count: proposal.support_count,
@@ -99,10 +99,10 @@ export const StatusKommonsCard: React.FC<{ proposal: ProposalSummary }> = ({
               })}
             </span>
           )}
-        </span>
+        </div>
         <Link
           to='/governance'
-          className='status-kommons-card__link'
+          className='status-korner-card__action'
           onClick={handleLinkClick}
         >
           {intl.formatMessage(messages.viewSeed)}
