@@ -1,0 +1,53 @@
+# Klot — private menstrual-cycle tracker (phase-only sharing)
+# Retroactively authored from the shipped code on `dev/tbone` (live on shadow, not on main).
+# Reference prototype: /tree.html was the mind-map; this space is the tides_prototype.html translated to Kronk.
+
+slug:            klot
+name:            Klot
+planet:          earth
+icon:            nights_stay
+render_target:   native
+version:         0.1.0
+
+permissions:
+  - read:statuses                 # required for the sovereignty note + phase-only endpoint auth
+  - write:statuses                # required for logging periods + updating settings
+
+resources:
+  - name:    periods              # user-logged period start dates
+    primary: true
+  - name:    settings             # per-account cycle_length + period_length
+  - name:    shares               # allowlist of viewer_account_ids who may see this account's phase
+  - name:    phases               # not a table — a synthesized read-only projection endpoint
+
+storage:
+  db_namespace:  klot_            # tables: klot_periods, klot_settings, klot_shares
+  media_prefix:  # not-applicable — Klot deliberately holds no media; it stores only dates and settings
+  redis_prefix:  # not-implemented — settings could plausibly cache, but per-account footprint is trivial
+
+visibility_scopes:                # Klot's PhasesController is a bespoke capability — see §7 "secure only once"
+  - klot_phase_viewer             # implicit; enforced today by ownership check + the KlotShare allowlist.
+                                  # Would migrate onto the shared authorization layer when it lands.
+
+steward_role:    moderator        # nominal; no cross-user moderation actions exist for Klot data
+
+emits: []
+listens: []
+
+feed_projection:
+  card:               # not-applicable — Klot is a body-data Korner; deliberately does NOT project.
+                      # The sovereignty contract (Api::V1::Klot::PhasesController + KlotShareSerializer) is that
+                      # only phase-name + moon glyph reaches an authorized viewer, and never on the shared feed.
+                      # Framework-conformance here is *refusing* the projection, not implementing it.
+  discriminator:      # n/a
+
+subscription:
+  default:  # not-applicable — Klot data is per-account owner-visible only; subscription is not the right primitive.
+           # The KlotShare table is the correct primitive: a per-viewer opt-in, revocable, owner-controlled.
+
+launch:
+  blurb:  "Klot — track your cycle. Share the phase, not the data."
+  cta:    "Tap in"
+
+feature_flag:    # not-implemented
+federates:       false            # explicitly local-only, by the same sovereignty argument as the phase endpoint
