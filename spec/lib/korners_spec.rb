@@ -36,7 +36,7 @@ RSpec.describe Korners do
     it 'excludes dev-branch manifests' do
       slugs = described_class.enforced.map(&:slug)
       dev_branch_slugs.each do |slug|
-        expect(slugs).not_to include(slug)
+        expect(slugs).to_not include(slug)
       end
     end
   end

@@ -6,7 +6,7 @@ module Mastodon
   module CLI
     class Korners < Base
       desc 'list', 'List every Korner declared under config/korners/ and its drift'
-      long_desc <<~LONG
+      long_desc <<~LONG # rubocop:disable I18n/RailsI18n/DecorateString
         Prints a table showing every manifest under config/korners/, whether it's
         enforced on this branch, and any drift the boot-time validator would
         report (missing tables, missing Status associations).
@@ -16,7 +16,7 @@ module Mastodon
       def list
         Rails.application.eager_load!
 
-        header_row = ['slug', 'planet', 'enforced', 'drift']
+        header_row = %w(slug planet enforced drift)
         rows = ::Korners.all.map do |manifest|
           drift = detect_drift(manifest)
           [
@@ -26,13 +26,13 @@ module Mastodon
             drift.any? ? drift.join('; ') : 'none',
           ]
         end
-        rows = rows.sort_by { |row| row.first }
+        rows = rows.sort_by(&:first)
 
         widths = header_row.each_with_index.map do |head, idx|
           [head.length, *rows.map { |r| r[idx].length }].max
         end
 
-        say (header_row.each_with_index.map { |h, i| h.ljust(widths[i]) }.join('  '))
+        say(header_row.each_with_index.map { |h, i| h.ljust(widths[i]) }.join('  '))
         say('-' * (widths.sum + (2 * (widths.length - 1))))
         rows.each do |row|
           say(row.each_with_index.map { |cell, i| cell.ljust(widths[i]) }.join('  '))
@@ -52,15 +52,11 @@ module Mastodon
         prefix = manifest.db_namespace.to_s.chomp('_')
         if prefix.present?
           tables = ActiveRecord::Base.connection.tables
-          unless tables.include?(prefix.pluralize) || tables.any? { |t| t.start_with?("#{prefix}_") }
-            drift << "no tables match '#{manifest.db_namespace}'"
-          end
+          drift << "no tables match '#{manifest.db_namespace}'" unless tables.include?(prefix.pluralize) || tables.any? { |t| t.start_with?("#{prefix}_") }
         end
 
         assoc = manifest.status_association
-        if assoc && Status.reflect_on_association(assoc).nil?
-          drift << "Status has no :#{assoc}"
-        end
+        drift << "Status has no :#{assoc}" if assoc && Status.reflect_on_association(assoc).nil?
 
         drift
       end
