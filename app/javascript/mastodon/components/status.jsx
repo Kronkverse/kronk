@@ -33,9 +33,7 @@ import { getHashtagBarForStatus } from './hashtag_bar';
 import { RelativeTimestamp } from './relative_timestamp';
 import StatusActionBar from './status_action_bar';
 import StatusContent from './status_content';
-import { StatusEventCard } from './status_event_card';
-import { StatusKommonsCard } from './status_kommons_card';
-import { StatusQuestionCard } from './status_question_card';
+import { hasKornerCard, pickKornerCard } from './korner_cards';
 import { StatusSpaceBar } from './status_space_bar';
 import { StatusThreadLabel } from './status_thread_label';
 import { VisibilityIcon } from './visibility_icon';
@@ -557,35 +555,20 @@ class Status extends ImmutablePureComponent {
           </Bundle>
         );
       }
-    } else if (status.get('event')) {
-      media = <StatusEventCard event={status.get('event').toJS()} />;
-    } else if (status.get('post_type') === 'question' || status.get('post_type') === 'answer') {
-      const isAnswer = status.get('post_type') === 'answer';
-      const questionObj = isAnswer ? status.get('question') : null;
-      media = (
-        <StatusQuestionCard
-          postType='question'
-          contentHtml={isAnswer ? (questionObj ? questionObj.get('content') : '') : status.get('contentHtml')}
-          answersCount={isAnswer ? (questionObj ? questionObj.get('answers_count') : 0) : status.get('answers_count')}
-          answerers={isAnswer ? (questionObj ? questionObj.get('answerers')?.toJS() : []) : status.get('answerers')?.toJS()}
-          hasAnswered={isAnswer ? true : status.get('has_answered')}
-          statusId={isAnswer ? status.get('in_reply_to_id') : status.get('id')}
-          onCardClick={this.handleClick}
-        />
-      );
-    } else if (status.get('post_type') === 'proposal' && status.get('proposal')) {
-      media = (
-        <StatusKommonsCard proposal={status.get('proposal').toJS()} />
-      );
-    } else if (status.get('card') && !status.get('quote')) {
-      media = (
-        <Card
-          onOpenMedia={this.handleOpenMedia}
-          card={status.get('card')}
-          compact
-          sensitive={status.get('sensitive')}
-        />
-      );
+    } else {
+      const kornerCard = pickKornerCard(status);
+      if (kornerCard) {
+        media = kornerCard.card(status, { onCardClick: this.handleClick });
+      } else if (status.get('card') && !status.get('quote')) {
+        media = (
+          <Card
+            onOpenMedia={this.handleOpenMedia}
+            card={status.get('card')}
+            compact
+            sensitive={status.get('sensitive')}
+          />
+        );
+      }
     }
 
     const avatarAccount = displayAccount ?? status.get('account');
@@ -679,7 +662,7 @@ class Status extends ImmutablePureComponent {
 
             {expanded && (
               <>
-                {!status.get("event") && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && status.get('post_type') !== 'proposal' && (
+                {!hasKornerCard(status) && (
                   <StatusContent
                     status={status}
                     onClick={this.handleClick}

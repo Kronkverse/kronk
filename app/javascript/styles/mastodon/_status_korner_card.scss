@@ -1,0 +1,138 @@
+@use 'variables' as *;
+
+// Shared frame for every Korner card in the feed. Per-Korner partials
+// (_status_kommons_card.scss, _status_question_card.scss, …) still exist
+// and add their own body/footer rules; the container + badge live here
+// so a new Korner only has to fill in its own body slot.
+
+.status-korner-card {
+  border: 2px solid
+    color-mix(in srgb, var(--space-color, #4844c0) 60%, black 40%);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 12px;
+  background-color: lighten($ui-base-color, 3%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--space-color, #4844c0) 40%, transparent),
+    0 4px 16px rgba(#000, 0.5);
+  color: inherit;
+  text-decoration: none;
+  display: block;
+
+  &:hover,
+  &:focus {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  &__badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--space-color, #4844c0);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  &__badge-icon .icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  &__badge-label {
+    // Tight to the icon; per-Korner rules can restyle if needed.
+  }
+
+  &__type-tag {
+    margin-inline-start: auto;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  // ── Unified body: 14px padding; every Korner uses this slot ──────────────
+  &__body {
+    padding: 14px;
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: $primary-text-color;
+    margin: 0 0 4px;
+  }
+
+  &__summary {
+    font-size: 13px;
+    line-height: 1.5;
+    color: $dark-text-color;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+
+    // Space to breathe when the summary slot renders rich HTML (Kuestions).
+    p {
+      margin: 0 0 6px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  // ── Unified footer: meta chips left, single action link right ───────────
+  &__footer {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 14px;
+    border-top: 1px solid
+      color-mix(in srgb, var(--space-color, #4844c0) 60%, black 40%);
+    background: color-mix(
+      in srgb,
+      var(--space-color, #4844c0) 12%,
+      transparent
+    );
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__action {
+    margin-inline-start: auto;
+    font-size: 12px;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--space-color) 55%, currentColor 45%);
+    text-decoration: none;
+    white-space: nowrap;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+
+    &:hover,
+    &:focus {
+      text-decoration: underline;
+    }
+
+    &::after {
+      content: ' →';
+    }
+  }
+}

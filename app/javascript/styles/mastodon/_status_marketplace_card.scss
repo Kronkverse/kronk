@@ -1,0 +1,21 @@
+@use 'variables' as *;
+
+// Marketplace-only overrides for the shared Korner card frame.
+
+.status-marketplace-card {
+  &__price {
+    font-size: 13px;
+    font-weight: 600;
+    color: color-mix(in srgb, var(--space-color) 55%, $primary-text-color 45%);
+  }
+
+  &__location,
+  &__subcategory {
+    font-size: 12px;
+    color: $dark-text-color;
+  }
+
+  &__subcategory {
+    font-style: italic;
+  }
+}

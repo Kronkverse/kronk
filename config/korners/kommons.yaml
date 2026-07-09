@@ -1,0 +1,53 @@
+# Kommons — governance & structural coordination
+# Retroactively authored from the shipped code on `main`.
+# See docs/kronk_korner_spec.md for the framework this manifest declares against.
+
+slug:            kommons
+name:            Kommons          # rendered as ₭ommons in nav (unicode Kra)
+planet:          jupiter
+icon:            gavel            # material-icon; no dedicated 4096×2048 logo yet — TODO
+render_target:   native           # web-native React; §9 render_target semantics not enforced yet
+version:         0.1.0            # retrospective; predates the spec
+
+permissions:
+  - read:proposals
+  - write:proposals
+
+resources:
+  - name:    proposals
+    primary: true                 # /governance is the canonical entry — moves under /hub/kommons in §4 migration
+  - name:    proposal_votes
+  - name:    proposal_completion_suggestions   # added on feature/kommons-notifications
+
+storage:
+  db_namespace:  proposal_        # actual tables: proposals, proposal_votes, proposal_completion_suggestions, proposal_challenge_conditions
+  media_prefix:  # not-implemented — proposal media currently uses Mastodon default paths
+  redis_prefix:  # not-implemented — no dedicated Kommons Redis usage
+
+visibility_scopes: []             # uses Mastodon's standard visibility for shared statuses
+
+steward_role:    moderator
+
+emits: []                         # no internal event bus yet (§6)
+listens: []
+
+feed_projection:
+  card:               kommons_card         # StatusKommonsCard, now wrapping StatusKornerCard (feature/korner-cards)
+  title_from:         title
+  summary_from:       summary
+  links_to:           /governance          # implicit — routed via Rails, not derived from a hub-prefixed slug
+  default_visibility: public
+  discriminator:      status.post_type == 'proposal'   # existing convention; §8.3 aspires to manifest-driven detection
+
+  status_association: proposal       # framework: Status.has_one :proposal
+  status_post_type:   proposal       # framework: status.post_type value
+subscription:
+  default:  off                   # not-implemented — no per-space subscribe primitive exists yet
+
+launch:                           # retrospective — Kommons predates launch cards
+  blurb:  "₭ommons — the space where structural moves are decided."
+  cta:    "Tap in"
+
+feature_flag:    # not-implemented — Kommons is unconditionally mounted on main
+federates:       false            # local-only per §8.8
+enforced:        true                              # framework: on this branch; boot validator enforces

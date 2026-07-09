@@ -1,0 +1,49 @@
+# Tree — the pipeline map: places (sub-layers) and things to build (ideas)
+# Retroactively authored from the shipped code on `dev/chris` (live on shadow, not on main).
+# Reference spec: docs/tree-brief.md; static prototype: public/tree.html.
+
+slug:            tree
+name:            Tree
+planet:          jupiter           # shares with Kommons — Tree is described as an evolution of Kommons
+icon:            account_tree
+render_target:   native
+version:         0.1.0
+
+permissions:
+  - read:statuses
+  - write:statuses
+
+resources:
+  - name:    nodes                 # both sub-layers (places) and ideas (things to build)
+    primary: true
+  - name:    dependencies          # cross-tree links (needs / secures / relates)
+  - name:    comments              # per-node discussion thread
+
+storage:
+  db_namespace:  tree_             # tables: tree_nodes, tree_dependencies, tree_comments
+  media_prefix:  # not-implemented — Tree has no media attachments today (nodes are text-only)
+  redis_prefix:  # not-implemented
+
+visibility_scopes: []               # all-users read; edits gated by ownership/steward
+
+steward_role:    moderator
+
+emits: []
+listens: []
+
+feed_projection:
+  card:               # not-implemented — Tree does not project into the shared feed today.
+                      # Whether a new idea being planted should surface as a feed card is an open design
+                      # decision; deliberately deferred until the Tree is populated by more than one person.
+  discriminator:      # n/a
+
+subscription:
+  default:  off                   # not-implemented
+
+launch:
+  blurb:  "Tree — a navigable map of everything in Kronk's pipeline."
+  cta:    "Tap in"
+
+feature_flag:    # not-implemented
+federates:       false            # local-only per the tree-brief; no federation planned
+enforced:        false                              # framework: runtime lives on a contributor dev branch; validator skips

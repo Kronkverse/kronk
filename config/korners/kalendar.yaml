@@ -1,0 +1,52 @@
+# Kalendar — events, RSVPs, invitations
+# Retroactively authored from the shipped code on `main`.
+
+slug:            kalendar
+name:            Kalendar
+planet:          neptune
+icon:            calendar_month
+render_target:   native
+version:         0.1.0
+
+permissions:
+  - read:statuses
+  - write:statuses
+
+resources:
+  - name:    events
+    primary: true
+  - name:    event_invitations
+  - name:    event_rsvps
+
+storage:
+  db_namespace:  event_           # tables: events, event_invitations, event_rsvps
+  media_prefix:  # not-implemented — event cover images use Mastodon's default paperclip attachment paths
+  redis_prefix:  # not-implemented
+
+visibility_scopes: []
+
+steward_role:    moderator
+
+emits:                            # via notification, not the framework's event bus
+  - notification.event_invitation
+listens: []
+
+feed_projection:
+  card:               event_card                    # StatusEventCard; not yet ported onto StatusKornerCard
+  title_from:         title
+  summary_from:       location                      # combines with start_time in the card layout
+  links_to:           /kalendar/<id>                # existing; §4 migration → /hub/kalendar/events/<id>
+  default_visibility: public
+  discriminator:      status.event.present?          # via Status.has_one :event, inverse of Event.status_id
+
+  status_association: event       # framework: Status.has_one :event
+subscription:
+  default:  off                   # not-implemented
+
+launch:
+  blurb:  "Kalendar — the shared calendar for Kronk."
+  cta:    "Tap in"
+
+feature_flag:    # not-implemented
+federates:       false
+enforced:        true                              # framework: on this branch; boot validator enforces

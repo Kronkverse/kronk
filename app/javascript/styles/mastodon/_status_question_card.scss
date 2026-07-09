@@ -1,35 +1,10 @@
 @use 'variables' as *;
 
+// Kuestions-only overrides and per-variant styles.
+// Container, badge, body, footer, meta, action live in
+// _status_korner_card.scss. Only Kuestions-unique visuals remain.
+
 .status-question-card {
-  border: 2px solid
-    color-mix(in srgb, var(--space-color, #4844c0) 60%, black 40%);
-  border-radius: 10px;
-  overflow: hidden;
-  margin-top: 12px;
-  background-color: lighten($ui-base-color, 3%);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--space-color, #4844c0) 50%, transparent),
-    0 4px 16px rgba(#000, 0.4);
-  cursor: pointer;
-
-  &__badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    background: var(--space-color, #4844c0);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: #fff;
-
-    &-icon .icon {
-      width: 14px;
-      height: 14px;
-    }
-  }
-
   &__question-ref {
     padding: 10px 14px;
     border-bottom: 1px solid
@@ -55,39 +30,10 @@
       color: $dark-text-color;
       display: -webkit-box;
       -webkit-line-clamp: 2;
+      line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
-  }
-
-  &__body {
-    padding: 16px 14px;
-    font-size: 16px;
-    line-height: 1.5;
-    color: $primary-text-color;
-
-    p {
-      margin: 0 0 10px;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-  }
-
-  &__footer {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    border-top: 1px solid
-      color-mix(in srgb, var(--space-color, #4844c0) 60%, black 40%);
-    background: color-mix(
-      in srgb,
-      var(--space-color, #4844c0) 10%,
-      transparent
-    );
-    cursor: default;
   }
 
   &__lock {
@@ -123,31 +69,9 @@
   &__count {
     font-size: 13px;
     color: $dark-text-color;
-    flex: 1;
 
     &--locked {
       cursor: pointer;
-    }
-  }
-
-  &__see-answers {
-    margin-inline-start: auto;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--space-color, #4844c0);
-    padding: 0;
-    white-space: nowrap;
-    transition: opacity 0.15s ease;
-
-    &:hover {
-      opacity: 0.75;
-    }
-
-    &::after {
-      content: ' →';
     }
   }
 

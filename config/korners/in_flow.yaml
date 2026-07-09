@@ -1,0 +1,42 @@
+# In Flow — celestial navigation / Orbit view
+# Retroactively authored from the shipped code on `main`.
+
+slug:            in-flow
+name:            In Flow
+planet:          uranus           # shared with Booth
+icon:            diversity_2
+render_target:   native
+version:         0.1.0
+
+permissions:
+  - read:statuses
+
+resources:
+  - name:    observations         # namespace :in_flow in routes/api.rb → resource :observation
+
+storage:
+  db_namespace:  # none currently — In Flow is largely a view layer over other spaces' data (no dedicated tables)
+  media_prefix:  # not-implemented
+  redis_prefix:  # not-implemented
+
+visibility_scopes: []
+
+steward_role:    moderator
+
+emits: []
+listens: []
+
+feed_projection:
+  card:               # not-implemented — In Flow does not project statuses of its own; it is a navigational surface
+  discriminator:      # n/a
+
+subscription:
+  default:  off                   # not-implemented
+
+launch:
+  blurb:  "In Flow — Kronk's celestial navigation."
+  cta:    "Tap in"
+
+feature_flag:    # not-implemented
+federates:       false
+enforced:        true                              # framework: on this branch; boot validator enforces

@@ -24,10 +24,14 @@ class Api::V1::EventsController < Api::BaseController
 
     set_image! if params[:image_id].present?
 
-    ApplicationRecord.transaction do
-      @event.save!
-      create_status_for_event!(@event) if params[:post_to_feed] != false
-    end
+    # Save event first; create the status outside the transaction.
+    # PostStatusService enqueues DistributionWorker via Sidekiq.perform_async,
+    # which starts running immediately — before this transaction commits.
+    # DistributionWorker.rescue silently swallows ActiveRecord::RecordNotFound,
+    # so the fanout to home feeds never runs and the status is orphaned
+    # from every timeline (visible only on the author profile / direct URL).
+    @event.save!
+    create_status_for_event!(@event) if params[:post_to_feed] != false
 
     render json: @event, serializer: REST::EventSerializer
   end

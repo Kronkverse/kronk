@@ -1,0 +1,49 @@
+# Marketplace — listings, offerings, services
+# Retroactively authored from the shipped code on `dev/kashka` (live on shadow, not on main).
+
+slug:            marketplace
+name:            Marketplace
+planet:          pluto
+icon:            inventory_2
+render_target:   native
+version:         0.1.0
+
+permissions:
+  - read:statuses                 # reuses Mastodon's read scope for public listings
+  - write:statuses                # reuses for creating a shared status per listing
+
+resources:
+  - name:    listings             # canonical resource
+    primary: true
+
+storage:
+  db_namespace:  marketplace_     # actual table: marketplace_listings
+  media_prefix:  # not-implemented — listing photos use Mastodon media_attachments (attached to the shared status,
+                 # not to the listing directly; see the shared_status association pattern in the model).
+  redis_prefix:  # not-implemented
+
+visibility_scopes: []             # uses Mastodon status visibility of the shared status
+
+steward_role:    moderator
+
+emits: []
+listens: []
+
+feed_projection:
+  card:               marketplace_card              # StatusMarketplaceCard, using StatusKornerCard
+  title_from:         title
+  summary_from:       description                   # truncated to 300 chars via MarketplaceListingSummarySerializer
+  links_to:           /marketplace/listing/<id>     # existing; §4 migration → /hub/marketplace/listings/<id>
+  default_visibility: public
+  discriminator:      status.marketplace_listing.present?    # backend just wired (dev/kashka commit 2d375c5f7)
+
+subscription:
+  default:  off                   # not-implemented
+
+launch:
+  blurb:  "Marketplace — creations, listings, and services from the Kronk community."
+  cta:    "Tap in"
+
+feature_flag:    # not-implemented — Marketplace is unconditionally mounted on dev/kashka
+federates:       false
+enforced:        false                              # framework: runtime lives on a contributor dev branch; validator skips

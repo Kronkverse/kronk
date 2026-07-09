@@ -61,6 +61,12 @@ class Api::V1::BoothSetsController < Api::BaseController
       application: doorkeeper_token.application
     )
 
+    # Link status back so timeline renders the shared status as a Booth card
+    # (Status has_one :booth_set via booth_sets.shared_status_id). Re-sharing
+    # points the association at the newest status; older shares stay in the
+    # timeline as plain text.
+    @booth_set.update!(shared_status_id: status.id)
+
     render json: status, serializer: REST::StatusSerializer
   end
 

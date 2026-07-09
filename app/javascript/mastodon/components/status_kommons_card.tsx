@@ -5,8 +5,8 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Link } from 'react-router-dom';
 
 import ToysFanIcon from '@/material-icons/400-24px/toys_fan.svg?react';
-import { Icon } from 'mastodon/components/icon';
-import { spaceColor } from 'mastodon/planets';
+
+import { StatusKornerCard } from './status_korner_card';
 
 const messages = defineMessages({
   badge: {
@@ -15,12 +15,11 @@ const messages = defineMessages({
   },
   supports: {
     id: 'status_kommons_card.supports',
-    defaultMessage: "{count, plural, one {# support} other {# supports}}",
+    defaultMessage: '{count, plural, one {# support} other {# supports}}',
   },
   challenges: {
     id: 'status_kommons_card.challenges',
-    defaultMessage:
-      "{count, plural, one {# challenge} other {# challenges}}",
+    defaultMessage: '{count, plural, one {# challenge} other {# challenges}}',
   },
   viewSeed: {
     id: 'status_kommons_card.view_seed',
@@ -63,34 +62,31 @@ export const StatusKommonsCard: React.FC<{ proposal: ProposalSummary }> = ({
   }, []);
 
   return (
-    <div
+    <StatusKornerCard
+      korner='Kommons'
+      variant='proposal'
       className='status-kommons-card'
-      style={{ '--space-color': spaceColor('Kommons') } as React.CSSProperties}
+      badge={{
+        icon: ToysFanIcon,
+        iconId: 'toys_fan',
+        label: intl.formatMessage(messages.badge),
+        tag: TYPE_LABELS[proposal.proposal_type] ?? proposal.proposal_type,
+      }}
     >
-      <div className='status-kommons-card__badge'>
-        <span className='status-kommons-card__badge-icon'>
-          <Icon id='toys_fan' icon={ToysFanIcon} />
-        </span>
-        {intl.formatMessage(messages.badge)}
-        <span className='status-kommons-card__type-tag'>
-          {TYPE_LABELS[proposal.proposal_type] ?? proposal.proposal_type}
-        </span>
-      </div>
-
-      <div className='status-kommons-card__body'>
+      <div className='status-korner-card__body status-kommons-card__body'>
         <div className='status-kommons-card__title'>{proposal.title}</div>
         {proposal.summary && (
           <div className='status-kommons-card__summary'>{proposal.summary}</div>
         )}
       </div>
 
-      <div className='status-kommons-card__footer'>
-        <span
-          className={`status-kommons-card__status status-kommons-card__status--${proposal.status}`}
-        >
-          {STATUS_LABELS[proposal.status] ?? proposal.status}
-        </span>
-        <span className='status-kommons-card__votes'>
+      <div className='status-korner-card__footer status-kommons-card__footer'>
+        <div className='status-korner-card__meta'>
+          <span
+            className={`status-kommons-card__status status-kommons-card__status--${proposal.status}`}
+          >
+            {STATUS_LABELS[proposal.status] ?? proposal.status}
+          </span>
           <span className='status-kommons-card__vote status-kommons-card__vote--support'>
             {intl.formatMessage(messages.supports, {
               count: proposal.support_count,
@@ -103,15 +99,15 @@ export const StatusKommonsCard: React.FC<{ proposal: ProposalSummary }> = ({
               })}
             </span>
           )}
-        </span>
+        </div>
         <Link
           to='/governance'
-          className='status-kommons-card__link'
+          className='status-korner-card__action'
           onClick={handleLinkClick}
         >
           {intl.formatMessage(messages.viewSeed)}
         </Link>
       </div>
-    </div>
+    </StatusKornerCard>
   );
 };

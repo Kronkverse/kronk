@@ -1,0 +1,52 @@
+# Kuestions — asking + answering
+# Retroactively authored from the shipped code on `main`.
+
+slug:            kuestions
+name:            Kuestions        # rendered with Ƙ in nav
+planet:          saturn
+icon:            question_mark
+render_target:   native
+version:         0.1.0
+
+permissions:
+  - read:questions
+  - write:questions
+
+resources:
+  - name:    questions
+    primary: true                 # a question is a Status with post_type='question'
+  - name:    answers              # a Status with post_type='answer', in_reply_to a question
+
+storage:
+  db_namespace:  # none — Kuestions rides entirely on Status.post_type and status thread structure.
+                 # This is the extreme end of the "how thin can a Korner be" spectrum:
+                 # no dedicated tables, discriminator is a single column on `statuses`.
+  media_prefix:  # not-implemented
+  redis_prefix:  # not-implemented
+
+visibility_scopes: []             # uses Mastodon visibility as-is
+
+steward_role:    moderator
+
+emits: []
+listens: []
+
+feed_projection:
+  card:               question_card                # StatusQuestionCard, unified onto StatusKornerCard
+  title_from:         # inferred from status content — no separate title field
+  summary_from:       content                       # rendered HTML from Status.text
+  links_to:           /questions                   # implicit; §4 migration → /hub/kuestions
+  default_visibility: public
+  discriminator:      status.post_type IN ('question','answer')
+
+  status_post_type:   question       # framework: status.post_type value
+subscription:
+  default:  off                   # not-implemented
+
+launch:
+  blurb:  "Kuestions — ask, answer, unlock."
+  cta:    "Tap in"
+
+feature_flag:    # not-implemented
+federates:       false
+enforced:        true                              # framework: on this branch; boot validator enforces
