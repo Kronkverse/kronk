@@ -96,6 +96,48 @@ class KlotPeriod < ApplicationRecord
 end
 ```
 
+### The migration pattern for feed-projected Korners
+
+If your Korner posts to the feed (see §11), your primary table needs one
+extra column: the status the share posts as. Follow this exact shape —
+`strong_migrations` will block anything else on staging/production:
+
+```ruby
+class AddStatusIdToYourTable < ActiveRecord::Migration[8.0]
+  disable_ddl_transaction!
+
+  def change
+    add_reference :your_table, :status, null: true,
+                                        index: { unique: true, algorithm: :concurrently }
+  end
+end
+```
+
+**No `foreign_key:` argument.** Kronk uses Ruby-level `dependent: :nullify`
+on the `Status has_one :your_thing` for cascade. Adding a DB-level FK is
+what `strong_migrations` refuses (adding a FK locks writes on both tables).
+Every existing feed-projected Korner (`events`, `marketplace_listings`,
+`booth_sets`) follows this pattern.
+
+### Column naming — use `status_id`
+
+The existing Korners have drifted here:
+
+| Korner | Column | Notes |
+| --- | --- | --- |
+| Kalendar | `events.status_id` | Canonical |
+| Marketplace | `marketplace_listings.status_id` | Canonical |
+| Booth | `booth_sets.shared_status_id` | Legacy — kept for compatibility |
+| Kommons | `proposals.discussion_status_id` | Legacy — kept for compatibility |
+
+**For a new Korner, use `status_id`.** Two of four existing Korners agree,
+the naming is shorter, and it's what the ORM naturally infers from
+`belongs_to :status`. Leave the legacy names alone in Booth and Kommons —
+migrating them would ripple through model/serializer/discriminator without
+buying much.
+
+---
+
 **Do not** add associations from `Account` back to your models. Kronk uses
 concerns for that:
 
@@ -124,6 +166,41 @@ Klot's is unusual in that it has its own `KlotController` for server-rendered
 share pages, but many Korners get away with piggy-backing on `HomeController`
 via a wildcard route (see §7). Start with the wildcard route if you don't
 need server-rendered pages.
+
+### Never call PostStatusService inside a transaction
+
+If any of your controllers posts a status to the feed (share endpoints,
+auto-post-on-create flows like Kalendar events), the call **must not**
+be wrapped in an `ApplicationRecord.transaction` block:
+
+```ruby
+# WRONG — silently drops the status from home feeds
+ApplicationRecord.transaction do
+  @thing.save!
+  @status = PostStatusService.new.call(current_account, text: ...)
+  @thing.update!(status_id: @status.id)
+end
+
+# RIGHT — save first, post status outside the transaction
+@thing.save!
+@status = PostStatusService.new.call(current_account, text: ...)
+@thing.update!(status_id: @status.id)
+```
+
+**Why:** `PostStatusService` enqueues `DistributionWorker.perform_async`
+during its call. Sidekiq starts the fanout job immediately — before your
+outer transaction commits. Inside the job, `Status.find(status_id)` raises
+`ActiveRecord::RecordNotFound`, which `DistributionWorker#perform` rescues
+silently. The status ends up in the DB when the transaction commits, but
+its fanout to home feeds never runs. The status is visible on the author's
+profile and via direct URL — but the home feed never gets it.
+
+This is the exact bug we hit on Kalendar's event creation. Booth's share
+endpoint was already correct.
+
+Trade-off: if `PostStatusService` fails after your save succeeded, you
+get an orphan primary row with no linked status. Preferable to the silent
+fanout failure — the user can retry or delete.
 
 ### 2b. The API controllers (`app/controllers/api/v1/<slug>/`)
 
@@ -374,6 +451,18 @@ Hub ships, that gets flipped in a follow-up PR.
 If your Korner emits statuses (posts) that need to render as space cards in
 the home timeline, the spec (§8) calls this **feed projection**. There are
 three moving parts:
+
+### Reference implementations
+
+Four Korners currently ship feed projection. Copy the closest match to
+your shape:
+
+| Korner | Best for | Reference files |
+| --- | --- | --- |
+| **Kommons** | You have a first-class resource (proposal, decision) with a discussion attached | `app/models/proposal.rb`, `app/controllers/api/v1/proposals_controller.rb`, `app/serializers/rest/proposal_summary_serializer.rb` |
+| **Kuestions** | Your Korner rides Status directly via `post_type` (no separate table) | `app/models/status.rb` (`enum :post_type`), `app/javascript/mastodon/components/status_question_card.tsx` |
+| **Kalendar** | You have a primary record (event, workshop) that gets shared on create | `app/controllers/api/v1/events_controller.rb#create` (post-race-fix — status creation is outside the transaction), `app/models/event.rb`, `app/serializers/rest/event_serializer.rb` |
+| **Booth** | You have a primary record (audio set, upload) with an explicit share action | `app/controllers/api/v1/booth_sets_controller.rb#share`, `app/models/booth_set.rb`, `app/serializers/rest/booth_set_summary_serializer.rb` |
 
 ### 11a. Association on `Status`
 
