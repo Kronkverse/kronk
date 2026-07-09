@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 
-import { FormattedDate, FormattedTime } from 'react-intl';
+import { defineMessages, useIntl, FormattedDate, FormattedTime } from 'react-intl';
 
-import { Link } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
@@ -10,7 +10,31 @@ import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
 import StarIcon from '@/material-icons/400-24px/star.svg?react';
 import api from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
-import { spaceColor } from 'mastodon/planets';
+
+import { StatusKornerCard } from './status_korner_card';
+
+const messages = defineMessages({
+  event: { id: 'status_event_card.event', defaultMessage: 'EVENT' },
+  huddle: { id: 'status_event_card.huddle', defaultMessage: 'HUDDLE' },
+  live: { id: 'status_event_card.live', defaultMessage: 'LIVE' },
+  going: { id: 'status_event_card.going', defaultMessage: 'Going' },
+  interested: {
+    id: 'status_event_card.interested',
+    defaultMessage: 'Interested',
+  },
+  goingCount: {
+    id: 'status_event_card.going_count',
+    defaultMessage: '{count} going',
+  },
+  interestedCount: {
+    id: 'status_event_card.interested_count',
+    defaultMessage: '{count} interested',
+  },
+  joinHuddle: {
+    id: 'status_event_card.join_huddle',
+    defaultMessage: 'Join Huddle',
+  },
+});
 
 interface EventData {
   id: string;
@@ -36,6 +60,8 @@ interface Props {
 }
 
 export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
+  const intl = useIntl();
+  const history = useHistory();
   const [event, setEvent] = useState(initialEvent);
 
   const isLive =
@@ -57,7 +83,7 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
     [event.id],
   );
 
-  const handleLocationClick = useCallback((e: React.MouseEvent) => {
+  const stopPropagation = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
 
@@ -79,15 +105,45 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
     [handleRsvp, event.rsvp],
   );
 
-  const handleHuddleClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
+  const handleCardClick = useCallback(() => {
+    history.push(`/kalendar/${event.id}`);
+  }, [history, event.id]);
+
+  const handleCardKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        history.push(`/kalendar/${event.id}`);
+      }
+    },
+    [history, event.id],
+  );
+
+  const badgeLabel = isLive
+    ? intl.formatMessage(messages.live)
+    : event.event_type === 'huddle'
+      ? intl.formatMessage(messages.huddle)
+      : intl.formatMessage(messages.event);
+
+  const badgeIcon =
+    isLive || event.event_type === 'huddle' ? VideocamIcon : CalendarMonthIcon;
+  const badgeIconId =
+    isLive || event.event_type === 'huddle' ? 'videocam' : 'calendar_month';
 
   return (
-    <Link
-      to={`/kalendar/${event.id}`}
-      className={`status-event-card ${isLive ? 'status-event-card--live' : ''}`}
-      style={{ '--space-color': spaceColor('Kalendar') } as React.CSSProperties}
+    <StatusKornerCard
+      korner='Kalendar'
+      variant={isLive ? 'live' : event.event_type}
+      className='status-event-card'
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      role='button'
+      tabIndex={0}
+      badge={{
+        icon: badgeIcon,
+        iconId: badgeIconId,
+        label: badgeLabel,
+      }}
     >
       {event.image_url && (
         <div
@@ -96,7 +152,7 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
         />
       )}
 
-      <div className='status-event-card__body'>
+      <div className='status-korner-card__body status-event-card__body'>
         <div className='status-event-card__date-badge'>
           <span className='status-event-card__date-badge__month'>
             <FormattedDate value={event.start_time} month='short' />
@@ -107,104 +163,98 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
         </div>
 
         <div className='status-event-card__content'>
-          <div className='status-event-card__header'>
-            {isLive && (
-              <span className='status-event-card__live-badge'>LIVE</span>
-            )}
-            {event.event_type === 'huddle' && !isLive && (
-              <Icon
-                id='videocam'
-                icon={VideocamIcon}
-                className='status-event-card__type-icon'
-              />
-            )}
-            {event.event_type === 'event' && (
-              <Icon
-                id='calendar_month'
-                icon={CalendarMonthIcon}
-                className='status-event-card__type-icon'
-              />
-            )}
-            <span className='status-event-card__title'>{event.title}</span>
+          <div className='status-korner-card__title status-event-card__title'>
+            {event.title}
           </div>
-
-          <div className='status-event-card__meta'>
-            <span className='status-event-card__time'>
-              <FormattedDate value={event.start_time} weekday='short' />{' '}
-              <FormattedTime value={event.start_time} />
-              {event.end_time && (
-                <>
-                  {' – '}
-                  <FormattedTime value={event.end_time} />
-                </>
-              )}
-            </span>
+          <div className='status-korner-card__meta status-event-card__meta'>
+            <FormattedDate value={event.start_time} weekday='short' />{' '}
+            <FormattedTime value={event.start_time} />
+            {event.end_time && (
+              <>
+                {' – '}
+                <FormattedTime value={event.end_time} />
+              </>
+            )}
             {event.location_name && (
-              <span className='status-event-card__location'>
+              <>
                 {' · '}
                 {event.location_url ? (
                   <a
                     href={event.location_url}
                     target='_blank'
                     rel='noopener noreferrer'
-                    onClick={handleLocationClick}
+                    onClick={stopPropagation}
                   >
                     {event.location_name}
                   </a>
                 ) : (
                   event.location_name
                 )}
-              </span>
+              </>
             )}
           </div>
-
           {event.description && (
-            <p className='status-event-card__description'>
+            <div className='status-korner-card__summary status-event-card__description'>
               {event.description.length > 140
                 ? event.description.slice(0, 140) + '…'
                 : event.description}
-            </p>
-          )}
-
-          <div className='status-event-card__footer'>
-            <div className='status-event-card__counts'>
-              {event.going_count > 0 && <span>{event.going_count} going</span>}
-              {event.interested_count > 0 && (
-                <span>{event.interested_count} interested</span>
-              )}
             </div>
-
-            {event.rsvp_enabled && (
-              <div className='status-event-card__rsvp-buttons' role='group'>
-                <button
-                  className={`status-event-card__rsvp-btn ${event.rsvp === 'going' ? 'active active--going' : ''}`}
-                  onClick={handleRsvpGoing}
-                >
-                  <Icon id='check' icon={CheckIcon} /> Going
-                </button>
-                <button
-                  className={`status-event-card__rsvp-btn ${event.rsvp === 'interested' ? 'active active--interested' : ''}`}
-                  onClick={handleRsvpInterested}
-                >
-                  <Icon id='star' icon={StarIcon} /> Interested
-                </button>
-              </div>
-            )}
-
-            {isLive && event.huddle_url && (
-              <a
-                href={event.huddle_url}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='status-event-card__join-huddle'
-                onClick={handleHuddleClick}
-              >
-                <Icon id='videocam' icon={VideocamIcon} /> Join Huddle
-              </a>
-            )}
-          </div>
+          )}
         </div>
       </div>
-    </Link>
+
+      <div className='status-korner-card__footer status-event-card__footer'>
+        <div className='status-korner-card__meta status-event-card__counts'>
+          {event.going_count > 0 && (
+            <span>
+              {intl.formatMessage(messages.goingCount, {
+                count: event.going_count,
+              })}
+            </span>
+          )}
+          {event.interested_count > 0 && (
+            <span>
+              {intl.formatMessage(messages.interestedCount, {
+                count: event.interested_count,
+              })}
+            </span>
+          )}
+        </div>
+
+        {isLive && event.huddle_url ? (
+          <a
+            href={event.huddle_url}
+            target='_blank'
+            rel='noopener noreferrer'
+            className='status-korner-card__action status-event-card__join-huddle'
+            onClick={stopPropagation}
+          >
+            <Icon id='videocam' icon={VideocamIcon} />{' '}
+            {intl.formatMessage(messages.joinHuddle)}
+          </a>
+        ) : (
+          event.rsvp_enabled && (
+            <div className='status-event-card__rsvp-buttons' role='group'>
+              <button
+                type='button'
+                className={`status-event-card__rsvp-btn ${event.rsvp === 'going' ? 'active active--going' : ''}`}
+                onClick={handleRsvpGoing}
+              >
+                <Icon id='check' icon={CheckIcon} />{' '}
+                {intl.formatMessage(messages.going)}
+              </button>
+              <button
+                type='button'
+                className={`status-event-card__rsvp-btn ${event.rsvp === 'interested' ? 'active active--interested' : ''}`}
+                onClick={handleRsvpInterested}
+              >
+                <Icon id='star' icon={StarIcon} />{' '}
+                {intl.formatMessage(messages.interested)}
+              </button>
+            </div>
+          )
+        )}
+      </div>
+    </StatusKornerCard>
   );
 };
