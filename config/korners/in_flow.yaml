@@ -39,3 +39,4 @@ launch:
 
 feature_flag:    # not-implemented
 federates:       false
+enforced:        true                              # framework: on this branch; boot validator enforces

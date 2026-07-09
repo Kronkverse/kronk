@@ -39,6 +39,7 @@ feed_projection:
   default_visibility: public
   discriminator:      status.event.present?          # via Status.has_one :event, inverse of Event.status_id
 
+  status_association: event       # framework: Status.has_one :event
 subscription:
   default:  off                   # not-implemented
 
@@ -48,3 +49,4 @@ launch:
 
 feature_flag:    # not-implemented
 federates:       false
+enforced:        true                              # framework: on this branch; boot validator enforces

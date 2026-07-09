@@ -338,7 +338,7 @@ semantic table.
 
 ## 9. Navigation panel
 
-**File:** `app/javascript/mastodon/features/ui/components/navigation_panel/index.tsx`
+**File:** `app/javascript/mastodon/features/navigation_panel/index.tsx`
 
 Add a `ColumnLink` for your Korner alongside the others:
 
@@ -488,7 +488,7 @@ should touch approximately:
 | `app/javascript/mastodon/features/<slug>/**/*` | Frontend feature module |
 | `app/javascript/mastodon/features/ui/util/async-components.js` | Chunk registration |
 | `app/javascript/mastodon/features/ui/index.jsx` | Route registration |
-| `app/javascript/mastodon/features/ui/components/navigation_panel/index.tsx` | Nav entry |
+| `app/javascript/mastodon/features/navigation_panel/index.tsx` | Nav entry |
 | `app/javascript/mastodon/planets.tsx` | `SPACE_PLANET` entry |
 | `app/javascript/styles/mastodon/_<slug>.scss` | Styles |
 | `app/javascript/styles/application.scss` | `@use` import |

@@ -51,3 +51,4 @@ launch:
 
 feature_flag:    # not-implemented
 federates:       false            # explicitly local-only, by the same sovereignty argument as the phase endpoint
+enforced:        false                              # framework: runtime lives on a contributor dev branch; validator skips

@@ -39,6 +39,8 @@ feed_projection:
   default_visibility: public
   discriminator:      status.post_type == 'proposal'   # existing convention; §8.3 aspires to manifest-driven detection
 
+  status_association: proposal       # framework: Status.has_one :proposal
+  status_post_type:   proposal       # framework: status.post_type value
 subscription:
   default:  off                   # not-implemented — no per-space subscribe primitive exists yet
 
@@ -48,3 +50,4 @@ launch:                           # retrospective — Kommons predates launch ca
 
 feature_flag:    # not-implemented — Kommons is unconditionally mounted on main
 federates:       false            # local-only per §8.8
+enforced:        true                              # framework: on this branch; boot validator enforces

@@ -46,3 +46,4 @@ launch:
 
 feature_flag:    # not-implemented — Marketplace is unconditionally mounted on dev/kashka
 federates:       false
+enforced:        false                              # framework: runtime lives on a contributor dev branch; validator skips

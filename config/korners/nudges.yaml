@@ -46,3 +46,4 @@ launch:
 
 feature_flag:    # not-implemented
 federates:       false            # nudges never federate — private by design
+enforced:        true                              # framework: on this branch; boot validator enforces
