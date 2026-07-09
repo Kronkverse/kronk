@@ -117,7 +117,8 @@ Shadow is transient and may be down. If it is, ask Tal to start it.
 
 When your feature is tested on staging and ready to ship, open a PR from your **feature branch** to `main`. Tal reviews and merges — never run `gh pr merge` yourself.
 
-**Title:** short feature-name handle (`Nudges`, `The Booth`). Details go in the body.
+**Title:** the version number this PR bumps to (e.g. `1.7.0`, `1.7.1`).
+The title is intentionally minimal — all context lives in the body.
 
 **Body must include:**
 
