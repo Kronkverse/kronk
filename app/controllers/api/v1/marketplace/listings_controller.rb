@@ -69,15 +69,11 @@ class Api::V1::Marketplace::ListingsController < Api::BaseController
     Array(ids).flatten.reject(&:blank?).map(&:to_s)
   end
 
+  # The status body is deliberately minimal now that the timeline
+  # renders a full Marketplace card for every share. Title only, mirroring
+  # how Kommons proposals share to the feed. Users who want richer
+  # commentary can add it via a manual reply on the shared status.
   def compose_share_text(listing)
-    header = "#{listing.title} — #{listing.category_label}"
-    header << " · #{listing.price_display}" if listing.price_display.present?
-
-    body = listing.description.to_s.strip
-    body = "#{body[0, 240].rstrip}…" if body.length > 240
-
-    url = "#{root_url.chomp('/')}/marketplace/#{listing.category_slug}"
-
-    [header, body.presence, url].compact.join("\n\n")
+    listing.title
   end
 end
