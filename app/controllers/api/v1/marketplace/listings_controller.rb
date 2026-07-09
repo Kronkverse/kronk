@@ -21,10 +21,15 @@ class Api::V1::Marketplace::ListingsController < Api::BaseController
   end
 
   def create
-    ApplicationRecord.transaction do
-      @listing = current_account.marketplace_listings.create!(listing_params)
-      share_to_feed!(@listing) unless params[:skip_share] == true
-    end
+    # Do NOT wrap this in ApplicationRecord.transaction — share_to_feed! calls
+    # PostStatusService which enqueues DistributionWorker via Sidekiq.perform_async
+    # before the outer transaction would commit. Status.find in the worker fails
+    # with RecordNotFound, gets rescued silently, and the fanout to home feeds
+    # never runs. The listing would exist and get status_id set on it, but the
+    # status would only be visible on the author profile — never in home feeds.
+    # See docs/korners/adding_a_korner.md for the wider pattern.
+    @listing = current_account.marketplace_listings.create!(listing_params)
+    share_to_feed!(@listing) unless params[:skip_share] == true
 
     render json: @listing, serializer: REST::MarketplaceListingSerializer, status: :created
   end
