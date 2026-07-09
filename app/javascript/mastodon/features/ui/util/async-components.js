@@ -299,10 +299,6 @@ export function BoothSetPage () {
   return import("../../booth/booth_set_page");
 }
 
-export function Flow () {
-  return import("../../flow");
-}
-
 export function Klot () {
   return import("../../klot");
 }

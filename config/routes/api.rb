@@ -113,16 +113,6 @@ namespace :api, format: false do
       end
     end
 
-    resources :flow_cycles, only: [:index, :show, :create, :update, :destroy] do
-      collection do
-        get :shared_with_me
-      end
-      member do
-        post :share
-        delete 'share/:account_id', action: :unshare
-      end
-    end
-
     namespace :klot do
       resources :periods, only: [:index, :create, :destroy]
       resource :settings, only: [:show, :update]

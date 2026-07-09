@@ -17,7 +17,6 @@ module Account::Associations
         has_many :custom_filters
         has_many :booth_sets
         has_many :events
-        has_many :flow_cycles
         has_many :klot_periods
         has_many :klot_shares
         has_one  :klot_setting
