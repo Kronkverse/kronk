@@ -740,13 +740,25 @@
   }
 
   &__uploads {
+    // Kronk fix: was locked to `aspect-ratio: 3/2`, which squeezed 2–4 uploads
+    // into a thin strip that made the delete button hard to hit. Now each row
+    // of the internal grid gets a real min-height, and we let the section grow
+    // vertically to fit its contents rather than compressing.
     padding: 0 12px;
-    aspect-ratio: 3/2;
     flex-shrink: 0;
   }
 
   .media-gallery {
     gap: 8px;
+    // Give the grid enough vertical room that each thumbnail is legible and
+    // its delete affordance is easy to hit. `minmax(..., auto)` lets a single
+    // photo stretch taller if the compose column is wide.
+    grid-auto-rows: minmax(180px, auto);
+
+    &--layout-1 { min-height: 220px; }
+    &--layout-2,
+    &--layout-3,
+    &--layout-4 { min-height: 380px; }
   }
 
   &__upload {
@@ -816,8 +828,11 @@
       width: 100%;
       height: 100%;
       background-position: center;
-      background-size: cover;
+      // Kronk fix: `contain` shows the whole image (letterboxed) instead of
+      // cropping so the user can see what they've attached before they post.
+      background-size: contain;
       background-repeat: no-repeat;
+      background-color: rgba(0, 0, 0, 30%);
       overflow: hidden;
     }
 
@@ -839,12 +854,20 @@
     }
 
     .icon-button.compose-form__upload__delete {
-      padding: 2px;
+      // Kronk fix: bigger hit target with a stronger backing so the delete
+      // affordance is unambiguous and easier to tap on mobile.
+      padding: 6px;
       border-radius: 50%;
+      background: rgba(0, 0, 0, 65%);
+
+      &:hover,
+      &:focus-visible {
+        background: rgba(0, 0, 0, 85%);
+      }
 
       .icon {
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
       }
     }
 
