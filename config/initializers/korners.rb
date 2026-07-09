@@ -55,15 +55,15 @@ module Korners
       return nil unless yaml.is_a?(Hash) && yaml['slug'].is_a?(String)
 
       Manifest.new(
-        slug:               yaml['slug'],
-        name:               yaml['name'],
-        planet:             yaml['planet'],
-        db_namespace:       yaml.dig('storage', 'db_namespace'),
-        enforced:           yaml['enforced'] == true,
+        slug: yaml['slug'],
+        name: yaml['name'],
+        planet: yaml['planet'],
+        db_namespace: yaml.dig('storage', 'db_namespace'),
+        enforced: yaml['enforced'] == true,
         status_association: yaml.dig('feed_projection', 'status_association')&.to_sym,
-        status_post_type:   yaml.dig('feed_projection', 'status_post_type')
+        status_post_type: yaml.dig('feed_projection', 'status_post_type')
       )
-    rescue StandardError => e
+    rescue => e
       Rails.logger.warn("[korners] failed to parse #{path.basename}: #{e.message}")
       nil
     end
@@ -82,19 +82,15 @@ Rails.application.config.after_initialize do
       if prefix.present?
         primary_table = prefix.pluralize
         matches_prefix = tables.include?(primary_table) || tables.any? { |t| t.start_with?("#{prefix}_") }
-        unless matches_prefix
-          Rails.logger.warn("[korners:#{manifest.slug}] db_namespace '#{manifest.db_namespace}' matches no tables")
-        end
+        Rails.logger.warn("[korners:#{manifest.slug}] db_namespace '#{manifest.db_namespace}' matches no tables") unless matches_prefix
       end
 
       assoc = manifest.status_association
-      if assoc && Status.reflect_on_association(assoc).nil?
-        Rails.logger.warn("[korners:#{manifest.slug}] Status has no :#{assoc} association")
-      end
+      Rails.logger.warn("[korners:#{manifest.slug}] Status has no :#{assoc} association") if assoc && Status.reflect_on_association(assoc).nil?
     end
   rescue ActiveRecord::NoDatabaseError, ActiveRecord::ConnectionNotEstablished
     # DB not yet reachable (rake db:setup and similar); skip silently.
-  rescue StandardError => e
+  rescue => e
     Rails.logger.warn("[korners] boot-time validation crashed: #{e.class} #{e.message}")
   end
 end
