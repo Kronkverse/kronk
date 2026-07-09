@@ -36,11 +36,7 @@ feed_projection:
   summary_from:       artist_name
   links_to:           /booth/sets/<id>              # existing
   default_visibility: public
-  discriminator:      status.booth_set.present?      # NOT-IMPLEMENTED on the backend — Booth#share currently
-                                                    # posts a plain-text status without linking booth_set_id back.
-                                                    # Requires: migration adding booth_sets.shared_status_id,
-                                                    # controller update, Status has_one :shared_booth_set,
-                                                    # StatusSerializer exposure.
+  discriminator:      status.booth_set.present?      # Status has_one :booth_set via booth_sets.shared_status_id
 
   status_association: booth_set       # framework: Status.has_one :booth_set
 subscription:

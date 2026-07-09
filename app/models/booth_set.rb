@@ -5,6 +5,7 @@ class BoothSet < ApplicationRecord
   belongs_to :event, optional: true
   belongs_to :audio_attachment, class_name: 'MediaAttachment', optional: true
   belongs_to :cover_attachment, class_name: 'MediaAttachment', optional: true
+    belongs_to :shared_status, class_name: 'Status', optional: true, inverse_of: :booth_set
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :artist_name, presence: true, length: { maximum: 200 }
