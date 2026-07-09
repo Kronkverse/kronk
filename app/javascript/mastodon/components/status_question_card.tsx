@@ -7,7 +7,8 @@ import LockOpenIcon from '@/material-icons/400-24px/lock_open.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import api from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
-import { spaceColor } from 'mastodon/planets';
+
+import { StatusKornerCard } from './status_korner_card';
 
 const messages = defineMessages({
   question: {
@@ -166,39 +167,33 @@ export const StatusQuestionCard: React.FC<{
   );
 
   return (
-    <div
+    <StatusKornerCard
+      korner='Questions'
+      variant={postType}
       className={`status-question-card status-question-card--${postType}`}
-      style={
-        { '--space-color': spaceColor('Questions') } as React.CSSProperties
-      }
+      badge={{
+        icon: QuestionMarkIcon,
+        iconId: 'question_mark',
+        label:
+          postType === 'question'
+            ? intl.formatMessage(messages.question)
+            : intl.formatMessage(messages.answer),
+      }}
       onClick={onCardClick}
       onKeyDown={handleCardKeyDown}
       role={onCardClick ? 'button' : undefined}
       tabIndex={onCardClick ? 0 : undefined}
     >
-      <div className='status-question-card__badge'>
-        <Icon
-          id='question_mark'
-          icon={QuestionMarkIcon}
-          className='status-question-card__badge-icon'
-        />
-        <span>
-          {postType === 'question'
-            ? intl.formatMessage(messages.question)
-            : intl.formatMessage(messages.answer)}
-        </span>
-      </div>
-
       {contentHtml && (
         <div
-          className='status-question-card__body'
+          className='status-korner-card__body status-question-card__body'
           dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
       )}
 
       {postType === 'question' && (
         <div
-          className='status-question-card__footer'
+          className='status-korner-card__footer status-question-card__footer'
           onClick={handleFooterClick}
           role='presentation'
         >
@@ -280,6 +275,6 @@ export const StatusQuestionCard: React.FC<{
           )}
         </div>
       )}
-    </div>
+    </StatusKornerCard>
   );
 };
