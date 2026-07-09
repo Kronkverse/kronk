@@ -3,6 +3,7 @@
 **Audience:** developers building a new Korner (space) inside Kronk.
 **Reference implementation:** Klot (cycle tracker), landed on `dev/tbone`.
 **Read alongside:** [`kronk_korner_spec.md`](../kronk_korner_spec.md).
+**Visual companion:** [`anatomy.md`](./anatomy.md) — two diagrams showing how the pieces connect.
 
 This walkthrough describes the pattern **as the codebase actually implements
 it today**, not as the spec ultimately wants it. Where the two diverge, each
