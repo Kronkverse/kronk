@@ -23,6 +23,5 @@ class CreateKlotTables < ActiveRecord::Migration[8.0]
     end
     add_index :klot_shares, [:account_id, :viewer_account_id], unique: true, name: 'index_klot_shares_unique'
     add_index :klot_shares, :viewer_account_id
-    add_foreign_key :klot_shares, :accounts, column: :viewer_account_id, on_delete: :cascade
   end
 end
