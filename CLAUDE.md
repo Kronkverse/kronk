@@ -125,6 +125,9 @@ When your feature is tested on staging and ready to ship, open a PR from your **
 - **Why** — the problem being solved
 - **How to test** — concrete steps on shadow
 - **Dependencies** — migrations, other PRs, or deploy steps required
+- **Version bump** — every PR to main updates `lib/kronk/version.rb`.
+  Patch for fixes/refactors, minor for features, major for breaking changes.
+  Include the bump in the PR itself; do not add it as a post-merge commit.
 
 ### 4. Clean up
 

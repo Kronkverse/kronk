@@ -15,6 +15,9 @@ module Mastodon
       LONG
       def list
         Rails.application.eager_load!
+        require_relative '../../kronk/version'
+        say "Korner framework (Kronk v#{::Kronk::Version})"
+        say ''
 
         header_row = %w(slug planet enforced drift)
         rows = ::Korners.all.map do |manifest|
