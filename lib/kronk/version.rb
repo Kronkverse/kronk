@@ -19,14 +19,15 @@
 #   1.4.0  Booth (audio sets + share flow)
 #   1.5.0  InFlow (observation feature)
 #   1.6.0  Nudges (notification-style space)
-#   1.7.0  Korner Framework (this release) — manifest system, boot
-#          validator, shared card frame, transaction race fixes
+#   1.7.0  Korner Framework — manifest system, boot validator, shared
+#          card frame, transaction race fixes
+#   1.7.1  docs: docs/rebuild/ planning space + rebuild intake in CLAUDE.md
 module Kronk
   module Version
     module_function
 
     def to_s
-      '1.7.0'
+      '1.7.1'
     end
 
     def to_a

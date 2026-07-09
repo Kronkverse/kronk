@@ -85,6 +85,21 @@ These are additions on top of upstream Mastodon:
 - **Don't remove branding.** Kronk-specific branding (logo, wordmark, welcome email) should be preserved.
 - **Don't modify upstream files unnecessarily.** Keep diffs minimal to make future upstream merges easier.
 
+## 2.x Rebuild planning
+
+Ideas, plans, and open questions for the eventual Kronk 2.0 rebuild live
+under `docs/rebuild/`. The Korner framework work (shipped as 1.7.0) and
+the `mastodon.kronk.info` → `kronk.info` URL migration are both folded
+into the rebuild rather than treated as standalone concerns.
+
+**When Tal shares a rebuild-related idea, drop it into `docs/rebuild/`:**
+
+- Look for an existing themed file (`docs/rebuild/<theme>.md`) that fits — append there
+- If nothing fits, create a new themed file with a short kebab-case name
+- Update `docs/rebuild/README.md` to link any new file you create
+- Rough notes are fine — this is a capture surface, not a finished spec
+- If it's unclear whether an idea is rebuild-scope, ask — better to over-attribute than to lose the thread
+
 ## Contributor Workflow
 
 ### 1. Start from a branch
