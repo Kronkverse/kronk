@@ -2,7 +2,7 @@
 
 class Api::V1::ProposalsController < Api::BaseController
   before_action :require_user!
-  before_action :set_proposal, only: [:show, :vote, :unvote, :mark_delivered, :update, :archive, :unarchive]
+  before_action :set_proposal, only: [:show, :vote, :unvote, :mark_delivered, :update, :archive, :unarchive, :suggest_completed]
   before_action :require_creator_or_steward!, only: [:mark_delivered, :update, :archive, :unarchive]
 
   def index
@@ -83,6 +83,7 @@ class Api::V1::ProposalsController < Api::BaseController
     end
 
     reconcile_status!
+    notify_creator_of_support!(vote) if vote.agree? && vote.account_id != @proposal.created_by_account_id
     render json: @proposal.reload, serializer: REST::ProposalSerializer
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -102,7 +103,25 @@ class Api::V1::ProposalsController < Api::BaseController
     render json: @proposal, serializer: REST::ProposalSerializer
   end
 
+  def suggest_completed
+    return render json: { error: %q(You cannot suggest completion on your own proposal.) }, status: :unprocessable_entity if @proposal.created_by_account_id == current_account.id
+    return render json: { error: %q(This proposal is already marked as delivered.) }, status: :unprocessable_entity if @proposal.delivered?
+
+    suggestion = @proposal.completion_suggestions.find_or_create_by!(account: current_account)
+    NotifyService.new.call(@proposal.created_by_account, :proposal_suggest_completed, suggestion) if suggestion.previously_new_record?
+    render json: @proposal.reload, serializer: REST::ProposalSerializer
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
+  end
+
   private
+
+  def notify_creator_of_support!(vote)
+    NotifyService.new.call(@proposal.created_by_account, :proposal_support, vote)
+  rescue StandardError => e
+    Rails.logger.warn("proposal_support notification failed for vote #{vote.id}: #{e.class}: #{e.message}")
+  end
+
 
   def set_proposal
     @proposal = Proposal.find(params[:id])

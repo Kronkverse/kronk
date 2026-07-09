@@ -136,4 +136,21 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
   def paginated?
     object.pagination_data.present?
   end
+  attribute :proposal, if: :proposal_type?
+
+  def proposal_type?
+    [:proposal_support, :proposal_comment, :proposal_suggest_completed].include?(object.type)
+  end
+
+  def proposal
+    record = case object.type
+             when :proposal_support then object.activity&.proposal
+             when :proposal_suggest_completed then object.activity&.proposal
+             when :proposal_comment then Proposal.find_by(discussion_status_id: object.activity_id)
+             end
+    return nil unless record
+
+    { id: record.id.to_s, title: record.title }
+  end
+
 end

@@ -25,6 +25,9 @@ export const allNotificationTypes: NotificationType[] = [
   'event_invitation',
   'nudge',
   'media_tag',
+  'proposal_support',
+  'proposal_comment',
+  'proposal_suggest_completed',
 ];
 
 export type NotificationWithStatusType =
@@ -48,7 +51,10 @@ export type NotificationType =
   | 'annual_report'
   | 'event_invitation'
   | 'nudge'
-  | 'media_tag';
+  | 'media_tag'
+  | 'proposal_support'
+  | 'proposal_comment'
+  | 'proposal_suggest_completed';
 
 export interface BaseNotificationJSON {
   id: string;
@@ -208,6 +214,27 @@ interface MediaTagNotificationJSON extends BaseNotificationJSON {
   media_tag_status_path: string | null;
 }
 
+
+export interface ApiProposalReferenceJSON {
+  id: string;
+  title: string;
+}
+
+type ProposalNotificationTypes =
+  | 'proposal_support'
+  | 'proposal_comment'
+  | 'proposal_suggest_completed';
+
+interface ProposalNotificationGroupJSON extends BaseNotificationGroupJSON {
+  type: ProposalNotificationTypes;
+  proposal: ApiProposalReferenceJSON;
+}
+
+interface ProposalNotificationJSON extends BaseNotificationJSON {
+  type: ProposalNotificationTypes;
+  proposal: ApiProposalReferenceJSON;
+}
+
 export type ApiNotificationJSON =
   | SimpleNotificationJSON
   | ReportNotificationJSON
@@ -216,7 +243,8 @@ export type ApiNotificationJSON =
   | ModerationWarningNotificationJSON
   | EventInvitationNotificationJSON
   | NudgeNotificationJSON
-  | MediaTagNotificationJSON;
+  | MediaTagNotificationJSON
+  | ProposalNotificationJSON;
 
 export type ApiNotificationGroupJSON =
   | SimpleNotificationGroupJSON
@@ -227,7 +255,8 @@ export type ApiNotificationGroupJSON =
   | AnnualReportNotificationGroupJSON
   | EventInvitationNotificationGroupJSON
   | NudgeNotificationGroupJSON
-  | MediaTagNotificationGroupJSON;
+  | MediaTagNotificationGroupJSON
+  | ProposalNotificationGroupJSON;
 
 export interface ApiNotificationGroupsResultJSON {
   accounts: ApiAccountJSON[];

@@ -10,6 +10,7 @@ class Proposal < ApplicationRecord
   has_many :proposal_votes, dependent: :destroy
   has_many :tasks, dependent: :destroy
   has_many :budget_items, dependent: :destroy
+  has_many :completion_suggestions, class_name: 'ProposalCompletionSuggestion', dependent: :destroy
 
   enum :status, { open: 1, vetoed: 2, delivered: 3, in_progress: 4 }
   enum :proposal_type, { small: 0, medium: 1, large: 2 }, prefix: :type

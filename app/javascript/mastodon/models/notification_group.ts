@@ -6,6 +6,7 @@ import type {
   ApiNotificationGroupJSON,
   ApiNotificationJSON,
   ApiEventInvitationJSON,
+  ApiProposalReferenceJSON,
   NotificationType,
   NotificationWithStatusType,
 } from 'mastodon/api_types/notifications';
@@ -69,6 +70,17 @@ export interface NotificationGroupNudge extends BaseNotification<'nudge'> {
   nudgeStreak: number;
   nudgeMessage?: NudgeMessageData;
   nudgeReactions: NudgeReactions;
+}
+
+
+export type ProposalNotificationType =
+  | 'proposal_support'
+  | 'proposal_comment'
+  | 'proposal_suggest_completed';
+
+export interface NotificationGroupProposal
+  extends BaseNotification<ProposalNotificationType> {
+  proposal: ApiProposalReferenceJSON;
 }
 
 export interface NotificationGroupMediaTag
@@ -135,7 +147,8 @@ export type NotificationGroup =
   | NotificationGroupAnnualReport
   | NotificationGroupEventInvitation
   | NotificationGroupNudge
-  | NotificationGroupMediaTag;
+  | NotificationGroupMediaTag
+  | NotificationGroupProposal;
 
 function createReportFromJSON(reportJSON: ApiReportJSON): Report {
   const { target_account, ...report } = reportJSON;
@@ -249,6 +262,15 @@ export function createNotificationGroupFromJSON(
             }
           : undefined,
         nudgeReactions: group.nudge_reactions,
+        sampleAccountIds,
+      };
+    case 'proposal_support':
+    case 'proposal_comment':
+    case 'proposal_suggest_completed':
+      return {
+        ...group,
+        partial: false,
+        proposal: group.proposal,
         sampleAccountIds,
       };
     case 'media_tag':

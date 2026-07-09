@@ -40,6 +40,9 @@ export const ProposalDetail: React.FC<{
   const [deliverNotes, setDeliverNotes] = useState('');
   const [deliverPending, setDeliverPending] = useState(false);
   const [deliverError, setDeliverError] = useState<string | null>(null);
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestDone, setSuggestDone] = useState(false);
+  const [suggestError, setSuggestError] = useState<string | null>(null);
 
   const isSeeder = proposal.created_by_account.id === me;
 
@@ -189,6 +192,28 @@ export const ProposalDetail: React.FC<{
     },
     [handleDeliverSubmit],
   );
+
+  const handleSuggestCompleted = useCallback(async () => {
+    if (suggesting) return;
+    setSuggesting(true);
+    setSuggestError(null);
+    try {
+      const res = await api().post<Proposal>(
+        `/api/v1/proposals/${proposal.id}/suggest_completed`,
+      );
+      onVoteUpdate(res.data);
+      setSuggestDone(true);
+    } catch {
+      setSuggestError('Could not send the suggestion. Try again in a moment.');
+    } finally {
+      setSuggesting(false);
+    }
+  }, [proposal.id, suggesting, onVoteUpdate]);
+
+  const handleSuggestCompletedClick = useCallback(() => {
+    void handleSuggestCompleted();
+  }, [handleSuggestCompleted]);
+
 
   return (
     <div className='governance-detail'>
@@ -428,6 +453,36 @@ export const ProposalDetail: React.FC<{
                   )}
                 </div>
               )}
+
+              {!isSeeder &&
+                !proposal.archived_at &&
+                proposal.status !== 'delivered' && (
+                  <div className='governance-detail__peer-actions'>
+                    <button
+                      type='button'
+                      className='governance-detail__action-btn governance-detail__action-btn--suggest'
+                      onClick={handleSuggestCompletedClick}
+                      disabled={suggesting || suggestDone}
+                    >
+                      {suggestDone ? (
+                        <FormattedMessage
+                          id='governance.action.suggest_completed.sent'
+                          defaultMessage='Suggestion sent'
+                        />
+                      ) : (
+                        <FormattedMessage
+                          id='governance.action.suggest_completed'
+                          defaultMessage='Suggest completed'
+                        />
+                      )}
+                    </button>
+                    {suggestError && (
+                      <p className='governance-detail__peer-error'>
+                        {suggestError}
+                      </p>
+                    )}
+                  </div>
+                )}
             </div>
 
             <nav className='governance-detail__tabs'>

@@ -9,6 +9,7 @@ import { useAppSelector, useAppDispatch } from 'mastodon/store';
 import { NotificationAdminReport } from './notification_admin_report';
 import { NotificationAdminSignUp } from './notification_admin_sign_up';
 import { NotificationAnnualReport } from './notification_annual_report';
+import { NotificationProposal } from './notification_proposal';
 import { NotificationEventInvitation } from './notification_event_invitation';
 import { NotificationFavourite } from './notification_favourite';
 import { NotificationFollow } from './notification_follow';
@@ -178,6 +179,13 @@ export const NotificationGroup: React.FC<{
           unread={unread}
           notification={notificationGroup}
         />
+      );
+      break;
+    case 'proposal_support':
+    case 'proposal_comment':
+    case 'proposal_suggest_completed':
+      content = (
+        <NotificationProposal unread={unread} notification={notificationGroup} />
       );
       break;
     default:

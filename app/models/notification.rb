@@ -89,6 +89,15 @@ class Notification < ApplicationRecord
     media_tag: {
       filterable: true,
     }.freeze,
+    proposal_support: {
+      filterable: true,
+    }.freeze,
+    proposal_comment: {
+      filterable: true,
+    }.freeze,
+    proposal_suggest_completed: {
+      filterable: true,
+    }.freeze,
   }.freeze
 
   TYPES = PROPERTIES.keys.freeze
