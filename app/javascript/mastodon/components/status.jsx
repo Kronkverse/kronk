@@ -33,8 +33,10 @@ import { getHashtagBarForStatus } from './hashtag_bar';
 import { RelativeTimestamp } from './relative_timestamp';
 import StatusActionBar from './status_action_bar';
 import StatusContent from './status_content';
+import { StatusBoothCard } from './status_booth_card';
 import { StatusEventCard } from './status_event_card';
 import { StatusKommonsCard } from './status_kommons_card';
+import { StatusMarketplaceCard } from './status_marketplace_card';
 import { StatusQuestionCard } from './status_question_card';
 import { StatusSpaceBar } from './status_space_bar';
 import { StatusThreadLabel } from './status_thread_label';
@@ -576,6 +578,14 @@ class Status extends ImmutablePureComponent {
     } else if (status.get('post_type') === 'proposal' && status.get('proposal')) {
       media = (
         <StatusKommonsCard proposal={status.get('proposal').toJS()} />
+      );
+    } else if (status.get('marketplace_listing')) {
+      media = (
+        <StatusMarketplaceCard listing={status.get('marketplace_listing').toJS()} />
+      );
+    } else if (status.get('booth_set')) {
+      media = (
+        <StatusBoothCard set={status.get('booth_set').toJS()} />
       );
     } else if (status.get('card') && !status.get('quote')) {
       media = (

@@ -1,0 +1,26 @@
+@use 'variables' as *;
+
+// Booth-only overrides for the shared Korner card frame.
+
+.status-booth-card {
+  &__artist {
+    // Booth artist name is the "who" — closer to identity than description,
+    // so give it a slightly warmer tone than the generic muted summary.
+    color: color-mix(in srgb, var(--space-color) 40%, $dark-text-color 60%);
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+
+  &__genres {
+    font-size: 12px;
+    color: $dark-text-color;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__duration {
+    font-size: 12px;
+    color: $dark-text-color;
+    font-variant-numeric: tabular-nums;
+  }
+}
