@@ -689,7 +689,7 @@ class Status extends ImmutablePureComponent {
 
             {expanded && (
               <>
-                {!status.get("event") && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && status.get('post_type') !== 'proposal' && (
+                {!status.get("event") && status.get('post_type') !== 'question' && status.get('post_type') !== 'answer' && status.get('post_type') !== 'proposal' && !status.get('marketplace_listing') && !status.get('booth_set') && (
                   <StatusContent
                     status={status}
                     onClick={this.handleClick}
