@@ -34,7 +34,6 @@ import { RelativeTimestamp } from './relative_timestamp';
 import StatusActionBar from './status_action_bar';
 import StatusContent from './status_content';
 import { hasKornerCard, pickKornerCard } from './korner_cards';
-import { StatusQuestionCard } from './status_question_card';
 import { StatusSpaceBar } from './status_space_bar';
 import { StatusThreadLabel } from './status_thread_label';
 import { VisibilityIcon } from './visibility_icon';
@@ -556,24 +555,10 @@ class Status extends ImmutablePureComponent {
           </Bundle>
         );
       }
-    } else if (status.get('post_type') === 'question' || status.get('post_type') === 'answer') {
-      const isAnswer = status.get('post_type') === 'answer';
-      const questionObj = isAnswer ? status.get('question') : null;
-      media = (
-        <StatusQuestionCard
-          postType='question'
-          contentHtml={isAnswer ? (questionObj ? questionObj.get('content') : '') : status.get('contentHtml')}
-          answersCount={isAnswer ? (questionObj ? questionObj.get('answers_count') : 0) : status.get('answers_count')}
-          answerers={isAnswer ? (questionObj ? questionObj.get('answerers')?.toJS() : []) : status.get('answerers')?.toJS()}
-          hasAnswered={isAnswer ? true : status.get('has_answered')}
-          statusId={isAnswer ? status.get('in_reply_to_id') : status.get('id')}
-          onCardClick={this.handleClick}
-        />
-      );
     } else {
       const kornerCard = pickKornerCard(status);
       if (kornerCard) {
-        media = kornerCard.card(status);
+        media = kornerCard.card(status, { onCardClick: this.handleClick });
       } else if (status.get('card') && !status.get('quote')) {
         media = (
           <Card

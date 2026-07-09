@@ -36,6 +36,7 @@ export const SPACE_PLANET: Record<string, PlanetName> = {
   Questions: 'Saturn',
   Booth: 'Uranus',
   Flow: 'Mars',
+  Nudges: 'Mercury',
 };
 
 export function spaceColor(space: string): string {
