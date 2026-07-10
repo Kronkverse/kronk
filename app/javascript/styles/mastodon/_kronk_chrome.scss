@@ -102,6 +102,81 @@
   }
 }
 
+// Sub-bar that appears when inside a /hub/<slug> route. Sits just below
+// the fixed top chrome; on mobile it shifts down further because the
+// HubSwitcher moves to the viewport bottom, freeing top real estate.
+.korner-sub-bar {
+  position: fixed;
+  top: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 24;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-round, 999px);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-default);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+
+  @media (max-width: 629px) {
+    top: 0.75rem;
+    left: 0.75rem;
+    transform: none;
+  }
+
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 0.1rem 0.35rem;
+    border-radius: var(--radius-small, 6px);
+
+    &:hover {
+      color: var(--text-primary);
+      background: var(--kronk-purple-deep);
+    }
+  }
+
+  &__back-icon {
+    width: 1rem;
+    height: 1rem;
+    fill: currentColor;
+  }
+
+  &__divider {
+    color: var(--text-muted);
+    opacity: 0.6;
+  }
+
+  &__crumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  &__glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.1rem;
+    height: 1.1rem;
+    color: var(--kronk-purple-accent);
+
+    svg {
+      width: 1.1rem;
+      height: 1.1rem;
+      fill: currentColor;
+    }
+  }
+}
+
 .kronk-menu {
   position: fixed;
   bottom: 1.5rem;

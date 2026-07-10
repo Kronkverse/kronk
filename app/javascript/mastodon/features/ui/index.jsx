@@ -24,6 +24,7 @@ import { BoothMiniPlayer } from 'mastodon/features/booth/components/booth_mini_p
 import { HuddlePip } from 'mastodon/features/huddle_pip';
 import { PictureInPicture } from 'mastodon/features/picture_in_picture';
 import { HubSwitcher } from './components/hub_switcher';
+import { KornerSubBar } from './components/korner_sub_bar';
 import { KronkMenu } from './components/kronk_menu';
 import { KronkWordmark } from './components/kronk_wordmark';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
@@ -653,6 +654,7 @@ class UI extends PureComponent {
               the layout wiring is verified on shadow. */}
           <KronkWordmark />
           <HubSwitcher variant={layout === 'mobile' ? 'bottom' : 'top'} currentAccountUsername={this.props.username} />
+          <KornerSubBar />
           {this.props.identity.signedIn && <KronkMenu currentAccountUsername={this.props.username} />}
           {!disableHoverCards && <HoverCardController />}
           <HashtagMenuController />
