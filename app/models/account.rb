@@ -453,6 +453,7 @@ class Account < ApplicationRecord
   end
 
   before_validation :prepare_contents, if: :local?
+  before_validation :apply_kronk_defaults, on: :create, if: :local?
   before_create :generate_keys
   after_create :seed_default_profile_sections, if: :local?
   before_destroy :clean_feed_manager
@@ -469,6 +470,15 @@ class Account < ApplicationRecord
   def prepare_contents
     display_name&.strip!
     note&.strip!
+  end
+
+  # Kronk defaults for freshly-signed-up local accounts (Phase 11.4).
+  # New accounts get follower approval on by default — people opt out
+  # rather than opt in. Callers who need an unlocked account (staff
+  # bots, service accounts) can flip it back with `update!(locked: false)`
+  # right after create, since this only fires once at insertion.
+  def apply_kronk_defaults
+    self.locked = true unless locked_changed?
   end
 
   def generate_keys

@@ -127,7 +127,28 @@ module Mastodon
           detect_drift(manifest).each { |line| issues << "#{manifest.slug}: #{line}" }
         end
 
+        detect_orphan_listens(manifests).each { |line| issues << line }
+
         issues
+      end
+
+      # A manifest's `listens:` block names events it wants to react to.
+      # If no other manifest declares that event under `emits:`, the
+      # listener will never fire — likely a typo or a dropped emitter.
+      def detect_orphan_listens(manifests)
+        emitted = manifests.flat_map do |m|
+          Array(m.emits).map { |e| e.is_a?(Hash) ? e['name'] : e }.compact
+        end.to_set
+
+        manifests.flat_map do |m|
+          Array(m.listens).filter_map do |listen|
+            name = listen.is_a?(Hash) ? listen['name'] : listen
+            next unless name.is_a?(String)
+            next if emitted.include?(name)
+
+            "#{m.slug}: listens for '#{name}' but no manifest emits it"
+          end
+        end
       end
     end
   end
