@@ -20,7 +20,7 @@ module Mastodon
         say ''
 
         header_row = %w(slug planet enforced drift)
-        rows = ::Korners.all.map do |manifest|
+        rows = ::Kronk::KornerRegistry.all.map do |manifest|
           drift = detect_drift(manifest)
           [
             manifest.slug,
