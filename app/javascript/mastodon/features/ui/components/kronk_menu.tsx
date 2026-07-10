@@ -86,6 +86,12 @@ export const KronkMenu = ({ currentAccountUsername, unreadNudgesCount = 0 }: Kro
           <Link className='kronk-menu__item' to='/search' role='menuitem' onClick={close}>
             <FormattedMessage id='kronk_menu.search' defaultMessage='Search' />
           </Link>
+          <Link className='kronk-menu__item' to='/explore' role='menuitem' onClick={close}>
+            <FormattedMessage id='kronk_menu.explore' defaultMessage='Explore' />
+          </Link>
+          <Link className='kronk-menu__item' to='/public/local' role='menuitem' onClick={close}>
+            <FormattedMessage id='kronk_menu.local' defaultMessage='Local timeline' />
+          </Link>
           <Link className='kronk-menu__item' to='/nudges' role='menuitem' onClick={close}>
             <FormattedMessage id='kronk_menu.nudges' defaultMessage='Nudges' />
             {unreadNudgesCount > 0 && <span className='kronk-menu__dot' aria-label={`${unreadNudgesCount} unread`} />}
