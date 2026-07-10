@@ -182,6 +182,10 @@ namespace :api, format: false do
       end
     end
 
+    namespace :nudges do
+      resources :legacy, only: [:index], controller: :legacy_archive
+    end
+
     resource :instance, only: [:show] do
       scope module: :instances do
         resources :peers, only: [:index]
