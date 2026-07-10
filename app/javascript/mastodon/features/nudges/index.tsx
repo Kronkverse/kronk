@@ -497,6 +497,20 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
           <FormattedMessage id='nudges.tab.chats' defaultMessage='Chats' />
         </span>
         <Link
+          to='/nudges/activity'
+          style={{
+            padding: '0.35rem 0.85rem',
+            borderRadius: 'var(--radius-round, 999px)',
+            border: '1px solid var(--border-default)',
+            background: 'var(--surface-elevated)',
+            color: 'var(--text-secondary)',
+            textDecoration: 'none',
+            fontSize: '0.85rem',
+          }}
+        >
+          <FormattedMessage id='nudges.tab.activity' defaultMessage='Activity' />
+        </Link>
+        <Link
           to='/nudges/legacy'
           style={{
             padding: '0.35rem 0.85rem',
