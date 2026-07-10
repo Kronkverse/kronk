@@ -300,3 +300,7 @@ export function SectionedProfile () {
   return import("../../sectioned_profile");
 }
 
+export function NudgesLegacyArchive () {
+  return import("../../nudges_legacy");
+}
+

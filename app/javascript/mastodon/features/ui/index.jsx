@@ -100,6 +100,7 @@ import {
   BoothSetPage,
   ProfileSectionsSettings,
   SectionedProfile,
+  NudgesLegacyArchive,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
 import { focusColumn, getFocusedItemIndex, focusItemSibling } from './util/focusUtils';
@@ -231,6 +232,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path={["/kalendar/:id", "/hub/kalendar/:id"]} component={EventDetail} content={children} />}
             {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={Events} content={children} />}
             {signedIn && <WrappedRoute path={["/in-flow", "/hub/in-flow"]} component={InFlow} content={children} />}
+            {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/:accountId" component={NudgesThread} content={children} />}
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} />}
             {signedIn && <WrappedRoute path={["/governance", "/hub/kommons"]} component={Governance} content={children} />}

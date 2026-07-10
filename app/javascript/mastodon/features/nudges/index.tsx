@@ -480,6 +480,38 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
         </div>
       )}
 
+      {/* Phase 5 rebuild — transitional tab bar. "Chats" is the current
+          Nudges surface (this component); "Legacy" flips to the archived
+          notifications view (LEGACY_TYPES scope). Once every user has
+          moved off the bell UI (2.1.x), the legacy tab is removed. */}
+      <div style={{ display: 'flex', gap: '0.4rem', padding: '0.5rem 1rem 0' }}>
+        <span
+          style={{
+            padding: '0.35rem 0.85rem',
+            borderRadius: 'var(--radius-round, 999px)',
+            background: 'var(--accent)',
+            color: 'var(--surface-primary)',
+            fontSize: '0.85rem',
+          }}
+        >
+          <FormattedMessage id='nudges.tab.chats' defaultMessage='Chats' />
+        </span>
+        <Link
+          to='/nudges/legacy'
+          style={{
+            padding: '0.35rem 0.85rem',
+            borderRadius: 'var(--radius-round, 999px)',
+            border: '1px solid var(--border-default)',
+            background: 'var(--surface-elevated)',
+            color: 'var(--text-secondary)',
+            textDecoration: 'none',
+            fontSize: '0.85rem',
+          }}
+        >
+          <FormattedMessage id='nudges.tab.legacy' defaultMessage='Legacy' />
+        </Link>
+      </div>
+
       <div className='scrollable nudge-page'>
         {!loading && grandTotal > 0 && (
           <div className='nudge-grand-total'>
