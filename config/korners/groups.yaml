@@ -1,0 +1,69 @@
+# Groups — a framework primitive for shareable, multi-poster spaces.
+# Groups are standalone (they can exist without a hosting korner) but
+# can also be attached to any korner (spec §Groups). A Status can target
+# N groups; group timelines union members' posts targeted at the group.
+#
+# Governance is peer-support by default; seeder-only administration for
+# archival/rename. See app/models/group.rb + Groups spec.
+
+slug:            groups
+name:            Groups
+icon:            groups
+render_target:   web
+version:         1.0.0
+
+resources:
+  - name:    groups
+    primary: true
+  - name:    group_memberships
+  - name:    statuses_groups   # join to Status for multi-group posts
+
+storage:
+  db_namespace:  group_
+  media_prefix:  (none)
+
+security:
+  ownership_model:      seeder_and_members
+  visibility:           public               # discoverable listing
+  member_gate:          approval_optional    # seeders may require join approval
+  archive_gate:         seeder_only
+
+feed_projection:
+  card:               group_card
+  title_from:         name
+  summary_from:       description
+  # Deliberately no status_association: a Group is not represented by a
+  # single Status. Its timeline is the union of Statuses joined via the
+  # statuses_groups table.
+  links_to:           /hub/groups/<id>
+  default_visibility: public
+
+settings:
+  - name:    notify_on_new_post
+    kind:    boolean
+    default: true
+    scope:   user
+  - name:    default_visibility
+    kind:    string
+    default: public
+    scope:   group
+
+# group.post.created — fired whenever a Status is joined to this group
+# via either /api/v1/statuses (with group_ids[]) or the group-scoped
+# composer. Payload: { group_id, status_id, account_id }.
+emits:
+  - name: group.post.created
+    payload:
+      - group_id
+      - status_id
+      - account_id
+listens: []
+
+hub_teaser:
+  static:  "Shareable, multi-poster spaces."
+
+launch:
+  blurb:  "Groups — a place for multiple people to post together, discover shared context, and act as one."
+  cta:    "Start a group"
+
+enforced:        true

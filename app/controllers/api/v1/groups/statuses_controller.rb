@@ -46,6 +46,13 @@ class Api::V1::Groups::StatusesController < Api::BaseController
       @group.statuses << status unless @group.statuses.exists?(id: status.id)
     end
 
+    Kronk::KornerEvents.publish(
+      'group.post.created',
+      group_id: @group.id,
+      status_id: status.id,
+      account_id: status.account_id
+    )
+
     render json: status, serializer: REST::StatusSerializer
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.message }, status: 422

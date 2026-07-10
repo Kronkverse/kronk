@@ -255,5 +255,14 @@ class Api::V1::StatusesController < Api::BaseController
         g.statuses << status unless g.statuses.exists?(id: status.id)
       end
     end
+
+    groups.each do |g|
+      Kronk::KornerEvents.publish(
+        'group.post.created',
+        group_id: g.id,
+        status_id: status.id,
+        account_id: status.account_id
+      )
+    end
   end
 end

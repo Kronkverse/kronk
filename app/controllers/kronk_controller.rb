@@ -26,6 +26,7 @@ class KronkController < ApplicationController
   )
 
   before_action :set_page_key
+  before_action :load_navigation
   before_action :load_content
 
   def show; end
@@ -38,6 +39,16 @@ class KronkController < ApplicationController
     return if PAGE_PATTERN.match?(@page_key)
 
     @page_key = 'about'
+  end
+
+  # The nav lists every top-level `.md` file that ships in content/kronk.
+  # Ops can drop new pages in — they'll appear in the sidebar without a
+  # code change. Order matches the recommended reading flow.
+  NAV_ORDER = %w(about values contributors governance rules privacy terms contact).freeze
+
+  def load_navigation
+    keys = CONTENT_ROOT.glob('*.md').map { |p| p.basename('.md').to_s }
+    @nav_pages = NAV_ORDER.select { |k| keys.include?(k) } + (keys - NAV_ORDER)
   end
 
   def load_content

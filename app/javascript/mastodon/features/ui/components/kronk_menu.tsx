@@ -108,9 +108,10 @@ export const KronkMenu = ({ currentAccountUsername, unreadNudgesCount = 0 }: Kro
           <Link className='kronk-menu__item' to='/hub/groups' role='menuitem' onClick={close}>
             <FormattedMessage id='kronk_menu.groups' defaultMessage='Groups' />
           </Link>
-          <Link className='kronk-menu__item' to='/kronk' role='menuitem' onClick={close}>
+          {/* /kronk/* is Rails-served, not SPA — force a full navigation. */}
+          <a className='kronk-menu__item' href='/kronk' role='menuitem' onClick={close}>
             <FormattedMessage id='kronk_menu.about' defaultMessage='About Kronk' />
-          </Link>
+          </a>
         </div>
       )}
     </div>

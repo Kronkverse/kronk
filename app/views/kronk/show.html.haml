@@ -1,7 +1,16 @@
 - content_for :header_tags do
-  %title= "#{@title} - Kronk"
+  %title= "#{@title} — Kronk"
 
 .kronk-org-page
+  %nav.kronk-org-page__nav{ 'aria-label': 'Kronk pages' }
+    %a.kronk-org-page__wordmark{ href: '/kronk' } ӁЯѺƝ₭
+    %ul.kronk-org-page__nav-list
+      - @nav_pages.each do |key|
+        %li
+          %a{ href: "/kronk/#{key}",
+              class: ['kronk-org-page__nav-link', ('kronk-org-page__nav-link--active' if key == @page_key)] }
+            = key.humanize
+
   %article.kronk-org-page__body
     %h1= @title
     != @body_html
