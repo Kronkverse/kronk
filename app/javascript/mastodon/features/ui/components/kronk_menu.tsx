@@ -4,6 +4,7 @@ import { FormattedMessage } from 'react-intl';
 
 import { apiRequestGet } from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+import { useAppSelector } from 'mastodon/store';
 import { FeedScopePicker } from './feed_scope_picker';
 
 // Kronk's Ӂ menu — the floating action button that expands into a
@@ -16,13 +17,19 @@ import { FeedScopePicker } from './feed_scope_picker';
 
 interface KronkMenuProps {
   currentAccountUsername?: string;
-  unreadNudgesCount?: number;
 }
 
-export const KronkMenu = ({ currentAccountUsername, unreadNudgesCount = 0 }: KronkMenuProps) => {
+export const KronkMenu = ({ currentAccountUsername }: KronkMenuProps) => {
   const [open, setOpen] = useState(false);
   const [followRequestCount, setFollowRequestCount] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
+
+  // Read unread nudges from Redux — bumped by incoming streaming
+  // events + fetchNotifications so the badge stays in sync without a
+  // dedicated poll.
+  const unreadNudgesCount = useAppSelector(
+    (state) => state.notificationGroups.unreadNudgeCount ?? 0,
+  );
 
   const toggle = useCallback(() => setOpen((prev) => !prev), []);
   const close = useCallback(() => setOpen(false), []);
