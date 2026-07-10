@@ -1,30 +1,41 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+import { List as ImmutableList } from 'immutable';
 
 import { apiRequestGet } from 'mastodon/api';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+import { importFetchedStatuses } from 'mastodon/actions/importer';
+import { useAppDispatch } from 'mastodon/store';
 import Column from 'mastodon/components/column';
 import ColumnHeader from 'mastodon/components/column_header';
+import StatusList from 'mastodon/components/status_list';
 
 const messages = defineMessages({
   title: { id: 'sectioned_profile.title', defaultMessage: 'Profile' },
 });
 
 interface SectionWithStatuses extends ApiProfileSectionJSON {
-  statuses: ApiStatusJSON[];
+  statusIds: ImmutableList<string>;
   loading: boolean;
 }
 
+const emptyList = ImmutableList<string>();
+
 export const SectionedProfile = () => {
   const intl = useIntl();
+  const dispatch = useAppDispatch();
   const { acct } = useParams<{ acct?: string }>();
 
   const [account, setAccount] = useState<ApiAccountJSON | null>(null);
   const [sections, setSections] = useState<SectionWithStatuses[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // StatusList requires an onLoadMore handler prop but per-section
+  // pagination is deferred; supply a no-op so it renders read-only.
+  const noopLoadMore = useCallback(() => undefined, []);
 
   useEffect(() => {
     if (!acct) return;
@@ -32,9 +43,7 @@ export const SectionedProfile = () => {
     let cancelled = false;
     void (async () => {
       try {
-        const [accountRes] = await Promise.all([
-          apiRequestGet<ApiAccountJSON>(`v1/accounts/lookup`, { acct }),
-        ]);
+        const accountRes = await apiRequestGet<ApiAccountJSON>('v1/accounts/lookup', { acct });
         if (cancelled) return;
         setAccount(accountRes);
 
@@ -43,10 +52,9 @@ export const SectionedProfile = () => {
         );
         if (cancelled) return;
 
-        // Kick off status fetches in parallel for each section.
         const enriched: SectionWithStatuses[] = sectionList.map((s) => ({
           ...s,
-          statuses: [],
+          statusIds: emptyList,
           loading: true,
         }));
         setSections(enriched);
@@ -58,9 +66,19 @@ export const SectionedProfile = () => {
               { limit: 20 },
             );
             if (cancelled) return;
+
+            // Push into Redux so <Status> can hydrate normally.
+            dispatch(importFetchedStatuses(statuses));
+
             setSections((prev) =>
               prev.map((row) =>
-                row.id === s.id ? { ...row, statuses, loading: false } : row,
+                row.id === s.id
+                  ? {
+                      ...row,
+                      statusIds: ImmutableList(statuses.map((st) => st.id)),
+                      loading: false,
+                    }
+                  : row,
               ),
             );
           }),
@@ -74,7 +92,7 @@ export const SectionedProfile = () => {
     return () => {
       cancelled = true;
     };
-  }, [acct]);
+  }, [acct, dispatch]);
 
   return (
     <Column bindToDocument label={intl.formatMessage(messages.title)}>
@@ -109,46 +127,34 @@ export const SectionedProfile = () => {
               background: 'var(--surface-elevated)',
             }}
           >
-            <header style={{ display: 'flex', gap: '0.5rem', alignItems: 'baseline', marginBottom: '0.75rem' }}>
+            <header
+              style={{
+                display: 'flex',
+                gap: '0.5rem',
+                alignItems: 'baseline',
+                marginBottom: '0.75rem',
+              }}
+            >
               <h3 style={{ margin: 0, color: 'var(--accent)' }}>
                 {section.title ?? section.section_type}
               </h3>
               <small style={{ color: 'var(--text-muted)' }}>{section.section_type}</small>
             </header>
 
-            {section.loading && (
-              <p style={{ color: 'var(--text-muted)' }}>
-                <FormattedMessage id='sectioned_profile.loading_section' defaultMessage='Loading…' />
-              </p>
-            )}
-
-            {!section.loading && section.statuses.length === 0 && (
-              <p style={{ color: 'var(--text-muted)' }}>
-                <FormattedMessage id='sectioned_profile.empty' defaultMessage='Nothing here yet.' />
-              </p>
-            )}
-
-            <ul style={{ padding: 0, listStyle: 'none' }}>
-              {section.statuses.map((status) => (
-                <li
-                  key={status.id}
-                  style={{
-                    padding: '0.5rem 0',
-                    borderTop: '1px solid var(--border-default)',
-                  }}
-                >
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    {new Date(status.created_at).toLocaleString()}
-                  </div>
-                  <div
-                    style={{ marginTop: '0.25rem' }}
-                    // Trusted markup — Status content comes from the Mastodon
-                    // sanitiser before it reaches this component.
-                    dangerouslySetInnerHTML={{ __html: status.content }}
-                  />
-                </li>
-              ))}
-            </ul>
+            <StatusList
+              scrollKey={`sectioned_profile:${section.id}`}
+              statusIds={section.statusIds}
+              isLoading={section.loading}
+              hasMore={false}
+              onLoadMore={noopLoadMore}
+              timelineId={`sectioned_profile:${section.id}`}
+              emptyMessage={
+                <FormattedMessage
+                  id='sectioned_profile.empty'
+                  defaultMessage='Nothing here yet.'
+                />
+              }
+            />
           </section>
         ))}
       </div>

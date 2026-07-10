@@ -2,6 +2,9 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FormattedMessage } from 'react-intl';
 
+import { apiRequestGet } from 'mastodon/api';
+import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+
 // Kronk's Ӂ menu — the floating action button that expands into a
 // radial cluster of the per-user actions (Profile, Settings, Post,
 // Search, Nudges). Placed bottom-right in the app chrome.
@@ -17,10 +20,29 @@ interface KronkMenuProps {
 
 export const KronkMenu = ({ currentAccountUsername, unreadNudgesCount = 0 }: KronkMenuProps) => {
   const [open, setOpen] = useState(false);
+  const [followRequestCount, setFollowRequestCount] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
 
   const toggle = useCallback(() => setOpen((prev) => !prev), []);
   const close = useCallback(() => setOpen(false), []);
+
+  // Poll follow-request count on mount and when the menu opens. Kept
+  // lightweight — a single accounts list request, no reducer wiring.
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const accounts = await apiRequestGet<ApiAccountJSON[]>('v1/follow_requests', { limit: 40 });
+        if (!cancelled) setFollowRequestCount(accounts.length);
+      } catch {
+        // Silent — the badge is informational.
+      }
+    };
+    void refresh();
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -43,7 +65,9 @@ export const KronkMenu = ({ currentAccountUsername, unreadNudgesCount = 0 }: Kro
         onClick={toggle}
       >
         <span aria-hidden='true'>Ӂ</span>
-        {unreadNudgesCount > 0 && <span className='kronk-menu__badge'>{unreadNudgesCount}</span>}
+        {(unreadNudgesCount + followRequestCount) > 0 && (
+          <span className='kronk-menu__badge'>{unreadNudgesCount + followRequestCount}</span>
+        )}
       </button>
 
       {open && (
@@ -74,6 +98,11 @@ export const KronkMenu = ({ currentAccountUsername, unreadNudgesCount = 0 }: Kro
               onClick={close}
             >
               <FormattedMessage id='kronk_menu.connections' defaultMessage='Connections' />
+              {followRequestCount > 0 && (
+                <span className='kronk-menu__badge' aria-label={`${followRequestCount} follow requests`}>
+                  {followRequestCount}
+                </span>
+              )}
             </Link>
           )}
           <Link className='kronk-menu__item' to='/hub/groups' role='menuitem' onClick={close}>
