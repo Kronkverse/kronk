@@ -45,29 +45,31 @@ export NODE_OPTIONS="--max-old-space-size=2048"
 
 This is already set in `/etc/profile.d/mainframe.sh` on the dev server.
 
-## Spaces Architecture
+## Korners Architecture
 
-Kronk organises features into **spaces**, each orbiting a **planet** on the Kosmos (`/hub`). Every space inherits its accent colour from its parent planet.
+Kronk organises features into **korners**, each declared via a manifest under `config/korners/*.yaml`. Every korner mounts under the `/hub/<slug>` prefix and shares a common visual identity — the Kronk-purple palette — with differentiation coming from icon, name, and content.
 
-### Planet → Space mapping
+### The framework
 
-The canonical source of truth is `app/javascript/mastodon/planets.ts`:
+Full spec: `docs/kronk_korner_spec.md`. Reference implementation for adding a new korner: `docs/korners/adding_a_korner.md`.
 
-- `PLANET_COLORS` — hex colour for each planet
-- `SPACE_PLANET` — which planet each space orbits
-- `spaceColor(spaceName)` — returns the hex colour for a space
+Canonical sources of truth:
 
-### Adding a new space
+- `config/korners/*.yaml` — one manifest per korner (identity, resources, storage, security, feed projection, settings, etc.)
+- `config/korners/reserved_slugs.yaml` — slugs a korner cannot claim
+- `config/initializers/kronk_korner_registry.rb` — `Kronk::KornerRegistry` loads manifests at boot and warns on drift
+- `app/javascript/mastodon/tokens/tokens.yaml` — design tokens (colours, spacing, motion) generated into `_tokens.scss` by `bin/generate-tokens`
 
-1. **Decide which planet it belongs to** based on the planet's meaning (see Kosmos for meanings).
-2. **Add it to `SPACE_PLANET`** in `app/javascript/mastodon/planets.ts`.
-3. **Add it as a moon** in the `MOONS` array in `app/javascript/mastodon/features/hub/index.tsx` — position it near its parent planet's orbit.
-4. **Theme the space UI** by setting `--space-color: spaceColor('YourSpace')` as an inline style on the space's root element. All accent colours (badges, borders, glows, tints) should derive from this variable via `color-mix()` — see `_status_kommons_card.scss` as the reference implementation.
-5. **Theme feed cards** the same way — any card that appears in the home timeline from this space should carry `--space-color` so it's visually identifiable.
+### Adding a new korner
 
-### Sol is special
+1. **Author the manifest** at `config/korners/<slug>.yaml`. See `docs/korners/adding_a_korner.md` for the field-by-field walkthrough and `docs/kronk_korner_spec.md` §1 for the full schema.
+2. **Ship the models, controllers, and UI** as usual. Boot validator (`bin/tootctl korners doctor`) surfaces drift between the manifest and reality.
+3. **Wire feed projection** by declaring `feed_projection.card` in the manifest — the framework's card registry picks up the adapter component.
+4. **Theme with shared tokens** — reference `var(--accent)` for accents. The Kronk-purple palette applies platform-wide; per-korner colour identity was retired in 2.0.0.
 
-Sol represents the user profile and integrates with Anthemos. It has no moons — the planets are Sol's moons. It does not follow the space pattern above.
+### Historical note
+
+Prior to 2.0.0, Kronk used a "planet metaphor" — each space orbited a coloured planet, and cards themed from a `--space-color` custom property. That metaphor was retired to consolidate visual identity. Any lingering references to `planets.tsx`, `PLANET_COLORS`, `SPACE_PLANET`, `spaceColor()`, or `--space-color` are transitional aliases and will be swept.
 
 ## Custom Features (Kronk-specific)
 
