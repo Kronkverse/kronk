@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';
 
@@ -12,13 +12,20 @@ import { apiRequestGet, apiRequestPut } from 'mastodon/api';
 
 type Scope = 'friends' | 'friends_of_friends' | 'kommunity';
 
-const OPTIONS: { value: Scope; labelId: string; labelDefault: string }[] = [
-  { value: 'friends', labelId: 'feed_scope.friends', labelDefault: 'Friends' },
-  { value: 'friends_of_friends', labelId: 'feed_scope.fof', labelDefault: 'Friends of friends' },
-  { value: 'kommunity', labelId: 'feed_scope.kommunity', labelDefault: 'Kommunity' },
+const messages = defineMessages({
+  friends: { id: 'feed_scope.friends', defaultMessage: 'Friends' },
+  fof: { id: 'feed_scope.fof', defaultMessage: 'Friends of friends' },
+  kommunity: { id: 'feed_scope.kommunity', defaultMessage: 'Kommunity' },
+});
+
+const OPTIONS: { value: Scope; messageKey: keyof typeof messages }[] = [
+  { value: 'friends', messageKey: 'friends' },
+  { value: 'friends_of_friends', messageKey: 'fof' },
+  { value: 'kommunity', messageKey: 'kommunity' },
 ];
 
 export const FeedScopePicker = () => {
+  const intl = useIntl();
   const [scope, setScope] = useState<Scope>('kommunity');
   const [saving, setSaving] = useState(false);
 
@@ -68,7 +75,7 @@ export const FeedScopePicker = () => {
             className={`feed-scope-picker__option ${scope === opt.value ? 'feed-scope-picker__option--active' : ''}`}
             aria-pressed={scope === opt.value}
           >
-            <FormattedMessage id={opt.labelId} defaultMessage={opt.labelDefault} />
+            {intl.formatMessage(messages[opt.messageKey])}
           </button>
         ))}
       </div>
