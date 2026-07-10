@@ -225,30 +225,35 @@ Rails.application.routes.draw do
 
   get '/activity', to: redirect('/orbit')
   get '/space-preview/:space', to: 'space_preview#show'
+  # Booth's Rails-served resource routes (share, embed). Named routes
+  # preserve their :as identifiers so link generators (share/copy-link,
+  # embed iframe src) continue to resolve.
   get '/booth/sets/:id/embed', to: 'booth#embed', as: :embed_booth_set
   get '/booth/sets/:id', to: 'booth#show', as: :booth_set, constraints: { id: /\d+/ }
-  get '/booth', to: 'booth#index'
-  get '/booth/*path', to: 'booth#index', format: false
   get '/home', to: 'home#index'
   get '/huddle', to: 'huddle#index'
-  get '/kalendar', to: 'kalendar#index'
-  get '/kalendar/*path', to: 'kalendar#index', format: false
-  get '/governance', to: 'home#index'
-  get '/governance/*path', to: 'home#index', format: false
-  get '/questions', to: 'home#index'
-  get '/questions/*path', to: 'home#index', format: false
   get '/nudges', to: 'home#index'
   get '/nudges/*path', to: 'home#index', format: false
-  get '/in-flow', to: 'home#index'
-  get '/in-flow/*path', to: 'home#index', format: false
-  get '/market', to: 'home#index'
-  get '/market/*path', to: 'home#index', format: false
+
+  # Legacy top-level korner paths — 301 redirect to their /hub/<slug>
+  # counterparts. Client-side navigation continues to use whichever URL
+  # the SPA's <Link> generates (all swept to /hub/... paths); these
+  # redirects fire on refresh, bookmarks, and external links.
+  get '/booth', to: redirect('/hub/booth', status: 301)
+  get '/booth/*path', to: redirect('/hub/booth/%{path}', status: 301)
+  get '/kalendar', to: redirect('/hub/kalendar', status: 301)
+  get '/kalendar/*path', to: redirect('/hub/kalendar/%{path}', status: 301)
+  get '/governance', to: redirect('/hub/kommons', status: 301)
+  get '/governance/*path', to: redirect('/hub/kommons/%{path}', status: 301)
+  get '/questions', to: redirect('/hub/kuestions', status: 301)
+  get '/questions/*path', to: redirect('/hub/kuestions/%{path}', status: 301)
+  get '/in-flow', to: redirect('/hub/in-flow', status: 301)
+  get '/in-flow/*path', to: redirect('/hub/in-flow/%{path}', status: 301)
+  get '/market', to: redirect('/hub/marketplace', status: 301)
+  get '/market/*path', to: redirect('/hub/marketplace/%{path}', status: 301)
 
   # Korner framework — every korner mounts under /hub/<slug> per
-  # docs/kronk_korner_spec.md §4. Old top-level routes above stay live
-  # while the SPA client router is updated to prefer /hub/... paths;
-  # 301 redirects to the new paths land in a follow-up commit once the
-  # SPA handles the /hub/<slug>/... deep-link routes.
+  # docs/kronk_korner_spec.md §4. Legacy top-level paths above 301 here.
   get '/hub/kommons', to: 'home#index'
   get '/hub/kommons/*path', to: 'home#index', format: false
   get '/hub/kuestions', to: 'home#index'

@@ -101,7 +101,7 @@ export const StatusKommonsCard: React.FC<{ proposal: ProposalSummary }> = ({
           )}
         </div>
         <Link
-          to='/governance'
+          to='/hub/kommons'
           className='status-korner-card__action'
           onClick={handleLinkClick}
         >

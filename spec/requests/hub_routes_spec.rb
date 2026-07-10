@@ -3,11 +3,11 @@
 require 'rails_helper'
 
 # The 2.0.0 rebuild moves every korner under `/hub/<slug>` per §4 of
-# docs/kronk_korner_spec.md. This spec asserts the Rails-level routes
-# serve the same target as their legacy top-level counterparts.
+# docs/kronk_korner_spec.md. This spec asserts:
 #
-# The client-side router accepts both old and new paths so in-app
-# navigation continues to work while <Link> generators migrate.
+#   • the new /hub/<slug> paths serve their target controller
+#   • the legacy top-level paths 301-redirect to their /hub/<slug>
+#     counterpart, preserving the sub-path
 RSpec.describe 'Hub routes' do
   describe 'SPA-served korners return 200' do
     %w(
@@ -47,6 +47,28 @@ RSpec.describe 'Hub routes' do
       # Booth show may 404 without a real record; we're checking the
       # route resolves at all, not that the resource exists.
       expect(response.status).to be_in([200, 404])
+    end
+  end
+
+  describe 'legacy paths 301-redirect to the /hub/<slug> counterpart' do
+    {
+      '/governance'            => '/hub/kommons',
+      '/governance/proposals/1' => '/hub/kommons/proposals/1',
+      '/questions'             => '/hub/kuestions',
+      '/questions/42'          => '/hub/kuestions/42',
+      '/kalendar'              => '/hub/kalendar',
+      '/kalendar/42'           => '/hub/kalendar/42',
+      '/booth'                 => '/hub/booth',
+      '/booth/deep/link'       => '/hub/booth/deep/link',
+      '/in-flow'               => '/hub/in-flow',
+      '/market'                => '/hub/marketplace',
+      '/market/listing/1'      => '/hub/marketplace/listing/1',
+    }.each do |old_path, new_path|
+      it "301 #{old_path} → #{new_path}" do
+        get old_path
+        expect(response).to have_http_status(301)
+        expect(response.headers['Location']).to end_with(new_path)
+      end
     end
   end
 end

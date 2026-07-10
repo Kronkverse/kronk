@@ -334,7 +334,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
         {signedIn && (
           <ColumnLink
             transparent
-            to='/kalendar'
+            to='/hub/kalendar'
             icon='calendar_month'
             iconComponent={CalendarMonthIcon}
             activeIconComponent={CalendarMonthActiveIcon}
@@ -346,7 +346,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
         {signedIn && (
           <ColumnLink
             transparent
-            to='/in-flow'
+            to='/hub/in-flow'
             icon='public'
             iconComponent={PublicIcon}
             activeIconComponent={PublicActiveIcon}
@@ -363,7 +363,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
 
             <ColumnLink
               transparent
-              to='/questions'
+              to='/hub/kuestions'
               icon='question_mark'
               iconComponent={QuestionMarkIcon}
               activeIconComponent={QuestionMarkActiveIcon}
@@ -379,7 +379,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
 
             <ColumnLink
               transparent
-              to='/governance'
+              to='/hub/kommons'
               icon='gavel'
               iconComponent={GavelIcon}
               activeIconComponent={GavelActiveIcon}
@@ -391,7 +391,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
 
             <ColumnLink
               transparent
-              to='/market'
+              to='/hub/marketplace'
               icon='bar_chart'
               iconComponent={BarChartIcon}
               activeIconComponent={BarChartActiveIcon}
@@ -400,7 +400,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
 
             <ColumnLink
               transparent
-              to='/booth'
+              to='/hub/booth'
               icon='headphones'
               iconComponent={HeadphonesIcon}
               activeIconComponent={HeadphonesActiveIcon}

@@ -364,7 +364,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           />
         )}
 
-        <Link to='/kalendar' className='event-detail__back'>
+        <Link to='/hub/kalendar' className='event-detail__back'>
           <Icon id='arrow_back' icon={ArrowBackIcon} />
           <FormattedMessage
             id='events.back'

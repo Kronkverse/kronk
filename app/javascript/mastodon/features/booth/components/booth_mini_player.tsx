@@ -48,7 +48,7 @@ export const BoothMiniPlayer: React.FC = () => {
         style={{ width: `${progressPct}%` }}
       />
 
-      <Link to='/booth' className='booth-mini-player__link'>
+      <Link to='/hub/booth' className='booth-mini-player__link'>
         <div className='booth-mini-player__artwork'>
           {activeSet.cover_url ? (
             <img
