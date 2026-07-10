@@ -95,5 +95,9 @@ module Account::Associations
     # Marketplace listings + offers made by this account.
     has_many :listings, inverse_of: :account, dependent: :destroy
     has_many :listing_offers, foreign_key: :offerer_id, inverse_of: :offerer, dependent: :destroy
+
+    # Sectioned profile ordering (§Profile) — every account has a
+    # baseline `timeline` section on signup.
+    has_many :profile_sections, inverse_of: :account, dependent: :destroy
   end
 end

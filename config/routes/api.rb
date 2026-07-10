@@ -174,6 +174,14 @@ namespace :api, format: false do
       resource :order, only: [:show, :update, :destroy], controller: :orders
     end
 
+    namespace :profile do
+      resources :sections, only: [:index, :create, :update, :destroy] do
+        collection do
+          patch :reorder
+        end
+      end
+    end
+
     resource :instance, only: [:show] do
       scope module: :instances do
         resources :peers, only: [:index]

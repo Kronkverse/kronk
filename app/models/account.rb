@@ -454,6 +454,7 @@ class Account < ApplicationRecord
 
   before_validation :prepare_contents, if: :local?
   before_create :generate_keys
+  after_create :seed_default_profile_sections, if: :local?
   before_destroy :clean_feed_manager
 
   def ensure_keys!
@@ -490,6 +491,13 @@ class Account < ApplicationRecord
 
   def clean_feed_manager
     FeedManager.instance.clean_feeds!(:home, [id])
+  end
+
+  # Every new local account starts with a single `timeline` section on
+  # its profile. Users pick + reorder more via /api/v1/profile/sections.
+  # See §Profile.
+  def seed_default_profile_sections
+    profile_sections.create!(section_type: 'timeline', position: 0, title: nil)
   end
 
   def create_canonical_email_block!
