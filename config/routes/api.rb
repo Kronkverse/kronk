@@ -269,6 +269,14 @@ namespace :api, format: false do
         resources :identity_proofs, only: :index
         resources :featured_tags, only: :index
         resources :endorsements, only: :index
+
+        namespace :profile do
+          resources :sections, only: [:index] do
+            member do
+              get :statuses
+            end
+          end
+        end
       end
 
       collection do
