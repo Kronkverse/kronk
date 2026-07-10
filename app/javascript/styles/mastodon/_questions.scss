@@ -24,7 +24,7 @@
   font-family: Georgia, 'Liberation Serif', serif;
   font-size: 56px;
   font-weight: 500;
-  color: var(--space-color, #4844c0);
+  color: var(--accent);
   line-height: 1.1;
   margin-bottom: 24px;
 }
@@ -48,8 +48,8 @@
     color 0.15s ease;
 
   &:hover {
-    border-color: var(--space-color, #4844c0);
-    color: var(--space-color, #4844c0);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 }
 
@@ -74,7 +74,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    var(--space-color, #4844c0),
+    var(--accent),
     transparent
   );
   animation: shimmer 1.2s infinite;
@@ -93,7 +93,7 @@
 .questions-tab-nav__tab {
   background: transparent;
   border: 1px solid
-    color-mix(in srgb, var(--space-color, #4844c0) 50%, transparent);
+    color-mix(in srgb, var(--accent) 50%, transparent);
   border-radius: 20px;
   padding: 8px 24px;
   font-size: 14px;
@@ -106,13 +106,13 @@
     border-color 0.15s ease;
 
   &--active {
-    background: var(--space-color, #4844c0);
-    border-color: var(--space-color, #4844c0);
+    background: var(--accent);
+    border-color: var(--accent);
     color: #fff;
   }
 
   &:not(&--active):hover {
-    border-color: var(--space-color, #4844c0);
+    border-color: var(--accent);
     color: $primary-text-color;
   }
 }
@@ -131,7 +131,7 @@
     transform 0.1s ease;
 
   &:hover {
-    border-color: var(--space-color, #4844c0);
+    border-color: var(--accent);
     transform: translateY(-1px);
   }
 }
@@ -193,7 +193,7 @@
 }
 
 .question-card__lock--open {
-  color: var(--space-color, #4844c0);
+  color: var(--accent);
   width: 18px;
   height: 18px;
 }
@@ -224,7 +224,7 @@
 }
 
 .question-card__answer-btn {
-  background: var(--space-color, #4844c0);
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 20px;
@@ -241,7 +241,7 @@
 
 .question-card__answered-badge {
   font-size: 12px;
-  color: var(--space-color, #4844c0);
+  color: var(--accent);
   font-weight: 600;
 }
 
@@ -250,7 +250,7 @@
 .questions-composer {
   background: lighten($ui-base-color, 3%);
   border: 1px solid
-    color-mix(in srgb, var(--space-color, #4844c0) 40%, transparent);
+    color-mix(in srgb, var(--accent) 40%, transparent);
   border-radius: 16px;
   padding: 12px 16px;
   width: 100%;
@@ -283,7 +283,7 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: var(--space-color, #4844c0);
+  background: var(--accent);
   color: #fff;
   border: none;
   font-size: 22px;
@@ -347,7 +347,7 @@
 }
 
 .answer-composer__submit {
-  background: var(--space-color, #4844c0);
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 20px;
@@ -371,7 +371,7 @@
 
 .answer-composer {
   background: var(--color-bg-elevated, var(--background-color));
-  border: 1px solid var(--space-color, #4844c0);
+  border: 1px solid var(--accent);
   border-radius: 12px;
   padding: 14px;
   margin-top: 16px;
@@ -381,14 +381,14 @@
   display: flex;
   gap: 10px;
   padding: 10px 12px;
-  background: color-mix(in srgb, var(--space-color, #4844c0) 10%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   border-radius: 8px;
   margin-bottom: 12px;
 }
 
 .answer-composer__question-label {
   font-weight: 700;
-  color: var(--space-color, #4844c0);
+  color: var(--accent);
   font-size: 13px;
   flex-shrink: 0;
 }
@@ -409,7 +409,7 @@
 .question-detail__back {
   background: transparent;
   border: none;
-  color: var(--space-color, #4844c0);
+  color: var(--accent);
   font-size: 14px;
   cursor: pointer;
   padding: 4px 0 16px;
@@ -419,12 +419,12 @@
 .question-detail__question {
   background: color-mix(
     in srgb,
-    var(--space-color, #4844c0) 8%,
+    var(--accent) 8%,
     var(--color-bg-elevated, var(--background-color))
   );
   border: 1px solid
-    color-mix(in srgb, var(--space-color, #4844c0) 35%, transparent);
-  border-left: 3px solid var(--space-color, #4844c0);
+    color-mix(in srgb, var(--accent) 35%, transparent);
+  border-left: 3px solid var(--accent);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 16px;
@@ -501,7 +501,7 @@
 }
 
 .question-detail__answer-cta {
-  background: var(--space-color, #4844c0);
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 24px;
@@ -548,7 +548,7 @@
   display: inline-block;
   margin-top: 8px;
   font-size: 12px;
-  color: var(--space-color, #4844c0);
+  color: var(--accent);
   text-decoration: none;
   opacity: 0.8;
 

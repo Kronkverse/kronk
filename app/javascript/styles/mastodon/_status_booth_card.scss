@@ -6,7 +6,7 @@
   &__artist {
     // Booth artist name is the "who" — closer to identity than description,
     // so give it a slightly warmer tone than the generic muted summary.
-    color: color-mix(in srgb, var(--space-color) 40%, $dark-text-color 60%);
+    color: color-mix(in srgb, var(--accent) 40%, $dark-text-color 60%);
     -webkit-line-clamp: 1;
     line-clamp: 1;
   }

@@ -26,8 +26,8 @@
     border-radius: 4px;
 
     &--open {
-      background: color-mix(in srgb, var(--space-color) 25%, transparent);
-      color: color-mix(in srgb, var(--space-color) 50%, #e5d9f5 50%);
+      background: color-mix(in srgb, var(--accent) 25%, transparent);
+      color: color-mix(in srgb, var(--accent) 50%, #e5d9f5 50%);
     }
 
     &--in_progress {
@@ -51,7 +51,7 @@
     color: #9a95b8;
 
     &--support {
-      color: color-mix(in srgb, var(--space-color) 50%, #e5d9f5 50%);
+      color: color-mix(in srgb, var(--accent) 50%, #e5d9f5 50%);
       font-weight: 500;
     }
 

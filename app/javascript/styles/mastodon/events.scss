@@ -74,7 +74,7 @@ $ev-interested-color: #b8945f;
         left: 0;
         right: 0;
         height: 2px;
-        background: var(--space-color, #343070);
+        background: var(--accent);
       }
     }
   }
@@ -111,10 +111,10 @@ $ev-interested-color: #b8945f;
     &:hover:not(.active) {
       background: color-mix(
         in srgb,
-        var(--space-color, #343070) 8%,
+        var(--accent) 8%,
         transparent
       );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     }
 
     &.active {
@@ -130,8 +130,8 @@ $ev-interested-color: #b8945f;
     padding: 8px 18px;
     border: none;
     border-radius: 10px;
-    background: var(--space-color, #343070);
-    color: color-mix(in srgb, var(--space-color, #343070) 30%, #e5d9f5 70%);
+    background: var(--accent);
+    color: color-mix(in srgb, var(--accent) 30%, #e5d9f5 70%);
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -139,7 +139,7 @@ $ev-interested-color: #b8945f;
     transition: all 0.2s ease;
 
     &:hover {
-      background: var(--space-color, #343070);
+      background: var(--accent);
       box-shadow: 0 2px 8px rgba(74, 61, 143, 25%);
     }
   }
@@ -169,7 +169,7 @@ $ev-interested-color: #b8945f;
   &__empty {
     padding: 60px 20px;
     text-align: center;
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     font-size: 14px;
     font-style: italic;
   }
@@ -197,11 +197,11 @@ $ev-interested-color: #b8945f;
   &:hover {
     border-color: color-mix(
       in srgb,
-      var(--space-color, #343070) 30%,
+      var(--accent) 30%,
       transparent
     );
     box-shadow: 0 2px 8px
-      color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+      color-mix(in srgb, var(--accent) 8%, transparent);
   }
 
   &--live {
@@ -260,7 +260,7 @@ $ev-interested-color: #b8945f;
     text-overflow: ellipsis;
 
     &:hover {
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     }
   }
 
@@ -275,7 +275,7 @@ $ev-interested-color: #b8945f;
   }
 
   &__type-icon {
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     flex-shrink: 0;
   }
 
@@ -293,7 +293,7 @@ $ev-interested-color: #b8945f;
   }
 
   &__host {
-    color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+    color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
   }
 
   &__rsvp {
@@ -324,14 +324,14 @@ $ev-interested-color: #b8945f;
     &:hover:not(.active) {
       background: color-mix(
         in srgb,
-        var(--space-color, #343070) 8%,
+        var(--accent) 8%,
         transparent
       );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     }
 
     &.active {
-      background: var(--space-color, #343070);
+      background: var(--accent);
       color: #fff;
     }
   }
@@ -374,8 +374,8 @@ $ev-interested-color: #b8945f;
     height: 3px;
     background: linear-gradient(
       90deg,
-      var(--space-color, #343070),
-      color-mix(in srgb, var(--space-color, #343070) 60%, #9a95b8 40%)
+      var(--accent),
+      color-mix(in srgb, var(--accent) 60%, #9a95b8 40%)
     );
     border-radius: 14px 14px 0 0;
   }
@@ -408,10 +408,10 @@ $ev-interested-color: #b8945f;
     &:hover {
       background: color-mix(
         in srgb,
-        var(--space-color, #343070) 8%,
+        var(--accent) 8%,
         transparent
       );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     }
   }
 
@@ -440,18 +440,18 @@ $ev-interested-color: #b8945f;
     &:hover {
       border-color: color-mix(
         in srgb,
-        var(--space-color, #343070) 45%,
+        var(--accent) 45%,
         #9a95b8 55%
       );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     }
 
     &.active {
-      border-color: var(--space-color, #343070);
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      border-color: var(--accent);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       background: color-mix(
         in srgb,
-        var(--space-color, #343070) 8%,
+        var(--accent) 8%,
         transparent
       );
       box-shadow: 0 0 0 1px rgba(110, 95, 184, 8%);
@@ -465,7 +465,7 @@ $ev-interested-color: #b8945f;
       display: block;
       font-size: 12px;
       font-weight: 600;
-      color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+      color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
       margin-bottom: 5px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -490,14 +490,14 @@ $ev-interested-color: #b8945f;
         box-shadow 0.2s ease;
 
       &::placeholder {
-        color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+        color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
         opacity: 0.5;
       }
 
       &:focus {
-        border-color: var(--space-color, #343070);
+        border-color: var(--accent);
         box-shadow: 0 0 0 3px
-          color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+          color-mix(in srgb, var(--accent) 8%, transparent);
         outline: none;
       }
     }
@@ -538,9 +538,9 @@ $ev-interested-color: #b8945f;
         box-shadow 0.2s ease;
 
       &:focus {
-        border-color: var(--space-color, #343070);
+        border-color: var(--accent);
         box-shadow: 0 0 0 3px
-          color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+          color-mix(in srgb, var(--accent) 8%, transparent);
         outline: none;
       }
     }
@@ -558,7 +558,7 @@ $ev-interested-color: #b8945f;
       input {
         border-color: color-mix(
           in srgb,
-          var(--space-color, #343070) 65%,
+          var(--accent) 65%,
           #9a95b8 35%
         );
       }
@@ -580,9 +580,9 @@ $ev-interested-color: #b8945f;
         box-shadow 0.2s ease;
 
       &:focus {
-        border-color: var(--space-color, #343070);
+        border-color: var(--accent);
         box-shadow: 0 0 0 3px
-          color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+          color-mix(in srgb, var(--accent) 8%, transparent);
         outline: none;
       }
     }
@@ -609,7 +609,7 @@ $ev-interested-color: #b8945f;
 
     input[type='checkbox'] {
       width: auto;
-      accent-color: var(--space-color, #343070);
+      accent-color: var(--accent);
     }
   }
 
@@ -620,7 +620,7 @@ $ev-interested-color: #b8945f;
       display: block;
       font-size: 12px;
       font-weight: 600;
-      color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+      color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
       margin-bottom: 5px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -635,21 +635,21 @@ $ev-interested-color: #b8945f;
     border: 1px dashed rgba(110, 95, 184, 25%);
     border-radius: 10px;
     cursor: pointer;
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     font-size: 13px;
     transition: all 0.2s ease;
-    background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
 
     &:hover {
       border-color: color-mix(
         in srgb,
-        var(--space-color, #343070) 65%,
+        var(--accent) 65%,
         #9a95b8 35%
       );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       background: color-mix(
         in srgb,
-        var(--space-color, #343070) 12%,
+        var(--accent) 12%,
         transparent
       );
     }
@@ -723,10 +723,10 @@ $ev-interested-color: #b8945f;
     &:hover {
       border-color: color-mix(
         in srgb,
-        var(--space-color, #343070) 45%,
+        var(--accent) 45%,
         #9a95b8 55%
       );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     }
   }
 
@@ -734,8 +734,8 @@ $ev-interested-color: #b8945f;
     padding: 9px 24px;
     border: none;
     border-radius: 8px;
-    background: var(--space-color, #343070);
-    color: color-mix(in srgb, var(--space-color, #343070) 30%, #e5d9f5 70%);
+    background: var(--accent);
+    color: color-mix(in srgb, var(--accent) 30%, #e5d9f5 70%);
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -743,7 +743,7 @@ $ev-interested-color: #b8945f;
     transition: all 0.2s ease;
 
     &:hover {
-      background: var(--space-color, #343070);
+      background: var(--accent);
       box-shadow: 0 2px 8px rgba(74, 61, 143, 25%);
     }
 
@@ -778,13 +778,13 @@ $ev-interested-color: #b8945f;
     &:hover {
       border-color: color-mix(
         in srgb,
-        var(--space-color, #343070) 65%,
+        var(--accent) 65%,
         #9a95b8 35%
       );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       background: color-mix(
         in srgb,
-        var(--space-color, #343070) 8%,
+        var(--accent) 8%,
         transparent
       );
     }
@@ -809,7 +809,7 @@ $ev-interested-color: #b8945f;
     text-align: center;
     font-size: 11px;
     font-weight: 600;
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -829,10 +829,10 @@ $ev-interested-color: #b8945f;
     }
 
     &--today {
-      border-color: var(--space-color, #343070);
+      border-color: var(--accent);
       background: color-mix(
         in srgb,
-        var(--space-color, #343070) 8%,
+        var(--accent) 8%,
         transparent
       );
     }
@@ -857,8 +857,8 @@ $ev-interested-color: #b8945f;
     border-radius: 4px;
     font-size: 9px;
     font-weight: 500;
-    background: var(--space-color, #343070);
-    color: color-mix(in srgb, var(--space-color, #343070) 30%, #e5d9f5 70%);
+    background: var(--accent);
+    color: color-mix(in srgb, var(--accent) 30%, #e5d9f5 70%);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -878,8 +878,8 @@ $ev-interested-color: #b8945f;
     }
 
     &--huddle {
-      background: var(--space-color, #343070);
-      color: color-mix(in srgb, var(--space-color, #343070) 30%, #e5d9f5 70%);
+      background: var(--accent);
+      color: color-mix(in srgb, var(--accent) 30%, #e5d9f5 70%);
     }
 
     &--going {
@@ -919,7 +919,7 @@ $ev-interested-color: #b8945f;
       .event-calendar__event-dot--invited,
       .event-calendar__event-dot--huddle
     ) {
-      background: var(--space-color, #343070);
+      background: var(--accent);
     }
   }
 
@@ -987,13 +987,13 @@ $ev-interested-color: #b8945f;
     align-items: center;
     gap: 4px;
     font-size: 13px;
-    color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+    color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     text-decoration: none;
     margin-bottom: 16px;
     font-weight: 500;
 
     &:hover {
-      color: var(--space-color, #343070);
+      color: var(--accent);
     }
   }
 
@@ -1028,7 +1028,7 @@ $ev-interested-color: #b8945f;
     letter-spacing: -0.02em;
 
     .icon {
-      color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+      color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
       vertical-align: -2px;
     }
   }
@@ -1038,12 +1038,12 @@ $ev-interested-color: #b8945f;
     color: var(--secondary-text-color);
 
     a {
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       text-decoration: none;
       font-weight: 500;
 
       &:hover {
-        color: var(--space-color, #343070);
+        color: var(--accent);
       }
     }
   }
@@ -1062,16 +1062,16 @@ $ev-interested-color: #b8945f;
     font-size: 14px;
     color: var(--primary-text-color);
     padding: 6px 10px;
-    background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
     border-radius: 8px;
 
     .icon {
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       flex-shrink: 0;
     }
 
     a {
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       font-weight: 500;
     }
   }
@@ -1108,13 +1108,13 @@ $ev-interested-color: #b8945f;
     &:hover {
       border-color: color-mix(
         in srgb,
-        var(--space-color, #343070) 65%,
+        var(--accent) 65%,
         #9a95b8 35%
       );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       background: color-mix(
         in srgb,
-        var(--space-color, #343070) 8%,
+        var(--accent) 8%,
         transparent
       );
     }
@@ -1182,13 +1182,13 @@ $ev-interested-color: #b8945f;
     &:hover {
       border-color: color-mix(
         in srgb,
-        var(--space-color, #343070) 65%,
+        var(--accent) 65%,
         #9a95b8 35%
       );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       background: color-mix(
         in srgb,
-        var(--space-color, #343070) 8%,
+        var(--accent) 8%,
         transparent
       );
     }
@@ -1215,7 +1215,7 @@ $ev-interested-color: #b8945f;
     h3 {
       font-size: 13px;
       font-weight: 600;
-      color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+      color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
       margin: 0 0 10px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -1241,10 +1241,10 @@ $ev-interested-color: #b8945f;
     &:hover {
       background: color-mix(
         in srgb,
-        var(--space-color, #343070) 8%,
+        var(--accent) 8%,
         transparent
       );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     }
   }
 
@@ -1309,7 +1309,7 @@ $ev-interested-color: #b8945f;
     justify-content: center;
     min-width: 48px;
     height: 48px;
-    background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
     border: 1px solid rgba(110, 95, 184, 12%);
     border-radius: 10px;
     flex-shrink: 0;
@@ -1318,7 +1318,7 @@ $ev-interested-color: #b8945f;
       font-size: 10px;
       font-weight: 700;
       text-transform: uppercase;
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       line-height: 1;
       letter-spacing: 0.05em;
     }
@@ -1353,7 +1353,7 @@ $ev-interested-color: #b8945f;
   }
 
   &__type-icon {
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     flex-shrink: 0;
   }
 
@@ -1369,7 +1369,7 @@ $ev-interested-color: #b8945f;
 
   &__meta {
     font-size: 12px;
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     margin-bottom: 4px;
     display: flex;
     align-items: center;
@@ -1379,7 +1379,7 @@ $ev-interested-color: #b8945f;
 
   &__location {
     a {
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       text-decoration: none;
 
       &:hover {
@@ -1434,10 +1434,10 @@ $ev-interested-color: #b8945f;
     &:hover {
       border-color: color-mix(
         in srgb,
-        var(--space-color, #343070) 65%,
+        var(--accent) 65%,
         #9a95b8 35%
       );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     }
 
     &.active--going {
@@ -1476,9 +1476,9 @@ $ev-interested-color: #b8945f;
 // Invite panel on event detail
 .event-detail {
   &__action-btn--active {
-    background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
-    border-color: var(--space-color, #343070);
-    color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    border-color: var(--accent);
+    color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
   }
 
   &__invite {
@@ -1507,14 +1507,14 @@ $ev-interested-color: #b8945f;
         box-shadow 0.2s ease;
 
       &::placeholder {
-        color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+        color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
         opacity: 0.5;
       }
 
       &:focus {
-        border-color: var(--space-color, #343070);
+        border-color: var(--accent);
         box-shadow: 0 0 0 3px
-          color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+          color-mix(in srgb, var(--accent) 8%, transparent);
         outline: none;
       }
     }
@@ -1523,7 +1523,7 @@ $ev-interested-color: #b8945f;
   &__invite-empty {
     padding: 12px;
     text-align: center;
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     font-size: 13px;
     font-style: italic;
   }
@@ -1572,7 +1572,7 @@ $ev-interested-color: #b8945f;
     &:hover {
       background: color-mix(
         in srgb,
-        var(--space-color, #343070) 8%,
+        var(--accent) 8%,
         transparent
       );
     }
@@ -1604,7 +1604,7 @@ $ev-interested-color: #b8945f;
 
   &__invite-acct {
     font-size: 12px;
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
   }
 
   &__invite-btn {
@@ -1626,13 +1626,13 @@ $ev-interested-color: #b8945f;
     &:hover {
       border-color: color-mix(
         in srgb,
-        var(--space-color, #343070) 65%,
+        var(--accent) 65%,
         #9a95b8 35%
       );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       background: color-mix(
         in srgb,
-        var(--space-color, #343070) 8%,
+        var(--accent) 8%,
         transparent
       );
     }
@@ -1658,7 +1658,7 @@ $ev-interested-color: #b8945f;
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
   border: 1px solid rgba(110, 95, 184, 12%);
   border-radius: 10px;
   text-decoration: none;
@@ -1670,7 +1670,7 @@ $ev-interested-color: #b8945f;
     border-color: rgba(110, 95, 184, 30%);
     background: color-mix(
       in srgb,
-      var(--space-color, #343070) 12%,
+      var(--accent) 12%,
       transparent
     );
     text-decoration: none;
@@ -1693,7 +1693,7 @@ $ev-interested-color: #b8945f;
       font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       line-height: 1;
       letter-spacing: 0.05em;
     }
@@ -1721,14 +1721,14 @@ $ev-interested-color: #b8945f;
     line-height: 1.3;
 
     .icon {
-      color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+      color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
       flex-shrink: 0;
     }
   }
 
   &__meta {
     font-size: 12px;
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     margin-top: 1px;
   }
 }
@@ -1757,7 +1757,7 @@ $ev-interested-color: #b8945f;
 
   &__count {
     font-size: 13px;
-    color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+    color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     font-weight: 500;
   }
 
@@ -1774,7 +1774,7 @@ $ev-interested-color: #b8945f;
     &:focus-within {
       border-color: color-mix(
         in srgb,
-        var(--space-color, #343070) 65%,
+        var(--accent) 65%,
         #9a95b8 35%
       );
     }
@@ -1816,7 +1816,7 @@ $ev-interested-color: #b8945f;
       color: var(--secondary-text-color);
 
       input[type='checkbox'] {
-        accent-color: var(--space-color, #343070);
+        accent-color: var(--accent);
         width: 16px;
         height: 16px;
         cursor: pointer;
@@ -1851,13 +1851,13 @@ $ev-interested-color: #b8945f;
     &:hover {
       background: color-mix(
         in srgb,
-        var(--space-color, #343070) 8%,
+        var(--accent) 8%,
         transparent
       );
     }
 
     input[type='checkbox'] {
-      accent-color: var(--space-color, #343070);
+      accent-color: var(--accent);
       width: 16px;
       height: 16px;
       flex-shrink: 0;
@@ -1911,7 +1911,7 @@ $ev-interested-color: #b8945f;
     border: 1px solid var(--background-border-color);
     border-radius: 6px;
     background: transparent;
-    color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+    color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     font-size: 13px;
     cursor: pointer;
     transition: background 0.15s;
@@ -1919,7 +1919,7 @@ $ev-interested-color: #b8945f;
     &:hover {
       background: color-mix(
         in srgb,
-        var(--space-color, #343070) 8%,
+        var(--accent) 8%,
         transparent
       );
     }
@@ -1956,7 +1956,7 @@ $ev-interested-color: #b8945f;
     padding: 8px 20px;
     border: none;
     border-radius: 8px;
-    background: var(--space-color, #343070);
+    background: var(--accent);
     color: #fff;
     font-size: 14px;
     font-weight: 500;
@@ -1964,7 +1964,7 @@ $ev-interested-color: #b8945f;
     transition: background 0.15s;
 
     &:hover {
-      background: var(--space-color, #343070);
+      background: var(--accent);
     }
 
     &:disabled {
@@ -1979,7 +1979,7 @@ $ev-interested-color: #b8945f;
 .in-flow {
   margin: 24px 0 8px;
   border-top: 1px solid
-    color-mix(in srgb, var(--space-color, #343070) 30%, transparent);
+    color-mix(in srgb, var(--accent) 30%, transparent);
   padding-top: 20px;
   padding-bottom: 32px;
 
@@ -2022,9 +2022,9 @@ $ev-interested-color: #b8945f;
     margin-bottom: 20px;
     padding: 12px 16px;
     border-radius: 10px;
-    background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
     border: 1px solid
-      color-mix(in srgb, var(--space-color, #343070) 20%, transparent);
+      color-mix(in srgb, var(--accent) 20%, transparent);
   }
 
   &__moon {
@@ -2086,29 +2086,29 @@ $ev-interested-color: #b8945f;
     &:hover {
       background: color-mix(
         in srgb,
-        var(--space-color, #343070) 8%,
+        var(--accent) 8%,
         transparent
       );
     }
 
     &--season {
       border-left: 2px solid
-        color-mix(in srgb, var(--space-color, #343070) 50%, transparent);
+        color-mix(in srgb, var(--accent) 50%, transparent);
     }
 
     &--moon {
       border-left: 2px solid
-        color-mix(in srgb, var(--space-color, #343070) 25%, transparent);
+        color-mix(in srgb, var(--accent) 25%, transparent);
     }
 
     &--cross_quarter {
       border-left: 2px solid
-        color-mix(in srgb, var(--space-color, #343070) 60%, transparent);
+        color-mix(in srgb, var(--accent) 60%, transparent);
     }
 
     &--orbital {
       border-left: 2px solid
-        color-mix(in srgb, var(--space-color, #343070) 40%, #e8c840 60%);
+        color-mix(in srgb, var(--accent) 40%, #e8c840 60%);
     }
   }
 
@@ -2191,9 +2191,9 @@ $ev-interested-color: #b8945f;
     transform: translate(-50%, -50%);
     z-index: 100;
     width: 220px;
-    background: color-mix(in srgb, var(--space-color, #343070) 30%, #0d0d1a);
+    background: color-mix(in srgb, var(--accent) 30%, #0d0d1a);
     border: 1px solid
-      color-mix(in srgb, var(--space-color, #343070) 50%, transparent);
+      color-mix(in srgb, var(--accent) 50%, transparent);
     border-radius: 10px;
     padding: 12px;
     box-shadow: 0 8px 24px rgb(0 0 0 / 60%);
@@ -2269,6 +2269,6 @@ $ev-interested-color: #b8945f;
   }
 
   &__cell--celestial {
-    background: color-mix(in srgb, var(--space-color, #343070) 5%, transparent);
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
   }
 }

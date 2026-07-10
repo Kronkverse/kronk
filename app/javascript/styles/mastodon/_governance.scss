@@ -1,7 +1,7 @@
 @use 'variables' as *;
 
 // Commons — governance feature styles
-// Theme-aware via --space-color CSS custom property (set by governance/index.tsx)
+// Theme-aware via --accent shared token (set by governance/index.tsx)
 
 $governance-agree: #22c55e;
 $governance-abstain: #94a3b8;
@@ -73,8 +73,8 @@ $governance-amber: #f59e0b;
   }
 
   &.active {
-    color: var(--space-color, #36248c);
-    border-bottom-color: var(--space-color, #36248c);
+    color: var(--accent);
+    border-bottom-color: var(--accent);
     font-weight: 600;
   }
 }
@@ -83,7 +83,7 @@ $governance-amber: #f59e0b;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--space-color, #36248c);
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 999px;
@@ -147,7 +147,7 @@ $governance-amber: #f59e0b;
 // ─── Proposal card ─────────────────────────────────────────────────────────
 
 .governance-card {
-  --vote-agree: var(--space-color, #36248c);
+  --vote-agree: var(--accent);
   --vote-abstain: #{$dark-text-color};
   --vote-block: #{$governance-block};
   --strip-color: var(--background-border-color);
@@ -167,7 +167,7 @@ $governance-amber: #f59e0b;
     transform 0.05s;
 
   &--open {
-    --strip-color: var(--space-color, #36248c);
+    --strip-color: var(--accent);
   }
 
   &--in_progress {
@@ -253,7 +253,7 @@ $governance-amber: #f59e0b;
   gap: 4px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: var(--space-color, #36248c);
+  background: var(--accent);
   color: #fff;
   font-weight: 700;
   flex-shrink: 0;
@@ -361,7 +361,7 @@ $governance-amber: #f59e0b;
   color: #fff;
 
   &--open {
-    background: var(--space-color, #36248c);
+    background: var(--accent);
   }
 
   &--in_progress {
@@ -434,11 +434,11 @@ $governance-amber: #f59e0b;
 
   &:hover {
     opacity: 1;
-    color: var(--space-color, #36248c);
+    color: var(--accent);
   }
 
   &.active {
-    color: var(--space-color, #36248c);
+    color: var(--accent);
     opacity: 1;
   }
 
@@ -586,7 +586,7 @@ $governance-amber: #f59e0b;
 
 // ─── Detail view — Kronk-aligned palette, mockup layout ────────────────────
 // Layout and proportions follow the reference mockup; colours use Mastodon's
-// theme-adaptive variables + var(--space-color, #36248C) accent so the view looks right
+// theme-adaptive variables + var(--accent) accent so the view looks right
 // in both light and dark Kronk themes.
 
 .governance-detail {
@@ -617,7 +617,7 @@ $governance-amber: #f59e0b;
   transition: color 0.15s;
 
   &:hover {
-    color: var(--space-color, #36248c);
+    color: var(--accent);
   }
 
   svg {
@@ -706,7 +706,7 @@ $governance-amber: #f59e0b;
 
   &--open,
   &--in_progress {
-    background: var(--space-color, #36248c);
+    background: var(--accent);
     color: #fff;
   }
 
@@ -750,8 +750,8 @@ $governance-amber: #f59e0b;
     border-color 0.15s;
 
   &.active {
-    color: var(--space-color, #36248c);
-    border-bottom-color: var(--space-color, #36248c);
+    color: var(--accent);
+    border-bottom-color: var(--accent);
   }
 
   &:hover:not(.active) {
@@ -852,9 +852,9 @@ $governance-amber: #f59e0b;
 
     &:focus {
       outline: none;
-      border-color: var(--space-color, #36248c);
+      border-color: var(--accent);
       box-shadow: 0 0 0 3px
-        color-mix(in srgb, var(--space-color, #36248c) 18%, transparent);
+        color-mix(in srgb, var(--accent) 18%, transparent);
     }
   }
 
@@ -886,8 +886,8 @@ $governance-amber: #f59e0b;
     font-weight: 500;
 
     &:hover:not(:disabled) {
-      border-color: var(--space-color, #36248c);
-      color: var(--space-color, #36248c);
+      border-color: var(--accent);
+      color: var(--accent);
     }
 
     &:disabled {
@@ -948,7 +948,7 @@ $governance-amber: #f59e0b;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  background: var(--space-color, #36248c);
+  background: var(--accent);
   color: #fff;
   padding: 3px 12px;
   border-radius: 999px;
@@ -975,9 +975,9 @@ $governance-amber: #f59e0b;
 
   &:focus {
     outline: none;
-    border-color: var(--space-color, #36248c);
+    border-color: var(--accent);
     box-shadow: 0 0 0 2px
-      color-mix(in srgb, var(--space-color, #36248c) 18%, transparent);
+      color-mix(in srgb, var(--accent) 18%, transparent);
   }
 }
 
@@ -1001,7 +1001,7 @@ $governance-amber: #f59e0b;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: var(--space-color, #36248c);
+  background: var(--accent);
   border: none;
   border-radius: 999px;
   padding: 6px 14px;
@@ -1162,8 +1162,8 @@ $governance-amber: #f59e0b;
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--space-color, #36248c) 12%, transparent);
-  color: var(--space-color, #36248c);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1228,9 +1228,9 @@ $governance-amber: #f59e0b;
 
   &:focus {
     outline: none;
-    border-color: var(--space-color, #36248c);
+    border-color: var(--accent);
     box-shadow: 0 0 0 2px
-      color-mix(in srgb, var(--space-color, #36248c) 18%, transparent);
+      color-mix(in srgb, var(--accent) 18%, transparent);
   }
 }
 
@@ -1238,7 +1238,7 @@ $governance-amber: #f59e0b;
   padding: 7px 16px;
   border: none;
   border-radius: 999px;
-  background: var(--space-color, #36248c);
+  background: var(--accent);
   color: #fff;
   font-size: 12px;
   font-weight: 600;
@@ -1354,7 +1354,7 @@ $governance-amber: #f59e0b;
   flex-shrink: 0;
 
   &--agree {
-    background: var(--space-color, #36248c);
+    background: var(--accent);
   }
 
   &--abstain {
@@ -1401,13 +1401,13 @@ $governance-amber: #f59e0b;
   transition: all 0.15s;
 
   &:hover:not(:disabled) {
-    border-color: var(--space-color, #36248c);
+    border-color: var(--accent);
     color: $primary-text-color;
   }
 
   &--support.active {
-    background: var(--space-color, #36248c);
-    border-color: var(--space-color, #36248c);
+    background: var(--accent);
+    border-color: var(--accent);
     color: #fff;
   }
 
@@ -1463,7 +1463,7 @@ $governance-amber: #f59e0b;
 
   &:focus {
     outline: none;
-    border-color: var(--space-color, #36248c);
+    border-color: var(--accent);
   }
 }
 
@@ -1527,7 +1527,7 @@ $governance-amber: #f59e0b;
 
 .governance-composer__condition-add {
   align-self: flex-start;
-  background: var(--space-color, #36248c);
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 999px;
@@ -1569,8 +1569,8 @@ $governance-amber: #f59e0b;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    border-color: var(--space-color, #36248c);
-    color: var(--space-color, #36248c);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   &:disabled {
@@ -1583,7 +1583,7 @@ $governance-amber: #f59e0b;
   padding: 8px 22px;
   border: none;
   border-radius: 8px;
-  background: var(--space-color, #36248c);
+  background: var(--accent);
   color: #fff;
   font-size: 13px;
   font-weight: 600;
@@ -1617,7 +1617,7 @@ $governance-amber: #f59e0b;
   transition: border-color 0.15s;
 
   &--support {
-    border-left-color: var(--space-color, #36248c);
+    border-left-color: var(--accent);
   }
 
   &--question {
@@ -1629,7 +1629,7 @@ $governance-amber: #f59e0b;
   }
 
   &--mine {
-    background: color-mix(in srgb, var(--space-color, #36248c) 3%, transparent);
+    background: color-mix(in srgb, var(--accent) 3%, transparent);
   }
 }
 
@@ -1653,7 +1653,7 @@ $governance-amber: #f59e0b;
   flex-shrink: 0;
 
   &--support {
-    background: var(--space-color, #36248c);
+    background: var(--accent);
   }
 
   &--question {
@@ -1735,8 +1735,8 @@ $governance-amber: #f59e0b;
   color: $secondary-text-color;
 
   &:hover:not(:disabled) {
-    border-color: var(--space-color, #36248c);
-    color: var(--space-color, #36248c);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   &:disabled {
@@ -1815,7 +1815,7 @@ $governance-amber: #f59e0b;
   transition: width 0.3s;
 
   &--agree {
-    background: var(--space-color, #36248c);
+    background: var(--accent);
   }
 
   &--abstain {
@@ -1850,7 +1850,7 @@ $governance-amber: #f59e0b;
   flex-shrink: 0;
 
   &--agree {
-    background: var(--space-color, #36248c);
+    background: var(--accent);
   }
 
   &--abstain {
@@ -1874,7 +1874,7 @@ $governance-amber: #f59e0b;
   margin: 0 0 16px;
 
   strong {
-    color: var(--space-color, #36248c);
+    color: var(--accent);
   }
 }
 
@@ -1914,11 +1914,11 @@ $governance-amber: #f59e0b;
   }
 
   &--agree {
-    border-color: var(--space-color, #36248c);
-    color: var(--space-color, #36248c);
+    border-color: var(--accent);
+    color: var(--accent);
     background: color-mix(
       in srgb,
-      var(--space-color, #36248c) 12%,
+      var(--accent) 12%,
       transparent
     );
   }
@@ -1964,7 +1964,7 @@ $governance-amber: #f59e0b;
 
   &:focus {
     outline: none;
-    border-color: var(--space-color, #36248c);
+    border-color: var(--accent);
   }
 }
 
@@ -1992,13 +1992,13 @@ $governance-amber: #f59e0b;
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--space-color, #36248c) 12%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 600;
-  color: var(--space-color, #36248c);
+  color: var(--accent);
   flex-shrink: 0;
   overflow: hidden;
 
@@ -2036,10 +2036,10 @@ $governance-amber: #f59e0b;
   &--agree {
     background: color-mix(
       in srgb,
-      var(--space-color, #36248c) 12%,
+      var(--accent) 12%,
       transparent
     );
-    color: var(--space-color, #36248c);
+    color: var(--accent);
   }
 
   &--abstain {
@@ -2081,7 +2081,7 @@ $governance-amber: #f59e0b;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: var(--space-color, #36248c);
+  background: var(--accent);
   border: none;
   color: #fff;
   border-radius: 999px;
@@ -2107,7 +2107,7 @@ $governance-amber: #f59e0b;
   padding: 14px;
   border: 1px solid var(--background-border-color);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--space-color, #36248c) 3%, transparent);
+  background: color-mix(in srgb, var(--accent) 3%, transparent);
 }
 
 .governance-form__row {
@@ -2136,7 +2136,7 @@ $governance-amber: #f59e0b;
   color: #fff;
 
   &--open {
-    background: var(--space-color, #36248c);
+    background: var(--accent);
   }
 
   &--in_progress {
@@ -2271,16 +2271,16 @@ $governance-amber: #f59e0b;
   &--spent {
     background: color-mix(
       in srgb,
-      var(--space-color, #36248c) 10%,
+      var(--accent) 10%,
       transparent
     );
-    color: var(--space-color, #36248c);
+    color: var(--accent);
   }
 }
 
 .governance-task-card__claim-btn {
   margin-top: 8px;
-  background: var(--space-color, #36248c);
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -2327,9 +2327,9 @@ $governance-amber: #f59e0b;
     height: 3px;
     background: linear-gradient(
       90deg,
-      var(--space-color, #36248c),
-      color-mix(in srgb, var(--space-color, #36248c) 75%, white 25%),
-      color-mix(in srgb, var(--space-color, #36248c) 55%, white 45%)
+      var(--accent),
+      color-mix(in srgb, var(--accent) 75%, white 25%),
+      color-mix(in srgb, var(--accent) 55%, white 45%)
     );
     border-radius: 14px 14px 0 0;
   }
@@ -2371,7 +2371,7 @@ $governance-amber: #f59e0b;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  background: var(--space-color, #36248c);
+  background: var(--accent);
   color: #fff;
   padding: 3px 12px;
   border-radius: 999px;
@@ -2395,7 +2395,7 @@ $governance-amber: #f59e0b;
   gap: 4px;
   font-size: 11px;
   font-weight: 600;
-  background: var(--space-color, #36248c);
+  background: var(--accent);
   color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -2447,13 +2447,13 @@ $governance-amber: #f59e0b;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: var(--space-color, #36248c);
-    color: var(--space-color, #36248c);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   &.active {
-    background: var(--space-color, #36248c);
-    border-color: var(--space-color, #36248c);
+    background: var(--accent);
+    border-color: var(--accent);
     color: #fff;
     font-weight: 600;
   }
@@ -2482,9 +2482,9 @@ $governance-amber: #f59e0b;
 
   &:focus {
     outline: none;
-    border-color: var(--space-color, #36248c);
+    border-color: var(--accent);
     box-shadow: 0 0 0 3px
-      color-mix(in srgb, var(--space-color, #36248c) 8%, transparent);
+      color-mix(in srgb, var(--accent) 8%, transparent);
   }
 }
 
@@ -2562,7 +2562,7 @@ $governance-amber: #f59e0b;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--space-color, #36248c);
+  background: var(--accent);
   border: none;
   border-radius: 999px;
   padding: 8px 18px;
@@ -2604,8 +2604,8 @@ $governance-amber: #f59e0b;
   transition: all 0.15s;
 
   &:hover:not(:disabled) {
-    border-color: var(--space-color, #36248c);
-    color: var(--space-color, #36248c);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   &:disabled {
@@ -2618,7 +2618,7 @@ $governance-amber: #f59e0b;
   padding: 9px 24px;
   border: none;
   border-radius: 8px;
-  background: var(--space-color, #36248c);
+  background: var(--accent);
   color: #fff;
   cursor: pointer;
   font-size: 13px;
@@ -2627,9 +2627,9 @@ $governance-amber: #f59e0b;
   transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--space-color, #36248c) 94%, black 6%);
+    background: color-mix(in srgb, var(--accent) 94%, black 6%);
     box-shadow: 0 2px 8px
-      color-mix(in srgb, var(--space-color, #36248c) 25%, transparent);
+      color-mix(in srgb, var(--accent) 25%, transparent);
   }
 
   &:disabled {
@@ -2686,11 +2686,11 @@ $governance-amber: #f59e0b;
   }
 
   &:hover {
-    border-color: var(--space-color, #36248c);
+    border-color: var(--accent);
     background: rgba(86, 58, 204, 7%);
 
     span {
-      color: var(--space-color, #36248c);
+      color: var(--accent);
     }
   }
 
@@ -2700,16 +2700,16 @@ $governance-amber: #f59e0b;
     color: $secondary-text-color;
 
     &:hover {
-      border-color: var(--space-color, #36248c);
+      border-color: var(--accent);
     }
   }
 
   &--selected {
-    border-color: var(--space-color, #36248c);
+    border-color: var(--accent);
     background: rgba(86, 58, 204, 7%);
 
     span {
-      color: var(--space-color, #36248c);
+      color: var(--accent);
     }
   }
 }
@@ -2747,12 +2747,12 @@ $governance-amber: #f59e0b;
   }
 
   &:hover {
-    border-color: var(--space-color, #36248c);
+    border-color: var(--accent);
     background: rgba(86, 58, 204, 7%);
   }
 
   &--selected {
-    border-color: var(--space-color, #36248c);
+    border-color: var(--accent);
     background: rgba(86, 58, 204, 7%);
   }
 }
@@ -2809,7 +2809,7 @@ $governance-amber: #f59e0b;
 
   &__input {
     flex: 1;
-    accent-color: var(--space-color, #36248c);
+    accent-color: var(--accent);
     cursor: pointer;
     height: 4px;
   }
@@ -2817,7 +2817,7 @@ $governance-amber: #f59e0b;
   &__value {
     font-size: 22px;
     font-weight: 700;
-    color: var(--space-color, #36248c);
+    color: var(--accent);
     min-width: 32px;
     text-align: right;
   }

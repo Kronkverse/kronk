@@ -9,7 +9,7 @@
 .in-flow__header {
   padding: 36px 24px 28px;
   border-bottom: 1px solid
-    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+    color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .in-flow__title {
@@ -25,7 +25,7 @@
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
+  color: color-mix(in srgb, var(--accent) 80%, #fff 20%);
   margin: 0 0 16px;
 }
 
@@ -43,9 +43,9 @@
 .in-flow__daily {
   margin: 0;
   padding: 20px 24px;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 12%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   border-bottom: 1px solid
-    color-mix(in srgb, var(--space-color, #3034a0) 15%, transparent);
+    color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 // ── Daily tile grid ──────────────────────────────────────────────────────────
@@ -65,9 +65,9 @@
 }
 
 .in-flow__daily-tile {
-  background: color-mix(in srgb, var(--space-color, #3034a0) 10%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   border: 1px solid
-    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+    color-mix(in srgb, var(--accent) 20%, transparent);
   border-radius: 10px;
   padding: 12px;
   display: flex;
@@ -82,7 +82,7 @@
 }
 
 .in-flow__daily-tile-icon {
-  color: color-mix(in srgb, var(--space-color, #3034a0) 70%, #fff 30%);
+  color: color-mix(in srgb, var(--accent) 70%, #fff 30%);
   flex-shrink: 0;
 }
 
@@ -106,7 +106,7 @@
   display: flex;
   gap: 0;
   border-bottom: 1px solid
-    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+    color-mix(in srgb, var(--accent) 20%, transparent);
   padding: 0 24px;
 }
 
@@ -130,7 +130,7 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: var(--space-color, #3034a0);
+    background: var(--accent);
     transform: scaleX(0);
     transition: transform 0.2s ease;
   }
@@ -199,7 +199,7 @@
 
 .in-flow-light__arc-fill {
   fill: none;
-  stroke: color-mix(in srgb, var(--space-color, #3034a0) 70%, #fff 30%);
+  stroke: color-mix(in srgb, var(--accent) 70%, #fff 30%);
   stroke-width: 1.5;
   stroke-linecap: round;
 }
@@ -250,7 +250,7 @@
 .in-flow-light__solstice-countdown {
   font-size: 11px;
   font-weight: 500;
-  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
+  color: color-mix(in srgb, var(--accent) 80%, #fff 20%);
 }
 
 .in-flow-light__solstice-bar {
@@ -266,7 +266,7 @@
   left: 0;
   top: 0;
   height: 100%;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 70%, #fff 30%);
+  background: color-mix(in srgb, var(--accent) 70%, #fff 30%);
   border-radius: 2px;
 }
 
@@ -279,15 +279,15 @@
   border-radius: 50%;
   transform: translate(-50%, -50%);
   box-shadow: 0 0 6px
-    color-mix(in srgb, var(--space-color, #3034a0) 60%, #fff 40%);
+    color-mix(in srgb, var(--accent) 60%, #fff 40%);
 }
 
 .in-flow-light__sun-times {
   display: flex;
   align-items: center;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 8%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
   border: 1px solid
-    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+    color-mix(in srgb, var(--accent) 20%, transparent);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -302,7 +302,7 @@
 }
 
 .in-flow-light__sun-icon {
-  color: color-mix(in srgb, var(--space-color, #3034a0) 60%, #fff 40%);
+  color: color-mix(in srgb, var(--accent) 60%, #fff 40%);
 
   &--set {
     transform: scaleY(-1);
@@ -312,7 +312,7 @@
 .in-flow-light__sun-divider {
   width: 1px;
   height: 48px;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .in-flow-light__sun-label {
@@ -417,7 +417,7 @@
   color: $primary-text-color;
   opacity: 0.75;
   display: block;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 10%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   border-radius: 8px;
   padding: 12px;
   box-sizing: content-box;
@@ -461,14 +461,14 @@
   align-items: center;
   gap: 6px;
   padding: 7px 12px;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 10%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   border: 1px solid
-    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+    color-mix(in srgb, var(--accent) 20%, transparent);
   border-radius: 20px;
 }
 
 .in-flow-dark__wanderer-icon {
-  color: color-mix(in srgb, var(--space-color, #3034a0) 70%, #fff 30%);
+  color: color-mix(in srgb, var(--accent) 70%, #fff 30%);
 }
 
 .in-flow-dark__wanderer-name {
@@ -590,7 +590,7 @@
   }
 
   &--next .in-flow-festival__label {
-    color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
+    color: color-mix(in srgb, var(--accent) 80%, #fff 20%);
   }
 }
 
@@ -630,10 +630,10 @@
   display: block;
   width: 100%;
   text-align: start;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 10%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   border: none;
   border-bottom: 1px solid
-    color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+    color-mix(in srgb, var(--accent) 20%, transparent);
   padding: 16px 20px;
   cursor: pointer;
   transition: background 0.15s ease;
@@ -641,7 +641,7 @@
   &:hover {
     background: color-mix(
       in srgb,
-      var(--space-color, #3034a0) 16%,
+      var(--accent) 16%,
       transparent
     );
   }
@@ -682,6 +682,6 @@
 
 .daily-kosmic-card__cta {
   font-size: 12px;
-  color: color-mix(in srgb, var(--space-color, #3034a0) 80%, #fff 20%);
+  color: color-mix(in srgb, var(--accent) 80%, #fff 20%);
   font-weight: 500;
 }

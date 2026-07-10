@@ -1,11 +1,11 @@
 @use 'variables' as *;
 
 // The Booth — DJ set hosting space
-// Theme accent via --space-color (set by booth/index.tsx)
+// Theme accent via --accent (set by booth/index.tsx)
 
 $booth-bg: var(--background-color, #17101f);
 $booth-card-bg: var(--surface-background-color, #1e1433);
-$booth-accent: var(--space-color, #3034a0);
+$booth-accent: var(--accent);
 
 // ─── Hero title ───────────────────────────────────────────────────────────────
 
@@ -45,7 +45,7 @@ $booth-accent: var(--space-color, #3034a0);
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--space-color, #3034a0);
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -79,11 +79,11 @@ $booth-accent: var(--space-color, #3034a0);
 .booth__now-playing {
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 15%,
+    var(--accent) 15%,
     $ui-base-color
   );
   border: 1px solid
-    color-mix(in srgb, var(--space-color, #3034a0) 30%, transparent);
+    color-mix(in srgb, var(--accent) 30%, transparent);
   border-radius: 12px;
   padding: 16px;
   display: flex;
@@ -99,7 +99,7 @@ $booth-accent: var(--space-color, #3034a0);
   overflow: hidden;
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 20%,
+    var(--accent) 20%,
     $ui-base-color
   );
 
@@ -123,7 +123,7 @@ $booth-accent: var(--space-color, #3034a0);
     height: 60px;
     fill: color-mix(
       in srgb,
-      var(--space-color, #3034a0) 50%,
+      var(--accent) 50%,
       $secondary-text-color
     );
   }
@@ -157,10 +157,10 @@ $booth-accent: var(--space-color, #3034a0);
 .booth__action-btn {
   background: none;
   border: 1px solid
-    color-mix(in srgb, var(--space-color, #3034a0) 50%, transparent);
+    color-mix(in srgb, var(--accent) 50%, transparent);
   color: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 80%,
+    var(--accent) 80%,
     $primary-text-color
   );
   border-radius: 20px;
@@ -178,7 +178,7 @@ $booth-accent: var(--space-color, #3034a0);
   &:hover {
     background: color-mix(
       in srgb,
-      var(--space-color, #3034a0) 15%,
+      var(--accent) 15%,
       transparent
     );
     color: $primary-text-color;
@@ -215,22 +215,22 @@ $booth-accent: var(--space-color, #3034a0);
   &:focus-visible {
     border-color: color-mix(
       in srgb,
-      var(--space-color, #3034a0) 60%,
+      var(--accent) 60%,
       transparent
     );
     background: color-mix(
       in srgb,
-      var(--space-color, #3034a0) 8%,
+      var(--accent) 8%,
       $ui-base-color
     );
     outline: none;
   }
 
   &--active {
-    border-color: var(--space-color, #3034a0);
+    border-color: var(--accent);
     background: color-mix(
       in srgb,
-      var(--space-color, #3034a0) 12%,
+      var(--accent) 12%,
       $ui-base-color
     );
   }
@@ -250,7 +250,7 @@ $booth-accent: var(--space-color, #3034a0);
   overflow: hidden;
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 20%,
+    var(--accent) 20%,
     $ui-base-color
   );
 
@@ -484,10 +484,10 @@ $booth-accent: var(--space-color, #3034a0);
 }
 
 .booth-card__genre {
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
   color: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 80%,
+    var(--accent) 80%,
     $primary-text-color
   );
   border-radius: 10px;
@@ -512,7 +512,7 @@ $booth-accent: var(--space-color, #3034a0);
   flex-shrink: 0;
   width: 44px;
   height: 44px;
-  background: var(--space-color, #3034a0);
+  background: var(--accent);
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -576,7 +576,7 @@ $booth-accent: var(--space-color, #3034a0);
   height: 5px;
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 20%,
+    var(--accent) 20%,
     $ui-base-lighter-color
   );
   border-radius: 3px;
@@ -584,7 +584,7 @@ $booth-accent: var(--space-color, #3034a0);
   position: relative;
 
   &:focus-visible {
-    outline: 2px solid var(--space-color, #3034a0);
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
 
@@ -595,7 +595,7 @@ $booth-accent: var(--space-color, #3034a0);
 
 .booth-player__progress-fill {
   height: 100%;
-  background: var(--space-color, #3034a0);
+  background: var(--accent);
   border-radius: 3px;
   pointer-events: none;
   transition: width 0.25s linear;
@@ -607,7 +607,7 @@ $booth-accent: var(--space-color, #3034a0);
   transform: translate(-50%, -50%);
   width: 12px;
   height: 12px;
-  background: var(--space-color, #3034a0);
+  background: var(--accent);
   border-radius: 50%;
   pointer-events: none;
   opacity: 0;
@@ -648,7 +648,7 @@ $booth-accent: var(--space-color, #3034a0);
 
   &:focus {
     outline: none;
-    border-color: var(--space-color, #3034a0);
+    border-color: var(--accent);
   }
 
   &--date {
@@ -694,11 +694,11 @@ $booth-accent: var(--space-color, #3034a0);
 .booth-inline-player {
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 12%,
+    var(--accent) 12%,
     $ui-base-color
   );
   border: 1px solid
-    color-mix(in srgb, var(--space-color, #3034a0) 30%, transparent);
+    color-mix(in srgb, var(--accent) 30%, transparent);
   border-radius: 12px;
   overflow: hidden;
   display: flex;
@@ -712,7 +712,7 @@ $booth-accent: var(--space-color, #3034a0);
   overflow: hidden;
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 25%,
+    var(--accent) 25%,
     $ui-base-color
   );
 
@@ -738,7 +738,7 @@ $booth-accent: var(--space-color, #3034a0);
     height: 80px;
     fill: color-mix(
       in srgb,
-      var(--space-color, #3034a0) 50%,
+      var(--accent) 50%,
       $secondary-text-color
     );
   }
@@ -799,10 +799,10 @@ $booth-accent: var(--space-color, #3034a0);
 }
 
 .booth-inline-player__genre {
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
   color: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 80%,
+    var(--accent) 80%,
     $primary-text-color
   );
   border-radius: 10px;
@@ -830,7 +830,7 @@ $booth-accent: var(--space-color, #3034a0);
 .booth-inline-player__play-btn {
   width: 56px;
   height: 56px;
-  background: var(--space-color, #3034a0);
+  background: var(--accent);
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -907,7 +907,7 @@ $booth-accent: var(--space-color, #3034a0);
   user-select: none;
 
   &:focus-visible {
-    outline: 2px solid var(--space-color, #3034a0);
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
     border-radius: 3px;
   }
@@ -919,25 +919,25 @@ $booth-accent: var(--space-color, #3034a0);
   border-radius: 1px;
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 30%,
+    var(--accent) 30%,
     $ui-base-lighter-color
   );
   transition: background 0.1s;
 
   &--played {
-    background: var(--space-color, #3034a0);
+    background: var(--accent);
   }
 }
 
 .booth-waveform:hover .booth-waveform__bar {
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 45%,
+    var(--accent) 45%,
     $ui-base-lighter-color
   );
 
   &--played {
-    background: color-mix(in srgb, var(--space-color, #3034a0) 100%, #fff 10%);
+    background: color-mix(in srgb, var(--accent) 100%, #fff 10%);
     filter: brightness(1.1);
   }
 }
@@ -972,7 +972,7 @@ $booth-accent: var(--space-color, #3034a0);
   overflow: hidden;
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 20%,
+    var(--accent) 20%,
     $ui-base-color
   );
 
@@ -996,7 +996,7 @@ $booth-accent: var(--space-color, #3034a0);
     height: 80px;
     fill: color-mix(
       in srgb,
-      var(--space-color, #3034a0) 40%,
+      var(--accent) 40%,
       $secondary-text-color
     );
   }
@@ -1028,10 +1028,10 @@ $booth-accent: var(--space-color, #3034a0);
 
 .booth__set-detail-genre {
   display: inline-block;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, transparent);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
   color: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 80%,
+    var(--accent) 80%,
     $primary-text-color
   );
   border-radius: 12px;
@@ -1060,11 +1060,11 @@ $booth-accent: var(--space-color, #3034a0);
 .booth-upload-form {
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 10%,
+    var(--accent) 10%,
     $ui-base-color
   );
   border: 1px solid
-    color-mix(in srgb, var(--space-color, #3034a0) 25%, transparent);
+    color-mix(in srgb, var(--accent) 25%, transparent);
   border-radius: 12px;
   padding: 20px;
   display: flex;
@@ -1112,7 +1112,7 @@ $booth-accent: var(--space-color, #3034a0);
 
     &:focus {
       outline: none;
-      border-color: var(--space-color, #3034a0);
+      border-color: var(--accent);
     }
 
     &:disabled {
@@ -1162,7 +1162,7 @@ $booth-accent: var(--space-color, #3034a0);
 }
 
 .booth-upload-form__submit {
-  background: var(--space-color, #3034a0);
+  background: var(--accent);
   border: none;
   color: #fff;
   border-radius: 6px;
@@ -1218,7 +1218,7 @@ $booth-accent: var(--space-color, #3034a0);
   height: 6px;
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 20%,
+    var(--accent) 20%,
     $ui-base-lighter-color
   );
   border-radius: 3px;
@@ -1227,7 +1227,7 @@ $booth-accent: var(--space-color, #3034a0);
 
 .booth-upload-form__progress-fill {
   height: 100%;
-  background: var(--space-color, #3034a0);
+  background: var(--accent);
   border-radius: 3px;
   transition: width 0.3s ease;
 }
@@ -1300,7 +1300,7 @@ $booth-accent: var(--space-color, #3034a0);
   cursor: ns-resize;
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 20%,
+    var(--accent) 20%,
     $ui-base-color
   );
   user-select: none;
@@ -1377,11 +1377,11 @@ $booth-accent: var(--space-color, #3034a0);
   padding: 12px 14px;
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 18%,
+    var(--accent) 18%,
     $ui-base-color
   );
   border-top: 1px solid
-    color-mix(in srgb, var(--space-color, #3034a0) 35%, transparent);
+    color-mix(in srgb, var(--accent) 35%, transparent);
   backdrop-filter: blur(8px);
   z-index: 5;
   margin: 0 -16px -16px;
@@ -1404,7 +1404,7 @@ $booth-accent: var(--space-color, #3034a0);
   overflow: hidden;
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 30%,
+    var(--accent) 30%,
     $ui-base-color
   );
 
@@ -1484,7 +1484,7 @@ $booth-accent: var(--space-color, #3034a0);
 .booth-bottom-player__play-btn {
   width: 40px;
   height: 40px;
-  background: var(--space-color, #3034a0);
+  background: var(--accent);
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -1547,7 +1547,7 @@ $booth-accent: var(--space-color, #3034a0);
   height: 4px;
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 20%,
+    var(--accent) 20%,
     $ui-base-lighter-color
   );
   border-radius: 2px;
@@ -1555,7 +1555,7 @@ $booth-accent: var(--space-color, #3034a0);
   position: relative;
 
   &:focus-visible {
-    outline: 2px solid var(--space-color, #3034a0);
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
 
@@ -1566,7 +1566,7 @@ $booth-accent: var(--space-color, #3034a0);
 
 .booth-bottom-player__progress-fill {
   height: 100%;
-  background: var(--space-color, #3034a0);
+  background: var(--accent);
   border-radius: 2px;
   pointer-events: none;
   transition: width 0.25s linear;
@@ -1578,7 +1578,7 @@ $booth-accent: var(--space-color, #3034a0);
   transform: translate(-50%, -50%);
   width: 10px;
   height: 10px;
-  background: var(--space-color, #3034a0);
+  background: var(--accent);
   border-radius: 50%;
   pointer-events: none;
   opacity: 0;
@@ -1641,7 +1641,7 @@ $booth-accent: var(--space-color, #3034a0);
   transition: border-color 0.15s;
 
   &:focus-within {
-    border-color: var(--space-color, #3034a0);
+    border-color: var(--accent);
   }
 }
 
@@ -1649,10 +1649,10 @@ $booth-accent: var(--space-color, #3034a0);
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 25%, transparent);
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
   color: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 85%,
+    var(--accent) 85%,
     $primary-text-color
   );
   border-radius: 12px;
@@ -1727,7 +1727,7 @@ $booth-accent: var(--space-color, #3034a0);
   &:hover {
     background: color-mix(
       in srgb,
-      var(--space-color, #3034a0) 12%,
+      var(--accent) 12%,
       $ui-base-color
     );
   }
@@ -1765,7 +1765,7 @@ $booth-accent: var(--space-color, #3034a0);
   &--linked {
     border-color: color-mix(
       in srgb,
-      var(--space-color, #3034a0) 60%,
+      var(--accent) 60%,
       transparent
     );
   }
@@ -1784,16 +1784,16 @@ $booth-accent: var(--space-color, #3034a0);
   border-radius: 10px;
   background: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 20%,
+    var(--accent) 20%,
     $ui-base-color
   );
   color: color-mix(
     in srgb,
-    var(--space-color, #3034a0) 80%,
+    var(--accent) 80%,
     $primary-text-color
   );
   border: 1px solid
-    color-mix(in srgb, var(--space-color, #3034a0) 40%, transparent);
+    color-mix(in srgb, var(--accent) 40%, transparent);
   white-space: nowrap;
 }
 
@@ -1855,7 +1855,7 @@ $booth-accent: var(--space-color, #3034a0);
   &:hover {
     background: color-mix(
       in srgb,
-      var(--space-color, #3034a0) 12%,
+      var(--accent) 12%,
       $ui-base-color
     );
   }
@@ -1904,7 +1904,7 @@ $booth-accent: var(--space-color, #3034a0);
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--space-color, #3034a0);
+  background: var(--accent);
   color: #fff;
   padding: 10px 18px;
   border-radius: 24px;
@@ -1937,7 +1937,7 @@ $booth-accent: var(--space-color, #3034a0);
   top: 0;
   left: 0;
   height: 2px;
-  background: var(--space-color, #3034a0);
+  background: var(--accent);
   transition: width 0.15s linear;
 }
 
@@ -1961,7 +1961,7 @@ $booth-accent: var(--space-color, #3034a0);
   height: 40px;
   border-radius: 4px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--space-color, #3034a0) 20%, $ui-base-color);
+  background: color-mix(in srgb, var(--accent) 20%, $ui-base-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1975,7 +1975,7 @@ $booth-accent: var(--space-color, #3034a0);
   svg {
     width: 20px;
     height: 20px;
-    fill: color-mix(in srgb, var(--space-color, #3034a0) 50%, $secondary-text-color);
+    fill: color-mix(in srgb, var(--accent) 50%, $secondary-text-color);
   }
 }
 

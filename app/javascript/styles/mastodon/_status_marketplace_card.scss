@@ -6,7 +6,7 @@
   &__price {
     font-size: 13px;
     font-weight: 600;
-    color: color-mix(in srgb, var(--space-color) 55%, $primary-text-color 45%);
+    color: color-mix(in srgb, var(--accent) 55%, $primary-text-color 45%);
   }
 
   &__location,

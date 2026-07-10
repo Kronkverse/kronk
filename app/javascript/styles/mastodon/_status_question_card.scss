@@ -8,10 +8,10 @@
   &__question-ref {
     padding: 10px 14px;
     border-bottom: 1px solid
-      color-mix(in srgb, var(--space-color, #4844c0) 60%, black 40%);
+      color-mix(in srgb, var(--accent) 60%, black 40%);
     background: color-mix(
       in srgb,
-      var(--space-color, #4844c0) 12%,
+      var(--accent) 12%,
       transparent
     );
 
@@ -44,7 +44,7 @@
     }
 
     &--open .icon {
-      color: var(--space-color, #4844c0);
+      color: var(--accent);
     }
   }
 
@@ -76,7 +76,7 @@
   }
 
   &__answer-btn {
-    background: var(--space-color, #4844c0);
+    background: var(--accent);
     color: #fff;
     border: none;
     border-radius: 20px;
@@ -113,7 +113,7 @@
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: var(--space-color, #4844c0);
+    background: var(--accent);
     color: #fff;
     border: none;
     cursor: pointer;
@@ -124,7 +124,7 @@
     font-weight: 700;
     line-height: 1;
     box-shadow: 0 0 12px
-      color-mix(in srgb, var(--space-color, #4844c0) 70%, transparent);
+      color-mix(in srgb, var(--accent) 70%, transparent);
     transition:
       opacity 0.15s ease,
       box-shadow 0.15s ease;
@@ -138,18 +138,18 @@
     &:not(:disabled):hover {
       opacity: 0.9;
       box-shadow: 0 0 18px
-        color-mix(in srgb, var(--space-color, #4844c0) 90%, transparent);
+        color-mix(in srgb, var(--accent) 90%, transparent);
     }
   }
 
   &__answers {
     border-top: 1px solid
-      color-mix(in srgb, var(--space-color, #4844c0) 60%, black 40%);
+      color-mix(in srgb, var(--accent) 60%, black 40%);
     padding: 10px 14px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background: color-mix(in srgb, var(--space-color, #4844c0) 6%, transparent);
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
   }
 
   &__answer-item {
