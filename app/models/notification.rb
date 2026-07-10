@@ -34,62 +34,87 @@ class Notification < ApplicationRecord
   }.freeze
 
   # Please update app/javascript/api_types/notification.ts if you change this
+  # `legacy: true` marks types that flow through the retiring bell surface.
+  # `nudge` is the new Nudges surface — not legacy. During the 2.0.0
+  # transition both surfaces coexist so users can find archived content;
+  # after Phase 14 sunsets the legacy archive tab, legacy types stop
+  # generating new notifications too.
   PROPERTIES = {
     mention: {
       filterable: true,
+      legacy: true,
     }.freeze,
     status: {
       filterable: false,
+      legacy: true,
     }.freeze,
     reblog: {
       filterable: true,
+      legacy: true,
     }.freeze,
     follow: {
       filterable: true,
+      legacy: true,
     }.freeze,
     follow_request: {
       filterable: true,
+      legacy: true,
     }.freeze,
     favourite: {
       filterable: true,
+      legacy: true,
     }.freeze,
     poll: {
       filterable: false,
+      legacy: true,
     }.freeze,
     update: {
       filterable: false,
+      legacy: true,
     }.freeze,
     severed_relationships: {
       filterable: false,
+      legacy: true,
     }.freeze,
     moderation_warning: {
       filterable: false,
+      legacy: true,
     }.freeze,
     annual_report: {
       filterable: false,
+      legacy: true,
     }.freeze,
     'admin.sign_up': {
       filterable: false,
+      legacy: true,
     }.freeze,
     'admin.report': {
       filterable: false,
+      legacy: true,
     }.freeze,
     quote: {
       filterable: true,
+      legacy: true,
     }.freeze,
     quoted_update: {
       filterable: false,
+      legacy: true,
     }.freeze,
     event_invitation: {
       filterable: true,
+      legacy: true,
     }.freeze,
     nudge: {
       filterable: true,
+      legacy: false,
     }.freeze,
     media_tag: {
       filterable: true,
+      legacy: true,
     }.freeze,
   }.freeze
+
+  LEGACY_TYPES = PROPERTIES.select { |_, props| props[:legacy] }.keys.freeze
 
   TYPES = PROPERTIES.keys.freeze
 
@@ -130,6 +155,7 @@ class Notification < ApplicationRecord
   validates :type, inclusion: { in: TYPES }
 
   scope :without_suspended, -> { joins(:from_account).merge(Account.without_suspended) }
+  scope :legacy_archive, -> { where(type: LEGACY_TYPES) }
 
   def type
     @type ||= (super || LEGACY_TYPE_CLASS_MAP[activity_type]).to_sym
