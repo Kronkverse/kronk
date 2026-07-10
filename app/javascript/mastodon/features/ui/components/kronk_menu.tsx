@@ -108,6 +108,9 @@ export const KronkMenu = ({ currentAccountUsername, unreadNudgesCount = 0 }: Kro
               )}
             </Link>
           )}
+          <Link className='kronk-menu__item' to='/settings/profile_sections' role='menuitem' onClick={close}>
+            <FormattedMessage id='kronk_menu.profile_sections' defaultMessage='Profile sections' />
+          </Link>
           <Link className='kronk-menu__item' to='/hub/groups' role='menuitem' onClick={close}>
             <FormattedMessage id='kronk_menu.groups' defaultMessage='Groups' />
           </Link>
