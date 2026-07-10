@@ -1,0 +1,48 @@
+// SectionedProfile — Kronk 2.0's default /@user view. Renders under
+// AccountHeader (avatar, bio, follow controls, tab strip) so the
+// existing profile chrome carries over.
+
+.sectioned-profile {
+  &__body {
+    padding: 1rem;
+  }
+
+  &__error {
+    color: var(--warning-red, tomato);
+  }
+
+  &__loading {
+    color: var(--text-muted);
+  }
+
+  &__section {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium, 8px);
+    background: var(--surface-elevated);
+  }
+
+  &__section-header {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  &__section-title {
+    margin: 0;
+    color: var(--kronk-purple-accent);
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  &__section-type {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}

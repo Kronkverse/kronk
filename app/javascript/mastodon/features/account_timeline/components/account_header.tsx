@@ -992,11 +992,17 @@ export const AccountHeader: React.FC<{
 
       {!(hideTabs || hidden) && (
         <div className='account__section-headline'>
+          {/* Sections is the Kronk 2.0 profile default (/@user renders
+              SectionedProfile). Posts remains available under /posts
+              for viewers who prefer the flat feed. */}
+          <NavLink exact to={`/@${account.acct}`}>
+            <FormattedMessage id='account.sections' defaultMessage='Sections' />
+          </NavLink>
+          <NavLink exact to={`/@${account.acct}/posts`}>
+            <FormattedMessage id='account.posts' defaultMessage='Posts' />
+          </NavLink>
           <NavLink exact to={`/@${account.acct}/featured`}>
             <FormattedMessage id='account.featured' defaultMessage='Featured' />
-          </NavLink>
-          <NavLink exact to={`/@${account.acct}`}>
-            <FormattedMessage id='account.posts' defaultMessage='Posts' />
           </NavLink>
           <NavLink exact to={`/@${account.acct}/with_replies`}>
             <FormattedMessage
@@ -1006,9 +1012,6 @@ export const AccountHeader: React.FC<{
           </NavLink>
           <NavLink exact to={`/@${account.acct}/media`}>
             <FormattedMessage id='account.media' defaultMessage='Media' />
-          </NavLink>
-          <NavLink exact to={`/@${account.acct}/profile`}>
-            <FormattedMessage id='account.sections' defaultMessage='Sections' />
           </NavLink>
           {me !== account.id && signedIn && (
             <NavLink exact to={`/@${account.acct}/nudges`}>

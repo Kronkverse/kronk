@@ -13,6 +13,12 @@ const messages = defineMessages({
 
 type Scope = 'mine' | 'discoverable' | 'all';
 
+const SCOPE_LABELS: [Scope, string][] = [
+  ['mine', 'My groups'],
+  ['discoverable', 'Discoverable'],
+  ['all', 'All'],
+];
+
 export const Groups = () => {
   const intl = useIntl();
   const [groups, setGroups] = useState<ApiGroupJSON[]>([]);
@@ -57,75 +63,32 @@ export const Groups = () => {
     }
   };
 
-  const chip = (label: string, kind: 'seeder' | 'member' | 'discoverable') => (
-    <span
-      style={{
-        padding: '0.15rem 0.5rem',
-        borderRadius: 'var(--radius-round, 999px)',
-        fontSize: '0.7rem',
-        background: kind === 'seeder' ? 'var(--accent)' : 'var(--surface-elevated)',
-        color: kind === 'seeder' ? 'var(--surface-primary)' : 'var(--text-secondary)',
-        border: kind === 'seeder' ? 'none' : '1px solid var(--border-default)',
-        marginLeft: '0.4rem',
-      }}
-    >
-      {label}
-    </span>
-  );
-
   return (
     <Column bindToDocument label={intl.formatMessage(messages.title)}>
       <ColumnHeader title={intl.formatMessage(messages.title)} showBackButton />
 
-      <div className='scrollable' style={{ padding: '1rem' }}>
-        <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+      <div className='scrollable groups-page'>
+        <p className='groups-page__intro'>
           <FormattedMessage
             id='groups.intro'
             defaultMessage='Groups are shareable multi-poster spaces. Seeders plant them; membership is opt-in. Choose a governance framework at creation to shape how structural changes get enacted.'
           />
         </p>
 
-        {/* Scope tabs — 'mine' shows the viewer's own groups (including
-            private ones); 'discoverable' shows the public discovery
-            listing; 'all' unions the two. */}
-        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem' }}>
-          {([
-            ['mine', 'My groups'],
-            ['discoverable', 'Discoverable'],
-            ['all', 'All'],
-          ] as [Scope, string][]).map(([value, label]) => (
+        <div className='groups-page__scope-tabs'>
+          {SCOPE_LABELS.map(([value, label]) => (
             <button
               key={value}
               type='button'
               onClick={() => setScope(value)}
-              style={{
-                padding: '0.35rem 0.85rem',
-                borderRadius: 'var(--radius-round, 999px)',
-                border: value === scope ? 'none' : '1px solid var(--border-default)',
-                background: value === scope ? 'var(--accent)' : 'var(--surface-elevated)',
-                color: value === scope ? 'var(--surface-primary)' : 'var(--text-secondary)',
-                fontSize: '0.85rem',
-                cursor: value === scope ? 'default' : 'pointer',
-              }}
+              className={`groups-page__scope-tab ${value === scope ? 'groups-page__scope-tab--active' : ''}`}
             >
               {label}
             </button>
           ))}
         </div>
 
-        <button
-          type='button'
-          onClick={() => setCreating((prev) => !prev)}
-          style={{
-            marginBottom: '1rem',
-            padding: '0.5rem 1rem',
-            border: 'none',
-            borderRadius: 'var(--radius-medium, 8px)',
-            background: 'var(--accent)',
-            color: 'var(--surface-primary)',
-            cursor: 'pointer',
-          }}
-        >
+        <button type='button' onClick={() => setCreating((prev) => !prev)} className='groups-page__new-btn'>
           {creating ? (
             <FormattedMessage id='groups.cancel_create' defaultMessage='Cancel' />
           ) : (
@@ -134,47 +97,35 @@ export const Groups = () => {
         </button>
 
         {creating && (
-          <div style={{ marginBottom: '1.5rem', padding: '1rem', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-medium, 8px)', background: 'var(--surface-elevated)' }}>
-            <h3 style={{ marginTop: 0 }}>
+          <div className='groups-page__form'>
+            <h3>
               <FormattedMessage id='groups.plant_title' defaultMessage='Plant a new group' />
             </h3>
 
-            <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+            <label>
               <FormattedMessage id='groups.form.slug' defaultMessage='Slug (lowercase, hyphens ok)' />
-              <input
-                type='text'
-                value={form.slug}
-                onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                style={{ display: 'block', width: '100%', padding: '0.4rem', marginTop: '0.25rem' }}
-              />
+              <input type='text' value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
             </label>
 
-            <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+            <label>
               <FormattedMessage id='groups.form.name' defaultMessage='Name' />
-              <input
-                type='text'
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                style={{ display: 'block', width: '100%', padding: '0.4rem', marginTop: '0.25rem' }}
-              />
+              <input type='text' value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </label>
 
-            <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+            <label>
               <FormattedMessage id='groups.form.description' defaultMessage='Description' />
               <textarea
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 rows={3}
-                style={{ display: 'block', width: '100%', padding: '0.4rem', marginTop: '0.25rem' }}
               />
             </label>
 
-            <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+            <label>
               <FormattedMessage id='groups.form.governance' defaultMessage='Governance framework' />
               <select
                 value={form.governance_framework}
                 onChange={(e) => setForm({ ...form, governance_framework: e.target.value })}
-                style={{ display: 'block', width: '100%', padding: '0.4rem', marginTop: '0.25rem' }}
               >
                 <option value='peer_support'>peer_support — one second required</option>
                 <option value='two_key'>two_key — two seconds required</option>
@@ -184,7 +135,7 @@ export const Groups = () => {
               </select>
             </label>
 
-            <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <label className='groups-page__form-checkbox'>
               <input
                 type='checkbox'
                 checked={form.discoverable}
@@ -193,58 +144,40 @@ export const Groups = () => {
               <FormattedMessage id='groups.form.discoverable' defaultMessage='List this group in the public discovery page' />
             </label>
 
-            <button
-              type='button'
-              onClick={() => void submitCreate()}
-              style={{ padding: '0.5rem 1rem', border: 'none', borderRadius: 'var(--radius-medium, 8px)', background: 'var(--accent)', color: 'var(--surface-primary)', cursor: 'pointer' }}
-            >
+            <button type='button' onClick={() => void submitCreate()}>
               <FormattedMessage id='groups.plant' defaultMessage='Plant it' />
             </button>
           </div>
         )}
 
-        {error && (
-          <p style={{ color: 'var(--warning-red, tomato)' }}>{error}</p>
-        )}
+        {error && <p className='groups-page__error'>{error}</p>}
 
         {loading && (
-          <p style={{ color: 'var(--text-muted)' }}>
+          <p className='groups-page__loading'>
             <FormattedMessage id='groups.loading' defaultMessage='Loading…' />
           </p>
         )}
 
         {!loading && groups.length === 0 && (
-          <p style={{ color: 'var(--text-muted)' }}>
-            <FormattedMessage id='groups.empty' defaultMessage='No discoverable groups yet. Plant one above.' />
+          <p className='groups-page__empty'>
+            <FormattedMessage id='groups.empty' defaultMessage='No groups here. Try another scope or plant one.' />
           </p>
         )}
 
-        <ul style={{ padding: 0, listStyle: 'none' }}>
+        <ul className='groups-page__list'>
           {groups.map((g) => (
-            <li
-              key={g.id}
-              style={{
-                padding: '0.75rem 1rem',
-                marginBottom: '0.5rem',
-                border: '1px solid var(--border-default)',
-                borderRadius: 'var(--radius-medium, 8px)',
-                background: 'var(--surface-elevated)',
-              }}
-            >
-              <Link
-                to={`/hub/groups/${g.id}`}
-                style={{ color: 'var(--text-primary)', textDecoration: 'none' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap' }}>
-                  <h3 style={{ margin: 0, color: 'var(--accent)' }}>{g.name}</h3>
-                  <small style={{ marginLeft: '0.5rem', color: 'var(--text-muted)' }}>@{g.slug}</small>
-                  {g.viewer_role === 'seeder' && chip('seeder', 'seeder')}
-                  {g.viewer_role === 'member' && chip('member', 'member')}
+            <li key={g.id} className='groups-page__row'>
+              <Link to={`/hub/groups/${g.id}`}>
+                <div className='groups-page__row-header'>
+                  <h3 className='groups-page__row-name'>{g.name}</h3>
+                  <small className='groups-page__row-slug'>@{g.slug}</small>
+                  {g.viewer_role === 'seeder' && (
+                    <span className='groups-page__chip groups-page__chip--seeder'>seeder</span>
+                  )}
+                  {g.viewer_role === 'member' && <span className='groups-page__chip'>member</span>}
                 </div>
-                {g.description && (
-                  <p style={{ margin: '0.4rem 0 0.2rem', color: 'var(--text-secondary)' }}>{g.description}</p>
-                )}
-                <small style={{ color: 'var(--text-muted)' }}>
+                {g.description && <p className='groups-page__row-desc'>{g.description}</p>}
+                <small className='groups-page__row-meta'>
                   {g.member_count} members · governance: {g.governance_framework}
                 </small>
               </Link>

@@ -98,7 +98,17 @@
   padding-top: 0;
 
   @media (min-width: 630px) {
-    padding-top: 3rem;
+    padding-top: 3.5rem;
+  }
+}
+
+// When a KornerSubBar is present, give an extra row of headroom.
+body:has(.korner-sub-bar) {
+  @media (min-width: 630px) {
+    .columns-area,
+    .column {
+      padding-top: 6rem;
+    }
   }
 }
 
@@ -133,12 +143,14 @@
   }
 }
 
-// Sub-bar that appears when inside a /hub/<slug> route. Sits just below
-// the fixed top chrome; on mobile it shifts down further because the
-// HubSwitcher moves to the viewport bottom, freeing top real estate.
+// Sub-bar that appears when inside a /hub/<slug> route. Positioned
+// beneath the HubSwitcher on desktop (which sits at 0.75rem + ~2.5rem
+// height) so they stack vertically without fighting for centre-top.
+// On mobile the HubSwitcher becomes a bottom tab bar, so the sub-bar
+// can move back to the top-left.
 .korner-sub-bar {
   position: fixed;
-  top: 3rem;
+  top: 3.5rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 24;

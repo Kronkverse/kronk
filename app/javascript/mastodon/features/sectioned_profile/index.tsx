@@ -7,11 +7,12 @@ import { apiRequestGet } from 'mastodon/api';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
-import { importFetchedStatuses } from 'mastodon/actions/importer';
+import { importFetchedStatuses, importFetchedAccount } from 'mastodon/actions/importer';
 import { useAppDispatch } from 'mastodon/store';
 import Column from 'mastodon/components/column';
-import ColumnHeader from 'mastodon/components/column_header';
+import { ColumnBackButton } from 'mastodon/components/column_back_button';
 import StatusList from 'mastodon/components/status_list';
+import { AccountHeader } from 'mastodon/features/account_timeline/components/account_header';
 
 const messages = defineMessages({
   title: { id: 'sectioned_profile.title', defaultMessage: 'Profile' },
@@ -33,8 +34,6 @@ export const SectionedProfile = () => {
   const [sections, setSections] = useState<SectionWithStatuses[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // StatusList requires an onLoadMore handler prop but per-section
-  // pagination is deferred; supply a no-op so it renders read-only.
   const noopLoadMore = useCallback(() => undefined, []);
 
   useEffect(() => {
@@ -45,6 +44,9 @@ export const SectionedProfile = () => {
       try {
         const accountRes = await apiRequestGet<ApiAccountJSON>('v1/accounts/lookup', { acct });
         if (cancelled) return;
+
+        // Hydrate the account into Redux so AccountHeader can find it.
+        dispatch(importFetchedAccount(accountRes));
         setAccount(accountRes);
 
         const sectionList = await apiRequestGet<ApiProfileSectionJSON[]>(
@@ -67,7 +69,6 @@ export const SectionedProfile = () => {
             );
             if (cancelled) return;
 
-            // Push into Redux so <Status> can hydrate normally.
             dispatch(importFetchedStatuses(statuses));
 
             setSections((prev) =>
@@ -96,67 +97,52 @@ export const SectionedProfile = () => {
 
   return (
     <Column bindToDocument label={intl.formatMessage(messages.title)}>
-      <ColumnHeader
-        title={account?.display_name ?? acct ?? intl.formatMessage(messages.title)}
-        showBackButton
-      />
+      <ColumnBackButton />
 
-      <div className='scrollable' style={{ padding: '1rem' }}>
-        {error && (
-          <p style={{ color: 'var(--warning-red, tomato)' }}>
-            <FormattedMessage id='sectioned_profile.error' defaultMessage='Could not load profile.' />
-            {' '}
-            {error}
-          </p>
-        )}
+      <div className='scrollable sectioned-profile'>
+        {account && <AccountHeader accountId={account.id} />}
 
-        {!error && sections.length === 0 && (
-          <p style={{ color: 'var(--text-muted)' }}>
-            <FormattedMessage id='sectioned_profile.loading' defaultMessage='Loading…' />
-          </p>
-        )}
+        <div className='sectioned-profile__body'>
+          {error && (
+            <p className='sectioned-profile__error'>
+              <FormattedMessage id='sectioned_profile.error' defaultMessage='Could not load profile.' />
+              {' '}
+              {error}
+            </p>
+          )}
 
-        {sections.map((section) => (
-          <section
-            key={section.id}
-            style={{
-              marginBottom: '2rem',
-              padding: '1rem',
-              border: '1px solid var(--border-default)',
-              borderRadius: 'var(--radius-medium, 8px)',
-              background: 'var(--surface-elevated)',
-            }}
-          >
-            <header
-              style={{
-                display: 'flex',
-                gap: '0.5rem',
-                alignItems: 'baseline',
-                marginBottom: '0.75rem',
-              }}
-            >
-              <h3 style={{ margin: 0, color: 'var(--accent)' }}>
-                {section.title ?? section.section_type}
-              </h3>
-              <small style={{ color: 'var(--text-muted)' }}>{section.section_type}</small>
-            </header>
+          {!error && sections.length === 0 && (
+            <p className='sectioned-profile__loading'>
+              <FormattedMessage id='sectioned_profile.loading' defaultMessage='Loading…' />
+            </p>
+          )}
 
-            <StatusList
-              scrollKey={`sectioned_profile:${section.id}`}
-              statusIds={section.statusIds}
-              isLoading={section.loading}
-              hasMore={false}
-              onLoadMore={noopLoadMore}
-              timelineId={`sectioned_profile:${section.id}`}
-              emptyMessage={
-                <FormattedMessage
-                  id='sectioned_profile.empty'
-                  defaultMessage='Nothing here yet.'
-                />
-              }
-            />
-          </section>
-        ))}
+          {sections.map((section) => (
+            <section key={section.id} className='sectioned-profile__section'>
+              <header className='sectioned-profile__section-header'>
+                <h3 className='sectioned-profile__section-title'>
+                  {section.title ?? section.section_type}
+                </h3>
+                <small className='sectioned-profile__section-type'>{section.section_type}</small>
+              </header>
+
+              <StatusList
+                scrollKey={`sectioned_profile:${section.id}`}
+                statusIds={section.statusIds}
+                isLoading={section.loading}
+                hasMore={false}
+                onLoadMore={noopLoadMore}
+                timelineId={`sectioned_profile:${section.id}`}
+                emptyMessage={
+                  <FormattedMessage
+                    id='sectioned_profile.empty'
+                    defaultMessage='Nothing here yet.'
+                  />
+                }
+              />
+            </section>
+          ))}
+        </div>
       </div>
     </Column>
   );

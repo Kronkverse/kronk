@@ -20,6 +20,8 @@
 @use 'mastodon/nudges_activity';
 @use 'mastodon/korner_stub';
 @use 'mastodon/compose_kronk';
+@use 'mastodon/sectioned_profile';
+@use 'mastodon/groups';
 @use 'mastodon/polls';
 @use 'mastodon/modal';
 @use 'mastodon/emoji_picker';
