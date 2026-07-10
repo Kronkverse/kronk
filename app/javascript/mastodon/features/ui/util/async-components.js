@@ -332,6 +332,10 @@ export function KompassStub () {
   return import("../../korner_stub").then(m => ({ default: m.KompassStub }));
 }
 
+export function KornerSettings () {
+  return import("../../korner_settings");
+}
+
 export function Connections () {
   return import("../../connections");
 }

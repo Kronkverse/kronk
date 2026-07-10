@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 
 import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
+import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
@@ -54,28 +55,45 @@ const KornerCard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
     [korner.slug, saving, tunedIn],
   );
 
+  const stopClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
   return (
     <Link to={`/hub/${korner.slug}`} className='hub-page__card'>
-      <span className='hub-page__card-icon' aria-hidden='true'>
-        <Icon />
-      </span>
-      <div className='hub-page__card-body'>
-        <h3 className='hub-page__card-name'>{korner.name}</h3>
-        {teaser && <p className='hub-page__card-teaser'>{teaser}</p>}
+      <div className='hub-page__card-top'>
+        <span className='hub-page__card-icon' aria-hidden='true'>
+          <Icon />
+        </span>
+        <div className='hub-page__card-body'>
+          <h3 className='hub-page__card-name'>{korner.name}</h3>
+          {teaser && <p className='hub-page__card-teaser'>{teaser}</p>}
+        </div>
       </div>
-      <button
-        type='button'
-        onClick={toggleTuneIn}
-        className={`hub-page__card-tune ${tunedIn ? 'hub-page__card-tune--in' : 'hub-page__card-tune--out'}`}
-        aria-pressed={tunedIn}
-        title={tunedIn ? 'Tune out' : 'Tune in'}
-      >
-        {tunedIn ? (
-          <FormattedMessage id='hub.tuned_in' defaultMessage='Tuned in' />
-        ) : (
-          <FormattedMessage id='hub.tuned_out' defaultMessage='Tune in' />
-        )}
-      </button>
+      <div className='hub-page__card-footer'>
+        <Link
+          to={`/hub/${korner.slug}/settings`}
+          className='hub-page__card-settings-link'
+          onClick={stopClick}
+          aria-label={`Settings for ${korner.name}`}
+          title={`${korner.name} settings`}
+        >
+          <SettingsIcon />
+        </Link>
+        <button
+          type='button'
+          onClick={toggleTuneIn}
+          className={`hub-page__card-tune ${tunedIn ? 'hub-page__card-tune--in' : 'hub-page__card-tune--out'}`}
+          aria-pressed={tunedIn}
+          title={tunedIn ? 'Tune out' : 'Tune in'}
+        >
+          {tunedIn ? (
+            <FormattedMessage id='hub.tuned_in' defaultMessage='Tuned in' />
+          ) : (
+            <FormattedMessage id='hub.tuned_out' defaultMessage='Tune in' />
+          )}
+        </button>
+      </div>
     </Link>
   );
 };

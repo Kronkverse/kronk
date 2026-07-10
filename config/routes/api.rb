@@ -174,6 +174,10 @@ namespace :api, format: false do
         # out. Idempotent create/destroy so the button can toggle safely.
         post :tune_out, action: :tune_out
         delete :tune_out, action: :tune_in
+
+        # Per-korner user settings (spec §K).
+        get :settings, action: :settings_show
+        post :settings, action: :settings_update
       end
     end
     resources :kategories, only: [:index]

@@ -294,6 +294,9 @@ Rails.application.routes.draw do
   # tab (Feed / Profile / Hub).
   get '/hub', to: 'home#index'
 
+  # Per-korner settings pages (spec §K). Fall through to the SPA.
+  get '/hub/:slug/settings', to: 'home#index', constraints: { slug: /[a-z0-9-]+/ }
+
   # Kronk organisation space (§O) — served at /kronk/* from markdown
   # under content/kronk/. The wordmark in the app chrome links here.
   get '/kronk', to: 'kronk#show', defaults: { page: 'about' }

@@ -1,0 +1,196 @@
+// Per-korner settings space (spec §K). One page per korner at
+// /hub/<slug>/settings, framework-provided rows + manifest-declared
+// korner-specific settings.
+
+.korner-settings {
+  padding: 1.5rem;
+  max-width: 42rem;
+  margin: 0 auto;
+
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    margin-bottom: 1rem;
+    border-radius: 999px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+      fill: currentColor;
+    }
+
+    &:hover {
+      color: var(--kronk-purple-accent);
+      background: color-mix(in oklab, var(--kronk-purple-accent) 10%, transparent);
+    }
+  }
+
+  &__header {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  &__glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 12px;
+    background: var(--kronk-purple-accent);
+    color: var(--surface-primary);
+    box-shadow: 0 4px 12px -4px color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
+
+    svg {
+      width: 1.65rem;
+      height: 1.65rem;
+      fill: currentColor;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: 'Liberation Serif', Georgia, serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  &__subtitle {
+    margin: 0.15rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  &__error {
+    padding: 0.85rem 1rem;
+    border: 1px solid color-mix(in oklab, var(--warning-red, tomato) 40%, transparent);
+    border-radius: var(--radius-medium, 8px);
+    background: color-mix(in oklab, var(--warning-red, tomato) 10%, transparent);
+    color: var(--warning-red, tomato);
+    margin-bottom: 1rem;
+  }
+
+  &__loading {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  &__section {
+    margin-bottom: 2rem;
+    padding: 1.25rem 1.25rem 0.5rem;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    background: var(--surface-elevated);
+  }
+
+  &__section-title {
+    margin: 0 0 1rem;
+    color: var(--kronk-purple-accent);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  &__row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.65rem 0;
+    border-top: 1px solid color-mix(in oklab, var(--border-default) 60%, transparent);
+
+    &:first-of-type {
+      border-top: none;
+      padding-top: 0.15rem;
+    }
+
+    &--boolean {
+      flex-direction: row;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+
+      input[type='checkbox'] {
+        width: 1.2rem;
+        height: 1.2rem;
+        margin: 0;
+        accent-color: var(--kronk-purple-accent);
+      }
+    }
+
+    input[type='text'],
+    input[type='number'],
+    select {
+      padding: 0.5rem 0.75rem;
+      background: var(--surface-primary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-small, 6px);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+
+      &:focus {
+        border-color: var(--kronk-purple-accent);
+        outline: none;
+      }
+    }
+  }
+
+  &__label {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+
+  &__hint {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    flex-basis: 100%;
+    margin-left: calc(1.2rem + 0.75rem);
+  }
+
+  &__value-muted {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-style: italic;
+  }
+
+  &__save {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+
+    button {
+      padding: 0.6rem 1.75rem;
+      border: none;
+      border-radius: 999px;
+      background: var(--kronk-purple-accent);
+      color: var(--surface-primary);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px -4px color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
+      transition: transform 150ms ease-out, background 150ms ease-out;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
