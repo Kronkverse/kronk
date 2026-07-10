@@ -6,13 +6,24 @@
 # instance-layer files (privacy, terms, contact, rules) for their
 # deployment.
 
-require 'commonmarker'
+require 'redcarpet'
 
 class KronkController < ApplicationController
   layout 'application'
 
   CONTENT_ROOT = Rails.root.join('content', 'kronk').freeze
   PAGE_PATTERN = /\A[a-z0-9\-]+(?:\/[a-z0-9\-]+)?\z/
+
+  # Reused across requests — Redcarpet renderers are thread-safe once
+  # constructed. `safe_links_only` blocks javascript: URLs; markdown
+  # content itself is in-repo so we don't need `filter_html`.
+  MARKDOWN = Redcarpet::Markdown.new(
+    Redcarpet::Render::HTML.new(hard_wrap: false, safe_links_only: true, no_styles: true),
+    autolink: true,
+    fenced_code_blocks: true,
+    tables: true,
+    strikethrough: true
+  )
 
   before_action :set_page_key
   before_action :load_content
@@ -45,7 +56,7 @@ class KronkController < ApplicationController
   def render_markdown(raw)
     frontmatter, body = split_frontmatter(raw)
     title = frontmatter['title'] || @page_key.humanize
-    html  = Commonmarker.to_html(body, options: { render: { unsafe: false } })
+    html  = MARKDOWN.render(body.to_s)
     [title, html.html_safe]
   end
 
