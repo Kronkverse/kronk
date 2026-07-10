@@ -58,6 +58,13 @@ class Auth::RegistrationsController < Devise::RegistrationsController
     resource.sign_up_ip             = request.remote_ip
 
     resource.build_account if resource.account.nil?
+
+    # Kronk defaults for freshly-signed-up local accounts (Phase 11.4).
+    # Sign-ups get follower approval on by default. Applied here rather
+    # than as a model-level callback so internal + fabricator-created
+    # accounts (test seeds, staff bots, service accounts) keep the
+    # framework default of unlocked.
+    resource.account.locked = true if resource.account && !resource.account.locked
   end
 
   def configure_sign_up_params
