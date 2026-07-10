@@ -11,12 +11,15 @@ const messages = defineMessages({
   title: { id: 'groups.title', defaultMessage: 'Groups' },
 });
 
+type Scope = 'mine' | 'discoverable' | 'all';
+
 export const Groups = () => {
   const intl = useIntl();
   const [groups, setGroups] = useState<ApiGroupJSON[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [scope, setScope] = useState<Scope>('mine');
   const [form, setForm] = useState({
     slug: '',
     name: '',
@@ -25,10 +28,10 @@ export const Groups = () => {
     governance_framework: 'peer_support',
   });
 
-  const refetch = async () => {
+  const refetch = async (nextScope?: Scope) => {
     setLoading(true);
     try {
-      const data = await apiGetGroups({ limit: 40 });
+      const data = await apiGetGroups({ limit: 40, scope: nextScope ?? scope });
       setGroups(data);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
@@ -39,7 +42,8 @@ export const Groups = () => {
 
   useEffect(() => {
     void refetch();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scope]);
 
   const submitCreate = async () => {
     setError(null);
@@ -80,6 +84,34 @@ export const Groups = () => {
             defaultMessage='Groups are shareable multi-poster spaces. Seeders plant them; membership is opt-in. Choose a governance framework at creation to shape how structural changes get enacted.'
           />
         </p>
+
+        {/* Scope tabs — 'mine' shows the viewer's own groups (including
+            private ones); 'discoverable' shows the public discovery
+            listing; 'all' unions the two. */}
+        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem' }}>
+          {([
+            ['mine', 'My groups'],
+            ['discoverable', 'Discoverable'],
+            ['all', 'All'],
+          ] as [Scope, string][]).map(([value, label]) => (
+            <button
+              key={value}
+              type='button'
+              onClick={() => setScope(value)}
+              style={{
+                padding: '0.35rem 0.85rem',
+                borderRadius: 'var(--radius-round, 999px)',
+                border: value === scope ? 'none' : '1px solid var(--border-default)',
+                background: value === scope ? 'var(--accent)' : 'var(--surface-elevated)',
+                color: value === scope ? 'var(--surface-primary)' : 'var(--text-secondary)',
+                fontSize: '0.85rem',
+                cursor: value === scope ? 'default' : 'pointer',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
         <button
           type='button'

@@ -20,7 +20,22 @@ class Api::V1::GroupsController < Api::BaseController
   DEFAULT_LIMIT = 40
 
   def index
-    scope = Group.discoverable.order(:name).limit(limit_param(DEFAULT_LIMIT))
+    scope = case params[:scope]
+            when 'mine'
+              # Groups the viewer belongs to (member or seeder). Includes
+              # non-discoverable ones — private groups only surface here.
+              current_account.groups.reorder(:name)
+            when 'all'
+              # Discoverable + viewer's own, union'd. Useful for the Ӂ menu
+              # "Groups" surface where users want both.
+              discover = Group.discoverable
+              mine = current_account&.groups || Group.none
+              Group.where(id: discover.select(:id)).or(Group.where(id: mine.select(:id))).reorder(:name)
+            else
+              Group.discoverable.order(:name)
+            end
+
+    scope = scope.limit(limit_param(DEFAULT_LIMIT))
     scope = scope.where(Group.arel_table[:id].lt(params[:max_id])) if params[:max_id].present?
     scope = scope.where(Group.arel_table[:id].gt(params[:min_id])) if params[:min_id].present?
 

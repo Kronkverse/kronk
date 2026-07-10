@@ -15,8 +15,9 @@ export interface ApiGroupJSON {
   viewer_role: 'seeder' | 'member' | null;
 }
 
-export const apiGetGroups = (params: { max_id?: string; min_id?: string; limit?: number } = {}) =>
-  apiRequestGet<ApiGroupJSON[]>('v1/groups', params);
+export const apiGetGroups = (
+  params: { max_id?: string; min_id?: string; limit?: number; scope?: 'mine' | 'discoverable' | 'all' } = {},
+) => apiRequestGet<ApiGroupJSON[]>('v1/groups', params);
 
 export const apiGetGroup = (id: string) => apiRequestGet<ApiGroupJSON>(`v1/groups/${id}`);
 
