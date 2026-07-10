@@ -292,3 +292,7 @@ export function BoothSetPage () {
   return import("../../booth/booth_set_page");
 }
 
+export function ProfileSectionsSettings () {
+  return import("../../profile_sections_settings");
+}
+

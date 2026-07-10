@@ -98,6 +98,7 @@ import {
   QuestionPage,
   Booth,
   BoothSetPage,
+  ProfileSectionsSettings,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
 import { focusColumn, getFocusedItemIndex, focusItemSibling } from './util/focusUtils';
@@ -224,6 +225,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/huddle" component={Live} content={children} />}
             <WrappedRoute path={["/booth/sets/:id", "/hub/booth/sets/:id"]} component={BoothSetPage} content={children} />
             <WrappedRoute path={["/booth", "/hub/booth"]} component={Booth} content={children} />
+            {signedIn && <WrappedRoute path="/settings/profile_sections" component={ProfileSectionsSettings} content={children} />}
             {signedIn && <WrappedRoute path={["/kalendar/:id", "/hub/kalendar/:id"]} component={EventDetail} content={children} />}
             {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={Events} content={children} />}
             {signedIn && <WrappedRoute path={["/in-flow", "/hub/in-flow"]} component={InFlow} content={children} />}
