@@ -1,6 +1,11 @@
 import { useEffect, useCallback, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
 import { useAppDispatch } from 'mastodon/store';
 import {
   fetchProfileSections,
@@ -12,10 +17,57 @@ import {
   apiUpdateProfileSection,
 } from 'mastodon/api/profile_sections';
 import { apiRequestGet } from 'mastodon/api';
+import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
 import { useProfileSections } from 'mastodon/hooks/useProfileSections';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import Column from 'mastodon/components/column';
 import ColumnHeader from 'mastodon/components/column_header';
+
+// Draggable row wrapper — one section, drag handle on the left.
+const SortableSectionRow: React.FC<{
+  section: ApiProfileSectionJSON;
+  onToggleVisible: (id: string, visible: boolean) => void;
+  onRemove: (id: string) => void;
+}> = ({ section, onToggleVisible, onRemove }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.5rem 0.75rem',
+        border: '1px solid var(--border-default)',
+        borderRadius: 'var(--radius-medium, 8px)',
+        marginBottom: '0.5rem',
+        background: 'var(--surface-elevated)',
+        opacity: section.visible ? (isDragging ? 0.7 : 1) : 0.5,
+        cursor: 'default',
+      }}
+    >
+      <span
+        {...attributes}
+        {...listeners}
+        aria-label='Drag to reorder'
+        style={{ cursor: 'grab', padding: '0 0.4rem', color: 'var(--text-muted)', userSelect: 'none' }}
+      >
+        ⋮⋮
+      </span>
+      <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{section.section_type}</span>
+      <span style={{ flex: 1 }}>{section.title ?? '—'}</span>
+      <button type='button' onClick={() => onToggleVisible(section.id, section.visible)}>
+        {section.visible ? 'Hide' : 'Show'}
+      </button>
+      {section.section_type !== 'timeline' && (
+        <button type='button' onClick={() => onRemove(section.id)}>Remove</button>
+      )}
+    </li>
+  );
+};
 
 interface KategoryJSON {
   name: string;
@@ -39,21 +91,19 @@ export const ProfileSectionsSettings = () => {
     void dispatch(fetchProfileSections());
   }, [dispatch]);
 
-  const moveUp = useCallback(
-    (index: number) => {
-      if (index === 0) return;
-      const order = sections.map((s) => s.id);
-      [order[index - 1], order[index]] = [order[index], order[index - 1]];
-      void dispatch(reorderProfileSections({ order }));
-    },
-    [dispatch, sections],
-  );
+  // dnd-kit setup for drag-to-reorder.
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  const moveDown = useCallback(
-    (index: number) => {
-      if (index === sections.length - 1) return;
-      const order = sections.map((s) => s.id);
-      [order[index], order[index + 1]] = [order[index + 1], order[index]];
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+
+      const oldIndex = sections.findIndex((s) => s.id === active.id);
+      const newIndex = sections.findIndex((s) => s.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const order = arrayMove(sections, oldIndex, newIndex).map((s) => s.id);
       void dispatch(reorderProfileSections({ order }));
     },
     [dispatch, sections],
@@ -135,37 +185,24 @@ export const ProfileSectionsSettings = () => {
           </p>
         )}
 
-        <ol style={{ padding: 0, listStyle: 'none' }}>
-          {sections.map((s, i) => (
-            <li
-              key={s.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.5rem 0.75rem',
-                border: '1px solid var(--border-default)',
-                borderRadius: 'var(--radius-medium, 8px)',
-                marginBottom: '0.5rem',
-                background: 'var(--surface-elevated)',
-                opacity: s.visible ? 1 : 0.5,
-              }}
-            >
-              <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
-                {s.section_type}
-              </span>
-              <span style={{ flex: 1 }}>{s.title ?? '—'}</span>
-              <button type='button' onClick={() => moveUp(i)} disabled={i === 0}>↑</button>
-              <button type='button' onClick={() => moveDown(i)} disabled={i === sections.length - 1}>↓</button>
-              <button type='button' onClick={() => void toggleVisible(s.id, s.visible)}>
-                {s.visible ? 'Hide' : 'Show'}
-              </button>
-              {s.section_type !== 'timeline' && (
-                <button type='button' onClick={() => void remove(s.id)}>Remove</button>
-              )}
-            </li>
-          ))}
-        </ol>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+            <ol style={{ padding: 0, listStyle: 'none' }}>
+              {sections.map((s) => (
+                <SortableSectionRow
+                  key={s.id}
+                  section={s}
+                  onToggleVisible={(id, visible) => void toggleVisible(id, visible)}
+                  onRemove={(id) => void remove(id)}
+                />
+              ))}
+            </ol>
+          </SortableContext>
+        </DndContext>
 
         <h3 style={{ marginTop: '2rem', marginBottom: '0.5rem' }}>
           <FormattedMessage id='profile_sections.add_korner' defaultMessage='Add a korner section' />
