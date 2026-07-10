@@ -19,6 +19,7 @@ require_relative 'settings'
 require_relative 'statuses'
 require_relative 'upgrade'
 require_relative 'korners'
+require_relative 'kategories'
 
 module Mastodon::CLI
   class Main < Base
