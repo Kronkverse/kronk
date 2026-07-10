@@ -1,0 +1,76 @@
+# Huddle — live video sessions. Own korner, peer-connected to Kalendar
+# via events.huddle_session_id. Both can exist independently; the FK
+# is optional.
+#
+# See docs/kronk_korner_spec.md §Huddle and delta rollup I4.
+
+slug:            huddle
+name:            Huddle
+icon:            videocam
+render_target:   native
+version:         2.0.0            # split from Kalendar in the rebuild
+
+resources:
+  - name:    huddle_sessions
+    primary: true
+  - name:    huddle_participants
+
+storage:
+  db_namespace:  huddle_          # tables: huddle_sessions, huddle_participants
+  media_prefix:  spaces/huddle/
+
+feed_projection:
+  card:               huddle_card
+  title_from:         title
+  summary_from:       description
+  status_association: huddle_session          # framework: Status.has_one :huddle_session via status_id
+  links_to:           /hub/huddle/sessions/<id>
+  default_visibility: public
+
+notifications:
+  types:
+    - name:         huddle_starting
+      subject_type: huddle_session
+      default_push: true
+      aggregation:  none
+      interactive:  true                       # nudge — T-5min for scheduled sessions
+    - name:         huddle_participant_joined
+      subject_type: huddle_session
+      default_push: false                       # host-only, potentially noisy
+      aggregation:  { window: 5m, key: huddle_session_id }
+      interactive:  false                       # notice
+    - name:         huddle_ended
+      subject_type: huddle_session
+      default_push: false
+      aggregation:  none
+      interactive:  false
+
+settings:
+  - name:      auto_join_notifications
+    kind:      enum
+    options:   [always, if_scheduled, off]
+    default:   if_scheduled
+    scope:     user
+  - name:      notify_when_someone_joins_my_huddle
+    kind:      boolean
+    default:   true
+    scope:     user
+
+emits:
+  - huddle.started
+  - huddle.ended
+  - huddle.participant.joined
+
+listens:
+  - kalendar.event.created    # if a Kalendar event references a huddle_session_id,
+                              # Huddle can attach event metadata to the session
+
+hub_teaser:
+  static:  "Live rooms, open the door and drop in."
+
+launch:
+  blurb:  "Huddle — live video, when it makes sense to be in the room together."
+  cta:    "Peek in"
+
+enforced:        false          # backfill from event_type='huddle' + controllers land in 2.x
+federates:       false
