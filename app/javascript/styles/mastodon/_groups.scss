@@ -171,3 +171,135 @@
     }
   }
 }
+
+.group-detail {
+  padding: 1rem;
+
+  &__error {
+    color: var(--warning-red, tomato);
+  }
+
+  &__loading {
+    color: var(--text-muted);
+  }
+
+  &__header {
+    margin-bottom: 1rem;
+  }
+
+  &__slug {
+    color: var(--text-muted);
+  }
+
+  &__archived-badge {
+    margin-left: 0.5rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    background: var(--surface-elevated);
+    color: var(--text-muted);
+  }
+
+  &__description {
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+  }
+
+  &__meta {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.5rem 1rem;
+    margin-bottom: 1rem;
+
+    dt {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    dd {
+      margin: 0;
+      color: var(--text-primary);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+
+    button {
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-medium, 8px);
+      cursor: pointer;
+      font-weight: 500;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__btn-primary {
+    background: var(--kronk-purple-accent);
+    color: var(--surface-primary);
+    border: none;
+  }
+
+  &__btn-secondary {
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+  }
+
+  &__btn-danger {
+    background: var(--surface-elevated);
+    color: var(--text-muted);
+    border: 1px solid var(--border-default);
+  }
+
+  &__composer {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium, 8px);
+    background: var(--surface-elevated);
+
+    h3 {
+      margin-top: 0;
+      color: var(--kronk-purple-accent);
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      background: var(--surface-primary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-small, 6px);
+      color: var(--text-primary);
+    }
+
+    button {
+      padding: 0.4rem 1rem;
+      border: none;
+      border-radius: var(--radius-medium, 8px);
+      background: var(--kronk-purple-accent);
+      color: var(--surface-primary);
+      cursor: pointer;
+      font-weight: 500;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__timeline-heading {
+    margin: 1rem 0 0.5rem;
+    color: var(--kronk-purple-accent);
+  }
+}

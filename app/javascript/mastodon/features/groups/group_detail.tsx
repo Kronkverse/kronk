@@ -113,123 +113,87 @@ export const GroupDetail = () => {
 
   return (
     <Column bindToDocument label={intl.formatMessage(messages.title)}>
-      <ColumnHeader
-        title={group?.name ?? intl.formatMessage(messages.title)}
-        showBackButton
-      />
+      <ColumnHeader title={group?.name ?? intl.formatMessage(messages.title)} showBackButton />
 
-      <div className='scrollable' style={{ padding: '1rem' }}>
-        {error && <p style={{ color: 'var(--warning-red, tomato)' }}>{error}</p>}
+      <div className='scrollable group-detail'>
+        {error && <p className='group-detail__error'>{error}</p>}
 
         {!group && !error && (
-          <p style={{ color: 'var(--text-muted)' }}>
+          <p className='group-detail__loading'>
             <FormattedMessage id='groups.detail.loading' defaultMessage='Loading…' />
           </p>
         )}
 
         {group && (
           <>
-            <div style={{ marginBottom: '1rem' }}>
-              <small style={{ color: 'var(--text-muted)' }}>@{group.slug}</small>
-              {group.archived && (
-                <span
-                  style={{
-                    marginLeft: '0.5rem',
-                    padding: '0.15rem 0.5rem',
-                    borderRadius: 'var(--radius-round, 999px)',
-                    fontSize: '0.7rem',
-                    background: 'var(--surface-elevated)',
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  archived
-                </span>
-              )}
+            <div className='group-detail__header'>
+              <small className='group-detail__slug'>@{group.slug}</small>
+              {group.archived && <span className='group-detail__archived-badge'>archived</span>}
             </div>
 
-            {group.description && (
-              <p style={{ marginBottom: '1rem' }}>{group.description}</p>
-            )}
+            {group.description && <p className='group-detail__description'>{group.description}</p>}
 
-            <dl style={{ marginBottom: '1rem' }}>
-              <dt style={{ color: 'var(--text-muted)' }}>Members</dt>
-              <dd style={{ marginInlineStart: 0 }}>{group.member_count}</dd>
-              <dt style={{ color: 'var(--text-muted)' }}>Seeders</dt>
-              <dd style={{ marginInlineStart: 0 }}>{group.seeder_count}</dd>
-              <dt style={{ color: 'var(--text-muted)' }}>Governance</dt>
-              <dd style={{ marginInlineStart: 0 }}>
+            <dl className='group-detail__meta'>
+              <dt>Members</dt>
+              <dd>{group.member_count}</dd>
+              <dt>Seeders</dt>
+              <dd>{group.seeder_count}</dd>
+              <dt>Governance</dt>
+              <dd>
                 {group.governance_framework}
                 {group.governance_threshold ? ` (threshold ${group.governance_threshold})` : ''}
               </dd>
-              <dt style={{ color: 'var(--text-muted)' }}>Discoverable</dt>
-              <dd style={{ marginInlineStart: 0 }}>{group.discoverable ? 'yes' : 'no'}</dd>
+              <dt>Discoverable</dt>
+              <dd>{group.discoverable ? 'yes' : 'no'}</dd>
               {group.viewer_role && (
                 <>
-                  <dt style={{ color: 'var(--text-muted)' }}>Your role</dt>
-                  <dd style={{ marginInlineStart: 0 }}>{group.viewer_role}</dd>
+                  <dt>Your role</dt>
+                  <dd>{group.viewer_role}</dd>
                 </>
               )}
             </dl>
 
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+            <div className='group-detail__actions'>
               {!group.archived && !group.viewer_role && (
-                <button
-                  type='button'
-                  onClick={() => void doJoin()}
-                  disabled={busy}
-                  style={{ padding: '0.5rem 1rem', border: 'none', borderRadius: 'var(--radius-medium, 8px)', background: 'var(--accent)', color: 'var(--surface-primary)', cursor: 'pointer' }}
-                >
+                <button type='button' onClick={() => void doJoin()} disabled={busy} className='group-detail__btn-primary'>
                   <FormattedMessage id='groups.detail.join' defaultMessage='Join' />
                 </button>
               )}
 
               {group.viewer_role && !group.archived && (
-                <button
-                  type='button'
-                  onClick={() => void doLeave()}
-                  disabled={busy}
-                  style={{ padding: '0.5rem 1rem', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-medium, 8px)', background: 'var(--surface-elevated)', color: 'var(--text-primary)', cursor: 'pointer' }}
-                >
+                <button type='button' onClick={() => void doLeave()} disabled={busy} className='group-detail__btn-secondary'>
                   <FormattedMessage id='groups.detail.leave' defaultMessage='Leave' />
                 </button>
               )}
 
               {group.viewer_role === 'seeder' && !group.archived && (
-                <button
-                  type='button'
-                  onClick={() => void doArchive()}
-                  disabled={busy}
-                  style={{ padding: '0.5rem 1rem', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-medium, 8px)', background: 'var(--surface-elevated)', color: 'var(--text-muted)', cursor: 'pointer' }}
-                >
+                <button type='button' onClick={() => void doArchive()} disabled={busy} className='group-detail__btn-danger'>
                   <FormattedMessage id='groups.detail.archive' defaultMessage='Archive' />
                 </button>
               )}
             </div>
 
             {group.viewer_role && !group.archived && (
-              <div style={{ marginBottom: '1.5rem', padding: '1rem', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-medium, 8px)', background: 'var(--surface-elevated)' }}>
-                <h3 style={{ marginTop: 0 }}>
+              <div className='group-detail__composer'>
+                <h3>
                   <FormattedMessage id='groups.detail.post_here' defaultMessage='Post to this group' />
                 </h3>
                 <textarea
                   value={composerText}
                   onChange={(e) => setComposerText(e.target.value)}
                   rows={3}
-                  placeholder={intl.formatMessage({ id: 'groups.detail.composer_placeholder', defaultMessage: "What's happening in the group?" })}
-                  style={{ display: 'block', width: '100%', padding: '0.5rem', marginBottom: '0.5rem' }}
+                  placeholder={intl.formatMessage({
+                    id: 'groups.detail.composer_placeholder',
+                    defaultMessage: "What's happening in the group?",
+                  })}
                 />
-                <button
-                  type='button'
-                  onClick={() => void doPost()}
-                  disabled={busy || !composerText.trim()}
-                  style={{ padding: '0.4rem 1rem', border: 'none', borderRadius: 'var(--radius-medium, 8px)', background: 'var(--accent)', color: 'var(--surface-primary)', cursor: 'pointer' }}
-                >
+                <button type='button' onClick={() => void doPost()} disabled={busy || !composerText.trim()}>
                   <FormattedMessage id='groups.detail.post_send' defaultMessage='Post' />
                 </button>
               </div>
             )}
 
-            <h3>
+            <h3 className='group-detail__timeline-heading'>
               <FormattedMessage id='groups.detail.timeline' defaultMessage='Group timeline' />
             </h3>
             <StatusList
