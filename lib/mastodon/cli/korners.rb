@@ -19,12 +19,12 @@ module Mastodon
         say "Korner framework (Kronk v#{::Kronk::Version})"
         say ''
 
-        header_row = %w(slug planet enforced drift)
+        header_row = %w(slug version enforced drift)
         rows = ::Kronk::KornerRegistry.all.map do |manifest|
           drift = detect_drift(manifest)
           [
             manifest.slug,
-            manifest.planet.to_s,
+            manifest.version.to_s,
             manifest.enforced ? 'yes' : 'no',
             drift.any? ? drift.join('; ') : 'none',
           ]

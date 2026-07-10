@@ -9,6 +9,12 @@
 # never fails on manifest mismatch — the goal is to make drift visible in
 # the server log, not to wedge production.
 #
+# The parser tolerates both the shape shipped in 1.7.0 (security fields
+# at top-level, no notifications/settings/aesthetic blocks) and the fuller
+# shape defined in docs/kronk_korner_spec.md §1.1 (nested `security:`,
+# `notifications:`, `settings:`, `aesthetic:`, `hub_teaser:` blocks).
+# Missing blocks resolve to nil or empty arrays as appropriate.
+#
 # Companion JS-side registry:
 #   app/javascript/mastodon/components/korner_cards.tsx
 #
@@ -19,15 +25,64 @@ require 'yaml'
 module Kronk
   module KornerRegistry
     Manifest = Struct.new(
+      # Identity (§1.1)
       :slug,
       :name,
-      :planet,
-      :db_namespace,
+      :icon,
+      :render_target,
+      :version,
+      # Structure
+      :resources,
+      :storage,
+      :security,
+      :aesthetic,
+      :notifications,
+      :feed_projection,
+      :settings,
+      # Inter-korner (§6)
+      :emits,
+      :listens,
+      # Hub landing (§4.7)
+      :hub_teaser,
+      # Launch card (§8.7)
+      :launch,
+      # Deployment
+      :feature_flag,
       :enforced,
-      :status_association,
-      :status_post_type,
       keyword_init: true
-    )
+    ) do
+      def db_namespace
+        storage&.dig('db_namespace')
+      end
+
+      def media_prefix
+        storage&.dig('media_prefix')
+      end
+
+      def redis_prefix
+        storage&.dig('redis_prefix')
+      end
+
+      def status_association
+        feed_projection&.dig('status_association')&.to_sym
+      end
+
+      def status_post_type
+        feed_projection&.dig('status_post_type')
+      end
+
+      def maintainers
+        Array(security&.dig('maintainers'))
+      end
+
+      def visibility_scopes
+        Array(security&.dig('visibility_scopes'))
+      end
+
+      def federates?
+        security&.dig('federates') == true
+      end
+    end
 
     class << self
       def all
@@ -36,6 +91,10 @@ module Kronk
 
       def enforced
         all.select(&:enforced)
+      end
+
+      def find(slug)
+        all.find { |m| m.slug == slug.to_s }
       end
 
       def reload!
@@ -56,17 +115,55 @@ module Kronk
         return nil unless yaml.is_a?(Hash) && yaml['slug'].is_a?(String)
 
         Manifest.new(
-          slug: yaml['slug'],
-          name: yaml['name'],
-          planet: yaml['planet'],
-          db_namespace: yaml.dig('storage', 'db_namespace'),
-          enforced: yaml['enforced'] == true,
-          status_association: yaml.dig('feed_projection', 'status_association')&.to_sym,
-          status_post_type: yaml.dig('feed_projection', 'status_post_type')
+          slug:            yaml['slug'],
+          name:            yaml['name'],
+          icon:            yaml['icon'],
+          render_target:   yaml['render_target'],
+          version:         yaml['version'],
+          resources:       Array(yaml['resources']),
+          storage:         yaml['storage'].is_a?(Hash) ? yaml['storage'] : nil,
+          security:        extract_security(yaml),
+          aesthetic:       yaml['aesthetic'].is_a?(Hash) ? yaml['aesthetic'] : nil,
+          notifications:   extract_notification_types(yaml),
+          feed_projection: yaml['feed_projection'].is_a?(Hash) ? yaml['feed_projection'] : nil,
+          settings:        Array(yaml['settings']),
+          emits:           Array(yaml['emits']),
+          listens:         Array(yaml['listens']),
+          hub_teaser:      yaml['hub_teaser'].is_a?(Hash) ? yaml['hub_teaser'] : nil,
+          launch:          yaml['launch'].is_a?(Hash) ? yaml['launch'] : nil,
+          feature_flag:    yaml['feature_flag'],
+          enforced:        yaml['enforced'] == true
         )
       rescue => e
         Rails.logger.warn("[kronk:korner_registry] failed to parse #{path.basename}: #{e.message}")
         nil
+      end
+
+      # 1.7.0 shape places security fields at top-level (permissions,
+      # visibility_scopes, steward_role, federates). §1.1 nests them under
+      # `security:`. Prefer nested when present; otherwise synthesise the
+      # block from top-level fields so downstream code sees a uniform shape.
+      def extract_security(yaml)
+        return yaml['security'] if yaml['security'].is_a?(Hash)
+
+        maintainers = yaml['steward_role'].present? ? [yaml['steward_role']] : nil
+
+        {
+          'permissions'       => yaml['permissions'],
+          'visibility_scopes' => yaml['visibility_scopes'],
+          'maintainers'       => maintainers,
+          'federates'         => yaml['federates']
+        }.compact
+      end
+
+      # Notifications may arrive as either `notifications: [<type>, ...]`
+      # or `notifications: { types: [<type>, ...] }`. Normalise to a flat array.
+      def extract_notification_types(yaml)
+        raw = yaml['notifications']
+        return raw if raw.is_a?(Array)
+        return Array(raw['types']) if raw.is_a?(Hash)
+
+        []
       end
     end
   end
