@@ -186,6 +186,13 @@ namespace :api, format: false do
       resources :legacy, only: [:index], controller: :legacy_archive
     end
 
+    resources :groups, only: [:index, :show, :create, :update, :destroy] do
+      member do
+        post :join
+        post :leave
+      end
+    end
+
     resource :instance, only: [:show] do
       scope module: :instances do
         resources :peers, only: [:index]
