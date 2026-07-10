@@ -20,29 +20,20 @@ import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 const messages = defineMessages({
   title: { id: 'feed_settings.title', defaultMessage: 'Feed settings' },
   loading: { id: 'feed_settings.loading', defaultMessage: 'Loading…' },
+  scopeFriends: { id: 'feed_settings.scope.friends', defaultMessage: 'Friends' },
+  scopeFof: { id: 'feed_settings.scope.fof', defaultMessage: 'Friends of friends' },
+  scopeKommunity: { id: 'feed_settings.scope.kommunity', defaultMessage: 'Kommunity' },
+  scopeFriendsDesc: { id: 'feed_settings.scope.friends_desc', defaultMessage: 'Only accounts you follow.' },
+  scopeFofDesc: { id: 'feed_settings.scope.fof_desc', defaultMessage: 'Your follows, plus who they follow.' },
+  scopeKommunityDesc: { id: 'feed_settings.scope.kommunity_desc', defaultMessage: 'Everyone tuned in to your korners.' },
 });
 
 type Scope = 'friends' | 'friends_of_friends' | 'kommunity';
 
-const SCOPE_OPTIONS: { value: Scope; labelId: string; labelDefault: string; description: string }[] = [
-  {
-    value: 'friends',
-    labelId: 'feed_settings.scope.friends',
-    labelDefault: 'Friends',
-    description: 'Only accounts you follow.',
-  },
-  {
-    value: 'friends_of_friends',
-    labelId: 'feed_settings.scope.fof',
-    labelDefault: 'Friends of friends',
-    description: 'Your follows, plus who they follow.',
-  },
-  {
-    value: 'kommunity',
-    labelId: 'feed_settings.scope.kommunity',
-    labelDefault: 'Kommunity',
-    description: 'Everyone tuned in to your korners.',
-  },
+const SCOPE_OPTIONS: { value: Scope; label: keyof typeof messages; desc: keyof typeof messages }[] = [
+  { value: 'friends', label: 'scopeFriends', desc: 'scopeFriendsDesc' },
+  { value: 'friends_of_friends', label: 'scopeFof', desc: 'scopeFofDesc' },
+  { value: 'kommunity', label: 'scopeKommunity', desc: 'scopeKommunityDesc' },
 ];
 
 const KornerTuneRow: React.FC<{
@@ -197,9 +188,11 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColumn 
                 aria-pressed={scope === opt.value}
               >
                 <span className='feed-settings__scope-title'>
-                  {intl.formatMessage({ id: opt.labelId, defaultMessage: opt.labelDefault })}
+                  {intl.formatMessage(messages[opt.label])}
                 </span>
-                <span className='feed-settings__scope-desc'>{opt.description}</span>
+                <span className='feed-settings__scope-desc'>
+                  {intl.formatMessage(messages[opt.desc])}
+                </span>
               </button>
             ))}
           </div>
