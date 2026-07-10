@@ -5,7 +5,7 @@ slug:            kuestions
 name:            Kuestions        # rendered with Ƙ in nav
 icon:            question_mark
 render_target:   native
-version:         0.1.0
+version:         2.0.0            # rework: dedicated Question + Answer models + visibility gate
 
 permissions:
   - read:questions
@@ -13,13 +13,13 @@ permissions:
 
 resources:
   - name:    questions
-    primary: true                 # a question is a Status with post_type='question'
-  - name:    answers              # a Status with post_type='answer', in_reply_to a question
+    primary: true                 # Question model (v2): dedicated table, title + prompt + status_id
+  - name:    answers              # Answer model (v2): dedicated table, one row per (question, account)
 
 storage:
-  db_namespace:  # none — Kuestions rides entirely on Status.post_type and status thread structure.
-                 # This is the extreme end of the "how thin can a Korner be" spectrum:
-                 # no dedicated tables, discriminator is a single column on `statuses`.
+  db_namespace:  question_        # tables: questions, answers (v2). Legacy post_type-based rows on
+                                   # `statuses` continue to resolve during the transition; backfill
+                                   # walks them into questions/answers on migration.
   media_prefix:  # not-implemented
   redis_prefix:  # not-implemented
 
@@ -32,15 +32,26 @@ listens: []
 
 feed_projection:
   card:               question_card                # StatusQuestionCard, unified onto StatusKornerCard
-  title_from:         # inferred from status content — no separate title field
-  summary_from:       content                       # rendered HTML from Status.text
-  links_to:           /questions                   # implicit; §4 migration → /hub/kuestions
+  title_from:         title                        # Question#title (v2 model)
+  summary_from:       prompt                       # Question#prompt — the body text
+  links_to:           /hub/kuestions/<id>
   default_visibility: public
-  discriminator:      status.post_type IN ('question','answer')
 
-  status_post_type:   question       # framework: status.post_type value
-subscription:
-  default:  off                   # not-implemented
+  status_association: question       # framework: Status.has_one :question via status_id (§5.5)
+  status_post_type:   question       # legacy path; both resolve during the transition
+
+notifications:
+  types:
+    - name:         question_answered
+      subject_type: question
+      default_push: true
+      aggregation:  default
+      interactive:  true             # nudge — reply-able
+    - name:         answer_frothed
+      subject_type: answer
+      default_push: false
+      aggregation:  { window: 1h, key: answer_id }
+      interactive:  false            # notice — inline count in the answer's thread
 
 launch:
   blurb:  "Kuestions — ask, answer, unlock."
