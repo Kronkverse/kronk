@@ -124,7 +124,7 @@ class Api::V1::ProposalsController < Api::BaseController
       visibility: visibility,
       post_type: :proposal
     )
-    proposal.update_columns(discussion_status_id: feed_status.id)
+    proposal.update_columns(status_id: feed_status.id, discussion_status_id: feed_status.id)
   rescue => e
     Rails.logger.error("Failed to create feed status for proposal #{proposal.id}: #{e.message}")
   end

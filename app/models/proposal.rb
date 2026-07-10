@@ -5,8 +5,33 @@ class Proposal < ApplicationRecord
 
   belongs_to :created_by_account, class_name: 'Account'
   belongs_to :parent_proposal, class_name: 'Proposal', optional: true
-  belongs_to :discussion_status, class_name: 'Status', optional: true, inverse_of: :proposal
+  belongs_to :status, class_name: 'Status', optional: true, inverse_of: :proposal
   has_many :child_proposals, class_name: 'Proposal', foreign_key: :parent_proposal_id, dependent: :nullify, inverse_of: :parent_proposal
+
+  # Transitional dual-write. `discussion_status_id` is the pre-2.0.0
+  # column name; `status_id` is the canonical §5.5 name. Both attributes
+  # remain populated during the transition so serializers, mailers, and
+  # ActivityPub keep resolving. The old column is dropped in 2.1.0.
+  def discussion_status_id=(value)
+    super
+    write_attribute(:status_id, value) if has_attribute?(:status_id)
+  end
+
+  def status_id=(value)
+    super
+    write_attribute(:discussion_status_id, value) if has_attribute?(:discussion_status_id)
+  end
+
+  # Deprecated reader — new code uses `#status`. Kept for compat with
+  # ActivityPub serializers, existing view partials, and external callers
+  # for one release.
+  def discussion_status
+    status
+  end
+
+  def discussion_status_id
+    read_attribute(:discussion_status_id) || read_attribute(:status_id)
+  end
   has_many :proposal_votes, dependent: :destroy
   has_many :tasks, dependent: :destroy
   has_many :budget_items, dependent: :destroy

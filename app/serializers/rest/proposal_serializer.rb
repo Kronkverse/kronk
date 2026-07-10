@@ -3,7 +3,7 @@
 class REST::ProposalSerializer < ActiveModel::Serializer
   attributes :id, :title, :body, :summary, :status,
              :proposal_type, :categories,
-             :parent_proposal_id, :discussion_status_id,
+             :parent_proposal_id, :status_id, :discussion_status_id,
              :outcome_notes, :opens_at,
              :support_count, :veto_count, :participation_count,
              :created_at, :archived_at
@@ -12,6 +12,12 @@ class REST::ProposalSerializer < ActiveModel::Serializer
     object.parent_proposal_id&.to_s
   end
 
+  def status_id
+    object.status_id&.to_s
+  end
+
+  # Deprecated — mirrors status_id. Kept for one release so external
+  # clients that read discussion_status_id continue to resolve.
   def discussion_status_id
     object.discussion_status_id&.to_s
   end
