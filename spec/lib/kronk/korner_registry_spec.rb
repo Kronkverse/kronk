@@ -73,6 +73,24 @@ RSpec.describe Kronk::KornerRegistry do
     end
   end
 
+  describe '.reserved_slugs' do
+    it 'loads the reserved slug list from config/korners/reserved_slugs.yaml' do
+      slugs = described_class.reserved_slugs
+      expect(slugs).to include('hub', 'kronk', 'nudges', 'admin', 'settings', 'api')
+    end
+
+    it 'does not include reserved_slugs.yaml as a manifest' do
+      slugs = described_class.all.map(&:slug)
+      expect(slugs).to_not include('reserved_slugs')
+    end
+
+    it 'does not collide with any shipping manifest slug' do
+      manifest_slugs = described_class.all.map(&:slug)
+      overlap = manifest_slugs & described_class.reserved_slugs
+      expect(overlap).to be_empty, "manifests collide with reserved slugs: #{overlap}"
+    end
+  end
+
   describe 'deprecated ::Korners alias' do
     it 'resolves to Kronk::KornerRegistry' do
       expect(Korners).to equal(described_class)

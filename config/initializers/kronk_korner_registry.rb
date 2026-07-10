@@ -84,6 +84,8 @@ module Kronk
       end
     end
 
+    RESERVED_SLUGS_FILENAME = 'reserved_slugs.yaml'
+
     class << self
       def all
         @all ||= load_manifests
@@ -97,8 +99,13 @@ module Kronk
         all.find { |m| m.slug == slug.to_s }
       end
 
+      def reserved_slugs
+        @reserved_slugs ||= load_reserved_slugs
+      end
+
       def reload!
         @all = nil
+        @reserved_slugs = nil
       end
 
       private
@@ -107,7 +114,19 @@ module Kronk
         dir = Rails.root.join('config', 'korners')
         return [] unless dir.directory?
 
-        dir.glob('*.yaml').filter_map { |path| parse_manifest(path) }
+        dir.glob('*.yaml')
+           .reject { |path| path.basename.to_s == RESERVED_SLUGS_FILENAME }
+           .filter_map { |path| parse_manifest(path) }
+      end
+
+      def load_reserved_slugs
+        path = Rails.root.join('config', 'korners', RESERVED_SLUGS_FILENAME)
+        return [] unless path.file?
+
+        list = YAML.safe_load_file(path)
+        return [] unless list.is_a?(Array)
+
+        list.filter_map { |slug| slug.to_s.presence }
       end
 
       def parse_manifest(path)
@@ -177,6 +196,17 @@ Rails.application.config.after_initialize do
   next if Rails.env.test?
 
   begin
+    manifests = Kronk::KornerRegistry.all
+    reserved  = Kronk::KornerRegistry.reserved_slugs
+
+    manifests.map(&:slug).tally.each do |slug, count|
+      Rails.logger.warn("[kronk:korner_registry] slug '#{slug}' declared by #{count} manifests") if count > 1
+    end
+
+    manifests.each do |manifest|
+      Rails.logger.warn("[kronk:korner_registry:#{manifest.slug}] slug is reserved for platform use") if reserved.include?(manifest.slug)
+    end
+
     tables = ActiveRecord::Base.connection.tables
 
     Kronk::KornerRegistry.enforced.each do |manifest|

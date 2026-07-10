@@ -1,0 +1,44 @@
+# Slugs a korner cannot claim as its `slug:`. The boot validator warns
+# when a manifest's slug appears in this list or duplicates another
+# manifest's slug.
+#
+# See docs/kronk_korner_spec.md §4.4.
+
+# Platform surfaces
+- home
+- nudges
+- explore
+- search
+- tags
+- settings
+- admin
+
+# Kronk framework roots
+- hub
+- kronk
+- feed
+
+# Mastodon route stems (single-word top-level paths)
+- notifications
+- favourites
+- bookmarks
+- lists
+- filters
+- preferences
+- follow_requests
+- mutes
+- blocks
+- apps
+- invites
+- media
+- about
+- directory
+- terms
+- public
+- web
+- auth
+
+# Infra / protocol
+- api
+- oauth
+- .well-known
