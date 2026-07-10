@@ -6,5 +6,5 @@ import { createDataLoadingThunk } from 'mastodon/store/typed_functions';
 export const fetchKorners = createDataLoadingThunk(
   'korners/fetch',
   () => apiGetKorners(),
-  ([data]) => data ?? [],
+  (data) => data ?? [],
 );

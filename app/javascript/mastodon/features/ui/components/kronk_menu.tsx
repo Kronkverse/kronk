@@ -2,18 +2,15 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FormattedMessage } from 'react-intl';
 
-import { apiRequestGet } from 'mastodon/api';
-import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { useAppSelector } from 'mastodon/store';
-import { FeedScopePicker } from './feed_scope_picker';
 
 // Kronk's Ӂ menu — the floating action button that expands into a
-// radial cluster of the per-user actions (Profile, Settings, Post,
-// Search, Nudges). Placed bottom-right in the app chrome.
+// radial cluster of the per-user actions (spec: Profile, Settings,
+// Post, Search, Nudges). Placed bottom-right in the app chrome.
 //
-// Additive shell for Phase 12. The radial-open geometry, focus trap,
-// and keyboard shortcuts iterate on shadow. This ships the surface;
-// visual polish lands after visual verification.
+// Kept intentionally small; convenience routes (Explore, Groups,
+// Connections, etc.) live elsewhere in the chrome so this stays a
+// five-thumb affordance.
 
 interface KronkMenuProps {
   currentAccountUsername?: string;
@@ -21,36 +18,14 @@ interface KronkMenuProps {
 
 export const KronkMenu = ({ currentAccountUsername }: KronkMenuProps) => {
   const [open, setOpen] = useState(false);
-  const [followRequestCount, setFollowRequestCount] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Read unread nudges from Redux — bumped by incoming streaming
-  // events + fetchNotifications so the badge stays in sync without a
-  // dedicated poll.
   const unreadNudgesCount = useAppSelector(
     (state) => state.notificationGroups.unreadNudgeCount ?? 0,
   );
 
   const toggle = useCallback(() => setOpen((prev) => !prev), []);
   const close = useCallback(() => setOpen(false), []);
-
-  // Poll follow-request count on mount and when the menu opens. Kept
-  // lightweight — a single accounts list request, no reducer wiring.
-  useEffect(() => {
-    let cancelled = false;
-    const refresh = async () => {
-      try {
-        const accounts = await apiRequestGet<ApiAccountJSON[]>('v1/follow_requests', { limit: 40 });
-        if (!cancelled) setFollowRequestCount(accounts.length);
-      } catch {
-        // Silent — the badge is informational.
-      }
-    };
-    void refresh();
-    return () => {
-      cancelled = true;
-    };
-  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -73,8 +48,8 @@ export const KronkMenu = ({ currentAccountUsername }: KronkMenuProps) => {
         onClick={toggle}
       >
         <span aria-hidden='true'>Ӂ</span>
-        {(unreadNudgesCount + followRequestCount) > 0 && (
-          <span className='kronk-menu__badge'>{unreadNudgesCount + followRequestCount}</span>
+        {unreadNudgesCount > 0 && (
+          <span className='kronk-menu__badge'>{unreadNudgesCount}</span>
         )}
       </button>
 
@@ -83,8 +58,7 @@ export const KronkMenu = ({ currentAccountUsername }: KronkMenuProps) => {
           <Link className='kronk-menu__item' to={profilePath} role='menuitem' onClick={close}>
             <FormattedMessage id='kronk_menu.profile' defaultMessage='Profile' />
           </Link>
-          {/* /settings/preferences is Rails-served, not the SPA — <a> forces
-              a full navigation so the classic settings page loads. */}
+          {/* /settings/preferences is Rails-served — force a full nav. */}
           <a className='kronk-menu__item' href='/settings/preferences' role='menuitem' onClick={close}>
             <FormattedMessage id='kronk_menu.settings' defaultMessage='Settings' />
           </a>
@@ -94,46 +68,10 @@ export const KronkMenu = ({ currentAccountUsername }: KronkMenuProps) => {
           <Link className='kronk-menu__item' to='/search' role='menuitem' onClick={close}>
             <FormattedMessage id='kronk_menu.search' defaultMessage='Search' />
           </Link>
-          <Link className='kronk-menu__item' to='/explore' role='menuitem' onClick={close}>
-            <FormattedMessage id='kronk_menu.explore' defaultMessage='Explore' />
-          </Link>
-          <Link className='kronk-menu__item' to='/public/local' role='menuitem' onClick={close}>
-            <FormattedMessage id='kronk_menu.local' defaultMessage='Local timeline' />
-          </Link>
           <Link className='kronk-menu__item' to='/nudges' role='menuitem' onClick={close}>
             <FormattedMessage id='kronk_menu.nudges' defaultMessage='Nudges' />
             {unreadNudgesCount > 0 && <span className='kronk-menu__dot' aria-label={`${unreadNudgesCount} unread`} />}
           </Link>
-          <Link className='kronk-menu__item' to='/nudges/activity' role='menuitem' onClick={close}>
-            <FormattedMessage id='kronk_menu.activity' defaultMessage='Activity' />
-          </Link>
-          {currentAccountUsername && (
-            <Link
-              className='kronk-menu__item'
-              to={`/@${currentAccountUsername}/connections`}
-              role='menuitem'
-              onClick={close}
-            >
-              <FormattedMessage id='kronk_menu.connections' defaultMessage='Connections' />
-              {followRequestCount > 0 && (
-                <span className='kronk-menu__badge' aria-label={`${followRequestCount} follow requests`}>
-                  {followRequestCount}
-                </span>
-              )}
-            </Link>
-          )}
-          <Link className='kronk-menu__item' to='/settings/profile_sections' role='menuitem' onClick={close}>
-            <FormattedMessage id='kronk_menu.profile_sections' defaultMessage='Profile sections' />
-          </Link>
-          <Link className='kronk-menu__item' to='/hub/groups' role='menuitem' onClick={close}>
-            <FormattedMessage id='kronk_menu.groups' defaultMessage='Groups' />
-          </Link>
-          {/* /kronk/* is Rails-served, not SPA — force a full navigation. */}
-          <a className='kronk-menu__item' href='/kronk' role='menuitem' onClick={close}>
-            <FormattedMessage id='kronk_menu.about' defaultMessage='About Kronk' />
-          </a>
-
-          <FeedScopePicker />
         </div>
       )}
     </div>

@@ -102,6 +102,37 @@
   }
 }
 
+// Center the main timeline on the page. Classic Mastodon leaves the
+// timeline flush-left with a fixed right pane; Kronk chrome hides the
+// side nav and floats the Ӂ menu, so the main column should occupy
+// the middle rather than sit on the left. Applies only above the
+// mobile breakpoint.
+@media (min-width: 890px) {
+  .columns-area {
+    justify-content: center;
+  }
+
+  .columns-area__panels {
+    justify-content: center;
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .columns-area__panels__main {
+    width: 100%;
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  // Kronk chrome replaces the classic right-hand nav + trends pane;
+  // hide the whole panel so it doesn't offset the centre.
+  .columns-area__panels__pane--navigational {
+    display: none;
+  }
+}
+
 // Sub-bar that appears when inside a /hub/<slug> route. Sits just below
 // the fixed top chrome; on mobile it shifts down further because the
 // HubSwitcher moves to the viewport bottom, freeing top real estate.
