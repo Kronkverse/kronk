@@ -103,6 +103,8 @@ class Status < ApplicationRecord
   has_one :quote, inverse_of: :status, dependent: :destroy
   has_one :proposal, foreign_key: :status_id, dependent: :nullify, inverse_of: :status
   has_one :booth_set, foreign_key: :status_id, dependent: :nullify, inverse_of: :status
+  has_one :question, foreign_key: :status_id, dependent: :nullify, inverse_of: :status
+  has_one :answer, foreign_key: :status_id, dependent: :nullify, inverse_of: :status
 
   enum :post_type, { normal: 0, question: 1, answer: 2, proposal: 3 }, prefix: :kronk
 

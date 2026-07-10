@@ -86,5 +86,10 @@ module Account::Associations
     # membership carries no callbacks beyond timestamps.
     has_many :group_memberships, inverse_of: :account, dependent: :delete_all
     has_many :groups, through: :group_memberships
+
+    # Kuestions v2: an account has answers (one per question), and can
+    # be the creator of questions. Cascade delete on account destroy.
+    has_many :answers, inverse_of: :account, dependent: :delete_all
+    has_many :created_questions, class_name: 'Question', foreign_key: :created_by_account_id, dependent: :destroy, inverse_of: :created_by_account
   end
 end
