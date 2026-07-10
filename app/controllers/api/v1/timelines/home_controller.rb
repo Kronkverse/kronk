@@ -25,7 +25,9 @@ class Api::V1::Timelines::HomeController < Api::V1::Timelines::BaseController
   private
 
   def load_statuses
-    preloaded_home_statuses
+    # Kronk::TuneInGate is a no-op unless FeatureFlags.tune_in_enforced is set —
+    # keeps the read path unchanged until Phase 14 flips the flag.
+    Kronk::TuneInGate.filter(current_user&.account, preloaded_home_statuses)
   end
 
   def preloaded_home_statuses
