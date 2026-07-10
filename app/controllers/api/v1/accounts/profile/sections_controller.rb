@@ -13,8 +13,10 @@
 #                 manifest's feed_projection.status_association
 #   kategory   → statuses tagged with the section's curated Tag
 class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
-  before_action -> { doorkeeper_authorize! :read, :'read:accounts', :'read:statuses' }
+  before_action -> { authorize_if_got_token! :read, :'read:accounts', :'read:statuses' }
   before_action :set_account
+
+  skip_before_action :require_authenticated_user!
 
   DEFAULT_LIMIT = 20
 
