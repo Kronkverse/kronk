@@ -243,6 +243,29 @@ Rails.application.routes.draw do
   get '/in-flow/*path', to: 'home#index', format: false
   get '/market', to: 'home#index'
   get '/market/*path', to: 'home#index', format: false
+
+  # Korner framework — every korner mounts under /hub/<slug> per
+  # docs/kronk_korner_spec.md §4. Old top-level routes above stay live
+  # while the SPA client router is updated to prefer /hub/... paths;
+  # 301 redirects to the new paths land in a follow-up commit once the
+  # SPA handles the /hub/<slug>/... deep-link routes.
+  get '/hub/kommons', to: 'home#index'
+  get '/hub/kommons/*path', to: 'home#index', format: false
+  get '/hub/kuestions', to: 'home#index'
+  get '/hub/kuestions/*path', to: 'home#index', format: false
+  get '/hub/kalendar', to: 'kalendar#index'
+  get '/hub/kalendar/*path', to: 'kalendar#index', format: false
+  get '/hub/booth/sets/:id/embed', to: 'booth#embed'
+  get '/hub/booth/sets/:id', to: 'booth#show', constraints: { id: /\d+/ }
+  get '/hub/booth', to: 'booth#index'
+  get '/hub/booth/*path', to: 'booth#index', format: false
+  get '/hub/marketplace', to: 'home#index'
+  get '/hub/marketplace/*path', to: 'home#index', format: false
+  get '/hub/in-flow', to: 'home#index'
+  get '/hub/in-flow/*path', to: 'home#index', format: false
+  get '/hub/tree', to: 'home#index'
+  get '/hub/tree/*path', to: 'home#index', format: false
+
   draw(:web_app)
 
   get '/web/(*any)', to: redirect(path: '/%{any}', status: 302), as: :web, defaults: { any: '' }, format: false

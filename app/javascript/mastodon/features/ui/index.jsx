@@ -217,16 +217,16 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/explore' component={Explore} content={children} />
             <WrappedRoute path="/orbit" component={Orbit} content={children} />
             {signedIn && <WrappedRoute path="/huddle" component={Live} content={children} />}
-            <WrappedRoute path="/booth/sets/:id" component={BoothSetPage} content={children} />
-            <WrappedRoute path="/booth" component={Booth} content={children} />
-            {signedIn && <WrappedRoute path="/kalendar/:id" component={EventDetail} content={children} />}
-            {signedIn && <WrappedRoute path="/kalendar" component={Events} content={children} />}
-            {signedIn && <WrappedRoute path="/in-flow" component={InFlow} content={children} />}
+            <WrappedRoute path={["/booth/sets/:id", "/hub/booth/sets/:id"]} component={BoothSetPage} content={children} />
+            <WrappedRoute path={["/booth", "/hub/booth"]} component={Booth} content={children} />
+            {signedIn && <WrappedRoute path={["/kalendar/:id", "/hub/kalendar/:id"]} component={EventDetail} content={children} />}
+            {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={Events} content={children} />}
+            {signedIn && <WrappedRoute path={["/in-flow", "/hub/in-flow"]} component={InFlow} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/:accountId" component={NudgesThread} content={children} />}
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} />}
-            {signedIn && <WrappedRoute path="/governance" component={Governance} content={children} />}
-            {signedIn && <WrappedRoute path="/questions/:id" component={QuestionPage} content={children} />}
-            {signedIn && <WrappedRoute path="/questions" component={Questions} content={children} />}
+            {signedIn && <WrappedRoute path={["/governance", "/hub/kommons"]} component={Governance} content={children} />}
+            {signedIn && <WrappedRoute path={["/questions/:id", "/hub/kuestions/:id"]} component={QuestionPage} content={children} />}
+            {signedIn && <WrappedRoute path={["/questions", "/hub/kuestions"]} component={Questions} content={children} />}
             <WrappedRoute path='/search' component={Search} content={children} />
             <WrappedRoute path={['/publish', '/statuses/new']} component={Compose} content={children} />
 
