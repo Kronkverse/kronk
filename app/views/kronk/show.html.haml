@@ -1,0 +1,7 @@
+- content_for :header_tags do
+  %title= "#{@title} - Kronk"
+
+.kronk-org-page
+  %article.kronk-org-page__body
+    %h1= @title
+    != @body_html

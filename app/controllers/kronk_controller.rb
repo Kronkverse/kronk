@@ -1,0 +1,61 @@
+# frozen_string_literal: true
+
+# /kronk/* — the Kronk organisation space per spec §O. Serves markdown
+# pages from content/kronk/ with a plain Rails view wrapper. Content
+# is versioned in the repo; instance operators fork and edit the
+# instance-layer files (privacy, terms, contact, rules) for their
+# deployment.
+
+require 'commonmarker'
+
+class KronkController < ApplicationController
+  layout 'application'
+
+  CONTENT_ROOT = Rails.root.join('content', 'kronk').freeze
+  PAGE_PATTERN = /\A[a-z0-9\-]+(?:\/[a-z0-9\-]+)?\z/
+
+  before_action :set_page_key
+  before_action :load_content
+
+  def show; end
+
+  private
+
+  def set_page_key
+    @page_key = params[:page].presence || 'about'
+
+    return if PAGE_PATTERN.match?(@page_key)
+
+    @page_key = 'about'
+  end
+
+  def load_content
+    path = CONTENT_ROOT.join("#{@page_key}.md")
+
+    if path.file?
+      raw = path.read
+      @title, @body_html = render_markdown(raw)
+    else
+      @title = 'Page not found'
+      @body_html = "<p>No content at <code>/kronk/#{@page_key}</code> yet.</p>".html_safe
+      response.status = 404
+    end
+  end
+
+  def render_markdown(raw)
+    frontmatter, body = split_frontmatter(raw)
+    title = frontmatter['title'] || @page_key.humanize
+    html  = Commonmarker.to_html(body, options: { render: { unsafe: false } })
+    [title, html.html_safe]
+  end
+
+  # Optional YAML frontmatter: --- ... --- at the top of the file.
+  def split_frontmatter(raw)
+    return [{}, raw] unless raw.start_with?("---\n")
+
+    _, frontmatter, body = raw.split(/^---\s*$/, 3)
+    [YAML.safe_load(frontmatter.to_s) || {}, body.to_s]
+  rescue Psych::SyntaxError
+    [{}, raw]
+  end
+end

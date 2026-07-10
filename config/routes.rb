@@ -273,6 +273,11 @@ Rails.application.routes.draw do
   get '/hub/huddle', to: 'huddle#index'
   get '/hub/huddle/*path', to: 'huddle#index', format: false
 
+  # Kronk organisation space (§O) — served at /kronk/* from markdown
+  # under content/kronk/. The wordmark in the app chrome links here.
+  get '/kronk', to: 'kronk#show', defaults: { page: 'about' }
+  get '/kronk/:page', to: 'kronk#show', constraints: { page: /[a-z0-9\-]+(?:\/[a-z0-9\-]+)?/ }
+
   draw(:web_app)
 
   get '/web/(*any)', to: redirect(path: '/%{any}', status: 302), as: :web, defaults: { any: '' }, format: false
