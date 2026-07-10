@@ -45,4 +45,7 @@ export interface ApiKornerJSON {
   launch?: Record<string, unknown> | null;
   feature_flag?: string | null;
   enforced?: boolean;
+  // Populated by /api/v1/korners for the current viewer. Anonymous
+  // callers get `true`. Toggle via POST/DELETE /api/v1/korners/:slug/tune_out.
+  tuned_in?: boolean;
 }

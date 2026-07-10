@@ -99,4 +99,33 @@
     font-size: 0.9rem;
     line-height: 1.4;
   }
+
+  &__card-tune {
+    align-self: center;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-default);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
+
+    &:hover {
+      border-color: var(--kronk-purple-accent);
+      color: var(--text-primary);
+    }
+
+    &--in {
+      background: var(--kronk-purple-accent);
+      border-color: var(--kronk-purple-accent);
+      color: var(--surface-primary);
+
+      &:hover {
+        background: var(--kronk-purple-bright, var(--kronk-purple-accent));
+        color: var(--surface-primary);
+      }
+    }
+  }
 }

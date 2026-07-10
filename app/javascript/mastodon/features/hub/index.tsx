@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
@@ -6,6 +7,7 @@ import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { apiRequestPost, apiRequestDelete } from 'mastodon/api';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 
 // Hub landing page (spec §4). Grid of korner cards; every enforced,
@@ -24,6 +26,33 @@ const KornerCard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
     (korner.launch?.blurb as string | undefined) ??
     '';
 
+  const [tunedIn, setTunedIn] = useState(korner.tuned_in !== false);
+  const [saving, setSaving] = useState(false);
+
+  const toggleTuneIn = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (saving) return;
+      setSaving(true);
+      const next = !tunedIn;
+      setTunedIn(next);
+      try {
+        if (next) {
+          await apiRequestDelete(`v1/korners/${korner.slug}/tune_out`);
+        } else {
+          await apiRequestPost(`v1/korners/${korner.slug}/tune_out`, {});
+        }
+      } catch {
+        // Roll back on failure.
+        setTunedIn(!next);
+      } finally {
+        setSaving(false);
+      }
+    },
+    [korner.slug, saving, tunedIn],
+  );
+
   return (
     <Link to={`/hub/${korner.slug}`} className='hub-page__card'>
       <span className='hub-page__card-icon' aria-hidden='true'>
@@ -33,6 +62,19 @@ const KornerCard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
         <h3 className='hub-page__card-name'>{korner.name}</h3>
         {teaser && <p className='hub-page__card-teaser'>{teaser}</p>}
       </div>
+      <button
+        type='button'
+        onClick={toggleTuneIn}
+        className={`hub-page__card-tune ${tunedIn ? 'hub-page__card-tune--in' : 'hub-page__card-tune--out'}`}
+        aria-pressed={tunedIn}
+        title={tunedIn ? 'Tune out' : 'Tune in'}
+      >
+        {tunedIn ? (
+          <FormattedMessage id='hub.tuned_in' defaultMessage='Tuned in' />
+        ) : (
+          <FormattedMessage id='hub.tuned_out' defaultMessage='Tune in' />
+        )}
+      </button>
     </Link>
   );
 };

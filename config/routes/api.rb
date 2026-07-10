@@ -167,7 +167,14 @@ namespace :api, format: false do
 
     # Kronk-specific: korner manifest catalogue + kategories + hub order.
     # Under /api/v1/ so downstream apps (Android, iOS shell) hit stable v1 paths.
-    resources :korners, only: [:index, :show], constraints: { id: /[^\/]+/ }
+    resources :korners, only: [:index, :show], constraints: { id: /[^\/]+/ } do
+      member do
+        # Tune-out is per-account per-korner (spec §N.5). Present = tuned
+        # out. Idempotent create/destroy so the button can toggle safely.
+        post :tune_out, action: :tune_out
+        delete :tune_out, action: :tune_in
+      end
+    end
     resources :kategories, only: [:index]
 
     namespace :hub do
