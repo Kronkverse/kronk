@@ -8,7 +8,8 @@ import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars-fill.svg?re
 import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
+import { useKorner } from 'mastodon/hooks/useKorner';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 const messages = defineMessages({
   heading: { id: 'market.title', defaultMessage: 'Market' },
@@ -23,6 +24,8 @@ const messages = defineMessages({
 const Market: React.FC<{
   multiColumn: boolean;
 }> = ({ multiColumn }) => {
+  const korner = useKorner('marketplace');
+  const kornerIcon = useKornerIcon('marketplace');
   const intl = useIntl();
   const columnRef = useRef<ColumnRef>(null);
 
@@ -37,9 +40,9 @@ const Market: React.FC<{
       label={intl.formatMessage(messages.heading)}
     >
       <ColumnHeader
-        title={planetName('Market')}
+        title={korner?.name ?? 'Market'}
         icon='earth'
-        iconComponent={planetIcon('Market')}
+        iconComponent={kornerIcon}
         onClick={handleHeaderClick}
         multiColumn={multiColumn}
       />
@@ -48,7 +51,7 @@ const Market: React.FC<{
         className='scrollable'
         style={
           {
-            '--space-color': spaceColor('Market'),
+            '--space-color': 'var(--accent)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',

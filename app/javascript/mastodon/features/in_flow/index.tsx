@@ -1,8 +1,9 @@
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useKorner } from 'mastodon/hooks/useKorner';
 import { useCallback, useState } from 'react';
 
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { planetName, spaceColor } from 'mastodon/planets';
 
 import { OrbitIcon } from './components/celestial_icons';
 import { DarkStrand } from './components/dark_strand';
@@ -30,6 +31,8 @@ const StrandTabButton: React.FC<StrandTabButtonProps> = ({
   active,
   onSelect,
 }) => {
+  const korner = useKorner('in-flow');
+  const kornerIcon = useKornerIcon('in-flow');
   const handleClick = useCallback(() => {
     onSelect(tab);
   }, [tab, onSelect]);
@@ -50,7 +53,7 @@ export const InFlow: React.FC<Props> = ({ multiColumn }) => {
   return (
     <Column>
       <ColumnHeader
-        title={planetName('InFlow')}
+        title={korner?.name ?? 'InFlow'}
         icon='public'
         iconComponent={OrbitIcon}
         multiColumn={multiColumn}
@@ -58,7 +61,7 @@ export const InFlow: React.FC<Props> = ({ multiColumn }) => {
 
       <div
         className='in-flow scrollable'
-        style={{ '--space-color': spaceColor('InFlow') } as React.CSSProperties}
+        style={{ '--space-color': 'var(--accent)' } as React.CSSProperties}
       >
         <header className='in-flow__header'>
           <h1 className='in-flow__title'>In Flow</h1>

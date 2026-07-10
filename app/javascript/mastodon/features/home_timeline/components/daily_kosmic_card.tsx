@@ -1,10 +1,11 @@
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useKorner } from 'mastodon/hooks/useKorner';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useHistory } from 'react-router-dom';
 
 import { buildDailyIntegrationText } from 'mastodon/features/in_flow/components/daily_integration';
 import { getDailyObservable } from 'mastodon/features/in_flow/components/earth_calendar';
-import { spaceColor } from 'mastodon/planets';
 
 function getMelbourneMonthDay(): { month: number; day: number } {
   const fmt = new Intl.DateTimeFormat('en-AU', {
@@ -52,7 +53,7 @@ export const DailyKosmicCard: React.FC = () => {
   return (
     <button
       className='daily-kosmic-card'
-      style={{ '--space-color': spaceColor('InFlow') } as React.CSSProperties}
+      style={{ '--space-color': 'var(--accent)' } as React.CSSProperties}
       onClick={handleClick}
       type='button'
     >

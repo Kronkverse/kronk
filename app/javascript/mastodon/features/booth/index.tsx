@@ -11,7 +11,8 @@ import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { useIdentity } from 'mastodon/identity_context';
-import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
+import { useKorner } from 'mastodon/hooks/useKorner';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import { useBoothPlayback } from './booth_playback_context';
 import { BoothSetCard } from './components/booth_set_card';
@@ -41,6 +42,8 @@ const messages = defineMessages({
 });
 
 const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
+  const korner = useKorner('booth');
+  const kornerIcon = useKornerIcon('booth');
   const intl = useIntl();
   const columnRef = useRef<ColumnRef>(null);
   const { signedIn } = useIdentity();
@@ -246,16 +249,16 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
       label={intl.formatMessage(messages.heading)}
     >
       <ColumnHeader
-        title={planetName('Booth')}
+        title={korner?.name ?? 'Booth'}
         icon='headphones'
-        iconComponent={planetIcon('Booth')}
+        iconComponent={kornerIcon}
         onClick={handleHeaderClick}
         multiColumn={multiColumn}
       />
 
       <div
         className='booth scrollable'
-        style={{ '--space-color': spaceColor('Booth') } as React.CSSProperties}
+        style={{ '--space-color': 'var(--accent)' } as React.CSSProperties}
       >
         <section className='booth__hero'>
           <h1 className='booth__hero-title'>

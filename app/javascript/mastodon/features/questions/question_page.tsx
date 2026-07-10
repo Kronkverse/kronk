@@ -6,12 +6,15 @@ import { useHistory, useParams } from 'react-router-dom';
 import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
+import { useKorner } from 'mastodon/hooks/useKorner';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import { QuestionDetail } from './components/question_detail';
 import type { Question } from './types';
 
 const QuestionPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+  const korner = useKorner('kuestions');
+  const kornerIcon = useKornerIcon('kuestions');
   const { id } = useParams<{ id: string }>();
   const history = useHistory();
   const [question, setQuestion] = useState<Question | null>(null);
@@ -42,9 +45,9 @@ const QuestionPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
   const header = (
     <ColumnHeader
-      title={planetName('Questions')}
+      title={korner?.name ?? 'Questions'}
       icon='saturn'
-      iconComponent={planetIcon('Questions')}
+      iconComponent={kornerIcon}
       multiColumn={multiColumn}
     />
   );
@@ -56,7 +59,7 @@ const QuestionPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         <div
           className='questions-page'
           style={
-            { '--space-color': spaceColor('Questions') } as React.CSSProperties
+            { '--space-color': 'var(--accent)' } as React.CSSProperties
           }
         >
           <div className='questions-page__list'>
@@ -76,7 +79,7 @@ const QuestionPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       <div
         className='questions-page'
         style={
-          { '--space-color': spaceColor('Questions') } as React.CSSProperties
+          { '--space-color': 'var(--accent)' } as React.CSSProperties
         }
       >
         <div className='questions-page__list'>

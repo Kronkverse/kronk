@@ -1,3 +1,5 @@
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useKorner } from 'mastodon/hooks/useKorner';
 import { useEffect, useState, useCallback, useRef } from 'react';
 
 import { FormattedDate, FormattedTime, FormattedMessage } from 'react-intl';
@@ -18,7 +20,6 @@ import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
-import { spaceColor } from 'mastodon/planets';
 
 import { CreateEventForm } from './components/create_event_form';
 
@@ -354,7 +355,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       <div
         className='event-detail'
         style={
-          { '--space-color': spaceColor('Kalendar') } as React.CSSProperties
+          { '--space-color': 'var(--accent)' } as React.CSSProperties
         }
       >
         {event.image_url && (

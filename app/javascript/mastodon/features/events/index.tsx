@@ -7,7 +7,8 @@ import { Helmet } from 'react-helmet';
 import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
+import { useKorner } from 'mastodon/hooks/useKorner';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import { CreateEventForm } from './components/create_event_form';
 import { EventCalendar } from './components/event_calendar';
@@ -74,6 +75,8 @@ interface EventAccount {
 type FilterType = 'upcoming' | 'past' | 'mine' | 'invited';
 
 const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+  const korner = useKorner('kalendar');
+  const kornerIcon = useKornerIcon('kalendar');
   const intl = useIntl();
   const [events, setEvents] = useState<Event[]>([]);
   const [filter, setFilter] = useState<FilterType>('upcoming');
@@ -173,9 +176,9 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   return (
     <Column>
       <ColumnHeader
-        title={planetName('Kalendar')}
+        title={korner?.name ?? 'Kalendar'}
         icon='neptune'
-        iconComponent={planetIcon('Kalendar')}
+        iconComponent={kornerIcon}
         multiColumn={multiColumn}
       />
 
@@ -186,7 +189,7 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       <div
         className='events-page'
         style={
-          { '--space-color': spaceColor('Kalendar') } as React.CSSProperties
+          { '--space-color': 'var(--accent)' } as React.CSSProperties
         }
       >
         <section className='events-page__hero'>

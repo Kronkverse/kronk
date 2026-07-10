@@ -7,7 +7,8 @@ import { Helmet } from 'react-helmet';
 import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
+import { useKorner } from 'mastodon/hooks/useKorner';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import { QuestionCard } from './components/question_card';
 import { QuestionComposer } from './components/question_composer';
@@ -22,6 +23,8 @@ const messages = defineMessages({
 });
 
 const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+  const korner = useKorner('kuestions');
+  const kornerIcon = useKornerIcon('kuestions');
   const intl = useIntl();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,9 +61,9 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   return (
     <Column>
       <ColumnHeader
-        title={planetName('Questions')}
+        title={korner?.name ?? 'Questions'}
         icon='saturn'
-        iconComponent={planetIcon('Questions')}
+        iconComponent={kornerIcon}
         multiColumn={multiColumn}
       />
       <Helmet>
@@ -70,7 +73,7 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       <div
         className='questions-page'
         style={
-          { '--space-color': spaceColor('Questions') } as React.CSSProperties
+          { '--space-color': 'var(--accent)' } as React.CSSProperties
         }
       >
         <div className='questions-tab-nav'>

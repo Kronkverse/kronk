@@ -9,7 +9,8 @@ import api from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
-import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
+import { useKorner } from 'mastodon/hooks/useKorner';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import { ProposalCard } from './components/proposal_card';
 import { ProposalDetail } from './components/proposal_detail';
@@ -23,6 +24,8 @@ const messages = defineMessages({
 type FilterType = 'open' | 'vetoed' | 'delivered' | 'in_progress';
 
 const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+  const korner = useKorner('kommons');
+  const kornerIcon = useKornerIcon('kommons');
   const intl = useIntl();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [filter, _setFilter] = useState<FilterType>('open');
@@ -86,9 +89,9 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   return (
     <Column>
       <ColumnHeader
-        title={planetName('Kommons')}
-        icon='jupiter'
-        iconComponent={planetIcon('Kommons')}
+        title={korner?.name ?? 'Kommons'}
+        icon='kommons'
+        iconComponent={kornerIcon}
         multiColumn={multiColumn}
       />
 
@@ -96,12 +99,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      <div
-        className='governance-page'
-        style={
-          { '--space-color': spaceColor('Kommons') } as React.CSSProperties
-        }
-      >
+      <div className='governance-page'>
         {selectedId && selected ? (
           <ProposalDetail
             proposal={selected}

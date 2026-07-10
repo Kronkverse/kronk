@@ -15,7 +15,8 @@ import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { me, getAccessToken } from 'mastodon/initial_state';
-import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
+import { useKorner } from 'mastodon/hooks/useKorner';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({
@@ -41,7 +42,7 @@ interface JitsiApi {
 }
 
 const scrollableStyle: React.CSSProperties = {
-  '--space-color': spaceColor('Huddle'),
+  '--space-color': 'var(--accent)',
   display: 'flex',
   flexDirection: 'column',
   height: '100%',
@@ -181,6 +182,8 @@ const jitsiContainerStyle: React.CSSProperties = {
 const Live: React.FC<{
   multiColumn: boolean;
 }> = ({ multiColumn }) => {
+  const korner = useKorner('huddle');
+  const kornerIcon = useKornerIcon('huddle');
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const columnRef = useRef<ColumnRef>(null);
@@ -504,9 +507,9 @@ const Live: React.FC<{
       label={intl.formatMessage(messages.heading)}
     >
       <ColumnHeader
-        title={planetName('Huddle')}
+        title={korner?.name ?? 'Huddle'}
         icon='venus'
-        iconComponent={planetIcon('Huddle')}
+        iconComponent={kornerIcon}
         onClick={handleHeaderClick}
         multiColumn={multiColumn}
       />
