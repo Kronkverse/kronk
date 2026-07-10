@@ -66,6 +66,22 @@ export const KronkMenu = ({ currentAccountUsername, unreadNudgesCount = 0 }: Kro
             <FormattedMessage id='kronk_menu.nudges' defaultMessage='Nudges' />
             {unreadNudgesCount > 0 && <span className='kronk-menu__dot' aria-label={`${unreadNudgesCount} unread`} />}
           </Link>
+          {currentAccountUsername && (
+            <Link
+              className='kronk-menu__item'
+              to={`/@${currentAccountUsername}/connections`}
+              role='menuitem'
+              onClick={close}
+            >
+              <FormattedMessage id='kronk_menu.connections' defaultMessage='Connections' />
+            </Link>
+          )}
+          <Link className='kronk-menu__item' to='/hub/groups' role='menuitem' onClick={close}>
+            <FormattedMessage id='kronk_menu.groups' defaultMessage='Groups' />
+          </Link>
+          <Link className='kronk-menu__item' to='/kronk' role='menuitem' onClick={close}>
+            <FormattedMessage id='kronk_menu.about' defaultMessage='About Kronk' />
+          </Link>
         </div>
       )}
     </div>

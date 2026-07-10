@@ -648,8 +648,8 @@ class UI extends PureComponent {
               Additive: renders alongside the classic side nav until
               the layout wiring is verified on shadow. */}
           <KronkWordmark />
-          <HubSwitcher variant={layout === 'mobile' ? 'bottom' : 'top'} />
-          {this.props.identity.signedIn && <KronkMenu />}
+          <HubSwitcher variant={layout === 'mobile' ? 'bottom' : 'top'} currentAccountUsername={this.props.username} />
+          {this.props.identity.signedIn && <KronkMenu currentAccountUsername={this.props.username} />}
           {!disableHoverCards && <HoverCardController />}
           <HashtagMenuController />
           <PwaInstallPrompt />
