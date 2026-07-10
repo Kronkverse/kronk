@@ -56,4 +56,49 @@ RSpec.describe 'Korners' do
       expect(response.parsed_body).to include('slug' => 'in-flow')
     end
   end
+
+  describe 'POST /api/v1/korners/:slug/tune_out' do
+    let(:user) { Fabricate(:user) }
+    let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'write:accounts') }
+    let(:headers) { { 'Authorization' => "Bearer #{token.token}" } }
+
+    it 'creates a KornerTuneOut row for the current account' do
+      expect do
+        post tune_out_api_v1_korner_path(id: 'kommons'), headers: headers
+      end.to change { KornerTuneOut.where(account: user.account, korner_slug: 'kommons').count }.from(0).to(1)
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body).to include('tuned_in' => false, 'slug' => 'kommons')
+    end
+
+    it 'is idempotent — a second call is a no-op' do
+      user.account.tune_out!('kommons')
+
+      expect do
+        post tune_out_api_v1_korner_path(id: 'kommons'), headers: headers
+      end.not_to(change { KornerTuneOut.where(account: user.account, korner_slug: 'kommons').count })
+    end
+
+    it 'requires authentication' do
+      post tune_out_api_v1_korner_path(id: 'kommons')
+
+      expect(response).to have_http_status(401).or have_http_status(403)
+    end
+  end
+
+  describe 'DELETE /api/v1/korners/:slug/tune_out' do
+    let(:user) { Fabricate(:user) }
+    let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'write:accounts') }
+    let(:headers) { { 'Authorization' => "Bearer #{token.token}" } }
+
+    it 'removes the row and reports tuned_in true' do
+      user.account.tune_out!('kommons')
+
+      delete tune_out_api_v1_korner_path(id: 'kommons'), headers: headers
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body).to include('tuned_in' => true, 'slug' => 'kommons')
+      expect(KornerTuneOut.where(account: user.account, korner_slug: 'kommons')).to be_empty
+    end
+  end
 end
