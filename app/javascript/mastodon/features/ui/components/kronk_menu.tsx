@@ -4,6 +4,7 @@ import { FormattedMessage } from 'react-intl';
 
 import { apiRequestGet } from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+import { FeedScopePicker } from './feed_scope_picker';
 
 // Kronk's Ӂ menu — the floating action button that expands into a
 // radial cluster of the per-user actions (Profile, Settings, Post,
@@ -124,6 +125,8 @@ export const KronkMenu = ({ currentAccountUsername, unreadNudgesCount = 0 }: Kro
           <a className='kronk-menu__item' href='/kronk' role='menuitem' onClick={close}>
             <FormattedMessage id='kronk_menu.about' defaultMessage='About Kronk' />
           </a>
+
+          <FeedScopePicker />
         </div>
       )}
     </div>

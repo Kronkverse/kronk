@@ -271,3 +271,57 @@
     background: var(--kronk-purple-accent);
   }
 }
+
+// Feed scope: locked-to-three-values picker inside the Ӂ menu panel.
+// Sits under the item list so it doesn't compete for menuitem
+// keyboard-nav semantics.
+.feed-scope-picker {
+  padding: 0.5rem;
+  border-top: 1px solid var(--border-default);
+  margin-top: 0.35rem;
+
+  &__heading {
+    margin: 0 0 0.35rem;
+    padding: 0 0.15rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__options {
+    display: flex;
+    gap: 0.2rem;
+  }
+
+  &__option {
+    flex: 1;
+    padding: 0.35rem 0.45rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-small, 6px);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: background 100ms ease-out, color 100ms ease-out;
+
+    &:hover {
+      color: var(--text-primary);
+      background: var(--kronk-purple-deep);
+    }
+
+    &--active {
+      background: var(--kronk-purple-accent);
+      border-color: var(--kronk-purple-accent);
+      color: var(--surface-primary);
+
+      &:hover {
+        background: var(--kronk-purple-bright, var(--kronk-purple-accent));
+        color: var(--surface-primary);
+      }
+    }
+  }
+}

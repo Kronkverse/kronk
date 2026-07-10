@@ -60,6 +60,14 @@ class UserSettings
     setting :must_be_following_dm, default: false
   end
 
+  # Kronk feed scope: which slice of the network the home timeline pulls
+  # from. Locked to the three values from the mockup workshop
+  # (project_kronk_rebuild_new_korners). Persists here; the actual
+  # timeline gate lands behind Kronk::FeatureFlags.feed_scope_enforced.
+  namespace :kronk do
+    setting :feed_scope, default: 'kommunity', in: %w(friends friends_of_friends kommunity)
+  end
+
   def initialize(original_hash)
     @original_hash = original_hash || {}
   end
