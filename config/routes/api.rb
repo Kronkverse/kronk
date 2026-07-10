@@ -165,6 +165,15 @@ namespace :api, format: false do
       get :check_confirmation, to: 'confirmations#check'
     end
 
+    # Kronk-specific: korner manifest catalogue + kategories + hub order.
+    # Under /api/v1/ so downstream apps (Android, iOS shell) hit stable v1 paths.
+    resources :korners, only: [:index, :show], constraints: { id: /[^\/]+/ }
+    resources :kategories, only: [:index]
+
+    namespace :hub do
+      resource :order, only: [:show, :update, :destroy], controller: :orders
+    end
+
     resource :instance, only: [:show] do
       scope module: :instances do
         resources :peers, only: [:index]
@@ -386,12 +395,6 @@ namespace :api, format: false do
     resources :media, only: [:create]
     resources :suggestions, only: [:index]
     resource :instance, only: [:show]
-    resources :korners, only: [:index, :show], constraints: { id: /[^\/]+/ }
-    resources :kategories, only: [:index]
-
-    namespace :hub do
-      resource :order, only: [:show, :update, :destroy], controller: :orders
-    end
     resources :filters, only: [:index, :create, :show, :update, :destroy] do
       scope module: :filters do
         resources :keywords, only: [:index, :create]

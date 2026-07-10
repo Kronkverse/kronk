@@ -61,12 +61,13 @@ class KronkController < ApplicationController
   end
 
   # Optional YAML frontmatter: --- ... --- at the top of the file.
+  # `permitted_classes: [Date]` because content pages carry `updated: YYYY-MM-DD`.
   def split_frontmatter(raw)
     return [{}, raw] unless raw.start_with?("---\n")
 
     _, frontmatter, body = raw.split(/^---\s*$/, 3)
-    [YAML.safe_load(frontmatter.to_s) || {}, body.to_s]
-  rescue Psych::SyntaxError
+    [YAML.safe_load(frontmatter.to_s, permitted_classes: [Date]) || {}, body.to_s]
+  rescue Psych::SyntaxError, Psych::DisallowedClass
     [{}, raw]
   end
 end
