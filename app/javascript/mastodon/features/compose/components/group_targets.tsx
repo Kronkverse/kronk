@@ -62,29 +62,17 @@ export const GroupTargets = () => {
   const byId = new Map(available.map((g) => [g.id, g] as const));
 
   return (
-    <div className='compose-form__group-targets' style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', alignItems: 'center', padding: '0.25rem 0.5rem' }}>
+    <div className='compose-form__group-targets'>
       {selectedIds.map((id) => {
         const group = byId.get(id);
         return (
-          <span
-            key={id}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              padding: '0.15rem 0.55rem',
-              borderRadius: '999px',
-              background: 'var(--kronk-purple-deep)',
-              color: 'var(--kronk-purple-accent)',
-              fontSize: '0.85rem',
-            }}
-          >
+          <span key={id} className='compose-form__group-chip'>
             {group?.name ?? `#${id}`}
             <button
               type='button'
               onClick={() => removeGroup(id)}
               aria-label='Remove group target'
-              style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, marginLeft: '0.15rem' }}
+              className='compose-form__group-chip-remove'
             >
               ×
             </button>
@@ -95,15 +83,8 @@ export const GroupTargets = () => {
       <button
         type='button'
         onClick={() => setOpen((v) => !v)}
-        style={{
-          padding: '0.15rem 0.65rem',
-          borderRadius: '999px',
-          background: 'transparent',
-          border: '1px dashed var(--border-default)',
-          color: 'var(--text-secondary)',
-          fontSize: '0.85rem',
-          cursor: 'pointer',
-        }}
+        className='compose-form__group-target-toggle'
+        aria-expanded={open}
       >
         {selectedIds.size === 0 ? (
           <FormattedMessage id='compose.group_targets.add' defaultMessage='+ Post to group…' />
@@ -113,21 +94,9 @@ export const GroupTargets = () => {
       </button>
 
       {open && (
-        <div
-          role='menu'
-          style={{
-            position: 'absolute',
-            marginTop: '2rem',
-            padding: '0.35rem',
-            background: 'var(--surface-elevated)',
-            border: '1px solid var(--border-default)',
-            borderRadius: 'var(--radius-medium, 8px)',
-            minWidth: '14rem',
-            zIndex: 10,
-          }}
-        >
+        <div role='menu' className='compose-form__group-target-menu'>
           {available.length === 0 && (
-            <p style={{ margin: 0, padding: '0.5rem', color: 'var(--text-muted)' }}>
+            <p className='compose-form__group-target-empty'>
               <FormattedMessage id='compose.group_targets.none' defaultMessage='No groups yet.' />
             </p>
           )}
@@ -140,17 +109,7 @@ export const GroupTargets = () => {
                 role='menuitemcheckbox'
                 aria-checked={selected}
                 onClick={() => toggleGroup(g.id)}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  textAlign: 'left',
-                  padding: '0.4rem 0.6rem',
-                  background: selected ? 'var(--kronk-purple-deep)' : 'transparent',
-                  color: 'var(--text-primary)',
-                  border: 'none',
-                  borderRadius: 'var(--radius-small, 6px)',
-                  cursor: 'pointer',
-                }}
+                className={`compose-form__group-target-option ${selected ? 'compose-form__group-target-option--active' : ''}`}
               >
                 {selected ? '✓ ' : ''}
                 {g.name}
