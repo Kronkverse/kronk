@@ -1,8 +1,16 @@
 @use 'sass:color';
 @use 'functions' as *;
 @use 'variables' as *;
+@use 'tokens';
 
 :root {
+  --accent: var(--semantic-accent);
+
+  // Transitional alias — resolves the retired planet-derived
+  // `--space-color` to the shared Kronk accent while SCSS partials are
+  // swept. Remove after the sweep lands.
+  --space-color: var(--accent);
+
   --dropdown-border-color: #{lighten($ui-base-color, 4%)};
   --dropdown-background-color: #{rgba(darken($ui-base-color, 8%), 0.9)};
   --dropdown-shadow:
