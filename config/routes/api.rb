@@ -387,6 +387,7 @@ namespace :api, format: false do
     resources :suggestions, only: [:index]
     resource :instance, only: [:show]
     resources :korners, only: [:index, :show], constraints: { id: /[^\/]+/ }
+    resources :kategories, only: [:index]
 
     namespace :hub do
       resource :order, only: [:show, :update, :destroy], controller: :orders

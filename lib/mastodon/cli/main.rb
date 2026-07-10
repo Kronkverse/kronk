@@ -43,6 +43,9 @@ module Mastodon::CLI
     desc 'korners SUBCOMMAND ...ARGS', 'Inspect the Korner framework registry'
     subcommand 'korners', Korners
 
+    desc 'kategories SUBCOMMAND ...ARGS', 'Manage curated Kategories (§Kategories)'
+    subcommand 'kategories', Kategories
+
     desc 'statuses SUBCOMMAND ...ARGS', 'Manage statuses'
     subcommand 'statuses', Statuses
 
