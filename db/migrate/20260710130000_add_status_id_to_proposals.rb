@@ -7,8 +7,10 @@
 # the same unique/index constraints. The old `discussion_status_id`
 # column stays for one release as a deprecated alias, then drops in 2.1.
 class AddStatusIdToProposals < ActiveRecord::Migration[8.0]
+  disable_ddl_transaction!
+
   def up
-    add_column :proposals, :status_id, :bigint
+    add_column :proposals, :status_id, :bigint, if_not_exists: true
 
     # Strong_migrations can't inspect a raw execute; the UPDATE is
     # writing a bigint we just added, so it's safe.
@@ -17,14 +19,19 @@ class AddStatusIdToProposals < ActiveRecord::Migration[8.0]
         UPDATE proposals
         SET status_id = discussion_status_id
         WHERE discussion_status_id IS NOT NULL
+          AND status_id IS NULL
       SQL
     end
 
-    add_index :proposals, :status_id, unique: true, where: 'status_id IS NOT NULL'
+    add_index :proposals, :status_id,
+              unique: true,
+              algorithm: :concurrently,
+              where: 'status_id IS NOT NULL',
+              if_not_exists: true
   end
 
   def down
-    remove_index :proposals, :status_id
-    remove_column :proposals, :status_id
+    remove_index :proposals, :status_id, algorithm: :concurrently, if_exists: true
+    remove_column :proposals, :status_id, if_exists: true
   end
 end
