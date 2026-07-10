@@ -386,6 +386,7 @@ namespace :api, format: false do
     resources :media, only: [:create]
     resources :suggestions, only: [:index]
     resource :instance, only: [:show]
+    resources :korners, only: [:index, :show], constraints: { id: /[^\/]+/ }
     resources :filters, only: [:index, :create, :show, :update, :destroy] do
       scope module: :filters do
         resources :keywords, only: [:index, :create]
