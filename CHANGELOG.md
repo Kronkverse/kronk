@@ -2,6 +2,132 @@
 
 All notable changes to this project will be documented in this file.
 
+Kronk's own version numbers live in `lib/kronk/version.rb` and advance
+independently from the upstream Mastodon version. See docs/kronk_korner_spec.md.
+
+## Kronk
+
+### [2.0.0] - Unreleased — rebuild
+
+The 2.0.0 rebuild retires the planet metaphor, migrates every korner
+under `/hub/<slug>`, moves the notification bell to the Nudges chat
+surface, and lays the primitive layer (Kategories, Groups, Search)
+that 2.x new korners depend on.
+
+Ships as a single main-PR merge of the `rebuild/2.0.0` integration
+branch.
+
+#### Framework
+
+- `Kronk::FeatureFlags` — YAML-declared boolean gates
+- `Kronk::KornerRegistry` (renamed from `Korners`) with expanded
+  manifest struct + deprecated top-level alias
+- Reserved slugs list + boot-time collision + duplicate check
+- `GET /api/v1/korners` and `GET /api/v1/korners/:slug` public API
+- `bin/tootctl korners describe SLUG` and `doctor` subcommands
+- `Kronk::KornerEvents` — in-process pub/sub bus for §6
+  inter-korner communication
+- `Kronk::Url.hub_path` — canonical URL helper for mailers + shares
+
+#### Aesthetic
+
+- Retire the planet metaphor (`SPACE_PLANET`, `PLANET_COLORS`,
+  `spaceColor()`, `planetName()`, `planetIcon()`)
+- Design token pipeline: `tokens.yaml` + `bin/generate-tokens` +
+  generated `_tokens.scss`; CI checks generated files match source
+- Kronk-purple palette (5 tokens, dark+light variants) + semantic
+  `--accent`
+- SCSS sweep: 10 partials, 400+ refs migrated from `--space-color`
+  to `--accent`
+- `planets.tsx` shimmed as an accent-only compatibility layer
+
+#### URLs
+
+- Every korner mounts under `/hub/<slug>` per §4
+- 301 redirects from legacy top-level paths (`/governance`,
+  `/questions`, `/kalendar`, `/booth`, `/in-flow`, `/market`,
+  `/tree`) to their `/hub/<slug>` counterparts
+- Client router accepts both paths for backward compatibility
+
+#### Tune-in + Hub
+
+- `korner_tune_outs` implicit-default scheme (absence = tuned in;
+  no backfill for existing accounts)
+- `Kronk::TuneInCounts` — Redis-cached aggregate powering default
+  Hub ordering
+- `user_hub_orders` + `/api/v1/hub/order` REST endpoint
+- `Kronk::TuneInGate` — home timeline filter behind
+  `Kronk::FeatureFlags.tune_in_enforced?` (defaults off)
+
+#### Nudges
+
+- Notification::PROPERTIES gains `legacy: true` on every non-nudge
+  type + `Notification::LEGACY_TYPES` constant + `.legacy_archive`
+  scope
+- `Nudges::Aggregator` service — Signal-style rolling-window
+  grouping with manifest-driven window overrides
+- Kommons declares 5 notification types
+
+#### Status linkage (§5.5)
+
+- Canonical `status_id` column on `proposals` (renamed from
+  `discussion_status_id`) + `booth_sets` (renamed from
+  `shared_status_id`); dual-write compat + deprecated readers
+
+#### Primitives
+
+- Kategories: `curated:` flag on tags, 20 defaults seeded from
+  `config/kategory_defaults.yaml`, `/api/v1/kategories` API,
+  `bin/tootctl kategories seed` CLI
+- Groups foundation: `groups`, `group_memberships`,
+  `statuses_groups` tables + models with 5 governance frameworks
+- Search / Meilisearch adapter deferred (needs docker-compose infra)
+
+#### Per-korner rebuilds
+
+- Kuestions v2: dedicated `Question` + `Answer` models replacing
+  Status-polymorphism, `Kuestions::VisibilityGate` enforces
+  answer-before-view
+- Huddle korner split: `huddle_sessions` + `huddle_participants`
+  tables, own `/hub/huddle` URL, peer-linked to Kalendar via
+  `events.huddle_session_id` FK
+- InFlow: `kosmic_updates` model + `Scheduler::KosmicDailyScheduler`
+  posting one daily update
+- Marketplace greenfield: `listings`, `listing_photos`,
+  `listing_offers` tables built to spec §5 from day one
+- Tree: `enforced: false` manifest ships alongside the WIP code
+
+#### Org space + Profile
+
+- `/kronk/*` markdown-served org space per §O with 8 content files
+  (about, values, governance, contributors + privacy/terms/contact/
+  rules instance-layer stubs)
+- Follower approval on by default for new signups
+  (`accounts.locked` default flipped)
+
+#### Nav chrome (additive; visual polish on shadow)
+
+- `KronkWordmark`, `HubSwitcher`, `KronkMenu` components ship as
+  additive; existing side navigation stays live until shadow
+  verification
+
+#### 2.x new korner manifests (enforced: false)
+
+- Moments (ephemeral posts)
+- Albutts (shared albums, credit-forward)
+- Kompass (opt-in presence)
+
+#### Deferred to 2.0.x follow-up
+
+- Notifications folder rename + UI promotion + bell removal
+- Kuestions v2 data backfill task
+- Huddle Event.event_type retirement + backfill
+- Meilisearch search backend
+- Profile space UI rebuild
+- Nav-chrome layout wiring (components exist but not slotted yet)
+
+## Upstream Mastodon
+
 ## [4.5.9] - 2026-04-15
 
 ### Security
