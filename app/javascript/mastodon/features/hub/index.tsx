@@ -3,6 +3,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 
+import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
@@ -89,7 +90,7 @@ const Hub: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
   return (
     <Column>
-      <ColumnHeader title={intl.formatMessage(messages.title)} icon='hub' multiColumn={multiColumn} />
+      <ColumnHeader title={intl.formatMessage(messages.title)} icon='hub' iconComponent={ExploreIcon} multiColumn={multiColumn} />
 
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>

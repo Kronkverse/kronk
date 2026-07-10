@@ -3,6 +3,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 
+import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import { apiRequestGet } from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
@@ -123,7 +124,13 @@ export const NudgesActivity: React.FC<{ multiColumn?: boolean }> = ({ multiColum
 
   return (
     <Column bindToDocument label={intl.formatMessage(messages.title)}>
-      <ColumnHeader title={intl.formatMessage(messages.title)} icon='hub' showBackButton multiColumn={multiColumn} />
+      <ColumnHeader
+        title={intl.formatMessage(messages.title)}
+        icon='notifications'
+        iconComponent={NotificationsIcon}
+        showBackButton
+        multiColumn={multiColumn}
+      />
 
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
