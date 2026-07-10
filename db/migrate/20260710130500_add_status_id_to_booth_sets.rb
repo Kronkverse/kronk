@@ -10,11 +10,13 @@ class AddStatusIdToBoothSets < ActiveRecord::Migration[8.0]
   def up
     add_column :booth_sets, :status_id, :bigint
 
-    execute <<~SQL.squish
-      UPDATE booth_sets
-      SET status_id = shared_status_id
-      WHERE shared_status_id IS NOT NULL
-    SQL
+    safety_assured do
+      execute <<~SQL.squish
+        UPDATE booth_sets
+        SET status_id = shared_status_id
+        WHERE shared_status_id IS NOT NULL
+      SQL
+    end
 
     add_index :booth_sets,
               :status_id,

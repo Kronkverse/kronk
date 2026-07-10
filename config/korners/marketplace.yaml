@@ -23,7 +23,7 @@ resources:
 storage:
   db_namespace:  listing_          # tables: listings, listing_photos, listing_offers
   media_prefix:  spaces/marketplace/
-  redis_prefix:  marketplace:
+  redis_prefix:  "marketplace:"
 
 visibility_scopes:
   - public

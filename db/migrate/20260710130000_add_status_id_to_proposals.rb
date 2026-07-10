@@ -10,11 +10,15 @@ class AddStatusIdToProposals < ActiveRecord::Migration[8.0]
   def up
     add_column :proposals, :status_id, :bigint
 
-    execute <<~SQL.squish
-      UPDATE proposals
-      SET status_id = discussion_status_id
-      WHERE discussion_status_id IS NOT NULL
-    SQL
+    # Strong_migrations can't inspect a raw execute; the UPDATE is
+    # writing a bigint we just added, so it's safe.
+    safety_assured do
+      execute <<~SQL.squish
+        UPDATE proposals
+        SET status_id = discussion_status_id
+        WHERE discussion_status_id IS NOT NULL
+      SQL
+    end
 
     add_index :proposals, :status_id, unique: true, where: 'status_id IS NOT NULL'
   end

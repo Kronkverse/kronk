@@ -5,8 +5,11 @@
 # See docs/kronk_korner_spec.md §4.4.
 
 # Platform surfaces
+# NOTE: `nudges` is intentionally NOT reserved during the 2.0.0 transition
+# — the current shipping korner still owns that slug via nudges.yaml.
+# Once the Nudges cutover completes (task #30) and the manifest is
+# retired, `nudges` moves back into this list as a reserved platform stem.
 - home
-- nudges
 - explore
 - search
 - tags
