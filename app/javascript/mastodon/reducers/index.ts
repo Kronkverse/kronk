@@ -5,6 +5,7 @@ import { combineReducers } from 'redux-immutable';
 
 import { accountsReducer } from './accounts';
 import { accountsFamiliarFollowersReducer } from './accounts_familiar_followers';
+import { kornersReducer } from './korners';
 import { accountsMapReducer } from './accounts_map';
 import { alertsReducer } from './alerts';
 import announcements from './announcements';
@@ -57,6 +58,7 @@ const reducers = {
   accounts: accountsReducer,
   accounts_map: accountsMapReducer,
   accounts_familiar_followers: accountsFamiliarFollowersReducer,
+  korners: kornersReducer,
   statuses,
   relationships: relationshipsReducer,
   settings,

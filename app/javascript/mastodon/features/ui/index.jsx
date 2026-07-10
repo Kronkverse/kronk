@@ -11,6 +11,7 @@ import { connect } from 'react-redux';
 import { debounce } from 'lodash';
 
 import { focusApp, unfocusApp, changeLayout } from 'mastodon/actions/app';
+import { fetchKorners } from 'mastodon/actions/korners';
 import { synchronouslySubmitMarkers, submitMarkers, fetchMarkers } from 'mastodon/actions/markers';
 import { fetchNotifications } from 'mastodon/actions/notification_groups';
 import { INTRODUCTION_VERSION } from 'mastodon/actions/onboarding';
@@ -423,6 +424,10 @@ class UI extends PureComponent {
     if ('serviceWorker' in  navigator) {
       navigator.serviceWorker.addEventListener('message', this.handleServiceWorkerPostMessage);
     }
+
+    // Korner manifests are public — fetch unconditionally so /kronk,
+    // /hub, and unauthenticated feed cards have display data.
+    this.props.dispatch(fetchKorners());
 
     if (signedIn) {
       this.props.dispatch(fetchMarkers());
