@@ -80,3 +80,7 @@
       interval: 1 hour
       class: Scheduler::NatureObservationScheduler
       queue: scheduler
+    kosmic_daily_scheduler:
+      cron: '5 0 * * *'
+      class: Scheduler::KosmicDailyScheduler
+      queue: scheduler
