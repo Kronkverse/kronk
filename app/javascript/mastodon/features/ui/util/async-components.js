@@ -316,6 +316,10 @@ export function Hub () {
   return import("../../hub");
 }
 
+export function NudgesActivity () {
+  return import("../../nudges_activity");
+}
+
 export function Connections () {
   return import("../../connections");
 }

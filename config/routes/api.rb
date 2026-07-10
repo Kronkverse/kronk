@@ -191,6 +191,7 @@ namespace :api, format: false do
 
     namespace :nudges do
       resources :legacy, only: [:index], controller: :legacy_archive
+      resources :activity, only: [:index], controller: :activity
     end
 
     resources :groups, only: [:index, :show, :create, :update, :destroy] do

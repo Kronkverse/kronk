@@ -90,6 +90,9 @@ export const KronkMenu = ({ currentAccountUsername, unreadNudgesCount = 0 }: Kro
             <FormattedMessage id='kronk_menu.nudges' defaultMessage='Nudges' />
             {unreadNudgesCount > 0 && <span className='kronk-menu__dot' aria-label={`${unreadNudgesCount} unread`} />}
           </Link>
+          <Link className='kronk-menu__item' to='/nudges/activity' role='menuitem' onClick={close}>
+            <FormattedMessage id='kronk_menu.activity' defaultMessage='Activity' />
+          </Link>
           {currentAccountUsername && (
             <Link
               className='kronk-menu__item'
