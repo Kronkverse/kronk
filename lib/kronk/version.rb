@@ -19,18 +19,25 @@
 #   1.4.0  Booth (audio sets + share flow)
 #   1.5.0  InFlow (observation feature)
 #   1.6.0  Nudges (notification-style space)
-#   1.7.0  Korner Framework (this release) — manifest system, boot
-#          validator, shared card frame, transaction race fixes
+#   1.7.0  Korner Framework — manifest system, boot validator, shared
+#          card frame, transaction race fixes
+#   2.0.0  Rebuild — Korner framework v2, planet metaphor retired,
+#          Hub landing, Groups primitive, Nudges activity feed,
+#          org space, sectioned profile, tune-in gate.
+#
+# The rebuild ships from the long-lived `rebuild/2.0.0` integration
+# branch. Interim tips are marked `2.0.0-alpha.N`; `main` stays on the
+# 1.7.x line until the final PR flips the version and merges.
 module Kronk
   module Version
     module_function
 
     def to_s
-      '1.7.0'
+      '2.0.0-alpha.1'
     end
 
     def to_a
-      to_s.split('.').map(&:to_i)
+      to_s.split(/[.-]/).map { |part| Integer(part, exception: false) || part }
     end
   end
 end
