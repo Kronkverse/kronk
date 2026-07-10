@@ -1,9 +1,21 @@
 // Kronk chrome — wordmark, hub-switcher, and Ӂ-menu styling.
-// Additive alongside the existing side navigation while Phase 12 is
-// verified on shadow. Once the new chrome is proven, `_navigation_panel`
-// gets deprecated in a follow-up.
+// Phase 12 rebuild: classic Mastodon side nav is hidden below;
+// KronkWordmark + HubSwitcher + KronkMenu take over the navigation
+// surfaces.
+
+// Hide the classic side navigation. The new chrome (wordmark,
+// hub-switcher, Ӂ-menu) covers every affordance it provided.
+.navigation-panel,
+.tabs-bar,
+.tabs-bar__wrapper {
+  display: none !important;
+}
 
 .kronk-wordmark {
+  position: fixed;
+  top: 0.75rem;
+  left: 1rem;
+  z-index: 25;
   display: inline-flex;
   align-items: center;
   gap: 0.15em;
@@ -23,6 +35,11 @@
 }
 
 .hub-switcher {
+  position: fixed;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
   display: inline-flex;
   align-items: center;
   gap: 0.25em;
@@ -55,6 +72,9 @@
     // spans full width.
     position: fixed;
     inset: auto 0 0 0;
+    top: auto;
+    left: 0;
+    transform: none;
     justify-content: space-around;
     border-radius: 0;
     border-top: 1px solid var(--border-default);
@@ -65,6 +85,16 @@
       flex: 1;
       text-align: center;
     }
+  }
+}
+
+// Push the columns area down so the fixed top chrome doesn't overlap.
+.columns-area,
+.column {
+  padding-top: 0;
+
+  @media (min-width: 630px) {
+    padding-top: 3rem;
   }
 }
 

@@ -51,9 +51,11 @@ export const KronkMenu = ({ currentAccountUsername, unreadNudgesCount = 0 }: Kro
           <Link className='kronk-menu__item' to={profilePath} role='menuitem' onClick={close}>
             <FormattedMessage id='kronk_menu.profile' defaultMessage='Profile' />
           </Link>
-          <Link className='kronk-menu__item' to='/settings/preferences' role='menuitem' onClick={close}>
+          {/* /settings/preferences is Rails-served, not the SPA — <a> forces
+              a full navigation so the classic settings page loads. */}
+          <a className='kronk-menu__item' href='/settings/preferences' role='menuitem' onClick={close}>
             <FormattedMessage id='kronk_menu.settings' defaultMessage='Settings' />
-          </Link>
+          </a>
           <Link className='kronk-menu__item kronk-menu__item--post' to='/publish' role='menuitem' onClick={close}>
             <FormattedMessage id='kronk_menu.post' defaultMessage='Post' />
           </Link>
