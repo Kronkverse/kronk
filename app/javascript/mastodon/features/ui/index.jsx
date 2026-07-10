@@ -14,6 +14,7 @@ import { focusApp, unfocusApp, changeLayout } from 'mastodon/actions/app';
 import { fetchKorners } from 'mastodon/actions/korners';
 import { synchronouslySubmitMarkers, submitMarkers, fetchMarkers } from 'mastodon/actions/markers';
 import { fetchNotifications } from 'mastodon/actions/notification_groups';
+import { fetchProfileSections } from 'mastodon/actions/profile_sections';
 import { INTRODUCTION_VERSION } from 'mastodon/actions/onboarding';
 import { AlertsController } from 'mastodon/components/alerts_controller';
 import { Hotkeys } from 'mastodon/components/hotkeys';
@@ -434,6 +435,7 @@ class UI extends PureComponent {
       this.props.dispatch(expandHomeTimeline());
       this.props.dispatch(fetchNotifications());
       this.props.dispatch(fetchServerTranslationLanguages());
+      this.props.dispatch(fetchProfileSections());
 
       setTimeout(() => this.props.dispatch(fetchServer()), 3000);
     }
