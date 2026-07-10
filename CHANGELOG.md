@@ -105,11 +105,67 @@ branch.
 - Follower approval on by default for new signups
   (`accounts.locked` default flipped)
 
-#### Nav chrome (additive; visual polish on shadow)
+#### Nav chrome
 
-- `KronkWordmark`, `HubSwitcher`, `KronkMenu` components ship as
-  additive; existing side navigation stays live until shadow
-  verification
+- `KronkWordmark`, `HubSwitcher` (Feed / Profile / Hub), `KronkMenu`
+  (Ӂ floating action) become the primary navigation surfaces
+- Classic Mastodon side nav (`.navigation-panel`, `.tabs-bar`, bell)
+  hidden via `_kronk_chrome.scss`
+- `KornerSubBar` — back-to-Hub breadcrumb pill when inside a
+  `/hub/<slug>` route
+- Ӂ menu carries: Profile, Settings, Post, Search, Explore, Local,
+  Nudges, Activity, Connections (with follow-request badge), Profile
+  sections, Groups, About Kronk, Feed scope picker
+
+#### Hub + tune-in
+
+- Hub landing at `/hub` — grid of every enforced korner, ordered by
+  tune-in count (spec §4.7.1)
+- Per-card tune-out toggle wired to `POST/DELETE /api/v1/korners/:slug/tune_out`
+- KornerStub component covers 2.x korners (Moments/Albutts/Kompass)
+  reading their manifest launch blurb
+
+#### Composer
+
+- Multi-group targeting: `group_ids[]` on POST /api/v1/statuses;
+  chip-based group picker beneath the visibility dropdown
+- Curated Kategory chip picker: reads /api/v1/kategories and
+  auto-inserts `#tag` into the composer text
+
+#### Nudges Activity
+
+- `Nudges::Aggregator` wired into `/api/v1/nudges/activity`
+- `/nudges/activity` SPA page renders aggregated groups
+  ("3 froths on your post")
+- Activity tab in the Nudges tab strip + Ӂ menu
+
+#### Groups
+
+- `groups` korner manifest (enforced framework primitive)
+- `group.post.created` event bus emissions on both composer paths
+- Scope tabs on `/hub/groups` (mine / discoverable / all) — private
+  groups now surface
+- Group timeline via shared `StatusList`
+
+#### Feed scope
+
+- `kronk.feed_scope` user setting (Friends / FoF / Kommunity)
+- `/api/v1/kronk_settings` REST surface (show/update)
+- Picker mounted at bottom of Ӂ menu; timeline gate deferred behind
+  `Kronk::FeatureFlags.feed_scope_enforced`
+
+#### Doctor
+
+- `bin/tootctl korners doctor` flags orphan listeners (a manifest's
+  `listens:` entry with no matching `emits:` elsewhere)
+- Caught real drift on landing — Huddle listens for
+  `kalendar.event.created` but Kalendar hadn't declared the emit;
+  wired an after_create_commit + manifest declaration
+
+#### Version
+
+- Rebuild branch reports as `2.0.0-alpha.1`; final PR from
+  `rebuild/2.0.0` to `main` will land `2.0.0`
 
 #### 2.x new korner manifests (enforced: false)
 
