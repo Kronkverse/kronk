@@ -296,3 +296,7 @@ export function ProfileSectionsSettings () {
   return import("../../profile_sections_settings");
 }
 
+export function SectionedProfile () {
+  return import("../../sectioned_profile");
+}
+
