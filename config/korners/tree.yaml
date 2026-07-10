@@ -4,7 +4,6 @@
 
 slug:            tree
 name:            Tree
-planet:          jupiter           # shares with Kommons — Tree is described as an evolution of Kommons
 icon:            account_tree
 render_target:   native
 version:         0.1.0

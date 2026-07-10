@@ -3,7 +3,6 @@
 
 slug:            kuestions
 name:            Kuestions        # rendered with Ƙ in nav
-planet:          saturn
 icon:            question_mark
 render_target:   native
 version:         0.1.0

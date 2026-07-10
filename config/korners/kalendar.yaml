@@ -3,7 +3,6 @@
 
 slug:            kalendar
 name:            Kalendar
-planet:          neptune
 icon:            calendar_month
 render_target:   native
 version:         0.1.0

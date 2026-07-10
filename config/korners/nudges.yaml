@@ -3,7 +3,6 @@
 
 slug:            nudges
 name:            Nudges
-planet:          mercury          # shared with Feed — small/fast/messenger vibe fits the "nudge/prompt" semantic
 icon:            partner_exchange
 render_target:   native
 version:         0.1.0

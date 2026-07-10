@@ -3,7 +3,6 @@
 
 slug:            in-flow
 name:            In Flow
-planet:          uranus           # shared with Booth
 icon:            diversity_2
 render_target:   native
 version:         0.1.0

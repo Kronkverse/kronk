@@ -3,7 +3,6 @@
 
 slug:            marketplace
 name:            Marketplace
-planet:          pluto
 icon:            inventory_2
 render_target:   native
 version:         0.1.0

@@ -4,7 +4,6 @@
 
 slug:            kommons
 name:            Kommons          # rendered as ₭ommons in nav (unicode Kra)
-planet:          jupiter
 icon:            gavel            # material-icon; no dedicated 4096×2048 logo yet — TODO
 render_target:   native           # web-native React; §9 render_target semantics not enforced yet
 version:         0.1.0            # retrospective; predates the spec

@@ -4,7 +4,6 @@
 
 slug:            klot
 name:            Klot
-planet:          earth
 icon:            nights_stay
 render_target:   native
 version:         0.1.0

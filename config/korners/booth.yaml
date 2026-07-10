@@ -3,7 +3,6 @@
 
 slug:            booth
 name:            The Booth
-planet:          uranus           # shared with InFlow — the same planet may host multiple Korners
 icon:            headphones
 render_target:   native
 version:         0.1.0
