@@ -10,6 +10,9 @@
           %a{ href: "/kronk/#{key}",
               class: ['kronk-org-page__nav-link', ('kronk-org-page__nav-link--active' if key == @page_key)] }
             = key.humanize
+    - if user_signed_in?
+      %a.kronk-org-page__back-to-app{ href: '/home' }
+        &larr; Back to Kronk
 
   %article.kronk-org-page__body
     %h1= @title
