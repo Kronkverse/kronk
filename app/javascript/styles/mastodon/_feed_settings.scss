@@ -1,0 +1,226 @@
+// Feed settings surface (/home/settings). Sibling of KornerSettings but
+// for the framework's home feed. Scope picker + tune-in list.
+
+.feed-settings {
+  padding: 1.5rem;
+  max-width: 42rem;
+  margin: 0 auto;
+
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    margin-bottom: 1rem;
+    border-radius: 999px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+      fill: currentColor;
+    }
+
+    &:hover {
+      color: var(--kronk-purple-accent);
+      background: color-mix(in oklab, var(--kronk-purple-accent) 10%, transparent);
+    }
+  }
+
+  &__header {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  &__glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 12px;
+    background: var(--kronk-purple-accent);
+    color: var(--surface-primary);
+    box-shadow: 0 4px 12px -4px color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
+
+    svg {
+      width: 1.65rem;
+      height: 1.65rem;
+      fill: currentColor;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: 'Liberation Serif', Georgia, serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  &__subtitle {
+    margin: 0.15rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  &__error {
+    padding: 0.85rem 1rem;
+    border: 1px solid color-mix(in oklab, var(--warning-red, tomato) 40%, transparent);
+    border-radius: var(--radius-medium, 8px);
+    background: color-mix(in oklab, var(--warning-red, tomato) 10%, transparent);
+    color: var(--warning-red, tomato);
+    margin-bottom: 1rem;
+  }
+
+  &__loading {
+    color: var(--text-muted);
+    padding: 1rem;
+  }
+
+  &__section {
+    margin-bottom: 2rem;
+    padding: 1.25rem;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    background: var(--surface-elevated);
+  }
+
+  &__section-title {
+    margin: 0 0 0.4rem;
+    color: var(--kronk-purple-accent);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  &__section-hint {
+    margin: 0 0 1rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__scope-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__scope-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.9rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--border-default);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color 150ms ease-out,
+      background 150ms ease-out,
+      transform 150ms ease-out;
+
+    &:hover {
+      border-color: var(--kronk-purple-accent);
+      transform: translateY(-1px);
+    }
+
+    &--active {
+      border-color: var(--kronk-purple-accent);
+      background: color-mix(in oklab, var(--kronk-purple-accent) 12%, var(--surface-primary));
+      box-shadow: 0 2px 8px -4px color-mix(in oklab, var(--kronk-purple-accent) 50%, transparent);
+      cursor: default;
+    }
+  }
+
+  &__scope-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__scope-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  &__korner-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  &__korner-row {
+    display: flex;
+    gap: 0.85rem;
+    align-items: center;
+    padding: 0.75rem 0.85rem;
+    border-radius: 10px;
+    border: 1px solid var(--border-default);
+    background: var(--surface-primary);
+    cursor: pointer;
+    transition: border-color 150ms ease-out;
+
+    &:hover {
+      border-color: var(--kronk-purple-accent);
+    }
+
+    input[type='checkbox'] {
+      flex: 0 0 auto;
+      width: 1.2rem;
+      height: 1.2rem;
+      margin: 0;
+      accent-color: var(--kronk-purple-accent);
+    }
+  }
+
+  &__korner-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 10px;
+    background: color-mix(in oklab, var(--kronk-purple-accent) 20%, transparent);
+    color: var(--kronk-purple-accent);
+    flex: 0 0 auto;
+
+    svg {
+      width: 1.25rem;
+      height: 1.25rem;
+      fill: currentColor;
+    }
+  }
+
+  &__korner-body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  &__korner-name {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  &__korner-teaser {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

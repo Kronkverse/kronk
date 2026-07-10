@@ -110,6 +110,7 @@ import {
   AlbuttsStub,
   KompassStub,
   KornerSettings,
+  FeedSettings,
   Connections,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
@@ -208,7 +209,8 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/privacy-policy' component={PrivacyPolicy} content={children} />
             <WrappedRoute path='/terms-of-service/:date?' component={TermsOfService} content={children} />
 
-            <WrappedRoute path={['/home', '/timelines/home']} component={HomeTimeline} content={children} />
+            {signedIn && <WrappedRoute path='/home/settings' exact component={FeedSettings} content={children} />}
+            <WrappedRoute path={['/home', '/timelines/home']} exact component={HomeTimeline} content={children} />
             <Redirect from='/timelines/public' to='/public' exact />
             <Redirect from='/timelines/public/local' to='/public/local' exact />
             <WrappedRoute path='/public' exact component={Firehose} componentParams={{ feedType: 'public' }} content={children} />

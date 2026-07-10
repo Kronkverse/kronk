@@ -7,9 +7,11 @@ import classNames from 'classnames';
 import { Helmet } from 'react-helmet';
 
 import { connect } from 'react-redux';
+import { Link } from 'react-router-dom';
 
 import CampaignIcon from '@/material-icons/400-24px/campaign.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
+import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { SymbolLogo } from 'mastodon/components/logo';
 import { fetchAnnouncements, toggleShowAnnouncements } from 'mastodon/actions/announcements';
 import { IconWithBadge } from 'mastodon/components/icon_with_badge';
@@ -37,6 +39,7 @@ const messages = defineMessages({
   title: { id: 'column.home', defaultMessage: 'Home' },
   show_announcements: { id: 'home.show_announcements', defaultMessage: 'Show announcements' },
   hide_announcements: { id: 'home.hide_announcements', defaultMessage: 'Hide announcements' },
+  feedSettings: { id: 'home.feed_settings', defaultMessage: 'Feed settings' },
   tab_friends: { id: 'home.tab.friends', defaultMessage: 'Friends' },
   tab_fof: { id: 'home.tab.fof', defaultMessage: 'Friends of Friends' },
   tab_kommunity: { id: 'home.tab.kommunity', defaultMessage: '₭ommunity' },
@@ -189,6 +192,24 @@ class HomeTimeline extends PureComponent {
       );
     }
 
+    const feedSettingsButton = signedIn ? (
+      <Link
+        to='/home/settings'
+        className='column-header__button'
+        title={intl.formatMessage(messages.feedSettings)}
+        aria-label={intl.formatMessage(messages.feedSettings)}
+      >
+        <SettingsIcon />
+      </Link>
+    ) : null;
+
+    const extraButtons = (
+      <>
+        {announcementsButton}
+        {feedSettingsButton}
+      </>
+    );
+
     banners.push(<DailyKosmicCard key='daily-kosmic-card' />);
     banners.push(<LiveBanner key='live-banner' />);
     if (criticalUpdatesPending) {
@@ -222,7 +243,7 @@ class HomeTimeline extends PureComponent {
           onClick={this.handleHeaderClick}
           pinned={pinned}
           multiColumn={multiColumn}
-          extraButton={announcementsButton}
+          extraButton={extraButtons}
           appendContent={hasAnnouncements && showAnnouncements && <Announcements />}
         >
           <ColumnSettings />

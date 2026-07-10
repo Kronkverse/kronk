@@ -336,6 +336,10 @@ export function KornerSettings () {
   return import("../../korner_settings");
 }
 
+export function FeedSettings () {
+  return import("../../feed_settings");
+}
+
 export function Connections () {
   return import("../../connections");
 }

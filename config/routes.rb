@@ -240,6 +240,7 @@ Rails.application.routes.draw do
   get '/booth/sets/:id/embed', to: 'booth#embed', as: :embed_booth_set
   get '/booth/sets/:id', to: 'booth#show', as: :booth_set, constraints: { id: /\d+/ }
   get '/home', to: 'home#index'
+  get '/home/settings', to: 'home#index'
   get '/huddle', to: 'huddle#index'
   get '/nudges', to: 'home#index'
   get '/nudges/*path', to: 'home#index', format: false
