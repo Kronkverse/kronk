@@ -16,12 +16,21 @@ class Api::V1::KornersController < Api::BaseController
     # No shared cache when we're personalising the response with tune-in
     # state; without this every viewer would inherit the first cached body.
     tuned_out = tuned_out_slugs
-    render json: Kronk::KornerRegistry.all.map { |m| m.to_h.merge('tuned_in' => !tuned_out.include?(m.slug)) }
+    counts = Kronk::TuneInCounts.for_all_korners
+    render json: Kronk::KornerRegistry.all.map { |m|
+      m.to_h.merge(
+        'tuned_in' => !tuned_out.include?(m.slug),
+        'tune_in_count' => counts.fetch(m.slug, 0)
+      )
+    }
   end
 
   def show
     tuned_out = tuned_out_slugs
-    render json: @manifest.to_h.merge('tuned_in' => !tuned_out.include?(@manifest.slug))
+    render json: @manifest.to_h.merge(
+      'tuned_in' => !tuned_out.include?(@manifest.slug),
+      'tune_in_count' => Kronk::TuneInCounts.for_korner(@manifest.slug)
+    )
   end
 
   def tune_out

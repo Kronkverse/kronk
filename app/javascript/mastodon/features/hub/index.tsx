@@ -84,9 +84,15 @@ const Hub: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const korners = useAllKorners();
 
+  // Spec §4.7.1: default Hub order is most-tuned-in first. Ties break
+  // alphabetically so the grid is stable when many korners share a
+  // count (fresh instance before anyone's tuned out of anything).
   const listed = korners
     .filter((k) => k.enforced !== false)
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => {
+      const diff = (b.tune_in_count ?? 0) - (a.tune_in_count ?? 0);
+      return diff !== 0 ? diff : a.name.localeCompare(b.name);
+    });
 
   return (
     <Column>

@@ -48,4 +48,7 @@ export interface ApiKornerJSON {
   // Populated by /api/v1/korners for the current viewer. Anonymous
   // callers get `true`. Toggle via POST/DELETE /api/v1/korners/:slug/tune_out.
   tuned_in?: boolean;
+  // Aggregate number of accounts tuned in to this korner. Powers the
+  // default Hub grid ordering. See lib/kronk/tune_in_counts.rb.
+  tune_in_count?: number;
 }
