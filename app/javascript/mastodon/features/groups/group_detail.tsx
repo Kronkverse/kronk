@@ -1,9 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+import { List as ImmutableList } from 'immutable';
 
 import Column from 'mastodon/components/column';
 import ColumnHeader from 'mastodon/components/column_header';
+import StatusList from 'mastodon/components/status_list';
+import { importFetchedStatuses } from 'mastodon/actions/importer';
+import { useAppDispatch } from 'mastodon/store';
 import {
   apiGetGroup,
   apiJoinGroup,
@@ -13,7 +17,6 @@ import {
   apiPostGroupStatus,
 } from 'mastodon/api/groups';
 import type { ApiGroupJSON } from 'mastodon/api/groups';
-import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 
 const messages = defineMessages({
   title: { id: 'groups.detail.title', defaultMessage: 'Group' },
@@ -21,23 +24,30 @@ const messages = defineMessages({
 
 export const GroupDetail = () => {
   const intl = useIntl();
+  const dispatch = useAppDispatch();
   const { id } = useParams<{ id?: string }>();
   const [group, setGroup] = useState<ApiGroupJSON | null>(null);
-  const [statuses, setStatuses] = useState<ApiStatusJSON[]>([]);
+  const [statusIds, setStatusIds] = useState<ImmutableList<string>>(ImmutableList());
   const [composerText, setComposerText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const refetch = useCallback(async () => {
     if (!id) return;
     try {
       const [g, s] = await Promise.all([apiGetGroup(id), apiGetGroupStatuses(id, { limit: 20 })]);
       setGroup(g);
-      setStatuses(s);
+      dispatch(importFetchedStatuses(s));
+      setStatusIds(ImmutableList(s.map((st) => st.id)));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoading(false);
     }
-  }, [id]);
+  }, [id, dispatch]);
+
+  const noopLoadMore = useCallback(() => undefined, []);
 
   useEffect(() => {
     void refetch();
@@ -222,27 +232,17 @@ export const GroupDetail = () => {
             <h3>
               <FormattedMessage id='groups.detail.timeline' defaultMessage='Group timeline' />
             </h3>
-            {statuses.length === 0 && (
-              <p style={{ color: 'var(--text-muted)' }}>
+            <StatusList
+              scrollKey={`group_timeline:${group.id}`}
+              statusIds={statusIds}
+              isLoading={loading}
+              hasMore={false}
+              onLoadMore={noopLoadMore}
+              timelineId={`group_timeline:${group.id}`}
+              emptyMessage={
                 <FormattedMessage id='groups.detail.empty_timeline' defaultMessage='No posts yet.' />
-              </p>
-            )}
-            <ul style={{ padding: 0, listStyle: 'none' }}>
-              {statuses.map((s) => (
-                <li
-                  key={s.id}
-                  style={{
-                    padding: '0.75rem 0',
-                    borderTop: '1px solid var(--border-default)',
-                  }}
-                >
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    @{s.account?.acct} · {new Date(s.created_at).toLocaleString()}
-                  </div>
-                  <div dangerouslySetInnerHTML={{ __html: s.content }} />
-                </li>
-              ))}
-            </ul>
+              }
+            />
           </>
         )}
       </div>
