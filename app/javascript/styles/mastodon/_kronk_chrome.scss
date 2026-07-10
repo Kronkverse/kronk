@@ -1,0 +1,164 @@
+// Kronk chrome — wordmark, hub-switcher, and Ӂ-menu styling.
+// Additive alongside the existing side navigation while Phase 12 is
+// verified on shadow. Once the new chrome is proven, `_navigation_panel`
+// gets deprecated in a follow-up.
+
+.kronk-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15em;
+  padding: 0.5em 0.75em;
+  color: var(--kronk-purple-accent);
+  font-family: 'Liberation Serif', Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--kronk-purple-bright);
+    outline: none;
+  }
+}
+
+.hub-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round, 999px);
+  padding: 0.15em;
+
+  &__item {
+    padding: 0.4em 1em;
+    border-radius: var(--radius-round, 999px);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 150ms ease-out, background 150ms ease-out;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+
+    &--active {
+      background: var(--kronk-purple-accent);
+      color: var(--surface-primary);
+    }
+  }
+
+  &--bottom {
+    // Mobile bottom-tab-bar variant: fixed to viewport bottom,
+    // spans full width.
+    position: fixed;
+    inset: auto 0 0 0;
+    justify-content: space-around;
+    border-radius: 0;
+    border-top: 1px solid var(--border-default);
+    padding: 0.5em 0.25em env(safe-area-inset-bottom, 0);
+    z-index: 20;
+
+    .hub-switcher__item {
+      flex: 1;
+      text-align: center;
+    }
+  }
+}
+
+.kronk-menu {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 30;
+
+  &__trigger {
+    position: relative;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    border: none;
+    background: var(--kronk-purple-primary);
+    color: var(--surface-primary);
+    font-size: 1.75rem;
+    font-family: 'Liberation Serif', serif;
+    cursor: pointer;
+    box-shadow: var(--elevation-medium, 0 4px 16px rgb(0 0 0 / 50%));
+    transition: transform 150ms ease-out;
+
+    &:hover,
+    &:focus-visible {
+      transform: scale(1.05);
+      outline: none;
+    }
+  }
+
+  &--open &__trigger {
+    background: var(--kronk-purple-bright);
+  }
+
+  &__badge {
+    position: absolute;
+    top: -0.25rem;
+    right: -0.25rem;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: var(--kronk-purple-accent);
+    color: var(--kronk-purple-deep);
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__panel {
+    position: absolute;
+    bottom: calc(100% + 0.75rem);
+    right: 0;
+    min-width: 12rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium, 10px);
+    box-shadow: var(--elevation-high, 0 8px 32px rgb(0 0 0 / 60%));
+    padding: 0.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.75rem;
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: var(--radius-small, 6px);
+    font-size: 0.95rem;
+    transition: background 100ms ease-out;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--kronk-purple-deep);
+      outline: none;
+    }
+
+    &--post {
+      color: var(--kronk-purple-accent);
+      font-weight: 600;
+    }
+  }
+
+  &__dot {
+    margin-left: auto;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--kronk-purple-accent);
+  }
+}
