@@ -177,7 +177,7 @@ namespace :api, format: false do
     namespace :profile do
       resources :sections, only: [:index, :create, :update, :destroy] do
         collection do
-          patch :reorder
+          put :reorder
         end
       end
     end

@@ -1,4 +1,4 @@
-import { apiRequestGet, apiRequestPatch, apiRequestPost, apiRequestDelete } from 'mastodon/api';
+import { apiRequestGet, apiRequestPut, apiRequestPost, apiRequestDelete } from 'mastodon/api';
 
 export interface ApiProfileSectionJSON {
   id: string;
@@ -13,7 +13,7 @@ export const apiGetProfileSections = () =>
   apiRequestGet<ApiProfileSectionJSON[]>('v1/profile/sections');
 
 export const apiReorderProfileSections = (order: string[]) =>
-  apiRequestPatch<ApiProfileSectionJSON[]>('v1/profile/sections/reorder', { order });
+  apiRequestPut<ApiProfileSectionJSON[]>('v1/profile/sections/reorder', { order });
 
 export const apiCreateProfileSection = (params: {
   section_type: string;
@@ -25,7 +25,7 @@ export const apiUpdateProfileSection = (id: string, params: {
   title?: string | null;
   visible?: boolean;
   settings?: Record<string, unknown>;
-}) => apiRequestPatch<ApiProfileSectionJSON>(`v1/profile/sections/${id}`, params);
+}) => apiRequestPut<ApiProfileSectionJSON>(`v1/profile/sections/${id}`, params);
 
 export const apiDeleteProfileSection = (id: string) =>
   apiRequestDelete(`v1/profile/sections/${id}`);
