@@ -102,7 +102,7 @@ class Status < ApplicationRecord
   has_one :trend, class_name: 'StatusTrend', inverse_of: :status, dependent: nil
   has_one :quote, inverse_of: :status, dependent: :destroy
   has_one :proposal, foreign_key: :status_id, dependent: :nullify, inverse_of: :status
-  has_one :booth_set, foreign_key: :shared_status_id, dependent: :nullify, inverse_of: :shared_status
+  has_one :booth_set, foreign_key: :status_id, dependent: :nullify, inverse_of: :status
 
   enum :post_type, { normal: 0, question: 1, answer: 2, proposal: 3 }, prefix: :kronk
 

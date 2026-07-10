@@ -5,7 +5,28 @@ class BoothSet < ApplicationRecord
   belongs_to :event, optional: true
   belongs_to :audio_attachment, class_name: 'MediaAttachment', optional: true
   belongs_to :cover_attachment, class_name: 'MediaAttachment', optional: true
-    belongs_to :shared_status, class_name: 'Status', optional: true, inverse_of: :booth_set
+  belongs_to :status, class_name: 'Status', optional: true, inverse_of: :booth_set
+
+  # Transitional dual-write. `shared_status_id` is the pre-2.0.0 column;
+  # `status_id` is the canonical §5.5 column. Both stay populated during
+  # the transition; old column drops in 2.1.
+  def shared_status_id=(value)
+    super
+    write_attribute(:status_id, value) if has_attribute?(:status_id)
+  end
+
+  def status_id=(value)
+    super
+    write_attribute(:shared_status_id, value) if has_attribute?(:shared_status_id)
+  end
+
+  def shared_status
+    status
+  end
+
+  def shared_status_id
+    read_attribute(:shared_status_id) || read_attribute(:status_id)
+  end
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :artist_name, presence: true, length: { maximum: 200 }
