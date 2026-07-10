@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { useAppDispatch } from 'mastodon/store';
@@ -11,10 +11,15 @@ import {
   apiDeleteProfileSection,
   apiUpdateProfileSection,
 } from 'mastodon/api/profile_sections';
+import { apiRequestGet } from 'mastodon/api';
 import { useProfileSections } from 'mastodon/hooks/useProfileSections';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import Column from 'mastodon/components/column';
 import ColumnHeader from 'mastodon/components/column_header';
+
+interface KategoryJSON {
+  name: string;
+}
 
 const messages = defineMessages({
   title: { id: 'profile_sections.title', defaultMessage: 'Profile sections' },
@@ -76,6 +81,32 @@ export const ProfileSectionsSettings = () => {
         section_type: 'korner',
         title: name,
         settings: { korner_slug: slug },
+      });
+      refetch();
+    },
+    [refetch],
+  );
+
+  const [kategories, setKategories] = useState<KategoryJSON[]>([]);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const data = await apiRequestGet<KategoryJSON[]>('v1/kategories');
+        setKategories(data);
+      } catch {
+        // Kategories are optional — silent failure keeps the UI usable.
+      }
+    })();
+  }, []);
+
+  const addKategorySection = useCallback(
+    async (tagName: string) => {
+      const title = tagName.charAt(0).toUpperCase() + tagName.slice(1);
+      await apiCreateProfileSection({
+        section_type: 'kategory',
+        title,
+        settings: { tag_name: tagName },
       });
       refetch();
     },
@@ -159,6 +190,34 @@ export const ProfileSectionsSettings = () => {
                 + {k.name}
               </button>
             ))}
+        </div>
+
+        <h3 style={{ marginTop: '2rem', marginBottom: '0.5rem' }}>
+          <FormattedMessage id='profile_sections.add_kategory' defaultMessage='Add a kategory section' />
+        </h3>
+
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {kategories.map((k) => (
+            <button
+              key={k.name}
+              type='button'
+              onClick={() => void addKategorySection(k.name)}
+              style={{
+                padding: '0.4rem 0.8rem',
+                borderRadius: 'var(--radius-round, 999px)',
+                border: '1px solid var(--border-default)',
+                background: 'var(--surface-elevated)',
+                cursor: 'pointer',
+              }}
+            >
+              + #{k.name}
+            </button>
+          ))}
+          {kategories.length === 0 && (
+            <p style={{ color: 'var(--text-muted)' }}>
+              <FormattedMessage id='profile_sections.no_kategories' defaultMessage='No curated kategories seeded yet. Run bin/tootctl kategories seed on this instance.' />
+            </p>
+          )}
         </div>
       </div>
     </Column>
