@@ -4,7 +4,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
-import ViewAgendaIcon from '@/material-icons/400-24px/view_agenda.svg?react';
+import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { apiRequestGet, apiRequestPut, apiRequestPost, apiRequestDelete } from 'mastodon/api';
@@ -140,7 +140,7 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColumn 
       <ColumnHeader
         title={intl.formatMessage(messages.title)}
         icon='feed'
-        iconComponent={ViewAgendaIcon}
+        iconComponent={HomeIcon}
         multiColumn={multiColumn}
         showBackButton
       />
@@ -157,7 +157,7 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColumn 
 
         <header className='feed-settings__header'>
           <span className='feed-settings__glyph' aria-hidden='true'>
-            <ViewAgendaIcon />
+            <HomeIcon />
           </span>
           <div>
             <h1 className='feed-settings__title'>
