@@ -1,0 +1,48 @@
+// Shared placeholder for korners whose UI hasn't shipped yet.
+// Displays glyph + name + launch blurb + a "coming soon" line.
+
+.korner-stub {
+  padding: 3rem 1.5rem;
+  text-align: center;
+
+  &__glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background: var(--kronk-purple-primary);
+    color: var(--surface-primary);
+    margin-bottom: 1rem;
+
+    svg {
+      width: 2.25rem;
+      height: 2.25rem;
+      fill: currentColor;
+    }
+  }
+
+  &__title {
+    margin: 0 0 0.75rem;
+    color: var(--kronk-purple-accent);
+    font-family: 'Liberation Serif', Georgia, serif;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  &__blurb {
+    margin: 0 auto 1.5rem;
+    max-width: 32rem;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  &__pending {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-style: italic;
+  }
+}

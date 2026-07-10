@@ -320,6 +320,18 @@ export function NudgesActivity () {
   return import("../../nudges_activity");
 }
 
+export function MomentsStub () {
+  return import("../../korner_stub").then(m => ({ default: m.MomentsStub }));
+}
+
+export function AlbuttsStub () {
+  return import("../../korner_stub").then(m => ({ default: m.AlbuttsStub }));
+}
+
+export function KompassStub () {
+  return import("../../korner_stub").then(m => ({ default: m.KompassStub }));
+}
+
 export function Connections () {
   return import("../../connections");
 }

@@ -106,6 +106,9 @@ import {
   GroupDetail,
   Hub,
   NudgesActivity,
+  MomentsStub,
+  AlbuttsStub,
+  KompassStub,
   Connections,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
@@ -242,6 +245,9 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/hub/groups/:id" component={GroupDetail} content={children} />}
             {signedIn && <WrappedRoute path="/hub/groups" component={Groups} content={children} />}
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
+            <WrappedRoute path='/hub/moments' component={MomentsStub} content={children} />
+            <WrappedRoute path='/hub/albutts' component={AlbuttsStub} content={children} />
+            <WrappedRoute path='/hub/kompass' component={KompassStub} content={children} />
             <WrappedRoute path='/@:acct/connections' exact component={Connections} content={children} />
             {signedIn && <WrappedRoute path="/nudges/activity" component={NudgesActivity} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/:accountId" component={NudgesThread} content={children} />}
