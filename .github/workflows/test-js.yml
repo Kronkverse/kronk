@@ -39,5 +39,8 @@ jobs:
       - name: Set up Javascript environment
         uses: ./.github/actions/setup-javascript
 
+      - name: Verify tokens.scss matches tokens.yaml
+        run: bin/generate-tokens --check
+
       - name: JavaScript testing
         run: yarn test:js
