@@ -46,6 +46,52 @@ module Mastodon
         say "#{rows.length} registered · #{rows.count { |r| r[2] == 'yes' }} enforced · #{drifty} with drift"
       end
 
+      desc 'describe SLUG', 'Dump a Korner manifest as YAML'
+      long_desc <<~LONG # rubocop:disable I18n/RailsI18n/DecorateString
+        Prints the parsed manifest for the given SLUG. Structural blocks
+        (storage, security, feed_projection, etc.) render as nested YAML.
+
+        Exits non-zero when no manifest matches SLUG.
+      LONG
+      def describe(slug)
+        Rails.application.eager_load!
+        manifest = ::Kronk::KornerRegistry.find(slug)
+
+        if manifest.nil?
+          say "No manifest found for slug '#{slug}'."
+          exit(1)
+        end
+
+        say YAML.dump(manifest.to_h.transform_keys(&:to_s))
+      end
+
+      desc 'doctor', 'Run the boot validator synchronously against every enforced manifest'
+      long_desc <<~LONG # rubocop:disable I18n/RailsI18n/DecorateString
+        Runs every check the boot-time validator would run (duplicate slug,
+        reserved slug collision, missing DB tables, missing Status
+        associations) and prints a summary.
+
+        Exits non-zero when any drift is detected — meant to be wired into
+        CI as a gate.
+      LONG
+      def doctor
+        Rails.application.eager_load!
+        require_relative '../../kronk/version'
+        say "Korner framework doctor (Kronk v#{::Kronk::Version})"
+        say ''
+
+        issues = collect_issues
+        if issues.empty?
+          say 'No drift detected.'
+          exit(0)
+        end
+
+        issues.each { |line| say line }
+        say ''
+        say "#{issues.length} #{issues.length == 1 ? 'issue' : 'issues'} found."
+        exit(1)
+      end
+
       private
 
       def detect_drift(manifest)
@@ -62,6 +108,26 @@ module Mastodon
         drift << "Status has no :#{assoc}" if assoc && Status.reflect_on_association(assoc).nil?
 
         drift
+      end
+
+      def collect_issues
+        issues = []
+        manifests = ::Kronk::KornerRegistry.all
+        reserved  = ::Kronk::KornerRegistry.reserved_slugs
+
+        manifests.map(&:slug).tally.each do |slug, count|
+          issues << "duplicate slug '#{slug}' declared #{count} times" if count > 1
+        end
+
+        manifests.each do |manifest|
+          issues << "#{manifest.slug}: slug is reserved for platform use" if reserved.include?(manifest.slug)
+        end
+
+        ::Kronk::KornerRegistry.enforced.each do |manifest|
+          detect_drift(manifest).each { |line| issues << "#{manifest.slug}: #{line}" }
+        end
+
+        issues
       end
     end
   end
