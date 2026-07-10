@@ -9,8 +9,11 @@ import {
   apiJoinGroup,
   apiLeaveGroup,
   apiArchiveGroup,
+  apiGetGroupStatuses,
+  apiPostGroupStatus,
 } from 'mastodon/api/groups';
 import type { ApiGroupJSON } from 'mastodon/api/groups';
+import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 
 const messages = defineMessages({
   title: { id: 'groups.detail.title', defaultMessage: 'Group' },
@@ -20,14 +23,17 @@ export const GroupDetail = () => {
   const intl = useIntl();
   const { id } = useParams<{ id?: string }>();
   const [group, setGroup] = useState<ApiGroupJSON | null>(null);
+  const [statuses, setStatuses] = useState<ApiStatusJSON[]>([]);
+  const [composerText, setComposerText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const refetch = useCallback(async () => {
     if (!id) return;
     try {
-      const data = await apiGetGroup(id);
-      setGroup(data);
+      const [g, s] = await Promise.all([apiGetGroup(id), apiGetGroupStatuses(id, { limit: 20 })]);
+      setGroup(g);
+      setStatuses(s);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -36,6 +42,21 @@ export const GroupDetail = () => {
   useEffect(() => {
     void refetch();
   }, [refetch]);
+
+  const doPost = async () => {
+    if (!id || !composerText.trim()) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await apiPostGroupStatus(id, { status: composerText.trim() });
+      setComposerText('');
+      await refetch();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const doJoin = async () => {
     if (!id) return;
@@ -140,7 +161,7 @@ export const GroupDetail = () => {
               )}
             </dl>
 
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
               {!group.archived && !group.viewer_role && (
                 <button
                   type='button'
@@ -174,6 +195,54 @@ export const GroupDetail = () => {
                 </button>
               )}
             </div>
+
+            {group.viewer_role && !group.archived && (
+              <div style={{ marginBottom: '1.5rem', padding: '1rem', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-medium, 8px)', background: 'var(--surface-elevated)' }}>
+                <h3 style={{ marginTop: 0 }}>
+                  <FormattedMessage id='groups.detail.post_here' defaultMessage='Post to this group' />
+                </h3>
+                <textarea
+                  value={composerText}
+                  onChange={(e) => setComposerText(e.target.value)}
+                  rows={3}
+                  placeholder={intl.formatMessage({ id: 'groups.detail.composer_placeholder', defaultMessage: "What's happening in the group?" })}
+                  style={{ display: 'block', width: '100%', padding: '0.5rem', marginBottom: '0.5rem' }}
+                />
+                <button
+                  type='button'
+                  onClick={() => void doPost()}
+                  disabled={busy || !composerText.trim()}
+                  style={{ padding: '0.4rem 1rem', border: 'none', borderRadius: 'var(--radius-medium, 8px)', background: 'var(--accent)', color: 'var(--surface-primary)', cursor: 'pointer' }}
+                >
+                  <FormattedMessage id='groups.detail.post_send' defaultMessage='Post' />
+                </button>
+              </div>
+            )}
+
+            <h3>
+              <FormattedMessage id='groups.detail.timeline' defaultMessage='Group timeline' />
+            </h3>
+            {statuses.length === 0 && (
+              <p style={{ color: 'var(--text-muted)' }}>
+                <FormattedMessage id='groups.detail.empty_timeline' defaultMessage='No posts yet.' />
+              </p>
+            )}
+            <ul style={{ padding: 0, listStyle: 'none' }}>
+              {statuses.map((s) => (
+                <li
+                  key={s.id}
+                  style={{
+                    padding: '0.75rem 0',
+                    borderTop: '1px solid var(--border-default)',
+                  }}
+                >
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    @{s.account?.acct} · {new Date(s.created_at).toLocaleString()}
+                  </div>
+                  <div dangerouslySetInnerHTML={{ __html: s.content }} />
+                </li>
+              ))}
+            </ul>
           </>
         )}
       </div>

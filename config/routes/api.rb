@@ -191,6 +191,10 @@ namespace :api, format: false do
         post :join
         post :leave
       end
+
+      scope module: :groups do
+        resources :statuses, only: [:index, :create]
+      end
     end
 
     resource :instance, only: [:show] do
