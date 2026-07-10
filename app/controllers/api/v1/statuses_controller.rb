@@ -99,6 +99,8 @@ class Api::V1::StatusesController < Api::BaseController
       with_rate_limit: true
     )
 
+    attach_status_to_groups!(@status, status_params[:group_ids]) if status_params[:group_ids].present?
+
     render json: @status, serializer: serializer_for_status
   rescue PostStatusService::UnexpectedMentionsError => e
     render json: unexpected_accounts_error_json(e), status: 422
@@ -206,6 +208,7 @@ class Api::V1::StatusesController < Api::BaseController
       :language,
       :scheduled_at,
       allowed_mentions: [],
+      group_ids: [],
       media_ids: [],
       media_attributes: [
         :id,
@@ -235,5 +238,22 @@ class Api::V1::StatusesController < Api::BaseController
 
   def serialized_accounts(accounts)
     ActiveModel::Serializer::CollectionSerializer.new(accounts, serializer: REST::AccountSerializer)
+  end
+
+  # Attach a freshly-created Status to one or more Groups. Silently
+  # drops groups the author is not a member of, or that are archived —
+  # the status itself is already saved, so this is best-effort join.
+  def attach_status_to_groups!(status, group_ids)
+    ids = Array(group_ids).map(&:to_i).reject(&:zero?).uniq
+    return if ids.empty?
+
+    groups = Group.where(id: ids, archived: false).select { |g| g.member?(status.account) }
+    return if groups.empty?
+
+    ActiveRecord::Base.transaction do
+      groups.each do |g|
+        g.statuses << status unless g.statuses.exists?(id: status.id)
+      end
+    end
   end
 end

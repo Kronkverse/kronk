@@ -42,6 +42,7 @@ import {
   COMPOSE_SPOILERNESS_CHANGE,
   COMPOSE_SPOILER_TEXT_CHANGE,
   COMPOSE_LANGUAGE_CHANGE,
+  COMPOSE_GROUP_TARGETS_CHANGE,
   COMPOSE_COMPOSING_CHANGE,
   COMPOSE_EMOJI_INSERT,
   COMPOSE_RESET,
@@ -96,6 +97,9 @@ const initialState = ImmutableMap({
   quote_policy: 'public',
   default_quote_policy: 'public', // Set in hydration.
   fetching_link: null,
+
+  // Groups — a Status can target N Groups (multi-target).
+  group_ids: ImmutableList(),
 });
 
 const initialPoll = ImmutableMap({
@@ -124,6 +128,7 @@ function clearAll(state) {
     map.set('idempotencyKey', uuid());
     map.set('quoted_status_id', null);
     map.set('quote_policy', state.get('default_quote_policy'));
+    map.set('group_ids', ImmutableList());
   });
 }
 
@@ -397,6 +402,10 @@ export const composeReducer = (state = initialState, action) => {
   case COMPOSE_CHANGE:
     return state
       .set('text', action.text)
+      .set('idempotencyKey', uuid());
+  case COMPOSE_GROUP_TARGETS_CHANGE:
+    return state
+      .set('group_ids', ImmutableList(action.groupIds ?? []))
       .set('idempotencyKey', uuid());
   case COMPOSE_COMPOSING_CHANGE:
     return state.set('is_composing', action.value);
