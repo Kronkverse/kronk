@@ -276,6 +276,8 @@ Rails.application.routes.draw do
   get '/hub/in-flow/*path', to: 'home#index', format: false
   get '/hub/tree', to: 'home#index'
   get '/hub/tree/*path', to: 'home#index', format: false
+  get '/hub/groups', to: 'home#index'
+  get '/hub/groups/*path', to: 'home#index', format: false
   get '/hub/huddle', to: 'huddle#index'
   get '/hub/huddle/*path', to: 'huddle#index', format: false
 

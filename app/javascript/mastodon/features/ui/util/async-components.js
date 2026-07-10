@@ -304,3 +304,11 @@ export function NudgesLegacyArchive () {
   return import("../../nudges_legacy");
 }
 
+export function Groups () {
+  return import("../../groups");
+}
+
+export function GroupDetail () {
+  return import("../../groups/group_detail");
+}
+
