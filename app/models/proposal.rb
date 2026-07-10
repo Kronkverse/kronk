@@ -24,13 +24,22 @@ class Proposal < ApplicationRecord
 
   # Deprecated reader — new code uses `#status`. Kept for compat with
   # ActivityPub serializers, existing view partials, and external callers
-  # for one release.
+  # for one release. Logs once per process on first read so the sweep to
+  # `#status` can be spotted from stray call-sites during 2.0.x.
   def discussion_status
+    Proposal.warn_deprecated_status_read!
     status
   end
 
   def discussion_status_id
+    Proposal.warn_deprecated_status_read!
     read_attribute(:discussion_status_id) || read_attribute(:status_id)
+  end
+
+  def self.warn_deprecated_status_read!
+    return if @deprecated_status_read_warned
+    @deprecated_status_read_warned = true
+    Rails.logger.warn('[Proposal] deprecated read of discussion_status(_id); prefer #status(_id). Column drops in 2.1.0.')
   end
   has_many :proposal_votes, dependent: :destroy
   has_many :tasks, dependent: :destroy
