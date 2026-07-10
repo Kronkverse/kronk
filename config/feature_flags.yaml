@@ -1,0 +1,17 @@
+# Kronk feature flags — boolean toggles for phased rollout.
+#
+# Shape: `default:` block for platform-wide defaults, then optional
+# per-env override blocks (`development:`, `test:`, `production:`).
+# A flag not listed anywhere resolves to `false`.
+#
+# Usage in code:
+#   Kronk::FeatureFlags.enabled?(:tune_in_enforced)
+#
+# See lib/kronk/feature_flags.rb and docs/kronk_korner_spec.md §10.
+
+default: {}
+
+# Uncomment and populate as flags are introduced.
+# development: {}
+# test: {}
+# production: {}
