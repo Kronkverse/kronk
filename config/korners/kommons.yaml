@@ -40,8 +40,34 @@ feed_projection:
 
   status_association: proposal       # framework: Status.has_one :proposal
   status_post_type:   proposal       # framework: status.post_type value
-subscription:
-  default:  off                   # not-implemented — no per-space subscribe primitive exists yet
+
+notifications:
+  types:
+    - name:         proposal_backed
+      subject_type: proposal
+      default_push: false
+      aggregation:  { window: 1h, key: proposal_id }
+      interactive:  false            # notice — inline count in the proposal's Nudges thread
+    - name:         proposal_challenged
+      subject_type: proposal
+      default_push: true
+      aggregation:  default
+      interactive:  true             # nudge — reply-able, react-able
+    - name:         proposal_comment
+      subject_type: proposal
+      default_push: true
+      aggregation:  default
+      interactive:  true
+    - name:         proposal_status_changed
+      subject_type: proposal
+      default_push: false            # noisy for backers/opposers — off by default
+      aggregation:  default
+      interactive:  false
+    - name:         task_assigned
+      subject_type: task
+      default_push: true
+      aggregation:  none
+      interactive:  true
 
 launch:                           # retrospective — Kommons predates launch cards
   blurb:  "₭ommons — the space where structural moves are decided."
