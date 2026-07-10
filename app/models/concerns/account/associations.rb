@@ -77,5 +77,9 @@ module Account::Associations
     # out of that korner. Absence is the default (tuned in). Cascade
     # delete rather than destroy — no callbacks to run.
     has_many :korner_tune_outs, inverse_of: :account, dependent: :delete_all
+
+    # Per-account Hub grid ordering — absence of rows falls back to the
+    # default (tune-in popularity per Kronk::TuneInCounts).
+    has_many :user_hub_orders, inverse_of: :account, dependent: :delete_all
   end
 end

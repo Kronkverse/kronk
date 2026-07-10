@@ -387,6 +387,10 @@ namespace :api, format: false do
     resources :suggestions, only: [:index]
     resource :instance, only: [:show]
     resources :korners, only: [:index, :show], constraints: { id: /[^\/]+/ }
+
+    namespace :hub do
+      resource :order, only: [:show, :update, :destroy], controller: :orders
+    end
     resources :filters, only: [:index, :create, :show, :update, :destroy] do
       scope module: :filters do
         resources :keywords, only: [:index, :create]
