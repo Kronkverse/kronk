@@ -44,7 +44,7 @@ class KronkController < ApplicationController
   # The nav lists every top-level `.md` file that ships in content/kronk.
   # Ops can drop new pages in — they'll appear in the sidebar without a
   # code change. Order matches the recommended reading flow.
-  NAV_ORDER = %w(about values contributors governance rules privacy terms contact).freeze
+  NAV_ORDER = %w(about announcements values contributors governance rules privacy terms contact).freeze
 
   def load_navigation
     keys = CONTENT_ROOT.glob('*.md').map { |p| p.basename('.md').to_s }
