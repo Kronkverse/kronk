@@ -21,6 +21,9 @@ import { BoothPlaybackProvider } from 'mastodon/features/booth/booth_playback_co
 import { BoothMiniPlayer } from 'mastodon/features/booth/components/booth_mini_player';
 import { HuddlePip } from 'mastodon/features/huddle_pip';
 import { PictureInPicture } from 'mastodon/features/picture_in_picture';
+import { HubSwitcher } from './components/hub_switcher';
+import { KronkMenu } from './components/kronk_menu';
+import { KronkWordmark } from './components/kronk_wordmark';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { layoutFromWindow } from 'mastodon/is_mobile';
 import { WithRouterPropTypes } from 'mastodon/utils/react_router';
@@ -621,6 +624,13 @@ class UI extends PureComponent {
           <BoothMiniPlayer />
           <HuddlePip />
           <AlertsController />
+
+          {/* Phase 12 rebuild chrome — Kronk-native nav elements.
+              Additive: renders alongside the classic side nav until
+              the layout wiring is verified on shadow. */}
+          <KronkWordmark />
+          <HubSwitcher variant={layout === 'mobile' ? 'bottom' : 'top'} />
+          {this.props.identity.signedIn && <KronkMenu />}
           {!disableHoverCards && <HoverCardController />}
           <HashtagMenuController />
           <PwaInstallPrompt />
