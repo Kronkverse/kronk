@@ -26,7 +26,18 @@ visibility_scopes: []
 
 steward_role:    moderator
 
-emits:                            # via notification, not the framework's event bus
+emits:
+  # Framework event-bus emissions (§6 inter-korner). Huddle listens
+  # for this to attach event metadata to its sessions.
+  - name: kalendar.event.created
+    payload:
+      - event_id
+      - account_id
+      - event_type
+      - huddle_session_id
+  # notification.event_invitation dispatches via the Mastodon
+  # notification system rather than the korner event bus; documented
+  # here for discoverability of Kalendar's outbound signals.
   - notification.event_invitation
 listens: []
 
