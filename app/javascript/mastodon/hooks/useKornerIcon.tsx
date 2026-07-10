@@ -8,6 +8,7 @@ import HourglassIcon from '@/material-icons/400-24px/hourglass.svg?react';
 import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library.svg?react';
 import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
+import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 
 import type { IconProp } from 'mastodon/components/icon';
 
@@ -26,6 +27,7 @@ const SLUG_TO_ICON: Record<string, IconProp> = {
   moments: HourglassIcon,
   albutts: PhotoLibraryIcon,
   kompass: ExploreIcon,
+  groups: GroupsIcon,
 };
 
 // Fallback when a slug has no mapped icon yet (tree / klot / newly-added

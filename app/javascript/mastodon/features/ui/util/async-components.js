@@ -312,6 +312,10 @@ export function GroupDetail () {
   return import("../../groups/group_detail");
 }
 
+export function Hub () {
+  return import("../../hub");
+}
+
 export function Connections () {
   return import("../../connections");
 }
