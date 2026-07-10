@@ -284,6 +284,16 @@ Rails.application.routes.draw do
   get '/hub/huddle', to: 'huddle#index'
   get '/hub/huddle/*path', to: 'huddle#index', format: false
 
+  # 2.x korner stubs (Moments/Albutts/Kompass) — manifest-only, no
+  # backend yet. Fall through to the SPA so KornerStub renders.
+  get '/hub/moments', to: 'home#index'
+  get '/hub/albutts', to: 'home#index'
+  get '/hub/kompass', to: 'home#index'
+
+  # /hub bare — the landing grid. Ships in 2.0.0 as the third HubSwitcher
+  # tab (Feed / Profile / Hub).
+  get '/hub', to: 'home#index'
+
   # Kronk organisation space (§O) — served at /kronk/* from markdown
   # under content/kronk/. The wordmark in the app chrome links here.
   get '/kronk', to: 'kronk#show', defaults: { page: 'about' }
