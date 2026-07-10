@@ -103,6 +103,7 @@ import {
   NudgesLegacyArchive,
   Groups,
   GroupDetail,
+  Connections,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
 import { focusColumn, getFocusedItemIndex, focusItemSibling } from './util/focusUtils';
@@ -237,6 +238,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
             {signedIn && <WrappedRoute path="/hub/groups/:id" component={GroupDetail} content={children} />}
             {signedIn && <WrappedRoute path="/hub/groups" component={Groups} content={children} />}
+            <WrappedRoute path='/@:acct/connections' exact component={Connections} content={children} />
             {signedIn && <WrappedRoute path="/nudges/:accountId" component={NudgesThread} content={children} />}
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} />}
             {signedIn && <WrappedRoute path={["/governance", "/hub/kommons"]} component={Governance} content={children} />}

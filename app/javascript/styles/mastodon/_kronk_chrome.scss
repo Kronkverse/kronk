@@ -3,11 +3,15 @@
 // KronkWordmark + HubSwitcher + KronkMenu take over the navigation
 // surfaces.
 
-// Hide the classic side navigation. The new chrome (wordmark,
-// hub-switcher, Ӂ-menu) covers every affordance it provided.
+// Hide the classic Mastodon navigation surfaces. The new Kronk chrome
+// (wordmark, hub-switcher, Ӂ-menu) covers every affordance the old
+// panels + tabs bar provided. Bell removal is part of this — the
+// bell icon lives inside .ui__navigation-bar so hiding it here also
+// completes Phase 5's "remove the notifications bell" item.
 .navigation-panel,
 .tabs-bar,
-.tabs-bar__wrapper {
+.tabs-bar__wrapper,
+.ui__navigation-bar {
   display: none !important;
 }
 

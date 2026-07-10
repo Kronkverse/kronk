@@ -166,6 +166,9 @@ Rails.application.routes.draw do
     # Sectioned profile view — served by the SPA. Comes BEFORE the
     # generic /:id status route so 'profile' isn't matched as a status id.
     get '/@:account_username/profile', to: 'home#index'
+    # Kronk-native Connections subview (follow requests + followers +
+    # following) — SPA-served. Same reasoning re: ordering.
+    get '/@:account_username/connections', to: 'home#index'
     get '/@:account_username/:id', to: 'statuses#show', as: :short_account_status
     get '/@:account_username/:id/embed', to: 'statuses#embed', as: :embed_short_account_status
   end

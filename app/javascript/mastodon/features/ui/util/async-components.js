@@ -312,3 +312,7 @@ export function GroupDetail () {
   return import("../../groups/group_detail");
 }
 
+export function Connections () {
+  return import("../../connections");
+}
+
