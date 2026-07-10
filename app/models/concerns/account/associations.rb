@@ -81,5 +81,10 @@ module Account::Associations
     # Per-account Hub grid ordering — absence of rows falls back to the
     # default (tune-in popularity per Kronk::TuneInCounts).
     has_many :user_hub_orders, inverse_of: :account, dependent: :delete_all
+
+    # Group memberships (§Groups). Cascade delete rather than destroy —
+    # membership carries no callbacks beyond timestamps.
+    has_many :group_memberships, inverse_of: :account, dependent: :delete_all
+    has_many :groups, through: :group_memberships
   end
 end
