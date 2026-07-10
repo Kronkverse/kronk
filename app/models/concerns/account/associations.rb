@@ -72,5 +72,10 @@ module Account::Associations
 
     # BulkImport records owned by account
     has_many :bulk_imports, inverse_of: :account, dependent: :delete_all
+
+    # Korner tune-outs — presence of a row means the account has opted
+    # out of that korner. Absence is the default (tuned in). Cascade
+    # delete rather than destroy — no callbacks to run.
+    has_many :korner_tune_outs, inverse_of: :account, dependent: :delete_all
   end
 end
