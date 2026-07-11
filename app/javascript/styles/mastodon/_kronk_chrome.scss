@@ -31,7 +31,10 @@ body::before {
   height: 3rem;
   background: #000;
   border: 1.5px solid var(--kronk-purple-accent);
-  border-radius: var(--radius-large);   // 16px — matches sidebar
+  // Square the bottom-right corner so the strip's right edge meets
+  // the sidebar's top edge as one continuous L-shape. Other three
+  // corners stay --radius-large.
+  border-radius: var(--radius-large) var(--radius-large) 0 var(--radius-large);
   box-shadow:
     var(--elevation-floating),
     0 0 24px -6px color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent);
@@ -43,6 +46,7 @@ body::before {
     left: 0.5rem;
     right: 0.5rem;
     height: 2.85rem;
+    border-radius: var(--radius-large);
   }
 }
 

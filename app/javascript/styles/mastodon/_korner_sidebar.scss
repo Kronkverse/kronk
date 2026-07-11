@@ -8,14 +8,17 @@ $rail-breakpoint: 890px;  // Sidebar shows above the mobile breakpoint;
 
 .korner-sidebar {
   position: fixed;
-  top: 4rem;      // matches body::before top-strip height + small gap
+  top: 3.75rem;   // Flush against body::before bottom edge; borders align
   right: 0.75rem;
   bottom: 0.75rem;
   width: $rail-width;
   z-index: 22;
   background: #000;
   border: 1.5px solid var(--kronk-purple-accent);
-  border-radius: var(--radius-large);   // 16px — docked-panel feel
+  border-top: none;   // Strip's bottom border serves this side
+  // Top corners squared so the sidebar reads as an extension of the
+  // strip's right end. Bottom corners keep --radius-large.
+  border-radius: 0 0 var(--radius-large) var(--radius-large);
   box-shadow:
     var(--elevation-floating),
     -4px 0 24px -8px color-mix(in oklab, var(--kronk-purple-accent) 25%, transparent);
