@@ -38,6 +38,23 @@ font:
   mono:    "'Roboto Mono', 'Fira Mono', ui-monospace, monospace"
 
 # ── Radius scale ───────────────────────────────────────────────────
+# Kronk's universal corner language. Everything rounds — no sharp
+# corners in the shell. If a surface can't fit a radius, it becomes a
+# hairline divider (border, not box).
+#
+#   small   →  6px   inline chips, small icon buttons, focus rings,
+#                    dropdown items
+#   medium  →  10px  cards, panels, dropdowns, sidebar korner tiles,
+#                    Ӂ menu items
+#   large   →  16px  hero surfaces — the top strip, the sidebar, hub
+#                    korner cards, Ӂ menu panel, modal frames
+#   round   →  999px pills — HubSwitcher, tags, badges, tune-in
+#                    controls, every capsule button
+#
+# Buttons follow the same rules: primary CTAs are `round` pills,
+# secondary/tertiary buttons are `small` or `medium`, chip picks are
+# `round`. Borders on interactive surfaces are always 1-1.5px in
+# --border-default or the semantic-accent tint; never thicker.
 radius:
   small:  '6px'
   medium: '10px'
