@@ -42,6 +42,12 @@
     = yield :header_tags
 
   %body{ class: body_classes }
+    -# Static Kronk chrome for Rails-served pages. Skip when the SPA
+    -# is mounting — shared/_web_app sets body_classes to include
+    -# 'app-body' and the React chrome handles those responses.
+    - unless content_for?(:body_classes) && content_for(:body_classes).include?('app-body')
+      = render 'shared/kronk_static_chrome'
+
     = content_for?(:content) ? yield(:content) : yield
 
     .logo-resources{ 'tabindex' => '-1', 'inert' => true, 'aria-hidden' => 'true' }

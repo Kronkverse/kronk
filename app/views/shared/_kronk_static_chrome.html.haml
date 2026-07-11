@@ -1,0 +1,36 @@
+-# Static chrome for Rails-served pages (org space /kronk/*, classic
+-# settings /settings/preferences/*). Mirrors the React chrome
+-# (top strip, wordmark, HubSwitcher, sidebar, Ӂ menu) as pure HAML
+-# so those surfaces feel like the same Kronk as the SPA. All styles
+-# come from _kronk_chrome.scss / _korner_sidebar.scss so a token
+-# retune here follows through automatically.
+
+- korners = Kronk::KornerRegistry.all.select { |k| k.enforced } rescue []
+- current_slug = params[:slug] || (request.path[%r{^/hub/([a-z0-9-]+)}, 1])
+
+%a.kronk-wordmark{ href: '/kronk' }
+  %span{ 'aria-hidden' => 'true' } ӁЯѺƝ₭
+
+%nav.hub-switcher{ 'aria-label' => 'Primary surfaces' }
+  %a.hub-switcher__item{ href: '/home' } Feed
+  - if user_signed_in?
+    %a.hub-switcher__item{ href: "/@#{current_user.account.username}" } Profile
+  %a.hub-switcher__item{ href: '/hub', class: ('hub-switcher__item--active' if request.path.start_with?('/hub')) } Hub
+
+- if user_signed_in?
+  %aside.korner-sidebar{ 'aria-label' => 'Korners' }
+    %nav.korner-sidebar__list
+      - korners.each do |k|
+        %a.korner-sidebar__row{ href: "/hub/#{k.slug}",
+                                class: ('korner-sidebar__row--active' if current_slug == k.slug),
+                                'data-name' => k.name,
+                                'aria-label' => k.name,
+                                title: k.name }
+          %span.korner-sidebar__glyph{ 'aria-hidden' => 'true' }
+            = k.name.first.upcase
+          %span.korner-sidebar__label= k.name
+    %a.korner-sidebar__all{ href: '/hub', title: 'All korners', 'data-name' => 'All korners' } ⋯
+
+  .kronk-menu
+    %a.kronk-menu__trigger{ href: '/publish', 'aria-label' => 'Post', title: 'Post' }
+      %span{ 'aria-hidden' => 'true' } Ӂ
