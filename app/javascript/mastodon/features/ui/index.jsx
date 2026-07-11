@@ -225,7 +225,12 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/lists/:id/edit' component={ListEdit} content={children} />
             <WrappedRoute path='/lists/:id/members' component={ListMembers} content={children} />
             <WrappedRoute path='/lists/:id' component={ListTimeline} content={children} />
-            <WrappedRoute path='/notifications' component={Notifications} content={children} exact />
+            {/* Phase 5.5 — Nudges takes over the notification surface.
+                Classic bell UI is CSS-hidden via _kronk_chrome.scss;
+                any residual muscle-memory links to /notifications
+                redirect to the Activity feed. Old routes still mount
+                for the archive tab. */}
+            <Redirect from='/notifications' to='/nudges/activity' exact />
             <WrappedRoute path='/notifications/requests' component={NotificationRequests} content={children} exact />
             <WrappedRoute path='/notifications/requests/:id' component={NotificationRequest} content={children} exact />
             <WrappedRoute path='/favourites' component={FavouritedStatuses} content={children} />
@@ -580,7 +585,8 @@ class UI extends PureComponent {
   };
 
   handleHotkeyGoToNotifications = () => {
-    this.props.history.push('/notifications');
+    // Phase 5.5 — notifications hotkey routes to Nudges Activity.
+    this.props.history.push('/nudges/activity');
   };
 
   handleHotkeyGoToLocal = () => {
