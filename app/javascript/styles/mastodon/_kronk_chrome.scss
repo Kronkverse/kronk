@@ -214,11 +214,14 @@ body:has(.korner-sub-bar) {
 
   // Grid-shaped surfaces (Hub landing especially) want more room than
   // the reading-column timeline. When the router lands on one, let the
-  // main pane expand so the cards can flow into 3+ columns.
+  // main pane expand — capped at the available viewport width so the
+  // grid never runs behind the sidebar. The grid itself uses
+  // auto-fill(minmax(15rem, 1fr)) and will happily collapse to fewer
+  // columns as the available space shrinks.
   body:has(.hub-page) {
     .columns-area__panels,
     .columns-area__panels__main {
-      max-width: 1080px;
+      max-width: min(1080px, 100%);
     }
   }
 }

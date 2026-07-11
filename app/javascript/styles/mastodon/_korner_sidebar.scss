@@ -3,8 +3,8 @@
 
 $rail-width: 4.5rem;
 $rail-gutter: 1.5rem;  // Visible breathing room between content and the rail
-$rail-breakpoint: 1200px;  // Sidebar only on genuinely wide viewports;
-                            // narrower windows keep the content full-width.
+$rail-breakpoint: 890px;  // Sidebar shows above the mobile breakpoint;
+                            // content grids collapse columns as space shrinks.
 
 .korner-sidebar {
   position: fixed;
