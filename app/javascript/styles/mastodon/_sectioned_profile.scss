@@ -1,48 +1,403 @@
-// SectionedProfile — Kronk 2.0's default /@user view. Renders under
-// AccountHeader (avatar, bio, follow controls, tab strip) so the
-// existing profile chrome carries over.
+// SectionedProfile — Kronk 2.0's /@user surface. The identity strip
+// (cover / avatar / name / bio / chips / stats) is restyled here even
+// though the DOM lives in AccountHeader — a SectionedProfile-mounted
+// header carries hideTabs so the flat tab strip is suppressed and the
+// four in-panel tabs (Me / My Work / Timeline / Friendship) take over.
+
+// ---------- shared surface ----------------------------------------------------
 
 .sectioned-profile {
+  --sp-canvas: var(--background-color, #0a0812);
+  --sp-surface: var(--surface-variant-background-color, #141020);
+  --sp-surface-2: var(--surface-background-color, #191430);
+  --sp-line: rgba(132, 138, 250, 14%);
+  --sp-line-2: rgba(132, 138, 250, 24%);
+  --sp-text: var(--on-surface-color, #ece9fb);
+  --sp-dim: var(--text-secondary-color, #9a95c4);
+  --sp-faint: var(--text-tertiary-color, #6f6a95);
+  --sp-radius: 16px;
+  --sp-serif: 'Liberation Serif', Georgia, 'Times New Roman', serif;
+
+  color: var(--sp-text);
+
   &__body {
-    padding: 1rem;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 22px 80px;
   }
 
   &__error {
     color: var(--warning-red, tomato);
+    padding: 1rem;
   }
 
   &__loading {
-    color: var(--text-muted);
-  }
-
-  &__section {
-    margin-bottom: 2rem;
+    color: var(--sp-dim);
     padding: 1rem;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-medium, 8px);
-    background: var(--surface-elevated);
   }
+}
 
-  &__section-header {
-    display: flex;
-    gap: 0.5rem;
-    align-items: baseline;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border-default);
-  }
+// ---------- restyle: AccountHeader identity strip ---------------------------
+// Only takes effect when the header is mounted inside .sectioned-profile
+// (i.e. inside the /@user landing). Non-Sections views keep upstream styling.
 
-  &__section-title {
+.sectioned-profile .account__header {
+  .account__header__image {
+    height: 210px;
     margin: 0;
-    color: var(--kronk-purple-accent);
-    font-size: 1.1rem;
-    font-weight: 600;
+    background:
+      radial-gradient(120% 140% at 82% 0%, rgba(132, 138, 250, 42%), transparent 60%),
+      radial-gradient(90% 120% at 10% 20%, rgba(86, 58, 204, 40%), transparent 55%),
+      linear-gradient(160deg, #241a44, #0d0a1c 70%);
+    border-radius: 0 0 24px 24px;
+
+    img.parallax {
+      // Fade out the header image so the cover gradient shows through;
+      // once users upload richer cover art this can be tuned per-account.
+      opacity: 0.5;
+      mix-blend-mode: screen;
+    }
   }
 
-  &__section-type {
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+  .account__header__bar {
+    padding: 0 6px;
+    border-top: 0;
+  }
+
+  .account__header__tabs {
+    align-items: flex-end;
+    margin-top: -64px;
+    padding: 0;
+
+    .avatar {
+      width: 148px;
+      height: 148px;
+      border-radius: 34%;
+      border: 3px solid var(--sp-canvas);
+      box-shadow: 0 10px 30px rgb(0 0 0 / 50%);
+      overflow: hidden;
+      flex: none;
+
+      .account__avatar,
+      img {
+        width: 100%;
+        height: 100%;
+        border-radius: inherit;
+      }
+    }
+  }
+
+  .account__header__tabs__name h1 {
+    font-family: var(--sp-serif);
+    font-size: 38px;
+    line-height: 1;
+    margin: 0;
+    font-weight: 400;
+
+    small {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: var(--sp-dim);
+      font-size: 14px;
+      margin-top: 8px;
+      font-family: var(--font-sans-serif), sans-serif;
+    }
+  }
+
+  .account__header__extra {
+    padding-top: 18px;
+  }
+
+  .account__header__bio {
+    max-width: 640px;
+    color: #d7d3ee;
+  }
+
+  .account__header__fields {
+    margin-top: 12px;
+
+    dl {
+      display: inline-flex;
+      gap: 8px;
+      background: var(--sp-surface);
+      border: 1px solid var(--sp-line-2);
+      border-radius: 20px;
+      padding: 5px 13px;
+      font-size: 12.5px;
+      color: #cbc6ea;
+
+      dt,
+      dd {
+        margin: 0;
+        padding: 0;
+      }
+
+      dt {
+        color: var(--sp-dim);
+      }
+    }
+  }
+
+  .account__header__extra__links {
+    gap: 30px;
+    padding-top: 6px;
+
+    a {
+      display: block;
+      text-align: left;
+
+      strong {
+        font-family: var(--sp-serif);
+        font-size: 26px;
+        display: block;
+        line-height: 1;
+      }
+
+      abbr {
+        font-size: 11.5px;
+        color: var(--sp-dim);
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+      }
+    }
+  }
+}
+
+// ---------- tab strip ---------------------------------------------------------
+
+.sectioned-profile__tabs {
+  display: flex;
+  gap: 6px;
+  margin: 26px 0 22px;
+  border-bottom: 1px solid var(--sp-line);
+  overflow-x: auto;
+}
+
+.sectioned-profile__tab {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  color: var(--sp-dim);
+  font-family: var(--sp-serif);
+  font-size: 18px;
+  padding: 12px 20px;
+  white-space: nowrap;
+  transition: color 0.14s, border-color 0.14s;
+
+  &:hover {
+    color: var(--sp-text);
+  }
+
+  &--active {
+    color: var(--sp-text);
+    border-bottom-color: var(--accent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+// ---------- panels ------------------------------------------------------------
+
+.sectioned-profile__panel {
+  &[hidden] {
+    display: none;
+  }
+}
+
+.sectioned-profile__card {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-line);
+  border-radius: var(--sp-radius);
+  padding: 20px;
+
+  & + & {
+    margin-top: 18px;
+  }
+
+  h3 {
+    font-family: var(--sp-serif);
+    font-size: 19px;
+    margin: 0 0 14px;
+    font-weight: 400;
+  }
+}
+
+.sectioned-profile__muted {
+  color: var(--sp-dim);
+}
+
+.sectioned-profile__stub {
+  color: var(--sp-dim);
+  font-size: 14px;
+  line-height: 1.5;
+
+  a {
+    color: var(--accent);
+  }
+}
+
+.sectioned-profile__provisional {
+  font-size: 11px;
+  color: var(--sp-faint);
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.6;
+  }
+}
+
+// ---------- Me panel ----------------------------------------------------------
+
+.sectioned-profile__me-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr 300px;
+  gap: 18px;
+  align-items: start;
+}
+
+.sectioned-profile__me-col {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+// ---------- My Work panel -----------------------------------------------------
+
+.sectioned-profile__work-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  h3 {
+    font-family: var(--sp-serif);
+    font-size: 22px;
+    margin: 0 0 4px;
+    font-weight: 400;
+  }
+
+  p {
+    margin: 0;
+    color: var(--sp-dim);
+    font-size: 13.5px;
+  }
+}
+
+.sectioned-profile__work-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(212px, 1fr));
+  gap: 14px;
+}
+
+.sectioned-profile__work-card {
+  position: relative;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-line);
+  border-radius: 14px;
+  padding: 16px 16px 15px;
+  overflow: hidden;
+  transition: transform 0.14s, border-color 0.14s;
+  text-decoration: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--accent);
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: var(--sp-line-2);
+  }
+
+  &-preview {
+    height: 74px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    background: var(--sp-surface-2);
+  }
+
+  &-title {
+    font-family: var(--sp-serif);
+    font-size: 18px;
+  }
+
+  &-sub {
+    font-size: 12px;
+    color: var(--sp-dim);
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+}
+
+.sectioned-profile__work-empty {
+  grid-column: 1 / -1;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--sp-dim);
+  background: var(--sp-surface);
+  border: 1px dashed var(--sp-line-2);
+  border-radius: 14px;
+
+  a {
+    color: var(--accent);
+  }
+}
+
+// ---------- Timeline panel ----------------------------------------------------
+
+.sectioned-profile__feed {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+// ---------- Friendship panel --------------------------------------------------
+
+.sectioned-profile__friendship {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+// ---------- responsive --------------------------------------------------------
+
+@media (width <= 980px) {
+  .sectioned-profile__me-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sectioned-profile .account__header .account__header__tabs {
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sectioned-profile__work-card,
+  .sectioned-profile__tab {
+    transition: none;
   }
 }
