@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 import { useAllKorners } from 'mastodon/hooks/useKorner';
@@ -7,9 +7,8 @@ import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 
 // Pervasive icon rail on the right. Most-recently-visited korner
 // floats to the top; ties break on tune_in_count desc, then alpha.
-//
-// Recency lives in localStorage as {slug: iso-timestamp}. Updated on
-// route match and on click. Syncs across tabs via a storage event.
+// Reorders with a hand-rolled FLIP animation so rows slide to their
+// new positions instead of jumping.
 
 const SLUG_RE = /^\/hub\/([a-z0-9-]+)(?:\/|$)/;
 const STORAGE_KEY = 'kronk:korner-recency';
@@ -28,15 +27,18 @@ const writeRecency = (r: Recency) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(r));
   } catch {
-    // Silent — recency is best-effort.
+    // best-effort
   }
 };
 
-const KornerRow: React.FC<{
+interface KornerRowProps {
   korner: ApiKornerJSON;
   active: boolean;
   onVisit: (slug: string) => void;
-}> = ({ korner, active, onVisit }) => {
+  registerRef: (slug: string, el: HTMLAnchorElement | null) => void;
+}
+
+const KornerRow: React.FC<KornerRowProps> = ({ korner, active, onVisit, registerRef }) => {
   const Icon = useKornerIcon(korner.slug);
   return (
     <Link
@@ -46,6 +48,7 @@ const KornerRow: React.FC<{
       data-name={korner.name}
       aria-label={korner.name}
       title={korner.name}
+      ref={(el) => registerRef(korner.slug, el)}
     >
       <span className='korner-sidebar__glyph' aria-hidden='true'>
         <Icon />
@@ -60,13 +63,15 @@ export const KornerSidebar = () => {
   const korners = useAllKorners();
   const [recency, setRecency] = useState<Recency>(() => readRecency());
 
+  // FLIP bookkeeping: last-seen top offset per slug.
+  const positions = useRef<Map<string, number>>(new Map());
+  const nodes = useRef<Map<string, HTMLAnchorElement>>(new Map());
+
   const activeSlug = useMemo(() => {
     const m = SLUG_RE.exec(location.pathname);
     return m?.[1];
   }, [location.pathname]);
 
-  // Whenever the active slug changes (route match), stamp its recency
-  // and re-sort. Covers deep links / back-forward as well as clicks.
   useEffect(() => {
     if (!activeSlug) return;
     setRecency((prev) => {
@@ -76,7 +81,6 @@ export const KornerSidebar = () => {
     });
   }, [activeSlug]);
 
-  // Cross-tab sync: when another tab writes recency, refresh ours.
   useEffect(() => {
     const handler = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY) setRecency(readRecency());
@@ -95,6 +99,11 @@ export const KornerSidebar = () => {
     });
   }, []);
 
+  const registerRef = useCallback((slug: string, el: HTMLAnchorElement | null) => {
+    if (el) nodes.current.set(slug, el);
+    else nodes.current.delete(slug);
+  }, []);
+
   const listed = useMemo(
     () =>
       korners
@@ -110,11 +119,41 @@ export const KornerSidebar = () => {
     [korners, recency],
   );
 
+  // FLIP: after the DOM commits with the new order, snap each row back
+  // to its previous position, then transition to (0,0) so it slides.
+  useLayoutEffect(() => {
+    listed.forEach((k) => {
+      const el = nodes.current.get(k.slug);
+      if (!el) return;
+      const prev = positions.current.get(k.slug);
+      const current = el.offsetTop;
+      if (prev !== undefined && prev !== current) {
+        const dy = prev - current;
+        el.style.transform = `translateY(${dy}px)`;
+        el.style.transition = 'none';
+        // Force reflow so the transform sticks before we transition away.
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        el.offsetHeight;
+        requestAnimationFrame(() => {
+          el.style.transform = '';
+          el.style.transition = 'transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1), background 150ms ease-out, color 150ms ease-out';
+        });
+      }
+      positions.current.set(k.slug, current);
+    });
+  }, [listed]);
+
   return (
     <aside className='korner-sidebar' aria-label='Korners'>
       <nav className='korner-sidebar__list'>
         {listed.map((k) => (
-          <KornerRow key={k.slug} korner={k} active={activeSlug === k.slug} onVisit={onVisit} />
+          <KornerRow
+            key={k.slug}
+            korner={k}
+            active={activeSlug === k.slug}
+            onVisit={onVisit}
+            registerRef={registerRef}
+          />
         ))}
       </nav>
       <Link to='/hub' className='korner-sidebar__all' title='All korners' data-name='All korners'>
