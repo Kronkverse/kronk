@@ -21,6 +21,8 @@ const KornerRow: React.FC<{ korner: ApiKornerJSON; active: boolean }> = ({ korne
     <Link
       to={`/hub/${korner.slug}`}
       className={`korner-sidebar__row ${active ? 'korner-sidebar__row--active' : ''}`}
+      data-name={korner.name}
+      aria-label={korner.name}
       title={korner.name}
     >
       <span className='korner-sidebar__glyph' aria-hidden='true'>
