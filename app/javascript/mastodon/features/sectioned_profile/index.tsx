@@ -141,14 +141,10 @@ export const SectionedProfile = () => {
 
       <div className='scrollable sectioned-profile'>
         {account && (
-          <div className='sectioned-profile__header-wrap'>
+          <div
+            className={`sectioned-profile__header-wrap${isOwner ? ' sectioned-profile__header-wrap--owner' : ''}`}
+          >
             <AccountHeader accountId={account.id} hideTabs />
-            {isOwner && (
-              <span className='sectioned-profile__owner-badge' aria-label='Your profile'>
-                <span aria-hidden>◈</span>
-                <FormattedMessage id='sectioned_profile.owner' defaultMessage='Owner' />
-              </span>
-            )}
           </div>
         )}
 
