@@ -74,9 +74,29 @@ class HomeTimeline extends PureComponent {
     fofHasMore: PropTypes.bool,
   };
 
+  // Which slice of the network the home feed renders. Driven by the
+  // user's kronk.feed_scope setting (Friends / FoF / Kommunity),
+  // fetched once on mount and cached in state. The old in-header tab
+  // picker was retired — this setting is the single source of truth.
   state = {
     activeTab: 'friends',
     initializedTabs: { friends: true, fof: false, kommunity: false },
+  };
+
+  loadPersistedFeedScope = async () => {
+    try {
+      const res = await fetch('/api/v1/kronk_settings', {
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const scope = data?.feed_scope;
+      const tab = scope === 'friends_of_friends' ? 'fof' : scope === 'kommunity' ? 'kommunity' : 'friends';
+      if (tab !== this.state.activeTab) this.handleTabChange(tab);
+    } catch {
+      // Silent — default tab stays.
+    }
   };
 
   handlePin = () => {
@@ -133,6 +153,7 @@ class HomeTimeline extends PureComponent {
   componentDidMount () {
     setTimeout(() => this.props.dispatch(fetchAnnouncements()), 700);
     this._checkIfReloadNeeded(false, this.props.isPartial);
+    void this.loadPersistedFeedScope();
   }
 
   componentDidUpdate (prevProps) {
@@ -249,31 +270,10 @@ class HomeTimeline extends PureComponent {
           <ColumnSettings />
         </ColumnHeader>
 
-        {signedIn && (
-          <div className='account__section-headline'>
-            <button
-              type='button'
-              className={classNames({ active: activeTab === 'friends' })}
-              onClick={() => this.handleTabChange('friends')}
-            >
-              {intl.formatMessage(messages.tab_friends)}
-            </button>
-            <button
-              type='button'
-              className={classNames({ active: activeTab === 'fof' })}
-              onClick={() => this.handleTabChange('fof')}
-            >
-              {intl.formatMessage(messages.tab_fof)}
-            </button>
-            <button
-              type='button'
-              className={classNames({ active: activeTab === 'kommunity' })}
-              onClick={() => this.handleTabChange('kommunity')}
-            >
-              {intl.formatMessage(messages.tab_kommunity)}
-            </button>
-          </div>
-        )}
+        {/* Feed scope tabs retired. The friends / friends-of-friends /
+            kommunity picker now lives at /home/settings; the home column
+            shows one feed driven by that setting. Reachable via the
+            settings gear beside Announcements. */}
 
         {signedIn ? (
           activeTab === 'fof' ? (

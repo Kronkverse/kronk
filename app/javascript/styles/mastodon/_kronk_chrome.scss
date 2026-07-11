@@ -15,25 +15,45 @@
   display: none !important;
 }
 
+// Unified top strip: solid black band spanning the viewport with a
+// Kronk-purple accent bottom border, hosting the wordmark (left),
+// HubSwitcher (centre), and Ӂ menu (right). Reads as one chrome layer
+// sitting on top of the starry backdrop rather than three floating
+// chips. Chrome elements below stay position:fixed inside this strip
+// because they need to keep their independent z-index layering (menu
+// panel, sub-bar, etc.).
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.75rem;
+  background: #000;
+  border-bottom: 1.5px solid var(--kronk-purple-accent);
+  box-shadow:
+    0 4px 20px -4px rgb(0 0 0 / 55%),
+    0 0 24px -6px color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent);
+  z-index: 24;
+  pointer-events: none;
+
+  @media (max-width: 629px) {
+    height: 3.5rem;
+  }
+}
+
 .kronk-wordmark {
   position: fixed;
   top: 0.85rem;
-  left: 1rem;
+  left: 1.25rem;
   z-index: 25;
   display: inline-flex;
   align-items: center;
   gap: 0.15em;
-  padding: 0.4rem 0.9rem;
-  border-radius: 999px;
-  background: #000;
-  border: 1.5px solid var(--kronk-purple-accent);
-  box-shadow:
-    0 8px 28px -6px rgb(0 0 0 / 55%),
-    0 0 0 4px rgb(0 0 0 / 30%),
-    inset 0 1px 0 color-mix(in oklab, var(--kronk-purple-accent) 15%, transparent);
+  padding: 0.3rem 0.4rem;
   color: var(--kronk-purple-accent);
   font-family: 'Liberation Serif', Georgia, serif;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-decoration: none;
@@ -42,32 +62,25 @@
   &:hover,
   &:focus-visible {
     color: var(--kronk-purple-bright, #fff);
-    transform: translateY(-1px);
+    transform: scale(1.03);
     outline: none;
   }
 }
 
 .hub-switcher {
   position: fixed;
-  top: 0.85rem;
+  top: 0.65rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 25;
   display: inline-flex;
   align-items: center;
   gap: 0.15rem;
-  padding: 0.4rem;
+  padding: 0.3rem;
   border-radius: 999px;
-  // Solid black background so the pill reads as "on top of" the
-  // starry backdrop rather than washing into it. Kronk-purple accent
-  // border makes the pill feel like a discrete affordance.
-  background: #000;
-  border: 1.5px solid var(--kronk-purple-accent);
-  box-shadow:
-    0 8px 28px -6px rgb(0 0 0 / 55%),
-    0 0 0 4px rgb(0 0 0 / 30%),
-    0 2px 12px -2px color-mix(in oklab, var(--kronk-purple-accent) 35%, transparent),
-    inset 0 1px 0 color-mix(in oklab, var(--kronk-purple-accent) 15%, transparent);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 
   &__item {
     padding: 0.5rem 1.35rem;
@@ -146,23 +159,21 @@
   }
 }
 
-// Push the columns area down so the fixed top chrome doesn't overlap.
+// Push the columns area down so the fixed top strip doesn't overlap.
 .columns-area,
 .column {
-  padding-top: 0;
+  padding-top: 3.75rem;
 
-  @media (min-width: 630px) {
+  @media (max-width: 629px) {
     padding-top: 3.5rem;
   }
 }
 
 // When a KornerSubBar is present, give an extra row of headroom.
 body:has(.korner-sub-bar) {
-  @media (min-width: 630px) {
-    .columns-area,
-    .column {
-      padding-top: 6rem;
-    }
+  .columns-area,
+  .column {
+    padding-top: 6.25rem;
   }
 }
 
@@ -288,29 +299,29 @@ body:has(.korner-sub-bar) {
 
 .kronk-menu {
   position: fixed;
-  top: 0.65rem;
-  right: 1rem;
+  top: 0.55rem;
+  right: 1.25rem;
   z-index: 30;
 
   @media (max-width: 629px) {
-    top: 0.5rem;
-    right: 0.75rem;
+    top: 0.4rem;
+    right: 1rem;
   }
 
   &__trigger {
     position: relative;
-    width: 3rem;
-    height: 3rem;
+    width: 2.65rem;
+    height: 2.65rem;
     border-radius: 50%;
     border: none;
     background: var(--kronk-purple-accent);
-    color: var(--surface-primary);
-    font-size: 1.55rem;
+    color: #fff;
+    font-size: 1.35rem;
     font-family: 'Liberation Serif', serif;
     cursor: pointer;
     box-shadow:
-      0 6px 18px -4px color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent),
-      inset 0 1px 0 color-mix(in oklab, #fff 25%, transparent);
+      0 4px 12px -2px color-mix(in oklab, var(--kronk-purple-accent) 65%, transparent),
+      inset 0 1px 0 color-mix(in oklab, #fff 30%, transparent);
     transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), background 200ms ease-out;
 
     &:hover,
