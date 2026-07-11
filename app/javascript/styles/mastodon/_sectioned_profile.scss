@@ -106,11 +106,17 @@
 
   .account__header__extra {
     padding-top: 18px;
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+    flex-wrap: wrap;
   }
 
   .account__header__bio {
+    flex: 1 1 340px;
     max-width: 640px;
     color: #d7d3ee;
+    min-width: 280px;
   }
 
   .account__header__fields {
@@ -139,12 +145,17 @@
   }
 
   .account__header__extra__links {
+    display: flex;
     gap: 30px;
     padding-top: 6px;
+    margin-left: auto;
+    flex: none;
+    align-items: flex-end;
 
     a {
       display: block;
       text-align: left;
+      padding: 0;
 
       strong {
         font-family: var(--font-display);
@@ -185,6 +196,9 @@
   padding: 12px 20px;
   white-space: nowrap;
   transition: color 0.14s, border-color 0.14s;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
 
   &:hover {
     color: var(--sp-text);
@@ -199,6 +213,12 @@
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
+}
+
+.sectioned-profile__tab-icon {
+  font-size: 17px;
+  opacity: 0.8;
+  line-height: 1;
 }
 
 // ---------- panels ------------------------------------------------------------
@@ -224,6 +244,11 @@
     font-size: 19px;
     margin: 0 0 14px;
     font-weight: 400;
+  }
+
+  &--note {
+    background: linear-gradient(160deg, rgba(132, 138, 250, 10%), rgba(86, 58, 204, 5%));
+    border-color: rgba(132, 138, 250, 25%);
   }
 }
 
@@ -259,6 +284,30 @@
   }
 }
 
+// ---------- header-wrap + owner badge ---------------------------------------
+
+.sectioned-profile__header-wrap {
+  position: relative;
+}
+
+.sectioned-profile__owner-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgb(0 0 0 / 40%);
+  border: 1px solid rgba(132, 138, 250, 40%);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+
 // ---------- Me panel ----------------------------------------------------------
 
 .sectioned-profile__me-grid {
@@ -272,6 +321,47 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+.sectioned-profile__open-to {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.sectioned-profile__open-to-item {
+  flex: 1 1 190px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-line);
+  border-radius: 12px;
+  padding: 15px 16px;
+
+  b {
+    font-size: 13.5px;
+    display: block;
+    font-weight: 600;
+  }
+
+  span.sectioned-profile__muted {
+    font-size: 11.5px;
+    color: var(--sp-dim);
+  }
+}
+
+.sectioned-profile__open-to-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: rgba(132, 138, 250, 12%);
+  color: var(--accent);
+  flex: none;
+  font-size: 16px;
 }
 
 // ---------- My Work panel -----------------------------------------------------
@@ -368,6 +458,21 @@
   }
 }
 
+.sectioned-profile__work-new {
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--sp-faint);
+  border: 1px solid var(--sp-line-2);
+  background: var(--sp-surface);
+  border-radius: 999px;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--accent);
+    border-color: rgba(132, 138, 250, 40%);
+  }
+}
+
 // ---------- Timeline panel ----------------------------------------------------
 
 .sectioned-profile__feed {
@@ -382,15 +487,138 @@
   margin: 0 auto;
 }
 
+.sectioned-profile__fr-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: linear-gradient(150deg, rgba(132, 138, 250, 12%), rgba(86, 58, 204, 6%));
+  border: 1px solid rgba(132, 138, 250, 25%);
+  border-radius: 16px;
+  padding: 20px 22px;
+  margin-bottom: 18px;
+}
+
+.sectioned-profile__fr-pair {
+  display: flex;
+}
+
+.sectioned-profile__fr-pair-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 34%;
+  border: 2px solid var(--sp-canvas);
+  background: linear-gradient(150deg, #3a2c66, #181233);
+
+  &:last-child {
+    margin-left: -16px;
+    background: linear-gradient(150deg, #2c3a66, #131a33);
+  }
+}
+
+.sectioned-profile__fr-hero-copy {
+  h3 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    margin: 0;
+    font-weight: 400;
+  }
+
+  p {
+    margin: 4px 0 0;
+    font-size: 13.5px;
+  }
+}
+
+.sectioned-profile__fr-tier {
+  margin-left: auto;
+  text-align: right;
+}
+
+.sectioned-profile__fr-tier-val {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--accent);
+}
+
+.sectioned-profile__fr-tier-lab {
+  font-size: 11px;
+  color: var(--sp-dim);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.sectioned-profile__fr-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.sectioned-profile__kv {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-top: 1px solid var(--sp-line);
+  font-size: 14px;
+
+  &:first-of-type {
+    border-top: 0;
+  }
+
+  b {
+    font-weight: 600;
+  }
+}
+
+.sectioned-profile__kv-v {
+  color: var(--sp-dim);
+}
+
+.sectioned-profile__fr-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.sectioned-profile__btn {
+  border-radius: 11px;
+  padding: 11px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid var(--sp-line-2);
+  background: var(--sp-surface);
+  color: var(--sp-text);
+  font-family: var(--font-sans-serif), sans-serif;
+
+  &[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &--primary {
+    background: var(--accent);
+    border-color: transparent;
+    color: #fff;
+  }
+}
+
 // ---------- responsive --------------------------------------------------------
 
 @media (width <= 980px) {
-  .sectioned-profile__me-grid {
+  .sectioned-profile__me-grid,
+  .sectioned-profile__fr-two {
     grid-template-columns: 1fr;
   }
 
-  .sectioned-profile .account__header .account__header__tabs {
-    flex-wrap: wrap;
+  .sectioned-profile .account__header {
+    .account__header__tabs {
+      flex-wrap: wrap;
+    }
+
+    .account__header__extra__links {
+      margin-left: 0;
+      width: 100%;
+    }
   }
 }
 

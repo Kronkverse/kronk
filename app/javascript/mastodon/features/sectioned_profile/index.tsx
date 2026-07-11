@@ -140,7 +140,17 @@ export const SectionedProfile = () => {
       <ColumnBackButton />
 
       <div className='scrollable sectioned-profile'>
-        {account && <AccountHeader accountId={account.id} hideTabs />}
+        {account && (
+          <div className='sectioned-profile__header-wrap'>
+            <AccountHeader accountId={account.id} hideTabs />
+            {isOwner && (
+              <span className='sectioned-profile__owner-badge' aria-label='Your profile'>
+                <span aria-hidden>◈</span>
+                <FormattedMessage id='sectioned_profile.owner' defaultMessage='Owner' />
+              </span>
+            )}
+          </div>
+        )}
 
         <div className='sectioned-profile__body'>
           {error && (
@@ -160,17 +170,17 @@ export const SectionedProfile = () => {
           {account && (
             <>
               <div className='sectioned-profile__tabs' role='tablist'>
-                <TabButton tab='me' activeTab={activeTab} onSelect={setTab}>
+                <TabButton tab='me' activeTab={activeTab} onSelect={setTab} icon='◐'>
                   <FormattedMessage id='sectioned_profile.tab.me' defaultMessage='Me' />
                 </TabButton>
-                <TabButton tab='work' activeTab={activeTab} onSelect={setTab}>
+                <TabButton tab='work' activeTab={activeTab} onSelect={setTab} icon='▤'>
                   <FormattedMessage id='sectioned_profile.tab.work' defaultMessage='My Work' />
                 </TabButton>
-                <TabButton tab='timeline' activeTab={activeTab} onSelect={setTab}>
+                <TabButton tab='timeline' activeTab={activeTab} onSelect={setTab} icon='≡'>
                   <FormattedMessage id='sectioned_profile.tab.timeline' defaultMessage='Timeline' />
                 </TabButton>
                 {!isOwner && (
-                  <TabButton tab='friendship' activeTab={activeTab} onSelect={setTab}>
+                  <TabButton tab='friendship' activeTab={activeTab} onSelect={setTab} icon='♥'>
                     <FormattedMessage id='sectioned_profile.tab.friendship' defaultMessage='Friendship' />
                   </TabButton>
                 )}
@@ -224,8 +234,9 @@ const TabButton: React.FC<{
   tab: TabKey;
   activeTab: TabKey;
   onSelect: (tab: TabKey) => void;
+  icon?: string;
   children: React.ReactNode;
-}> = ({ tab, activeTab, onSelect, children }) => {
+}> = ({ tab, activeTab, onSelect, icon, children }) => {
   const handleClick = useCallback(() => {
     onSelect(tab);
   }, [onSelect, tab]);
@@ -238,74 +249,197 @@ const TabButton: React.FC<{
       className={`sectioned-profile__tab${activeTab === tab ? ' sectioned-profile__tab--active' : ''}`}
       onClick={handleClick}
     >
+      {icon && (
+        <span className='sectioned-profile__tab-icon' aria-hidden>
+          {icon}
+        </span>
+      )}
       {children}
     </button>
   );
 };
 
-const MePanel: React.FC<{ isOwner: boolean }> = ({ isOwner }) => (
-  <div className='sectioned-profile__me-grid'>
-    <div className='sectioned-profile__me-col'>
-      <div className='sectioned-profile__card'>
-        <h3>
-          <FormattedMessage id='sectioned_profile.me.about' defaultMessage='About' />
-        </h3>
-        <p className='sectioned-profile__stub'>
-          {isOwner ? (
-            <FormattedMessage
-              id='sectioned_profile.me.stub_owner'
-              defaultMessage='Your identity cards will appear here. Configure them in profile settings.'
-            />
-          ) : (
-            <FormattedMessage
-              id='sectioned_profile.me.stub_visitor'
-              defaultMessage='This person hasn’t set up their profile cards yet.'
-            />
-          )}
-        </p>
+const MePanel: React.FC<{ isOwner: boolean }> = ({ isOwner }) => {
+  const stubCopy = isOwner ? (
+    <FormattedMessage
+      id='sectioned_profile.me.stub_owner'
+      defaultMessage='Set this up in profile settings.'
+    />
+  ) : (
+    <FormattedMessage
+      id='sectioned_profile.me.stub_visitor'
+      defaultMessage='Not set yet.'
+    />
+  );
+
+  return (
+    <>
+      <div className='sectioned-profile__me-grid'>
+        <div className='sectioned-profile__me-col'>
+          <div className='sectioned-profile__card'>
+            <h3>
+              <FormattedMessage id='sectioned_profile.me.about' defaultMessage='About me' />
+            </h3>
+            <p className='sectioned-profile__stub'>{stubCopy}</p>
+          </div>
+
+          <div className='sectioned-profile__card'>
+            <h3>
+              <FormattedMessage id='sectioned_profile.me.interests' defaultMessage='Interests' />
+            </h3>
+            <p className='sectioned-profile__stub'>{stubCopy}</p>
+          </div>
+
+          <div className='sectioned-profile__card'>
+            <h3>
+              <FormattedMessage
+                id='sectioned_profile.me.exploring'
+                defaultMessage='Currently exploring'
+              />
+            </h3>
+            <p className='sectioned-profile__stub'>{stubCopy}</p>
+          </div>
+        </div>
+
+        <div className='sectioned-profile__me-col'>
+          <div className='sectioned-profile__card'>
+            <h3>
+              <FormattedMessage
+                id='sectioned_profile.me.at_a_glance'
+                defaultMessage='At a glance'
+              />
+            </h3>
+            <p className='sectioned-profile__stub'>{stubCopy}</p>
+          </div>
+
+          <div className='sectioned-profile__card'>
+            <h3>
+              <FormattedMessage
+                id='sectioned_profile.me.highlights'
+                defaultMessage='Recent highlights'
+              />
+            </h3>
+            <p className='sectioned-profile__stub'>{stubCopy}</p>
+          </div>
+
+          <div className='sectioned-profile__card'>
+            <h3>
+              <FormattedMessage
+                id='sectioned_profile.me.personality'
+                defaultMessage='Personality snapshot'
+              />
+            </h3>
+            <p className='sectioned-profile__stub'>{stubCopy}</p>
+          </div>
+
+          <div className='sectioned-profile__card'>
+            <h3>
+              <FormattedMessage id='sectioned_profile.me.drive' defaultMessage='What drives me' />
+            </h3>
+            <p className='sectioned-profile__stub'>{stubCopy}</p>
+          </div>
+
+          <div className='sectioned-profile__card'>
+            <h3>
+              <FormattedMessage
+                id='sectioned_profile.me.rotation'
+                defaultMessage='In rotation'
+              />
+            </h3>
+            <p className='sectioned-profile__stub'>{stubCopy}</p>
+          </div>
+        </div>
+
+        <div className='sectioned-profile__me-col'>
+          <div className='sectioned-profile__card'>
+            <h3>
+              <FormattedMessage
+                id='sectioned_profile.me.moments'
+                defaultMessage='Life in moments'
+              />
+            </h3>
+            <p className='sectioned-profile__stub'>{stubCopy}</p>
+          </div>
+
+          <div className='sectioned-profile__card'>
+            <h3>
+              <FormattedMessage id='sectioned_profile.me.values' defaultMessage='Values' />
+            </h3>
+            <p className='sectioned-profile__stub'>{stubCopy}</p>
+          </div>
+
+          <div className='sectioned-profile__card sectioned-profile__card--note'>
+            <h3>
+              <FormattedMessage
+                id='sectioned_profile.me.note'
+                defaultMessage='A note'
+              />
+            </h3>
+            <p className='sectioned-profile__stub'>{stubCopy}</p>
+          </div>
+        </div>
       </div>
 
-      <div className='sectioned-profile__card'>
-        <h3>
-          <FormattedMessage id='sectioned_profile.me.interests' defaultMessage='Interests' />
-        </h3>
-        <p className='sectioned-profile__stub'>—</p>
+      <div className='sectioned-profile__open-to'>
+        <div className='sectioned-profile__open-to-item'>
+          <span className='sectioned-profile__open-to-icon' aria-hidden>◌</span>
+          <div>
+            <b>
+              <FormattedMessage
+                id='sectioned_profile.me.open_to.conversations'
+                defaultMessage='Meaningful conversations'
+              />
+            </b>
+            <span className='sectioned-profile__muted'>{stubCopy}</span>
+          </div>
+        </div>
+        <div className='sectioned-profile__open-to-item'>
+          <span className='sectioned-profile__open-to-icon' aria-hidden>❋</span>
+          <div>
+            <b>
+              <FormattedMessage
+                id='sectioned_profile.me.open_to.collabs'
+                defaultMessage='Creative collaborations'
+              />
+            </b>
+            <span className='sectioned-profile__muted'>{stubCopy}</span>
+          </div>
+        </div>
+        <div className='sectioned-profile__open-to-item'>
+          <span className='sectioned-profile__open-to-icon' aria-hidden>◈</span>
+          <div>
+            <b>
+              <FormattedMessage
+                id='sectioned_profile.me.open_to.governance'
+                defaultMessage='Governance work'
+              />
+            </b>
+            <span className='sectioned-profile__muted'>{stubCopy}</span>
+          </div>
+        </div>
+        <div className='sectioned-profile__open-to-item'>
+          <span className='sectioned-profile__open-to-icon' aria-hidden>♥</span>
+          <div>
+            <b>
+              <FormattedMessage
+                id='sectioned_profile.me.open_to.vouching'
+                defaultMessage='Vouching'
+              />
+            </b>
+            <span className='sectioned-profile__muted'>{stubCopy}</span>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div className='sectioned-profile__me-col'>
-      <div className='sectioned-profile__card'>
-        <h3>
-          <FormattedMessage id='sectioned_profile.me.at_a_glance' defaultMessage='At a glance' />
-        </h3>
-        <p className='sectioned-profile__stub'>—</p>
-      </div>
-
-      <div className='sectioned-profile__card'>
-        <h3>
-          <FormattedMessage id='sectioned_profile.me.drive' defaultMessage='What drives me' />
-        </h3>
-        <p className='sectioned-profile__stub'>—</p>
-      </div>
-    </div>
-
-    <div className='sectioned-profile__me-col'>
-      <div className='sectioned-profile__card'>
-        <h3>
-          <FormattedMessage id='sectioned_profile.me.values' defaultMessage='Values' />
-        </h3>
-        <p className='sectioned-profile__stub'>—</p>
-      </div>
-    </div>
-
-    <p className='sectioned-profile__provisional' style={{ gridColumn: '1 / -1' }}>
-      <FormattedMessage
-        id='sectioned_profile.me.provisional'
-        defaultMessage='Identity fields are the framework stub — content wires up when profile settings ship.'
-      />
-    </p>
-  </div>
-);
+      <p className='sectioned-profile__provisional'>
+        <FormattedMessage
+          id='sectioned_profile.me.provisional'
+          defaultMessage='Identity content wires up when the profile settings surface ships.'
+        />
+      </p>
+    </>
+  );
+};
 
 const WorkPanel: React.FC<{
   sections: SectionWithStatuses[];
@@ -324,6 +458,14 @@ const WorkPanel: React.FC<{
           />
         </p>
       </div>
+      {isOwner && (
+        <a
+          className='sectioned-profile__work-new'
+          href='/settings/profile_sections'
+        >
+          <FormattedMessage id='sectioned_profile.work.new_card' defaultMessage='＋ New card' />
+        </a>
+      )}
     </div>
 
     <div className='sectioned-profile__work-grid'>
@@ -384,26 +526,183 @@ const TimelinePanel: React.FC<{
 
 const FriendshipPanel: React.FC = () => (
   <div className='sectioned-profile__friendship'>
-    <div className='sectioned-profile__card'>
+    <div className='sectioned-profile__fr-hero'>
+      <div className='sectioned-profile__fr-pair' aria-hidden>
+        <span className='sectioned-profile__fr-pair-avatar' />
+        <span className='sectioned-profile__fr-pair-avatar' />
+      </div>
+      <div className='sectioned-profile__fr-hero-copy'>
+        <h3>
+          <FormattedMessage
+            id='sectioned_profile.friendship.hero_title'
+            defaultMessage='How you overlap'
+          />
+        </h3>
+        <p className='sectioned-profile__muted'>
+          <FormattedMessage
+            id='sectioned_profile.friendship.hero_sub'
+            defaultMessage='Connection facts populate once the relationship data is joined in.'
+          />
+        </p>
+      </div>
+      <div className='sectioned-profile__fr-tier'>
+        <div className='sectioned-profile__fr-tier-val'>—</div>
+        <div className='sectioned-profile__fr-tier-lab'>
+          <FormattedMessage
+            id='sectioned_profile.friendship.tier'
+            defaultMessage='vouch tier'
+          />
+        </div>
+      </div>
+    </div>
+
+    <div className='sectioned-profile__fr-two'>
+      <div className='sectioned-profile__card'>
+        <h3>
+          <FormattedMessage
+            id='sectioned_profile.friendship.how_connected'
+            defaultMessage='How you’re connected'
+          />
+        </h3>
+        <div className='sectioned-profile__kv'>
+          <b>
+            <FormattedMessage
+              id='sectioned_profile.friendship.mutual_crews'
+              defaultMessage='Mutual crews'
+            />
+          </b>
+          <span className='sectioned-profile__kv-v'>—</span>
+        </div>
+        <div className='sectioned-profile__kv'>
+          <b>
+            <FormattedMessage
+              id='sectioned_profile.friendship.shared_seeds'
+              defaultMessage='Shared seeds'
+            />
+          </b>
+          <span className='sectioned-profile__kv-v'>—</span>
+        </div>
+        <div className='sectioned-profile__kv'>
+          <b>
+            <FormattedMessage
+              id='sectioned_profile.friendship.mutual_connections'
+              defaultMessage='Mutual connections'
+            />
+          </b>
+          <span className='sectioned-profile__kv-v'>—</span>
+        </div>
+        <div className='sectioned-profile__kv'>
+          <b>
+            <FormattedMessage
+              id='sectioned_profile.friendship.introduced_by'
+              defaultMessage='Introduced by'
+            />
+          </b>
+          <span className='sectioned-profile__kv-v'>—</span>
+        </div>
+      </div>
+
+      <div className='sectioned-profile__card'>
+        <h3>
+          <FormattedMessage
+            id='sectioned_profile.friendship.between'
+            defaultMessage='Between you'
+          />
+        </h3>
+        <div className='sectioned-profile__kv'>
+          <b>
+            <FormattedMessage
+              id='sectioned_profile.friendship.conversations'
+              defaultMessage='Conversations'
+            />
+          </b>
+          <span className='sectioned-profile__kv-v'>—</span>
+        </div>
+        <div className='sectioned-profile__kv'>
+          <b>
+            <FormattedMessage
+              id='sectioned_profile.friendship.replies'
+              defaultMessage='Replies exchanged'
+            />
+          </b>
+          <span className='sectioned-profile__kv-v'>—</span>
+        </div>
+        <div className='sectioned-profile__kv'>
+          <b>
+            <FormattedMessage
+              id='sectioned_profile.friendship.boosts'
+              defaultMessage='Boosts'
+            />
+          </b>
+          <span className='sectioned-profile__kv-v'>—</span>
+        </div>
+        <div className='sectioned-profile__kv'>
+          <b>
+            <FormattedMessage
+              id='sectioned_profile.friendship.huddles'
+              defaultMessage='Huddles together'
+            />
+          </b>
+          <span className='sectioned-profile__kv-v'>—</span>
+        </div>
+      </div>
+    </div>
+
+    <div className='sectioned-profile__card' style={{ marginTop: '16px' }}>
       <h3>
         <FormattedMessage
-          id='sectioned_profile.friendship.title'
-          defaultMessage='How you overlap'
+          id='sectioned_profile.friendship.overlap'
+          defaultMessage='Where you overlap'
         />
       </h3>
-      <p className='sectioned-profile__stub'>
-        <FormattedMessage
-          id='sectioned_profile.friendship.stub'
-          defaultMessage='Friendship view is the framework stub — mutual connections, shared crews, and vouches will populate here.'
-        />
-      </p>
-      <p className='sectioned-profile__provisional'>
-        <FormattedMessage
-          id='sectioned_profile.friendship.provisional'
-          defaultMessage='Vouch tiers are provisional until the Anthemos membrane ships.'
-        />
-      </p>
+      <p className='sectioned-profile__stub'>—</p>
     </div>
+
+    <div className='sectioned-profile__fr-two' style={{ marginTop: '16px' }}>
+      <div className='sectioned-profile__card'>
+        <h3>
+          <FormattedMessage
+            id='sectioned_profile.friendship.vouches'
+            defaultMessage='Vouches'
+          />
+        </h3>
+        <p className='sectioned-profile__stub'>—</p>
+      </div>
+      <div className='sectioned-profile__card'>
+        <h3>
+          <FormattedMessage
+            id='sectioned_profile.friendship.history'
+            defaultMessage='Your history'
+          />
+        </h3>
+        <p className='sectioned-profile__stub'>—</p>
+      </div>
+    </div>
+
+    <div className='sectioned-profile__fr-actions'>
+      <button type='button' className='sectioned-profile__btn sectioned-profile__btn--primary' disabled>
+        <FormattedMessage id='sectioned_profile.friendship.message' defaultMessage='Message' />
+      </button>
+      <button type='button' className='sectioned-profile__btn' disabled>
+        <FormattedMessage
+          id='sectioned_profile.friendship.adjust_vouch'
+          defaultMessage='Adjust vouch'
+        />
+      </button>
+      <button type='button' className='sectioned-profile__btn' disabled>
+        <FormattedMessage
+          id='sectioned_profile.friendship.add_to_crew'
+          defaultMessage='Add to a crew'
+        />
+      </button>
+    </div>
+
+    <p className='sectioned-profile__provisional'>
+      <FormattedMessage
+        id='sectioned_profile.friendship.provisional'
+        defaultMessage='Vouch tiers are provisional until the Anthemos membrane ships.'
+      />
+    </p>
   </div>
 );
 
