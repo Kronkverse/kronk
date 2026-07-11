@@ -27,7 +27,6 @@ import { HubSwitcher } from './components/hub_switcher';
 import { KornerSubBar } from './components/korner_sub_bar';
 import { KronkMenu } from './components/kronk_menu';
 import { KronkWordmark } from './components/kronk_wordmark';
-import { AvatarBubble } from './components/avatar_bubble';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { layoutFromWindow } from 'mastodon/is_mobile';
 import { WithRouterPropTypes } from 'mastodon/utils/react_router';
@@ -671,7 +670,6 @@ class UI extends PureComponent {
           <KronkWordmark />
           <HubSwitcher variant={layout === 'mobile' ? 'bottom' : 'top'} currentAccountUsername={this.props.username} />
           <KornerSubBar />
-          {this.props.identity.signedIn && <AvatarBubble />}
           {this.props.identity.signedIn && <KronkMenu />}
           {!disableHoverCards && <HoverCardController />}
           <HashtagMenuController />
