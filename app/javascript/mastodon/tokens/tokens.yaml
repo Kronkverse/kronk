@@ -1,16 +1,17 @@
 # Kronk design tokens — single source of truth for the aesthetic system.
 #
-# 2026-07-11: reverted to running Kronk-purple (blurple family) per
-# Tal — Imperial regal was too dark for the current chrome.
+# 2026-07-11: matched to the running production palette on
+# mastodon.kronk.info. Rich indigo family — brand #6364ff, primary
+# #3034a0, deep #36248c, bright #8c8dff, muted #343070.
 #
 # See docs/kronk_korner_spec.md §6 for aesthetic spec.
 
 kronk:
-  purple-primary:  { dark: '#6364ff', light: '#563acc' }   # Brand purple (blurple-500/600)
-  purple-bright:   { dark: '#858afa', light: '#7477fd' }   # Highlight / focus
-  purple-deep:     { dark: '#1f1a3a', light: '#28214f' }   # Surface tint / atmosphere
-  purple-muted:    { dark: '#4a4287', light: '#8b7fc2' }   # Supporting text / low priority
-  purple-accent:   { dark: '#858afa', light: '#6364ff' }   # Accent on cards, chips, borders
+  purple-primary:  { dark: '#3034a0', light: '#3034a0' }   # Major surface accents, borders
+  purple-bright:   { dark: '#8c8dff', light: '#6364ff' }   # Highlight / focus
+  purple-deep:     { dark: '#36248c', light: '#36248c' }   # Surface tint / atmosphere
+  purple-muted:    { dark: '#343070', light: '#45455f' }   # Supporting text / low priority
+  purple-accent:   { dark: '#6364ff', light: '#6364ff' }   # Accent on cards, chips, borders
 
 semantic:
-  accent:          { dark: '#858afa', light: '#6364ff' }   # → var(--accent) consumer alias
+  accent:          { dark: '#6364ff', light: '#6364ff' }   # → var(--accent) consumer alias
