@@ -22,31 +22,54 @@
 // chips. Chrome elements below stay position:fixed inside this strip
 // because they need to keep their independent z-index layering (menu
 // panel, sub-bar, etc.).
+// Chrome wrap. Single L-shaped fixed layer that spans the top edge and
+// the right rail — one continuous piece, not two chips joined. Uses
+// clip-path for the L geometry, a linear gradient so the black fades
+// into the starry backdrop along the inner edges, and a drop-shadow
+// filter (which respects clip-path) for the purple glow.
+
 body::before {
   content: '';
   position: fixed;
-  top: 0.75rem;
-  left: 0.75rem;
-  right: 0.75rem;
-  height: 3rem;
-  background: #000;
-  border: 1.5px solid var(--kronk-purple-accent);
-  // Square the bottom-right corner so the strip's right edge meets
-  // the sidebar's top edge as one continuous L-shape. Other three
-  // corners stay --radius-large.
-  border-radius: var(--radius-large) var(--radius-large) 0 var(--radius-large);
-  box-shadow:
-    var(--elevation-floating),
-    0 0 24px -6px color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent);
+  inset: 0;
   z-index: 24;
   pointer-events: none;
+  background:
+    // Anchor the black at outer edges; fade toward the inner corner so
+    // it dissolves into the stars rather than looking like a hard mask.
+    radial-gradient(
+      circle at 100% 0,
+      #000 0,
+      #000 60%,
+      rgb(0 0 0 / 88%) 78%,
+      rgb(0 0 0 / 65%) 88%,
+      rgb(0 0 0 / 35%) 96%,
+      transparent 100%
+    );
+  // L-shape polygon:
+  //   strip band along the top,
+  //   sidebar rail along the right,
+  //   6.25rem thick (strip 3.5rem + 0.75rem outer margin + inner buffer),
+  //   4.5rem rail width + 0.75rem outer margin.
+  clip-path: polygon(
+    0.75rem 0.75rem,
+    calc(100% - 0.75rem) 0.75rem,
+    calc(100% - 0.75rem) calc(100% - 0.75rem),
+    calc(100% - 5.25rem) calc(100% - 0.75rem),
+    calc(100% - 5.25rem) 3.75rem,
+    0.75rem 3.75rem
+  );
+  filter: drop-shadow(0 0 24px color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent));
 
-  @media (max-width: 629px) {
-    top: 0.5rem;
-    left: 0.5rem;
-    right: 0.5rem;
-    height: 2.85rem;
-    border-radius: var(--radius-large);
+  @media (max-width: 889px) {
+    // Below the sidebar breakpoint, the L collapses to just the top
+    // strip — no right rail.
+    clip-path: polygon(
+      0.5rem 0.5rem,
+      calc(100% - 0.5rem) 0.5rem,
+      calc(100% - 0.5rem) 3.35rem,
+      0.5rem 3.35rem
+    );
   }
 }
 
