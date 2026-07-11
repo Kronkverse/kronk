@@ -2,6 +2,9 @@
 // on hover, black bg, accent left-border. Ordered by tune-in count.
 
 $rail-width: 4.5rem;
+$rail-gutter: 1.5rem;  // Visible breathing room between content and the rail
+$rail-breakpoint: 1200px;  // Sidebar only on genuinely wide viewports;
+                            // narrower windows keep the content full-width.
 
 .korner-sidebar {
   position: fixed;
@@ -19,7 +22,7 @@ $rail-width: 4.5rem;
   flex-direction: column;
   overflow: hidden;
 
-  @media (max-width: 889px) {
+  @media (max-width: $rail-breakpoint - 1px) {
     display: none;
   }
 
@@ -166,13 +169,14 @@ $rail-width: 4.5rem;
   }
 }
 
-// Reserve the sidebar's width on the right at the body level so every
-// inline-flow surface (columns-area, hub-page, sectioned-profile,
-// korner-settings, feed-settings, org-space) automatically clears the
-// sidebar. Fixed chrome (top strip, sidebar itself, Ӂ menu) is
-// positioned against the viewport and is unaffected.
-@media (min-width: 890px) {
+// Reserve the sidebar's width + a visible gutter on the right at the
+// body level so every inline-flow surface (columns-area, hub-page,
+// sectioned-profile, korner-settings, feed-settings, org-space)
+// automatically clears the sidebar with breathing room. Fixed chrome
+// (top strip, sidebar itself, Ӂ menu) is positioned against the
+// viewport and is unaffected.
+@media (min-width: $rail-breakpoint) {
   body:has(.korner-sidebar) {
-    padding-right: $rail-width;
+    padding-right: calc($rail-width + $rail-gutter);
   }
 }
