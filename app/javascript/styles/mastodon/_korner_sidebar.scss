@@ -166,13 +166,13 @@ $rail-width: 4.5rem;
   }
 }
 
-// Keep the feed centred: pad BOTH sides equally by the rail width
-// so the content column stays visually squared to the viewport.
+// Reserve the sidebar's width on the right so the content column
+// centres in the *visible* viewport (viewport minus sidebar), not in
+// the raw viewport with the sidebar hanging off. Left stays untouched.
 @media (min-width: 890px) {
   body:has(.korner-sidebar) {
     .columns-area,
     .column {
-      padding-left: $rail-width;
       padding-right: $rail-width;
     }
   }
