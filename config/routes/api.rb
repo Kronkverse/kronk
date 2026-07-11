@@ -174,10 +174,20 @@ namespace :api, format: false do
         # out. Idempotent create/destroy so the button can toggle safely.
         post :tune_out, action: :tune_out
         delete :tune_out, action: :tune_in
+        # Canonical spec §K.9 alias.
+        post :tune_in, action: :tune_in
 
         # Per-korner user settings (spec §K).
         get :settings, action: :settings_show
         post :settings, action: :settings_update
+      end
+
+      # Per-name PATCH/DELETE for autosave (spec §K.9 canonical path).
+      # `korner_id` is populated by resources :korners; `name` may be
+      # dotted (e.g. `push.<type>`) so match allows that.
+      member do
+        patch 'settings/:name', to: 'korners#setting_patch', constraints: { name: %r{[^/]+} }, as: :setting_patch
+        delete 'settings/:name', to: 'korners#setting_delete', constraints: { name: %r{[^/]+} }, as: :setting_delete
       end
     end
     resources :kategories, only: [:index]

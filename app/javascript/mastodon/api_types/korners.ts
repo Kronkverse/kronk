@@ -19,6 +19,15 @@ export interface ApiKornerSettingJSON {
   default?: unknown;
   options?: unknown[];
   scope?: 'user' | 'steward' | string;
+  // Optional label / description — either an i18n message id (spec §K.5)
+  // or a plain display string.
+  label?: string;
+  description?: string;
+  // Kind-dependent constraints (spec §K.5).
+  min?: number;
+  max?: number;
+  step?: number;
+  max_length?: number;
 }
 
 export interface ApiKornerResourceJSON {
