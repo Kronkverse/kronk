@@ -60,8 +60,12 @@ const KornerCard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
   }, []);
 
   return (
-    <Link to={`/hub/${korner.slug}`} className='hub-page__card'>
-      <div className='hub-page__card-top'>
+    <div className='hub-page__card'>
+      {/* Open-korner surface fills the top of the card without wrapping
+          the whole card; nesting a <Link> inside another <Link> collapses
+          the inner one, which was making the settings gear silently
+          route to the parent korner. */}
+      <Link to={`/hub/${korner.slug}`} className='hub-page__card-open' aria-label={`Open ${korner.name}`}>
         <span className='hub-page__card-icon' aria-hidden='true'>
           <Icon />
         </span>
@@ -69,7 +73,7 @@ const KornerCard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
           <h3 className='hub-page__card-name'>{korner.name}</h3>
           {teaser && <p className='hub-page__card-teaser'>{teaser}</p>}
         </div>
-      </div>
+      </Link>
       <div className='hub-page__card-footer'>
         <Link
           to={`/hub/${korner.slug}/settings`}
@@ -94,7 +98,7 @@ const KornerCard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
           )}
         </button>
       </div>
-    </Link>
+    </div>
   );
 };
 
