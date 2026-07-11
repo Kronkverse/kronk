@@ -19,9 +19,9 @@
     font-size: 0.8rem;
     color: var(--text-muted);
     padding: 0.25rem 0.65rem;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     opacity: 0;
-    transition: opacity 200ms ease-out;
+    transition: opacity var(--dur-medium) var(--ease-out);
 
     &--saving {
       color: var(--text-muted);
@@ -36,8 +36,8 @@
     }
 
     &--error {
-      color: var(--warning-red, tomato);
-      background: color-mix(in oklab, var(--warning-red, tomato) 12%, transparent);
+      color: var(--warning-red);
+      background: color-mix(in oklab, var(--warning-red) 12%, transparent);
       opacity: 1;
     }
   }
@@ -60,8 +60,8 @@
       position: absolute;
       inset: 0;
       background: color-mix(in oklab, var(--text-muted) 30%, transparent);
-      border-radius: 999px;
-      transition: background 180ms ease-out;
+      border-radius: var(--radius-round);
+      transition: background var(--dur-fast) var(--ease-out);
 
       &::after {
         content: '';
@@ -72,7 +72,7 @@
         height: 1.25rem;
         border-radius: 50%;
         background: #fff;
-        transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+        transition: transform var(--dur-medium) var(--ease-spring);
         box-shadow: 0 2px 4px rgb(0 0 0 / 25%);
       }
     }
@@ -98,12 +98,12 @@
     gap: 0.4rem;
     padding: 0.4rem 0.85rem;
     border: 1px solid var(--border-default);
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     background: var(--surface-primary);
     color: var(--text-secondary);
     font-size: 0.85rem;
     cursor: pointer;
-    transition: border-color 150ms ease-out, background 150ms ease-out, color 150ms ease-out;
+    transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 
     input {
       accent-color: var(--kronk-purple-accent);
@@ -133,7 +133,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.35rem 0.5rem;
-    border-radius: 6px;
+    border-radius: var(--radius-small);
     cursor: pointer;
 
     input {
@@ -152,7 +152,7 @@
     gap: 0.35rem;
     padding: 0.35rem 0.65rem;
     margin-bottom: 1rem;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     color: var(--text-secondary);
     text-decoration: none;
     font-size: 0.85rem;
@@ -184,7 +184,7 @@
     justify-content: center;
     width: 3rem;
     height: 3rem;
-    border-radius: 12px;
+    border-radius: var(--radius-medium);
     background: var(--kronk-purple-accent);
     color: var(--surface-primary);
     box-shadow: 0 4px 12px -4px color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
@@ -213,10 +213,10 @@
 
   &__error {
     padding: 0.85rem 1rem;
-    border: 1px solid color-mix(in oklab, var(--warning-red, tomato) 40%, transparent);
-    border-radius: var(--radius-medium, 8px);
-    background: color-mix(in oklab, var(--warning-red, tomato) 10%, transparent);
-    color: var(--warning-red, tomato);
+    border: 1px solid color-mix(in oklab, var(--warning-red) 40%, transparent);
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--warning-red) 10%, transparent);
+    color: var(--warning-red);
     margin-bottom: 1rem;
   }
 
@@ -229,7 +229,7 @@
     margin-bottom: 2rem;
     padding: 1.25rem 1.25rem 0.5rem;
     border: 1px solid var(--border-default);
-    border-radius: 12px;
+    border-radius: var(--radius-medium);
     background: var(--surface-elevated);
   }
 
@@ -260,7 +260,7 @@
       padding: 0.5rem 0.75rem;
       background: var(--surface-primary);
       border: 1px solid var(--border-default);
-      border-radius: var(--radius-small, 6px);
+      border-radius: var(--radius-small);
       color: var(--text-primary);
       font-size: 0.9rem;
 

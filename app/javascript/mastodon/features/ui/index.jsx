@@ -113,6 +113,7 @@ import {
   KornerSettings,
   FeedSettings,
   Connections,
+  StyleGuide,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
 import { focusColumn, getFocusedItemIndex, focusItemSibling } from './util/focusUtils';
@@ -250,6 +251,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/hub/groups" component={Groups} content={children} />}
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
             {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
+            <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
             <WrappedRoute path='/hub/moments' component={MomentsStub} content={children} />
             <WrappedRoute path='/hub/albutts' component={AlbuttsStub} content={children} />
             <WrappedRoute path='/hub/kompass' component={KompassStub} content={children} />

@@ -61,7 +61,7 @@ body::before {
   font-weight: 700;
   letter-spacing: 0.03em;
   text-decoration: none;
-  transition: transform 180ms ease-out, color 180ms ease-out;
+  transition: transform var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 
   &:hover,
   &:focus-visible {
@@ -81,14 +81,14 @@ body::before {
   align-items: center;
   gap: 0.15rem;
   padding: 0.3rem;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: transparent;
   border: none;
   box-shadow: none;
 
   &__item {
     padding: 0.5rem 1.35rem;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     color: color-mix(in oklab, #fff 75%, var(--kronk-purple-accent));
     text-decoration: none;
     font-family: var(--font-display);
@@ -97,9 +97,9 @@ body::before {
     letter-spacing: 0.01em;
     position: relative;
     transition:
-      color 200ms ease-out,
-      background 200ms ease-out,
-      transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+      color var(--dur-medium) var(--ease-out),
+      background var(--dur-medium) var(--ease-out),
+      transform var(--dur-medium) var(--ease-spring);
 
     &:hover {
       color: #fff;
@@ -115,7 +115,7 @@ body::before {
       background: linear-gradient(
         135deg,
         var(--kronk-purple-accent),
-        var(--kronk-purple-bright, var(--kronk-purple-accent))
+        var(--kronk-purple-bright)
       );
       color: #fff;
       box-shadow:
@@ -151,7 +151,7 @@ body::before {
     .hub-switcher__item {
       flex: 1;
       text-align: center;
-      border-radius: var(--radius-medium, 8px);
+      border-radius: var(--radius-medium);
       padding: 0.6rem 0.5rem;
       color: color-mix(in oklab, #fff 75%, var(--kronk-purple-accent));
 
@@ -195,7 +195,7 @@ body:has(.korner-sub-bar) {
     max-width: 720px;
     margin-left: auto;
     margin-right: auto;
-    transition: max-width 200ms ease-out;
+    transition: max-width var(--dur-medium) var(--ease-out);
   }
 
   .columns-area__panels__main {
@@ -203,7 +203,7 @@ body:has(.korner-sub-bar) {
     max-width: 720px;
     margin-left: auto;
     margin-right: auto;
-    transition: max-width 200ms ease-out;
+    transition: max-width var(--dur-medium) var(--ease-out);
   }
 
   // Kronk chrome replaces the classic right-hand nav + trends pane;
@@ -238,7 +238,7 @@ body:has(.korner-sub-bar) {
   align-items: center;
   gap: 0.5rem;
   padding: 0.3rem 0.75rem;
-  border-radius: var(--radius-round, 999px);
+  border-radius: var(--radius-round);
   background: var(--surface-elevated);
   border: 1px solid var(--border-default);
   font-size: 0.85rem;
@@ -257,7 +257,7 @@ body:has(.korner-sub-bar) {
     color: var(--text-secondary);
     text-decoration: none;
     padding: 0.1rem 0.35rem;
-    border-radius: var(--radius-small, 6px);
+    border-radius: var(--radius-small);
 
     &:hover {
       color: var(--text-primary);
@@ -325,12 +325,12 @@ body:has(.korner-sub-bar) {
     box-shadow:
       0 4px 12px -2px color-mix(in oklab, var(--kronk-purple-accent) 65%, transparent),
       inset 0 1px 0 color-mix(in oklab, #fff 30%, transparent);
-    transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), background 200ms ease-out;
+    transition: transform var(--dur-medium) var(--ease-spring), background var(--dur-medium) var(--ease-out);
 
     &:hover,
     &:focus-visible {
       transform: scale(1.06);
-      background: var(--kronk-purple-bright, var(--kronk-purple-accent));
+      background: var(--kronk-purple-bright);
       outline: none;
     }
   }
@@ -347,7 +347,7 @@ body:has(.korner-sub-bar) {
     min-width: 1.35rem;
     height: 1.35rem;
     padding: 0 0.4rem;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     background: var(--surface-primary);
     color: var(--kronk-purple-accent);
     border: 2px solid var(--surface-primary);
@@ -370,14 +370,14 @@ body:has(.korner-sub-bar) {
     gap: 0.25rem;
     background: color-mix(in oklab, var(--surface-elevated) 92%, var(--kronk-purple-deep));
     border: 1px solid color-mix(in oklab, var(--kronk-purple-accent) 20%, var(--border-default));
-    border-radius: 16px;
+    border-radius: var(--radius-large);
     box-shadow:
       0 20px 48px -12px rgb(0 0 0 / 50%),
       0 4px 16px -4px color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent),
       inset 0 1px 0 color-mix(in oklab, var(--kronk-purple-accent) 8%, transparent);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    animation: kronk-menu-in 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: kronk-menu-in var(--dur-medium) var(--ease-spring);
     transform-origin: top right;
   }
 
@@ -388,14 +388,14 @@ body:has(.korner-sub-bar) {
     padding: 0.7rem 0.85rem;
     color: var(--text-primary);
     text-decoration: none;
-    border-radius: 10px;
+    border-radius: var(--radius-medium);
     font-size: 0.95rem;
     font-weight: 500;
     position: relative;
     transition:
-      background 150ms ease-out,
-      transform 150ms ease-out,
-      color 150ms ease-out;
+      background var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
 
     &:hover,
     &:focus-visible {
@@ -416,7 +416,7 @@ body:has(.korner-sub-bar) {
 
       &:hover,
       &:focus-visible {
-        background: var(--kronk-purple-bright, var(--kronk-purple-accent));
+        background: var(--kronk-purple-bright);
         color: var(--surface-primary);
 
         .kronk-menu__item-glyph {
@@ -439,10 +439,10 @@ body:has(.korner-sub-bar) {
     justify-content: center;
     width: 2.1rem;
     height: 2.1rem;
-    border-radius: 8px;
+    border-radius: var(--radius-medium);
     background: color-mix(in oklab, var(--kronk-purple-accent) 12%, transparent);
     color: var(--kronk-purple-accent);
-    transition: background 150ms ease-out, color 150ms ease-out;
+    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 
     svg {
       width: 1.1rem;
@@ -459,7 +459,7 @@ body:has(.korner-sub-bar) {
     min-width: 1.35rem;
     height: 1.35rem;
     padding: 0 0.4rem;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     background: var(--kronk-purple-accent);
     color: var(--surface-primary);
     font-size: 0.7rem;
@@ -509,14 +509,14 @@ body:has(.korner-sub-bar) {
     flex: 1;
     padding: 0.35rem 0.45rem;
     border: 1px solid var(--border-default);
-    border-radius: var(--radius-small, 6px);
+    border-radius: var(--radius-small);
     background: transparent;
     color: var(--text-secondary);
     font-size: 0.75rem;
     font-weight: 500;
     cursor: pointer;
     text-align: center;
-    transition: background 100ms ease-out, color 100ms ease-out;
+    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 
     &:hover {
       color: var(--text-primary);
@@ -529,7 +529,7 @@ body:has(.korner-sub-bar) {
       color: var(--surface-primary);
 
       &:hover {
-        background: var(--kronk-purple-bright, var(--kronk-purple-accent));
+        background: var(--kronk-purple-bright);
         color: var(--surface-primary);
       }
     }

@@ -16,7 +16,7 @@
     align-items: center;
     gap: 0.25rem;
     padding: 0.15rem 0.6rem;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     background: var(--kronk-purple-deep);
     color: var(--kronk-purple-accent);
     font-size: 0.8rem;
@@ -39,7 +39,7 @@
 
   &__group-target-toggle {
     padding: 0.15rem 0.65rem;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     background: transparent;
     border: 1px dashed var(--border-default);
     color: var(--text-secondary);
@@ -64,10 +64,10 @@
     padding: 0.35rem;
     background: var(--surface-elevated);
     border: 1px solid var(--border-default);
-    border-radius: var(--radius-medium, 8px);
+    border-radius: var(--radius-medium);
     min-width: 14rem;
     z-index: 10;
-    box-shadow: var(--elevation-medium, 0 4px 16px rgb(0 0 0 / 30%));
+    box-shadow: var(--elevation-card);
   }
 
   &__group-target-empty {
@@ -85,7 +85,7 @@
     background: transparent;
     color: var(--text-primary);
     border: none;
-    border-radius: var(--radius-small, 6px);
+    border-radius: var(--radius-small);
     cursor: pointer;
     font-size: 0.85rem;
 
@@ -107,7 +107,7 @@
 
   &__kategory-toggle {
     padding: 0.15rem 0.65rem;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     background: transparent;
     border: 1px dashed var(--border-default);
     color: var(--text-secondary);
@@ -135,13 +135,13 @@
 
   &__kategory-chip {
     padding: 0.2rem 0.6rem;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     border: 1px solid var(--border-default);
     background: transparent;
     color: var(--text-secondary);
     font-size: 0.75rem;
     cursor: pointer;
-    transition: background 100ms ease-out, color 100ms ease-out, border-color 100ms ease-out;
+    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 
     &:hover {
       color: var(--text-primary);

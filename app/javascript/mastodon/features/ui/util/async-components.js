@@ -344,3 +344,7 @@ export function Connections () {
   return import("../../connections");
 }
 
+export function StyleGuide () {
+  return import("../../styleguide");
+}
+

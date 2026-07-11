@@ -15,12 +15,12 @@
   &__tab {
     display: inline-block;
     padding: 0.4rem 0.9rem;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     color: var(--text-secondary);
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 500;
-    transition: background 120ms ease-out, color 120ms ease-out;
+    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 
     &:hover {
       color: var(--text-primary);
@@ -48,7 +48,7 @@
   }
 
   &__error {
-    color: var(--warning-red, tomato);
+    color: var(--warning-red);
   }
 
   &__list {
@@ -66,9 +66,9 @@
     gap: 0.85rem;
     padding: 0.85rem 1rem;
     border: 1px solid var(--border-default);
-    border-radius: var(--radius-medium, 10px);
+    border-radius: var(--radius-medium);
     background: var(--surface-elevated);
-    transition: border-color 120ms ease-out, background 120ms ease-out;
+    transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
 
     &:hover {
       border-color: var(--kronk-purple-accent);

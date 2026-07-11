@@ -48,14 +48,14 @@
     padding: 1.75rem 1.25rem 1rem;
     min-height: 15rem;
     border: 1px solid var(--border-default);
-    border-radius: 16px;
+    border-radius: var(--radius-large);
     background: var(--surface-elevated);
     color: var(--text-primary);
     overflow: hidden;
     transition:
-      transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1),
-      border-color 180ms ease-out,
-      box-shadow 180ms ease-out;
+      transform var(--dur-fast) var(--ease-spring),
+      border-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out);
 
     // Layered gradient wash — reads as atmosphere rather than a flat
     // surface, lets the hero glyph pop out cleanly.
@@ -76,7 +76,7 @@
         );
       opacity: 0.85;
       pointer-events: none;
-      transition: opacity 250ms ease-out;
+      transition: opacity var(--dur-medium) var(--ease-out);
     }
 
     // Top-edge accent stripe brightens on hover.
@@ -92,7 +92,7 @@
         transparent
       );
       opacity: 0.55;
-      transition: opacity 250ms ease-out;
+      transition: opacity var(--dur-medium) var(--ease-out);
     }
 
     &:hover,
@@ -106,7 +106,7 @@
 
       .hub-page__card-icon {
         transform: translateY(-2px) scale(1.08);
-        background: var(--kronk-purple-bright, var(--kronk-purple-accent));
+        background: var(--kronk-purple-bright);
       }
     }
   }
@@ -120,7 +120,7 @@
     flex: 1 1 auto;
     position: relative;
     z-index: 1;
-    border-radius: 10px;
+    border-radius: var(--radius-medium);
 
     &:focus-visible {
       outline: 2px solid var(--kronk-purple-accent);
@@ -148,9 +148,9 @@
     position: relative;
     z-index: 1;
     transition:
-      transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1),
-      background 200ms ease-out,
-      box-shadow 200ms ease-out;
+      transform var(--dur-medium) var(--ease-spring),
+      background var(--dur-medium) var(--ease-out),
+      box-shadow var(--dur-medium) var(--ease-out);
 
     svg {
       width: 2.5rem;
@@ -200,7 +200,7 @@
 
   &__card-tune {
     padding: 0.35rem 0.9rem;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     border: 1px solid var(--border-default);
     background: color-mix(in oklab, var(--surface-primary) 90%, transparent);
     color: var(--text-secondary);
@@ -209,10 +209,10 @@
     letter-spacing: 0.02em;
     cursor: pointer;
     transition:
-      background 150ms ease-out,
-      border-color 150ms ease-out,
-      color 150ms ease-out,
-      transform 150ms ease-out;
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
 
     &:hover {
       border-color: var(--kronk-purple-accent);
@@ -238,10 +238,10 @@
     justify-content: center;
     width: 2rem;
     height: 2rem;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     color: var(--text-muted);
     text-decoration: none;
-    transition: background 150ms ease-out, color 150ms ease-out;
+    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 
     &:hover {
       background: color-mix(in oklab, var(--kronk-purple-accent) 15%, transparent);

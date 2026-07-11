@@ -41,7 +41,7 @@ $rail-breakpoint: 1200px;  // Sidebar only on genuinely wide viewports;
     }
     &::-webkit-scrollbar-thumb {
       background: color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
-      border-radius: 999px;
+      border-radius: var(--radius-round);
     }
   }
 
@@ -73,7 +73,7 @@ $rail-breakpoint: 1200px;  // Sidebar only on genuinely wide viewports;
       padding: 0.35rem 0.7rem;
       background: #000;
       border: 1px solid var(--kronk-purple-accent);
-      border-radius: 8px;
+      border-radius: var(--radius-medium);
       color: #fff;
       font-family: var(--font-display);
       font-size: 0.85rem;
@@ -85,7 +85,7 @@ $rail-breakpoint: 1200px;  // Sidebar only on genuinely wide viewports;
       box-shadow:
         0 4px 14px -3px rgb(0 0 0 / 60%),
         0 0 12px -2px color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
-      transition: opacity 150ms ease-out, transform 200ms ease-out;
+      transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-medium) var(--ease-out);
     }
 
     &:hover::after,
@@ -122,7 +122,7 @@ $rail-breakpoint: 1200px;  // Sidebar only on genuinely wide viewports;
         top: 0.6rem;
         bottom: 0.6rem;
         width: 3px;
-        border-radius: 999px;
+        border-radius: var(--radius-round);
         background: var(--kronk-purple-accent);
         box-shadow: 0 0 8px color-mix(in oklab, var(--kronk-purple-accent) 70%, transparent);
       }
@@ -141,10 +141,10 @@ $rail-breakpoint: 1200px;  // Sidebar only on genuinely wide viewports;
     justify-content: center;
     width: 2.5rem;
     height: 2.5rem;
-    border-radius: 10px;
+    border-radius: var(--radius-medium);
     background: color-mix(in oklab, var(--kronk-purple-accent) 15%, transparent);
     color: var(--kronk-purple-accent);
-    transition: background 150ms ease-out, color 150ms ease-out;
+    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 
     svg {
       width: 1.35rem;
@@ -164,12 +164,12 @@ $rail-breakpoint: 1200px;  // Sidebar only on genuinely wide viewports;
     align-items: center;
     justify-content: center;
     padding: 0.85rem 0.4rem;
-    border-top: 1px solid color-mix(in oklab, var(--kronk-purple-accent) 25%, #1c1730);
+    border-top: 1px solid color-mix(in oklab, var(--kronk-purple-accent) 25%, var(--surface-elevated));
     color: var(--kronk-purple-accent);
     text-decoration: none;
     font-size: 1rem;
     font-weight: 700;
-    transition: background 150ms ease-out, color 150ms ease-out;
+    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 
     &:hover {
       background: color-mix(in oklab, var(--kronk-purple-accent) 12%, transparent);

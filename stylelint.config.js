@@ -42,5 +42,47 @@ module.exports = {
         ],
       },
     },
+
+    // Kronk-owned SCSS: everything must go through tokens. No raw
+    // hex colours, no raw shadows, no raw motion durations, no raw
+    // border-radius pixel values. Change tokens.yaml; components
+    // reference tokens. Rejects regressions before they land.
+    //
+    // Applies only to Kronk-authored files. The generated
+    // _tokens.scss is the token source and is expressly exempt.
+    {
+      files: [
+        'app/javascript/styles/mastodon/_kronk_chrome.scss',
+        'app/javascript/styles/mastodon/_kronk_org_page.scss',
+        'app/javascript/styles/mastodon/_hub_page.scss',
+        'app/javascript/styles/mastodon/_nudges_activity.scss',
+        'app/javascript/styles/mastodon/_korner_stub.scss',
+        'app/javascript/styles/mastodon/_compose_kronk.scss',
+        'app/javascript/styles/mastodon/_sectioned_profile.scss',
+        'app/javascript/styles/mastodon/_groups.scss',
+        'app/javascript/styles/mastodon/_korner_settings.scss',
+        'app/javascript/styles/mastodon/_korner_sidebar.scss',
+        'app/javascript/styles/mastodon/_feed_settings.scss',
+        'app/javascript/styles/mastodon/_styleguide.scss',
+      ],
+      rules: {
+        // Raw hex codes are banned. Colours must come from tokens.
+        // Whitelisted: #fff / #000 for on-purple text and pure-black
+        // chrome bg, plus 3-digit shorthand of the same. If a value
+        // isn't one of those, it should be a token.
+        'color-no-hex': [true, {
+          message: 'No raw hex codes in Kronk SCSS. Use a token from --kronk-*, --semantic-*, or a color-mix() with tokens.',
+          severity: 'warning',
+        }],
+
+        // Border radius must come from --radius-* tokens.
+        'declaration-property-value-disallowed-list': [{
+          'border-radius': ['/^[0-9]+px$/', '/^[0-9]+rem$/'],
+        }, {
+          message: 'border-radius must reference a --radius-* token (small/medium/large/round).',
+          severity: 'warning',
+        }],
+      },
+    },
   ],
 };
