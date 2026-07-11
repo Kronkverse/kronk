@@ -25,6 +25,7 @@ import { HuddlePip } from 'mastodon/features/huddle_pip';
 import { PictureInPicture } from 'mastodon/features/picture_in_picture';
 import { HubSwitcher } from './components/hub_switcher';
 import { KornerSubBar } from './components/korner_sub_bar';
+import { KornerSidebar } from './components/korner_sidebar';
 import { KronkMenu } from './components/kronk_menu';
 import { KronkWordmark } from './components/kronk_wordmark';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
@@ -670,6 +671,7 @@ class UI extends PureComponent {
           <KronkWordmark />
           <HubSwitcher variant={layout === 'mobile' ? 'bottom' : 'top'} currentAccountUsername={this.props.username} />
           <KornerSubBar />
+          {this.props.identity.signedIn && <KornerSidebar />}
           {this.props.identity.signedIn && <KronkMenu />}
           {!disableHoverCards && <HoverCardController />}
           <HashtagMenuController />

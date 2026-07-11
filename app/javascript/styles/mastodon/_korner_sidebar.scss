@@ -1,0 +1,155 @@
+// Pervasive left rail. Always present alongside the top strip and Ӂ.
+// Sanctum-style: fixed left, ~15rem wide, black bg, accent right-border.
+// Ordered by tune-in count (proxy for most-recent-activity) with the
+// most active pinned to the top.
+
+.korner-sidebar {
+  position: fixed;
+  top: 3.75rem;   // matches body::before top-strip height
+  left: 0;
+  bottom: 0;
+  width: 15rem;
+  z-index: 22;
+  background: #000;
+  border-right: 1.5px solid var(--kronk-purple-accent);
+  box-shadow:
+    4px 0 20px -6px rgb(0 0 0 / 55%),
+    4px 0 24px -8px color-mix(in oklab, var(--kronk-purple-accent) 25%, transparent);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  @media (max-width: 889px) {
+    // Below the desktop breakpoint, retract off-screen. Reserve space
+    // via a slide-in later if needed.
+    display: none;
+  }
+
+  &__list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 0.75rem 0.4rem;
+
+    // Trim the scrollbar chrome.
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent) transparent;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
+      border-radius: 999px;
+    }
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.75rem;
+    margin-bottom: 0.15rem;
+    border-radius: 10px;
+    color: color-mix(in oklab, #fff 72%, var(--kronk-purple-accent));
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    position: relative;
+    transition:
+      background 150ms ease-out,
+      color 150ms ease-out,
+      transform 150ms ease-out;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in oklab, var(--kronk-purple-accent) 15%, transparent);
+      color: #fff;
+      transform: translateX(2px);
+      outline: none;
+
+      .korner-sidebar__glyph {
+        background: var(--kronk-purple-accent);
+        color: #fff;
+      }
+    }
+
+    &--active {
+      background: color-mix(in oklab, var(--kronk-purple-accent) 22%, transparent);
+      color: #fff;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: -0.4rem;
+        top: 0.65rem;
+        bottom: 0.65rem;
+        width: 3px;
+        border-radius: 999px;
+        background: var(--kronk-purple-accent);
+        box-shadow: 0 0 8px color-mix(in oklab, var(--kronk-purple-accent) 70%, transparent);
+      }
+
+      .korner-sidebar__glyph {
+        background: var(--kronk-purple-accent);
+        color: #fff;
+      }
+    }
+  }
+
+  &__glyph {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 8px;
+    background: color-mix(in oklab, var(--kronk-purple-accent) 15%, transparent);
+    color: var(--kronk-purple-accent);
+    transition: background 150ms ease-out, color 150ms ease-out;
+
+    svg {
+      width: 1.1rem;
+      height: 1.1rem;
+      fill: currentColor;
+    }
+  }
+
+  &__label {
+    flex: 1 1 auto;
+    font-family: 'Liberation Serif', Georgia, serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__all {
+    padding: 0.85rem 1rem;
+    border-top: 1px solid color-mix(in oklab, var(--kronk-purple-accent) 25%, #1c1730);
+    color: var(--kronk-purple-accent);
+    text-decoration: none;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    transition: background 150ms ease-out, color 150ms ease-out;
+
+    &:hover {
+      background: color-mix(in oklab, var(--kronk-purple-accent) 12%, transparent);
+      color: #fff;
+    }
+  }
+}
+
+// Shift content column to clear the sidebar on desktop.
+@media (min-width: 890px) {
+  body:has(.korner-sidebar) {
+    .columns-area,
+    .column {
+      padding-left: 15rem;
+    }
+  }
+}
