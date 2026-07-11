@@ -39,6 +39,31 @@ feed_projection:
 subscription:
   default:  # not-applicable — nudges are 1:1, not a broadcast surface; subscription is not the right primitive.
 
+# Per-user settings surfaced at /hub/nudges/settings (spec §K.3.3).
+settings:
+  - name:    quiet_hours_start
+    kind:    string
+    default: '22:00'
+    scope:   user
+    label:   Quiet hours start (24h, HH:MM)
+    description: Push nudges suppressed between quiet hours start and end. In-app nudges still land.
+  - name:    quiet_hours_end
+    kind:    string
+    default: '07:00'
+    scope:   user
+    label:   Quiet hours end (24h, HH:MM)
+  - name:    show_activity_in_chats
+    kind:    boolean
+    default: true
+    scope:   user
+    label:   Show reaction summaries inline in nudge threads
+    description: When on, "3 froths on this post" collapses into the thread. When off, they only appear on the Activity tab.
+  - name:    auto_read_on_open
+    kind:    boolean
+    default: true
+    scope:   user
+    label:   Mark thread read as soon as I open it
+
 launch:
   blurb:  "Nudges — a private ping, a shared thread."
   cta:    # not-applicable

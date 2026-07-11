@@ -44,6 +44,30 @@ subscription:
   default:  # not-applicable — Klot data is per-account owner-visible only; subscription is not the right primitive.
            # The KlotShare table is the correct primitive: a per-viewer opt-in, revocable, owner-controlled.
 
+# Per-user settings surfaced at /hub/klot/settings (spec §K.3.3).
+settings:
+  - name:    cycle_length_days
+    kind:    integer
+    default: 28
+    min:     20
+    max:     45
+    scope:   user
+    label:   Average cycle length (days)
+    description: Used only for phase estimation. Nothing shared. Stored client-computed.
+  - name:    period_length_days
+    kind:    integer
+    default: 5
+    min:     2
+    max:     10
+    scope:   user
+    label:   Average period length (days)
+  - name:    share_phase_publicly
+    kind:    boolean
+    default: false
+    scope:   user
+    label:   Let approved shares see the current phase name
+    description: Even when on, only accounts you've explicitly granted a KlotShare to can see it. Raw dates never leave your account.
+
 launch:
   blurb:  "Klot — track your cycle. Share the phase, not the data."
   cta:    "Tap in"

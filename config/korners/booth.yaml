@@ -41,6 +41,26 @@ feed_projection:
 subscription:
   default:  off                   # not-implemented
 
+# Per-user settings surfaced at /hub/booth/settings (spec §K.3.3).
+settings:
+  - name:    autoplay_on_visit
+    kind:    boolean
+    default: false
+    scope:   user
+    label:   Auto-play the featured set when I open Booth
+  - name:    cover_image_size
+    kind:    enum
+    options: [small, medium, large]
+    default: medium
+    scope:   user
+    label:   Cover image size
+  - name:    default_mix_visibility
+    kind:    enum
+    options: [public, unlisted, followers]
+    default: public
+    scope:   user
+    label:   Default visibility for sets I upload
+
 launch:
   blurb:  "The Booth — DJ sets and mixes at Kronk."
   cta:    "Tap in"

@@ -53,6 +53,29 @@ feed_projection:
 subscription:
   default:  off                   # not-implemented
 
+# Per-user settings surfaced at /hub/kalendar/settings (spec §K.3.3).
+settings:
+  - name:    reminder_lead_time
+    kind:    duration
+    default: PT1H
+    options: [PT15M, PT30M, PT1H, PT4H, P1D]
+    scope:   user
+    label:   Event reminder lead time
+    description: How far ahead of an event you're going or interested in the reminder fires.
+  - name:    default_event_visibility
+    kind:    enum
+    options: [public, unlisted, private]
+    default: public
+    scope:   user
+    label:   Default event visibility
+    description: Fresh events you create start at this visibility. You can override per-event.
+  - name:    week_start
+    kind:    enum
+    options: [monday, sunday]
+    default: monday
+    scope:   user
+    label:   Week starts on
+
 launch:
   blurb:  "Kalendar — the shared calendar for Kronk."
   cta:    "Tap in"

@@ -69,6 +69,22 @@ notifications:
       aggregation:  none
       interactive:  true
 
+# Per-user settings surfaced at /hub/kommons/settings (spec §K.3.3).
+settings:
+  - name:    preferred_proposal_types
+    kind:    multi_enum
+    options: [small, medium, large]
+    default: [small, medium, large]
+    scope:   user
+    label:   Show me proposal sizes
+    description: Filter your Kommons Hub feed to just these sizes. All three ships by default.
+  - name:    notify_on_status_change
+    kind:    boolean
+    default: false
+    scope:   user
+    label:   Notify me when a proposal I backed changes state
+    description: Fires a nudge when a proposal you've backed advances, gets vetoed, or delivers.
+
 launch:                           # retrospective — Kommons predates launch cards
   blurb:  "₭ommons — the space where structural moves are decided."
   cta:    "Tap in"

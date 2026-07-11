@@ -53,6 +53,27 @@ notifications:
       aggregation:  { window: 1h, key: answer_id }
       interactive:  false            # notice — inline count in the answer's thread
 
+# Per-user settings surfaced at /hub/kuestions/settings (spec §K.3.3).
+settings:
+  - name:    default_answer_visibility
+    kind:    enum
+    options: [public, unlisted, followers]
+    default: public
+    scope:   user
+    label:   Default visibility for my answers
+  - name:    hide_answered_questions
+    kind:    boolean
+    default: false
+    scope:   user
+    label:   Hide questions I've already answered
+    description: When on, the Kuestions feed filters out anything you've locked in an answer for.
+  - name:    unlock_confirmation
+    kind:    boolean
+    default: true
+    scope:   user
+    label:   Confirm before answering
+    description: Answering unlocks other people's answers. When on, we ask for confirmation so you don't burn the unlock by accident.
+
 launch:
   blurb:  "Kuestions — ask, answer, unlock."
   cta:    "Tap in"
