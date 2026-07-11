@@ -15,7 +15,7 @@ $booth-accent: var(--accent);
 }
 
 .booth__hero-title {
-  font-family: Georgia, 'Liberation Serif', serif;
+  font-family: Georgia, var(--font-display);
   font-size: 36px;
   font-weight: 500;
   color: $primary-text-color;

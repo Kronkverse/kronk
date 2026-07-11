@@ -13,7 +13,7 @@ $ev-interested-color: #b8945f;
 }
 
 .events-page__hero-title {
-  font-family: Georgia, 'Liberation Serif', serif;
+  font-family: Georgia, var(--font-display);
   font-size: 36px;
   font-weight: 500;
   color: $primary-text-color;
@@ -1993,7 +1993,7 @@ $ev-interested-color: #b8945f;
   }
 
   &__header-label {
-    font-family: Georgia, 'Liberation Serif', serif;
+    font-family: Georgia, var(--font-display);
     font-size: 34px;
     font-weight: 500;
     letter-spacing: 0.01em;

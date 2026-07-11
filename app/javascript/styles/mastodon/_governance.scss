@@ -25,7 +25,7 @@ $governance-amber: #f59e0b;
 }
 
 .governance-page__hero-title {
-  font-family: Georgia, 'Liberation Serif', serif;
+  font-family: Georgia, var(--font-display);
   font-size: 36px;
   font-weight: 500;
   color: $primary-text-color;
@@ -270,7 +270,7 @@ $governance-amber: #f59e0b;
 }
 
 .governance-card__title {
-  font-family: 'Liberation Serif', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 18px;
   font-weight: 700;
   color: $primary-text-color;
@@ -685,7 +685,7 @@ $governance-amber: #f59e0b;
 }
 
 .governance-detail__title {
-  font-family: Georgia, 'Times New Roman', 'Liberation Serif', serif;
+  font-family: Georgia, 'Times New Roman', var(--font-display);
   font-size: 28px;
   font-weight: 500;
   color: #{$primary-text-color};
@@ -820,7 +820,7 @@ $governance-amber: #f59e0b;
   }
 
   &__heading {
-    font-family: Georgia, 'Liberation Serif', serif;
+    font-family: Georgia, var(--font-display);
     font-size: 20px;
     font-weight: 600;
     color: $primary-text-color;
@@ -1338,7 +1338,7 @@ $governance-amber: #f59e0b;
 }
 
 .governance-tab-proposal__subsection-title {
-  font-family: Georgia, 'Liberation Serif', serif;
+  font-family: Georgia, var(--font-display);
   font-size: 15px;
   font-weight: 600;
   color: $primary-text-color;
@@ -1683,7 +1683,7 @@ $governance-amber: #f59e0b;
 }
 
 .governance-response-card__title {
-  font-family: Georgia, 'Liberation Serif', serif;
+  font-family: Georgia, var(--font-display);
   font-size: 16px;
   font-weight: 600;
   color: $primary-text-color;
@@ -2070,7 +2070,7 @@ $governance-amber: #f59e0b;
 }
 
 .governance-tab-kontribute__section-heading {
-  font-family: 'Liberation Serif', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 15px;
   font-weight: 700;
   color: $primary-text-color;
@@ -2304,7 +2304,7 @@ $governance-amber: #f59e0b;
 
 // Page title (Mastodon ColumnHeader) — scoped to only this view via :has()
 .column:has(.governance-page) .column-header__title {
-  font-family: 'Liberation Serif', Georgia, serif;
+  font-family: var(--font-display);
 }
 
 .governance-form {
@@ -2778,7 +2778,7 @@ $governance-amber: #f59e0b;
 }
 
 .wizard-heading {
-  font-family: Georgia, 'Liberation Serif', serif;
+  font-family: Georgia, var(--font-display);
   font-size: 20px;
   font-weight: 500;
   color: $primary-text-color;
