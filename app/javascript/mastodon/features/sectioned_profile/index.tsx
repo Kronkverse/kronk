@@ -33,6 +33,8 @@ interface SectionWithStatuses extends ApiProfileSectionJSON {
 
 const emptyList = ImmutableList<string>();
 
+const noopLoadMore = () => undefined;
+
 const isTabKey = (v: string | null): v is TabKey =>
   v !== null && (TAB_KEYS as string[]).includes(v);
 
@@ -64,8 +66,6 @@ export const SectionedProfile = () => {
     },
     [history, location.pathname, location.search],
   );
-
-  const noopLoadMore = useCallback(() => undefined, []);
 
   useEffect(() => {
     if (!acct) return;
@@ -444,63 +444,173 @@ const MePanel: React.FC<{ isOwner: boolean }> = ({ isOwner }) => {
 const WorkPanel: React.FC<{
   sections: SectionWithStatuses[];
   isOwner: boolean;
-}> = ({ sections, isOwner }) => (
-  <>
-    <div className='sectioned-profile__work-head'>
-      <div>
-        <h3>
-          <FormattedMessage id='sectioned_profile.work.title' defaultMessage='Collected work' />
-        </h3>
-        <p>
-          <FormattedMessage
-            id='sectioned_profile.work.subtitle'
-            defaultMessage='Rooms you can walk into — sections from korners you post to and kategories you use.'
-          />
-        </p>
-      </div>
-      {isOwner && (
-        <a
-          className='sectioned-profile__work-new'
-          href='/settings/profile_sections'
-        >
-          <FormattedMessage id='sectioned_profile.work.new_card' defaultMessage='＋ New card' />
-        </a>
-      )}
-    </div>
+}> = ({ sections, isOwner }) => {
+  const [openId, setOpenId] = useState<string | null>(null);
+  const openSection = useMemo(
+    () => sections.find((s) => s.id === openId) ?? null,
+    [sections, openId],
+  );
 
-    <div className='sectioned-profile__work-grid'>
-      {sections.length === 0 && (
-        <p className='sectioned-profile__work-empty'>
-          {isOwner ? (
-            <FormattedMessage
-              id='sectioned_profile.work.empty_owner'
-              defaultMessage='No sections yet. Add korner or kategory sections in profile settings.'
-            />
-          ) : (
-            <FormattedMessage
-              id='sectioned_profile.work.empty_visitor'
-              defaultMessage='Nothing collected yet.'
-            />
-          )}
-        </p>
-      )}
+  const handleClose = useCallback(() => {
+    setOpenId(null);
+  }, []);
 
-      {sections.map((section) => (
-        <div key={section.id} className='sectioned-profile__work-card'>
-          <div className='sectioned-profile__work-card-preview' />
-          <div className='sectioned-profile__work-card-title'>
-            {section.title ?? section.section_type}
-          </div>
-          <div className='sectioned-profile__work-card-sub'>
-            <span>{section.statusIds.size}</span>
-            <span>·</span>
-            <span>{section.section_type}</span>
-          </div>
+  useEffect(() => {
+    if (!openId) return undefined;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpenId(null);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [openId]);
+
+  return (
+    <>
+      <div className='sectioned-profile__work-head'>
+        <div>
+          <h3>
+            <FormattedMessage id='sectioned_profile.work.title' defaultMessage='Collected work' />
+          </h3>
+          <p>
+            <FormattedMessage
+              id='sectioned_profile.work.subtitle'
+              defaultMessage='Rooms you can walk into — sections from korners you post to and kategories you use.'
+            />
+          </p>
         </div>
-      ))}
-    </div>
-  </>
-);
+        {isOwner && (
+          <a
+            className='sectioned-profile__work-new'
+            href='/settings/profile_sections'
+          >
+            <FormattedMessage id='sectioned_profile.work.new_card' defaultMessage='＋ New card' />
+          </a>
+        )}
+      </div>
+
+      <div className='sectioned-profile__work-grid'>
+        {sections.length === 0 && (
+          <p className='sectioned-profile__work-empty'>
+            {isOwner ? (
+              <FormattedMessage
+                id='sectioned_profile.work.empty_owner'
+                defaultMessage='No sections yet. Add korner or kategory sections in profile settings.'
+              />
+            ) : (
+              <FormattedMessage
+                id='sectioned_profile.work.empty_visitor'
+                defaultMessage='Nothing collected yet.'
+              />
+            )}
+          </p>
+        )}
+
+        {sections.map((section) => (
+          <WorkCard key={section.id} section={section} onOpen={setOpenId} />
+        ))}
+      </div>
+
+      <WorkDrawer section={openSection} onClose={handleClose} />
+    </>
+  );
+};
+
+const WorkCard: React.FC<{
+  section: SectionWithStatuses;
+  onOpen: (id: string) => void;
+}> = ({ section, onOpen }) => {
+  const handleClick = useCallback(() => {
+    onOpen(section.id);
+  }, [onOpen, section.id]);
+
+  return (
+    <button
+      type='button'
+      className='sectioned-profile__work-card'
+      onClick={handleClick}
+    >
+      <span className='sectioned-profile__work-card-open' aria-hidden>
+        ＋ open
+      </span>
+      <div className='sectioned-profile__work-card-preview' />
+      <div className='sectioned-profile__work-card-title'>
+        {section.title ?? section.section_type}
+      </div>
+      <div className='sectioned-profile__work-card-sub'>
+        <span>{section.statusIds.size}</span>
+        <span>·</span>
+        <span>{section.section_type}</span>
+      </div>
+    </button>
+  );
+};
+
+const WorkDrawer: React.FC<{
+  section: SectionWithStatuses | null;
+  onClose: () => void;
+}> = ({ section, onClose }) => {
+  const open = section !== null;
+  return (
+    <>
+      <div
+        className={`sectioned-profile__scrim${open ? ' sectioned-profile__scrim--on' : ''}`}
+        onClick={onClose}
+        role='presentation'
+      />
+      <aside
+        className={`sectioned-profile__drawer${open ? ' sectioned-profile__drawer--on' : ''}`}
+        aria-hidden={!open}
+        aria-labelledby='sectioned-profile-drawer-title'
+      >
+        <button
+          type='button'
+          className='sectioned-profile__drawer-close'
+          onClick={onClose}
+          aria-label='Close'
+        >
+          ✕
+        </button>
+        {section && (
+          <>
+            <div
+              className='sectioned-profile__drawer-title'
+              id='sectioned-profile-drawer-title'
+            >
+              <span className='sectioned-profile__drawer-dot' aria-hidden />
+              <span>{section.title ?? section.section_type}</span>
+            </div>
+            <div className='sectioned-profile__drawer-sub'>
+              <FormattedMessage
+                id='sectioned_profile.work.drawer_sub'
+                defaultMessage='{count, plural, one {# post} other {# posts}} showcased · {kind}'
+                values={{ count: section.statusIds.size, kind: section.section_type }}
+              />
+            </div>
+            {section.statusIds.size === 0 ? (
+              <p className='sectioned-profile__drawer-empty'>
+                <FormattedMessage
+                  id='sectioned_profile.work.drawer_empty'
+                  defaultMessage='Nothing showcased in this section yet.'
+                />
+              </p>
+            ) : (
+              <StatusList
+                scrollKey={`sectioned_profile:drawer:${section.id}`}
+                statusIds={section.statusIds}
+                isLoading={section.loading}
+                hasMore={false}
+                onLoadMore={noopLoadMore}
+                timelineId={`sectioned_profile:drawer:${section.id}`}
+              />
+            )}
+          </>
+        )}
+      </aside>
+    </>
+  );
+};
 
 const TimelinePanel: React.FC<{
   section: SectionWithStatuses | undefined;
