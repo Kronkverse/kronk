@@ -94,32 +94,114 @@ Kronk has a distinctive lexicon; new spaces extend it rather than diverge from i
 
 ## 3. Aesthetic
 
-The bones exist; the framework documents and enforces them.
+Kronk shares one aesthetic vocabulary across every Korner. The framework declares it in a single source (`app/javascript/mastodon/tokens/tokens.yaml`), generates CSS custom properties from it (`_tokens.scss`), and enforces token usage via stylelint. A Korner author never invents visual language — they compose the shared kit.
 
-### 3.1 Tokens
+Living reference: **`/styleguide`** renders every token + representative components. Change the token; refresh the page; see it applied. If it looks broken in the guide, it's broken everywhere.
 
-| Token | Value / role |
+### 3.1 Palette — Kronk-purple only
+
+The planet metaphor is retired (2026-07-10). There is one shared palette: **Kronk-purple**, an indigo family matching the running production instance. Korner identity comes from **icon + name + content**, never colour.
+
+Palette tokens (dark theme):
+
+| Token | Value | Role |
+|---|---|---|
+| `--kronk-purple-primary` | `#3034a0` | Brand — gradient anchors, borders |
+| `--kronk-purple-bright` | `#8c8dff` | Highlight, focus, hover state |
+| `--kronk-purple-deep` | `#36248c` | Surface tint, atmosphere |
+| `--kronk-purple-muted` | `#343070` | Supporting text, low priority |
+| `--kronk-purple-accent` | `#6364ff` | Accent on cards, chips, borders |
+| `--accent` | alias | Consumer alias for `--kronk-purple-accent` |
+
+Semantic surface + text tokens (dark theme):
+
+| Token | Value |
 |---|---|
-| `--colour-primary` | `#563ACC` (Kronk purple) |
-| `--planet-sun` … `--planet-pluto` | Domain gradient, warm bright purple → cool grey |
-| Theme | Dark throughout |
-| Serif voice | Liberation Serif (wordmark + serif typography) |
-| Logo canvas | 4096×2048 for space logos |
-| Symbol motif | Unicode marks (e.g. ※ Orbit); Ӂ Я Ѻ Ɲ ₭ wordmark |
+| `--surface-primary` | `#191b22` |
+| `--surface-elevated` | `#292938` |
+| `--border-default` | `#3d2a6e` |
+| `--text-primary` | `#ffffff` |
+| `--text-secondary` | `#9c9cc9` |
+| `--text-muted` | `#606085` |
+| `--warning-red` | `#ef4444` |
+| `--success-green` | `#4b9160` |
 
-A Korner picks a planet in its manifest and **inherits that planet's palette** — it does not choose arbitrary colours. The inherited colour is also what makes a space's feed cards recognisable at a glance (§8.2).
+Light theme mirrors with darkened palette values and inverted surfaces; see `_tokens.scss` for the full override block.
 
-### 3.2 Component kit
+**Do not hardcode hex codes in Korner SCSS.** The stylelint config rejects them. Colours reach visible surfaces via tokens or `color-mix(in oklab, var(--kronk-purple-accent) N%, transparent)` layers.
 
-A shared, documented set: buttons, cards (including the feed card, §8.2), toggles, modals, tab/column chrome, hero-card pattern, the fan mechanic. New spaces **compose these**, not roll their own. Formalise the kit in the existing Storybook as the living source of truth.
+### 3.2 Typography
 
-### 3.3 Motion
+| Token | Family | Role |
+|---|---|---|
+| `--font-display` | `'Liberation Serif', Georgia, serif` | Wordmark, Korner names, headings, hero titles |
+| `--font-body` | `mastodon-font-sans-serif, sans-serif` | Body copy, controls, chrome labels |
+| `--font-mono` | `'Roboto Mono', 'Fira Mono', ui-monospace, monospace` | Code, hex chips, telemetry |
 
-The Hub's animation vocabulary (Bezier arcs, moon-bloom) is shared, so transitions feel like one system.
+Bundle Liberation Serif and the Ӂ Я Ѻ Ɲ ₭ wordmark glyphs on every platform. Not on stock Android; verify early.
 
-### 3.4 Cross-platform token parity
+### 3.3 Radius — universal corner language
 
-Tokens live as CSS `:root` vars on web and must exist as a matching Compose theme on Android; generate both from one source or they drift. **Bundle Liberation Serif and the wordmark glyphs** — they are not on stock Android and will not render otherwise. Verify early.
+Everything rounds. No sharp corners in the shell. If a surface can't fit a radius, it becomes a hairline divider (border, not box).
+
+| Token | Value | Applied to |
+|---|---|---|
+| `--radius-small` | `6px` | Inline chips, small icon buttons, focus rings, dropdown items |
+| `--radius-medium` | `10px` | Cards, panels, dropdowns, sidebar tiles, Ӂ menu items |
+| `--radius-large` | `16px` | Hero surfaces — top strip, sidebar, Hub Korner cards, Ӂ menu panel, modal frames |
+| `--radius-round` | `999px` | Pills — HubSwitcher, tags, badges, tune-in controls, every capsule button |
+
+### 3.4 Elevation presets
+
+| Token | Shadow | Role |
+|---|---|---|
+| `--elevation-subtle` | `0 1px 2px rgb(0 0 0 / 12%)` | Inline surfaces, subtle depth |
+| `--elevation-card` | `0 4px 12px -4px rgb(0 0 0 / 30%)` | Floating cards, panels |
+| `--elevation-floating` | `0 8px 24px -8px rgb(0 0 0 / 40%)` | Top strip, sidebar, floating menus |
+| `--elevation-menu` | `0 20px 48px -12px rgb(0 0 0 / 50%)` | Ӂ menu panel, modals |
+
+Additional shadow layers are composed on top when a surface needs accent glow — usually `color-mix(in oklab, var(--kronk-purple-accent) N%, transparent)`.
+
+### 3.5 Motion
+
+| Token | Value | When to use |
+|---|---|---|
+| `--dur-fast` | `120ms` | Hover, focus, small state changes |
+| `--dur-medium` | `200ms` | Panel opens, transitions between views |
+| `--dur-slow` | `400ms` | Large transitions, page shifts |
+| `--ease-out` | `cubic-bezier(0.16, 1, 0.3, 1)` | Default deceleration |
+| `--ease-in-out` | `cubic-bezier(0.65, 0, 0.35, 1)` | Reversible motion |
+| `--ease-spring` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Playful, springy — buttons scaling on hover, sidebar row lift |
+
+The Korner sidebar reorders with a hand-rolled FLIP animation using `--ease-spring` + `--dur-medium`. Hub Korner card hover lifts with the same easing. This is the shared vocabulary; new motion should reach for these tokens before authoring new curves.
+
+### 3.6 Component kit
+
+A shared, documented set: buttons, cards, toggles, chips, pills, modals, column chrome, feed card (§8.2), Ӂ menu, HubSwitcher, sidebar tiles, Korner card. New Korners **compose these**, not roll their own. `/styleguide` is the living source of truth; when a Korner needs a new visual pattern that isn't there, that pattern lands in the shared kit and the style guide first, then the Korner picks it up.
+
+Every Korner-authored SCSS file lives under `app/javascript/styles/mastodon/` and gets a stylelint override that enforces token usage. Adding a new file? Add it to the override list in `stylelint.config.js`.
+
+### 3.7 Cross-platform token parity
+
+Tokens live as CSS `:root` vars on web. Android must generate a matching Compose theme from the same `tokens.yaml` source, or the two drift. iOS follows the same rule when the app shell lands. `bin/generate-tokens` is the shared generator entry point.
+
+### 3.8 Korner overrides — when they are permitted
+
+A Korner does not override the palette. Ever. Kronk-purple is universal.
+
+A Korner **may** override radius, elevation, or motion for surfaces it owns, if that surface's function requires it (e.g. a card-flip animation using `cubic-bezier` beyond `--ease-spring`). Overrides live in the Korner's own SCSS file, scoped to its selector root, and are reviewed for whether they belong in the shared kit instead. Nine times out of ten they do.
+
+### 3.9 Changing the aesthetic
+
+The whole system retunes from one file. To iterate:
+
+1. Edit `app/javascript/mastodon/tokens/tokens.yaml`.
+2. Regenerate `_tokens.scss` via `bin/generate-tokens`.
+3. Refresh `/styleguide` to preview every token + component.
+4. Deploy to shadow; verify against representative Korner surfaces.
+5. Ship.
+
+**Never hardcode hex codes, durations, radii, or shadow values in component SCSS.** Stylelint rejects them at pre-commit. Every value goes through the tokens file. This discipline is what makes future retunes trivial.
 
 ---
 
