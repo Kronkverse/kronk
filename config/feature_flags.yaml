@@ -11,9 +11,10 @@
 
 default:
   # Kronk 2.0 profile composer at /@:acct/edit. Gates the
-  # profile_cards API endpoints + the composer route. Off until the
-  # composer UI is ready end-to-end.
-  profile_composer: false
+  # profile_cards API endpoints + the composer route. Enabled as the
+  # composer lands (canvas + inspector + per-card visibility); further
+  # steps (modes, sections fold-in, preview) build on top behind this.
+  profile_composer: true
 
 # Uncomment and populate as flags are introduced.
 # development: {}
