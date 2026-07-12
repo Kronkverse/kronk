@@ -360,3 +360,11 @@ export function AppearanceSettings () {
   return import("../../appearance_settings");
 }
 
+export function SettingsYou () {
+  return import("../../settings_you");
+}
+
+export function SettingsKorners () {
+  return import("../../settings_korners");
+}
+
