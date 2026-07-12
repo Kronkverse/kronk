@@ -22,11 +22,11 @@
 // chips. Chrome elements below stay position:fixed inside this strip
 // because they need to keep their independent z-index layering (menu
 // panel, sub-bar, etc.).
-// Chrome wrap. Single L-shaped fixed layer that spans the top edge and
-// the right rail — one continuous piece, not two chips joined. Uses
-// clip-path for the L geometry, a linear gradient so the black fades
-// into the starry backdrop along the inner edges, and a drop-shadow
-// filter (which respects clip-path) for the purple glow.
+// Chrome wrap. Two overlapping soft-edge bands — a top strip and a
+// right rail — which together read as an L. No clip-path: the L's
+// inner edge is a gradient fade so the black dissolves into the stars
+// instead of terminating at a hard line. The bands extend to the
+// viewport edge, so only the inner edges fade.
 
 body::before {
   content: '';
@@ -35,41 +35,57 @@ body::before {
   z-index: 24;
   pointer-events: none;
   background:
-    // Anchor the black at outer edges; fade toward the inner corner so
-    // it dissolves into the stars rather than looking like a hard mask.
-    radial-gradient(
-      circle at 100% 0,
+    // Top strip: solid black across the top under wordmark/menu, fading
+    // downward into the stars.
+    linear-gradient(
+      to bottom,
       #000 0,
-      #000 60%,
-      rgb(0 0 0 / 88%) 78%,
-      rgb(0 0 0 / 65%) 88%,
-      rgb(0 0 0 / 35%) 96%,
-      transparent 100%
-    );
-  // L-shape polygon:
-  //   strip band along the top,
-  //   sidebar rail along the right,
-  //   6.25rem thick (strip 3.5rem + 0.75rem outer margin + inner buffer),
-  //   4.5rem rail width + 0.75rem outer margin.
-  clip-path: polygon(
-    0.75rem 0.75rem,
-    calc(100% - 0.75rem) 0.75rem,
-    calc(100% - 0.75rem) calc(100% - 0.75rem),
-    calc(100% - 5.25rem) calc(100% - 0.75rem),
-    calc(100% - 5.25rem) 3.75rem,
-    0.75rem 3.75rem
-  );
-  filter: drop-shadow(0 0 24px color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent));
+      #000 3.5rem,
+      rgb(0 0 0 / 85%) 4.25rem,
+      rgb(0 0 0 / 55%) 5.25rem,
+      rgb(0 0 0 / 25%) 6.25rem,
+      transparent 7.5rem
+    ),
+    // Right rail: solid black along the right edge, fading leftward.
+    linear-gradient(
+        to left,
+        #000 0,
+        #000 4.5rem,
+        rgb(0 0 0 / 85%) 5.25rem,
+        rgb(0 0 0 / 55%) 6.25rem,
+        rgb(0 0 0 / 25%) 7.25rem,
+        transparent 8.5rem
+      );
+  background-repeat: no-repeat;
+  background-position:
+    0 0,
+    100% 0;
+  background-size:
+    100% 7.5rem,
+    8.5rem 100%;
 
-  @media (max-width: 889px) {
-    // Below the sidebar breakpoint, the L collapses to just the top
-    // strip — no right rail.
-    clip-path: polygon(
-      0.5rem 0.5rem,
-      calc(100% - 0.5rem) 0.5rem,
-      calc(100% - 0.5rem) 3.35rem,
-      0.5rem 3.35rem
+  // Soft purple wash bleeding out of the fade — reads as glow on the
+  // chrome, not an outline. Weaker than the old drop-shadow because
+  // there's no crisp shape to trace.
+  filter: drop-shadow(
+    0 0 32px color-mix(in oklab, var(--kronk-purple-accent) 18%, transparent)
+  );
+
+  @media (width <= 889px) {
+    // Below the sidebar breakpoint, drop the right rail — just the top
+    // strip remains.
+    background: linear-gradient(
+      to bottom,
+      #000 0,
+      #000 3.35rem,
+      rgb(0 0 0 / 85%) 4rem,
+      rgb(0 0 0 / 55%) 4.85rem,
+      rgb(0 0 0 / 25%) 5.75rem,
+      transparent 6.75rem
     );
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    background-size: 100% 6.75rem;
   }
 }
 
@@ -88,7 +104,9 @@ body::before {
   font-weight: 700;
   letter-spacing: 0.03em;
   text-decoration: none;
-  transition: transform var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 
   &:hover,
   &:focus-visible {
@@ -130,7 +148,11 @@ body::before {
 
     &:hover {
       color: #fff;
-      background: color-mix(in oklab, var(--kronk-purple-accent) 20%, transparent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 20%,
+        transparent
+      );
     }
 
     &:focus-visible {
@@ -146,7 +168,8 @@ body::before {
       );
       color: #fff;
       box-shadow:
-        0 4px 12px -2px color-mix(in oklab, var(--kronk-purple-accent) 65%, transparent),
+        0 4px 12px -2px
+          color-mix(in oklab, var(--kronk-purple-accent) 65%, transparent),
         inset 0 1px 0 color-mix(in oklab, #fff 25%, transparent),
         inset 0 -1px 0 color-mix(in oklab, #000 15%, transparent);
 
@@ -162,7 +185,7 @@ body::before {
     // full width. Loses the pill shape and glow but keeps the black-on-
     // stars treatment so it reads as chrome, not surface.
     position: fixed;
-    inset: auto 0 0 0;
+    inset: auto 0 0;
     top: auto;
     left: 0;
     transform: none;
@@ -195,7 +218,7 @@ body::before {
 .column {
   padding-top: 4.25rem;
 
-  @media (max-width: 629px) {
+  @media (width <= 629px) {
     padding-top: 3.75rem;
   }
 }
@@ -212,7 +235,7 @@ body:has(.korner-sub-bar) {
 // side nav and floats the Ӂ menu, so the main column should occupy
 // the middle rather than sit on the left. Applies only above the
 // mobile breakpoint.
-@media (min-width: 890px) {
+@media (width >= 890px) {
   .columns-area {
     justify-content: center;
   }
@@ -274,7 +297,7 @@ body:has(.korner-sub-bar) {
   font-size: 0.85rem;
   color: var(--text-secondary);
 
-  @media (max-width: 629px) {
+  @media (width <= 629px) {
     top: 0.75rem;
     left: 0.75rem;
     transform: none;
@@ -336,7 +359,7 @@ body:has(.korner-sub-bar) {
   right: 1.5rem;
   z-index: 30;
 
-  @media (max-width: 629px) {
+  @media (width <= 629px) {
     top: 0.85rem;
     right: 1rem;
   }
@@ -353,9 +376,12 @@ body:has(.korner-sub-bar) {
     font-family: var(--font-display);
     cursor: pointer;
     box-shadow:
-      0 4px 12px -2px color-mix(in oklab, var(--kronk-purple-accent) 65%, transparent),
+      0 4px 12px -2px
+        color-mix(in oklab, var(--kronk-purple-accent) 65%, transparent),
       inset 0 1px 0 color-mix(in oklab, #fff 30%, transparent);
-    transition: transform var(--dur-medium) var(--ease-spring), background var(--dur-medium) var(--ease-out);
+    transition:
+      transform var(--dur-medium) var(--ease-spring),
+      background var(--dur-medium) var(--ease-out);
 
     &:hover,
     &:focus-visible {
@@ -398,13 +424,20 @@ body:has(.korner-sub-bar) {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    background: color-mix(in oklab, var(--surface-elevated) 92%, var(--kronk-purple-deep));
-    border: 1px solid color-mix(in oklab, var(--kronk-purple-accent) 20%, var(--border-default));
+    background: color-mix(
+      in oklab,
+      var(--surface-elevated) 92%,
+      var(--kronk-purple-deep)
+    );
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 20%, var(--border-default));
     border-radius: var(--radius-large);
     box-shadow:
       0 20px 48px -12px rgb(0 0 0 / 50%),
-      0 4px 16px -4px color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent),
-      inset 0 1px 0 color-mix(in oklab, var(--kronk-purple-accent) 8%, transparent);
+      0 4px 16px -4px
+        color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent),
+      inset 0 1px 0
+        color-mix(in oklab, var(--kronk-purple-accent) 8%, transparent);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     animation: kronk-menu-in var(--dur-medium) var(--ease-spring);
@@ -429,7 +462,11 @@ body:has(.korner-sub-bar) {
 
     &:hover,
     &:focus-visible {
-      background: color-mix(in oklab, var(--kronk-purple-accent) 15%, transparent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 15%,
+        transparent
+      );
       transform: translateX(2px);
       outline: none;
 
@@ -442,7 +479,8 @@ body:has(.korner-sub-bar) {
     &--primary {
       background: var(--kronk-purple-accent);
       color: var(--surface-primary);
-      box-shadow: 0 2px 8px -2px color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
+      box-shadow: 0 2px 8px -2px
+        color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
 
       &:hover,
       &:focus-visible {
@@ -470,9 +508,15 @@ body:has(.korner-sub-bar) {
     width: 2.1rem;
     height: 2.1rem;
     border-radius: var(--radius-medium);
-    background: color-mix(in oklab, var(--kronk-purple-accent) 12%, transparent);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 12%,
+      transparent
+    );
     color: var(--kronk-purple-accent);
-    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
 
     svg {
       width: 1.1rem;
@@ -505,12 +549,12 @@ body:has(.korner-sub-bar) {
     opacity: 0;
     transform: translateY(-6px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
-
 
 // Feed scope: locked-to-three-values picker inside the Ӂ menu panel.
 // Sits under the item list so it doesn't compete for menuitem
@@ -546,7 +590,9 @@ body:has(.korner-sub-bar) {
     font-weight: 500;
     cursor: pointer;
     text-align: center;
-    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
 
     &:hover {
       color: var(--text-primary);
