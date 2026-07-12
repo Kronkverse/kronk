@@ -55,7 +55,6 @@
 // ---------- restyle: AccountHeader identity strip ---------------------------
 // Only takes effect when the header is mounted inside .sectioned-profile
 // (i.e. inside the /@user landing). Non-Sections views keep upstream styling.
-//
 // Structural model: the shared AccountHeader DOM renders name / bio / stats as
 // three vertical siblings inside .account__header__bar. To match the prototype's
 // `.headwrap` (avatar left, identity middle, stats right, all bottom-aligned to
@@ -511,9 +510,11 @@
   p {
     margin: 0;
   }
+
   p + p {
     margin-top: 6px;
   }
+
   a {
     color: var(--accent);
   }
@@ -711,7 +712,6 @@
 // Empty-state placeholder tiles — same shape as .work-card so the grid
 // structure is legible before any real content exists. Dimmed so they
 // don't compete with real cards when both are present.
-//
 // Left-edge stripe uses the shared --accent (planet metaphor was retired
 // 2026-07-10; the whole palette is Kronk purple). The stripe stays at
 // full visibility even when the tile itself is dimmed, so the shape of
@@ -1132,7 +1132,6 @@
 // interactions were causing the grid layout to collapse, the cover to
 // float inset, the avatar to render on a phantom surface bg, and the
 // edit-profile perch to end up as a full-width banner.
-//
 // Rather than escalate specificity indefinitely, use !important on the
 // specific properties that must win. Kept scoped to `.sectioned-profile`
 // so no other view is affected.

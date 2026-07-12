@@ -31,7 +31,6 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
     overflow-y: auto;
     overflow-x: visible;
     padding: 0.75rem 0.4rem;
-
     scrollbar-width: thin;
     scrollbar-color: color-mix(
         in oklab,
@@ -43,6 +42,7 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
     &::-webkit-scrollbar {
       width: 4px;
     }
+
     &::-webkit-scrollbar-thumb {
       background: color-mix(
         in oklab,

@@ -1,6 +1,5 @@
 // KProfileHeader — /@user identity strip. Own class namespace so no
 // specificity fights with upstream Mastodon .account__header rules.
-//
 // Layout:
 //   +---------------- cover (full-bleed, 210px, bottom-rounded) ----------------+
 //   |                                                                          |
@@ -9,7 +8,6 @@
 //   |   |            |                                            Following N |
 //   |   +------------+                                                        |
 //   +--------------------------------------------------------------------------+
-//
 // Assumes it gets a full-width content area (no shell compensation). If
 // the shell squeezes width, the layout wraps, not collapses.
 
