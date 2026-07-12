@@ -27,7 +27,8 @@ export const GroupDetail = () => {
   const dispatch = useAppDispatch();
   const { id } = useParams<{ id?: string }>();
   const [group, setGroup] = useState<ApiGroupJSON | null>(null);
-  const [statusIds, setStatusIds] = useState<ImmutableList<string>>(ImmutableList());
+  const [statusIds, setStatusIds] =
+    useState<ImmutableList<string>>(ImmutableList());
   const [composerText, setComposerText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -36,7 +37,10 @@ export const GroupDetail = () => {
   const refetch = useCallback(async () => {
     if (!id) return;
     try {
-      const [g, s] = await Promise.all([apiGetGroup(id), apiGetGroupStatuses(id, { limit: 20 })]);
+      const [g, s] = await Promise.all([
+        apiGetGroup(id),
+        apiGetGroupStatuses(id, { limit: 20 }),
+      ]);
       setGroup(g);
       dispatch(importFetchedStatuses(s));
       setStatusIds(ImmutableList(s.map((st) => st.id)));
@@ -98,7 +102,12 @@ export const GroupDetail = () => {
 
   const doArchive = async () => {
     if (!id) return;
-    if (!window.confirm('Archive this group? Posts stay resolvable but new activity is blocked.')) return;
+    if (
+      !window.confirm(
+        'Archive this group? Posts stay resolvable but new activity is blocked.',
+      )
+    )
+      return;
     setBusy(true);
     setError(null);
     try {
@@ -113,14 +122,20 @@ export const GroupDetail = () => {
 
   return (
     <Column bindToDocument label={intl.formatMessage(messages.title)}>
-      <ColumnHeader title={group?.name ?? intl.formatMessage(messages.title)} showBackButton />
+      <ColumnHeader
+        title={group?.name ?? intl.formatMessage(messages.title)}
+        showBackButton
+      />
 
       <div className='scrollable group-detail'>
         {error && <p className='group-detail__error'>{error}</p>}
 
         {!group && !error && (
           <p className='group-detail__loading'>
-            <FormattedMessage id='groups.detail.loading' defaultMessage='Loading…' />
+            <FormattedMessage
+              id='groups.detail.loading'
+              defaultMessage='Loading…'
+            />
           </p>
         )}
 
@@ -128,10 +143,14 @@ export const GroupDetail = () => {
           <>
             <div className='group-detail__header'>
               <small className='group-detail__slug'>@{group.slug}</small>
-              {group.archived && <span className='group-detail__archived-badge'>archived</span>}
+              {group.archived && (
+                <span className='group-detail__archived-badge'>archived</span>
+              )}
             </div>
 
-            {group.description && <p className='group-detail__description'>{group.description}</p>}
+            {group.description && (
+              <p className='group-detail__description'>{group.description}</p>
+            )}
 
             <dl className='group-detail__meta'>
               <dt>Members</dt>
@@ -141,7 +160,9 @@ export const GroupDetail = () => {
               <dt>Governance</dt>
               <dd>
                 {group.governance_framework}
-                {group.governance_threshold ? ` (threshold ${group.governance_threshold})` : ''}
+                {group.governance_threshold
+                  ? ` (threshold ${group.governance_threshold})`
+                  : ''}
               </dd>
               <dt>Discoverable</dt>
               <dd>{group.discoverable ? 'yes' : 'no'}</dd>
@@ -155,20 +176,44 @@ export const GroupDetail = () => {
 
             <div className='group-detail__actions'>
               {!group.archived && !group.viewer_role && (
-                <button type='button' onClick={() => void doJoin()} disabled={busy} className='group-detail__btn-primary'>
-                  <FormattedMessage id='groups.detail.join' defaultMessage='Join' />
+                <button
+                  type='button'
+                  onClick={() => void doJoin()}
+                  disabled={busy}
+                  className='group-detail__btn-primary'
+                >
+                  <FormattedMessage
+                    id='groups.detail.join'
+                    defaultMessage='Join'
+                  />
                 </button>
               )}
 
               {group.viewer_role && !group.archived && (
-                <button type='button' onClick={() => void doLeave()} disabled={busy} className='group-detail__btn-secondary'>
-                  <FormattedMessage id='groups.detail.leave' defaultMessage='Leave' />
+                <button
+                  type='button'
+                  onClick={() => void doLeave()}
+                  disabled={busy}
+                  className='group-detail__btn-secondary'
+                >
+                  <FormattedMessage
+                    id='groups.detail.leave'
+                    defaultMessage='Leave'
+                  />
                 </button>
               )}
 
               {group.viewer_role === 'seeder' && !group.archived && (
-                <button type='button' onClick={() => void doArchive()} disabled={busy} className='group-detail__btn-danger'>
-                  <FormattedMessage id='groups.detail.archive' defaultMessage='Archive' />
+                <button
+                  type='button'
+                  onClick={() => void doArchive()}
+                  disabled={busy}
+                  className='group-detail__btn-danger'
+                >
+                  <FormattedMessage
+                    id='groups.detail.archive'
+                    defaultMessage='Archive'
+                  />
                 </button>
               )}
             </div>
@@ -176,7 +221,10 @@ export const GroupDetail = () => {
             {group.viewer_role && !group.archived && (
               <div className='group-detail__composer'>
                 <h3>
-                  <FormattedMessage id='groups.detail.post_here' defaultMessage='Post to this group' />
+                  <FormattedMessage
+                    id='groups.detail.post_here'
+                    defaultMessage='Post to this group'
+                  />
                 </h3>
                 <textarea
                   value={composerText}
@@ -187,14 +235,24 @@ export const GroupDetail = () => {
                     defaultMessage: "What's happening in the group?",
                   })}
                 />
-                <button type='button' onClick={() => void doPost()} disabled={busy || !composerText.trim()}>
-                  <FormattedMessage id='groups.detail.post_send' defaultMessage='Post' />
+                <button
+                  type='button'
+                  onClick={() => void doPost()}
+                  disabled={busy || !composerText.trim()}
+                >
+                  <FormattedMessage
+                    id='groups.detail.post_send'
+                    defaultMessage='Post'
+                  />
                 </button>
               </div>
             )}
 
             <h3 className='group-detail__timeline-heading'>
-              <FormattedMessage id='groups.detail.timeline' defaultMessage='Group timeline' />
+              <FormattedMessage
+                id='groups.detail.timeline'
+                defaultMessage='Group timeline'
+              />
             </h3>
             <StatusList
               scrollKey={`group_timeline:${group.id}`}
@@ -204,7 +262,10 @@ export const GroupDetail = () => {
               onLoadMore={noopLoadMore}
               timelineId={`group_timeline:${group.id}`}
               emptyMessage={
-                <FormattedMessage id='groups.detail.empty_timeline' defaultMessage='No posts yet.' />
+                <FormattedMessage
+                  id='groups.detail.empty_timeline'
+                  defaultMessage='No posts yet.'
+                />
               }
             />
           </>

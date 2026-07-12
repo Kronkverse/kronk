@@ -99,10 +99,15 @@
     &:focus-within {
       transform: translateY(-4px);
       border-color: var(--kronk-purple-accent);
-      box-shadow: 0 12px 32px -10px color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent);
+      box-shadow: 0 12px 32px -10px
+        color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent);
 
-      &::before { opacity: 1.15; }
-      &::after  { opacity: 1; }
+      &::before {
+        opacity: 1.15;
+      }
+      &::after {
+        opacity: 1;
+      }
 
       .hub-page__card-icon {
         transform: translateY(-2px) scale(1.08);
@@ -143,7 +148,8 @@
     background: var(--kronk-purple-accent);
     color: var(--surface-primary);
     box-shadow:
-      0 8px 20px -6px color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent),
+      0 8px 20px -6px
+        color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent),
       inset 0 1px 0 color-mix(in oklab, #fff 25%, transparent);
     position: relative;
     z-index: 1;
@@ -193,7 +199,8 @@
     gap: 0.4rem;
     margin-top: 1rem;
     padding-top: 0.75rem;
-    border-top: 1px solid color-mix(in oklab, var(--border-default) 50%, transparent);
+    border-top: 1px solid
+      color-mix(in oklab, var(--border-default) 50%, transparent);
     position: relative;
     z-index: 1;
   }
@@ -221,7 +228,11 @@
     }
 
     &--in {
-      background: color-mix(in oklab, var(--kronk-purple-accent) 18%, transparent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
       border-color: var(--kronk-purple-accent);
       color: var(--kronk-purple-accent);
 
@@ -241,10 +252,16 @@
     border-radius: var(--radius-round);
     color: var(--text-muted);
     text-decoration: none;
-    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
 
     &:hover {
-      background: color-mix(in oklab, var(--kronk-purple-accent) 15%, transparent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 15%,
+        transparent
+      );
       color: var(--kronk-purple-accent);
     }
 

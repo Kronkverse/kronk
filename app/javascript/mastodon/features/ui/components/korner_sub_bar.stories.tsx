@@ -20,7 +20,15 @@ type Story = StoryObj<typeof meta>;
 export const InsideKorner: Story = {
   parameters: { reactRouter: { location: '/hub/kommons' } },
   render: () => (
-    <div style={{ padding: '4rem', background: '#000', minWidth: '30rem', minHeight: '10rem', position: 'relative' }}>
+    <div
+      style={{
+        padding: '4rem',
+        background: '#000',
+        minWidth: '30rem',
+        minHeight: '10rem',
+        position: 'relative',
+      }}
+    >
       <KornerSubBar />
     </div>
   ),

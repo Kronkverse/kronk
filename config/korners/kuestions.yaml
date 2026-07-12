@@ -1,83 +1,84 @@
 # Kuestions — asking + answering
 # Retroactively authored from the shipped code on `main`.
 
-slug:            kuestions
-name:            Kuestions        # rendered with Ƙ in nav
-icon:            question_mark
-render_target:   native
-version:         2.0.0            # rework: dedicated Question + Answer models + visibility gate
+slug: kuestions
+name: Kuestions # rendered with Ƙ in nav
+icon: question_mark
+render_target: native
+version: 2.0.0 # rework: dedicated Question + Answer models + visibility gate
 
 permissions:
   - read:questions
   - write:questions
 
 resources:
-  - name:    questions
-    primary: true                 # Question model (v2): dedicated table, title + prompt + status_id
-  - name:    answers              # Answer model (v2): dedicated table, one row per (question, account)
+  - name: questions
+    primary: true # Question model (v2): dedicated table, title + prompt + status_id
+  - name: answers # Answer model (v2): dedicated table, one row per (question, account)
 
 storage:
-  db_namespace:  question_        # tables: questions, answers (v2). Legacy post_type-based rows on
-                                   # `statuses` continue to resolve during the transition; backfill
-                                   # walks them into questions/answers on migration.
-  media_prefix:  # not-implemented
-  redis_prefix:  # not-implemented
+  db_namespace:
+    question_ # tables: questions, answers (v2). Legacy post_type-based rows on
+    # `statuses` continue to resolve during the transition; backfill
+    # walks them into questions/answers on migration.
+  media_prefix: # not-implemented
+  redis_prefix: # not-implemented
 
-visibility_scopes: []             # uses Mastodon visibility as-is
+visibility_scopes: [] # uses Mastodon visibility as-is
 
-steward_role:    moderator
+steward_role: moderator
 
 emits: []
 listens: []
 
 feed_projection:
-  card:               question_card                # StatusQuestionCard, unified onto StatusKornerCard
-  title_from:         title                        # Question#title (v2 model)
-  summary_from:       prompt                       # Question#prompt — the body text
-  links_to:           /hub/kuestions/<id>
+  card: question_card # StatusQuestionCard, unified onto StatusKornerCard
+  title_from: title # Question#title (v2 model)
+  summary_from: prompt # Question#prompt — the body text
+  links_to: /hub/kuestions/<id>
   default_visibility: public
 
-  status_association: question       # framework: Status.has_one :question via status_id (§5.5)
-  status_post_type:   question       # legacy path; both resolve during the transition
+  status_association: question # framework: Status.has_one :question via status_id (§5.5)
+  status_post_type: question # legacy path; both resolve during the transition
 
 notifications:
   types:
-    - name:         question_answered
+    - name: question_answered
       subject_type: question
       default_push: true
-      aggregation:  default
-      interactive:  true             # nudge — reply-able
-    - name:         answer_frothed
+      aggregation: default
+      interactive: true # nudge — reply-able
+    - name: answer_frothed
       subject_type: answer
       default_push: false
-      aggregation:  { window: 1h, key: answer_id }
-      interactive:  false            # notice — inline count in the answer's thread
+      aggregation: { window: 1h, key: answer_id }
+      interactive: false # notice — inline count in the answer's thread
 
 # Per-user settings surfaced at /hub/kuestions/settings (spec §K.3.3).
 settings:
-  - name:    default_answer_visibility
-    kind:    enum
+  - name: default_answer_visibility
+    kind: enum
     options: [public, unlisted, followers]
     default: public
-    scope:   user
-    label:   Default visibility for my answers
-  - name:    hide_answered_questions
-    kind:    boolean
+    scope: user
+    label: Default visibility for my answers
+  - name: hide_answered_questions
+    kind: boolean
     default: false
-    scope:   user
-    label:   Hide questions I've already answered
+    scope: user
+    label: Hide questions I've already answered
     description: When on, the Kuestions feed filters out anything you've locked in an answer for.
-  - name:    unlock_confirmation
-    kind:    boolean
+  - name: unlock_confirmation
+    kind: boolean
     default: true
-    scope:   user
-    label:   Confirm before answering
+    scope: user
+    label: Confirm before answering
     description: Answering unlocks other people's answers. When on, we ask for confirmation so you don't burn the unlock by accident.
 
 launch:
-  blurb:  "Kuestions — ask, answer, unlock."
-  cta:    "Tap in"
+  blurb: 'Kuestions — ask, answer, unlock.'
+  cta: 'Tap in'
 
-feature_flag:    # not-implemented
-federates:       false
-enforced:        true                              # framework: on this branch; boot validator enforces
+feature_flag: # not-implemented
+federates: false
+enforced: true # framework: on this branch; boot validator enforces

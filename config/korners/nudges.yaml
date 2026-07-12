@@ -1,73 +1,73 @@
 # Nudges — private per-account pings, threaded exchanges
 # Retroactively authored from the shipped code on `main`.
 
-slug:            nudges
-name:            Nudges
-icon:            partner_exchange
-render_target:   native
-version:         0.1.0
+slug: nudges
+name: Nudges
+icon: partner_exchange
+render_target: native
+version: 0.1.0
 
 permissions:
   - read:notifications
   - write:notifications
 
 resources:
-  - name:    nudges               # a Nudge is emitted as a notification, threaded via nudge_messages
+  - name: nudges # a Nudge is emitted as a notification, threaded via nudge_messages
     primary: true
-  - name:    nudge_messages
-  - name:    nudge_reactions
+  - name: nudge_messages
+  - name: nudge_reactions
 
 storage:
-  db_namespace:  nudge_           # tables: nudges, nudge_messages, nudge_reactions
-  media_prefix:  # not-implemented — nudge media (voice, image) uses Mastodon media_attachments
-  redis_prefix:  # not-implemented
+  db_namespace: nudge_ # tables: nudges, nudge_messages, nudge_reactions
+  media_prefix: # not-implemented — nudge media (voice, image) uses Mastodon media_attachments
+  redis_prefix: # not-implemented
 
-visibility_scopes: []             # nudges are private (recipient-scoped) by construction
+visibility_scopes: [] # nudges are private (recipient-scoped) by construction
 
-steward_role:    moderator
+steward_role: moderator
 
 emits:
-  - notification.nudge            # via NotifyService, not the framework event bus
+  - notification.nudge # via NotifyService, not the framework event bus
 listens: []
 
 feed_projection:
-  card:               # not-applicable — Nudges appear in the notifications drawer, not the timeline.
-                      # The spec's card anatomy (§8.2) targets timeline projections; Nudges intentionally
-                      # do not project into the shared feed.
-  discriminator:      # n/a — routed as a Notification (type: 'nudge'), not a Status.
+  card: # not-applicable — Nudges appear in the notifications drawer, not the timeline.
+    # The spec's card anatomy (§8.2) targets timeline projections; Nudges intentionally
+    # do not project into the shared feed.
+  discriminator: # n/a — routed as a Notification (type: 'nudge'), not a Status.
 
 subscription:
-  default:  # not-applicable — nudges are 1:1, not a broadcast surface; subscription is not the right primitive.
+  default: # not-applicable — nudges are 1:1, not a broadcast surface; subscription is not the right primitive.
 
 # Per-user settings surfaced at /hub/nudges/settings (spec §K.3.3).
 settings:
-  - name:    quiet_hours_start
-    kind:    string
+  - name: quiet_hours_start
+    kind: string
     default: '22:00'
-    scope:   user
-    label:   Quiet hours start (24h, HH:MM)
+    scope: user
+    label: Quiet hours start (24h, HH:MM)
     description: Push nudges suppressed between quiet hours start and end. In-app nudges still land.
-  - name:    quiet_hours_end
-    kind:    string
+  - name: quiet_hours_end
+    kind: string
     default: '07:00'
-    scope:   user
-    label:   Quiet hours end (24h, HH:MM)
-  - name:    show_activity_in_chats
-    kind:    boolean
+    scope: user
+    label: Quiet hours end (24h, HH:MM)
+  - name: show_activity_in_chats
+    kind: boolean
     default: true
-    scope:   user
-    label:   Show reaction summaries inline in nudge threads
+    scope: user
+    label: Show reaction summaries inline in nudge threads
     description: When on, "3 froths on this post" collapses into the thread. When off, they only appear on the Activity tab.
-  - name:    auto_read_on_open
-    kind:    boolean
+  - name: auto_read_on_open
+    kind: boolean
     default: true
-    scope:   user
-    label:   Mark thread read as soon as I open it
+    scope: user
+    label: Mark thread read as soon as I open it
 
 launch:
-  blurb:  "Nudges — a private ping, a shared thread."
-  cta:    # not-applicable
+  blurb: 'Nudges — a private ping, a shared thread.'
+  cta: # not-applicable
 
-feature_flag:    # not-implemented
-federates:       false            # nudges never federate — private by design
-enforced:        true                              # framework: on this branch; boot validator enforces
+feature_flag: # not-implemented
+federates: false # nudges never federate — private by design
+enforced: true # framework: on this branch; boot validator enforces

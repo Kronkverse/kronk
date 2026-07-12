@@ -30,23 +30,59 @@ const semantic = [
 ];
 
 const radii = [
-  { name: 'small', var: '--radius-small', use: 'chips, small icon buttons, focus rings' },
-  { name: 'medium', var: '--radius-medium', use: 'cards, panels, dropdowns, sidebar tiles' },
-  { name: 'large', var: '--radius-large', use: 'hero surfaces — top strip, sidebar, korner cards' },
-  { name: 'round', var: '--radius-round', use: 'pills — HubSwitcher, tags, badges' },
+  {
+    name: 'small',
+    var: '--radius-small',
+    use: 'chips, small icon buttons, focus rings',
+  },
+  {
+    name: 'medium',
+    var: '--radius-medium',
+    use: 'cards, panels, dropdowns, sidebar tiles',
+  },
+  {
+    name: 'large',
+    var: '--radius-large',
+    use: 'hero surfaces — top strip, sidebar, korner cards',
+  },
+  {
+    name: 'round',
+    var: '--radius-round',
+    use: 'pills — HubSwitcher, tags, badges',
+  },
 ];
 
 const elevations = [
-  { name: 'subtle', var: '--elevation-subtle', use: 'inline surfaces, subtle depth' },
+  {
+    name: 'subtle',
+    var: '--elevation-subtle',
+    use: 'inline surfaces, subtle depth',
+  },
   { name: 'card', var: '--elevation-card', use: 'floating cards, panels' },
-  { name: 'floating', var: '--elevation-floating', use: 'top strip, sidebar, floating menus' },
+  {
+    name: 'floating',
+    var: '--elevation-floating',
+    use: 'top strip, sidebar, floating menus',
+  },
   { name: 'menu', var: '--elevation-menu', use: 'Ӂ menu panel, modals' },
 ];
 
 const motions = [
-  { name: 'dur-fast', var: '--dur-fast', use: 'hover, focus, small state changes' },
-  { name: 'dur-medium', var: '--dur-medium', use: 'panel opens, transitions between views' },
-  { name: 'dur-slow', var: '--dur-slow', use: 'large transitions, page shifts' },
+  {
+    name: 'dur-fast',
+    var: '--dur-fast',
+    use: 'hover, focus, small state changes',
+  },
+  {
+    name: 'dur-medium',
+    var: '--dur-medium',
+    use: 'panel opens, transitions between views',
+  },
+  {
+    name: 'dur-slow',
+    var: '--dur-slow',
+    use: 'large transitions, page shifts',
+  },
   { name: 'ease-out', var: '--ease-out', use: 'default deceleration' },
   { name: 'ease-in-out', var: '--ease-in-out', use: 'reversible motion' },
   { name: 'ease-spring', var: '--ease-spring', use: 'playful, springy motion' },
@@ -54,7 +90,11 @@ const motions = [
 
 const fonts = [
   { name: 'display', var: '--font-display', sample: 'Kronk rebuild aesthetic' },
-  { name: 'body', var: '--font-body', sample: 'The quick brown fox jumps over the lazy dog.' },
+  {
+    name: 'body',
+    var: '--font-body',
+    sample: 'The quick brown fox jumps over the lazy dog.',
+  },
   { name: 'mono', var: '--font-mono', sample: 'const foo = "bar";' },
 ];
 
@@ -70,8 +110,8 @@ export const StyleGuide = () => (
       <header className='styleguide__hero'>
         <h1 className='styleguide__title'>Kronk aesthetic</h1>
         <p className='styleguide__intro'>
-          Live values from <code>tokens.yaml</code>. Every surface in Kronk composes
-          against these. Change the token; every consumer retunes.
+          Live values from <code>tokens.yaml</code>. Every surface in Kronk
+          composes against these. Change the token; every consumer retunes.
         </p>
       </header>
 
@@ -80,7 +120,10 @@ export const StyleGuide = () => (
         <div className='styleguide__swatches'>
           {swatches.map((s) => (
             <div key={s.var} className='styleguide__swatch'>
-              <div className='styleguide__swatch-chip' style={{ background: `var(${s.var})` }} />
+              <div
+                className='styleguide__swatch-chip'
+                style={{ background: `var(${s.var})` }}
+              />
               <div className='styleguide__swatch-meta'>
                 <code>{s.name}</code>
               </div>
@@ -90,11 +133,16 @@ export const StyleGuide = () => (
       </section>
 
       <section className='styleguide__section'>
-        <h2 className='styleguide__section-title'>Semantic surfaces &amp; text</h2>
+        <h2 className='styleguide__section-title'>
+          Semantic surfaces &amp; text
+        </h2>
         <div className='styleguide__swatches'>
           {semantic.map((s) => (
             <div key={s.var} className='styleguide__swatch'>
-              <div className='styleguide__swatch-chip' style={{ background: `var(${s.var})` }} />
+              <div
+                className='styleguide__swatch-chip'
+                style={{ background: `var(${s.var})` }}
+              />
               <div className='styleguide__swatch-meta'>
                 <code>{s.name}</code>
               </div>
@@ -108,7 +156,10 @@ export const StyleGuide = () => (
         {fonts.map((f) => (
           <div key={f.var} className='styleguide__font-row'>
             <code className='styleguide__font-name'>{f.name}</code>
-            <span className='styleguide__font-sample' style={{ fontFamily: `var(${f.var})` }}>
+            <span
+              className='styleguide__font-sample'
+              style={{ fontFamily: `var(${f.var})` }}
+            >
               {f.sample}
             </span>
           </div>
@@ -164,16 +215,28 @@ export const StyleGuide = () => (
 
         <h3 className='styleguide__subsection-title'>Buttons</h3>
         <div className='styleguide__row'>
-          <button type='button' className='styleguide__btn styleguide__btn--primary'>
+          <button
+            type='button'
+            className='styleguide__btn styleguide__btn--primary'
+          >
             Primary CTA
           </button>
-          <button type='button' className='styleguide__btn styleguide__btn--secondary'>
+          <button
+            type='button'
+            className='styleguide__btn styleguide__btn--secondary'
+          >
             Secondary
           </button>
-          <button type='button' className='styleguide__btn styleguide__btn--pill'>
+          <button
+            type='button'
+            className='styleguide__btn styleguide__btn--pill'
+          >
             Pill
           </button>
-          <button type='button' className='styleguide__btn styleguide__btn--danger'>
+          <button
+            type='button'
+            className='styleguide__btn styleguide__btn--danger'
+          >
             Danger
           </button>
         </div>
@@ -182,11 +245,15 @@ export const StyleGuide = () => (
         <div className='styleguide__card'>
           <h4>Card title</h4>
           <p>
-            A card is a small elevated surface. Uses <code>--surface-elevated</code>,
-            <code>--border-default</code>, <code>--radius-medium</code>, and
+            A card is a small elevated surface. Uses{' '}
+            <code>--surface-elevated</code>,<code>--border-default</code>,{' '}
+            <code>--radius-medium</code>, and
             <code>--elevation-card</code>.
           </p>
-          <button type='button' className='styleguide__btn styleguide__btn--pill'>
+          <button
+            type='button'
+            className='styleguide__btn styleguide__btn--pill'
+          >
             Action
           </button>
         </div>
@@ -194,7 +261,9 @@ export const StyleGuide = () => (
         <h3 className='styleguide__subsection-title'>Pill row</h3>
         <div className='styleguide__pills'>
           <span className='styleguide__pill'>Kalendar</span>
-          <span className='styleguide__pill styleguide__pill--active'>Kommons</span>
+          <span className='styleguide__pill styleguide__pill--active'>
+            Kommons
+          </span>
           <span className='styleguide__pill'>Booth</span>
           <span className='styleguide__pill'>Kuestions</span>
         </div>
@@ -203,8 +272,13 @@ export const StyleGuide = () => (
       <section className='styleguide__section styleguide__section--how'>
         <h2 className='styleguide__section-title'>Changing the aesthetic</h2>
         <ol className='styleguide__how'>
-          <li>Edit <code>app/javascript/mastodon/tokens/tokens.yaml</code>.</li>
-          <li>Regenerate <code>_tokens.scss</code> via <code>bin/generate-tokens</code>.</li>
+          <li>
+            Edit <code>app/javascript/mastodon/tokens/tokens.yaml</code>.
+          </li>
+          <li>
+            Regenerate <code>_tokens.scss</code> via{' '}
+            <code>bin/generate-tokens</code>.
+          </li>
           <li>Refresh this page to preview.</li>
           <li>Ship when happy.</li>
         </ol>

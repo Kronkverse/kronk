@@ -55,7 +55,13 @@ export const Groups = () => {
     setError(null);
     try {
       await apiCreateGroup(form);
-      setForm({ slug: '', name: '', description: '', discoverable: true, governance_framework: 'peer_support' });
+      setForm({
+        slug: '',
+        name: '',
+        description: '',
+        discoverable: true,
+        governance_framework: 'peer_support',
+      });
       setCreating(false);
       await refetch();
     } catch (e: unknown) {
@@ -88,49 +94,89 @@ export const Groups = () => {
           ))}
         </div>
 
-        <button type='button' onClick={() => setCreating((prev) => !prev)} className='groups-page__new-btn'>
+        <button
+          type='button'
+          onClick={() => setCreating((prev) => !prev)}
+          className='groups-page__new-btn'
+        >
           {creating ? (
-            <FormattedMessage id='groups.cancel_create' defaultMessage='Cancel' />
+            <FormattedMessage
+              id='groups.cancel_create'
+              defaultMessage='Cancel'
+            />
           ) : (
-            <FormattedMessage id='groups.new' defaultMessage='+ Plant a new group' />
+            <FormattedMessage
+              id='groups.new'
+              defaultMessage='+ Plant a new group'
+            />
           )}
         </button>
 
         {creating && (
           <div className='groups-page__form'>
             <h3>
-              <FormattedMessage id='groups.plant_title' defaultMessage='Plant a new group' />
+              <FormattedMessage
+                id='groups.plant_title'
+                defaultMessage='Plant a new group'
+              />
             </h3>
 
             <label>
-              <FormattedMessage id='groups.form.slug' defaultMessage='Slug (lowercase, hyphens ok)' />
-              <input type='text' value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+              <FormattedMessage
+                id='groups.form.slug'
+                defaultMessage='Slug (lowercase, hyphens ok)'
+              />
+              <input
+                type='text'
+                value={form.slug}
+                onChange={(e) => setForm({ ...form, slug: e.target.value })}
+              />
             </label>
 
             <label>
               <FormattedMessage id='groups.form.name' defaultMessage='Name' />
-              <input type='text' value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <input
+                type='text'
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
             </label>
 
             <label>
-              <FormattedMessage id='groups.form.description' defaultMessage='Description' />
+              <FormattedMessage
+                id='groups.form.description'
+                defaultMessage='Description'
+              />
               <textarea
                 value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
                 rows={3}
               />
             </label>
 
             <label>
-              <FormattedMessage id='groups.form.governance' defaultMessage='Governance framework' />
+              <FormattedMessage
+                id='groups.form.governance'
+                defaultMessage='Governance framework'
+              />
               <select
                 value={form.governance_framework}
-                onChange={(e) => setForm({ ...form, governance_framework: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, governance_framework: e.target.value })
+                }
               >
-                <option value='peer_support'>peer_support — one second required</option>
+                <option value='peer_support'>
+                  peer_support — one second required
+                </option>
                 <option value='two_key'>two_key — two seconds required</option>
-                <option value='threshold'>threshold — N supporters required</option>
-                <option value='majority'>majority — over half of members</option>
+                <option value='threshold'>
+                  threshold — N supporters required
+                </option>
+                <option value='majority'>
+                  majority — over half of members
+                </option>
                 <option value='consensus'>consensus — unanimous</option>
               </select>
             </label>
@@ -139,9 +185,14 @@ export const Groups = () => {
               <input
                 type='checkbox'
                 checked={form.discoverable}
-                onChange={(e) => setForm({ ...form, discoverable: e.target.checked })}
+                onChange={(e) =>
+                  setForm({ ...form, discoverable: e.target.checked })
+                }
               />
-              <FormattedMessage id='groups.form.discoverable' defaultMessage='List this group in the public discovery page' />
+              <FormattedMessage
+                id='groups.form.discoverable'
+                defaultMessage='List this group in the public discovery page'
+              />
             </label>
 
             <button type='button' onClick={() => void submitCreate()}>
@@ -160,7 +211,10 @@ export const Groups = () => {
 
         {!loading && groups.length === 0 && (
           <p className='groups-page__empty'>
-            <FormattedMessage id='groups.empty' defaultMessage='No groups here. Try another scope or plant one.' />
+            <FormattedMessage
+              id='groups.empty'
+              defaultMessage='No groups here. Try another scope or plant one.'
+            />
           </p>
         )}
 
@@ -172,13 +226,20 @@ export const Groups = () => {
                   <h3 className='groups-page__row-name'>{g.name}</h3>
                   <small className='groups-page__row-slug'>@{g.slug}</small>
                   {g.viewer_role === 'seeder' && (
-                    <span className='groups-page__chip groups-page__chip--seeder'>seeder</span>
+                    <span className='groups-page__chip groups-page__chip--seeder'>
+                      seeder
+                    </span>
                   )}
-                  {g.viewer_role === 'member' && <span className='groups-page__chip'>member</span>}
+                  {g.viewer_role === 'member' && (
+                    <span className='groups-page__chip'>member</span>
+                  )}
                 </div>
-                {g.description && <p className='groups-page__row-desc'>{g.description}</p>}
+                {g.description && (
+                  <p className='groups-page__row-desc'>{g.description}</p>
+                )}
                 <small className='groups-page__row-meta'>
-                  {g.member_count} members · governance: {g.governance_framework}
+                  {g.member_count} members · governance:{' '}
+                  {g.governance_framework}
                 </small>
               </Link>
             </li>

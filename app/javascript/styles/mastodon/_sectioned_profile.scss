@@ -64,7 +64,7 @@
 // margin-left:auto inside the __extra flex row.
 
 .sectioned-profile .account__header {
-  overflow: visible;  // let the avatar bleed above the cover
+  overflow: visible; // let the avatar bleed above the cover
   margin: 0;
   border: 0;
   background: transparent;
@@ -76,10 +76,18 @@
     border-radius: 0 0 24px 24px;
     border: 0;
     background:
-      radial-gradient(120% 140% at 82% 0%, rgba(132, 138, 250, 42%), transparent 60%),
-      radial-gradient(90% 120% at 10% 20%, rgba(86, 58, 204, 40%), transparent 55%),
+      radial-gradient(
+        120% 140% at 82% 0%,
+        rgba(132, 138, 250, 42%),
+        transparent 60%
+      ),
+      radial-gradient(
+        90% 120% at 10% 20%,
+        rgba(86, 58, 204, 40%),
+        transparent 55%
+      ),
       linear-gradient(160deg, #241a44, #0d0a1c 70%);
-    background-color: #0d0a1c;  // opaque fallback so stars don't show through
+    background-color: #0d0a1c; // opaque fallback so stars don't show through
 
     img.parallax {
       opacity: 0.5;
@@ -110,7 +118,7 @@
     margin: -64px 0 0;
     padding: 0;
     overflow: visible;
-    background: none;  // kill any inherited tab-bar background (phantom wrap)
+    background: none; // kill any inherited tab-bar background (phantom wrap)
 
     .avatar {
       width: 148px;
@@ -150,7 +158,7 @@
   .account__header__tabs__name {
     grid-column: 2;
     margin: 0;
-    padding-right: 100px;  // room for the edit-profile perch, no more
+    padding-right: 100px; // room for the edit-profile perch, no more
 
     h1 {
       font-family: var(--font-display);
@@ -256,7 +264,10 @@
 // Inline "◈ Owner" chip appended to the handle line — activated by a modifier
 // on the wrap. The floating cover chip has been retired; this one lives inline
 // beside the @handle where it belongs.
-.sectioned-profile__header-wrap--owner .account__header__tabs__name h1 small::after {
+.sectioned-profile__header-wrap--owner
+  .account__header__tabs__name
+  h1
+  small::after {
   content: '◈ Owner';
   color: var(--accent);
   font-weight: 600;
@@ -283,7 +294,9 @@
   font-size: 18px;
   padding: 12px 20px;
   white-space: nowrap;
-  transition: color 0.14s, border-color 0.14s;
+  transition:
+    color 0.14s,
+    border-color 0.14s;
   display: inline-flex;
   align-items: center;
   gap: 9px;
@@ -335,7 +348,11 @@
   }
 
   &--note {
-    background: linear-gradient(160deg, rgba(132, 138, 250, 10%), rgba(86, 58, 204, 5%));
+    background: linear-gradient(
+      160deg,
+      rgba(132, 138, 250, 10%),
+      rgba(86, 58, 204, 5%)
+    );
     border-color: rgba(132, 138, 250, 25%);
   }
 }
@@ -370,7 +387,9 @@
   text-decoration: none;
   color: inherit;
   display: block;
-  transition: border-color 0.14s, transform 0.14s;
+  transition:
+    border-color 0.14s,
+    transform 0.14s;
 
   &:hover,
   &:focus-visible {
@@ -423,7 +442,9 @@
   background-size: cover;
   background-position: center;
   display: block;
-  transition: transform 0.14s, box-shadow 0.14s;
+  transition:
+    transform 0.14s,
+    box-shadow 0.14s;
 
   &:hover,
   &:focus-visible {
@@ -511,7 +532,10 @@
   border: 1px solid var(--sp-line-2);
   border-radius: 999px;
   text-decoration: none;
-  transition: background 0.14s, border-color 0.14s, color 0.14s;
+  transition:
+    background 0.14s,
+    border-color 0.14s,
+    color 0.14s;
 
   &:hover,
   &:focus-visible {
@@ -642,7 +666,9 @@
   border-radius: 14px;
   padding: 16px 16px 15px;
   overflow: hidden;
-  transition: transform 0.14s, border-color 0.14s;
+  transition:
+    transform 0.14s,
+    border-color 0.14s;
   text-decoration: none;
 
   &::before {
@@ -700,7 +726,9 @@
   padding: 16px 16px 15px;
   overflow: hidden;
   text-decoration: none;
-  transition: opacity 0.14s, border-color 0.14s;
+  transition:
+    opacity 0.14s,
+    border-color 0.14s;
 
   // Dim the tile CONTENT (title, sub, preview) but not the accent
   // stripe — the stripe is our "shape of the feature" cue and needs to
@@ -812,7 +840,11 @@
   display: flex;
   align-items: center;
   gap: 18px;
-  background: linear-gradient(150deg, rgba(132, 138, 250, 12%), rgba(86, 58, 204, 6%));
+  background: linear-gradient(
+    150deg,
+    rgba(132, 138, 250, 12%),
+    rgba(86, 58, 204, 6%)
+  );
   border: 1px solid rgba(132, 138, 250, 25%);
   border-radius: 16px;
   padding: 20px 22px;
@@ -1057,7 +1089,7 @@
   display: flex;
   align-items: center;
   gap: 11px;
-  padding-right: 40px;  // leave room for the close button
+  padding-right: 40px; // leave room for the close button
 }
 
 .sectioned-profile__drawer-dot {
@@ -1171,7 +1203,7 @@
   position: absolute !important;
   top: 18px !important;
   right: 22px !important;
-  margin-top: 0 !important;  // upstream sets margin-top: 55px
+  margin-top: 0 !important; // upstream sets margin-top: 55px
   display: flex !important;
   gap: 6px !important;
   z-index: 3 !important;

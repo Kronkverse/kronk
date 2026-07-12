@@ -20,7 +20,15 @@ type Story = StoryObj<typeof meta>;
 
 export const Closed: Story = {
   render: () => (
-    <div style={{ padding: '4rem', background: '#000', minWidth: '20rem', minHeight: '20rem', position: 'relative' }}>
+    <div
+      style={{
+        padding: '4rem',
+        background: '#000',
+        minWidth: '20rem',
+        minHeight: '20rem',
+        position: 'relative',
+      }}
+    >
       <KronkMenu />
     </div>
   ),

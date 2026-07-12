@@ -11,7 +11,10 @@ import { apiRequestGet, apiRequestPost, apiRequestDelete } from 'mastodon/api';
 import api from 'mastodon/api';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
-import type { ApiKornerSettingJSON, ApiKornerNotificationTypeJSON } from 'mastodon/api_types/korners';
+import type {
+  ApiKornerSettingJSON,
+  ApiKornerNotificationTypeJSON,
+} from 'mastodon/api_types/korners';
 
 // Per-korner settings space (spec §K). Autosave-driven, widget kinds
 // from §K.4, one push toggle per manifest notification type (§K.3.2).
@@ -21,7 +24,10 @@ const messages = defineMessages({
   loading: { id: 'korner_settings.loading', defaultMessage: 'Loading…' },
   savedNow: { id: 'korner_settings.saved_now', defaultMessage: 'Saved' },
   saving: { id: 'korner_settings.saving', defaultMessage: 'Saving…' },
-  save_error: { id: 'korner_settings.save_error', defaultMessage: 'Could not save' },
+  save_error: {
+    id: 'korner_settings.save_error',
+    defaultMessage: 'Could not save',
+  },
 });
 
 interface ServerSettings {
@@ -44,7 +50,11 @@ const BooleanWidget: React.FC<{
   onChange: (v: boolean) => void;
 }> = ({ value, onChange }) => (
   <label className='korner-settings__toggle'>
-    <input type='checkbox' checked={!!value} onChange={(e) => onChange(e.target.checked)} />
+    <input
+      type='checkbox'
+      checked={!!value}
+      onChange={(e) => onChange(e.target.checked)}
+    />
     <span className='korner-settings__toggle-track' aria-hidden='true' />
   </label>
 );
@@ -74,7 +84,9 @@ const EnumWidget: React.FC<{
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)}>
       {options.map((opt) => (
-        <option key={opt} value={opt}>{humanize(opt)}</option>
+        <option key={opt} value={opt}>
+          {humanize(opt)}
+        </option>
       ))}
     </select>
   );
@@ -113,11 +125,14 @@ const DurationWidget: React.FC<{
   value: string;
   onChange: (v: string) => void;
 }> = ({ options, value, onChange }) => {
-  const presets = options && options.length ? options : ['PT15M', 'PT1H', 'P1D'];
+  const presets =
+    options && options.length ? options : ['PT15M', 'PT1H', 'P1D'];
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)}>
       {presets.map((p) => (
-        <option key={p} value={p}>{p}</option>
+        <option key={p} value={p}>
+          {p}
+        </option>
       ))}
     </select>
   );
@@ -132,7 +147,9 @@ const SettingRow: React.FC<{
 }> = ({ setting, value, onChange }) => {
   const label = setting.label ?? humanize(setting.name);
   const description = setting.description;
-  const options = Array.isArray(setting.options) ? (setting.options as unknown[]).map(String) : [];
+  const options = Array.isArray(setting.options)
+    ? (setting.options as unknown[]).map(String)
+    : [];
 
   return (
     <div className='korner-settings__row'>
@@ -144,7 +161,11 @@ const SettingRow: React.FC<{
       </div>
       {description && <p className='korner-settings__hint'>{description}</p>}
       {setting.kind === 'enum' && (
-        <EnumWidget options={options} value={String(value ?? setting.default ?? '')} onChange={onChange} />
+        <EnumWidget
+          options={options}
+          value={String(value ?? setting.default ?? '')}
+          onChange={onChange}
+        />
       )}
       {setting.kind === 'multi_enum' && (
         <MultiEnumWidget
@@ -182,7 +203,9 @@ const SettingRow: React.FC<{
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
+  multiColumn,
+}) => {
   const intl = useIntl();
   const { slug } = useParams<{ slug: string }>();
   const korner = useKorner(slug);
@@ -199,7 +222,9 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColum
     let cancelled = false;
     void (async () => {
       try {
-        const data = await apiRequestGet<ServerSettings>(`v1/korners/${slug}/settings`);
+        const data = await apiRequestGet<ServerSettings>(
+          `v1/korners/${slug}/settings`,
+        );
         if (!cancelled) setState(data);
       } catch (e: unknown) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
@@ -223,7 +248,10 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColum
         setStatus('saving');
         void (async () => {
           try {
-            const res = await api().patch(`/api/v1/korners/${slug}/settings/${encodeURIComponent(name)}`, { value });
+            const res = await api().patch(
+              `/api/v1/korners/${slug}/settings/${encodeURIComponent(name)}`,
+              { value },
+            );
             setState(res.data as ServerSettings);
             setStatus('saved');
             setTimeout(() => setStatus('idle'), 1200);
@@ -240,7 +268,9 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColum
 
   const setValue = useCallback(
     (name: string, value: unknown) => {
-      setState((prev) => (prev ? { ...prev, values: { ...prev.values, [name]: value } } : prev));
+      setState((prev) =>
+        prev ? { ...prev, values: { ...prev.values, [name]: value } } : prev,
+      );
       save(name, value);
     },
     [save],
@@ -250,7 +280,13 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColum
     (notifType: string, value: boolean) => {
       setState((prev) =>
         prev
-          ? { ...prev, push_preferences: { ...prev.push_preferences, [notifType]: value } }
+          ? {
+              ...prev,
+              push_preferences: {
+                ...prev.push_preferences,
+                [notifType]: value,
+              },
+            }
           : prev,
       );
       save(`push.${notifType}`, value);
@@ -284,7 +320,13 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColum
 
   return (
     <Column>
-      <ColumnHeader title={title} icon='settings' iconComponent={SettingsIcon} multiColumn={multiColumn} showBackButton />
+      <ColumnHeader
+        title={title}
+        icon='settings'
+        iconComponent={SettingsIcon}
+        multiColumn={multiColumn}
+        showBackButton
+      />
 
       <Helmet>
         <title>{title}</title>
@@ -300,7 +342,9 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColum
               values={{ name: korner?.name ?? slug }}
             />
           </Link>
-          <span className={`korner-settings__save-indicator korner-settings__save-indicator--${status}`}>
+          <span
+            className={`korner-settings__save-indicator korner-settings__save-indicator--${status}`}
+          >
             {status === 'saving' && intl.formatMessage(messages.saving)}
             {status === 'saved' && intl.formatMessage(messages.savedNow)}
             {status === 'error' && intl.formatMessage(messages.save_error)}
@@ -314,7 +358,9 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColum
           <div>
             <h1 className='korner-settings__title'>{korner?.name ?? slug}</h1>
             {korner?.hub_teaser?.static && (
-              <p className='korner-settings__subtitle'>{String(korner.hub_teaser.static)}</p>
+              <p className='korner-settings__subtitle'>
+                {String(korner.hub_teaser.static)}
+              </p>
             )}
           </div>
         </header>
@@ -322,21 +368,32 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColum
         {error && <p className='korner-settings__error'>{error}</p>}
 
         {!state && !error && (
-          <p className='korner-settings__loading'>{intl.formatMessage(messages.loading)}</p>
+          <p className='korner-settings__loading'>
+            {intl.formatMessage(messages.loading)}
+          </p>
         )}
 
         {state && (
           <>
             <section className='korner-settings__section'>
               <h2 className='korner-settings__section-title'>
-                <FormattedMessage id='korner_settings.tune_in_section' defaultMessage='Tune-in' />
+                <FormattedMessage
+                  id='korner_settings.tune_in_section'
+                  defaultMessage='Tune-in'
+                />
               </h2>
               <div className='korner-settings__row'>
                 <div className='korner-settings__row-header'>
                   <span className='korner-settings__label'>
-                    <FormattedMessage id='korner_settings.tuned_in' defaultMessage='Tuned in' />
+                    <FormattedMessage
+                      id='korner_settings.tuned_in'
+                      defaultMessage='Tuned in'
+                    />
                   </span>
-                  <BooleanWidget value={state.tuned_in} onChange={toggleTuneIn} />
+                  <BooleanWidget
+                    value={state.tuned_in}
+                    onChange={toggleTuneIn}
+                  />
                 </div>
                 <p className='korner-settings__hint'>
                   <FormattedMessage
@@ -350,12 +407,17 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColum
             {state.notifications_schema.length > 0 && (
               <section className='korner-settings__section'>
                 <h2 className='korner-settings__section-title'>
-                  <FormattedMessage id='korner_settings.push_section' defaultMessage='Push notifications' />
+                  <FormattedMessage
+                    id='korner_settings.push_section'
+                    defaultMessage='Push notifications'
+                  />
                 </h2>
                 {state.notifications_schema.map((n) => (
                   <div className='korner-settings__row' key={n.name}>
                     <div className='korner-settings__row-header'>
-                      <span className='korner-settings__label'>{humanize(n.name)}</span>
+                      <span className='korner-settings__label'>
+                        {humanize(n.name)}
+                      </span>
                       <BooleanWidget
                         value={state.push_preferences[n.name] === true}
                         onChange={(v) => setPushPref(n.name, v)}
@@ -364,7 +426,9 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColum
                     {n.subject_type && (
                       <p className='korner-settings__hint'>
                         Subject: {n.subject_type}
-                        {n.interactive === false ? ' · passive notice' : ' · interactive nudge'}
+                        {n.interactive === false
+                          ? ' · passive notice'
+                          : ' · interactive nudge'}
                       </p>
                     )}
                   </div>

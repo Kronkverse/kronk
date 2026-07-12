@@ -14,5 +14,8 @@ const initialState: ApiProfileSectionJSON[] = [];
 export const profileSectionsReducer = createReducer(initialState, (builder) => {
   builder
     .addCase(fetchProfileSections.fulfilled, (_state, { payload }) => payload)
-    .addCase(reorderProfileSections.fulfilled, (_state, { payload }) => payload);
+    .addCase(
+      reorderProfileSections.fulfilled,
+      (_state, { payload }) => payload,
+    );
 });

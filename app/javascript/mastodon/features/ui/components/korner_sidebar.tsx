@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 import { useAllKorners } from 'mastodon/hooks/useKorner';
@@ -38,7 +45,12 @@ interface KornerRowProps {
   registerRef: (slug: string, el: HTMLAnchorElement | null) => void;
 }
 
-const KornerRow: React.FC<KornerRowProps> = ({ korner, active, onVisit, registerRef }) => {
+const KornerRow: React.FC<KornerRowProps> = ({
+  korner,
+  active,
+  onVisit,
+  registerRef,
+}) => {
   const Icon = useKornerIcon(korner.slug);
   return (
     <Link
@@ -99,10 +111,13 @@ export const KornerSidebar = () => {
     });
   }, []);
 
-  const registerRef = useCallback((slug: string, el: HTMLAnchorElement | null) => {
-    if (el) nodes.current.set(slug, el);
-    else nodes.current.delete(slug);
-  }, []);
+  const registerRef = useCallback(
+    (slug: string, el: HTMLAnchorElement | null) => {
+      if (el) nodes.current.set(slug, el);
+      else nodes.current.delete(slug);
+    },
+    [],
+  );
 
   const listed = useMemo(
     () =>
@@ -136,7 +151,8 @@ export const KornerSidebar = () => {
         el.offsetHeight;
         requestAnimationFrame(() => {
           el.style.transform = '';
-          el.style.transition = 'transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1), background 150ms ease-out, color 150ms ease-out';
+          el.style.transition =
+            'transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1), background 150ms ease-out, color 150ms ease-out';
         });
       }
       positions.current.set(k.slug, current);
@@ -156,7 +172,12 @@ export const KornerSidebar = () => {
           />
         ))}
       </nav>
-      <Link to='/hub' className='korner-sidebar__all' title='All korners' data-name='All korners'>
+      <Link
+        to='/hub'
+        className='korner-sidebar__all'
+        title='All korners'
+        data-name='All korners'
+      >
         ⋯
       </Link>
     </aside>

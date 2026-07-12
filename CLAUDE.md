@@ -4,10 +4,10 @@ Kronk is a custom Mastodon instance at **mastodon.kronk.info**. This repo is a f
 
 ## Branch Strategy
 
-| Branch    | Purpose                                        | Deploy target           |
-| --------- | ---------------------------------------------- | ----------------------- |
-| `main`    | Production (protected — PRs only)              | mastodon.kronk.info     |
-| `staging` | Shared integration — all work accumulates here | shadow.kronk.info       |
+| Branch    | Purpose                                        | Deploy target       |
+| --------- | ---------------------------------------------- | ------------------- |
+| `main`    | Production (protected — PRs only)              | mastodon.kronk.info |
+| `staging` | Shared integration — all work accumulates here | shadow.kronk.info   |
 
 **Never commit directly to `staging` or `main`.** Always work on a branch.
 

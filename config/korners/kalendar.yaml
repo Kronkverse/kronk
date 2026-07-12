@@ -1,30 +1,30 @@
 # Kalendar — events, RSVPs, invitations
 # Retroactively authored from the shipped code on `main`.
 
-slug:            kalendar
-name:            Kalendar
-icon:            calendar_month
-render_target:   native
-version:         0.1.0
+slug: kalendar
+name: Kalendar
+icon: calendar_month
+render_target: native
+version: 0.1.0
 
 permissions:
   - read:statuses
   - write:statuses
 
 resources:
-  - name:    events
+  - name: events
     primary: true
-  - name:    event_invitations
-  - name:    event_rsvps
+  - name: event_invitations
+  - name: event_rsvps
 
 storage:
-  db_namespace:  event_           # tables: events, event_invitations, event_rsvps
-  media_prefix:  # not-implemented — event cover images use Mastodon's default paperclip attachment paths
-  redis_prefix:  # not-implemented
+  db_namespace: event_ # tables: events, event_invitations, event_rsvps
+  media_prefix: # not-implemented — event cover images use Mastodon's default paperclip attachment paths
+  redis_prefix: # not-implemented
 
 visibility_scopes: []
 
-steward_role:    moderator
+steward_role: moderator
 
 emits:
   # Framework event-bus emissions (§6 inter-korner). Huddle listens
@@ -42,48 +42,48 @@ emits:
 listens: []
 
 feed_projection:
-  card:               event_card                    # StatusEventCard; not yet ported onto StatusKornerCard
-  title_from:         title
-  summary_from:       location                      # combines with start_time in the card layout
-  links_to:           /kalendar/<id>                # existing; §4 migration → /hub/kalendar/events/<id>
+  card: event_card # StatusEventCard; not yet ported onto StatusKornerCard
+  title_from: title
+  summary_from: location # combines with start_time in the card layout
+  links_to: /kalendar/<id> # existing; §4 migration → /hub/kalendar/events/<id>
   default_visibility: public
-  discriminator:      status.event.present?          # via Status.has_one :event, inverse of Event.status_id
+  discriminator: status.event.present? # via Status.has_one :event, inverse of Event.status_id
 
-  status_association: event       # framework: Status.has_one :event
+  status_association: event # framework: Status.has_one :event
 subscription:
-  default:  off                   # not-implemented
+  default: off # not-implemented
 
 # Per-user settings surfaced at /hub/kalendar/settings (spec §K.3.3).
 settings:
-  - name:    reminder_lead_time
-    kind:    duration
+  - name: reminder_lead_time
+    kind: duration
     default: PT1H
     options: [PT15M, PT30M, PT1H, PT4H, P1D]
-    scope:   user
-    label:   Event reminder lead time
+    scope: user
+    label: Event reminder lead time
     description: How far ahead of an event you're going or interested in the reminder fires.
-  - name:    default_event_visibility
-    kind:    enum
+  - name: default_event_visibility
+    kind: enum
     options: [public, unlisted, private]
     default: public
-    scope:   user
-    label:   Default event visibility
+    scope: user
+    label: Default event visibility
     description: Fresh events you create start at this visibility. You can override per-event.
-  - name:    week_start
-    kind:    enum
+  - name: week_start
+    kind: enum
     options: [monday, sunday]
     default: monday
-    scope:   user
-    label:   Week starts on
+    scope: user
+    label: Week starts on
 
 compose:
-  label:  "New event"
-  route:  "/hub/kalendar/new"
+  label: 'New event'
+  route: '/hub/kalendar/new'
 
 launch:
-  blurb:  "Kalendar — the shared calendar for Kronk."
-  cta:    "Tap in"
+  blurb: 'Kalendar — the shared calendar for Kronk.'
+  cta: 'Tap in'
 
-feature_flag:    # not-implemented
-federates:       false
-enforced:        true                              # framework: on this branch; boot validator enforces
+feature_flag: # not-implemented
+federates: false
+enforced: true # framework: on this branch; boot validator enforces

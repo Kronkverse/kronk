@@ -135,7 +135,9 @@ export const KronkMenu = () => {
       if (ref.current && !ref.current.contains(e.target as Node)) close();
     };
     document.addEventListener('mousedown', handler);
-    return () => { document.removeEventListener('mousedown', handler); };
+    return () => {
+      document.removeEventListener('mousedown', handler);
+    };
   }, [open, close]);
 
   return (
@@ -156,36 +158,74 @@ export const KronkMenu = () => {
       {open && (
         <div className='kronk-menu__panel' role='menu'>
           {post && (
-            <Link className='kronk-menu__item kronk-menu__item--primary' to={post.href} role='menuitem' onClick={close}>
-              <span className='kronk-menu__item-glyph' aria-hidden='true'><EditIcon /></span>
+            <Link
+              className='kronk-menu__item kronk-menu__item--primary'
+              to={post.href}
+              role='menuitem'
+              onClick={close}
+            >
+              <span className='kronk-menu__item-glyph' aria-hidden='true'>
+                <EditIcon />
+              </span>
               <span className='kronk-menu__item-label'>{post.label}</span>
             </Link>
           )}
-          <Link className='kronk-menu__item' to='/nudges' role='menuitem' onClick={close}>
-            <span className='kronk-menu__item-glyph' aria-hidden='true'><ChatIcon /></span>
+          <Link
+            className='kronk-menu__item'
+            to='/nudges'
+            role='menuitem'
+            onClick={close}
+          >
+            <span className='kronk-menu__item-glyph' aria-hidden='true'>
+              <ChatIcon />
+            </span>
             <span className='kronk-menu__item-label'>
               <FormattedMessage {...messages.nudges} />
             </span>
             {unreadNudgesCount > 0 && (
-              <span className='kronk-menu__item-badge' aria-label={`${unreadNudgesCount} unread`}>
+              <span
+                className='kronk-menu__item-badge'
+                aria-label={`${unreadNudgesCount} unread`}
+              >
                 {unreadNudgesCount}
               </span>
             )}
           </Link>
-          <Link className='kronk-menu__item' to='/search' role='menuitem' onClick={close}>
-            <span className='kronk-menu__item-glyph' aria-hidden='true'><SearchIcon /></span>
+          <Link
+            className='kronk-menu__item'
+            to='/search'
+            role='menuitem'
+            onClick={close}
+          >
+            <span className='kronk-menu__item-glyph' aria-hidden='true'>
+              <SearchIcon />
+            </span>
             <span className='kronk-menu__item-label'>
               <FormattedMessage {...messages.search} />
             </span>
           </Link>
           {settings.external ? (
-            <a className='kronk-menu__item' href={settings.href} role='menuitem' onClick={close}>
-              <span className='kronk-menu__item-glyph' aria-hidden='true'><SettingsIcon /></span>
+            <a
+              className='kronk-menu__item'
+              href={settings.href}
+              role='menuitem'
+              onClick={close}
+            >
+              <span className='kronk-menu__item-glyph' aria-hidden='true'>
+                <SettingsIcon />
+              </span>
               <span className='kronk-menu__item-label'>{settings.label}</span>
             </a>
           ) : (
-            <Link className='kronk-menu__item' to={settings.href} role='menuitem' onClick={close}>
-              <span className='kronk-menu__item-glyph' aria-hidden='true'><SettingsIcon /></span>
+            <Link
+              className='kronk-menu__item'
+              to={settings.href}
+              role='menuitem'
+              onClick={close}
+            >
+              <span className='kronk-menu__item-glyph' aria-hidden='true'>
+                <SettingsIcon />
+              </span>
               <span className='kronk-menu__item-label'>{settings.label}</span>
             </Link>
           )}

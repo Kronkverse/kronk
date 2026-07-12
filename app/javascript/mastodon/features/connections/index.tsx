@@ -32,7 +32,9 @@ export const Connections = () => {
   const [busy, setBusy] = useState<string | null>(null);
 
   const viewingOwnProfile =
-    account && identity.accountId && String(account.id) === String(identity.accountId);
+    account &&
+    identity.accountId &&
+    String(account.id) === String(identity.accountId);
 
   useEffect(() => {
     if (!acct) return;
@@ -40,13 +42,22 @@ export const Connections = () => {
 
     void (async () => {
       try {
-        const accountRes = await apiRequestGet<ApiAccountJSON>('v1/accounts/lookup', { acct });
+        const accountRes = await apiRequestGet<ApiAccountJSON>(
+          'v1/accounts/lookup',
+          { acct },
+        );
         if (cancelled) return;
         setAccount(accountRes);
 
         const [followersRes, followingRes] = await Promise.all([
-          apiRequestGet<ApiAccountJSON[]>(`v1/accounts/${accountRes.id}/followers`, { limit: 20 }),
-          apiRequestGet<ApiAccountJSON[]>(`v1/accounts/${accountRes.id}/following`, { limit: 20 }),
+          apiRequestGet<ApiAccountJSON[]>(
+            `v1/accounts/${accountRes.id}/followers`,
+            { limit: 20 },
+          ),
+          apiRequestGet<ApiAccountJSON[]>(
+            `v1/accounts/${accountRes.id}/following`,
+            { limit: 20 },
+          ),
         ]);
         if (cancelled) return;
         setFollowers(followersRes);
@@ -54,7 +65,10 @@ export const Connections = () => {
 
         // Follow requests are viewer-scoped — only load when viewing own profile.
         if (String(accountRes.id) === String(identity.accountId)) {
-          const requestsRes = await apiRequestGet<FollowRequestJSON[]>('v1/follow_requests', { limit: 40 });
+          const requestsRes = await apiRequestGet<FollowRequestJSON[]>(
+            'v1/follow_requests',
+            { limit: 40 },
+          );
           if (cancelled) return;
           setRequests(requestsRes);
         }
@@ -64,13 +78,18 @@ export const Connections = () => {
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [acct, identity.accountId]);
 
   const authorize = async (id: string) => {
     setBusy(id);
     try {
-      await apiRequestPost<ApiRelationshipJSON>(`v1/follow_requests/${id}/authorize`, {});
+      await apiRequestPost<ApiRelationshipJSON>(
+        `v1/follow_requests/${id}/authorize`,
+        {},
+      );
       setRequests((prev) => prev.filter((r) => r.id !== id));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
@@ -82,7 +101,10 @@ export const Connections = () => {
   const reject = async (id: string) => {
     setBusy(id);
     try {
-      await apiRequestPost<ApiRelationshipJSON>(`v1/follow_requests/${id}/reject`, {});
+      await apiRequestPost<ApiRelationshipJSON>(
+        `v1/follow_requests/${id}/reject`,
+        {},
+      );
       setRequests((prev) => prev.filter((r) => r.id !== id));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
@@ -114,7 +136,9 @@ export const Connections = () => {
       )}
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 600 }}>{a.display_name || a.username}</div>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>@{a.acct}</div>
+        <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+          @{a.acct}
+        </div>
       </div>
       {actions}
     </li>
@@ -123,7 +147,11 @@ export const Connections = () => {
   return (
     <Column bindToDocument label={intl.formatMessage(messages.title)}>
       <ColumnHeader
-        title={account ? `${account.display_name || account.username} — Connections` : intl.formatMessage(messages.title)}
+        title={
+          account
+            ? `${account.display_name || account.username} — Connections`
+            : intl.formatMessage(messages.title)
+        }
         showBackButton
       />
 
@@ -135,7 +163,10 @@ export const Connections = () => {
         {viewingOwnProfile && (
           <>
             <h3 style={{ marginTop: 0 }}>
-              <FormattedMessage id='connections.requests' defaultMessage='Follow requests' />
+              <FormattedMessage
+                id='connections.requests'
+                defaultMessage='Follow requests'
+              />
               {requests.length > 0 && (
                 <span
                   style={{
@@ -154,43 +185,73 @@ export const Connections = () => {
 
             {requests.length === 0 && (
               <p style={{ color: 'var(--text-muted)' }}>
-                <FormattedMessage id='connections.no_requests' defaultMessage='No pending follow requests.' />
+                <FormattedMessage
+                  id='connections.no_requests'
+                  defaultMessage='No pending follow requests.'
+                />
               </p>
             )}
 
             <ul style={{ padding: 0, listStyle: 'none' }}>
               {requests.map((r) =>
-                renderAccountRow(r, (
+                renderAccountRow(
+                  r,
                   <div style={{ display: 'flex', gap: '0.4rem' }}>
                     <button
                       type='button'
                       onClick={() => void authorize(r.id)}
                       disabled={busy === r.id}
-                      style={{ padding: '0.35rem 0.7rem', border: 'none', borderRadius: 'var(--radius-medium, 8px)', background: 'var(--accent)', color: 'var(--surface-primary)', cursor: 'pointer' }}
+                      style={{
+                        padding: '0.35rem 0.7rem',
+                        border: 'none',
+                        borderRadius: 'var(--radius-medium, 8px)',
+                        background: 'var(--accent)',
+                        color: 'var(--surface-primary)',
+                        cursor: 'pointer',
+                      }}
                     >
-                      <FormattedMessage id='connections.authorize' defaultMessage='Accept' />
+                      <FormattedMessage
+                        id='connections.authorize'
+                        defaultMessage='Accept'
+                      />
                     </button>
                     <button
                       type='button'
                       onClick={() => void reject(r.id)}
                       disabled={busy === r.id}
-                      style={{ padding: '0.35rem 0.7rem', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-medium, 8px)', background: 'var(--surface-elevated)', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                      style={{
+                        padding: '0.35rem 0.7rem',
+                        border: '1px solid var(--border-default)',
+                        borderRadius: 'var(--radius-medium, 8px)',
+                        background: 'var(--surface-elevated)',
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                      }}
                     >
-                      <FormattedMessage id='connections.reject' defaultMessage='Reject' />
+                      <FormattedMessage
+                        id='connections.reject'
+                        defaultMessage='Reject'
+                      />
                     </button>
-                  </div>
-                )),
+                  </div>,
+                ),
               )}
             </ul>
           </>
         )}
 
         <h3>
-          <FormattedMessage id='connections.followers' defaultMessage='Followers' />
+          <FormattedMessage
+            id='connections.followers'
+            defaultMessage='Followers'
+          />
         </h3>
         {followers.length === 0 && (
           <p style={{ color: 'var(--text-muted)' }}>
-            <FormattedMessage id='connections.no_followers' defaultMessage='No followers yet.' />
+            <FormattedMessage
+              id='connections.no_followers'
+              defaultMessage='No followers yet.'
+            />
           </p>
         )}
         <ul style={{ padding: 0, listStyle: 'none' }}>
@@ -198,11 +259,17 @@ export const Connections = () => {
         </ul>
 
         <h3>
-          <FormattedMessage id='connections.following' defaultMessage='Following' />
+          <FormattedMessage
+            id='connections.following'
+            defaultMessage='Following'
+          />
         </h3>
         {following.length === 0 && (
           <p style={{ color: 'var(--text-muted)' }}>
-            <FormattedMessage id='connections.no_following' defaultMessage='Not following anyone yet.' />
+            <FormattedMessage
+              id='connections.no_following'
+              defaultMessage='Not following anyone yet.'
+            />
           </p>
         )}
         <ul style={{ padding: 0, listStyle: 'none' }}>

@@ -7,8 +7,8 @@ these files instantiate.
 ## Status of this catalog — v0.5
 
 These manifests are **retroactively authored from the shipped code** in
-each space's respective branch. They describe *what a space actually
-does today*, not what the framework aspires to. Fields that don't map
+each space's respective branch. They describe _what a space actually
+does today_, not what the framework aspires to. Fields that don't map
 cleanly onto current implementation are marked explicitly:
 
 - `# not-implemented` — feature exists in the spec but the space has no
@@ -27,17 +27,17 @@ exactly how far a space is from framework-conformance.
 Not every space lives on `main` yet. Manifests here document the
 current state across the ecosystem:
 
-| Korner | Branch of record | Status |
-|---|---|---|
-| Kommons | `main` | Live in production |
-| Kuestions | `main` | Live in production |
-| Kalendar (Events) | `main` | Live in production |
-| Booth | `main` | Live in production |
-| InFlow | `main` | Live in production |
-| Nudges | `main` | Live in production |
-| Marketplace | `dev/kashka` | Live on shadow |
-| Tree | `dev/chris` | Live on shadow |
-| Klot | `dev/tbone` | Live on shadow |
+| Korner            | Branch of record | Status             |
+| ----------------- | ---------------- | ------------------ |
+| Kommons           | `main`           | Live in production |
+| Kuestions         | `main`           | Live in production |
+| Kalendar (Events) | `main`           | Live in production |
+| Booth             | `main`           | Live in production |
+| InFlow            | `main`           | Live in production |
+| Nudges            | `main`           | Live in production |
+| Marketplace       | `dev/kashka`     | Live on shadow     |
+| Tree              | `dev/chris`      | Live on shadow     |
+| Klot              | `dev/tbone`      | Live on shadow     |
 
 A retired space (`flow/` — cycle tracker, superseded by Klot and purged
 on `dev/tbone`) is not listed. If it returns, add its manifest with the

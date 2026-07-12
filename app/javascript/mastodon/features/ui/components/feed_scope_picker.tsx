@@ -33,7 +33,9 @@ export const FeedScopePicker = () => {
     let cancelled = false;
     void (async () => {
       try {
-        const data = await apiRequestGet<{ feed_scope: Scope }>('v1/kronk_settings');
+        const data = await apiRequestGet<{ feed_scope: Scope }>(
+          'v1/kronk_settings',
+        );
         if (!cancelled && data.feed_scope) setScope(data.feed_scope);
       } catch {
         // Silent — the picker is informational until the gate lands.

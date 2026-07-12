@@ -15,7 +15,9 @@ import { useAppSelector, useAppDispatch } from 'mastodon/store';
 export const GroupTargets = () => {
   const dispatch = useAppDispatch();
   const selectedIds = useAppSelector(
-    (state) => (state.compose.get('group_ids') ?? ImmutableList()) as ImmutableList<string>,
+    (state) =>
+      (state.compose.get('group_ids') ??
+        ImmutableList()) as ImmutableList<string>,
   );
 
   const [available, setAvailable] = useState<ApiGroupJSON[]>([]);
@@ -25,10 +27,14 @@ export const GroupTargets = () => {
     let cancelled = false;
     void (async () => {
       try {
-        const groups = await apiRequestGet<ApiGroupJSON[]>('v1/groups', { limit: 100 });
+        const groups = await apiRequestGet<ApiGroupJSON[]>('v1/groups', {
+          limit: 100,
+        });
         if (!cancelled) {
           // Only show groups the viewer is a member of.
-          setAvailable(groups.filter((g) => g.viewer_role !== null && !g.archived));
+          setAvailable(
+            groups.filter((g) => g.viewer_role !== null && !g.archived),
+          );
         }
       } catch {
         // Best-effort — composer stays usable without groups.
@@ -87,9 +93,15 @@ export const GroupTargets = () => {
         aria-expanded={open}
       >
         {selectedIds.size === 0 ? (
-          <FormattedMessage id='compose.group_targets.add' defaultMessage='+ Post to group…' />
+          <FormattedMessage
+            id='compose.group_targets.add'
+            defaultMessage='+ Post to group…'
+          />
         ) : (
-          <FormattedMessage id='compose.group_targets.more' defaultMessage='+ Another group' />
+          <FormattedMessage
+            id='compose.group_targets.more'
+            defaultMessage='+ Another group'
+          />
         )}
       </button>
 
@@ -97,7 +109,10 @@ export const GroupTargets = () => {
         <div role='menu' className='compose-form__group-target-menu'>
           {available.length === 0 && (
             <p className='compose-form__group-target-empty'>
-              <FormattedMessage id='compose.group_targets.none' defaultMessage='No groups yet.' />
+              <FormattedMessage
+                id='compose.group_targets.none'
+                defaultMessage='No groups yet.'
+              />
             </p>
           )}
           {available.map((g) => {

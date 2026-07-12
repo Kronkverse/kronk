@@ -21,20 +21,20 @@ import type { IconProp } from 'mastodon/components/icon';
 // korner must map to a unique icon so the Hub grid stays legible at
 // a glance.
 const SLUG_TO_ICON: Record<string, IconProp> = {
-  kommons: GavelIcon,                     // gavel — governance
-  kuestions: QuestionMarkIcon,            // ? — questions
-  kalendar: CalendarIcon,                 // calendar — events
-  huddle: PartnerExchangeIcon,            // handshake — live sessions
-  booth: HeadphonesIcon,                  // headphones — audio
-  marketplace: InventoryIcon,             // stack — listings
-  'in-flow': DiversityIcon,               // people bloom — social
-  nudges: ChatIcon,                       // speech bubble — chats
-  moments: HourglassIcon,                 // hourglass — ephemeral
-  albutts: PhotoLibraryIcon,              // photo stack — albums
-  kompass: ExploreIcon,                   // compass — presence
-  groups: GroupsIcon,                     // group silhouettes
-  tree: BarChartIcon,                     // stacked bars — hierarchy (proxy for account_tree)
-  klot: ArticleIcon,                      // journal page — private log (proxy for nights_stay)
+  kommons: GavelIcon, // gavel — governance
+  kuestions: QuestionMarkIcon, // ? — questions
+  kalendar: CalendarIcon, // calendar — events
+  huddle: PartnerExchangeIcon, // handshake — live sessions
+  booth: HeadphonesIcon, // headphones — audio
+  marketplace: InventoryIcon, // stack — listings
+  'in-flow': DiversityIcon, // people bloom — social
+  nudges: ChatIcon, // speech bubble — chats
+  moments: HourglassIcon, // hourglass — ephemeral
+  albutts: PhotoLibraryIcon, // photo stack — albums
+  kompass: ExploreIcon, // compass — presence
+  groups: GroupsIcon, // group silhouettes
+  tree: BarChartIcon, // stacked bars — hierarchy (proxy for account_tree)
+  klot: ArticleIcon, // journal page — private log (proxy for nights_stay)
 };
 
 // Fallback when a slug has no mapped icon yet (tree / klot / newly-added

@@ -25,13 +25,21 @@
 
     &--saving {
       color: var(--text-muted);
-      background: color-mix(in oklab, var(--kronk-purple-accent) 8%, transparent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 8%,
+        transparent
+      );
       opacity: 1;
     }
 
     &--saved {
       color: var(--kronk-purple-accent);
-      background: color-mix(in oklab, var(--kronk-purple-accent) 12%, transparent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        transparent
+      );
       opacity: 1;
     }
 
@@ -103,7 +111,10 @@
     color: var(--text-secondary);
     font-size: 0.85rem;
     cursor: pointer;
-    transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
 
     input {
       accent-color: var(--kronk-purple-accent);
@@ -115,7 +126,11 @@
     }
 
     &:has(input:checked) {
-      background: color-mix(in oklab, var(--kronk-purple-accent) 15%, var(--surface-primary));
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 15%,
+        var(--surface-primary)
+      );
       border-color: var(--kronk-purple-accent);
       color: var(--kronk-purple-accent);
       font-weight: 500;
@@ -142,7 +157,11 @@
     }
 
     &:hover {
-      background: color-mix(in oklab, var(--kronk-purple-accent) 8%, transparent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 8%,
+        transparent
+      );
     }
   }
 
@@ -165,7 +184,11 @@
 
     &:hover {
       color: var(--kronk-purple-accent);
-      background: color-mix(in oklab, var(--kronk-purple-accent) 10%, transparent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 10%,
+        transparent
+      );
     }
   }
 
@@ -187,7 +210,8 @@
     border-radius: var(--radius-medium);
     background: var(--kronk-purple-accent);
     color: var(--surface-primary);
-    box-shadow: 0 4px 12px -4px color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
+    box-shadow: 0 4px 12px -4px
+      color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
 
     svg {
       width: 1.65rem;
@@ -247,7 +271,8 @@
     flex-direction: column;
     gap: 0.4rem;
     padding: 0.75rem 0;
-    border-top: 1px solid color-mix(in oklab, var(--border-default) 60%, transparent);
+    border-top: 1px solid
+      color-mix(in oklab, var(--border-default) 60%, transparent);
 
     &:first-of-type {
       border-top: none;
@@ -297,5 +322,4 @@
     font-size: 0.85rem;
     font-style: italic;
   }
-
 }

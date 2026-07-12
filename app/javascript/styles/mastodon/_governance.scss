@@ -853,8 +853,7 @@ $governance-amber: #f59e0b;
     &:focus {
       outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px
-        color-mix(in srgb, var(--accent) 18%, transparent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
     }
   }
 
@@ -976,8 +975,7 @@ $governance-amber: #f59e0b;
   &:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px
-      color-mix(in srgb, var(--accent) 18%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
   }
 }
 
@@ -1229,8 +1227,7 @@ $governance-amber: #f59e0b;
   &:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px
-      color-mix(in srgb, var(--accent) 18%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
   }
 }
 
@@ -1916,11 +1913,7 @@ $governance-amber: #f59e0b;
   &--agree {
     border-color: var(--accent);
     color: var(--accent);
-    background: color-mix(
-      in srgb,
-      var(--accent) 12%,
-      transparent
-    );
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
   }
 
   &--abstain {
@@ -2034,11 +2027,7 @@ $governance-amber: #f59e0b;
   flex-shrink: 0;
 
   &--agree {
-    background: color-mix(
-      in srgb,
-      var(--accent) 12%,
-      transparent
-    );
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
     color: var(--accent);
   }
 
@@ -2269,11 +2258,7 @@ $governance-amber: #f59e0b;
   }
 
   &--spent {
-    background: color-mix(
-      in srgb,
-      var(--accent) 10%,
-      transparent
-    );
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
     color: var(--accent);
   }
 }
@@ -2483,8 +2468,7 @@ $governance-amber: #f59e0b;
   &:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px
-      color-mix(in srgb, var(--accent) 8%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent);
   }
 }
 
@@ -2628,8 +2612,7 @@ $governance-amber: #f59e0b;
 
   &:hover:not(:disabled) {
     background: color-mix(in srgb, var(--accent) 94%, black 6%);
-    box-shadow: 0 2px 8px
-      color-mix(in srgb, var(--accent) 25%, transparent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 25%, transparent);
   }
 
   &:disabled {

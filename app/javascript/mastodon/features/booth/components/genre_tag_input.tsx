@@ -97,7 +97,8 @@ export const GenreTagInput: React.FC<Props> = ({
   const addGenre = useCallback(
     (genre: string) => {
       const trimmed = genre.trim();
-      if (!trimmed || value.includes(trimmed) || value.length >= maxTags) return;
+      if (!trimmed || value.includes(trimmed) || value.length >= maxTags)
+        return;
       onChange([...value, trimmed]);
       setInputValue('');
       setShowSuggestions(false);

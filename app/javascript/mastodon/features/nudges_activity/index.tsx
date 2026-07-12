@@ -39,19 +39,28 @@ interface ActivityGroup {
 // Verb templates per notification type. Keeps the aggregation output
 // legible without needing i18n strings for every distinct verb yet.
 const VERB: Record<string, { one: string; many: string }> = {
-  favourite:      { one: 'frothed your post',                 many: 'frothed your post' },
-  reblog:         { one: 'boosted your post',                 many: 'boosted your post' },
-  mention:        { one: 'mentioned you',                     many: 'mentioned you' },
-  follow:         { one: 'followed you',                      many: 'followed you' },
-  follow_request: { one: 'requested to follow you',           many: 'requested to follow you' },
-  poll:           { one: 'a poll you voted in has ended',     many: 'polls you voted in have ended' },
-  quote:          { one: 'quoted your post',                  many: 'quoted your post' },
-  event_invitation: { one: 'invited you to an event',         many: 'invited you to events' },
-  media_tag:      { one: 'tagged you in media',               many: 'tagged you in media' },
+  favourite: { one: 'frothed your post', many: 'frothed your post' },
+  reblog: { one: 'boosted your post', many: 'boosted your post' },
+  mention: { one: 'mentioned you', many: 'mentioned you' },
+  follow: { one: 'followed you', many: 'followed you' },
+  follow_request: {
+    one: 'requested to follow you',
+    many: 'requested to follow you',
+  },
+  poll: {
+    one: 'a poll you voted in has ended',
+    many: 'polls you voted in have ended',
+  },
+  quote: { one: 'quoted your post', many: 'quoted your post' },
+  event_invitation: {
+    one: 'invited you to an event',
+    many: 'invited you to events',
+  },
+  media_tag: { one: 'tagged you in media', many: 'tagged you in media' },
 };
 
 const describeVerb = (type: string, count: number): string =>
-  count > 1 ? VERB[type]?.many ?? type : VERB[type]?.one ?? type;
+  count > 1 ? (VERB[type]?.many ?? type) : (VERB[type]?.one ?? type);
 
 const ActorAvatars: React.FC<{ actors: ActorJSON[] }> = ({ actors }) => {
   const shown = actors.slice(0, 3);
@@ -87,8 +96,7 @@ const ActivityRow: React.FC<{ group: ActivityGroup }> = ({ group }) => {
           {group.count > 1 && others > 0 && (
             <> and {others === 1 ? '1 other' : `${others} others`}</>
           )}
-          {group.count > 1 && others === 0 && <> ({group.count})</>}
-          {' '}
+          {group.count > 1 && others === 0 && <> ({group.count})</>}{' '}
           {describeVerb(group.type, group.count)}
         </p>
         <p className='nudges-activity__timestamp'>
@@ -99,7 +107,9 @@ const ActivityRow: React.FC<{ group: ActivityGroup }> = ({ group }) => {
   );
 };
 
-export const NudgesActivity: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+export const NudgesActivity: React.FC<{ multiColumn?: boolean }> = ({
+  multiColumn,
+}) => {
   const intl = useIntl();
   const [groups, setGroups] = useState<ActivityGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,7 +118,9 @@ export const NudgesActivity: React.FC<{ multiColumn?: boolean }> = ({ multiColum
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await apiRequestGet<ActivityGroup[]>('v1/nudges/activity', { limit: 40 });
+      const data = await apiRequestGet<ActivityGroup[]>('v1/nudges/activity', {
+        limit: 40,
+      });
       setGroups(data);
       setError(null);
     } catch (e: unknown) {
@@ -139,24 +151,35 @@ export const NudgesActivity: React.FC<{ multiColumn?: boolean }> = ({ multiColum
       <div className='nudges-activity scrollable'>
         <div className='nudges-activity__tabs'>
           <Link to='/nudges' className='nudges-activity__tab'>
-            <FormattedMessage id='nudges_activity.tab_chat' defaultMessage='Chat' />
+            <FormattedMessage
+              id='nudges_activity.tab_chat'
+              defaultMessage='Chat'
+            />
           </Link>
           <span className='nudges-activity__tab nudges-activity__tab--active'>
-            <FormattedMessage id='nudges_activity.tab_activity' defaultMessage='Activity' />
+            <FormattedMessage
+              id='nudges_activity.tab_activity'
+              defaultMessage='Activity'
+            />
           </span>
         </div>
 
         {error && (
           <p className='nudges-activity__error'>
-            <FormattedMessage id='nudges_activity.error' defaultMessage='Could not load activity.' />
-            {' '}
+            <FormattedMessage
+              id='nudges_activity.error'
+              defaultMessage='Could not load activity.'
+            />{' '}
             {error}
           </p>
         )}
 
         {loading && groups.length === 0 && !error && (
           <p className='nudges-activity__empty'>
-            <FormattedMessage id='nudges_activity.loading' defaultMessage='Loading…' />
+            <FormattedMessage
+              id='nudges_activity.loading'
+              defaultMessage='Loading…'
+            />
           </p>
         )}
 

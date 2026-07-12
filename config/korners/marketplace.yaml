@@ -2,35 +2,35 @@
 # Greenfield reference korner: built to spec §5 from day one — canonical
 # status_id linkage, dedicated tables, no retrofitting.
 
-slug:            marketplace
-name:            Marketplace
-icon:            inventory_2
-render_target:   native
-version:         2.0.0
+slug: marketplace
+name: Marketplace
+icon: inventory_2
+render_target: native
+version: 2.0.0
 
 permissions:
   - read:listings
   - write:listings
-  - read:statuses     # reuses Mastodon's read scope for public listings
-  - write:statuses    # reuses for creating a shared Status per listing
+  - read:statuses # reuses Mastodon's read scope for public listings
+  - write:statuses # reuses for creating a shared Status per listing
 
 resources:
-  - name:    listings
+  - name: listings
     primary: true
-  - name:    listing_photos
-  - name:    listing_offers
+  - name: listing_photos
+  - name: listing_offers
 
 storage:
-  db_namespace:  listing_          # tables: listings, listing_photos, listing_offers
-  media_prefix:  spaces/marketplace/
-  redis_prefix:  "marketplace:"
+  db_namespace: listing_ # tables: listings, listing_photos, listing_offers
+  media_prefix: spaces/marketplace/
+  redis_prefix: 'marketplace:'
 
 visibility_scopes:
   - public
   - followers
   - friends_of_friends
 
-steward_role:    moderator
+steward_role: moderator
 
 emits:
   - marketplace.listing.published
@@ -42,62 +42,62 @@ emits:
 listens: []
 
 feed_projection:
-  card:               marketplace_card
-  title_from:         title
-  summary_from:       description
-  status_association: listing            # framework: Status.has_one :listing via status_id (§5.5)
-  links_to:           /hub/marketplace/listings/<id>
+  card: marketplace_card
+  title_from: title
+  summary_from: description
+  status_association: listing # framework: Status.has_one :listing via status_id (§5.5)
+  links_to: /hub/marketplace/listings/<id>
   default_visibility: public
 
 notifications:
   types:
-    - name:         listing_saved
+    - name: listing_saved
       subject_type: listing
       default_push: false
-      aggregation:  { window: 6h, key: listing_id }
-      interactive:  false
-    - name:         listing_message
+      aggregation: { window: 6h, key: listing_id }
+      interactive: false
+    - name: listing_message
       subject_type: listing_offer
       default_push: true
-      aggregation:  default
-      interactive:  true                 # nudge — reply-able
-    - name:         listing_updated
+      aggregation: default
+      interactive: true # nudge — reply-able
+    - name: listing_updated
       subject_type: listing
-      default_push: false                # only for accounts that have saved the listing
-      aggregation:  { window: 1h, key: listing_id }
-      interactive:  false
-    - name:         listing_offer_received
+      default_push: false # only for accounts that have saved the listing
+      aggregation: { window: 1h, key: listing_id }
+      interactive: false
+    - name: listing_offer_received
       subject_type: listing_offer
       default_push: true
-      aggregation:  none
-      interactive:  true
+      aggregation: none
+      interactive: true
 
 settings:
-  - name:      default_publish_visibility
-    kind:      enum
-    options:   [public, followers, friends_of_friends]
-    default:   public
-    scope:     user
-  - name:      notify_on_offer
-    kind:      boolean
-    default:   true
-    scope:     user
-  - name:      auto_close_after_days
-    kind:      integer
-    default:   90
-    scope:     user
+  - name: default_publish_visibility
+    kind: enum
+    options: [public, followers, friends_of_friends]
+    default: public
+    scope: user
+  - name: notify_on_offer
+    kind: boolean
+    default: true
+    scope: user
+  - name: auto_close_after_days
+    kind: integer
+    default: 90
+    scope: user
 
 compose:
-  label:  "New listing"
-  route:  "/hub/marketplace/new"
+  label: 'New listing'
+  route: '/hub/marketplace/new'
 
 hub_teaser:
-  static:  "Creations, listings, services — traded person-to-person."
+  static: 'Creations, listings, services — traded person-to-person.'
 
 launch:
-  blurb:  "Marketplace — creations, listings, and services from the Kronk community."
-  cta:    "Tap in"
+  blurb: 'Marketplace — creations, listings, and services from the Kronk community.'
+  cta: 'Tap in'
 
-feature_flag:    # not-implemented — Marketplace ships enabled at 2.0.0
-federates:       false
-enforced:        true
+feature_flag: # not-implemented — Marketplace ships enabled at 2.0.0
+federates: false
+enforced: true

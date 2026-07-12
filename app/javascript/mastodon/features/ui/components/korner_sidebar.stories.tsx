@@ -21,7 +21,14 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => (
-    <div style={{ position: 'relative', minHeight: '30rem', background: '#000', width: '100%' }}>
+    <div
+      style={{
+        position: 'relative',
+        minHeight: '30rem',
+        background: '#000',
+        width: '100%',
+      }}
+    >
       <KornerSidebar />
     </div>
   ),

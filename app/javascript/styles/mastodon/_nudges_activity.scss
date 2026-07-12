@@ -20,7 +20,9 @@
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 500;
-    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
 
     &:hover {
       color: var(--text-primary);
@@ -68,7 +70,9 @@
     border: 1px solid var(--border-default);
     border-radius: var(--radius-medium);
     background: var(--surface-elevated);
-    transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
 
     &:hover {
       border-color: var(--kronk-purple-accent);

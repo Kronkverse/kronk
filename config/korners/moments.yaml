@@ -4,45 +4,45 @@
 # validator quiet while the models + composer land during 2.x.
 # See docs/kronk_korner_spec.md §New korners.
 
-slug:            moments
-name:            Moments
-icon:            hourglass_empty
-render_target:   native
-version:         0.0.0
+slug: moments
+name: Moments
+icon: hourglass_empty
+render_target: native
+version: 0.0.0
 
 resources:
-  - name:    moments
+  - name: moments
     primary: true
 
 storage:
-  db_namespace:  moment_               # planned: moments, moment_views
-  media_prefix:  spaces/moments/       # planned — DO Spaces path root
+  db_namespace: moment_ # planned: moments, moment_views
+  media_prefix: spaces/moments/ # planned — DO Spaces path root
 
 feed_projection:
-  card:               moments_card    # to be built
-  title_from:         caption
+  card: moments_card # to be built
+  title_from: caption
   status_association: moment
-  links_to:           /hub/moments/<id>
+  links_to: /hub/moments/<id>
   default_visibility: followers
 
 settings:
-  - name:      auto_expire_hours
-    kind:      integer
-    default:   24
-    scope:     user
-  - name:      notify_on_view
-    kind:      boolean
-    default:   false
-    scope:     user
+  - name: auto_expire_hours
+    kind: integer
+    default: 24
+    scope: user
+  - name: notify_on_view
+    kind: boolean
+    default: false
+    scope: user
 
 emits: []
 listens: []
 
 hub_teaser:
-  static:  "Gone by morning."
+  static: 'Gone by morning.'
 
 launch:
-  blurb:  "Moments — post something ephemeral. It's gone in 24 hours."
-  cta:    "Try it"
+  blurb: "Moments — post something ephemeral. It's gone in 24 hours."
+  cta: 'Try it'
 
-enforced:        false                 # boot validator silent until models land
+enforced: false # boot validator silent until models land

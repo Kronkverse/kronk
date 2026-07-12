@@ -63,8 +63,8 @@ const filterMetarowFields = (
   const hidden = hiddenNames.map((n) => n.toLowerCase());
   return fields.filter((f) => {
     const name = f.name.trim().toLowerCase();
-    if (/^pronouns?$/.test(name)) return false;  // already inline in handle
-    if (hidden.includes(name)) return false;      // consumed by a Me-panel card
+    if (/^pronouns?$/.test(name)) return false; // already inline in handle
+    if (hidden.includes(name)) return false; // consumed by a Me-panel card
     return true;
   });
 };
@@ -81,11 +81,7 @@ export const KProfileHeader: React.FC<{
       <div className='kprofile__cover' aria-hidden />
 
       <div className='kprofile__headwrap'>
-        <img
-          className='kprofile__avatar'
-          src={account.avatar}
-          alt=''
-        />
+        <img className='kprofile__avatar' src={account.avatar} alt='' />
 
         <div className='kprofile__identity'>
           <div className='kprofile__nameline'>
@@ -127,24 +123,28 @@ export const KProfileHeader: React.FC<{
           )}
 
           <div className='kprofile__metarow'>
-            {filterMetarowFields(account.fields, hiddenFieldNames).map((field) => (
-              <span
-                key={field.name}
-                className={`kprofile__meta-item${field.verified_at ? ' kprofile__meta-item--verified' : ''}`}
-              >
-                <span className='kprofile__meta-icon' aria-hidden>
-                  {iconForField(field.name)}
-                </span>
+            {filterMetarowFields(account.fields, hiddenFieldNames).map(
+              (field) => (
                 <span
-                  className='kprofile__meta-value'
-                  // field.value is server-sanitised HTML (may contain a
-                  // verified <a> or an emoji <img>).
-                  dangerouslySetInnerHTML={{ __html: field.value }}
-                />
-              </span>
-            ))}
+                  key={field.name}
+                  className={`kprofile__meta-item${field.verified_at ? ' kprofile__meta-item--verified' : ''}`}
+                >
+                  <span className='kprofile__meta-icon' aria-hidden>
+                    {iconForField(field.name)}
+                  </span>
+                  <span
+                    className='kprofile__meta-value'
+                    // field.value is server-sanitised HTML (may contain a
+                    // verified <a> or an emoji <img>).
+                    dangerouslySetInnerHTML={{ __html: field.value }}
+                  />
+                </span>
+              ),
+            )}
             <span className='kprofile__meta-item'>
-              <span className='kprofile__meta-icon' aria-hidden>✦</span>
+              <span className='kprofile__meta-icon' aria-hidden>
+                ✦
+              </span>
               <FormattedMessage
                 id='kprofile.meta.joined'
                 defaultMessage='Joined {date}'

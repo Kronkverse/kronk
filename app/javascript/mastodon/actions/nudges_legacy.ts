@@ -5,7 +5,11 @@ import { apiGetNudgesLegacyArchive } from 'mastodon/api/nudges_legacy';
 // Cursor-paginated forward on max_id.
 export const fetchNudgesLegacyArchive = createDataLoadingThunk(
   'nudges_legacy/fetch',
-  ({ maxId, minId, limit }: { maxId?: string; minId?: string; limit?: number } = {}) =>
+  ({
+    maxId,
+    minId,
+    limit,
+  }: { maxId?: string; minId?: string; limit?: number } = {}) =>
     apiGetNudgesLegacyArchive({ max_id: maxId, min_id: minId, limit }),
   ([data]) => data ?? [],
 );

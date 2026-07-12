@@ -34,10 +34,14 @@
   height: 210px;
   border-radius: 0 0 24px 24px;
   background:
-    radial-gradient(120% 140% at 82% 0%, rgb(132 138 250 / 42%), transparent 60%),
+    radial-gradient(
+      120% 140% at 82% 0%,
+      rgb(132 138 250 / 42%),
+      transparent 60%
+    ),
     radial-gradient(90% 120% at 10% 20%, rgb(86 58 204 / 40%), transparent 55%),
     linear-gradient(160deg, #241a44, #0d0a1c 70%);
-  background-color: #0d0a1c;  // opaque; stars must never show through
+  background-color: #0d0a1c; // opaque; stars must never show through
 }
 
 .kprofile__headwrap {
@@ -47,7 +51,7 @@
   align-items: flex-end;
   padding: 0 22px;
   max-width: 1180px;
-  margin: -64px auto 0;  // pull avatar up over cover
+  margin: -64px auto 0; // pull avatar up over cover
   flex-wrap: wrap;
 }
 
@@ -95,7 +99,9 @@
   border-radius: 8px;
   text-decoration: none;
   flex: 0 0 auto;
-  transition: background 0.14s, border-color 0.14s;
+  transition:
+    background 0.14s,
+    border-color 0.14s;
 
   &:hover,
   &:focus-visible {

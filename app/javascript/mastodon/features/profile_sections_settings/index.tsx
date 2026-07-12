@@ -1,9 +1,20 @@
 import { useEffect, useCallback, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
 import { useAppDispatch } from 'mastodon/store';
@@ -29,7 +40,14 @@ const SortableSectionRow: React.FC<{
   onToggleVisible: (id: string, visible: boolean) => void;
   onRemove: (id: string) => void;
 }> = ({ section, onToggleVisible, onRemove }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: section.id });
 
   return (
     <li
@@ -53,17 +71,29 @@ const SortableSectionRow: React.FC<{
         {...attributes}
         {...listeners}
         aria-label='Drag to reorder'
-        style={{ cursor: 'grab', padding: '0 0.4rem', color: 'var(--text-muted)', userSelect: 'none' }}
+        style={{
+          cursor: 'grab',
+          padding: '0 0.4rem',
+          color: 'var(--text-muted)',
+          userSelect: 'none',
+        }}
       >
         ⋮⋮
       </span>
-      <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{section.section_type}</span>
+      <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
+        {section.section_type}
+      </span>
       <span style={{ flex: 1 }}>{section.title ?? '—'}</span>
-      <button type='button' onClick={() => onToggleVisible(section.id, section.visible)}>
+      <button
+        type='button'
+        onClick={() => onToggleVisible(section.id, section.visible)}
+      >
         {section.visible ? 'Hide' : 'Show'}
       </button>
       {section.section_type !== 'timeline' && (
-        <button type='button' onClick={() => onRemove(section.id)}>Remove</button>
+        <button type='button' onClick={() => onRemove(section.id)}>
+          Remove
+        </button>
       )}
     </li>
   );
@@ -92,7 +122,9 @@ export const ProfileSectionsSettings = () => {
   }, [dispatch]);
 
   // dnd-kit setup for drag-to-reorder.
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  );
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -176,12 +208,18 @@ export const ProfileSectionsSettings = () => {
         </p>
 
         <h3 style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>
-          <FormattedMessage id='profile_sections.your_sections' defaultMessage='Your sections' />
+          <FormattedMessage
+            id='profile_sections.your_sections'
+            defaultMessage='Your sections'
+          />
         </h3>
 
         {sections.length === 0 && (
           <p style={{ color: 'var(--text-muted)' }}>
-            <FormattedMessage id='profile_sections.empty' defaultMessage='Loading…' />
+            <FormattedMessage
+              id='profile_sections.empty'
+              defaultMessage='Loading…'
+            />
           </p>
         )}
 
@@ -190,13 +228,18 @@ export const ProfileSectionsSettings = () => {
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+          <SortableContext
+            items={sections.map((s) => s.id)}
+            strategy={verticalListSortingStrategy}
+          >
             <ol style={{ padding: 0, listStyle: 'none' }}>
               {sections.map((s) => (
                 <SortableSectionRow
                   key={s.id}
                   section={s}
-                  onToggleVisible={(id, visible) => void toggleVisible(id, visible)}
+                  onToggleVisible={(id, visible) =>
+                    void toggleVisible(id, visible)
+                  }
                   onRemove={(id) => void remove(id)}
                 />
               ))}
@@ -205,7 +248,10 @@ export const ProfileSectionsSettings = () => {
         </DndContext>
 
         <h3 style={{ marginTop: '2rem', marginBottom: '0.5rem' }}>
-          <FormattedMessage id='profile_sections.add_korner' defaultMessage='Add a korner section' />
+          <FormattedMessage
+            id='profile_sections.add_korner'
+            defaultMessage='Add a korner section'
+          />
         </h3>
 
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -230,7 +276,10 @@ export const ProfileSectionsSettings = () => {
         </div>
 
         <h3 style={{ marginTop: '2rem', marginBottom: '0.5rem' }}>
-          <FormattedMessage id='profile_sections.add_kategory' defaultMessage='Add a kategory section' />
+          <FormattedMessage
+            id='profile_sections.add_kategory'
+            defaultMessage='Add a kategory section'
+          />
         </h3>
 
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -252,7 +301,10 @@ export const ProfileSectionsSettings = () => {
           ))}
           {kategories.length === 0 && (
             <p style={{ color: 'var(--text-muted)' }}>
-              <FormattedMessage id='profile_sections.no_kategories' defaultMessage='No curated kategories seeded yet. Run bin/tootctl kategories seed on this instance.' />
+              <FormattedMessage
+                id='profile_sections.no_kategories'
+                defaultMessage='No curated kategories seeded yet. Run bin/tootctl kategories seed on this instance.'
+              />
             </p>
           )}
         </div>

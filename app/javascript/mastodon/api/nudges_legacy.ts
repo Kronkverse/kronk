@@ -7,8 +7,10 @@ import type { ApiNotificationJSON } from 'mastodon/api_types/notifications';
 //
 // max_id / min_id follow standard Mastodon cursor pagination on
 // notification.id.
-export const apiGetNudgesLegacyArchive = (params: {
-  max_id?: string;
-  min_id?: string;
-  limit?: number;
-} = {}) => apiRequestGet<ApiNotificationJSON[]>('v1/nudges/legacy', params);
+export const apiGetNudgesLegacyArchive = (
+  params: {
+    max_id?: string;
+    min_id?: string;
+    limit?: number;
+  } = {},
+) => apiRequestGet<ApiNotificationJSON[]>('v1/nudges/legacy', params);

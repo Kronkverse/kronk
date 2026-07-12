@@ -71,12 +71,7 @@
 
 .questions-page__loading {
   height: 4px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--accent),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
   animation: shimmer 1.2s infinite;
   border-radius: 2px;
 }
@@ -92,8 +87,7 @@
 
 .questions-tab-nav__tab {
   background: transparent;
-  border: 1px solid
-    color-mix(in srgb, var(--accent) 50%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
   border-radius: 20px;
   padding: 8px 24px;
   font-size: 14px;
@@ -249,8 +243,7 @@
 
 .questions-composer {
   background: lighten($ui-base-color, 3%);
-  border: 1px solid
-    color-mix(in srgb, var(--accent) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
   border-radius: 16px;
   padding: 12px 16px;
   width: 100%;
@@ -422,8 +415,7 @@
     var(--accent) 8%,
     var(--color-bg-elevated, var(--background-color))
   );
-  border: 1px solid
-    color-mix(in srgb, var(--accent) 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
   border-left: 3px solid var(--accent);
   border-radius: 12px;
   padding: 20px;

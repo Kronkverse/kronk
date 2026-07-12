@@ -13,7 +13,11 @@
   code {
     font-family: var(--font-mono);
     font-size: 0.85em;
-    background: color-mix(in oklab, var(--kronk-purple-accent) 10%, transparent);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 10%,
+      transparent
+    );
     padding: 0.1em 0.35em;
     border-radius: var(--radius-small);
     color: var(--kronk-purple-accent);
@@ -180,8 +184,9 @@
     font-weight: 600;
     cursor: pointer;
     border: none;
-    transition: transform var(--dur-fast) var(--ease-out),
-                background var(--dur-fast) var(--ease-out);
+    transition:
+      transform var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
 
     &:hover {
       transform: translateY(-1px);
@@ -202,7 +207,11 @@
     }
 
     &--pill {
-      background: color-mix(in oklab, var(--kronk-purple-accent) 15%, transparent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 15%,
+        transparent
+      );
       color: var(--kronk-purple-accent);
       border: 1px solid var(--kronk-purple-accent);
       border-radius: var(--radius-round);

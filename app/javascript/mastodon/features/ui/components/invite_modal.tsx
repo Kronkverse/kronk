@@ -10,16 +10,26 @@ import { Button } from 'mastodon/components/button';
 import { Icon } from 'mastodon/components/icon';
 
 const messages = defineMessages({
-  title: { id: 'invite_modal.title', defaultMessage: 'Invite someone to Kronk' },
+  title: {
+    id: 'invite_modal.title',
+    defaultMessage: 'Invite someone to Kronk',
+  },
   blurb: {
     id: 'invite_modal.blurb',
-    defaultMessage: 'Every person you invite becomes part of our community. Please share this link with care — you are a custodian of this space. Help foster the environment you want to see on Kronk.',
+    defaultMessage:
+      'Every person you invite becomes part of our community. Please share this link with care — you are a custodian of this space. Help foster the environment you want to see on Kronk.',
   },
   copy: { id: 'invite_modal.copy', defaultMessage: 'Copy link' },
   copied: { id: 'invite_modal.copied', defaultMessage: 'Copied!' },
   close: { id: 'invite_modal.close', defaultMessage: 'Close' },
-  loading: { id: 'invite_modal.loading', defaultMessage: 'Generating your invite link...' },
-  error: { id: 'invite_modal.error', defaultMessage: 'Could not generate invite link.' },
+  loading: {
+    id: 'invite_modal.loading',
+    defaultMessage: 'Generating your invite link...',
+  },
+  error: {
+    id: 'invite_modal.error',
+    defaultMessage: 'Could not generate invite link.',
+  },
 });
 
 interface InviteModalProps {
@@ -67,11 +77,15 @@ const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
         </div>
 
         {loading && (
-          <p className='invite-modal__loading'>{intl.formatMessage(messages.loading)}</p>
+          <p className='invite-modal__loading'>
+            {intl.formatMessage(messages.loading)}
+          </p>
         )}
 
         {error && (
-          <p className='invite-modal__error'>{intl.formatMessage(messages.error)}</p>
+          <p className='invite-modal__error'>
+            {intl.formatMessage(messages.error)}
+          </p>
         )}
 
         {inviteUrl && (
@@ -93,11 +107,18 @@ const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                 readOnly
                 value={inviteUrl}
                 className='invite-modal__link-input'
-                onClick={(e) => { (e.target as HTMLInputElement).select(); }}
+                onClick={(e) => {
+                  (e.target as HTMLInputElement).select();
+                }}
               />
-              <Button onClick={handleCopy} className='invite-modal__copy-button'>
+              <Button
+                onClick={handleCopy}
+                className='invite-modal__copy-button'
+              >
                 <Icon id='copy' icon={ContentCopyIcon} />
-                {copied ? intl.formatMessage(messages.copied) : intl.formatMessage(messages.copy)}
+                {copied
+                  ? intl.formatMessage(messages.copied)
+                  : intl.formatMessage(messages.copy)}
               </Button>
             </div>
           </>

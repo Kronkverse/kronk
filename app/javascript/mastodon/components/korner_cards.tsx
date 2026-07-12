@@ -54,7 +54,8 @@ export const KORNER_CARDS: KornerCardEntry[] = [
   },
   {
     slug: 'kommons',
-    matches: (s) => s.get('post_type') === 'proposal' && s.get('proposal') != null,
+    matches: (s) =>
+      s.get('post_type') === 'proposal' && s.get('proposal') != null,
     card: (s) => <StatusKommonsCard proposal={dataFrom(s, 'proposal')} />,
   },
   {
@@ -66,11 +67,20 @@ export const KORNER_CARDS: KornerCardEntry[] = [
     card: (s, ctx) => {
       const isAnswer = s.get('post_type') === 'answer';
       const questionObj = isAnswer
-        ? (s.get('question') as ImmutableMap<string, unknown> | null | undefined)
+        ? (s.get('question') as
+            | ImmutableMap<string, unknown>
+            | null
+            | undefined)
         : null;
       const answerersSrc = isAnswer
-        ? (questionObj?.get('answerers') as ImmutableMap<string, unknown> | null | undefined)
-        : (s.get('answerers') as ImmutableMap<string, unknown> | null | undefined);
+        ? (questionObj?.get('answerers') as
+            | ImmutableMap<string, unknown>
+            | null
+            | undefined)
+        : (s.get('answerers') as
+            | ImmutableMap<string, unknown>
+            | null
+            | undefined);
       return (
         <StatusQuestionCard
           postType='question'

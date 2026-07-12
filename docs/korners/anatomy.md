@@ -101,7 +101,7 @@ Four boxes in the diagram aren't in the request path. They're **declarative**
 — edited once, referenced forever:
 
 - **`planets.tsx`** — makes your Korner's space colour derivable everywhere via `spaceColor('SlugName')`.
-- **`navigation_panel/index.tsx`** — how a user *discovers* your Korner without knowing the URL.
+- **`navigation_panel/index.tsx`** — how a user _discovers_ your Korner without knowing the URL.
 - **`concerns/account/associations.rb`** — one line so `Account.first.slug_periods` works.
 - **`config/korners/slug.yaml`** — machine-readable declaration of your Korner's shape. Not enforced yet; will be Phase 3.
 
@@ -162,18 +162,18 @@ of a switch.
 
 ## Layers, at a glance
 
-| Layer | Files | Role |
-| --- | --- | --- |
-| **Data** | `db/migrate/*`, `app/models/<slug>_*.rb` | Tables, all `<slug>_` prefixed. Own only what's yours. |
-| **API** | `app/controllers/api/v1/<slug>/*.rb`, `app/serializers/rest/<slug>_*.rb` | JSON boundary; thin controllers, authorise via Doorkeeper. |
-| **Routes** | `config/routes.rb`, `config/routes/api.rb` | SPA wildcard + `namespace :<slug>` for the API. |
-| **Feature module** | `app/javascript/mastodon/features/<slug>/*` | The UI. `index.tsx` mounts, `api.ts` fetches, `components/` renders, `types.ts` types. |
-| **Registration** | `ui/index.jsx`, `async-components.js`, `navigation_panel/*`, `planets.tsx` | Cross-cutting existing-file edits that make your Korner known. |
-| **Styles** | `_<slug>.scss`, `application.scss` | One partial, one `@use` line. |
-| **Feed projection** *(optional)* | `Status.rb`, `StatusSerializer`, `<slug>_summary_serializer.rb`, `status_<slug>_card.tsx`, `status.jsx` | Only if posts from this Korner render as cards in the home timeline. |
-| **Manifest** | `config/korners/<slug>.yaml` | Declaration of your Korner's shape. Not enforced yet. |
+| Layer                            | Files                                                                                                   | Role                                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **Data**                         | `db/migrate/*`, `app/models/<slug>_*.rb`                                                                | Tables, all `<slug>_` prefixed. Own only what's yours.                                 |
+| **API**                          | `app/controllers/api/v1/<slug>/*.rb`, `app/serializers/rest/<slug>_*.rb`                                | JSON boundary; thin controllers, authorise via Doorkeeper.                             |
+| **Routes**                       | `config/routes.rb`, `config/routes/api.rb`                                                              | SPA wildcard + `namespace :<slug>` for the API.                                        |
+| **Feature module**               | `app/javascript/mastodon/features/<slug>/*`                                                             | The UI. `index.tsx` mounts, `api.ts` fetches, `components/` renders, `types.ts` types. |
+| **Registration**                 | `ui/index.jsx`, `async-components.js`, `navigation_panel/*`, `planets.tsx`                              | Cross-cutting existing-file edits that make your Korner known.                         |
+| **Styles**                       | `_<slug>.scss`, `application.scss`                                                                      | One partial, one `@use` line.                                                          |
+| **Feed projection** _(optional)_ | `Status.rb`, `StatusSerializer`, `<slug>_summary_serializer.rb`, `status_<slug>_card.tsx`, `status.jsx` | Only if posts from this Korner render as cards in the home timeline.                   |
+| **Manifest**                     | `config/korners/<slug>.yaml`                                                                            | Declaration of your Korner's shape. Not enforced yet.                                  |
 
-Everything above is *the pattern as of today*. The spec's endpoint is a
+Everything above is _the pattern as of today_. The spec's endpoint is a
 Korner that ships in half these touchpoints because manifest-driven
 registration collapses many into one file. Getting there is Phase 3.
 For now: match the pattern, mark the drift.

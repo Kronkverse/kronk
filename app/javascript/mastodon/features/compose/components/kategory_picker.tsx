@@ -22,7 +22,9 @@ interface KategoryJSON {
 export const KategoryPicker = () => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
-  const text = useAppSelector((state) => (state.compose.get('text') ?? '') as string);
+  const text = useAppSelector(
+    (state) => (state.compose.get('text') ?? '') as string,
+  );
 
   const [expanded, setExpanded] = useState(false);
   const [kategories, setKategories] = useState<KategoryJSON[]>([]);
@@ -49,9 +51,10 @@ export const KategoryPicker = () => {
       const hashtag = `#${tag}`;
       const lower = hashtag.toLowerCase();
       if (alreadyTaggedRe.includes(lower)) return;
-      const next = text.length === 0 || text.endsWith(' ') || text.endsWith('\n')
-        ? `${text}${hashtag} `
-        : `${text} ${hashtag} `;
+      const next =
+        text.length === 0 || text.endsWith(' ') || text.endsWith('\n')
+          ? `${text}${hashtag} `
+          : `${text} ${hashtag} `;
       dispatch(changeCompose(next));
     },
     [dispatch, text, alreadyTaggedRe],

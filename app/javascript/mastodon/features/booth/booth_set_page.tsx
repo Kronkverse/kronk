@@ -47,7 +47,9 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         setSet(res.data);
         setLoading(false);
       })
-      .catch(() => { setLoading(false); });
+      .catch(() => {
+        setLoading(false);
+      });
   }, [id]);
 
   const handleCopyLink = useCallback(() => {
@@ -55,7 +57,9 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
     const url = `${window.location.origin}/booth/sets/${set.id}/embed`;
     void navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
-      setTimeout(() => { setCopied(false); }, 2000);
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
     });
   }, [set]);
 

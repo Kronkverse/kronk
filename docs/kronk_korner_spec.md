@@ -2,7 +2,7 @@
 
 **The framework every new Kronk space is built against.**
 
-*Status: Draft v0.5 — working document. Federation is parked for now. Two load-bearing decisions remain open (see §13). Everything below is either a settled convention, a recommended default awaiting sign-off, or an explicitly open question.*
+_Status: Draft v0.5 — working document. Federation is parked for now. Two load-bearing decisions remain open (see §13). Everything below is either a settled convention, a recommended default awaiting sign-off, or an explicitly open question._
 
 ---
 
@@ -12,9 +12,9 @@ As Kronk grows, spaces will be built by many hands. Without a shared framework, 
 
 This document defines the contract a new space (a **Korner**) is built against so that spaces interoperate: they share storage discipline, talk to each other through defined channels, enforce the same access rules, and **converge on one feed**.
 
-The feed is the payoff. It is the single surface where a user encounters Kronk as *one thing* rather than a set of separate tools. Every space projects into it — a new Marketplace listing, a Kommons question, a comment — and each projection appears not as a plain written post but as a **space card**: visibly from a specific space, tappable through to that space. Standardising how spaces project into the feed, and who receives those projections, is the core the rest of this framework serves.
+The feed is the payoff. It is the single surface where a user encounters Kronk as _one thing_ rather than a set of separate tools. Every space projects into it — a new Marketplace listing, a Kommons question, a comment — and each projection appears not as a plain written post but as a **space card**: visibly from a specific space, tappable through to that space. Standardising how spaces project into the feed, and who receives those projections, is the core the rest of this framework serves.
 
-The framework's spine is a **manifest** — a declaration each Korner registers itself with. Navigation, theming, storage namespacing, permissions, and feed projection are all derived *from* the manifest.
+The framework's spine is a **manifest** — a declaration each Korner registers itself with. Navigation, theming, storage namespacing, permissions, and feed projection are all derived _from_ the manifest.
 
 **How to use this doc:** every new-space Claude Code brief and spec inherits from this document. Resolve ambiguities here first, then build.
 
@@ -85,10 +85,10 @@ The manifest is exposed as a queryable endpoint so the Android app (and future i
 
 Kronk has a distinctive lexicon; new spaces extend it rather than diverge from it.
 
-- **Naming grammar.** The K-alliteration (Kommons, Kalendar) and the celestial metaphor (planets/moons) are the house style. Whether these are *rules* or *strong defaults* is open (§13).
+- **Naming grammar.** The K-alliteration (Kommons, Kalendar) and the celestial metaphor (planets/moons) are the house style. Whether these are _rules_ or _strong defaults_ is open (§13).
 - **Shared verb set.** Common actions read identically everywhere: join/leave, post/publish, back/block, subscribe/unsubscribe, "I'm a fan." A space does not invent its own verb for a shared concept.
 - **Reserved terms.** Words with platform-wide meaning: **steward** (= Mastodon moderator), **membrane**, **capability**, **fan**, **moon**, **planet**, **subscribe**. A space must not repurpose these.
-- **i18n as the enforcement point.** All user-facing strings pass through Mastodon's react-intl locale pipeline — never hardcoded. Translation hygiene *and* the chokepoint where shared vocabulary stays consistent.
+- **i18n as the enforcement point.** All user-facing strings pass through Mastodon's react-intl locale pipeline — never hardcoded. Translation hygiene _and_ the chokepoint where shared vocabulary stays consistent.
 
 ---
 
@@ -104,27 +104,27 @@ The planet metaphor is retired (2026-07-10). There is one shared palette: **Kron
 
 Palette tokens (dark theme):
 
-| Token | Value | Role |
-|---|---|---|
-| `--kronk-purple-primary` | `#3034a0` | Brand — gradient anchors, borders |
-| `--kronk-purple-bright` | `#8c8dff` | Highlight, focus, hover state |
-| `--kronk-purple-deep` | `#36248c` | Surface tint, atmosphere |
-| `--kronk-purple-muted` | `#343070` | Supporting text, low priority |
-| `--kronk-purple-accent` | `#6364ff` | Accent on cards, chips, borders |
-| `--accent` | alias | Consumer alias for `--kronk-purple-accent` |
+| Token                    | Value     | Role                                       |
+| ------------------------ | --------- | ------------------------------------------ |
+| `--kronk-purple-primary` | `#3034a0` | Brand — gradient anchors, borders          |
+| `--kronk-purple-bright`  | `#8c8dff` | Highlight, focus, hover state              |
+| `--kronk-purple-deep`    | `#36248c` | Surface tint, atmosphere                   |
+| `--kronk-purple-muted`   | `#343070` | Supporting text, low priority              |
+| `--kronk-purple-accent`  | `#6364ff` | Accent on cards, chips, borders            |
+| `--accent`               | alias     | Consumer alias for `--kronk-purple-accent` |
 
 Semantic surface + text tokens (dark theme):
 
-| Token | Value |
-|---|---|
-| `--surface-primary` | `#191b22` |
+| Token                | Value     |
+| -------------------- | --------- |
+| `--surface-primary`  | `#191b22` |
 | `--surface-elevated` | `#292938` |
-| `--border-default` | `#3d2a6e` |
-| `--text-primary` | `#ffffff` |
-| `--text-secondary` | `#9c9cc9` |
-| `--text-muted` | `#606085` |
-| `--warning-red` | `#ef4444` |
-| `--success-green` | `#4b9160` |
+| `--border-default`   | `#3d2a6e` |
+| `--text-primary`     | `#ffffff` |
+| `--text-secondary`   | `#9c9cc9` |
+| `--text-muted`       | `#606085` |
+| `--warning-red`      | `#ef4444` |
+| `--success-green`    | `#4b9160` |
 
 Light theme mirrors with darkened palette values and inverted surfaces; see `_tokens.scss` for the full override block.
 
@@ -132,11 +132,11 @@ Light theme mirrors with darkened palette values and inverted surfaces; see `_to
 
 ### 3.2 Typography
 
-| Token | Family | Role |
-|---|---|---|
-| `--font-display` | `'Liberation Serif', Georgia, serif` | Wordmark, Korner names, headings, hero titles |
-| `--font-body` | `mastodon-font-sans-serif, sans-serif` | Body copy, controls, chrome labels |
-| `--font-mono` | `'Roboto Mono', 'Fira Mono', ui-monospace, monospace` | Code, hex chips, telemetry |
+| Token            | Family                                                | Role                                          |
+| ---------------- | ----------------------------------------------------- | --------------------------------------------- |
+| `--font-display` | `'Liberation Serif', Georgia, serif`                  | Wordmark, Korner names, headings, hero titles |
+| `--font-body`    | `mastodon-font-sans-serif, sans-serif`                | Body copy, controls, chrome labels            |
+| `--font-mono`    | `'Roboto Mono', 'Fira Mono', ui-monospace, monospace` | Code, hex chips, telemetry                    |
 
 Bundle Liberation Serif and the Ӂ Я Ѻ Ɲ ₭ wordmark glyphs on every platform. Not on stock Android; verify early.
 
@@ -144,33 +144,33 @@ Bundle Liberation Serif and the Ӂ Я Ѻ Ɲ ₭ wordmark glyphs on every platfor
 
 Everything rounds. No sharp corners in the shell. If a surface can't fit a radius, it becomes a hairline divider (border, not box).
 
-| Token | Value | Applied to |
-|---|---|---|
-| `--radius-small` | `6px` | Inline chips, small icon buttons, focus rings, dropdown items |
-| `--radius-medium` | `10px` | Cards, panels, dropdowns, sidebar tiles, Ӂ menu items |
-| `--radius-large` | `16px` | Hero surfaces — top strip, sidebar, Hub Korner cards, Ӂ menu panel, modal frames |
-| `--radius-round` | `999px` | Pills — HubSwitcher, tags, badges, tune-in controls, every capsule button |
+| Token             | Value   | Applied to                                                                       |
+| ----------------- | ------- | -------------------------------------------------------------------------------- |
+| `--radius-small`  | `6px`   | Inline chips, small icon buttons, focus rings, dropdown items                    |
+| `--radius-medium` | `10px`  | Cards, panels, dropdowns, sidebar tiles, Ӂ menu items                            |
+| `--radius-large`  | `16px`  | Hero surfaces — top strip, sidebar, Hub Korner cards, Ӂ menu panel, modal frames |
+| `--radius-round`  | `999px` | Pills — HubSwitcher, tags, badges, tune-in controls, every capsule button        |
 
 ### 3.4 Elevation presets
 
-| Token | Shadow | Role |
-|---|---|---|
-| `--elevation-subtle` | `0 1px 2px rgb(0 0 0 / 12%)` | Inline surfaces, subtle depth |
-| `--elevation-card` | `0 4px 12px -4px rgb(0 0 0 / 30%)` | Floating cards, panels |
-| `--elevation-floating` | `0 8px 24px -8px rgb(0 0 0 / 40%)` | Top strip, sidebar, floating menus |
-| `--elevation-menu` | `0 20px 48px -12px rgb(0 0 0 / 50%)` | Ӂ menu panel, modals |
+| Token                  | Shadow                               | Role                               |
+| ---------------------- | ------------------------------------ | ---------------------------------- |
+| `--elevation-subtle`   | `0 1px 2px rgb(0 0 0 / 12%)`         | Inline surfaces, subtle depth      |
+| `--elevation-card`     | `0 4px 12px -4px rgb(0 0 0 / 30%)`   | Floating cards, panels             |
+| `--elevation-floating` | `0 8px 24px -8px rgb(0 0 0 / 40%)`   | Top strip, sidebar, floating menus |
+| `--elevation-menu`     | `0 20px 48px -12px rgb(0 0 0 / 50%)` | Ӂ menu panel, modals               |
 
 Additional shadow layers are composed on top when a surface needs accent glow — usually `color-mix(in oklab, var(--kronk-purple-accent) N%, transparent)`.
 
 ### 3.5 Motion
 
-| Token | Value | When to use |
-|---|---|---|
-| `--dur-fast` | `120ms` | Hover, focus, small state changes |
-| `--dur-medium` | `200ms` | Panel opens, transitions between views |
-| `--dur-slow` | `400ms` | Large transitions, page shifts |
-| `--ease-out` | `cubic-bezier(0.16, 1, 0.3, 1)` | Default deceleration |
-| `--ease-in-out` | `cubic-bezier(0.65, 0, 0.35, 1)` | Reversible motion |
+| Token           | Value                               | When to use                                                   |
+| --------------- | ----------------------------------- | ------------------------------------------------------------- |
+| `--dur-fast`    | `120ms`                             | Hover, focus, small state changes                             |
+| `--dur-medium`  | `200ms`                             | Panel opens, transitions between views                        |
+| `--dur-slow`    | `400ms`                             | Large transitions, page shifts                                |
+| `--ease-out`    | `cubic-bezier(0.16, 1, 0.3, 1)`     | Default deceleration                                          |
+| `--ease-in-out` | `cubic-bezier(0.65, 0, 0.35, 1)`    | Reversible motion                                             |
 | `--ease-spring` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Playful, springy — buttons scaling on hover, sidebar row lift |
 
 The Korner sidebar reorders with a hand-rolled FLIP animation using `--ease-spring` + `--dur-medium`. Hub Korner card hover lifts with the same easing. This is the shared vocabulary; new motion should reach for these tokens before authoring new curves.
@@ -220,6 +220,7 @@ The whole system retunes from one file. To iterate:
   ```
 
   Keep the `<resource>` segment even for single-resource spaces — predictability across every space is the point, and it survives a space growing a second resource. The `<id>` is the **domain id** (the listing), not the underlying Status id: the Status is the feed projection, the object is the thing, and the URL points at the thing.
+
 - **Slug uniqueness.** Because all spaces share the `/hub/` namespace, slugs must be unique and reserved; this is checked at manifest registration (ties to the enforcement decision, §13).
 - **Shared chrome.** Consistent affordances wrap every space: header, reliable "back to Cosmos," breadcrumb. A user is never lost.
 - **Structure over port.** Nav is defined abstractly (Hub entry, space header, back) so each platform renders it natively (§9).
@@ -257,6 +258,7 @@ Given any one, you can derive the other two. That symmetry is the organisation, 
   ```
 
   Deleting an item is one prefix delete (`spaces/market/listings/42/`); a whole space's media is one prefix (`spaces/market/`) for retention rules or teardown.
+
 - **`spaces/` keeps Korner media out of Mastodon's own tree** (`accounts/`, `system/`) so the two never tangle.
 - **Sharding** the id into the path (`.../listings/00/42/…`) is available for spaces expecting enormous object counts — premature at current scale; note it, don't build it.
 
@@ -267,14 +269,14 @@ Keys are prefixed by `redis_prefix` (`market:listing:42:views`) so no space clob
 ### 5.5 Data rules
 
 - **Reusable media capability.** The HTTP range-request pattern (from DJ sets) belongs in the shared kit.
-- **Placement rule.** Social-fabric data lives in the space; self-shaped data defers to Anthemos via the membrane. Ask: does this describe *the self* (→ Anthemos) or *the social fabric* (→ the space)?
+- **Placement rule.** Social-fabric data lives in the space; self-shaped data defers to Anthemos via the membrane. Ask: does this describe _the self_ (→ Anthemos) or _the social fabric_ (→ the space)?
 
 ### 5.6 Identity & deletion
 
 An id, once issued, is **never reissued**. Delete listing 42 and the number is retired permanently — the next insert gets a new id, and a gap is left where 42 was. Gaps are expected and fine. This matters because the id is permanent and shareable: it lives in feed cards, bookmarks, DMs, external links. Reuse would silently repoint all of those at different content.
 
 - **ID scheme: Mastodon Snowflakes, not raw auto-increment.** Korner objects use the platform's existing Snowflake IDs — the same scheme Statuses use — for consistency (one id philosophy platform-wide) and because sequential ids are enumerable. Sequential numbering would let anyone walk `/listings/1, /2, /3…` to count objects and read deletion history off the gaps, which leaks volume and activity — off-message for a platform that refuses surveillance. (UUIDv7 is the alternative if stronger non-enumerability is ever wanted; Snowflake is the default for consistency.)
-- **Delete leaves a tombstone, not a hole.** On deletion, purge the content and its media (`spaces/<slug>/<resource>/<id>/` removed — *deleted means deleted*), but keep a minimal marker: id, `deleted_at`, optional reason. A request for a deleted id then resolves to an explicit **410 Gone** ("this listing was removed") — never a 404, and never a different object. Its feed card is withdrawn or flipped to a removed state.
+- **Delete leaves a tombstone, not a hole.** On deletion, purge the content and its media (`spaces/<slug>/<resource>/<id>/` removed — _deleted means deleted_), but keep a minimal marker: id, `deleted_at`, optional reason. A request for a deleted id then resolves to an explicit **410 Gone** ("this listing was removed") — never a 404, and never a different object. Its feed card is withdrawn or flipped to a removed state.
 - **Retiring an id retires all three mirrors** (§5.1) coherently — URL, storage prefix, and table row go together.
 - **Tombstones are the ActivityPub-native shape**, so this stays consistent when federation returns (§8.8).
 
@@ -286,7 +288,7 @@ One answer for "how does one space tell another something," not one per pair.
 
 - **Stable interfaces, no reaching in.** A space exposes service objects others call; spaces never read each other's tables directly.
 - **Lightweight internal event bus.** Fire-and-forget signals via Redis pub/sub or `ActiveSupport::Notifications`. The manifest's `emits` / `listens` document the contract.
-- *(Federation boundary parked — see §8.8.)*
+- _(Federation boundary parked — see §8.8.)_
 
 ---
 
@@ -294,13 +296,13 @@ One answer for "how does one space tell another something," not one per pair.
 
 The load-bearing dimension, and the place where inconsistency leaks data. The failure mode is each space inventing its own visibility checks, and content surfacing at a seam that never checked — including in the feed (§8).
 
-- **Single authorisation layer.** A Pundit-style policy set that *every* space calls. Ad-hoc `if` checks scattered per feature are prohibited. New scopes are defined and enforced in this one place; a space declares any new scope in its manifest (`visibility_scopes`).
+- **Single authorisation layer.** A Pundit-style policy set that _every_ space calls. Ad-hoc `if` checks scattered per feature are prohibited. New scopes are defined and enforced in this one place; a space declares any new scope in its manifest (`visibility_scopes`).
 - **Capability model as north star.** The membrane's recipient-scoped, revocable grants are the conceptual target for cross-space visibility, mirrorable internally before Anthemos lands.
 - **Layered gates.** The invite-only perimeter gates the instance; per-space and per-object policies gate within.
 - **Role mapping.** Every space's roles map onto the shared vocabulary (steward = moderator) via `steward_role`.
-- **"Secure only once."** A space may ship a visibility feature now, marked *provisional*, until Anthemos-verified identity backs it.
+- **"Secure only once."** A space may ship a visibility feature now, marked _provisional_, until Anthemos-verified identity backs it.
 
-Feed projection (§8) runs *through* this layer. It is the reason the single authorisation layer is not optional.
+Feed projection (§8) runs _through_ this layer. It is the reason the single authorisation layer is not optional.
 
 ---
 
@@ -332,10 +334,10 @@ Each space's `feed_projection` block (see §1.1) names the card template, the pa
 
 Whether a card reaches a given user is governed by **two separate gates**, evaluated in order:
 
-1. **Permission (visibility scope) — security.** Who is *allowed* to see the object: public / followers-only / group-scoped / etc. Enforced in the authorisation layer (§7). A followers-only listing is invisible to non-followers, full stop.
-2. **Subscription (injection) — preference.** Among those permitted, who has *opted in* to this space appearing in their feed (§8.6).
+1. **Permission (visibility scope) — security.** Who is _allowed_ to see the object: public / followers-only / group-scoped / etc. Enforced in the authorisation layer (§7). A followers-only listing is invisible to non-followers, full stop.
+2. **Subscription (injection) — preference.** Among those permitted, who has _opted in_ to this space appearing in their feed (§8.6).
 
-A card is assembled for a viewer only if they pass **both**: *permitted* **and** *subscribed*. Enforce them separately and in this order — permission first, subscription second. **Never let subscription stand in for permission.** Treating "they're subscribed" as "they're allowed" is the classic leak. Cards are generated per-viewer: gated by policy, then filtered by subscription.
+A card is assembled for a viewer only if they pass **both**: _permitted_ **and** _subscribed_. Enforce them separately and in this order — permission first, subscription second. **Never let subscription stand in for permission.** Treating "they're subscribed" as "they're allowed" is the classic leak. Cards are generated per-viewer: gated by policy, then filtered by subscription.
 
 ### 8.5 Per-post visibility
 
@@ -353,7 +355,7 @@ Because algorithmic burying is off the table by principle, subscription is the *
 
 When a space opens, it announces itself with a one-time **launch card** in the feed — the framework projecting its own new member. The card carries the space icon and planet colour, a "new Korner" badge, the manifest `launch.blurb`, and taps through to the space's root (not to any object).
 
-The launch card is the one projection **exempt from the subscription gate (§8.4)** — and must be, because no one can have subscribed to a space that did not yet exist. It stays permission-gated (respecting the perimeter and any restriction on who may see the space at all) but bypasses subscription by nature. The launch card *is* the invitation to subscribe: it carries the inline `launch.cta` action ("Tap in"), so a user goes announce → subscribe → receiving that space's projections in one step. This is a deliberate, named exception; do not "fix" it by requiring subscription, which would make launches invisible.
+The launch card is the one projection **exempt from the subscription gate (§8.4)** — and must be, because no one can have subscribed to a space that did not yet exist. It stays permission-gated (respecting the perimeter and any restriction on who may see the space at all) but bypasses subscription by nature. The launch card _is_ the invitation to subscribe: it carries the inline `launch.cta` action ("Tap in"), so a user goes announce → subscribe → receiving that space's projections in one step. This is a deliberate, named exception; do not "fix" it by requiring subscription, which would make launches invisible.
 
 Launch cards are one-per-space and rare, so they carry no feed-noise risk. A single global "space announcements" preference is the appropriate opt-out (per-space opt-out is meaningless for a space you haven't met yet). Because a launch is often a Seed bearing fruit or a Kommons-backed build, the card is a natural place to surface that provenance.
 
@@ -369,23 +371,23 @@ The app is where the framework either holds or quietly breaks, because it does n
 
 On web, a new Korner is live the moment its module merges. `kronk-app` is a **separate native codebase shipping on Google Play's cadence plus review lag** — it gains spaces only when a binary is cut and approved. The framework must be designed around that mismatch.
 
-### 9.1 The load-bearing decision — `render_target` *(OPEN — §13)*
+### 9.1 The load-bearing decision — `render_target` _(OPEN — §13)_
 
-| `render_target` | Meaning | Trade-off |
-|---|---|---|
-| `native` | Built in Compose | Highest fidelity; a second implementation + app release per space |
-| `hosted` | Rendered as web inside a native shell | New spaces appear with no binary; slightly less native feel |
-| `hybrid` | Hosted by default, native where capabilities demand | Best velocity/fidelity balance |
+| `render_target` | Meaning                                             | Trade-off                                                         |
+| --------------- | --------------------------------------------------- | ----------------------------------------------------------------- |
+| `native`        | Built in Compose                                    | Highest fidelity; a second implementation + app release per space |
+| `hosted`        | Rendered as web inside a native shell               | New spaces appear with no binary; slightly less native feel       |
+| `hybrid`        | Hosted by default, native where capabilities demand | Best velocity/fidelity balance                                    |
 
-**Recommended default: hybrid, leaning hosted.** The app becomes a native shell (auth, nav, notifications, deep links) rendering most Korners as web, native reserved for capability-heavy spaces. Keeps the app in lockstep with the web framework and makes iOS far cheaper. Cost accepted: reduced native feel for hosted spaces. *Pending sign-off.*
+**Recommended default: hybrid, leaning hosted.** The app becomes a native shell (auth, nav, notifications, deep links) rendering most Korners as web, native reserved for capability-heavy spaces. Keeps the app in lockstep with the web framework and makes iOS far cheaper. Cost accepted: reduced native feel for hosted spaces. _Pending sign-off._
 
 ### 9.2 Consequences
 
 - **Server-driven manifest** (§1.2). App reads the registry, renders the Hub dynamically. Version the API; assume permanent server/app skew. Unknown space → fall back to webview or hide, never crash.
-- **Feed cards on mobile.** The card anatomy (§8.2) must render natively in the app's timeline, tapping through via deep link. Whatever a space's `render_target`, its *feed card* is part of the shared shell.
+- **Feed cards on mobile.** The card anatomy (§8.2) must render natively in the app's timeline, tapping through via deep link. Whatever a space's `render_target`, its _feed card_ is part of the shared shell.
 - **Nav re-expressed, not ported.** Bottom bar + touch Hub; orbital animation simplified for battery and weaker GPUs.
 - **Native capabilities decide what must be native.** Background audio (DJ sets → Media3 `MediaSessionService`), push notifications, camera/media capture, share-to-Kronk, offline caching, biometric app-lock.
-  - *Decide:* notification transport — UnifiedPush (degoogled) vs FCM (convenient).
+  - _Decide:_ notification transport — UnifiedPush (degoogled) vs FCM (convenient).
 - **Secure token storage.** Auth tokens in the Android Keystore; matters more once the app may carry Anthemos capability tokens.
 - **Hybrid Views/Compose seam.** A known hazard (`ViewTreeLifecycleOwner not found`). Native Korners follow one documented integration pattern (Compose-first, stated rule for when Views are allowed).
 - **Reviewer wall.** An invite-only app needs a review-mode or demo credential, or store review can't get past the gate.
@@ -394,7 +396,7 @@ On web, a new Korner is live the moment its module merges. `kronk-app` is a **se
 
 ## 10. Operations & lifecycle
 
-- **Proposal path.** An idea can be *planted* as a Seed openly; structural moves — a new visibility scope, new storage, a new planet, a change to this spec — route through a Kommons proposal. *Ideas are things to build; places are structural.*
+- **Proposal path.** An idea can be _planted_ as a Seed openly; structural moves — a new visibility scope, new storage, a new planet, a change to this spec — route through a Kommons proposal. _Ideas are things to build; places are structural._
 - **Merge dark.** One monolith on one droplet means spaces ship together. Feature flags (`feature_flag`) are non-negotiable.
 - **Standard spec template.** Each space ships a spec doc from a shared template (formalising KRONK_HUB_UI.md, KOMMONS_UI_REDESIGN.md).
 - **Versioning & retirement.** The manifest declares a version; a defined retirement path cleans up routes, data, feed projections, subscriptions, and the nav entry.
@@ -404,7 +406,7 @@ On web, a new Korner is live the moment its module merges. `kronk-app` is a **se
 
 ## 11. Governance fit
 
-Open, plantable moves need no proposal; anything touching shared structure — scopes, storage, planets, the feed contract, the manifest schema — is a Kommons decision. Mirrors the pipeline tool's resolution: *sub-layers are places; ideas are things to build.*
+Open, plantable moves need no proposal; anything touching shared structure — scopes, storage, planets, the feed contract, the manifest schema — is a Kommons decision. Mirrors the pipeline tool's resolution: _sub-layers are places; ideas are things to build._
 
 ---
 
@@ -448,4 +450,4 @@ Smaller pending items: naming grammar as rule vs default (§2); notification tra
 
 ---
 
-*Versioned alongside the Kronk repos. A v0.5 skeleton to build from, not a frozen spec — expand each section as conventions settle and the open decisions in §13 are made.*
+_Versioned alongside the Kronk repos. A v0.5 skeleton to build from, not a frozen spec — expand each section as conventions settle and the open decisions in §13 are made._
