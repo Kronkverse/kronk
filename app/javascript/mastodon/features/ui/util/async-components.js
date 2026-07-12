@@ -356,3 +356,7 @@ export function SettingsHub () {
   return import("../../settings_hub");
 }
 
+export function AppearanceSettings () {
+  return import("../../appearance_settings");
+}
+

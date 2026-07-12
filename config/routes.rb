@@ -185,6 +185,7 @@ Rails.application.routes.draw do
   # SPA-served settings sub-pages that don't live in the Devise/Doorkeeper
   # settings module. Add here as new ones ship.
   get '/settings/profile_sections', to: 'home#index'
+  get '/settings/appearance', to: 'home#index'
 
   draw(:settings)
 

@@ -109,6 +109,7 @@ const YOU_SECTIONS: SectionDef[] = [
   },
   {
     key: 'appearance',
+    to: '/settings/appearance',
     Icon: TuneIcon,
     name: messages.appearance,
     desc: messages.appearanceDesc,

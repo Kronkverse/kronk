@@ -116,6 +116,7 @@ import {
   Connections,
   StyleGuide,
   SettingsHub,
+  AppearanceSettings,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
 import { focusColumn, getFocusedItemIndex, focusItemSibling } from './util/focusUtils';
@@ -249,6 +250,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path={["/booth/sets/:id", "/hub/booth/sets/:id"]} component={BoothSetPage} content={children} />
             <WrappedRoute path={["/booth", "/hub/booth"]} component={Booth} content={children} />
             {signedIn && <WrappedRoute path='/settings' exact component={SettingsHub} content={children} />}
+            {signedIn && <WrappedRoute path='/settings/appearance' exact component={AppearanceSettings} content={children} />}
             {signedIn && <WrappedRoute path="/settings/profile_sections" component={ProfileSectionsSettings} content={children} />}
             <WrappedRoute path='/@:acct/profile' exact component={SectionedProfile} content={children} />
             {signedIn && <WrappedRoute path={["/kalendar/:id", "/hub/kalendar/:id"]} component={EventDetail} content={children} />}
