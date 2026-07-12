@@ -364,6 +364,30 @@
   margin: 0;
 }
 
+// Every empty-card gets an inline action — heading + one dim line +
+// button, no dead ends. Only rendered for the owner (visitors just see
+// the heading + description).
+.sectioned-profile__card-action {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--sp-text);
+  background: transparent;
+  border: 1px solid var(--sp-line-2);
+  border-radius: 999px;
+  text-decoration: none;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--sp-surface-2);
+    border-color: var(--accent);
+    color: var(--accent);
+    outline: none;
+  }
+}
+
 .sectioned-profile__provisional {
   font-size: 11px;
   color: var(--sp-faint);

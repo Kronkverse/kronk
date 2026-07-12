@@ -54,6 +54,19 @@ const messages = defineMessages({
   openGovernanceDesc: { id: 'sectioned_profile.me.open_to.governance_desc', defaultMessage: 'Proposals, Kommons, quiet organising.' },
   openVouchingTitle: { id: 'sectioned_profile.me.open_to.vouching', defaultMessage: 'Vouching' },
   openVouchingDesc: { id: 'sectioned_profile.me.open_to.vouching_desc', defaultMessage: 'A web of trust, one person at a time.' },
+
+  // Per-card actions on empty state. Names the thing that happens.
+  aboutAction: { id: 'sectioned_profile.me.about_action', defaultMessage: 'Add a bio' },
+  interestsAction: { id: 'sectioned_profile.me.interests_action', defaultMessage: 'Add interests' },
+  exploringAction: { id: 'sectioned_profile.me.exploring_action', defaultMessage: 'Add a spark' },
+  atGlanceAction: { id: 'sectioned_profile.me.at_a_glance_action', defaultMessage: 'Set up your summary' },
+  highlightsAction: { id: 'sectioned_profile.me.highlights_action', defaultMessage: 'Pin a highlight' },
+  personalityAction: { id: 'sectioned_profile.me.personality_action', defaultMessage: 'Add a few words' },
+  driveAction: { id: 'sectioned_profile.me.drive_action', defaultMessage: 'Write your line' },
+  rotationAction: { id: 'sectioned_profile.me.rotation_action', defaultMessage: 'Add what you are on' },
+  momentsAction: { id: 'sectioned_profile.me.moments_action', defaultMessage: 'Add photos' },
+  valuesAction: { id: 'sectioned_profile.me.values_action', defaultMessage: 'Add values' },
+  noteAction: { id: 'sectioned_profile.me.note_action', defaultMessage: 'Write a note' },
 });
 
 type TabKey = 'me' | 'work' | 'timeline' | 'friendship';
@@ -324,27 +337,35 @@ type MessageDescriptor = {
 interface MeCardCopy {
   title: MessageDescriptor;
   desc: MessageDescriptor;
+  action: MessageDescriptor;
+  href: string;
   note?: boolean;
 }
 
+// Bio + display-name + avatar edits actually exist at /settings/profile
+// (upstream Mastodon). Everything else routes there as a stub until the
+// identity-fields backend lands — the action still names the thing that
+// should happen, per the empty-state pattern.
+const EDIT_PROFILE_HREF = '/settings/profile';
+
 const ME_COL_1: MeCardCopy[] = [
-  { title: messages.aboutTitle, desc: messages.aboutDesc },
-  { title: messages.interestsTitle, desc: messages.interestsDesc },
-  { title: messages.exploringTitle, desc: messages.exploringDesc },
+  { title: messages.aboutTitle, desc: messages.aboutDesc, action: messages.aboutAction, href: EDIT_PROFILE_HREF },
+  { title: messages.interestsTitle, desc: messages.interestsDesc, action: messages.interestsAction, href: EDIT_PROFILE_HREF },
+  { title: messages.exploringTitle, desc: messages.exploringDesc, action: messages.exploringAction, href: EDIT_PROFILE_HREF },
 ];
 
 const ME_COL_2: MeCardCopy[] = [
-  { title: messages.atGlanceTitle, desc: messages.atGlanceDesc },
-  { title: messages.highlightsTitle, desc: messages.highlightsDesc },
-  { title: messages.personalityTitle, desc: messages.personalityDesc },
-  { title: messages.driveTitle, desc: messages.driveDesc },
-  { title: messages.rotationTitle, desc: messages.rotationDesc },
+  { title: messages.atGlanceTitle, desc: messages.atGlanceDesc, action: messages.atGlanceAction, href: EDIT_PROFILE_HREF },
+  { title: messages.highlightsTitle, desc: messages.highlightsDesc, action: messages.highlightsAction, href: EDIT_PROFILE_HREF },
+  { title: messages.personalityTitle, desc: messages.personalityDesc, action: messages.personalityAction, href: EDIT_PROFILE_HREF },
+  { title: messages.driveTitle, desc: messages.driveDesc, action: messages.driveAction, href: EDIT_PROFILE_HREF },
+  { title: messages.rotationTitle, desc: messages.rotationDesc, action: messages.rotationAction, href: EDIT_PROFILE_HREF },
 ];
 
 const ME_COL_3: MeCardCopy[] = [
-  { title: messages.momentsTitle, desc: messages.momentsDesc },
-  { title: messages.valuesTitle, desc: messages.valuesDesc },
-  { title: messages.noteTitle, desc: messages.noteDesc, note: true },
+  { title: messages.momentsTitle, desc: messages.momentsDesc, action: messages.momentsAction, href: EDIT_PROFILE_HREF },
+  { title: messages.valuesTitle, desc: messages.valuesDesc, action: messages.valuesAction, href: EDIT_PROFILE_HREF },
+  { title: messages.noteTitle, desc: messages.noteDesc, action: messages.noteAction, href: EDIT_PROFILE_HREF, note: true },
 ];
 
 interface OpenToCopy {
@@ -360,29 +381,34 @@ const OPEN_TO: OpenToCopy[] = [
   { icon: '♥', title: messages.openVouchingTitle, sub: messages.openVouchingDesc },
 ];
 
-const MeCard: React.FC<{ card: MeCardCopy }> = ({ card }) => {
+const MeCard: React.FC<{ card: MeCardCopy; isOwner: boolean }> = ({ card, isOwner }) => {
   const intl = useIntl();
   return (
     <div className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}>
       <h3>{intl.formatMessage(card.title)}</h3>
       <p className='sectioned-profile__card-desc'>{intl.formatMessage(card.desc)}</p>
+      {isOwner && (
+        <a href={card.href} className='sectioned-profile__card-action'>
+          {intl.formatMessage(card.action)}
+        </a>
+      )}
     </div>
   );
 };
 
-const MePanel: React.FC<{ isOwner: boolean }> = () => {
+const MePanel: React.FC<{ isOwner: boolean }> = ({ isOwner }) => {
   const intl = useIntl();
   return (
     <>
       <div className='sectioned-profile__me-grid'>
         <div className='sectioned-profile__me-col'>
-          {ME_COL_1.map((c) => <MeCard key={c.title.id} card={c} />)}
+          {ME_COL_1.map((c) => <MeCard key={c.title.id} card={c} isOwner={isOwner} />)}
         </div>
         <div className='sectioned-profile__me-col'>
-          {ME_COL_2.map((c) => <MeCard key={c.title.id} card={c} />)}
+          {ME_COL_2.map((c) => <MeCard key={c.title.id} card={c} isOwner={isOwner} />)}
         </div>
         <div className='sectioned-profile__me-col'>
-          {ME_COL_3.map((c) => <MeCard key={c.title.id} card={c} />)}
+          {ME_COL_3.map((c) => <MeCard key={c.title.id} card={c} isOwner={isOwner} />)}
         </div>
       </div>
 
