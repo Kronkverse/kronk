@@ -126,7 +126,7 @@ def emit_scss(tokens)
   buf.concat(emit_dark(tokens))
   buf << '}'
   buf << ''
-  buf << ':root[data-theme="light"] {'
+  buf << ":root[data-theme='light'] {"
   buf.concat(emit_light(tokens))
   buf << '}'
   buf << ''
