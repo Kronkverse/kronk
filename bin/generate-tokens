@@ -11,11 +11,27 @@
 # Future targets (Android Compose Theme.kt, iOS Theme.swift) fold into
 # the same generator when they land.
 #
+# tokens.yaml carries two shapes of value:
+#
+#   themed          <token>: { dark: '…', light: '…' }
+#   theme-invariant <token>: '…'   (fonts, radius, elevation, motion)
+#
+# Themed tokens emit on :root (dark) with light overrides in
+# :root[data-theme="light"]. Theme-invariant tokens emit once, on :root.
+# The `semantic` section additionally yields a block of short consumer
+# aliases (`--accent: var(--semantic-accent)` …) that the rest of the
+# SCSS references directly.
+#
+# The output structure — section order, comment headers, alias block —
+# is described by PLAN below; adding a section to tokens.yaml without a
+# matching PLAN entry is a hard error (see the coverage check) so the two
+# never drift silently.
+#
 # Usage:
 #   bin/generate-tokens          # write generated files
 #   bin/generate-tokens --check  # verify generated files match tokens.yaml; exit 1 on drift
 #
-# CI wires the --check mode into test-js.yml so a devs who forgets to
+# CI wires the --check mode into test-js.yml so a dev who forgets to
 # regenerate after editing tokens.yaml gets caught before merge.
 
 require 'yaml'
@@ -25,8 +41,80 @@ ROOT        = Pathname.new(__dir__).join('..').expand_path
 TOKENS_YAML = ROOT.join('app/javascript/mastodon/tokens/tokens.yaml')
 SCSS_TARGET = ROOT.join('app/javascript/styles/mastodon/_tokens.scss')
 
+# Total character width of a `// ── Label ──…` section header.
+HEADER_WIDTH = 68
+
+# Emit plan for the :root (dark) block, in output order. The light block
+# re-emits only the themed groups, header-less.
+#
+#   kind    :themed   { dark, light } hashes; light overrides emit too
+#           :plain    theme-invariant string values; dark block only
+#           :aliases  short `var(--semantic-*)` aliases derived from the
+#                     named section's keys
+#   section tokens.yaml key the group draws from
+#   label   section-comment text (:aliases carries its own comment)
+#   prefix  custom-property name prefix; '' emits the token name bare
+PLAN = [
+  { kind: :themed,  section: 'kronk',     label: 'Palette',                  prefix: 'kronk-' },
+  { kind: :themed,  section: 'semantic',  label: 'Semantic surfaces + text', prefix: 'semantic-' },
+  { kind: :aliases, section: 'semantic',  label: nil,                        prefix: '' },
+  { kind: :plain,   section: 'font',      label: 'Fonts',                    prefix: 'font-' },
+  { kind: :plain,   section: 'radius',    label: 'Radius scale',             prefix: 'radius-' },
+  { kind: :plain,   section: 'elevation', label: 'Elevation presets',        prefix: 'elevation-' },
+  { kind: :plain,   section: 'motion',    label: 'Motion',                   prefix: '' },
+].freeze
+
 def load_tokens
   YAML.safe_load_file(TOKENS_YAML)
+end
+
+# Guard against a tokens.yaml section that PLAN doesn't render — that
+# would silently drop the section from the output.
+def assert_plan_covers!(tokens)
+  covered = PLAN.map { |group| group[:section] }.uniq
+  missing = tokens.keys - covered
+  return if missing.empty?
+
+  warn "tokens.yaml has sections with no PLAN entry: #{missing.join(', ')}. " \
+       'Add them to PLAN in bin/generate-tokens.'
+  exit 1
+end
+
+def header(label)
+  base = "  // ── #{label} "
+  base + ('─' * (HEADER_WIDTH - base.length))
+end
+
+def emit_dark(tokens)
+  lines = []
+  PLAN.each_with_index do |group, index|
+    lines << '' unless index.zero? # blank separator before every group but the first
+    entries = tokens.fetch(group[:section])
+
+    case group[:kind]
+    when :themed
+      lines << header(group[:label])
+      entries.each { |name, values| lines << "  --#{group[:prefix]}#{name}: #{values['dark']};" }
+    when :plain
+      lines << header(group[:label])
+      entries.each { |name, value| lines << "  --#{group[:prefix]}#{name}: #{value};" }
+    when :aliases
+      lines << '  // Consumer aliases — SCSS uses the short names below directly.'
+      entries.each_key { |name| lines << "  --#{name}: var(--semantic-#{name});" }
+    end
+  end
+  lines
+end
+
+def emit_light(tokens)
+  lines = []
+  PLAN.select { |group| group[:kind] == :themed }.each_with_index do |group, index|
+    lines << '' unless index.zero?
+    tokens.fetch(group[:section]).each do |name, values|
+      lines << "  --#{group[:prefix]}#{name}: #{values['light']};"
+    end
+  end
+  lines
 end
 
 def emit_scss(tokens)
@@ -35,33 +123,22 @@ def emit_scss(tokens)
   buf << '// Do not edit by hand — rerun the generator when tokens change.'
   buf << ''
   buf << ':root {'
-  emit_theme(buf, tokens, 'dark')
+  buf.concat(emit_dark(tokens))
   buf << '}'
   buf << ''
   buf << ':root[data-theme="light"] {'
-  emit_theme(buf, tokens, 'light')
+  buf.concat(emit_light(tokens))
   buf << '}'
   buf << ''
   buf.join("\n")
-end
-
-def emit_theme(buf, tokens, theme)
-  tokens.each do |section, entries|
-    next unless entries.is_a?(Hash)
-
-    entries.each do |name, values|
-      next unless values.is_a?(Hash) && values[theme]
-
-      buf << "  --#{section}-#{name}: #{values[theme]};"
-    end
-  end
 end
 
 def check_mode?
   ARGV.include?('--check')
 end
 
-tokens    = load_tokens
+tokens = load_tokens
+assert_plan_covers!(tokens)
 generated = emit_scss(tokens)
 
 if check_mode?

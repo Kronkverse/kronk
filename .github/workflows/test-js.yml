@@ -15,6 +15,11 @@ on:
       - '**/*.tsx'
       - '**/*.snap'
       - '.github/workflows/test-js.yml'
+      # Design-token pipeline — so `bin/generate-tokens --check` runs when
+      # the source, generated output, or generator itself changes.
+      - 'app/javascript/mastodon/tokens/tokens.yaml'
+      - 'app/javascript/styles/mastodon/_tokens.scss'
+      - 'bin/generate-tokens'
 
   pull_request:
     paths:
@@ -27,6 +32,11 @@ on:
       - '**/*.tsx'
       - '**/*.snap'
       - '.github/workflows/test-js.yml'
+      # Design-token pipeline — so `bin/generate-tokens --check` runs when
+      # the source, generated output, or generator itself changes.
+      - 'app/javascript/mastodon/tokens/tokens.yaml'
+      - 'app/javascript/styles/mastodon/_tokens.scss'
+      - 'bin/generate-tokens'
 
 jobs:
   test:
