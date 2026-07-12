@@ -32,6 +32,13 @@
     max-width: 1180px;
     margin: 0 auto;
     padding: 0 22px 80px;
+
+    // Opaque, positive stacking context so the starfield (body bg-image
+    // + panel bg-images from _stars.scss) never shows through the tab
+    // strip or the whitespace between cards.
+    position: relative;
+    z-index: 1;
+    background: var(--background-color, #0a0812);
   }
 
   &__error {
