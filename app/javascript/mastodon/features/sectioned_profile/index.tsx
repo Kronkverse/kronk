@@ -20,6 +20,40 @@ import { useAppDispatch } from 'mastodon/store';
 
 const messages = defineMessages({
   title: { id: 'sectioned_profile.title', defaultMessage: 'Profile' },
+
+  // Me panel card copy — heading + description for each empty state.
+  aboutTitle: { id: 'sectioned_profile.me.about', defaultMessage: 'About me' },
+  aboutDesc: { id: 'sectioned_profile.me.about_desc', defaultMessage: 'Tell people who you are.' },
+  interestsTitle: { id: 'sectioned_profile.me.interests', defaultMessage: 'Interests' },
+  interestsDesc: { id: 'sectioned_profile.me.interests_desc', defaultMessage: 'What you would talk about for an hour.' },
+  exploringTitle: { id: 'sectioned_profile.me.exploring', defaultMessage: 'Currently exploring' },
+  exploringDesc: { id: 'sectioned_profile.me.exploring_desc', defaultMessage: 'New questions, tools, or practices you are leaning into.' },
+  atGlanceTitle: { id: 'sectioned_profile.me.at_a_glance', defaultMessage: 'At a glance' },
+  atGlanceDesc: { id: 'sectioned_profile.me.at_a_glance_desc', defaultMessage: 'A quick summary of your presence across Kronk.' },
+  highlightsTitle: { id: 'sectioned_profile.me.highlights', defaultMessage: 'Recent highlights' },
+  highlightsDesc: { id: 'sectioned_profile.me.highlights_desc', defaultMessage: 'Pinned or featured posts, up to three.' },
+  personalityTitle: { id: 'sectioned_profile.me.personality', defaultMessage: 'Personality snapshot' },
+  personalityDesc: { id: 'sectioned_profile.me.personality_desc', defaultMessage: 'A few words that sound like you.' },
+  driveTitle: { id: 'sectioned_profile.me.drive', defaultMessage: 'What drives me' },
+  driveDesc: { id: 'sectioned_profile.me.drive_desc', defaultMessage: 'One short line about what pulls you forward.' },
+  rotationTitle: { id: 'sectioned_profile.me.rotation', defaultMessage: 'In rotation' },
+  rotationDesc: { id: 'sectioned_profile.me.rotation_desc', defaultMessage: 'What you are reading, listening to, watching.' },
+  momentsTitle: { id: 'sectioned_profile.me.moments', defaultMessage: 'Life in moments' },
+  momentsDesc: { id: 'sectioned_profile.me.moments_desc', defaultMessage: 'Nine photos. No captions needed.' },
+  valuesTitle: { id: 'sectioned_profile.me.values', defaultMessage: 'Values' },
+  valuesDesc: { id: 'sectioned_profile.me.values_desc', defaultMessage: 'Five words. Not more.' },
+  noteTitle: { id: 'sectioned_profile.me.note', defaultMessage: 'A note' },
+  noteDesc: { id: 'sectioned_profile.me.note_desc', defaultMessage: 'Whatever you want to say to whoever visits.' },
+
+  // Open-to strip
+  openConversationsTitle: { id: 'sectioned_profile.me.open_to.conversations', defaultMessage: 'Meaningful conversations' },
+  openConversationsDesc: { id: 'sectioned_profile.me.open_to.conversations_desc', defaultMessage: 'Slow ones welcome.' },
+  openCollabsTitle: { id: 'sectioned_profile.me.open_to.collabs', defaultMessage: 'Creative collaborations' },
+  openCollabsDesc: { id: 'sectioned_profile.me.open_to.collabs_desc', defaultMessage: 'Bring what you make, meet others who make.' },
+  openGovernanceTitle: { id: 'sectioned_profile.me.open_to.governance', defaultMessage: 'Governance work' },
+  openGovernanceDesc: { id: 'sectioned_profile.me.open_to.governance_desc', defaultMessage: 'Proposals, Kommons, quiet organising.' },
+  openVouchingTitle: { id: 'sectioned_profile.me.open_to.vouching', defaultMessage: 'Vouching' },
+  openVouchingDesc: { id: 'sectioned_profile.me.open_to.vouching_desc', defaultMessage: 'A web of trust, one person at a time.' },
 });
 
 type TabKey = 'me' | 'work' | 'timeline' | 'friendship';
@@ -259,122 +293,104 @@ const TabButton: React.FC<{
 // FOR. No dead-end copy. When identity fields backend ships, real
 // content replaces the description; the descriptions stay as the
 // aria-hint / empty state.
+//
+// Message descriptors are static (defined at module-scope via
+// defineMessages above) so react-intl's babel extractor can scan them
+// at build time. Do NOT pass dynamic ids/defaults to FormattedMessage
+// — the Vite pipeline rejects it. Instead we resolve via
+// intl.formatMessage(descriptor) at render time.
+
+type MessageDescriptor = {
+  id: string;
+  defaultMessage: string;
+};
+
 interface MeCardCopy {
-  headingId: string;
-  headingDefault: string;
-  descId: string;
-  descDefault: string;
-  note?: boolean;  // uses --note modifier
+  title: MessageDescriptor;
+  desc: MessageDescriptor;
+  note?: boolean;
 }
 
 const ME_COL_1: MeCardCopy[] = [
-  { headingId: 'sectioned_profile.me.about', headingDefault: 'About me',
-    descId: 'sectioned_profile.me.about_desc', descDefault: 'Tell people who you are.' },
-  { headingId: 'sectioned_profile.me.interests', headingDefault: 'Interests',
-    descId: 'sectioned_profile.me.interests_desc', descDefault: 'What you would talk about for an hour.' },
-  { headingId: 'sectioned_profile.me.exploring', headingDefault: 'Currently exploring',
-    descId: 'sectioned_profile.me.exploring_desc', descDefault: 'New questions, tools, or practices you are leaning into.' },
+  { title: messages.aboutTitle, desc: messages.aboutDesc },
+  { title: messages.interestsTitle, desc: messages.interestsDesc },
+  { title: messages.exploringTitle, desc: messages.exploringDesc },
 ];
 
 const ME_COL_2: MeCardCopy[] = [
-  { headingId: 'sectioned_profile.me.at_a_glance', headingDefault: 'At a glance',
-    descId: 'sectioned_profile.me.at_a_glance_desc', descDefault: 'A quick summary of your presence across Kronk.' },
-  { headingId: 'sectioned_profile.me.highlights', headingDefault: 'Recent highlights',
-    descId: 'sectioned_profile.me.highlights_desc', descDefault: 'Pinned or featured posts, up to three.' },
-  { headingId: 'sectioned_profile.me.personality', headingDefault: 'Personality snapshot',
-    descId: 'sectioned_profile.me.personality_desc', descDefault: 'A few words that sound like you.' },
-  { headingId: 'sectioned_profile.me.drive', headingDefault: 'What drives me',
-    descId: 'sectioned_profile.me.drive_desc', descDefault: 'One short line about what pulls you forward.' },
-  { headingId: 'sectioned_profile.me.rotation', headingDefault: 'In rotation',
-    descId: 'sectioned_profile.me.rotation_desc', descDefault: 'What you are reading, listening to, watching.' },
+  { title: messages.atGlanceTitle, desc: messages.atGlanceDesc },
+  { title: messages.highlightsTitle, desc: messages.highlightsDesc },
+  { title: messages.personalityTitle, desc: messages.personalityDesc },
+  { title: messages.driveTitle, desc: messages.driveDesc },
+  { title: messages.rotationTitle, desc: messages.rotationDesc },
 ];
 
 const ME_COL_3: MeCardCopy[] = [
-  { headingId: 'sectioned_profile.me.moments', headingDefault: 'Life in moments',
-    descId: 'sectioned_profile.me.moments_desc', descDefault: 'Nine photos. No captions needed.' },
-  { headingId: 'sectioned_profile.me.values', headingDefault: 'Values',
-    descId: 'sectioned_profile.me.values_desc', descDefault: 'Five words. Not more.' },
-  { headingId: 'sectioned_profile.me.note', headingDefault: 'A note',
-    descId: 'sectioned_profile.me.note_desc', descDefault: 'Whatever you want to say to whoever visits.',
-    note: true },
+  { title: messages.momentsTitle, desc: messages.momentsDesc },
+  { title: messages.valuesTitle, desc: messages.valuesDesc },
+  { title: messages.noteTitle, desc: messages.noteDesc, note: true },
 ];
 
 interface OpenToCopy {
   icon: string;
-  titleId: string;
-  titleDefault: string;
-  subId: string;
-  subDefault: string;
+  title: MessageDescriptor;
+  sub: MessageDescriptor;
 }
 
 const OPEN_TO: OpenToCopy[] = [
-  { icon: '◌', titleId: 'sectioned_profile.me.open_to.conversations',
-    titleDefault: 'Meaningful conversations',
-    subId: 'sectioned_profile.me.open_to.conversations_desc',
-    subDefault: 'Slow ones welcome.' },
-  { icon: '❋', titleId: 'sectioned_profile.me.open_to.collabs',
-    titleDefault: 'Creative collaborations',
-    subId: 'sectioned_profile.me.open_to.collabs_desc',
-    subDefault: 'Bring what you make, meet others who make.' },
-  { icon: '◈', titleId: 'sectioned_profile.me.open_to.governance',
-    titleDefault: 'Governance work',
-    subId: 'sectioned_profile.me.open_to.governance_desc',
-    subDefault: 'Proposals, Kommons, quiet organising.' },
-  { icon: '♥', titleId: 'sectioned_profile.me.open_to.vouching',
-    titleDefault: 'Vouching',
-    subId: 'sectioned_profile.me.open_to.vouching_desc',
-    subDefault: 'A web of trust, one person at a time.' },
+  { icon: '◌', title: messages.openConversationsTitle, sub: messages.openConversationsDesc },
+  { icon: '❋', title: messages.openCollabsTitle, sub: messages.openCollabsDesc },
+  { icon: '◈', title: messages.openGovernanceTitle, sub: messages.openGovernanceDesc },
+  { icon: '♥', title: messages.openVouchingTitle, sub: messages.openVouchingDesc },
 ];
 
-const MeCard: React.FC<{ card: MeCardCopy }> = ({ card }) => (
-  <div className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}>
-    <h3>
-      <FormattedMessage id={card.headingId} defaultMessage={card.headingDefault} />
-    </h3>
-    <p className='sectioned-profile__card-desc'>
-      <FormattedMessage id={card.descId} defaultMessage={card.descDefault} />
-    </p>
-  </div>
-);
-
-const MePanel: React.FC<{ isOwner: boolean }> = () => (
-  <>
-    <div className='sectioned-profile__me-grid'>
-      <div className='sectioned-profile__me-col'>
-        {ME_COL_1.map((c) => <MeCard key={c.headingId} card={c} />)}
-      </div>
-      <div className='sectioned-profile__me-col'>
-        {ME_COL_2.map((c) => <MeCard key={c.headingId} card={c} />)}
-      </div>
-      <div className='sectioned-profile__me-col'>
-        {ME_COL_3.map((c) => <MeCard key={c.headingId} card={c} />)}
-      </div>
+const MeCard: React.FC<{ card: MeCardCopy }> = ({ card }) => {
+  const intl = useIntl();
+  return (
+    <div className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}>
+      <h3>{intl.formatMessage(card.title)}</h3>
+      <p className='sectioned-profile__card-desc'>{intl.formatMessage(card.desc)}</p>
     </div>
+  );
+};
 
-    <div className='sectioned-profile__open-to'>
-      {OPEN_TO.map((o) => (
-        <div key={o.titleId} className='sectioned-profile__open-to-item'>
-          <span className='sectioned-profile__open-to-icon' aria-hidden>{o.icon}</span>
-          <div>
-            <b>
-              <FormattedMessage id={o.titleId} defaultMessage={o.titleDefault} />
-            </b>
-            <span className='sectioned-profile__muted'>
-              <FormattedMessage id={o.subId} defaultMessage={o.subDefault} />
-            </span>
-          </div>
+const MePanel: React.FC<{ isOwner: boolean }> = () => {
+  const intl = useIntl();
+  return (
+    <>
+      <div className='sectioned-profile__me-grid'>
+        <div className='sectioned-profile__me-col'>
+          {ME_COL_1.map((c) => <MeCard key={c.title.id} card={c} />)}
         </div>
-      ))}
-    </div>
+        <div className='sectioned-profile__me-col'>
+          {ME_COL_2.map((c) => <MeCard key={c.title.id} card={c} />)}
+        </div>
+        <div className='sectioned-profile__me-col'>
+          {ME_COL_3.map((c) => <MeCard key={c.title.id} card={c} />)}
+        </div>
+      </div>
 
-    <p className='sectioned-profile__provisional'>
-      <FormattedMessage
-        id='sectioned_profile.me.provisional'
-        defaultMessage='Identity content wires up when the profile settings surface ships.'
-      />
-    </p>
-  </>
-);
+      <div className='sectioned-profile__open-to'>
+        {OPEN_TO.map((o) => (
+          <div key={o.title.id} className='sectioned-profile__open-to-item'>
+            <span className='sectioned-profile__open-to-icon' aria-hidden>{o.icon}</span>
+            <div>
+              <b>{intl.formatMessage(o.title)}</b>
+              <span className='sectioned-profile__muted'>{intl.formatMessage(o.sub)}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p className='sectioned-profile__provisional'>
+        <FormattedMessage
+          id='sectioned_profile.me.provisional'
+          defaultMessage='Identity content wires up when the profile settings surface ships.'
+        />
+      </p>
+    </>
+  );
+};
 
 const WorkPanel: React.FC<{
   sections: SectionWithStatuses[];
