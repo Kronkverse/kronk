@@ -58,11 +58,21 @@ const findPronouns = (fields: ApiAccountFieldJSON[]): string | null => {
 
 const filterMetarowFields = (
   fields: ApiAccountFieldJSON[],
-): ApiAccountFieldJSON[] => fields.filter((f) => !/^pronouns?$/i.test(f.name.trim()));
+  hiddenNames: string[],
+): ApiAccountFieldJSON[] => {
+  const hidden = hiddenNames.map((n) => n.toLowerCase());
+  return fields.filter((f) => {
+    const name = f.name.trim().toLowerCase();
+    if (/^pronouns?$/.test(name)) return false;  // already inline in handle
+    if (hidden.includes(name)) return false;      // consumed by a Me-panel card
+    return true;
+  });
+};
 
-export const KProfileHeader: React.FC<{ account: ApiAccountJSON }> = ({
-  account,
-}) => {
+export const KProfileHeader: React.FC<{
+  account: ApiAccountJSON;
+  hiddenFieldNames?: string[];
+}> = ({ account, hiddenFieldNames = [] }) => {
   const intl = useIntl();
   const isOwner = account.id === me;
 
@@ -117,7 +127,7 @@ export const KProfileHeader: React.FC<{ account: ApiAccountJSON }> = ({
           )}
 
           <div className='kprofile__metarow'>
-            {filterMetarowFields(account.fields).map((field) => (
+            {filterMetarowFields(account.fields, hiddenFieldNames).map((field) => (
               <span
                 key={field.name}
                 className={`kprofile__meta-item${field.verified_at ? ' kprofile__meta-item--verified' : ''}`}

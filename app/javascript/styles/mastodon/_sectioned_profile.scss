@@ -477,6 +477,27 @@
   margin: 0;
 }
 
+// Populated card body — renders sanitised HTML from an account custom
+// field (e.g. Interests, Values, Personality). Same shape as card-desc
+// but with sp-text color for genuine content.
+.sectioned-profile__card-body {
+  color: var(--sp-text);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+  overflow-wrap: break-word;
+
+  p {
+    margin: 0;
+  }
+  p + p {
+    margin-top: 6px;
+  }
+  a {
+    color: var(--accent);
+  }
+}
+
 // Every empty-card gets an inline action — heading + one dim line +
 // button, no dead ends. Only rendered for the owner (visitors just see
 // the heading + description).

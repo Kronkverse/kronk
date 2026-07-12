@@ -213,7 +213,12 @@ export const SectionedProfile = () => {
       <ColumnBackButton />
 
       <div className='scrollable sectioned-profile'>
-        {account && <KProfileHeader account={account} />}
+        {account && (
+          <KProfileHeader
+            account={account}
+            hiddenFieldNames={identityFieldNames()}
+          />
+        )}
 
         <div className='sectioned-profile__body'>
           {error && (
@@ -347,7 +352,25 @@ interface MeCardCopy {
   // Marker for cards that render populated content from the account
   // object or a live API fetch instead of the empty-state template.
   kind?: 'at-a-glance' | 'highlights' | 'moments';
+  // Optional matching name(s) in account.fields — if the user has a
+  // custom field with any of these names, the card renders populated
+  // from that field's value instead of the empty state. Names match
+  // case-insensitively.
+  fieldNames?: string[];
 }
+
+// Every fieldName across every ME_COL card, flattened + lowercased.
+// Used by KProfileHeader to filter these out of the metarow so a
+// field consumed by a Me-panel card doesn't also show as a chip.
+export const identityFieldNames = (): string[] => {
+  const all: string[] = [];
+  for (const col of [ME_COL_1, ME_COL_2, ME_COL_3]) {
+    for (const card of col) {
+      if (card.fieldNames) all.push(...card.fieldNames.map((n) => n.toLowerCase()));
+    }
+  }
+  return all;
+};
 
 // Bio + display-name + avatar edits actually exist at /settings/profile
 // (upstream Mastodon). Everything else routes there as a stub until the
@@ -356,23 +379,31 @@ interface MeCardCopy {
 const EDIT_PROFILE_HREF = '/settings/profile';
 
 const ME_COL_1: MeCardCopy[] = [
-  { title: messages.aboutTitle, desc: messages.aboutDesc, action: messages.aboutAction, href: EDIT_PROFILE_HREF },
-  { title: messages.interestsTitle, desc: messages.interestsDesc, action: messages.interestsAction, href: EDIT_PROFILE_HREF },
-  { title: messages.exploringTitle, desc: messages.exploringDesc, action: messages.exploringAction, href: EDIT_PROFILE_HREF },
+  { title: messages.aboutTitle, desc: messages.aboutDesc, action: messages.aboutAction, href: EDIT_PROFILE_HREF,
+    fieldNames: ['about', 'about me', 'bio'] },
+  { title: messages.interestsTitle, desc: messages.interestsDesc, action: messages.interestsAction, href: EDIT_PROFILE_HREF,
+    fieldNames: ['interests'] },
+  { title: messages.exploringTitle, desc: messages.exploringDesc, action: messages.exploringAction, href: EDIT_PROFILE_HREF,
+    fieldNames: ['exploring', 'currently exploring'] },
 ];
 
 const ME_COL_2: MeCardCopy[] = [
   { title: messages.atGlanceTitle, desc: messages.atGlanceDesc, action: messages.atGlanceAction, href: EDIT_PROFILE_HREF, kind: 'at-a-glance' },
   { title: messages.highlightsTitle, desc: messages.highlightsDesc, action: messages.highlightsAction, href: EDIT_PROFILE_HREF, kind: 'highlights' },
-  { title: messages.personalityTitle, desc: messages.personalityDesc, action: messages.personalityAction, href: EDIT_PROFILE_HREF },
-  { title: messages.driveTitle, desc: messages.driveDesc, action: messages.driveAction, href: EDIT_PROFILE_HREF },
-  { title: messages.rotationTitle, desc: messages.rotationDesc, action: messages.rotationAction, href: EDIT_PROFILE_HREF },
+  { title: messages.personalityTitle, desc: messages.personalityDesc, action: messages.personalityAction, href: EDIT_PROFILE_HREF,
+    fieldNames: ['personality'] },
+  { title: messages.driveTitle, desc: messages.driveDesc, action: messages.driveAction, href: EDIT_PROFILE_HREF,
+    fieldNames: ['drive', 'motto', 'what drives me'] },
+  { title: messages.rotationTitle, desc: messages.rotationDesc, action: messages.rotationAction, href: EDIT_PROFILE_HREF,
+    fieldNames: ['rotation', 'in rotation'] },
 ];
 
 const ME_COL_3: MeCardCopy[] = [
   { title: messages.momentsTitle, desc: messages.momentsDesc, action: messages.momentsAction, href: EDIT_PROFILE_HREF, kind: 'moments' },
-  { title: messages.valuesTitle, desc: messages.valuesDesc, action: messages.valuesAction, href: EDIT_PROFILE_HREF },
-  { title: messages.noteTitle, desc: messages.noteDesc, action: messages.noteAction, href: EDIT_PROFILE_HREF, note: true },
+  { title: messages.valuesTitle, desc: messages.valuesDesc, action: messages.valuesAction, href: EDIT_PROFILE_HREF,
+    fieldNames: ['values'] },
+  { title: messages.noteTitle, desc: messages.noteDesc, action: messages.noteAction, href: EDIT_PROFILE_HREF, note: true,
+    fieldNames: ['note'] },
 ];
 
 interface OpenToCopy {
@@ -404,6 +435,26 @@ const MeCard: React.FC<{
   }
   if (card.kind === 'moments') {
     return <MomentsCard card={card} account={account} isOwner={isOwner} />;
+  }
+
+  // Fields-driven population: if the user has an account custom field
+  // whose name matches any of card.fieldNames, render that field's
+  // value as the card body. Otherwise fall through to the empty state.
+  if (card.fieldNames) {
+    const wanted = card.fieldNames.map((n) => n.toLowerCase());
+    const field = account.fields.find((f) => wanted.includes(f.name.trim().toLowerCase()));
+    if (field) {
+      return (
+        <div className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}>
+          <h3>{intl.formatMessage(card.title)}</h3>
+          <div
+            className='sectioned-profile__card-body'
+            // field.value is server-sanitised HTML (may contain <a>).
+            dangerouslySetInnerHTML={{ __html: field.value }}
+          />
+        </div>
+      );
+    }
   }
 
   return (
