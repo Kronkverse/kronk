@@ -255,187 +255,126 @@ const TabButton: React.FC<{
   );
 };
 
-const MePanel: React.FC<{ isOwner: boolean }> = ({ isOwner }) => {
-  const stubCopy = isOwner ? (
-    <FormattedMessage
-      id='sectioned_profile.me.stub_owner'
-      defaultMessage='Set this up in profile settings.'
-    />
-  ) : (
-    <FormattedMessage
-      id='sectioned_profile.me.stub_visitor'
-      defaultMessage='Not set yet.'
-    />
-  );
+// Each Me card is heading + one-line description of what the card is
+// FOR. No dead-end copy. When identity fields backend ships, real
+// content replaces the description; the descriptions stay as the
+// aria-hint / empty state.
+interface MeCardCopy {
+  headingId: string;
+  headingDefault: string;
+  descId: string;
+  descDefault: string;
+  note?: boolean;  // uses --note modifier
+}
 
-  return (
-    <>
-      <div className='sectioned-profile__me-grid'>
-        <div className='sectioned-profile__me-col'>
-          <div className='sectioned-profile__card'>
-            <h3>
-              <FormattedMessage id='sectioned_profile.me.about' defaultMessage='About me' />
-            </h3>
-            <p className='sectioned-profile__stub'>{stubCopy}</p>
-          </div>
+const ME_COL_1: MeCardCopy[] = [
+  { headingId: 'sectioned_profile.me.about', headingDefault: 'About me',
+    descId: 'sectioned_profile.me.about_desc', descDefault: 'Tell people who you are.' },
+  { headingId: 'sectioned_profile.me.interests', headingDefault: 'Interests',
+    descId: 'sectioned_profile.me.interests_desc', descDefault: 'What you would talk about for an hour.' },
+  { headingId: 'sectioned_profile.me.exploring', headingDefault: 'Currently exploring',
+    descId: 'sectioned_profile.me.exploring_desc', descDefault: 'New questions, tools, or practices you are leaning into.' },
+];
 
-          <div className='sectioned-profile__card'>
-            <h3>
-              <FormattedMessage id='sectioned_profile.me.interests' defaultMessage='Interests' />
-            </h3>
-            <p className='sectioned-profile__stub'>{stubCopy}</p>
-          </div>
+const ME_COL_2: MeCardCopy[] = [
+  { headingId: 'sectioned_profile.me.at_a_glance', headingDefault: 'At a glance',
+    descId: 'sectioned_profile.me.at_a_glance_desc', descDefault: 'A quick summary of your presence across Kronk.' },
+  { headingId: 'sectioned_profile.me.highlights', headingDefault: 'Recent highlights',
+    descId: 'sectioned_profile.me.highlights_desc', descDefault: 'Pinned or featured posts, up to three.' },
+  { headingId: 'sectioned_profile.me.personality', headingDefault: 'Personality snapshot',
+    descId: 'sectioned_profile.me.personality_desc', descDefault: 'A few words that sound like you.' },
+  { headingId: 'sectioned_profile.me.drive', headingDefault: 'What drives me',
+    descId: 'sectioned_profile.me.drive_desc', descDefault: 'One short line about what pulls you forward.' },
+  { headingId: 'sectioned_profile.me.rotation', headingDefault: 'In rotation',
+    descId: 'sectioned_profile.me.rotation_desc', descDefault: 'What you are reading, listening to, watching.' },
+];
 
-          <div className='sectioned-profile__card'>
-            <h3>
-              <FormattedMessage
-                id='sectioned_profile.me.exploring'
-                defaultMessage='Currently exploring'
-              />
-            </h3>
-            <p className='sectioned-profile__stub'>{stubCopy}</p>
-          </div>
-        </div>
+const ME_COL_3: MeCardCopy[] = [
+  { headingId: 'sectioned_profile.me.moments', headingDefault: 'Life in moments',
+    descId: 'sectioned_profile.me.moments_desc', descDefault: 'Nine photos. No captions needed.' },
+  { headingId: 'sectioned_profile.me.values', headingDefault: 'Values',
+    descId: 'sectioned_profile.me.values_desc', descDefault: 'Five words. Not more.' },
+  { headingId: 'sectioned_profile.me.note', headingDefault: 'A note',
+    descId: 'sectioned_profile.me.note_desc', descDefault: 'Whatever you want to say to whoever visits.',
+    note: true },
+];
 
-        <div className='sectioned-profile__me-col'>
-          <div className='sectioned-profile__card'>
-            <h3>
-              <FormattedMessage
-                id='sectioned_profile.me.at_a_glance'
-                defaultMessage='At a glance'
-              />
-            </h3>
-            <p className='sectioned-profile__stub'>{stubCopy}</p>
-          </div>
+interface OpenToCopy {
+  icon: string;
+  titleId: string;
+  titleDefault: string;
+  subId: string;
+  subDefault: string;
+}
 
-          <div className='sectioned-profile__card'>
-            <h3>
-              <FormattedMessage
-                id='sectioned_profile.me.highlights'
-                defaultMessage='Recent highlights'
-              />
-            </h3>
-            <p className='sectioned-profile__stub'>{stubCopy}</p>
-          </div>
+const OPEN_TO: OpenToCopy[] = [
+  { icon: '◌', titleId: 'sectioned_profile.me.open_to.conversations',
+    titleDefault: 'Meaningful conversations',
+    subId: 'sectioned_profile.me.open_to.conversations_desc',
+    subDefault: 'Slow ones welcome.' },
+  { icon: '❋', titleId: 'sectioned_profile.me.open_to.collabs',
+    titleDefault: 'Creative collaborations',
+    subId: 'sectioned_profile.me.open_to.collabs_desc',
+    subDefault: 'Bring what you make, meet others who make.' },
+  { icon: '◈', titleId: 'sectioned_profile.me.open_to.governance',
+    titleDefault: 'Governance work',
+    subId: 'sectioned_profile.me.open_to.governance_desc',
+    subDefault: 'Proposals, Kommons, quiet organising.' },
+  { icon: '♥', titleId: 'sectioned_profile.me.open_to.vouching',
+    titleDefault: 'Vouching',
+    subId: 'sectioned_profile.me.open_to.vouching_desc',
+    subDefault: 'A web of trust, one person at a time.' },
+];
 
-          <div className='sectioned-profile__card'>
-            <h3>
-              <FormattedMessage
-                id='sectioned_profile.me.personality'
-                defaultMessage='Personality snapshot'
-              />
-            </h3>
-            <p className='sectioned-profile__stub'>{stubCopy}</p>
-          </div>
+const MeCard: React.FC<{ card: MeCardCopy }> = ({ card }) => (
+  <div className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}>
+    <h3>
+      <FormattedMessage id={card.headingId} defaultMessage={card.headingDefault} />
+    </h3>
+    <p className='sectioned-profile__card-desc'>
+      <FormattedMessage id={card.descId} defaultMessage={card.descDefault} />
+    </p>
+  </div>
+);
 
-          <div className='sectioned-profile__card'>
-            <h3>
-              <FormattedMessage id='sectioned_profile.me.drive' defaultMessage='What drives me' />
-            </h3>
-            <p className='sectioned-profile__stub'>{stubCopy}</p>
-          </div>
-
-          <div className='sectioned-profile__card'>
-            <h3>
-              <FormattedMessage
-                id='sectioned_profile.me.rotation'
-                defaultMessage='In rotation'
-              />
-            </h3>
-            <p className='sectioned-profile__stub'>{stubCopy}</p>
-          </div>
-        </div>
-
-        <div className='sectioned-profile__me-col'>
-          <div className='sectioned-profile__card'>
-            <h3>
-              <FormattedMessage
-                id='sectioned_profile.me.moments'
-                defaultMessage='Life in moments'
-              />
-            </h3>
-            <p className='sectioned-profile__stub'>{stubCopy}</p>
-          </div>
-
-          <div className='sectioned-profile__card'>
-            <h3>
-              <FormattedMessage id='sectioned_profile.me.values' defaultMessage='Values' />
-            </h3>
-            <p className='sectioned-profile__stub'>{stubCopy}</p>
-          </div>
-
-          <div className='sectioned-profile__card sectioned-profile__card--note'>
-            <h3>
-              <FormattedMessage
-                id='sectioned_profile.me.note'
-                defaultMessage='A note'
-              />
-            </h3>
-            <p className='sectioned-profile__stub'>{stubCopy}</p>
-          </div>
-        </div>
+const MePanel: React.FC<{ isOwner: boolean }> = () => (
+  <>
+    <div className='sectioned-profile__me-grid'>
+      <div className='sectioned-profile__me-col'>
+        {ME_COL_1.map((c) => <MeCard key={c.headingId} card={c} />)}
       </div>
-
-      <div className='sectioned-profile__open-to'>
-        <div className='sectioned-profile__open-to-item'>
-          <span className='sectioned-profile__open-to-icon' aria-hidden>◌</span>
-          <div>
-            <b>
-              <FormattedMessage
-                id='sectioned_profile.me.open_to.conversations'
-                defaultMessage='Meaningful conversations'
-              />
-            </b>
-            <span className='sectioned-profile__muted'>{stubCopy}</span>
-          </div>
-        </div>
-        <div className='sectioned-profile__open-to-item'>
-          <span className='sectioned-profile__open-to-icon' aria-hidden>❋</span>
-          <div>
-            <b>
-              <FormattedMessage
-                id='sectioned_profile.me.open_to.collabs'
-                defaultMessage='Creative collaborations'
-              />
-            </b>
-            <span className='sectioned-profile__muted'>{stubCopy}</span>
-          </div>
-        </div>
-        <div className='sectioned-profile__open-to-item'>
-          <span className='sectioned-profile__open-to-icon' aria-hidden>◈</span>
-          <div>
-            <b>
-              <FormattedMessage
-                id='sectioned_profile.me.open_to.governance'
-                defaultMessage='Governance work'
-              />
-            </b>
-            <span className='sectioned-profile__muted'>{stubCopy}</span>
-          </div>
-        </div>
-        <div className='sectioned-profile__open-to-item'>
-          <span className='sectioned-profile__open-to-icon' aria-hidden>♥</span>
-          <div>
-            <b>
-              <FormattedMessage
-                id='sectioned_profile.me.open_to.vouching'
-                defaultMessage='Vouching'
-              />
-            </b>
-            <span className='sectioned-profile__muted'>{stubCopy}</span>
-          </div>
-        </div>
+      <div className='sectioned-profile__me-col'>
+        {ME_COL_2.map((c) => <MeCard key={c.headingId} card={c} />)}
       </div>
+      <div className='sectioned-profile__me-col'>
+        {ME_COL_3.map((c) => <MeCard key={c.headingId} card={c} />)}
+      </div>
+    </div>
 
-      <p className='sectioned-profile__provisional'>
-        <FormattedMessage
-          id='sectioned_profile.me.provisional'
-          defaultMessage='Identity content wires up when the profile settings surface ships.'
-        />
-      </p>
-    </>
-  );
-};
+    <div className='sectioned-profile__open-to'>
+      {OPEN_TO.map((o) => (
+        <div key={o.titleId} className='sectioned-profile__open-to-item'>
+          <span className='sectioned-profile__open-to-icon' aria-hidden>{o.icon}</span>
+          <div>
+            <b>
+              <FormattedMessage id={o.titleId} defaultMessage={o.titleDefault} />
+            </b>
+            <span className='sectioned-profile__muted'>
+              <FormattedMessage id={o.subId} defaultMessage={o.subDefault} />
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <p className='sectioned-profile__provisional'>
+      <FormattedMessage
+        id='sectioned_profile.me.provisional'
+        defaultMessage='Identity content wires up when the profile settings surface ships.'
+      />
+    </p>
+  </>
+);
 
 const WorkPanel: React.FC<{
   sections: SectionWithStatuses[];
@@ -487,25 +426,13 @@ const WorkPanel: React.FC<{
       </div>
 
       <div className='sectioned-profile__work-grid'>
-        {sections.length === 0 && (
-          <p className='sectioned-profile__work-empty'>
-            {isOwner ? (
-              <FormattedMessage
-                id='sectioned_profile.work.empty_owner'
-                defaultMessage='No sections yet. Add korner or kategory sections in profile settings.'
-              />
-            ) : (
-              <FormattedMessage
-                id='sectioned_profile.work.empty_visitor'
-                defaultMessage='Nothing collected yet.'
-              />
-            )}
-          </p>
+        {sections.length === 0 ? (
+          <WorkEmptyState isOwner={isOwner} />
+        ) : (
+          sections.map((section) => (
+            <WorkCard key={section.id} section={section} onOpen={setOpenId} />
+          ))
         )}
-
-        {sections.map((section) => (
-          <WorkCard key={section.id} section={section} onOpen={setOpenId} />
-        ))}
       </div>
 
       <WorkDrawer section={openSection} onClose={handleClose} />
@@ -607,6 +534,53 @@ const WorkDrawer: React.FC<{
     </>
   );
 };
+
+// Suggested placeholder categories for the empty-state grid. Naming
+// intent from docs/prototypes/kronk-profile-redesign.html — the shape
+// of the feature must be legible before any content exists in it.
+const PLACEHOLDER_KATEGORIES: string[] = [
+  'Poetry', 'Essays', 'Photography', 'Field notes',
+  'Reflections', 'Quotes', 'Sketches', 'Letters',
+  'Reviews', 'Dialogues', 'Questions', 'Threads',
+  'Governance', 'Proposals', 'Projects', 'Recipes',
+  'Travel', 'Trades', 'Archive', 'Collections',
+];
+
+const WorkEmptyState: React.FC<{ isOwner: boolean }> = ({ isOwner }) => (
+  <>
+    {isOwner && (
+      <a
+        className='sectioned-profile__work-placeholder sectioned-profile__work-placeholder--create'
+        href='/settings/profile_sections'
+      >
+        <span className='sectioned-profile__work-placeholder-plus' aria-hidden>＋</span>
+        <span className='sectioned-profile__work-placeholder-title'>
+          <FormattedMessage
+            id='sectioned_profile.work.create_first'
+            defaultMessage='Create your first card'
+          />
+        </span>
+        <span className='sectioned-profile__work-placeholder-sub'>
+          <FormattedMessage
+            id='sectioned_profile.work.create_first_hint'
+            defaultMessage='Sort your posts into rooms.'
+          />
+        </span>
+      </a>
+    )}
+    {PLACEHOLDER_KATEGORIES.map((title) => (
+      <div
+        key={title}
+        className='sectioned-profile__work-placeholder'
+        aria-hidden
+      >
+        <div className='sectioned-profile__work-placeholder-preview' />
+        <div className='sectioned-profile__work-placeholder-title'>{title}</div>
+        <div className='sectioned-profile__work-placeholder-sub'>0 posts</div>
+      </div>
+    ))}
+  </>
+);
 
 const TimelinePanel: React.FC<{
   section: SectionWithStatuses | undefined;
