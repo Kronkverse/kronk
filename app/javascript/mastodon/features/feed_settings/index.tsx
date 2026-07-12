@@ -7,7 +7,12 @@ import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { apiRequestGet, apiRequestPut, apiRequestPost, apiRequestDelete } from 'mastodon/api';
+import {
+  apiRequestGet,
+  apiRequestPut,
+  apiRequestPost,
+  apiRequestDelete,
+} from 'mastodon/api';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
@@ -20,17 +25,39 @@ import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 const messages = defineMessages({
   title: { id: 'feed_settings.title', defaultMessage: 'Feed settings' },
   loading: { id: 'feed_settings.loading', defaultMessage: 'Loading…' },
-  scopeFriends: { id: 'feed_settings.scope.friends', defaultMessage: 'Friends' },
-  scopeFof: { id: 'feed_settings.scope.fof', defaultMessage: 'Friends of friends' },
-  scopeKommunity: { id: 'feed_settings.scope.kommunity', defaultMessage: 'Kommunity' },
-  scopeFriendsDesc: { id: 'feed_settings.scope.friends_desc', defaultMessage: 'Only accounts you follow.' },
-  scopeFofDesc: { id: 'feed_settings.scope.fof_desc', defaultMessage: 'Your follows, plus who they follow.' },
-  scopeKommunityDesc: { id: 'feed_settings.scope.kommunity_desc', defaultMessage: 'Everyone tuned in to your korners.' },
+  scopeFriends: {
+    id: 'feed_settings.scope.friends',
+    defaultMessage: 'Friends',
+  },
+  scopeFof: {
+    id: 'feed_settings.scope.fof',
+    defaultMessage: 'Friends of friends',
+  },
+  scopeKommunity: {
+    id: 'feed_settings.scope.kommunity',
+    defaultMessage: 'Kommunity',
+  },
+  scopeFriendsDesc: {
+    id: 'feed_settings.scope.friends_desc',
+    defaultMessage: 'Only accounts you follow.',
+  },
+  scopeFofDesc: {
+    id: 'feed_settings.scope.fof_desc',
+    defaultMessage: 'Your follows, plus who they follow.',
+  },
+  scopeKommunityDesc: {
+    id: 'feed_settings.scope.kommunity_desc',
+    defaultMessage: 'Everyone tuned in to your korners.',
+  },
 });
 
 type Scope = 'friends' | 'friends_of_friends' | 'kommunity';
 
-const SCOPE_OPTIONS: { value: Scope; label: keyof typeof messages; desc: keyof typeof messages }[] = [
+const SCOPE_OPTIONS: {
+  value: Scope;
+  label: keyof typeof messages;
+  desc: keyof typeof messages;
+}[] = [
   { value: 'friends', label: 'scopeFriends', desc: 'scopeFriendsDesc' },
   { value: 'friends_of_friends', label: 'scopeFof', desc: 'scopeFofDesc' },
   { value: 'kommunity', label: 'scopeKommunity', desc: 'scopeKommunityDesc' },
@@ -54,7 +81,9 @@ const KornerTuneRow: React.FC<{
       </span>
       <span className='feed-settings__korner-body'>
         <span className='feed-settings__korner-name'>{korner.name}</span>
-        {teaser && <span className='feed-settings__korner-teaser'>{teaser}</span>}
+        {teaser && (
+          <span className='feed-settings__korner-teaser'>{teaser}</span>
+        )}
       </span>
       <input
         type='checkbox'
@@ -66,7 +95,9 @@ const KornerTuneRow: React.FC<{
   );
 };
 
-export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
+  multiColumn,
+}) => {
   const intl = useIntl();
   const korners = useAllKorners();
 
@@ -80,7 +111,9 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColumn 
     let cancelled = false;
     void (async () => {
       try {
-        const scopeRes = await apiRequestGet<{ feed_scope: Scope }>('v1/kronk_settings');
+        const scopeRes = await apiRequestGet<{ feed_scope: Scope }>(
+          'v1/kronk_settings',
+        );
         if (!cancelled && scopeRes.feed_scope) setScope(scopeRes.feed_scope);
       } catch (e: unknown) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
@@ -103,33 +136,39 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColumn 
     setLoaded(true);
   }, [korners, loaded]);
 
-  const changeScope = useCallback(async (next: Scope) => {
-    if (savingScope || next === scope) return;
-    const previous = scope;
-    setScope(next);
-    setSavingScope(true);
-    try {
-      await apiRequestPut('v1/kronk_settings', { feed_scope: next });
-    } catch {
-      setScope(previous);
-    } finally {
-      setSavingScope(false);
-    }
-  }, [scope, savingScope]);
-
-  const toggleKorner = useCallback(async (slug: string, next: boolean) => {
-    const previous = tuneStates[slug];
-    setTuneStates((prev) => ({ ...prev, [slug]: next }));
-    try {
-      if (next) {
-        await apiRequestDelete(`v1/korners/${slug}/tune_out`);
-      } else {
-        await apiRequestPost(`v1/korners/${slug}/tune_out`, {});
+  const changeScope = useCallback(
+    async (next: Scope) => {
+      if (savingScope || next === scope) return;
+      const previous = scope;
+      setScope(next);
+      setSavingScope(true);
+      try {
+        await apiRequestPut('v1/kronk_settings', { feed_scope: next });
+      } catch {
+        setScope(previous);
+      } finally {
+        setSavingScope(false);
       }
-    } catch {
-      setTuneStates((prev) => ({ ...prev, [slug]: previous ?? true }));
-    }
-  }, [tuneStates]);
+    },
+    [scope, savingScope],
+  );
+
+  const toggleKorner = useCallback(
+    async (slug: string, next: boolean) => {
+      const previous = tuneStates[slug];
+      setTuneStates((prev) => ({ ...prev, [slug]: next }));
+      try {
+        if (next) {
+          await apiRequestDelete(`v1/korners/${slug}/tune_out`);
+        } else {
+          await apiRequestPost(`v1/korners/${slug}/tune_out`, {});
+        }
+      } catch {
+        setTuneStates((prev) => ({ ...prev, [slug]: previous ?? true }));
+      }
+    },
+    [tuneStates],
+  );
 
   const listedKorners = korners
     .filter((k) => k.enforced !== false)
@@ -152,7 +191,10 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColumn 
       <div className='scrollable feed-settings'>
         <Link to='/home' className='feed-settings__back'>
           <ArrowBackIcon />
-          <FormattedMessage id='feed_settings.back' defaultMessage='Back to feed' />
+          <FormattedMessage
+            id='feed_settings.back'
+            defaultMessage='Back to feed'
+          />
         </Link>
 
         <header className='feed-settings__header'>
@@ -161,7 +203,10 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColumn 
           </span>
           <div>
             <h1 className='feed-settings__title'>
-              <FormattedMessage id='feed_settings.hero_title' defaultMessage='Feed' />
+              <FormattedMessage
+                id='feed_settings.hero_title'
+                defaultMessage='Feed'
+              />
             </h1>
             <p className='feed-settings__subtitle'>
               <FormattedMessage
@@ -200,7 +245,10 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColumn 
 
         <section className='feed-settings__section'>
           <h2 className='feed-settings__section-title'>
-            <FormattedMessage id='feed_settings.korners' defaultMessage='Korners in your feed' />
+            <FormattedMessage
+              id='feed_settings.korners'
+              defaultMessage='Korners in your feed'
+            />
           </h2>
           <p className='feed-settings__section-hint'>
             <FormattedMessage
@@ -210,7 +258,9 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({ multiColumn 
           </p>
 
           {!loaded && listedKorners.length === 0 && (
-            <p className='feed-settings__loading'>{intl.formatMessage(messages.loading)}</p>
+            <p className='feed-settings__loading'>
+              {intl.formatMessage(messages.loading)}
+            </p>
           )}
 
           <div className='feed-settings__korner-list'>

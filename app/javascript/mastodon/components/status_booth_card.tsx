@@ -34,7 +34,8 @@ const formatDuration = (seconds: number): string => {
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
-  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  if (h > 0)
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   return `${m}:${String(s).padStart(2, '0')}`;
 };
 
@@ -49,9 +50,10 @@ export const StatusBoothCard: React.FC<{ set: BoothSet }> = ({ set }) => {
     ? formatDuration(set.duration_seconds)
     : null;
 
-  const genresLabel = set.genres && set.genres.length > 0
-    ? set.genres.slice(0, 3).join(' · ')
-    : null;
+  const genresLabel =
+    set.genres && set.genres.length > 0
+      ? set.genres.slice(0, 3).join(' · ')
+      : null;
 
   return (
     <StatusKornerCard

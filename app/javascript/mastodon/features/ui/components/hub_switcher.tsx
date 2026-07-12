@@ -15,18 +15,38 @@ interface HubSwitcherProps {
   currentAccountUsername?: string;
 }
 
-export const HubSwitcher = ({ variant = 'top', currentAccountUsername }: HubSwitcherProps) => {
-  const profilePath = currentAccountUsername ? `/@${currentAccountUsername}` : '/getting-started';
+export const HubSwitcher = ({
+  variant = 'top',
+  currentAccountUsername,
+}: HubSwitcherProps) => {
+  const profilePath = currentAccountUsername
+    ? `/@${currentAccountUsername}`
+    : '/getting-started';
 
   return (
-    <nav className={`hub-switcher hub-switcher--${variant}`} aria-label='Primary surfaces'>
-      <NavLink to='/home' className='hub-switcher__item' activeClassName='hub-switcher__item--active'>
+    <nav
+      className={`hub-switcher hub-switcher--${variant}`}
+      aria-label='Primary surfaces'
+    >
+      <NavLink
+        to='/home'
+        className='hub-switcher__item'
+        activeClassName='hub-switcher__item--active'
+      >
         <FormattedMessage id='hub_switcher.feed' defaultMessage='Feed' />
       </NavLink>
-      <NavLink to={profilePath} className='hub-switcher__item' activeClassName='hub-switcher__item--active'>
+      <NavLink
+        to={profilePath}
+        className='hub-switcher__item'
+        activeClassName='hub-switcher__item--active'
+      >
         <FormattedMessage id='hub_switcher.profile' defaultMessage='Profile' />
       </NavLink>
-      <NavLink to='/hub' className='hub-switcher__item' activeClassName='hub-switcher__item--active'>
+      <NavLink
+        to='/hub'
+        className='hub-switcher__item'
+        activeClassName='hub-switcher__item--active'
+      >
         <FormattedMessage id='hub_switcher.hub' defaultMessage='Hub' />
       </NavLink>
     </nav>

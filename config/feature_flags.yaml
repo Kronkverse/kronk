@@ -15,7 +15,6 @@ default:
   # composer lands (canvas + inspector + per-card visibility); further
   # steps (modes, sections fold-in, preview) build on top behind this.
   profile_composer: true
-
 # Uncomment and populate as flags are introduced.
 # development: {}
 # test: {}

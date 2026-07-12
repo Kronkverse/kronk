@@ -1,74 +1,74 @@
 # Booth — DJ sets, mixes, audio-forward sharing
 # Retroactively authored from the shipped code on `main`.
 
-slug:            booth
-name:            The Booth
-icon:            headphones
-render_target:   native
-version:         0.1.0
+slug: booth
+name: The Booth
+icon: headphones
+render_target: native
+version: 0.1.0
 
 permissions:
   - read:statuses
   - write:statuses
 
 resources:
-  - name:    booth_sets
+  - name: booth_sets
     primary: true
 
 storage:
-  db_namespace:  booth_           # tables: booth_sets
-  media_prefix:  # not-implemented — audio + cover use Mastodon media_attachments (paperclip); a spec-conformant
-                 # future would move Booth audio under spaces/booth/booth_sets/<id>/, but the size + range-request
-                 # streaming path (§5.5) already exists and works, so migration is scheduling, not architecture.
-  redis_prefix:  # not-implemented
+  db_namespace: booth_ # tables: booth_sets
+  media_prefix: # not-implemented — audio + cover use Mastodon media_attachments (paperclip); a spec-conformant
+    # future would move Booth audio under spaces/booth/booth_sets/<id>/, but the size + range-request
+    # streaming path (§5.5) already exists and works, so migration is scheduling, not architecture.
+  redis_prefix: # not-implemented
 
 visibility_scopes: []
 
-steward_role:    moderator
+steward_role: moderator
 
 emits: []
 listens: []
 
 feed_projection:
-  card:               booth_card                    # StatusBoothCard — landed on feature/korner-cards
-  title_from:         title
-  summary_from:       artist_name
-  links_to:           /booth/sets/<id>              # existing
+  card: booth_card # StatusBoothCard — landed on feature/korner-cards
+  title_from: title
+  summary_from: artist_name
+  links_to: /booth/sets/<id> # existing
   default_visibility: public
-  discriminator:      status.booth_set.present?      # Status has_one :booth_set via booth_sets.shared_status_id
+  discriminator: status.booth_set.present? # Status has_one :booth_set via booth_sets.shared_status_id
 
-  status_association: booth_set       # framework: Status.has_one :booth_set
+  status_association: booth_set # framework: Status.has_one :booth_set
 subscription:
-  default:  off                   # not-implemented
+  default: off # not-implemented
 
 # Per-user settings surfaced at /hub/booth/settings (spec §K.3.3).
 settings:
-  - name:    autoplay_on_visit
-    kind:    boolean
+  - name: autoplay_on_visit
+    kind: boolean
     default: false
-    scope:   user
-    label:   Auto-play the featured set when I open Booth
-  - name:    cover_image_size
-    kind:    enum
+    scope: user
+    label: Auto-play the featured set when I open Booth
+  - name: cover_image_size
+    kind: enum
     options: [small, medium, large]
     default: medium
-    scope:   user
-    label:   Cover image size
-  - name:    default_mix_visibility
-    kind:    enum
+    scope: user
+    label: Cover image size
+  - name: default_mix_visibility
+    kind: enum
     options: [public, unlisted, followers]
     default: public
-    scope:   user
-    label:   Default visibility for sets I upload
+    scope: user
+    label: Default visibility for sets I upload
 
 compose:
-  label:  "Upload a set"
-  route:  "/hub/booth/new"
+  label: 'Upload a set'
+  route: '/hub/booth/new'
 
 launch:
-  blurb:  "The Booth — DJ sets and mixes at Kronk."
-  cta:    "Tap in"
+  blurb: 'The Booth — DJ sets and mixes at Kronk.'
+  cta: 'Tap in'
 
-feature_flag:    # not-implemented
-federates:       false
-enforced:        true                              # framework: on this branch; boot validator enforces
+feature_flag: # not-implemented
+federates: false
+enforced: true # framework: on this branch; boot validator enforces

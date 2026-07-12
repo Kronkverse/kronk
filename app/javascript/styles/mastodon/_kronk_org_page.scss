@@ -10,7 +10,7 @@
   margin: 3rem auto;
   padding: 0 1.5rem;
 
-  @media (max-width: 720px) {
+  @media (width <= 720px) {
     grid-template-columns: 1fr;
     gap: 1.5rem;
     margin-top: 4rem;
@@ -35,7 +35,7 @@
     max-height: calc(100vh - 5rem);
     overflow-y: auto;
 
-    @media (max-width: 720px) {
+    @media (width <= 720px) {
       position: static;
       max-height: none;
     }
@@ -57,7 +57,9 @@
     color: var(--text-secondary);
     text-decoration: none;
     font-size: 0.95rem;
-    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
 
     &:hover {
       background: var(--kronk-purple-deep);

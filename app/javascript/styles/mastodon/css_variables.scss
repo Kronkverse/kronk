@@ -5,7 +5,6 @@
 
 :root {
   --accent: var(--semantic-accent);
-
   --dropdown-border-color: #{lighten($ui-base-color, 4%)};
   --dropdown-background-color: #{rgba(darken($ui-base-color, 8%), 0.9)};
   --dropdown-shadow:

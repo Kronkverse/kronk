@@ -20,7 +20,9 @@ export const CoverPositionEditor: React.FC<Props> = ({
     const el = containerRef.current;
     if (!el) return 50;
     const rect = el.getBoundingClientRect();
-    return Math.round(Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100)));
+    return Math.round(
+      Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100)),
+    );
   }, []);
 
   const handleMouseDown = useCallback(

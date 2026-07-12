@@ -51,11 +51,7 @@ export const DailyKosmicCard: React.FC = () => {
   }, [history]);
 
   return (
-    <button
-      className='daily-kosmic-card'
-      onClick={handleClick}
-      type='button'
-    >
+    <button className='daily-kosmic-card' onClick={handleClick} type='button'>
       <div className='daily-kosmic-card__header'>
         <span className='daily-kosmic-card__name'>Kosmic Daily</span>
         <span className='daily-kosmic-card__date'>{today}</span>

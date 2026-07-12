@@ -5,48 +5,48 @@
 # WIP manifest — no backend yet. `enforced: false`.
 # See docs/kronk_korner_spec.md §New korners.
 
-slug:            albutts
-name:            Albutts
-icon:            photo_album
-render_target:   native
-version:         0.0.0
+slug: albutts
+name: Albutts
+icon: photo_album
+render_target: native
+version: 0.0.0
 
 resources:
-  - name:    albums
+  - name: albums
     primary: true
-  - name:    album_photos
-  - name:    album_contributors
+  - name: album_photos
+  - name: album_contributors
 
 storage:
-  db_namespace:  album_                # planned: albums, album_photos, album_contributors
-  media_prefix:  spaces/albutts/
+  db_namespace: album_ # planned: albums, album_photos, album_contributors
+  media_prefix: spaces/albutts/
 
 feed_projection:
-  card:               albutts_card
-  title_from:         title
-  summary_from:       contributor_count
+  card: albutts_card
+  title_from: title
+  summary_from: contributor_count
   status_association: album
-  links_to:           /hub/albutts/albums/<id>
+  links_to: /hub/albutts/albums/<id>
   default_visibility: public
 
 settings:
-  - name:      require_contributor_approval
-    kind:      boolean
-    default:   true
-    scope:     user
-  - name:      notify_on_new_photo
-    kind:      boolean
-    default:   true
-    scope:     user
+  - name: require_contributor_approval
+    kind: boolean
+    default: true
+    scope: user
+  - name: notify_on_new_photo
+    kind: boolean
+    default: true
+    scope: user
 
 emits: []
 listens: []
 
 hub_teaser:
-  static:  "Shared albums, credit forward."
+  static: 'Shared albums, credit forward.'
 
 launch:
-  blurb:  "Albutts — shared albums where every photo carries its author's credit."
-  cta:    "Start an album"
+  blurb: "Albutts — shared albums where every photo carries its author's credit."
+  cta: 'Start an album'
 
-enforced:        false
+enforced: false

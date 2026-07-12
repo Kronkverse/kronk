@@ -33,7 +33,13 @@ export const KornerStub: React.FC<{ multiColumn?: boolean; slug?: string }> = ({
 
   return (
     <Column bindToDocument label={title}>
-      <ColumnHeader title={title} icon='korner' iconComponent={Icon} showBackButton multiColumn={multiColumn} />
+      <ColumnHeader
+        title={title}
+        icon='korner'
+        iconComponent={Icon}
+        showBackButton
+        multiColumn={multiColumn}
+      />
 
       <Helmet>
         <title>{title}</title>
@@ -58,8 +64,14 @@ export const KornerStub: React.FC<{ multiColumn?: boolean; slug?: string }> = ({
 
 // Individual bindings so each korner slug lands on its own bundle
 // route and can be swapped for a real feature component when ready.
-export const MomentsStub: React.FC<{ multiColumn?: boolean }> = (props) => <KornerStub {...props} slug='moments' />;
-export const AlbuttsStub: React.FC<{ multiColumn?: boolean }> = (props) => <KornerStub {...props} slug='albutts' />;
-export const KompassStub: React.FC<{ multiColumn?: boolean }> = (props) => <KornerStub {...props} slug='kompass' />;
+export const MomentsStub: React.FC<{ multiColumn?: boolean }> = (props) => (
+  <KornerStub {...props} slug='moments' />
+);
+export const AlbuttsStub: React.FC<{ multiColumn?: boolean }> = (props) => (
+  <KornerStub {...props} slug='albutts' />
+);
+export const KompassStub: React.FC<{ multiColumn?: boolean }> = (props) => (
+  <KornerStub {...props} slug='kompass' />
+);
 
 export default KornerStub;

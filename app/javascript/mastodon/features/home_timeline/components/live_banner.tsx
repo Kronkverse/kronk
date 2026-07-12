@@ -4,7 +4,6 @@ import { useHistory } from 'react-router-dom';
 
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
 
-
 const JITSI_DOMAIN = 'meet.talitamoss.info';
 const ROOM_NAME = 'huddle';
 const POLL_INTERVAL = 15000;

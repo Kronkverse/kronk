@@ -44,7 +44,15 @@ export const Bottom: Story = {
     currentAccountUsername: 'tal',
   },
   render: (args) => (
-    <div style={{ padding: '2rem', background: '#000', minWidth: '20rem', height: '10rem', position: 'relative' }}>
+    <div
+      style={{
+        padding: '2rem',
+        background: '#000',
+        minWidth: '20rem',
+        height: '10rem',
+        position: 'relative',
+      }}
+    >
       <HubSwitcher {...args} />
     </div>
   ),

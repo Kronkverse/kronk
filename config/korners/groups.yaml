@@ -6,47 +6,47 @@
 # Governance is peer-support by default; seeder-only administration for
 # archival/rename. See app/models/group.rb + Groups spec.
 
-slug:            groups
-name:            Groups
-icon:            groups
-render_target:   web
-version:         1.0.0
+slug: groups
+name: Groups
+icon: groups
+render_target: web
+version: 1.0.0
 
 resources:
-  - name:    groups
+  - name: groups
     primary: true
-  - name:    group_memberships
-  - name:    statuses_groups   # join to Status for multi-group posts
+  - name: group_memberships
+  - name: statuses_groups # join to Status for multi-group posts
 
 storage:
-  db_namespace:  group_
-  media_prefix:  (none)
+  db_namespace: group_
+  media_prefix: (none)
 
 security:
-  ownership_model:      seeder_and_members
-  visibility:           public               # discoverable listing
-  member_gate:          approval_optional    # seeders may require join approval
-  archive_gate:         seeder_only
+  ownership_model: seeder_and_members
+  visibility: public # discoverable listing
+  member_gate: approval_optional # seeders may require join approval
+  archive_gate: seeder_only
 
 feed_projection:
-  card:               group_card
-  title_from:         name
-  summary_from:       description
+  card: group_card
+  title_from: name
+  summary_from: description
   # Deliberately no status_association: a Group is not represented by a
   # single Status. Its timeline is the union of Statuses joined via the
   # statuses_groups table.
-  links_to:           /hub/groups/<id>
+  links_to: /hub/groups/<id>
   default_visibility: public
 
 settings:
-  - name:    notify_on_new_post
-    kind:    boolean
+  - name: notify_on_new_post
+    kind: boolean
     default: true
-    scope:   user
-  - name:    default_visibility
-    kind:    string
+    scope: user
+  - name: default_visibility
+    kind: string
     default: public
-    scope:   group
+    scope: group
 
 # group.post.created — fired whenever a Status is joined to this group
 # via either /api/v1/statuses (with group_ids[]) or the group-scoped
@@ -60,14 +60,14 @@ emits:
 listens: []
 
 compose:
-  label:  "New group"
-  route:  "/hub/groups/new"
+  label: 'New group'
+  route: '/hub/groups/new'
 
 hub_teaser:
-  static:  "Shareable, multi-poster spaces."
+  static: 'Shareable, multi-poster spaces.'
 
 launch:
-  blurb:  "Groups — a place for multiple people to post together, discover shared context, and act as one."
-  cta:    "Start a group"
+  blurb: 'Groups — a place for multiple people to post together, discover shared context, and act as one.'
+  cta: 'Start a group'
 
-enforced:        true
+enforced: true

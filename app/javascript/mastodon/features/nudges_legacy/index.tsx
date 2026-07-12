@@ -17,17 +17,28 @@ const messages = defineMessages({
 const summaryFor = (n: ApiNotificationJSON) => {
   const actor = n.account?.acct ?? 'someone';
   switch (n.type) {
-    case 'mention':          return `${actor} mentioned you`;
-    case 'reblog':           return `${actor} reblogged your post`;
-    case 'favourite':        return `${actor} favourited your post`;
-    case 'follow':           return `${actor} followed you`;
-    case 'follow_request':   return `${actor} requested to follow you`;
-    case 'poll':             return `A poll you were in ended`;
-    case 'update':           return `${actor} edited a post`;
-    case 'quote':            return `${actor} quoted your post`;
-    case 'quoted_update':    return `${actor} edited a quote of your post`;
-    case 'event_invitation': return `${actor} invited you to an event`;
-    case 'media_tag':        return `${actor} tagged you in media`;
+    case 'mention':
+      return `${actor} mentioned you`;
+    case 'reblog':
+      return `${actor} reblogged your post`;
+    case 'favourite':
+      return `${actor} favourited your post`;
+    case 'follow':
+      return `${actor} followed you`;
+    case 'follow_request':
+      return `${actor} requested to follow you`;
+    case 'poll':
+      return `A poll you were in ended`;
+    case 'update':
+      return `${actor} edited a post`;
+    case 'quote':
+      return `${actor} quoted your post`;
+    case 'quoted_update':
+      return `${actor} edited a quote of your post`;
+    case 'event_invitation':
+      return `${actor} invited you to an event`;
+    case 'media_tag':
+      return `${actor} tagged you in media`;
     case 'severed_relationships':
     case 'moderation_warning':
     case 'annual_report':
@@ -92,13 +103,19 @@ export const NudgesLegacyArchive = () => {
 
         {loading && !loaded && (
           <p style={{ color: 'var(--text-muted)' }}>
-            <FormattedMessage id='nudges.legacy.loading' defaultMessage='Loading…' />
+            <FormattedMessage
+              id='nudges.legacy.loading'
+              defaultMessage='Loading…'
+            />
           </p>
         )}
 
         {loaded && entries.length === 0 && (
           <p style={{ color: 'var(--text-muted)' }}>
-            <FormattedMessage id='nudges.legacy.empty' defaultMessage='No archived notifications.' />
+            <FormattedMessage
+              id='nudges.legacy.empty'
+              defaultMessage='No archived notifications.'
+            />
           </p>
         )}
 

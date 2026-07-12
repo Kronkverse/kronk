@@ -508,7 +508,10 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
             fontSize: '0.85rem',
           }}
         >
-          <FormattedMessage id='nudges.tab.activity' defaultMessage='Activity' />
+          <FormattedMessage
+            id='nudges.tab.activity'
+            defaultMessage='Activity'
+          />
         </Link>
         <Link
           to='/nudges/legacy'

@@ -65,7 +65,11 @@ const KornerCard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
           the whole card; nesting a <Link> inside another <Link> collapses
           the inner one, which was making the settings gear silently
           route to the parent korner. */}
-      <Link to={`/hub/${korner.slug}`} className='hub-page__card-open' aria-label={`Open ${korner.name}`}>
+      <Link
+        to={`/hub/${korner.slug}`}
+        className='hub-page__card-open'
+        aria-label={`Open ${korner.name}`}
+      >
         <span className='hub-page__card-icon' aria-hidden='true'>
           <Icon />
         </span>
@@ -118,7 +122,12 @@ const Hub: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
   return (
     <Column>
-      <ColumnHeader title={intl.formatMessage(messages.title)} icon='hub' iconComponent={ExploreIcon} multiColumn={multiColumn} />
+      <ColumnHeader
+        title={intl.formatMessage(messages.title)}
+        icon='hub'
+        iconComponent={ExploreIcon}
+        multiColumn={multiColumn}
+      />
 
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>

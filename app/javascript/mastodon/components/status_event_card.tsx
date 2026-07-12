@@ -1,6 +1,11 @@
 import { useCallback, useState } from 'react';
 
-import { defineMessages, useIntl, FormattedDate, FormattedTime } from 'react-intl';
+import {
+  defineMessages,
+  useIntl,
+  FormattedDate,
+  FormattedTime,
+} from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 

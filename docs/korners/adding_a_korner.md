@@ -33,13 +33,13 @@ components in the feed.
 Answer these five questions before touching the repo. Every subsequent step
 follows from these answers.
 
-| Question | Klot's answer |
-| --- | --- |
-| **Slug** — one lowercase word, used everywhere (route, table prefix, i18n keys, manifest filename) | `klot` |
-| **Space name** — TitleCase, used in `SPACE_PLANET` and UI copy | `Klot` |
-| **Planet** — from the eight planets in `planets.tsx` — determines the accent colour | `Earth` |
-| **What does a post from this Korner look like?** — the feed projection | A shared cycle log entry with phase-of-cycle + emoji |
-| **What are the primary nouns?** — one Ruby model per noun, table name `<slug>_<noun>` | `KlotPeriod`, `KlotSetting`, `KlotShare` |
+| Question                                                                                           | Klot's answer                                        |
+| -------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| **Slug** — one lowercase word, used everywhere (route, table prefix, i18n keys, manifest filename) | `klot`                                               |
+| **Space name** — TitleCase, used in `SPACE_PLANET` and UI copy                                     | `Klot`                                               |
+| **Planet** — from the eight planets in `planets.tsx` — determines the accent colour                | `Earth`                                              |
+| **What does a post from this Korner look like?** — the feed projection                             | A shared cycle log entry with phase-of-cycle + emoji |
+| **What are the primary nouns?** — one Ruby model per noun, table name `<slug>_<noun>`              | `KlotPeriod`, `KlotSetting`, `KlotShare`             |
 
 If any of these five is unclear, stop here and clarify. Retro-fitting a slug
 change across nine files is painful.
@@ -55,6 +55,7 @@ exercise up front anyway.
 ## 1. Model your data
 
 **Files:**
+
 - `db/migrate/<timestamp>_create_<slug>_tables.rb`
 - `app/models/<slug>_<noun>.rb` — one per noun
 
@@ -134,12 +135,12 @@ Every existing feed-projected Korner (`events`, `marketplace_listings`,
 
 The existing Korners have drifted here:
 
-| Korner | Column | Notes |
-| --- | --- | --- |
-| Kalendar | `events.status_id` | Canonical |
-| Marketplace | `marketplace_listings.status_id` | Canonical |
-| Booth | `booth_sets.shared_status_id` | Legacy — kept for compatibility |
-| Kommons | `proposals.discussion_status_id` | Legacy — kept for compatibility |
+| Korner      | Column                           | Notes                           |
+| ----------- | -------------------------------- | ------------------------------- |
+| Kalendar    | `events.status_id`               | Canonical                       |
+| Marketplace | `marketplace_listings.status_id` | Canonical                       |
+| Booth       | `booth_sets.shared_status_id`    | Legacy — kept for compatibility |
+| Kommons     | `proposals.discussion_status_id` | Legacy — kept for compatibility |
 
 **For a new Korner, use `status_id`.** Two of four existing Korners agree,
 the naming is shorter, and it's what the ORM naturally infers from
@@ -285,7 +286,7 @@ features/klot/
   and no React. Makes phase logic unit-testable in isolation.
 - **Types in one place.** `types.ts` is the source of truth for what a
   `KlotPeriod` looks like on the client.
-- **Components are named for what they *are*, not what they *do*.**
+- **Components are named for what they _are_, not what they _do_.**
   `cycle_ring.tsx`, not `phase_visualiser.tsx`.
 
 Use `var(--accent)` (from `_tokens.scss`) for borders, glows, and tints.
@@ -310,8 +311,8 @@ Two file edits, both under `app/javascript/mastodon/features/ui/`:
 Add the dynamic import so the bundle can code-split your Korner:
 
 ```js
-export function Klot () {
-  return import("../../klot");
+export function Klot() {
+  return import('../../klot');
 }
 ```
 
@@ -377,7 +378,7 @@ Create the partial, prefix every selector with your Korner's namespace:
 @use 'variables' as *;
 
 .klot-page {
-  --klot-bg: #0D0A1F;
+  --klot-bg: #0d0a1f;
   --klot-surface: #181336;
   // ...
 }
@@ -432,7 +433,12 @@ semantic table.
 Add a `ColumnLink` for your Korner alongside the others:
 
 ```tsx
-<ColumnLink transparent to='/klot' icon='moon' text={intl.formatMessage(messages.klot)} />
+<ColumnLink
+  transparent
+  to='/klot'
+  icon='moon'
+  text={intl.formatMessage(messages.klot)}
+/>
 ```
 
 Add a matching entry to the `messages` object with the display label.
@@ -469,12 +475,12 @@ three moving parts:
 Four Korners currently ship feed projection. Copy the closest match to
 your shape:
 
-| Korner | Best for | Reference files |
-| --- | --- | --- |
-| **Kommons** | You have a first-class resource (proposal, decision) with a discussion attached | `app/models/proposal.rb`, `app/controllers/api/v1/proposals_controller.rb`, `app/serializers/rest/proposal_summary_serializer.rb` |
-| **Kuestions** | Your Korner rides Status directly via `post_type` (no separate table) | `app/models/status.rb` (`enum :post_type`), `app/javascript/mastodon/components/status_question_card.tsx` |
-| **Kalendar** | You have a primary record (event, workshop) that gets shared on create | `app/controllers/api/v1/events_controller.rb#create` (post-race-fix — status creation is outside the transaction), `app/models/event.rb`, `app/serializers/rest/event_serializer.rb` |
-| **Booth** | You have a primary record (audio set, upload) with an explicit share action | `app/controllers/api/v1/booth_sets_controller.rb#share`, `app/models/booth_set.rb`, `app/serializers/rest/booth_set_summary_serializer.rb` |
+| Korner        | Best for                                                                        | Reference files                                                                                                                                                                      |
+| ------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Kommons**   | You have a first-class resource (proposal, decision) with a discussion attached | `app/models/proposal.rb`, `app/controllers/api/v1/proposals_controller.rb`, `app/serializers/rest/proposal_summary_serializer.rb`                                                    |
+| **Kuestions** | Your Korner rides Status directly via `post_type` (no separate table)           | `app/models/status.rb` (`enum :post_type`), `app/javascript/mastodon/components/status_question_card.tsx`                                                                            |
+| **Kalendar**  | You have a primary record (event, workshop) that gets shared on create          | `app/controllers/api/v1/events_controller.rb#create` (post-race-fix — status creation is outside the transaction), `app/models/event.rb`, `app/serializers/rest/event_serializer.rb` |
+| **Booth**     | You have a primary record (audio set, upload) with an explicit share action     | `app/controllers/api/v1/booth_sets_controller.rb#share`, `app/models/booth_set.rb`, `app/serializers/rest/booth_set_summary_serializer.rb`                                           |
 
 ### 11a. Association on `Status`
 
@@ -535,6 +541,7 @@ drift you accepted along the way. Copy one of the existing manifests as a
 starting point — `klot.yaml` is the newest and cleanest.
 
 Mark drift honestly:
+
 - `# not-implemented` — spec says the field should be filled, you haven't
 - `# implicit` — the code does this thing but it's not declared explicitly
 - `# TODO` — you know it needs doing before the Korner is spec-conformant
@@ -575,30 +582,30 @@ PR to `main`. See CLAUDE.md for the full branch/PR workflow.
 For a Korner with a full frontend+backend+feed presence, the merge diff
 should touch approximately:
 
-| File | Purpose |
-| --- | --- |
-| `db/migrate/*_create_<slug>_tables.rb` | Schema |
-| `app/models/<slug>_*.rb` | Ruby models |
-| `app/models/concerns/account/associations.rb` | `Account has_many` line |
-| `app/controllers/<slug>_controller.rb` | (Optional) server-rendered pages |
-| `app/controllers/api/v1/<slug>/*_controller.rb` | JSON API |
-| `app/serializers/rest/<slug>_*_serializer.rb` | JSON shape |
-| `app/lib/<slug>/*.rb` | Business logic (if substantial) |
-| `config/routes.rb` | SPA shell routes |
-| `config/routes/api.rb` | API routes |
-| `app/javascript/mastodon/features/<slug>/**/*` | Frontend feature module |
-| `app/javascript/mastodon/features/ui/util/async-components.js` | Chunk registration |
-| `app/javascript/mastodon/features/ui/index.jsx` | Route registration |
-| `app/javascript/mastodon/features/navigation_panel/index.tsx` | Nav entry |
-| `app/javascript/mastodon/planets.tsx` | `SPACE_PLANET` entry |
-| `app/javascript/styles/mastodon/_<slug>.scss` | Styles |
-| `app/javascript/styles/application.scss` | `@use` import |
-| `app/models/status.rb` (if feed-projected) | `has_one` association |
-| `app/serializers/rest/status_serializer.rb` | Timeline JSON exposure |
-| `app/serializers/rest/<slug>_summary_serializer.rb` | Card projection |
-| `app/javascript/mastodon/components/status_<slug>_card.tsx` | Feed card |
-| `app/javascript/mastodon/components/status.jsx` | Discriminator branch |
-| `config/korners/<slug>.yaml` | Manifest |
+| File                                                           | Purpose                          |
+| -------------------------------------------------------------- | -------------------------------- |
+| `db/migrate/*_create_<slug>_tables.rb`                         | Schema                           |
+| `app/models/<slug>_*.rb`                                       | Ruby models                      |
+| `app/models/concerns/account/associations.rb`                  | `Account has_many` line          |
+| `app/controllers/<slug>_controller.rb`                         | (Optional) server-rendered pages |
+| `app/controllers/api/v1/<slug>/*_controller.rb`                | JSON API                         |
+| `app/serializers/rest/<slug>_*_serializer.rb`                  | JSON shape                       |
+| `app/lib/<slug>/*.rb`                                          | Business logic (if substantial)  |
+| `config/routes.rb`                                             | SPA shell routes                 |
+| `config/routes/api.rb`                                         | API routes                       |
+| `app/javascript/mastodon/features/<slug>/**/*`                 | Frontend feature module          |
+| `app/javascript/mastodon/features/ui/util/async-components.js` | Chunk registration               |
+| `app/javascript/mastodon/features/ui/index.jsx`                | Route registration               |
+| `app/javascript/mastodon/features/navigation_panel/index.tsx`  | Nav entry                        |
+| `app/javascript/mastodon/planets.tsx`                          | `SPACE_PLANET` entry             |
+| `app/javascript/styles/mastodon/_<slug>.scss`                  | Styles                           |
+| `app/javascript/styles/application.scss`                       | `@use` import                    |
+| `app/models/status.rb` (if feed-projected)                     | `has_one` association            |
+| `app/serializers/rest/status_serializer.rb`                    | Timeline JSON exposure           |
+| `app/serializers/rest/<slug>_summary_serializer.rb`            | Card projection                  |
+| `app/javascript/mastodon/components/status_<slug>_card.tsx`    | Feed card                        |
+| `app/javascript/mastodon/components/status.jsx`                | Discriminator branch             |
+| `config/korners/<slug>.yaml`                                   | Manifest                         |
 
 That's ~18–22 files for a Korner with feed presence, ~14–16 for one without.
 

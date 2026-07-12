@@ -6,7 +6,10 @@ import { useParams, useLocation, useHistory } from 'react-router-dom';
 
 import { List as ImmutableList } from 'immutable';
 
-import { importFetchedStatuses, importFetchedAccount } from 'mastodon/actions/importer';
+import {
+  importFetchedStatuses,
+  importFetchedAccount,
+} from 'mastodon/actions/importer';
 import { apiRequestGet } from 'mastodon/api';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
@@ -23,54 +26,180 @@ const messages = defineMessages({
 
   // Me panel card copy — heading + description for each empty state.
   aboutTitle: { id: 'sectioned_profile.me.about', defaultMessage: 'About me' },
-  aboutDesc: { id: 'sectioned_profile.me.about_desc', defaultMessage: 'Tell people who you are.' },
-  interestsTitle: { id: 'sectioned_profile.me.interests', defaultMessage: 'Interests' },
-  interestsDesc: { id: 'sectioned_profile.me.interests_desc', defaultMessage: 'What you would talk about for an hour.' },
-  exploringTitle: { id: 'sectioned_profile.me.exploring', defaultMessage: 'Currently exploring' },
-  exploringDesc: { id: 'sectioned_profile.me.exploring_desc', defaultMessage: 'New questions, tools, or practices you are leaning into.' },
-  atGlanceTitle: { id: 'sectioned_profile.me.at_a_glance', defaultMessage: 'At a glance' },
-  atGlanceDesc: { id: 'sectioned_profile.me.at_a_glance_desc', defaultMessage: 'A quick summary of your presence across Kronk.' },
-  highlightsTitle: { id: 'sectioned_profile.me.highlights', defaultMessage: 'Recent highlights' },
-  highlightsDesc: { id: 'sectioned_profile.me.highlights_desc', defaultMessage: 'Pinned or featured posts, up to three.' },
-  personalityTitle: { id: 'sectioned_profile.me.personality', defaultMessage: 'Personality snapshot' },
-  personalityDesc: { id: 'sectioned_profile.me.personality_desc', defaultMessage: 'A few words that sound like you.' },
-  driveTitle: { id: 'sectioned_profile.me.drive', defaultMessage: 'What drives me' },
-  driveDesc: { id: 'sectioned_profile.me.drive_desc', defaultMessage: 'One short line about what pulls you forward.' },
-  rotationTitle: { id: 'sectioned_profile.me.rotation', defaultMessage: 'In rotation' },
-  rotationDesc: { id: 'sectioned_profile.me.rotation_desc', defaultMessage: 'What you are reading, listening to, watching.' },
-  momentsTitle: { id: 'sectioned_profile.me.moments', defaultMessage: 'Life in moments' },
-  momentsDesc: { id: 'sectioned_profile.me.moments_desc', defaultMessage: 'Nine photos. No captions needed.' },
+  aboutDesc: {
+    id: 'sectioned_profile.me.about_desc',
+    defaultMessage: 'Tell people who you are.',
+  },
+  interestsTitle: {
+    id: 'sectioned_profile.me.interests',
+    defaultMessage: 'Interests',
+  },
+  interestsDesc: {
+    id: 'sectioned_profile.me.interests_desc',
+    defaultMessage: 'What you would talk about for an hour.',
+  },
+  exploringTitle: {
+    id: 'sectioned_profile.me.exploring',
+    defaultMessage: 'Currently exploring',
+  },
+  exploringDesc: {
+    id: 'sectioned_profile.me.exploring_desc',
+    defaultMessage: 'New questions, tools, or practices you are leaning into.',
+  },
+  atGlanceTitle: {
+    id: 'sectioned_profile.me.at_a_glance',
+    defaultMessage: 'At a glance',
+  },
+  atGlanceDesc: {
+    id: 'sectioned_profile.me.at_a_glance_desc',
+    defaultMessage: 'A quick summary of your presence across Kronk.',
+  },
+  highlightsTitle: {
+    id: 'sectioned_profile.me.highlights',
+    defaultMessage: 'Recent highlights',
+  },
+  highlightsDesc: {
+    id: 'sectioned_profile.me.highlights_desc',
+    defaultMessage: 'Pinned or featured posts, up to three.',
+  },
+  personalityTitle: {
+    id: 'sectioned_profile.me.personality',
+    defaultMessage: 'Personality snapshot',
+  },
+  personalityDesc: {
+    id: 'sectioned_profile.me.personality_desc',
+    defaultMessage: 'A few words that sound like you.',
+  },
+  driveTitle: {
+    id: 'sectioned_profile.me.drive',
+    defaultMessage: 'What drives me',
+  },
+  driveDesc: {
+    id: 'sectioned_profile.me.drive_desc',
+    defaultMessage: 'One short line about what pulls you forward.',
+  },
+  rotationTitle: {
+    id: 'sectioned_profile.me.rotation',
+    defaultMessage: 'In rotation',
+  },
+  rotationDesc: {
+    id: 'sectioned_profile.me.rotation_desc',
+    defaultMessage: 'What you are reading, listening to, watching.',
+  },
+  momentsTitle: {
+    id: 'sectioned_profile.me.moments',
+    defaultMessage: 'Life in moments',
+  },
+  momentsDesc: {
+    id: 'sectioned_profile.me.moments_desc',
+    defaultMessage: 'Nine photos. No captions needed.',
+  },
   valuesTitle: { id: 'sectioned_profile.me.values', defaultMessage: 'Values' },
-  valuesDesc: { id: 'sectioned_profile.me.values_desc', defaultMessage: 'Five words. Not more.' },
+  valuesDesc: {
+    id: 'sectioned_profile.me.values_desc',
+    defaultMessage: 'Five words. Not more.',
+  },
   noteTitle: { id: 'sectioned_profile.me.note', defaultMessage: 'A note' },
-  noteDesc: { id: 'sectioned_profile.me.note_desc', defaultMessage: 'Whatever you want to say to whoever visits.' },
+  noteDesc: {
+    id: 'sectioned_profile.me.note_desc',
+    defaultMessage: 'Whatever you want to say to whoever visits.',
+  },
 
   // Open-to strip
-  openConversationsTitle: { id: 'sectioned_profile.me.open_to.conversations', defaultMessage: 'Meaningful conversations' },
-  openConversationsDesc: { id: 'sectioned_profile.me.open_to.conversations_desc', defaultMessage: 'Slow ones welcome.' },
-  openCollabsTitle: { id: 'sectioned_profile.me.open_to.collabs', defaultMessage: 'Creative collaborations' },
-  openCollabsDesc: { id: 'sectioned_profile.me.open_to.collabs_desc', defaultMessage: 'Bring what you make, meet others who make.' },
-  openGovernanceTitle: { id: 'sectioned_profile.me.open_to.governance', defaultMessage: 'Governance work' },
-  openGovernanceDesc: { id: 'sectioned_profile.me.open_to.governance_desc', defaultMessage: 'Proposals, Kommons, quiet organising.' },
-  openVouchingTitle: { id: 'sectioned_profile.me.open_to.vouching', defaultMessage: 'Vouching' },
-  openVouchingDesc: { id: 'sectioned_profile.me.open_to.vouching_desc', defaultMessage: 'A web of trust, one person at a time.' },
+  openConversationsTitle: {
+    id: 'sectioned_profile.me.open_to.conversations',
+    defaultMessage: 'Meaningful conversations',
+  },
+  openConversationsDesc: {
+    id: 'sectioned_profile.me.open_to.conversations_desc',
+    defaultMessage: 'Slow ones welcome.',
+  },
+  openCollabsTitle: {
+    id: 'sectioned_profile.me.open_to.collabs',
+    defaultMessage: 'Creative collaborations',
+  },
+  openCollabsDesc: {
+    id: 'sectioned_profile.me.open_to.collabs_desc',
+    defaultMessage: 'Bring what you make, meet others who make.',
+  },
+  openGovernanceTitle: {
+    id: 'sectioned_profile.me.open_to.governance',
+    defaultMessage: 'Governance work',
+  },
+  openGovernanceDesc: {
+    id: 'sectioned_profile.me.open_to.governance_desc',
+    defaultMessage: 'Proposals, Kommons, quiet organising.',
+  },
+  openVouchingTitle: {
+    id: 'sectioned_profile.me.open_to.vouching',
+    defaultMessage: 'Vouching',
+  },
+  openVouchingDesc: {
+    id: 'sectioned_profile.me.open_to.vouching_desc',
+    defaultMessage: 'A web of trust, one person at a time.',
+  },
 
   // Per-card actions on empty state. Names the thing that happens.
-  aboutAction: { id: 'sectioned_profile.me.about_action', defaultMessage: 'Add a bio' },
-  interestsAction: { id: 'sectioned_profile.me.interests_action', defaultMessage: 'Add interests' },
-  exploringAction: { id: 'sectioned_profile.me.exploring_action', defaultMessage: 'Add a spark' },
-  atGlanceAction: { id: 'sectioned_profile.me.at_a_glance_action', defaultMessage: 'Set up your summary' },
-  atGlanceTilePosts: { id: 'sectioned_profile.me.at_a_glance.posts', defaultMessage: 'Posts' },
-  atGlanceTileFollowing: { id: 'sectioned_profile.me.at_a_glance.following', defaultMessage: 'Following' },
-  atGlanceTileFollowers: { id: 'sectioned_profile.me.at_a_glance.followers', defaultMessage: 'Followers' },
-  atGlanceTileSince: { id: 'sectioned_profile.me.at_a_glance.since', defaultMessage: 'Since' },
-  highlightsAction: { id: 'sectioned_profile.me.highlights_action', defaultMessage: 'Pin a highlight' },
-  personalityAction: { id: 'sectioned_profile.me.personality_action', defaultMessage: 'Add a few words' },
-  driveAction: { id: 'sectioned_profile.me.drive_action', defaultMessage: 'Write your line' },
-  rotationAction: { id: 'sectioned_profile.me.rotation_action', defaultMessage: 'Add what you are on' },
-  momentsAction: { id: 'sectioned_profile.me.moments_action', defaultMessage: 'Add photos' },
-  valuesAction: { id: 'sectioned_profile.me.values_action', defaultMessage: 'Add values' },
-  noteAction: { id: 'sectioned_profile.me.note_action', defaultMessage: 'Write a note' },
+  aboutAction: {
+    id: 'sectioned_profile.me.about_action',
+    defaultMessage: 'Add a bio',
+  },
+  interestsAction: {
+    id: 'sectioned_profile.me.interests_action',
+    defaultMessage: 'Add interests',
+  },
+  exploringAction: {
+    id: 'sectioned_profile.me.exploring_action',
+    defaultMessage: 'Add a spark',
+  },
+  atGlanceAction: {
+    id: 'sectioned_profile.me.at_a_glance_action',
+    defaultMessage: 'Set up your summary',
+  },
+  atGlanceTilePosts: {
+    id: 'sectioned_profile.me.at_a_glance.posts',
+    defaultMessage: 'Posts',
+  },
+  atGlanceTileFollowing: {
+    id: 'sectioned_profile.me.at_a_glance.following',
+    defaultMessage: 'Following',
+  },
+  atGlanceTileFollowers: {
+    id: 'sectioned_profile.me.at_a_glance.followers',
+    defaultMessage: 'Followers',
+  },
+  atGlanceTileSince: {
+    id: 'sectioned_profile.me.at_a_glance.since',
+    defaultMessage: 'Since',
+  },
+  highlightsAction: {
+    id: 'sectioned_profile.me.highlights_action',
+    defaultMessage: 'Pin a highlight',
+  },
+  personalityAction: {
+    id: 'sectioned_profile.me.personality_action',
+    defaultMessage: 'Add a few words',
+  },
+  driveAction: {
+    id: 'sectioned_profile.me.drive_action',
+    defaultMessage: 'Write your line',
+  },
+  rotationAction: {
+    id: 'sectioned_profile.me.rotation_action',
+    defaultMessage: 'Add what you are on',
+  },
+  momentsAction: {
+    id: 'sectioned_profile.me.moments_action',
+    defaultMessage: 'Add photos',
+  },
+  valuesAction: {
+    id: 'sectioned_profile.me.values_action',
+    defaultMessage: 'Add values',
+  },
+  noteAction: {
+    id: 'sectioned_profile.me.note_action',
+    defaultMessage: 'Write a note',
+  },
 });
 
 type TabKey = 'me' | 'work' | 'timeline' | 'friendship';
@@ -127,7 +256,9 @@ export const SectionedProfile = () => {
       // all — surface the error and stop.
       let accountRes: ApiAccountJSON;
       try {
-        accountRes = await apiRequestGet<ApiAccountJSON>('v1/accounts/lookup', { acct });
+        accountRes = await apiRequestGet<ApiAccountJSON>('v1/accounts/lookup', {
+          acct,
+        });
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
         return;
@@ -149,7 +280,9 @@ export const SectionedProfile = () => {
         // Log but don't setError — the rest of the surface can render.
         if (!cancelled) {
           // eslint-disable-next-line no-console
-          console.warn('SectionedProfile: sections fetch failed; rendering empty state');
+          console.warn(
+            'SectionedProfile: sections fetch failed; rendering empty state',
+          );
         }
       }
       if (cancelled) return;
@@ -187,7 +320,9 @@ export const SectionedProfile = () => {
           } catch {
             if (cancelled) return;
             setSections((prev) =>
-              prev.map((row) => (row.id === s.id ? { ...row, loading: false } : row)),
+              prev.map((row) =>
+                row.id === s.id ? { ...row, loading: false } : row,
+              ),
             );
           }
         }),
@@ -223,33 +358,70 @@ export const SectionedProfile = () => {
         <div className='sectioned-profile__body'>
           {error && (
             <p className='sectioned-profile__error'>
-              <FormattedMessage id='sectioned_profile.error' defaultMessage='Could not load profile.' />
-              {' '}
+              <FormattedMessage
+                id='sectioned_profile.error'
+                defaultMessage='Could not load profile.'
+              />{' '}
               {error}
             </p>
           )}
 
           {!error && !account && (
             <p className='sectioned-profile__loading'>
-              <FormattedMessage id='sectioned_profile.loading' defaultMessage='Loading…' />
+              <FormattedMessage
+                id='sectioned_profile.loading'
+                defaultMessage='Loading…'
+              />
             </p>
           )}
 
           {account && (
             <>
               <div className='sectioned-profile__tabs' role='tablist'>
-                <TabButton tab='me' activeTab={activeTab} onSelect={setTab} icon='◐'>
-                  <FormattedMessage id='sectioned_profile.tab.me' defaultMessage='Me' />
+                <TabButton
+                  tab='me'
+                  activeTab={activeTab}
+                  onSelect={setTab}
+                  icon='◐'
+                >
+                  <FormattedMessage
+                    id='sectioned_profile.tab.me'
+                    defaultMessage='Me'
+                  />
                 </TabButton>
-                <TabButton tab='work' activeTab={activeTab} onSelect={setTab} icon='▤'>
-                  <FormattedMessage id='sectioned_profile.tab.work' defaultMessage='My Work' />
+                <TabButton
+                  tab='work'
+                  activeTab={activeTab}
+                  onSelect={setTab}
+                  icon='▤'
+                >
+                  <FormattedMessage
+                    id='sectioned_profile.tab.work'
+                    defaultMessage='My Work'
+                  />
                 </TabButton>
-                <TabButton tab='timeline' activeTab={activeTab} onSelect={setTab} icon='≡'>
-                  <FormattedMessage id='sectioned_profile.tab.timeline' defaultMessage='Timeline' />
+                <TabButton
+                  tab='timeline'
+                  activeTab={activeTab}
+                  onSelect={setTab}
+                  icon='≡'
+                >
+                  <FormattedMessage
+                    id='sectioned_profile.tab.timeline'
+                    defaultMessage='Timeline'
+                  />
                 </TabButton>
                 {!isOwner && (
-                  <TabButton tab='friendship' activeTab={activeTab} onSelect={setTab} icon='♥'>
-                    <FormattedMessage id='sectioned_profile.tab.friendship' defaultMessage='Friendship' />
+                  <TabButton
+                    tab='friendship'
+                    activeTab={activeTab}
+                    onSelect={setTab}
+                    icon='♥'
+                  >
+                    <FormattedMessage
+                      id='sectioned_profile.tab.friendship'
+                      defaultMessage='Friendship'
+                    />
                   </TabButton>
                 )}
               </div>
@@ -366,7 +538,8 @@ export const identityFieldNames = (): string[] => {
   const all: string[] = [];
   for (const col of [ME_COL_1, ME_COL_2, ME_COL_3]) {
     for (const card of col) {
-      if (card.fieldNames) all.push(...card.fieldNames.map((n) => n.toLowerCase()));
+      if (card.fieldNames)
+        all.push(...card.fieldNames.map((n) => n.toLowerCase()));
     }
   }
   return all;
@@ -379,31 +552,90 @@ export const identityFieldNames = (): string[] => {
 const EDIT_PROFILE_HREF = '/settings/profile';
 
 const ME_COL_1: MeCardCopy[] = [
-  { title: messages.aboutTitle, desc: messages.aboutDesc, action: messages.aboutAction, href: EDIT_PROFILE_HREF,
-    fieldNames: ['about', 'about me', 'bio'] },
-  { title: messages.interestsTitle, desc: messages.interestsDesc, action: messages.interestsAction, href: EDIT_PROFILE_HREF,
-    fieldNames: ['interests'] },
-  { title: messages.exploringTitle, desc: messages.exploringDesc, action: messages.exploringAction, href: EDIT_PROFILE_HREF,
-    fieldNames: ['exploring', 'currently exploring'] },
+  {
+    title: messages.aboutTitle,
+    desc: messages.aboutDesc,
+    action: messages.aboutAction,
+    href: EDIT_PROFILE_HREF,
+    fieldNames: ['about', 'about me', 'bio'],
+  },
+  {
+    title: messages.interestsTitle,
+    desc: messages.interestsDesc,
+    action: messages.interestsAction,
+    href: EDIT_PROFILE_HREF,
+    fieldNames: ['interests'],
+  },
+  {
+    title: messages.exploringTitle,
+    desc: messages.exploringDesc,
+    action: messages.exploringAction,
+    href: EDIT_PROFILE_HREF,
+    fieldNames: ['exploring', 'currently exploring'],
+  },
 ];
 
 const ME_COL_2: MeCardCopy[] = [
-  { title: messages.atGlanceTitle, desc: messages.atGlanceDesc, action: messages.atGlanceAction, href: EDIT_PROFILE_HREF, kind: 'at-a-glance' },
-  { title: messages.highlightsTitle, desc: messages.highlightsDesc, action: messages.highlightsAction, href: EDIT_PROFILE_HREF, kind: 'highlights' },
-  { title: messages.personalityTitle, desc: messages.personalityDesc, action: messages.personalityAction, href: EDIT_PROFILE_HREF,
-    fieldNames: ['personality'] },
-  { title: messages.driveTitle, desc: messages.driveDesc, action: messages.driveAction, href: EDIT_PROFILE_HREF,
-    fieldNames: ['drive', 'motto', 'what drives me'] },
-  { title: messages.rotationTitle, desc: messages.rotationDesc, action: messages.rotationAction, href: EDIT_PROFILE_HREF,
-    fieldNames: ['rotation', 'in rotation'] },
+  {
+    title: messages.atGlanceTitle,
+    desc: messages.atGlanceDesc,
+    action: messages.atGlanceAction,
+    href: EDIT_PROFILE_HREF,
+    kind: 'at-a-glance',
+  },
+  {
+    title: messages.highlightsTitle,
+    desc: messages.highlightsDesc,
+    action: messages.highlightsAction,
+    href: EDIT_PROFILE_HREF,
+    kind: 'highlights',
+  },
+  {
+    title: messages.personalityTitle,
+    desc: messages.personalityDesc,
+    action: messages.personalityAction,
+    href: EDIT_PROFILE_HREF,
+    fieldNames: ['personality'],
+  },
+  {
+    title: messages.driveTitle,
+    desc: messages.driveDesc,
+    action: messages.driveAction,
+    href: EDIT_PROFILE_HREF,
+    fieldNames: ['drive', 'motto', 'what drives me'],
+  },
+  {
+    title: messages.rotationTitle,
+    desc: messages.rotationDesc,
+    action: messages.rotationAction,
+    href: EDIT_PROFILE_HREF,
+    fieldNames: ['rotation', 'in rotation'],
+  },
 ];
 
 const ME_COL_3: MeCardCopy[] = [
-  { title: messages.momentsTitle, desc: messages.momentsDesc, action: messages.momentsAction, href: EDIT_PROFILE_HREF, kind: 'moments' },
-  { title: messages.valuesTitle, desc: messages.valuesDesc, action: messages.valuesAction, href: EDIT_PROFILE_HREF,
-    fieldNames: ['values'] },
-  { title: messages.noteTitle, desc: messages.noteDesc, action: messages.noteAction, href: EDIT_PROFILE_HREF, note: true,
-    fieldNames: ['note'] },
+  {
+    title: messages.momentsTitle,
+    desc: messages.momentsDesc,
+    action: messages.momentsAction,
+    href: EDIT_PROFILE_HREF,
+    kind: 'moments',
+  },
+  {
+    title: messages.valuesTitle,
+    desc: messages.valuesDesc,
+    action: messages.valuesAction,
+    href: EDIT_PROFILE_HREF,
+    fieldNames: ['values'],
+  },
+  {
+    title: messages.noteTitle,
+    desc: messages.noteDesc,
+    action: messages.noteAction,
+    href: EDIT_PROFILE_HREF,
+    note: true,
+    fieldNames: ['note'],
+  },
 ];
 
 interface OpenToCopy {
@@ -413,10 +645,26 @@ interface OpenToCopy {
 }
 
 const OPEN_TO: OpenToCopy[] = [
-  { icon: '◌', title: messages.openConversationsTitle, sub: messages.openConversationsDesc },
-  { icon: '❋', title: messages.openCollabsTitle, sub: messages.openCollabsDesc },
-  { icon: '◈', title: messages.openGovernanceTitle, sub: messages.openGovernanceDesc },
-  { icon: '♥', title: messages.openVouchingTitle, sub: messages.openVouchingDesc },
+  {
+    icon: '◌',
+    title: messages.openConversationsTitle,
+    sub: messages.openConversationsDesc,
+  },
+  {
+    icon: '❋',
+    title: messages.openCollabsTitle,
+    sub: messages.openCollabsDesc,
+  },
+  {
+    icon: '◈',
+    title: messages.openGovernanceTitle,
+    sub: messages.openGovernanceDesc,
+  },
+  {
+    icon: '♥',
+    title: messages.openVouchingTitle,
+    sub: messages.openVouchingDesc,
+  },
 ];
 
 const MeCard: React.FC<{
@@ -442,10 +690,14 @@ const MeCard: React.FC<{
   // value as the card body. Otherwise fall through to the empty state.
   if (card.fieldNames) {
     const wanted = card.fieldNames.map((n) => n.toLowerCase());
-    const field = account.fields.find((f) => wanted.includes(f.name.trim().toLowerCase()));
+    const field = account.fields.find((f) =>
+      wanted.includes(f.name.trim().toLowerCase()),
+    );
     if (field) {
       return (
-        <div className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}>
+        <div
+          className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}
+        >
           <h3>{intl.formatMessage(card.title)}</h3>
           <div
             className='sectioned-profile__card-body'
@@ -458,9 +710,13 @@ const MeCard: React.FC<{
   }
 
   return (
-    <div className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}>
+    <div
+      className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}
+    >
       <h3>{intl.formatMessage(card.title)}</h3>
-      <p className='sectioned-profile__card-desc'>{intl.formatMessage(card.desc)}</p>
+      <p className='sectioned-profile__card-desc'>
+        {intl.formatMessage(card.desc)}
+      </p>
       {isOwner && (
         <a href={card.href} className='sectioned-profile__card-action'>
           {intl.formatMessage(card.action)}
@@ -514,10 +770,10 @@ const HighlightsCard: React.FC<{
 
   useEffect(() => {
     let cancelled = false;
-    void apiRequestGet<ApiStatusJSON[]>(
-      `v1/accounts/${account.id}/statuses`,
-      { pinned: true, limit: 3 },
-    )
+    void apiRequestGet<ApiStatusJSON[]>(`v1/accounts/${account.id}/statuses`, {
+      pinned: true,
+      limit: 3,
+    })
       .then((rows) => {
         if (!cancelled) setPinned(rows);
       })
@@ -571,7 +827,10 @@ const HighlightTile: React.FC<{ status: ApiStatusJSON }> = ({ status }) => {
   const media = status.media_attachments[0];
   const excerpt =
     status.spoiler_text ||
-    (status.content ?? '').replace(/<[^>]+>/g, '').trim().slice(0, 60);
+    (status.content ?? '')
+      .replace(/<[^>]+>/g, '')
+      .trim()
+      .slice(0, 60);
   // Mastodon's JSON API uses `favourites_count` (British spelling);
   // the local TS type uses `favorites_count`. Handle both to be safe.
   const raw = status as unknown as {
@@ -584,7 +843,9 @@ const HighlightTile: React.FC<{ status: ApiStatusJSON }> = ({ status }) => {
     <a href={status.url} className='sectioned-profile__highlight'>
       <div
         className='sectioned-profile__highlight-thumb'
-        style={media ? { backgroundImage: `url(${media.preview_url})` } : undefined}
+        style={
+          media ? { backgroundImage: `url(${media.preview_url})` } : undefined
+        }
       />
       <div className='sectioned-profile__highlight-cap'>
         <b>{excerpt || '…'}</b>
@@ -606,10 +867,11 @@ const MomentsCard: React.FC<{
 
   useEffect(() => {
     let cancelled = false;
-    void apiRequestGet<ApiStatusJSON[]>(
-      `v1/accounts/${account.id}/statuses`,
-      { only_media: true, limit: 9, exclude_reblogs: true },
-    )
+    void apiRequestGet<ApiStatusJSON[]>(`v1/accounts/${account.id}/statuses`, {
+      only_media: true,
+      limit: 9,
+      exclude_reblogs: true,
+    })
       .then((rows) => {
         if (!cancelled) setMoments(rows);
       })
@@ -632,7 +894,11 @@ const MomentsCard: React.FC<{
   // Flatten all media across statuses into a single thumb list (up to 9).
   const thumbs = moments
     .flatMap((s) =>
-      s.media_attachments.map((m) => ({ mediaId: m.id, statusUrl: s.url, previewUrl: m.preview_url })),
+      s.media_attachments.map((m) => ({
+        mediaId: m.id,
+        statusUrl: s.url,
+        previewUrl: m.preview_url,
+      })),
     )
     .slice(0, 9);
 
@@ -670,29 +936,57 @@ const MomentsCard: React.FC<{
   );
 };
 
-const MePanel: React.FC<{ isOwner: boolean; account: ApiAccountJSON }> = ({ isOwner, account }) => {
+const MePanel: React.FC<{ isOwner: boolean; account: ApiAccountJSON }> = ({
+  isOwner,
+  account,
+}) => {
   const intl = useIntl();
   return (
     <>
       <div className='sectioned-profile__me-grid'>
         <div className='sectioned-profile__me-col'>
-          {ME_COL_1.map((c) => <MeCard key={c.title.id} card={c} isOwner={isOwner} account={account} />)}
+          {ME_COL_1.map((c) => (
+            <MeCard
+              key={c.title.id}
+              card={c}
+              isOwner={isOwner}
+              account={account}
+            />
+          ))}
         </div>
         <div className='sectioned-profile__me-col'>
-          {ME_COL_2.map((c) => <MeCard key={c.title.id} card={c} isOwner={isOwner} account={account} />)}
+          {ME_COL_2.map((c) => (
+            <MeCard
+              key={c.title.id}
+              card={c}
+              isOwner={isOwner}
+              account={account}
+            />
+          ))}
         </div>
         <div className='sectioned-profile__me-col'>
-          {ME_COL_3.map((c) => <MeCard key={c.title.id} card={c} isOwner={isOwner} account={account} />)}
+          {ME_COL_3.map((c) => (
+            <MeCard
+              key={c.title.id}
+              card={c}
+              isOwner={isOwner}
+              account={account}
+            />
+          ))}
         </div>
       </div>
 
       <div className='sectioned-profile__open-to'>
         {OPEN_TO.map((o) => (
           <div key={o.title.id} className='sectioned-profile__open-to-item'>
-            <span className='sectioned-profile__open-to-icon' aria-hidden>{o.icon}</span>
+            <span className='sectioned-profile__open-to-icon' aria-hidden>
+              {o.icon}
+            </span>
             <div>
               <b>{intl.formatMessage(o.title)}</b>
-              <span className='sectioned-profile__muted'>{intl.formatMessage(o.sub)}</span>
+              <span className='sectioned-profile__muted'>
+                {intl.formatMessage(o.sub)}
+              </span>
             </div>
           </div>
         ))}
@@ -738,7 +1032,10 @@ const WorkPanel: React.FC<{
       <div className='sectioned-profile__work-head'>
         <div>
           <h3>
-            <FormattedMessage id='sectioned_profile.work.title' defaultMessage='Collected work' />
+            <FormattedMessage
+              id='sectioned_profile.work.title'
+              defaultMessage='Collected work'
+            />
           </h3>
           <p>
             <FormattedMessage
@@ -752,7 +1049,10 @@ const WorkPanel: React.FC<{
             className='sectioned-profile__work-new'
             href='/settings/profile_sections'
           >
-            <FormattedMessage id='sectioned_profile.work.new_card' defaultMessage='＋ New card' />
+            <FormattedMessage
+              id='sectioned_profile.work.new_card'
+              defaultMessage='＋ New card'
+            />
           </a>
         )}
       </div>
@@ -840,7 +1140,10 @@ const WorkDrawer: React.FC<{
               <FormattedMessage
                 id='sectioned_profile.work.drawer_sub'
                 defaultMessage='{count, plural, one {# post} other {# posts}} showcased · {kind}'
-                values={{ count: section.statusIds.size, kind: section.section_type }}
+                values={{
+                  count: section.statusIds.size,
+                  kind: section.section_type,
+                }}
               />
             </div>
             {section.statusIds.size === 0 ? (
@@ -871,11 +1174,26 @@ const WorkDrawer: React.FC<{
 // intent from docs/prototypes/kronk-profile-redesign.html — the shape
 // of the feature must be legible before any content exists in it.
 const PLACEHOLDER_KATEGORIES: string[] = [
-  'Poetry', 'Essays', 'Photography', 'Field notes',
-  'Reflections', 'Quotes', 'Sketches', 'Letters',
-  'Reviews', 'Dialogues', 'Questions', 'Threads',
-  'Governance', 'Proposals', 'Projects', 'Recipes',
-  'Travel', 'Trades', 'Archive', 'Collections',
+  'Poetry',
+  'Essays',
+  'Photography',
+  'Field notes',
+  'Reflections',
+  'Quotes',
+  'Sketches',
+  'Letters',
+  'Reviews',
+  'Dialogues',
+  'Questions',
+  'Threads',
+  'Governance',
+  'Proposals',
+  'Projects',
+  'Recipes',
+  'Travel',
+  'Trades',
+  'Archive',
+  'Collections',
 ];
 
 const WorkEmptyState: React.FC<{ isOwner: boolean }> = ({ isOwner }) => (
@@ -885,7 +1203,9 @@ const WorkEmptyState: React.FC<{ isOwner: boolean }> = ({ isOwner }) => (
         className='sectioned-profile__work-placeholder sectioned-profile__work-placeholder--create'
         href='/settings/profile_sections'
       >
-        <span className='sectioned-profile__work-placeholder-plus' aria-hidden>＋</span>
+        <span className='sectioned-profile__work-placeholder-plus' aria-hidden>
+          ＋
+        </span>
         <span className='sectioned-profile__work-placeholder-title'>
           <FormattedMessage
             id='sectioned_profile.work.create_first'
@@ -1092,8 +1412,15 @@ const FriendshipPanel: React.FC = () => (
     </div>
 
     <div className='sectioned-profile__fr-actions'>
-      <button type='button' className='sectioned-profile__btn sectioned-profile__btn--primary' disabled>
-        <FormattedMessage id='sectioned_profile.friendship.message' defaultMessage='Message' />
+      <button
+        type='button'
+        className='sectioned-profile__btn sectioned-profile__btn--primary'
+        disabled
+      >
+        <FormattedMessage
+          id='sectioned_profile.friendship.message'
+          defaultMessage='Message'
+        />
       </button>
       <button type='button' className='sectioned-profile__btn' disabled>
         <FormattedMessage

@@ -31,11 +31,16 @@ export const KornerSubBar = () => {
   return (
     <div className='korner-sub-bar' aria-label='Korner breadcrumb'>
       <Link to='/hub' className='korner-sub-bar__back'>
-        <ArrowBackIcon className='korner-sub-bar__back-icon' aria-hidden='true' />
+        <ArrowBackIcon
+          className='korner-sub-bar__back-icon'
+          aria-hidden='true'
+        />
         <span className='korner-sub-bar__back-label'>Hub</span>
       </Link>
 
-      <span className='korner-sub-bar__divider' aria-hidden='true'>/</span>
+      <span className='korner-sub-bar__divider' aria-hidden='true'>
+        /
+      </span>
 
       <span className='korner-sub-bar__crumb'>
         <span className='korner-sub-bar__glyph' aria-hidden='true'>

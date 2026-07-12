@@ -2,67 +2,67 @@
 # 2.0.0 gains a scheduled kosmic_updates resource that projects into
 # the feed for users tuned in to InFlow (Tal's 2026-07-10 decision).
 
-slug:            in-flow
-name:            In Flow
-icon:            diversity_2
-render_target:   native
-version:         2.0.0
+slug: in-flow
+name: In Flow
+icon: diversity_2
+render_target: native
+version: 2.0.0
 
 permissions:
   - read:statuses
 
 resources:
-  - name:    observations         # namespace :in_flow in routes/api.rb → resource :observation
+  - name: observations # namespace :in_flow in routes/api.rb → resource :observation
     primary: true
-  - name:    kosmic_updates       # new in 2.0.0 — daily row via Scheduler::KosmicDailyScheduler
+  - name: kosmic_updates # new in 2.0.0 — daily row via Scheduler::KosmicDailyScheduler
 
 storage:
-  db_namespace:  kosmic_          # tables: kosmic_updates
-  media_prefix:  spaces/in-flow/
-  redis_prefix:  # not-implemented
+  db_namespace: kosmic_ # tables: kosmic_updates
+  media_prefix: spaces/in-flow/
+  redis_prefix: # not-implemented
 
 visibility_scopes: []
 
-steward_role:    moderator
+steward_role: moderator
 
 emits:
   - in_flow.kosmic_update.published
 listens: []
 
 feed_projection:
-  card:               kosmic_daily_card
-  title_from:         on_date       # rendered as the date badge
-  summary_from:       body
-  status_association: kosmic_update  # framework: Status.has_one :kosmic_update via status_id (§5.5)
-  links_to:           /hub/in-flow/kosmic/<on_date>
+  card: kosmic_daily_card
+  title_from: on_date # rendered as the date badge
+  summary_from: body
+  status_association: kosmic_update # framework: Status.has_one :kosmic_update via status_id (§5.5)
+  links_to: /hub/in-flow/kosmic/<on_date>
   default_visibility: public
 
 notifications:
   types:
-    - name:         inflow_daily_posted
+    - name: inflow_daily_posted
       subject_type: kosmic_update
-      default_push: false           # off by default — daily cadence is loud enough
-      aggregation:  none
-      interactive:  false            # notice
+      default_push: false # off by default — daily cadence is loud enough
+      aggregation: none
+      interactive: false # notice
 
 settings:
-  - name:      daily_delivery_time
-    kind:      time
-    default:   '00:05'               # UTC; scheduler runs at 0:05 daily
-    scope:     user                  # advisory — presenter for the user, not enforced by scheduler
-  - name:      strands_of_interest
-    kind:      multi_enum
-    options:   [light, dark, soil, season]
-    default:   [light, dark, soil, season]
-    scope:     user
+  - name: daily_delivery_time
+    kind: time
+    default: '00:05' # UTC; scheduler runs at 0:05 daily
+    scope: user # advisory — presenter for the user, not enforced by scheduler
+  - name: strands_of_interest
+    kind: multi_enum
+    options: [light, dark, soil, season]
+    default: [light, dark, soil, season]
+    scope: user
 
 hub_teaser:
-  static:  "Kosmic weather, once a day."
+  static: 'Kosmic weather, once a day.'
 
 launch:
-  blurb:  "In Flow — Kronk's celestial navigation + a daily Kosmic dispatch."
-  cta:    "Tap in"
+  blurb: "In Flow — Kronk's celestial navigation + a daily Kosmic dispatch."
+  cta: 'Tap in'
 
-feature_flag:    # not-implemented — In Flow is unconditionally mounted on main
-federates:       false
-enforced:        true
+feature_flag: # not-implemented — In Flow is unconditionally mounted on main
+federates: false
+enforced: true

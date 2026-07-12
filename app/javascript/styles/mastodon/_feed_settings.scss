@@ -25,7 +25,11 @@
 
     &:hover {
       color: var(--kronk-purple-accent);
-      background: color-mix(in oklab, var(--kronk-purple-accent) 10%, transparent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 10%,
+        transparent
+      );
     }
   }
 
@@ -47,7 +51,8 @@
     border-radius: var(--radius-medium);
     background: var(--kronk-purple-accent);
     color: var(--surface-primary);
-    box-shadow: 0 4px 12px -4px color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
+    box-shadow: 0 4px 12px -4px
+      color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
 
     svg {
       width: 1.65rem;
@@ -137,8 +142,13 @@
 
     &--active {
       border-color: var(--kronk-purple-accent);
-      background: color-mix(in oklab, var(--kronk-purple-accent) 12%, var(--surface-primary));
-      box-shadow: 0 2px 8px -4px color-mix(in oklab, var(--kronk-purple-accent) 50%, transparent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        var(--surface-primary)
+      );
+      box-shadow: 0 2px 8px -4px
+        color-mix(in oklab, var(--kronk-purple-accent) 50%, transparent);
       cursor: default;
     }
   }
@@ -191,7 +201,11 @@
     width: 2.25rem;
     height: 2.25rem;
     border-radius: var(--radius-medium);
-    background: color-mix(in oklab, var(--kronk-purple-accent) 20%, transparent);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 20%,
+      transparent
+    );
     color: var(--kronk-purple-accent);
     flex: 0 0 auto;
 
