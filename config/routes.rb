@@ -177,7 +177,11 @@ Rails.application.routes.draw do
   end
 
   get '/@:username_with_domain/(*any)', to: 'home#index', constraints: { username_with_domain: %r{([^/])+?} }, as: :account_with_domain, format: false
-  get '/settings', to: redirect('/settings/profile')
+  # /settings is the SPA settings hub (settings rebuild §4.1) — a launchpad
+  # for the personal "You" sections and every korner's settings. The classic
+  # Devise/Doorkeeper settings pages below (draw :settings) still serve their
+  # own sub-paths (e.g. /settings/profile, /settings/preferences/*).
+  get '/settings', to: 'home#index'
   # SPA-served settings sub-pages that don't live in the Devise/Doorkeeper
   # settings module. Add here as new ones ship.
   get '/settings/profile_sections', to: 'home#index'

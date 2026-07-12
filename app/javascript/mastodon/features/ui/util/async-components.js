@@ -352,3 +352,7 @@ export function StyleGuide () {
   return import("../../styleguide");
 }
 
+export function SettingsHub () {
+  return import("../../settings_hub");
+}
+

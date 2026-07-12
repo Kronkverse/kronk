@@ -1,0 +1,161 @@
+// Settings hub — the launchpad at /settings (settings rebuild §4.1).
+// Styled entirely through semantic tokens so it inherits the design system;
+// see the aesthetic spec §6. No --space-* scale exists yet, so spacing is
+// literal here and swaps to tokens when that scale lands.
+
+.settings-hub {
+  padding: 20px;
+  max-width: 680px;
+  margin: 0 auto;
+
+  &__hero {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  &__hero-glyph {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent);
+
+    svg {
+      width: 26px;
+      height: 26px;
+    }
+  }
+
+  &__hero-title {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+  }
+
+  &__hero-intro {
+    margin: 2px 0 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  &__group {
+    margin-bottom: 28px;
+  }
+
+  &__group-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 10px;
+  }
+
+  &__group-hint {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 12px;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 15px;
+    border-radius: var(--radius-large);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
+    text-decoration: none;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+      transform: translateX(2px);
+    }
+
+    &--soon {
+      cursor: default;
+
+      &:hover,
+      &:focus-visible {
+        border-color: var(--border-default);
+        transform: none;
+      }
+
+      .settings-hub__row-glyph,
+      .settings-hub__row-name,
+      .settings-hub__row-desc {
+        opacity: 0.55;
+      }
+    }
+  }
+
+  &__row-glyph {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    color: var(--accent);
+
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  &__row-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  &__row-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  &__row-desc {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+  }
+
+  &__row-chevron {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    color: var(--text-muted);
+  }
+
+  &__row-soon {
+    flex: 0 0 auto;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    padding: 2px 9px;
+  }
+}
