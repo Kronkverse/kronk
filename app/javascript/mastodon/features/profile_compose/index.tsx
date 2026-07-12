@@ -37,6 +37,15 @@ const messages = defineMessages({
   },
   done: { id: 'profile_compose.done', defaultMessage: 'Done' },
 
+  modeMe: { id: 'profile_compose.mode.me', defaultMessage: 'Me' },
+  modeWork: { id: 'profile_compose.mode.work', defaultMessage: 'My Work' },
+  modeHeader: { id: 'profile_compose.mode.header', defaultMessage: 'Header' },
+  headerStub: {
+    id: 'profile_compose.header_stub',
+    defaultMessage:
+      'Cover image, avatar and display name — editing lands in the next step.',
+  },
+
   paletteHeading: {
     id: 'profile_compose.palette.heading',
     defaultMessage: 'Cards',
@@ -207,16 +216,21 @@ interface PaletteEntry {
   label: { id: string; defaultMessage: string };
 }
 
+type Mode = 'me' | 'work' | 'header';
+
 interface CardGroup {
   title: { id: string; defaultMessage: string };
+  mode: Exclude<Mode, 'header'>;
   entries: PaletteEntry[];
 }
 
 // Bounded set matching ProfileCard::CARD_TYPES. Any addition here must
-// be mirrored server-side; unknown card_types 422 on write.
+// be mirrored server-side; unknown card_types 422 on write. `mode` sorts
+// each group into the composer's Me / My Work tabs.
 const CARD_GROUPS: CardGroup[] = [
   {
     title: messages.groupWho,
+    mode: 'me',
     entries: [
       { cardType: 'about', icon: '◔', label: messages.cardAbout },
       { cardType: 'interests', icon: '❋', label: messages.cardInterests },
@@ -229,6 +243,7 @@ const CARD_GROUPS: CardGroup[] = [
   },
   {
     title: messages.groupMake,
+    mode: 'work',
     entries: [
       { cardType: 'moments', icon: '▦', label: messages.cardMoments },
       { cardType: 'highlights', icon: '◎', label: messages.cardHighlights },
@@ -237,6 +252,7 @@ const CARD_GROUPS: CardGroup[] = [
   },
   {
     title: messages.groupNow,
+    mode: 'me',
     entries: [
       { cardType: 'rotation', icon: '♪', label: messages.cardRotation },
       { cardType: 'open_to', icon: '◌', label: messages.cardOpenTo },
@@ -245,6 +261,7 @@ const CARD_GROUPS: CardGroup[] = [
   },
   {
     title: messages.groupVerified,
+    mode: 'me',
     entries: [
       {
         cardType: 'pod_credentials',
@@ -260,6 +277,22 @@ const CARD_META: Record<string, PaletteEntry> = Object.fromEntries(
     group.entries.map((entry) => [entry.cardType, entry] as const),
   ),
 ) as Record<string, PaletteEntry>;
+
+// card_type -> the mode it belongs to, for filtering the canvas.
+const CARD_MODE: Record<string, Mode> = Object.fromEntries(
+  CARD_GROUPS.flatMap((group) =>
+    group.entries.map((entry) => [entry.cardType, group.mode] as const),
+  ),
+) as Record<string, Mode>;
+
+const MODE_TABS: {
+  key: Mode;
+  label: { id: string; defaultMessage: string };
+}[] = [
+  { key: 'me', label: messages.modeMe },
+  { key: 'work', label: messages.modeWork },
+  { key: 'header', label: messages.modeHeader },
+];
 
 interface AxiosLike {
   response?: { status?: number };
@@ -285,6 +318,7 @@ export const ProfileCompose = () => {
   const [featureAvailable, setFeatureAvailable] = useState(true);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [mode, setMode] = useState<Mode>('me');
   const bodyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -390,6 +424,10 @@ export const ProfileCompose = () => {
   const usedTypes = new Set((cards ?? []).map((c) => c.card_type));
   const placed = (cards ?? []).slice().sort((a, b) => a.position - b.position);
   const selectedCard = placed.find((c) => c.card_type === selectedType) ?? null;
+  const visibleGroups = CARD_GROUPS.filter((group) => group.mode === mode);
+  const modeCards = placed.filter(
+    (card) => (CARD_MODE[card.card_type] ?? 'me') === mode,
+  );
 
   // Owner gate. If the URL acct doesn't match the signed-in user, redirect.
   if (acct && myAcct && acct !== myAcct) {
@@ -454,36 +492,53 @@ export const ProfileCompose = () => {
               )}
             </p>
 
-            {CARD_GROUPS.map((group) => (
-              <div key={group.title.id}>
-                <div className='kcompose__group'>
-                  {intl.formatMessage(group.title)}
+            {mode === 'header' ? (
+              <p className='kcompose__pane-sub'>
+                <FormattedMessage {...messages.headerStub} />
+              </p>
+            ) : (
+              visibleGroups.map((group) => (
+                <div key={group.title.id}>
+                  <div className='kcompose__group'>
+                    {intl.formatMessage(group.title)}
+                  </div>
+                  {group.entries.map((entry) => (
+                    <PaletteCard
+                      key={entry.cardType}
+                      entry={entry}
+                      used={usedTypes.has(entry.cardType)}
+                      disabled={!featureAvailable}
+                      onAdd={handleAdd}
+                      onRemove={handleRemove}
+                    />
+                  ))}
                 </div>
-                {group.entries.map((entry) => (
-                  <PaletteCard
-                    key={entry.cardType}
-                    entry={entry}
-                    used={usedTypes.has(entry.cardType)}
-                    disabled={!featureAvailable}
-                    onAdd={handleAdd}
-                    onRemove={handleRemove}
-                  />
-                ))}
-              </div>
-            ))}
+              ))
+            )}
           </aside>
 
           <main className='kcompose__pane kcompose__pane--center'>
-            <p className='kcompose__pane-h'>
-              <FormattedMessage {...messages.canvasHeading} />
-            </p>
-            {placed.length === 0 ? (
+            <nav className='kcompose__modes'>
+              {MODE_TABS.map((tab) => (
+                <ModeTab
+                  key={tab.key}
+                  tab={tab}
+                  active={mode === tab.key}
+                  onSelect={setMode}
+                />
+              ))}
+            </nav>
+            {mode === 'header' ? (
+              <p className='kcompose__pane-sub'>
+                <FormattedMessage {...messages.headerStub} />
+              </p>
+            ) : modeCards.length === 0 ? (
               <p className='kcompose__pane-sub'>
                 <FormattedMessage {...messages.canvasEmpty} />
               </p>
             ) : (
               <div className='kcompose__canvas'>
-                {placed.map((card) => (
+                {modeCards.map((card) => (
                   <CanvasCard
                     key={card.card_type}
                     card={card}
@@ -516,6 +571,28 @@ export const ProfileCompose = () => {
         </div>
       </div>
     </Column>
+  );
+};
+
+const ModeTab: React.FC<{
+  tab: { key: Mode; label: { id: string; defaultMessage: string } };
+  active: boolean;
+  onSelect: (mode: Mode) => void;
+}> = ({ tab, active, onSelect }) => {
+  const intl = useIntl();
+  const handleClick = useCallback(() => {
+    onSelect(tab.key);
+  }, [onSelect, tab.key]);
+
+  return (
+    <button
+      type='button'
+      className={`kcompose__mode${active ? ' kcompose__mode--on' : ''}`}
+      onClick={handleClick}
+      aria-pressed={active}
+    >
+      {intl.formatMessage(tab.label)}
+    </button>
   );
 };
 
