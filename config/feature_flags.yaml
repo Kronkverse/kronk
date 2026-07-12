@@ -10,7 +10,7 @@
 # See lib/kronk/feature_flags.rb and docs/kronk_korner_spec.md §10.
 
 default:
-  # Kronk 2.0 profile composer at /hub/profile/compose. Gates the
+  # Kronk 2.0 profile composer at /@:acct/edit. Gates the
   # profile_cards API endpoints + the composer route. Off until the
   # composer UI is ready end-to-end.
   profile_composer: false

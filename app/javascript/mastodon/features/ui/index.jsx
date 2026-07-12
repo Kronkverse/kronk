@@ -256,7 +256,6 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/hub/groups/:id" component={GroupDetail} content={children} />}
             {signedIn && <WrappedRoute path="/hub/groups" component={Groups} content={children} />}
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
-            {signedIn && <WrappedRoute path='/hub/profile/compose' exact component={ProfileCompose} content={children} />}
             {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
             <WrappedRoute path='/hub/moments' component={MomentsStub} content={children} />
@@ -277,6 +276,7 @@ class SwitchingColumnsArea extends PureComponent {
                 remains available at /@:acct/posts for people who prefer
                 the flat feed. */}
             <WrappedRoute path={['/@:acct', '/accounts/:id']} exact component={SectionedProfile} content={children} />
+            {signedIn && <WrappedRoute path='/@:acct/edit' exact component={ProfileCompose} content={children} />}
             <WrappedRoute path={['/@:acct/posts', '/accounts/:id/posts']} component={AccountTimeline} content={children} />
             <WrappedRoute path={['/@:acct/featured', '/accounts/:id/featured']} component={AccountFeatured} content={children} />
             <WrappedRoute path='/@:acct/tagged/:tagged?' exact component={AccountTimeline} content={children} />

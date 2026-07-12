@@ -2,12 +2,17 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
+import { Redirect, useParams } from 'react-router-dom';
+
 import { Helmet } from 'react-helmet';
 
 import { apiRequestGet, apiRequestPut, apiRequestDelete } from 'mastodon/api';
 import Column from 'mastodon/components/column';
+import { me } from 'mastodon/initial_state';
+import { useAppSelector } from 'mastodon/store';
 
-// Profile Composer at /hub/profile/compose. Step 3 fills the left pane
+// Profile Composer at /@:acct/edit. Owner-only — visitors get bounced
+// back to /@:acct. Step 3 fills the left pane
 // with the card palette; steps 4/5 wire the canvas + inspector.
 
 const messages = defineMessages({
@@ -121,6 +126,16 @@ const isFeatureFlagOff = (e: unknown): boolean => {
 
 export const ProfileCompose = () => {
   const intl = useIntl();
+  const { acct } = useParams<{ acct?: string }>();
+
+  // Owner-only. Any viewer who lands on /@someone-else/edit falls back
+  // to their read-only profile. The route also mounts under signedIn
+  // guard in ui/index.jsx, so unsigned users never reach this branch.
+  const myAccount = useAppSelector((state) =>
+    me ? state.accounts.get(me) : undefined,
+  );
+  const myAcct = myAccount?.get('acct');
+
   const [cards, setCards] = useState<ProfileCardJSON[] | null>(null);
   const [featureAvailable, setFeatureAvailable] = useState(true);
 
@@ -168,6 +183,14 @@ export const ProfileCompose = () => {
 
   const usedTypes = new Set((cards ?? []).map((c) => c.card_type));
 
+  // Owner gate. If the URL acct doesn't match the signed-in user's
+  // acct, redirect to the read-only profile at /@:acct.
+  if (acct && myAcct && acct !== myAcct) {
+    return <Redirect to={`/@${acct}`} />;
+  }
+
+  const doneHref = myAcct ? `/@${myAcct}` : '/';
+
   return (
     <Column bindToDocument label={intl.formatMessage(messages.title)}>
       <Helmet>
@@ -193,7 +216,7 @@ export const ProfileCompose = () => {
             <button type='button' className='kcompose__btn' disabled>
               <FormattedMessage {...messages.preview} />
             </button>
-            <a href='/@me' className='kcompose__btn kcompose__btn--primary'>
+            <a href={doneHref} className='kcompose__btn kcompose__btn--primary'>
               <FormattedMessage {...messages.done} />
             </a>
           </div>
