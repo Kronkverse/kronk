@@ -87,6 +87,10 @@ settings:
     default:   90
     scope:     user
 
+compose:
+  label:  "New listing"
+  route:  "/hub/marketplace/new"
+
 hub_teaser:
   static:  "Creations, listings, services — traded person-to-person."
 

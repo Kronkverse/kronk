@@ -39,6 +39,10 @@ module Kronk
       :notifications,
       :feed_projection,
       :settings,
+      # Compose action (§K.10) — powers the Ӂ menu's Post button when
+      # the viewer is inside this korner. Shape: { 'label' => String,
+      # 'route' => String }. Optional; if absent the menu hides Post.
+      :compose,
       # Inter-korner (§6)
       :emits,
       :listens,
@@ -146,6 +150,7 @@ module Kronk
           notifications:   extract_notification_types(yaml),
           feed_projection: yaml['feed_projection'].is_a?(Hash) ? yaml['feed_projection'] : nil,
           settings:        Array(yaml['settings']),
+          compose:         extract_compose(yaml),
           emits:           Array(yaml['emits']),
           listens:         Array(yaml['listens']),
           hub_teaser:      yaml['hub_teaser'].is_a?(Hash) ? yaml['hub_teaser'] : nil,
@@ -173,6 +178,20 @@ module Kronk
           'maintainers'       => maintainers,
           'federates'         => yaml['federates']
         }.compact
+      end
+
+      # Compose action must be a Hash with String label + String route.
+      # Anything else (nil, wrong shape, missing field) resolves to nil so
+      # the Ӂ menu hides the Post item for this korner.
+      def extract_compose(yaml)
+        raw = yaml['compose']
+        return nil unless raw.is_a?(Hash)
+
+        label = raw['label'].to_s
+        route = raw['route'].to_s
+        return nil if label.empty? || route.empty?
+
+        { 'label' => label, 'route' => route }
       end
 
       # Notifications may arrive as either `notifications: [<type>, ...]`
