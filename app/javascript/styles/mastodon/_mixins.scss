@@ -46,3 +46,21 @@
     color: $inverted-text-color;
   }
 }
+
+// Kronk cover-glow — the signature layered purple radial-glow from the
+// profile cover, extracted for reuse on korner headers and other cover
+// surfaces. The bright glow layer is tokenised to --kronk-purple-bright;
+// the deeper glow + dark base are the profile's bespoke cover palette.
+// $radius sets the bottom-corner rounding.
+@mixin kronk-cover-glow($radius: 24px) {
+  border-radius: 0 0 $radius $radius;
+  background:
+    radial-gradient(
+      120% 140% at 82% 0%,
+      color-mix(in srgb, var(--kronk-purple-bright) 42%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(90% 120% at 10% 20%, rgb(86 58 204 / 40%), transparent 55%),
+    linear-gradient(160deg, #241a44, #0d0a1c 70%);
+  background-color: #0d0a1c; // opaque; stars must never show through
+}

@@ -11,6 +11,8 @@
 // Assumes it gets a full-width content area (no shell compensation). If
 // the shell squeezes width, the layout wraps, not collapses.
 
+@use 'mixins' as *;
+
 .kprofile {
   --k-canvas: var(--background-color, #0a0812);
   --k-surface: var(--surface-variant-background-color, #141020);
@@ -30,16 +32,7 @@
 
 .kprofile__cover {
   height: 210px;
-  border-radius: 0 0 24px 24px;
-  background:
-    radial-gradient(
-      120% 140% at 82% 0%,
-      rgb(132 138 250 / 42%),
-      transparent 60%
-    ),
-    radial-gradient(90% 120% at 10% 20%, rgb(86 58 204 / 40%), transparent 55%),
-    linear-gradient(160deg, #241a44, #0d0a1c 70%);
-  background-color: #0d0a1c; // opaque; stars must never show through
+  @include kronk-cover-glow;
 }
 
 .kprofile__headwrap {
