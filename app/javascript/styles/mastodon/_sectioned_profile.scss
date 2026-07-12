@@ -692,9 +692,124 @@
   }
 }
 
+// ---------- My Work drawer ----------------------------------------------------
+
+.sectioned-profile__work-card {
+  appearance: none;
+  font: inherit;
+  width: 100%;
+}
+
+.sectioned-profile__work-card-open {
+  position: absolute;
+  top: 12px;
+  right: 13px;
+  font-size: 12px;
+  color: var(--sp-faint);
+  opacity: 0;
+  transition: opacity 0.14s;
+  pointer-events: none;
+}
+
+.sectioned-profile__work-card:hover .sectioned-profile__work-card-open,
+.sectioned-profile__work-card:focus-visible .sectioned-profile__work-card-open {
+  opacity: 1;
+}
+
+.sectioned-profile__scrim {
+  position: fixed;
+  inset: 0;
+  background: rgb(6 4 14 / 62%);
+  backdrop-filter: blur(3px);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.sectioned-profile__scrim--on {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sectioned-profile__drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(480px, 92vw);
+  z-index: 41;
+  transform: translateX(100%);
+  transition: transform 0.26s cubic-bezier(0.2, 0.7, 0.2, 1);
+  background: var(--sp-canvas);
+  border-left: 1px solid var(--sp-line-2);
+  padding: 26px 26px 40px;
+  overflow-y: auto;
+  box-shadow: -20px 0 60px rgb(0 0 0 / 50%);
+}
+
+.sectioned-profile__drawer--on {
+  transform: none;
+}
+
+.sectioned-profile__drawer-close {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  background: none;
+  border: 0;
+  color: var(--sp-dim);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 8px;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--sp-text);
+    background: var(--sp-surface);
+    outline: none;
+  }
+}
+
+.sectioned-profile__drawer-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding-right: 40px;  // leave room for the close button
+}
+
+.sectioned-profile__drawer-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+}
+
+.sectioned-profile__drawer-sub {
+  color: var(--sp-dim);
+  font-size: 13px;
+  margin: 6px 0 20px;
+}
+
+.sectioned-profile__drawer-empty {
+  color: var(--sp-dim);
+  padding: 40px 0;
+  text-align: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sectioned-profile__work-card,
   .sectioned-profile__tab {
+    transition: none;
+  }
+
+  .sectioned-profile__scrim,
+  .sectioned-profile__drawer,
+  .sectioned-profile__work-card-open {
     transition: none;
   }
 }
