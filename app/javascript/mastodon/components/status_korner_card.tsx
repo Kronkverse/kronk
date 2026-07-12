@@ -10,7 +10,7 @@ import { Icon } from 'mastodon/components/icon';
 // warrants a distinguished feed presentation.
 //
 // The wrapper owns:
-//   - the outer container (border, box-shadow, --space-color)
+//   - the outer container (border, box-shadow)
 //   - the badge row (icon + label + optional tag)
 //
 // Everything below the badge (body, footer, per-space chrome) is passed
@@ -71,11 +71,6 @@ export const StatusKornerCard: React.FC<Props> = ({
     className && `${className}__type-tag`,
   );
 
-  const rootStyle: React.CSSProperties = {
-    '--space-color': 'var(--accent)',
-    ...style,
-  } as React.CSSProperties;
-
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       onClick?.(e);
@@ -86,7 +81,7 @@ export const StatusKornerCard: React.FC<Props> = ({
   return (
     <div
       className={rootClass}
-      style={rootStyle}
+      style={style}
       onClick={handleClick}
       onKeyDown={onKeyDown}
       role={role}

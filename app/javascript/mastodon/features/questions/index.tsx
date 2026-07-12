@@ -70,12 +70,7 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      <div
-        className='questions-page'
-        style={
-          { '--space-color': 'var(--accent)' } as React.CSSProperties
-        }
-      >
+      <div className='questions-page'>
         <div className='questions-tab-nav'>
           <button
             className={`questions-tab-nav__tab ${activeTab === 'ask' ? 'questions-tab-nav__tab--active' : ''}`}

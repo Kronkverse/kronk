@@ -39,6 +39,11 @@ branch.
   `--accent`
 - SCSS sweep: 10 partials, 400+ refs migrated from `--space-color`
   to `--accent`
+- JS/TSX sweep: inline `--space-color` no-op declarations removed
+  across booth, market, questions, events, in-flow, home-timeline,
+  and `StatusKornerCard`; active `var(--space-color)` consumers in
+  `features/live/index.tsx` migrated to `var(--accent)`; transitional
+  `--space-color` alias in `_css_variables.scss` deleted
 - `planets.tsx` shimmed as an accent-only compatibility layer
 
 #### URLs

@@ -352,12 +352,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         <title>{event.title}</title>
       </Helmet>
 
-      <div
-        className='event-detail'
-        style={
-          { '--space-color': 'var(--accent)' } as React.CSSProperties
-        }
-      >
+      <div className='event-detail'>
         {event.image_url && (
           <div
             className='event-detail__cover'

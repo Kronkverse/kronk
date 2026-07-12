@@ -1,5 +1,15 @@
 # Adding a Korner
 
+> **Stale (pre-2.0.0):** the planet system (`planets.tsx`, `SPACE_PLANET`,
+> `spaceColor()`, `--space-color`) referenced throughout this walkthrough
+> has been retired. Every Korner now inherits the shared Kronk-purple
+> accent from `_tokens.scss` — no per-Korner planet or colour assignment.
+> Use `var(--accent)` in SCSS directly. Steps here that ask you to edit
+> `planets.tsx` or set `--space-color` no longer apply. The rest of the
+> flow (models, controllers, feature module, registration) is still
+> broadly correct. See `docs/kronk_korner_spec.md` for the current
+> authoritative framework.
+
 **Audience:** developers building a new Korner (space) inside Kronk.
 **Reference implementation:** Klot (cycle tracker), landed on `dev/tbone`.
 **Read alongside:** [`kronk_korner_spec.md`](../kronk_korner_spec.md).
@@ -278,10 +288,11 @@ features/klot/
 - **Components are named for what they *are*, not what they *do*.**
   `cycle_ring.tsx`, not `phase_visualiser.tsx`.
 
-Set `--space-color: {spaceColor('Klot')}` on the root element of your
-mounted component. Everything nested inherits the accent (borders, glows,
-tints) via `color-mix()` on that variable. See how Klot's `index.tsx` and
-`_klot.scss` do this.
+Use `var(--accent)` (from `_tokens.scss`) for borders, glows, and tints.
+Everything nested picks up the shared Kronk-purple accent — no per-Korner
+colour derivation. `color-mix()` on `var(--accent)` is fine where a
+softer shade is needed. (Prior to 2.0.0 this went through `--space-color`
+and `spaceColor()`; both were retired.)
 
 **[Spec drift]** The spec (§3) requires every Korner declare a language
 schema — the verbs and nouns your Korner introduces. Klot's language is

@@ -42,11 +42,10 @@ interface JitsiApi {
 }
 
 const scrollableStyle: React.CSSProperties = {
-  '--space-color': 'var(--accent)',
   display: 'flex',
   flexDirection: 'column',
   height: '100%',
-} as React.CSSProperties;
+};
 const lobbyContainerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -61,7 +60,7 @@ const roomIconStyle: React.CSSProperties = {
   height: '80px',
   borderRadius: '20px',
   background:
-    'linear-gradient(135deg, color-mix(in srgb, var(--space-color) 65%, #B8A0FF 35%) 0%, var(--space-color) 100%)',
+    'linear-gradient(135deg, color-mix(in srgb, var(--accent) 65%, #B8A0FF 35%) 0%, var(--accent) 100%)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -456,7 +455,7 @@ const Live: React.FC<{
       if (apiLoaded) {
         e.currentTarget.style.transform = 'translateY(-1px)';
         e.currentTarget.style.boxShadow =
-          '0 6px 20px color-mix(in srgb, var(--space-color) 50%, transparent)';
+          '0 6px 20px color-mix(in srgb, var(--accent) 50%, transparent)';
       }
     },
     [apiLoaded],
@@ -466,7 +465,7 @@ const Live: React.FC<{
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.currentTarget.style.transform = 'translateY(0)';
       e.currentTarget.style.boxShadow =
-        '0 4px 16px color-mix(in srgb, var(--space-color) 30%, transparent)';
+        '0 4px 16px color-mix(in srgb, var(--accent) 30%, transparent)';
     },
     [],
   );
@@ -480,11 +479,11 @@ const Live: React.FC<{
       border: 'none',
       cursor: apiLoaded ? 'pointer' : 'default',
       background: apiLoaded
-        ? 'linear-gradient(135deg, color-mix(in srgb, var(--space-color) 65%, #B8A0FF 35%) 0%, var(--space-color) 100%)'
+        ? 'linear-gradient(135deg, color-mix(in srgb, var(--accent) 65%, #B8A0FF 35%) 0%, var(--accent) 100%)'
         : 'var(--background-border-color)',
       color: '#fff',
       boxShadow: apiLoaded
-        ? '0 4px 16px color-mix(in srgb, var(--space-color) 30%, transparent)'
+        ? '0 4px 16px color-mix(in srgb, var(--accent) 30%, transparent)'
         : 'none',
       transition: 'transform 0.2s ease, box-shadow 0.2s ease',
       opacity: apiLoaded ? 1 : 0.5,

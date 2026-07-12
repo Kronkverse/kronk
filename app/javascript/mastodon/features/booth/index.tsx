@@ -256,10 +256,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         multiColumn={multiColumn}
       />
 
-      <div
-        className='booth scrollable'
-        style={{ '--space-color': 'var(--accent)' } as React.CSSProperties}
-      >
+      <div className='booth scrollable'>
         <section className='booth__hero'>
           <h1 className='booth__hero-title'>
             {intl.formatMessage(messages.heading)}

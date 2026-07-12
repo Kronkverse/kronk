@@ -1,5 +1,12 @@
 # Anatomy of a Korner
 
+> **Stale (pre-2.0.0):** this walkthrough predates the rebuild. The
+> `planets.tsx` / `SPACE_PLANET` / `spaceColor()` / `--space-color`
+> layer has been retired — every Korner now inherits the shared
+> `var(--accent)` from `_tokens.scss` and per-Korner colour identity
+> is gone. See `docs/kronk_korner_spec.md` for the current authoritative
+> framework; treat this document as a rough shape guide only.
+
 Visual companion to [adding_a_korner.md](./adding_a_korner.md).
 Two diagrams to hold the shape in your head — the **runtime map**, and
 **feed projection** (the layer only some Korners need).

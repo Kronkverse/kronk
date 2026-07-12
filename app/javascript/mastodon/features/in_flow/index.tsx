@@ -59,10 +59,7 @@ export const InFlow: React.FC<Props> = ({ multiColumn }) => {
         multiColumn={multiColumn}
       />
 
-      <div
-        className='in-flow scrollable'
-        style={{ '--space-color': 'var(--accent)' } as React.CSSProperties}
-      >
+      <div className='in-flow scrollable'>
         <header className='in-flow__header'>
           <h1 className='in-flow__title'>In Flow</h1>
           <p className='in-flow__subtitle'>{LOCATION_LABEL}</p>

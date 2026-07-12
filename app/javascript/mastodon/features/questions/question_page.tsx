@@ -56,12 +56,7 @@ const QuestionPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     return (
       <Column>
         {header}
-        <div
-          className='questions-page'
-          style={
-            { '--space-color': 'var(--accent)' } as React.CSSProperties
-          }
-        >
+        <div className='questions-page'>
           <div className='questions-page__list'>
             <div className='questions-page__loading' />
           </div>
@@ -76,12 +71,7 @@ const QuestionPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       <Helmet>
         <title>{question.account.display_name} — Ƙuestions</title>
       </Helmet>
-      <div
-        className='questions-page'
-        style={
-          { '--space-color': 'var(--accent)' } as React.CSSProperties
-        }
-      >
+      <div className='questions-page'>
         <div className='questions-page__list'>
           <QuestionDetail
             question={question}
