@@ -137,10 +137,13 @@
 
 // ---------- three-pane grid ------------------------------------------------
 
+// Stacks by default; goes three-pane only when the composer has room
+// (see the container query below). Never crams three fixed panes into a
+// tight space.
 .kcompose__panes {
   flex: 1 1 auto;
   display: grid;
-  grid-template-columns: 250px 1fr 300px;
+  grid-template-columns: 1fr;
   min-height: 0;
 }
 
@@ -150,12 +153,11 @@
   min-height: 0;
 
   &--left {
-    border-right: 1px solid var(--kc-line);
+    border-bottom: 1px solid var(--kc-line);
   }
 
   &--right {
-    border-left: 1px solid var(--kc-line);
-    background: rgb(20 16 32 / 50%);
+    border-bottom: 1px solid var(--kc-line);
   }
 }
 
@@ -175,21 +177,26 @@
 
 // ---------- responsive ----------------------------------------------------
 
-// Below the point where three cols make sense, collapse into a stack.
-// Left → center → right, so the palette lives at the top on mobile.
-@media (width <= 900px) {
+// Three-pane only when the composer itself is wide enough. This is a
+// container query on the main pane's width (it declares `container:
+// column / inline-size`), so it responds to the space actually available
+// — not the viewport, which matters on the advanced/multi-column layout
+// where the column is narrow. 220 + 260 fixed sides leave the centre a
+// comfortable minimum; below the threshold it stays stacked.
+@container column (min-width: 880px) {
   .kcompose__panes {
-    grid-template-columns: 1fr;
+    grid-template-columns: 220px 1fr 260px;
   }
 
-  .kcompose__pane--left,
-  .kcompose__pane--right {
-    border: 0;
-    border-bottom: 1px solid var(--kc-line);
+  .kcompose__pane--left {
+    border-inline-end: 1px solid var(--kc-line);
+    border-bottom: 0;
   }
 
   .kcompose__pane--right {
-    background: transparent;
+    border-inline-start: 1px solid var(--kc-line);
+    border-bottom: 0;
+    background: rgb(20 16 32 / 50%);
   }
 }
 
