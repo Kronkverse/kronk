@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kronk · Profile space redesign</title>
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   KRONK DESIGN TOKENS
+   Remap on integration to Mastodon SCSS / CSS vars:
+     --k-canvas      → $ui-base-color        / --background-color
+     --k-surface     → $ui-base-lighter-color
+     --k-accent      → --brand-color          / $highlight-text-color
+     --k-serif       → brand serif (Liberation Serif)
+   Cosmos palette is warm (Sun) → cool/grey (Pluto). Profile lives on
+   the Sun (Self domain), so --planet-sun is this space's home accent.
+   ══════════════════════════════════════════════════════════════════ */
+:root{
+  --k-canvas:#0a0812; --k-surface:#141020; --k-surface-2:#191430; --k-surface-3:#20193b;
+  --k-line:rgba(139,110,255,.12); --k-line-2:rgba(139,110,255,.22);
+  --k-text:#ECE9FB; --k-dim:#9a95c4; --k-faint:#6f6a95;
+
+  --planet-sun:#a274ff;      /* Self / this profile */
+  --planet-mercury:#8b5cff;  /* Expression — posts, creative work */
+  --planet-neptune:#6d5cf0;  /* Gathering */
+  --planet-jupiter:#563acc;  /* Governance */
+  --planet-pluto:#4b4590;    /* Exchange (cooled, greyed) */
+
+  --k-accent:var(--planet-sun); --k-accent-deep:var(--planet-jupiter);
+  --k-radius:16px; --k-squircle:34%;
+  --k-serif:"Liberation Serif",Georgia,"Times New Roman",serif;
+  --k-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:var(--k-sans); color:var(--k-text); background:var(--k-canvas);
+  -webkit-font-smoothing:antialiased; line-height:1.5;
+}
+/* Starfield — subtle purple dust + scattered crosses, fixed behind everything */
+body::before{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(1px 1px at 12% 18%, rgba(162,116,255,.55), transparent),
+    radial-gradient(1px 1px at 78% 8%, rgba(139,110,255,.45), transparent),
+    radial-gradient(1px 1px at 33% 62%, rgba(162,116,255,.40), transparent),
+    radial-gradient(1px 1px at 62% 44%, rgba(139,110,255,.35), transparent),
+    radial-gradient(1px 1px at 88% 72%, rgba(162,116,255,.45), transparent),
+    radial-gradient(1px 1px at 8% 82%, rgba(139,110,255,.35), transparent),
+    radial-gradient(1200px 600px at 78% -8%, rgba(86,58,204,.18), transparent),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cg fill='none' stroke='%237b5cff' stroke-opacity='0.16' stroke-width='1'%3E%3Cpath d='M40 30h6M43 27v6'/%3E%3Cpath d='M180 90h6M183 87v6'/%3E%3Cpath d='M110 160h6M113 157v6'/%3E%3Cpath d='M200 200h6M203 197v6'/%3E%3Cpath d='M20 190h6M23 187v6'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat:no-repeat,no-repeat,no-repeat,no-repeat,no-repeat,no-repeat,no-repeat,repeat;
+}
+main,.topbar{position:relative; z-index:1}
+
+/* ─────────── mockup chrome (real shell lives elsewhere) ─────────── */
+.topbar{
+  display:flex; align-items:center; gap:20px; padding:14px 26px;
+  border-bottom:1px solid var(--k-line); background:rgba(10,8,18,.72); backdrop-filter:blur(14px);
+  position:sticky; top:0;
+}
+.wordmark{font-family:var(--k-serif); font-size:22px; letter-spacing:2px; color:var(--k-text)}
+.switcher{margin:0 auto; display:flex; gap:30px; font-family:var(--k-serif); font-size:17px}
+.switcher span{color:var(--k-faint); cursor:default}
+.switcher span.on{color:var(--k-text); border-bottom:2px solid var(--k-accent); padding-bottom:3px}
+.monogram{
+  width:40px; height:40px; border-radius:50%; display:grid; place-items:center;
+  font-family:var(--k-serif); font-size:20px; color:#fff;
+  background:linear-gradient(140deg,var(--planet-sun),var(--planet-jupiter));
+  box-shadow:0 4px 18px rgba(139,110,255,.35);
+}
+
+/* ─────────────────────────── layout ─────────────────────────── */
+main{max-width:1180px; margin:0 auto; padding:0 22px 80px}
+
+/* Header */
+.cover{
+  height:210px; margin:0 -22px; border-radius:0 0 24px 24px; overflow:hidden; position:relative;
+  background:
+    radial-gradient(120% 140% at 82% 0%, rgba(162,116,255,.42), transparent 60%),
+    radial-gradient(90% 120% at 10% 20%, rgba(86,58,204,.40), transparent 55%),
+    linear-gradient(160deg,#241a44,#0d0a1c 70%);
+}
+.cover::after{ /* faint horizon glow */
+  content:""; position:absolute; inset:0;
+  background:radial-gradient(70% 60% at 60% 120%, rgba(162,116,255,.25), transparent 70%);
+}
+.headwrap{display:flex; gap:26px; margin-top:-64px; padding:0 6px; align-items:flex-end; flex-wrap:wrap}
+.avatar{
+  width:148px; height:148px; border-radius:var(--k-squircle); flex:none;
+  background:linear-gradient(150deg,#3a2c66,#181233); border:3px solid var(--k-canvas);
+  box-shadow:0 10px 30px rgba(0,0,0,.5); overflow:hidden; position:relative;
+}
+.avatar::after{ /* portrait stand-in */
+  content:""; position:absolute; inset:0;
+  background:radial-gradient(60% 55% at 50% 38%, rgba(162,116,255,.5), transparent 60%),
+             radial-gradient(80% 90% at 50% 130%, rgba(86,58,204,.6), transparent 60%);
+}
+.identity{flex:1 1 340px; padding-bottom:6px; min-width:280px}
+.nameline{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.name{font-family:var(--k-serif); font-size:38px; line-height:1; margin:0}
+.pod-badge{ /* Anthemos verified pod link (provisional) */
+  display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--planet-sun);
+  border:1px solid rgba(162,116,255,.4); border-radius:20px; padding:3px 9px;
+}
+.pod-badge .dot{width:6px; height:6px; border-radius:50%; background:var(--planet-sun); box-shadow:0 0 8px var(--planet-sun)}
+.handle{color:var(--k-dim); margin:6px 0 0; font-size:14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.instance{background:var(--k-surface-2); border:1px solid var(--k-line); border-radius:6px; padding:1px 7px; color:var(--k-dim); font-size:12px}
+.owner{color:var(--planet-jupiter); font-weight:600}
+.bio{margin:12px 0 0; max-width:560px; color:#d7d3ee}
+.metarow{display:flex; gap:18px; margin-top:12px; flex-wrap:wrap; color:var(--k-dim); font-size:13px}
+.metarow a{color:var(--planet-sun); text-decoration:none}
+.metarow .ico{opacity:.7; margin-right:5px}
+.chips{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap}
+.chip{border:1px solid var(--k-line-2); background:var(--k-surface); border-radius:20px; padding:5px 13px; font-size:12.5px; color:#cbc6ea}
+.chip.add{color:var(--k-faint); cursor:pointer}
+
+.stats{display:flex; gap:30px; margin-left:auto; align-items:flex-end; padding-bottom:6px}
+.stat b{font-family:var(--k-serif); font-size:26px; display:block; line-height:1}
+.stat span{font-size:11.5px; color:var(--k-dim); letter-spacing:.4px; text-transform:uppercase}
+
+/* Tabs */
+.tabs{display:flex; gap:6px; margin:26px 0 22px; border-bottom:1px solid var(--k-line); overflow-x:auto}
+.tab{
+  appearance:none; background:none; border:0; cursor:pointer; color:var(--k-dim);
+  font-family:var(--k-serif); font-size:18px; padding:12px 20px; white-space:nowrap;
+  border-bottom:2px solid transparent; display:flex; align-items:center; gap:9px;
+}
+.tab .ti{width:17px; height:17px; opacity:.8}
+.tab.on{color:var(--k-text); border-bottom-color:var(--k-accent)}
+.tab:hover{color:var(--k-text)}
+
+/* Cards */
+.card{background:var(--k-surface); border:1px solid var(--k-line); border-radius:var(--k-radius); padding:20px}
+.card + .card{margin-top:18px}
+.card h3{font-family:var(--k-serif); font-size:19px; margin:0 0 14px; font-weight:400}
+.muted{color:var(--k-dim)}
+
+/* Panels */
+.panel{display:none} .panel.on{display:block}
+
+/* ── ME grid ── */
+.me-grid{display:grid; grid-template-columns:300px 1fr 300px; gap:18px; align-items:start}
+.detail{display:flex; align-items:center; gap:11px; padding:7px 0; font-size:13.5px; color:#d0ccec; border-top:1px solid var(--k-line)}
+.detail:first-of-type{border-top:0}
+.detail .ico{width:16px; text-align:center; opacity:.7}
+.verified{margin-left:auto; font-size:10px; color:var(--planet-sun); opacity:.85}
+.ilist{list-style:none; margin:0; padding:0}
+.ilist li{display:flex; align-items:center; gap:11px; padding:8px 0; font-size:14px; border-top:1px solid var(--k-line)}
+.ilist li:first-child{border-top:0}
+.ilist .ico{opacity:.75}
+
+.tiles{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+.tile{background:var(--k-surface-2); border:1px solid var(--k-line); border-radius:12px; padding:14px 6px; text-align:center}
+.tile b{font-family:var(--k-serif); font-size:24px; display:block}
+.tile span{font-size:11px; color:var(--k-dim)}
+
+.highlights{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+.hl{border:1px solid var(--k-line); border-radius:12px; overflow:hidden; background:var(--k-surface-2)}
+.hl .thumb{height:96px}
+.hl .cap{padding:9px 11px}
+.hl .cap b{font-size:13px; font-weight:600; display:block}
+.hl .cap span{font-size:11.5px; color:var(--k-dim)}
+
+.snap{display:flex; flex-wrap:wrap; gap:8px}
+.snap span{background:var(--k-surface-2); border:1px solid var(--k-line); border-radius:8px; padding:6px 12px; font-size:12.5px; color:#cdc8ec}
+
+.quote{font-family:var(--k-serif); font-size:20px; line-height:1.45; color:#e5e1f8; position:relative; padding-left:20px}
+.quote::before{content:"“"; position:absolute; left:-4px; top:-8px; font-size:40px; color:var(--planet-sun); opacity:.6}
+
+.media{display:flex; align-items:center; gap:12px; background:var(--k-surface-2); border:1px solid var(--k-line); border-radius:12px; padding:10px 12px}
+.media .art{width:44px; height:44px; border-radius:8px; flex:none}
+.media .meta b{display:block; font-size:13.5px} .media .meta span{font-size:11.5px; color:var(--k-dim)}
+.media .play{margin-left:auto; width:30px; height:30px; border-radius:50%; border:1px solid var(--k-line-2); display:grid; place-items:center; color:var(--planet-sun)}
+
+.gallery{display:grid; grid-template-columns:repeat(3,1fr); gap:7px}
+.gallery .g{aspect-ratio:1; border-radius:9px}
+
+.values-list{list-style:none; margin:0; padding:0}
+.values-list li{display:flex; align-items:center; gap:11px; padding:9px 0; font-size:14px; border-top:1px solid var(--k-line)}
+.values-list li:first-child{border-top:0}
+.values-list .ico{color:var(--planet-sun)}
+
+.note{background:linear-gradient(160deg,rgba(162,116,255,.10),rgba(86,58,204,.05)); border-color:rgba(162,116,255,.25)}
+.note p{font-family:var(--k-serif); font-size:16px; line-height:1.55; color:#e7e3f8; margin:0}
+
+.open-to{display:flex; gap:14px; flex-wrap:wrap; margin-top:18px}
+.open-to .ot{flex:1 1 190px; display:flex; align-items:center; gap:12px; background:var(--k-surface); border:1px solid var(--k-line); border-radius:12px; padding:15px 16px}
+.open-to .ot .ic{width:34px; height:34px; border-radius:9px; display:grid; place-items:center; background:rgba(162,116,255,.12); color:var(--planet-sun); flex:none}
+.open-to .ot b{font-size:13.5px; display:block} .open-to .ot span{font-size:11.5px; color:var(--k-dim)}
+
+/* ── MY WORK ── */
+.work-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:16px; flex-wrap:wrap; gap:8px}
+.work-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(212px,1fr)); gap:14px}
+.wcard{
+  position:relative; text-align:left; cursor:pointer; color:inherit;
+  background:var(--k-surface); border:1px solid var(--k-line); border-radius:14px;
+  padding:16px 16px 15px; overflow:hidden; transition:transform .14s, border-color .14s;
+}
+.wcard::before{content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--pc,var(--planet-mercury))}
+.wcard:hover{transform:translateY(-3px); border-color:var(--k-line-2)}
+.wcard .wprev{height:74px; border-radius:10px; margin-bottom:12px; background:var(--k-surface-2)}
+.wcard .wtitle{font-family:var(--k-serif); font-size:18px}
+.wcard .wsub{font-size:12px; color:var(--k-dim); margin-top:3px; display:flex; align-items:center; gap:7px}
+.wcard .pdot{width:7px; height:7px; border-radius:50%; background:var(--pc,var(--planet-mercury))}
+.wcard .wadd{position:absolute; top:12px; right:13px; font-size:12px; color:var(--k-faint); opacity:0; transition:.14s}
+.wcard:hover .wadd{opacity:1}
+
+/* Drawer */
+.scrim{position:fixed; inset:0; background:rgba(6,4,14,.62); backdrop-filter:blur(3px); z-index:40; opacity:0; pointer-events:none; transition:.2s}
+.scrim.on{opacity:1; pointer-events:auto}
+.drawer{
+  position:fixed; top:0; right:0; bottom:0; width:min(480px,92vw); z-index:41; transform:translateX(100%);
+  transition:transform .26s cubic-bezier(.2,.7,.2,1); background:var(--k-canvas); border-left:1px solid var(--k-line-2);
+  padding:26px 26px 40px; overflow-y:auto; box-shadow:-20px 0 60px rgba(0,0,0,.5);
+}
+.drawer.on{transform:none}
+.drawer .dclose{position:absolute; top:18px; right:20px; background:none; border:0; color:var(--k-dim); font-size:22px; cursor:pointer}
+.drawer .dtitle{font-family:var(--k-serif); font-size:28px; display:flex; align-items:center; gap:11px}
+.drawer .dtitle .pdot{width:11px; height:11px; border-radius:50%}
+.drawer .dsub{color:var(--k-dim); font-size:13px; margin:6px 0 20px}
+.showcase{border:1px solid var(--k-line); border-radius:12px; padding:14px; margin-bottom:12px; background:var(--k-surface)}
+.showcase b{font-family:var(--k-serif); font-size:15px; font-weight:400}
+.showcase p{margin:7px 0 0; font-size:13.5px; color:#cbc6ea}
+.showcase .sc-meta{margin-top:10px; font-size:12px; color:var(--k-faint); display:flex; gap:16px}
+.drawer .dadd{width:100%; border:1px dashed var(--k-line-2); background:none; color:var(--k-dim); border-radius:12px; padding:13px; cursor:pointer; font-size:13.5px}
+
+/* ── TIMELINE ── */
+.feed{max-width:640px; margin:0 auto}
+.post{background:var(--k-surface); border:1px solid var(--k-line); border-radius:14px; padding:16px 18px; margin-bottom:14px}
+.post .ph{display:flex; align-items:center; gap:11px}
+.post .pav{width:40px; height:40px; border-radius:var(--k-squircle); background:linear-gradient(150deg,#3a2c66,#181233); flex:none}
+.post .pn b{font-family:var(--k-serif); font-size:15px} .post .pn span{color:var(--k-dim); font-size:12.5px; margin-left:6px}
+.post .pt{margin-left:auto; color:var(--k-faint); font-size:12px}
+.post .pbody{margin:12px 0 0; color:#ded9f4; font-size:14.5px; white-space:pre-line}
+.post .pmedia{height:180px; border-radius:12px; margin-top:12px}
+.post .pcard{ /* space card projection */
+  margin-top:12px; border:1px solid var(--pc,var(--planet-neptune)); border-left-width:4px; border-radius:12px; padding:12px 14px; background:rgba(109,92,240,.06);
+}
+.post .pcard .pk{font-size:11px; letter-spacing:.5px; text-transform:uppercase; color:var(--pc,var(--planet-neptune))}
+.post .pcard b{font-family:var(--k-serif); font-size:16px; display:block; margin-top:3px; font-weight:400}
+.post .actions{display:flex; gap:26px; margin-top:14px; color:var(--k-faint); font-size:13px}
+.post .actions span{display:flex; align-items:center; gap:6px; cursor:pointer}
+.post .actions span:hover{color:var(--planet-sun)}
+
+/* ── FRIENDSHIP ── */
+.fr{max-width:820px; margin:0 auto}
+.fr-hero{display:flex; align-items:center; gap:18px; background:linear-gradient(150deg,rgba(162,116,255,.12),rgba(86,58,204,.06)); border:1px solid rgba(162,116,255,.25); border-radius:16px; padding:20px 22px; margin-bottom:18px}
+.fr-hero .pair{display:flex}
+.fr-hero .pair .a{width:52px; height:52px; border-radius:var(--k-squircle); border:2px solid var(--k-canvas); background:linear-gradient(150deg,#3a2c66,#181233)}
+.fr-hero .pair .a:last-child{margin-left:-16px; background:linear-gradient(150deg,#2c3a66,#131a33)}
+.fr-hero h3{font-family:var(--k-serif); font-size:22px; margin:0; font-weight:400}
+.fr-hero p{margin:4px 0 0; color:var(--k-dim); font-size:13.5px}
+.fr-hero .tier{margin-left:auto; text-align:right}
+.fr-hero .tier .tval{font-family:var(--k-serif); font-size:20px; color:var(--planet-sun)}
+.fr-hero .tier .tlab{font-size:11px; color:var(--k-dim)}
+.fr-two{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+.kv{display:flex; justify-content:space-between; padding:9px 0; border-top:1px solid var(--k-line); font-size:14px}
+.kv:first-of-type{border-top:0}
+.kv b{font-weight:600} .kv .v{color:var(--k-dim)}
+.overlap{display:flex; gap:8px; flex-wrap:wrap}
+.overlap span{background:rgba(162,116,255,.10); border:1px solid rgba(162,116,255,.25); border-radius:8px; padding:5px 11px; font-size:12.5px}
+.tl{list-style:none; margin:0; padding:0}
+.tl li{position:relative; padding:0 0 18px 26px; border-left:2px solid var(--k-line); margin-left:6px}
+.tl li:last-child{border-color:transparent; padding-bottom:0}
+.tl li::before{content:""; position:absolute; left:-7px; top:2px; width:12px; height:12px; border-radius:50%; background:var(--planet-sun); box-shadow:0 0 0 4px rgba(162,116,255,.12)}
+.tl b{font-size:13.5px} .tl span{display:block; color:var(--k-dim); font-size:12px; margin-top:2px}
+.vouch{display:flex; align-items:center; gap:12px; padding:11px 0; border-top:1px solid var(--k-line); font-size:13.5px}
+.vouch:first-of-type{border-top:0}
+.vouch .vav{width:34px; height:34px; border-radius:var(--k-squircle); background:linear-gradient(150deg,#2c3a66,#131a33); flex:none}
+.vouch .vtier{margin-left:auto; font-size:11px; color:var(--planet-sun); border:1px solid rgba(162,116,255,.35); border-radius:14px; padding:2px 9px}
+.fr-actions{display:flex; gap:10px; margin-top:18px; flex-wrap:wrap}
+.btn{border-radius:11px; padding:11px 20px; font-size:14px; cursor:pointer; border:1px solid var(--k-line-2); background:var(--k-surface); color:var(--k-text)}
+.btn.primary{background:linear-gradient(140deg,var(--planet-sun),var(--planet-jupiter)); border:0; color:#fff}
+
+.provisional{font-size:11px; color:var(--k-faint); margin-top:14px; display:flex; align-items:center; gap:7px}
+.provisional::before{content:""; width:6px; height:6px; border-radius:50%; background:var(--planet-sun); opacity:.6}
+
+/* gradient "photo" stand-ins (swap for real media on build) */
+.ph-dawn{background:linear-gradient(160deg,#4a3a6e,#7a5aa8 40%,#c79ad6 90%)}
+.ph-forest{background:linear-gradient(150deg,#1c3330,#2f4d54 60%,#5a7a72)}
+.ph-mtn{background:linear-gradient(170deg,#2a2450,#5b4a8f 60%,#9a86c9)}
+.ph-coffee{background:radial-gradient(circle at 50% 45%,#c9a07a,#6b4a34 55%,#2a1c15)}
+.ph-bloom{background:radial-gradient(circle at 45% 40%,#d8b24a,#5a4a1e 60%,#241d10)}
+.ph-arch{background:linear-gradient(150deg,#3a2c5a,#6b5a8f 60%,#b9a6d6)}
+.ph-silh{background:linear-gradient(180deg,#c79ad6,#7a5aa8 55%,#241a3a)}
+.ph-desk{background:linear-gradient(150deg,#20193b,#4a3a6e 70%,#8a6ab0)}
+.ph-tree{background:linear-gradient(160deg,#243b33,#4a6a54 60%,#8aa88f)}
+.ph-book{background:linear-gradient(150deg,#3a3050,#6a5a8a 60%,#c2b2d6)}
+.ph-indigo{background:linear-gradient(150deg,#1e1a3a,#3a2c66 60%,#6d5cf0)}
+.ph-violet{background:linear-gradient(150deg,#2c1f4a,#563acc 70%,#a274ff)}
+
+@media (max-width:980px){
+  .me-grid{grid-template-columns:1fr}
+  .fr-two{grid-template-columns:1fr}
+  .stats{margin-left:0; width:100%; gap:26px}
+  .switcher{display:none}
+}
+@media (max-width:560px){
+  .tiles{grid-template-columns:repeat(2,1fr)}
+  .highlights,.gallery{grid-template-columns:repeat(2,1fr)}
+  .name{font-size:30px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:2px solid var(--planet-sun); outline-offset:2px}
+</style>
+</head>
+<body>
+
+<!-- ═══ mockup chrome — the real shell (wordmark + Ӂ bubbles) lives in the shell redesign, not here ═══ -->
+<header class="topbar">
+  <span class="wordmark">ӁЯѺƝ₭</span>
+  <nav class="switcher"><span>Feed</span><span class="on">Profile</span><span>Hub</span></nav>
+  <div class="monogram">Ӂ</div>
+</header>
+
+<main>
+  <!-- ══════════ PROFILE HEADER (shared across tabs) ══════════ -->
+  <div class="cover"></div>
+  <div class="headwrap">
+    <div class="avatar"></div>
+    <div class="identity">
+      <div class="nameline">
+        <h1 class="name">Chris</h1>
+        <span class="pod-badge"><span class="dot"></span>Anthemos pod</span>
+      </div>
+      <p class="handle">
+        <span>@tal · he/him</span>
+        <span class="instance">mastodon.kronk.info</span>
+        <span class="owner">◈ Owner</span>
+      </p>
+      <p class="bio">Film photography, leatherwork and adventuring while working toward software creation — advocating for personal sovereignty over behavioural data and making democracy more democratic.</p>
+      <div class="metarow">
+        <span><span class="ico">◍</span>Perth, Australia</span>
+        <a href="#"><span class="ico">↗</span>chris.kronk.info</a>
+        <span><span class="ico">✦</span>Joined 16 Feb 2024</span>
+      </div>
+      <div class="chips">
+        <span class="chip">Photographer</span>
+        <span class="chip">Leatherworker</span>
+        <span class="chip">Democracy nerd</span>
+        <span class="chip">Adventurer</span>
+        <span class="chip add">＋</span>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>64</b><span>Connections</span></div>
+      <div class="stat"><b>81</b><span>Followers</span></div>
+      <div class="stat"><b>101</b><span>Following</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════ TABS ══════════ -->
+  <nav class="tabs" role="tablist">
+    <button class="tab on" data-tab="me" role="tab"><span class="ti">◐</span>Me</button>
+    <button class="tab" data-tab="work" role="tab"><span class="ti">▤</span>My Work</button>
+    <button class="tab" data-tab="timeline" role="tab"><span class="ti">≡</span>Timeline</button>
+    <button class="tab" data-tab="friendship" role="tab"><span class="ti">♥</span>Friendship</button>
+  </nav>
+
+  <!-- ══════════ PANEL: ME ══════════ -->
+  <section class="panel on" id="me">
+    <div class="me-grid">
+
+      <!-- LEFT -->
+      <div>
+        <div class="card">
+          <h3>About me</h3>
+          <p class="muted" style="margin-top:0">Maker and quiet builder. I care about the in-between craft — the analogue process, the slow decision, the thing made by hand — and about giving people real sovereignty over their own lives online.</p>
+          <div class="detail"><span class="ico">◔</span>27 years old <span class="verified">✓ Anthemos</span></div>
+          <div class="detail"><span class="ico">✦</span>Born 3 Apr 1998</div>
+          <div class="detail"><span class="ico">◍</span>Perth, Australia</div>
+          <div class="detail"><span class="ico">❋</span>Studies: Politics &amp; Computer Science</div>
+          <div class="detail"><span class="ico">✎</span>Language: English</div>
+          <div class="detail"><span class="ico">◈</span>Joined Kronk: Feb 2024</div>
+        </div>
+
+        <div class="card">
+          <h3>Interests</h3>
+          <ul class="ilist">
+            <li><span class="ico">◎</span>Film photography</li>
+            <li><span class="ico">✂</span>Leatherwork</li>
+            <li><span class="ico">◈</span>Democracy &amp; governance</li>
+            <li><span class="ico">⌘</span>Software &amp; sovereignty</li>
+            <li><span class="ico">▲</span>Hiking &amp; the outdoors</li>
+            <li><span class="ico">❋</span>Philosophy</li>
+            <li><span class="ico muted">＋</span><span class="muted">More</span></li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Currently exploring</h3>
+          <ul class="ilist">
+            <li><span class="ico">◇</span>Large-format film</li>
+            <li><span class="ico">◇</span>Vegetable-tanned leather</li>
+            <li><span class="ico">◇</span>Sortition &amp; citizens' assemblies</li>
+            <li><span class="ico">◇</span>Rust</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- CENTER -->
+      <div>
+        <div class="card">
+          <h3>At a glance</h3>
+          <div class="tiles">
+            <div class="tile"><b>489</b><span>Posts</span></div>
+            <div class="tile"><b>210</b><span>Photos</span></div>
+            <div class="tile"><b>18</b><span>Essays</span></div>
+            <div class="tile"><b>9</b><span>Collections</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Recent highlights</h3>
+          <div class="highlights">
+            <div class="hl"><div class="thumb ph-dawn"></div><div class="cap"><b>The shore remembers</b><span>♥ 145</span></div></div>
+            <div class="hl"><div class="thumb ph-coffee"></div><div class="cap"><b>On slow tools</b><span>♥ 98</span></div></div>
+            <div class="hl"><div class="thumb ph-book"></div><div class="cap"><b>Notes on consent</b><span>♥ 112</span></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Personality snapshot</h3>
+          <div class="snap">
+            <span>Curious</span><span>Systems-minded</span><span>Patient</span><span>Principled</span>
+            <span>Maker</span><span>Deep listener</span><span>Independent</span><span>Warm</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>What drives me</h3>
+          <p class="quote">To build tools that give people back their own lives — and to leave every place a little more sovereign than I found it.</p>
+        </div>
+
+        <div class="card">
+          <h3>In rotation</h3>
+          <div class="media" style="margin-bottom:10px">
+            <div class="art ph-forest"></div>
+            <div class="meta"><b>Holocene</b><span>Bon Iver · listening</span></div>
+            <div class="play">▶</div>
+          </div>
+          <div class="media">
+            <div class="art ph-tree"></div>
+            <div class="meta"><b>The Overstory</b><span>Richard Powers · reading</span></div>
+            <div class="play">▶</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+        <div class="card">
+          <h3>Life in moments</h3>
+          <div class="gallery">
+            <div class="g ph-forest"></div><div class="g ph-coffee"></div><div class="g ph-mtn"></div>
+            <div class="g ph-bloom"></div><div class="g ph-arch"></div><div class="g ph-silh"></div>
+            <div class="g ph-desk"></div><div class="g ph-tree"></div><div class="g ph-book"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Values</h3>
+          <ul class="values-list">
+            <li><span class="ico">◈</span>Sovereignty</li>
+            <li><span class="ico">◈</span>Consent</li>
+            <li><span class="ico">◈</span>Craft</li>
+            <li><span class="ico">◈</span>Honesty</li>
+            <li><span class="ico">◈</span>Community</li>
+          </ul>
+        </div>
+
+        <div class="card note">
+          <h3>A note from Chris</h3>
+          <p>Thanks for being here. Every connection on Kronk is one you chose and one that was chosen back — small, real, and yours. That's the whole point.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Open to (full-width footer strip) -->
+    <div class="open-to">
+      <div class="ot"><span class="ic">◌</span><div><b>Meaningful conversations</b><span>Slow ones welcome</span></div></div>
+      <div class="ot"><span class="ic">❋</span><div><b>Creative collaborations</b><span>Photo, leather, code</span></div></div>
+      <div class="ot"><span class="ic">◈</span><div><b>Governance work</b><span>Kommons &amp; syntocracy</span></div></div>
+      <div class="ot"><span class="ic">♥</span><div><b>Vouching</b><span>Web of trust</span></div></div>
+    </div>
+    <p class="provisional">Age &amp; identity fields marked <em>✓ Anthemos</em> are projected from the user's pod — provisional until the membrane ships; today they're plain profile fields.</p>
+  </section>
+
+  <!-- ══════════ PANEL: MY WORK ══════════ -->
+  <section class="panel" id="work">
+    <div class="work-head">
+      <div>
+        <h3 style="font-family:var(--k-serif); font-size:22px; margin:0 0 4px; font-weight:400">Collected work</h3>
+        <p class="muted" style="margin:0; font-size:13.5px">Posts sorted into rooms you can walk into — not a stream to scroll. Tap a card to see what's inside.</p>
+      </div>
+      <button class="chip add" style="padding:8px 14px">＋ New card</button>
+    </div>
+    <div class="work-grid" id="workGrid"><!-- cards injected --></div>
+  </section>
+
+  <!-- ══════════ PANEL: TIMELINE ══════════ -->
+  <section class="panel" id="timeline">
+    <div class="feed">
+      <article class="post">
+        <div class="ph"><div class="pav"></div><div class="pn"><b>Chris</b><span>@tal</span></div><div class="pt">5d</div></div>
+        <p class="pbody">~~ Mayhem ~~
+
+A question has been circulating: "What is community to you?"
+
+Where words fail me, Mayhem embodies it. The connections there are multilateral — each person holds many points of contact within the group, rather than one thread to a faceless identity.</p>
+        <div class="actions"><span>↩ 12</span><span>⟳ 8</span><span>♥ 47</span><span>⤓</span></div>
+      </article>
+
+      <article class="post">
+        <div class="ph"><div class="pav"></div><div class="pn"><b>Chris</b><span>@tal</span></div><div class="pt">1w</div></div>
+        <p class="pbody">Golden hour on the salt lakes. Shot on Portra 400, no edits — the film did the work.</p>
+        <div class="pmedia ph-dawn"></div>
+        <div class="actions"><span>↩ 5</span><span>⟳ 14</span><span>♥ 98</span><span>⤓</span></div>
+      </article>
+
+      <article class="post">
+        <div class="ph"><div class="pav"></div><div class="pn"><b>Chris</b><span>@tal</span></div><div class="pt">2w</div></div>
+        <p class="pbody">New proposal is live — moving Kommons quorum to a tenure-weighted consent model. Read it and tell me where it breaks.</p>
+        <div class="pcard" style="--pc:var(--planet-jupiter)">
+          <div class="pk">Kommons · Jupiter</div>
+          <b>Tenure-weighted consent for quorum</b>
+          <div class="actions" style="margin-top:10px"><span>Back it · 9</span><span>Meh · 2</span><span>Block · 0</span></div>
+        </div>
+        <div class="actions"><span>↩ 21</span><span>⟳ 6</span><span>♥ 33</span><span>⤓</span></div>
+      </article>
+
+      <article class="post">
+        <div class="ph"><div class="pav"></div><div class="pn"><b>Chris</b><span>@tal</span></div><div class="pt">3w</div></div>
+        <p class="pbody">Finished the card wallet — four pockets, one hidden. Vegetable-tanned, hand-stitched, saddle-soaped. It'll outlive me.</p>
+        <div class="pmedia ph-coffee"></div>
+        <div class="actions"><span>↩ 3</span><span>⟳ 4</span><span>♥ 61</span><span>⤓</span></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ══════════ PANEL: FRIENDSHIP ══════════ -->
+  <section class="panel" id="friendship">
+    <div class="fr">
+      <div class="fr-hero">
+        <div class="pair"><div class="a"></div><div class="a"></div></div>
+        <div>
+          <h3>You &amp; Chris</h3>
+          <p>Connected since March 2024 · you follow each other</p>
+        </div>
+        <div class="tier">
+          <div class="tval">Tier 2</div>
+          <div class="tlab">mutual vouch</div>
+        </div>
+      </div>
+
+      <div class="fr-two">
+        <div class="card">
+          <h3>How you're connected</h3>
+          <div class="kv"><b>Mutual crews</b><span class="v">Mainframe · Kommons stewards</span></div>
+          <div class="kv"><b>Shared seeds</b><span class="v">Shell redesign · Kalendar</span></div>
+          <div class="kv"><b>Mutual connections</b><span class="v">14</span></div>
+          <div class="kv"><b>Introduced by</b><span class="v">@isabelle</span></div>
+        </div>
+
+        <div class="card">
+          <h3>Between you</h3>
+          <div class="kv"><b>Conversations</b><span class="v">38</span></div>
+          <div class="kv"><b>Replies exchanged</b><span class="v">210</span></div>
+          <div class="kv"><b>Boosts</b><span class="v">17 given · 22 received</span></div>
+          <div class="kv"><b>Huddles together</b><span class="v">6</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h3>Where you overlap</h3>
+        <div class="overlap">
+          <span>Photography</span><span>Governance</span><span>Philosophy</span><span>Analogue craft</span><span>Sovereignty</span>
+        </div>
+      </div>
+
+      <div class="fr-two" style="margin-top:16px">
+        <div class="card">
+          <h3>Vouches</h3>
+          <div class="vouch"><div class="vav"></div><div><b>You vouch for Chris</b><br><span class="muted" style="font-size:12px">Since Apr 2024</span></div><span class="vtier">Tier 2</span></div>
+          <div class="vouch"><div class="vav"></div><div><b>Chris vouches for you</b><br><span class="muted" style="font-size:12px">Since May 2024</span></div><span class="vtier">Tier 2</span></div>
+          <div class="vouch"><div class="vav"></div><div><b>3 people vouch for both</b><br><span class="muted" style="font-size:12px">@isabelle, @wren, @koa</span></div></div>
+        </div>
+
+        <div class="card">
+          <h3>Your history</h3>
+          <ul class="tl">
+            <li><b>First connected</b><span>14 Mar 2024 — Chris followed you back</span></li>
+            <li><b>First collaboration</b><span>Apr 2024 — Kalendar hero-card build</span></li>
+            <li><b>First vouch</b><span>Apr 2024 — you vouched, tier 2</span></li>
+            <li><b>Most recent</b><span>2d ago — replied in Kommons</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="fr-actions">
+        <button class="btn primary">Message Chris</button>
+        <button class="btn">Adjust vouch</button>
+        <button class="btn">Add to a crew</button>
+      </div>
+      <p class="provisional">Vouch tiers are web-of-trust credentials — authored in each person's Anthemos pod, routed (not stored) by Kronk. Provisional until the membrane ships.</p>
+    </div>
+  </section>
+</main>
+
+<!-- Drawer for My Work cards -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <button class="dclose" id="dclose" aria-label="Close">✕</button>
+  <div class="dtitle"><span class="pdot" id="dpdot"></span><span id="dtitle">Poetry</span></div>
+  <div class="dsub" id="dsub">Mercury · Expression · 12 posts showcased</div>
+  <div id="dbody"></div>
+  <button class="dadd">＋ Add a post to this card</button>
+</aside>
+
+<script>
+/* ── mockup chrome vs real UI: everything below is prototype wiring ── */
+
+/* Tabs */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on');
+    document.getElementById(t.dataset.tab).classList.add('on');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+
+/* My Work — ~20 category cards. planet ties each room to a Cosmos domain. */
+const P={mercury:'var(--planet-mercury)',jupiter:'var(--planet-jupiter)',neptune:'var(--planet-neptune)',pluto:'var(--planet-pluto)',sun:'var(--planet-sun)'};
+const cards=[
+  {t:'Poetry',c:12,p:'mercury',prev:'ph-violet',dom:'Expression'},
+  {t:'Essays',c:18,p:'mercury',prev:'ph-book',dom:'Expression'},
+  {t:'Photography',c:210,p:'mercury',prev:'ph-dawn',dom:'Expression'},
+  {t:'Field notes',c:41,p:'mercury',prev:'ph-forest',dom:'Expression'},
+  {t:'Reflections',c:27,p:'mercury',prev:'ph-indigo',dom:'Expression'},
+  {t:'Quotes',c:34,p:'mercury',prev:'ph-arch',dom:'Expression'},
+  {t:'Sketches',c:15,p:'mercury',prev:'ph-desk',dom:'Expression'},
+  {t:'Letters',c:9,p:'mercury',prev:'ph-book',dom:'Expression'},
+  {t:'Reviews',c:22,p:'neptune',prev:'ph-tree',dom:'Gathering'},
+  {t:'Dialogues',c:8,p:'neptune',prev:'ph-silh',dom:'Gathering'},
+  {t:'Questions',c:16,p:'neptune',prev:'ph-mtn',dom:'Gathering'},
+  {t:'Threads',c:31,p:'neptune',prev:'ph-indigo',dom:'Gathering'},
+  {t:'Governance',c:19,p:'jupiter',prev:'ph-violet',dom:'Governance'},
+  {t:'Proposals',c:7,p:'jupiter',prev:'ph-arch',dom:'Governance'},
+  {t:'Leatherwork',c:24,p:'sun',prev:'ph-coffee',dom:'Craft'},
+  {t:'Projects',c:11,p:'sun',prev:'ph-desk',dom:'Craft'},
+  {t:'Recipes',c:13,p:'sun',prev:'ph-bloom',dom:'Craft'},
+  {t:'Travel',c:38,p:'pluto',prev:'ph-mtn',dom:'Exchange'},
+  {t:'Trades',c:6,p:'pluto',prev:'ph-coffee',dom:'Exchange'},
+  {t:'Archive',c:57,p:'pluto',prev:'ph-book',dom:'Craft'},
+];
+const grid=document.getElementById('workGrid');
+grid.innerHTML=cards.map((c,i)=>`
+  <button class="wcard" style="--pc:${P[c.p]}" data-i="${i}">
+    <span class="wadd">＋ add</span>
+    <div class="wprev ${c.prev}"></div>
+    <div class="wtitle">${c.t}</div>
+    <div class="wsub"><span class="pdot"></span>${c.c} posts · ${c.dom}</div>
+  </button>`).join('');
+
+/* Sample showcased posts shown when a card opens */
+const samples={
+  Poetry:[['Salt and static','A short one, written on the drive home from the lakes. Six lines, no punctuation.'],
+          ['Ledger','On what we owe the people who vouch for us.'],
+          ['Aperture','Light is just consent from the sun.']],
+  Photography:[['The shore remembers','Portra 400, salt lakes at golden hour.'],['Vegetable tan','Studio light, the wallet before stitching.'],['Fog on the range','6am, hand-held, no tripod.']],
+  Governance:[['Tenure-weighted consent','Draft rationale for the Kommons quorum change.'],['Sortition, softly','Why I think a lottery beats a vote here.'],['Blocking well','A note on using the Block vote with care.']],
+  Leatherwork:[['Four pockets, one hidden','The card wallet, start to finish.'],['Saddle stitch','Why two needles beat a machine every time.'],['Vegetable vs chrome','What I reach for and when.']],
+};
+function fill(c){
+  const rows=(samples[c.t]||[['Showcased post','A favourite, pinned to this card.'],['Another','You choose what lives here — not the algorithm.'],['And one more','Reorder, feature, or hide any time.']]);
+  document.getElementById('dbody').innerHTML=rows.map(r=>`
+    <div class="showcase"><b>${r[0]}</b><p>${r[1]}</p>
+      <div class="sc-meta"><span>♥ ${20+Math.floor(Math.random()*130)}</span><span>⟳ ${Math.floor(Math.random()*20)}</span><span>featured</span></div>
+    </div>`).join('');
+}
+const scrim=document.getElementById('scrim'),drawer=document.getElementById('drawer');
+grid.addEventListener('click',e=>{
+  const b=e.target.closest('.wcard'); if(!b)return;
+  const c=cards[b.dataset.i];
+  document.getElementById('dtitle').textContent=c.t;
+  document.getElementById('dsub').textContent=`${c.dom} · ${c.c} posts showcased`;
+  document.getElementById('dpdot').style.background=P[c.p];
+  fill(c);
+  scrim.classList.add('on'); drawer.classList.add('on'); drawer.setAttribute('aria-hidden','false');
+});
+function close(){scrim.classList.remove('on'); drawer.classList.remove('on'); drawer.setAttribute('aria-hidden','true');}
+scrim.addEventListener('click',close);
+document.getElementById('dclose').addEventListener('click',close);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+</script>
+</body>
+</html>

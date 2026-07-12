@@ -39,34 +39,50 @@
 // ---------- restyle: AccountHeader identity strip ---------------------------
 // Only takes effect when the header is mounted inside .sectioned-profile
 // (i.e. inside the /@user landing). Non-Sections views keep upstream styling.
+//
+// Structural model: the shared AccountHeader DOM renders name / bio / stats as
+// three vertical siblings inside .account__header__bar. To match the prototype's
+// `.headwrap` (avatar left, identity middle, stats right, all bottom-aligned to
+// the cover) we make __bar a two-column grid — avatar in col 1 spanning full
+// height, everything else in col 2 flowing vertically. Stats push right via
+// margin-left:auto inside the __extra flex row.
 
 .sectioned-profile .account__header {
+  overflow: visible;  // let the avatar bleed above the cover
+
   .account__header__image {
     height: 210px;
     margin: 0;
+    border-radius: 0 0 24px 24px;
+    border-bottom: 0;
     background:
       radial-gradient(120% 140% at 82% 0%, rgba(132, 138, 250, 42%), transparent 60%),
       radial-gradient(90% 120% at 10% 20%, rgba(86, 58, 204, 40%), transparent 55%),
       linear-gradient(160deg, #241a44, #0d0a1c 70%);
-    border-radius: 0 0 24px 24px;
 
     img.parallax {
-      // Fade out the header image so the cover gradient shows through;
-      // once users upload richer cover art this can be tuned per-account.
       opacity: 0.5;
       mix-blend-mode: screen;
     }
   }
 
   .account__header__bar {
-    padding: 0 6px;
-    border-top: 0;
+    position: relative;
+    display: grid;
+    grid-template-columns: 148px 1fr;
+    column-gap: 26px;
+    padding: 12px 6px 0;
+    border: 0;
   }
 
   .account__header__tabs {
-    align-items: flex-end;
-    margin-top: -64px;
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: start;
+    display: block;
+    margin: -64px 0 0;
     padding: 0;
+    overflow: visible;
 
     .avatar {
       width: 148px;
@@ -75,40 +91,72 @@
       border: 3px solid var(--sp-canvas);
       box-shadow: 0 10px 30px rgb(0 0 0 / 50%);
       overflow: hidden;
-      flex: none;
+      display: block;
 
       .account__avatar,
       img {
         width: 100%;
         height: 100%;
         border-radius: inherit;
+        background: transparent;
+        border: 0;
       }
     }
   }
 
-  .account__header__tabs__name h1 {
-    font-family: var(--font-display);
-    font-size: 38px;
-    line-height: 1;
-    margin: 0;
-    font-weight: 400;
+  // Edit-profile / bell / share / menu — perch top-right of the identity col,
+  // baseline-aligned with the name. Absolute in __bar (position: relative).
+  .account__header__buttons--desktop {
+    position: absolute;
+    top: 18px;
+    right: 6px;
+    display: flex;
+    gap: 6px;
+    z-index: 2;
+  }
 
-    small {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      color: var(--sp-dim);
-      font-size: 14px;
-      margin-top: 8px;
-      font-family: var(--font-sans-serif), sans-serif;
+  .account__header__buttons--mobile {
+    grid-column: 2;
+  }
+
+  .account__header__tabs__name {
+    grid-column: 2;
+    margin: 0;
+    padding-right: 180px;  // keep name clear of the edit-profile perch
+
+    h1 {
+      font-family: var(--font-display);
+      font-size: 38px;
+      line-height: 1;
+      margin: 0;
+      font-weight: 400;
+      overflow: visible;
+      white-space: normal;
+
+      small {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        color: var(--sp-dim);
+        font-size: 14px;
+        margin-top: 8px;
+        font-family: var(--font-sans-serif), sans-serif;
+      }
     }
   }
 
+  .account__header__badges {
+    grid-column: 2;
+    margin-top: 8px;
+  }
+
   .account__header__extra {
-    padding-top: 18px;
+    grid-column: 2;
+    padding-top: 6px;
     display: flex;
     gap: 30px;
-    align-items: flex-start;
+    align-items: flex-end;
     flex-wrap: wrap;
   }
 
@@ -116,7 +164,8 @@
     flex: 1 1 340px;
     max-width: 640px;
     color: #d7d3ee;
-    min-width: 280px;
+    min-width: 260px;
+    margin: 0;
   }
 
   .account__header__fields {
@@ -147,8 +196,8 @@
   .account__header__extra__links {
     display: flex;
     gap: 30px;
-    padding-top: 6px;
     margin-left: auto;
+    padding: 0 0 6px;
     flex: none;
     align-items: flex-end;
 
@@ -156,12 +205,14 @@
       display: block;
       text-align: left;
       padding: 0;
+      color: inherit;
 
       strong {
         font-family: var(--font-display);
         font-size: 26px;
         display: block;
         line-height: 1;
+        color: var(--sp-text);
       }
 
       abbr {
@@ -172,6 +223,15 @@
       }
     }
   }
+}
+
+// Inline "◈ Owner" chip appended to the handle line — activated by a modifier
+// on the wrap. The floating cover chip has been retired; this one lives inline
+// beside the @handle where it belongs.
+.sectioned-profile__header-wrap--owner .account__header__tabs__name h1 small::after {
+  content: '◈ Owner';
+  color: var(--accent);
+  font-weight: 600;
 }
 
 // ---------- tab strip ---------------------------------------------------------
@@ -284,28 +344,10 @@
   }
 }
 
-// ---------- header-wrap + owner badge ---------------------------------------
+// ---------- header-wrap -----------------------------------------------------
 
 .sectioned-profile__header-wrap {
   position: relative;
-}
-
-.sectioned-profile__owner-badge {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 11px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--accent);
-  background: rgb(0 0 0 / 40%);
-  border: 1px solid rgba(132, 138, 250, 40%);
-  border-radius: 999px;
-  backdrop-filter: blur(6px);
 }
 
 // ---------- Me panel ----------------------------------------------------------
@@ -611,14 +653,42 @@
   }
 
   .sectioned-profile .account__header {
-    .account__header__tabs {
-      flex-wrap: wrap;
+    .account__header__bar {
+      grid-template-columns: 1fr;
+    }
+
+    .account__header__tabs,
+    .account__header__tabs__name,
+    .account__header__extra,
+    .account__header__badges,
+    .account__header__buttons--mobile {
+      grid-column: 1;
+    }
+
+    .account__header__tabs__name {
+      padding-right: 0;
+    }
+
+    .account__header__extra {
+      align-items: flex-start;
     }
 
     .account__header__extra__links {
       margin-left: 0;
       width: 100%;
     }
+
+    .account__header__buttons--desktop {
+      position: static;
+      justify-content: flex-end;
+      padding-top: 8px;
+    }
+  }
+}
+
+@media (width <= 560px) {
+  .sectioned-profile .account__header .account__header__tabs__name h1 {
+    font-size: 30px;
   }
 }
 
