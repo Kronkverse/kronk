@@ -354,6 +354,40 @@
   }
 }
 
+// Populated card content — the At-a-glance 4-tile grid. Matches the
+// prototype's `.tiles / .tile` on kronk-profile-redesign.html.
+.sectioned-profile__tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.sectioned-profile__tile {
+  background: var(--sp-surface-2);
+  border: 1px solid var(--sp-line);
+  border-radius: 12px;
+  padding: 14px 6px;
+  text-align: center;
+
+  b {
+    font-family: var(--font-display);
+    font-size: 24px;
+    display: block;
+    line-height: 1;
+    color: var(--sp-text);
+    font-weight: 400;
+  }
+
+  span {
+    font-size: 11px;
+    color: var(--sp-dim);
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 4px;
+  }
+}
+
 // Self-describing empty-state copy on Me-panel cards. Names what the
 // card is FOR, not "please go to settings". Replaces the old
 // __stub-plus-generic-copy pattern.

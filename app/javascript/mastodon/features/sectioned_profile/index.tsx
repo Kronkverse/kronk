@@ -60,6 +60,10 @@ const messages = defineMessages({
   interestsAction: { id: 'sectioned_profile.me.interests_action', defaultMessage: 'Add interests' },
   exploringAction: { id: 'sectioned_profile.me.exploring_action', defaultMessage: 'Add a spark' },
   atGlanceAction: { id: 'sectioned_profile.me.at_a_glance_action', defaultMessage: 'Set up your summary' },
+  atGlanceTilePosts: { id: 'sectioned_profile.me.at_a_glance.posts', defaultMessage: 'Posts' },
+  atGlanceTileFollowing: { id: 'sectioned_profile.me.at_a_glance.following', defaultMessage: 'Following' },
+  atGlanceTileFollowers: { id: 'sectioned_profile.me.at_a_glance.followers', defaultMessage: 'Followers' },
+  atGlanceTileSince: { id: 'sectioned_profile.me.at_a_glance.since', defaultMessage: 'Since' },
   highlightsAction: { id: 'sectioned_profile.me.highlights_action', defaultMessage: 'Pin a highlight' },
   personalityAction: { id: 'sectioned_profile.me.personality_action', defaultMessage: 'Add a few words' },
   driveAction: { id: 'sectioned_profile.me.drive_action', defaultMessage: 'Write your line' },
@@ -250,7 +254,7 @@ export const SectionedProfile = () => {
                 role='tabpanel'
                 hidden={activeTab !== 'me'}
               >
-                <MePanel isOwner={isOwner} />
+                <MePanel isOwner={isOwner} account={account} />
               </section>
 
               <section
@@ -340,6 +344,9 @@ interface MeCardCopy {
   action: MessageDescriptor;
   href: string;
   note?: boolean;
+  // Marker for cards that render populated content from the account
+  // object instead of the empty-state template.
+  kind?: 'at-a-glance';
 }
 
 // Bio + display-name + avatar edits actually exist at /settings/profile
@@ -355,7 +362,7 @@ const ME_COL_1: MeCardCopy[] = [
 ];
 
 const ME_COL_2: MeCardCopy[] = [
-  { title: messages.atGlanceTitle, desc: messages.atGlanceDesc, action: messages.atGlanceAction, href: EDIT_PROFILE_HREF },
+  { title: messages.atGlanceTitle, desc: messages.atGlanceDesc, action: messages.atGlanceAction, href: EDIT_PROFILE_HREF, kind: 'at-a-glance' },
   { title: messages.highlightsTitle, desc: messages.highlightsDesc, action: messages.highlightsAction, href: EDIT_PROFILE_HREF },
   { title: messages.personalityTitle, desc: messages.personalityDesc, action: messages.personalityAction, href: EDIT_PROFILE_HREF },
   { title: messages.driveTitle, desc: messages.driveDesc, action: messages.driveAction, href: EDIT_PROFILE_HREF },
@@ -381,8 +388,18 @@ const OPEN_TO: OpenToCopy[] = [
   { icon: '♥', title: messages.openVouchingTitle, sub: messages.openVouchingDesc },
 ];
 
-const MeCard: React.FC<{ card: MeCardCopy; isOwner: boolean }> = ({ card, isOwner }) => {
+const MeCard: React.FC<{
+  card: MeCardCopy;
+  isOwner: boolean;
+  account: ApiAccountJSON;
+}> = ({ card, isOwner, account }) => {
   const intl = useIntl();
+
+  // Populated variants replace the empty-state template entirely.
+  if (card.kind === 'at-a-glance') {
+    return <AtAGlanceCard account={account} />;
+  }
+
   return (
     <div className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}>
       <h3>{intl.formatMessage(card.title)}</h3>
@@ -396,19 +413,50 @@ const MeCard: React.FC<{ card: MeCardCopy; isOwner: boolean }> = ({ card, isOwne
   );
 };
 
-const MePanel: React.FC<{ isOwner: boolean }> = ({ isOwner }) => {
+// Populated "At a glance" — 4 tiles reading real Mastodon account
+// counters. No backend change. Shown for both owner and visitor.
+const AtAGlanceCard: React.FC<{ account: ApiAccountJSON }> = ({ account }) => {
+  const intl = useIntl();
+  const joinedYear = new Date(account.created_at).getFullYear();
+
+  return (
+    <div className='sectioned-profile__card'>
+      <h3>{intl.formatMessage(messages.atGlanceTitle)}</h3>
+      <div className='sectioned-profile__tiles'>
+        <div className='sectioned-profile__tile'>
+          <b>{account.statuses_count}</b>
+          <span>{intl.formatMessage(messages.atGlanceTilePosts)}</span>
+        </div>
+        <div className='sectioned-profile__tile'>
+          <b>{account.following_count}</b>
+          <span>{intl.formatMessage(messages.atGlanceTileFollowing)}</span>
+        </div>
+        <div className='sectioned-profile__tile'>
+          <b>{account.followers_count}</b>
+          <span>{intl.formatMessage(messages.atGlanceTileFollowers)}</span>
+        </div>
+        <div className='sectioned-profile__tile'>
+          <b>{joinedYear}</b>
+          <span>{intl.formatMessage(messages.atGlanceTileSince)}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MePanel: React.FC<{ isOwner: boolean; account: ApiAccountJSON }> = ({ isOwner, account }) => {
   const intl = useIntl();
   return (
     <>
       <div className='sectioned-profile__me-grid'>
         <div className='sectioned-profile__me-col'>
-          {ME_COL_1.map((c) => <MeCard key={c.title.id} card={c} isOwner={isOwner} />)}
+          {ME_COL_1.map((c) => <MeCard key={c.title.id} card={c} isOwner={isOwner} account={account} />)}
         </div>
         <div className='sectioned-profile__me-col'>
-          {ME_COL_2.map((c) => <MeCard key={c.title.id} card={c} isOwner={isOwner} />)}
+          {ME_COL_2.map((c) => <MeCard key={c.title.id} card={c} isOwner={isOwner} account={account} />)}
         </div>
         <div className='sectioned-profile__me-col'>
-          {ME_COL_3.map((c) => <MeCard key={c.title.id} card={c} isOwner={isOwner} />)}
+          {ME_COL_3.map((c) => <MeCard key={c.title.id} card={c} isOwner={isOwner} account={account} />)}
         </div>
       </div>
 
