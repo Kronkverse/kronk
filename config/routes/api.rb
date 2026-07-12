@@ -202,6 +202,14 @@ namespace :api, format: false do
           put :reorder
         end
       end
+
+      # Identity content cards on the Me tab (About me, Interests, etc.).
+      # Keyed by card_type — see ProfileCard::CARD_TYPES.
+      resources :cards, only: [:index, :update, :destroy], param: :card_type do
+        collection do
+          patch :reorder
+        end
+      end
     end
 
     namespace :nudges do
@@ -310,6 +318,10 @@ namespace :api, format: false do
               get :statuses
             end
           end
+
+          # Read-only listing of the target account's identity cards.
+          # Filtered per-viewer by ProfileCard#visible_to?
+          resources :cards, only: [:index], param: :card_type
         end
       end
 
