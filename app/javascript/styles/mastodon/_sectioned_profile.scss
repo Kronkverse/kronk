@@ -908,3 +908,103 @@
     transition: none;
   }
 }
+
+// ---------- HARDENING (2026-07-12) --------------------------------------------
+// The polite specificity-based overrides at the top of this file aren't
+// winning against Mastodon's account_header rules in practice — even at
+// higher class-count specificity, container queries and source-order
+// interactions were causing the grid layout to collapse, the cover to
+// float inset, the avatar to render on a phantom surface bg, and the
+// edit-profile perch to end up as a full-width banner.
+//
+// Rather than escalate specificity indefinitely, use !important on the
+// specific properties that must win. Kept scoped to `.sectioned-profile`
+// so no other view is affected.
+
+// Kill any ambient padding/margin the scrollable brings in — the cover
+// must be able to fill its container edge-to-edge.
+.scrollable.sectioned-profile {
+  padding: 0 !important;
+}
+
+.sectioned-profile .account__header {
+  overflow: visible !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.sectioned-profile .account__header .account__header__image {
+  height: 210px !important;
+  width: 100% !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 0 24px 24px !important;
+}
+
+// Two-column grid — avatar | identity. Force the display type; upstream
+// leaves __bar at its block default in some viewport widths.
+.sectioned-profile .account__header .account__header__bar {
+  display: grid !important;
+  grid-template-columns: 148px 1fr !important;
+  column-gap: 26px !important;
+  padding: 12px 22px 0 !important;
+  max-width: 1180px !important;
+  margin: 0 auto !important;
+  border: 0 !important;
+  background: transparent !important;
+  position: relative !important;
+}
+
+// Avatar: squircle, no phantom bg from the upstream .account__avatar rule.
+.sectioned-profile .account__header .account__header__tabs {
+  background: none !important;
+  margin: -64px 0 0 !important;
+  display: block !important;
+  padding: 0 !important;
+}
+
+.sectioned-profile .account__header .avatar {
+  width: 148px !important;
+  height: 148px !important;
+  border-radius: 34% !important;
+  border: 3px solid var(--sp-canvas) !important;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 50%) !important;
+  overflow: hidden !important;
+  background: transparent !important;
+}
+
+.sectioned-profile .account__header .avatar .account__avatar {
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: inherit !important;
+}
+
+// Edit-profile / bell / share perch: top-right of the identity column,
+// not a full-width banner.
+.sectioned-profile .account__header .account__header__buttons--desktop {
+  position: absolute !important;
+  top: 18px !important;
+  right: 22px !important;
+  margin-top: 0 !important;  // upstream sets margin-top: 55px
+  display: flex !important;
+  gap: 6px !important;
+  z-index: 3 !important;
+}
+
+// Role badges (upstream renders Owner/Admin/Mod as chips) are already
+// represented by the inline ◈ Owner chip in the handle line for
+// SectionedProfile. Hide the duplicate.
+.sectioned-profile .account__header .account__header__badges {
+  display: none !important;
+}
+
+// Downgrade the error banner from a full-width red block to a subtle
+// one-liner. A failed sections/statuses fetch shouldn't dominate the
+// page — the rest of the panel is now resilient to it.
+.sectioned-profile__error {
+  font-size: 12px;
+  padding: 6px 22px 0;
+  opacity: 0.7;
+}

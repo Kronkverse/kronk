@@ -106,36 +106,56 @@ export const SectionedProfile = () => {
 
     let cancelled = false;
     void (async () => {
+      // Step 1: account lookup. If this fails, the panel can't render at
+      // all — surface the error and stop.
+      let accountRes: ApiAccountJSON;
       try {
-        const accountRes = await apiRequestGet<ApiAccountJSON>('v1/accounts/lookup', { acct });
-        if (cancelled) return;
+        accountRes = await apiRequestGet<ApiAccountJSON>('v1/accounts/lookup', { acct });
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+        return;
+      }
+      if (cancelled) return;
 
-        // Hydrate the account into Redux so AccountHeader can find it.
-        dispatch(importFetchedAccount(accountRes));
-        setAccount(accountRes);
+      dispatch(importFetchedAccount(accountRes));
+      setAccount(accountRes);
 
-        const sectionList = await apiRequestGet<ApiProfileSectionJSON[]>(
+      // Step 2: sections list. Independent of statuses. A failure here
+      // means the user sees the tabs + placeholder grids instead of an
+      // empty panel and a scary red error.
+      let sectionList: ApiProfileSectionJSON[] = [];
+      try {
+        sectionList = await apiRequestGet<ApiProfileSectionJSON[]>(
           `v1/accounts/${accountRes.id}/profile/sections`,
         );
-        if (cancelled) return;
+      } catch {
+        // Log but don't setError — the rest of the surface can render.
+        if (!cancelled) {
+          // eslint-disable-next-line no-console
+          console.warn('SectionedProfile: sections fetch failed; rendering empty state');
+        }
+      }
+      if (cancelled) return;
 
-        const enriched: SectionWithStatuses[] = sectionList.map((s) => ({
-          ...s,
-          statusIds: emptyList,
-          loading: true,
-        }));
-        setSections(enriched);
+      const enriched: SectionWithStatuses[] = sectionList.map((s) => ({
+        ...s,
+        statusIds: emptyList,
+        loading: true,
+      }));
+      setSections(enriched);
 
-        await Promise.all(
-          sectionList.map(async (s) => {
+      // Step 3: statuses per section. Each fetch is independent; one
+      // failure doesn't fail the others. `loading: false` is set either
+      // way so the UI stops showing skeletons.
+      await Promise.all(
+        sectionList.map(async (s) => {
+          try {
             const statuses = await apiRequestGet<ApiStatusJSON[]>(
               `v1/accounts/${accountRes.id}/profile/sections/${s.id}/statuses`,
               { limit: 20 },
             );
             if (cancelled) return;
-
             dispatch(importFetchedStatuses(statuses));
-
             setSections((prev) =>
               prev.map((row) =>
                 row.id === s.id
@@ -147,12 +167,14 @@ export const SectionedProfile = () => {
                   : row,
               ),
             );
-          }),
-        );
-      } catch (e: unknown) {
-        if (cancelled) return;
-        setError(e instanceof Error ? e.message : String(e));
-      }
+          } catch {
+            if (cancelled) return;
+            setSections((prev) =>
+              prev.map((row) => (row.id === s.id ? { ...row, loading: false } : row)),
+            );
+          }
+        }),
+      );
     })();
 
     return () => {
