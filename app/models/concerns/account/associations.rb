@@ -99,5 +99,9 @@ module Account::Associations
     # Sectioned profile ordering (§Profile) — every account has a
     # baseline `timeline` section on signup.
     has_many :profile_sections, inverse_of: :account, dependent: :destroy
+
+    # Identity content on the Me tab (About me / Interests / Values / …).
+    # Users start with zero cards; the composer creates them on demand.
+    has_many :profile_cards, inverse_of: :account, dependent: :destroy
   end
 end
