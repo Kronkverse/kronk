@@ -30,6 +30,11 @@ semantic:
   text-muted: { dark: '#606085', light: '#7a7194' }
   warning-red: { dark: '#ef4444', light: '#c53030' }
   success-green: { dark: '#4b9160', light: '#276749' }
+  # Governance/Kommons decision outcomes — vibrant state indicators, distinct from success-green
+  decision-agree: { dark: '#22c55e', light: '#16a34a' }
+  decision-abstain: { dark: '#94a3b8', light: '#64748b' }
+  decision-block: { dark: '#ef4444', light: '#c53030' }
+  decision-pending: { dark: '#f59e0b', light: '#c2410c' }
 
 # ── Fonts (theme-invariant) ────────────────────────────────────────
 font:

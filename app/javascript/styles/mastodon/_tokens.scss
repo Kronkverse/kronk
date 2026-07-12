@@ -19,6 +19,10 @@
   --semantic-text-muted: #606085;
   --semantic-warning-red: #ef4444;
   --semantic-success-green: #4b9160;
+  --semantic-decision-agree: #22c55e;
+  --semantic-decision-abstain: #94a3b8;
+  --semantic-decision-block: #ef4444;
+  --semantic-decision-pending: #f59e0b;
 
   // Consumer aliases — SCSS uses the short names below directly.
   --accent: var(--semantic-accent);
@@ -30,6 +34,10 @@
   --text-muted: var(--semantic-text-muted);
   --warning-red: var(--semantic-warning-red);
   --success-green: var(--semantic-success-green);
+  --decision-agree: var(--semantic-decision-agree);
+  --decision-abstain: var(--semantic-decision-abstain);
+  --decision-block: var(--semantic-decision-block);
+  --decision-pending: var(--semantic-decision-pending);
 
   // ── Fonts ──────────────────────────────────────────────────────
   --font-display: 'Liberation Serif', Georgia, serif;
@@ -73,4 +81,8 @@
   --semantic-text-muted: #7a7194;
   --semantic-warning-red: #c53030;
   --semantic-success-green: #276749;
+  --semantic-decision-agree: #16a34a;
+  --semantic-decision-abstain: #64748b;
+  --semantic-decision-block: #c53030;
+  --semantic-decision-pending: #c2410c;
 }
