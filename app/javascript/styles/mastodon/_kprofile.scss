@@ -1,0 +1,209 @@
+// KProfileHeader — /@user identity strip. Own class namespace so no
+// specificity fights with upstream Mastodon .account__header rules.
+//
+// Layout:
+//   +---------------- cover (full-bleed, 210px, bottom-rounded) ----------------+
+//   |                                                                          |
+//   |   +---avatar---+  name / handle / bio / joined / metarow    Posts N     |
+//   |   |            |                                            Followers N |
+//   |   |            |                                            Following N |
+//   |   +------------+                                                        |
+//   +--------------------------------------------------------------------------+
+//
+// Assumes it gets a full-width content area (no shell compensation). If
+// the shell squeezes width, the layout wraps, not collapses.
+
+.kprofile {
+  --k-canvas: var(--background-color, #0a0812);
+  --k-surface: var(--surface-variant-background-color, #141020);
+  --k-text: var(--on-surface-color, #ece9fb);
+  --k-dim: var(--text-secondary-color, #9a95c4);
+  --k-faint: var(--text-tertiary-color, #6f6a95);
+  --k-line: rgba(132, 138, 250, 24%);
+  --k-accent: var(--accent, #8c8dff);
+  --k-serif: var(--font-display, 'Liberation Serif', Georgia, serif);
+
+  position: relative;
+  color: var(--k-text);
+}
+
+.kprofile__cover {
+  height: 210px;
+  border-radius: 0 0 24px 24px;
+  background:
+    radial-gradient(120% 140% at 82% 0%, rgb(132 138 250 / 42%), transparent 60%),
+    radial-gradient(90% 120% at 10% 20%, rgb(86 58 204 / 40%), transparent 55%),
+    linear-gradient(160deg, #241a44, #0d0a1c 70%);
+  background-color: #0d0a1c;  // opaque; stars must never show through
+}
+
+.kprofile__headwrap {
+  position: relative;
+  display: flex;
+  gap: 26px;
+  align-items: flex-end;
+  padding: 0 22px;
+  max-width: 1180px;
+  margin: -64px auto 0;  // pull avatar up over cover
+  flex-wrap: wrap;
+}
+
+.kprofile__avatar {
+  width: 148px;
+  height: 148px;
+  border-radius: 34%;
+  border: 3px solid var(--k-canvas);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 50%);
+  background: linear-gradient(150deg, #3a2c66, #181233);
+  flex: 0 0 auto;
+  object-fit: cover;
+  display: block;
+}
+
+.kprofile__identity {
+  flex: 1 1 340px;
+  min-width: 260px;
+  padding-bottom: 6px;
+}
+
+.kprofile__nameline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.kprofile__name {
+  font-family: var(--k-serif);
+  font-size: 38px;
+  line-height: 1;
+  margin: 0;
+  font-weight: 400;
+  color: var(--k-text);
+}
+
+.kprofile__edit {
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--k-text);
+  background: transparent;
+  border: 1px solid var(--k-line);
+  border-radius: 8px;
+  text-decoration: none;
+  flex: 0 0 auto;
+  transition: background 0.14s, border-color 0.14s;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--k-surface);
+    border-color: var(--k-accent);
+    outline: none;
+  }
+}
+
+.kprofile__handle {
+  color: var(--k-dim);
+  font-size: 14px;
+  margin: 6px 0 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.kprofile__handle-acct {
+  font-family: var(--font-sans-serif), sans-serif;
+}
+
+.kprofile__owner {
+  color: var(--k-accent);
+  font-weight: 600;
+}
+
+.kprofile__bio {
+  margin: 12px 0 0;
+  max-width: 640px;
+  color: #d7d3ee;
+
+  p {
+    margin: 0;
+  }
+
+  p + p {
+    margin-top: 6px;
+  }
+
+  a {
+    color: var(--k-accent);
+  }
+}
+
+.kprofile__metarow {
+  display: flex;
+  gap: 18px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  color: var(--k-dim);
+  font-size: 13px;
+}
+
+.kprofile__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.kprofile__meta-icon {
+  opacity: 0.7;
+}
+
+.kprofile__stats {
+  display: flex;
+  gap: 30px;
+  align-items: flex-end;
+  margin-left: auto;
+  padding-bottom: 6px;
+  flex: none;
+}
+
+.kprofile__stat {
+  text-align: left;
+
+  b {
+    font-family: var(--k-serif);
+    font-size: 26px;
+    display: block;
+    line-height: 1;
+    color: var(--k-text);
+    font-weight: 400;
+  }
+
+  span {
+    font-size: 11.5px;
+    color: var(--k-dim);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+}
+
+// Only collapses at a truly narrow viewport — well below anything a
+// desktop user can hit even with a shell rail eating space. The whole
+// point of route (a) was to stop having stacking rules bite normal
+// viewports.
+@media (width <= 560px) {
+  .kprofile__headwrap {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .kprofile__stats {
+    margin-left: 0;
+    justify-content: space-between;
+    padding-bottom: 0;
+  }
+
+  .kprofile__name {
+    font-size: 30px;
+  }
+}

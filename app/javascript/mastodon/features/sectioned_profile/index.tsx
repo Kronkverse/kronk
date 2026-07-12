@@ -14,7 +14,7 @@ import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 import Column from 'mastodon/components/column';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
 import StatusList from 'mastodon/components/status_list';
-import { AccountHeader } from 'mastodon/features/account_timeline/components/account_header';
+import { KProfileHeader } from './kprofile_header';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
 
@@ -196,13 +196,7 @@ export const SectionedProfile = () => {
       <ColumnBackButton />
 
       <div className='scrollable sectioned-profile'>
-        {account && (
-          <div
-            className={`sectioned-profile__header-wrap${isOwner ? ' sectioned-profile__header-wrap--owner' : ''}`}
-          >
-            <AccountHeader accountId={account.id} hideTabs />
-          </div>
-        )}
+        {account && <KProfileHeader account={account} />}
 
         <div className='sectioned-profile__body'>
           {error && (
