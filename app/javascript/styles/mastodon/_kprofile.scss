@@ -23,7 +23,10 @@
   --k-accent: var(--accent, #8c8dff);
   --k-serif: var(--font-display, 'Liberation Serif', Georgia, serif);
 
+  // Positive stacking so the header sits above the starfield (body
+  // bg-image + panel bg-images from _stars.scss).
   position: relative;
+  z-index: 1;
   color: var(--k-text);
 }
 

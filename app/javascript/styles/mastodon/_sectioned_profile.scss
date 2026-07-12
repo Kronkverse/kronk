@@ -32,6 +32,13 @@
     max-width: 1180px;
     margin: 0 auto;
     padding: 0 22px 80px;
+
+    // Opaque, positive stacking context so the starfield (body bg-image
+    // + panel bg-images from _stars.scss) never shows through the tab
+    // strip or the whitespace between cards.
+    position: relative;
+    z-index: 1;
+    background: var(--background-color, #0a0812);
   }
 
   &__error {
@@ -357,6 +364,30 @@
   margin: 0;
 }
 
+// Every empty-card gets an inline action — heading + one dim line +
+// button, no dead ends. Only rendered for the owner (visitors just see
+// the heading + description).
+.sectioned-profile__card-action {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--sp-text);
+  background: transparent;
+  border: 1px solid var(--sp-line-2);
+  border-radius: 999px;
+  text-decoration: none;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--sp-surface-2);
+    border-color: var(--accent);
+    color: var(--accent);
+    outline: none;
+  }
+}
+
 .sectioned-profile__provisional {
   font-size: 11px;
   color: var(--sp-faint);
@@ -520,6 +551,11 @@
 // Empty-state placeholder tiles — same shape as .work-card so the grid
 // structure is legible before any real content exists. Dimmed so they
 // don't compete with real cards when both are present.
+//
+// Left-edge stripe uses the shared --accent (planet metaphor was retired
+// 2026-07-10; the whole palette is Kronk purple). The stripe stays at
+// full visibility even when the tile itself is dimmed, so the shape of
+// the feature stays legible.
 .sectioned-profile__work-placeholder {
   position: relative;
   text-align: left;
@@ -530,8 +566,16 @@
   padding: 16px 16px 15px;
   overflow: hidden;
   text-decoration: none;
-  opacity: 0.65;
   transition: opacity 0.14s, border-color 0.14s;
+
+  // Dim the tile CONTENT (title, sub, preview) but not the accent
+  // stripe — the stripe is our "shape of the feature" cue and needs to
+  // read at full strength.
+  > .sectioned-profile__work-placeholder-preview,
+  > .sectioned-profile__work-placeholder-title,
+  > .sectioned-profile__work-placeholder-sub {
+    opacity: 0.65;
+  }
 
   &::before {
     content: '';
@@ -541,7 +585,7 @@
     bottom: 0;
     width: 4px;
     background: var(--accent);
-    opacity: 0.35;
+    opacity: 0.7;
   }
 
   &--create {
@@ -551,11 +595,17 @@
     text-align: center;
     border-style: solid;
     border-color: var(--accent);
-    opacity: 1;
     color: var(--sp-text);
     cursor: pointer;
 
     &::before {
+      opacity: 1;
+    }
+
+    // Undo the content-dimming from the parent rule — the create tile is
+    // interactive, not decor, and reads at full strength.
+    > .sectioned-profile__work-placeholder-title,
+    > .sectioned-profile__work-placeholder-sub {
       opacity: 1;
     }
 
