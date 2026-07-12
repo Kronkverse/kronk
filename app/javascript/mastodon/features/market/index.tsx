@@ -51,7 +51,6 @@ const Market: React.FC<{
         className='scrollable'
         style={
           {
-            '--space-color': 'var(--accent)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',

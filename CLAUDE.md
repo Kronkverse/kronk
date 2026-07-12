@@ -69,7 +69,7 @@ Canonical sources of truth:
 
 ### Historical note
 
-Prior to 2.0.0, Kronk used a "planet metaphor" — each space orbited a coloured planet, and cards themed from a `--space-color` custom property. That metaphor was retired to consolidate visual identity. Any lingering references to `planets.tsx`, `PLANET_COLORS`, `SPACE_PLANET`, `spaceColor()`, or `--space-color` are transitional aliases and will be swept.
+Prior to 2.0.0, Kronk used a "planet metaphor" — each space orbited a coloured planet, and cards themed from a `--space-color` custom property. That metaphor was retired to consolidate visual identity. `--space-color` and its transitional alias were swept from the code in the 2.0.0 rebuild; `planets.tsx` remains as an accent-only compatibility shim until its remaining imports are removed.
 
 ## Custom Features (Kronk-specific)
 

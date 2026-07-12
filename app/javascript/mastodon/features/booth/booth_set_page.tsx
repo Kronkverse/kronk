@@ -73,10 +73,7 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         multiColumn={multiColumn}
       />
 
-      <div
-        className='booth booth--set-page scrollable'
-        style={{ '--space-color': 'var(--accent)' } as React.CSSProperties}
-      >
+      <div className='booth booth--set-page scrollable'>
         <Link to='/hub/booth' className='booth__back-link'>
           ← {intl.formatMessage(messages.back)}
         </Link>

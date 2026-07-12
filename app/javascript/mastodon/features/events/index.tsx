@@ -186,12 +186,7 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      <div
-        className='events-page'
-        style={
-          { '--space-color': 'var(--accent)' } as React.CSSProperties
-        }
-      >
+      <div className='events-page'>
         <section className='events-page__hero'>
           <h1 className='events-page__hero-title'>
             {intl.formatMessage(messages.title)}

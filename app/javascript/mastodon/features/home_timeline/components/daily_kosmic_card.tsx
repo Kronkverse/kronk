@@ -53,7 +53,6 @@ export const DailyKosmicCard: React.FC = () => {
   return (
     <button
       className='daily-kosmic-card'
-      style={{ '--space-color': 'var(--accent)' } as React.CSSProperties}
       onClick={handleClick}
       type='button'
     >
