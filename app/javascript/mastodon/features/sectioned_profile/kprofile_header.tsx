@@ -1,6 +1,9 @@
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+import type {
+  ApiAccountJSON,
+  ApiAccountFieldJSON,
+} from 'mastodon/api_types/accounts';
 import { me } from 'mastodon/initial_state';
 
 // Independent header for the SectionedProfile route (/@user). Does NOT
@@ -26,6 +29,36 @@ const formatJoinDate = (iso: string): string => {
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
 };
+
+// Common Mastodon custom-field name → icon glyph. Match is
+// case-insensitive on the field name; unknown fields fall back to `▸`.
+const FIELD_ICONS: Array<[RegExp, string]> = [
+  [/^(website|url|link|site)$/i, '↗'],
+  [/^(location|city|from|based)$/i, '◍'],
+  [/^(email|mail)$/i, '✉'],
+  [/^(pronouns?)$/i, '◆'],
+];
+
+const iconForField = (name: string): string => {
+  for (const [re, glyph] of FIELD_ICONS) {
+    if (re.test(name.trim())) return glyph;
+  }
+  return '▸';
+};
+
+// Pronouns often live in a custom field. When present we lift it out of
+// the fields list and render it inline next to the handle (matches the
+// prototype's `@tal · he/him` treatment).
+const findPronouns = (fields: ApiAccountFieldJSON[]): string | null => {
+  const pronouns = fields.find((f) => /^pronouns?$/i.test(f.name.trim()));
+  if (!pronouns) return null;
+  // value is server-sanitised HTML — strip tags for the inline pill.
+  return pronouns.value.replace(/<[^>]+>/g, '').trim() || null;
+};
+
+const filterMetarowFields = (
+  fields: ApiAccountFieldJSON[],
+): ApiAccountFieldJSON[] => fields.filter((f) => !/^pronouns?$/i.test(f.name.trim()));
 
 export const KProfileHeader: React.FC<{ account: ApiAccountJSON }> = ({
   account,
@@ -64,6 +97,11 @@ export const KProfileHeader: React.FC<{ account: ApiAccountJSON }> = ({
 
           <p className='kprofile__handle'>
             <span className='kprofile__handle-acct'>@{account.acct}</span>
+            {findPronouns(account.fields) && (
+              <span className='kprofile__pronouns'>
+                {findPronouns(account.fields)}
+              </span>
+            )}
             {isOwner && (
               <span className='kprofile__owner'>
                 {intl.formatMessage(messages.ownerBadge)}
@@ -79,6 +117,22 @@ export const KProfileHeader: React.FC<{ account: ApiAccountJSON }> = ({
           )}
 
           <div className='kprofile__metarow'>
+            {filterMetarowFields(account.fields).map((field) => (
+              <span
+                key={field.name}
+                className={`kprofile__meta-item${field.verified_at ? ' kprofile__meta-item--verified' : ''}`}
+              >
+                <span className='kprofile__meta-icon' aria-hidden>
+                  {iconForField(field.name)}
+                </span>
+                <span
+                  className='kprofile__meta-value'
+                  // field.value is server-sanitised HTML (may contain a
+                  // verified <a> or an emoji <img>).
+                  dangerouslySetInnerHTML={{ __html: field.value }}
+                />
+              </span>
+            ))}
             <span className='kprofile__meta-item'>
               <span className='kprofile__meta-icon' aria-hidden>✦</span>
               <FormattedMessage
