@@ -169,6 +169,9 @@ Rails.application.routes.draw do
     # Kronk-native Connections subview (follow requests + followers +
     # following) — SPA-served. Same reasoning re: ordering.
     get '/@:account_username/connections', to: 'home#index'
+    # Profile composer (owner-only) — SPA-served. Same reasoning re:
+    # ordering: 'edit' must not be matched as a status id.
+    get '/@:account_username/edit', to: 'home#index'
     get '/@:account_username/:id', to: 'statuses#show', as: :short_account_status
     get '/@:account_username/:id/embed', to: 'statuses#embed', as: :embed_short_account_status
   end
