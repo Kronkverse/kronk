@@ -346,7 +346,7 @@ interface MeCardCopy {
   note?: boolean;
   // Marker for cards that render populated content from the account
   // object or a live API fetch instead of the empty-state template.
-  kind?: 'at-a-glance' | 'highlights';
+  kind?: 'at-a-glance' | 'highlights' | 'moments';
 }
 
 // Bio + display-name + avatar edits actually exist at /settings/profile
@@ -370,7 +370,7 @@ const ME_COL_2: MeCardCopy[] = [
 ];
 
 const ME_COL_3: MeCardCopy[] = [
-  { title: messages.momentsTitle, desc: messages.momentsDesc, action: messages.momentsAction, href: EDIT_PROFILE_HREF },
+  { title: messages.momentsTitle, desc: messages.momentsDesc, action: messages.momentsAction, href: EDIT_PROFILE_HREF, kind: 'moments' },
   { title: messages.valuesTitle, desc: messages.valuesDesc, action: messages.valuesAction, href: EDIT_PROFILE_HREF },
   { title: messages.noteTitle, desc: messages.noteDesc, action: messages.noteAction, href: EDIT_PROFILE_HREF, note: true },
 ];
@@ -401,6 +401,9 @@ const MeCard: React.FC<{
   }
   if (card.kind === 'highlights') {
     return <HighlightsCard card={card} account={account} isOwner={isOwner} />;
+  }
+  if (card.kind === 'moments') {
+    return <MomentsCard card={card} account={account} isOwner={isOwner} />;
   }
 
   return (
@@ -537,6 +540,82 @@ const HighlightTile: React.FC<{ status: ApiStatusJSON }> = ({ status }) => {
         <span>♥ {favCount}</span>
       </div>
     </a>
+  );
+};
+
+// Populated "Life in moments" — up to 9 media thumbnails from the
+// account's media-only timeline. Matches the prototype's `.gallery / .g`.
+const MomentsCard: React.FC<{
+  card: MeCardCopy;
+  account: ApiAccountJSON;
+  isOwner: boolean;
+}> = ({ card, account, isOwner }) => {
+  const intl = useIntl();
+  const [moments, setMoments] = useState<ApiStatusJSON[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void apiRequestGet<ApiStatusJSON[]>(
+      `v1/accounts/${account.id}/statuses`,
+      { only_media: true, limit: 9, exclude_reblogs: true },
+    )
+      .then((rows) => {
+        if (!cancelled) setMoments(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setMoments([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [account.id]);
+
+  if (moments === null) {
+    return (
+      <div className='sectioned-profile__card'>
+        <h3>{intl.formatMessage(card.title)}</h3>
+      </div>
+    );
+  }
+
+  // Flatten all media across statuses into a single thumb list (up to 9).
+  const thumbs = moments
+    .flatMap((s) =>
+      s.media_attachments.map((m) => ({ mediaId: m.id, statusUrl: s.url, previewUrl: m.preview_url })),
+    )
+    .slice(0, 9);
+
+  if (thumbs.length === 0) {
+    return (
+      <div className='sectioned-profile__card'>
+        <h3>{intl.formatMessage(card.title)}</h3>
+        <p className='sectioned-profile__card-desc'>
+          {intl.formatMessage(card.desc)}
+        </p>
+        {isOwner && (
+          <a href={card.href} className='sectioned-profile__card-action'>
+            {intl.formatMessage(card.action)}
+          </a>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className='sectioned-profile__card'>
+      <h3>{intl.formatMessage(card.title)}</h3>
+      <div className='sectioned-profile__gallery'>
+        {thumbs.map((t) => (
+          <a
+            key={t.mediaId}
+            href={t.statusUrl}
+            className='sectioned-profile__gallery-tile'
+            style={{ backgroundImage: `url(${t.previewUrl})` }}
+            aria-label={intl.formatMessage(card.title)}
+          />
+        ))}
+      </div>
+    </div>
   );
 };
 

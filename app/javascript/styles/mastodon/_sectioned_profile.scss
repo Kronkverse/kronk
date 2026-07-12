@@ -408,6 +408,31 @@
   }
 }
 
+// Populated "Life in moments" — 3×3 grid of media thumbnails from the
+// account's media-only timeline. Matches the prototype's `.gallery / .g`.
+.sectioned-profile__gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+
+.sectioned-profile__gallery-tile {
+  aspect-ratio: 1;
+  border-radius: 9px;
+  background-color: var(--sp-surface-2);
+  background-size: cover;
+  background-position: center;
+  display: block;
+  transition: transform 0.14s, box-shadow 0.14s;
+
+  &:hover,
+  &:focus-visible {
+    transform: scale(1.03);
+    box-shadow: 0 4px 16px rgb(0 0 0 / 35%);
+    outline: none;
+  }
+}
+
 // Populated card content — the At-a-glance 4-tile grid. Matches the
 // prototype's `.tiles / .tile` on kronk-profile-redesign.html.
 .sectioned-profile__tiles {
