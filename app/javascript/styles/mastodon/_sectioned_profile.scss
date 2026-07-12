@@ -354,6 +354,60 @@
   }
 }
 
+// Populated "Recent highlights" — 3-column grid of pinned-status
+// thumbnails. Matches the prototype's `.highlights / .hl`.
+.sectioned-profile__highlights {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.sectioned-profile__highlight {
+  border: 1px solid var(--sp-line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--sp-surface-2);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: border-color 0.14s, transform 0.14s;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    outline: none;
+  }
+}
+
+.sectioned-profile__highlight-thumb {
+  height: 96px;
+  background: linear-gradient(150deg, #3a2c66, #181233);
+  background-size: cover;
+  background-position: center;
+}
+
+.sectioned-profile__highlight-cap {
+  padding: 9px 11px;
+
+  b {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sp-text);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  span {
+    font-size: 11.5px;
+    color: var(--sp-dim);
+    display: block;
+    margin-top: 2px;
+  }
+}
+
 // Populated card content — the At-a-glance 4-tile grid. Matches the
 // prototype's `.tiles / .tile` on kronk-profile-redesign.html.
 .sectioned-profile__tiles {

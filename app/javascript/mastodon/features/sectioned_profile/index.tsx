@@ -345,8 +345,8 @@ interface MeCardCopy {
   href: string;
   note?: boolean;
   // Marker for cards that render populated content from the account
-  // object instead of the empty-state template.
-  kind?: 'at-a-glance';
+  // object or a live API fetch instead of the empty-state template.
+  kind?: 'at-a-glance' | 'highlights';
 }
 
 // Bio + display-name + avatar edits actually exist at /settings/profile
@@ -363,7 +363,7 @@ const ME_COL_1: MeCardCopy[] = [
 
 const ME_COL_2: MeCardCopy[] = [
   { title: messages.atGlanceTitle, desc: messages.atGlanceDesc, action: messages.atGlanceAction, href: EDIT_PROFILE_HREF, kind: 'at-a-glance' },
-  { title: messages.highlightsTitle, desc: messages.highlightsDesc, action: messages.highlightsAction, href: EDIT_PROFILE_HREF },
+  { title: messages.highlightsTitle, desc: messages.highlightsDesc, action: messages.highlightsAction, href: EDIT_PROFILE_HREF, kind: 'highlights' },
   { title: messages.personalityTitle, desc: messages.personalityDesc, action: messages.personalityAction, href: EDIT_PROFILE_HREF },
   { title: messages.driveTitle, desc: messages.driveDesc, action: messages.driveAction, href: EDIT_PROFILE_HREF },
   { title: messages.rotationTitle, desc: messages.rotationDesc, action: messages.rotationAction, href: EDIT_PROFILE_HREF },
@@ -398,6 +398,9 @@ const MeCard: React.FC<{
   // Populated variants replace the empty-state template entirely.
   if (card.kind === 'at-a-glance') {
     return <AtAGlanceCard account={account} />;
+  }
+  if (card.kind === 'highlights') {
+    return <HighlightsCard card={card} account={account} isOwner={isOwner} />;
   }
 
   return (
@@ -441,6 +444,99 @@ const AtAGlanceCard: React.FC<{ account: ApiAccountJSON }> = ({ account }) => {
         </div>
       </div>
     </div>
+  );
+};
+
+// Populated "Recent highlights" — up to 3 pinned statuses, matching
+// the prototype's `.highlights / .hl` treatment. Falls back to the
+// empty-state MeCard when no pinned statuses exist.
+const HighlightsCard: React.FC<{
+  card: MeCardCopy;
+  account: ApiAccountJSON;
+  isOwner: boolean;
+}> = ({ card, account, isOwner }) => {
+  const intl = useIntl();
+  const [pinned, setPinned] = useState<ApiStatusJSON[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void apiRequestGet<ApiStatusJSON[]>(
+      `v1/accounts/${account.id}/statuses`,
+      { pinned: true, limit: 3 },
+    )
+      .then((rows) => {
+        if (!cancelled) setPinned(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setPinned([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [account.id]);
+
+  // Loading — show heading with no content to avoid empty→filled flicker.
+  if (pinned === null) {
+    return (
+      <div className='sectioned-profile__card'>
+        <h3>{intl.formatMessage(card.title)}</h3>
+      </div>
+    );
+  }
+
+  // No pinned statuses — full empty-state template with action.
+  if (pinned.length === 0) {
+    return (
+      <div className='sectioned-profile__card'>
+        <h3>{intl.formatMessage(card.title)}</h3>
+        <p className='sectioned-profile__card-desc'>
+          {intl.formatMessage(card.desc)}
+        </p>
+        {isOwner && (
+          <a href={card.href} className='sectioned-profile__card-action'>
+            {intl.formatMessage(card.action)}
+          </a>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className='sectioned-profile__card'>
+      <h3>{intl.formatMessage(card.title)}</h3>
+      <div className='sectioned-profile__highlights'>
+        {pinned.map((status) => (
+          <HighlightTile key={status.id} status={status} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const HighlightTile: React.FC<{ status: ApiStatusJSON }> = ({ status }) => {
+  const media = status.media_attachments[0];
+  const excerpt =
+    status.spoiler_text ||
+    (status.content ?? '').replace(/<[^>]+>/g, '').trim().slice(0, 60);
+  // Mastodon's JSON API uses `favourites_count` (British spelling);
+  // the local TS type uses `favorites_count`. Handle both to be safe.
+  const raw = status as unknown as {
+    favourites_count?: number;
+    favorites_count?: number;
+  };
+  const favCount = raw.favourites_count ?? raw.favorites_count ?? 0;
+
+  return (
+    <a href={status.url} className='sectioned-profile__highlight'>
+      <div
+        className='sectioned-profile__highlight-thumb'
+        style={media ? { backgroundImage: `url(${media.preview_url})` } : undefined}
+      />
+      <div className='sectioned-profile__highlight-cap'>
+        <b>{excerpt || '…'}</b>
+        <span>♥ {favCount}</span>
+      </div>
+    </a>
   );
 };
 
