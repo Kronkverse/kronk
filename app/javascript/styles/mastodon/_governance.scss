@@ -3,11 +3,6 @@
 // Commons — governance feature styles
 // Theme-aware via --accent shared token (set by governance/index.tsx)
 
-$governance-agree: #22c55e;
-$governance-abstain: #94a3b8;
-$governance-block: #ef4444;
-$governance-amber: #f59e0b;
-
 // ─── Page shell ────────────────────────────────────────────────────────────
 
 .governance-page {
@@ -149,7 +144,7 @@ $governance-amber: #f59e0b;
 .governance-card {
   --vote-agree: var(--accent);
   --vote-abstain: #{$dark-text-color};
-  --vote-block: #{$governance-block};
+  --vote-block: #{var(--decision-block)};
   --strip-color: var(--background-border-color);
 
   position: relative;
@@ -171,17 +166,17 @@ $governance-amber: #f59e0b;
   }
 
   &--in_progress {
-    --strip-color: #{$governance-amber};
+    --strip-color: #{var(--decision-pending)};
   }
 
   &--vetoed {
-    --strip-color: #{$governance-block};
+    --strip-color: #{var(--decision-block)};
 
     opacity: 0.85;
   }
 
   &--delivered {
-    --strip-color: #{$governance-agree};
+    --strip-color: #{var(--decision-agree)};
   }
 
   &--archived {
@@ -323,8 +318,8 @@ $governance-amber: #f59e0b;
 }
 
 .governance-card__needs-help {
-  background: rgba($governance-amber, 0.15);
-  color: darken($governance-amber, 10%);
+  background: color-mix(in srgb, var(--decision-pending) 15%, transparent);
+  color: color-mix(in srgb, var(--decision-pending) 90%, black);
   border-radius: 12px;
   padding: 2px 8px;
   font-size: 11px;
@@ -365,15 +360,15 @@ $governance-amber: #f59e0b;
   }
 
   &--in_progress {
-    background: $governance-amber;
+    background: var(--decision-pending);
   }
 
   &--vetoed {
-    background: $governance-block;
+    background: var(--decision-block);
   }
 
   &--delivered {
-    background: $governance-agree;
+    background: var(--decision-agree);
   }
 }
 
@@ -412,7 +407,7 @@ $governance-amber: #f59e0b;
 
 .governance-card__veto-count {
   font-size: 11px;
-  color: $governance-block;
+  color: var(--decision-block);
   margin-top: 2px;
 }
 
@@ -468,20 +463,20 @@ $governance-amber: #f59e0b;
   }
 
   &--vetoed {
-    background: rgba($governance-block, 0.08);
-    border-left: 3px solid $governance-block;
+    background: color-mix(in srgb, var(--decision-block) 8%, transparent);
+    border-left: 3px solid var(--decision-block);
 
     strong {
-      color: $governance-block;
+      color: var(--decision-block);
     }
   }
 
   &--delivered {
-    background: rgba($governance-agree, 0.1);
-    border-left: 3px solid $governance-agree;
+    background: color-mix(in srgb, var(--decision-agree) 10%, transparent);
+    border-left: 3px solid var(--decision-agree);
 
     strong {
-      color: darken($governance-agree, 18%);
+      color: color-mix(in srgb, var(--decision-agree) 82%, black);
     }
   }
 }
@@ -492,9 +487,9 @@ $governance-amber: #f59e0b;
   margin-top: 18px;
   padding: 14px 16px;
   border: 1px solid var(--border-color);
-  border-left: 3px solid $governance-agree;
+  border-left: 3px solid var(--decision-agree);
   border-radius: 6px;
-  background: rgba($governance-agree, 0.04);
+  background: color-mix(in srgb, var(--decision-agree) 4%, transparent);
 }
 
 .governance-delivery__heading {
@@ -503,7 +498,7 @@ $governance-amber: #f59e0b;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: darken($governance-agree, 18%);
+  color: color-mix(in srgb, var(--decision-agree) 82%, black);
 }
 
 .governance-delivery__hint {
@@ -526,13 +521,14 @@ $governance-amber: #f59e0b;
 
   &:focus {
     outline: none;
-    border-color: $governance-agree;
-    box-shadow: 0 0 0 3px rgba($governance-agree, 0.18);
+    border-color: var(--decision-agree);
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--decision-agree) 18%, transparent);
   }
 }
 
 .governance-delivery__btn {
-  background: darken($governance-agree, 6%);
+  background: color-mix(in srgb, var(--decision-agree) 94%, black);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -572,15 +568,15 @@ $governance-amber: #f59e0b;
   transition: width 0.3s ease;
 
   &--agree {
-    background: $governance-agree;
+    background: var(--decision-agree);
   }
 
   &--abstain {
-    background: $governance-abstain;
+    background: var(--decision-abstain);
   }
 
   &--block {
-    background: $governance-block;
+    background: var(--decision-block);
   }
 }
 
@@ -660,20 +656,20 @@ $governance-amber: #f59e0b;
   }
 
   &--archive {
-    color: $governance-block;
-    border-color: $governance-block;
+    color: var(--decision-block);
+    border-color: var(--decision-block);
 
     &:hover {
-      background: rgba($governance-block, 0.08);
+      background: color-mix(in srgb, var(--decision-block) 8%, transparent);
     }
   }
 
   &--deliver {
-    color: $governance-agree;
-    border-color: $governance-agree;
+    color: var(--decision-agree);
+    border-color: var(--decision-agree);
 
     &:hover {
-      background: rgba($governance-agree, 0.08);
+      background: color-mix(in srgb, var(--decision-agree) 8%, transparent);
     }
   }
 }
@@ -711,12 +707,12 @@ $governance-amber: #f59e0b;
   }
 
   &--vetoed {
-    background: $governance-block;
+    background: var(--decision-block);
     color: #fff;
   }
 
   &--delivered {
-    background: $governance-agree;
+    background: var(--decision-agree);
     color: #fff;
   }
 }
@@ -897,10 +893,10 @@ $governance-amber: #f59e0b;
 
   &__submit {
     padding: 9px 20px;
-    border: 1px solid rgba($governance-block, 0.5);
+    border: 1px solid color-mix(in srgb, var(--decision-block) 50%, transparent);
     border-radius: 8px;
-    background: rgba($governance-block, 0.12);
-    color: $governance-block;
+    background: color-mix(in srgb, var(--decision-block) 12%, transparent);
+    color: var(--decision-block);
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -922,7 +918,7 @@ $governance-amber: #f59e0b;
 .governance-vote-current__withdraw {
   background: transparent;
   border: none;
-  color: $governance-block;
+  color: var(--decision-block);
   cursor: pointer;
   font-size: inherit;
   padding: 0;
@@ -990,8 +986,8 @@ $governance-amber: #f59e0b;
   border-radius: 6px;
 
   &:hover {
-    color: $governance-block;
-    background: rgba($governance-block, 0.08);
+    color: var(--decision-block);
+    background: color-mix(in srgb, var(--decision-block) 8%, transparent);
   }
 }
 
@@ -1025,10 +1021,10 @@ $governance-amber: #f59e0b;
 
 .governance-challenge {
   border: 1px solid var(--background-border-color);
-  border-left: 3px solid $governance-block;
+  border-left: 3px solid var(--decision-block);
   border-radius: 8px;
   padding: 14px 16px;
-  background: rgba($governance-block, 0.03);
+  background: color-mix(in srgb, var(--decision-block) 3%, transparent);
 }
 
 .governance-challenge__header {
@@ -1042,8 +1038,8 @@ $governance-amber: #f59e0b;
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: rgba($governance-block, 0.14);
-  color: $governance-block;
+  background: color-mix(in srgb, var(--decision-block) 14%, transparent);
+  color: var(--decision-block);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1074,7 +1070,8 @@ $governance-amber: #f59e0b;
   color: $primary-text-color;
   margin: 0 0 12px;
   padding: 0 0 0 8px;
-  border-left: 2px solid rgba($governance-block, 0.3);
+  border-left: 2px solid
+    color-mix(in srgb, var(--decision-block) 30%, transparent);
 }
 
 .governance-challenge__section-label {
@@ -1106,7 +1103,7 @@ $governance-amber: #f59e0b;
 
   &--met {
     opacity: 0.85;
-    border-color: rgba($governance-agree, 0.4);
+    border-color: color-mix(in srgb, var(--decision-agree) 40%, transparent);
   }
 }
 
@@ -1120,7 +1117,7 @@ $governance-amber: #f59e0b;
     margin-top: 2px;
     width: 16px;
     height: 16px;
-    accent-color: $governance-agree;
+    accent-color: var(--decision-agree);
     cursor: pointer;
   }
 
@@ -1266,23 +1263,23 @@ $governance-amber: #f59e0b;
 
 .governance-challenge__withdraw-hint {
   font-size: 11px;
-  color: $governance-agree;
+  color: var(--decision-agree);
   font-weight: 600;
 }
 
 .governance-challenge__withdraw-btn {
   padding: 7px 16px;
-  border: 1px solid rgba($governance-block, 0.5);
+  border: 1px solid color-mix(in srgb, var(--decision-block) 50%, transparent);
   border-radius: 6px;
   background: transparent;
-  color: $governance-block;
+  color: var(--decision-block);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   margin-left: auto;
 
   &:hover:not(:disabled) {
-    background: rgba($governance-block, 0.08);
+    background: color-mix(in srgb, var(--decision-block) 8%, transparent);
   }
 
   &:disabled {
@@ -1291,8 +1288,9 @@ $governance-amber: #f59e0b;
   }
 
   &--ready {
-    background: rgba($governance-block, 0.12);
-    box-shadow: 0 0 0 2px rgba($governance-block, 0.25);
+    background: color-mix(in srgb, var(--decision-block) 12%, transparent);
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--decision-block) 25%, transparent);
   }
 }
 
@@ -1359,7 +1357,7 @@ $governance-amber: #f59e0b;
   }
 
   &--block {
-    background: $governance-block;
+    background: var(--decision-block);
   }
 }
 
@@ -1415,8 +1413,8 @@ $governance-amber: #f59e0b;
   }
 
   &--challenge.active {
-    background: $governance-block;
-    border-color: $governance-block;
+    background: var(--decision-block);
+    border-color: var(--decision-block);
     color: #fff;
   }
 
@@ -1502,7 +1500,7 @@ $governance-amber: #f59e0b;
 
   &:focus {
     outline: none;
-    border-color: $governance-block;
+    border-color: var(--decision-block);
   }
 }
 
@@ -1517,8 +1515,8 @@ $governance-amber: #f59e0b;
   border-radius: 6px;
 
   &:hover {
-    color: $governance-block;
-    background: rgba($governance-block, 0.08);
+    color: var(--decision-block);
+    background: color-mix(in srgb, var(--decision-block) 8%, transparent);
   }
 }
 
@@ -1542,10 +1540,10 @@ $governance-amber: #f59e0b;
 .governance-composer__error {
   margin: 0;
   padding: 8px 12px;
-  background: rgba($governance-block, 0.08);
-  border: 1px solid rgba($governance-block, 0.3);
+  background: color-mix(in srgb, var(--decision-block) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--decision-block) 30%, transparent);
   border-radius: 6px;
-  color: $governance-block;
+  color: var(--decision-block);
   font-size: 13px;
 }
 
@@ -1622,7 +1620,7 @@ $governance-amber: #f59e0b;
   }
 
   &--challenge {
-    border-left-color: $governance-block;
+    border-left-color: var(--decision-block);
   }
 
   &--mine {
@@ -1658,7 +1656,7 @@ $governance-amber: #f59e0b;
   }
 
   &--challenge {
-    background: $governance-block;
+    background: var(--decision-block);
   }
 }
 
@@ -1744,8 +1742,8 @@ $governance-amber: #f59e0b;
 
 .governance-response-card__delete-btn {
   &:hover:not(:disabled) {
-    border-color: $governance-block;
-    color: $governance-block;
+    border-color: var(--decision-block);
+    color: var(--decision-block);
   }
 }
 
@@ -1774,20 +1772,20 @@ $governance-amber: #f59e0b;
   }
 
   &--vetoed {
-    background: #{rgba($governance-block, 0.1)};
-    border-left: 3px solid #{$governance-block};
+    background: #{color-mix(in srgb, var(--decision-block) 10%, transparent)};
+    border-left: 3px solid #{var(--decision-block)};
 
     strong {
-      color: #{$governance-block};
+      color: #{var(--decision-block)};
     }
   }
 
   &--delivered {
-    background: rgba($governance-agree, 0.12);
-    border-left: 3px solid $governance-agree;
+    background: color-mix(in srgb, var(--decision-agree) 12%, transparent);
+    border-left: 3px solid var(--decision-agree);
 
     strong {
-      color: $governance-agree;
+      color: var(--decision-agree);
     }
   }
 }
@@ -1820,7 +1818,7 @@ $governance-amber: #f59e0b;
   }
 
   &--block {
-    background: #{$governance-block};
+    background: #{var(--decision-block)};
   }
 }
 
@@ -1855,7 +1853,7 @@ $governance-amber: #f59e0b;
   }
 
   &--block {
-    background: #{$governance-block};
+    background: #{var(--decision-block)};
   }
 }
 
@@ -1923,15 +1921,15 @@ $governance-amber: #f59e0b;
   }
 
   &--block {
-    border-color: rgba($governance-block, 0.5);
-    color: $governance-block;
-    background: rgba($governance-block, 0.12);
+    border-color: color-mix(in srgb, var(--decision-block) 50%, transparent);
+    color: var(--decision-block);
+    background: color-mix(in srgb, var(--decision-block) 12%, transparent);
   }
 
   &--deliver {
-    border-color: rgba($governance-agree, 0.5);
-    color: $governance-agree;
-    background: rgba($governance-agree, 0.12);
+    border-color: color-mix(in srgb, var(--decision-agree) 50%, transparent);
+    color: var(--decision-agree);
+    background: color-mix(in srgb, var(--decision-agree) 12%, transparent);
     flex: 0 0 auto;
     align-self: flex-start;
     padding: 10px 24px;
@@ -2037,8 +2035,8 @@ $governance-amber: #f59e0b;
   }
 
   &--block {
-    background: #{rgba($governance-block, 0.1)};
-    color: #{$governance-block};
+    background: #{color-mix(in srgb, var(--decision-block) 10%, transparent)};
+    color: #{var(--decision-block)};
   }
 }
 
@@ -2129,11 +2127,11 @@ $governance-amber: #f59e0b;
   }
 
   &--in_progress {
-    background: $governance-amber;
+    background: var(--decision-pending);
   }
 
   &--done {
-    background: $governance-agree;
+    background: var(--decision-agree);
   }
 }
 
@@ -2200,8 +2198,8 @@ $governance-amber: #f59e0b;
 
 .governance-skill-badge {
   display: inline-block;
-  background: rgba($governance-amber, 0.15);
-  color: darken($governance-amber, 15%);
+  background: color-mix(in srgb, var(--decision-pending) 15%, transparent);
+  color: color-mix(in srgb, var(--decision-pending) 85%, black);
   border-radius: 10px;
   padding: 1px 8px;
   font-size: 11px;
@@ -2253,8 +2251,8 @@ $governance-amber: #f59e0b;
   }
 
   &--funded {
-    background: rgba($governance-agree, 0.1);
-    color: darken($governance-agree, 20%);
+    background: color-mix(in srgb, var(--decision-agree) 10%, transparent);
+    color: color-mix(in srgb, var(--decision-agree) 80%, black);
   }
 
   &--spent {
@@ -2331,9 +2329,9 @@ $governance-amber: #f59e0b;
 }
 
 .governance-form__error {
-  color: $governance-block;
-  background: rgba($governance-block, 0.08);
-  border: 1px solid rgba($governance-block, 0.35);
+  color: var(--decision-block);
+  background: color-mix(in srgb, var(--decision-block) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--decision-block) 35%, transparent);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 13px;
@@ -2389,7 +2387,7 @@ $governance-amber: #f59e0b;
 }
 
 .governance-form__required {
-  color: $governance-block;
+  color: var(--decision-block);
   font-weight: 700;
 }
 
@@ -2532,8 +2530,8 @@ $governance-amber: #f59e0b;
   transition: all 0.15s;
 
   &:hover {
-    color: $governance-block;
-    background: rgba($governance-block, 0.08);
+    color: var(--decision-block);
+    background: color-mix(in srgb, var(--decision-block) 8%, transparent);
   }
 
   svg {
@@ -2622,11 +2620,12 @@ $governance-amber: #f59e0b;
   }
 
   &--deliver {
-    background: $governance-agree;
+    background: var(--decision-agree);
 
     &:hover:not(:disabled) {
-      background: darken($governance-agree, 6%);
-      box-shadow: 0 2px 8px rgba($governance-agree, 0.25);
+      background: color-mix(in srgb, var(--decision-agree) 94%, black);
+      box-shadow: 0 2px 8px
+        color-mix(in srgb, var(--decision-agree) 25%, transparent);
     }
   }
 }
