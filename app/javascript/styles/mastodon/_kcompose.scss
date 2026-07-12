@@ -33,6 +33,14 @@
   padding: 0;
 }
 
+// The composer is a full-bleed three-pane editor. The single-column main
+// pane caps content at 600px above the no-gap breakpoint (components.scss),
+// which starves the centre canvas between the 250px + 300px side panes.
+// Lift the cap only for the pane that holds the composer.
+.columns-area__panels__main:has(.kcompose) {
+  max-width: none;
+}
+
 // ---------- top bar --------------------------------------------------------
 
 .kcompose__topbar {
