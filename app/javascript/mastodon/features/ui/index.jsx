@@ -111,6 +111,7 @@ import {
   AlbuttsStub,
   KompassStub,
   KornerSettings,
+  ProfileCompose,
   FeedSettings,
   Connections,
   StyleGuide,
@@ -255,6 +256,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/hub/groups/:id" component={GroupDetail} content={children} />}
             {signedIn && <WrappedRoute path="/hub/groups" component={Groups} content={children} />}
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
+            {signedIn && <WrappedRoute path='/hub/profile/compose' exact component={ProfileCompose} content={children} />}
             {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
             <WrappedRoute path='/hub/moments' component={MomentsStub} content={children} />
