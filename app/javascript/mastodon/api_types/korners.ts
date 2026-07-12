@@ -18,7 +18,7 @@ export interface ApiKornerSettingJSON {
   kind: string;
   default?: unknown;
   options?: unknown[];
-  scope?: 'user' | 'steward' | string;
+  scope?: string;
   // Optional label / description — either an i18n message id (spec §K.5)
   // or a plain display string.
   label?: string;
@@ -35,6 +35,11 @@ export interface ApiKornerResourceJSON {
   primary?: boolean;
 }
 
+export interface ApiKornerComposeJSON {
+  label: string;
+  route: string;
+}
+
 export interface ApiKornerJSON {
   slug: string;
   name: string;
@@ -48,6 +53,7 @@ export interface ApiKornerJSON {
   notifications?: ApiKornerNotificationTypeJSON[];
   feed_projection?: Record<string, unknown> | null;
   settings?: ApiKornerSettingJSON[];
+  compose?: ApiKornerComposeJSON | null;
   emits?: string[];
   listens?: string[];
   hub_teaser?: Record<string, unknown> | null;

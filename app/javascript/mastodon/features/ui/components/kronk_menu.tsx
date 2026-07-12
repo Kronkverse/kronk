@@ -37,6 +37,38 @@ const KORNER_RE = /^\/hub\/([a-z0-9-]+)(?:\/|$)/;
 const PROFILE_RE = /^\/@([^/]+)(?:\/|$)/;
 const FEED_RE = /^\/home(?:\/|$)/;
 
+interface PostTarget {
+  href: string;
+  label: string;
+}
+
+// Resolve the Post button target for the current surface:
+//   • Inside a korner with a declared compose block → use its label+route.
+//   • Inside a korner without compose → hide (returns null).
+//   • On profile / home feed → plain status compose.
+//   • Anywhere else (Hub landing, org space, settings, etc.) → hide.
+const usePostTarget = (): PostTarget | null => {
+  const intl = useIntl();
+  const location = useLocation();
+
+  const kornerMatch = KORNER_RE.exec(location.pathname);
+  const kornerSlug = kornerMatch?.[1];
+  const korner = useKorner(kornerSlug);
+
+  return useMemo(() => {
+    if (kornerSlug) {
+      if (korner?.compose?.route && korner.compose.label) {
+        return { href: korner.compose.route, label: korner.compose.label };
+      }
+      return null;
+    }
+    if (PROFILE_RE.exec(location.pathname) || FEED_RE.exec(location.pathname)) {
+      return { href: '/publish', label: intl.formatMessage(messages.post) };
+    }
+    return null;
+  }, [kornerSlug, korner, location.pathname, intl]);
+};
+
 interface SettingsTarget {
   href: string;
   label: string;
@@ -88,9 +120,10 @@ export const KronkMenu = () => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const settings = useSettingsTarget();
+  const post = usePostTarget();
 
   const unreadNudgesCount = useAppSelector(
-    (state) => state.notificationGroups.unreadNudgeCount ?? 0,
+    (state) => state.notificationGroups.unreadNudgeCount,
   );
 
   const toggle = useCallback(() => setOpen((prev) => !prev), []);
@@ -122,12 +155,12 @@ export const KronkMenu = () => {
 
       {open && (
         <div className='kronk-menu__panel' role='menu'>
-          <Link className='kronk-menu__item kronk-menu__item--primary' to='/publish' role='menuitem' onClick={close}>
-            <span className='kronk-menu__item-glyph' aria-hidden='true'><EditIcon /></span>
-            <span className='kronk-menu__item-label'>
-              <FormattedMessage {...messages.post} />
-            </span>
-          </Link>
+          {post && (
+            <Link className='kronk-menu__item kronk-menu__item--primary' to={post.href} role='menuitem' onClick={close}>
+              <span className='kronk-menu__item-glyph' aria-hidden='true'><EditIcon /></span>
+              <span className='kronk-menu__item-label'>{post.label}</span>
+            </Link>
+          )}
           <Link className='kronk-menu__item' to='/nudges' role='menuitem' onClick={close}>
             <span className='kronk-menu__item-glyph' aria-hidden='true'><ChatIcon /></span>
             <span className='kronk-menu__item-label'>

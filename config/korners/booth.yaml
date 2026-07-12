@@ -61,6 +61,10 @@ settings:
     scope:   user
     label:   Default visibility for sets I upload
 
+compose:
+  label:  "Upload a set"
+  route:  "/hub/booth/new"
+
 launch:
   blurb:  "The Booth — DJ sets and mixes at Kronk."
   cta:    "Tap in"

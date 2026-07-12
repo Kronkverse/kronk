@@ -76,6 +76,10 @@ settings:
     scope:   user
     label:   Week starts on
 
+compose:
+  label:  "New event"
+  route:  "/hub/kalendar/new"
+
 launch:
   blurb:  "Kalendar — the shared calendar for Kronk."
   cta:    "Tap in"

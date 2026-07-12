@@ -59,6 +59,10 @@ emits:
       - account_id
 listens: []
 
+compose:
+  label:  "New group"
+  route:  "/hub/groups/new"
+
 hub_teaser:
   static:  "Shareable, multi-poster spaces."
 
