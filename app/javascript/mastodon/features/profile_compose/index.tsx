@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
@@ -7,6 +6,7 @@ import { Helmet } from 'react-helmet';
 import { Redirect, useParams } from 'react-router-dom';
 
 import { apiRequestGet, apiRequestPut, apiRequestDelete } from 'mastodon/api';
+import Column from 'mastodon/components/column';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 
@@ -407,114 +407,115 @@ export const ProfileCompose = () => {
           ? intl.formatMessage(messages.saved)
           : '';
 
-  return createPortal(
-    <div className='kcompose'>
+  return (
+    <Column bindToDocument label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
         <meta name='robots' content='noindex' />
       </Helmet>
 
-      <header className='kcompose__topbar'>
-        <span className='kcompose__wordmark'>ӁЯѺƝ₭</span>
-        <span className='kcompose__crumb'>
-          <FormattedMessage {...messages.crumbLead} />
-          {' · '}
-          <b>
-            <FormattedMessage {...messages.crumbCurrent} />
-          </b>
-        </span>
-
-        <div className='kcompose__topbar-right'>
-          <span
-            className={`kcompose__saved kcompose__saved--${saveStatus}`}
-            aria-live='polite'
-          >
-            {statusLabel}
+      <div className='scrollable kcompose'>
+        <header className='kcompose__topbar'>
+          <span className='kcompose__wordmark'>ӁЯѺƝ₭</span>
+          <span className='kcompose__crumb'>
+            <FormattedMessage {...messages.crumbLead} />
+            {' · '}
+            <b>
+              <FormattedMessage {...messages.crumbCurrent} />
+            </b>
           </span>
-          <button type='button' className='kcompose__btn' disabled>
-            <FormattedMessage {...messages.preview} />
-          </button>
-          <a href={doneHref} className='kcompose__btn kcompose__btn--primary'>
-            <FormattedMessage {...messages.done} />
-          </a>
-        </div>
-      </header>
 
-      <div className='kcompose__panes'>
-        <aside className='kcompose__pane kcompose__pane--left'>
-          <p className='kcompose__pane-h'>
-            <FormattedMessage {...messages.paletteHeading} />
-          </p>
-          <p className='kcompose__pane-sub'>
-            {featureAvailable ? (
-              <FormattedMessage {...messages.paletteSub} />
-            ) : (
-              <FormattedMessage {...messages.paletteDisabled} />
-            )}
-          </p>
+          <div className='kcompose__topbar-right'>
+            <span
+              className={`kcompose__saved kcompose__saved--${saveStatus}`}
+              aria-live='polite'
+            >
+              {statusLabel}
+            </span>
+            <button type='button' className='kcompose__btn' disabled>
+              <FormattedMessage {...messages.preview} />
+            </button>
+            <a href={doneHref} className='kcompose__btn kcompose__btn--primary'>
+              <FormattedMessage {...messages.done} />
+            </a>
+          </div>
+        </header>
 
-          {CARD_GROUPS.map((group) => (
-            <div key={group.title.id}>
-              <div className='kcompose__group'>
-                {intl.formatMessage(group.title)}
+        <div className='kcompose__panes'>
+          <aside className='kcompose__pane kcompose__pane--left'>
+            <p className='kcompose__pane-h'>
+              <FormattedMessage {...messages.paletteHeading} />
+            </p>
+            <p className='kcompose__pane-sub'>
+              {featureAvailable ? (
+                <FormattedMessage {...messages.paletteSub} />
+              ) : (
+                <FormattedMessage {...messages.paletteDisabled} />
+              )}
+            </p>
+
+            {CARD_GROUPS.map((group) => (
+              <div key={group.title.id}>
+                <div className='kcompose__group'>
+                  {intl.formatMessage(group.title)}
+                </div>
+                {group.entries.map((entry) => (
+                  <PaletteCard
+                    key={entry.cardType}
+                    entry={entry}
+                    used={usedTypes.has(entry.cardType)}
+                    disabled={!featureAvailable}
+                    onAdd={handleAdd}
+                    onRemove={handleRemove}
+                  />
+                ))}
               </div>
-              {group.entries.map((entry) => (
-                <PaletteCard
-                  key={entry.cardType}
-                  entry={entry}
-                  used={usedTypes.has(entry.cardType)}
-                  disabled={!featureAvailable}
-                  onAdd={handleAdd}
-                  onRemove={handleRemove}
-                />
-              ))}
-            </div>
-          ))}
-        </aside>
+            ))}
+          </aside>
 
-        <main className='kcompose__pane kcompose__pane--center'>
-          <p className='kcompose__pane-h'>
-            <FormattedMessage {...messages.canvasHeading} />
-          </p>
-          {placed.length === 0 ? (
-            <p className='kcompose__pane-sub'>
-              <FormattedMessage {...messages.canvasEmpty} />
+          <main className='kcompose__pane kcompose__pane--center'>
+            <p className='kcompose__pane-h'>
+              <FormattedMessage {...messages.canvasHeading} />
             </p>
-          ) : (
-            <div className='kcompose__canvas'>
-              {placed.map((card) => (
-                <CanvasCard
-                  key={card.card_type}
-                  card={card}
-                  selected={card.card_type === selectedType}
-                  onSelect={setSelectedType}
-                  onCycleVisibility={handleVisibility}
-                />
-              ))}
-            </div>
-          )}
-        </main>
+            {placed.length === 0 ? (
+              <p className='kcompose__pane-sub'>
+                <FormattedMessage {...messages.canvasEmpty} />
+              </p>
+            ) : (
+              <div className='kcompose__canvas'>
+                {placed.map((card) => (
+                  <CanvasCard
+                    key={card.card_type}
+                    card={card}
+                    selected={card.card_type === selectedType}
+                    onSelect={setSelectedType}
+                    onCycleVisibility={handleVisibility}
+                  />
+                ))}
+              </div>
+            )}
+          </main>
 
-        <aside className='kcompose__pane kcompose__pane--right'>
-          <p className='kcompose__pane-h'>
-            <FormattedMessage {...messages.inspectorHeading} />
-          </p>
-          {selectedCard ? (
-            <Inspector
-              card={selectedCard}
-              onBodyChange={handleBodyChange}
-              onVisibility={handleVisibility}
-              onRemove={handleRemove}
-            />
-          ) : (
-            <p className='kcompose__pane-sub'>
-              <FormattedMessage {...messages.inspectorEmpty} />
+          <aside className='kcompose__pane kcompose__pane--right'>
+            <p className='kcompose__pane-h'>
+              <FormattedMessage {...messages.inspectorHeading} />
             </p>
-          )}
-        </aside>
+            {selectedCard ? (
+              <Inspector
+                card={selectedCard}
+                onBodyChange={handleBodyChange}
+                onVisibility={handleVisibility}
+                onRemove={handleRemove}
+              />
+            ) : (
+              <p className='kcompose__pane-sub'>
+                <FormattedMessage {...messages.inspectorEmpty} />
+              </p>
+            )}
+          </aside>
+        </div>
       </div>
-    </div>,
-    document.body,
+    </Column>
   );
 };
 

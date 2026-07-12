@@ -17,20 +17,28 @@
   --kc-accent: var(--accent, #8c8dff);
   --kc-serif: var(--font-display, 'Liberation Serif', Georgia, serif);
 
-  // Full-screen takeover. The composer is portalled to <body> (see
-  // profile_compose/index.tsx) so it escapes the column layout entirely and
-  // uses the whole viewport — the mockup's standalone editor with its own
-  // chrome + Done, not a pane squeezed inside the columns. `container` makes
-  // the pane grid respond to its own (viewport) width.
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  overflow: hidden;
+  // Positive stacking above the starfield.
+  position: relative;
+  z-index: 1;
   color: var(--kc-text);
   display: flex;
   flex-direction: column;
+  min-height: 100%;
   background: var(--kc-canvas);
-  container: kcompose / inline-size;
+}
+
+// Kill any ambient padding on the scrollable wrapper so the composer
+// fills its container edge to edge.
+.scrollable.kcompose {
+  padding: 0;
+}
+
+// The composer is a full-bleed three-pane editor. The single-column main
+// pane caps content at 600px above the no-gap breakpoint (components.scss),
+// which starves the centre canvas between the 250px + 300px side panes.
+// Lift the cap only for the pane that holds the composer.
+.columns-area__panels__main:has(.kcompose) {
+  max-width: none;
 }
 
 // ---------- top bar --------------------------------------------------------
@@ -137,7 +145,6 @@
   display: grid;
   grid-template-columns: 1fr;
   min-height: 0;
-  overflow-y: auto; // stacked: the whole thing scrolls as one
 }
 
 .kcompose__pane {
@@ -176,10 +183,9 @@
 // — not the viewport, which matters on the advanced/multi-column layout
 // where the column is narrow. 220 + 260 fixed sides leave the centre a
 // comfortable minimum; below the threshold it stays stacked.
-@container kcompose (min-width: 880px) {
+@container column (min-width: 880px) {
   .kcompose__panes {
     grid-template-columns: 220px 1fr 260px;
-    overflow: hidden; // three-pane: each pane scrolls independently
   }
 
   .kcompose__pane--left {
