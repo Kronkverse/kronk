@@ -173,6 +173,7 @@ namespace :api, format: false do
     namespace :settings do
       resource :appearance, only: [:show, :update], controller: :appearance
       resource :notifications, only: [:show, :update], controller: :notifications
+      resource :privacy, only: [:show, :update], controller: :privacy
     end
     resources :korners, only: [:index, :show], constraints: { id: /[^\/]+/ } do
       member do

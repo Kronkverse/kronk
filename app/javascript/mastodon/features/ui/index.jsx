@@ -120,6 +120,7 @@ import {
   SettingsKorners,
   AppearanceSettings,
   NotificationsSettings,
+  PrivacySettings,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
 import { focusColumn, getFocusedItemIndex, focusItemSibling } from './util/focusUtils';
@@ -257,6 +258,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/settings/korners' exact component={SettingsKorners} content={children} />}
             {signedIn && <WrappedRoute path='/settings/appearance' exact component={AppearanceSettings} content={children} />}
             {signedIn && <WrappedRoute path='/settings/notifications' exact component={NotificationsSettings} content={children} />}
+            {signedIn && <WrappedRoute path='/settings/privacy' exact component={PrivacySettings} content={children} />}
             {signedIn && <WrappedRoute path="/settings/profile_sections" component={ProfileSectionsSettings} content={children} />}
             <WrappedRoute path='/@:acct/profile' exact component={SectionedProfile} content={children} />
             {signedIn && <WrappedRoute path={["/kalendar/:id", "/hub/kalendar/:id"]} component={EventDetail} content={children} />}

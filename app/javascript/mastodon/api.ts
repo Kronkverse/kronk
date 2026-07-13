@@ -127,7 +127,7 @@ export default function api(withAuthorization = true) {
   return instance;
 }
 
-type ApiUrl = `v${1 | '1_alpha' | 2}/${string}`;
+export type ApiUrl = `v${1 | '1_alpha' | 2}/${string}`;
 type RequestParamsOrData = Record<string, unknown>;
 
 export async function apiRequest<ApiResponse = unknown>(

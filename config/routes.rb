@@ -189,6 +189,7 @@ Rails.application.routes.draw do
   get '/settings/korners', to: 'home#index'
   get '/settings/appearance', to: 'home#index'
   get '/settings/notifications', to: 'home#index'
+  get '/settings/privacy', to: 'home#index'
 
   draw(:settings)
 
