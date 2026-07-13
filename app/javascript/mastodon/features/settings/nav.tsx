@@ -94,6 +94,7 @@ export const YOU_SECTIONS: SectionDef[] = [
   },
   {
     key: 'privacy',
+    to: '/settings/privacy',
     Icon: VisibilityIcon,
     name: navMessages.privacy,
     desc: navMessages.privacyDesc,
