@@ -1,13 +1,15 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+
 import { FormattedMessage, useIntl, defineMessages } from 'react-intl';
 
-import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
+import { Link, useLocation } from 'react-router-dom';
+
+import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit-fill.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
-import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
-import { useAppSelector } from 'mastodon/store';
+import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { useKorner } from 'mastodon/hooks/useKorner';
+import { useAppSelector } from 'mastodon/store';
 
 // Kronk's Ӂ menu — floating action bottom-right. Trimmed to four
 // primary verbs: Settings / Post / Search / Nudges. The Settings
@@ -93,13 +95,6 @@ const useSettingsTarget = (): SettingsTarget => {
         external: false,
       };
     }
-    if (PROFILE_RE.exec(location.pathname)) {
-      return {
-        href: '/settings/profile_sections',
-        label: intl.formatMessage(messages.settings_profile),
-        external: false,
-      };
-    }
     if (FEED_RE.exec(location.pathname)) {
       return {
         href: '/home/settings',
@@ -126,8 +121,12 @@ export const KronkMenu = () => {
     (state) => state.notificationGroups.unreadNudgeCount,
   );
 
-  const toggle = useCallback(() => setOpen((prev) => !prev), []);
-  const close = useCallback(() => setOpen(false), []);
+  const toggle = useCallback(() => {
+    setOpen((prev) => !prev);
+  }, []);
+  const close = useCallback(() => {
+    setOpen(false);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
