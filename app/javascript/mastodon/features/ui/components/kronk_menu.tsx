@@ -107,11 +107,11 @@ const useSettingsTarget = (): SettingsTarget => {
         external: false,
       };
     }
-    // Fallback: global Rails-served preferences.
+    // Fallback: the settings hub (settings rebuild §4.1), SPA-served.
     return {
-      href: '/settings/preferences',
+      href: '/settings',
       label: intl.formatMessage(messages.settings),
-      external: true,
+      external: false,
     };
   }, [kornerSlug, korner, location.pathname, intl]);
 };

@@ -1,0 +1,188 @@
+// Shared settings widget engine (settings rebuild §5.2). One renderer for
+// every framework-rendered settings surface — per-korner settings (§K) and
+// the personal settings sections — so they are one system, not per-feature
+// reinventions. Widget kinds follow §K.4. Class names are shared with the
+// korner settings styles for now; a later kit slice neutralises them.
+
+export interface SettingDescriptor {
+  name: string;
+  kind: string;
+  options?: unknown[] | null;
+  label?: string | null;
+  description?: string | null;
+  default?: unknown;
+}
+
+export const humanize = (name: string) =>
+  name.replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+export const BooleanWidget: React.FC<{
+  value: boolean;
+  onChange: (v: boolean) => void;
+}> = ({ value, onChange }) => (
+  <label className='korner-settings__toggle'>
+    <input
+      type='checkbox'
+      checked={!!value}
+      onChange={(e) => {
+        onChange(e.target.checked);
+      }}
+    />
+    <span className='korner-settings__toggle-track' aria-hidden='true' />
+  </label>
+);
+
+export const EnumWidget: React.FC<{
+  options: string[];
+  value: string;
+  onChange: (v: string) => void;
+}> = ({ options, value, onChange }) => {
+  // Spec §K.4: radios when ≤3 options, dropdown otherwise.
+  if (options.length <= 3) {
+    return (
+      <div className='korner-settings__radios'>
+        {options.map((opt) => (
+          <label key={opt} className='korner-settings__radio'>
+            <input
+              type='radio'
+              checked={value === opt}
+              onChange={() => {
+                onChange(opt);
+              }}
+            />
+            <span>{humanize(opt)}</span>
+          </label>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <select
+      value={value}
+      onChange={(e) => {
+        onChange(e.target.value);
+      }}
+    >
+      {options.map((opt) => (
+        <option key={opt} value={opt}>
+          {humanize(opt)}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+export const MultiEnumWidget: React.FC<{
+  options: string[];
+  value: string[];
+  onChange: (v: string[]) => void;
+}> = ({ options, value, onChange }) => {
+  const selected = new Set(value);
+  const toggle = (opt: string) => {
+    const next = new Set(selected);
+    if (next.has(opt)) next.delete(opt);
+    else next.add(opt);
+    onChange(options.filter((o) => next.has(o)));
+  };
+  return (
+    <div className='korner-settings__multi'>
+      {options.map((opt) => (
+        <label key={opt} className='korner-settings__multi-item'>
+          <input
+            type='checkbox'
+            checked={selected.has(opt)}
+            onChange={() => {
+              toggle(opt);
+            }}
+          />
+          <span>{humanize(opt)}</span>
+        </label>
+      ))}
+    </div>
+  );
+};
+
+export const DurationWidget: React.FC<{
+  options?: string[];
+  value: string;
+  onChange: (v: string) => void;
+}> = ({ options, value, onChange }) => {
+  const presets = options?.length ? options : ['PT15M', 'PT1H', 'P1D'];
+  return (
+    <select
+      value={value}
+      onChange={(e) => {
+        onChange(e.target.value);
+      }}
+    >
+      {presets.map((p) => (
+        <option key={p} value={p}>
+          {p}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+export const SettingRow: React.FC<{
+  setting: SettingDescriptor;
+  value: unknown;
+  onChange: (value: unknown) => void;
+}> = ({ setting, value, onChange }) => {
+  const label = setting.label ?? humanize(setting.name);
+  const description = setting.description;
+  const options = Array.isArray(setting.options)
+    ? setting.options.map(String)
+    : [];
+
+  return (
+    <div className='korner-settings__row'>
+      <div className='korner-settings__row-header'>
+        <span className='korner-settings__label'>{label}</span>
+        {setting.kind === 'boolean' && (
+          <BooleanWidget value={value === true} onChange={onChange} />
+        )}
+      </div>
+      {description && <p className='korner-settings__hint'>{description}</p>}
+      {setting.kind === 'enum' && (
+        <EnumWidget
+          options={options}
+          value={String(value ?? setting.default ?? '')}
+          onChange={onChange}
+        />
+      )}
+      {setting.kind === 'multi_enum' && (
+        <MultiEnumWidget
+          options={options}
+          value={Array.isArray(value) ? (value as unknown[]).map(String) : []}
+          onChange={onChange}
+        />
+      )}
+      {setting.kind === 'duration' && (
+        <DurationWidget
+          options={options}
+          value={String(value ?? setting.default ?? 'PT1H')}
+          onChange={onChange}
+        />
+      )}
+      {setting.kind === 'string' && (
+        <input
+          type='text'
+          value={String(value ?? '')}
+          onChange={(e) => {
+            onChange(e.target.value);
+          }}
+        />
+      )}
+      {(setting.kind === 'integer' || setting.kind === 'number') && (
+        <input
+          type='number'
+          value={Number(value ?? 0)}
+          onChange={(e) => {
+            onChange(Number(e.target.value));
+          }}
+        />
+      )}
+    </div>
+  );
+};

@@ -115,6 +115,10 @@ import {
   FeedSettings,
   Connections,
   StyleGuide,
+  SettingsHub,
+  SettingsYou,
+  SettingsKorners,
+  AppearanceSettings,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
 import { focusColumn, getFocusedItemIndex, focusItemSibling } from './util/focusUtils';
@@ -247,6 +251,10 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/huddle" component={Live} content={children} />}
             <WrappedRoute path={["/booth/sets/:id", "/hub/booth/sets/:id"]} component={BoothSetPage} content={children} />
             <WrappedRoute path={["/booth", "/hub/booth"]} component={Booth} content={children} />
+            {signedIn && <WrappedRoute path='/settings' exact component={SettingsHub} content={children} />}
+            {signedIn && <WrappedRoute path='/settings/you' exact component={SettingsYou} content={children} />}
+            {signedIn && <WrappedRoute path='/settings/korners' exact component={SettingsKorners} content={children} />}
+            {signedIn && <WrappedRoute path='/settings/appearance' exact component={AppearanceSettings} content={children} />}
             {signedIn && <WrappedRoute path="/settings/profile_sections" component={ProfileSectionsSettings} content={children} />}
             <WrappedRoute path='/@:acct/profile' exact component={SectionedProfile} content={children} />
             {signedIn && <WrappedRoute path={["/kalendar/:id", "/hub/kalendar/:id"]} component={EventDetail} content={children} />}

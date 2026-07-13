@@ -168,6 +168,11 @@ namespace :api, format: false do
     # Kronk-specific: korner manifest catalogue + kategories + hub order.
     # Under /api/v1/ so downstream apps (Android, iOS shell) hit stable v1 paths.
     resource :kronk_settings, only: [:show, :update], controller: :kronk_settings
+    # Personal settings sections (settings rebuild §7). Each is a writeable
+    # read/write surface over a slice of the user's preferences.
+    namespace :settings do
+      resource :appearance, only: [:show, :update], controller: :appearance
+    end
     resources :korners, only: [:index, :show], constraints: { id: /[^\/]+/ } do
       member do
         # Tune-out is per-account per-korner (spec §N.5). Present = tuned
