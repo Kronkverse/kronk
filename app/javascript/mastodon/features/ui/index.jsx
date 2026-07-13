@@ -96,6 +96,7 @@ import {
   Nudges,
   NudgesThread,
   Governance,
+  KommonsTree,
   Questions,
   QuestionPage,
   Booth,
@@ -265,6 +266,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/nudges/activity" component={NudgesActivity} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/:accountId" component={NudgesThread} content={children} />}
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} />}
+            {signedIn && <WrappedRoute path="/hub/kommons/tree" component={KommonsTree} content={children} />}
             {signedIn && <WrappedRoute path={["/governance", "/hub/kommons"]} component={Governance} content={children} />}
             {signedIn && <WrappedRoute path={["/questions/:id", "/hub/kuestions/:id"]} component={QuestionPage} content={children} />}
             {signedIn && <WrappedRoute path={["/questions", "/hub/kuestions"]} component={Questions} content={children} />}

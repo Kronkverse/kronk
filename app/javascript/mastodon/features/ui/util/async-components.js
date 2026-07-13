@@ -276,6 +276,11 @@ export function Governance () {
 }
 
 
+export function KommonsTree () {
+  return import("../../kommons_tree");
+}
+
+
 export function Questions () {
   return import("../../questions");
 }

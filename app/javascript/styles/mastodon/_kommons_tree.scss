@@ -1,0 +1,277 @@
+// Kommons Tree — three-bucket drilldown feedback surface.
+// Route: /hub/kommons/tree
+
+.kommons-tree {
+  padding: 20px;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+// ── Breadcrumb ──────────────────────────────────────────────────────
+.kommons-tree__breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--surface-border, rgba(255, 255, 255, 0.08));
+  font-size: 13px;
+}
+
+.kommons-tree__crumb {
+  background: transparent;
+  border: 0;
+  padding: 4px 6px;
+  color: var(--text-muted, rgba(255, 255, 255, 0.6));
+  cursor: pointer;
+  border-radius: var(--radius-sm, 4px);
+
+  &:hover:not(:disabled) {
+    color: var(--accent);
+    background: var(--surface-hover, rgba(255, 255, 255, 0.04));
+  }
+
+  &:disabled {
+    color: var(--text-primary, #fff);
+    cursor: default;
+  }
+}
+
+.kommons-tree__crumb-sep {
+  color: var(--text-muted, rgba(255, 255, 255, 0.4));
+}
+
+// ── Picker layout ───────────────────────────────────────────────────
+.kommons-tree__picker {
+  margin-top: 8px;
+}
+
+.kommons-tree__intro {
+  color: var(--text-muted, rgba(255, 255, 255, 0.7));
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+// ── Bucket grid (step 1) ────────────────────────────────────────────
+.kommons-tree__bucket-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kommons-tree__bucket {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 22px 18px;
+  min-height: 160px;
+  background: var(--surface-primary, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 8px);
+  color: var(--text-primary, #fff);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 120ms ease, background 120ms ease, transform 120ms ease;
+
+  &:hover {
+    border-color: var(--accent);
+    background: var(--surface-hover, rgba(255, 255, 255, 0.07));
+    transform: translateY(-1px);
+  }
+}
+
+.kommons-tree__bucket-glyph {
+  font-size: 28px;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.kommons-tree__bucket-label {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.kommons-tree__bucket-blurb {
+  color: var(--text-muted, rgba(255, 255, 255, 0.6));
+  font-size: 13px;
+  flex: 1;
+}
+
+.kommons-tree__bucket-count {
+  color: var(--text-muted, rgba(255, 255, 255, 0.55));
+  font-size: 12px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--surface-border, rgba(255, 255, 255, 0.08));
+}
+
+// ── Page list (step 2) ──────────────────────────────────────────────
+.kommons-tree__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kommons-tree__row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--surface-primary, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.06));
+  border-radius: var(--radius-sm, 6px);
+  color: var(--text-primary, #fff);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+
+  &:hover {
+    border-color: var(--accent);
+    background: var(--surface-hover, rgba(255, 255, 255, 0.06));
+  }
+}
+
+.kommons-tree__row-label {
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.kommons-tree__row-url {
+  grid-column: 1;
+  grid-row: 2;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+}
+
+.kommons-tree__row-meta {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  color: var(--text-muted, rgba(255, 255, 255, 0.55));
+  font-size: 12px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+// ── Lifecycle badges ────────────────────────────────────────────────
+.kommons-tree__badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid transparent;
+
+  &--live {
+    color: var(--decision-agree, #22c55e);
+    border-color: currentcolor;
+  }
+
+  &--soon {
+    color: var(--decision-pending, #f59e0b);
+    border-color: currentcolor;
+  }
+
+  &--deprecated {
+    color: var(--decision-block, #ef4444);
+    border-color: currentcolor;
+  }
+
+  &--hidden {
+    color: var(--text-muted, rgba(255, 255, 255, 0.5));
+    border-color: currentcolor;
+  }
+}
+
+// ── Node detail (step 3) ────────────────────────────────────────────
+.kommons-tree__detail {
+  padding: 4px 0;
+}
+
+.kommons-tree__detail-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 20px;
+  color: var(--text-primary, #fff);
+}
+
+.kommons-tree__detail-meta {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 8px 20px;
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  background: var(--surface-primary, rgba(255, 255, 255, 0.03));
+  border-radius: var(--radius-sm, 6px);
+}
+
+.kommons-tree__detail-row {
+  display: contents;
+
+  dt {
+    color: var(--text-muted, rgba(255, 255, 255, 0.55));
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    align-self: center;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--text-primary, #fff);
+  }
+
+  code {
+    font-family: var(--font-mono, monospace);
+    font-size: 13px;
+    color: var(--text-primary, #fff);
+    background: var(--surface-hover, rgba(255, 255, 255, 0.05));
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+}
+
+.kommons-tree__detail-proposals {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px dashed var(--surface-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-sm, 6px);
+  color: var(--text-muted, rgba(255, 255, 255, 0.65));
+  text-align: center;
+  font-size: 14px;
+}
+
+.kommons-tree__detail-empty {
+  margin: 0;
+  color: var(--text-muted, rgba(255, 255, 255, 0.6));
+}
+
+// ── Composer stub ───────────────────────────────────────────────────
+.kommons-tree__composer-stub {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--surface-primary, rgba(255, 255, 255, 0.05));
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius-md, 8px);
+
+  p {
+    margin: 0 0 12px;
+    color: var(--text-primary, #fff);
+    line-height: 1.5;
+  }
+}
+
+.button--kommons-tree {
+  display: inline-block;
+  margin-top: 8px;
+}
