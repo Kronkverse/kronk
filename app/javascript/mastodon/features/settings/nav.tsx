@@ -106,6 +106,7 @@ export const YOU_SECTIONS: SectionDef[] = [
   },
   {
     key: 'notifications',
+    to: '/settings/notifications',
     Icon: NotificationsIcon,
     name: navMessages.notifications,
     desc: navMessages.notificationsDesc,

@@ -360,6 +360,10 @@ export function AppearanceSettings () {
   return import("../../appearance_settings");
 }
 
+export function NotificationsSettings () {
+  return import("../../notifications_settings");
+}
+
 export function SettingsYou () {
   return import("../../settings_you");
 }
