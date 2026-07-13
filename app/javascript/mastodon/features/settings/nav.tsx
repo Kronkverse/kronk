@@ -12,6 +12,8 @@ import TuneIcon from '@/material-icons/400-24px/tune.svg?react';
 import VisibilityIcon from '@/material-icons/400-24px/visibility.svg?react';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { me } from 'mastodon/initial_state';
+import { useAppSelector } from 'mastodon/store';
 
 // Shared navigation pieces for the settings surfaces (settings rebuild §4).
 // The hub drills into a "You" list and a "Korners" list; both, plus the hub
@@ -117,6 +119,17 @@ export const YOU_SECTIONS: SectionDef[] = [
 export const SectionRow: React.FC<{ section: SectionDef }> = ({ section }) => {
   const intl = useIntl();
   const { Icon } = section;
+  const myAccount = useAppSelector((state) =>
+    me ? state.accounts.get(me) : undefined,
+  );
+  const myAcct = myAccount?.get('acct');
+  // Profile "settings" is the composer (owner-only /@:acct/edit).
+  const to =
+    section.key === 'profile'
+      ? myAcct
+        ? `/@${myAcct}/edit`
+        : undefined
+      : section.to;
 
   const inner = (
     <>
@@ -131,7 +144,7 @@ export const SectionRow: React.FC<{ section: SectionDef }> = ({ section }) => {
           {intl.formatMessage(section.desc)}
         </span>
       </span>
-      {section.to ? (
+      {to ? (
         <ChevronRightIcon
           className='settings-nav__row-chevron'
           aria-hidden='true'
@@ -144,9 +157,9 @@ export const SectionRow: React.FC<{ section: SectionDef }> = ({ section }) => {
     </>
   );
 
-  if (section.to) {
+  if (to) {
     return (
-      <Link to={section.to} className='settings-nav__row'>
+      <Link to={to} className='settings-nav__row'>
         {inner}
       </Link>
     );
