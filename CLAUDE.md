@@ -111,7 +111,15 @@ git merge feature/my-change
 git push origin staging
 ```
 
-Shadow auto-deploys within a few minutes. Multiple contributors' work accumulates simultaneously — don't worry about overwriting others.
+Any push to `staging` fires the **`auto-deploy-staging`** GitHub Action, which SSHes to the kronk droplet and deploys `staging` to shadow — you never SSH to kronk yourself. Shadow auto-deploys within a few minutes. Multiple contributors' work accumulates simultaneously — don't worry about overwriting others.
+
+**To put a whole branch on shadow** (e.g. the `rebuild/2.0.0` integration branch), point `staging` at it and push — the same Action deploys it:
+
+```bash
+git push -f origin origin/rebuild/2.0.0:staging   # shadow now runs rebuild/2.0.0
+```
+
+**⚠️ Pushing to `main` resets shadow.** The `staging-sync` Action fires on _every_ push to `main` and redeploys `main` to shadow — silently reverting whatever branch you had running there back to the production line. So if you merge anything to `main` while dogfooding a branch on shadow, **re-push that branch to `staging` afterwards** to restore it.
 
 Shadow is transient and may be down. If it is, ask Tal to start it.
 
