@@ -121,7 +121,15 @@ git push -f origin origin/rebuild/2.0.0:staging   # shadow now runs rebuild/2.0.
 
 **⚠️ Pushing to `main` resets shadow.** The `staging-sync` Action fires on _every_ push to `main` and redeploys `main` to shadow — silently reverting whatever branch you had running there back to the production line. So if you merge anything to `main` while dogfooding a branch on shadow, **re-push that branch to `staging` afterwards** to restore it.
 
-**⚠️ Re-pushing the code isn't enough — reconnect the DB too.** The rebuild shadow runs on a **separate database**, `mastodon_staging_rebuild` (its own users/content, empty of the classic ~14-user `mastodon_staging` data). A `main` deploy repoints `/home/mastodon/staging/.env.production`'s `DB_NAME` back to `mastodon_staging`, so after re-pushing the branch you must also set `DB_NAME=mastodon_staging_rebuild` in that `.env` and restart `mastodon-staging-web` / `-sidekiq` / `-streaming@4001` — otherwise shadow runs the rebuild code against the wrong (old) database and shows the classic users/content.
+**⚠️ Every deploy resets the DB — reconnect it after each one.** The rebuild shadow runs on a **separate database**, `mastodon_staging_rebuild` (its own users/content, empty of the classic ~14-user `mastodon_staging` data). `/home/mastodon/staging/.env.production` is a **symlink** to either `.env.production.classic` (the old DB) or `.env.production.rebuild` (the rebuild DB), and **every deploy — any `staging` push, not just `main` — resets it to `.classic`.** So after *any* shadow deploy, switch it back and restart:
+
+```bash
+ssh kronk
+sudo -u mastodon bash -lc 'cd /home/mastodon/staging && ln -sf .env.production.rebuild .env.production'
+sudo systemctl restart mastodon-staging-web mastodon-staging-sidekiq mastodon-staging-streaming@4001
+```
+
+Switch the *symlink* — don't `sed` `DB_NAME`. Verify with `RAILS_ENV=production bin/rails runner "puts ActiveRecord::Base.connection.current_database"` (the `/api/v1/instance` `user_count` is cached and lags). Durable fix (infra): make `.rebuild` the deploy default, or stop the deploy clobbering the symlink.
 
 Shadow is transient and may be down. If it is, ask Tal to start it.
 
