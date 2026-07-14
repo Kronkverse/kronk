@@ -109,7 +109,7 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   def proposal_params
-    params.expect(proposal: [:title, :body, :proposal_type, categories: []])
+    params.expect(proposal: [:title, :body, :proposal_type, :node_id, categories: []])
   end
 
   def vote_params
