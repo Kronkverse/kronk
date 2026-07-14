@@ -21,24 +21,36 @@ export const humanize = (name: string) =>
 export const BooleanWidget: React.FC<{
   value: boolean;
   onChange: (v: boolean) => void;
-}> = ({ value, onChange }) => (
-  <label className='korner-settings__toggle'>
-    <input
-      type='checkbox'
-      checked={!!value}
-      onChange={(e) => {
-        onChange(e.target.checked);
-      }}
-    />
-    <span className='korner-settings__toggle-track' aria-hidden='true' />
-  </label>
-);
+}> = ({ value, onChange }) => {
+  const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => {
+      onChange(e.target.checked);
+    },
+    [onChange],
+  );
+  return (
+    <label className='korner-settings__toggle'>
+      <input
+        type='checkbox'
+        checked={!!value}
+        onChange={handleChange}
+      />
+      <span className='korner-settings__toggle-track' aria-hidden='true' />
+    </label>
+  );
+};
 
 export const EnumWidget: React.FC<{
   options: string[];
   value: string;
   onChange: (v: string) => void;
 }> = ({ options, value, onChange }) => {
+  const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement>>(
+    (e) => {
+      onChange(e.currentTarget.value);
+    },
+    [onChange],
+  );
   // Spec §K.4: radios when ≤3 options, dropdown otherwise.
   if (options.length <= 3) {
     return (
@@ -47,10 +59,9 @@ export const EnumWidget: React.FC<{
           <label key={opt} className='korner-settings__radio'>
             <input
               type='radio'
+              value={opt}
               checked={value === opt}
-              onChange={() => {
-                onChange(opt);
-              }}
+              onChange={handleChange}
             />
             <span>{humanize(opt)}</span>
           </label>
@@ -59,12 +70,7 @@ export const EnumWidget: React.FC<{
     );
   }
   return (
-    <select
-      value={value}
-      onChange={(e) => {
-        onChange(e.target.value);
-      }}
-    >
+    <select value={value} onChange={handleChange}>
       {options.map((opt) => (
         <option key={opt} value={opt}>
           {humanize(opt)}
@@ -80,22 +86,25 @@ export const MultiEnumWidget: React.FC<{
   onChange: (v: string[]) => void;
 }> = ({ options, value, onChange }) => {
   const selected = new Set(value);
-  const toggle = (opt: string) => {
-    const next = new Set(selected);
-    if (next.has(opt)) next.delete(opt);
-    else next.add(opt);
-    onChange(options.filter((o) => next.has(o)));
-  };
+  const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => {
+      const opt = e.currentTarget.value;
+      const next = new Set(value);
+      if (next.has(opt)) next.delete(opt);
+      else next.add(opt);
+      onChange(options.filter((o) => next.has(o)));
+    },
+    [options, value, onChange],
+  );
   return (
     <div className='korner-settings__multi'>
       {options.map((opt) => (
         <label key={opt} className='korner-settings__multi-item'>
           <input
             type='checkbox'
+            value={opt}
             checked={selected.has(opt)}
-            onChange={() => {
-              toggle(opt);
-            }}
+            onChange={handleChange}
           />
           <span>{humanize(opt)}</span>
         </label>
@@ -110,13 +119,14 @@ export const DurationWidget: React.FC<{
   onChange: (v: string) => void;
 }> = ({ options, value, onChange }) => {
   const presets = options?.length ? options : ['PT15M', 'PT1H', 'P1D'];
+  const handleChange = useCallback<React.ChangeEventHandler<HTMLSelectElement>>(
+    (e) => {
+      onChange(e.currentTarget.value);
+    },
+    [onChange],
+  );
   return (
-    <select
-      value={value}
-      onChange={(e) => {
-        onChange(e.target.value);
-      }}
-    >
+    <select value={value} onChange={handleChange}>
       {presets.map((p) => (
         <option key={p} value={p}>
           {p}
@@ -209,6 +219,26 @@ export const AccentWidget: React.FC<{
   );
 };
 
+const StringInput: React.FC<{ value: unknown; onChange: (v: unknown) => void }> = ({ value, onChange }) => {
+  const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => {
+      onChange(e.target.value);
+    },
+    [onChange],
+  );
+  return <input type='text' value={String(value ?? '')} onChange={handleChange} />;
+};
+
+const NumberInput: React.FC<{ value: unknown; onChange: (v: unknown) => void }> = ({ value, onChange }) => {
+  const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => {
+      onChange(Number(e.target.value));
+    },
+    [onChange],
+  );
+  return <input type='number' value={Number(value ?? 0)} onChange={handleChange} />;
+};
+
 export const SettingRow: React.FC<{
   setting: SettingDescriptor;
   value: unknown;
@@ -251,22 +281,10 @@ export const SettingRow: React.FC<{
         />
       )}
       {setting.kind === 'string' && (
-        <input
-          type='text'
-          value={String(value ?? '')}
-          onChange={(e) => {
-            onChange(e.target.value);
-          }}
-        />
+        <StringInput value={value} onChange={onChange} />
       )}
       {(setting.kind === 'integer' || setting.kind === 'number') && (
-        <input
-          type='number'
-          value={Number(value ?? 0)}
-          onChange={(e) => {
-            onChange(Number(e.target.value));
-          }}
-        />
+        <NumberInput value={value} onChange={onChange} />
       )}
       {setting.kind === 'accent' && (
         <AccentWidget
