@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
+
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+
 import { Link } from 'react-router-dom';
 
-import Column from 'mastodon/components/column';
-import ColumnHeader from 'mastodon/components/column_header';
 import { apiGetGroups, apiCreateGroup } from 'mastodon/api/groups';
 import type { ApiGroupJSON } from 'mastodon/api/groups';
+import Column from 'mastodon/components/column';
+import ColumnHeader from 'mastodon/components/column_header';
 
 const messages = defineMessages({
   title: { id: 'groups.title', defaultMessage: 'Groups' },
@@ -86,7 +88,7 @@ export const Groups = () => {
             <button
               key={value}
               type='button'
-              onClick={() => setScope(value)}
+              onClick={() => { setScope(value); }}
               className={`groups-page__scope-tab ${value === scope ? 'groups-page__scope-tab--active' : ''}`}
             >
               {label}
@@ -96,7 +98,7 @@ export const Groups = () => {
 
         <button
           type='button'
-          onClick={() => setCreating((prev) => !prev)}
+          onClick={() => { setCreating((prev) => !prev); }}
           className='groups-page__new-btn'
         >
           {creating ? (
@@ -129,7 +131,7 @@ export const Groups = () => {
               <input
                 type='text'
                 value={form.slug}
-                onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                onChange={(e) => { setForm({ ...form, slug: e.target.value }); }}
               />
             </label>
 
@@ -138,7 +140,7 @@ export const Groups = () => {
               <input
                 type='text'
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onChange={(e) => { setForm({ ...form, name: e.target.value }); }}
               />
             </label>
 
@@ -150,7 +152,7 @@ export const Groups = () => {
               <textarea
                 value={form.description}
                 onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
+                  { setForm({ ...form, description: e.target.value }); }
                 }
                 rows={3}
               />
@@ -164,7 +166,7 @@ export const Groups = () => {
               <select
                 value={form.governance_framework}
                 onChange={(e) =>
-                  setForm({ ...form, governance_framework: e.target.value })
+                  { setForm({ ...form, governance_framework: e.target.value }); }
                 }
               >
                 <option value='peer_support'>
@@ -186,7 +188,7 @@ export const Groups = () => {
                 type='checkbox'
                 checked={form.discoverable}
                 onChange={(e) =>
-                  setForm({ ...form, discoverable: e.target.checked })
+                  { setForm({ ...form, discoverable: e.target.checked }); }
                 }
               />
               <FormattedMessage

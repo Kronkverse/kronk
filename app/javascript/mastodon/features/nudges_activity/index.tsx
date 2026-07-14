@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
+
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
-import { Link } from 'react-router-dom';
+
 import { Helmet } from 'react-helmet';
+import { Link } from 'react-router-dom';
 
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import { apiRequestGet } from 'mastodon/api';

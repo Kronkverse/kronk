@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';

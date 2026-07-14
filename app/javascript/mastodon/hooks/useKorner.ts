@@ -1,5 +1,5 @@
-import { useAppSelector } from 'mastodon/store';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
+import { useAppSelector } from 'mastodon/store';
 
 // Returns the manifest for a korner slug, or undefined if the registry
 // hasn't loaded yet / the slug isn't registered.

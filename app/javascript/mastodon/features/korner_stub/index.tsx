@@ -1,6 +1,7 @@
-import { useParams } from 'react-router-dom';
 import { FormattedMessage } from 'react-intl';
+
 import { Helmet } from 'react-helmet';
+import { useParams } from 'react-router-dom';
 
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
@@ -13,7 +14,7 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 // like it belongs. Every 2.x korner marked `enforced: false` hits this
 // route until its own feature ships.
 
-type Params = { slug?: string };
+interface Params { slug?: string }
 
 export const KornerStub: React.FC<{ multiColumn?: boolean; slug?: string }> = ({
   multiColumn,

@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
+
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { apiRequestGet } from 'mastodon/api';
 import { changeCompose } from 'mastodon/actions/compose';
+import { apiRequestGet } from 'mastodon/api';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
 // Curated Kategories (tags with `curated: true`) — surfaces framework
@@ -66,7 +67,7 @@ export const KategoryPicker = () => {
     <div className='compose-form__kategory-picker'>
       <button
         type='button'
-        onClick={() => setExpanded((v) => !v)}
+        onClick={() => { setExpanded((v) => !v); }}
         className='compose-form__kategory-toggle'
         aria-expanded={expanded}
       >
@@ -81,7 +82,7 @@ export const KategoryPicker = () => {
               <button
                 key={k.name}
                 type='button'
-                onClick={() => toggle(k.name)}
+                onClick={() => { toggle(k.name); }}
                 className={`compose-form__kategory-chip ${tagged ? 'compose-form__kategory-chip--active' : ''}`}
                 aria-pressed={tagged}
               >

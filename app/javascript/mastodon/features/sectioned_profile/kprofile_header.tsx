@@ -32,7 +32,7 @@ const formatJoinDate = (iso: string): string => {
 
 // Common Mastodon custom-field name → icon glyph. Match is
 // case-insensitive on the field name; unknown fields fall back to `▸`.
-const FIELD_ICONS: Array<[RegExp, string]> = [
+const FIELD_ICONS: [RegExp, string][] = [
   [/^(website|url|link|site)$/i, '↗'],
   [/^(location|city|from|based)$/i, '◍'],
   [/^(email|mail)$/i, '✉'],

@@ -5,6 +5,7 @@ import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
 import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 import api from 'mastodon/api';
+
 import type { BoothSet } from '../types';
 
 interface Props {
@@ -51,7 +52,7 @@ export const BottomPlayer: React.FC<Props> = ({ set, onClose }) => {
 
   const seekTo = useCallback((pct: number) => {
     const audio = audioRef.current;
-    if (!audio || !audio.duration) return;
+    if (!audio?.duration) return;
     audio.currentTime = pct * audio.duration;
   }, []);
 
@@ -75,7 +76,7 @@ export const BottomPlayer: React.FC<Props> = ({ set, onClose }) => {
       if (!dragging) return;
       seekTo(getProgressPct(e.clientX));
     };
-    const handleMouseUp = () => setDragging(false);
+    const handleMouseUp = () => { setDragging(false); };
     if (dragging) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
@@ -108,11 +109,11 @@ export const BottomPlayer: React.FC<Props> = ({ set, onClose }) => {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const onDurationChange = () => setDuration(audio.duration);
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-    const onEnded = () => setPlaying(false);
+    const onTimeUpdate = () => { setCurrentTime(audio.currentTime); };
+    const onDurationChange = () => { setDuration(audio.duration); };
+    const onPlay = () => { setPlaying(true); };
+    const onPause = () => { setPlaying(false); };
+    const onEnded = () => { setPlaying(false); };
     audio.addEventListener('timeupdate', onTimeUpdate);
     audio.addEventListener('durationchange', onDurationChange);
     audio.addEventListener('loadedmetadata', onDurationChange);
@@ -163,7 +164,7 @@ export const BottomPlayer: React.FC<Props> = ({ set, onClose }) => {
         <div className='booth-bottom-player__controls'>
           <button
             className='booth-bottom-player__skip-btn'
-            onClick={() => handleSkip(-30)}
+            onClick={() => { handleSkip(-30); }}
             aria-label='Back 30 seconds'
             type='button'
           >
@@ -184,7 +185,7 @@ export const BottomPlayer: React.FC<Props> = ({ set, onClose }) => {
 
           <button
             className='booth-bottom-player__skip-btn'
-            onClick={() => handleSkip(30)}
+            onClick={() => { handleSkip(30); }}
             aria-label='Forward 30 seconds'
             type='button'
           >

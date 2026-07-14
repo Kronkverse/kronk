@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
+
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+
 import { Link } from 'react-router-dom';
 
-import { useAppDispatch, useAppSelector } from 'mastodon/store';
 import { fetchNudgesLegacyArchive } from 'mastodon/actions/nudges_legacy';
 import type { ApiNotificationJSON } from 'mastodon/api_types/notifications';
 import Column from 'mastodon/components/column';
 import ColumnHeader from 'mastodon/components/column_header';
+import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({
   title: { id: 'nudges.legacy.title', defaultMessage: 'Legacy archive' },

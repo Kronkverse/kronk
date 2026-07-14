@@ -1,20 +1,21 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+
 import { Helmet } from 'react-helmet';
+import { useParams, Link } from 'react-router-dom';
 
 import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
-import Column from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { apiRequestGet, apiRequestPost, apiRequestDelete } from 'mastodon/api';
-import api from 'mastodon/api';
-import { useKorner } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import api, { apiRequestGet, apiRequestPost, apiRequestDelete } from 'mastodon/api';
 import type {
   ApiKornerSettingJSON,
   ApiKornerNotificationTypeJSON,
 } from 'mastodon/api_types/korners';
+import Column from 'mastodon/components/column';
+import { ColumnHeader } from 'mastodon/components/column_header';
+import { useKorner } from 'mastodon/hooks/useKorner';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // Per-korner settings space (spec §K). Autosave-driven, widget kinds
 // from §K.4, one push toggle per manifest notification type (§K.3.2).
@@ -53,7 +54,7 @@ const BooleanWidget: React.FC<{
     <input
       type='checkbox'
       checked={!!value}
-      onChange={(e) => onChange(e.target.checked)}
+      onChange={(e) => { onChange(e.target.checked); }}
     />
     <span className='korner-settings__toggle-track' aria-hidden='true' />
   </label>
@@ -73,7 +74,7 @@ const EnumWidget: React.FC<{
             <input
               type='radio'
               checked={value === opt}
-              onChange={() => onChange(opt)}
+              onChange={() => { onChange(opt); }}
             />
             <span>{humanize(opt)}</span>
           </label>
@@ -82,7 +83,7 @@ const EnumWidget: React.FC<{
     );
   }
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value)}>
+    <select value={value} onChange={(e) => { onChange(e.target.value); }}>
       {options.map((opt) => (
         <option key={opt} value={opt}>
           {humanize(opt)}
@@ -111,7 +112,7 @@ const MultiEnumWidget: React.FC<{
           <input
             type='checkbox'
             checked={selected.has(opt)}
-            onChange={() => toggle(opt)}
+            onChange={() => { toggle(opt); }}
           />
           <span>{humanize(opt)}</span>
         </label>
@@ -126,9 +127,9 @@ const DurationWidget: React.FC<{
   onChange: (v: string) => void;
 }> = ({ options, value, onChange }) => {
   const presets =
-    options && options.length ? options : ['PT15M', 'PT1H', 'P1D'];
+    options?.length ? options : ['PT15M', 'PT1H', 'P1D'];
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value)}>
+    <select value={value} onChange={(e) => { onChange(e.target.value); }}>
       {presets.map((p) => (
         <option key={p} value={p}>
           {p}
@@ -148,7 +149,7 @@ const SettingRow: React.FC<{
   const label = setting.label ?? humanize(setting.name);
   const description = setting.description;
   const options = Array.isArray(setting.options)
-    ? (setting.options as unknown[]).map(String)
+    ? (setting.options).map(String)
     : [];
 
   return (
@@ -185,14 +186,14 @@ const SettingRow: React.FC<{
         <input
           type='text'
           value={String(value ?? '')}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => { onChange(e.target.value); }}
         />
       )}
       {(setting.kind === 'integer' || setting.kind === 'number') && (
         <input
           type='number'
           value={Number(value ?? 0)}
-          onChange={(e) => onChange(Number(e.target.value))}
+          onChange={(e) => { onChange(Number(e.target.value)); }}
         />
       )}
     </div>
@@ -254,11 +255,11 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
             );
             setState(res.data as ServerSettings);
             setStatus('saved');
-            setTimeout(() => setStatus('idle'), 1200);
+            setTimeout(() => { setStatus('idle'); }, 1200);
           } catch (e: unknown) {
             setError(e instanceof Error ? e.message : String(e));
             setStatus('error');
-            setTimeout(() => setStatus('idle'), 2000);
+            setTimeout(() => { setStatus('idle'); }, 2000);
           }
         })();
       }, 500);
@@ -306,11 +307,11 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
         await apiRequestPost(`v1/korners/${slug}/tune_out`, {});
       }
       setStatus('saved');
-      setTimeout(() => setStatus('idle'), 1200);
+      setTimeout(() => { setStatus('idle'); }, 1200);
     } catch {
       setState((prev) => (prev ? { ...prev, tuned_in: !next } : prev));
       setStatus('error');
-      setTimeout(() => setStatus('idle'), 2000);
+      setTimeout(() => { setStatus('idle'); }, 2000);
     }
   }, [slug, state]);
 
@@ -420,7 +421,7 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
                       </span>
                       <BooleanWidget
                         value={state.push_preferences[n.name] === true}
-                        onChange={(v) => setPushPref(n.name, v)}
+                        onChange={(v) => { setPushPref(n.name, v); }}
                       />
                     </div>
                     {n.subject_type && (
@@ -452,7 +453,7 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
                       key={s.name}
                       setting={s}
                       value={state.values[s.name] ?? s.default}
-                      onChange={(v) => setValue(s.name, v)}
+                      onChange={(v) => { setValue(s.name, v); }}
                     />
                   ))}
               </section>

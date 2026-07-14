@@ -64,7 +64,7 @@ const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
     if (inviteUrl) {
       void navigator.clipboard.writeText(inviteUrl);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => { setCopied(false); }, 2000);
     }
   }, [inviteUrl]);
 

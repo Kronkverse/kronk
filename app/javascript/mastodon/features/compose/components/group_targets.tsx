@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
+
 import { FormattedMessage } from 'react-intl';
+
 import { List as ImmutableList } from 'immutable';
 
+import { changeComposeGroupTargets } from 'mastodon/actions/compose';
 import { apiRequestGet } from 'mastodon/api';
 import type { ApiGroupJSON } from 'mastodon/api/groups';
-import { changeComposeGroupTargets } from 'mastodon/actions/compose';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
 // Compact multi-select for targeting a post at one or more Groups.
@@ -76,7 +78,7 @@ export const GroupTargets = () => {
             {group?.name ?? `#${id}`}
             <button
               type='button'
-              onClick={() => removeGroup(id)}
+              onClick={() => { removeGroup(id); }}
               aria-label='Remove group target'
               className='compose-form__group-chip-remove'
             >
@@ -88,7 +90,7 @@ export const GroupTargets = () => {
 
       <button
         type='button'
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => { setOpen((v) => !v); }}
         className='compose-form__group-target-toggle'
         aria-expanded={open}
       >
@@ -123,7 +125,7 @@ export const GroupTargets = () => {
                 type='button'
                 role='menuitemcheckbox'
                 aria-checked={selected}
-                onClick={() => toggleGroup(g.id)}
+                onClick={() => { toggleGroup(g.id); }}
                 className={`compose-form__group-target-option ${selected ? 'compose-form__group-target-option--active' : ''}`}
               >
                 {selected ? '✓ ' : ''}

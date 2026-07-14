@@ -1,5 +1,5 @@
-import { useAppSelector } from 'mastodon/store';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
+import { useAppSelector } from 'mastodon/store';
 
 // Returns the current user's profile sections, ordered by position.
 // Empty until fetchProfileSections resolves.
