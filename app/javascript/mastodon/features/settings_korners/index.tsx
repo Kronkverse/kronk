@@ -3,7 +3,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import GroupIcon from '@/material-icons/400-24px/group.svg?react';
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { KornerRow } from 'mastodon/features/settings/nav';
 import { useAllKorners } from 'mastodon/hooks/useKorner';

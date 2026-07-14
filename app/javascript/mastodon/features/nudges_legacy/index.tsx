@@ -6,8 +6,8 @@ import { Link } from 'react-router-dom';
 
 import { fetchNudgesLegacyArchive } from 'mastodon/actions/nudges_legacy';
 import type { ApiNotificationJSON } from 'mastodon/api_types/notifications';
-import Column from 'mastodon/components/column';
-import ColumnHeader from 'mastodon/components/column_header';
+import { Column } from 'mastodon/components/column';
+import { ColumnHeader } from 'mastodon/components/column_header';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({

@@ -14,7 +14,7 @@ import { apiRequestGet } from 'mastodon/api';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
 import StatusList from 'mastodon/components/status_list';
 import { me } from 'mastodon/initial_state';

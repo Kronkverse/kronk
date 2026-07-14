@@ -16,8 +16,8 @@ import {
   apiPostGroupStatus,
 } from 'mastodon/api/groups';
 import type { ApiGroupJSON } from 'mastodon/api/groups';
-import Column from 'mastodon/components/column';
-import ColumnHeader from 'mastodon/components/column_header';
+import { Column } from 'mastodon/components/column';
+import { ColumnHeader } from 'mastodon/components/column_header';
 import StatusList from 'mastodon/components/status_list';
 import { useAppDispatch } from 'mastodon/store';
 

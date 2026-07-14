@@ -6,8 +6,8 @@ import { Link } from 'react-router-dom';
 
 import { apiGetGroups, apiCreateGroup } from 'mastodon/api/groups';
 import type { ApiGroupJSON } from 'mastodon/api/groups';
-import Column from 'mastodon/components/column';
-import ColumnHeader from 'mastodon/components/column_header';
+import { Column } from 'mastodon/components/column';
+import { ColumnHeader } from 'mastodon/components/column_header';
 
 const messages = defineMessages({
   title: { id: 'groups.title', defaultMessage: 'Groups' },

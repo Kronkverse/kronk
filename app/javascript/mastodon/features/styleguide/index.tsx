@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet';
 
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
 
 // Living style guide — the source of truth for what every Kronk token

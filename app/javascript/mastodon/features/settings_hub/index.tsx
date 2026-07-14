@@ -7,7 +7,7 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
 import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import PersonIcon from '@/material-icons/400-24px/person.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { YOU_SECTIONS } from 'mastodon/features/settings/nav';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
