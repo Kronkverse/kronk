@@ -18,8 +18,6 @@ import api from 'mastodon/api';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
-import { useKorner } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import { CreateEventForm } from './components/create_event_form';
 

@@ -3,7 +3,6 @@ import { useCallback, useState } from 'react';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { useKorner } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import { OrbitIcon } from './components/celestial_icons';
 import { DarkStrand } from './components/dark_strand';
@@ -31,8 +30,6 @@ const StrandTabButton: React.FC<StrandTabButtonProps> = ({
   active,
   onSelect,
 }) => {
-  const korner = useKorner('in-flow');
-  const kornerIcon = useKornerIcon('in-flow');
   const handleClick = useCallback(() => {
     onSelect(tab);
   }, [tab, onSelect]);
@@ -49,6 +46,7 @@ const StrandTabButton: React.FC<StrandTabButtonProps> = ({
 
 export const InFlow: React.FC<Props> = ({ multiColumn }) => {
   const [activeTab, setActiveTab] = useState<StrandTab>('light');
+  const korner = useKorner('in-flow');
 
   return (
     <Column>
