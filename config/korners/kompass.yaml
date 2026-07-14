@@ -46,3 +46,11 @@ launch:
   cta: 'Peek in'
 
 enforced: false
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: kompass.index
+    label: Kompass
+    url: /hub/kompass
+    lifecycle: soon
+    spa: true

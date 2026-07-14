@@ -66,3 +66,11 @@ launch:
 feature_flag: # not-implemented — In Flow is unconditionally mounted on main
 federates: false
 enforced: true
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: in-flow.index
+    label: In Flow
+    url: /hub/in-flow
+    lifecycle: live
+    spa: true

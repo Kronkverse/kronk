@@ -82,3 +82,16 @@ launch:
 feature_flag: # not-implemented
 federates: false
 enforced: true # framework: on this branch; boot validator enforces
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: kuestions.index
+    label: Kuestions
+    url: /hub/kuestions
+    lifecycle: live
+    spa: true
+  - id: kuestions.detail
+    label: A question
+    url: /hub/kuestions/:id
+    lifecycle: live
+    spa: true

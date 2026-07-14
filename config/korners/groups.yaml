@@ -71,3 +71,11 @@ launch:
   cta: 'Start a group'
 
 enforced: true
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: groups.index
+    label: Groups
+    url: /hub/groups
+    lifecycle: live
+    spa: true

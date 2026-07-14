@@ -46,3 +46,11 @@ launch:
   cta: 'Try it'
 
 enforced: false # boot validator silent until models land
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: moments.index
+    label: Moments
+    url: /hub/moments
+    lifecycle: soon
+    spa: true

@@ -14,12 +14,12 @@ class Proposal < ApplicationRecord
   # ActivityPub keep resolving. The old column is dropped in 2.1.0.
   def discussion_status_id=(value)
     super
-    write_attribute(:status_id, value) if has_attribute?(:status_id)
+    self[:status_id] = value if has_attribute?(:status_id)
   end
 
   def status_id=(value)
     super
-    write_attribute(:discussion_status_id, value) if has_attribute?(:discussion_status_id)
+    self[:discussion_status_id] = value if has_attribute?(:discussion_status_id)
   end
 
   # Deprecated reader — new code uses `#status`. Kept for compat with
@@ -33,11 +33,12 @@ class Proposal < ApplicationRecord
 
   def discussion_status_id
     Proposal.warn_deprecated_status_read!
-    read_attribute(:discussion_status_id) || read_attribute(:status_id)
+    read_attribute(:discussion_status_id) || self[:status_id]
   end
 
   def self.warn_deprecated_status_read!
     return if @deprecated_status_read_warned
+
     @deprecated_status_read_warned = true
     Rails.logger.warn('[Proposal] deprecated read of discussion_status(_id); prefer #status(_id). Column drops in 2.1.0.')
   end
@@ -51,6 +52,9 @@ class Proposal < ApplicationRecord
   validates :title, presence: true, length: { maximum: 240 }
   validates :body,  presence: true
   validate  :categories_within_allowed_values
+  validate  :node_id_registered
+
+  scope :for_node, ->(node_id) { where(node_id: node_id) }
 
   scope :active,        -> { where(archived_at: nil) }
   scope :archived,      -> { where.not(archived_at: nil) }
@@ -96,5 +100,15 @@ class Proposal < ApplicationRecord
 
     invalid = categories - CATEGORY_VALUES
     errors.add(:categories, "contains invalid values: #{invalid.join(', ')}") if invalid.any?
+  end
+
+  # node_id references Kronk::NodeRegistry (config, not a table). Nil is
+  # allowed for classic structural proposals; a set value must resolve
+  # to a registered node.
+  def node_id_registered
+    return if node_id.blank?
+    return if Kronk::NodeRegistry.find(node_id)
+
+    errors.add(:node_id, "'#{node_id}' is not a registered Kronk node")
   end
 end

@@ -87,3 +87,11 @@ launch:
 feature_flag: # not-implemented
 federates: false
 enforced: true # framework: on this branch; boot validator enforces
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: kalendar.index
+    label: Kalendar
+    url: /hub/kalendar
+    lifecycle: live
+    spa: true

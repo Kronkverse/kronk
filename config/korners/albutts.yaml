@@ -50,3 +50,11 @@ launch:
   cta: 'Start an album'
 
 enforced: false
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: albutts.index
+    label: Albutts
+    url: /hub/albutts
+    lifecycle: soon
+    spa: true
