@@ -4,8 +4,6 @@ import { useHistory } from 'react-router-dom';
 
 import { buildDailyIntegrationText } from 'mastodon/features/in_flow/components/daily_integration';
 import { getDailyObservable } from 'mastodon/features/in_flow/components/earth_calendar';
-import { useKorner } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 function getMelbourneMonthDay(): { month: number; day: number } {
   const fmt = new Intl.DateTimeFormat('en-AU', {

@@ -39,6 +39,10 @@ interface Props {
 }
 
 export const StatusKornerCard: React.FC<Props> = ({
+  // `korner` is part of the card's stable prop surface (every card
+  // variant declares which korner it belongs to); rendering doesn't
+  // consume it directly today but callers depend on the signature.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   korner,
   variant,
   className,
