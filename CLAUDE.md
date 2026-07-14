@@ -115,6 +115,15 @@ Shadow auto-deploys within a few minutes. Multiple contributors' work accumulate
 
 Shadow is transient and may be down. If it is, ask Tal to start it.
 
+#### Shadow gotchas (read before debugging a "failed" deploy)
+
+These trip everyone up — a deploy usually **succeeded** even when it looks like it didn't:
+
+- **Don't trust the version string as a deploy signal.** `https://shadow.kronk.info/api/v1/instance` reports `version` from the `MASTODON_VERSION_PRERELEASE` env var (and is cached), **not** from the deployed code. During the 2.0.0 rebuild that env var is refreshed only by `deploy-shadow-rebuild.sh`, so the ordinary staging auto-deploy leaves it stale (e.g. stuck on an older `alpha.N`). **Verify a deploy by the actual route/feature** (does `/hub/...` or your new page render?) or the deployed git ref on the droplet — never the version endpoint.
+- **The DB is a symlink, and shadow has two databases.** `/home/mastodon/staging/.env.production` symlinks to `.env.production.classic` (DB `mastodon_staging`) or `.env.production.rebuild` (DB `mastodon_staging_rebuild`, the rebuild's isolated data incl. your shadow login). If you "can't log in," the DB is probably pointed at the wrong one. As of 2026-07-14 the choice is **persistent** across deploys via `/home/mastodon/staging/.deploy-env-mode` (defaults to `rebuild`), so it should no longer silently revert.
+- **Pushing to `main` resets shadow.** A push to `main` fires `staging-sync.yml`, which redeploys `main` (the 1.7.x production line) onto shadow — silently reverting it off the rebuild. After any `main` merge, re-push the rebuild to shadow.
+- **Push/fetch auth is a shared SSH deploy key** (`git@github-kronk:...`) for all `devs` on mainframe — no personal GitHub token needed, and it doesn't expire.
+
 ### 3. Open a PR for production
 
 When your feature is tested on staging and ready to ship, open a PR from your **feature branch** to `main`. Tal reviews and merges — never run `gh pr merge` yourself.
