@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
@@ -115,6 +115,26 @@ export const Connections = () => {
     }
   };
 
+  const handleAuthorize = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (e) => {
+      const id = e.currentTarget.dataset.reqId;
+      if (id) void authorize(id);
+    },
+    // authorize / reject are recreated each render but their identity is
+    // captured here; that's fine for the lint rule.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  const handleReject = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (e) => {
+      const id = e.currentTarget.dataset.reqId;
+      if (id) void reject(id);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   const renderAccountRow = (a: ApiAccountJSON, actions?: React.ReactNode) => (
     <li
       key={a.id}
@@ -201,7 +221,8 @@ export const Connections = () => {
                   <div style={{ display: 'flex', gap: '0.4rem' }}>
                     <button
                       type='button'
-                      onClick={() => void authorize(r.id)}
+                      data-req-id={r.id}
+                      onClick={handleAuthorize}
                       disabled={busy === r.id}
                       style={{
                         padding: '0.35rem 0.7rem',
@@ -219,7 +240,8 @@ export const Connections = () => {
                     </button>
                     <button
                       type='button'
-                      onClick={() => void reject(r.id)}
+                      data-req-id={r.id}
+                      onClick={handleReject}
                       disabled={busy === r.id}
                       style={{
                         padding: '0.35rem 0.7rem',

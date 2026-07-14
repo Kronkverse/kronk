@@ -295,3 +295,21 @@ export const SettingRow: React.FC<{
     </div>
   );
 };
+
+// Convenience wrapper for `.map(setting => ...)` iterations that want a
+// stable onChange handler without building one per iteration. Callers
+// supply `onSet(name, value)`; the wrapper closes over the setting's
+// name in a useCallback keyed by name identity.
+export const NamedSettingRow: React.FC<{
+  setting: SettingDescriptor;
+  value: unknown;
+  onSet: (name: string, value: unknown) => void;
+}> = ({ setting, value, onSet }) => {
+  const handleChange = useCallback(
+    (v: unknown) => {
+      onSet(setting.name, v);
+    },
+    [setting.name, onSet],
+  );
+  return <SettingRow setting={setting} value={value} onChange={handleChange} />;
+};

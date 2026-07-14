@@ -9,7 +9,7 @@ import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { SettingRow } from 'mastodon/features/settings/setting_widgets';
+import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
 
 // Notifications section (settings rebuild §7). Schema + values come from the
@@ -144,6 +144,11 @@ export const NotificationsSettings: React.FC<{ multiColumn?: boolean }> = ({
     [values],
   );
 
+  const handleSet = useCallback(
+    (name: string, value: unknown) => { void save(name, value); },
+    [save],
+  );
+
   const statusLabel =
     status === 'saving'
       ? intl.formatMessage(messages.saving)
@@ -194,7 +199,7 @@ export const NotificationsSettings: React.FC<{ multiColumn?: boolean }> = ({
               const labelMsg = LABELS[setting.name];
               const hintMsg = HINTS[setting.name];
               return (
-                <SettingRow
+                <NamedSettingRow
                   key={setting.name}
                   setting={{
                     ...setting,
@@ -204,7 +209,7 @@ export const NotificationsSettings: React.FC<{ multiColumn?: boolean }> = ({
                       : undefined,
                   }}
                   value={values[setting.name]}
-                  onChange={(value) => void save(setting.name, value)}
+                  onSet={handleSet}
                 />
               );
             })}

@@ -41,6 +41,12 @@ const SortableSectionRow: React.FC<{
   onToggleVisible: (id: string, visible: boolean) => void;
   onRemove: (id: string) => void;
 }> = ({ section, onToggleVisible, onRemove }) => {
+  const handleToggle = useCallback(() => {
+    onToggleVisible(section.id, section.visible);
+  }, [section.id, section.visible, onToggleVisible]);
+  const handleRemove = useCallback(() => {
+    onRemove(section.id);
+  }, [section.id, onRemove]);
   const {
     attributes,
     listeners,
@@ -87,12 +93,12 @@ const SortableSectionRow: React.FC<{
       <span style={{ flex: 1 }}>{section.title ?? '—'}</span>
       <button
         type='button'
-        onClick={() => { onToggleVisible(section.id, section.visible); }}
+        onClick={handleToggle}
       >
         {section.visible ? 'Hide' : 'Show'}
       </button>
       {section.section_type !== 'timeline' && (
-        <button type='button' onClick={() => { onRemove(section.id); }}>
+        <button type='button' onClick={handleRemove}>
           Remove
         </button>
       )}
@@ -196,6 +202,30 @@ export const ProfileSectionsSettings = () => {
     [refetch],
   );
 
+  const handleToggleVisible = useCallback(
+    (id: string, visible: boolean) => { void toggleVisible(id, visible); },
+    [toggleVisible],
+  );
+  const handleRemove = useCallback(
+    (id: string) => { void remove(id); },
+    [remove],
+  );
+  const handleAddKorner = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (e) => {
+      const slug = e.currentTarget.dataset.slug;
+      const name = e.currentTarget.dataset.name;
+      if (slug && name) void addKornerSection(slug, name);
+    },
+    [addKornerSection],
+  );
+  const handleAddKategory = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (e) => {
+      const name = e.currentTarget.dataset.name;
+      if (name) void addKategorySection(name);
+    },
+    [addKategorySection],
+  );
+
   return (
     <Column bindToDocument label={intl.formatMessage(messages.title)}>
       <ColumnHeader title={intl.formatMessage(messages.title)} showBackButton />
@@ -238,10 +268,8 @@ export const ProfileSectionsSettings = () => {
                 <SortableSectionRow
                   key={s.id}
                   section={s}
-                  onToggleVisible={(id, visible) =>
-                    void toggleVisible(id, visible)
-                  }
-                  onRemove={(id) => void remove(id)}
+                  onToggleVisible={handleToggleVisible}
+                  onRemove={handleRemove}
                 />
               ))}
             </ol>
@@ -262,7 +290,9 @@ export const ProfileSectionsSettings = () => {
               <button
                 key={k.slug}
                 type='button'
-                onClick={() => void addKornerSection(k.slug, k.name)}
+                data-slug={k.slug}
+                data-name={k.name}
+                onClick={handleAddKorner}
                 style={{
                   padding: '0.4rem 0.8rem',
                   borderRadius: 'var(--radius-round, 999px)',
@@ -288,7 +318,8 @@ export const ProfileSectionsSettings = () => {
             <button
               key={k.name}
               type='button'
-              onClick={() => void addKategorySection(k.name)}
+              data-name={k.name}
+              onClick={handleAddKategory}
               style={{
                 padding: '0.4rem 0.8rem',
                 borderRadius: 'var(--radius-round, 999px)',

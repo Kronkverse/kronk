@@ -61,13 +61,25 @@ export const KategoryPicker = () => {
     [dispatch, text, alreadyTaggedRe],
   );
 
+  const handleToggleExpanded = useCallback(() => {
+    setExpanded((v) => !v);
+  }, []);
+
+  const handleChipClick = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (e) => {
+      const name = e.currentTarget.dataset.name;
+      if (name) toggle(name);
+    },
+    [toggle],
+  );
+
   if (kategories.length === 0) return null;
 
   return (
     <div className='compose-form__kategory-picker'>
       <button
         type='button'
-        onClick={() => { setExpanded((v) => !v); }}
+        onClick={handleToggleExpanded}
         className='compose-form__kategory-toggle'
         aria-expanded={expanded}
       >
@@ -82,7 +94,8 @@ export const KategoryPicker = () => {
               <button
                 key={k.name}
                 type='button'
-                onClick={() => { toggle(k.name); }}
+                data-name={k.name}
+                onClick={handleChipClick}
                 className={`compose-form__kategory-chip ${tagged ? 'compose-form__kategory-chip--active' : ''}`}
                 aria-pressed={tagged}
               >

@@ -64,6 +64,14 @@ export const FeedScopePicker = () => {
     [scope, saving],
   );
 
+  const handleClick = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (e) => {
+      const value = e.currentTarget.dataset.scope as Scope | undefined;
+      if (value) void change(value);
+    },
+    [change],
+  );
+
   return (
     <div className='feed-scope-picker' role='group' aria-label='Feed scope'>
       <p className='feed-scope-picker__heading'>
@@ -74,7 +82,8 @@ export const FeedScopePicker = () => {
           <button
             key={opt.value}
             type='button'
-            onClick={() => void change(opt.value)}
+            data-scope={opt.value}
+            onClick={handleClick}
             className={`feed-scope-picker__option ${scope === opt.value ? 'feed-scope-picker__option--active' : ''}`}
             aria-pressed={scope === opt.value}
           >

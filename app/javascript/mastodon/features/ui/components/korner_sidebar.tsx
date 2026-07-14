@@ -53,15 +53,21 @@ const KornerRow: React.FC<KornerRowProps> = ({
   registerRef,
 }) => {
   const Icon = useKornerIcon(korner.slug);
+  const handleClick = useCallback(() => {
+    onVisit(korner.slug);
+  }, [onVisit, korner.slug]);
+  const handleRef = useCallback((el: HTMLAnchorElement | null) => {
+    registerRef(korner.slug, el);
+  }, [registerRef, korner.slug]);
   return (
     <Link
       to={`/hub/${korner.slug}`}
       className={`korner-sidebar__row ${active ? 'korner-sidebar__row--active' : ''}`}
-      onClick={() => { onVisit(korner.slug); }}
+      onClick={handleClick}
       data-name={korner.name}
       aria-label={korner.name}
       title={korner.name}
-      ref={(el) => { registerRef(korner.slug, el); }}
+      ref={handleRef}
     >
       <span className='korner-sidebar__glyph' aria-hidden='true'>
         <Icon />

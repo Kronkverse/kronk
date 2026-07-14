@@ -138,11 +138,41 @@ export const GenreTagInput: React.FC<Props> = ({
 
   const atMax = value.length >= maxTags;
 
+  const handleFieldClick = useCallback(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleRemoveTag = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (e) => {
+      e.stopPropagation();
+      const genre = e.currentTarget.dataset.genre;
+      if (genre) removeGenre(genre);
+    },
+    [removeGenre],
+  );
+
+  const handleShowSuggestions = useCallback(() => {
+    setShowSuggestions(true);
+  }, []);
+
+  const handleHideSuggestions = useCallback(() => {
+    setTimeout(() => { setShowSuggestions(false); }, 150);
+  }, []);
+
+  const handleSuggestionMouseDown = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (e) => {
+      e.preventDefault();
+      const genre = e.currentTarget.dataset.genre;
+      if (genre) addGenre(genre);
+    },
+    [addGenre],
+  );
+
   return (
     <div className='booth-genre-input'>
       <div
         className='booth-genre-input__field'
-        onClick={() => inputRef.current?.focus()}
+        onClick={handleFieldClick}
       >
         {value.map((genre) => (
           <span key={genre} className='booth-genre-input__tag'>
@@ -150,10 +180,8 @@ export const GenreTagInput: React.FC<Props> = ({
             <button
               type='button'
               className='booth-genre-input__tag-remove'
-              onClick={(e) => {
-                e.stopPropagation();
-                removeGenre(genre);
-              }}
+              data-genre={genre}
+              onClick={handleRemoveTag}
               disabled={disabled}
               aria-label={`Remove ${genre}`}
             >
@@ -169,8 +197,8 @@ export const GenreTagInput: React.FC<Props> = ({
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            onFocus={() => { setShowSuggestions(true); }}
-            onBlur={() => setTimeout(() => { setShowSuggestions(false); }, 150)}
+            onFocus={handleShowSuggestions}
+            onBlur={handleHideSuggestions}
             placeholder={value.length === 0 ? 'Add genres…' : ''}
             disabled={disabled}
           />
@@ -184,10 +212,8 @@ export const GenreTagInput: React.FC<Props> = ({
               key={g}
               type='button'
               className='booth-genre-input__suggestion'
-              onMouseDown={(e) => {
-                e.preventDefault();
-                addGenre(g);
-              }}
+              data-genre={g}
+              onMouseDown={handleSuggestionMouseDown}
             >
               {g}
             </button>
