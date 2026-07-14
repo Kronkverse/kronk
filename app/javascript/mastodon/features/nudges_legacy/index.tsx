@@ -17,7 +17,7 @@ const messages = defineMessages({
 // Human-readable summary per notification type. Nudge is excluded
 // from LEGACY_TYPES on the backend so we won't see it here.
 const summaryFor = (n: ApiNotificationJSON) => {
-  const actor = n.account?.acct ?? 'someone';
+  const actor = n.account.acct;
   switch (n.type) {
     case 'mention':
       return `${actor} mentioned you`;
