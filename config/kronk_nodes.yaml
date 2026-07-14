@@ -1,0 +1,103 @@
+# Kronk cross-cutting nodes — the page-types not owned by a korner manifest.
+#
+# Each korner declares its own nodes under a `nodes:` block in
+# `config/korners/<slug>.yaml`. This file holds everything else:
+# feed surfaces, profile surfaces (public + own), and settings pages.
+#
+# Schema (see lib/kronk/node_registry.rb):
+#   id         - stable identifier (bucket-prefixed dotted path). Feedback
+#                proposals key on this — do not change once shipped.
+#   bucket     - feed | profile | hub
+#   parent     - (hub only) korner slug this node belongs to
+#   label      - display name
+#   url        - canonical URL template (display attr; not identity)
+#   route_name - Rails route :as, used by the doctor drift check.
+#                Optional. Omit + set spa: true for React-Router-only routes.
+#   lifecycle  - live | soon | deprecated | hidden
+#   spa        - true when the route lives only in React Router (no Rails route)
+#
+# Anti-drift: `bin/tootctl korners doctor` validates that every node's
+# route_name resolves against Rails.application.routes, unless spa: true.
+
+nodes:
+  # ── FEED ──────────────────────────────────────────────────────────
+  - id: feed.home
+    bucket: feed
+    label: Home timeline
+    url: /home
+    lifecycle: live
+    spa: true
+
+  - id: feed.nudges
+    bucket: feed
+    label: Nudges activity
+    url: /nudges/activity
+    route_name: nudges_activity
+    lifecycle: live
+
+  # ── PROFILE ───────────────────────────────────────────────────────
+  - id: profile.view
+    bucket: profile
+    label: Someone's profile
+    url: /@:user
+    route_name: short_account
+    lifecycle: live
+
+  - id: profile.edit
+    bucket: profile
+    label: Profile composer
+    url: /@:user/edit
+    lifecycle: live
+    spa: true
+
+  - id: profile.sections
+    bucket: profile
+    label: Sectioned profile
+    url: /@:user/profile
+    lifecycle: live
+    spa: true
+
+  - id: profile.media
+    bucket: profile
+    label: Profile media
+    url: /@:user/media
+    lifecycle: live
+    spa: true
+
+  - id: profile.connections
+    bucket: profile
+    label: Profile connections
+    url: /@:user/connections
+    lifecycle: live
+    spa: true
+
+  # Settings surfaces — grouped under Profile in the tree since they
+  # are the self-management side of the same identity.
+  - id: settings.profile
+    bucket: profile
+    label: Settings · Profile
+    url: /settings/profile
+    route_name: settings_profile
+    lifecycle: live
+
+  - id: settings.sections
+    bucket: profile
+    label: Settings · Sections
+    url: /settings/profile_sections
+    lifecycle: live
+    spa: true
+
+  - id: settings.prefs
+    bucket: profile
+    label: Preferences
+    url: /settings/preferences
+    route_name: settings_preferences
+    lifecycle: live
+
+  # ── HUB (landing only — per-korner nodes live in their manifests) ─
+  - id: hub.landing
+    bucket: hub
+    label: Hub grid
+    url: /hub
+    lifecycle: live
+    spa: true

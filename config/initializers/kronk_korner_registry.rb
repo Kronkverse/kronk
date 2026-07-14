@@ -50,6 +50,11 @@ module Kronk
       :hub_teaser,
       # Launch card (§8.7)
       :launch,
+      # Tree nodes (§Kronk 2.0 tree registry) — user-facing page-types
+      # owned by this korner. Each entry follows the schema in
+      # `lib/kronk/node_registry.rb`. Optional; a korner with no visible
+      # surfaces (pure infra) can declare `nodes: []`.
+      :nodes,
       # Deployment
       :feature_flag,
       :enforced,
@@ -138,25 +143,26 @@ module Kronk
         return nil unless yaml.is_a?(Hash) && yaml['slug'].is_a?(String)
 
         Manifest.new(
-          slug:            yaml['slug'],
-          name:            yaml['name'],
-          icon:            yaml['icon'],
-          render_target:   yaml['render_target'],
-          version:         yaml['version'],
-          resources:       Array(yaml['resources']),
-          storage:         yaml['storage'].is_a?(Hash) ? yaml['storage'] : nil,
-          security:        extract_security(yaml),
-          aesthetic:       yaml['aesthetic'].is_a?(Hash) ? yaml['aesthetic'] : nil,
-          notifications:   extract_notification_types(yaml),
+          slug: yaml['slug'],
+          name: yaml['name'],
+          icon: yaml['icon'],
+          render_target: yaml['render_target'],
+          version: yaml['version'],
+          resources: Array(yaml['resources']),
+          storage: yaml['storage'].is_a?(Hash) ? yaml['storage'] : nil,
+          security: extract_security(yaml),
+          aesthetic: yaml['aesthetic'].is_a?(Hash) ? yaml['aesthetic'] : nil,
+          notifications: extract_notification_types(yaml),
           feed_projection: yaml['feed_projection'].is_a?(Hash) ? yaml['feed_projection'] : nil,
-          settings:        Array(yaml['settings']),
-          compose:         extract_compose(yaml),
-          emits:           Array(yaml['emits']),
-          listens:         Array(yaml['listens']),
-          hub_teaser:      yaml['hub_teaser'].is_a?(Hash) ? yaml['hub_teaser'] : nil,
-          launch:          yaml['launch'].is_a?(Hash) ? yaml['launch'] : nil,
-          feature_flag:    yaml['feature_flag'],
-          enforced:        yaml['enforced'] == true
+          settings: Array(yaml['settings']),
+          compose: extract_compose(yaml),
+          emits: Array(yaml['emits']),
+          listens: Array(yaml['listens']),
+          hub_teaser: yaml['hub_teaser'].is_a?(Hash) ? yaml['hub_teaser'] : nil,
+          launch: yaml['launch'].is_a?(Hash) ? yaml['launch'] : nil,
+          nodes: Array(yaml['nodes']),
+          feature_flag: yaml['feature_flag'],
+          enforced: yaml['enforced'] == true
         )
       rescue => e
         Rails.logger.warn("[kronk:korner_registry] failed to parse #{path.basename}: #{e.message}")
@@ -173,10 +179,10 @@ module Kronk
         maintainers = yaml['steward_role'].present? ? [yaml['steward_role']] : nil
 
         {
-          'permissions'       => yaml['permissions'],
+          'permissions' => yaml['permissions'],
           'visibility_scopes' => yaml['visibility_scopes'],
-          'maintainers'       => maintainers,
-          'federates'         => yaml['federates']
+          'maintainers' => maintainers,
+          'federates' => yaml['federates'],
         }.compact
       end
 

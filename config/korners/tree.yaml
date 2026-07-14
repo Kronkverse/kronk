@@ -46,3 +46,11 @@ launch:
 feature_flag: # not-implemented
 federates: false # local-only per the tree-brief; no federation planned
 enforced: false # framework: runtime lives on a contributor dev branch; validator skips
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: tree.index
+    label: Tree
+    url: /hub/tree
+    lifecycle: soon
+    spa: true

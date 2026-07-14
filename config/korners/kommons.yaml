@@ -92,3 +92,17 @@ launch: # retrospective — Kommons predates launch cards
 feature_flag: # not-implemented — Kommons is unconditionally mounted on main
 federates: false # local-only per §8.8
 enforced: true # framework: on this branch; boot validator enforces
+
+# ── Tree nodes (Kommons 2.0 — feedback tree) ────────────────────────
+# See lib/kronk/node_registry.rb for schema.
+nodes:
+  - id: kommons.index
+    label: Proposals
+    url: /hub/kommons
+    lifecycle: live
+    spa: true
+  - id: kommons.tree
+    label: Tree
+    url: /hub/kommons/tree
+    lifecycle: live
+    spa: true

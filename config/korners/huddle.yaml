@@ -74,3 +74,11 @@ launch:
 
 enforced: false # backfill from event_type='huddle' + controllers land in 2.x
 federates: false
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: huddle.index
+    label: Huddle
+    url: /hub/huddle
+    lifecycle: live
+    spa: true

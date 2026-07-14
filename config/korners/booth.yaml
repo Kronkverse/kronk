@@ -72,3 +72,16 @@ launch:
 feature_flag: # not-implemented
 federates: false
 enforced: true # framework: on this branch; boot validator enforces
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: booth.index
+    label: Booth home
+    url: /hub/booth
+    lifecycle: live
+    spa: true
+  - id: booth.set
+    label: A booth set
+    url: /hub/booth/sets/:id
+    lifecycle: live
+    spa: true

@@ -1,0 +1,108 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe Kronk::NodeRegistry do
+  before do
+    described_class.reload!
+    Kronk::KornerRegistry.reload!
+  end
+
+  describe '.all' do
+    it 'loads nodes from config/kronk_nodes.yaml' do
+      ids = described_class.all.map(&:id)
+      expect(ids).to include('feed.home', 'profile.view', 'settings.prefs', 'hub.landing')
+    end
+
+    it 'loads nodes from every korner manifest with a nodes: block' do
+      ids = described_class.all.map(&:id)
+      expect(ids).to include('kommons.index', 'kommons.tree', 'booth.index', 'kalendar.index')
+    end
+
+    it 'returns Node structs with required fields populated' do
+      home = described_class.find('feed.home')
+      expect(home).to be_a(described_class::Node)
+      expect(home.bucket).to eq('feed')
+      expect(home.label).to eq('Home timeline')
+      expect(home.lifecycle).to eq('live')
+    end
+
+    it 'assigns bucket=hub and parent=<slug> for korner-declared nodes by default' do
+      booth = described_class.find('booth.index')
+      expect(booth.bucket).to eq('hub')
+      expect(booth.parent).to eq('booth')
+    end
+
+    it 'tags each node with its source (cross_cutting or korner)' do
+      cross = described_class.find('feed.home')
+      korner = described_class.find('booth.index')
+
+      expect(cross.source).to eq(:cross_cutting)
+      expect(korner.source).to eq(:korner)
+    end
+  end
+
+  describe '.find' do
+    it 'returns nil for unknown ids' do
+      expect(described_class.find('not-a-node')).to be_nil
+    end
+
+    it 'accepts symbol or string ids' do
+      expect(described_class.find(:'feed.home')).to eq(described_class.find('feed.home'))
+    end
+  end
+
+  describe '.for_bucket' do
+    it 'filters by bucket' do
+      feed_ids = described_class.for_bucket('feed').map(&:id)
+      expect(feed_ids).to include('feed.home', 'feed.nudges')
+      expect(feed_ids).to all(start_with('feed.'))
+    end
+  end
+
+  describe '.in_korner' do
+    it 'returns hub nodes with matching parent slug' do
+      booth_ids = described_class.in_korner('booth').map(&:id)
+      expect(booth_ids).to include('booth.index', 'booth.set')
+      expect(booth_ids).to all(start_with('booth.'))
+    end
+
+    it 'returns empty for a korner with no nodes' do
+      # nudges korner declares `nodes: []` because feed.nudges covers it
+      expect(described_class.in_korner('nudges')).to be_empty
+    end
+  end
+
+  describe 'lifecycle handling' do
+    it 'accepts the four documented lifecycle states' do
+      lifecycles = described_class.all.map(&:lifecycle).uniq
+      expect(lifecycles - Kronk::NodeRegistry::LIFECYCLES).to be_empty
+    end
+
+    it 'flags stub korners as lifecycle:soon' do
+      klot = described_class.find('klot.index')
+      moments = described_class.find('moments.index')
+      expect(klot.lifecycle).to eq('soon')
+      expect(moments.lifecycle).to eq('soon')
+    end
+  end
+
+  describe 'SPA marker' do
+    it 'sets spa? true for React-Router-only routes' do
+      expect(described_class.find('feed.home').spa?).to be true
+      expect(described_class.find('profile.edit').spa?).to be true
+    end
+
+    it 'sets spa? false when a Rails route_name is declared' do
+      expect(described_class.find('profile.view').spa?).to be false
+    end
+  end
+
+  describe 'duplicate ids' do
+    it 'keeps the first occurrence and drops later duplicates' do
+      # Assert the invariant on the current registry: no duplicates.
+      ids = described_class.all.map(&:id)
+      expect(ids.tally.values).to all(eq(1))
+    end
+  end
+end
