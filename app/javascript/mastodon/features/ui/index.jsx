@@ -120,6 +120,7 @@ import {
   SettingsYou,
   SettingsKorners,
   AppearanceSettings,
+  PostingSettings,
   NotificationsSettings,
   PrivacySettings,
 } from './util/async-components';
@@ -258,6 +259,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/settings/you' exact component={SettingsYou} content={children} />}
             {signedIn && <WrappedRoute path='/settings/korners' exact component={SettingsKorners} content={children} />}
             {signedIn && <WrappedRoute path='/settings/appearance' exact component={AppearanceSettings} content={children} />}
+            {signedIn && <WrappedRoute path='/settings/posting' exact component={PostingSettings} content={children} />}
             {signedIn && <WrappedRoute path='/settings/notifications' exact component={NotificationsSettings} content={children} />}
             {signedIn && <WrappedRoute path='/settings/privacy' exact component={PrivacySettings} content={children} />}
             {signedIn && <WrappedRoute path="/settings/profile_sections" component={ProfileSectionsSettings} content={children} />}

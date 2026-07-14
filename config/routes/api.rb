@@ -179,6 +179,7 @@ namespace :api, format: false do
     # read/write surface over a slice of the user's preferences.
     namespace :settings do
       resource :appearance, only: [:show, :update], controller: :appearance
+      resource :posting, only: [:show, :update], controller: :posting
       resource :notifications, only: [:show, :update], controller: :notifications
       resource :privacy, only: [:show, :update], controller: :privacy
     end

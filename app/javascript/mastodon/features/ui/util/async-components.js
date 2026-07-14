@@ -365,6 +365,10 @@ export function AppearanceSettings () {
   return import("../../appearance_settings");
 }
 
+export function PostingSettings () {
+  return import("../../posting_settings");
+}
+
 export function NotificationsSettings () {
   return import("../../notifications_settings");
 }

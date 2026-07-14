@@ -5,113 +5,64 @@ import type { MessageDescriptor } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import TuneIcon from '@/material-icons/400-24px/tune.svg?react';
+import EditNoteIcon from '@/material-icons/400-24px/edit_note.svg?react';
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';
 import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { SettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
-import { applyPersonalAppearance } from 'mastodon/utils/personal_appearance';
 
-// Appearance & language section (settings rebuild §7). The schema and current
-// values come from the server (/api/v1/settings/appearance); this page renders
-// them with the shared settings widgets and autosaves each change. Field
-// labels live here (frontend i18n) rather than on the server.
+// Posting defaults section (settings rebuild §7; settings.posting). The
+// defaults applied when you compose a post. Schema + values come from the
+// server (/api/v1/settings/posting); rendered with the shared settings widgets
+// and autosaved per change. See docs/kronk_settings_ia.md.
 
 const messages = defineMessages({
-  title: {
-    id: 'appearance_settings.title',
-    defaultMessage: 'Appearance & language',
-  },
+  title: { id: 'posting_settings.title', defaultMessage: 'Posting' },
   intro: {
-    id: 'appearance_settings.intro',
-    defaultMessage: 'Theme, fonts, and how Kronk looks and feels to you.',
+    id: 'posting_settings.intro',
+    defaultMessage: 'The defaults applied when you compose a new post.',
   },
-  saving: { id: 'appearance_settings.saving', defaultMessage: 'Saving…' },
-  saved: { id: 'appearance_settings.saved', defaultMessage: 'Saved' },
-  error: { id: 'appearance_settings.error', defaultMessage: 'Couldn’t save' },
+  saving: { id: 'posting_settings.saving', defaultMessage: 'Saving…' },
+  saved: { id: 'posting_settings.saved', defaultMessage: 'Saved' },
+  error: { id: 'posting_settings.error', defaultMessage: 'Couldn’t save' },
 
-  theme: { id: 'appearance_settings.theme', defaultMessage: 'Theme' },
-  interfaceLanguage: {
-    id: 'appearance_settings.interface_language',
-    defaultMessage: 'Interface language',
+  defaultPrivacy: {
+    id: 'posting_settings.default_privacy',
+    defaultMessage: 'Default post visibility',
   },
-  reduceMotion: {
-    id: 'appearance_settings.reduce_motion',
-    defaultMessage: 'Reduce motion',
+  defaultPrivacyHint: {
+    id: 'posting_settings.default_privacy_hint',
+    defaultMessage: 'Who can see new posts, before you change it per post.',
   },
-  autoPlayGif: {
-    id: 'appearance_settings.auto_play_gif',
-    defaultMessage: 'Auto-play animations',
+  defaultLanguage: {
+    id: 'posting_settings.default_language',
+    defaultMessage: 'Default posting language',
   },
-
-  reduceMotionHint: {
-    id: 'appearance_settings.reduce_motion_hint',
-    defaultMessage: 'Minimise non-essential animation across the app.',
-  },
-
-  personalAccent: {
-    id: 'appearance_settings.personal_accent',
-    defaultMessage: 'Accent colour',
-  },
-  personalAccentHint: {
-    id: 'appearance_settings.personal_accent_hint',
-    defaultMessage:
-      'Your personal purple. Everyone picks their own shade — it always stays in the Kronk family.',
-  },
-  personalFontDisplay: {
-    id: 'appearance_settings.personal_font_display',
-    defaultMessage: 'Display font',
-  },
-  personalFontBody: {
-    id: 'appearance_settings.personal_font_body',
-    defaultMessage: 'Body font',
-  },
-  uiScale: {
-    id: 'appearance_settings.ui_scale',
-    defaultMessage: 'Interface size',
-  },
-  uiScaleHint: {
-    id: 'appearance_settings.ui_scale_hint',
-    defaultMessage: 'Scale the whole interface up or down.',
+  defaultSensitive: {
+    id: 'posting_settings.default_sensitive',
+    defaultMessage: 'Mark media as sensitive by default',
   },
 });
 
 const LABELS: Record<string, MessageDescriptor> = {
-  theme: messages.theme,
-  interface_language: messages.interfaceLanguage,
-  reduce_motion: messages.reduceMotion,
-  auto_play_gif: messages.autoPlayGif,
-  personal_accent: messages.personalAccent,
-  personal_font_display: messages.personalFontDisplay,
-  personal_font_body: messages.personalFontBody,
-  ui_scale: messages.uiScale,
+  default_privacy: messages.defaultPrivacy,
+  default_language: messages.defaultLanguage,
+  default_sensitive: messages.defaultSensitive,
 };
 
 const HINTS: Record<string, MessageDescriptor> = {
-  reduce_motion: messages.reduceMotionHint,
-  personal_accent: messages.personalAccentHint,
-  ui_scale: messages.uiScaleHint,
+  default_privacy: messages.defaultPrivacyHint,
 };
 
-// Apply the appearance-affecting subset of the settings map to the DOM live.
-const previewAppearance = (vals: Record<string, unknown>) => {
-  applyPersonalAppearance({
-    accent: (vals.personal_accent as string) || null,
-    fontDisplay: (vals.personal_font_display as string) || null,
-    fontBody: (vals.personal_font_body as string) || null,
-    uiScale: (vals.ui_scale as string) || null,
-  });
-};
-
-interface AppearancePayload {
+interface PostingPayload {
   settings_schema: SettingDescriptor[];
   values: Record<string, unknown>;
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = ({
+export const PostingSettings: React.FC<{ multiColumn?: boolean }> = ({
   multiColumn,
 }) => {
   const intl = useIntl();
@@ -124,9 +75,7 @@ export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = ({
     let cancelled = false;
     void (async () => {
       try {
-        const res = await apiRequestGet<AppearancePayload>(
-          'v1/settings/appearance',
-        );
+        const res = await apiRequestGet<PostingPayload>('v1/settings/posting');
         if (!cancelled) {
           setSchema(res.settings_schema);
           setValues(res.values);
@@ -145,19 +94,15 @@ export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = ({
     async (name: string, value: unknown) => {
       const previous = values[name];
       setValues((v) => ({ ...v, [name]: value }));
-      previewAppearance({ ...values, [name]: value }); // live preview
       setStatus('saving');
       try {
-        const res = await apiRequestPut<AppearancePayload>(
-          'v1/settings/appearance',
-          { [name]: value },
-        );
+        const res = await apiRequestPut<PostingPayload>('v1/settings/posting', {
+          [name]: value,
+        });
         setValues(res.values);
-        previewAppearance(res.values); // reconcile with server-validated values
         setStatus('saved');
       } catch {
         setValues((v) => ({ ...v, [name]: previous }));
-        previewAppearance({ ...values, [name]: previous }); // revert preview
         setStatus('error');
       }
     },
@@ -177,8 +122,8 @@ export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = ({
     <Column>
       <ColumnHeader
         title={intl.formatMessage(messages.title)}
-        icon='tune'
-        iconComponent={TuneIcon}
+        icon='edit_note'
+        iconComponent={EditNoteIcon}
         multiColumn={multiColumn}
         showBackButton
       />
@@ -190,7 +135,7 @@ export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = ({
       <div className='scrollable appearance-settings'>
         <header className='appearance-settings__hero'>
           <span className='appearance-settings__hero-glyph' aria-hidden='true'>
-            <TuneIcon />
+            <EditNoteIcon />
           </span>
           <div>
             <h1 className='appearance-settings__hero-title'>
@@ -235,4 +180,4 @@ export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = ({
   );
 };
 
-export default AppearanceSettings;
+export default PostingSettings;
