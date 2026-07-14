@@ -29,8 +29,8 @@ import {
   apiUpdateProfileSection,
 } from 'mastodon/api/profile_sections';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
-import Column from 'mastodon/components/column';
-import ColumnHeader from 'mastodon/components/column_header';
+import { Column } from 'mastodon/components/column';
+import { ColumnHeader } from 'mastodon/components/column_header';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useProfileSections } from 'mastodon/hooks/useProfileSections';
 import { useAppDispatch } from 'mastodon/store';

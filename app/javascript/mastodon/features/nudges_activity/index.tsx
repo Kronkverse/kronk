@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import { apiRequestGet } from 'mastodon/api';
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 

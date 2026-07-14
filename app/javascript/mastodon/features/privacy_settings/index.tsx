@@ -7,7 +7,7 @@ import { Helmet } from 'react-helmet';
 
 import VisibilityIcon from '@/material-icons/400-24px/visibility.svg?react';
 import { apiRequestGet, apiRequestPut, apiRequestPost } from 'mastodon/api';
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { ListManager } from 'mastodon/features/settings/list_manager';
 import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';

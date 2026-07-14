@@ -6,7 +6,7 @@ import { Helmet } from 'react-helmet';
 import { Redirect, useParams } from 'react-router-dom';
 
 import { apiRequestGet, apiRequestPut, apiRequestDelete } from 'mastodon/api';
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 

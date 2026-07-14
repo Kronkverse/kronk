@@ -9,7 +9,7 @@ import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { apiRequestPost, apiRequestDelete } from 'mastodon/api';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';

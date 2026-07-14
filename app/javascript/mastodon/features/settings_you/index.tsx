@@ -3,7 +3,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import PersonIcon from '@/material-icons/400-24px/person.svg?react';
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { YOU_SECTIONS, SectionRow } from 'mastodon/features/settings/nav';
 

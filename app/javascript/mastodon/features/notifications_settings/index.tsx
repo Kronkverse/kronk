@@ -7,7 +7,7 @@ import { Helmet } from 'react-helmet';
 
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';

@@ -7,8 +7,8 @@ import { useParams } from 'react-router-dom';
 import { apiRequestGet, apiRequestPost } from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import type { ApiRelationshipJSON } from 'mastodon/api_types/relationships';
-import Column from 'mastodon/components/column';
-import ColumnHeader from 'mastodon/components/column_header';
+import { Column } from 'mastodon/components/column';
+import { ColumnHeader } from 'mastodon/components/column_header';
 import { useIdentity } from 'mastodon/identity_context';
 
 const messages = defineMessages({
