@@ -137,3 +137,31 @@ nodes:
     url: /hub
     lifecycle: live
     spa: true
+
+  # ── SETTINGS (the four settings surfaces — see docs/kronk_settings_ia.md) ─
+  # Feed = incoming, Profile = outgoing, Hub = spaces, You = you + the app.
+  # The settings nav is a projection of these (bucket: settings).
+  - id: settings.feed
+    bucket: settings
+    label: Feed settings
+    url: /home/settings
+    lifecycle: live
+    spa: true
+  - id: settings.profile
+    bucket: settings
+    label: Profile settings
+    url: /@:user/edit
+    lifecycle: live
+    spa: true
+  - id: settings.hub
+    bucket: settings
+    label: Hub settings
+    url: /settings/korners
+    lifecycle: live
+    spa: true
+  - id: settings.you
+    bucket: settings
+    label: You & account
+    url: /settings/you
+    lifecycle: live
+    spa: true
