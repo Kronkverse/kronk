@@ -28,6 +28,12 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
     'default_sensitive' => { key: 'default_sensitive', kind: 'boolean', options: -> {} },
     'reduce_motion' => { key: 'web.reduce_motion', kind: 'boolean', options: -> {} },
     'auto_play_gif' => { key: 'web.auto_play', kind: 'boolean', options: -> {} },
+    # Kronk Personal Appearance. personal_accent is a purple hex (validated by
+    # hue below — kept out of `enum` because it's a continuous constraint).
+    'personal_accent' => { key: 'web.personal_accent', kind: 'accent', options: -> {} },
+    'personal_font_display' => { key: 'web.personal_font_display', kind: 'enum', options: -> { %w(default playfair fraunces cormorant lora merriweather garamond spectral) } },
+    'personal_font_body' => { key: 'web.personal_font_body', kind: 'enum', options: -> { %w(default inter ibm-plex manrope work-sans dm-sans figtree system) } },
+    'ui_scale' => { key: 'web.ui_scale', kind: 'enum', options: -> { %w(small default large xl) } },
   }.freeze
 
   def show
@@ -44,6 +50,11 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
       value = coerce(cfg[:kind], params[name])
 
       return render json: { error: "invalid value for #{name}" }, status: 422 if cfg[:kind] == 'enum' && cfg[:options].call.exclude?(value)
+
+      if cfg[:kind] == 'accent'
+        value = value.presence # blank clears the override
+        return render json: { error: "#{name} must be a purple hex colour" }, status: 422 unless purple_accent?(value)
+      end
 
       if cfg[:key] == :locale
         new_locale = value
@@ -69,6 +80,30 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
     kind == 'boolean' ? ActiveModel::Type::Boolean.new.cast(raw) : raw.to_s
   end
 
+  # Personal accent must stay in the purple family so the platform still reads
+  # as Kronk. Accepts blank (clears the override) or a #rrggbb whose hue sits in
+  # the indigo→violet→magenta-purple band. Near-greys (no meaningful hue) are
+  # rejected.
+  def purple_accent?(hex)
+    return true if hex.blank?
+    return false unless hex.match?(/\A#\h{6}\z/)
+
+    r = hex[1, 2].to_i(16) / 255.0
+    g = hex[3, 2].to_i(16) / 255.0
+    b = hex[5, 2].to_i(16) / 255.0
+    max = [r, g, b].max
+    delta = max - [r, g, b].min
+    return false if delta < 0.06
+
+    hue = case max
+          when r then 60 * (((g - b) / delta) % 6)
+          when g then 60 * (((b - r) / delta) + 2)
+          else 60 * (((r - g) / delta) + 4)
+          end
+    hue += 360 if hue.negative?
+    hue.between?(240, 320)
+  end
+
   def payload
     {
       settings_schema: FIELDS.map do |name, cfg|
@@ -85,6 +120,10 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
         'default_sensitive' => current_user.settings['default_sensitive'],
         'reduce_motion' => current_user.settings['web.reduce_motion'],
         'auto_play_gif' => current_user.settings['web.auto_play'],
+        'personal_accent' => current_user.settings['web.personal_accent'],
+        'personal_font_display' => current_user.settings['web.personal_font_display'],
+        'personal_font_body' => current_user.settings['web.personal_font_body'],
+        'ui_scale' => current_user.settings['web.ui_scale'],
       },
     }
   end

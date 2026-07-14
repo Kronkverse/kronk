@@ -124,6 +124,70 @@ export const DurationWidget: React.FC<{
   );
 };
 
+// Kronk Personal Appearance accent picker. Constrained to the purple family so
+// personalisation never breaks Kronk's identity — a spread of purple presets
+// plus a custom picker (server-side hue validation is the backstop).
+const PURPLE_PRESETS = [
+  '#4414cc',
+  '#5b3fd6',
+  '#6364ff',
+  '#6d5cff',
+  '#7241ff',
+  '#7c5cff',
+  '#7c3aed',
+  '#8b5cf6',
+  '#9061ff',
+  '#8c8dff',
+  '#a78bfa',
+];
+
+export const AccentWidget: React.FC<{
+  value: string;
+  onChange: (v: string) => void;
+}> = ({ value, onChange }) => (
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+    {PURPLE_PRESETS.map((p) => (
+      <button
+        key={p}
+        type='button'
+        title={p}
+        aria-label={p}
+        onClick={() => {
+          onChange(p);
+        }}
+        style={{
+          width: '26px',
+          height: '26px',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          background: p,
+          border:
+            value === p
+              ? '2px solid var(--text-primary)'
+              : '1px solid var(--border-default)',
+        }}
+      />
+    ))}
+    <input
+      type='color'
+      aria-label='Custom purple'
+      value={/^#[0-9a-fA-F]{6}$/.test(value) ? value : '#6364ff'}
+      onChange={(e) => {
+        onChange(e.target.value);
+      }}
+      style={{
+        width: '30px',
+        height: '26px',
+        padding: 0,
+        border: '1px solid var(--border-default)',
+        borderRadius: '6px',
+        background: 'none',
+        cursor: 'pointer',
+      }}
+    />
+  </div>
+);
+
 export const SettingRow: React.FC<{
   setting: SettingDescriptor;
   value: unknown;
@@ -182,6 +246,9 @@ export const SettingRow: React.FC<{
             onChange(Number(e.target.value));
           }}
         />
+      )}
+      {setting.kind === 'accent' && (
+        <AccentWidget value={String(value ?? '')} onChange={onChange} />
       )}
     </div>
   );
