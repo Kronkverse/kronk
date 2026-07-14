@@ -111,4 +111,4 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 };
 
-export default Questions;
+export { Questions };

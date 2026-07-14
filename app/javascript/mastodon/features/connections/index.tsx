@@ -304,4 +304,3 @@ export const Connections = () => {
   );
 };
 
-export default Connections;

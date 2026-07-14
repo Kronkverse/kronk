@@ -110,4 +110,3 @@ export const InFlow: React.FC<Props> = ({ multiColumn }) => {
   );
 };
 
-export default InFlow;

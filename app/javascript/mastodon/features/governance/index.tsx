@@ -198,4 +198,4 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 };
 
-export default Governance;
+export { Governance };

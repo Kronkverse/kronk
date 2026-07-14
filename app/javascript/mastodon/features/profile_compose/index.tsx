@@ -798,4 +798,3 @@ const Inspector: React.FC<{
   );
 };
 
-export default ProfileCompose;

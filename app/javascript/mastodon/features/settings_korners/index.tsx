@@ -68,4 +68,3 @@ export const SettingsKorners: React.FC<{ multiColumn?: boolean }> = ({
   );
 };
 
-export default SettingsKorners;

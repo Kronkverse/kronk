@@ -167,4 +167,4 @@ const Hub: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 };
 
-export default Hub;
+export { Hub };

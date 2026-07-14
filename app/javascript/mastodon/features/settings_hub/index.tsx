@@ -130,4 +130,3 @@ export const SettingsHub: React.FC<{ multiColumn?: boolean }> = ({
   );
 };
 
-export default SettingsHub;

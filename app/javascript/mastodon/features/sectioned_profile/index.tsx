@@ -1446,4 +1446,3 @@ const FriendshipPanel: React.FC = () => (
   </div>
 );
 
-export default SectionedProfile;

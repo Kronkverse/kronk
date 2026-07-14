@@ -313,4 +313,3 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
   );
 };
 
-export default FeedSettings;

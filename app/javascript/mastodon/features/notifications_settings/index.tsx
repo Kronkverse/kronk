@@ -220,4 +220,3 @@ export const NotificationsSettings: React.FC<{ multiColumn?: boolean }> = ({
   );
 };
 
-export default NotificationsSettings;

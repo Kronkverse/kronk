@@ -298,4 +298,4 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 };
 
-export default Events;
+export { Events };

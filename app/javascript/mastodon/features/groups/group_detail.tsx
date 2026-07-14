@@ -287,4 +287,3 @@ export const GroupDetail = () => {
   );
 };
 
-export default GroupDetail;

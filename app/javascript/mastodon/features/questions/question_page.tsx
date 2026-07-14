@@ -84,4 +84,4 @@ const QuestionPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 };
 
-export default QuestionPage;
+export { QuestionPage };
