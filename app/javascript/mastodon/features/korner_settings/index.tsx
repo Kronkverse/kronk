@@ -520,4 +520,3 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
   );
 };
 
-export default KornerSettings;

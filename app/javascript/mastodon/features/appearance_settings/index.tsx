@@ -260,4 +260,3 @@ export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = ({
   );
 };
 
-export default AppearanceSettings;

@@ -108,4 +108,4 @@ const AccountNudges: React.FC = () => {
   );
 };
 
-export default AccountNudges;
+export { AccountNudges };

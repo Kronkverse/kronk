@@ -590,4 +590,4 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 };
 
-export default EventDetail;
+export { EventDetail };

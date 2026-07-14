@@ -251,11 +251,11 @@ export function Live () {
 }
 
 export function Events () {
-  return import("../../events");
+  return import("../../events").then(m => ({ default: m.Events }));
 }
 
 export function InFlow () {
-  return import("../../in_flow");
+  return import("../../in_flow").then(m => ({ default: m.InFlow }));
 }
 
 export function Nudges () {
@@ -267,12 +267,12 @@ export function NudgesThread () {
 }
 
 export function EventDetail () {
-  return import("../../events/event_detail");
+  return import("../../events/event_detail").then(m => ({ default: m.EventDetail }));
 }
 
 
 export function Governance () {
-  return import("../../governance");
+  return import("../../governance").then(m => ({ default: m.Governance }));
 }
 
 
@@ -282,11 +282,11 @@ export function KommonsTree () {
 
 
 export function Questions () {
-  return import("../../questions");
+  return import("../../questions").then(m => ({ default: m.Questions }));
 }
 
 export function QuestionPage () {
-  return import("../../questions/question_page");
+  return import("../../questions/question_page").then(m => ({ default: m.QuestionPage }));
 }
 
 export function Booth () {
@@ -298,31 +298,31 @@ export function BoothSetPage () {
 }
 
 export function ProfileSectionsSettings () {
-  return import("../../profile_sections_settings");
+  return import("../../profile_sections_settings").then(m => ({ default: m.ProfileSectionsSettings }));
 }
 
 export function SectionedProfile () {
-  return import("../../sectioned_profile");
+  return import("../../sectioned_profile").then(m => ({ default: m.SectionedProfile }));
 }
 
 export function NudgesLegacyArchive () {
-  return import("../../nudges_legacy");
+  return import("../../nudges_legacy").then(m => ({ default: m.NudgesLegacyArchive }));
 }
 
 export function Groups () {
-  return import("../../groups");
+  return import("../../groups").then(m => ({ default: m.Groups }));
 }
 
 export function GroupDetail () {
-  return import("../../groups/group_detail");
+  return import("../../groups/group_detail").then(m => ({ default: m.GroupDetail }));
 }
 
 export function Hub () {
-  return import("../../hub");
+  return import("../../hub").then(m => ({ default: m.Hub }));
 }
 
 export function NudgesActivity () {
-  return import("../../nudges_activity");
+  return import("../../nudges_activity").then(m => ({ default: m.NudgesActivity }));
 }
 
 export function MomentsStub () {
@@ -338,46 +338,46 @@ export function KompassStub () {
 }
 
 export function KornerSettings () {
-  return import("../../korner_settings");
+  return import("../../korner_settings").then(m => ({ default: m.KornerSettings }));
 }
 
 export function ProfileCompose () {
-  return import("../../profile_compose");
+  return import("../../profile_compose").then(m => ({ default: m.ProfileCompose }));
 }
 
 export function FeedSettings () {
-  return import("../../feed_settings");
+  return import("../../feed_settings").then(m => ({ default: m.FeedSettings }));
 }
 
 export function Connections () {
-  return import("../../connections");
+  return import("../../connections").then(m => ({ default: m.Connections }));
 }
 
 export function StyleGuide () {
-  return import("../../styleguide");
+  return import("../../styleguide").then(m => ({ default: m.StyleGuide }));
 }
 
 export function SettingsHub () {
-  return import("../../settings_hub");
+  return import("../../settings_hub").then(m => ({ default: m.SettingsHub }));
 }
 
 export function AppearanceSettings () {
-  return import("../../appearance_settings");
+  return import("../../appearance_settings").then(m => ({ default: m.AppearanceSettings }));
 }
 
 export function NotificationsSettings () {
-  return import("../../notifications_settings");
+  return import("../../notifications_settings").then(m => ({ default: m.NotificationsSettings }));
 }
 
 export function PrivacySettings () {
-  return import("../../privacy_settings");
+  return import("../../privacy_settings").then(m => ({ default: m.PrivacySettings }));
 }
 
 export function SettingsYou () {
-  return import("../../settings_you");
+  return import("../../settings_you").then(m => ({ default: m.SettingsYou }));
 }
 
 export function SettingsKorners () {
-  return import("../../settings_korners");
+  return import("../../settings_korners").then(m => ({ default: m.SettingsKorners }));
 }
 

@@ -345,4 +345,3 @@ export const ProfileSectionsSettings = () => {
   );
 };
 
-export default ProfileSectionsSettings;

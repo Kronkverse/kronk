@@ -150,4 +150,3 @@ export const NudgesLegacyArchive = () => {
   );
 };
 
-export default NudgesLegacyArchive;

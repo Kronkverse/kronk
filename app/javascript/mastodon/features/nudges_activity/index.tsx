@@ -204,4 +204,3 @@ export const NudgesActivity: React.FC<{ multiColumn?: boolean }> = ({
   );
 };
 
-export default NudgesActivity;

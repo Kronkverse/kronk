@@ -255,4 +255,3 @@ export const PrivacySettings: React.FC<{ multiColumn?: boolean }> = ({
   );
 };
 
-export default PrivacySettings;

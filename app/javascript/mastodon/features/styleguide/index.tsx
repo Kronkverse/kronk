@@ -291,4 +291,3 @@ export const StyleGuide = () => (
   </Column>
 );
 
-export default StyleGuide;

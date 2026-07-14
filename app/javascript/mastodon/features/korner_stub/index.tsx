@@ -75,4 +75,3 @@ export const KompassStub: React.FC<{ multiColumn?: boolean }> = (props) => (
   <KornerStub {...props} slug='kompass' />
 );
 
-export default KornerStub;
