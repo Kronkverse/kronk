@@ -128,8 +128,40 @@ module Mastodon
         end
 
         detect_orphan_listens(manifests).each { |line| issues << line }
+        detect_node_issues.each { |line| issues << line }
 
         issues
+      end
+
+      # Kommons Tree nodes: verify structure, referential integrity, and
+      # (when available) Rails-route matching for non-SPA nodes.
+      def detect_node_issues
+        issues = []
+        nodes = ::Kronk::NodeRegistry.all
+        node_ids = nodes.map(&:id).to_set
+        korner_slugs = ::Kronk::KornerRegistry.all.map(&:slug).to_set
+
+        nodes.each do |node|
+          if node.bucket == 'hub' && node.parent.present? && !korner_slugs.include?(node.parent)
+            issues << "node '#{node.id}': parent slug '#{node.parent}' is not a registered korner"
+          end
+
+          if node.route_name.present? && !node.spa? && !rails_route_exists?(node.route_name)
+            issues << "node '#{node.id}': route_name '#{node.route_name}' has no matching Rails route"
+          end
+
+          ::Kronk::NodeRegistry.links_for(node.id).each do |link|
+            next if node_ids.include?(link['to'])
+
+            issues << "node '#{node.id}': links to '#{link['to']}' but no such node is registered"
+          end
+        end
+
+        issues
+      end
+
+      def rails_route_exists?(name)
+        Rails.application.routes.named_routes.key?(name.to_sym)
       end
 
       # A manifest's `listens:` block names events it wants to react to.

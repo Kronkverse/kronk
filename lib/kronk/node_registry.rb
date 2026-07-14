@@ -36,11 +36,13 @@
 # implements that spec.
 
 require 'yaml'
+require 'set'
 
 module Kronk
   module NodeRegistry
     BUCKETS = %w(feed profile hub).freeze
     LIFECYCLES = %w(live soon deprecated hidden).freeze
+    LINK_KINDS = %w(creates listed_on projects_to listens_to settings_for related).freeze
 
     CROSS_CUTTING_FILENAME = 'kronk_nodes.yaml'
 
@@ -53,7 +55,8 @@ module Kronk
       :route_name,
       :lifecycle,
       :spa,
-      :source, # :cross_cutting | :korner
+      :source,      # :cross_cutting | :korner
+      :raw_links,   # Array<Hash> — declared in the manifest under nodes[].links
       keyword_init: true
     ) do
       def spa?
@@ -80,6 +83,19 @@ module Kronk
 
       def in_korner(slug)
         all.select { |n| n.bucket == 'hub' && n.parent == slug.to_s }
+      end
+
+      # Resolved connections for a node: auto-derived + manifest-declared.
+      # Auto: `projects_to feed.home` for a korner's index node when its
+      # manifest has feed_projection.card. Manifest: every entry under
+      # `links:` inside the node's yaml.
+      def links_for(id)
+        node = find(id)
+        return [] unless node
+
+        auto = auto_links(node)
+        explicit = normalize_links(node.raw_links)
+        dedup_links(auto + explicit)
       end
 
       def reload!
@@ -142,8 +158,46 @@ module Kronk
           route_name: entry['route_name']&.to_s,
           lifecycle: lifecycle,
           spa: entry['spa'] == true,
-          source: source
+          source: source,
+          raw_links: Array(entry['links'])
         )
+      end
+
+      def auto_links(node)
+        return [] unless node.source == :korner
+        return [] unless node.parent
+        return [] unless node.id == "#{node.parent}.index"
+
+        manifest = Kronk::KornerRegistry.find(node.parent)
+        return [] unless manifest&.feed_projection&.dig('card')
+
+        target = 'feed.home'
+        return [] if node.id == target
+
+        [{ 'to' => target, 'kind' => 'projects_to', 'description' => "New #{manifest.name} content projects to the feed." }]
+      end
+
+      def normalize_links(raw)
+        Array(raw).filter_map do |link|
+          next unless link.is_a?(Hash)
+
+          to = link['to'].to_s
+          kind = link['kind'].to_s
+          next if to.empty? || !LINK_KINDS.include?(kind)
+
+          { 'to' => to, 'kind' => kind, 'description' => link['description'].to_s }
+        end
+      end
+
+      def dedup_links(links)
+        seen = Set.new
+        links.each_with_object([]) do |link, out|
+          key = [link['to'], link['kind']]
+          next if seen.include?(key)
+
+          seen << key
+          out << link
+        end
       end
     end
   end
