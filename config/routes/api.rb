@@ -137,6 +137,13 @@ namespace :api, format: false do
       resources :tasks, only: [:index, :create, :update], shallow: true
     end
 
+    # Kommons Tree — the feedback map of Kronk. Nodes are user-facing
+    # page-types (auto-derived from Kronk::NodeRegistry); a feedback
+    # item is a Kommons proposal tagged with `node_id`.
+    namespace :kommons do
+      resources :nodes, only: [:index]
+    end
+
     resources :reports, only: [:create]
     resources :trends, only: [:index], controller: 'trends/tags'
     resources :filters, only: [:index, :create, :show, :update, :destroy]

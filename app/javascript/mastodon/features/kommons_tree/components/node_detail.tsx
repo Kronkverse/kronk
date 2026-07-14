@@ -50,11 +50,12 @@ const linkKindMessage = (kind: LinkKind) => {
 
 interface Props {
   node: KommonsNode;
+  nodes: KommonsNode[];
   onFile: () => void;
   onNavigate?: (nodeId: string) => void;
 }
 
-export const NodeDetail: React.FC<Props> = ({ node, onFile, onNavigate }) => {
+export const NodeDetail: React.FC<Props> = ({ node, nodes, onFile, onNavigate }) => {
   const intl = useIntl();
   const [connectionsOpen, setConnectionsOpen] = useState(false);
 
@@ -122,7 +123,7 @@ export const NodeDetail: React.FC<Props> = ({ node, onFile, onNavigate }) => {
               </p>
               <ul className='kommons-tree__connections-list'>
                 {links.map((link, i) => {
-                  const target = findNode(link.to);
+                  const target = findNode(nodes, link.to);
                   const targetLabel = target?.label ?? link.to;
                   return (
                     <li key={`${link.to}-${i}`} className='kommons-tree__connection'>

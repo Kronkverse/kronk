@@ -371,19 +371,114 @@
   line-height: 1.4;
 }
 
-// ── Composer stub ───────────────────────────────────────────────────
-.kommons-tree__composer-stub {
+// ── Loading + error banners ─────────────────────────────────────────
+.kommons-tree__loading,
+.kommons-tree__error {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted, rgba(255, 255, 255, 0.65));
+  font-size: 14px;
+}
+
+.kommons-tree__error {
+  color: var(--decision-block, #ef4444);
+}
+
+// ── Composer (functional form; replaces the stub) ───────────────────
+.kommons-tree__composer {
   margin-top: 20px;
   padding: 20px;
-  background: var(--surface-primary, rgba(255, 255, 255, 0.05));
-  border: 1px dashed var(--accent);
+  background: var(--surface-primary, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--accent);
   border-radius: var(--radius-md, 8px);
+}
 
-  p {
-    margin: 0 0 12px;
-    color: var(--text-primary, #fff);
-    line-height: 1.5;
+.kommons-tree__composer-heading {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+}
+
+.kommons-tree__composer-hint {
+  margin: 0 0 16px;
+  color: var(--text-muted, rgba(255, 255, 255, 0.6));
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.kommons-tree__composer-node {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  background: var(--surface-hover, rgba(255, 255, 255, 0.03));
+  border-radius: var(--radius-sm, 4px);
+  font-size: 12px;
+
+  dt {
+    margin: 0;
+    color: var(--text-muted, rgba(255, 255, 255, 0.55));
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
+
+  dd {
+    margin: 0;
+    color: var(--text-primary, #fff);
+  }
+
+  code {
+    font-family: var(--font-mono, monospace);
+    color: var(--accent);
+  }
+}
+
+.kommons-tree__composer-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+
+  span {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted, rgba(255, 255, 255, 0.55));
+  }
+
+  input,
+  textarea {
+    padding: 10px 12px;
+    background: var(--surface-hover, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+    border-radius: var(--radius-sm, 4px);
+    color: var(--text-primary, #fff);
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+  }
+}
+
+.kommons-tree__composer-error {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  color: var(--decision-block, #ef4444);
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: var(--radius-sm, 4px);
+  font-size: 13px;
+}
+
+.kommons-tree__composer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .button--kommons-tree {

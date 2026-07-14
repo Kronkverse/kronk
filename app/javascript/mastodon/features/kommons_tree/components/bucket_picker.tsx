@@ -1,6 +1,6 @@
 import { defineMessages, useIntl } from 'react-intl';
 
-import type { Bucket } from '../data/nodes';
+import type { Bucket, KommonsNode } from '../data/nodes';
 import { bucketTotals } from '../data/nodes';
 
 const messages = defineMessages({
@@ -18,12 +18,13 @@ const messages = defineMessages({
 });
 
 interface Props {
+  nodes: KommonsNode[];
   onSelect: (bucket: Bucket) => void;
 }
 
-export const BucketPicker: React.FC<Props> = ({ onSelect }) => {
+export const BucketPicker: React.FC<Props> = ({ nodes, onSelect }) => {
   const intl = useIntl();
-  const totals = bucketTotals();
+  const totals = bucketTotals(nodes);
 
   const buckets: { key: Bucket; label: string; blurb: string; glyph: string }[] = [
     { key: 'feed', label: intl.formatMessage(messages.feed), blurb: intl.formatMessage(messages.feedBlurb), glyph: '\u2261' },
