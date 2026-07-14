@@ -76,6 +76,11 @@ const KornerTuneRow: React.FC<{
     (korner.launch?.blurb as string | undefined) ??
     '';
 
+  const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => { onToggle(e.target.checked); },
+    [onToggle],
+  );
+
   return (
     <label className='feed-settings__korner-row'>
       <span className='feed-settings__korner-glyph' aria-hidden='true'>
@@ -90,11 +95,24 @@ const KornerTuneRow: React.FC<{
       <input
         type='checkbox'
         checked={tunedIn}
-        onChange={(e) => { onToggle(e.target.checked); }}
+        onChange={handleChange}
         aria-label={`Tune ${tunedIn ? 'out of' : 'in to'} ${korner.name}`}
       />
     </label>
   );
+};
+
+// Wrapper providing stable per-row toggle callback for the map iteration.
+const KornerTuneRowScoped: React.FC<{
+  korner: ApiKornerJSON;
+  tunedIn: boolean;
+  onSet: (slug: string, next: boolean) => void;
+}> = ({ korner, tunedIn, onSet }) => {
+  const handleToggle = useCallback(
+    (next: boolean) => { onSet(korner.slug, next); },
+    [korner.slug, onSet],
+  );
+  return <KornerTuneRow korner={korner} tunedIn={tunedIn} onToggle={handleToggle} />;
 };
 
 export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
@@ -172,6 +190,19 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
     [tuneStates],
   );
 
+  const handleScopeClick = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (e) => {
+      const value = e.currentTarget.dataset.scope as Scope | undefined;
+      if (value) void changeScope(value);
+    },
+    [changeScope],
+  );
+
+  const handleKornerToggle = useCallback(
+    (slug: string, next: boolean) => { void toggleKorner(slug, next); },
+    [toggleKorner],
+  );
+
   const listedKorners = korners
     .filter((k) => k.enforced !== false)
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -230,7 +261,8 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
               <button
                 key={opt.value}
                 type='button'
-                onClick={() => void changeScope(opt.value)}
+                data-scope={opt.value}
+                onClick={handleScopeClick}
                 className={`feed-settings__scope-card ${scope === opt.value ? 'feed-settings__scope-card--active' : ''}`}
                 aria-pressed={scope === opt.value}
               >
@@ -267,11 +299,11 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
 
           <div className='feed-settings__korner-list'>
             {listedKorners.map((k) => (
-              <KornerTuneRow
+              <KornerTuneRowScoped
                 key={k.slug}
                 korner={k}
                 tunedIn={tuneStates[k.slug] ?? true}
-                onToggle={(next) => void toggleKorner(k.slug, next)}
+                onSet={handleKornerToggle}
               />
             ))}
           </div>

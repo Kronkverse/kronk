@@ -65,6 +65,26 @@ export const GroupTargets = () => {
     [dispatch, selectedIds],
   );
 
+  const handleRemove = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (e) => {
+      const id = e.currentTarget.dataset.id;
+      if (id) removeGroup(id);
+    },
+    [removeGroup],
+  );
+
+  const handleToggleOpen = useCallback(() => {
+    setOpen((v) => !v);
+  }, []);
+
+  const handleToggle = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (e) => {
+      const id = e.currentTarget.dataset.id;
+      if (id) toggleGroup(id);
+    },
+    [toggleGroup],
+  );
+
   if (available.length === 0 && selectedIds.size === 0) return null;
 
   const byId = new Map(available.map((g) => [g.id, g] as const));
@@ -78,7 +98,8 @@ export const GroupTargets = () => {
             {group?.name ?? `#${id}`}
             <button
               type='button'
-              onClick={() => { removeGroup(id); }}
+              data-id={id}
+              onClick={handleRemove}
               aria-label='Remove group target'
               className='compose-form__group-chip-remove'
             >
@@ -90,7 +111,7 @@ export const GroupTargets = () => {
 
       <button
         type='button'
-        onClick={() => { setOpen((v) => !v); }}
+        onClick={handleToggleOpen}
         className='compose-form__group-target-toggle'
         aria-expanded={open}
       >
@@ -125,7 +146,8 @@ export const GroupTargets = () => {
                 type='button'
                 role='menuitemcheckbox'
                 aria-checked={selected}
-                onClick={() => { toggleGroup(g.id); }}
+                data-id={g.id}
+                onClick={handleToggle}
                 className={`compose-form__group-target-option ${selected ? 'compose-form__group-target-option--active' : ''}`}
               >
                 {selected ? '✓ ' : ''}

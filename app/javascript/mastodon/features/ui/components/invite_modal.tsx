@@ -68,6 +68,11 @@ const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
     }
   }, [inviteUrl]);
 
+  const handleSelectAll = useCallback<React.MouseEventHandler<HTMLInputElement>>(
+    (e) => { e.currentTarget.select(); },
+    [],
+  );
+
   return (
     <div className='modal-root__modal safety-action-modal invite-modal'>
       <div className='safety-action-modal__top'>
@@ -107,9 +112,7 @@ const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
                 readOnly
                 value={inviteUrl}
                 className='invite-modal__link-input'
-                onClick={(e) => {
-                  (e.target as HTMLInputElement).select();
-                }}
+                onClick={handleSelectAll}
               />
               <Button
                 onClick={handleCopy}

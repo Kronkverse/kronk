@@ -123,6 +123,15 @@ export const GroupDetail = () => {
     }
   };
 
+  const handleJoin = useCallback(() => { void doJoin(); }, [doJoin]);
+  const handleLeave = useCallback(() => { void doLeave(); }, [doLeave]);
+  const handleArchive = useCallback(() => { void doArchive(); }, [doArchive]);
+  const handlePost = useCallback(() => { void doPost(); }, [doPost]);
+  const handleComposerChange = useCallback<React.ChangeEventHandler<HTMLTextAreaElement>>(
+    (e) => { setComposerText(e.target.value); },
+    [],
+  );
+
   return (
     <Column bindToDocument label={intl.formatMessage(messages.title)}>
       <ColumnHeader
@@ -181,7 +190,7 @@ export const GroupDetail = () => {
               {!group.archived && !group.viewer_role && (
                 <button
                   type='button'
-                  onClick={() => void doJoin()}
+                  onClick={handleJoin}
                   disabled={busy}
                   className='group-detail__btn-primary'
                 >
@@ -195,7 +204,7 @@ export const GroupDetail = () => {
               {group.viewer_role && !group.archived && (
                 <button
                   type='button'
-                  onClick={() => void doLeave()}
+                  onClick={handleLeave}
                   disabled={busy}
                   className='group-detail__btn-secondary'
                 >
@@ -209,7 +218,7 @@ export const GroupDetail = () => {
               {group.viewer_role === 'seeder' && !group.archived && (
                 <button
                   type='button'
-                  onClick={() => void doArchive()}
+                  onClick={handleArchive}
                   disabled={busy}
                   className='group-detail__btn-danger'
                 >
@@ -231,7 +240,7 @@ export const GroupDetail = () => {
                 </h3>
                 <textarea
                   value={composerText}
-                  onChange={(e) => { setComposerText(e.target.value); }}
+                  onChange={handleComposerChange}
                   rows={3}
                   placeholder={intl.formatMessage({
                     id: 'groups.detail.composer_placeholder',
@@ -240,7 +249,7 @@ export const GroupDetail = () => {
                 />
                 <button
                   type='button'
-                  onClick={() => void doPost()}
+                  onClick={handlePost}
                   disabled={busy || !composerText.trim()}
                 >
                   <FormattedMessage

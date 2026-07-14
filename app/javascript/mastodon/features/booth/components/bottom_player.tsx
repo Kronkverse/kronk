@@ -106,6 +106,16 @@ export const BottomPlayer: React.FC<Props> = ({ set, onClose }) => {
     );
   }, []);
 
+  const handleSkipBack = useCallback(() => { handleSkip(-30); }, [handleSkip]);
+  const handleSkipForward = useCallback(() => { handleSkip(30); }, [handleSkip]);
+  const handleProgressKeyDown = useCallback<React.KeyboardEventHandler<HTMLDivElement>>(
+    (e) => {
+      if (e.key === 'ArrowLeft') handleSkip(-10);
+      if (e.key === 'ArrowRight') handleSkip(10);
+    },
+    [handleSkip],
+  );
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -164,7 +174,7 @@ export const BottomPlayer: React.FC<Props> = ({ set, onClose }) => {
         <div className='booth-bottom-player__controls'>
           <button
             className='booth-bottom-player__skip-btn'
-            onClick={() => { handleSkip(-30); }}
+            onClick={handleSkipBack}
             aria-label='Back 30 seconds'
             type='button'
           >
@@ -185,7 +195,7 @@ export const BottomPlayer: React.FC<Props> = ({ set, onClose }) => {
 
           <button
             className='booth-bottom-player__skip-btn'
-            onClick={() => { handleSkip(30); }}
+            onClick={handleSkipForward}
             aria-label='Forward 30 seconds'
             type='button'
           >
@@ -208,10 +218,7 @@ export const BottomPlayer: React.FC<Props> = ({ set, onClose }) => {
             aria-valuemin={0}
             aria-valuemax={Math.round(duration)}
             tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowLeft') handleSkip(-10);
-              if (e.key === 'ArrowRight') handleSkip(10);
-            }}
+            onKeyDown={handleProgressKeyDown}
           >
             <div
               className='booth-bottom-player__progress-fill'
