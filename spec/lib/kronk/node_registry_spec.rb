@@ -105,4 +105,36 @@ RSpec.describe Kronk::NodeRegistry do
       expect(ids.tally.values).to all(eq(1))
     end
   end
+
+  describe '.links_for' do
+    it 'returns [] for an unknown node' do
+      expect(described_class.links_for('not-a-node')).to eq([])
+    end
+
+    it 'returns manifest-declared explicit links for a node' do
+      links = described_class.links_for('kalendar.index')
+      targets = links.map { |l| l['to'] }
+      expect(targets).to include('marketplace.index', 'huddle.index')
+    end
+
+    it 'auto-derives projects_to feed.home for a korner index node with feed_projection' do
+      links = described_class.links_for('kommons.index')
+      auto = links.find { |l| l['kind'] == 'projects_to' && l['to'] == 'feed.home' }
+      expect(auto).to be_present
+    end
+
+    it 'dedupes when auto and explicit links produce the same edge' do
+      links = described_class.links_for('kommons.index')
+      pt_home = links.select { |l| l['kind'] == 'projects_to' && l['to'] == 'feed.home' }
+      expect(pt_home.length).to eq(1)
+    end
+
+    it 'normalises unknown link kinds out' do
+      # sanity: every emitted kind is in the allowed set
+      described_class.all.each do |node|
+        kinds = described_class.links_for(node.id).map { |l| l['kind'] }.uniq
+        expect(kinds - Kronk::NodeRegistry::LINK_KINDS).to be_empty
+      end
+    end
+  end
 end

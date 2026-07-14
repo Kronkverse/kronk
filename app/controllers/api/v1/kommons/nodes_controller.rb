@@ -34,6 +34,7 @@ class Api::V1::Kommons::NodesController < Api::BaseController
       lifecycle:       node.lifecycle,
       spa:             node.spa?,
       open_proposals:  @counts[node.id] || 0,
+      links:           Kronk::NodeRegistry.links_for(node.id),
     }
   end
 end

@@ -27,6 +27,16 @@ nodes:
     url: /home
     lifecycle: live
     spa: true
+    links:
+      - to: kommons.index
+        kind: projects_to
+        description: Kommons proposals appear here as Kommons cards.
+      - to: booth.index
+        kind: projects_to
+        description: Booth sets appear here as space cards.
+      - to: kuestions.index
+        kind: projects_to
+        description: Kuestions project into the feed as question cards.
 
   - id: feed.nudges
     bucket: feed
@@ -42,6 +52,13 @@ nodes:
     url: /@:user
     route_name: short_account
     lifecycle: live
+    links:
+      - to: feed.home
+        kind: related
+        description: Statuses posted here appear in followers' home timelines.
+      - to: profile.sections
+        kind: related
+        description: The sectioned view is the primary render of this profile.
 
   - id: profile.edit
     bucket: profile
@@ -49,6 +66,10 @@ nodes:
     url: /@:user/edit
     lifecycle: live
     spa: true
+    links:
+      - to: settings.profile
+        kind: settings_for
+        description: Configures the same account attributes as classic settings.
 
   - id: profile.sections
     bucket: profile
@@ -56,6 +77,13 @@ nodes:
     url: /@:user/profile
     lifecycle: live
     spa: true
+    links:
+      - to: settings.sections
+        kind: settings_for
+        description: Rearrange your sections in Settings → Sections.
+      - to: booth.index
+        kind: listens_to
+        description: Booth sets can be surfaced as a profile section.
 
   - id: profile.media
     bucket: profile
@@ -79,6 +107,10 @@ nodes:
     url: /settings/profile
     route_name: settings_profile
     lifecycle: live
+    links:
+      - to: profile.edit
+        kind: settings_for
+        description: Same account attributes; the composer is the modern entry point.
 
   - id: settings.sections
     bucket: profile
@@ -86,6 +118,10 @@ nodes:
     url: /settings/profile_sections
     lifecycle: live
     spa: true
+    links:
+      - to: profile.sections
+        kind: settings_for
+        description: Configures the sectioned profile render.
 
   - id: settings.prefs
     bucket: profile

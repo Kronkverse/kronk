@@ -1,12 +1,9 @@
-// Kommons Tree — node types + client-side connection overlay.
+// Kommons Tree — node types + API → UI shape converter.
 //
-// Nodes themselves now come from the API (`GET /api/v1/kommons/nodes`,
-// backed by `Kronk::NodeRegistry` on the Ruby side). Connections
-// (cross-branch links) are still mocked here until PR 3 wires the
-// backend derivation from manifest emits/listens/feed_projection.
-//
-// The `KommonsNode` shape kept intact so downstream components don't
-// have to know whether the data is API-hydrated or fallback.
+// Nodes AND their cross-branch connections both come from the API
+// (`GET /api/v1/kommons/nodes`, backed by `Kronk::NodeRegistry` on the
+// Ruby side; links auto-derived from feed_projection + declared in
+// per-node `links:` blocks of the korner manifest).
 
 import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
 
@@ -43,60 +40,6 @@ export interface KommonsNode {
   links?: NodeLink[];
 }
 
-// ── Mock connections (PR 3 replaces with backend-derived) ──────────
-// Keyed by source node id; each entry lists outgoing edges.
-
-const MOCK_CONNECTIONS: Record<string, NodeLink[]> = {
-  'feed.home': [
-    { to: 'kommons.index', kind: 'projects_to', description: 'Kommons proposals appear here as Kommons cards.' },
-    { to: 'booth.index', kind: 'projects_to', description: 'Booth sets appear here as space cards.' },
-    { to: 'kuestions.index', kind: 'projects_to', description: 'Kuestions project into the feed as question cards.' },
-  ],
-  'profile.view': [
-    { to: 'feed.home', kind: 'related', description: 'Statuses posted here appear in followers\u2019 home timelines.' },
-    { to: 'profile.sections', kind: 'related', description: 'The sectioned view is the primary render of this profile.' },
-  ],
-  'profile.edit': [
-    { to: 'settings.profile', kind: 'settings_for', description: 'Configures the same account attributes as classic settings.' },
-  ],
-  'profile.sections': [
-    { to: 'settings.sections', kind: 'settings_for', description: 'Rearrange your sections in Settings \u2192 Sections.' },
-    { to: 'booth.index', kind: 'listens_to', description: 'Booth sets can be surfaced as a profile section.' },
-  ],
-  'settings.profile': [
-    { to: 'profile.edit', kind: 'settings_for', description: 'Same account attributes; new composer is the modern entry point.' },
-  ],
-  'settings.sections': [
-    { to: 'profile.sections', kind: 'settings_for', description: 'Configures the sectioned profile render.' },
-  ],
-  'kommons.index': [
-    { to: 'feed.home', kind: 'projects_to', description: 'Proposals project to the feed as Kommons cards.' },
-    { to: 'kommons.tree', kind: 'related', description: 'Feedback proposals originate from tree nodes.' },
-  ],
-  'kommons.tree': [
-    { to: 'kommons.index', kind: 'creates', description: 'Every planted feedback item becomes a proposal on the Kommons list.' },
-  ],
-  'booth.index': [
-    { to: 'feed.home', kind: 'projects_to', description: 'New sets appear in the feed as Booth cards.' },
-    { to: 'profile.sections', kind: 'listed_on', description: 'Booth sets can be featured as a profile section.' },
-  ],
-  'kalendar.index': [
-    { to: 'marketplace.index', kind: 'creates', description: 'Events can list tickets on Marketplace.' },
-    { to: 'huddle.index', kind: 'related', description: 'Huddles are scheduled through Kalendar and emit calendar events.' },
-    { to: 'feed.home', kind: 'projects_to', description: 'RSVPed events surface in the feed.' },
-  ],
-  'marketplace.index': [
-    { to: 'kalendar.index', kind: 'listens_to', description: 'Event ticket listings originate in Kalendar.' },
-    { to: 'feed.home', kind: 'projects_to', description: 'New listings project into the feed as marketplace cards.' },
-  ],
-  'kuestions.index': [
-    { to: 'feed.home', kind: 'projects_to', description: 'Questions and answers project to the feed.' },
-  ],
-  'huddle.index': [
-    { to: 'kalendar.index', kind: 'listens_to', description: 'Huddle sessions surface in Kalendar as scheduled events.' },
-  ],
-};
-
 // ── API → UI shape converter ───────────────────────────────────────
 
 export const fromApiNodes = (api: ApiKommonsNode[]): KommonsNode[] =>
@@ -108,7 +51,7 @@ export const fromApiNodes = (api: ApiKommonsNode[]): KommonsNode[] =>
     url: n.url,
     lifecycle: n.lifecycle,
     openProposals: n.open_proposals,
-    links: MOCK_CONNECTIONS[n.id],
+    links: n.links.length > 0 ? n.links : undefined,
   }));
 
 // ── Helpers (pure — take a nodes array) ────────────────────────────

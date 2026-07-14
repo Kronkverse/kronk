@@ -7,6 +7,20 @@ import { apiRequestGet, apiRequestPost } from 'mastodon/api';
 // backed by `Kronk::NodeRegistry` on the Ruby side. Connections
 // (cross-branch links) are still mocked client-side pending PR 3.
 
+export type ApiLinkKind =
+  | 'creates'
+  | 'listed_on'
+  | 'projects_to'
+  | 'listens_to'
+  | 'settings_for'
+  | 'related';
+
+export interface ApiNodeLink {
+  to: string;
+  kind: ApiLinkKind;
+  description: string;
+}
+
 export interface ApiKommonsNode {
   id: string;
   bucket: 'feed' | 'profile' | 'hub';
@@ -17,6 +31,7 @@ export interface ApiKommonsNode {
   lifecycle: 'live' | 'soon' | 'deprecated' | 'hidden';
   spa: boolean;
   open_proposals: number;
+  links: ApiNodeLink[];
 }
 
 export const apiGetKommonsNodes = () =>

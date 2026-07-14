@@ -109,3 +109,7 @@ nodes:
     url: /hub/marketplace
     lifecycle: live
     spa: true
+    links:
+      - to: kalendar.index
+        kind: listens_to
+        description: Event ticket listings originate in Kalendar.

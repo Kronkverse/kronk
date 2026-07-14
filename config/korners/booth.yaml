@@ -80,6 +80,10 @@ nodes:
     url: /hub/booth
     lifecycle: live
     spa: true
+    links:
+      - to: profile.sections
+        kind: listed_on
+        description: Booth sets can be featured as a profile section.
   - id: booth.set
     label: A booth set
     url: /hub/booth/sets/:id
