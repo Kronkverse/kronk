@@ -169,8 +169,8 @@ export const GenreTagInput: React.FC<Props> = ({
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            onFocus={() => setShowSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+            onFocus={() => { setShowSuggestions(true); }}
+            onBlur={() => setTimeout(() => { setShowSuggestions(false); }, 150)}
             placeholder={value.length === 0 ? 'Add genres…' : ''}
             disabled={disabled}
           />

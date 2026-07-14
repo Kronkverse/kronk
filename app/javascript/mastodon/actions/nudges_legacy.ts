@@ -1,5 +1,5 @@
-import { createDataLoadingThunk } from 'mastodon/store/typed_functions';
 import { apiGetNudgesLegacyArchive } from 'mastodon/api/nudges_legacy';
+import { createDataLoadingThunk } from 'mastodon/store/typed_functions';
 
 // Fetched when the Nudges surface is opened to the "Legacy" tab.
 // Cursor-paginated forward on max_id.

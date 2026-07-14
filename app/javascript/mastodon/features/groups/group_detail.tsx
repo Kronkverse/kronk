@@ -1,13 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+
+import { useParams } from 'react-router-dom';
+
 import { List as ImmutableList } from 'immutable';
 
-import Column from 'mastodon/components/column';
-import ColumnHeader from 'mastodon/components/column_header';
-import StatusList from 'mastodon/components/status_list';
 import { importFetchedStatuses } from 'mastodon/actions/importer';
-import { useAppDispatch } from 'mastodon/store';
 import {
   apiGetGroup,
   apiJoinGroup,
@@ -17,6 +16,10 @@ import {
   apiPostGroupStatus,
 } from 'mastodon/api/groups';
 import type { ApiGroupJSON } from 'mastodon/api/groups';
+import Column from 'mastodon/components/column';
+import ColumnHeader from 'mastodon/components/column_header';
+import StatusList from 'mastodon/components/status_list';
+import { useAppDispatch } from 'mastodon/store';
 
 const messages = defineMessages({
   title: { id: 'groups.detail.title', defaultMessage: 'Group' },
@@ -228,7 +231,7 @@ export const GroupDetail = () => {
                 </h3>
                 <textarea
                   value={composerText}
-                  onChange={(e) => setComposerText(e.target.value)}
+                  onChange={(e) => { setComposerText(e.target.value); }}
                   rows={3}
                   placeholder={intl.formatMessage({
                     id: 'groups.detail.composer_placeholder',

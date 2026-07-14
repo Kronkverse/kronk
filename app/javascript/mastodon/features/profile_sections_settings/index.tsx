@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useState } from 'react';
+
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import {
@@ -17,22 +18,22 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-import { useAppDispatch } from 'mastodon/store';
 import {
   fetchProfileSections,
   reorderProfileSections,
 } from 'mastodon/actions/profile_sections';
+import { apiRequestGet } from 'mastodon/api';
 import {
   apiCreateProfileSection,
   apiDeleteProfileSection,
   apiUpdateProfileSection,
 } from 'mastodon/api/profile_sections';
-import { apiRequestGet } from 'mastodon/api';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
-import { useProfileSections } from 'mastodon/hooks/useProfileSections';
-import { useAllKorners } from 'mastodon/hooks/useKorner';
 import Column from 'mastodon/components/column';
 import ColumnHeader from 'mastodon/components/column_header';
+import { useAllKorners } from 'mastodon/hooks/useKorner';
+import { useProfileSections } from 'mastodon/hooks/useProfileSections';
+import { useAppDispatch } from 'mastodon/store';
 
 // Draggable row wrapper — one section, drag handle on the left.
 const SortableSectionRow: React.FC<{
@@ -86,12 +87,12 @@ const SortableSectionRow: React.FC<{
       <span style={{ flex: 1 }}>{section.title ?? '—'}</span>
       <button
         type='button'
-        onClick={() => onToggleVisible(section.id, section.visible)}
+        onClick={() => { onToggleVisible(section.id, section.visible); }}
       >
         {section.visible ? 'Hide' : 'Show'}
       </button>
       {section.section_type !== 'timeline' && (
-        <button type='button' onClick={() => onRemove(section.id)}>
+        <button type='button' onClick={() => { onRemove(section.id); }}>
           Remove
         </button>
       )}

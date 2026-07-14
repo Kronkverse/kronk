@@ -17,9 +17,10 @@ import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 import Column from 'mastodon/components/column';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
 import StatusList from 'mastodon/components/status_list';
-import { KProfileHeader } from './kprofile_header';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
+
+import { KProfileHeader } from './kprofile_header';
 
 const messages = defineMessages({
   title: { id: 'sectioned_profile.title', defaultMessage: 'Profile' },
@@ -279,7 +280,7 @@ export const SectionedProfile = () => {
       } catch {
         // Log but don't setError — the rest of the surface can render.
         if (!cancelled) {
-          // eslint-disable-next-line no-console
+           
           console.warn(
             'SectionedProfile: sections fetch failed; rendering empty state',
           );
@@ -510,10 +511,10 @@ const TabButton: React.FC<{
 // — the Vite pipeline rejects it. Instead we resolve via
 // intl.formatMessage(descriptor) at render time.
 
-type MessageDescriptor = {
+interface MessageDescriptor {
   id: string;
   defaultMessage: string;
-};
+}
 
 interface MeCardCopy {
   title: MessageDescriptor;

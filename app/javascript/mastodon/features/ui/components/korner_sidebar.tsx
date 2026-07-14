@@ -6,11 +6,12 @@ import {
   useRef,
   useState,
 } from 'react';
+
 import { Link, useLocation } from 'react-router-dom';
 
+import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
-import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 
 // Pervasive icon rail on the right. Most-recently-visited korner
 // floats to the top; ties break on tune_in_count desc, then alpha.
@@ -56,11 +57,11 @@ const KornerRow: React.FC<KornerRowProps> = ({
     <Link
       to={`/hub/${korner.slug}`}
       className={`korner-sidebar__row ${active ? 'korner-sidebar__row--active' : ''}`}
-      onClick={() => onVisit(korner.slug)}
+      onClick={() => { onVisit(korner.slug); }}
       data-name={korner.name}
       aria-label={korner.name}
       title={korner.name}
-      ref={(el) => registerRef(korner.slug, el)}
+      ref={(el) => { registerRef(korner.slug, el); }}
     >
       <span className='korner-sidebar__glyph' aria-hidden='true'>
         <Icon />

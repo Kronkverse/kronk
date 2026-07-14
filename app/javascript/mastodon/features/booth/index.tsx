@@ -10,9 +10,9 @@ import api from 'mastodon/api';
 import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { useIdentity } from 'mastodon/identity_context';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useIdentity } from 'mastodon/identity_context';
 
 import { useBoothPlayback } from './booth_playback_context';
 import { BoothSetCard } from './components/booth_set_card';

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+
+import { useParams } from 'react-router-dom';
 
 import { apiRequestGet, apiRequestPost } from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';

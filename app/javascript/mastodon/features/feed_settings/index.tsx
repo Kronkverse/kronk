@@ -1,21 +1,23 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+
 import { Helmet } from 'react-helmet';
+import { Link } from 'react-router-dom';
 
 import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
-import Column from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
 import {
   apiRequestGet,
   apiRequestPut,
   apiRequestPost,
   apiRequestDelete,
 } from 'mastodon/api';
+import type { ApiKornerJSON } from 'mastodon/api_types/korners';
+import Column from 'mastodon/components/column';
+import { ColumnHeader } from 'mastodon/components/column_header';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
-import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 
 // Feed settings surface (spec §Feed). Sibling of KornerSettings but for
 // the framework-level home feed itself — scope, tune-in list, per-post
@@ -88,7 +90,7 @@ const KornerTuneRow: React.FC<{
       <input
         type='checkbox'
         checked={tunedIn}
-        onChange={(e) => onToggle(e.target.checked)}
+        onChange={(e) => { onToggle(e.target.checked); }}
         aria-label={`Tune ${tunedIn ? 'out of' : 'in to'} ${korner.name}`}
       />
     </label>

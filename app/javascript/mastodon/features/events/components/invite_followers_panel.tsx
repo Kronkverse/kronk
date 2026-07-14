@@ -36,7 +36,7 @@ const FollowerRow: React.FC<{
     : 'invite-followers-panel__account';
 
   return (
-    // eslint-disable-next-line jsx-a11y/label-has-associated-control
+     
     <label className={className}>
       <input
         type='checkbox'
