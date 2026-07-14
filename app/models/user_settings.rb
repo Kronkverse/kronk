@@ -37,6 +37,15 @@ class UserSettings
     setting :display_media, default: 'default', in: %w(default show_all hide_all)
     setting :auto_play, default: false
     setting :emoji_style, default: 'auto', in: %w(auto native twemoji)
+    # Kronk Personal Appearance — per-user token overrides layered over the
+    # brand defaults. personal_accent is a purple hex (hue-clamped in the
+    # appearance controller, not via `in:`); the rest are enum keys the
+    # client maps to font stacks / a UI scale factor. 'default' = inherit the
+    # brand token (no override).
+    setting :personal_accent, default: nil
+    setting :personal_font_display, default: 'default', in: %w(default playfair fraunces cormorant lora merriweather garamond spectral)
+    setting :personal_font_body, default: 'default', in: %w(default inter ibm-plex manrope work-sans dm-sans figtree system)
+    setting :ui_scale, default: 'default', in: %w(small default large xl)
   end
 
   namespace :notification_emails do

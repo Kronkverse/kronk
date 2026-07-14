@@ -47,6 +47,10 @@ interface InitialStateMeta {
   status_page_url: string;
   terms_of_service_enabled: boolean;
   emoji_style?: string;
+  personal_accent?: string | null;
+  personal_font_display?: string;
+  personal_font_body?: string;
+  ui_scale?: string;
 }
 
 interface Role {
@@ -128,6 +132,10 @@ export const criticalUpdatesPending = initialState?.critical_updates_pending;
 export const statusPageUrl = getMeta('status_page_url');
 export const sso_redirect = getMeta('sso_redirect');
 export const termsOfServiceEnabled = getMeta('terms_of_service_enabled');
+export const personalAccent = getMeta('personal_accent');
+export const personalFontDisplay = getMeta('personal_font_display');
+export const personalFontBody = getMeta('personal_font_body');
+export const uiScale = getMeta('ui_scale');
 
 const displayNames =
   // Intl.DisplayNames can be undefined in old browsers

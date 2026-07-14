@@ -5,11 +5,19 @@ import { Globals } from '@react-spring/web';
 import * as perf from '@/mastodon/utils/performance';
 import { setupBrowserNotifications } from 'mastodon/actions/notifications';
 import Mastodon from 'mastodon/containers/mastodon';
-import { me, reduceMotion } from 'mastodon/initial_state';
+import {
+  me,
+  reduceMotion,
+  personalAccent,
+  personalFontDisplay,
+  personalFontBody,
+  uiScale,
+} from 'mastodon/initial_state';
 import ready from 'mastodon/ready';
 import { store } from 'mastodon/store';
 
 import { isProduction, isDevelopment } from './utils/environment';
+import { applyPersonalAppearance } from './utils/personal_appearance';
 
 function main() {
   perf.start('main()');
@@ -28,6 +36,14 @@ function main() {
         skipAnimation: true,
       });
     }
+
+    // Kronk Personal Appearance — apply the user's per-user token overrides.
+    applyPersonalAppearance({
+      accent: personalAccent,
+      fontDisplay: personalFontDisplay,
+      fontBody: personalFontBody,
+      uiScale,
+    });
 
     const { initializeEmoji } = await import('./features/emoji/index');
     initializeEmoji();

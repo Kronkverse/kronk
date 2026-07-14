@@ -39,6 +39,11 @@
 
     = custom_stylesheet
 
+    -# Kronk Personal Appearance — per-user accent, injected for no-flash first
+    -# paint (guarded to a #rrggbb hex; the value is purple-validated on save).
+    - if user_signed_in? && current_user.settings['web.personal_accent'].to_s.match?(/\A#\h{6}\z/)
+      = tag.style ":root{--accent:#{current_user.settings['web.personal_accent']};}".html_safe, nonce: request.content_security_policy_nonce
+
     = yield :header_tags
 
   %body{ class: body_classes }

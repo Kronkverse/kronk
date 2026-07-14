@@ -11,6 +11,7 @@ import Column from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { SettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
+import { applyPersonalAppearance } from 'mastodon/utils/personal_appearance';
 
 // Appearance & language section (settings rebuild §7). The schema and current
 // values come from the server (/api/v1/settings/appearance); this page renders
@@ -64,6 +65,32 @@ const messages = defineMessages({
     id: 'appearance_settings.default_privacy_hint',
     defaultMessage: 'Who can see new posts, before you change it per post.',
   },
+
+  personalAccent: {
+    id: 'appearance_settings.personal_accent',
+    defaultMessage: 'Accent colour',
+  },
+  personalAccentHint: {
+    id: 'appearance_settings.personal_accent_hint',
+    defaultMessage:
+      'Your personal purple. Everyone picks their own shade — it always stays in the Kronk family.',
+  },
+  personalFontDisplay: {
+    id: 'appearance_settings.personal_font_display',
+    defaultMessage: 'Display font',
+  },
+  personalFontBody: {
+    id: 'appearance_settings.personal_font_body',
+    defaultMessage: 'Body font',
+  },
+  uiScale: {
+    id: 'appearance_settings.ui_scale',
+    defaultMessage: 'Interface size',
+  },
+  uiScaleHint: {
+    id: 'appearance_settings.ui_scale_hint',
+    defaultMessage: 'Scale the whole interface up or down.',
+  },
 });
 
 const LABELS: Record<string, MessageDescriptor> = {
@@ -74,11 +101,27 @@ const LABELS: Record<string, MessageDescriptor> = {
   default_sensitive: messages.defaultSensitive,
   reduce_motion: messages.reduceMotion,
   auto_play_gif: messages.autoPlayGif,
+  personal_accent: messages.personalAccent,
+  personal_font_display: messages.personalFontDisplay,
+  personal_font_body: messages.personalFontBody,
+  ui_scale: messages.uiScale,
 };
 
 const HINTS: Record<string, MessageDescriptor> = {
   reduce_motion: messages.reduceMotionHint,
   default_privacy: messages.defaultPrivacyHint,
+  personal_accent: messages.personalAccentHint,
+  ui_scale: messages.uiScaleHint,
+};
+
+// Apply the appearance-affecting subset of the settings map to the DOM live.
+const previewAppearance = (vals: Record<string, unknown>) => {
+  applyPersonalAppearance({
+    accent: (vals.personal_accent as string) || null,
+    fontDisplay: (vals.personal_font_display as string) || null,
+    fontBody: (vals.personal_font_body as string) || null,
+    uiScale: (vals.ui_scale as string) || null,
+  });
 };
 
 interface AppearancePayload {
@@ -122,6 +165,7 @@ export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = ({
     async (name: string, value: unknown) => {
       const previous = values[name];
       setValues((v) => ({ ...v, [name]: value }));
+      previewAppearance({ ...values, [name]: value }); // live preview
       setStatus('saving');
       try {
         const res = await apiRequestPut<AppearancePayload>(
@@ -129,9 +173,11 @@ export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = ({
           { [name]: value },
         );
         setValues(res.values);
+        previewAppearance(res.values); // reconcile with server-validated values
         setStatus('saved');
       } catch {
         setValues((v) => ({ ...v, [name]: previous }));
+        previewAppearance({ ...values, [name]: previous }); // revert preview
         setStatus('error');
       }
     },
