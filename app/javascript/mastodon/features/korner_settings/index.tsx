@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition --
+ * `cancelled` mutates in the useEffect cleanup after the async fetch
+ * reads it. TS control-flow doesn't track the mutation across the
+ * closure so the checks look "always truthy/falsy", but the guards
+ * are load-bearing: without them setState fires after unmount. */
+
 import { useEffect, useState, useCallback, useRef } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
@@ -385,7 +391,7 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
 
   const title = korner
     ? intl.formatMessage(messages.title, { name: korner.name })
-    : intl.formatMessage(messages.title, { name: slug ?? 'Korner' });
+    : intl.formatMessage(messages.title, { name: slug });
 
   return (
     <Column>
