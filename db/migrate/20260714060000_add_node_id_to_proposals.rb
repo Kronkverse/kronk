@@ -10,10 +10,17 @@
 #
 # Index supports the per-node count query on the tree endpoint's
 # hot path (`GET /api/v1/kommons/nodes`).
+#
+# The index is built CONCURRENTLY (with disable_ddl_transaction!) so it
+# doesn't take a write-blocking lock on `proposals` — a plain add_index is
+# rejected by strong_migrations and was aborting the shadow deploy. The
+# `if_not_exists` guards keep it safe to re-run after the earlier failure.
 
 class AddNodeIdToProposals < ActiveRecord::Migration[7.2]
+  disable_ddl_transaction!
+
   def change
-    add_column :proposals, :node_id, :string, null: true
-    add_index :proposals, [:node_id, :status]
+    add_column :proposals, :node_id, :string, null: true, if_not_exists: true
+    add_index :proposals, [:node_id, :status], algorithm: :concurrently, if_not_exists: true
   end
 end
