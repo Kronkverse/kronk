@@ -269,7 +269,10 @@ export const SettingRow: React.FC<{
         />
       )}
       {setting.kind === 'accent' && (
-        <AccentWidget value={String(value ?? '')} onChange={onChange} />
+        <AccentWidget
+          value={typeof value === 'string' ? value : ''}
+          onChange={onChange}
+        />
       )}
     </div>
   );
