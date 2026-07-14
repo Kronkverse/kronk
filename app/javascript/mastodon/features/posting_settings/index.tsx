@@ -45,13 +45,13 @@ const messages = defineMessages({
   },
 });
 
-const LABELS: Record<string, MessageDescriptor> = {
+const LABELS: Record<string, MessageDescriptor | undefined> = {
   default_privacy: messages.defaultPrivacy,
   default_language: messages.defaultLanguage,
   default_sensitive: messages.defaultSensitive,
 };
 
-const HINTS: Record<string, MessageDescriptor> = {
+const HINTS: Record<string, MessageDescriptor | undefined> = {
   default_privacy: messages.defaultPrivacyHint,
 };
 
