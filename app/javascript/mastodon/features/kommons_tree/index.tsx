@@ -96,6 +96,11 @@ const KommonsTree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   }, [bucket, kornerSlug, goToBuckets]);
 
   const handleNode = useCallback((id: string) => {
+    const target = findNode(id);
+    if (target) {
+      setBucket(target.bucket);
+      setKornerSlug(target.parent ?? null);
+    }
     setNodeId(id);
     setStep('detail');
   }, []);
@@ -177,7 +182,7 @@ const KommonsTree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         )}
 
         {step === 'detail' && selectedNode && (
-          <NodeDetail node={selectedNode} onFile={openComposer} />
+          <NodeDetail node={selectedNode} onFile={openComposer} onNavigate={handleNode} />
         )}
 
         {composerOpen && selectedNode && (
