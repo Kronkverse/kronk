@@ -49,22 +49,27 @@ const humanize = (name: string) =>
 const BooleanWidget: React.FC<{
   value: boolean;
   onChange: (v: boolean) => void;
-}> = ({ value, onChange }) => (
-  <label className='korner-settings__toggle'>
-    <input
-      type='checkbox'
-      checked={!!value}
-      onChange={(e) => { onChange(e.target.checked); }}
-    />
-    <span className='korner-settings__toggle-track' aria-hidden='true' />
-  </label>
-);
+}> = ({ value, onChange }) => {
+  const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => { onChange(e.target.checked); },
+    [onChange],
+  );
+  return (
+    <label className='korner-settings__toggle'>
+      <input type='checkbox' checked={!!value} onChange={handleChange} />
+      <span className='korner-settings__toggle-track' aria-hidden='true' />
+    </label>
+  );
+};
 
 const EnumWidget: React.FC<{
   options: string[];
   value: string;
   onChange: (v: string) => void;
 }> = ({ options, value, onChange }) => {
+  const handleChange = useCallback<
+    React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement>
+  >((e) => { onChange(e.currentTarget.value); }, [onChange]);
   // Spec §K.4: radios when ≤3 options, dropdown otherwise.
   if (options.length <= 3) {
     return (
@@ -73,8 +78,9 @@ const EnumWidget: React.FC<{
           <label key={opt} className='korner-settings__radio'>
             <input
               type='radio'
+              value={opt}
               checked={value === opt}
-              onChange={() => { onChange(opt); }}
+              onChange={handleChange}
             />
             <span>{humanize(opt)}</span>
           </label>
@@ -83,7 +89,7 @@ const EnumWidget: React.FC<{
     );
   }
   return (
-    <select value={value} onChange={(e) => { onChange(e.target.value); }}>
+    <select value={value} onChange={handleChange}>
       {options.map((opt) => (
         <option key={opt} value={opt}>
           {humanize(opt)}
@@ -99,20 +105,25 @@ const MultiEnumWidget: React.FC<{
   onChange: (v: string[]) => void;
 }> = ({ options, value, onChange }) => {
   const selected = new Set(value);
-  const toggle = (opt: string) => {
-    const next = new Set(selected);
-    if (next.has(opt)) next.delete(opt);
-    else next.add(opt);
-    onChange(options.filter((o) => next.has(o)));
-  };
+  const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => {
+      const opt = e.currentTarget.value;
+      const next = new Set(value);
+      if (next.has(opt)) next.delete(opt);
+      else next.add(opt);
+      onChange(options.filter((o) => next.has(o)));
+    },
+    [options, value, onChange],
+  );
   return (
     <div className='korner-settings__multi'>
       {options.map((opt) => (
         <label key={opt} className='korner-settings__multi-item'>
           <input
             type='checkbox'
+            value={opt}
             checked={selected.has(opt)}
-            onChange={() => { toggle(opt); }}
+            onChange={handleChange}
           />
           <span>{humanize(opt)}</span>
         </label>
@@ -126,10 +137,13 @@ const DurationWidget: React.FC<{
   value: string;
   onChange: (v: string) => void;
 }> = ({ options, value, onChange }) => {
-  const presets =
-    options?.length ? options : ['PT15M', 'PT1H', 'P1D'];
+  const presets = options?.length ? options : ['PT15M', 'PT1H', 'P1D'];
+  const handleChange = useCallback<React.ChangeEventHandler<HTMLSelectElement>>(
+    (e) => { onChange(e.currentTarget.value); },
+    [onChange],
+  );
   return (
-    <select value={value} onChange={(e) => { onChange(e.target.value); }}>
+    <select value={value} onChange={handleChange}>
       {presets.map((p) => (
         <option key={p} value={p}>
           {p}
@@ -137,6 +151,28 @@ const DurationWidget: React.FC<{
       ))}
     </select>
   );
+};
+
+const StringInput: React.FC<{ value: unknown; onChange: (v: unknown) => void }> = ({
+  value,
+  onChange,
+}) => {
+  const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => { onChange(e.target.value); },
+    [onChange],
+  );
+  return <input type='text' value={String(value ?? '')} onChange={handleChange} />;
+};
+
+const NumberInput: React.FC<{ value: unknown; onChange: (v: unknown) => void }> = ({
+  value,
+  onChange,
+}) => {
+  const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => { onChange(Number(e.target.value)); },
+    [onChange],
+  );
+  return <input type='number' value={Number(value ?? 0)} onChange={handleChange} />;
 };
 
 // ---- setting row -----------------------------------------------------------
@@ -183,21 +219,53 @@ const SettingRow: React.FC<{
         />
       )}
       {setting.kind === 'string' && (
-        <input
-          type='text'
-          value={String(value ?? '')}
-          onChange={(e) => { onChange(e.target.value); }}
-        />
+        <StringInput value={value} onChange={onChange} />
       )}
       {(setting.kind === 'integer' || setting.kind === 'number') && (
-        <input
-          type='number'
-          value={Number(value ?? 0)}
-          onChange={(e) => { onChange(Number(e.target.value)); }}
-        />
+        <NumberInput value={value} onChange={onChange} />
       )}
     </div>
   );
+};
+
+// Per-row wrappers give the map iterations a stable onChange callback
+// (react/jsx-no-bind) without the parent having to build a closure per key.
+
+const NotificationPrefRow: React.FC<{
+  notif: ApiKornerNotificationTypeJSON;
+  checked: boolean;
+  onSet: (name: string, value: boolean) => void;
+}> = ({ notif, checked, onSet }) => {
+  const handleChange = useCallback(
+    (v: boolean) => { onSet(notif.name, v); },
+    [notif.name, onSet],
+  );
+  return (
+    <div className='korner-settings__row'>
+      <div className='korner-settings__row-header'>
+        <span className='korner-settings__label'>{humanize(notif.name)}</span>
+        <BooleanWidget value={checked} onChange={handleChange} />
+      </div>
+      {notif.subject_type && (
+        <p className='korner-settings__hint'>
+          Subject: {notif.subject_type}
+          {notif.interactive === false ? ' · passive notice' : ' · interactive nudge'}
+        </p>
+      )}
+    </div>
+  );
+};
+
+const NamedSettingRow: React.FC<{
+  setting: ApiKornerSettingJSON;
+  value: unknown;
+  onSet: (name: string, value: unknown) => void;
+}> = ({ setting, value, onSet }) => {
+  const handleChange = useCallback(
+    (v: unknown) => { onSet(setting.name, v); },
+    [setting.name, onSet],
+  );
+  return <SettingRow setting={setting} value={value} onChange={handleChange} />;
 };
 
 // ---- page ------------------------------------------------------------------
@@ -414,25 +482,12 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
                   />
                 </h2>
                 {state.notifications_schema.map((n) => (
-                  <div className='korner-settings__row' key={n.name}>
-                    <div className='korner-settings__row-header'>
-                      <span className='korner-settings__label'>
-                        {humanize(n.name)}
-                      </span>
-                      <BooleanWidget
-                        value={state.push_preferences[n.name] === true}
-                        onChange={(v) => { setPushPref(n.name, v); }}
-                      />
-                    </div>
-                    {n.subject_type && (
-                      <p className='korner-settings__hint'>
-                        Subject: {n.subject_type}
-                        {n.interactive === false
-                          ? ' · passive notice'
-                          : ' · interactive nudge'}
-                      </p>
-                    )}
-                  </div>
+                  <NotificationPrefRow
+                    key={n.name}
+                    notif={n}
+                    checked={state.push_preferences[n.name] === true}
+                    onSet={setPushPref}
+                  />
                 ))}
               </section>
             )}
@@ -449,11 +504,11 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
                 {state.settings_schema
                   .filter((s) => (s.scope ?? 'user') === 'user')
                   .map((s) => (
-                    <SettingRow
+                    <NamedSettingRow
                       key={s.name}
                       setting={s}
                       value={state.values[s.name] ?? s.default}
-                      onChange={(v) => { setValue(s.name, v); }}
+                      onSet={setValue}
                     />
                   ))}
               </section>

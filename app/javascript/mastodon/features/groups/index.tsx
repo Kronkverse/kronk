@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
@@ -71,6 +71,35 @@ export const Groups = () => {
     }
   };
 
+  // Stable handlers so JSX doesn't re-create arrows every render.
+  const handleScopeClick = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (e) => {
+      const value = e.currentTarget.dataset.scope as Scope | undefined;
+      if (value) setScope(value);
+    },
+    [],
+  );
+
+  const handleToggleCreating = useCallback(() => {
+    setCreating((prev) => !prev);
+  }, []);
+
+  const handleFieldChange = useCallback<
+    React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  >((e) => {
+    const field = e.currentTarget.dataset.field;
+    if (!field) return;
+    const value =
+      e.currentTarget instanceof HTMLInputElement && e.currentTarget.type === 'checkbox'
+        ? e.currentTarget.checked
+        : e.currentTarget.value;
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }, []);
+
+  const handleSubmitCreate = useCallback(() => {
+    void submitCreate();
+  }, [submitCreate]);
+
   return (
     <Column bindToDocument label={intl.formatMessage(messages.title)}>
       <ColumnHeader title={intl.formatMessage(messages.title)} showBackButton />
@@ -88,7 +117,8 @@ export const Groups = () => {
             <button
               key={value}
               type='button'
-              onClick={() => { setScope(value); }}
+              data-scope={value}
+              onClick={handleScopeClick}
               className={`groups-page__scope-tab ${value === scope ? 'groups-page__scope-tab--active' : ''}`}
             >
               {label}
@@ -98,7 +128,7 @@ export const Groups = () => {
 
         <button
           type='button'
-          onClick={() => { setCreating((prev) => !prev); }}
+          onClick={handleToggleCreating}
           className='groups-page__new-btn'
         >
           {creating ? (
@@ -130,8 +160,9 @@ export const Groups = () => {
               />
               <input
                 type='text'
+                data-field='slug'
                 value={form.slug}
-                onChange={(e) => { setForm({ ...form, slug: e.target.value }); }}
+                onChange={handleFieldChange}
               />
             </label>
 
@@ -139,8 +170,9 @@ export const Groups = () => {
               <FormattedMessage id='groups.form.name' defaultMessage='Name' />
               <input
                 type='text'
+                data-field='name'
                 value={form.name}
-                onChange={(e) => { setForm({ ...form, name: e.target.value }); }}
+                onChange={handleFieldChange}
               />
             </label>
 
@@ -150,10 +182,9 @@ export const Groups = () => {
                 defaultMessage='Description'
               />
               <textarea
+                data-field='description'
                 value={form.description}
-                onChange={(e) =>
-                  { setForm({ ...form, description: e.target.value }); }
-                }
+                onChange={handleFieldChange}
                 rows={3}
               />
             </label>
@@ -164,10 +195,9 @@ export const Groups = () => {
                 defaultMessage='Governance framework'
               />
               <select
+                data-field='governance_framework'
                 value={form.governance_framework}
-                onChange={(e) =>
-                  { setForm({ ...form, governance_framework: e.target.value }); }
-                }
+                onChange={handleFieldChange}
               >
                 <option value='peer_support'>
                   peer_support — one second required
@@ -186,10 +216,9 @@ export const Groups = () => {
             <label className='groups-page__form-checkbox'>
               <input
                 type='checkbox'
+                data-field='discoverable'
                 checked={form.discoverable}
-                onChange={(e) =>
-                  { setForm({ ...form, discoverable: e.target.checked }); }
-                }
+                onChange={handleFieldChange}
               />
               <FormattedMessage
                 id='groups.form.discoverable'
@@ -197,7 +226,7 @@ export const Groups = () => {
               />
             </label>
 
-            <button type='button' onClick={() => void submitCreate()}>
+            <button type='button' onClick={handleSubmitCreate}>
               <FormattedMessage id='groups.plant' defaultMessage='Plant it' />
             </button>
           </div>
