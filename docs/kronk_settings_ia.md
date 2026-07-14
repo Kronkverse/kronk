@@ -1,101 +1,98 @@
 # Kronk Settings — Information Architecture
 
-> **Status:** proposed spec (2026-07-14). Defines the canonical settings layout and ties it to the Kommons Tree node registry so it stops being a hand-maintained list. Supersedes the ad-hoc section list in `features/settings/nav.tsx`.
+> **Status:** spec (rev. 2026-07-14). Defines the canonical settings layout, organised by Kronk's own structure and tied to the Kommons Tree node registry. Supersedes the flat section list in `features/settings/nav.tsx`.
 
-## 1. The principle
+## 1. The organising principle
 
-Settings is **a projection of the node map, not a hand-typed list.** The Kommons Tree already models every page-type as a node in `Kronk::NodeRegistry` (`lib/kronk/node_registry.rb`, fed by `config/kronk_nodes.yaml` + each korner manifest's `nodes:` block). Settings pages are page-types too, so they should be **nodes in that same registry**, and the settings nav should **render from the registry**.
+Settings mirror **the shape of Kronk itself**, not a flat preferences dump. Every setting belongs to one of four surfaces, decided by a simple test:
 
-Why: the settings nav in `nav.tsx` is currently a hardcoded list that drifts from reality — which is how *posting* defaults (post visibility, posting language, sensitive-by-default) ended up mislodged under **Appearance**. Deriving from the registry gives the same anti-drift guarantee the Tree gives: add a korner → its settings node appears automatically; define what a section *owns* once → fields can't wander.
+| Surface | Test | Tree bucket |
+|---|---|---|
+| **Feed** | *Incoming* — what reaches you / what you consume | `feed` |
+| **Profile** | *Outgoing* — what you put out / your identity | `profile` |
+| **Hub** | A *space* — the korners and how you arrange them | `hub` |
+| **You / Account** | Neither in nor out — *you and the app itself* | `settings` (new) |
 
-This is the settings half of the Tree vision's "nav / settings / chrome all derive from the same map."
+The first three **are the Kommons Tree buckets** (`feed | profile | hub`). "You/Account" is a new `settings` bucket. So the settings nav is a **projection of `Kronk::NodeRegistry`** (`lib/kronk/node_registry.rb` + `config/kronk_nodes.yaml`) — same anti-drift guarantee as the Tree: add a korner → its settings node appears; define what a surface owns → settings can't wander (which is how posting-defaults had drifted into Appearance).
 
-## 2. Two axes
+**Privacy is not a page** — it scatters to where it acts: blocks/mutes/filters are *incoming* → **Feed**; discoverability is *outgoing* → **Profile**; 2FA/sessions are *account* → **You**.
 
-Settings has exactly two axes:
+## 2. The four surfaces — full inventory + build status
 
-1. **"You"** — personal settings that cut across every space (theme, your posting defaults, your privacy, your account). A cluster of cross-cutting nodes.
-2. **Per-space (§K)** — settings scoped to one korner, at `/hub/<slug>/settings`. One settings node per korner, declared in that korner's manifest.
+### ① Feed — *incoming* (`feed` bucket)
+What reaches you, and what you filter out.
+- **Feed scope** — friends / friends-of-friends / kommunity (`kronk.feed_scope`) · **built**
+- Timeline display — group boosts, slow-mode (pending items), media display, autoplay, blurhash, expand content warnings, show trends, deck/advanced layout · *(Mastodon feed prefs)*
+- **Keyword filters** — what's hidden (`/filters`) · classic
+- **Mutes · Blocks · Domain blocks** — silencing incoming · classic (`Mutes`/`Blocks`/`DomainBlocks` exist)
+- **Who can reach you** — follow-request approval (`locked`), who can DM you (`interactions.must_be_following_dm`)
+- *(Home: a `FeedSettings` feature already exists — this is its remit.)*
 
-Nothing else. Instance/admin settings remain Mastodon's `/admin` and are out of scope here.
+### ② Profile — *outgoing* (`profile` bucket)
+Your identity and everything you publish.
+- **Composer** — display name, bio, avatar, header, fields, **sections** (`/@:acct/edit`) · **built**
+- **Posting defaults** — visibility, language, sensitive-by-default, quote policy · **built as a standalone Posting section (Slice A); target: nested here**
+- **Discoverability** — searchable, suggest-to-others, index by search engines · outgoing projection
+- **Verifications** (link rel-me), **featured tags**, bot flag · classic
 
-## 3. Node model
+### ③ Hub — *the spaces* (`hub` bucket)
+- **Korner tune-in / ordering** — which korners you follow, hub layout · **built** (tune-in)
+- **Per-korner §K settings** — one page per korner at `/hub/<slug>/settings` · **built** (`KornerSettings`)
+- **Nudges** owns **notifications** — see §3.
 
-Add a **`settings` bucket** to the registry (alongside `feed | profile | hub`). The "You" cluster lives in `config/kronk_nodes.yaml`:
+### ④ You / Account (`settings` bucket)
+You and the app — neither incoming nor outgoing.
+- **Account & Security** — email, password, 2FA, active sessions, login activity, authorized apps, aliases, migration, deactivate/delete · **classic monolith** (`settings/*`)
+- **Appearance** — theme, personal accent, fonts, UI scale, motion, emoji style · **built** (+ Personal Appearance)
+- **Data** — export archive/CSVs, import, auto-delete old posts (statuses cleanup) · **classic monolith**
+
+## 3. Notifications ≡ Nudges
+
+Notifications are **merging into Nudges** (the classic bell is already retired; Nudges is the activity surface). So there is **no standalone Notifications section** — notification preferences (which activity nudges you, email digests, push, `notification_emails.*`, `software_updates`) live with **Nudges**. Nudges is a korner, so its prefs are its §K settings under Hub; and because nudge activity is *incoming*, it also reads naturally alongside Feed. Treat the existing `NotificationsSettings` as folding into Nudges rather than a top-level "You" section.
+
+## 4. Node model
+
+Add a **`settings` bucket** to the registry (alongside `feed | profile | hub`). The four top-level surfaces + their sub-pages are nodes:
 
 ```yaml
 # config/kronk_nodes.yaml
-- id: settings.profile        # bucket:settings, lifecycle:live, spa:true …
-  bucket: settings
-  label: Profile
-  url: /@:acct/edit
-  lifecycle: live
-  spa: true
-- id: settings.appearance
-  bucket: settings
-  label: Appearance
-  url: /settings/appearance
-  lifecycle: live
-  spa: true
-# … settings.posting, settings.privacy, settings.notifications,
-#     settings.account, settings.data
+- id: settings.feed        # bucket:settings  (the Feed settings surface)
+- id: settings.profile     # bucket:settings
+- id: settings.hub         # bucket:settings
+- id: settings.you         # bucket:settings — Account/Appearance/Data live under here
 ```
+Per-korner settings stay `hub` nodes in the korner manifest, linked with the existing `settings_for` kind (`kommons.settings`, `nudges.settings`, …). The nav renders from `NodeRegistry` via the existing **`api/v1/kommons/nodes`** endpoint filtered to the `settings` bucket — no hardcoded list, no second endpoint. `bin/tootctl korners doctor` already fails on a node pointing at a dead route.
 
-**Per-korner settings** are `hub` nodes declared in the korner manifest and linked back with the existing `settings_for` link kind:
+## 5. Current state → target (re-homing)
 
-```yaml
-# config/korners/kommons.yaml → nodes:
-- id: kommons.settings
-  label: Kommons settings
-  url: /hub/kommons/settings
-  lifecycle: live
-- id: kommons.index
-  links:
-    - to: kommons.settings
-      kind: settings_for
-```
+Sections were built before this IA, so several need re-homing to match direction:
 
-The nav is then a projection:
-- **"You" cluster** = `NodeRegistry.for_bucket('settings')`, ordered per §4.
-- **Per-korner** = for the current korner, `NodeRegistry.in_korner(slug)` filtered to its `settings_for` target.
+| Built today | Under new IA |
+|---|---|
+| Appearance (theme/accent/fonts/scale/motion) | ✅ stays in **You** |
+| **Posting** (Slice A, standalone) | → nest under **Profile** (outgoing) |
+| **Privacy** (mutes/blocks + discoverability toggles) | → **split**: mutes/blocks/filters to **Feed**; discoverability to **Profile** |
+| **Notifications** | → fold into **Nudges** (§3) |
+| Profile composer | ✅ **Profile** |
+| Per-korner §K | ✅ **Hub** |
+| Feed settings (`FeedSettings`) | ✅ **Feed** — absorb filters/mutes/blocks/scope |
 
-`bin/tootctl korners doctor` already validates node route-names against Rails routes, so a settings node that points at a dead route fails the boot check — settings can't silently rot.
+### Remaining work
+1. **Register** the `settings` bucket + `settings.{feed,profile,hub,you}` nodes + per-korner `*.settings` nodes/links.
+2. **Feed surface** — gather scope + timeline display + filters + mutes/blocks/domain-blocks + reach controls into the Feed settings page.
+3. **Profile surface** — add posting defaults (from Slice A) + discoverability under the profile settings.
+4. **Nudges** — absorb notification prefs.
+5. **You/Account** — rehome **Account & Security** and **Data** out of the classic Mastodon monolith into the SPA shell (mark `lifecycle: soon` until built).
+6. **Registry-driven nav** — replace the hardcoded `YOU_SECTIONS` list with a projection of `NodeRegistry` (settings bucket + per-korner `settings_for`).
 
-## 4. The "You" cluster — sections and what each OWNS
+## 6. Lifecycle & projection
 
-Ordered as they should appear in the nav. "Owns" is normative — it resolves the current mixups.
-
-| # | Node | Owns | Status |
-|---|------|------|--------|
-| 1 | `settings.profile` | Identity: display name, bio, avatar/header, profile fields, pinned/sections (the profile composer at `/@:acct/edit`). | **Built** (composer) |
-| 2 | `settings.appearance` | **Look & feel only:** theme (dark/light/contrast), personal accent (purple), display/body font, UI scale, reduce motion, auto-play, interface (UI) language. | **Built — needs trimming** |
-| 3 | `settings.posting` | **Composing defaults:** default post visibility, default posting language, mark media sensitive by default. | **NEW** |
-| 4 | `settings.privacy` | Safety & reach: mutes, blocks, domain blocks, discoverability (locked / discoverable / indexable), DM filtering, keyword filters. | **Built** (filters pending) |
-| 5 | `settings.notifications` | Notification preferences: email prefs, software-update emails, (later) in-app notification prefs. | **Built** |
-| 6 | `settings.account` | Account & security: email, password, 2FA, active sessions, authorized apps, account migration, deactivate/delete. | **Monolith** (classic Mastodon `/settings/*`) |
-| 7 | `settings.data` | Your data: export archive, import follows/lists/blocks. | **Monolith** |
-
-### Reassignments this spec mandates (the fix you flagged)
-
-The `Api::V1::Settings::AppearanceController` currently also carries `default_privacy`, `default_language`, `default_sensitive` — those are **posting defaults, not appearance.** Move them to a new `Api::V1::Settings::PostingController` (`settings.posting`). Appearance keeps only look-&-feel + interface language.
-
-## 5. Build status → what's left
-
-- **Trim Appearance** — move the three posting-defaults to a new **Posting** section/controller. (Schema-driven: relocate the `FIELDS` entries + labels; no data migration — the underlying `default_*` user settings are unchanged.)
-- **Add Posting** (`settings.posting`) — new controller + section + node.
-- **Account & Security** and **Data** — still the untouched Mastodon monolith; rehome into the SPA shell (the two remaining "You" sections). Mark `lifecycle: soon` until built so the nav shows them honestly.
-- **Wire the nav to the registry** — replace the hardcoded list in `settings/nav.tsx` with a projection of `NodeRegistry` (`settings` bucket + per-korner `settings_for`). Needs the registry serialized to the client (extend the Kommons nodes API / initial_state).
-- **Register the settings nodes** — add the `settings` bucket + the seven "You" nodes to `kronk_nodes.yaml`, and a `*.settings` node + `settings_for` link to each korner manifest that has a §K surface.
-
-## 6. Lifecycle & projections
-
-- Sections carry `lifecycle` (`live | soon | deprecated | hidden`), so "coming soon" sections (e.g. Data before it's built) render from data, not a hardcoded "Soon" pill.
-- Settings is a **projection** of the node map — same as the Kommons Tree feedback view, and later nav/breadcrumbs/search. Keep the node schema rendering-agnostic; the settings nav is one renderer.
+Sections carry `lifecycle` (`live | soon | deprecated | hidden`) so "coming soon" surfaces render from data. Settings is one *projection* of the node map — the same map the Kommons Tree, and later nav/breadcrumbs/search, read from. Keep the node schema rendering-agnostic.
 
 ## 7. Coordination
 
-This spec **writes into the Tree's `NodeRegistry` / `kronk_nodes.yaml`**, which the `tal@mainframe` session owns (Kommons Tree backend). The `settings` bucket + settings nodes should land in coordination with that work so the two don't diverge. Suggested split: Tree owner adds the `settings` bucket + node loading; settings work (portal-me) adds the nodes, the Posting controller, the Appearance trim, and the registry-driven nav.
+Writes into the Tree's `NodeRegistry` / `kronk_nodes.yaml`. Per Tal (2026-07-14), **portal-me owns the whole build** (registry bucket + nodes + surfaces + nav); the `tal@mainframe` session stays off `node_registry.rb` / `kronk_nodes.yaml` to avoid collision.
 
 ---
 
-_Related: `docs/kronk_korner_spec.md` (korner manifests + `nodes:`), the Kommons Tree, and `docs/kronk_aesthetic_system.md`. The settings widget kit (`features/settings/setting_widgets.tsx`) renders every section; sections are schema-driven, so a new section is a controller `FIELDS` map + a node, not a bespoke page._
+_Related: `docs/kronk_korner_spec.md` (korner manifests + `nodes:`), the Kommons Tree, `docs/kronk_aesthetic_system.md`. Sections are schema-driven (`features/settings/setting_widgets.tsx`): a new section is a controller `FIELDS` map + a node, not a bespoke page._
