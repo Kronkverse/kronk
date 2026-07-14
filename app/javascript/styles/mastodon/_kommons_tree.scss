@@ -256,6 +256,121 @@
   color: var(--text-muted, rgba(255, 255, 255, 0.6));
 }
 
+// ── Connections (cross-branch links) ────────────────────────────────
+.kommons-tree__connections {
+  margin: 20px 0;
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-sm, 6px);
+  background: var(--surface-primary, rgba(255, 255, 255, 0.02));
+}
+
+.kommons-tree__connections-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: 0;
+  color: var(--text-primary, #fff);
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+
+  &:hover {
+    background: var(--surface-hover, rgba(255, 255, 255, 0.04));
+  }
+}
+
+.kommons-tree__connections-chevron {
+  color: var(--accent);
+  font-size: 10px;
+  width: 12px;
+  display: inline-block;
+}
+
+.kommons-tree__connections-count {
+  color: var(--text-primary, #fff);
+  font-weight: 500;
+}
+
+.kommons-tree__connections-body {
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--surface-border, rgba(255, 255, 255, 0.06));
+}
+
+.kommons-tree__connections-hint {
+  margin: 10px 0 12px;
+  color: var(--text-muted, rgba(255, 255, 255, 0.55));
+  font-size: 12px;
+  font-style: italic;
+}
+
+.kommons-tree__connections-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kommons-tree__connection {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  padding: 8px 10px;
+  background: var(--surface-hover, rgba(255, 255, 255, 0.03));
+  border-radius: var(--radius-sm, 4px);
+  font-size: 13px;
+}
+
+.kommons-tree__connection-kind {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid currentcolor;
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  white-space: nowrap;
+}
+
+.kommons-tree__connection-kind--creates      { color: var(--decision-agree, #22c55e); }
+.kommons-tree__connection-kind--listed_on    { color: var(--decision-pending, #f59e0b); }
+.kommons-tree__connection-kind--projects_to  { color: var(--accent); }
+.kommons-tree__connection-kind--listens_to   { color: var(--text-muted, rgba(255, 255, 255, 0.6)); }
+.kommons-tree__connection-kind--settings_for { color: var(--text-muted, rgba(255, 255, 255, 0.6)); }
+.kommons-tree__connection-kind--related      { color: var(--text-muted, rgba(255, 255, 255, 0.5)); }
+
+.kommons-tree__connection-target {
+  grid-column: 2;
+  grid-row: 1;
+  color: var(--accent);
+  font-weight: 500;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.kommons-tree__connection-desc {
+  grid-column: 1 / span 2;
+  grid-row: 2;
+  color: var(--text-muted, rgba(255, 255, 255, 0.65));
+  line-height: 1.4;
+}
+
 // ── Composer stub ───────────────────────────────────────────────────
 .kommons-tree__composer-stub {
   margin-top: 20px;
