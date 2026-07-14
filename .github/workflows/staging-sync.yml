@@ -22,6 +22,11 @@ jobs:
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/key
           chmod 600 ~/.ssh/key
+          # The deploy action already runs migrations, stamps the version
+          # label, and clears the instance cache. A separate migrate SSH is
+          # both redundant and impossible here: the deploy key is
+          # ForceCommand-locked to deploy|deploy-pr|stop|status, so any other
+          # command (e.g. `cd … && rails db:migrate`) fails with
+          # "Unknown action: cd".
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "deploy $BRANCH"
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "cd /home/mastodon/staging && RAILS_ENV=production bundle exec rails db:migrate"
           rm -f ~/.ssh/key
