@@ -65,14 +65,15 @@ const asString = (v: unknown, fallback = ''): string => {
 const BooleanWidget: React.FC<{
   value: boolean;
   onChange: (v: boolean) => void;
-}> = ({ value, onChange }) => {
+  ariaLabel?: string;
+}> = ({ value, onChange, ariaLabel }) => {
   const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (e) => { onChange(e.target.checked); },
     [onChange],
   );
   return (
     <label className='korner-settings__toggle'>
-      <input type='checkbox' checked={value} onChange={handleChange} />
+      <input type='checkbox' checked={value} onChange={handleChange} aria-label={ariaLabel} />
       <span className='korner-settings__toggle-track' aria-hidden='true' />
     </label>
   );
@@ -209,7 +210,7 @@ const SettingRow: React.FC<{
       <div className='korner-settings__row-header'>
         <span className='korner-settings__label'>{label}</span>
         {setting.kind === 'boolean' && (
-          <BooleanWidget value={value === true} onChange={onChange} />
+          <BooleanWidget value={value === true} onChange={onChange} ariaLabel={label} />
         )}
       </div>
       {description && <p className='korner-settings__hint'>{description}</p>}
@@ -260,7 +261,7 @@ const NotificationPrefRow: React.FC<{
     <div className='korner-settings__row'>
       <div className='korner-settings__row-header'>
         <span className='korner-settings__label'>{humanize(notif.name)}</span>
-        <BooleanWidget value={checked} onChange={handleChange} />
+        <BooleanWidget value={checked} onChange={handleChange} ariaLabel={humanize(notif.name)} />
       </div>
       {notif.subject_type && (
         <p className='korner-settings__hint'>

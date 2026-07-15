@@ -144,6 +144,8 @@ export const BottomPlayer: React.FC<Props> = ({ set, onClose }) => {
 
   return (
     <div className='booth-bottom-player'>
+      {/* Booth sets are music/DJ mixes; captions do not apply. */}
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio ref={audioRef} src={set.audio_url ?? ''} preload='metadata' />
 
       <div className='booth-bottom-player__info'>
