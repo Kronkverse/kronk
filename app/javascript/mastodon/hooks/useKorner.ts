@@ -1,3 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call --
+ * The Redux root state is an Immutable Map (via redux-immutable's
+ * combineReducers) — `state.get('korners')` is the correct read
+ * shape at runtime. The Kronk store's TypeScript surface doesn't
+ * expose the .get signature though, so eslint sees the call target
+ * as `error`-typed. Remove this file-level disable once the store
+ * types either narrow to a proper Immutable Map or the state
+ * migrates to a plain object. */
+
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { useAppSelector } from 'mastodon/store';
 

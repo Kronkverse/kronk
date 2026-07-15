@@ -55,6 +55,10 @@ export const NudgesLegacyArchive = () => {
   const dispatch = useAppDispatch();
 
   const { entries, loading, loaded } = useAppSelector((state) => {
+    // Redux root state is an Immutable Map (redux-immutable). TS
+    // sees state.get as error-typed; see hooks/useKorner.ts for the
+    // wider context and follow-up plan.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const s = state.get('nudges_legacy') as
       | { entries: ApiNotificationJSON[]; loading: boolean; loaded: boolean }
       | undefined;
