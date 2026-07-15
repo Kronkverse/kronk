@@ -7,6 +7,7 @@
 import { useEffect, useState, useCallback } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+import type { MessageDescriptor } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
@@ -22,6 +23,8 @@ import {
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
+import { SettingRow } from 'mastodon/features/settings/setting_widgets';
+import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
@@ -57,7 +60,41 @@ const messages = defineMessages({
     id: 'feed_settings.scope.kommunity_desc',
     defaultMessage: 'Everyone tuned in to your korners.',
   },
+
+  groupBoosts: {
+    id: 'feed_settings.group_boosts',
+    defaultMessage: 'Group boosts of the same post',
+  },
+  slowMode: {
+    id: 'feed_settings.slow_mode',
+    defaultMessage: 'Load new posts manually',
+  },
+  mediaDisplay: {
+    id: 'feed_settings.media_display',
+    defaultMessage: 'Media display',
+  },
+  blurMedia: {
+    id: 'feed_settings.blur_media',
+    defaultMessage: 'Blur media until you open it',
+  },
+  expandContentWarnings: {
+    id: 'feed_settings.expand_content_warnings',
+    defaultMessage: 'Always expand content warnings',
+  },
+  showTrends: {
+    id: 'feed_settings.show_trends',
+    defaultMessage: 'Show trends',
+  },
 });
+
+const DISPLAY_LABELS: Record<string, MessageDescriptor | undefined> = {
+  group_boosts: messages.groupBoosts,
+  slow_mode: messages.slowMode,
+  media_display: messages.mediaDisplay,
+  blur_media: messages.blurMedia,
+  expand_content_warnings: messages.expandContentWarnings,
+  show_trends: messages.showTrends,
+};
 
 type Scope = 'friends' | 'friends_of_friends' | 'kommunity';
 
@@ -121,6 +158,30 @@ const KornerTuneRowScoped: React.FC<{
   return <KornerTuneRow korner={korner} tunedIn={tunedIn} onToggle={handleToggle} />;
 };
 
+// Schema-driven display-pref row bound to the feed settings endpoint. The
+// name-aware handler is memoised here so the SettingRow onChange isn't an
+// inline arrow (react/jsx-no-bind).
+const FeedDisplayRow: React.FC<{
+  setting: SettingDescriptor;
+  value: unknown;
+  label?: string;
+  onSave: (name: string, value: unknown) => void;
+}> = ({ setting, value, label, onSave }) => {
+  const handleChange = useCallback(
+    (v: unknown) => {
+      onSave(setting.name, v);
+    },
+    [onSave, setting.name],
+  );
+  return (
+    <SettingRow
+      setting={{ ...setting, label }}
+      value={value}
+      onChange={handleChange}
+    />
+  );
+};
+
 export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
   multiColumn,
 }) => {
@@ -132,6 +193,49 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
   const [loaded, setLoaded] = useState(false);
   const [savingScope, setSavingScope] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [displaySchema, setDisplaySchema] = useState<SettingDescriptor[]>([]);
+  const [displayValues, setDisplayValues] = useState<Record<string, unknown>>(
+    {},
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await apiRequestGet<{
+          settings_schema: SettingDescriptor[];
+          values: Record<string, unknown>;
+        }>('v1/settings/feed');
+        if (!cancelled) {
+          setDisplaySchema(res.settings_schema);
+          setDisplayValues(res.values);
+        }
+      } catch {
+        // non-fatal — the Display section just stays empty
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const saveDisplay = useCallback(
+    (name: string, value: unknown) => {
+      const previous = displayValues[name];
+      setDisplayValues((v) => ({ ...v, [name]: value }));
+      void apiRequestPut<{ values: Record<string, unknown> }>(
+        'v1/settings/feed',
+        { [name]: value },
+      )
+        .then((res) => {
+          setDisplayValues(res.values);
+        })
+        .catch(() => {
+          setDisplayValues((v) => ({ ...v, [name]: previous }));
+        });
+    },
+    [displayValues],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -312,6 +416,78 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
                 onSet={handleKornerToggle}
               />
             ))}
+          </div>
+        </section>
+
+        {displaySchema.length > 0 && (
+          <section className='feed-settings__section'>
+            <h2 className='feed-settings__section-title'>
+              <FormattedMessage
+                id='feed_settings.display'
+                defaultMessage='Display'
+              />
+            </h2>
+            <p className='feed-settings__section-hint'>
+              <FormattedMessage
+                id='feed_settings.display_hint'
+                defaultMessage='How posts render in your timeline.'
+              />
+            </p>
+            <div className='appearance-settings__fields'>
+              {displaySchema.map((setting) => {
+                const labelMsg = DISPLAY_LABELS[setting.name];
+                return (
+                  <FeedDisplayRow
+                    key={setting.name}
+                    setting={setting}
+                    value={displayValues[setting.name]}
+                    label={labelMsg ? intl.formatMessage(labelMsg) : undefined}
+                    onSave={saveDisplay}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        <section className='feed-settings__section'>
+          <h2 className='feed-settings__section-title'>
+            <FormattedMessage
+              id='feed_settings.incoming'
+              defaultMessage='Silence what reaches you'
+            />
+          </h2>
+          <p className='feed-settings__section-hint'>
+            <FormattedMessage
+              id='feed_settings.incoming_hint'
+              defaultMessage='Filters and blocks control what gets into your feed and mentions.'
+            />
+          </p>
+          <div className='feed-settings__links'>
+            <a className='feed-settings__link' href='/filters'>
+              <FormattedMessage
+                id='feed_settings.filters'
+                defaultMessage='Keyword filters'
+              />
+            </a>
+            <a className='feed-settings__link' href='/mutes'>
+              <FormattedMessage
+                id='feed_settings.mutes'
+                defaultMessage='Muted accounts'
+              />
+            </a>
+            <a className='feed-settings__link' href='/blocks'>
+              <FormattedMessage
+                id='feed_settings.blocks'
+                defaultMessage='Blocked accounts'
+              />
+            </a>
+            <a className='feed-settings__link' href='/domain_blocks'>
+              <FormattedMessage
+                id='feed_settings.domain_blocks'
+                defaultMessage='Blocked domains'
+              />
+            </a>
           </div>
         </section>
       </div>
