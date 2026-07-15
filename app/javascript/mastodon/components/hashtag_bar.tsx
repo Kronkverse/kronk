@@ -230,7 +230,7 @@ const HashtagBar: React.FC<{
           to={`/tags/${hashtag}`}
           data-menu-hashtag={accountId}
         >
-          #<span>{hashtag}</span>
+          <span className='kategory-pill'>{hashtag}</span>
         </Link>
       ))}
 

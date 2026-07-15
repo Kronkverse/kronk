@@ -18,13 +18,13 @@ import { useAppSelector } from 'mastodon/store';
 const messages = defineMessages({
   browseHashtag: {
     id: 'hashtag.browse',
-    defaultMessage: 'Browse posts in #{hashtag}',
+    defaultMessage: 'Browse posts in {hashtag}',
   },
   browseHashtagFromAccount: {
     id: 'hashtag.browse_from_account',
-    defaultMessage: 'Browse posts from @{name} in #{hashtag}',
+    defaultMessage: 'Browse posts from @{name} in {hashtag}',
   },
-  muteHashtag: { id: 'hashtag.mute', defaultMessage: 'Mute #{hashtag}' },
+  muteHashtag: { id: 'hashtag.mute', defaultMessage: 'Mute {hashtag}' },
 });
 
 const offset = [5, 5] as OffsetValue;

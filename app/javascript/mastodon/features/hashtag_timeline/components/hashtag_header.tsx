@@ -185,7 +185,7 @@ export const HashtagHeader: React.FC<{
   return (
     <div className='hashtag-header'>
       <div className='hashtag-header__header'>
-        <h1>#{tag.name}</h1>
+        <h1>{tag.name}</h1>
 
         <div className='hashtag-header__header__buttons'>
           {menu.length > 0 && (

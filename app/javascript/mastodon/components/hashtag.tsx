@@ -124,9 +124,7 @@ export const Hashtag: React.FC<HashtagProps> = ({
     <div className='trends__item__name'>
       <Link to={to}>
         {name ? (
-          <>
-            #<span>{name}</span>
-          </>
+          <span className='kategory-pill'>{name}</span>
         ) : (
           <Skeleton width={50} />
         )}

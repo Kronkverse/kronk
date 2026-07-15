@@ -107,7 +107,7 @@ export const KategoryPicker = () => {
                 className={`compose-form__kategory-chip ${tagged ? 'compose-form__kategory-chip--active' : ''}`}
                 aria-pressed={tagged}
               >
-                {tagged ? '✓ ' : '#'}
+                {tagged ? '✓ ' : ''}
                 {k.name}
               </button>
             );

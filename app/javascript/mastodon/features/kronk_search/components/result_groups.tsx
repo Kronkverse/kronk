@@ -127,7 +127,9 @@ export const ResultGroups: React.FC<Props> = ({ results }) => {
           <ul className='kronk-search__group-list'>
             {hashtags.map((t) => (
               <li key={t.name}>
-                <span className='kronk-search__kategory'>#{t.name}</span>
+                <span className='kronk-search__kategory kategory-pill'>
+                  {t.name}
+                </span>
               </li>
             ))}
           </ul>
