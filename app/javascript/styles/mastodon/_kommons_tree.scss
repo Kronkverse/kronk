@@ -347,18 +347,23 @@
 .kommons-tree__connection-kind--creates {
   color: var(--decision-agree, #22c55e);
 }
+
 .kommons-tree__connection-kind--listed_on {
   color: var(--decision-pending, #f59e0b);
 }
+
 .kommons-tree__connection-kind--projects_to {
   color: var(--accent);
 }
+
 .kommons-tree__connection-kind--listens_to {
   color: var(--text-muted, rgba(255, 255, 255, 60%));
 }
+
 .kommons-tree__connection-kind--settings_for {
   color: var(--text-muted, rgba(255, 255, 255, 60%));
 }
+
 .kommons-tree__connection-kind--related {
   color: var(--text-muted, rgba(255, 255, 255, 50%));
 }
