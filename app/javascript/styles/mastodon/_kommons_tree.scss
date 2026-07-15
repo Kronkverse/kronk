@@ -485,3 +485,29 @@
   display: inline-block;
   margin-top: 8px;
 }
+
+// Entry link on the Kommons landing page (governance/index.tsx) —
+// pointer from the proposal list to the tree browser. Styled as a
+// secondary action alongside "Plant a seed". Housed here instead of
+// _governance.scss to stay out of portal-me's Sweep 2 territory.
+
+.governance-page__tree-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 120ms ease, color 120ms ease;
+
+  &:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+}
