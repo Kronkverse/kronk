@@ -130,6 +130,46 @@ nodes:
     route_name: settings_preferences
     lifecycle: live
 
+  # The rebuilt SPA settings sections (settings rebuild §7). Grouped under
+  # Profile ("self-management"); the settings nav projects all settings.* nodes.
+  - id: settings.appearance
+    bucket: profile
+    label: Appearance
+    url: /settings/appearance
+    lifecycle: live
+    spa: true
+  - id: settings.posting
+    bucket: profile
+    label: Posting
+    url: /settings/posting
+    lifecycle: live
+    spa: true
+  - id: settings.privacy
+    bucket: profile
+    label: Privacy
+    url: /settings/privacy
+    lifecycle: live
+    spa: true
+  - id: settings.notifications
+    bucket: profile
+    label: Notifications
+    url: /settings/notifications
+    lifecycle: live
+    spa: true
+  # Still the classic Mastodon monolith — surfaced as `soon` until rehomed.
+  - id: settings.account
+    bucket: profile
+    label: Account & security
+    url: /settings/account
+    lifecycle: soon
+    spa: true
+  - id: settings.data
+    bucket: profile
+    label: Data
+    url: /settings/data
+    lifecycle: soon
+    spa: true
+
   # ── HUB (landing only — per-korner nodes live in their manifests) ─
   - id: hub.landing
     bucket: hub

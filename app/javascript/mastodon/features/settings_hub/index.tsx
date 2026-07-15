@@ -9,7 +9,7 @@ import PersonIcon from '@/material-icons/400-24px/person.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { YOU_SECTIONS } from 'mastodon/features/settings/nav';
+import { useSettingsSections } from 'mastodon/features/settings/nav';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 
 // The settings hub (spec: settings rebuild §4.1). Two kards — "You" and
@@ -72,6 +72,7 @@ export const SettingsHub: React.FC<{ multiColumn?: boolean }> = ({
   multiColumn,
 }) => {
   const intl = useIntl();
+  const youCount = useSettingsSections().length;
   const kornerCount = useAllKorners().filter(
     (k) => k.enforced !== false,
   ).length;
@@ -112,7 +113,7 @@ export const SettingsHub: React.FC<{ multiColumn?: boolean }> = ({
             title={intl.formatMessage(messages.you)}
             desc={intl.formatMessage(messages.youDesc)}
             meta={intl.formatMessage(messages.sectionCount, {
-              count: YOU_SECTIONS.length,
+              count: youCount,
             })}
           />
           <Kard

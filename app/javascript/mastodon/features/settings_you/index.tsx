@@ -5,7 +5,10 @@ import { Helmet } from 'react-helmet';
 import PersonIcon from '@/material-icons/400-24px/person.svg?react';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { YOU_SECTIONS, SectionRow } from 'mastodon/features/settings/nav';
+import {
+  useSettingsSections,
+  SectionRow,
+} from 'mastodon/features/settings/nav';
 
 // The "You" list (settings rebuild §4.2) — the personal settings sections,
 // drilled into from the hub. Each row is its own canonical /settings/<x>
@@ -24,6 +27,7 @@ export const SettingsYou: React.FC<{ multiColumn?: boolean }> = ({
   multiColumn,
 }) => {
   const intl = useIntl();
+  const sections = useSettingsSections();
 
   return (
     <Column>
@@ -55,7 +59,7 @@ export const SettingsYou: React.FC<{ multiColumn?: boolean }> = ({
         </header>
 
         <div className='settings-nav__list'>
-          {YOU_SECTIONS.map((section) => (
+          {sections.map((section) => (
             <SectionRow key={section.key} section={section} />
           ))}
         </div>

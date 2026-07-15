@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 import { defineMessages, useIntl } from 'react-intl';
 import type { MessageDescriptor } from 'react-intl';
 
@@ -11,6 +13,8 @@ import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react
 import PersonIcon from '@/material-icons/400-24px/person.svg?react';
 import TuneIcon from '@/material-icons/400-24px/tune.svg?react';
 import VisibilityIcon from '@/material-icons/400-24px/visibility.svg?react';
+import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
+import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { me } from 'mastodon/initial_state';
@@ -78,71 +82,114 @@ export interface SectionDef {
   desc: MessageDescriptor;
 }
 
-// Canonical paths from the settings-rebuild path lock (§5.1). `to` is left
-// undefined until each section's page lands in its own slice.
-export const YOU_SECTIONS: SectionDef[] = [
+// Presentation for the "You" settings sections: icon + i18n label/desc, keyed
+// by node id, in display order. The registry (kronk_nodes.yaml, via the kommons
+// nodes API) drives WHICH sections exist and their route + lifecycle; this map
+// only says how each looks. A section id absent from the registry drops out;
+// one absent from this map is not rendered here (so the "You" list stays the
+// curated personal set, not every settings.* node). See docs/kronk_settings_ia.md.
+const YOU_PRESENTATION: {
+  id: string;
+  Icon: SvgComponent;
+  name: MessageDescriptor;
+  desc: MessageDescriptor;
+}[] = [
   {
-    key: 'profile',
+    id: 'settings.profile',
     Icon: PersonIcon,
     name: navMessages.profile,
     desc: navMessages.profileDesc,
   },
   {
-    key: 'account',
+    id: 'settings.account',
     Icon: LockIcon,
     name: navMessages.account,
     desc: navMessages.accountDesc,
   },
   {
-    key: 'appearance',
-    to: '/settings/appearance',
+    id: 'settings.appearance',
     Icon: TuneIcon,
     name: navMessages.appearance,
     desc: navMessages.appearanceDesc,
   },
   {
-    key: 'posting',
-    to: '/settings/posting',
+    id: 'settings.posting',
     Icon: EditNoteIcon,
     name: navMessages.posting,
     desc: navMessages.postingDesc,
   },
   {
-    key: 'privacy',
-    to: '/settings/privacy',
+    id: 'settings.privacy',
     Icon: VisibilityIcon,
     name: navMessages.privacy,
     desc: navMessages.privacyDesc,
   },
   {
-    key: 'data',
+    id: 'settings.data',
     Icon: DownloadIcon,
     name: navMessages.data,
     desc: navMessages.dataDesc,
   },
   {
-    key: 'notifications',
-    to: '/settings/notifications',
+    id: 'settings.notifications',
     Icon: NotificationsIcon,
     name: navMessages.notifications,
     desc: navMessages.notificationsDesc,
   },
 ];
 
-export const SectionRow: React.FC<{ section: SectionDef }> = ({ section }) => {
-  const intl = useIntl();
-  const { Icon } = section;
+// Derives the "You" settings sections from the Kommons Tree node registry.
+// Each section shows only if its node is present; the row's route + soon-state
+// come from the node's url + lifecycle. Replaces the old hardcoded YOU_SECTIONS
+// so the nav can't drift from the registry (settings IA §5, item 6).
+export const useSettingsSections = (): SectionDef[] => {
+  const [nodes, setNodes] = useState<Record<string, ApiKommonsNode>>({});
   const myAccount = useAppSelector((state) =>
     me ? state.accounts.get(me) : undefined,
   );
   const myAcct = myAccount?.get('acct');
-  // Profile "settings" is the composer (owner-only /@:acct/edit).
-  const to =
-    section.key === 'profile'
-      ? myAcct
-        ? `/@${myAcct}/edit`
-        : undefined
-      : section.to;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void apiGetKommonsNodes()
+      .then((res) => {
+        if (cancelled) return;
+        const map: Record<string, ApiKommonsNode> = {};
+        for (const node of res.nodes) map[node.id] = node;
+        setNodes(map);
+      })
+      .catch(() => {
+        // Registry unreachable: leave empty; rows simply don't render.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return YOU_PRESENTATION.flatMap((p) => {
+    const node = nodes[p.id];
+    if (!node) return [];
+
+    let to: string | undefined;
+    if (node.lifecycle === 'live') {
+      // Profile "settings" is the composer (owner-only /@:acct/edit).
+      to =
+        p.id === 'settings.profile'
+          ? myAcct
+            ? `/@${myAcct}/edit`
+            : undefined
+          : node.url;
+    }
+
+    return [{ key: p.id, to, Icon: p.Icon, name: p.name, desc: p.desc }];
+  });
+};
+
+export const SectionRow: React.FC<{ section: SectionDef }> = ({ section }) => {
+  const intl = useIntl();
+  const { Icon, to } = section;
 
   const inner = (
     <>
