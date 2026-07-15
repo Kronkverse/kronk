@@ -9,8 +9,8 @@ import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import HourglassIcon from '@/material-icons/400-24px/hourglass.svg?react';
 import InventoryIcon from '@/material-icons/400-24px/inventory_2.svg?react';
-import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library.svg?react';
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
+import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import type { IconProp } from 'mastodon/components/icon';
 

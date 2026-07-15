@@ -400,6 +400,10 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
     }
   }, [slug, state]);
 
+  const handleTuneInToggle = useCallback(() => {
+    void toggleTuneIn();
+  }, [toggleTuneIn]);
+
   const title = korner
     ? intl.formatMessage(messages.title, { name: korner.name })
     : intl.formatMessage(messages.title, { name: slug });
@@ -478,7 +482,7 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
                   </span>
                   <BooleanWidget
                     value={state.tuned_in}
-                    onChange={toggleTuneIn}
+                    onChange={handleTuneInToggle}
                   />
                 </div>
                 <p className='korner-settings__hint'>

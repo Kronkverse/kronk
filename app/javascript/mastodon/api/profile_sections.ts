@@ -7,7 +7,10 @@ import {
 
 export interface ApiProfileSectionJSON {
   id: string;
-  section_type: 'timeline' | 'korner' | 'kategory' | string;
+  // `string` covers future-forward compat; the known values are
+  // documented here so consumers can narrow with a `switch` on the
+  // literals.
+  section_type: string; // 'timeline' | 'korner' | 'kategory' | ...
   position: number;
   title: string | null;
   settings: Record<string, unknown>;
