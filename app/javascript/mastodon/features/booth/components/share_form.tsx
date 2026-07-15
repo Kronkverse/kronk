@@ -74,6 +74,7 @@ export const ShareForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
           value={comment}
           onChange={handleCommentChange}
           placeholder={intl.formatMessage(messages.placeholder)}
+          aria-label={intl.formatMessage(messages.placeholder)}
           rows={3}
           maxLength={500}
           disabled={sharing}
