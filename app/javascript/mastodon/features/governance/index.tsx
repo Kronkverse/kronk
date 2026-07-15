@@ -111,7 +111,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           />
         ) : showForm ? (
           <div className='governance-plant'>
-            <button className='governance-plant__back' onClick={handleHideForm}>
+            <button className='chrome-back-link' onClick={handleHideForm}>
               <FormattedMessage
                 id='governance.back_to_seeds'
                 defaultMessage='← All seeds'

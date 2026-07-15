@@ -370,6 +370,51 @@ body:has(.korner-sub-bar) {
       fill: currentColor;
     }
   }
+
+  // Settings gear at the right of the sub-bar. Matches the affordance
+  // on Hub-grid korner cards (`.hub-page__card-settings-link`) so
+  // "gear you can click for settings" reads identically from either
+  // entry point. Sweep 3 chrome consistency.
+  &__settings {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.35rem;
+    padding: 0.15rem;
+    border-radius: var(--radius-small);
+    color: var(--text-secondary);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--text-primary);
+      background: var(--kronk-purple-deep);
+    }
+  }
+
+  &__settings-icon {
+    width: 1rem;
+    height: 1rem;
+    fill: currentColor;
+  }
+}
+
+// Shared "← back" chrome for in-korner surfaces. Retires the
+// Kommons-specific `.governance-plant__back` class as part of Sweep 3
+// (the old class definition still lives in `_governance.scss` for
+// portal-me's Sweep 2 to sweep alongside the colour-token migration).
+.chrome-back-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  align-self: flex-start;
+
+  &:hover {
+    color: var(--text-primary);
+  }
 }
 
 .kronk-menu {
