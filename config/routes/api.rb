@@ -180,6 +180,7 @@ namespace :api, format: false do
     namespace :settings do
       resource :appearance, only: [:show, :update], controller: :appearance
       resource :posting, only: [:show, :update], controller: :posting
+      resource :feed, only: [:show, :update], controller: :feed
       resource :notifications, only: [:show, :update], controller: :notifications
       resource :privacy, only: [:show, :update], controller: :privacy
     end
