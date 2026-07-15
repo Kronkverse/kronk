@@ -12,6 +12,21 @@
 #
 # See docs/kronk_korner_spec.md §Groups.
 class Group < ApplicationRecord
+  include Searchable
+
+  searchable_as :groups, if: :discoverable?
+
+  def as_json_for_search
+    {
+      id: id,
+      name: name.to_s,
+      description: description.to_s,
+      discoverable: discoverable?,
+      archived: respond_to?(:archived?) ? archived? : false,
+      created_at: created_at&.to_i,
+    }
+  end
+
   GOVERNANCE_FRAMEWORKS = %w(peer_support two_key threshold majority consensus).freeze
   SLUG_PATTERN = /\A[a-z][a-z0-9-]*\z/
 

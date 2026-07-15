@@ -27,7 +27,7 @@ module Kronk
           []
         end
 
-        def reindex_all(type)
+        def reindex_all(type, _model = nil)
           Rails.logger.info("[kronk:search:null] reindex_all(#{type}) — no-op adapter, nothing indexed")
         end
       end

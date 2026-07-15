@@ -57,11 +57,44 @@ module Kronk
           []
         end
 
-        def reindex_all(type)
-          # Placeholder — real implementation lives in PR 2's rake task,
-          # which walks the model in batches and pushes documents. Left
-          # here so the interface is complete.
-          raise NotImplementedError, 'reindex_all is implemented in the PR 2 rake task, not the adapter'
+        def reindex_all(type, model)
+          configure_index(type)
+          index = index_for(type)
+          batch_size = 500
+          total = 0
+
+          scope = model.respond_to?(:reindex_scope) ? model.reindex_scope : model.all
+          scope.find_in_batches(batch_size: batch_size) do |batch|
+            docs = batch.filter_map do |record|
+              serialize(type, record) if satisfies_condition?(record)
+            end
+            index.add_documents(docs) if docs.any?
+            total += docs.size
+            Rails.logger.info("[kronk:search:meilisearch] reindexed #{total} #{type}…")
+          end
+          Rails.logger.info("[kronk:search:meilisearch] reindex_all(#{type}) complete: #{total} documents")
+          total
+        rescue => e
+          Rails.logger.warn("[kronk:search:meilisearch] reindex_all(#{type}) failed: #{e.class} #{e.message}")
+          nil
+        end
+
+        # Push index settings (searchable / filterable / sortable
+        # attributes) from Kronk::Search::IndexConfigs. Idempotent —
+        # Meilisearch merges settings. Called by the rake task; safe
+        # to call at any time.
+        def configure_index(type)
+          config = Kronk::Search::IndexConfigs.for(type)
+          return if config.empty?
+
+          settings = {
+            searchableAttributes: config[:searchable_attributes],
+            filterableAttributes: config[:filterable_attributes],
+            sortableAttributes: config[:sortable_attributes],
+          }.compact
+          index_for(type).update_settings(settings)
+        rescue => e
+          Rails.logger.warn("[kronk:search:meilisearch] configure_index(#{type}) failed: #{e.class} #{e.message}")
         end
 
         private
@@ -77,10 +110,9 @@ module Kronk
           client.index("#{INDEX_PREFIX}#{type}")
         end
 
-        # Serialization contract stubbed for PR 1. PR 2 fleshes this
-        # out per-type against `Kronk::Search::IndexConfigs`; for now
-        # the adapter carries a permissive default that lets the write
-        # path exercise end-to-end against a live Meilisearch instance.
+        # Turn a record into the document Meilisearch stores. Models
+        # override `#as_json_for_search` to declare their per-type
+        # field shape; unknown records get an id-only fallback.
         def serialize(type, record)
           return nil unless record.respond_to?(:id) && record.id
 
@@ -89,6 +121,12 @@ module Kronk
           else
             { id: record.id, type: type.to_s }
           end
+        end
+
+        def satisfies_condition?(record)
+          return true unless record.respond_to?(:satisfies_search_condition?, true)
+
+          record.send(:satisfies_search_condition?)
         end
 
         def build_search_opts(filters, viewer)

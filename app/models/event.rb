@@ -1,6 +1,23 @@
 # frozen_string_literal: true
 
 class Event < ApplicationRecord
+  include Searchable
+
+  searchable_as :kalendar_events
+
+  def as_json_for_search
+    {
+      id: id,
+      title: title.to_s,
+      description: description.to_s,
+      location_name: location_name.to_s,
+      host_acct: account&.acct.to_s,
+      account_id: account_id,
+      starts_at: start_time&.to_i,
+      ends_at: end_time&.to_i,
+    }
+  end
+
   belongs_to :account
   belongs_to :status, optional: true
   belongs_to :parent_event, class_name: 'Event', optional: true

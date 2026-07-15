@@ -111,6 +111,23 @@ class Account < ApplicationRecord
   include DomainNormalizable
   include Paginable
   include Reviewable
+  include Searchable
+
+  searchable_as :accounts
+
+  def as_json_for_search
+    {
+      id: id,
+      username: username.to_s,
+      display_name: display_name.to_s,
+      note: note.to_s,
+      acct: local? ? username : "#{username}@#{domain}",
+      locked: locked?,
+      discoverable: discoverable?,
+      local: local?,
+      created_at: created_at&.to_i,
+    }
+  end
 
   enum :protocol, { ostatus: 0, activitypub: 1 }
   enum :suspension_origin, { local: 0, remote: 1 }, prefix: true

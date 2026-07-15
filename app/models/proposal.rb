@@ -1,6 +1,24 @@
 # frozen_string_literal: true
 
 class Proposal < ApplicationRecord
+  include Searchable
+
+  searchable_as :kommons_proposals
+
+  def as_json_for_search
+    {
+      id: id,
+      title: title.to_s,
+      body: body.to_s,
+      summary: summary.to_s,
+      created_by_account_id: created_by_account_id,
+      status: status,
+      categories: Array(categories),
+      archived: archived?,
+      created_at: created_at&.to_i,
+    }
+  end
+
   CATEGORY_VALUES = %w(timeline huddle events marketplace identity moderation infrastructure app design governance).freeze
 
   belongs_to :created_by_account, class_name: 'Account'
