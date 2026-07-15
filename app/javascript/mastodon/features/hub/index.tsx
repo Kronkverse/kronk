@@ -58,7 +58,9 @@ const KornerCard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
   );
 
   const toggleTuneIn = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
-    (e) => { void toggleTuneInInner(e); },
+    (e) => {
+      void toggleTuneInInner(e);
+    },
     [toggleTuneInInner],
   );
 

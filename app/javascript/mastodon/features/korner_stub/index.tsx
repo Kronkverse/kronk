@@ -14,7 +14,9 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 // like it belongs. Every 2.x korner marked `enforced: false` hits this
 // route until its own feature ships.
 
-interface Params { slug?: string }
+interface Params {
+  slug?: string;
+}
 
 export const KornerStub: React.FC<{ multiColumn?: boolean; slug?: string }> = ({
   multiColumn,
@@ -74,4 +76,3 @@ export const AlbuttsStub: React.FC<{ multiColumn?: boolean }> = (props) => (
 export const KompassStub: React.FC<{ multiColumn?: boolean }> = (props) => (
   <KornerStub {...props} slug='kompass' />
 );
-

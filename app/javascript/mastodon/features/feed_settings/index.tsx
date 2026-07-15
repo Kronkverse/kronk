@@ -120,7 +120,9 @@ const KornerTuneRow: React.FC<{
     '';
 
   const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
-    (e) => { onToggle(e.target.checked); },
+    (e) => {
+      onToggle(e.target.checked);
+    },
     [onToggle],
   );
 
@@ -152,10 +154,14 @@ const KornerTuneRowScoped: React.FC<{
   onSet: (slug: string, next: boolean) => void;
 }> = ({ korner, tunedIn, onSet }) => {
   const handleToggle = useCallback(
-    (next: boolean) => { onSet(korner.slug, next); },
+    (next: boolean) => {
+      onSet(korner.slug, next);
+    },
     [korner.slug, onSet],
   );
-  return <KornerTuneRow korner={korner} tunedIn={tunedIn} onToggle={handleToggle} />;
+  return (
+    <KornerTuneRow korner={korner} tunedIn={tunedIn} onToggle={handleToggle} />
+  );
 };
 
 // Schema-driven display-pref row bound to the feed settings endpoint. The
@@ -300,7 +306,9 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
     [tuneStates],
   );
 
-  const handleScopeClick = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+  const handleScopeClick = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >(
     (e) => {
       const value = e.currentTarget.dataset.scope as Scope | undefined;
       if (value) void changeScope(value);
@@ -309,7 +317,9 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
   );
 
   const handleKornerToggle = useCallback(
-    (slug: string, next: boolean) => { void toggleKorner(slug, next); },
+    (slug: string, next: boolean) => {
+      void toggleKorner(slug, next);
+    },
     [toggleKorner],
   );
 
@@ -494,4 +504,3 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
     </Column>
   );
 };
-

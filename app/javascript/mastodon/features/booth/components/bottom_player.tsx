@@ -76,7 +76,9 @@ export const BottomPlayer: React.FC<Props> = ({ set, onClose }) => {
       if (!dragging) return;
       seekTo(getProgressPct(e.clientX));
     };
-    const handleMouseUp = () => { setDragging(false); };
+    const handleMouseUp = () => {
+      setDragging(false);
+    };
     if (dragging) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
@@ -106,9 +108,15 @@ export const BottomPlayer: React.FC<Props> = ({ set, onClose }) => {
     );
   }, []);
 
-  const handleSkipBack = useCallback(() => { handleSkip(-30); }, [handleSkip]);
-  const handleSkipForward = useCallback(() => { handleSkip(30); }, [handleSkip]);
-  const handleProgressKeyDown = useCallback<React.KeyboardEventHandler<HTMLDivElement>>(
+  const handleSkipBack = useCallback(() => {
+    handleSkip(-30);
+  }, [handleSkip]);
+  const handleSkipForward = useCallback(() => {
+    handleSkip(30);
+  }, [handleSkip]);
+  const handleProgressKeyDown = useCallback<
+    React.KeyboardEventHandler<HTMLDivElement>
+  >(
     (e) => {
       if (e.key === 'ArrowLeft') handleSkip(-10);
       if (e.key === 'ArrowRight') handleSkip(10);
@@ -119,11 +127,21 @@ export const BottomPlayer: React.FC<Props> = ({ set, onClose }) => {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const onTimeUpdate = () => { setCurrentTime(audio.currentTime); };
-    const onDurationChange = () => { setDuration(audio.duration); };
-    const onPlay = () => { setPlaying(true); };
-    const onPause = () => { setPlaying(false); };
-    const onEnded = () => { setPlaying(false); };
+    const onTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+    };
+    const onDurationChange = () => {
+      setDuration(audio.duration);
+    };
+    const onPlay = () => {
+      setPlaying(true);
+    };
+    const onPause = () => {
+      setPlaying(false);
+    };
+    const onEnded = () => {
+      setPlaying(false);
+    };
     audio.addEventListener('timeupdate', onTimeUpdate);
     audio.addEventListener('durationchange', onDurationChange);
     audio.addEventListener('loadedmetadata', onDurationChange);

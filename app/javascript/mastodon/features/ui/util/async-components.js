@@ -281,6 +281,11 @@ export function KommonsTree () {
 }
 
 
+export function KronkSearch () {
+  return import("../../kronk_search");
+}
+
+
 export function Questions () {
   return import("../../questions").then(m => ({ default: m.Questions }));
 }

@@ -26,10 +26,22 @@ import type { Bucket, KommonsNode } from './data/nodes';
 import { bucketNodes, findNode, fromApiNodes, listKorners } from './data/nodes';
 
 const messages = defineMessages({
-  title: { id: 'kommons_tree.title', defaultMessage: '\u20aeommons \u00b7 Tree' },
-  crumbBuckets: { id: 'kommons_tree.crumb.buckets', defaultMessage: 'All spaces' },
-  loading: { id: 'kommons_tree.loading', defaultMessage: 'Loading the tree\u2026' },
-  loadError: { id: 'kommons_tree.load_error', defaultMessage: 'Could not load the Kommons tree. Refresh to try again.' },
+  title: {
+    id: 'kommons_tree.title',
+    defaultMessage: '\u20aeommons \u00b7 Tree',
+  },
+  crumbBuckets: {
+    id: 'kommons_tree.crumb.buckets',
+    defaultMessage: 'All spaces',
+  },
+  loading: {
+    id: 'kommons_tree.loading',
+    defaultMessage: 'Loading the tree\u2026',
+  },
+  loadError: {
+    id: 'kommons_tree.load_error',
+    defaultMessage: 'Could not load the Kommons tree. Refresh to try again.',
+  },
 });
 
 type Step = 'buckets' | 'pages' | 'detail';
@@ -40,16 +52,24 @@ interface CrumbProps {
 }
 
 const Crumb: React.FC<CrumbProps> = ({ onClick, children }) => (
-  <button type='button' className='kommons-tree__crumb' onClick={onClick} disabled={!onClick}>
+  <button
+    type='button'
+    className='kommons-tree__crumb'
+    onClick={onClick}
+    disabled={!onClick}
+  >
     {children}
   </button>
 );
 
 const bucketLabel = (b: Bucket): string => {
   switch (b) {
-    case 'feed': return 'Feed';
-    case 'profile': return 'Profile';
-    case 'hub': return 'Hub';
+    case 'feed':
+      return 'Feed';
+    case 'profile':
+      return 'Profile';
+    case 'hub':
+      return 'Hub';
   }
 };
 
@@ -72,7 +92,7 @@ const KommonsTree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setLoading(true);
     setLoadError(false);
     apiGetKommonsNodes()
-      .then(res => {
+      .then((res) => {
         if (cancelled) return;
         setNodes(fromApiNodes(res.nodes));
         setLoading(false);
@@ -88,7 +108,7 @@ const KommonsTree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   }, [reloadKey]);
 
   const refetch = useCallback(() => {
-    setReloadKey(k => k + 1);
+    setReloadKey((k) => k + 1);
   }, []);
 
   const goToBuckets = useCallback(() => {
@@ -118,15 +138,18 @@ const KommonsTree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     }
   }, [bucket, kornerSlug, goToBuckets]);
 
-  const handleNode = useCallback((id: string) => {
-    const target = findNode(nodes, id);
-    if (target) {
-      setBucket(target.bucket);
-      setKornerSlug(target.parent ?? null);
-    }
-    setNodeId(id);
-    setStep('detail');
-  }, [nodes]);
+  const handleNode = useCallback(
+    (id: string) => {
+      const target = findNode(nodes, id);
+      if (target) {
+        setBucket(target.bucket);
+        setKornerSlug(target.parent ?? null);
+      }
+      setNodeId(id);
+      setStep('detail');
+    },
+    [nodes],
+  );
 
   const handleBackFromDetail = useCallback(() => {
     setNodeId(null);
@@ -153,8 +176,16 @@ const KommonsTree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       <ColumnHeader icon='gavel' title={title} multiColumn={multiColumn} />
 
       <div className='kommons-tree'>
-        {loading && <p className='kommons-tree__loading'>{intl.formatMessage(messages.loading)}</p>}
-        {loadError && <p className='kommons-tree__error'>{intl.formatMessage(messages.loadError)}</p>}
+        {loading && (
+          <p className='kommons-tree__loading'>
+            {intl.formatMessage(messages.loading)}
+          </p>
+        )}
+        {loadError && (
+          <p className='kommons-tree__error'>
+            {intl.formatMessage(messages.loadError)}
+          </p>
+        )}
 
         {!loading && !loadError && (
           <>
@@ -164,29 +195,47 @@ const KommonsTree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               </Crumb>
               {bucket && (
                 <>
-                  <span className='kommons-tree__crumb-sep' aria-hidden='true'>/</span>
-                  <Crumb onClick={step === 'pages' && !kornerSlug ? undefined : handleBackFromPages}>
+                  <span className='kommons-tree__crumb-sep' aria-hidden='true'>
+                    /
+                  </span>
+                  <Crumb
+                    onClick={
+                      step === 'pages' && !kornerSlug
+                        ? undefined
+                        : handleBackFromPages
+                    }
+                  >
                     {bucketLabel(bucket)}
                   </Crumb>
                 </>
               )}
               {bucket === 'hub' && kornerSlug && (
                 <>
-                  <span className='kommons-tree__crumb-sep' aria-hidden='true'>/</span>
-                  <Crumb onClick={step === 'pages' ? undefined : handleBackFromDetail}>
+                  <span className='kommons-tree__crumb-sep' aria-hidden='true'>
+                    /
+                  </span>
+                  <Crumb
+                    onClick={
+                      step === 'pages' ? undefined : handleBackFromDetail
+                    }
+                  >
                     {kornerSlug}
                   </Crumb>
                 </>
               )}
               {selectedNode && (
                 <>
-                  <span className='kommons-tree__crumb-sep' aria-hidden='true'>/</span>
+                  <span className='kommons-tree__crumb-sep' aria-hidden='true'>
+                    /
+                  </span>
                   <Crumb>{selectedNode.label}</Crumb>
                 </>
               )}
             </nav>
 
-            {step === 'buckets' && <BucketPicker nodes={nodes} onSelect={handleBucket} />}
+            {step === 'buckets' && (
+              <BucketPicker nodes={nodes} onSelect={handleBucket} />
+            )}
 
             {step === 'pages' && bucket === 'hub' && !kornerSlug && (
               <PagePicker
@@ -214,7 +263,12 @@ const KommonsTree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             )}
 
             {step === 'detail' && selectedNode && (
-              <NodeDetail node={selectedNode} nodes={nodes} onFile={openComposer} onNavigate={handleNode} />
+              <NodeDetail
+                node={selectedNode}
+                nodes={nodes}
+                onFile={openComposer}
+                onNavigate={handleNode}
+              />
             )}
           </>
         )}

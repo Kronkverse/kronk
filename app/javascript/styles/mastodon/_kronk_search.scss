@@ -1,0 +1,254 @@
+// Kronk Search — universal search surface.
+// Route: /hub/search
+
+.kronk-search {
+  padding: 20px;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+// ── Form ────────────────────────────────────────────────────────────
+.kronk-search__form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.kronk-search__input-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.kronk-search__input-icon {
+  position: absolute;
+  inset-inline-start: 12px;
+  width: 18px;
+  height: 18px;
+  fill: var(--text-muted, rgba(255, 255, 255, 50%));
+  pointer-events: none;
+}
+
+.kronk-search__input {
+  flex: 1;
+  width: 100%;
+  padding: 10px 12px 10px 40px;
+  background: var(--surface-input, rgba(255, 255, 255, 4%));
+  color: var(--text-primary, #fff);
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 12%));
+  border-radius: var(--radius-sm, 6px);
+  font-size: 15px;
+
+  &::placeholder {
+    color: var(--text-muted, rgba(255, 255, 255, 40%));
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+}
+
+.kronk-search__submit {
+  padding: 10px 16px;
+  background: var(--accent);
+  color: var(--on-accent, #fff);
+  border: 0;
+  border-radius: var(--radius-sm, 6px);
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+}
+
+// ── Scope chip ─────────────────────────────────────────────────────
+.kronk-search__scope-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 4px 10px;
+  background: var(--surface-hover, rgba(255, 255, 255, 4%));
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.kronk-search__scope-label {
+  color: var(--text-muted, rgba(255, 255, 255, 70%));
+}
+
+.kronk-search__scope-widen {
+  background: transparent;
+  border: 0;
+  padding: 2px 6px;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ── Loading / error / empty ────────────────────────────────────────
+.kronk-search__loading,
+.kronk-search__error,
+.kronk-search__empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted, rgba(255, 255, 255, 60%));
+  font-size: 14px;
+}
+
+.kronk-search__error {
+  color: var(--danger, #e57373);
+}
+
+// ── Recent list ────────────────────────────────────────────────────
+.kronk-search__recent {
+  margin-top: 16px;
+}
+
+.kronk-search__recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+
+  h3 {
+    margin: 0;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, rgba(255, 255, 255, 50%));
+  }
+}
+
+.kronk-search__recent-clear {
+  background: transparent;
+  border: 0;
+  padding: 4px 6px;
+  color: var(--text-muted, rgba(255, 255, 255, 50%));
+  cursor: pointer;
+  font-size: 12px;
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+.kronk-search__recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 0;
+  }
+}
+
+.kronk-search__recent-item {
+  flex: 1;
+  text-align: start;
+  background: transparent;
+  border: 0;
+  padding: 8px 10px;
+  color: var(--text-primary, #fff);
+  cursor: pointer;
+  border-radius: var(--radius-sm, 4px);
+  font-size: 14px;
+
+  &:hover {
+    background: var(--surface-hover, rgba(255, 255, 255, 4%));
+  }
+}
+
+.kronk-search__recent-forget {
+  background: transparent;
+  border: 0;
+  padding: 4px 8px;
+  color: var(--text-muted, rgba(255, 255, 255, 40%));
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+
+  &:hover {
+    color: var(--danger, #e57373);
+  }
+}
+
+// ── Result groups ──────────────────────────────────────────────────
+.kronk-search__result-groups {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.kronk-search__group {
+  border-top: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
+  padding-top: 12px;
+}
+
+.kronk-search__group-heading {
+  margin: 0 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted, rgba(255, 255, 255, 50%));
+}
+
+.kronk-search__group-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--surface-border, rgba(255, 255, 255, 4%));
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+}
+
+.kronk-search__account {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+
+  strong {
+    color: var(--text-primary, #fff);
+  }
+}
+
+.kronk-search__account-acct {
+  color: var(--text-muted, rgba(255, 255, 255, 50%));
+  font-size: 13px;
+}
+
+.kronk-search__status-author {
+  color: var(--text-muted, rgba(255, 255, 255, 50%));
+  font-size: 13px;
+}
+
+.kronk-search__status-body {
+  margin: 4px 0 0;
+  color: var(--text-primary, #fff);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.kronk-search__kategory {
+  color: var(--accent);
+  font-weight: 600;
+}

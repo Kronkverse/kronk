@@ -56,9 +56,12 @@ const KornerRow: React.FC<KornerRowProps> = ({
   const handleClick = useCallback(() => {
     onVisit(korner.slug);
   }, [onVisit, korner.slug]);
-  const handleRef = useCallback((el: HTMLAnchorElement | null) => {
-    registerRef(korner.slug, el);
-  }, [registerRef, korner.slug]);
+  const handleRef = useCallback(
+    (el: HTMLAnchorElement | null) => {
+      registerRef(korner.slug, el);
+    },
+    [registerRef, korner.slug],
+  );
   return (
     <Link
       to={`/hub/${korner.slug}`}

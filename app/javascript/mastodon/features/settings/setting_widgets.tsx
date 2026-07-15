@@ -57,7 +57,9 @@ export const EnumWidget: React.FC<{
   value: string;
   onChange: (v: string) => void;
 }> = ({ options, value, onChange }) => {
-  const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement>>(
+  const handleChange = useCallback<
+    React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement>
+  >(
     (e) => {
       onChange(e.currentTarget.value);
     },
@@ -231,7 +233,10 @@ export const AccentWidget: React.FC<{
   );
 };
 
-const StringInput: React.FC<{ value: unknown; onChange: (v: unknown) => void }> = ({ value, onChange }) => {
+const StringInput: React.FC<{
+  value: unknown;
+  onChange: (v: unknown) => void;
+}> = ({ value, onChange }) => {
   const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (e) => {
       onChange(e.target.value);
@@ -241,14 +246,19 @@ const StringInput: React.FC<{ value: unknown; onChange: (v: unknown) => void }> 
   return <input type='text' value={asString(value)} onChange={handleChange} />;
 };
 
-const NumberInput: React.FC<{ value: unknown; onChange: (v: unknown) => void }> = ({ value, onChange }) => {
+const NumberInput: React.FC<{
+  value: unknown;
+  onChange: (v: unknown) => void;
+}> = ({ value, onChange }) => {
   const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (e) => {
       onChange(Number(e.target.value));
     },
     [onChange],
   );
-  return <input type='number' value={Number(value ?? 0)} onChange={handleChange} />;
+  return (
+    <input type='number' value={Number(value ?? 0)} onChange={handleChange} />
+  );
 };
 
 export const SettingRow: React.FC<{
@@ -267,7 +277,11 @@ export const SettingRow: React.FC<{
       <div className='korner-settings__row-header'>
         <span className='korner-settings__label'>{label}</span>
         {setting.kind === 'boolean' && (
-          <BooleanWidget value={value === true} onChange={onChange} ariaLabel={label} />
+          <BooleanWidget
+            value={value === true}
+            onChange={onChange}
+            ariaLabel={label}
+          />
         )}
       </div>
       {description && <p className='korner-settings__hint'>{description}</p>}

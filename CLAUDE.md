@@ -5,17 +5,18 @@ Kronk is a custom Mastodon instance at **mastodon.kronk.info**. This repo is a f
 > **This file is the single source of truth for the Kronk contributor & agent workflow.** It is public. Do **not** put server IPs, SSH keys, deploy keys, droplet names, or credentials here — those live in the private infra runbook (see below). Every other instruction file (per-host, per-user) should link back here rather than restating it, so nothing drifts.
 >
 > **Where things live:**
+>
 > - **Workflow / build / korners / code rules** → this file (repo, normative).
 > - **Infra topology, SSH keys, deploy mechanics, credentials, merge authority** → private infra runbook (mainframe: `/home/shared/infra.md`; portal: `/home/claude/CLAUDE.md`). Not in this public repo.
 > - **Deeper reference** → `docs/` (`docs/kronk_korner_spec.md`, `docs/korners/adding_a_korner.md`, `docs/kronk_aesthetic_system.md`).
 
 ## Branch Strategy
 
-| Branch          | Purpose                                                                 | Deploy target       |
-| --------------- | ---------------------------------------------------------------------- | ------------------- |
-| `main`          | Production (protected — PRs only, merged by the maintainer)            | mastodon.kronk.info |
+| Branch          | Purpose                                                                    | Deploy target          |
+| --------------- | -------------------------------------------------------------------------- | ---------------------- |
+| `main`          | Production (protected — PRs only, merged by the maintainer)                | mastodon.kronk.info    |
 | `rebuild/2.0.0` | **Active 2.x integration branch — base your work here during the rebuild** | shadow (via `staging`) |
-| `staging`       | Transient deploy branch for shadow — push to it to show work; disposable | shadow.kronk.info   |
+| `staging`       | Transient deploy branch for shadow — push to it to show work; disposable   | shadow.kronk.info      |
 
 **Never commit directly to `main`, `rebuild/2.0.0`, or `staging`.** Always work on a branch and open a PR.
 

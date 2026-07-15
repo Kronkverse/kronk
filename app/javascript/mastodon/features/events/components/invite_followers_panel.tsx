@@ -36,7 +36,6 @@ const FollowerRow: React.FC<{
     : 'invite-followers-panel__account';
 
   return (
-     
     <label className={className}>
       <input
         type='checkbox'

@@ -47,7 +47,8 @@ export const navMessages = defineMessages({
   posting: { id: 'settings_hub.posting', defaultMessage: 'Posting' },
   postingDesc: {
     id: 'settings_hub.posting_desc',
-    defaultMessage: 'Defaults for new posts — visibility, language, sensitivity.',
+    defaultMessage:
+      'Defaults for new posts — visibility, language, sensitivity.',
   },
   privacy: {
     id: 'settings_hub.privacy',

@@ -71,7 +71,9 @@ export const KategoryPicker = () => {
     setExpanded((v) => !v);
   }, []);
 
-  const handleChipClick = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+  const handleChipClick = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >(
     (e) => {
       const name = e.currentTarget.dataset.name;
       if (name) toggle(name);
