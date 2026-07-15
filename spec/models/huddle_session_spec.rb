@@ -7,9 +7,9 @@ RSpec.describe HuddleSession do
 
   def build(**overrides)
     described_class.new(
-      title:         'Weekly sync',
-      session_url:   'https://huddle.kronk.info/rooms/42',
-      host_account:  host,
+      title: 'Weekly sync',
+      session_url: 'https://huddle.kronk.info/rooms/42',
+      host_account: host,
       **overrides
     )
   end

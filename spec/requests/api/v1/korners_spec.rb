@@ -76,7 +76,7 @@ RSpec.describe 'Korners' do
 
       expect do
         post tune_out_api_v1_korner_path(id: 'kommons'), headers: headers
-      end.not_to(change { KornerTuneOut.where(account: user.account, korner_slug: 'kommons').count })
+      end.to_not(change { KornerTuneOut.where(account: user.account, korner_slug: 'kommons').count })
     end
 
     it 'requires authentication' do

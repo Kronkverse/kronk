@@ -44,16 +44,16 @@ namespace :kronk do
         end
 
         attrs = {
-          title:           event.title,
-          description:     event.description,
+          title: event.title,
+          description: event.description,
           host_account_id: event.account_id,
-          status_id:       event.status_id,
-          session_url:     session_url,
+          status_id: event.status_id,
+          session_url: session_url,
           scheduled_start: event.start_time,
-          scheduled_end:   event.end_time,
-          state:           event_state_at(event),
-          created_at:      event.created_at,
-          updated_at:      event.updated_at,
+          scheduled_end: event.end_time,
+          state: event_state_at(event),
+          created_at: event.created_at,
+          updated_at: event.updated_at,
         }
 
         if dry_run

@@ -108,9 +108,7 @@ class Api::V1::KornersController < Api::BaseController
   def settings_update
     row = load_settings_row(create_if_missing: true)
 
-    unless params[:push_enabled].nil?
-      row.push_enabled = ActiveModel::Type::Boolean.new.cast(params[:push_enabled])
-    end
+    row.push_enabled = ActiveModel::Type::Boolean.new.cast(params[:push_enabled]) unless params[:push_enabled].nil?
 
     Array(params[:push_preferences]).each do |type, enabled|
       next unless notification_defined?(type.to_s)
@@ -170,7 +168,7 @@ class Api::V1::KornersController < Api::BaseController
     {
       slug: @manifest.slug,
       tuned_in: !tuned_out_slugs.include?(@manifest.slug),
-      push_enabled: row.nil? ? true : row.push_enabled,
+      push_enabled: row.nil? || row.push_enabled,
       push_preferences: push_preferences,
       values: values,
       # Echo the manifest's settings and notifications shape so the

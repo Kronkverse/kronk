@@ -75,9 +75,7 @@ class Api::V1::Timelines::FriendsActivityController < Api::BaseController
       }
 
       ts = row['created_at']
-      if grouped[target_id][:latest_at].nil? || ts > grouped[target_id][:latest_at]
-        grouped[target_id][:latest_at] = ts
-      end
+      grouped[target_id][:latest_at] = ts if grouped[target_id][:latest_at].nil? || ts > grouped[target_id][:latest_at]
     end
 
     sorted = grouped.sort_by { |_, v| v[:latest_at] }.reverse

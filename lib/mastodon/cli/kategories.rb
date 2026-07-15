@@ -6,7 +6,7 @@ module Mastodon
   module CLI
     class Kategories < Base
       desc 'seed', 'Seed curated Kategories from config/kategory_defaults.yaml'
-      long_desc <<~LONG # rubocop:disable I18n/RailsI18n/DecorateString
+      long_desc <<~LONG
         Reads config/kategory_defaults.yaml and marks the corresponding Tag rows
         as `curated: true` (creating any that don't yet exist). Idempotent —
         safe to run repeatedly.

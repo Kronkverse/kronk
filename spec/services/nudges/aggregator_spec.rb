@@ -40,7 +40,7 @@ RSpec.describe Nudges::Aggregator do
 
       notifications = [
         notif(:favourite, a, at: Time.zone.parse('2026-07-10 12:00:00')),
-        notif(:favourite, b, at: Time.zone.parse('2026-07-10 12:15:00')),  # 15 min later — past 10-min default
+        notif(:favourite, b, at: Time.zone.parse('2026-07-10 12:15:00')), # 15 min later — past 10-min default
       ]
 
       groups = described_class.for(notifications)
@@ -52,7 +52,7 @@ RSpec.describe Nudges::Aggregator do
 
       notifications = [
         notif(:favourite, a, at: Time.zone.parse('2026-07-10 12:00:00')),
-        notif(:reblog, a,   at: Time.zone.parse('2026-07-10 12:01:00')),
+        notif(:reblog, a, at: Time.zone.parse('2026-07-10 12:01:00')),
       ]
 
       groups = described_class.for(notifications)

@@ -38,8 +38,8 @@ namespace :kronk do
 
   desc 'Seed a default Timeline profile section for local accounts that have none (2.0.0 backfill)'
   task backfill_profile_sections: :environment do
-    scope = Account.local.left_joins(:profile_sections)
-                   .where(profile_sections: { id: nil })
+    scope = Account.local.where.missing(:profile_sections)
+
     total = scope.count
     puts "Backfilling profile sections for #{total} local accounts…"
 

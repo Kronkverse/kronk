@@ -26,7 +26,7 @@ RSpec.describe Kronk::TuneInGate do
 
     it 'passes plain toots (no korner projection) through even when the account has tune-outs' do
       account.tune_out!(:kommons)
-      status = Fabricate(:status)  # post_type: normal, no proposal
+      status = Fabricate(:status) # post_type: normal, no proposal
       expect(described_class.filter(account, [status])).to eq([status])
     end
 

@@ -45,9 +45,9 @@ RSpec.describe Kronk::FeatureFlags do
 
     it 'restores state when the block raises' do
       seed(example: false)
-      expect {
+      expect do
         described_class.with_flag(example: true) { raise 'boom' }
-      }.to raise_error('boom')
+      end.to raise_error('boom')
       expect(described_class.enabled?(:example)).to be false
     end
   end

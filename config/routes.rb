@@ -315,7 +315,7 @@ Rails.application.routes.draw do
   # Kronk organisation space (§O) — served at /kronk/* from markdown
   # under content/kronk/. The wordmark in the app chrome links here.
   get '/kronk', to: 'kronk#show', defaults: { page: 'about' }
-  get '/kronk/:page', to: 'kronk#show', constraints: { page: /[a-z0-9\-]+(?:\/[a-z0-9\-]+)?/ }
+  get '/kronk/:page', to: 'kronk#show', constraints: { page: %r{[a-z0-9-]+(?:/[a-z0-9-]+)?} }
 
   draw(:web_app)
 

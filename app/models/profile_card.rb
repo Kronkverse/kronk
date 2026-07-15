@@ -73,7 +73,7 @@ class ProfileCard < ApplicationRecord
       # to the connections gate — a slightly narrower audience than the
       # designed behaviour but never leaks content wider than intended.
       viewer && mutual_follow?(viewer)
-    else  # only_me — already handled by the owner check above
+    else # only_me — already handled by the owner check above
       false
     end
   end

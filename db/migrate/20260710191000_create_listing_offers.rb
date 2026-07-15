@@ -8,8 +8,8 @@ class CreateListingOffers < ActiveRecord::Migration[8.0]
       t.references :listing, null: false, foreign_key: { on_delete: :cascade }
       t.references :offerer, null: false, foreign_key: { to_table: :accounts, on_delete: :cascade }
       t.text       :message
-      t.integer    :amount_cents             # nil = accept listed price
-      t.string     :state, default: 'pending', null: false  # pending | accepted | declined | withdrawn | expired
+      t.integer    :amount_cents # nil = accept listed price
+      t.string     :state, default: 'pending', null: false # pending | accepted | declined | withdrawn | expired
 
       t.timestamps
     end

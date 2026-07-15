@@ -24,7 +24,7 @@ RSpec.describe 'Nudges Activity' do
 
       get api_v1_nudges_activity_index_path, headers: headers
 
-      expect(response.parsed_body.pluck('type')).not_to include('mention')
+      expect(response.parsed_body.pluck('type')).to_not include('mention')
     end
 
     it 'aggregates repeat notifications into a single group' do

@@ -48,13 +48,13 @@ class Api::V1::Nudges::ActivityController < Api::BaseController
     latest = group.notifications.last
 
     {
-      id:           "#{group.type}-#{group.subject_type}-#{group.subject_id}-#{latest.id}",
-      type:         group.type,
+      id: "#{group.type}-#{group.subject_type}-#{group.subject_id}-#{latest.id}",
+      type: group.type,
       subject_type: group.subject_type,
-      subject_id:   group.subject_id&.to_s,
-      count:        group.count,
-      latest_at:    group.latest_at.iso8601,
-      actors:       serialized_actors(group.actors),
+      subject_id: group.subject_id&.to_s,
+      count: group.count,
+      latest_at: group.latest_at.iso8601,
+      actors: serialized_actors(group.actors),
       notification: ActiveModelSerializers::SerializableResource.new(
         latest,
         serializer: REST::NotificationSerializer

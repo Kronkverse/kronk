@@ -27,9 +27,7 @@ class Api::V1::Profile::CardsController < Api::BaseController
   def update
     card_type = params[:card_type]
 
-    unless ProfileCard::CARD_TYPES.include?(card_type)
-      return render json: { error: "unknown card_type: #{card_type}" }, status: 422
-    end
+    return render json: { error: "unknown card_type: #{card_type}" }, status: 422 unless ProfileCard::CARD_TYPES.include?(card_type)
 
     card = current_account.profile_cards.find_or_initialize_by(card_type: card_type)
     card.assign_attributes(card_update_params)
@@ -83,6 +81,6 @@ class Api::V1::Profile::CardsController < Api::BaseController
   def require_composer_flag!
     return if Kronk::FeatureFlags.enabled?(:profile_composer)
 
-    render json: { error: 'profile_composer feature not enabled' }, status: :not_found
+    render json: { error: 'profile_composer feature not enabled' }, status: 404
   end
 end

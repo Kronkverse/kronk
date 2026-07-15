@@ -183,7 +183,7 @@ namespace :api, format: false do
       resource :notifications, only: [:show, :update], controller: :notifications
       resource :privacy, only: [:show, :update], controller: :privacy
     end
-    resources :korners, only: [:index, :show], constraints: { id: /[^\/]+/ } do
+    resources :korners, only: [:index, :show], constraints: { id: %r{[^/]+} } do
       member do
         # Tune-out is per-account per-korner (spec §N.5). Present = tuned
         # out. Idempotent create/destroy so the button can toggle safely.

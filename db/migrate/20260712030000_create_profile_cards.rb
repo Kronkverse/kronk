@@ -16,7 +16,7 @@ class CreateProfileCards < ActiveRecord::Migration[8.0]
   def change
     create_table :profile_cards do |t|
       t.references :account, null: false, foreign_key: { on_delete: :cascade }
-      t.string     :card_type,  null: false
+      t.string     :card_type, null: false
       t.text       :body
       t.integer    :visibility, null: false, default: 1 # kronk (local)
       t.integer    :position,   null: false, default: 0
