@@ -21,7 +21,7 @@ const messages = defineMessages({
   title: { id: 'connections.title', defaultMessage: 'Connections' },
 });
 
-interface FollowRequestJSON extends ApiAccountJSON {}
+type FollowRequestJSON = ApiAccountJSON;
 
 // Kronk profile subview at /@:acct/connections. When viewing your own
 // profile, it surfaces pending follow requests (Kronk defaults new

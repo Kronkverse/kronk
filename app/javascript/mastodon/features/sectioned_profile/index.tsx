@@ -833,11 +833,12 @@ const HighlightsCard: React.FC<{
 const HighlightTile: React.FC<{ status: ApiStatusJSON }> = ({ status }) => {
   const media = status.media_attachments[0];
   const excerpt =
-    status.spoiler_text ||
-    (status.content ?? '')
-      .replace(/<[^>]+>/g, '')
-      .trim()
-      .slice(0, 60);
+    status.spoiler_text.length > 0
+      ? status.spoiler_text
+      : (status.content ?? '')
+          .replace(/<[^>]+>/g, '')
+          .trim()
+          .slice(0, 60);
   // Mastodon's JSON API uses `favourites_count` (British spelling);
   // the local TS type uses `favorites_count`. Handle both to be safe.
   const raw = status as unknown as {
@@ -855,7 +856,7 @@ const HighlightTile: React.FC<{ status: ApiStatusJSON }> = ({ status }) => {
         }
       />
       <div className='sectioned-profile__highlight-cap'>
-        <b>{excerpt || '…'}</b>
+        <b>{excerpt.length > 0 ? excerpt : '…'}</b>
         <span>♥ {favCount}</span>
       </div>
     </a>

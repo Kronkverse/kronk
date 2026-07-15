@@ -33,7 +33,7 @@ const KornerCard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
   const [tunedIn, setTunedIn] = useState(korner.tuned_in !== false);
   const [saving, setSaving] = useState(false);
 
-  const toggleTuneIn = useCallback(
+  const toggleTuneInInner = useCallback(
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
@@ -55,6 +55,11 @@ const KornerCard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
       }
     },
     [korner.slug, saving, tunedIn],
+  );
+
+  const toggleTuneIn = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (e) => { void toggleTuneInInner(e); },
+    [toggleTuneInInner],
   );
 
   const stopClick = useCallback((e: React.MouseEvent) => {
