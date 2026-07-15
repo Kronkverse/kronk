@@ -24,7 +24,11 @@ module Kronk
       def filter(hits, viewer)
         by_type = hits.group_by { |h| h[:type]&.to_sym }
 
-        Search.new(
+        # `::Search` is Mastodon's top-level result presenter. The leading
+        # `::` is required: inside `Kronk::Search`, a bare `Search` resolves
+        # to this enclosing module (which has no `.new`) — the NoMethodError
+        # only surfaces on the meilisearch path, which CI's null adapter skips.
+        ::Search.new(
           accounts: filter_accounts(by_type[:accounts], viewer),
           statuses: filter_statuses(by_type[:statuses], viewer),
           hashtags: filter_hashtags(by_type[:kategories], viewer)
