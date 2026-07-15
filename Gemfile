@@ -28,6 +28,7 @@ gem 'bootsnap', '~> 1.18.0', require: false
 gem 'browser'
 gem 'charlock_holmes', '~> 0.7.7'
 gem 'chewy', '~> 7.3'
+gem 'meilisearch', '~> 0.30' # Kronk 2.0 search backend — see lib/kronk/search
 gem 'devise'
 gem 'devise-two-factor'
 
