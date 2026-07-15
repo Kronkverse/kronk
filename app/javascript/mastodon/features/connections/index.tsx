@@ -42,7 +42,7 @@ export const Connections = () => {
   const viewingOwnProfile =
     account &&
     identity.accountId &&
-    String(account.id) === String(identity.accountId);
+    account.id === identity.accountId;
 
   useEffect(() => {
     if (!acct) return;
@@ -72,7 +72,7 @@ export const Connections = () => {
         setFollowing(followingRes);
 
         // Follow requests are viewer-scoped — only load when viewing own profile.
-        if (String(accountRes.id) === String(identity.accountId)) {
+        if (accountRes.id === identity.accountId) {
           const requestsRes = await apiRequestGet<FollowRequestJSON[]>(
             'v1/follow_requests',
             { limit: 40 },
