@@ -40,9 +40,7 @@ export const Connections = () => {
   const [busy, setBusy] = useState<string | null>(null);
 
   const viewingOwnProfile =
-    account &&
-    identity.accountId &&
-    account.id === identity.accountId;
+    account && identity.accountId && account.id === identity.accountId;
 
   useEffect(() => {
     if (!acct) return;
@@ -121,13 +119,12 @@ export const Connections = () => {
     }
   };
 
-  const handleAuthorize = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
-    (e) => {
-      const id = e.currentTarget.dataset.reqId;
-      if (id) void authorize(id);
-    },
-    [],
-  );
+  const handleAuthorize = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >((e) => {
+    const id = e.currentTarget.dataset.reqId;
+    if (id) void authorize(id);
+  }, []);
 
   const handleReject = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
     (e) => {
@@ -305,4 +302,3 @@ export const Connections = () => {
     </Column>
   );
 };
-

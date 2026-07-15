@@ -290,4 +290,3 @@ export const StyleGuide = () => (
     </div>
   </Column>
 );
-

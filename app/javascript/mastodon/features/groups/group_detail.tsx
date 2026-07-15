@@ -123,14 +123,23 @@ export const GroupDetail = () => {
     }
   }, [id]);
 
-  const handleJoin = useCallback(() => { void doJoin(); }, [doJoin]);
-  const handleLeave = useCallback(() => { void doLeave(); }, [doLeave]);
-  const handleArchive = useCallback(() => { void doArchive(); }, [doArchive]);
-  const handlePost = useCallback(() => { void doPost(); }, [doPost]);
-  const handleComposerChange = useCallback<React.ChangeEventHandler<HTMLTextAreaElement>>(
-    (e) => { setComposerText(e.target.value); },
-    [],
-  );
+  const handleJoin = useCallback(() => {
+    void doJoin();
+  }, [doJoin]);
+  const handleLeave = useCallback(() => {
+    void doLeave();
+  }, [doLeave]);
+  const handleArchive = useCallback(() => {
+    void doArchive();
+  }, [doArchive]);
+  const handlePost = useCallback(() => {
+    void doPost();
+  }, [doPost]);
+  const handleComposerChange = useCallback<
+    React.ChangeEventHandler<HTMLTextAreaElement>
+  >((e) => {
+    setComposerText(e.target.value);
+  }, []);
 
   return (
     <Column bindToDocument label={intl.formatMessage(messages.title)}>
@@ -286,4 +295,3 @@ export const GroupDetail = () => {
     </Column>
   );
 };
-

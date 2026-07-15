@@ -44,7 +44,11 @@ export const ScopeChip: React.FC<Props> = ({ scope, onWiden }) => {
     <div className='kronk-search__scope-chip' role='status'>
       <span className='kronk-search__scope-label'>{label}</span>
       {scope.kind !== 'universal' && onWiden && (
-        <button type='button' className='kronk-search__scope-widen' onClick={onWiden}>
+        <button
+          type='button'
+          className='kronk-search__scope-widen'
+          onClick={onWiden}
+        >
           {intl.formatMessage(messages.widen)}
         </button>
       )}

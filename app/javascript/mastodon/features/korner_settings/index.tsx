@@ -13,7 +13,11 @@ import { useParams, Link } from 'react-router-dom';
 
 import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
-import api, { apiRequestGet, apiRequestPost, apiRequestDelete } from 'mastodon/api';
+import api, {
+  apiRequestGet,
+  apiRequestPost,
+  apiRequestDelete,
+} from 'mastodon/api';
 import type {
   ApiKornerSettingJSON,
   ApiKornerNotificationTypeJSON,
@@ -68,12 +72,19 @@ const BooleanWidget: React.FC<{
   ariaLabel?: string;
 }> = ({ value, onChange, ariaLabel }) => {
   const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
-    (e) => { onChange(e.target.checked); },
+    (e) => {
+      onChange(e.target.checked);
+    },
     [onChange],
   );
   return (
     <label className='korner-settings__toggle'>
-      <input type='checkbox' checked={value} onChange={handleChange} aria-label={ariaLabel} />
+      <input
+        type='checkbox'
+        checked={value}
+        onChange={handleChange}
+        aria-label={ariaLabel}
+      />
       <span className='korner-settings__toggle-track' aria-hidden='true' />
     </label>
   );
@@ -86,7 +97,12 @@ const EnumWidget: React.FC<{
 }> = ({ options, value, onChange }) => {
   const handleChange = useCallback<
     React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement>
-  >((e) => { onChange(e.currentTarget.value); }, [onChange]);
+  >(
+    (e) => {
+      onChange(e.currentTarget.value);
+    },
+    [onChange],
+  );
   // Spec §K.4: radios when ≤3 options, dropdown otherwise.
   if (options.length <= 3) {
     return (
@@ -156,7 +172,9 @@ const DurationWidget: React.FC<{
 }> = ({ options, value, onChange }) => {
   const presets = options?.length ? options : ['PT15M', 'PT1H', 'P1D'];
   const handleChange = useCallback<React.ChangeEventHandler<HTMLSelectElement>>(
-    (e) => { onChange(e.currentTarget.value); },
+    (e) => {
+      onChange(e.currentTarget.value);
+    },
     [onChange],
   );
   return (
@@ -170,26 +188,32 @@ const DurationWidget: React.FC<{
   );
 };
 
-const StringInput: React.FC<{ value: unknown; onChange: (v: unknown) => void }> = ({
-  value,
-  onChange,
-}) => {
+const StringInput: React.FC<{
+  value: unknown;
+  onChange: (v: unknown) => void;
+}> = ({ value, onChange }) => {
   const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
-    (e) => { onChange(e.target.value); },
+    (e) => {
+      onChange(e.target.value);
+    },
     [onChange],
   );
   return <input type='text' value={asString(value)} onChange={handleChange} />;
 };
 
-const NumberInput: React.FC<{ value: unknown; onChange: (v: unknown) => void }> = ({
-  value,
-  onChange,
-}) => {
+const NumberInput: React.FC<{
+  value: unknown;
+  onChange: (v: unknown) => void;
+}> = ({ value, onChange }) => {
   const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
-    (e) => { onChange(Number(e.target.value)); },
+    (e) => {
+      onChange(Number(e.target.value));
+    },
     [onChange],
   );
-  return <input type='number' value={Number(value ?? 0)} onChange={handleChange} />;
+  return (
+    <input type='number' value={Number(value ?? 0)} onChange={handleChange} />
+  );
 };
 
 // ---- setting row -----------------------------------------------------------
@@ -202,7 +226,7 @@ const SettingRow: React.FC<{
   const label = setting.label ?? humanize(setting.name);
   const description = setting.description;
   const options = Array.isArray(setting.options)
-    ? (setting.options).map(String)
+    ? setting.options.map(String)
     : [];
 
   return (
@@ -210,7 +234,11 @@ const SettingRow: React.FC<{
       <div className='korner-settings__row-header'>
         <span className='korner-settings__label'>{label}</span>
         {setting.kind === 'boolean' && (
-          <BooleanWidget value={value === true} onChange={onChange} ariaLabel={label} />
+          <BooleanWidget
+            value={value === true}
+            onChange={onChange}
+            ariaLabel={label}
+          />
         )}
       </div>
       {description && <p className='korner-settings__hint'>{description}</p>}
@@ -254,19 +282,27 @@ const NotificationPrefRow: React.FC<{
   onSet: (name: string, value: boolean) => void;
 }> = ({ notif, checked, onSet }) => {
   const handleChange = useCallback(
-    (v: boolean) => { onSet(notif.name, v); },
+    (v: boolean) => {
+      onSet(notif.name, v);
+    },
     [notif.name, onSet],
   );
   return (
     <div className='korner-settings__row'>
       <div className='korner-settings__row-header'>
         <span className='korner-settings__label'>{humanize(notif.name)}</span>
-        <BooleanWidget value={checked} onChange={handleChange} ariaLabel={humanize(notif.name)} />
+        <BooleanWidget
+          value={checked}
+          onChange={handleChange}
+          ariaLabel={humanize(notif.name)}
+        />
       </div>
       {notif.subject_type && (
         <p className='korner-settings__hint'>
           Subject: {notif.subject_type}
-          {notif.interactive === false ? ' · passive notice' : ' · interactive nudge'}
+          {notif.interactive === false
+            ? ' · passive notice'
+            : ' · interactive nudge'}
         </p>
       )}
     </div>
@@ -279,7 +315,9 @@ const NamedSettingRow: React.FC<{
   onSet: (name: string, value: unknown) => void;
 }> = ({ setting, value, onSet }) => {
   const handleChange = useCallback(
-    (v: unknown) => { onSet(setting.name, v); },
+    (v: unknown) => {
+      onSet(setting.name, v);
+    },
     [setting.name, onSet],
   );
   return <SettingRow setting={setting} value={value} onChange={handleChange} />;
@@ -340,11 +378,15 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
             );
             setState(res.data as ServerSettings);
             setStatus('saved');
-            setTimeout(() => { setStatus('idle'); }, 1200);
+            setTimeout(() => {
+              setStatus('idle');
+            }, 1200);
           } catch (e: unknown) {
             setError(e instanceof Error ? e.message : String(e));
             setStatus('error');
-            setTimeout(() => { setStatus('idle'); }, 2000);
+            setTimeout(() => {
+              setStatus('idle');
+            }, 2000);
           }
         })();
       }, 500);
@@ -392,11 +434,15 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
         await apiRequestPost(`v1/korners/${slug}/tune_out`, {});
       }
       setStatus('saved');
-      setTimeout(() => { setStatus('idle'); }, 1200);
+      setTimeout(() => {
+        setStatus('idle');
+      }, 1200);
     } catch {
       setState((prev) => (prev ? { ...prev, tuned_in: !next } : prev));
       setStatus('error');
-      setTimeout(() => { setStatus('idle'); }, 2000);
+      setTimeout(() => {
+        setStatus('idle');
+      }, 2000);
     }
   }, [slug, state]);
 
@@ -540,4 +586,3 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
     </Column>
   );
 };
-

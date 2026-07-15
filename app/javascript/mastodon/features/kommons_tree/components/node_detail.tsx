@@ -8,43 +8,78 @@ import { findNode } from '../data/nodes';
 const messages = defineMessages({
   url: { id: 'kommons_tree.node.url', defaultMessage: 'URL' },
   status: { id: 'kommons_tree.node.status', defaultMessage: 'Status' },
-  file: { id: 'kommons_tree.node.file', defaultMessage: 'Plant feedback on this page' },
+  file: {
+    id: 'kommons_tree.node.file',
+    defaultMessage: 'Plant feedback on this page',
+  },
   empty: {
     id: 'kommons_tree.node.empty',
     defaultMessage: 'No open proposals on this page yet. Plant the first one.',
   },
   mockOpen: {
     id: 'kommons_tree.node.mock_open',
-    defaultMessage: '{count, plural, one {# open proposal} other {# open proposals}} on this page (backend pending).',
+    defaultMessage:
+      '{count, plural, one {# open proposal} other {# open proposals}} on this page (backend pending).',
   },
   lifecycleLive: { id: 'kommons_tree.lifecycle.live', defaultMessage: 'Live' },
   lifecycleSoon: { id: 'kommons_tree.lifecycle.soon', defaultMessage: 'Soon' },
-  lifecycleDeprecated: { id: 'kommons_tree.lifecycle.deprecated', defaultMessage: 'Deprecated' },
-  lifecycleHidden: { id: 'kommons_tree.lifecycle.hidden', defaultMessage: 'Hidden' },
+  lifecycleDeprecated: {
+    id: 'kommons_tree.lifecycle.deprecated',
+    defaultMessage: 'Deprecated',
+  },
+  lifecycleHidden: {
+    id: 'kommons_tree.lifecycle.hidden',
+    defaultMessage: 'Hidden',
+  },
   connectionsHeader: {
     id: 'kommons_tree.node.connections_header',
     defaultMessage: '{count, plural, one {# connection} other {# connections}}',
   },
   connectionsHint: {
     id: 'kommons_tree.node.connections_hint',
-    defaultMessage: 'Links to other pages \u2014 event bus, feed projection, shared settings.',
+    defaultMessage:
+      'Links to other pages \u2014 event bus, feed projection, shared settings.',
   },
-  linkKindCreates: { id: 'kommons_tree.link.creates', defaultMessage: 'creates' },
-  linkKindListedOn: { id: 'kommons_tree.link.listed_on', defaultMessage: 'listed on' },
-  linkKindProjectsTo: { id: 'kommons_tree.link.projects_to', defaultMessage: 'projects to' },
-  linkKindListensTo: { id: 'kommons_tree.link.listens_to', defaultMessage: 'listens to' },
-  linkKindSettingsFor: { id: 'kommons_tree.link.settings_for', defaultMessage: 'settings for' },
-  linkKindRelated: { id: 'kommons_tree.link.related', defaultMessage: 'related' },
+  linkKindCreates: {
+    id: 'kommons_tree.link.creates',
+    defaultMessage: 'creates',
+  },
+  linkKindListedOn: {
+    id: 'kommons_tree.link.listed_on',
+    defaultMessage: 'listed on',
+  },
+  linkKindProjectsTo: {
+    id: 'kommons_tree.link.projects_to',
+    defaultMessage: 'projects to',
+  },
+  linkKindListensTo: {
+    id: 'kommons_tree.link.listens_to',
+    defaultMessage: 'listens to',
+  },
+  linkKindSettingsFor: {
+    id: 'kommons_tree.link.settings_for',
+    defaultMessage: 'settings for',
+  },
+  linkKindRelated: {
+    id: 'kommons_tree.link.related',
+    defaultMessage: 'related',
+  },
 });
 
 const linkKindMessage = (kind: LinkKind) => {
   switch (kind) {
-    case 'creates': return messages.linkKindCreates;
-    case 'listed_on': return messages.linkKindListedOn;
-    case 'projects_to': return messages.linkKindProjectsTo;
-    case 'listens_to': return messages.linkKindListensTo;
-    case 'settings_for': return messages.linkKindSettingsFor;
-    case 'related': return messages.linkKindRelated;
+    case 'creates':
+      return messages.linkKindCreates;
+    case 'listed_on':
+      return messages.linkKindListedOn;
+    case 'projects_to':
+      return messages.linkKindProjectsTo;
+    case 'listens_to':
+      return messages.linkKindListensTo;
+    case 'settings_for':
+      return messages.linkKindSettingsFor;
+    case 'related':
+      return messages.linkKindRelated;
   }
 };
 
@@ -55,7 +90,12 @@ interface Props {
   onNavigate?: (nodeId: string) => void;
 }
 
-export const NodeDetail: React.FC<Props> = ({ node, nodes, onFile, onNavigate }) => {
+export const NodeDetail: React.FC<Props> = ({
+  node,
+  nodes,
+  onFile,
+  onNavigate,
+}) => {
   const intl = useIntl();
   const [connectionsOpen, setConnectionsOpen] = useState(false);
 
@@ -69,13 +109,18 @@ export const NodeDetail: React.FC<Props> = ({ node, nodes, onFile, onNavigate })
   const links = node.links ?? [];
 
   const toggleConnections = useCallback(() => {
-    setConnectionsOpen(v => !v);
+    setConnectionsOpen((v) => !v);
   }, []);
 
-  const handleTargetClick = useCallback<React.MouseEventHandler<HTMLButtonElement>>((e) => {
-    const id = e.currentTarget.dataset.nodeId;
-    if (id && onNavigate) onNavigate(id);
-  }, [onNavigate]);
+  const handleTargetClick = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >(
+    (e) => {
+      const id = e.currentTarget.dataset.nodeId;
+      if (id && onNavigate) onNavigate(id);
+    },
+    [onNavigate],
+  );
 
   return (
     <div className='kommons-tree__detail'>
@@ -84,12 +129,16 @@ export const NodeDetail: React.FC<Props> = ({ node, nodes, onFile, onNavigate })
       <dl className='kommons-tree__detail-meta'>
         <div className='kommons-tree__detail-row'>
           <dt>{intl.formatMessage(messages.url)}</dt>
-          <dd><code>{node.url}</code></dd>
+          <dd>
+            <code>{node.url}</code>
+          </dd>
         </div>
         <div className='kommons-tree__detail-row'>
           <dt>{intl.formatMessage(messages.status)}</dt>
           <dd>
-            <span className={`kommons-tree__badge kommons-tree__badge--${node.lifecycle}`}>
+            <span
+              className={`kommons-tree__badge kommons-tree__badge--${node.lifecycle}`}
+            >
               {lifecycleLabel}
             </span>
           </dd>
@@ -97,22 +146,39 @@ export const NodeDetail: React.FC<Props> = ({ node, nodes, onFile, onNavigate })
       </dl>
 
       <div className='kommons-tree__detail-proposals'>
-        {node.openProposals > 0
-          ? <p>{intl.formatMessage(messages.mockOpen, { count: node.openProposals })}</p>
-          : <p className='kommons-tree__detail-empty'>{intl.formatMessage(messages.empty)}</p>}
+        {node.openProposals > 0 ? (
+          <p>
+            {intl.formatMessage(messages.mockOpen, {
+              count: node.openProposals,
+            })}
+          </p>
+        ) : (
+          <p className='kommons-tree__detail-empty'>
+            {intl.formatMessage(messages.empty)}
+          </p>
+        )}
       </div>
 
       {links.length > 0 && (
-        <div className={`kommons-tree__connections kommons-tree__connections--${connectionsOpen ? 'open' : 'closed'}`}>
+        <div
+          className={`kommons-tree__connections kommons-tree__connections--${connectionsOpen ? 'open' : 'closed'}`}
+        >
           <button
             type='button'
             className='kommons-tree__connections-toggle'
             aria-expanded={connectionsOpen}
             onClick={toggleConnections}
           >
-            <span className='kommons-tree__connections-chevron' aria-hidden='true'>{connectionsOpen ? '\u25BE' : '\u25B8'}</span>
+            <span
+              className='kommons-tree__connections-chevron'
+              aria-hidden='true'
+            >
+              {connectionsOpen ? '\u25BE' : '\u25B8'}
+            </span>
             <span className='kommons-tree__connections-count'>
-              {intl.formatMessage(messages.connectionsHeader, { count: links.length })}
+              {intl.formatMessage(messages.connectionsHeader, {
+                count: links.length,
+              })}
             </span>
           </button>
 
@@ -126,18 +192,32 @@ export const NodeDetail: React.FC<Props> = ({ node, nodes, onFile, onNavigate })
                   const target = findNode(nodes, link.to);
                   const targetLabel = target?.label ?? link.to;
                   return (
-                    <li key={`${link.to}-${i}`} className='kommons-tree__connection'>
-                      <span className={`kommons-tree__connection-kind kommons-tree__connection-kind--${link.kind}`}>
+                    <li
+                      key={`${link.to}-${i}`}
+                      className='kommons-tree__connection'
+                    >
+                      <span
+                        className={`kommons-tree__connection-kind kommons-tree__connection-kind--${link.kind}`}
+                      >
                         {intl.formatMessage(linkKindMessage(link.kind))}
                       </span>
-                      {target && onNavigate
-                        ? (
-                          <button type='button' data-node-id={link.to} className='kommons-tree__connection-target' onClick={handleTargetClick}>
-                            {targetLabel}
-                          </button>
-                        )
-                        : <span className='kommons-tree__connection-target'>{targetLabel}</span>}
-                      <span className='kommons-tree__connection-desc'>{link.description}</span>
+                      {target && onNavigate ? (
+                        <button
+                          type='button'
+                          data-node-id={link.to}
+                          className='kommons-tree__connection-target'
+                          onClick={handleTargetClick}
+                        >
+                          {targetLabel}
+                        </button>
+                      ) : (
+                        <span className='kommons-tree__connection-target'>
+                          {targetLabel}
+                        </span>
+                      )}
+                      <span className='kommons-tree__connection-desc'>
+                        {link.description}
+                      </span>
                     </li>
                   );
                 })}
@@ -147,7 +227,11 @@ export const NodeDetail: React.FC<Props> = ({ node, nodes, onFile, onNavigate })
         </div>
       )}
 
-      <button type='button' className='button button--kommons-tree' onClick={onFile}>
+      <button
+        type='button'
+        className='button button--kommons-tree'
+        onClick={onFile}
+      >
         {intl.formatMessage(messages.file)}
       </button>
     </div>

@@ -64,14 +64,17 @@ const InviteModal: React.FC<InviteModalProps> = ({ onClose }) => {
     if (inviteUrl) {
       void navigator.clipboard.writeText(inviteUrl);
       setCopied(true);
-      setTimeout(() => { setCopied(false); }, 2000);
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
     }
   }, [inviteUrl]);
 
-  const handleSelectAll = useCallback<React.MouseEventHandler<HTMLInputElement>>(
-    (e) => { e.currentTarget.select(); },
-    [],
-  );
+  const handleSelectAll = useCallback<
+    React.MouseEventHandler<HTMLInputElement>
+  >((e) => {
+    e.currentTarget.select();
+  }, []);
 
   return (
     <div className='modal-root__modal safety-action-modal invite-modal'>

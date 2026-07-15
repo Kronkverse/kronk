@@ -96,12 +96,11 @@ const KronkSearch: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     [record],
   );
 
-  const handleInputChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
-    (e) => {
-      setQuery(e.target.value);
-    },
-    [],
-  );
+  const handleInputChange = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((e) => {
+    setQuery(e.target.value);
+  }, []);
 
   const handleSubmit = useCallback<React.FormEventHandler<HTMLFormElement>>(
     (e) => {

@@ -171,7 +171,9 @@ export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = ({
   );
 
   const handleSet = useCallback(
-    (name: string, value: unknown) => { void save(name, value); },
+    (name: string, value: unknown) => {
+      void save(name, value);
+    },
     [save],
   );
 
@@ -245,4 +247,3 @@ export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = ({
     </Column>
   );
 };
-

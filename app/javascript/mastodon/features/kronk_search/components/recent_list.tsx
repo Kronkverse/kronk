@@ -24,7 +24,12 @@ interface Props {
   onClear: () => void;
 }
 
-export const RecentList: React.FC<Props> = ({ queries, onPick, onForget, onClear }) => {
+export const RecentList: React.FC<Props> = ({
+  queries,
+  onPick,
+  onForget,
+  onClear,
+}) => {
   const intl = useIntl();
 
   const handlePick = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
@@ -50,7 +55,11 @@ export const RecentList: React.FC<Props> = ({ queries, onPick, onForget, onClear
     <div className='kronk-search__recent'>
       <div className='kronk-search__recent-header'>
         <h3>{intl.formatMessage(messages.heading)}</h3>
-        <button type='button' className='kronk-search__recent-clear' onClick={onClear}>
+        <button
+          type='button'
+          className='kronk-search__recent-clear'
+          onClick={onClear}
+        >
           {intl.formatMessage(messages.clear)}
         </button>
       </div>
@@ -70,7 +79,9 @@ export const RecentList: React.FC<Props> = ({ queries, onPick, onForget, onClear
               className='kronk-search__recent-forget'
               data-query={q}
               onClick={handleForget}
-              aria-label={intl.formatMessage(messages.forgetLabel, { query: q })}
+              aria-label={intl.formatMessage(messages.forgetLabel, {
+                query: q,
+              })}
               title={intl.formatMessage(messages.forgetLabel, { query: q })}
             >
               ×

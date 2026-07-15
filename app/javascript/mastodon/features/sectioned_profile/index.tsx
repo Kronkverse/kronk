@@ -286,7 +286,6 @@ export const SectionedProfile = () => {
       } catch {
         // Log but don't setError — the rest of the surface can render.
         if (!cancelled) {
-           
           console.warn(
             'SectionedProfile: sections fetch failed; rendering empty state',
           );
@@ -1452,4 +1451,3 @@ const FriendshipPanel: React.FC = () => (
     </p>
   </div>
 );
-

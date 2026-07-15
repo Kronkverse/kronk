@@ -36,17 +36,23 @@ export const Groups = () => {
     governance_framework: 'peer_support',
   });
 
-  const refetch = useCallback(async (nextScope?: Scope) => {
-    setLoading(true);
-    try {
-      const data = await apiGetGroups({ limit: 40, scope: nextScope ?? scope });
-      setGroups(data);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoading(false);
-    }
-  }, [scope]);
+  const refetch = useCallback(
+    async (nextScope?: Scope) => {
+      setLoading(true);
+      try {
+        const data = await apiGetGroups({
+          limit: 40,
+          scope: nextScope ?? scope,
+        });
+        setGroups(data);
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : String(e));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [scope],
+  );
 
   useEffect(() => {
     void refetch();
@@ -71,25 +77,27 @@ export const Groups = () => {
   }, [form, refetch]);
 
   // Stable handlers so JSX doesn't re-create arrows every render.
-  const handleScopeClick = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
-    (e) => {
-      const value = e.currentTarget.dataset.scope as Scope | undefined;
-      if (value) setScope(value);
-    },
-    [],
-  );
+  const handleScopeClick = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >((e) => {
+    const value = e.currentTarget.dataset.scope as Scope | undefined;
+    if (value) setScope(value);
+  }, []);
 
   const handleToggleCreating = useCallback(() => {
     setCreating((prev) => !prev);
   }, []);
 
   const handleFieldChange = useCallback<
-    React.ChangeEventHandler<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    React.ChangeEventHandler<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   >((e) => {
     const field = e.currentTarget.dataset.field;
     if (!field) return;
     const value =
-      e.currentTarget instanceof HTMLInputElement && e.currentTarget.type === 'checkbox'
+      e.currentTarget instanceof HTMLInputElement &&
+      e.currentTarget.type === 'checkbox'
         ? e.currentTarget.checked
         : e.currentTarget.value;
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -279,4 +287,3 @@ export const Groups = () => {
     </Column>
   );
 };
-

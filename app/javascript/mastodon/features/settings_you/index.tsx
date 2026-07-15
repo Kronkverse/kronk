@@ -67,4 +67,3 @@ export const SettingsYou: React.FC<{ multiColumn?: boolean }> = ({
     </Column>
   );
 };
-

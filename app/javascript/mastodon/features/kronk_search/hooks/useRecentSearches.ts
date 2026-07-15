@@ -15,7 +15,9 @@ const readStore = (): string[] => {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((q): q is string => typeof q === 'string') : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((q): q is string => typeof q === 'string')
+      : [];
   } catch {
     return [];
   }
@@ -23,7 +25,10 @@ const readStore = (): string[] => {
 
 const writeStore = (queries: string[]) => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(queries.slice(0, MAX_RECENT)));
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(queries.slice(0, MAX_RECENT)),
+    );
   } catch {
     // Best-effort; localStorage may be disabled or full.
   }
@@ -40,7 +45,10 @@ export const useRecentSearches = () => {
     const trimmed = query.trim();
     if (!trimmed) return;
     setRecent((prev) => {
-      const next = [trimmed, ...prev.filter((q) => q !== trimmed)].slice(0, MAX_RECENT);
+      const next = [trimmed, ...prev.filter((q) => q !== trimmed)].slice(
+        0,
+        MAX_RECENT,
+      );
       writeStore(next);
       return next;
     });

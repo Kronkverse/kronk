@@ -142,7 +142,9 @@ export const GenreTagInput: React.FC<Props> = ({
     inputRef.current?.focus();
   }, []);
 
-  const handleRemoveTag = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+  const handleRemoveTag = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >(
     (e) => {
       e.stopPropagation();
       const genre = e.currentTarget.dataset.genre;
@@ -156,10 +158,14 @@ export const GenreTagInput: React.FC<Props> = ({
   }, []);
 
   const handleHideSuggestions = useCallback(() => {
-    setTimeout(() => { setShowSuggestions(false); }, 150);
+    setTimeout(() => {
+      setShowSuggestions(false);
+    }, 150);
   }, []);
 
-  const handleSuggestionMouseDown = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+  const handleSuggestionMouseDown = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >(
     (e) => {
       e.preventDefault();
       const genre = e.currentTarget.dataset.genre;
@@ -174,10 +180,7 @@ export const GenreTagInput: React.FC<Props> = ({
        * Keyboard users already reach the input via Tab, so a keyboard
        * handler here would be redundant, not an accessibility fix. */}
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-      <div
-        className='booth-genre-input__field'
-        onClick={handleFieldClick}
-      >
+      <div className='booth-genre-input__field' onClick={handleFieldClick}>
         {value.map((genre) => (
           <span key={genre} className='booth-genre-input__tag'>
             {genre}

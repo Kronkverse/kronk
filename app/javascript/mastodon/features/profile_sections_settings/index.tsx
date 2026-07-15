@@ -91,10 +91,7 @@ const SortableSectionRow: React.FC<{
         {section.section_type}
       </span>
       <span style={{ flex: 1 }}>{section.title ?? '—'}</span>
-      <button
-        type='button'
-        onClick={handleToggle}
-      >
+      <button type='button' onClick={handleToggle}>
         {section.visible ? 'Hide' : 'Show'}
       </button>
       {section.section_type !== 'timeline' && (
@@ -203,14 +200,20 @@ export const ProfileSectionsSettings = () => {
   );
 
   const handleToggleVisible = useCallback(
-    (id: string, visible: boolean) => { void toggleVisible(id, visible); },
+    (id: string, visible: boolean) => {
+      void toggleVisible(id, visible);
+    },
     [toggleVisible],
   );
   const handleRemove = useCallback(
-    (id: string) => { void remove(id); },
+    (id: string) => {
+      void remove(id);
+    },
     [remove],
   );
-  const handleAddKorner = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+  const handleAddKorner = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >(
     (e) => {
       const slug = e.currentTarget.dataset.slug;
       const name = e.currentTarget.dataset.name;
@@ -218,7 +221,9 @@ export const ProfileSectionsSettings = () => {
     },
     [addKornerSection],
   );
-  const handleAddKategory = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+  const handleAddKategory = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >(
     (e) => {
       const name = e.currentTarget.dataset.name;
       if (name) void addKategorySection(name);
@@ -344,4 +349,3 @@ export const ProfileSectionsSettings = () => {
     </Column>
   );
 };
-

@@ -16,12 +16,12 @@ export type Lifecycle = 'live' | 'soon' | 'deprecated' | 'hidden';
 // Mock until PR 3 derives them from korner-manifest emits/listens/
 // feed_projection.
 export type LinkKind =
-  | 'creates'       // node A's action creates a resource visible on node B
-  | 'listed_on'     // resource from node A appears on node B
-  | 'projects_to'   // node A's content projects into node B's feed
-  | 'listens_to'    // node A subscribes to events emitted by node B
-  | 'settings_for'  // node A configures the surface at node B
-  | 'related';      // catch-all soft link
+  | 'creates' // node A's action creates a resource visible on node B
+  | 'listed_on' // resource from node A appears on node B
+  | 'projects_to' // node A's content projects into node B's feed
+  | 'listens_to' // node A subscribes to events emitted by node B
+  | 'settings_for' // node A configures the surface at node B
+  | 'related'; // catch-all soft link
 
 export interface NodeLink {
   to: string;
@@ -43,7 +43,7 @@ export interface KommonsNode {
 // ── API → UI shape converter ───────────────────────────────────────
 
 export const fromApiNodes = (api: ApiKommonsNode[]): KommonsNode[] =>
-  api.map(n => ({
+  api.map((n) => ({
     id: n.id,
     bucket: n.bucket,
     parent: n.parent ?? undefined,
@@ -81,17 +81,22 @@ const KORNER_LABELS: Record<string, string> = {
 };
 
 export const listKorners = (nodes: KommonsNode[]): KornerSummary[] => {
-  const withParent = nodes.filter((n): n is KommonsNode & { parent: string } => typeof n.parent === 'string');
-  const slugs = Array.from(new Set(withParent.map(n => n.parent)));
+  const withParent = nodes.filter(
+    (n): n is KommonsNode & { parent: string } => typeof n.parent === 'string',
+  );
+  const slugs = Array.from(new Set(withParent.map((n) => n.parent)));
   return slugs
-    .map(slug => {
-      const kornerNodes = nodes.filter(n => n.parent === slug);
-      const openProposals = kornerNodes.reduce((sum, n) => sum + n.openProposals, 0);
-      const anyLive = kornerNodes.some(n => n.lifecycle === 'live');
+    .map((slug) => {
+      const kornerNodes = nodes.filter((n) => n.parent === slug);
+      const openProposals = kornerNodes.reduce(
+        (sum, n) => sum + n.openProposals,
+        0,
+      );
+      const anyLive = kornerNodes.some((n) => n.lifecycle === 'live');
       return {
         slug,
         label: KORNER_LABELS[slug] ?? slug,
-        lifecycle: anyLive ? 'live' as const : 'soon' as const,
+        lifecycle: anyLive ? ('live' as const) : ('soon' as const),
         nodeCount: kornerNodes.length,
         openProposals,
       };
@@ -99,16 +104,23 @@ export const listKorners = (nodes: KommonsNode[]): KornerSummary[] => {
     .sort((a, b) => a.label.localeCompare(b.label));
 };
 
-export const bucketNodes = (nodes: KommonsNode[], bucket: Bucket, kornerSlug?: string): KommonsNode[] => {
+export const bucketNodes = (
+  nodes: KommonsNode[],
+  bucket: Bucket,
+  kornerSlug?: string,
+): KommonsNode[] => {
   if (bucket === 'hub') {
-    if (kornerSlug) return nodes.filter(n => n.bucket === 'hub' && n.parent === kornerSlug);
-    return nodes.filter(n => n.bucket === 'hub' && !n.parent);
+    if (kornerSlug)
+      return nodes.filter((n) => n.bucket === 'hub' && n.parent === kornerSlug);
+    return nodes.filter((n) => n.bucket === 'hub' && !n.parent);
   }
-  return nodes.filter(n => n.bucket === bucket);
+  return nodes.filter((n) => n.bucket === bucket);
 };
 
-export const findNode = (nodes: KommonsNode[], id: string): KommonsNode | undefined =>
-  nodes.find(n => n.id === id);
+export const findNode = (
+  nodes: KommonsNode[],
+  id: string,
+): KommonsNode | undefined => nodes.find((n) => n.id === id);
 
 export const bucketTotals = (nodes: KommonsNode[]): Record<Bucket, number> => {
   const totals: Record<Bucket, number> = { feed: 0, profile: 0, hub: 0 };

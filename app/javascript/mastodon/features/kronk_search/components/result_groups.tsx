@@ -63,7 +63,9 @@ export const ResultGroups: React.FC<Props> = ({ results }) => {
 
   if (total === 0) {
     return (
-      <p className='kronk-search__empty'>{intl.formatMessage(messages.empty)}</p>
+      <p className='kronk-search__empty'>
+        {intl.formatMessage(messages.empty)}
+      </p>
     );
   }
 
@@ -72,7 +74,9 @@ export const ResultGroups: React.FC<Props> = ({ results }) => {
       {accounts.length > 0 && (
         <section className='kronk-search__group'>
           <h3 className='kronk-search__group-heading'>
-            {intl.formatMessage(messages.accountsHeader, { count: accounts.length })}
+            {intl.formatMessage(messages.accountsHeader, {
+              count: accounts.length,
+            })}
           </h3>
           <ul className='kronk-search__group-list'>
             {accounts.map((a) => (
@@ -90,15 +94,21 @@ export const ResultGroups: React.FC<Props> = ({ results }) => {
       {statuses.length > 0 && (
         <section className='kronk-search__group'>
           <h3 className='kronk-search__group-heading'>
-            {intl.formatMessage(messages.statusesHeader, { count: statuses.length })}
+            {intl.formatMessage(messages.statusesHeader, {
+              count: statuses.length,
+            })}
           </h3>
           <ul className='kronk-search__group-list'>
             {statuses.map((s) => (
               <li key={s.id}>
                 <div className='kronk-search__status'>
-                  <span className='kronk-search__status-author'>@{s.account?.acct}</span>
+                  <span className='kronk-search__status-author'>
+                    @{s.account?.acct}
+                  </span>
                   <p className='kronk-search__status-body'>
-                    {s.spoiler_text && s.spoiler_text.length > 0 ? s.spoiler_text : (s.content ?? '').replace(/<[^>]+>/g, '').slice(0, 140)}
+                    {s.spoiler_text && s.spoiler_text.length > 0
+                      ? s.spoiler_text
+                      : (s.content ?? '').replace(/<[^>]+>/g, '').slice(0, 140)}
                   </p>
                 </div>
               </li>
@@ -110,7 +120,9 @@ export const ResultGroups: React.FC<Props> = ({ results }) => {
       {hashtags.length > 0 && (
         <section className='kronk-search__group'>
           <h3 className='kronk-search__group-heading'>
-            {intl.formatMessage(messages.hashtagsHeader, { count: hashtags.length })}
+            {intl.formatMessage(messages.hashtagsHeader, {
+              count: hashtags.length,
+            })}
           </h3>
           <ul className='kronk-search__group-list'>
             {hashtags.map((t) => (

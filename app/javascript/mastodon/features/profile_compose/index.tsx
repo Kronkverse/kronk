@@ -797,4 +797,3 @@ const Inspector: React.FC<{
     </div>
   );
 };
-
