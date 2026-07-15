@@ -39,8 +39,9 @@ module Kronk
       end
 
       # Bulk reindex — called by the rake task once at deploy time (and
-      # any time the schema of an index changes).
-      def reindex_all(type)
+      # any time the schema of an index changes). Walks `model` in
+      # batches and writes documents to the adapter's backing store.
+      def reindex_all(type, model)
         raise NotImplementedError
       end
     end

@@ -4,6 +4,25 @@
 # forward through draft → live → (reserved | closed). Closing sets
 # `closed_at`; reopening a closed listing means creating a fresh row.
 class Listing < ApplicationRecord
+  include Searchable
+
+  searchable_as :marketplace_listings
+
+  def as_json_for_search
+    {
+      id: id,
+      title: title.to_s,
+      description: description.to_s,
+      category: category.to_s,
+      subcategory: subcategory.to_s,
+      account_id: account_id,
+      state: state,
+      price_currency: price_currency.to_s,
+      price_cents: price_cents.to_i,
+      created_at: created_at&.to_i,
+    }
+  end
+
   CATEGORIES = %w(creation marketplace service).freeze
   STATES     = %w(draft live reserved closed).freeze
 

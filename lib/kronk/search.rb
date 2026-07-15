@@ -16,6 +16,7 @@
 #   - /home/shared/rebuild/memory/project_kronk_rebuild_search_spec_draft.md (spec)
 #   - ~/.claude/plans/kronk-search-implementation-plan.md (this PR = PR 1)
 
+require_relative 'search/index_configs'
 require_relative 'search/adapter'
 require_relative 'search/adapter/null'
 require_relative 'search/adapter/meilisearch'

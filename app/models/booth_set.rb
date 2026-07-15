@@ -1,6 +1,24 @@
 # frozen_string_literal: true
 
 class BoothSet < ApplicationRecord
+  include Searchable
+
+  searchable_as :booth_sets
+
+  def as_json_for_search
+    {
+      id: id,
+      title: title.to_s,
+      artist_name: artist_name.to_s,
+      genre: genre.to_s,
+      event_name: event_name.to_s,
+      account_id: account_id,
+      published: published?,
+      play_count: play_count.to_i,
+      created_at: created_at&.to_i,
+    }
+  end
+
   belongs_to :account
   belongs_to :event, optional: true
   belongs_to :audio_attachment, class_name: 'MediaAttachment', optional: true

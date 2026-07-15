@@ -22,6 +22,22 @@
 class Tag < ApplicationRecord
   include Paginable
   include Reviewable
+  include Searchable
+
+  searchable_as :kategories, if: :curated?
+
+  def as_json_for_search
+    {
+      id: id,
+      name: name.to_s,
+      curated: !curated.nil?,
+      created_at: created_at&.to_i,
+    }
+  end
+
+  def self.reindex_scope
+    curated
+  end
 
   # rubocop:disable Rails/HasAndBelongsToMany
   has_and_belongs_to_many :statuses

@@ -44,6 +44,21 @@ class Status < ApplicationRecord
   include Status::ThreadingConcern
   include Status::Visibility
   include Status::InteractionPolicyConcern
+  include Searchable
+
+  searchable_as :statuses
+
+  def as_json_for_search
+    {
+      id: id,
+      text: text.to_s,
+      spoiler_text: spoiler_text.to_s,
+      account_id: account_id,
+      visibility: visibility,
+      created_at: created_at&.to_i,
+      kategory_names: tags.pluck(:name),
+    }
+  end
 
   MEDIA_ATTACHMENTS_LIMIT = 30
 
