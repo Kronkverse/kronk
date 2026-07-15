@@ -32,7 +32,7 @@ class Api::V1::Nudges::LegacyArchiveController < Api::BaseController
   private
 
   def preloaded_statuses(notifications)
-    ids = notifications.map(&:activity_id).compact.uniq
+    ids = notifications.filter_map(&:activity_id).uniq
     Status.where(id: ids)
   end
 end

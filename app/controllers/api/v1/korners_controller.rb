@@ -241,7 +241,7 @@ class Api::V1::KornersController < Api::BaseController
   end
 
   def coerce_multi_enum(definition, value)
-    options = Array(definition['options']).map(&:to_s).to_set
+    options = Array(definition['options']).to_set(&:to_s)
     Array(value).map(&:to_s).uniq.select { |v| options.include?(v) }
   end
 

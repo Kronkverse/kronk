@@ -87,7 +87,8 @@ module Nudges
     end
 
     def notification_type_window(type)
-      Kronk::KornerRegistry.all.each do |manifest|
+      # KornerRegistry.all returns Array<Manifest> — not AR, so find_each doesn't apply.
+      Kronk::KornerRegistry.all.each do |manifest| # rubocop:disable Rails/FindEach
         next unless manifest.notifications.is_a?(Array)
 
         entry = manifest.notifications.find { |t| t['name'].to_s == type.to_s }

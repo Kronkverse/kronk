@@ -32,11 +32,11 @@ class Group < ApplicationRecord
   end
 
   def seeder?(account)
-    group_memberships.where(role: 'seeder', account_id: account.id).exists?
+    group_memberships.exists?(role: 'seeder', account_id: account.id)
   end
 
   def member?(account)
-    group_memberships.where(account_id: account.id).exists?
+    group_memberships.exists?(account_id: account.id)
   end
 
   def archived?

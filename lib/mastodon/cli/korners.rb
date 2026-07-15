@@ -59,7 +59,7 @@ module Mastodon
 
         if manifest.nil?
           say "No manifest found for slug '#{slug}'."
-          exit(1)
+          exit(1) # rubocop:disable Rails/Exit -- tootctl CLI; exit codes signal drift to CI
         end
 
         say YAML.dump(manifest.to_h.transform_keys(&:to_s))
@@ -83,13 +83,13 @@ module Mastodon
         issues = collect_issues
         if issues.empty?
           say 'No drift detected.'
-          exit(0)
+          exit(0) # rubocop:disable Rails/Exit -- tootctl CLI exit code is the CI signal
         end
 
         issues.each { |line| say line }
         say ''
         say "#{issues.length} #{issues.length == 1 ? 'issue' : 'issues'} found."
-        exit(1)
+        exit(1) # rubocop:disable Rails/Exit -- tootctl CLI exit code is the CI signal
       end
 
       private
@@ -138,8 +138,8 @@ module Mastodon
       def detect_node_issues
         issues = []
         nodes = ::Kronk::NodeRegistry.all
-        node_ids = nodes.map(&:id).to_set
-        korner_slugs = ::Kronk::KornerRegistry.all.map(&:slug).to_set
+        node_ids = nodes.to_set(&:id)
+        korner_slugs = ::Kronk::KornerRegistry.all.to_set(&:slug)
 
         nodes.each do |node|
           issues << "node '#{node.id}': parent slug '#{node.parent}' is not a registered korner" if node.bucket == 'hub' && node.parent.present? && !korner_slugs.include?(node.parent)
@@ -165,7 +165,7 @@ module Mastodon
       # listener will never fire — likely a typo or a dropped emitter.
       def detect_orphan_listens(manifests)
         emitted = manifests.flat_map do |m|
-          Array(m.emits).map { |e| e.is_a?(Hash) ? e['name'] : e }.compact
+          Array(m.emits).filter_map { |e| e.is_a?(Hash) ? e['name'] : e }
         end.to_set
 
         manifests.flat_map do |m|

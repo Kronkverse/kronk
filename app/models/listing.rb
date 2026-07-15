@@ -9,7 +9,7 @@ class Listing < ApplicationRecord
 
   belongs_to :account
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :listing
-  has_many   :listing_photos, -> { order(:position) }, dependent: :destroy
+  has_many   :listing_photos, -> { order(:position) }, dependent: :destroy, inverse_of: :listing
   has_many   :media_attachments, through: :listing_photos
   has_many   :listing_offers, dependent: :destroy
 

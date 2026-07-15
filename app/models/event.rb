@@ -23,7 +23,7 @@ class Event < ApplicationRecord
   validate :end_time_after_start_time
 
   scope :upcoming, -> { where('start_time > ?', Time.now.utc).order(start_time: :asc) }
-  scope :past, -> { where('start_time <= ?', Time.now.utc).order(start_time: :desc) }
+  scope :past, -> { where(start_time: ..Time.now.utc).order(start_time: :desc) }
   scope :in_month, ->(date) { where(start_time: date.all_month) }
   scope :not_cancelled, -> { where(cancelled: false) }
   scope :root_events, -> { where(parent_event_id: nil) }

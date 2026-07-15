@@ -45,7 +45,7 @@ RSpec.describe ProfileCard do
   describe '#visible_to?' do
     subject { described_class.create!(account: owner, card_type: 'about', position: 0, visibility: visibility) }
 
-    context 'everyone' do
+    context 'when visibility is everyone' do
       let(:visibility) { :everyone }
 
       it 'is visible to nil (unauth) viewer' do
@@ -57,7 +57,7 @@ RSpec.describe ProfileCard do
       end
     end
 
-    context 'kronk (local)' do
+    context 'when visibility is kronk (local)' do
       let(:visibility) { :kronk }
 
       it 'is not visible to unauth' do
@@ -73,7 +73,7 @@ RSpec.describe ProfileCard do
       end
     end
 
-    context 'connections' do
+    context 'when visibility is connections' do
       let(:visibility) { :connections }
 
       it 'is not visible without a follow' do
@@ -92,7 +92,7 @@ RSpec.describe ProfileCard do
       end
     end
 
-    context 'vouched (Anthemos placeholder — falls back to connections)' do
+    context 'when visibility is vouched (Anthemos placeholder — falls back to connections)' do
       let(:visibility) { :vouched }
 
       it 'behaves like connections while Anthemos is deferred' do
@@ -102,7 +102,7 @@ RSpec.describe ProfileCard do
       end
     end
 
-    context 'only_me' do
+    context 'when visibility is only_me' do
       let(:visibility) { :only_me }
 
       it 'is not visible to any other account' do

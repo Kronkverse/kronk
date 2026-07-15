@@ -9,7 +9,7 @@ module BoothHelper
     mins  = (total % 3600) / 60
     secs  = total % 60
 
-    if hours > 0
+    if hours.positive?
       "#{hours}:#{mins.to_s.rjust(2, '0')}:#{secs.to_s.rjust(2, '0')}"
     else
       "#{mins}:#{secs.to_s.rjust(2, '0')}"

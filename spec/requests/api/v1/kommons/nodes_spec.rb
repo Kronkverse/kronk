@@ -23,7 +23,7 @@ RSpec.describe 'GET /api/v1/kommons/nodes' do
       expect(response).to have_http_status(200)
 
       body = response.parsed_body
-      ids = body['nodes'].map { |n| n['id'] }
+      ids = body['nodes'].pluck('id')
 
       # Cross-cutting nodes
       expect(ids).to include('feed.home', 'profile.view', 'settings.prefs')
@@ -78,7 +78,7 @@ RSpec.describe 'GET /api/v1/kommons/nodes' do
            params: { proposal: { title: 'x', body: 'y', node_id: 'not-a-node' } },
            headers: headers
 
-      expect(response.status).to eq(422)
+      expect(response).to have_http_status(422)
     end
 
     it 'still accepts proposals without a node_id (classic structural proposals)' do

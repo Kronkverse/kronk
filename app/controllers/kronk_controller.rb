@@ -29,6 +29,11 @@ class KronkController < ApplicationController
   before_action :load_navigation
   before_action :load_content
 
+  # The nav lists every top-level `.md` file that ships in content/kronk.
+  # Ops can drop new pages in — they'll appear in the sidebar without a
+  # code change. Order matches the recommended reading flow.
+  NAV_ORDER = %w(about announcements values contributors governance rules privacy terms contact).freeze
+
   def show; end
 
   private
@@ -40,11 +45,6 @@ class KronkController < ApplicationController
 
     @page_key = 'about'
   end
-
-  # The nav lists every top-level `.md` file that ships in content/kronk.
-  # Ops can drop new pages in — they'll appear in the sidebar without a
-  # code change. Order matches the recommended reading flow.
-  NAV_ORDER = %w(about announcements values contributors governance rules privacy terms contact).freeze
 
   def load_navigation
     keys = CONTENT_ROOT.glob('*.md').map { |p| p.basename('.md').to_s }
@@ -59,7 +59,8 @@ class KronkController < ApplicationController
       @title, @body_html = render_markdown(raw)
     else
       @title = 'Page not found'
-      @body_html = "<p>No content at <code>/kronk/#{@page_key}</code> yet.</p>".html_safe
+      # @page_key is filtered by PAGE_PATTERN in set_page_key — safe to interpolate.
+      @body_html = "<p>No content at <code>/kronk/#{@page_key}</code> yet.</p>".html_safe # rubocop:disable Rails/OutputSafety
       response.status = 404
     end
   end
@@ -68,7 +69,8 @@ class KronkController < ApplicationController
     frontmatter, body = split_frontmatter(raw)
     title = frontmatter['title'] || @page_key.humanize
     html  = MARKDOWN.render(body.to_s)
-    [title, html.html_safe]
+    # Markdown source ships with the repo under content/kronk/*.md — trusted, not user input.
+    [title, html.html_safe] # rubocop:disable Rails/OutputSafety
   end
 
   # Optional YAML frontmatter: --- ... --- at the top of the file.

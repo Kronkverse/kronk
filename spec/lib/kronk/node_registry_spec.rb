@@ -113,7 +113,7 @@ RSpec.describe Kronk::NodeRegistry do
 
     it 'returns manifest-declared explicit links for a node' do
       links = described_class.links_for('kalendar.index')
-      targets = links.map { |l| l['to'] }
+      targets = links.pluck('to')
       expect(targets).to include('marketplace.index', 'huddle.index')
     end
 
@@ -131,7 +131,7 @@ RSpec.describe Kronk::NodeRegistry do
 
     it 'normalises unknown link kinds out' do
       # sanity: every emitted kind is in the allowed set
-      described_class.all.each do |node|
+      described_class.all.each do |node| # rubocop:disable Rails/FindEach -- NodeRegistry.all is Array<Node>
         kinds = described_class.links_for(node.id).map { |l| l['kind'] }.uniq
         expect(kinds - Kronk::NodeRegistry::LINK_KINDS).to be_empty
       end

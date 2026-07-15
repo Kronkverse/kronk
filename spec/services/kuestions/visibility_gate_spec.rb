@@ -14,7 +14,7 @@ RSpec.describe Kuestions::VisibilityGate do
   end
 
   describe '.visible_answers' do
-    context 'on a locked question' do
+    context 'when the question is locked' do
       let(:question) { make_question(locked: true) }
 
       it 'hides other-account answers from an onlooker who has not answered' do
@@ -38,7 +38,7 @@ RSpec.describe Kuestions::VisibilityGate do
       end
     end
 
-    context 'on an unlocked question' do
+    context 'when the question is unlocked' do
       let(:question) { make_question(locked: false) }
 
       it 'exposes all answers to any viewer including anonymous' do
