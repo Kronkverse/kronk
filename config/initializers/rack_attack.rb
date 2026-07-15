@@ -102,6 +102,27 @@ class Rack::Attack
     req.throttleable_remote_ip if req.paging_request? && req.unauthenticated?
   end
 
+  # Kronk Search rate limits (spec §"Rate limiting").
+  # Signed-in: 60 queries/minute burst + 500/hour sustained.
+  # Anonymous: 30/minute + 200/hour.
+  API_SEARCH_REGEX = %r{\A/api/v2/search(/|\z)}
+
+  throttle('throttle_authenticated_search_burst', limit: 60, period: 1.minute) do |req|
+    req.authenticated_user_id if req.path.match?(API_SEARCH_REGEX) && req.get?
+  end
+
+  throttle('throttle_authenticated_search_sustained', limit: 500, period: 1.hour) do |req|
+    req.authenticated_user_id if req.path.match?(API_SEARCH_REGEX) && req.get?
+  end
+
+  throttle('throttle_unauthenticated_search_burst', limit: 30, period: 1.minute) do |req|
+    req.throttleable_remote_ip if req.path.match?(API_SEARCH_REGEX) && req.get? && req.unauthenticated?
+  end
+
+  throttle('throttle_unauthenticated_search_sustained', limit: 200, period: 1.hour) do |req|
+    req.throttleable_remote_ip if req.path.match?(API_SEARCH_REGEX) && req.get? && req.unauthenticated?
+  end
+
   API_DELETE_REBLOG_REGEX = %r{\A/api/v1/statuses/\d+/unreblog\z}
   API_DELETE_STATUS_REGEX = %r{\A/api/v1/statuses/\d+\z}
 
