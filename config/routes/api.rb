@@ -67,6 +67,7 @@ namespace :api, format: false do
     resources :custom_emojis, only: [:index]
     resources :suggestions, only: [:index, :destroy]
     resources :scheduled_statuses, only: [:index, :show, :update, :destroy]
+    resource :draft, only: [:show, :update, :destroy]
     resources :preferences, only: [:index]
 
     resource :huddle_token, only: [:show]
