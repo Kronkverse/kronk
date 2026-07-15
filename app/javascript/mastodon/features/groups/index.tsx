@@ -36,7 +36,7 @@ export const Groups = () => {
     governance_framework: 'peer_support',
   });
 
-  const refetch = async (nextScope?: Scope) => {
+  const refetch = useCallback(async (nextScope?: Scope) => {
     setLoading(true);
     try {
       const data = await apiGetGroups({ limit: 40, scope: nextScope ?? scope });
@@ -46,14 +46,13 @@ export const Groups = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [scope]);
 
   useEffect(() => {
     void refetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scope]);
+  }, [scope, refetch]);
 
-  const submitCreate = async () => {
+  const submitCreate = useCallback(async () => {
     setError(null);
     try {
       await apiCreateGroup(form);
@@ -69,7 +68,7 @@ export const Groups = () => {
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
     }
-  };
+  }, [form, refetch]);
 
   // Stable handlers so JSX doesn't re-create arrows every render.
   const handleScopeClick = useCallback<React.MouseEventHandler<HTMLButtonElement>>(

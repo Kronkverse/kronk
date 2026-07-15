@@ -126,9 +126,6 @@ export const Connections = () => {
       const id = e.currentTarget.dataset.reqId;
       if (id) void authorize(id);
     },
-    // authorize / reject are recreated each render but their identity is
-    // captured here; that's fine for the lint rule.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
@@ -137,7 +134,6 @@ export const Connections = () => {
       const id = e.currentTarget.dataset.reqId;
       if (id) void reject(id);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 

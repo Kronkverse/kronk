@@ -60,7 +60,7 @@ export const GroupDetail = () => {
     void refetch();
   }, [refetch]);
 
-  const doPost = async () => {
+  const doPost = useCallback(async () => {
     if (!id || !composerText.trim()) return;
     setBusy(true);
     setError(null);
@@ -73,9 +73,9 @@ export const GroupDetail = () => {
     } finally {
       setBusy(false);
     }
-  };
+  }, [id, composerText, refetch]);
 
-  const doJoin = async () => {
+  const doJoin = useCallback(async () => {
     if (!id) return;
     setBusy(true);
     setError(null);
@@ -87,9 +87,9 @@ export const GroupDetail = () => {
     } finally {
       setBusy(false);
     }
-  };
+  }, [id]);
 
-  const doLeave = async () => {
+  const doLeave = useCallback(async () => {
     if (!id) return;
     setBusy(true);
     setError(null);
@@ -101,9 +101,9 @@ export const GroupDetail = () => {
     } finally {
       setBusy(false);
     }
-  };
+  }, [id]);
 
-  const doArchive = async () => {
+  const doArchive = useCallback(async () => {
     if (!id) return;
     if (
       !window.confirm(
@@ -121,7 +121,7 @@ export const GroupDetail = () => {
     } finally {
       setBusy(false);
     }
-  };
+  }, [id]);
 
   const handleJoin = useCallback(() => { void doJoin(); }, [doJoin]);
   const handleLeave = useCallback(() => { void doLeave(); }, [doLeave]);
