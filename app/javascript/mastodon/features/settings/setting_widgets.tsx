@@ -42,7 +42,7 @@ export const BooleanWidget: React.FC<{
     <label className='korner-settings__toggle'>
       <input
         type='checkbox'
-        checked={!!value}
+        checked={value}
         onChange={handleChange}
       />
       <span className='korner-settings__toggle-track' aria-hidden='true' />
