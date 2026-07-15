@@ -39,7 +39,7 @@ require 'yaml'
 
 module Kronk
   module NodeRegistry
-    BUCKETS = %w(feed profile hub settings).freeze
+    BUCKETS = %w(feed profile hub).freeze
     LIFECYCLES = %w(live soon deprecated hidden).freeze
     LINK_KINDS = %w(creates listed_on projects_to listens_to settings_for related).freeze
 
