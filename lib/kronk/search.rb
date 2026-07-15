@@ -20,6 +20,7 @@ require_relative 'search/index_configs'
 require_relative 'search/adapter'
 require_relative 'search/adapter/null'
 require_relative 'search/adapter/meilisearch'
+require_relative 'search/policy_filter'
 
 module Kronk
   module Search

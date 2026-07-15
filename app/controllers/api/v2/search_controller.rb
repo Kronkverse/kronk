@@ -17,7 +17,8 @@ class Api::V2::SearchController < Api::BaseController
   before_action :handle_fasp_requests
 
   def index
-    @search = Search.new(search_results)
+    @search = kronk_search_active? ? kronk_search_results : Search.new(search_results)
+    log_search_query
     render json: @search, serializer: REST::SearchSerializer
   rescue Mastodon::SyntaxError
     unprocessable_content
@@ -82,5 +83,46 @@ class Api::V2::SearchController < Api::BaseController
 
   def search_params
     params.permit(:type, :offset, :min_id, :max_id, :account_id, :following)
+  end
+
+  # ── Kronk 2.x search path (Phase 7.3/7.4) ───────────────────────────
+  # When SEARCH_BACKEND=meilisearch, hits from `Kronk::Search.adapter`
+  # replace the upstream SearchService pipeline. Response shape stays
+  # identical (accounts / statuses / hashtags) so clients don't break.
+  #
+  # Per-type policy filtering runs above the adapter in
+  # `Kronk::Search::PolicyFilter` — the index is a superset; the
+  # response is a subset gated by the viewer's identity (spec §7).
+
+  def kronk_search_active?
+    Kronk::Search.backend == 'meilisearch'
+  end
+
+  def kronk_search_results
+    types = requested_types
+    hits  = types.flat_map { |type| Kronk::Search.adapter.search(type: type, query: params[:q], filters: {}, viewer: current_account) }
+    Kronk::Search::PolicyFilter.filter(hits, current_account)
+  end
+
+  def requested_types
+    case params[:type].to_s
+    when 'accounts'  then [:accounts]
+    when 'statuses'  then [:statuses]
+    when 'hashtags'  then [:kategories]
+    else                  [:accounts, :statuses, :kategories]
+    end
+  end
+
+  # Aggregate-only logging per spec §"Query logging": never log the
+  # query string with an account identifier attached. A single log
+  # line per request goes to Rails.logger for capacity + latency
+  # tracking; downstream aggregators can count occurrences without
+  # ever seeing what the user typed or who typed it.
+  def log_search_query
+    Rails.logger.info(
+      "[kronk:search] backend=#{Kronk::Search.backend} " \
+      "type=#{params[:type].presence || 'universal'} " \
+      "authenticated=#{user_signed_in? ? 'y' : 'n'}"
+    )
   end
 end
