@@ -34,6 +34,6 @@ class Api::V1::Accounts::Profile::CardsController < Api::BaseController
   def require_composer_flag!
     return if Kronk::FeatureFlags.enabled?(:profile_composer)
 
-    render json: { error: 'profile_composer feature not enabled' }, status: :not_found
+    render json: { error: 'profile_composer feature not enabled' }, status: 404
   end
 end

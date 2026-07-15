@@ -33,12 +33,12 @@ namespace :kronk do
         end
 
         attrs = {
-          status_id:             status.id,
+          status_id: status.id,
           created_by_account_id: status.account_id,
-          title:                 (status.text || status.spoiler_text.to_s).to_s[0, 240].presence || '(untitled)',
-          prompt:                status.text,
-          created_at:            status.created_at,
-          updated_at:            status.updated_at,
+          title: (status.text || status.spoiler_text.to_s).to_s[0, 240].presence || '(untitled)',
+          prompt: status.text,
+          created_at: status.created_at,
+          updated_at: status.updated_at,
         }
 
         if dry_run
@@ -66,11 +66,11 @@ namespace :kronk do
 
         attrs = {
           question_id: parent_question.id,
-          account_id:  status.account_id,
-          body:        (status.text || '').to_s,
-          status_id:   status.id,
-          created_at:  status.created_at,
-          updated_at:  status.updated_at,
+          account_id: status.account_id,
+          body: (status.text || '').to_s,
+          status_id: status.id,
+          created_at: status.created_at,
+          updated_at: status.updated_at,
         }
 
         if dry_run

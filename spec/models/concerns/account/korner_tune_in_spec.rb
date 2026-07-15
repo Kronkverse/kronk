@@ -31,7 +31,7 @@ RSpec.describe Account::KornerTuneIn do
   describe '#tune_out!' do
     it 'is idempotent — calling twice does not raise or duplicate' do
       account.tune_out!(:kommons)
-      expect { account.tune_out!(:kommons) }.to_not change { account.korner_tune_outs.count }
+      expect { account.tune_out!(:kommons) }.to_not(change { account.korner_tune_outs.count })
     end
   end
 

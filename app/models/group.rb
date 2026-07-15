@@ -13,7 +13,7 @@
 # See docs/kronk_korner_spec.md §Groups.
 class Group < ApplicationRecord
   GOVERNANCE_FRAMEWORKS = %w(peer_support two_key threshold majority consensus).freeze
-  SLUG_PATTERN = /\A[a-z][a-z0-9\-]*\z/
+  SLUG_PATTERN = /\A[a-z][a-z0-9-]*\z/
 
   has_many :group_memberships, dependent: :destroy
   has_many :members, through: :group_memberships, source: :account

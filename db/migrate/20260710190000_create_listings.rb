@@ -15,7 +15,7 @@ class CreateListings < ActiveRecord::Migration[8.0]
       t.integer    :price_cents                     # nil = free / by-arrangement
       t.string     :price_currency, limit: 3
       t.string     :location
-      t.string     :state, default: 'draft', null: false  # draft | live | reserved | closed
+      t.string     :state, default: 'draft', null: false # draft | live | reserved | closed
       t.datetime   :closed_at
 
       t.timestamps

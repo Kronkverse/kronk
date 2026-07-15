@@ -12,12 +12,12 @@ class BoothSet < ApplicationRecord
   # the transition; old column drops in 2.1.
   def shared_status_id=(value)
     super
-    write_attribute(:status_id, value) if has_attribute?(:status_id)
+    self[:status_id] = value if has_attribute?(:status_id)
   end
 
   def status_id=(value)
     super
-    write_attribute(:shared_status_id, value) if has_attribute?(:shared_status_id)
+    self[:shared_status_id] = value if has_attribute?(:shared_status_id)
   end
 
   # Deprecated readers — new code uses `#status(_id)`. Logs once per
@@ -30,11 +30,12 @@ class BoothSet < ApplicationRecord
 
   def shared_status_id
     BoothSet.warn_deprecated_status_read!
-    read_attribute(:shared_status_id) || read_attribute(:status_id)
+    read_attribute(:shared_status_id) || self[:status_id]
   end
 
   def self.warn_deprecated_status_read!
     return if @deprecated_status_read_warned
+
     @deprecated_status_read_warned = true
     Rails.logger.warn('[BoothSet] deprecated read of shared_status(_id); prefer #status(_id). Column drops in 2.1.0.')
   end

@@ -52,17 +52,17 @@ RSpec.describe 'Hub routes' do
 
   describe 'legacy paths 301-redirect to the /hub/<slug> counterpart' do
     {
-      '/governance'            => '/hub/kommons',
+      '/governance' => '/hub/kommons',
       '/governance/proposals/1' => '/hub/kommons/proposals/1',
-      '/questions'             => '/hub/kuestions',
-      '/questions/42'          => '/hub/kuestions/42',
-      '/kalendar'              => '/hub/kalendar',
-      '/kalendar/42'           => '/hub/kalendar/42',
-      '/booth'                 => '/hub/booth',
-      '/booth/deep/link'       => '/hub/booth/deep/link',
-      '/in-flow'               => '/hub/in-flow',
-      '/market'                => '/hub/marketplace',
-      '/market/listing/1'      => '/hub/marketplace/listing/1',
+      '/questions' => '/hub/kuestions',
+      '/questions/42' => '/hub/kuestions/42',
+      '/kalendar' => '/hub/kalendar',
+      '/kalendar/42' => '/hub/kalendar/42',
+      '/booth' => '/hub/booth',
+      '/booth/deep/link' => '/hub/booth/deep/link',
+      '/in-flow' => '/hub/in-flow',
+      '/market' => '/hub/marketplace',
+      '/market/listing/1' => '/hub/marketplace/listing/1',
     }.each do |old_path, new_path|
       it "301 #{old_path} → #{new_path}" do
         get old_path

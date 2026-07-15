@@ -36,7 +36,6 @@
 # implements that spec.
 
 require 'yaml'
-require 'set'
 
 module Kronk
   module NodeRegistry

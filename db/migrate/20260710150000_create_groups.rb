@@ -12,7 +12,7 @@ class CreateGroups < ActiveRecord::Migration[8.0]
       t.text    :description
       t.boolean :discoverable, default: false, null: false
       t.string  :governance_framework, default: 'peer_support', null: false
-      t.integer :governance_threshold  # for :threshold governance; null otherwise
+      t.integer :governance_threshold # for :threshold governance; null otherwise
       t.datetime :archived_at
 
       t.timestamps

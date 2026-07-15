@@ -25,16 +25,16 @@ class Api::V1::Kommons::NodesController < Api::BaseController
 
   def serialize_node(node)
     {
-      id:              node.id,
-      bucket:          node.bucket,
-      parent:          node.parent,
-      label:           node.label,
-      url:             node.url,
-      route_name:      node.route_name,
-      lifecycle:       node.lifecycle,
-      spa:             node.spa?,
-      open_proposals:  @counts[node.id] || 0,
-      links:           Kronk::NodeRegistry.links_for(node.id),
+      id: node.id,
+      bucket: node.bucket,
+      parent: node.parent,
+      label: node.label,
+      url: node.url,
+      route_name: node.route_name,
+      lifecycle: node.lifecycle,
+      spa: node.spa?,
+      open_proposals: @counts[node.id] || 0,
+      links: Kronk::NodeRegistry.links_for(node.id),
     }
   end
 end

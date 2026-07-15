@@ -32,9 +32,9 @@ RSpec.describe Kronk::KornerEvents do
       described_class.subscribe('kommons.proposal.created') { raise 'boom' }
       described_class.subscribe('kommons.proposal.created') { |p| received = p }
 
-      expect {
+      expect do
         described_class.publish('kommons.proposal.created', proposal_id: 1)
-      }.to_not raise_error
+      end.to_not raise_error
       expect(received).to eq(proposal_id: 1)
     end
 

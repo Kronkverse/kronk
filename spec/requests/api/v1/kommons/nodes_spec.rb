@@ -20,7 +20,7 @@ RSpec.describe 'GET /api/v1/kommons/nodes' do
   context 'when signed in' do
     it 'returns the full node registry' do
       get '/api/v1/kommons/nodes', headers: headers
-      expect(response).to have_http_status(:ok)
+      expect(response).to have_http_status(200)
 
       body = response.parsed_body
       ids = body['nodes'].map { |n| n['id'] }
@@ -68,7 +68,7 @@ RSpec.describe 'GET /api/v1/kommons/nodes' do
            params: { proposal: { title: 'Bug on booth', body: 'Player wobbles.', node_id: 'booth.index' } },
            headers: headers
 
-      expect(response).to have_http_status(:success).or have_http_status(:created)
+      expect(response).to have_http_status(:success).or have_http_status(201)
       proposal = Proposal.find(response.parsed_body['id'])
       expect(proposal.node_id).to eq('booth.index')
     end
@@ -86,7 +86,7 @@ RSpec.describe 'GET /api/v1/kommons/nodes' do
            params: { proposal: { title: 'Bump quorum', body: 'Because ...' } },
            headers: headers
 
-      expect(response).to have_http_status(:success).or have_http_status(:created)
+      expect(response).to have_http_status(:success).or have_http_status(201)
       proposal = Proposal.find(response.parsed_body['id'])
       expect(proposal.node_id).to be_nil
     end

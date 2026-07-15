@@ -6,7 +6,7 @@ module Mastodon
   module CLI
     class Korners < Base
       desc 'list', 'List every Korner declared under config/korners/ and its drift'
-      long_desc <<~LONG # rubocop:disable I18n/RailsI18n/DecorateString
+      long_desc <<~LONG
         Prints a table showing every manifest under config/korners/, whether it's
         enforced on this branch, and any drift the boot-time validator would
         report (missing tables, missing Status associations).
@@ -47,7 +47,7 @@ module Mastodon
       end
 
       desc 'describe SLUG', 'Dump a Korner manifest as YAML'
-      long_desc <<~LONG # rubocop:disable I18n/RailsI18n/DecorateString
+      long_desc <<~LONG
         Prints the parsed manifest for the given SLUG. Structural blocks
         (storage, security, feed_projection, etc.) render as nested YAML.
 
@@ -66,7 +66,7 @@ module Mastodon
       end
 
       desc 'doctor', 'Run the boot validator synchronously against every enforced manifest'
-      long_desc <<~LONG # rubocop:disable I18n/RailsI18n/DecorateString
+      long_desc <<~LONG
         Runs every check the boot-time validator would run (duplicate slug,
         reserved slug collision, missing DB tables, missing Status
         associations) and prints a summary.
@@ -142,13 +142,9 @@ module Mastodon
         korner_slugs = ::Kronk::KornerRegistry.all.map(&:slug).to_set
 
         nodes.each do |node|
-          if node.bucket == 'hub' && node.parent.present? && !korner_slugs.include?(node.parent)
-            issues << "node '#{node.id}': parent slug '#{node.parent}' is not a registered korner"
-          end
+          issues << "node '#{node.id}': parent slug '#{node.parent}' is not a registered korner" if node.bucket == 'hub' && node.parent.present? && !korner_slugs.include?(node.parent)
 
-          if node.route_name.present? && !node.spa? && !rails_route_exists?(node.route_name)
-            issues << "node '#{node.id}': route_name '#{node.route_name}' has no matching Rails route"
-          end
+          issues << "node '#{node.id}': route_name '#{node.route_name}' has no matching Rails route" if node.route_name.present? && !node.spa? && !rails_route_exists?(node.route_name)
 
           ::Kronk::NodeRegistry.links_for(node.id).each do |link|
             next if node_ids.include?(link['to'])

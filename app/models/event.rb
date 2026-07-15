@@ -24,7 +24,7 @@ class Event < ApplicationRecord
 
   scope :upcoming, -> { where('start_time > ?', Time.now.utc).order(start_time: :asc) }
   scope :past, -> { where('start_time <= ?', Time.now.utc).order(start_time: :desc) }
-  scope :in_month, ->(date) { where(start_time: date.beginning_of_month..date.end_of_month) }
+  scope :in_month, ->(date) { where(start_time: date.all_month) }
   scope :not_cancelled, -> { where(cancelled: false) }
   scope :root_events, -> { where(parent_event_id: nil) }
 

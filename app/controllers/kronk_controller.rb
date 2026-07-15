@@ -12,7 +12,7 @@ class KronkController < ApplicationController
   layout 'application'
 
   CONTENT_ROOT = Rails.root.join('content', 'kronk').freeze
-  PAGE_PATTERN = /\A[a-z0-9\-]+(?:\/[a-z0-9\-]+)?\z/
+  PAGE_PATTERN = %r{\A[a-z0-9-]+(?:/[a-z0-9-]+)?\z}
 
   # Reused across requests — Redcarpet renderers are thread-safe once
   # constructed. `safe_links_only` blocks javascript: URLs; markdown
