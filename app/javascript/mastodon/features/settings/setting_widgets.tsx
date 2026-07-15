@@ -18,6 +18,16 @@ export interface SettingDescriptor {
 export const humanize = (name: string) =>
   name.replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
+// unknown → string, safely: primitives stringify; anything else returns
+// the fallback so `String({...})` never leaks '[object Object]' into a
+// DOM value. Used for typed:unknown settings values coming out of jsonb.
+const asString = (v: unknown, fallback = ''): string => {
+  if (v == null) return fallback;
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  return fallback;
+};
+
 export const BooleanWidget: React.FC<{
   value: boolean;
   onChange: (v: boolean) => void;
@@ -226,7 +236,7 @@ const StringInput: React.FC<{ value: unknown; onChange: (v: unknown) => void }> 
     },
     [onChange],
   );
-  return <input type='text' value={String(value ?? '')} onChange={handleChange} />;
+  return <input type='text' value={asString(value)} onChange={handleChange} />;
 };
 
 const NumberInput: React.FC<{ value: unknown; onChange: (v: unknown) => void }> = ({ value, onChange }) => {
@@ -262,7 +272,7 @@ export const SettingRow: React.FC<{
       {setting.kind === 'enum' && (
         <EnumWidget
           options={options}
-          value={String(value ?? setting.default ?? '')}
+          value={asString(value, asString(setting.default))}
           onChange={onChange}
         />
       )}
@@ -276,7 +286,7 @@ export const SettingRow: React.FC<{
       {setting.kind === 'duration' && (
         <DurationWidget
           options={options}
-          value={String(value ?? setting.default ?? 'PT1H')}
+          value={asString(value, asString(setting.default, 'PT1H'))}
           onChange={onChange}
         />
       )}

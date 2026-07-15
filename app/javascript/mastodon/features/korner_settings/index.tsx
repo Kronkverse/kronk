@@ -50,6 +50,16 @@ interface ServerSettings {
 const humanize = (name: string) =>
   name.replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
+// unknown → string, safely: primitives stringify; anything else returns
+// the fallback so `String({...})` never leaks '[object Object]' into a
+// DOM value. Used for typed:unknown settings values coming out of jsonb.
+const asString = (v: unknown, fallback = ''): string => {
+  if (v == null) return fallback;
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  return fallback;
+};
+
 // ---- widgets ---------------------------------------------------------------
 
 const BooleanWidget: React.FC<{
@@ -167,7 +177,7 @@ const StringInput: React.FC<{ value: unknown; onChange: (v: unknown) => void }> 
     (e) => { onChange(e.target.value); },
     [onChange],
   );
-  return <input type='text' value={String(value ?? '')} onChange={handleChange} />;
+  return <input type='text' value={asString(value)} onChange={handleChange} />;
 };
 
 const NumberInput: React.FC<{ value: unknown; onChange: (v: unknown) => void }> = ({
@@ -206,7 +216,7 @@ const SettingRow: React.FC<{
       {setting.kind === 'enum' && (
         <EnumWidget
           options={options}
-          value={String(value ?? setting.default ?? '')}
+          value={asString(value, asString(setting.default))}
           onChange={onChange}
         />
       )}
@@ -220,7 +230,7 @@ const SettingRow: React.FC<{
       {setting.kind === 'duration' && (
         <DurationWidget
           options={options}
-          value={String(value ?? setting.default ?? 'PT1H')}
+          value={asString(value, asString(setting.default, 'PT1H'))}
           onChange={onChange}
         />
       )}
@@ -432,9 +442,9 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
           </span>
           <div>
             <h1 className='korner-settings__title'>{korner?.name ?? slug}</h1>
-            {korner?.hub_teaser?.static && (
+            {typeof korner?.hub_teaser?.static === 'string' && (
               <p className='korner-settings__subtitle'>
-                {String(korner.hub_teaser.static)}
+                {korner.hub_teaser.static}
               </p>
             )}
           </div>
