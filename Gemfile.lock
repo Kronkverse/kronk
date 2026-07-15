@@ -317,6 +317,10 @@ GEM
       domain_name (~> 0.5)
     http-form_data (2.3.0)
     http_accept_language (2.1.1)
+    httparty (0.24.2)
+      csv
+      mini_mime (>= 1.0.0)
+      multi_xml (>= 0.5.2)
     httpclient (2.9.0)
       mutex_m
     httplog (1.7.3)
@@ -439,6 +443,8 @@ GEM
     mario-redis-lock (1.2.1)
       redis (>= 3.0.5)
     matrix (0.4.3)
+    meilisearch (0.33.0)
+      httparty (~> 0.24)
     memory_profiler (1.1.0)
     mime-types (3.7.0)
       logger
@@ -449,6 +455,8 @@ GEM
     minitest (5.26.0)
     msgpack (1.8.0)
     multi_json (1.17.0)
+    multi_xml (0.9.1)
+      bigdecimal (>= 3.1, < 5)
     mutex_m (0.3.0)
     net-http (0.6.0)
       uri
@@ -999,6 +1007,7 @@ DEPENDENCIES
   lograge (~> 0.12)
   mail (~> 2.8)
   mario-redis-lock (~> 1.2)
+  meilisearch (~> 0.30)
   memory_profiler
   mime-types (~> 3.7.0)
   mutex_m
