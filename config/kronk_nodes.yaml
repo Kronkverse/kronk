@@ -137,3 +137,21 @@ nodes:
     url: /hub
     lifecycle: live
     spa: true
+
+  # ── SETTINGS (see docs/kronk_settings_ia.md) — three surfaces mapped to the
+  # three buckets: Feed (incoming), Profile (self-management: composer + posting
+  # + discoverability + Account/Appearance/Data folded in as sections), Hub
+  # (spaces). Profile settings already exist above (settings.profile/.sections/
+  # .prefs in the profile bucket); these are the two genuinely-new surfaces.
+  - id: settings.feed
+    bucket: feed
+    label: Feed settings
+    url: /home/settings
+    lifecycle: live
+    spa: true
+  - id: settings.hub
+    bucket: hub
+    label: Hub settings
+    url: /settings/korners
+    lifecycle: live
+    spa: true
