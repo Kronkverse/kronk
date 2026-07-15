@@ -23,9 +23,9 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
   FIELDS = {
     'theme' => { key: 'theme', kind: 'enum', options: -> { Themes.instance.names } },
     'interface_language' => { key: :locale, kind: 'enum', options: -> { I18n.available_locales.map(&:to_s) } },
-    'default_privacy' => { key: 'default_privacy', kind: 'enum', options: -> { %w(public unlisted private) } },
-    'default_language' => { key: 'default_language', kind: 'enum', options: -> { [''] + LanguagesHelper::SUPPORTED_LOCALES.keys.map(&:to_s) } },
-    'default_sensitive' => { key: 'default_sensitive', kind: 'boolean', options: -> {} },
+    # NOTE: default_privacy / default_language / default_sensitive are *posting*
+    # defaults, not appearance — they live in Api::V1::Settings::PostingController
+    # (settings.posting). See docs/kronk_settings_ia.md.
     'reduce_motion' => { key: 'web.reduce_motion', kind: 'boolean', options: -> {} },
     'auto_play_gif' => { key: 'web.auto_play', kind: 'boolean', options: -> {} },
     # Kronk Personal Appearance. personal_accent is a purple hex (validated by
@@ -115,9 +115,6 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
       values: {
         'theme' => current_user.settings['theme'],
         'interface_language' => current_user.locale,
-        'default_privacy' => current_user.settings['default_privacy'],
-        'default_language' => current_user.settings['default_language'],
-        'default_sensitive' => current_user.settings['default_sensitive'],
         'reduce_motion' => current_user.settings['web.reduce_motion'],
         'auto_play_gif' => current_user.settings['web.auto_play'],
         'personal_accent' => current_user.settings['web.personal_accent'],

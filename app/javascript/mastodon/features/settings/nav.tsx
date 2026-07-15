@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import DownloadIcon from '@/material-icons/400-24px/download.svg?react';
+import EditNoteIcon from '@/material-icons/400-24px/edit_note.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import PersonIcon from '@/material-icons/400-24px/person.svg?react';
@@ -37,7 +38,12 @@ export const navMessages = defineMessages({
   },
   appearanceDesc: {
     id: 'settings_hub.appearance_desc',
-    defaultMessage: 'Theme, language, posting defaults, motion.',
+    defaultMessage: 'Theme, accent, fonts, motion — how Kronk looks to you.',
+  },
+  posting: { id: 'settings_hub.posting', defaultMessage: 'Posting' },
+  postingDesc: {
+    id: 'settings_hub.posting_desc',
+    defaultMessage: 'Defaults for new posts — visibility, language, sensitivity.',
   },
   privacy: {
     id: 'settings_hub.privacy',
@@ -93,6 +99,13 @@ export const YOU_SECTIONS: SectionDef[] = [
     Icon: TuneIcon,
     name: navMessages.appearance,
     desc: navMessages.appearanceDesc,
+  },
+  {
+    key: 'posting',
+    to: '/settings/posting',
+    Icon: EditNoteIcon,
+    name: navMessages.posting,
+    desc: navMessages.postingDesc,
   },
   {
     key: 'privacy',

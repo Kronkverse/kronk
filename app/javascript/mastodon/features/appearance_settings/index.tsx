@@ -31,7 +31,7 @@ const messages = defineMessages({
   },
   intro: {
     id: 'appearance_settings.intro',
-    defaultMessage: 'Theme, language, and the defaults for what you post.',
+    defaultMessage: 'Theme, fonts, and how Kronk looks and feels to you.',
   },
   saving: { id: 'appearance_settings.saving', defaultMessage: 'Saving…' },
   saved: { id: 'appearance_settings.saved', defaultMessage: 'Saved' },
@@ -41,18 +41,6 @@ const messages = defineMessages({
   interfaceLanguage: {
     id: 'appearance_settings.interface_language',
     defaultMessage: 'Interface language',
-  },
-  defaultPrivacy: {
-    id: 'appearance_settings.default_privacy',
-    defaultMessage: 'Default post visibility',
-  },
-  defaultLanguage: {
-    id: 'appearance_settings.default_language',
-    defaultMessage: 'Default posting language',
-  },
-  defaultSensitive: {
-    id: 'appearance_settings.default_sensitive',
-    defaultMessage: 'Mark media as sensitive by default',
   },
   reduceMotion: {
     id: 'appearance_settings.reduce_motion',
@@ -66,10 +54,6 @@ const messages = defineMessages({
   reduceMotionHint: {
     id: 'appearance_settings.reduce_motion_hint',
     defaultMessage: 'Minimise non-essential animation across the app.',
-  },
-  defaultPrivacyHint: {
-    id: 'appearance_settings.default_privacy_hint',
-    defaultMessage: 'Who can see new posts, before you change it per post.',
   },
 
   personalAccent: {
@@ -102,9 +86,6 @@ const messages = defineMessages({
 const LABELS: Record<string, MessageDescriptor> = {
   theme: messages.theme,
   interface_language: messages.interfaceLanguage,
-  default_privacy: messages.defaultPrivacy,
-  default_language: messages.defaultLanguage,
-  default_sensitive: messages.defaultSensitive,
   reduce_motion: messages.reduceMotion,
   auto_play_gif: messages.autoPlayGif,
   personal_accent: messages.personalAccent,
@@ -115,7 +96,6 @@ const LABELS: Record<string, MessageDescriptor> = {
 
 const HINTS: Record<string, MessageDescriptor> = {
   reduce_motion: messages.reduceMotionHint,
-  default_privacy: messages.defaultPrivacyHint,
   personal_accent: messages.personalAccentHint,
   ui_scale: messages.uiScaleHint,
 };
