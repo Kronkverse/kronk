@@ -28,7 +28,7 @@ class REST::EventSerializer < ActiveModel::Serializer
   end
 
   def image_url
-    return nil unless object.image_id.present?
+    return nil if object.image_id.blank?
 
     object.image&.file&.url(:small)
   end
@@ -42,9 +42,11 @@ class REST::EventSerializer < ActiveModel::Serializer
     object.invited?(current_user.account)
   end
 
+  # rubocop:disable Naming/PredicatePrefix -- `is_owner` is the JSON API key; renaming would break clients
   def is_owner
     object.account_id == current_user.account.id
   end
+  # rubocop:enable Naming/PredicatePrefix
 
   def current_user?
     !current_user.nil?

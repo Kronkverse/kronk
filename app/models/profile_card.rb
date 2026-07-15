@@ -65,10 +65,10 @@ class ProfileCard < ApplicationRecord
 
     case visibility
     when 'kronk'
-      viewer && viewer.local? && account.local?
+      viewer&.local? && account.local?
     when 'connections'
       viewer && mutual_follow?(viewer)
-    when 'vouched'
+    when 'vouched' # rubocop:disable Lint/DuplicateBranch
       # Vouched requires Anthemos. Until the membrane ships, fall back
       # to the connections gate — a slightly narrower audience than the
       # designed behaviour but never leaks content wider than intended.
@@ -81,7 +81,7 @@ class ProfileCard < ApplicationRecord
   private
 
   def mutual_follow?(viewer)
-    Follow.where(account_id: account_id, target_account_id: viewer.id).exists? &&
-      Follow.where(account_id: viewer.id, target_account_id: account_id).exists?
+    Follow.exists?(account_id: account_id, target_account_id: viewer.id) &&
+      Follow.exists?(account_id: viewer.id, target_account_id: account_id)
   end
 end

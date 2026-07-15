@@ -46,7 +46,7 @@ class Api::V1::Hub::OrdersController < Api::BaseController
   def valid?(slugs)
     return false if slugs.empty? || slugs.size != slugs.uniq.size
 
-    known = Kronk::KornerRegistry.all.map(&:slug).to_set
+    known = Kronk::KornerRegistry.all.to_set(&:slug)
     slugs.all? { |s| known.include?(s) }
   end
 end

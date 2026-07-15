@@ -50,8 +50,8 @@ RSpec.describe Kronk::KornerEvents do
 
   describe '.subscriber_count' do
     it 'returns the count of registered subscribers' do
-      described_class.subscribe('x') {}
-      described_class.subscribe('x') {}
+      described_class.subscribe('x') {} # rubocop:disable Lint/EmptyBlock -- exercising registration only
+      described_class.subscribe('x') {} # rubocop:disable Lint/EmptyBlock -- exercising registration only
       expect(described_class.subscriber_count('x')).to eq(2)
     end
   end

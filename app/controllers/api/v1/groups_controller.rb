@@ -86,7 +86,7 @@ class Api::V1::GroupsController < Api::BaseController
     membership = @group.group_memberships.find_by(account: current_account)
     return render json: @group, serializer: REST::GroupSerializer, scope: current_user if membership.nil?
 
-    return render json: { error: 'cannot leave — you are the last seeder. Nominate another first or archive the group.' }, status: 422 if membership.role == 'seeder' && @group.group_memberships.where(role: 'seeder').count == 1
+    return render json: { error: 'cannot leave — you are the last seeder. Nominate another first or archive the group.' }, status: 422 if membership.role == 'seeder' && @group.group_memberships.where(role: 'seeder').one?
 
     membership.destroy!
     render json: @group, serializer: REST::GroupSerializer, scope: current_user

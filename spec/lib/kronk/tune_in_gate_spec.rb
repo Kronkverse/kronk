@@ -9,7 +9,7 @@ RSpec.describe Kronk::TuneInGate do
 
   describe '.filter with the feature flag OFF (default)' do
     it 'returns statuses unchanged' do
-      statuses = double('statuses')
+      statuses = Object.new # opaque sentinel — filter() returns it unchanged when the flag is off
       expect(described_class.filter(account, statuses)).to be(statuses)
     end
   end

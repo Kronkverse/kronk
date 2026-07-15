@@ -2,6 +2,10 @@
 
 require 'rails_helper'
 
+# Cross-cutting spec for §5.5 status linkage (dual-write + read-through).
+# The second describe arg names a spec-section, not a Ruby method — the
+# same rationale holds for the filename.
+# rubocop:disable RSpec/DescribeMethod, RSpec/SpecFilePathFormat
 RSpec.describe Proposal, '§5.5 canonical status_id linkage' do
   let(:account) { Fabricate(:account) }
   let(:status)  { Fabricate(:status, account: account) }
@@ -46,3 +50,4 @@ RSpec.describe Proposal, '§5.5 canonical status_id linkage' do
     end
   end
 end
+# rubocop:enable RSpec/DescribeMethod, RSpec/SpecFilePathFormat
