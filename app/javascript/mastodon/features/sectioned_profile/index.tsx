@@ -234,6 +234,7 @@ export const SectionedProfile = () => {
 
   const [account, setAccount] = useState<ApiAccountJSON | null>(null);
   const [sections, setSections] = useState<SectionWithStatuses[]>([]);
+  const [cards, setCards] = useState<ProfileCardJSON[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const isOwner = account !== null && account.id === me;
@@ -274,6 +275,24 @@ export const SectionedProfile = () => {
 
       dispatch(importFetchedAccount(accountRes));
       setAccount(accountRes);
+
+      // Step 1b: profile cards (the Me tab). The endpoint filters
+      // per-viewer, so whatever comes back is renderable as-is. A 404
+      // (composer flag off) or any failure just leaves the Me tab on its
+      // owner empty-states.
+      try {
+        const cardList = await apiRequestGet<ProfileCardJSON[]>(
+          `v1/accounts/${accountRes.id}/profile/cards`,
+        );
+        if (!cancelled) setCards(cardList);
+      } catch {
+        if (!cancelled) {
+          console.warn(
+            'SectionedProfile: cards fetch failed; Me tab shows empty states',
+          );
+        }
+      }
+      if (cancelled) return;
 
       // Step 2: sections list. Independent of statuses. A failure here
       // means the user sees the tabs + placeholder grids instead of an
@@ -354,12 +373,7 @@ export const SectionedProfile = () => {
       <ColumnBackButton />
 
       <div className='scrollable sectioned-profile'>
-        {account && (
-          <KProfileHeader
-            account={account}
-            hiddenFieldNames={identityFieldNames()}
-          />
-        )}
+        {account && <KProfileHeader account={account} />}
 
         <div className='sectioned-profile__body'>
           {error && (
@@ -437,7 +451,7 @@ export const SectionedProfile = () => {
                 role='tabpanel'
                 hidden={activeTab !== 'me'}
               >
-                <MePanel isOwner={isOwner} account={account} />
+                <MePanel isOwner={isOwner} account={account} cards={cards} />
               </section>
 
               <section
@@ -521,35 +535,33 @@ interface MessageDescriptor {
   defaultMessage: string;
 }
 
+// A composed identity card, as returned by
+// GET /api/v1/accounts/:id/profile/cards. The endpoint already filters
+// per-viewer (ProfileCard#visible_to?), so only cards this viewer is
+// allowed to see arrive here — no client-side visibility gating needed.
+interface ProfileCardJSON {
+  id: string;
+  card_type: string;
+  body: string; // server-sanitised HTML
+  visibility: 'everyone' | 'kronk' | 'connections' | 'vouched' | 'only_me';
+  position: number;
+  visible: boolean;
+}
+
 interface MeCardCopy {
   title: MessageDescriptor;
   desc: MessageDescriptor;
   action: MessageDescriptor;
   href: string;
   note?: boolean;
-  // Marker for cards that render populated content from the account
-  // object or a live API fetch instead of the empty-state template.
+  // The ProfileCard type this slot renders. A slot shows content only when
+  // the owner has composed (and made visible) the matching card — content
+  // comes from the composer, not from account custom fields.
+  cardType: string;
+  // Marker for slots that render live content (counts / statuses / media)
+  // when the card is present, instead of the composed card body.
   kind?: 'at-a-glance' | 'highlights' | 'moments';
-  // Optional matching name(s) in account.fields — if the user has a
-  // custom field with any of these names, the card renders populated
-  // from that field's value instead of the empty state. Names match
-  // case-insensitively.
-  fieldNames?: string[];
 }
-
-// Every fieldName across every ME_COL card, flattened + lowercased.
-// Used by KProfileHeader to filter these out of the metarow so a
-// field consumed by a Me-panel card doesn't also show as a chip.
-export const identityFieldNames = (): string[] => {
-  const all: string[] = [];
-  for (const col of [ME_COL_1, ME_COL_2, ME_COL_3]) {
-    for (const card of col) {
-      if (card.fieldNames)
-        all.push(...card.fieldNames.map((n) => n.toLowerCase()));
-    }
-  }
-  return all;
-};
 
 // Bio + display-name + avatar edits actually exist at /settings/profile
 // (upstream Mastodon). Everything else routes there as a stub until the
@@ -563,21 +575,21 @@ const ME_COL_1: MeCardCopy[] = [
     desc: messages.aboutDesc,
     action: messages.aboutAction,
     href: EDIT_PROFILE_HREF,
-    fieldNames: ['about', 'about me', 'bio'],
+    cardType: 'about',
   },
   {
     title: messages.interestsTitle,
     desc: messages.interestsDesc,
     action: messages.interestsAction,
     href: EDIT_PROFILE_HREF,
-    fieldNames: ['interests'],
+    cardType: 'interests',
   },
   {
     title: messages.exploringTitle,
     desc: messages.exploringDesc,
     action: messages.exploringAction,
     href: EDIT_PROFILE_HREF,
-    fieldNames: ['exploring', 'currently exploring'],
+    cardType: 'exploring',
   },
 ];
 
@@ -587,6 +599,7 @@ const ME_COL_2: MeCardCopy[] = [
     desc: messages.atGlanceDesc,
     action: messages.atGlanceAction,
     href: EDIT_PROFILE_HREF,
+    cardType: 'at_a_glance',
     kind: 'at-a-glance',
   },
   {
@@ -594,6 +607,7 @@ const ME_COL_2: MeCardCopy[] = [
     desc: messages.highlightsDesc,
     action: messages.highlightsAction,
     href: EDIT_PROFILE_HREF,
+    cardType: 'highlights',
     kind: 'highlights',
   },
   {
@@ -601,21 +615,21 @@ const ME_COL_2: MeCardCopy[] = [
     desc: messages.personalityDesc,
     action: messages.personalityAction,
     href: EDIT_PROFILE_HREF,
-    fieldNames: ['personality'],
+    cardType: 'personality',
   },
   {
     title: messages.driveTitle,
     desc: messages.driveDesc,
     action: messages.driveAction,
     href: EDIT_PROFILE_HREF,
-    fieldNames: ['drive', 'motto', 'what drives me'],
+    cardType: 'drive',
   },
   {
     title: messages.rotationTitle,
     desc: messages.rotationDesc,
     action: messages.rotationAction,
     href: EDIT_PROFILE_HREF,
-    fieldNames: ['rotation', 'in rotation'],
+    cardType: 'rotation',
   },
 ];
 
@@ -625,6 +639,7 @@ const ME_COL_3: MeCardCopy[] = [
     desc: messages.momentsDesc,
     action: messages.momentsAction,
     href: EDIT_PROFILE_HREF,
+    cardType: 'moments',
     kind: 'moments',
   },
   {
@@ -632,7 +647,7 @@ const ME_COL_3: MeCardCopy[] = [
     desc: messages.valuesDesc,
     action: messages.valuesAction,
     href: EDIT_PROFILE_HREF,
-    fieldNames: ['values'],
+    cardType: 'values',
   },
   {
     title: messages.noteTitle,
@@ -640,7 +655,7 @@ const ME_COL_3: MeCardCopy[] = [
     action: messages.noteAction,
     href: EDIT_PROFILE_HREF,
     note: true,
-    fieldNames: ['note'],
+    cardType: 'note',
   },
 ];
 
@@ -673,48 +688,10 @@ const OPEN_TO: OpenToCopy[] = [
   },
 ];
 
-const MeCard: React.FC<{
-  card: MeCardCopy;
-  isOwner: boolean;
-  account: ApiAccountJSON;
-}> = ({ card, isOwner, account }) => {
+// Owner-only prompt shown in a Me slot the owner hasn't composed a card
+// for yet. Visitors never see empty slots (MeCard returns null for them).
+const EmptyMeCard: React.FC<{ card: MeCardCopy }> = ({ card }) => {
   const intl = useIntl();
-
-  // Populated variants replace the empty-state template entirely.
-  if (card.kind === 'at-a-glance') {
-    return <AtAGlanceCard account={account} />;
-  }
-  if (card.kind === 'highlights') {
-    return <HighlightsCard card={card} account={account} isOwner={isOwner} />;
-  }
-  if (card.kind === 'moments') {
-    return <MomentsCard card={card} account={account} isOwner={isOwner} />;
-  }
-
-  // Fields-driven population: if the user has an account custom field
-  // whose name matches any of card.fieldNames, render that field's
-  // value as the card body. Otherwise fall through to the empty state.
-  if (card.fieldNames) {
-    const wanted = card.fieldNames.map((n) => n.toLowerCase());
-    const field = account.fields.find((f) =>
-      wanted.includes(f.name.trim().toLowerCase()),
-    );
-    if (field) {
-      return (
-        <div
-          className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}
-        >
-          <h3>{intl.formatMessage(card.title)}</h3>
-          <div
-            className='sectioned-profile__card-body'
-            // field.value is server-sanitised HTML (may contain <a>).
-            dangerouslySetInnerHTML={{ __html: field.value }}
-          />
-        </div>
-      );
-    }
-  }
-
   return (
     <div
       className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}
@@ -723,13 +700,56 @@ const MeCard: React.FC<{
       <p className='sectioned-profile__card-desc'>
         {intl.formatMessage(card.desc)}
       </p>
-      {isOwner && (
-        <a href={card.href} className='sectioned-profile__card-action'>
-          {intl.formatMessage(card.action)}
-        </a>
-      )}
+      <a href={card.href} className='sectioned-profile__card-action'>
+        {intl.formatMessage(card.action)}
+      </a>
     </div>
   );
+};
+
+const MeCard: React.FC<{
+  card: MeCardCopy;
+  isOwner: boolean;
+  account: ApiAccountJSON;
+  composed?: ProfileCardJSON;
+}> = ({ card, isOwner, account, composed }) => {
+  const intl = useIntl();
+
+  // Live slots (counts / highlights / moments) render their component only
+  // when the owner has placed the matching card in the composer.
+  if (card.kind === 'at-a-glance') {
+    if (composed) return <AtAGlanceCard account={account} />;
+    return isOwner ? <EmptyMeCard card={card} /> : null;
+  }
+  if (card.kind === 'highlights') {
+    if (composed)
+      return <HighlightsCard card={card} account={account} isOwner={isOwner} />;
+    return isOwner ? <EmptyMeCard card={card} /> : null;
+  }
+  if (card.kind === 'moments') {
+    if (composed)
+      return <MomentsCard card={card} account={account} isOwner={isOwner} />;
+    return isOwner ? <EmptyMeCard card={card} /> : null;
+  }
+
+  // Text identity slots render the composed card body (server-sanitised
+  // HTML). No composed card → owner sees the prompt, visitor sees nothing.
+  if (composed?.body) {
+    return (
+      <div
+        className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}
+      >
+        <h3>{intl.formatMessage(card.title)}</h3>
+        <div
+          className='sectioned-profile__card-body'
+          // composed.body is server-sanitised HTML (may contain <a>).
+          dangerouslySetInnerHTML={{ __html: composed.body }}
+        />
+      </div>
+    );
+  }
+
+  return isOwner ? <EmptyMeCard card={card} /> : null;
 };
 
 // Populated "At a glance" — 4 tiles reading real Mastodon account
@@ -943,11 +963,17 @@ const MomentsCard: React.FC<{
   );
 };
 
-const MePanel: React.FC<{ isOwner: boolean; account: ApiAccountJSON }> = ({
-  isOwner,
-  account,
-}) => {
+const MePanel: React.FC<{
+  isOwner: boolean;
+  account: ApiAccountJSON;
+  cards: ProfileCardJSON[];
+}> = ({ isOwner, account, cards }) => {
   const intl = useIntl();
+  const cardByType = useMemo(() => {
+    const m = new Map<string, ProfileCardJSON>();
+    for (const c of cards) m.set(c.card_type, c);
+    return m;
+  }, [cards]);
   return (
     <>
       <div className='sectioned-profile__me-grid'>
@@ -958,6 +984,7 @@ const MePanel: React.FC<{ isOwner: boolean; account: ApiAccountJSON }> = ({
               card={c}
               isOwner={isOwner}
               account={account}
+              composed={cardByType.get(c.cardType)}
             />
           ))}
         </div>
@@ -968,6 +995,7 @@ const MePanel: React.FC<{ isOwner: boolean; account: ApiAccountJSON }> = ({
               card={c}
               isOwner={isOwner}
               account={account}
+              composed={cardByType.get(c.cardType)}
             />
           ))}
         </div>
@@ -978,6 +1006,7 @@ const MePanel: React.FC<{ isOwner: boolean; account: ApiAccountJSON }> = ({
               card={c}
               isOwner={isOwner}
               account={account}
+              composed={cardByType.get(c.cardType)}
             />
           ))}
         </div>
