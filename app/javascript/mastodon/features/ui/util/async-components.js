@@ -286,6 +286,11 @@ export function KronkSearch () {
 }
 
 
+export function YouPortal () {
+  return import("../../you_portal");
+}
+
+
 export function Questions () {
   return import("../../questions").then(m => ({ default: m.Questions }));
 }
