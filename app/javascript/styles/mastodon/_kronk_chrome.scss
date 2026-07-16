@@ -259,9 +259,14 @@ body:has(.korner-sub-bar) {
     justify-content: center;
   }
 
+  // Content fills the space between the viewport left edge and the
+  // right rail's fade transition — reads as "content wraps to the
+  // chrome's inner edge" rather than a narrow centre column
+  // surrounded by empty stars. 8.5rem matches the right rail's fade-
+  // to-transparent point (see body::before background-size above).
   .columns-area__panels {
     justify-content: center;
-    max-width: 720px;
+    max-width: calc(100% - 8.5rem);
     margin-left: auto;
     margin-right: auto;
     transition: max-width var(--dur-medium) var(--ease-out);
@@ -269,7 +274,7 @@ body:has(.korner-sub-bar) {
 
   .columns-area__panels__main {
     width: 100%;
-    max-width: 720px;
+    max-width: calc(100% - 8.5rem);
     margin-left: auto;
     margin-right: auto;
     transition: max-width var(--dur-medium) var(--ease-out);
@@ -281,18 +286,11 @@ body:has(.korner-sub-bar) {
     display: none;
   }
 
-  // Grid-shaped surfaces (Hub landing especially) want more room than
-  // the reading-column timeline. When the router lands on one, let the
-  // main pane expand — capped at the available viewport width so the
-  // grid never runs behind the sidebar. The grid itself uses
-  // auto-fill(minmax(15rem, 1fr)) and will happily collapse to fewer
-  // columns as the available space shrinks.
-  body:has(.hub-page) {
-    .columns-area__panels,
-    .columns-area__panels__main {
-      max-width: min(1080px, 100%);
-    }
-  }
+  // Note: the hub-page-specific max-width override was retired when
+  // the default panel width grew to `calc(100% - 8.5rem)` — grid
+  // surfaces now get the full available space by default, and
+  // auto-fill(minmax(15rem, 1fr)) handles adding/collapsing columns
+  // as the viewport width changes.
 }
 
 // Sub-bar that appears when inside a /hub/<slug> route. Positioned
