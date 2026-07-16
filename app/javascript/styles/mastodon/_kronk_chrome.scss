@@ -259,25 +259,25 @@ body:has(.korner-sub-bar) {
     justify-content: center;
   }
 
-  // Content fills the space between the viewport left edge and the
-  // right rail's fade transition. The L-shaped chrome is asymmetric
-  // (top + right, no left), so the content is anchored to the left
-  // and its right margin clears the full right-rail width so nothing
-  // renders under the fade. 8.5rem matches the right rail's total
-  // extent (see body::before background-size above).
+  // Content sits in the space between the viewport left edge and the
+  // right rail's fade transition, with equal breathing margins on
+  // both sides so it feels centred against the L-chrome rather than
+  // pushed flush-left. Each 8.5rem margin matches the right rail's
+  // extent (see body::before background-size above); the right one
+  // clears the fade, the left one gives visual symmetry.
   .columns-area__panels {
-    justify-content: flex-start;
-    max-width: calc(100% - 8.5rem);
-    margin-left: 0;
-    margin-right: 8.5rem;
+    justify-content: center;
+    max-width: calc(100% - 17rem);
+    margin-left: auto;
+    margin-right: auto;
     transition: max-width var(--dur-medium) var(--ease-out);
   }
 
   .columns-area__panels__main {
     width: 100%;
-    max-width: calc(100% - 8.5rem);
-    margin-left: 0;
-    margin-right: 8.5rem;
+    max-width: calc(100% - 17rem);
+    margin-left: auto;
+    margin-right: auto;
     transition: max-width var(--dur-medium) var(--ease-out);
   }
 
