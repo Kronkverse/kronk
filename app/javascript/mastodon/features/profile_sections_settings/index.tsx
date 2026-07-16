@@ -333,7 +333,7 @@ export const ProfileSectionsSettings = () => {
                 cursor: 'pointer',
               }}
             >
-              + #{k.name}
+              + {k.name}
             </button>
           ))}
           {kategories.length === 0 && (

@@ -41,7 +41,7 @@ const labelForRecentSearch = (search: RecentSearch) => {
     case 'account':
       return `@${search.q}`;
     case 'hashtag':
-      return `#${search.q}`;
+      return search.q;
     default:
       return search.q;
   }
@@ -335,7 +335,7 @@ export const Search: React.FC<{
               <FormattedMessage
                 id='search.quick_action.go_to_hashtag'
                 defaultMessage='Go to hashtag {x}'
-                values={{ x: <mark>#{trimmedValue.replace(/^#/, '')}</mark> }}
+                values={{ x: <mark>{trimmedValue.replace(/^#/, '')}</mark> }}
               />
             ),
             action: () => {
