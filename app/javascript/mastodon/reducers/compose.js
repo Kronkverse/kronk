@@ -52,6 +52,7 @@ import {
   COMPOSE_POLL_SETTINGS_CHANGE,
   COMPOSE_CHANGE_MEDIA_ORDER,
   COMPOSE_SET_STATUS,
+  COMPOSE_SET_DRAFT,
   COMPOSE_FOCUS,
 } from '../actions/compose';
 import { REDRAFT } from '../actions/statuses';
@@ -591,6 +592,41 @@ export const composeReducer = (state = initialState, action) => {
           multiple: action.status.get('poll').multiple,
           expires_in: expiresInFromExpiresAt(action.status.get('poll').expires_at),
         }));
+      }
+    });
+  case COMPOSE_SET_DRAFT:
+    return state.withMutations(map => {
+      const params = action.draft.params || {};
+      map.set('id', null);
+      map.set('text', params.text || '');
+      map.set('in_reply_to', params.in_reply_to_id || null);
+      map.set('privacy', params.visibility || map.get('default_privacy'));
+      map.set('media_attachments', fromJS(action.draft.media_attachments || []).map((media) => media.set('unattached', true)));
+      map.set('focusDate', new Date());
+      map.set('caretPosition', null);
+      map.set('idempotencyKey', uuid());
+      map.set('sensitive', !!params.sensitive);
+
+      if (params.language) {
+        map.set('language', params.language);
+      }
+
+      if (params.spoiler_text && params.spoiler_text.length > 0) {
+        map.set('spoiler', true);
+        map.set('spoiler_text', params.spoiler_text);
+      } else {
+        map.set('spoiler', false);
+        map.set('spoiler_text', '');
+      }
+
+      if (params.poll && Array.isArray(params.poll.options) && params.poll.options.length > 0) {
+        map.set('poll', ImmutableMap({
+          options: ImmutableList(params.poll.options),
+          multiple: !!params.poll.multiple,
+          expires_in: params.poll.expires_in || (24 * 3600),
+        }));
+      } else {
+        map.set('poll', null);
       }
     });
   case COMPOSE_POLL_ADD:
