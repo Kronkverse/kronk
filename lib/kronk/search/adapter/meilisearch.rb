@@ -22,6 +22,16 @@ module Kronk
     class Adapter
       class Meilisearch < Adapter
         INDEX_PREFIX = 'kronk_'
+        # Every Kronk index uses `id` as its primary key. We pass this
+        # explicitly on every write because Meilisearch's automatic
+        # inference fails when a document has more than one field
+        # ending in `id` (e.g. Status has both `id` and `account_id`,
+        # Proposal has `id` and `created_by_account_id`). Failing
+        # inference results in silent 4xx per-write — the index stays
+        # empty and no exception surfaces. Passing `primary_key`
+        # explicitly on `add_documents` sets it on first write for a
+        # fresh index and is a no-op on an already-configured index.
+        PRIMARY_KEY = 'id'
 
         def initialize(client: nil)
           super()
@@ -32,9 +42,11 @@ module Kronk
           doc = serialize(type, record)
           return if doc.nil?
 
-          index_for(type).add_documents([doc])
+          index_for(type).add_documents([doc], PRIMARY_KEY)
         rescue => e
-          Rails.logger.warn("[kronk:search:meilisearch] index(#{type}, #{record&.id}) failed: #{e.class} #{e.message}")
+          # error, not warn — silent-warn is what hid the missing
+          # primary-key inference on kronk_statuses in shadow.
+          Rails.logger.error("[kronk:search:meilisearch] index(#{type}, #{record&.id}) failed: #{e.class} #{e.message}")
         end
 
         def remove(type, record)
@@ -68,7 +80,7 @@ module Kronk
             docs = batch.filter_map do |record|
               serialize(type, record) if satisfies_condition?(record)
             end
-            index.add_documents(docs) if docs.any?
+            index.add_documents(docs, PRIMARY_KEY) if docs.any?
             total += docs.size
             Rails.logger.info("[kronk:search:meilisearch] reindexed #{total} #{type}…")
           end
