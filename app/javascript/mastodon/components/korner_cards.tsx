@@ -110,10 +110,8 @@ export const KORNER_CARDS: KornerCardEntry[] = [
   },
   {
     slug: 'marketplace',
-    matches: (s) => s.get('marketplace_listing') != null,
-    card: (s) => (
-      <StatusMarketplaceCard listing={dataFrom(s, 'marketplace_listing')} />
-    ),
+    matches: (s) => s.get('listing') != null,
+    card: (s) => <StatusMarketplaceCard listing={dataFrom(s, 'listing')} />,
   },
   {
     slug: 'booth',

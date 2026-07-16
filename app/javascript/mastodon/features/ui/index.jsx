@@ -112,6 +112,7 @@ import {
   MomentsStub,
   AlbuttsStub,
   KompassStub,
+  Marketplace,
   KornerSettings,
   ProfileCompose,
   FeedSettings,
@@ -277,6 +278,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/moments' component={MomentsStub} content={children} />
             <WrappedRoute path='/hub/albutts' component={AlbuttsStub} content={children} />
             <WrappedRoute path='/hub/kompass' component={KompassStub} content={children} />
+            <WrappedRoute path='/hub/marketplace' component={Marketplace} content={children} />
             <WrappedRoute path='/@:acct/connections' exact component={Connections} content={children} />
             {signedIn && <WrappedRoute path="/nudges/activity" component={NudgesActivity} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/:accountId" component={NudgesThread} content={children} />}
