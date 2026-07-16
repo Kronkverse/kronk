@@ -123,6 +123,10 @@ module Mastodon
           issues << "#{manifest.slug}: slug is reserved for platform use" if reserved.include?(manifest.slug)
         end
 
+        manifests.each do |manifest|
+          detect_conformance_issues(manifest).each { |line| issues << "#{manifest.slug}: #{line}" }
+        end
+
         ::Kronk::KornerRegistry.enforced.each do |manifest|
           detect_drift(manifest).each { |line| issues << "#{manifest.slug}: #{line}" }
         end
@@ -131,6 +135,62 @@ module Mastodon
         detect_node_issues.each { |line| issues << line }
 
         issues
+      end
+
+      # Korner Standard (docs/korners/korner_standard.md §3) conformance —
+      # the checks the doctor historically MISSED, so an `enforced` korner
+      # that doesn't actually work end-to-end can no longer pass. Identity
+      # (L1 slug/file) applies at every stage; the rest is enforced-gated
+      # since a `soon`/`building` korner is legitimately incomplete.
+      def detect_conformance_issues(manifest)
+        issues = []
+        slug = manifest.slug
+
+        # L1 — slug is one lowercase word, and names its own manifest file.
+        issues << "L1 slug '#{slug}' is not one lowercase word (a-z0-9)" unless slug.match?(/\A[a-z0-9]+\z/)
+        issues << "L1 no config/korners/#{slug}.yaml (slug != filename)" unless File.exist?(Rails.root.join('config', 'korners', "#{slug}.yaml"))
+
+        return issues unless manifest.enforced
+
+        # L1 — canonical nested `security:` block.
+        issues << 'L1 no `security:` block (canonical manifest shape)' if manifest.security.blank?
+
+        # L1 — icon wired in the slug->icon map.
+        issues << "L1 icon not wired in useKornerIcon (no '#{slug}' key in SLUG_TO_ICON)" unless korner_source('app/javascript/mastodon/hooks/useKornerIcon.tsx').match?(/['"]?#{Regexp.escape(slug)}['"]?\s*:/)
+
+        # L5 — /hub/<slug> mount resolves (an enforced korner in the Hub grid
+        # whose tile 404s is exactly the Marketplace/Nudges failure).
+        issues << "L5 no /hub/#{slug} mount in features/ui/index.jsx (enforced korner, dead Hub tile)" unless korner_source('app/javascript/mastodon/features/ui/index.jsx').include?("/hub/#{slug}")
+
+        # L3 — projection is actually serialised.
+        assoc = manifest.status_association
+        issues << "L3 REST::StatusSerializer does not expose ':#{assoc}' (projection never reaches the client)" if assoc && status_serializer_attributes.exclude?(assoc)
+
+        # L4 — the feed card is registered.
+        card = manifest.feed_projection&.dig('card')
+        issues << "L4 feed card '#{card}' not registered in korner_cards.tsx (no slug: '#{slug}' entry)" if card.present? && !korner_source('app/javascript/mastodon/components/korner_cards.tsx').match?(/slug:\s*['"]#{Regexp.escape(slug)}['"]/)
+
+        issues
+      end
+
+      # Read a repo source file once (memoised); '' if absent. Lets the
+      # doctor introspect the JS registry / mount / icon map from Ruby.
+      def korner_source(relative_path)
+        (@korner_source_cache ||= {})[relative_path] ||= begin
+          path = Rails.root.join(relative_path)
+          File.exist?(path) ? File.read(path) : ''
+        end
+      end
+
+      # The attribute + association names REST::StatusSerializer exposes.
+      def status_serializer_attributes
+        @status_serializer_attributes ||= begin
+          attrs = REST::StatusSerializer._attributes
+          attrs = attrs.keys if attrs.respond_to?(:keys)
+          refls = REST::StatusSerializer._reflections
+          refls = refls.keys if refls.respond_to?(:keys)
+          (Array(attrs) + Array(refls)).map(&:to_sym).to_set
+        end
       end
 
       # Kommons Tree nodes: verify structure, referential integrity, and
