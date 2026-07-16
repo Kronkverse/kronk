@@ -1,5 +1,3 @@
-@use 'variables' as *;
-
 // Shared frame for every Korner card in the feed. Per-Korner partials
 // (_status_kommons_card.scss, _status_question_card.scss, …) still exist
 // and add their own body/footer rules; the container + badge live here
@@ -7,13 +5,13 @@
 
 .status-korner-card {
   border: 2px solid color-mix(in srgb, var(--accent) 60%, black 40%);
-  border-radius: 10px;
+  border-radius: var(--radius-medium);
   overflow: hidden;
   margin-top: 12px;
-  background-color: lighten($ui-base-color, 3%);
+  background-color: var(--surface-elevated);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent),
-    0 4px 16px rgba(#000, 0.5);
+    var(--elevation-card);
   color: inherit;
   text-decoration: none;
   display: block;
@@ -34,6 +32,10 @@
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
+
+    // White-on-accent, theme-invariant (accent is purple in both themes).
+    // TODO(korner-standard): replace with a --text-on-accent token (added
+    // alongside the stylelint-governance extension for card partials).
     color: #fff;
   }
 
@@ -64,14 +66,14 @@
     font-size: 15px;
     font-weight: 600;
     line-height: 1.4;
-    color: $primary-text-color;
+    color: var(--text-primary);
     margin: 0 0 4px;
   }
 
   &__summary {
     font-size: 13px;
     line-height: 1.5;
-    color: $dark-text-color;
+    color: var(--text-secondary);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
