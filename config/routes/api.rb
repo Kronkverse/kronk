@@ -145,6 +145,10 @@ namespace :api, format: false do
       resources :nodes, only: [:index]
     end
 
+    namespace :marketplace do
+      resources :listings, only: [:index, :show, :create]
+    end
+
     resources :reports, only: [:create]
     resources :trends, only: [:index], controller: 'trends/tags'
     resources :filters, only: [:index, :create, :show, :update, :destroy]
