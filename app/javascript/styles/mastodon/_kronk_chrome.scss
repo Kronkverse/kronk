@@ -35,16 +35,17 @@ body::before {
   z-index: 24;
   pointer-events: none;
   background:
-    // Top strip: solid black across the top under wordmark/menu, fading
-    // downward into the stars.
+    // Left rail: solid black along the left edge, fading rightward
+    // into the stars. Symmetric with the right rail so content sits
+    // in a naturally-centred window between them.
     linear-gradient(
-      to bottom,
+      to right,
       #000 0,
-      #000 3.5rem,
-      rgb(0 0 0 / 85%) 4.25rem,
-      rgb(0 0 0 / 55%) 5.25rem,
-      rgb(0 0 0 / 25%) 6.25rem,
-      transparent 7.5rem
+      #000 4.5rem,
+      rgb(0 0 0 / 85%) 5.25rem,
+      rgb(0 0 0 / 55%) 6.25rem,
+      rgb(0 0 0 / 25%) 7.25rem,
+      transparent 8.5rem
     ),
     // Right rail: solid black along the right edge, fading leftward.
     linear-gradient(
@@ -61,31 +62,19 @@ body::before {
     0 0,
     100% 0;
   background-size:
-    100% 7.5rem,
+    8.5rem 100%,
     8.5rem 100%;
 
   // Soft purple wash bleeding out of the fade — reads as glow on the
-  // chrome, not an outline. Weaker than the old drop-shadow because
-  // there's no crisp shape to trace.
+  // chrome, not an outline.
   filter: drop-shadow(
     0 0 32px color-mix(in oklab, var(--kronk-purple-accent) 18%, transparent)
   );
 
   @media (width <= 889px) {
-    // Below the sidebar breakpoint, drop the right rail — just the top
-    // strip remains.
-    background: linear-gradient(
-      to bottom,
-      #000 0,
-      #000 3.35rem,
-      rgb(0 0 0 / 85%) 4rem,
-      rgb(0 0 0 / 55%) 4.85rem,
-      rgb(0 0 0 / 25%) 5.75rem,
-      transparent 6.75rem
-    );
-    background-repeat: no-repeat;
-    background-position: 0 0;
-    background-size: 100% 6.75rem;
+    // Below the sidebar breakpoint, drop the side rails entirely so
+    // content and the mobile bottom tab-bar own the viewport.
+    background: none;
   }
 }
 
