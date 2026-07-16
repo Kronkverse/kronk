@@ -100,7 +100,7 @@ launch:
 
 feature_flag: # not-implemented — Marketplace ships enabled at 2.0.0
 federates: false
-enforced: true
+enforced: false # Path A: not conformant (no serializer/mount) — item-8 rebuild target
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 nodes:

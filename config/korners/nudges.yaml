@@ -70,7 +70,7 @@ launch:
 
 feature_flag: # not-implemented
 federates: false # nudges never federate — private by design
-enforced: true # framework: on this branch; boot validator enforces
+enforced: false # Path A: /hub/nudges mount missing — re-enforce when the pillar mount lands (spec #331)
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 # The nudges korner is represented by the feed.nudges cross-cutting node.

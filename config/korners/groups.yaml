@@ -29,7 +29,7 @@ security:
   archive_gate: seeder_only
 
 feed_projection:
-  card: group_card
+  card: # not-built — Groups renders as its own /hub/groups web surface (render_target: web), not a timeline card
   title_from: name
   summary_from: description
   # Deliberately no status_association: a Group is not represented by a
