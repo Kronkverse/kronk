@@ -1,6 +1,6 @@
 # The Korner Standard
 
-> **Status:** v0 draft (2026-07-16). The normative definition of what makes a korner **slide in smoothly** to Kronk's infrastructure. Derived from the 2026-07-16 recreation audit (the dimensions where real korners broke) + the aesthetic standard (`docs/kronk_aesthetic_system.md` §6). Companion docs: `docs/kronk_korner_spec.md` (manifest field reference) and `docs/korners/adding_a_korner.md` (the build walkthrough — follows this standard).
+> **Status:** v1 (2026-07-16, two open decisions resolved — see foot). The normative definition of what makes a korner **slide in smoothly** to Kronk's infrastructure. Derived from the 2026-07-16 recreation audit (the dimensions where real korners broke) + the aesthetic standard (`docs/kronk_aesthetic_system.md` §6). Companion docs: `docs/kronk_korner_spec.md` (manifest field reference) and `docs/korners/adding_a_korner.md` (the build walkthrough — follows this standard).
 >
 > **How to read it:** §1 is the lifecycle gate — *what's required when*. §2 is the nine layers — *the checklist*. §3 is the conformance matrix — *what `korners doctor` enforces automatically vs. what a human signs off*. A korner is done when it passes every layer required for its lifecycle stage.
 >
@@ -29,7 +29,7 @@ A korner's `lifecycle` (in its node) and its manifest `enforced` flag are **prom
 - ⚙︎ **Slug** is one lowercase word (no hyphens/underscores), **equals the filename**, is **not** in `reserved_slugs.yaml`, and is unique across korners. *(Audit: `in-flow` has a hyphen and ≠ its filename `in_flow.yaml`.)*
 - ⚙︎ `name` and `icon` present; **`icon` is wired in `hooks/useKornerIcon.tsx`** and the mapping matches the manifest's `icon:` field. *(Audit: huddle/nudges icons are cross-wired vs their manifests.)*
 - ⚙︎ **No colour field** — no `--space-color`, no per-korner hex/hue. Differentiation is icon + name + content only.
-- ▲ **Canonical manifest shape.** The fleet currently uses three shapes (root-level `permissions`/`federates`; nested `security:`; and stubs with no security block). v0 proposes the **nested `security:`** shape as canonical (matches groups/huddle) and that every manifest carries identity + `resources` + `storage` + `security` + `feed_projection` (if it projects) + `settings` (if it has options) + `nodes`. *(Decision needed: pick the canonical shape so the doctor can validate against one.)*
+- ⚙︎ **Canonical manifest shape.** Every manifest carries identity + `resources` + `storage` + a nested **`security:`** block (permissions / visibility / federation / maintainers) + `feed_projection` (if it projects) + `settings` (if it has options) + `nodes`. The nested `security:` shape (matching groups/huddle) is canonical. The ~9 older root-level manifests migrate to it; stubs gain a `security:` block when they graduate to `enforced`.
 
 ### L2 — Data
 - ⚙︎ Every resource declared in `resources:` has a real model (`app/models/<x>.rb`), a table, and a migration.
@@ -68,7 +68,7 @@ A korner's `lifecycle` (in its node) and its manifest `enforced` flag are **prom
 - ◇ Settings are schema-driven (a `FIELDS` controller map + widgets), not a bespoke page.
 
 ### L9 — Tests & docs
-- ◇ ▲ A korner spec covering the model + the projection path. *(Decision: MUST for `enforced`, or SHOULD? v0 proposes SHOULD, rising to MUST once the test harness is cheap.)*
+- ◇ A korner spec covering the model + the projection path — **SHOULD** (recommended, not gating). Rises to MUST once a cheap korner-test harness exists.
 - ◇ Manifest is self-documenting; no phantom references. *(Audit: `nudges.yaml` cites a non-existent spec; `adding_a_korner.md` holds up non-existent Klot models — item 9 rewrites it against this standard.)*
 
 ## 3. Conformance matrix — the automated gate
@@ -86,7 +86,7 @@ Everything marked ⚙︎ above is **machine-checkable** and becomes an extended 
 | node bucket/parent/lifecycle valid; route_name resolves or spa; no id collision; links resolve | L6 | `feed.nudges` route |
 | card partial is stylelint-governed (no raw hex) | L7 | ungoverned card drift |
 
-`◇` items stay human sign-off (aesthetic judgment, tests, canonical-shape conformance until §L1 ▲ is decided).
+`◇` items stay human sign-off (aesthetic judgment, tests). Canonical manifest-shape conformance (nested `security:`) is `⚙︎` per L1.
 
 ## 4. Definition of done — "slides in smoothly"
 
@@ -103,4 +103,4 @@ Marketplace is the v0 test case (item 8): billed as the greenfield "reference ko
 
 ---
 
-_Open decisions flagged ▲: (L1) the canonical manifest shape; (L9) whether a korner spec is MUST or SHOULD for `enforced`. Everything else is proposed as normative for v1 pending review._
+_v1 decisions (2026-07-16, Tal): **(L1)** the nested `security:` block is the canonical manifest shape — the ~9 root-level manifests migrate to it. **(L9)** a korner spec is **SHOULD**, not gating. The standard is now normative for the recreation work._
