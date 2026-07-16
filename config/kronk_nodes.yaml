@@ -42,8 +42,11 @@ nodes:
     bucket: feed
     label: Nudges activity
     url: /nudges/activity
-    route_name: nudges_activity
     lifecycle: live
+    # SPA route (React Router) — /nudges/activity has no Rails named route, so
+    # `route_name` here failed `korners doctor`. Nudges is the activity surface;
+    # revisit when the Nudges pillar (spec #331) lands a canonical route.
+    spa: true
 
   # ── PROFILE ───────────────────────────────────────────────────────
   - id: profile.view
