@@ -13,19 +13,19 @@
 
 # ── Kronk palette (matches running production) ─────────────────────
 kronk:
-  purple-primary: { dark: '#3034a0', light: '#3034a0' }
-  purple-bright: { dark: '#8c8dff', light: '#6364ff' }
-  purple-deep: { dark: '#36248c', light: '#36248c' }
-  purple-muted: { dark: '#343070', light: '#45455f' }
-  purple-accent: { dark: '#6364ff', light: '#6364ff' }
+  purple-primary: { dark: '#32237c', light: '#3034a0' }
+  purple-bright: { dark: '#7241ff', light: '#6364ff' }
+  purple-deep: { dark: '#3a218b', light: '#36248c' }
+  purple-muted: { dark: '#413c8c', light: '#45455f' }
+  purple-accent: { dark: '#4414cc', light: '#6364ff' }
 
 # ── Semantic surfaces + text ───────────────────────────────────────
 semantic:
-  accent: { dark: '#6364ff', light: '#6364ff' }
+  accent: { dark: '#4414cc', light: '#6364ff' }
   surface-primary: { dark: '#191b22', light: '#ffffff' }
   surface-elevated: { dark: '#292938', light: '#f5f4f9' }
-  border-default: { dark: '#3d2a6e', light: '#ddd9e8' }
-  text-primary: { dark: '#ffffff', light: '#191b22' }
+  border-default: { dark: '#47368b', light: '#ddd9e8' }
+  text-primary: { dark: '#ece9f5', light: '#191b22' }
   text-secondary: { dark: '#9c9cc9', light: '#45455f' }
   text-muted: { dark: '#606085', light: '#7a7194' }
   warning-red: { dark: '#ef4444', light: '#c53030' }
