@@ -65,8 +65,8 @@ nodes:
 # Landing card content — surfaced by the shared korner-stub renderer
 # or the dedicated YouPortal feature.
 hub_teaser:
-  static: "Your Own Universe — track values, grow your Seed Being, log memories, and follow your kosmic rhythms."
+  static: 'Your Own Universe — track values, grow your Seed Being, log memories, and follow your kosmic rhythms.'
 
 launch:
   blurb: "YOU is Kronk's first pod client — a self-facing app for personal growth. Sign in and start shaping your identity."
-  cta: "Open YOU"
+  cta: 'Open YOU'
