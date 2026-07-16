@@ -38,6 +38,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
   has_one :event, serializer: REST::EventSerializer
   has_one :proposal, serializer: REST::ProposalSummarySerializer
   has_one :booth_set, serializer: REST::BoothSetSummarySerializer
+  has_one :listing, serializer: REST::MarketplaceListingSummarySerializer
   has_one :quote_approval
 
   attribute :question, if: :answer?
