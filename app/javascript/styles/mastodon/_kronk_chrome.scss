@@ -260,23 +260,24 @@ body:has(.korner-sub-bar) {
   }
 
   // Content fills the space between the viewport left edge and the
-  // right rail's fade transition — reads as "content wraps to the
-  // chrome's inner edge" rather than a narrow centre column
-  // surrounded by empty stars. 8.5rem matches the right rail's fade-
-  // to-transparent point (see body::before background-size above).
+  // right rail's fade transition. The L-shaped chrome is asymmetric
+  // (top + right, no left), so the content is anchored to the left
+  // and its right margin clears the full right-rail width so nothing
+  // renders under the fade. 8.5rem matches the right rail's total
+  // extent (see body::before background-size above).
   .columns-area__panels {
-    justify-content: center;
+    justify-content: flex-start;
     max-width: calc(100% - 8.5rem);
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: 0;
+    margin-right: 8.5rem;
     transition: max-width var(--dur-medium) var(--ease-out);
   }
 
   .columns-area__panels__main {
     width: 100%;
     max-width: calc(100% - 8.5rem);
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: 0;
+    margin-right: 8.5rem;
     transition: max-width var(--dur-medium) var(--ease-out);
   }
 
