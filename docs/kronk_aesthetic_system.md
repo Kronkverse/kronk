@@ -12,7 +12,7 @@ Kronk is **one platform, one palette**. Every space — profile, hub, kommons, e
 
 ### Principles (the rules that don't bend)
 
-1. **Everything through tokens.** No raw hex, rgb, or hard-coded spacing/motion values in feature CSS. Colours, radii, elevation, and motion all come from CSS custom properties generated from `tokens.yaml`. This is **enforced by stylelint** (see §2.4) — a raw hex in a governed file fails the build.
+1. **Everything through tokens.** No raw hex, rgb, or hard-coded spacing/motion values in feature CSS. Colours, radii, elevation, and motion all come from CSS custom properties generated from `tokens.yaml`. This is **enforced by stylelint** on governed feature CSS — a raw hex in a governed file fails the build. (Coverage is being extended to the korner-card partials.)
 2. **Kronk-purple is platform-wide.** The palette applies everywhere. Per-space colour identity is retired. When you need an accent, use `var(--accent)`; do not introduce a new brand colour for a korner.
 3. **Dark is the default; light is a first-class mirror.** Every themed token has both a `dark` and a `light` value. Build against the semantic aliases and both themes come for free — never branch on theme in feature code.
 4. **The planet metaphor is gone.** Pre-2.0.0, each space "orbited" a coloured planet and cards themed from a `--space-color` custom property. That was retired to consolidate identity. `--space-color` and its transitional alias were swept from the code. `planets.tsx` survives only as an accent-only compatibility shim until its last imports are removed — **do not build new work on it.**
@@ -42,11 +42,11 @@ These are the underlying brand ramp. **Feature code should almost never referenc
 
 | Token             | Dark      | Light     | Role                          |
 | ----------------- | --------- | --------- | ----------------------------- |
-| `--kronk-purple-primary` | `#3034a0` | `#3034a0` | Core brand purple             |
-| `--kronk-purple-bright`  | `#8c8dff` | `#6364ff` | Luminous highlight (glows)    |
-| `--kronk-purple-deep`    | `#36248c` | `#36248c` | Deep shadow purple            |
-| `--kronk-purple-muted`   | `#343070` | `#45455f` | Desaturated support purple    |
-| `--kronk-purple-accent`  | `#6364ff` | `#6364ff` | Interactive indigo accent     |
+| `--kronk-purple-primary` | `#32237c` | `#3034a0` | Core brand purple             |
+| `--kronk-purple-bright`  | `#7241ff` | `#6364ff` | Luminous highlight (glows)    |
+| `--kronk-purple-deep`    | `#3a218b` | `#36248c` | Deep shadow purple            |
+| `--kronk-purple-muted`   | `#413c8c` | `#45455f` | Desaturated support purple    |
+| `--kronk-purple-accent`  | `#4414cc` | `#6364ff` | Interactive indigo accent     |
 
 ### 2.3 Semantic tokens (the contract — build against these)
 
@@ -54,7 +54,7 @@ These are the underlying brand ramp. **Feature code should almost never referenc
 
 | Token       | Dark      | Light     |
 | ----------- | --------- | --------- |
-| `--accent`  | `#6364ff` | `#6364ff` |
+| `--accent`  | `#4414cc` | `#6364ff` |
 
 **Surfaces**
 
@@ -67,7 +67,7 @@ These are the underlying brand ramp. **Feature code should almost never referenc
 
 | Token               | Dark      | Light     |
 | ------------------- | --------- | --------- |
-| `--border-default`  | `#3d2a6e` | `#ddd9e8` |
+| `--border-default`  | `#47368b` | `#ddd9e8` |
 | `--text-primary`    | (light)   | (dark)    |
 | `--text-secondary`  | muted     | muted     |
 | `--text-muted`      | faint     | faint     |
@@ -129,6 +129,14 @@ Four levels, each a token defining a box-shadow: `--elevation-subtle`, `--elevat
 | `--motion-ease-spring`  | spring curve     | Playful/emphasis        |
 
 ---
+
+### 2.8 The per-user layer — Personal Appearance
+
+The tokens above are **brand defaults**. Kronk also lets each person tune a constrained slice of the aesthetic (Personal Appearance): a **purple-locked accent** (the hue is held to the Kronk range, so it can never leave the identity), theme (dark/light), display + body font, UI scale, and reduced motion. These are applied client-side by `utils/personal_appearance.ts`, which writes the choices as CSS custom properties onto `:root` (e.g. `root.style.setProperty('--accent', …)`), **layering over** the generated defaults.
+
+**Consequence for everything you build:** referencing `var(--accent)` and the semantic tokens isn't only about brand consistency — it's what makes per-user theming work. A component that hard-codes a hex, or reaches past a semantic alias to a raw palette token, silently opts the user out of their chosen accent/theme/scale. This is the deeper reason "everything through tokens" (§1) is non-negotiable: the token layer is the single seam where **both** platform identity and personalisation live.
+
+(The accent is hue-locked to purple server-side — `purple_accent?`, `Api::V1::Settings::AppearanceController`. Explore accents in the token studio at `talitamoss.info/kronk-chooser.html`.)
 
 ## 3. Signature treatments
 
