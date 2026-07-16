@@ -38,6 +38,7 @@ module Account::Associations
         has_many :statuses
 
         has_one :deletion_request, class_name: 'AccountDeletionRequest'
+        has_one :draft, inverse_of: :account, dependent: :destroy
         has_one :follow_recommendation_suppression
         has_one :notification_policy
         has_one :statuses_cleanup_policy, class_name: 'AccountStatusesCleanupPolicy'

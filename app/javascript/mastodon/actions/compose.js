@@ -4,6 +4,7 @@ import axios from 'axios';
 import { throttle } from 'lodash';
 
 import api from 'mastodon/api';
+import { apiGetDraft, apiPutDraft, apiDeleteDraft } from 'mastodon/api/drafts';
 import { apiAddMediaTag } from 'mastodon/api/media_tags';
 import { browserHistory } from 'mastodon/components/router';
 import { countableText } from 'mastodon/features/compose/util/counter';
@@ -34,6 +35,7 @@ export const COMPOSE_REPLY_CANCEL    = 'COMPOSE_REPLY_CANCEL';
 export const COMPOSE_DIRECT          = 'COMPOSE_DIRECT';
 export const COMPOSE_MENTION         = 'COMPOSE_MENTION';
 export const COMPOSE_RESET           = 'COMPOSE_RESET';
+export const COMPOSE_SET_DRAFT        = 'COMPOSE_SET_DRAFT';
 
 export const COMPOSE_UPLOAD_REQUEST    = 'COMPOSE_UPLOAD_REQUEST';
 export const COMPOSE_UPLOAD_SUCCESS    = 'COMPOSE_UPLOAD_SUCCESS';
@@ -268,6 +270,8 @@ export function submitCompose(successCallback) {
       dispatch(submitComposeSuccess({ ...response.data }));
 
       if (statusId === null) {
+        dispatch(deleteDraft());
+
         const pendingTags = getAllPendingTags();
         clearAllPendingTags();
         const tagPromises = [];
@@ -796,6 +800,78 @@ function insertIntoTagHistory(recognizedTags, text) {
 
     tagHistory.set(me, newHistory);
     dispatch(updateTagHistory(newHistory));
+  };
+}
+
+// Debounced background autosave: persist the composer to the server so an
+// in-progress post survives navigating away, a refresh, or a device switch.
+// Dispatched by the compose-draft middleware. One rolling draft per account.
+export function autosaveDraft() {
+  return (dispatch, getState) => {
+    const compose = getState().get('compose');
+
+    // Editing an existing status is not a draft.
+    if (compose.get('id')) {
+      return;
+    }
+
+    const text  = compose.get('text') || '';
+    const media = compose.get('media_attachments');
+    const poll  = compose.get('poll');
+
+    // Never autosave (or clear) an empty composer — clearing happens on publish.
+    if (text.trim().length === 0 && media.size === 0 && !poll) {
+      return;
+    }
+
+    apiPutDraft({
+      text,
+      spoiler_text: compose.get('spoiler') ? (compose.get('spoiler_text') || '') : '',
+      visibility: compose.get('privacy'),
+      language: compose.get('language') || null,
+      in_reply_to_id: compose.get('in_reply_to') || null,
+      sensitive: !!compose.get('sensitive'),
+      poll: poll ? {
+        options: poll.get('options').toArray().filter(option => option && option.length > 0),
+        expires_in: poll.get('expires_in'),
+        multiple: !!poll.get('multiple'),
+        hide_totals: !!poll.get('hide_totals'),
+      } : null,
+      media_ids: media.map(item => item.get('id')).toArray(),
+    }).catch(() => {});
+  };
+}
+
+// Restore the saved draft into a fresh composer (called on compose mount).
+export function restoreDraft() {
+  return (dispatch, getState) => {
+    const compose = getState().get('compose');
+
+    // Only restore into an empty, non-editing composer so we never clobber
+    // an active reply/edit/in-progress post.
+    if (compose.get('id') || (compose.get('text') || '').trim().length > 0 || compose.get('media_attachments').size > 0) {
+      return;
+    }
+
+    apiGetDraft().then(draft => {
+      if (!draft) {
+        return;
+      }
+
+      const params = draft.params || {};
+      const hasContent = (params.text || '').trim().length > 0 || (draft.media_attachments || []).length > 0 || !!params.poll;
+
+      if (hasContent) {
+        dispatch({ type: COMPOSE_SET_DRAFT, draft });
+      }
+    }).catch(() => {});
+  };
+}
+
+// Discard the saved draft (called after a successful publish).
+export function deleteDraft() {
+  return () => {
+    apiDeleteDraft().catch(() => {});
   };
 }
 
