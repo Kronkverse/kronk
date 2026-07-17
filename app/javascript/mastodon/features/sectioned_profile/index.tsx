@@ -12,6 +12,8 @@ import { useParams, useLocation, useHistory } from 'react-router-dom';
 
 import { List as ImmutableList } from 'immutable';
 
+import { isAxiosError } from 'axios';
+
 import {
   importFetchedStatuses,
   importFetchedAccount,
@@ -268,7 +270,16 @@ export const SectionedProfile = () => {
           acct,
         });
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+        // A 404 means the acct doesn't resolve here (removed, or a remote
+        // account this server hasn't seen) — show a calm "not on Kronk"
+        // note, not the raw axios string. Anything else is a load failure.
+        if (!cancelled) {
+          setError(
+            isAxiosError(e) && e.response?.status === 404
+              ? 'not_found'
+              : 'load_failed',
+          );
+        }
         return;
       }
       if (cancelled) return;
@@ -376,13 +387,21 @@ export const SectionedProfile = () => {
         {account && <KProfileHeader account={account} />}
 
         <div className='sectioned-profile__body'>
-          {error && (
+          {error === 'not_found' && (
+            <p className='sectioned-profile__error'>
+              <FormattedMessage
+                id='sectioned_profile.not_found'
+                defaultMessage="This profile isn't on Kronk — it may have been removed, or it lives on another server."
+              />
+            </p>
+          )}
+
+          {error === 'load_failed' && (
             <p className='sectioned-profile__error'>
               <FormattedMessage
                 id='sectioned_profile.error'
-                defaultMessage='Could not load profile.'
-              />{' '}
-              {error}
+                defaultMessage='Could not load this profile. Please try again in a moment.'
+              />
             </p>
           )}
 
