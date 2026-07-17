@@ -356,6 +356,48 @@
   }
 }
 
+// Card heading with its geometric glyph. The `.card h3` rules above own
+// the typography; this lays the glyph tile + label on one aligned row.
+.sectioned-profile__card-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sectioned-profile__card-glyph {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(132, 138, 250, 12%);
+  color: var(--accent);
+  font-size: 15px;
+  line-height: 1;
+}
+
+// Scannable chips for list-style cards (interests, values, personality,
+// drive, rotation) — the composer's "A · B · C" body split into pills.
+.sectioned-profile__chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sectioned-profile__chip {
+  padding: 5px 13px;
+  border: 1px solid var(--sp-line-2);
+  border-radius: 20px;
+  background: var(--sp-surface-2);
+  color: var(--sp-text);
+  font-size: 13px;
+  line-height: 1.3;
+}
+
 .sectioned-profile__muted {
   color: var(--sp-dim);
 }

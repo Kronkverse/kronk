@@ -568,7 +568,74 @@ interface MeCardCopy {
 const composerHref = (account: ApiAccountJSON): string =>
   `/@${account.acct}/edit`;
 
+// Geometric glyphs — the Kronk icon language (monochrome, purple, NOT
+// emoji) — that give each Me card a visual identity in its heading so
+// the panel reads as a set of distinct cards rather than a wall of text.
+const CARD_GLYPH: Record<string, string> = {
+  about: '◐',
+  interests: '✦',
+  exploring: '❋',
+  at_a_glance: '▦',
+  highlights: '✧',
+  personality: '◍',
+  drive: '◈',
+  rotation: '↻',
+  moments: '▤',
+  values: '◆',
+  note: '❝',
+};
+
+// Card heading with its geometric glyph. Shared by every Me card so the
+// glyph + type styling stay identical across text, live, and empty slots.
+const CardHeading: React.FC<{
+  cardType: string;
+  children: React.ReactNode;
+}> = ({ cardType, children }) => (
+  <h3 className='sectioned-profile__card-heading'>
+    {CARD_GLYPH[cardType] && (
+      <span className='sectioned-profile__card-glyph' aria-hidden>
+        {CARD_GLYPH[cardType]}
+      </span>
+    )}
+    <span>{children}</span>
+  </h3>
+);
+
+// Card types whose composed body is a short separated list ("A · B · C")
+// rather than prose — rendered as scannable chips instead of a sentence.
+const CHIP_TYPES = new Set([
+  'interests',
+  'values',
+  'personality',
+  'drive',
+  'rotation',
+]);
+
+// Split a composed card body (server-sanitised HTML) into chip labels on
+// the middot / bullet / pipe / newline separators the composer uses.
+// Tags are stripped, so chips are plain text (no dangerouslySetInnerHTML).
+const bodyToChips = (html: string): string[] =>
+  html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .split(/\s*[·•|\n]+\s*/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+// Columns lead with a VISUAL card so the profile opens on imagery /
+// live content, not prose: the top row is At a glance (stat tiles) ·
+// Recent highlights (pinned media) · Life in moments (photo grid). The
+// text identity cards sit beneath each visual lead.
 const ME_COL_1: MeCardCopy[] = [
+  {
+    title: messages.atGlanceTitle,
+    desc: messages.atGlanceDesc,
+    action: messages.atGlanceAction,
+    cardType: 'at_a_glance',
+    kind: 'at-a-glance',
+  },
   {
     title: messages.aboutTitle,
     desc: messages.aboutDesc,
@@ -590,13 +657,6 @@ const ME_COL_1: MeCardCopy[] = [
 ];
 
 const ME_COL_2: MeCardCopy[] = [
-  {
-    title: messages.atGlanceTitle,
-    desc: messages.atGlanceDesc,
-    action: messages.atGlanceAction,
-    cardType: 'at_a_glance',
-    kind: 'at-a-glance',
-  },
   {
     title: messages.highlightsTitle,
     desc: messages.highlightsDesc,
@@ -687,7 +747,9 @@ const EmptyMeCard: React.FC<{
     <div
       className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}
     >
-      <h3>{intl.formatMessage(card.title)}</h3>
+      <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
       <p className='sectioned-profile__card-desc'>
         {intl.formatMessage(card.desc)}
       </p>
@@ -729,16 +791,34 @@ const MeCard: React.FC<{
   // Text identity slots render the composed card body (server-sanitised
   // HTML). No composed card → owner sees the prompt, visitor sees nothing.
   if (composed?.body) {
+    // List-style cards (interests, values, …) render as scannable chips
+    // when the body splits into 2+ segments; otherwise fall back to the
+    // sanitised body (prose, or a single item).
+    const chips = CHIP_TYPES.has(card.cardType)
+      ? bodyToChips(composed.body)
+      : [];
     return (
       <div
         className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}
       >
-        <h3>{intl.formatMessage(card.title)}</h3>
-        <div
-          className='sectioned-profile__card-body'
-          // composed.body is server-sanitised HTML (may contain <a>).
-          dangerouslySetInnerHTML={{ __html: composed.body }}
-        />
+        <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
+        {chips.length >= 2 ? (
+          <ul className='sectioned-profile__chips'>
+            {chips.map((chip) => (
+              <li key={chip} className='sectioned-profile__chip'>
+                {chip}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div
+            className='sectioned-profile__card-body'
+            // composed.body is server-sanitised HTML (may contain <a>).
+            dangerouslySetInnerHTML={{ __html: composed.body }}
+          />
+        )}
       </div>
     );
   }
@@ -754,7 +834,9 @@ const AtAGlanceCard: React.FC<{ account: ApiAccountJSON }> = ({ account }) => {
 
   return (
     <div className='sectioned-profile__card'>
-      <h3>{intl.formatMessage(messages.atGlanceTitle)}</h3>
+      <CardHeading cardType='at_a_glance'>
+        {intl.formatMessage(messages.atGlanceTitle)}
+      </CardHeading>
       <div className='sectioned-profile__tiles'>
         <div className='sectioned-profile__tile'>
           <b>{account.statuses_count}</b>
@@ -809,7 +891,9 @@ const HighlightsCard: React.FC<{
   if (pinned === null) {
     return (
       <div className='sectioned-profile__card'>
-        <h3>{intl.formatMessage(card.title)}</h3>
+        <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
       </div>
     );
   }
@@ -818,7 +902,9 @@ const HighlightsCard: React.FC<{
   if (pinned.length === 0) {
     return (
       <div className='sectioned-profile__card'>
-        <h3>{intl.formatMessage(card.title)}</h3>
+        <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
         <p className='sectioned-profile__card-desc'>
           {intl.formatMessage(card.desc)}
         </p>
@@ -836,7 +922,9 @@ const HighlightsCard: React.FC<{
 
   return (
     <div className='sectioned-profile__card'>
-      <h3>{intl.formatMessage(card.title)}</h3>
+      <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
       <div className='sectioned-profile__highlights'>
         {pinned.map((status) => (
           <HighlightTile key={status.id} status={status} />
@@ -910,7 +998,9 @@ const MomentsCard: React.FC<{
   if (moments === null) {
     return (
       <div className='sectioned-profile__card'>
-        <h3>{intl.formatMessage(card.title)}</h3>
+        <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
       </div>
     );
   }
@@ -929,7 +1019,9 @@ const MomentsCard: React.FC<{
   if (thumbs.length === 0) {
     return (
       <div className='sectioned-profile__card'>
-        <h3>{intl.formatMessage(card.title)}</h3>
+        <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
         <p className='sectioned-profile__card-desc'>
           {intl.formatMessage(card.desc)}
         </p>
@@ -947,7 +1039,9 @@ const MomentsCard: React.FC<{
 
   return (
     <div className='sectioned-profile__card'>
-      <h3>{intl.formatMessage(card.title)}</h3>
+      <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
       <div className='sectioned-profile__gallery'>
         {thumbs.map((t) => (
           <a
