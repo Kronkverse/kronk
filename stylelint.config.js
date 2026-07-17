@@ -66,6 +66,7 @@ module.exports = {
         'app/javascript/styles/mastodon/_korner_sidebar.scss',
         'app/javascript/styles/mastodon/_feed_settings.scss',
         'app/javascript/styles/mastodon/_styleguide.scss',
+        'app/javascript/styles/mastodon/_you_portal.scss',
       ],
       rules: {
         // Raw hex codes are banned. Colours must come from tokens.

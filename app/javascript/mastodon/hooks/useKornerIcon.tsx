@@ -1,3 +1,4 @@
+import AccountCircleIcon from '@/material-icons/400-24px/account_circle.svg?react';
 import ArticleIcon from '@/material-icons/400-24px/article.svg?react';
 import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
 import CalendarIcon from '@/material-icons/400-24px/calendar_month.svg?react';
@@ -34,6 +35,7 @@ const SLUG_TO_ICON: Record<string, IconProp> = {
   groups: GroupsIcon, // group silhouettes
   tree: BarChartIcon, // stacked bars — hierarchy (proxy for account_tree)
   klot: ArticleIcon, // journal page — private log (proxy for nights_stay)
+  you: AccountCircleIcon, // self/identity — proxy for self_improvement (not shipped)
 };
 
 // Fallback when a slug has no mapped icon yet (tree / klot / newly-added
