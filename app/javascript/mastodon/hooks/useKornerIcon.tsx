@@ -12,6 +12,7 @@ import InventoryIcon from '@/material-icons/400-24px/inventory_2.svg?react';
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
+import StarIcon from '@/material-icons/400-24px/star.svg?react';
 import type { IconProp } from 'mastodon/components/icon';
 
 // Slug → icon component. Names match the manifest's `icon:` field
@@ -34,6 +35,7 @@ const SLUG_TO_ICON: Record<string, IconProp> = {
   groups: GroupsIcon, // group silhouettes
   tree: BarChartIcon, // stacked bars — hierarchy (proxy for account_tree)
   klot: ArticleIcon, // journal page — private log (proxy for nights_stay)
+  you: StarIcon, // four-point star — Your Own Universe (proxy for self_improvement)
 };
 
 // Fallback when a slug has no mapped icon yet (tree / klot / newly-added

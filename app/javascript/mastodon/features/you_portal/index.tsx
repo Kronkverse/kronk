@@ -1,15 +1,14 @@
-// YOU — landing card at /hub/you.
+// YOU — portal at /hub/you.
 //
-// The initial hook-up: a simple entry surface that introduces YOU as
-// Kronk's first "pod client" (see docs Kronk-Anthemos architecture)
-// and links the user out to Kashka's YOU PWA (repo:
-// Kashka-25/you-app-build, deployed on Netlify).
+// This korner is a portal, not a wrapper. Kronk hosts the discoverable
+// door into YOU (Kashka's personal-growth PWA — repo:
+// Kashka-25/you-app-build); YOU keeps its own aesthetic + surface on
+// its own domain. The Kronk-side stays a portal by design.
 //
-// This is deliberately shallow integration for 2.0 — no shared auth,
-// no data projection into Kronk yet. Those land in later phases once
-// Anthemos + its membrane are stable. For now the value is
-// discoverability: users find YOU through Kronk's normal korner
-// navigation instead of needing to know the URL.
+// Deeper integration between YOU and Kronk (shared auth, YOU signals
+// on the Kronk profile) will land at the auth/data-projection layer
+// via Anthemos's membrane — not by absorbing YOU into Kronk. So this
+// portal shape is the *target*, not a temporary shim.
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
@@ -59,12 +58,12 @@ const messages = defineMessages({
   },
   futureHeading: {
     id: 'you_portal.future_heading',
-    defaultMessage: 'Coming later',
+    defaultMessage: 'How it fits together',
   },
   futureBody: {
     id: 'you_portal.future_body',
     defaultMessage:
-      'Shared sign-in via Kronk, YOU signals appearing on your Kronk profile, and full Anthemos pod integration. Wired incrementally as the infrastructure lands.',
+      'YOU is its own app — it keeps its own aesthetic and surface. Kronk just hosts the door in. Later, YOU and Kronk will share sign-in and pass signals to each other through the Anthemos membrane, but YOU stays over there and Kronk stays over here.',
   },
 });
 

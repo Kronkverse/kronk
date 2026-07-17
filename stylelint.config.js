@@ -59,6 +59,7 @@ module.exports = {
         'app/javascript/styles/mastodon/_hub_page.scss',
         'app/javascript/styles/mastodon/_nudges_activity.scss',
         'app/javascript/styles/mastodon/_korner_stub.scss',
+        'app/javascript/styles/mastodon/_you_portal.scss',
         'app/javascript/styles/mastodon/_compose_kronk.scss',
         'app/javascript/styles/mastodon/_sectioned_profile.scss',
         'app/javascript/styles/mastodon/_groups.scss',
