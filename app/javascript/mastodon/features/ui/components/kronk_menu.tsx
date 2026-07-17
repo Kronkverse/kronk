@@ -8,6 +8,8 @@ import EditIcon from '@/material-icons/400-24px/edit-fill.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { useKorner } from 'mastodon/hooks/useKorner';
+import { me } from 'mastodon/initial_state';
+import { useAppSelector } from 'mastodon/store';
 
 // Kronk's Ӂ menu — a FLOATING, user-movable action button. Three primary
 // verbs: Post / Search / Settings (Nudges moved to the top-bar switcher).
@@ -31,6 +33,10 @@ const messages = defineMessages({
   settings_feed: {
     id: 'kronk_menu.settings_feed',
     defaultMessage: 'Feed settings',
+  },
+  settings_profile: {
+    id: 'kronk_menu.settings_profile',
+    defaultMessage: 'Profile settings',
   },
 });
 
@@ -103,6 +109,10 @@ const useSettingsTarget = (): SettingsTarget => {
   const kornerMatch = KORNER_RE.exec(location.pathname);
   const kornerSlug = kornerMatch?.[1];
   const korner = useKorner(kornerSlug);
+  const myAccount = useAppSelector((state) =>
+    me ? state.accounts.get(me) : undefined,
+  );
+  const myAcct = myAccount?.get('acct');
 
   return useMemo(() => {
     if (kornerSlug) {
@@ -121,13 +131,24 @@ const useSettingsTarget = (): SettingsTarget => {
         external: false,
       };
     }
+    // Profile space → the composer, symmetric with korner/feed reaching
+    // their own settings straight from the menu. Only on YOUR profile (the
+    // composer is owner-only); on someone else's, fall through to the hub.
+    const profileMatch = PROFILE_RE.exec(location.pathname);
+    if (profileMatch && myAcct && profileMatch[1] === myAcct) {
+      return {
+        href: `/@${myAcct}/edit`,
+        label: intl.formatMessage(messages.settings_profile),
+        external: false,
+      };
+    }
     // Fallback: the settings hub (settings rebuild §4.1), SPA-served.
     return {
       href: '/settings',
       label: intl.formatMessage(messages.settings),
       external: false,
     };
-  }, [kornerSlug, korner, location.pathname, intl]);
+  }, [kornerSlug, korner, location.pathname, intl, myAcct]);
 };
 
 // Clamp a proposed top-left to the viewport; optionally snap horizontally
