@@ -13,13 +13,32 @@
   display: none !important;
 }
 
-// The full-height black side "rails" (a body::before band down each
-// edge) are GONE — they read as dead black bars, and the left one had
-// no chrome in it at all. The Kronk chrome is now self-contained
-// floating pieces on the starfield: wordmark (top-left), HubSwitcher
-// (top-centre), the movable Ӂ (floating FAB), and the korner rail
-// (right), which now carries its own subtle glass backing instead of
-// borrowing the black band — see _korner_sidebar.scss.
+// The full-height black side "rails" are gone (they read as dead bars).
+// What stays is a TOP bar: an opaque black band behind the fixed chrome
+// (wordmark + HubSwitcher). Without it, content scrolls up UNDER the
+// fixed chrome and collides with it — the wordmark printed over the
+// first card. Solid black so scrolled content disappears cleanly behind
+// the chrome, with a thin purple accent edge so it reads as a header.
+// Hidden on mobile, where the switcher lives in the bottom tab-bar and
+// there is no top chrome. The korner rail (right) keeps its own glass
+// backing — see _korner_sidebar.scss.
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto; // top:0; right:0; left:0
+  height: 3.75rem; // aligns with the korner rail top; content clears at 4.25rem
+  z-index: 24; // above content, below the chrome (wordmark/switcher = 25)
+  pointer-events: none;
+  background: #000;
+  border-bottom: 1px solid
+    color-mix(in oklab, var(--kronk-purple-accent) 28%, transparent);
+  box-shadow: 0 6px 20px -8px rgb(0 0 0 / 55%);
+
+  @media (width <= 629px) {
+    // Switcher is in the bottom tab-bar; no top chrome to back.
+    display: none;
+  }
+}
 
 .kronk-wordmark {
   position: fixed;
