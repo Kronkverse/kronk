@@ -108,6 +108,8 @@ Kronk organises features into **korners**, each declared via a manifest under `c
 
 Full spec: `docs/kronk_korner_spec.md`. Reference implementation for adding a new korner: `docs/korners/adding_a_korner.md`. Visual system: `docs/kronk_aesthetic_system.md`.
 
+**Before you create or edit any `config/korners/*.yaml`, read `docs/korners/korner_standard.md`** — it is normative: the lifecycle gate (§1), the nine layers L1–L9 (§2), and the §3 conformance matrix. A manifest that passes `korners doctor` today can still violate the Standard — not all §3 checks are wired yet, so the Standard is the source of truth until they are.
+
 Canonical sources of truth:
 
 - `config/korners/*.yaml` — one manifest per korner (identity, resources, storage, security, feed projection, settings, etc.)

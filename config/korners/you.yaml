@@ -34,9 +34,12 @@ storage:
   media_prefix: # not-applicable — media lives in the pod
   redis_prefix: # not-applicable
 
-visibility_scopes: []
-
-steward_role: moderator
+# Canonical nested security block (Standard §L1). YOU holds no Kronk-side
+# data — permissions/visibility live in the user's pod — so this is minimal.
+security:
+  visibility_scopes: [] # no Kronk-side visibility gating — data is in the pod
+  maintainers: [moderator] # steward role for the integration itself
+  federates: false # YOU does not federate; signals surface via the membrane later
 
 # No cross-korner emits yet. Once Anthemos membrane is live, YOU may
 # publish "value updated" / "level up" / "mood logged" events that
@@ -61,6 +64,7 @@ nodes:
     parent: you
     label: YOU home
     url: /hub/you
+    lifecycle: soon # shallow link-out stub for 2.0 (Standard §L6 / §1 gate)
 
 # Landing card content — surfaced by the shared korner-stub renderer
 # or the dedicated YouPortal feature.
