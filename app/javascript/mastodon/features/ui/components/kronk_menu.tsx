@@ -4,30 +4,29 @@ import { FormattedMessage, useIntl, defineMessages } from 'react-intl';
 
 import { Link, useLocation } from 'react-router-dom';
 
-import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit-fill.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { useKorner } from 'mastodon/hooks/useKorner';
-import { useAppSelector } from 'mastodon/store';
 
-// Kronk's Ӂ menu — floating action bottom-right. Trimmed to four
-// primary verbs: Settings / Post / Search / Nudges. The Settings
-// entry is CONTEXT-AWARE — it points at the settings space for the
-// surface the user is currently on (korner / profile / feed / global).
+// Kronk's Ӂ menu — a FLOATING, user-movable action button. Three primary
+// verbs: Post / Search / Settings (Nudges moved to the top-bar switcher).
+// The Settings entry is CONTEXT-AWARE — it points at the settings space
+// for the surface the user is on. The Post entry is per-space.
+//
+// The button can be dragged anywhere (touch + mouse, iOS-AssistiveTouch
+// style); its position persists (localStorage), is clamped to the
+// viewport and snaps to the nearest edge, and a small drag-threshold
+// keeps a plain tap opening the menu. It lives in the app shell, so the
+// chosen position carries across every space.
 
 const messages = defineMessages({
   post: { id: 'kronk_menu.post', defaultMessage: 'Post' },
-  nudges: { id: 'kronk_menu.nudges', defaultMessage: 'Nudges' },
   search: { id: 'kronk_menu.search', defaultMessage: 'Search' },
   settings: { id: 'kronk_menu.settings', defaultMessage: 'Settings' },
   settings_korner: {
     id: 'kronk_menu.settings_korner',
     defaultMessage: '{name} settings',
-  },
-  settings_profile: {
-    id: 'kronk_menu.settings_profile',
-    defaultMessage: 'Profile settings',
   },
   settings_feed: {
     id: 'kronk_menu.settings_feed',
@@ -38,6 +37,26 @@ const messages = defineMessages({
 const KORNER_RE = /^\/hub\/([a-z0-9-]+)(?:\/|$)/;
 const PROFILE_RE = /^\/@([^/]+)(?:\/|$)/;
 const FEED_RE = /^\/home(?:\/|$)/;
+
+// ---- movable-button config ----
+const POS_KEY = 'kronk:menu-pos';
+const DRAG_THRESHOLD = 6; // px of movement before a press becomes a drag
+const EDGE = 12; // px kept clear of the viewport edge
+const BTN = 56; // nominal button size for anchor/centre math
+
+interface Pos {
+  x: number;
+  y: number;
+}
+
+const readPos = (): Pos | null => {
+  try {
+    const raw = localStorage.getItem(POS_KEY);
+    return raw ? (JSON.parse(raw) as Pos) : null;
+  } catch {
+    return null;
+  }
+};
 
 interface PostTarget {
   href: string;
@@ -111,23 +130,39 @@ const useSettingsTarget = (): SettingsTarget => {
   }, [kornerSlug, korner, location.pathname, intl]);
 };
 
+// Clamp a proposed top-left to the viewport; optionally snap horizontally
+// to the nearest edge (release behaviour).
+const clampAndSnap = (x: number, y: number, snap: boolean): Pos => {
+  const maxX = window.innerWidth - BTN - EDGE;
+  const maxY = window.innerHeight - BTN - EDGE;
+  let nx = Math.max(EDGE, Math.min(x, maxX));
+  const ny = Math.max(EDGE, Math.min(y, maxY));
+  if (snap) nx = nx + BTN / 2 < window.innerWidth / 2 ? EDGE : maxX;
+  return { x: nx, y: ny };
+};
+
 export const KronkMenu = () => {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<Pos | null>(() => readPos());
+  const [dragging, setDragging] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const drag = useRef<{
+    startX: number;
+    startY: number;
+    originX: number;
+    originY: number;
+    moved: boolean;
+  } | null>(null);
+  const suppressClick = useRef(false);
+
   const settings = useSettingsTarget();
   const post = usePostTarget();
 
-  const unreadNudgesCount = useAppSelector(
-    (state) => state.notificationGroups.unreadNudgeCount,
-  );
-
-  const toggle = useCallback(() => {
-    setOpen((prev) => !prev);
-  }, []);
   const close = useCallback(() => {
     setOpen(false);
   }, []);
 
+  // Close on outside click.
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
@@ -139,19 +174,105 @@ export const KronkMenu = () => {
     };
   }, [open, close]);
 
+  // Keep the button on-screen across viewport resizes.
+  useEffect(() => {
+    const onResize = () => {
+      setPos((p) => (p ? clampAndSnap(p.x, p.y, true) : null));
+    };
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+    };
+  }, []);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    drag.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      originX: rect.left,
+      originY: rect.top,
+      moved: false,
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }, []);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    const d = drag.current;
+    if (!d) return;
+    const dx = e.clientX - d.startX;
+    const dy = e.clientY - d.startY;
+    if (!d.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+    d.moved = true;
+    setDragging(true);
+    setOpen(false);
+    setPos(clampAndSnap(d.originX + dx, d.originY + dy, false));
+  }, []);
+
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    const d = drag.current;
+    drag.current = null;
+    e.currentTarget.releasePointerCapture(e.pointerId);
+    if (!d?.moved) return;
+    suppressClick.current = true;
+    setDragging(false);
+    setPos((p) => {
+      if (!p) return p;
+      const snapped = clampAndSnap(p.x, p.y, true);
+      try {
+        localStorage.setItem(POS_KEY, JSON.stringify(snapped));
+      } catch {
+        // best-effort
+      }
+      return snapped;
+    });
+  }, []);
+
+  const onClick = useCallback(() => {
+    if (suppressClick.current) {
+      suppressClick.current = false;
+      return;
+    }
+    setOpen((prev) => !prev);
+  }, []);
+
+  // Which corner the button sits in → which way the panel opens.
+  const anchor = useMemo(() => {
+    if (!pos) {
+      // Default park (matches the CSS): bottom-left on desktop — the
+      // right edge is the korner rail — and bottom-right on mobile. The
+      // panel opens upward either way, away from the viewport edge.
+      return window.innerWidth >= 890 ? 'bottom-left' : 'bottom-right';
+    }
+    const v = pos.y + BTN / 2 < window.innerHeight / 2 ? 'top' : 'bottom';
+    const h = pos.x + BTN / 2 < window.innerWidth / 2 ? 'left' : 'right';
+    return `${v}-${h}`;
+  }, [pos]);
+
+  const style = pos
+    ? { left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' }
+    : undefined;
+
   return (
-    <div ref={ref} className={`kronk-menu ${open ? 'kronk-menu--open' : ''}`}>
+    <div
+      ref={ref}
+      className={`kronk-menu ${open ? 'kronk-menu--open' : ''} ${dragging ? 'kronk-menu--dragging' : ''}`}
+      style={style}
+      data-anchor={anchor}
+    >
       <button
         type='button'
         className='kronk-menu__trigger'
         aria-expanded={open}
         aria-label='Kronk menu'
-        onClick={toggle}
+        onClick={onClick}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
       >
         <span aria-hidden='true'>Ӂ</span>
-        {unreadNudgesCount > 0 && (
-          <span className='kronk-menu__badge'>{unreadNudgesCount}</span>
-        )}
       </button>
 
       {open && (
@@ -169,27 +290,6 @@ export const KronkMenu = () => {
               <span className='kronk-menu__item-label'>{post.label}</span>
             </Link>
           )}
-          <Link
-            className='kronk-menu__item'
-            to='/nudges'
-            role='menuitem'
-            onClick={close}
-          >
-            <span className='kronk-menu__item-glyph' aria-hidden='true'>
-              <ChatIcon />
-            </span>
-            <span className='kronk-menu__item-label'>
-              <FormattedMessage {...messages.nudges} />
-            </span>
-            {unreadNudgesCount > 0 && (
-              <span
-                className='kronk-menu__item-badge'
-                aria-label={`${unreadNudgesCount} unread`}
-              >
-                {unreadNudgesCount}
-              </span>
-            )}
-          </Link>
           <Link
             className='kronk-menu__item'
             to='/search'

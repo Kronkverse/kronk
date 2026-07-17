@@ -3,78 +3,83 @@
 // KronkWordmark + HubSwitcher + KronkMenu take over the navigation
 // surfaces.
 
-// Hide the classic Mastodon navigation surfaces. The new Kronk chrome
-// (wordmark, hub-switcher, Ӂ-menu) covers every affordance the old
-// panels + tabs bar provided. Bell removal is part of this — the
-// bell icon lives inside .ui__navigation-bar so hiding it here also
-// completes Phase 5's "remove the notifications bell" item.
-.navigation-panel,
+// The classic Mastodon NavigationBar + side navigation panel are RETIRED
+// (removed from render — see ui/index.jsx + columns_area.jsx); the Kronk
+// chrome (wordmark, hub-switcher, Ӂ-menu) is the navigation surface. The
+// tabs-bar wrapper is still rendered by columns_area as a portal host for
+// mobile column headers, so it stays hidden here.
 .tabs-bar,
-.tabs-bar__wrapper,
-.ui__navigation-bar {
+.tabs-bar__wrapper {
   display: none !important;
 }
 
-// Unified top strip: solid black band spanning the viewport with a
-// Kronk-purple accent bottom border, hosting the wordmark (left),
-// HubSwitcher (centre), and Ӂ menu (right). Reads as one chrome layer
-// sitting on top of the starry backdrop rather than three floating
-// chips. Chrome elements below stay position:fixed inside this strip
-// because they need to keep their independent z-index layering (menu
-// panel, sub-bar, etc.).
-// Chrome wrap. Two overlapping soft-edge bands — a top strip and a
-// right rail — which together read as an L. No clip-path: the L's
-// inner edge is a gradient fade so the black dissolves into the stars
-// instead of terminating at a hard line. The bands extend to the
-// viewport edge, so only the inner edges fade.
-
+// The full-height black side "rails" are gone (they read as dead bars).
+// What stays is a TOP bar: an opaque black band behind the fixed chrome
+// (wordmark + HubSwitcher). Without it, content scrolls up UNDER the
+// fixed chrome and collides with it — the wordmark printed over the
+// first card. Solid black so scrolled content disappears cleanly behind
+// the chrome, with a thin purple accent edge so it reads as a header.
+// Hidden on mobile, where the switcher lives in the bottom tab-bar and
+// there is no top chrome. The korner rail (right) keeps its own glass
+// backing — see _korner_sidebar.scss.
 body::before {
   content: '';
   position: fixed;
-  inset: 0;
-  z-index: 24;
+  inset: 0 0 auto; // top:0; right:0; left:0
+  height: 5.5rem; // solid behind the chrome, then fades out below it
+  z-index: 24; // above content, below the chrome (wordmark/switcher = 25)
   pointer-events: none;
-  background:
-    // Left rail: solid black along the left edge, fading rightward
-    // into the stars. Symmetric with the right rail so content sits
-    // in a naturally-centred window between them.
-    linear-gradient(
-      to right,
-      #000 0,
-      #000 4.5rem,
-      rgb(0 0 0 / 85%) 5.25rem,
-      rgb(0 0 0 / 55%) 6.25rem,
-      rgb(0 0 0 / 25%) 7.25rem,
-      transparent 8.5rem
-    ),
-    // Right rail: solid black along the right edge, fading leftward.
-    linear-gradient(
-        to left,
-        #000 0,
-        #000 4.5rem,
-        rgb(0 0 0 / 85%) 5.25rem,
-        rgb(0 0 0 / 55%) 6.25rem,
-        rgb(0 0 0 / 25%) 7.25rem,
-        transparent 8.5rem
-      );
-  background-repeat: no-repeat;
-  background-position:
-    0 0,
-    100% 0;
-  background-size:
-    8.5rem 100%,
-    8.5rem 100%;
-
-  // Soft purple wash bleeding out of the fade — reads as glow on the
-  // chrome, not an outline.
+  // Solid black where the chrome actually sits (top ~3.25rem), then a soft
+  // fade to transparent so the bar dissolves into the starfield instead of
+  // ending on a hard edge. Content scrolling up passes through the fade
+  // before it disappears behind the solid band.
+  background: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 3.25rem,
+    rgb(0 0 0 / 82%) 3.9rem,
+    rgb(0 0 0 / 45%) 4.7rem,
+    rgb(0 0 0 / 0%) 5.5rem
+  );
+  // A whisper of purple glow under the bar — keeps the header identity
+  // without a sharp accent line.
   filter: drop-shadow(
-    0 0 32px color-mix(in oklab, var(--kronk-purple-accent) 18%, transparent)
+    0 2px 16px color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent)
+  );
+
+  @media (width <= 629px) {
+    // Switcher is in the bottom tab-bar; no top chrome to back.
+    display: none;
+  }
+}
+
+// Matching right-edge band behind the korner rail — the same treatment as
+// the top bar, rotated: solid black at the outer (right) edge, fading
+// inward to transparent so it dissolves into the starfield, with the same
+// faint purple glow. Together the two read as one soft chrome frame.
+// Hidden below the rail breakpoint, where the korner rail isn't shown.
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0 0 0 auto; // top:0; right:0; bottom:0; left:auto → full-height right band
+  width: 7.75rem;
+  z-index: 24; // above content, below the rail (z-index 25)
+  pointer-events: none;
+  background: linear-gradient(
+    to left,
+    #000 0,
+    #000 5.5rem,
+    rgb(0 0 0 / 82%) 6.15rem,
+    rgb(0 0 0 / 45%) 6.95rem,
+    rgb(0 0 0 / 0%) 7.75rem
+  );
+  filter: drop-shadow(
+    -2px 0 16px color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent)
   );
 
   @media (width <= 889px) {
-    // Below the sidebar breakpoint, drop the side rails entirely so
-    // content and the mobile bottom tab-bar own the viewport.
-    background: none;
+    // Korner rail is hidden below this width; nothing to back.
+    display: none;
   }
 }
 
@@ -97,11 +102,24 @@ body::before {
     transform var(--dur-fast) var(--ease-out),
     color var(--dur-fast) var(--ease-out);
 
+  // Each glyph is its own span (inline-flex gap separates them) so per-
+  // character routing + an easter egg can land in a later pass.
+  &__char {
+    display: inline-block;
+  }
+
   &:hover,
   &:focus-visible {
     color: var(--kronk-purple-bright, #fff);
     transform: scale(1.03);
     outline: none;
+  }
+
+  // On mobile the top strip is gone (the switcher moves to the bottom
+  // tab-bar), so the fixed wordmark would just float over page content.
+  // Drop it below the sidebar breakpoint — same as the side rails.
+  @media (width <= 889px) {
+    display: none;
   }
 }
 
@@ -119,6 +137,23 @@ body::before {
   background: transparent;
   border: none;
   box-shadow: none;
+
+  &__badge {
+    position: absolute;
+    top: 0.05rem;
+    right: 0.4rem;
+    min-width: 1.05rem;
+    height: 1.05rem;
+    padding: 0 0.28rem;
+    border-radius: var(--radius-round);
+    background: var(--kronk-purple-accent);
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1.05rem;
+    text-align: center;
+    pointer-events: none;
+  }
 
   &__item {
     padding: 0.5rem 1.35rem;
@@ -270,6 +305,24 @@ body:has(.korner-sub-bar) {
     display: none;
   }
 
+  // Compose is reached from the Ӂ menu now, not a persistent left
+  // column. Hide the compositional (compose) pane so content centres in
+  // the full width instead of being shoved right by an empty compose
+  // box — and so wide surfaces (the profile) aren't crammed + clipped.
+  .columns-area__panels__pane--compositional {
+    display: none;
+  }
+
+  // The sectioned profile is a 3-column composed layout (300 · 1fr ·
+  // 300, its own inner max-width 1180) — it needs the full prototype
+  // width, not the 720px reading column, or the right card column clips.
+  body:has(.sectioned-profile) {
+    .columns-area__panels,
+    .columns-area__panels__main {
+      max-width: min(1180px, 100%);
+    }
+  }
+
   // Grid-shaped surfaces (Hub landing especially) want more room than
   // the reading-column timeline. When the router lands on one, let the
   // main pane expand — capped at the available viewport width so the
@@ -407,14 +460,23 @@ body:has(.korner-sub-bar) {
 }
 
 .kronk-menu {
+  // FLOATING action button. Default park: bottom-left on desktop (the
+  // right edge belongs to the korner rail) and bottom-right on mobile
+  // (rail hidden; within thumb reach, lifted above the bottom tab-bar).
+  // The user can drag it anywhere; a saved position (inline top/left,
+  // set in JS) overrides these defaults.
   position: fixed;
-  top: 0.9rem;
-  right: 1.5rem;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  right: auto;
+  top: auto;
   z-index: 30;
 
-  @media (width <= 629px) {
-    top: 0.85rem;
+  @media (width <= 889px) {
+    left: auto;
     right: 1rem;
+    bottom: 4.75rem; // clear the mobile bottom tab-bar (hub-switcher)
+    top: auto;
   }
 
   &__trigger {
@@ -428,6 +490,8 @@ body:has(.korner-sub-bar) {
     font-size: 1.35rem;
     font-family: var(--font-display);
     cursor: pointer;
+    touch-action: none; // let pointer-drag reposition without page scroll
+    user-select: none;
     box-shadow:
       0 4px 12px -2px
         color-mix(in oklab, var(--kronk-purple-accent) 65%, transparent),
@@ -447,6 +511,32 @@ body:has(.korner-sub-bar) {
   &--open &__trigger {
     background: var(--kronk-purple-bright);
     transform: rotate(45deg);
+  }
+
+  // While the user is dragging the button: lift above everything and
+  // kill the spring transition so it tracks the pointer 1:1.
+  &--dragging {
+    z-index: 60;
+
+    .kronk-menu__trigger {
+      transition: none;
+      transform: none;
+      cursor: grabbing;
+    }
+  }
+
+  // The panel opens away from whichever corner the (movable) button sits
+  // in. Default (no data-anchor = parked top-right): opens down-left.
+  &[data-anchor^='bottom'] &__panel {
+    top: auto;
+    bottom: calc(100% + 0.75rem);
+    transform-origin: bottom right;
+  }
+
+  &[data-anchor$='left'] &__panel {
+    right: auto;
+    left: 0;
+    transform-origin: bottom left;
   }
 
   &__badge {

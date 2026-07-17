@@ -9,6 +9,7 @@ import {
 
 import { Link, useLocation } from 'react-router-dom';
 
+import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
@@ -94,6 +95,8 @@ export const KornerSidebar = () => {
     return m?.[1];
   }, [location.pathname]);
 
+  const onHub = location.pathname === '/hub';
+
   useEffect(() => {
     if (!activeSlug) return;
     setRecency((prev) => {
@@ -171,6 +174,17 @@ export const KornerSidebar = () => {
 
   return (
     <aside className='korner-sidebar' aria-label='Korners'>
+      <Link
+        to='/hub'
+        className={`korner-sidebar__hub ${onHub ? 'korner-sidebar__hub--active' : ''}`}
+        title='Hub'
+        aria-label='Hub'
+        data-name='Hub'
+      >
+        <span className='korner-sidebar__glyph' aria-hidden='true'>
+          <ExploreIcon />
+        </span>
+      </Link>
       <nav className='korner-sidebar__list'>
         {listed.map((k) => (
           <KornerRow
@@ -182,14 +196,6 @@ export const KornerSidebar = () => {
           />
         ))}
       </nav>
-      <Link
-        to='/hub'
-        className='korner-sidebar__all'
-        title='All korners'
-        data-name='All korners'
-      >
-        ⋯
-      </Link>
     </aside>
   );
 };
