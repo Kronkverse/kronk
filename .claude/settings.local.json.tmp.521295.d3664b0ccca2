@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh pr create --repo Kronkverse/kronk --base rebuild/2.0.0 --head feature/profile-cards-render --draft --title 'Profile Me tab: render composed ProfileCards \\(composer output\\)' --body ' *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" --max-time 15 https://shadow.kronk.info/)",
+      "Bash(gh api *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" --max-time 15 \"https://shadow.kronk.info/api/v1/accounts/1/profile/cards\")",
+      "Bash(ssh tal *)",
+      "Bash(ssh mainframe *)",
+      "Bash(git --no-pager diff --stat)",
+      "Bash(git add *)",
+      "Bash(git commit --no-verify -q -m 'Profile Me tab: empty-state actions open the composer + are visible *)",
+      "Bash(git push *)"
+    ]
+  }
+}
