@@ -552,7 +552,6 @@ interface MeCardCopy {
   title: MessageDescriptor;
   desc: MessageDescriptor;
   action: MessageDescriptor;
-  href: string;
   note?: boolean;
   // The ProfileCard type this slot renders. A slot shows content only when
   // the owner has composed (and made visible) the matching card — content
@@ -563,32 +562,29 @@ interface MeCardCopy {
   kind?: 'at-a-glance' | 'highlights' | 'moments';
 }
 
-// Bio + display-name + avatar edits actually exist at /settings/profile
-// (upstream Mastodon). Everything else routes there as a stub until the
-// identity-fields backend lands — the action still names the thing that
-// should happen, per the empty-state pattern.
-const EDIT_PROFILE_HREF = '/settings/profile';
+// Empty-state actions open the composer, where the owner places and fills
+// the card for this slot. These render only on the owner's own profile,
+// so the viewed acct is always the owner's — this is always your composer.
+const composerHref = (account: ApiAccountJSON): string =>
+  `/@${account.acct}/edit`;
 
 const ME_COL_1: MeCardCopy[] = [
   {
     title: messages.aboutTitle,
     desc: messages.aboutDesc,
     action: messages.aboutAction,
-    href: EDIT_PROFILE_HREF,
     cardType: 'about',
   },
   {
     title: messages.interestsTitle,
     desc: messages.interestsDesc,
     action: messages.interestsAction,
-    href: EDIT_PROFILE_HREF,
     cardType: 'interests',
   },
   {
     title: messages.exploringTitle,
     desc: messages.exploringDesc,
     action: messages.exploringAction,
-    href: EDIT_PROFILE_HREF,
     cardType: 'exploring',
   },
 ];
@@ -598,7 +594,6 @@ const ME_COL_2: MeCardCopy[] = [
     title: messages.atGlanceTitle,
     desc: messages.atGlanceDesc,
     action: messages.atGlanceAction,
-    href: EDIT_PROFILE_HREF,
     cardType: 'at_a_glance',
     kind: 'at-a-glance',
   },
@@ -606,7 +601,6 @@ const ME_COL_2: MeCardCopy[] = [
     title: messages.highlightsTitle,
     desc: messages.highlightsDesc,
     action: messages.highlightsAction,
-    href: EDIT_PROFILE_HREF,
     cardType: 'highlights',
     kind: 'highlights',
   },
@@ -614,21 +608,18 @@ const ME_COL_2: MeCardCopy[] = [
     title: messages.personalityTitle,
     desc: messages.personalityDesc,
     action: messages.personalityAction,
-    href: EDIT_PROFILE_HREF,
     cardType: 'personality',
   },
   {
     title: messages.driveTitle,
     desc: messages.driveDesc,
     action: messages.driveAction,
-    href: EDIT_PROFILE_HREF,
     cardType: 'drive',
   },
   {
     title: messages.rotationTitle,
     desc: messages.rotationDesc,
     action: messages.rotationAction,
-    href: EDIT_PROFILE_HREF,
     cardType: 'rotation',
   },
 ];
@@ -638,7 +629,6 @@ const ME_COL_3: MeCardCopy[] = [
     title: messages.momentsTitle,
     desc: messages.momentsDesc,
     action: messages.momentsAction,
-    href: EDIT_PROFILE_HREF,
     cardType: 'moments',
     kind: 'moments',
   },
@@ -646,14 +636,12 @@ const ME_COL_3: MeCardCopy[] = [
     title: messages.valuesTitle,
     desc: messages.valuesDesc,
     action: messages.valuesAction,
-    href: EDIT_PROFILE_HREF,
     cardType: 'values',
   },
   {
     title: messages.noteTitle,
     desc: messages.noteDesc,
     action: messages.noteAction,
-    href: EDIT_PROFILE_HREF,
     note: true,
     cardType: 'note',
   },
@@ -690,7 +678,10 @@ const OPEN_TO: OpenToCopy[] = [
 
 // Owner-only prompt shown in a Me slot the owner hasn't composed a card
 // for yet. Visitors never see empty slots (MeCard returns null for them).
-const EmptyMeCard: React.FC<{ card: MeCardCopy }> = ({ card }) => {
+const EmptyMeCard: React.FC<{
+  card: MeCardCopy;
+  account: ApiAccountJSON;
+}> = ({ card, account }) => {
   const intl = useIntl();
   return (
     <div
@@ -700,7 +691,10 @@ const EmptyMeCard: React.FC<{ card: MeCardCopy }> = ({ card }) => {
       <p className='sectioned-profile__card-desc'>
         {intl.formatMessage(card.desc)}
       </p>
-      <a href={card.href} className='sectioned-profile__card-action'>
+      <a
+        href={composerHref(account)}
+        className='sectioned-profile__card-action'
+      >
         {intl.formatMessage(card.action)}
       </a>
     </div>
@@ -719,17 +713,17 @@ const MeCard: React.FC<{
   // when the owner has placed the matching card in the composer.
   if (card.kind === 'at-a-glance') {
     if (composed) return <AtAGlanceCard account={account} />;
-    return isOwner ? <EmptyMeCard card={card} /> : null;
+    return isOwner ? <EmptyMeCard card={card} account={account} /> : null;
   }
   if (card.kind === 'highlights') {
     if (composed)
       return <HighlightsCard card={card} account={account} isOwner={isOwner} />;
-    return isOwner ? <EmptyMeCard card={card} /> : null;
+    return isOwner ? <EmptyMeCard card={card} account={account} /> : null;
   }
   if (card.kind === 'moments') {
     if (composed)
       return <MomentsCard card={card} account={account} isOwner={isOwner} />;
-    return isOwner ? <EmptyMeCard card={card} /> : null;
+    return isOwner ? <EmptyMeCard card={card} account={account} /> : null;
   }
 
   // Text identity slots render the composed card body (server-sanitised
@@ -749,7 +743,7 @@ const MeCard: React.FC<{
     );
   }
 
-  return isOwner ? <EmptyMeCard card={card} /> : null;
+  return isOwner ? <EmptyMeCard card={card} account={account} /> : null;
 };
 
 // Populated "At a glance" — 4 tiles reading real Mastodon account
@@ -829,7 +823,10 @@ const HighlightsCard: React.FC<{
           {intl.formatMessage(card.desc)}
         </p>
         {isOwner && (
-          <a href={card.href} className='sectioned-profile__card-action'>
+          <a
+            href={composerHref(account)}
+            className='sectioned-profile__card-action'
+          >
             {intl.formatMessage(card.action)}
           </a>
         )}
@@ -937,7 +934,10 @@ const MomentsCard: React.FC<{
           {intl.formatMessage(card.desc)}
         </p>
         {isOwner && (
-          <a href={card.href} className='sectioned-profile__card-action'>
+          <a
+            href={composerHref(account)}
+            className='sectioned-profile__card-action'
+          >
             {intl.formatMessage(card.action)}
           </a>
         )}

@@ -526,11 +526,12 @@
 .sectioned-profile__card-action {
   display: inline-block;
   margin-top: 12px;
-  padding: 6px 14px;
+  padding: 7px 16px;
   font-size: 13px;
-  color: var(--sp-text);
-  background: transparent;
-  border: 1px solid var(--sp-line-2);
+  font-weight: 500;
+  color: var(--accent);
+  background: rgba(132, 138, 250, 12%);
+  border: 1px solid var(--accent);
   border-radius: 999px;
   text-decoration: none;
   transition:
@@ -540,9 +541,9 @@
 
   &:hover,
   &:focus-visible {
-    background: var(--sp-surface-2);
+    background: var(--accent);
     border-color: var(--accent);
-    color: var(--accent);
+    color: var(--sp-text);
     outline: none;
   }
 }
