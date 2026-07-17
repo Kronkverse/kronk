@@ -1,72 +1,73 @@
-# YOU — Your Own Universe.
+# YOU — portal to Your Own Universe.
 #
-# A gamified personal-growth PWA (Kashka's project — repo:
-# Kashka-25/you-app-build). Users manage their values, streaks,
-# avatar, Memory Bank, mood, and astrology guidance in YOU.
+# This korner is a *portal* — a Kronk-native entry point that links
+# out to YOU (Kashka's personal-growth PWA, repo
+# Kashka-25/you-app-build). The Kronk-side stays a portal by design:
+# YOU keeps its own aesthetic + surface on its own domain, and Kronk
+# just hosts the discoverable route into it. Deeper wiring (shared
+# auth via Anthemos, YOU signals projected into Kronk's profile) will
+# land at the auth/data layer via the Anthemos membrane, not by
+# absorbing YOU into Kronk.
 #
-# In Kronk's architecture, YOU is a *pod client* — one of what will
-# eventually be many client applications sitting on top of the Anthemos
-# personal-pod infrastructure. YOU is the first schema-authoring
-# client; Kronk is a social-fabric consumer of the same pod via the
-# membrane (see docs/rebuild/kronk-anthemos-architecture memory).
-#
-# For 2.0 the integration is deliberately shallow: `/hub/you` renders
-# a landing card that links out to YOU's Netlify-hosted PWA. Deeper
-# integration (shared auth via Anthemos, projected profile fields,
-# Kronk-side surfacing of YOU signals) lands in later phases once
-# Anthemos + its membrane are stable.
-#
-# `enforced: false` keeps the boot validator quiet — no Kronk-side
-# models, no feed projection card. Just a routed entry point.
+# Because this korner is portal-only (no Kronk-side models, no feed
+# projection, no data), it stays at lifecycle `soon` / `enforced:
+# false` under `docs/korners/korner_standard.md` §1 permanently — a
+# link-out doesn't own the resources an enforced korner is required
+# to declare.
 
 slug: you
 name: YOU
-icon: self_improvement # material-icons "self_improvement" — meditative figure
+icon: star # kosmic four-point star — matches "Your Own Universe" framing;
+# useKornerIcon.tsx wires slug 'you' → StarIcon accordingly. (The
+# original preference was `self_improvement`, which isn't in the
+# shipped material-icons set — substituted per the same pattern
+# huddle/klot/tree use for unshipped icons.)
 render_target: native
-version: 0.0.0
+version: 0.1.0
 enforced: false
 
-# No local resources — YOU's data lives in the user's pod, not Kronk.
+# No local resources — YOU owns its own data (currently in Supabase;
+# eventually in an Anthemos pod). Kronk stores nothing on YOU's behalf.
 resources: []
 
 storage:
   db_namespace: # not-applicable — no Kronk-side tables
-  media_prefix: # not-applicable — media lives in the pod
+  media_prefix: # not-applicable — media lives in YOU / the pod
   redis_prefix: # not-applicable
 
-visibility_scopes: []
+# Canonical nested security block per Korner Standard §L1.
+security:
+  permissions: [] # no Kronk-side capabilities; auth is YOU's / Anthemos's
+  visibility: public # portal is publicly discoverable in /hub
+  federation: none # portal is intra-Kronk; YOU handles its own federation posture
+  maintainers: moderator # only Kronk admins can flip the portal itself
 
-steward_role: moderator
-
-# No cross-korner emits yet. Once Anthemos membrane is live, YOU may
-# publish "value updated" / "level up" / "mood logged" events that
-# other Kronk korners can react to.
+# No cross-korner emits or listens. Portal is a static route.
 emits: []
 listens: []
 
-# No feed projection in 2.0 — YOU signals surface in the profile
-# space (per docs/prototypes/kronk-profile-redesign.html), not the
-# main feed. Wire the projection card in a later phase.
+# No feed projection — YOU signals will appear in the profile space
+# via the Anthemos membrane once it lands, not as feed cards.
 feed_projection:
-  card: # not-implemented yet
+  card: # not-applicable — portal only
   title_from: # not-applicable
   status_association: # not-applicable
   links_to: /hub/you
 
-# Nodes for the Kommons Tree — one entry point node so users can
-# leave feedback on the YOU integration itself.
+# One Tree node so users can leave Kommons feedback on the portal itself.
+# lifecycle: soon per Korner Standard §L6 (matches enforced: false).
 nodes:
   - id: you.index
     bucket: hub
     parent: you
     label: YOU home
+    lifecycle: soon
     url: /hub/you
 
-# Landing card content — surfaced by the shared korner-stub renderer
-# or the dedicated YouPortal feature.
+# Landing card content — surfaced by the dedicated YouPortal feature.
 hub_teaser:
   static: 'Your Own Universe — track values, grow your Seed Being, log memories, and follow your kosmic rhythms.'
 
 launch:
-  blurb: "YOU is Kronk's first pod client — a self-facing app for personal growth. Sign in and start shaping your identity."
+  blurb: 'YOU is a self-facing personal-growth companion — its own app, in its own aesthetic. Kronk provides the door in.'
   cta: 'Open YOU'
