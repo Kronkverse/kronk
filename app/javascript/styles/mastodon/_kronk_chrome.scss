@@ -53,6 +53,36 @@ body::before {
   }
 }
 
+// Matching right-edge band behind the korner rail — the same treatment as
+// the top bar, rotated: solid black at the outer (right) edge, fading
+// inward to transparent so it dissolves into the starfield, with the same
+// faint purple glow. Together the two read as one soft chrome frame.
+// Hidden below the rail breakpoint, where the korner rail isn't shown.
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0 0 0 auto; // top:0; right:0; bottom:0; left:auto → full-height right band
+  width: 7.75rem;
+  z-index: 24; // above content, below the rail (z-index 25)
+  pointer-events: none;
+  background: linear-gradient(
+    to left,
+    #000 0,
+    #000 5.5rem,
+    rgb(0 0 0 / 82%) 6.15rem,
+    rgb(0 0 0 / 45%) 6.95rem,
+    rgb(0 0 0 / 0%) 7.75rem
+  );
+  filter: drop-shadow(
+    -2px 0 16px color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent)
+  );
+
+  @media (width <= 889px) {
+    // Korner rail is hidden below this width; nothing to back.
+    display: none;
+  }
+}
+
 .kronk-wordmark {
   position: fixed;
   top: 1.1rem;
