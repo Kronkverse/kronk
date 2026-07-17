@@ -35,14 +35,16 @@ storage:
   media_prefix: # not-applicable — media lives in YOU / the pod
   redis_prefix: # not-applicable
 
-# Canonical nested security block per Korner Standard §L1.
+# Canonical nested security block (Standard §L1). YOU holds no Kronk-side
+# data — permissions/visibility live in the user's pod — so this is minimal.
 security:
-  permissions: [] # no Kronk-side capabilities; auth is YOU's / Anthemos's
-  visibility: public # portal is publicly discoverable in /hub
-  federation: none # portal is intra-Kronk; YOU handles its own federation posture
-  maintainers: moderator # only Kronk admins can flip the portal itself
+  visibility_scopes: [] # no Kronk-side visibility gating — data is in the pod
+  maintainers: [moderator] # steward role for the integration itself
+  federates: false # YOU does not federate; signals surface via the membrane later
 
-# No cross-korner emits or listens. Portal is a static route.
+# No cross-korner emits yet. Once Anthemos membrane is live, YOU may
+# publish "value updated" / "level up" / "mood logged" events that
+# other Kronk korners can react to.
 emits: []
 listens: []
 
@@ -63,6 +65,7 @@ nodes:
     label: YOU home
     lifecycle: soon
     url: /hub/you
+    lifecycle: soon # shallow link-out stub for 2.0 (Standard §L6 / §1 gate)
 
 # Landing card content — surfaced by the dedicated YouPortal feature.
 hub_teaser:

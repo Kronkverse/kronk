@@ -279,7 +279,12 @@ body:has(.korner-sub-bar) {
   body:has(.hub-page) {
     .columns-area__panels,
     .columns-area__panels__main {
-      max-width: min(1080px, 100%);
+      // The korner rail is position:fixed at right: 0.75rem, width: 4.5rem.
+      // `100%` alone spans the full viewport (under the rail) — reserve the
+      // rail's ~5.25rem footprint (+ a gap) on the right so the grid's last
+      // column stops before it instead of sliding underneath.
+      max-width: min(1080px, 100% - 6.5rem);
+      margin-right: 6.5rem;
     }
   }
 }
