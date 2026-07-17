@@ -26,13 +26,26 @@ body::before {
   content: '';
   position: fixed;
   inset: 0 0 auto; // top:0; right:0; left:0
-  height: 3.75rem; // aligns with the korner rail top; content clears at 4.25rem
+  height: 5.5rem; // solid behind the chrome, then fades out below it
   z-index: 24; // above content, below the chrome (wordmark/switcher = 25)
   pointer-events: none;
-  background: #000;
-  border-bottom: 1px solid
-    color-mix(in oklab, var(--kronk-purple-accent) 28%, transparent);
-  box-shadow: 0 6px 20px -8px rgb(0 0 0 / 55%);
+  // Solid black where the chrome actually sits (top ~3.25rem), then a soft
+  // fade to transparent so the bar dissolves into the starfield instead of
+  // ending on a hard edge. Content scrolling up passes through the fade
+  // before it disappears behind the solid band.
+  background: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 3.25rem,
+    rgb(0 0 0 / 82%) 3.9rem,
+    rgb(0 0 0 / 45%) 4.7rem,
+    rgb(0 0 0 / 0%) 5.5rem
+  );
+  // A whisper of purple glow under the bar — keeps the header identity
+  // without a sharp accent line.
+  filter: drop-shadow(
+    0 2px 16px color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent)
+  );
 
   @media (width <= 629px) {
     // Switcher is in the bottom tab-bar; no top chrome to back.
