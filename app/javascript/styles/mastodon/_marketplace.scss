@@ -1,6 +1,54 @@
-// Minimal /hub/marketplace browse page (Korner Standard L5). Token-only.
+// /hub/marketplace browse page (Korner Standard L5). Token-only.
+// Slice: category filter tabs + card refresh. Filter tabs sit above the
+// listings list; each card exposes title/price on top and a meta row
+// with category chip + location beneath.
 .marketplace {
   padding: 1rem;
+
+  &__filter-tabs {
+    display: flex;
+    gap: 0.4rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-default);
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  &__filter-tab {
+    flex: 0 0 auto;
+    padding: 0.35rem 0.85rem;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: var(--surface-elevated);
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    &--active {
+      background: var(--accent);
+      color: var(--on-accent);
+      border-color: var(--accent);
+
+      &:hover,
+      &:focus-visible {
+        background: var(--accent);
+        color: var(--on-accent);
+      }
+    }
+  }
 
   &__status {
     color: var(--text-muted);
@@ -17,10 +65,18 @@
   }
 
   &__item {
-    padding: 0.75rem 1rem;
+    padding: 0.85rem 1rem;
     border: 1px solid var(--border-default);
     border-radius: var(--radius-medium);
     background: var(--surface-elevated);
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
   }
 
   &__item-head {
@@ -28,12 +84,13 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 0.5rem;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.5rem;
   }
 
   &__item-title {
     font-weight: 600;
     color: var(--text-primary);
+    font-size: 1rem;
   }
 
   &__item-price {
@@ -42,9 +99,39 @@
     white-space: nowrap;
   }
 
+  // Meta row: category chip + location, sits between title/price and
+  // the description.
+  &__item-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.4rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__item-category {
+    padding: 0.1rem 0.6rem;
+    border-radius: var(--radius-round);
+    background: var(--surface-primary);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid var(--border-default);
+  }
+
+  &__item-location::before {
+    content: '\2022'; // bullet separator
+    margin-right: 0.5rem;
+    color: var(--text-muted);
+  }
+
   &__item-desc {
     margin: 0.4rem 0 0;
     color: var(--text-secondary);
     font-size: 0.9em;
+    line-height: 1.4;
   }
 }
