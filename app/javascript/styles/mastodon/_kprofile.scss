@@ -16,7 +16,7 @@
 .kprofile {
   --k-canvas: var(--background-color, #0a0812);
   --k-surface: var(--surface-variant-background-color, #141020);
-  --k-text: var(--on-surface-color, #ece9fb);
+  --k-text: var(--text-primary, #ece9f5);
   --k-dim: var(--text-secondary-color, #9a95c4);
   --k-faint: var(--text-tertiary-color, #6f6a95);
   --k-line: rgba(132, 138, 250, 24%);

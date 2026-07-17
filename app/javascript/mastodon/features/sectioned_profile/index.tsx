@@ -12,6 +12,8 @@ import { useParams, useLocation, useHistory } from 'react-router-dom';
 
 import { List as ImmutableList } from 'immutable';
 
+import { isAxiosError } from 'axios';
+
 import {
   importFetchedStatuses,
   importFetchedAccount,
@@ -234,6 +236,7 @@ export const SectionedProfile = () => {
 
   const [account, setAccount] = useState<ApiAccountJSON | null>(null);
   const [sections, setSections] = useState<SectionWithStatuses[]>([]);
+  const [cards, setCards] = useState<ProfileCardJSON[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const isOwner = account !== null && account.id === me;
@@ -267,13 +270,40 @@ export const SectionedProfile = () => {
           acct,
         });
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+        // A 404 means the acct doesn't resolve here (removed, or a remote
+        // account this server hasn't seen) — show a calm "not on Kronk"
+        // note, not the raw axios string. Anything else is a load failure.
+        if (!cancelled) {
+          setError(
+            isAxiosError(e) && e.response?.status === 404
+              ? 'not_found'
+              : 'load_failed',
+          );
+        }
         return;
       }
       if (cancelled) return;
 
       dispatch(importFetchedAccount(accountRes));
       setAccount(accountRes);
+
+      // Step 1b: profile cards (the Me tab). The endpoint filters
+      // per-viewer, so whatever comes back is renderable as-is. A 404
+      // (composer flag off) or any failure just leaves the Me tab on its
+      // owner empty-states.
+      try {
+        const cardList = await apiRequestGet<ProfileCardJSON[]>(
+          `v1/accounts/${accountRes.id}/profile/cards`,
+        );
+        if (!cancelled) setCards(cardList);
+      } catch {
+        if (!cancelled) {
+          console.warn(
+            'SectionedProfile: cards fetch failed; Me tab shows empty states',
+          );
+        }
+      }
+      if (cancelled) return;
 
       // Step 2: sections list. Independent of statuses. A failure here
       // means the user sees the tabs + placeholder grids instead of an
@@ -354,21 +384,24 @@ export const SectionedProfile = () => {
       <ColumnBackButton />
 
       <div className='scrollable sectioned-profile'>
-        {account && (
-          <KProfileHeader
-            account={account}
-            hiddenFieldNames={identityFieldNames()}
-          />
-        )}
+        {account && <KProfileHeader account={account} />}
 
         <div className='sectioned-profile__body'>
-          {error && (
+          {error === 'not_found' && (
+            <p className='sectioned-profile__error'>
+              <FormattedMessage
+                id='sectioned_profile.not_found'
+                defaultMessage="This profile isn't on Kronk — it may have been removed, or it lives on another server."
+              />
+            </p>
+          )}
+
+          {error === 'load_failed' && (
             <p className='sectioned-profile__error'>
               <FormattedMessage
                 id='sectioned_profile.error'
-                defaultMessage='Could not load profile.'
-              />{' '}
-              {error}
+                defaultMessage='Could not load this profile. Please try again in a moment.'
+              />
             </p>
           )}
 
@@ -437,7 +470,7 @@ export const SectionedProfile = () => {
                 role='tabpanel'
                 hidden={activeTab !== 'me'}
               >
-                <MePanel isOwner={isOwner} account={account} />
+                <MePanel isOwner={isOwner} account={account} cards={cards} />
               </section>
 
               <section
@@ -521,101 +554,152 @@ interface MessageDescriptor {
   defaultMessage: string;
 }
 
+// A composed identity card, as returned by
+// GET /api/v1/accounts/:id/profile/cards. The endpoint already filters
+// per-viewer (ProfileCard#visible_to?), so only cards this viewer is
+// allowed to see arrive here — no client-side visibility gating needed.
+interface ProfileCardJSON {
+  id: string;
+  card_type: string;
+  body: string; // server-sanitised HTML
+  visibility: 'everyone' | 'kronk' | 'connections' | 'vouched' | 'only_me';
+  position: number;
+  visible: boolean;
+}
+
 interface MeCardCopy {
   title: MessageDescriptor;
   desc: MessageDescriptor;
   action: MessageDescriptor;
-  href: string;
   note?: boolean;
-  // Marker for cards that render populated content from the account
-  // object or a live API fetch instead of the empty-state template.
+  // The ProfileCard type this slot renders. A slot shows content only when
+  // the owner has composed (and made visible) the matching card — content
+  // comes from the composer, not from account custom fields.
+  cardType: string;
+  // Marker for slots that render live content (counts / statuses / media)
+  // when the card is present, instead of the composed card body.
   kind?: 'at-a-glance' | 'highlights' | 'moments';
-  // Optional matching name(s) in account.fields — if the user has a
-  // custom field with any of these names, the card renders populated
-  // from that field's value instead of the empty state. Names match
-  // case-insensitively.
-  fieldNames?: string[];
 }
 
-// Every fieldName across every ME_COL card, flattened + lowercased.
-// Used by KProfileHeader to filter these out of the metarow so a
-// field consumed by a Me-panel card doesn't also show as a chip.
-export const identityFieldNames = (): string[] => {
-  const all: string[] = [];
-  for (const col of [ME_COL_1, ME_COL_2, ME_COL_3]) {
-    for (const card of col) {
-      if (card.fieldNames)
-        all.push(...card.fieldNames.map((n) => n.toLowerCase()));
-    }
-  }
-  return all;
+// Empty-state actions open the composer, where the owner places and fills
+// the card for this slot. These render only on the owner's own profile,
+// so the viewed acct is always the owner's — this is always your composer.
+const composerHref = (account: ApiAccountJSON): string =>
+  `/@${account.acct}/edit`;
+
+// Geometric glyphs — the Kronk icon language (monochrome, purple, NOT
+// emoji) — that give each Me card a visual identity in its heading so
+// the panel reads as a set of distinct cards rather than a wall of text.
+const CARD_GLYPH: Record<string, string> = {
+  about: '◐',
+  interests: '✦',
+  exploring: '❋',
+  at_a_glance: '▦',
+  highlights: '✧',
+  personality: '◍',
+  drive: '◈',
+  rotation: '↻',
+  moments: '▤',
+  values: '◆',
+  note: '❝',
 };
 
-// Bio + display-name + avatar edits actually exist at /settings/profile
-// (upstream Mastodon). Everything else routes there as a stub until the
-// identity-fields backend lands — the action still names the thing that
-// should happen, per the empty-state pattern.
-const EDIT_PROFILE_HREF = '/settings/profile';
+// Card heading with its geometric glyph. Shared by every Me card so the
+// glyph + type styling stay identical across text, live, and empty slots.
+const CardHeading: React.FC<{
+  cardType: string;
+  children: React.ReactNode;
+}> = ({ cardType, children }) => (
+  <h3 className='sectioned-profile__card-heading'>
+    {CARD_GLYPH[cardType] && (
+      <span className='sectioned-profile__card-glyph' aria-hidden>
+        {CARD_GLYPH[cardType]}
+      </span>
+    )}
+    <span>{children}</span>
+  </h3>
+);
 
+// Card types whose composed body is a short separated list ("A · B · C")
+// rather than prose — rendered as scannable chips instead of a sentence.
+const CHIP_TYPES = new Set([
+  'interests',
+  'values',
+  'personality',
+  'drive',
+  'rotation',
+]);
+
+// Split a composed card body (server-sanitised HTML) into chip labels on
+// the middot / bullet / pipe / newline separators the composer uses.
+// Tags are stripped, so chips are plain text (no dangerouslySetInnerHTML).
+const bodyToChips = (html: string): string[] =>
+  html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .split(/\s*[·•|\n]+\s*/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+// Columns lead with a VISUAL card so the profile opens on imagery /
+// live content, not prose: the top row is At a glance (stat tiles) ·
+// Recent highlights (pinned media) · Life in moments (photo grid). The
+// text identity cards sit beneath each visual lead.
 const ME_COL_1: MeCardCopy[] = [
+  {
+    title: messages.atGlanceTitle,
+    desc: messages.atGlanceDesc,
+    action: messages.atGlanceAction,
+    cardType: 'at_a_glance',
+    kind: 'at-a-glance',
+  },
   {
     title: messages.aboutTitle,
     desc: messages.aboutDesc,
     action: messages.aboutAction,
-    href: EDIT_PROFILE_HREF,
-    fieldNames: ['about', 'about me', 'bio'],
+    cardType: 'about',
   },
   {
     title: messages.interestsTitle,
     desc: messages.interestsDesc,
     action: messages.interestsAction,
-    href: EDIT_PROFILE_HREF,
-    fieldNames: ['interests'],
+    cardType: 'interests',
   },
   {
     title: messages.exploringTitle,
     desc: messages.exploringDesc,
     action: messages.exploringAction,
-    href: EDIT_PROFILE_HREF,
-    fieldNames: ['exploring', 'currently exploring'],
+    cardType: 'exploring',
   },
 ];
 
 const ME_COL_2: MeCardCopy[] = [
   {
-    title: messages.atGlanceTitle,
-    desc: messages.atGlanceDesc,
-    action: messages.atGlanceAction,
-    href: EDIT_PROFILE_HREF,
-    kind: 'at-a-glance',
-  },
-  {
     title: messages.highlightsTitle,
     desc: messages.highlightsDesc,
     action: messages.highlightsAction,
-    href: EDIT_PROFILE_HREF,
+    cardType: 'highlights',
     kind: 'highlights',
   },
   {
     title: messages.personalityTitle,
     desc: messages.personalityDesc,
     action: messages.personalityAction,
-    href: EDIT_PROFILE_HREF,
-    fieldNames: ['personality'],
+    cardType: 'personality',
   },
   {
     title: messages.driveTitle,
     desc: messages.driveDesc,
     action: messages.driveAction,
-    href: EDIT_PROFILE_HREF,
-    fieldNames: ['drive', 'motto', 'what drives me'],
+    cardType: 'drive',
   },
   {
     title: messages.rotationTitle,
     desc: messages.rotationDesc,
     action: messages.rotationAction,
-    href: EDIT_PROFILE_HREF,
-    fieldNames: ['rotation', 'in rotation'],
+    cardType: 'rotation',
   },
 ];
 
@@ -624,23 +708,21 @@ const ME_COL_3: MeCardCopy[] = [
     title: messages.momentsTitle,
     desc: messages.momentsDesc,
     action: messages.momentsAction,
-    href: EDIT_PROFILE_HREF,
+    cardType: 'moments',
     kind: 'moments',
   },
   {
     title: messages.valuesTitle,
     desc: messages.valuesDesc,
     action: messages.valuesAction,
-    href: EDIT_PROFILE_HREF,
-    fieldNames: ['values'],
+    cardType: 'values',
   },
   {
     title: messages.noteTitle,
     desc: messages.noteDesc,
     action: messages.noteAction,
-    href: EDIT_PROFILE_HREF,
     note: true,
-    fieldNames: ['note'],
+    cardType: 'note',
   },
 ];
 
@@ -673,63 +755,94 @@ const OPEN_TO: OpenToCopy[] = [
   },
 ];
 
-const MeCard: React.FC<{
+// Owner-only prompt shown in a Me slot the owner hasn't composed a card
+// for yet. Visitors never see empty slots (MeCard returns null for them).
+const EmptyMeCard: React.FC<{
   card: MeCardCopy;
-  isOwner: boolean;
   account: ApiAccountJSON;
-}> = ({ card, isOwner, account }) => {
+}> = ({ card, account }) => {
   const intl = useIntl();
-
-  // Populated variants replace the empty-state template entirely.
-  if (card.kind === 'at-a-glance') {
-    return <AtAGlanceCard account={account} />;
-  }
-  if (card.kind === 'highlights') {
-    return <HighlightsCard card={card} account={account} isOwner={isOwner} />;
-  }
-  if (card.kind === 'moments') {
-    return <MomentsCard card={card} account={account} isOwner={isOwner} />;
-  }
-
-  // Fields-driven population: if the user has an account custom field
-  // whose name matches any of card.fieldNames, render that field's
-  // value as the card body. Otherwise fall through to the empty state.
-  if (card.fieldNames) {
-    const wanted = card.fieldNames.map((n) => n.toLowerCase());
-    const field = account.fields.find((f) =>
-      wanted.includes(f.name.trim().toLowerCase()),
-    );
-    if (field) {
-      return (
-        <div
-          className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}
-        >
-          <h3>{intl.formatMessage(card.title)}</h3>
-          <div
-            className='sectioned-profile__card-body'
-            // field.value is server-sanitised HTML (may contain <a>).
-            dangerouslySetInnerHTML={{ __html: field.value }}
-          />
-        </div>
-      );
-    }
-  }
-
   return (
     <div
       className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}
     >
-      <h3>{intl.formatMessage(card.title)}</h3>
+      <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
       <p className='sectioned-profile__card-desc'>
         {intl.formatMessage(card.desc)}
       </p>
-      {isOwner && (
-        <a href={card.href} className='sectioned-profile__card-action'>
-          {intl.formatMessage(card.action)}
-        </a>
-      )}
+      <a
+        href={composerHref(account)}
+        className='sectioned-profile__card-action'
+      >
+        {intl.formatMessage(card.action)}
+      </a>
     </div>
   );
+};
+
+const MeCard: React.FC<{
+  card: MeCardCopy;
+  isOwner: boolean;
+  account: ApiAccountJSON;
+  composed?: ProfileCardJSON;
+}> = ({ card, isOwner, account, composed }) => {
+  const intl = useIntl();
+
+  // Live slots (counts / highlights / moments) render their component only
+  // when the owner has placed the matching card in the composer.
+  if (card.kind === 'at-a-glance') {
+    if (composed) return <AtAGlanceCard account={account} />;
+    return isOwner ? <EmptyMeCard card={card} account={account} /> : null;
+  }
+  if (card.kind === 'highlights') {
+    if (composed)
+      return <HighlightsCard card={card} account={account} isOwner={isOwner} />;
+    return isOwner ? <EmptyMeCard card={card} account={account} /> : null;
+  }
+  if (card.kind === 'moments') {
+    if (composed)
+      return <MomentsCard card={card} account={account} isOwner={isOwner} />;
+    return isOwner ? <EmptyMeCard card={card} account={account} /> : null;
+  }
+
+  // Text identity slots render the composed card body (server-sanitised
+  // HTML). No composed card → owner sees the prompt, visitor sees nothing.
+  if (composed?.body) {
+    // List-style cards (interests, values, …) render as scannable chips
+    // when the body splits into 2+ segments; otherwise fall back to the
+    // sanitised body (prose, or a single item).
+    const chips = CHIP_TYPES.has(card.cardType)
+      ? bodyToChips(composed.body)
+      : [];
+    return (
+      <div
+        className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}
+      >
+        <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
+        {chips.length >= 2 ? (
+          <ul className='sectioned-profile__chips'>
+            {chips.map((chip) => (
+              <li key={chip} className='sectioned-profile__chip'>
+                {chip}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div
+            className='sectioned-profile__card-body'
+            // composed.body is server-sanitised HTML (may contain <a>).
+            dangerouslySetInnerHTML={{ __html: composed.body }}
+          />
+        )}
+      </div>
+    );
+  }
+
+  return isOwner ? <EmptyMeCard card={card} account={account} /> : null;
 };
 
 // Populated "At a glance" — 4 tiles reading real Mastodon account
@@ -740,7 +853,9 @@ const AtAGlanceCard: React.FC<{ account: ApiAccountJSON }> = ({ account }) => {
 
   return (
     <div className='sectioned-profile__card'>
-      <h3>{intl.formatMessage(messages.atGlanceTitle)}</h3>
+      <CardHeading cardType='at_a_glance'>
+        {intl.formatMessage(messages.atGlanceTitle)}
+      </CardHeading>
       <div className='sectioned-profile__tiles'>
         <div className='sectioned-profile__tile'>
           <b>{account.statuses_count}</b>
@@ -795,7 +910,9 @@ const HighlightsCard: React.FC<{
   if (pinned === null) {
     return (
       <div className='sectioned-profile__card'>
-        <h3>{intl.formatMessage(card.title)}</h3>
+        <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
       </div>
     );
   }
@@ -804,12 +921,17 @@ const HighlightsCard: React.FC<{
   if (pinned.length === 0) {
     return (
       <div className='sectioned-profile__card'>
-        <h3>{intl.formatMessage(card.title)}</h3>
+        <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
         <p className='sectioned-profile__card-desc'>
           {intl.formatMessage(card.desc)}
         </p>
         {isOwner && (
-          <a href={card.href} className='sectioned-profile__card-action'>
+          <a
+            href={composerHref(account)}
+            className='sectioned-profile__card-action'
+          >
             {intl.formatMessage(card.action)}
           </a>
         )}
@@ -819,7 +941,9 @@ const HighlightsCard: React.FC<{
 
   return (
     <div className='sectioned-profile__card'>
-      <h3>{intl.formatMessage(card.title)}</h3>
+      <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
       <div className='sectioned-profile__highlights'>
         {pinned.map((status) => (
           <HighlightTile key={status.id} status={status} />
@@ -893,7 +1017,9 @@ const MomentsCard: React.FC<{
   if (moments === null) {
     return (
       <div className='sectioned-profile__card'>
-        <h3>{intl.formatMessage(card.title)}</h3>
+        <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
       </div>
     );
   }
@@ -912,12 +1038,17 @@ const MomentsCard: React.FC<{
   if (thumbs.length === 0) {
     return (
       <div className='sectioned-profile__card'>
-        <h3>{intl.formatMessage(card.title)}</h3>
+        <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
         <p className='sectioned-profile__card-desc'>
           {intl.formatMessage(card.desc)}
         </p>
         {isOwner && (
-          <a href={card.href} className='sectioned-profile__card-action'>
+          <a
+            href={composerHref(account)}
+            className='sectioned-profile__card-action'
+          >
             {intl.formatMessage(card.action)}
           </a>
         )}
@@ -927,7 +1058,9 @@ const MomentsCard: React.FC<{
 
   return (
     <div className='sectioned-profile__card'>
-      <h3>{intl.formatMessage(card.title)}</h3>
+      <CardHeading cardType={card.cardType}>
+          {intl.formatMessage(card.title)}
+        </CardHeading>
       <div className='sectioned-profile__gallery'>
         {thumbs.map((t) => (
           <a
@@ -943,11 +1076,17 @@ const MomentsCard: React.FC<{
   );
 };
 
-const MePanel: React.FC<{ isOwner: boolean; account: ApiAccountJSON }> = ({
-  isOwner,
-  account,
-}) => {
+const MePanel: React.FC<{
+  isOwner: boolean;
+  account: ApiAccountJSON;
+  cards: ProfileCardJSON[];
+}> = ({ isOwner, account, cards }) => {
   const intl = useIntl();
+  const cardByType = useMemo(() => {
+    const m = new Map<string, ProfileCardJSON>();
+    for (const c of cards) m.set(c.card_type, c);
+    return m;
+  }, [cards]);
   return (
     <>
       <div className='sectioned-profile__me-grid'>
@@ -958,6 +1097,7 @@ const MePanel: React.FC<{ isOwner: boolean; account: ApiAccountJSON }> = ({
               card={c}
               isOwner={isOwner}
               account={account}
+              composed={cardByType.get(c.cardType)}
             />
           ))}
         </div>
@@ -968,6 +1108,7 @@ const MePanel: React.FC<{ isOwner: boolean; account: ApiAccountJSON }> = ({
               card={c}
               isOwner={isOwner}
               account={account}
+              composed={cardByType.get(c.cardType)}
             />
           ))}
         </div>
@@ -978,6 +1119,7 @@ const MePanel: React.FC<{ isOwner: boolean; account: ApiAccountJSON }> = ({
               card={c}
               isOwner={isOwner}
               account={account}
+              composed={cardByType.get(c.cardType)}
             />
           ))}
         </div>
