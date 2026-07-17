@@ -240,7 +240,12 @@ export const KronkMenu = () => {
 
   // Which corner the button sits in → which way the panel opens.
   const anchor = useMemo(() => {
-    if (!pos) return undefined; // default (bottom-right → opens up-left)
+    if (!pos) {
+      // Default park (matches the CSS): bottom-left on desktop — the
+      // right edge is the korner rail — and bottom-right on mobile. The
+      // panel opens upward either way, away from the viewport edge.
+      return window.innerWidth >= 890 ? 'bottom-left' : 'bottom-right';
+    }
     const v = pos.y + BTN / 2 < window.innerHeight / 2 ? 'top' : 'bottom';
     const h = pos.x + BTN / 2 < window.innerWidth / 2 ? 'left' : 'right';
     return `${v}-${h}`;

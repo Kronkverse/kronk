@@ -13,68 +13,13 @@
   display: none !important;
 }
 
-// Unified top strip: solid black band spanning the viewport with a
-// Kronk-purple accent bottom border, hosting the wordmark (left),
-// HubSwitcher (centre), and Ӂ menu (right). Reads as one chrome layer
-// sitting on top of the starry backdrop rather than three floating
-// chips. Chrome elements below stay position:fixed inside this strip
-// because they need to keep their independent z-index layering (menu
-// panel, sub-bar, etc.).
-// Chrome wrap. Two overlapping soft-edge bands — a top strip and a
-// right rail — which together read as an L. No clip-path: the L's
-// inner edge is a gradient fade so the black dissolves into the stars
-// instead of terminating at a hard line. The bands extend to the
-// viewport edge, so only the inner edges fade.
-
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 24;
-  pointer-events: none;
-  background:
-    // Left rail: solid black along the left edge, fading rightward
-    // into the stars. Symmetric with the right rail so content sits
-    // in a naturally-centred window between them.
-    linear-gradient(
-      to right,
-      #000 0,
-      #000 4.5rem,
-      rgb(0 0 0 / 85%) 5.25rem,
-      rgb(0 0 0 / 55%) 6.25rem,
-      rgb(0 0 0 / 25%) 7.25rem,
-      transparent 8.5rem
-    ),
-    // Right rail: solid black along the right edge, fading leftward.
-    linear-gradient(
-        to left,
-        #000 0,
-        #000 4.5rem,
-        rgb(0 0 0 / 85%) 5.25rem,
-        rgb(0 0 0 / 55%) 6.25rem,
-        rgb(0 0 0 / 25%) 7.25rem,
-        transparent 8.5rem
-      );
-  background-repeat: no-repeat;
-  background-position:
-    0 0,
-    100% 0;
-  background-size:
-    8.5rem 100%,
-    8.5rem 100%;
-
-  // Soft purple wash bleeding out of the fade — reads as glow on the
-  // chrome, not an outline.
-  filter: drop-shadow(
-    0 0 32px color-mix(in oklab, var(--kronk-purple-accent) 18%, transparent)
-  );
-
-  @media (width <= 889px) {
-    // Below the sidebar breakpoint, drop the side rails entirely so
-    // content and the mobile bottom tab-bar own the viewport.
-    background: none;
-  }
-}
+// The full-height black side "rails" (a body::before band down each
+// edge) are GONE — they read as dead black bars, and the left one had
+// no chrome in it at all. The Kronk chrome is now self-contained
+// floating pieces on the starfield: wordmark (top-left), HubSwitcher
+// (top-centre), the movable Ӂ (floating FAB), and the korner rail
+// (right), which now carries its own subtle glass backing instead of
+// borrowing the black band — see _korner_sidebar.scss.
 
 .kronk-wordmark {
   position: fixed;
@@ -298,6 +243,24 @@ body:has(.korner-sub-bar) {
     display: none;
   }
 
+  // Compose is reached from the Ӂ menu now, not a persistent left
+  // column. Hide the compositional (compose) pane so content centres in
+  // the full width instead of being shoved right by an empty compose
+  // box — and so wide surfaces (the profile) aren't crammed + clipped.
+  .columns-area__panels__pane--compositional {
+    display: none;
+  }
+
+  // The sectioned profile is a 3-column composed layout (300 · 1fr ·
+  // 300, its own inner max-width 1180) — it needs the full prototype
+  // width, not the 720px reading column, or the right card column clips.
+  body:has(.sectioned-profile) {
+    .columns-area__panels,
+    .columns-area__panels__main {
+      max-width: min(1180px, 100%);
+    }
+  }
+
   // Grid-shaped surfaces (Hub landing especially) want more room than
   // the reading-column timeline. When the router lands on one, let the
   // main pane expand — capped at the available viewport width so the
@@ -435,14 +398,23 @@ body:has(.korner-sub-bar) {
 }
 
 .kronk-menu {
+  // FLOATING action button. Default park: bottom-left on desktop (the
+  // right edge belongs to the korner rail) and bottom-right on mobile
+  // (rail hidden; within thumb reach, lifted above the bottom tab-bar).
+  // The user can drag it anywhere; a saved position (inline top/left,
+  // set in JS) overrides these defaults.
   position: fixed;
-  top: 0.9rem;
-  right: 1.5rem;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  right: auto;
+  top: auto;
   z-index: 30;
 
-  @media (width <= 629px) {
-    top: 0.85rem;
+  @media (width <= 889px) {
+    left: auto;
     right: 1rem;
+    bottom: 4.75rem; // clear the mobile bottom tab-bar (hub-switcher)
+    top: auto;
   }
 
   &__trigger {
@@ -496,11 +468,13 @@ body:has(.korner-sub-bar) {
   &[data-anchor^='bottom'] &__panel {
     top: auto;
     bottom: calc(100% + 0.75rem);
+    transform-origin: bottom right;
   }
 
   &[data-anchor$='left'] &__panel {
     right: auto;
     left: 0;
+    transform-origin: bottom left;
   }
 
   &__badge {
