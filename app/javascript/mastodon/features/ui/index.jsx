@@ -39,7 +39,6 @@ import { expandHomeTimeline } from '../../actions/timelines';
 import { initialState, me, owner, singleUserMode, trendsEnabled, landingPage, localLiveFeedAccess, disableHoverCards } from '../../initial_state';
 
 import BundleColumnError from './components/bundle_column_error';
-import { NavigationBar } from './components/navigation_bar';
 import { UploadArea } from './components/upload_area';
 import { HashtagMenuController } from './components/hashtag_menu_controller';
 import PwaInstallPrompt from '../../components/pwa_install_prompt';
@@ -691,15 +690,14 @@ class UI extends PureComponent {
             {children}
           </SwitchingColumnsArea>
 
-          <NavigationBar />
           {layout !== 'mobile' && <PictureInPicture />}
           <BoothMiniPlayer />
           <HuddlePip />
           <AlertsController />
 
-          {/* Phase 12 rebuild chrome — Kronk-native nav elements.
-              Additive: renders alongside the classic side nav until
-              the layout wiring is verified on shadow. */}
+          {/* Kronk-native nav chrome (Phase 12). The classic Mastodon
+              NavigationBar + side panel are retired — these ARE the
+              navigation surface, invariant across every space. */}
           <KronkWordmark />
           <HubSwitcher variant={layout === 'mobile' ? 'bottom' : 'top'} currentAccountUsername={this.props.username} />
           <KornerSubBar />

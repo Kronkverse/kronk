@@ -3,15 +3,13 @@
 // KronkWordmark + HubSwitcher + KronkMenu take over the navigation
 // surfaces.
 
-// Hide the classic Mastodon navigation surfaces. The new Kronk chrome
-// (wordmark, hub-switcher, Ӂ-menu) covers every affordance the old
-// panels + tabs bar provided. Bell removal is part of this — the
-// bell icon lives inside .ui__navigation-bar so hiding it here also
-// completes Phase 5's "remove the notifications bell" item.
-.navigation-panel,
+// The classic Mastodon NavigationBar + side navigation panel are RETIRED
+// (removed from render — see ui/index.jsx + columns_area.jsx); the Kronk
+// chrome (wordmark, hub-switcher, Ӂ-menu) is the navigation surface. The
+// tabs-bar wrapper is still rendered by columns_area as a portal host for
+// mobile column headers, so it stays hidden here.
 .tabs-bar,
-.tabs-bar__wrapper,
-.ui__navigation-bar {
+.tabs-bar__wrapper {
   display: none !important;
 }
 
