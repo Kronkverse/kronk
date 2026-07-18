@@ -10,6 +10,7 @@ import { me } from 'mastodon/initial_state';
 import type { Proposal } from '../types';
 
 import { TabKontribute } from './proposal_tabs/tab_kontribute';
+import { ProposalAttachments } from './proposal_attachments';
 import { TabProposal } from './proposal_tabs/tab_proposal';
 
 type Tab = 'proposal' | 'kontribute';
@@ -452,6 +453,9 @@ export const ProposalDetail: React.FC<{
             </nav>
 
             <div className='governance-detail__content'>
+              {activeTab === 'proposal' && (
+                <ProposalAttachments proposalId={proposal.id} />
+              )}
               {activeTab === 'proposal' && (
                 <TabProposal proposal={proposal} onVoteUpdate={onVoteUpdate} />
               )}

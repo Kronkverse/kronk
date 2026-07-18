@@ -67,7 +67,45 @@ module Mastodon::CLI
       report(find_proposal(id), 'state')
     end
 
+    desc 'attachments ID', 'List a proposal\'s attachments, or dump them to a directory'
+    long_desc <<~LONG
+      Lists the mockups, briefs and references attached to a proposal.
+
+      This is the read path for whoever is implementing the proposal —
+      including agents, which is the point. `--dump DIR` writes every
+      attachment into DIR so they can be opened and read directly.
+    LONG
+    option :dump, type: :string, desc: 'Write attachments into this directory'
+    def attachments(id)
+      proposal = find_proposal(id)
+      items = proposal.proposal_attachments.recent
+
+      if items.empty?
+        say("No attachments on ##{proposal.id} #{proposal.title}", :yellow)
+        return
+      end
+
+      say("##{proposal.id} #{proposal.title}")
+      items.each do |a|
+        say("  [#{a.kind}] #{a.filename} (#{a.file_content_type}, #{a.byte_size} bytes) by @#{a.account.username}")
+        say("      #{a.description}") if a.description.present?
+      end
+
+      dump_to(options[:dump], items) if options[:dump].present?
+    end
+
     private
+
+    def dump_to(dir, items)
+      FileUtils.mkdir_p(dir)
+      items.each do |a|
+        dest = File.join(dir, "#{a.id}-#{a.filename}")
+        a.file.copy_to_local_file(:original, dest)
+        say("  wrote #{dest}", :green)
+      rescue StandardError => e
+        say("  failed #{a.filename}: #{e.class} #{e.message}", :red)
+      end
+    end
 
     def find_proposal(id)
       Proposal.find(id)
