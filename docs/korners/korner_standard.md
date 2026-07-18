@@ -2,7 +2,7 @@
 
 > **Status:** v1 (2026-07-16, two open decisions resolved — see foot). The normative definition of what makes a korner **slide in smoothly** to Kronk's infrastructure. Derived from the 2026-07-16 recreation audit (the dimensions where real korners broke) + the aesthetic standard (`docs/kronk_aesthetic_system.md` §6). Companion docs: `docs/kronk_korner_spec.md` (manifest field reference) and `docs/korners/adding_a_korner.md` (the build walkthrough — follows this standard).
 >
-> **How to read it:** §1 is the lifecycle gate — _what's required when_. §2 is the nine layers — _the checklist_. §3 is the conformance matrix — _what `korners doctor` enforces automatically vs. what a human signs off_. A korner is done when it passes every layer required for its lifecycle stage.
+> **How to read it:** §1 is the lifecycle gate — _what's required when_. §2 is the ten layers — _the checklist_. §3 is the conformance matrix — _what `korners doctor` enforces automatically vs. what a human signs off_. A korner is done when it passes every layer required for its lifecycle stage.
 >
 > **`⚙︎` = machine-checkable** (target for the extended `korners doctor`, see §3). **`◇` = human sign-off.** **`▲` = a v0 open decision for review.**
 
@@ -18,11 +18,11 @@ A korner's `lifecycle` (in its node) and its manifest `enforced` flag are **prom
 | ---------------------- | ------------------- | -------------------- | ----------------- | -------------------------------------------------------------------------------------- |
 | **soon** (stub)        | `false`             | shown as "soon" tile | no                | L1 identity · L5 mount (via `KornerStub`) · L6 node (`lifecycle: soon`) · L7 aesthetic |
 | **building** (partial) | `false`             | no                   | no                | + L2 data (models/tables/migrations/schema)                                            |
-| **live** (complete)    | `true`              | yes                  | yes               | **all nine layers L1–L9**                                                              |
+| **live** (complete)    | `true`              | yes                  | yes               | **all ten layers L1–L10**                                                              |
 
 > **⚠ The golden rule.** `enforced: true` says: _this korner mounts, projects, serialises, and renders — right now._ Do not set it until every layer in §2 passes. Marketplace and Nudges were `enforced: true` while their `/hub/<slug>` was a dead link — that's the exact failure this rule prevents. A korner under construction stays `enforced: false` (and its node `lifecycle: soon|building`), which keeps it out of the Hub grid and the feed until it's real.
 
-## 2. The nine layers
+## 2. The ten layers
 
 ### L1 — Identity & manifest
 
@@ -81,6 +81,20 @@ _(This layer is `docs/kronk_aesthetic_system.md` §6, restated as korner require
 - ◇ A korner spec covering the model + the projection path — **SHOULD** (recommended, not gating). Rises to MUST once a cheap korner-test harness exists.
 - ◇ Manifest is self-documenting; no phantom references. _(Audit: `nudges.yaml` cites a non-existent spec; `adding_a_korner.md` holds up non-existent Klot models — item 9 rewrites it against this standard.)_
 
+### L10 — Notifications
+
+_(Appended after L9 to avoid renumbering existing references. Layer order is not priority order — notifications are build-time work, not an afterthought.)_
+
+A korner that generates activity a user would want to know about declares it, and the framework delivers it. The failure this closes: Kommons declares five notification types in its manifest and **none of them exist** — no type registration, no worker, no service. The manifest described a subsystem nobody built, and nothing caught it.
+
+- ⚙︎ Every entry in the manifest's `notifications.types` has a matching registered type. A declared type with no registration is the notification equivalent of a dead `/hub/<slug>` mount.
+- ⚙︎ Each declared type names a real `subject_type` resolving to a model the korner owns.
+- ⚙︎ Types are registered as **native** (non-legacy) entries in `Notification::PROPERTIES`. Kronk-native types already exist there (`nudge`); korner types join them rather than extending the 15 legacy Mastodon types, which are on a retirement path.
+- ◇ Every state transition a user is waiting on fires a notification. If a korner asks someone to act — confirm, respond, close — the ask is delivered, not left to be discovered on a return visit.
+- ◇ `default_push` is honest: on for things a user is being asked to act on, off for things that merely happened. Noisy defaults train people to switch the korner off.
+
+**On Nudges.** Notifications are becoming Nudges, and Nudges is not built. That does not block this layer. A korner declares its types in the manifest and the framework delivers them through `Notification` today; when Nudges lands it inherits the same declarations. The manifest contract is the stable surface — build against it, not against the current delivery mechanism.
+
 ## 3. Conformance matrix — the automated gate
 
 Everything marked ⚙︎ above is **machine-checkable** and becomes an extended `korners doctor` check (item 7). Today's doctor validates only L1 (slug/reserved) + L2 (db-namespace) + the `Status` association — which is why the L3/L4/L5 gaps sailed through. The extension adds:
@@ -95,6 +109,7 @@ Everything marked ⚙︎ above is **machine-checkable** and becomes an extended 
 | `/hub/<slug>` resolves; **enforced ⇒ mount resolves**                                          | L5    | Marketplace/Nudges dead tiles                 |
 | node bucket/parent/lifecycle valid; route_name resolves or spa; no id collision; links resolve | L6    | `feed.nudges` route                           |
 | card partial is stylelint-governed (no raw hex)                                                | L7    | ungoverned card drift                         |
+| every declared `notifications.types` entry is a registered type; `subject_type` resolves      | L10   | Kommons' five declared, zero built            |
 
 `◇` items stay human sign-off (aesthetic judgment, tests). Canonical manifest-shape conformance (nested `security:`) is `⚙︎` per L1.
 
