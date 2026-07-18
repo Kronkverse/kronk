@@ -22,7 +22,6 @@ import { BucketPicker } from './components/bucket_picker';
 import { Composer } from './components/composer';
 import { NodeDetail } from './components/node_detail';
 import { PagePicker } from './components/page_picker';
-import { Trending } from './components/trending';
 import type { Bucket, KommonsNode } from './data/nodes';
 import { bucketNodes, findNode, fromApiNodes, listKorners } from './data/nodes';
 
@@ -35,14 +34,6 @@ const messages = defineMessages({
     id: 'kommons_skeleton.crumb.buckets',
     defaultMessage: 'All spaces',
   },
-  modeTrending: {
-    id: 'kommons_skeleton.mode.trending',
-    defaultMessage: 'Trending',
-  },
-  modeSkeleton: {
-    id: 'kommons_skeleton.mode.skeleton',
-    defaultMessage: 'Skeleton',
-  },
   loading: {
     id: 'kommons_skeleton.loading',
     defaultMessage: 'Loading the tree\u2026',
@@ -54,12 +45,6 @@ const messages = defineMessages({
 });
 
 type Step = 'buckets' | 'pages' | 'detail';
-
-// Two ways in, per the 2026-07-18 design. The Skeleton walks the tree and
-// answers "what is being said about this page". Trending ignores the tree
-// and answers "what is being said at all" — it opens on Trending because
-// that is the question most people arrive with.
-type Mode = 'trending' | 'skeleton';
 
 interface CrumbProps {
   onClick?: () => void;
@@ -96,7 +81,6 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) =
   const [loadError, setLoadError] = useState(false);
 
   const [step, setStep] = useState<Step>('buckets');
-  const [mode, setMode] = useState<Mode>('trending');
   const [bucket, setBucket] = useState<Bucket | null>(null);
   const [kornerSlug, setKornerSlug] = useState<string | null>(null);
   const [nodeId, setNodeId] = useState<string | null>(null);
@@ -167,21 +151,6 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) =
     [nodes],
   );
 
-  const handleTrendingNode = useCallback(
-    (id: string) => {
-      handleNode(id);
-      setMode('skeleton');
-    },
-    [handleNode],
-  );
-
-  const showTrending = useCallback(() => {
-    setMode('trending');
-  }, []);
-  const showSkeleton = useCallback(() => {
-    setMode('skeleton');
-  }, []);
-
   const handleBackFromDetail = useCallback(() => {
     setNodeId(null);
     setStep('pages');
@@ -220,33 +189,6 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) =
 
         {!loading && !loadError && (
           <>
-            <div className='kommons-skeleton__modes' role='tablist'>
-              <button
-                type='button'
-                role='tab'
-                aria-selected={mode === 'trending'}
-                className={`kommons-skeleton__mode ${mode === 'trending' ? 'kommons-skeleton__mode--active' : ''}`}
-                onClick={showTrending}
-              >
-                {intl.formatMessage(messages.modeTrending)}
-              </button>
-              <button
-                type='button'
-                role='tab'
-                aria-selected={mode === 'skeleton'}
-                className={`kommons-skeleton__mode ${mode === 'skeleton' ? 'kommons-skeleton__mode--active' : ''}`}
-                onClick={showSkeleton}
-              >
-                {intl.formatMessage(messages.modeSkeleton)}
-              </button>
-            </div>
-
-            {mode === 'trending' && (
-              <Trending nodes={nodes} onSelectNode={handleTrendingNode} />
-            )}
-
-            {mode === 'skeleton' && (
-              <>
             <nav className='kommons-skeleton__breadcrumb' aria-label='breadcrumb'>
               <Crumb onClick={step === 'buckets' ? undefined : goToBuckets}>
                 {intl.formatMessage(messages.crumbBuckets)}
@@ -327,8 +269,6 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) =
                 onFile={openComposer}
                 onNavigate={handleNode}
               />
-            )}
-              </>
             )}
           </>
         )}
