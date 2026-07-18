@@ -472,6 +472,7 @@ class Account < ApplicationRecord
   before_validation :prepare_contents, if: :local?
   before_create :generate_keys
   after_create :seed_default_profile_sections, if: :local?
+  after_create :grant_starting_tokens, if: :local?
   before_destroy :clean_feed_manager
 
   def ensure_keys!
@@ -515,6 +516,16 @@ class Account < ApplicationRecord
   # See §Profile.
   def seed_default_profile_sections
     profile_sections.create!(section_type: 'timeline', position: 0, title: nil)
+  end
+
+  # Every local account starts with the same Kommons token balance as the
+  # accounts backfilled by the ledger migration, so a new signup can back a
+  # proposal immediately. Deliberately non-fatal: a token grant failing must
+  # never block account creation.
+  def grant_starting_tokens
+    Kronk::Tokens.grant!(self, TokenBalance::STARTING_BALANCE)
+  rescue StandardError => e
+    Rails.logger.error("Failed to grant starting tokens to account #{id}: #{e.class} #{e.message}")
   end
 
   def create_canonical_email_block!
