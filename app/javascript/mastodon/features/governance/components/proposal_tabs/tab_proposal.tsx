@@ -454,7 +454,7 @@ export const TabProposal: React.FC<{
   const withdrawResponse = useCallback(async () => {
     setSubmitting(true);
     try {
-      const res = await api().delete(`/api/v1/proposals/${proposal.id}/vote`);
+      const res = await api().delete(`/api/v1/proposals/${proposal.id}/unvote`);
       onVoteUpdate(res.data as Proposal);
       setEditing(false);
       resetComposer();
