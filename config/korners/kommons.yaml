@@ -114,3 +114,40 @@ nodes:
       - to: kommons.index
         kind: creates
         description: Every planted feedback item becomes a proposal on the Kommons list.
+
+  # ── 2.0.0 rebuild review (2026-07-18) ─────────────────────────────
+  # Review topics for the rebuild assessment, keyed so each finding can be
+  # planted as a proposal against the area it concerns. These are review
+  # surfaces, not product pages, so they carry `lifecycle: hidden` — they
+  # resolve in the Tree for reviewers without appearing as shipped surfaces.
+  # Retire them (and their proposals) once 2.0.0 ships.
+  - id: kommons.review.spec
+    label: 'Review: spec & documentation'
+    url: /hub/kommons/tree
+    lifecycle: hidden
+    spa: true
+  - id: kommons.review.framework
+    label: 'Review: framework surfaces'
+    url: /hub/kommons/tree
+    lifecycle: hidden
+    spa: true
+  - id: kommons.review.korners
+    label: 'Review: korner conformance'
+    url: /hub/kommons/tree
+    lifecycle: hidden
+    spa: true
+  - id: kommons.review.phases
+    label: 'Review: phases & scope'
+    url: /hub/kommons/tree
+    lifecycle: hidden
+    spa: true
+  - id: kommons.review.health
+    label: 'Review: branch & CI health'
+    url: /hub/kommons/tree
+    lifecycle: hidden
+    spa: true
+  - id: kommons.review.release
+    label: 'Review: release readiness'
+    url: /hub/kommons/tree
+    lifecycle: hidden
+    spa: true
