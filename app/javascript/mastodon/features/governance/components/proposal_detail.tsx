@@ -16,8 +16,8 @@ type Tab = 'proposal' | 'kontribute';
 
 const statusLabels: Record<Proposal['status'], string> = {
   open: 'Open',
-  in_progress: 'In progress',
-  vetoed: 'Vetoed',
+  completed: 'Completed',
+  annulled: 'Annulled',
   delivered: 'Delivered',
 };
 
@@ -167,7 +167,7 @@ export const ProposalDetail: React.FC<{
       setDeliverError(null);
       try {
         const res = await api().post<Proposal>(
-          `/api/v1/proposals/${proposal.id}/mark_delivered`,
+          `/api/v1/proposals/${proposal.id}/complete`,
           {
             outcome_notes: deliverNotes.trim() || null,
           },

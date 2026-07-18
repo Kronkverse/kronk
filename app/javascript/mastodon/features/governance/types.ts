@@ -2,7 +2,7 @@ export interface Proposal {
   id: string;
   title: string;
   body: string;
-  status: 'open' | 'vetoed' | 'delivered' | 'in_progress';
+  status: 'open' | 'delivered' | 'completed' | 'annulled';
   proposal_type: 'small' | 'medium' | 'large';
   categories: string[];
   discussion_status_id: string | null;
@@ -10,7 +10,7 @@ export interface Proposal {
   outcome_notes: string | null;
   archived_at: string | null;
   support_count: number;
-  veto_count: number;
+  challenge_count: number;
   participation_count: number;
   created_at: string;
   current_vote: {

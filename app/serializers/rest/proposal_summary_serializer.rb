@@ -2,7 +2,7 @@
 
 class REST::ProposalSummarySerializer < ActiveModel::Serializer
   attributes :id, :title, :body, :summary, :status, :proposal_type,
-             :support_count, :veto_count, :participation_count,
+             :support_count, :challenge_count, :participation_count,
              :categories, :created_at
 
   def id

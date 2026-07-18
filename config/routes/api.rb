@@ -131,7 +131,7 @@ namespace :api, format: false do
       member do
         post :vote
         delete :unvote
-        post :mark_delivered
+        post :complete
         post :archive
         post :unarchive
       end
