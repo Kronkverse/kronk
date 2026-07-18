@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ListAltIcon from '@/material-icons/400-24px/list_alt.svg?react';
@@ -33,7 +33,14 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [filter, _setFilter] = useState<FilterType>('open');
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const location = useLocation();
+  const history = useHistory();
+
+  // /hub/kommons/new opens the wizard directly. That path is what the Ӂ menu
+  // points at via the manifest's `compose:` block — the menu hides itself for
+  // any korner that declares no compose route, which is why Kommons had no
+  // "New proposal" entry at all.
+  const [showForm, setShowForm] = useState(location.pathname.endsWith('/new'));
 
   const fetchProposals = useCallback(async () => {
     setLoading(true);
@@ -80,7 +87,9 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
   const handleHideForm = useCallback(() => {
     setShowForm(false);
-  }, []);
+    // Drop back to the list URL so cancelling does not leave you on /new.
+    if (location.pathname.endsWith('/new')) history.replace('/hub/kommons');
+  }, [location.pathname, history]);
 
   const handleSelectProposal = useCallback((id: string) => {
     setSelectedId(id);

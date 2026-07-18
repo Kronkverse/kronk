@@ -86,6 +86,13 @@ settings:
     label: Notify me when a proposal I backed changes state
     description: Fires a nudge when a proposal you've backed advances, gets vetoed, or delivers.
 
+# Ӂ menu entry. Without this block the menu renders nothing inside the
+# korner — there was no way to start a proposal except the "Plant a seed"
+# button on the index.
+compose:
+  label: 'New proposal'
+  route: '/hub/kommons/new'
+
 launch: # retrospective — Kommons predates launch cards
   blurb: '₭ommons — the space where structural moves are decided.'
   cta: 'Tap in'
