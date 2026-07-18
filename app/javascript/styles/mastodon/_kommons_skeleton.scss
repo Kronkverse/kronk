@@ -533,3 +533,253 @@
     color: #fff;
   }
 }
+
+// ─── The rail — lateral navigation ──────────────────────────────────────────
+//
+// Three bands: where you came from, where you are, where you can go. The rail
+// scrolls rather than repainting, so the branch you walked stays present.
+// Horizontal scroll-snap does the work — touch momentum, rubber-banding and
+// trackpad gestures all come from the platform rather than from JS.
+
+.skeleton-rail {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 50%;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 0 22px;
+  scrollbar-width: none;
+
+  // Fades at both edges so the rail reads as a window onto something longer,
+  // not as a list that happens to end.
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 24px,
+    #000 calc(100% - 24px),
+    transparent 100%
+  );
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.skeleton-band {
+  flex: none;
+  width: min(78vw, 300px);
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transform-origin: center left;
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    filter var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+
+  // The three states. Past does not disappear — it recedes, which is the
+  // whole point: you can see where you came from.
+  &[data-state='current'] {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  &[data-state='past'] {
+    opacity: 40%;
+    filter: saturate(45%);
+    transform: scale(0.95);
+  }
+
+  &[data-state='behind'] {
+    opacity: 16%;
+    filter: saturate(20%);
+    transform: scale(0.92);
+  }
+
+  &[data-state='next'] {
+    opacity: 70%;
+    transform: scale(0.97);
+  }
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding-inline: 2px;
+    font-family: var(--font-display);
+    font-size: 17px;
+    color: var(--text-primary);
+  }
+
+  &__depth {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__cards {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  &__empty {
+    margin: 0;
+    padding: 18px;
+    border: 1px dashed var(--surface-border, rgb(255 255 255 / 12%));
+    border-radius: var(--radius-medium);
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: center;
+  }
+}
+
+.skeleton-card {
+  --i: 0;
+
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--surface-border, rgb(255 255 255 / 8%));
+  border-radius: var(--radius-medium);
+  background: var(--surface-primary, rgb(255 255 255 / 3%));
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  animation: skeleton-card-in var(--dur-slow) var(--ease-out) backwards;
+  animation-delay: calc(var(--i) * 28ms);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-medium) var(--ease-out),
+    transform var(--dur-medium) var(--ease-spring);
+
+  &:hover {
+    border-color: var(--accent);
+    background: var(--surface-elevated, rgb(255 255 255 / 6%));
+    transform: translateX(4px);
+    box-shadow: var(--elevation-card);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  // The card you took to get here keeps a lit edge, so the path you walked is
+  // visible in the bands behind you rather than only in the breadcrumb.
+  &[data-chosen='true'] {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset-block: 12px;
+      inset-inline-start: -1px;
+      width: 2px;
+      border-radius: var(--radius-round);
+      background: var(--accent);
+    }
+  }
+
+  // A leaf is where walking stops and reading starts.
+  &[data-leaf='true'] .skeleton-card__name::after {
+    content: ' ·';
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  &__name {
+    font-family: var(--font-display);
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  &__sub {
+    grid-column: 1;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__tally,
+  &__flag {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  &__tally {
+    color: var(--decision-agree);
+
+    &[data-zero='true'] {
+      color: var(--text-muted);
+      opacity: 55%;
+    }
+  }
+
+  &__flag {
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+
+    &--soon {
+      color: var(--decision-pending);
+    }
+
+    &--deprecated {
+      color: var(--decision-block);
+    }
+
+    &--hidden {
+      color: var(--text-muted);
+    }
+  }
+}
+
+@keyframes skeleton-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-card {
+    animation: none;
+  }
+}
+
+// On a phone the bands are nearly full-width, so a swipe moves exactly one
+// step and the neighbours peek in at the edges as an affordance.
+@media (width <= 640px) {
+  .skeleton-band {
+    width: 82vw;
+  }
+
+  .skeleton-rail {
+    gap: 12px;
+  }
+}
