@@ -4,29 +4,29 @@ import type { Bucket, KommonsNode, KornerSummary } from '../data/nodes';
 
 const messages = defineMessages({
   chooseKorner: {
-    id: 'kommons_tree.choose_korner',
+    id: 'kommons_skeleton.choose_korner',
     defaultMessage: 'Pick a korner. Each one has pages of its own.',
   },
   choosePage: {
-    id: 'kommons_tree.choose_page',
+    id: 'kommons_skeleton.choose_page',
     defaultMessage: 'Pick the page you want to plant feedback on.',
   },
   proposals: {
-    id: 'kommons_tree.open_count',
+    id: 'kommons_skeleton.open_count',
     defaultMessage:
       '{count, plural, one {# open proposal} other {# open proposals}}',
   },
   pages: {
-    id: 'kommons_tree.pages_count',
+    id: 'kommons_skeleton.pages_count',
     defaultMessage: '{count, plural, one {# page} other {# pages}}',
   },
-  lifecycleSoon: { id: 'kommons_tree.lifecycle.soon', defaultMessage: 'Soon' },
+  lifecycleSoon: { id: 'kommons_skeleton.lifecycle.soon', defaultMessage: 'Soon' },
   lifecycleDeprecated: {
-    id: 'kommons_tree.lifecycle.deprecated',
+    id: 'kommons_skeleton.lifecycle.deprecated',
     defaultMessage: 'Deprecated',
   },
   lifecycleHidden: {
-    id: 'kommons_tree.lifecycle.hidden',
+    id: 'kommons_skeleton.lifecycle.hidden',
     defaultMessage: 'Hidden',
   },
 });
@@ -51,7 +51,7 @@ const LifecycleBadge: React.FC<{ lifecycle: KommonsNode['lifecycle'] }> = ({
         ? intl.formatMessage(messages.lifecycleDeprecated)
         : intl.formatMessage(messages.lifecycleHidden);
   return (
-    <span className={`kommons-tree__badge kommons-tree__badge--${lifecycle}`}>
+    <span className={`kommons-skeleton__badge kommons-skeleton__badge--${lifecycle}`}>
       {label}
     </span>
   );
@@ -71,21 +71,21 @@ export const PagePicker: React.FC<Props> = ({
       onSelectKorner(slug);
     };
     return (
-      <div className='kommons-tree__picker'>
-        <p className='kommons-tree__intro'>
+      <div className='kommons-skeleton__picker'>
+        <p className='kommons-skeleton__intro'>
           {intl.formatMessage(messages.chooseKorner)}
         </p>
-        <ul className='kommons-tree__list'>
+        <ul className='kommons-skeleton__list'>
           {korners.map((k) => (
             <li key={k.slug}>
               <button
                 type='button'
-                className='kommons-tree__row'
+                className='kommons-skeleton__row'
                 onClick={handleKornerClick(k.slug)}
               >
-                <span className='kommons-tree__row-label'>{k.label}</span>
+                <span className='kommons-skeleton__row-label'>{k.label}</span>
                 <LifecycleBadge lifecycle={k.lifecycle} />
-                <span className='kommons-tree__row-meta'>
+                <span className='kommons-skeleton__row-meta'>
                   {intl.formatMessage(messages.pages, { count: k.nodeCount })}
                   {' \u00b7 '}
                   {intl.formatMessage(messages.proposals, {
@@ -107,22 +107,22 @@ export const PagePicker: React.FC<Props> = ({
   };
 
   return (
-    <div className='kommons-tree__picker'>
-      <p className='kommons-tree__intro'>
+    <div className='kommons-skeleton__picker'>
+      <p className='kommons-skeleton__intro'>
         {intl.formatMessage(messages.choosePage)}
       </p>
-      <ul className='kommons-tree__list'>
+      <ul className='kommons-skeleton__list'>
         {nodes.map((n) => (
           <li key={n.id}>
             <button
               type='button'
-              className='kommons-tree__row'
+              className='kommons-skeleton__row'
               onClick={handleNodeClick(n.id)}
             >
-              <span className='kommons-tree__row-label'>{n.label}</span>
+              <span className='kommons-skeleton__row-label'>{n.label}</span>
               <LifecycleBadge lifecycle={n.lifecycle} />
-              <span className='kommons-tree__row-url'>{n.url}</span>
-              <span className='kommons-tree__row-meta'>
+              <span className='kommons-skeleton__row-url'>{n.url}</span>
+              <span className='kommons-skeleton__row-meta'>
                 {intl.formatMessage(messages.proposals, {
                   count: n.openProposals,
                 })}

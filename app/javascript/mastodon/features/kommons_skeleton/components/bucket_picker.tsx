@@ -5,27 +5,27 @@ import { bucketTotals } from '../data/nodes';
 
 const messages = defineMessages({
   intro: {
-    id: 'kommons_tree.intro',
+    id: 'kommons_skeleton.intro',
     defaultMessage:
       'Where in Kronk is this about? Pick a space — every page inside it is a place you can plant feedback.',
   },
-  feed: { id: 'kommons_tree.bucket.feed', defaultMessage: 'Feed' },
-  profile: { id: 'kommons_tree.bucket.profile', defaultMessage: 'Profile' },
-  hub: { id: 'kommons_tree.bucket.hub', defaultMessage: 'Hub' },
+  feed: { id: 'kommons_skeleton.bucket.feed', defaultMessage: 'Feed' },
+  profile: { id: 'kommons_skeleton.bucket.profile', defaultMessage: 'Profile' },
+  hub: { id: 'kommons_skeleton.bucket.hub', defaultMessage: 'Hub' },
   feedBlurb: {
-    id: 'kommons_tree.bucket.feed_blurb',
+    id: 'kommons_skeleton.bucket.feed_blurb',
     defaultMessage: 'Home timeline, nudges activity',
   },
   profileBlurb: {
-    id: 'kommons_tree.bucket.profile_blurb',
+    id: 'kommons_skeleton.bucket.profile_blurb',
     defaultMessage: 'Anyone\u2019s profile, your own settings',
   },
   hubBlurb: {
-    id: 'kommons_tree.bucket.hub_blurb',
+    id: 'kommons_skeleton.bucket.hub_blurb',
     defaultMessage: 'Every korner and its pages',
   },
   proposals: {
-    id: 'kommons_tree.open_count',
+    id: 'kommons_skeleton.open_count',
     defaultMessage:
       '{count, plural, one {# open proposal} other {# open proposals}}',
   },
@@ -71,24 +71,24 @@ export const BucketPicker: React.FC<Props> = ({ nodes, onSelect }) => {
   };
 
   return (
-    <div className='kommons-tree__picker'>
-      <p className='kommons-tree__intro'>
+    <div className='kommons-skeleton__picker'>
+      <p className='kommons-skeleton__intro'>
         {intl.formatMessage(messages.intro)}
       </p>
-      <div className='kommons-tree__bucket-grid'>
+      <div className='kommons-skeleton__bucket-grid'>
         {buckets.map((b) => (
           <button
             key={b.key}
             type='button'
-            className={`kommons-tree__bucket kommons-tree__bucket--${b.key}`}
+            className={`kommons-skeleton__bucket kommons-skeleton__bucket--${b.key}`}
             onClick={handleClick(b.key)}
           >
-            <span className='kommons-tree__bucket-glyph' aria-hidden='true'>
+            <span className='kommons-skeleton__bucket-glyph' aria-hidden='true'>
               {b.glyph}
             </span>
-            <span className='kommons-tree__bucket-label'>{b.label}</span>
-            <span className='kommons-tree__bucket-blurb'>{b.blurb}</span>
-            <span className='kommons-tree__bucket-count'>
+            <span className='kommons-skeleton__bucket-label'>{b.label}</span>
+            <span className='kommons-skeleton__bucket-blurb'>{b.blurb}</span>
+            <span className='kommons-skeleton__bucket-count'>
               {intl.formatMessage(messages.proposals, { count: totals[b.key] })}
             </span>
           </button>

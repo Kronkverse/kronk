@@ -1,7 +1,7 @@
 # Per-space docs
 
 This folder holds **one canonical doc per space in Kronk** — the
-folder's contents mirror the Kommons Tree
+folder's contents mirror the Kommons Skeleton
 (`bin/tootctl korners doctor` reads the same registry).
 
 A "space" is any addressable surface where a user reflects on Kronk
@@ -32,7 +32,7 @@ Slug matches `config/korners/<slug>.yaml`.
 | [`marketplace.md`](marketplace.md) | `config/korners/marketplace.yaml` | Enforced — directory shipped; detail/composer pending |
 | [`moments.md`](moments.md) | `config/korners/moments.yaml` | Stub |
 | [`nudges.md`](nudges.md) | `config/korners/nudges.yaml` | Activity feed shipped; pillar move open (PR #331 closed 2026-07-18 pending the nav design decision) |
-| [`tree.md`](tree.md) | `config/korners/tree.yaml` | Kommons Tree work lives in `kommons.md`; this manifest may retire |
+| [`skeleton`](tree.md) | `config/korners/tree.yaml` | Kommons Skeleton work lives in `kommons.md`; this manifest may retire |
 | [`you.md`](you.md) | `config/korners/you.yaml` | Portal (link-out to Kashka's YOU PWA) |
 
 ### Cross-cutting spaces (not owned by a korner manifest)

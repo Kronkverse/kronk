@@ -8,44 +8,44 @@ import type { KommonsNode } from '../data/nodes';
 
 const messages = defineMessages({
   heading: {
-    id: 'kommons_tree.composer.heading',
+    id: 'kommons_skeleton.composer.heading',
     defaultMessage: 'Plant feedback on \u201c{label}\u201d',
   },
   hint: {
-    id: 'kommons_tree.composer.hint',
+    id: 'kommons_skeleton.composer.hint',
     defaultMessage: 'Becomes a Kommons proposal tagged with this page.',
   },
   titleLabel: {
-    id: 'kommons_tree.composer.title_label',
+    id: 'kommons_skeleton.composer.title_label',
     defaultMessage: 'Title',
   },
   titlePlaceholder: {
-    id: 'kommons_tree.composer.title_placeholder',
+    id: 'kommons_skeleton.composer.title_placeholder',
     defaultMessage: 'A short summary',
   },
   bodyLabel: {
-    id: 'kommons_tree.composer.body_label',
+    id: 'kommons_skeleton.composer.body_label',
     defaultMessage: 'Details',
   },
   bodyPlaceholder: {
-    id: 'kommons_tree.composer.body_placeholder',
+    id: 'kommons_skeleton.composer.body_placeholder',
     defaultMessage: 'What did you see? What did you expect?',
   },
-  cancel: { id: 'kommons_tree.composer.cancel', defaultMessage: 'Cancel' },
-  submit: { id: 'kommons_tree.composer.submit', defaultMessage: 'Plant it' },
+  cancel: { id: 'kommons_skeleton.composer.cancel', defaultMessage: 'Cancel' },
+  submit: { id: 'kommons_skeleton.composer.submit', defaultMessage: 'Plant it' },
   submitting: {
-    id: 'kommons_tree.composer.submitting',
+    id: 'kommons_skeleton.composer.submitting',
     defaultMessage: 'Planting\u2026',
   },
   success: {
-    id: 'kommons_tree.composer.success',
+    id: 'kommons_skeleton.composer.success',
     defaultMessage: 'Planted. It\u2019s now open on Kommons.',
   },
   error: {
-    id: 'kommons_tree.composer.error',
+    id: 'kommons_skeleton.composer.error',
     defaultMessage: 'Could not plant that. Try again.',
   },
-  nodeLabel: { id: 'kommons_tree.composer.node_label', defaultMessage: 'Page' },
+  nodeLabel: { id: 'kommons_skeleton.composer.node_label', defaultMessage: 'Page' },
 });
 
 interface Props {
@@ -101,16 +101,16 @@ export const Composer: React.FC<Props> = ({ node, onSuccess, onDismiss }) => {
   );
 
   return (
-    <div className='kommons-tree__composer' role='dialog' aria-modal='true'>
+    <div className='kommons-skeleton__composer' role='dialog' aria-modal='true'>
       <form onSubmit={handleSubmit}>
-        <h3 className='kommons-tree__composer-heading'>
+        <h3 className='kommons-skeleton__composer-heading'>
           {intl.formatMessage(messages.heading, { label: node.label })}
         </h3>
-        <p className='kommons-tree__composer-hint'>
+        <p className='kommons-skeleton__composer-hint'>
           {intl.formatMessage(messages.hint)}
         </p>
 
-        <dl className='kommons-tree__composer-node'>
+        <dl className='kommons-skeleton__composer-node'>
           <dt>{intl.formatMessage(messages.nodeLabel)}</dt>
           <dd>
             <code>{node.id}</code>
@@ -119,7 +119,7 @@ export const Composer: React.FC<Props> = ({ node, onSuccess, onDismiss }) => {
           </dd>
         </dl>
 
-        <label className='kommons-tree__composer-field'>
+        <label className='kommons-skeleton__composer-field'>
           <span>{intl.formatMessage(messages.titleLabel)}</span>
           <input
             type='text'
@@ -131,7 +131,7 @@ export const Composer: React.FC<Props> = ({ node, onSuccess, onDismiss }) => {
           />
         </label>
 
-        <label className='kommons-tree__composer-field'>
+        <label className='kommons-skeleton__composer-field'>
           <span>{intl.formatMessage(messages.bodyLabel)}</span>
           <textarea
             value={body}
@@ -143,12 +143,12 @@ export const Composer: React.FC<Props> = ({ node, onSuccess, onDismiss }) => {
         </label>
 
         {errored && (
-          <p className='kommons-tree__composer-error'>
+          <p className='kommons-skeleton__composer-error'>
             {intl.formatMessage(messages.error)}
           </p>
         )}
 
-        <div className='kommons-tree__composer-actions'>
+        <div className='kommons-skeleton__composer-actions'>
           <button
             type='button'
             className='button button-secondary'

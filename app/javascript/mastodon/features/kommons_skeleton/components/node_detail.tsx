@@ -6,62 +6,62 @@ import type { KommonsNode, LinkKind } from '../data/nodes';
 import { findNode } from '../data/nodes';
 
 const messages = defineMessages({
-  url: { id: 'kommons_tree.node.url', defaultMessage: 'URL' },
-  status: { id: 'kommons_tree.node.status', defaultMessage: 'Status' },
+  url: { id: 'kommons_skeleton.node.url', defaultMessage: 'URL' },
+  status: { id: 'kommons_skeleton.node.status', defaultMessage: 'Status' },
   file: {
-    id: 'kommons_tree.node.file',
+    id: 'kommons_skeleton.node.file',
     defaultMessage: 'Plant feedback on this page',
   },
   empty: {
-    id: 'kommons_tree.node.empty',
+    id: 'kommons_skeleton.node.empty',
     defaultMessage: 'No open proposals on this page yet. Plant the first one.',
   },
   mockOpen: {
-    id: 'kommons_tree.node.mock_open',
+    id: 'kommons_skeleton.node.mock_open',
     defaultMessage:
       '{count, plural, one {# open proposal} other {# open proposals}} on this page (backend pending).',
   },
-  lifecycleLive: { id: 'kommons_tree.lifecycle.live', defaultMessage: 'Live' },
-  lifecycleSoon: { id: 'kommons_tree.lifecycle.soon', defaultMessage: 'Soon' },
+  lifecycleLive: { id: 'kommons_skeleton.lifecycle.live', defaultMessage: 'Live' },
+  lifecycleSoon: { id: 'kommons_skeleton.lifecycle.soon', defaultMessage: 'Soon' },
   lifecycleDeprecated: {
-    id: 'kommons_tree.lifecycle.deprecated',
+    id: 'kommons_skeleton.lifecycle.deprecated',
     defaultMessage: 'Deprecated',
   },
   lifecycleHidden: {
-    id: 'kommons_tree.lifecycle.hidden',
+    id: 'kommons_skeleton.lifecycle.hidden',
     defaultMessage: 'Hidden',
   },
   connectionsHeader: {
-    id: 'kommons_tree.node.connections_header',
+    id: 'kommons_skeleton.node.connections_header',
     defaultMessage: '{count, plural, one {# connection} other {# connections}}',
   },
   connectionsHint: {
-    id: 'kommons_tree.node.connections_hint',
+    id: 'kommons_skeleton.node.connections_hint',
     defaultMessage:
       'Links to other pages \u2014 event bus, feed projection, shared settings.',
   },
   linkKindCreates: {
-    id: 'kommons_tree.link.creates',
+    id: 'kommons_skeleton.link.creates',
     defaultMessage: 'creates',
   },
   linkKindListedOn: {
-    id: 'kommons_tree.link.listed_on',
+    id: 'kommons_skeleton.link.listed_on',
     defaultMessage: 'listed on',
   },
   linkKindProjectsTo: {
-    id: 'kommons_tree.link.projects_to',
+    id: 'kommons_skeleton.link.projects_to',
     defaultMessage: 'projects to',
   },
   linkKindListensTo: {
-    id: 'kommons_tree.link.listens_to',
+    id: 'kommons_skeleton.link.listens_to',
     defaultMessage: 'listens to',
   },
   linkKindSettingsFor: {
-    id: 'kommons_tree.link.settings_for',
+    id: 'kommons_skeleton.link.settings_for',
     defaultMessage: 'settings for',
   },
   linkKindRelated: {
-    id: 'kommons_tree.link.related',
+    id: 'kommons_skeleton.link.related',
     defaultMessage: 'related',
   },
 });
@@ -123,21 +123,21 @@ export const NodeDetail: React.FC<Props> = ({
   );
 
   return (
-    <div className='kommons-tree__detail'>
-      <h2 className='kommons-tree__detail-title'>{node.label}</h2>
+    <div className='kommons-skeleton__detail'>
+      <h2 className='kommons-skeleton__detail-title'>{node.label}</h2>
 
-      <dl className='kommons-tree__detail-meta'>
-        <div className='kommons-tree__detail-row'>
+      <dl className='kommons-skeleton__detail-meta'>
+        <div className='kommons-skeleton__detail-row'>
           <dt>{intl.formatMessage(messages.url)}</dt>
           <dd>
             <code>{node.url}</code>
           </dd>
         </div>
-        <div className='kommons-tree__detail-row'>
+        <div className='kommons-skeleton__detail-row'>
           <dt>{intl.formatMessage(messages.status)}</dt>
           <dd>
             <span
-              className={`kommons-tree__badge kommons-tree__badge--${node.lifecycle}`}
+              className={`kommons-skeleton__badge kommons-skeleton__badge--${node.lifecycle}`}
             >
               {lifecycleLabel}
             </span>
@@ -145,7 +145,7 @@ export const NodeDetail: React.FC<Props> = ({
         </div>
       </dl>
 
-      <div className='kommons-tree__detail-proposals'>
+      <div className='kommons-skeleton__detail-proposals'>
         {node.openProposals > 0 ? (
           <p>
             {intl.formatMessage(messages.mockOpen, {
@@ -153,7 +153,7 @@ export const NodeDetail: React.FC<Props> = ({
             })}
           </p>
         ) : (
-          <p className='kommons-tree__detail-empty'>
+          <p className='kommons-skeleton__detail-empty'>
             {intl.formatMessage(messages.empty)}
           </p>
         )}
@@ -161,21 +161,21 @@ export const NodeDetail: React.FC<Props> = ({
 
       {links.length > 0 && (
         <div
-          className={`kommons-tree__connections kommons-tree__connections--${connectionsOpen ? 'open' : 'closed'}`}
+          className={`kommons-skeleton__connections kommons-skeleton__connections--${connectionsOpen ? 'open' : 'closed'}`}
         >
           <button
             type='button'
-            className='kommons-tree__connections-toggle'
+            className='kommons-skeleton__connections-toggle'
             aria-expanded={connectionsOpen}
             onClick={toggleConnections}
           >
             <span
-              className='kommons-tree__connections-chevron'
+              className='kommons-skeleton__connections-chevron'
               aria-hidden='true'
             >
               {connectionsOpen ? '\u25BE' : '\u25B8'}
             </span>
-            <span className='kommons-tree__connections-count'>
+            <span className='kommons-skeleton__connections-count'>
               {intl.formatMessage(messages.connectionsHeader, {
                 count: links.length,
               })}
@@ -183,21 +183,21 @@ export const NodeDetail: React.FC<Props> = ({
           </button>
 
           {connectionsOpen && (
-            <div className='kommons-tree__connections-body'>
-              <p className='kommons-tree__connections-hint'>
+            <div className='kommons-skeleton__connections-body'>
+              <p className='kommons-skeleton__connections-hint'>
                 {intl.formatMessage(messages.connectionsHint)}
               </p>
-              <ul className='kommons-tree__connections-list'>
+              <ul className='kommons-skeleton__connections-list'>
                 {links.map((link, i) => {
                   const target = findNode(nodes, link.to);
                   const targetLabel = target?.label ?? link.to;
                   return (
                     <li
                       key={`${link.to}-${i}`}
-                      className='kommons-tree__connection'
+                      className='kommons-skeleton__connection'
                     >
                       <span
-                        className={`kommons-tree__connection-kind kommons-tree__connection-kind--${link.kind}`}
+                        className={`kommons-skeleton__connection-kind kommons-skeleton__connection-kind--${link.kind}`}
                       >
                         {intl.formatMessage(linkKindMessage(link.kind))}
                       </span>
@@ -205,17 +205,17 @@ export const NodeDetail: React.FC<Props> = ({
                         <button
                           type='button'
                           data-node-id={link.to}
-                          className='kommons-tree__connection-target'
+                          className='kommons-skeleton__connection-target'
                           onClick={handleTargetClick}
                         >
                           {targetLabel}
                         </button>
                       ) : (
-                        <span className='kommons-tree__connection-target'>
+                        <span className='kommons-skeleton__connection-target'>
                           {targetLabel}
                         </span>
                       )}
-                      <span className='kommons-tree__connection-desc'>
+                      <span className='kommons-skeleton__connection-desc'>
                         {link.description}
                       </span>
                     </li>
@@ -229,7 +229,7 @@ export const NodeDetail: React.FC<Props> = ({
 
       <button
         type='button'
-        className='button button--kommons-tree'
+        className='button button--kommons-skeleton'
         onClick={onFile}
       >
         {intl.formatMessage(messages.file)}

@@ -1,6 +1,6 @@
 // Kommons Tree — feedback-tree drilldown surface inside Kommons.
 //
-// Route: /hub/kommons/tree
+// Route: /hub/kommons/skeleton
 // Concept: three top buckets (Feed / Profile / Hub), drill down to a
 //   page-type node, plant a feedback proposal on that node.
 //
@@ -27,19 +27,19 @@ import { bucketNodes, findNode, fromApiNodes, listKorners } from './data/nodes';
 
 const messages = defineMessages({
   title: {
-    id: 'kommons_tree.title',
+    id: 'kommons_skeleton.title',
     defaultMessage: '\u20aeommons \u00b7 Tree',
   },
   crumbBuckets: {
-    id: 'kommons_tree.crumb.buckets',
+    id: 'kommons_skeleton.crumb.buckets',
     defaultMessage: 'All spaces',
   },
   loading: {
-    id: 'kommons_tree.loading',
+    id: 'kommons_skeleton.loading',
     defaultMessage: 'Loading the tree\u2026',
   },
   loadError: {
-    id: 'kommons_tree.load_error',
+    id: 'kommons_skeleton.load_error',
     defaultMessage: 'Could not load the Kommons tree. Refresh to try again.',
   },
 });
@@ -54,7 +54,7 @@ interface CrumbProps {
 const Crumb: React.FC<CrumbProps> = ({ onClick, children }) => (
   <button
     type='button'
-    className='kommons-tree__crumb'
+    className='kommons-skeleton__crumb'
     onClick={onClick}
     disabled={!onClick}
   >
@@ -73,7 +73,7 @@ const bucketLabel = (b: Bucket): string => {
   }
 };
 
-const KommonsTree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
 
   const [nodes, setNodes] = useState<KommonsNode[]>([]);
@@ -175,27 +175,27 @@ const KommonsTree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     <Column bindToDocument={!multiColumn} label={title}>
       <ColumnHeader icon='gavel' title={title} multiColumn={multiColumn} />
 
-      <div className='kommons-tree'>
+      <div className='kommons-skeleton'>
         {loading && (
-          <p className='kommons-tree__loading'>
+          <p className='kommons-skeleton__loading'>
             {intl.formatMessage(messages.loading)}
           </p>
         )}
         {loadError && (
-          <p className='kommons-tree__error'>
+          <p className='kommons-skeleton__error'>
             {intl.formatMessage(messages.loadError)}
           </p>
         )}
 
         {!loading && !loadError && (
           <>
-            <nav className='kommons-tree__breadcrumb' aria-label='breadcrumb'>
+            <nav className='kommons-skeleton__breadcrumb' aria-label='breadcrumb'>
               <Crumb onClick={step === 'buckets' ? undefined : goToBuckets}>
                 {intl.formatMessage(messages.crumbBuckets)}
               </Crumb>
               {bucket && (
                 <>
-                  <span className='kommons-tree__crumb-sep' aria-hidden='true'>
+                  <span className='kommons-skeleton__crumb-sep' aria-hidden='true'>
                     /
                   </span>
                   <Crumb
@@ -211,7 +211,7 @@ const KommonsTree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               )}
               {bucket === 'hub' && kornerSlug && (
                 <>
-                  <span className='kommons-tree__crumb-sep' aria-hidden='true'>
+                  <span className='kommons-skeleton__crumb-sep' aria-hidden='true'>
                     /
                   </span>
                   <Crumb
@@ -225,7 +225,7 @@ const KommonsTree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               )}
               {selectedNode && (
                 <>
-                  <span className='kommons-tree__crumb-sep' aria-hidden='true'>
+                  <span className='kommons-skeleton__crumb-sep' aria-hidden='true'>
                     /
                   </span>
                   <Crumb>{selectedNode.label}</Crumb>
@@ -291,4 +291,4 @@ const KommonsTree: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 };
 
 // eslint-disable-next-line import/no-default-export
-export default KommonsTree;
+export default KommonsSkeleton;

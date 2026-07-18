@@ -102,12 +102,12 @@ nodes:
     lifecycle: live
     spa: true
     links:
-      - to: kommons.tree
+      - to: kommons.skeleton
         kind: related
         description: Feedback proposals originate from tree nodes.
-  - id: kommons.tree
-    label: Tree
-    url: /hub/kommons/tree
+  - id: kommons.skeleton
+    label: Skeleton
+    url: /hub/kommons/skeleton
     lifecycle: live
     spa: true
     links:
@@ -123,31 +123,31 @@ nodes:
   # Retire them (and their proposals) once 2.0.0 ships.
   - id: kommons.review.spec
     label: 'Review: spec & documentation'
-    url: /hub/kommons/tree
+    url: /hub/kommons/skeleton
     lifecycle: hidden
     spa: true
   - id: kommons.review.framework
     label: 'Review: framework surfaces'
-    url: /hub/kommons/tree
+    url: /hub/kommons/skeleton
     lifecycle: hidden
     spa: true
   - id: kommons.review.korners
     label: 'Review: korner conformance'
-    url: /hub/kommons/tree
+    url: /hub/kommons/skeleton
     lifecycle: hidden
     spa: true
   - id: kommons.review.phases
     label: 'Review: phases & scope'
-    url: /hub/kommons/tree
+    url: /hub/kommons/skeleton
     lifecycle: hidden
     spa: true
   - id: kommons.review.health
     label: 'Review: branch & CI health'
-    url: /hub/kommons/tree
+    url: /hub/kommons/skeleton
     lifecycle: hidden
     spa: true
   - id: kommons.review.release
     label: 'Review: release readiness'
-    url: /hub/kommons/tree
+    url: /hub/kommons/skeleton
     lifecycle: hidden
     spa: true

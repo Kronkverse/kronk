@@ -33,12 +33,11 @@ const SLUG_TO_ICON: Record<string, IconProp> = {
   albutts: PhotoLibraryIcon, // photo stack — albums
   kompass: ExploreIcon, // compass — presence
   groups: GroupsIcon, // group silhouettes
-  tree: BarChartIcon, // stacked bars — hierarchy (proxy for account_tree)
   klot: ArticleIcon, // journal page — private log (proxy for nights_stay)
   you: StarIcon, // four-point star — Your Own Universe (proxy for self_improvement)
 };
 
-// Fallback when a slug has no mapped icon yet (tree / klot / newly-added
+// Fallback when a slug has no mapped icon yet (klot / newly-added
 // korners). Renders a Kronk-purple circle.
 export const AccentCircle: IconProp = (props) => (
   <svg viewBox='0 0 24 24' {...props}>

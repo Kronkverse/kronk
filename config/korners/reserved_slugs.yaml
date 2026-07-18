@@ -10,6 +10,10 @@
 # Once the Nudges cutover completes (task #30) and the manifest is
 # retired, `nudges` moves back into this list as a reserved platform stem.
 - home
+# `tree` is reserved for a planned space mapping invite lineage — who
+# brought whom to Kronk. Reserved 2026-07-18 when the Kommons Tree was
+# renamed to the Skeleton to free the word.
+- tree
 - explore
 - search
 - tags

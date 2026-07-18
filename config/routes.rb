@@ -283,6 +283,10 @@ Rails.application.routes.draw do
 
   # Korner framework — every korner mounts under /hub/<slug> per
   # docs/kronk_korner_spec.md §4. Legacy top-level paths above 301 here.
+  # The Kommons Skeleton was called the Tree until 2026-07-18. `tree` is
+  # being reserved for a future invite-lineage space, so the old path
+  # redirects rather than staying a live alias.
+  get '/hub/kommons/tree', to: redirect('/hub/kommons/skeleton', status: 301)
   get '/hub/kommons', to: 'home#index'
   get '/hub/kommons/*path', to: 'home#index', format: false
   get '/hub/kuestions', to: 'home#index'
@@ -297,8 +301,6 @@ Rails.application.routes.draw do
   get '/hub/marketplace/*path', to: 'home#index', format: false
   get '/hub/inflow', to: 'home#index'
   get '/hub/inflow/*path', to: 'home#index', format: false
-  get '/hub/tree', to: 'home#index'
-  get '/hub/tree/*path', to: 'home#index', format: false
   get '/hub/groups', to: 'home#index'
   get '/hub/groups/*path', to: 'home#index', format: false
   get '/hub/huddle', to: 'huddle#index'
