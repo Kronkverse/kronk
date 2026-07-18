@@ -26,12 +26,12 @@ Slug matches `config/korners/<slug>.yaml`.
 | [`in_flow.md`](in_flow.md) | `config/korners/in_flow.yaml` | Models + projection shipped; UI reshape pending Tomas Round 2 |
 | [`kalendar.md`](kalendar.md) | `config/korners/kalendar.yaml` | Enforced — rebuild spiral view pending |
 | [`klot.md`](klot.md) | `config/korners/klot.yaml` | Stub |
-| [`kommons.md`](kommons.md) | `config/korners/kommons.yaml` | Enforced — Tree shipped; token backing pending |
+| [`kommons.md`](kommons.md) | `config/korners/kommons.yaml` | Enforced — Tree, token ledger and lifecycle shipped; backing UI pending |
 | [`kompass.md`](kompass.md) | `config/korners/kompass.yaml` | Stub — physical map |
 | [`kuestions.md`](kuestions.md) | `config/korners/kuestions.yaml` | Enforced — swipe-deck UI pending |
 | [`marketplace.md`](marketplace.md) | `config/korners/marketplace.yaml` | Enforced — directory shipped; detail/composer pending |
 | [`moments.md`](moments.md) | `config/korners/moments.yaml` | Stub |
-| [`nudges.md`](nudges.md) | `config/korners/nudges.yaml` | Activity feed shipped; pillar move pending (PR #331) |
+| [`nudges.md`](nudges.md) | `config/korners/nudges.yaml` | Activity feed shipped; pillar move open (PR #331 closed 2026-07-18 pending the nav design decision) |
 | [`tree.md`](tree.md) | `config/korners/tree.yaml` | Kommons Tree work lives in `kommons.md`; this manifest may retire |
 | [`you.md`](you.md) | `config/korners/you.yaml` | Portal (link-out to Kashka's YOU PWA) |
 

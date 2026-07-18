@@ -1,6 +1,6 @@
 # Kommons (`kommons` — rendered ₭ommons)
 
-**Manifest:** `config/korners/kommons.yaml` · **Mount:** `/hub/kommons` · **Status:** shipped-2.0 (Tree + backend), rebuild polish ongoing
+**Manifest:** `config/korners/kommons.yaml` · **Mount:** `/hub/kommons` · **Status:** shipped-2.0 (Tree, backend, token ledger, lifecycle) — backing UI pending
 
 ## Purpose
 
@@ -93,79 +93,109 @@ dropped (the `node_id` link is authoritative for placement).
 
 ### Proposal lifecycle states
 
-Formalise the lifecycle. Today `Proposal.status` is a free-ish string;
-in 2.0 it becomes a proper state machine with **four** states (the
-old `seconded` intermediate retires — see Token backing below):
+**Shipped 2026-07-18** (#368, #369). `Proposal.status` is an enum with
+four states:
 
-- **draft** — being composed; visible only to the author.
-- **open** — public; accepting community backing (tokens).
-- **enacted** — the author has marked the proposal complete. Tokens
-  invested in the proposal return to their backers.
-- **archived** — no longer active (rejected, superseded, or aged out).
-  Token behaviour on archive is TBD (see open decisions).
+- **open** — accepting backing.
+- **delivered** — a dev has built the thing and marked it done from the
+  back end. Backing closes. The proposer is notified and is the only
+  person who can move it on.
+- **completed** — the proposer confirmed delivery. Backers are refunded
+  and the author is paid. Terminal.
+- **annulled** — a dev released the proposal from the back end. Backers
+  are refunded, the author is paid nothing. Terminal.
 
-State transitions:
+```
+open ──dev──> delivered ──proposer──> completed   refund + payout
+ │
+ ├──dev──> annulled                               refund, no payout
+ └──archive (only while backing is zero)
+```
 
-- **`draft` → `open`**: author publishes.
-- **`open` → `enacted`**: **two-step** for anti-gaming reasons.
-  - A **developer/maintainer marks the proposal complete from the
-    backend** (signals the change has actually shipped).
-  - The **author signs off** — confirms the completion meets the
-    proposal's intent and quality bar.
-  - Backers can also **suggest completion** via a UI affordance,
-    which sends a Nudge to the author — but doesn't move the state
-    directly.
-  - Only when both dev-marks and author-signs-off does the proposal
-    reach `enacted`.
-- **`open` → `archived`**: archive is only permitted for proposals
-  with **zero token backing**. Once backers have invested, the
-  proposal is committed — it cannot be archived, only enacted (or
-  left `open` indefinitely).
+**Archiving is not a state.** It stays an `archived_at` timestamp, and is
+only permitted while total backing is zero. Once tokens are committed the
+proposal is committed too — it can only be completed or annulled, both of
+which return the stakes.
 
-State transitions are auditable; history is preserved.
+**There is no `delivered` → `annulled` edge.** Once delivered, the only
+way out is the proposer completing it. A problem found after delivery is
+a new proposal.
 
-### Token backing — new subsystem
+**`deliver` and `annul` are back-end only** — `tootctl kommons deliver
+<id>` and `tootctl kommons annul <id>`. Both move tokens and both are dev
+actions, so access is governed by who can get a shell on the server
+rather than by a role check; there is no in-app surface to discover or
+mis-permission. Completing is the proposer's and happens in the app via
+`POST /api/v1/proposals/:id/complete`.
 
-The old "seconding threshold" gate retires. In its place, 2.0
-introduces a **per-user token system** for backing proposals:
+Delivery fires a `proposal_status_changed` notification to the proposer —
+a Kronk-native (non-legacy) type registered in `Notification::PROPERTIES`,
+per Korner Standard L10.
+
+#### Two states were retired, not renamed
+
+`vetoed` and `in_progress` are gone (migration `CollapseProposalStates`
+remaps both to `open`).
+
+`vetoed` was never a lifecycle state. `reconcile_status!` recomputed it on
+every vote and unvote as "has at least one block vote" — a cached boolean
+living in the status column. No user ever set it and there was no veto UI.
+It survives as a **response count** off `proposal_votes`, which is where it
+always actually lived. Nothing is lost: every previously-vetoed proposal's
+blocks are still in `proposal_votes`.
+
+`in_progress` had no producer anywhere in the repo — only an enum entry,
+two TypeScript declarations and two label strings.
+
+The migration also fixed the column default, which was `0` — not a valid
+enum value, so any row written without an explicit status landed unmapped.
+
+### Token backing
+
+**Shipped 2026-07-18** (#366). The old "seconding threshold" gate retires.
+In its place, a per-user token system:
 
 - Every user has a **token balance**.
-- Users **invest tokens in a proposal** they want to back — any
-  amount from 1 up to their available balance.
-- Tokens are **locked once committed** — you cannot pull them back
-  out of a proposal to spend them elsewhere.
-- Tokens **return to the backer when the proposal is enacted**.
-- A record of every user's token investments is maintained (per-user
-  history of where tokens are dedicated).
+- Users **invest tokens in a proposal** they want to back — any amount
+  from 1 up to their available balance.
+- Tokens are **locked once committed** — there is no un-back.
+- Tokens **return to the backer** when the proposal is completed or
+  annulled.
+- **Backings accumulate.** A backer may top up; each investment is its own
+  row and a stake is their sum. Rows are never edited or deleted — a
+  refund is recorded as a transaction, not by unwinding the backing that
+  earned it.
 
-**Why tokens instead of simple counts:** scarcity forces
-prioritisation. Backing a proposal signals real commitment (you
-committed a limited resource), not just a click. Users have to choose
-which proposals matter enough to back.
+**Why tokens instead of simple counts:** scarcity forces prioritisation.
+Backing a proposal signals real commitment (you committed a limited
+resource), not just a click. Users have to choose which proposals matter
+enough to back.
 
-### Token supply — earn-through-enactment
+### Token supply — earn through completion
 
-Tokens are **earned by having your proposals enacted**. The author of
-an enacted proposal receives a payout scaled to the community backing
-their proposal received:
+**Shipped 2026-07-18** (#366).
+
+Every user starts with **10 tokens** — backfilled for existing accounts by
+the ledger migration, and granted on create for new ones, so a new signup
+can back something immediately. This closes the bootstrap question that
+was previously open here.
+
+Beyond that, tokens are **earned by having your proposals completed**. The
+author of a completed proposal receives a payout scaled to the backing it
+attracted:
 
 - **`author_payout = max(1, floor(total_backer_tokens / 10))`**
 - 80 tokens backed → author earns 8
-- <10 tokens backed → author earns 1 (floor)
+- fewer than 10 backed → author earns 1 (the floor)
 
-This closes the earning loop: users spend tokens backing proposals
-they want; when those proposals ship, backers get their tokens back
-AND authors are rewarded (from a Kronk-managed pool, not from the
-backers themselves).
+The payout comes from a Kronk-managed pool, **not** from the backers —
+their stakes are returned in full separately.
 
-**Bootstrap:** how does a user get their first tokens if you can only
-earn them by shipping proposals? Open decision — see below.
-
-**Anti-gaming (why the dev-signoff two-step exists):** without
-back-end verification, a user could propose something trivial, back
-it with tokens from a friend, self-mark complete, and farm the payout.
-The dev-signoff step means real completion (something actually shipped
-in the codebase or platform) is required, gated by the maintainer.
+**Anti-gaming (why the two-step exists):** without back-end verification a
+user could propose something trivial, back it with tokens from a friend,
+self-mark complete and farm the payout. Delivery is a dev action taken
+from a shell; only after it can the proposer complete and trigger the
+payout.
 
 ### Token display
 
@@ -179,21 +209,35 @@ On a proposal, backing is shown as:
 Discovery: browsing proposals can be sorted by ranked position, so
 strongly-backed proposals surface without an explicit threshold.
 
-### Infrastructure to build (not yet shipped)
+### Ledger infrastructure (shipped)
 
-- `AccountTokenBalance` (or equivalent) — per-user balance.
-- `TokenInvestment` — links account to proposal with amount and
-  timestamps.
-- `TokenPayout` (or ledger event) — records author payouts on
-  enactment.
-- Investment API — invest / view own investments.
-- Balance API — check available tokens.
-- Recycling on enact — return tokens to backers.
-- Payout on enact — grant author their `floor(total/10)` reward.
-- Existing `ProposalVote` model may be superseded or repurposed.
+**Shipped 2026-07-18** (#366, #368, #369).
 
-See memory `project_kronk_token_system.md` for the cross-cutting note
-on this subsystem.
+Tables — `token_balances` and `token_transactions` sit at platform level,
+since a user's balance is not Kommons-specific and may back other things
+later; `proposal_backings` sits under the korner's `proposal_` namespace
+per Standard L2.
+
+- **`TokenBalance`** — one row per account. Stored, not derived.
+- **`TokenTransaction`** — append-only audit trail. Signed amounts, kinds
+  `grant` / `backing` / `refund` / `payout`. Every balance change writes
+  one, so a balance always reconciles against the sum of its transactions
+  (`TokenBalance#reconciles?` asserts exactly that).
+- **`ProposalBacking`** — one row per investment, so top-ups accumulate.
+- **`Kronk::Tokens`** (`app/lib/`) — the only sanctioned mutation path.
+  Takes a row lock and writes the balance change and its transaction in
+  one database transaction, so two concurrent backings cannot overspend.
+  `refund_all!` and `pay_author!` are **idempotent** — a retried
+  transition cannot pay twice.
+- **`Kronk::ProposalStates`** (`app/lib/`) — the transition machine.
+
+Still to build: the **backing UI**. Backing is currently only reachable
+from a console, so the loop cannot yet be dogfooded from the app. Token
+display (total + backer count with a glyph) is specified below but
+unbuilt.
+
+`ProposalVote` is unchanged and still carries support / question /
+challenge as response counts — it was not superseded by tokens.
 
 ### Voting / seconding UX polish
 
@@ -239,14 +283,10 @@ mockups with Claude web.
 
 ## Open decisions
 
-- **Bootstrap: how does a user get their first tokens?** Earning
-  requires shipping proposals, but you can't back proposals without
-  tokens. Options: signup grant (e.g., 10 tokens), earned via other
-  activity (posting, engagement), Kronk-maintainer distribution, or
-  something else.
-- **Dev-signoff mechanic** — where does the maintainer sign off?
-  Admin UI? CLI (`bin/tootctl kommons enact <proposal_id>`)? Linked
-  to a merged PR reference?
+_Resolved 2026-07-18: **bootstrap** — every account starts with 10
+tokens, backfilled by migration and granted on create. **Dev-signoff** —
+`tootctl kommons deliver <id>` / `annul <id>`, back-end only._
+
 - **Reflection prompt corner + visual** — Claude web track will
   design; capture spec here once landed.
 - **User-designed spaces roadmap** — even though out of scope for
