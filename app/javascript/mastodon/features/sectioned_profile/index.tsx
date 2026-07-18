@@ -260,6 +260,16 @@ export const SectionedProfile = () => {
   useEffect(() => {
     if (!acct) return;
 
+    // Reset per-profile state up front. This component is reused across
+    // `/@:acct` routes (React doesn't remount it on navigation), so without
+    // this a stale error or the previous profile's content persists — e.g.
+    // after landing on any acct that 404s (common on shadow's partial DB),
+    // the not_found banner would stick onto every subsequent profile.
+    setError(null);
+    setAccount(null);
+    setCards([]);
+    setSections([]);
+
     let cancelled = false;
     void (async () => {
       // Step 1: account lookup. If this fails, the panel can't render at
