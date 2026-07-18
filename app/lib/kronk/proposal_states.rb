@@ -88,15 +88,23 @@ module Kronk
       raise InvalidTransition, "cannot #{action} a proposal that is #{proposal.status} (expected #{expected})"
     end
 
-    # Deliberately non-fatal. A notification failing must never leave a
-    # proposal half-transitioned — the state change is the contract, the
+    # Written directly rather than through NotifyService. That service is
+    # built around social interactions — it reads `from_account.local?` and
+    # the sender's user role to decide filtering — and a state change has no
+    # social sender. Passing a Proposal through it raises NoMethodError on
+    # nil. `notifications.from_account_id` is NOT NULL, so the instance's
+    # representative account stands in as the sender, which is the same
+    # convention Relay and the admin system checks use.
+    #
+    # Deliberately non-fatal: a notification failing must never leave a
+    # proposal half-transitioned. The state change is the contract, the
     # nudge is a courtesy.
     def notify_proposer(proposal)
-      LocalNotificationWorker.perform_async(
-        proposal.created_by_account_id,
-        proposal.id,
-        'Proposal',
-        'proposal_status_changed'
+      Notification.create!(
+        account_id: proposal.created_by_account_id,
+        from_account: Account.representative,
+        activity: proposal,
+        type: 'proposal_status_changed'
       )
     rescue StandardError => e
       Rails.logger.error("Failed to notify proposer of proposal #{proposal.id}: #{e.class} #{e.message}")
