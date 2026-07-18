@@ -23,7 +23,20 @@ class Proposal < ApplicationRecord
 
   belongs_to :created_by_account, class_name: 'Account'
   belongs_to :parent_proposal, class_name: 'Proposal', optional: true
-  belongs_to :status, class_name: 'Status', optional: true, inverse_of: :proposal
+  # The discussion thread this proposal projects into the feed as.
+  #
+  # Named `:discussion` rather than `:status` — the §5.5 sibling convention
+  # (Answer, BoothSet, Question, Event) — because Proposal is the one model
+  # that also declares `enum :status` for its own lifecycle state. A
+  # `belongs_to :status` shadows that enum's reader and writer, so
+  # `Proposal.new(status: :open)` raised AssociationTypeMismatch and
+  # `proposal.status` returned a Status object where every caller (the
+  # serializer, and the whole governance UI) expects 'open'/'vetoed'/
+  # 'delivered'/'in_progress'.
+  #
+  # The canonical §5.5 column name `status_id` is unchanged — only the Ruby
+  # association is renamed, so the storage symmetry the spec cares about holds.
+  belongs_to :discussion, class_name: 'Status', optional: true, foreign_key: :status_id, inverse_of: :proposal
   has_many :child_proposals, class_name: 'Proposal', foreign_key: :parent_proposal_id, dependent: :nullify, inverse_of: :parent_proposal
 
   # Transitional dual-write. `discussion_status_id` is the pre-2.0.0
@@ -46,7 +59,7 @@ class Proposal < ApplicationRecord
   # `#status` can be spotted from stray call-sites during 2.0.x.
   def discussion_status
     Proposal.warn_deprecated_status_read!
-    status
+    discussion
   end
 
   def discussion_status_id
@@ -58,7 +71,7 @@ class Proposal < ApplicationRecord
     return if @deprecated_status_read_warned
 
     @deprecated_status_read_warned = true
-    Rails.logger.warn('[Proposal] deprecated read of discussion_status(_id); prefer #status(_id). Column drops in 2.1.0.')
+    Rails.logger.warn('[Proposal] deprecated read of discussion_status(_id); prefer #discussion / #status_id. Column drops in 2.1.0.')
   end
   has_many :proposal_votes, dependent: :destroy
   has_many :tasks, dependent: :destroy

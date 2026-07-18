@@ -27,9 +27,19 @@ RSpec.describe Proposal, '§5.5 canonical status_id linkage' do
   end
 
   describe 'reads' do
-    it 'exposes #status returning the linked Status' do
+    # Was `#status`, which asserted the collision rather than catching it:
+    # belongs_to :status shadowed enum :status, so this passed by returning
+    # the association while the serializer and the governance UI were reading
+    # the same method expecting the lifecycle string. The association is now
+    # named :discussion; the canonical §5.5 column status_id is unchanged.
+    it 'exposes #discussion returning the linked Status' do
       proposal = Fabricate(:proposal, created_by_account: account, status_id: status.id)
-      expect(proposal.status).to eq(status)
+      expect(proposal.discussion).to eq(status)
+    end
+
+    it 'keeps #status as the lifecycle enum, not the linked Status' do
+      proposal = Fabricate(:proposal, created_by_account: account, status_id: status.id, status: :open)
+      expect(proposal.status).to eq('open')
     end
 
     it 'exposes deprecated #discussion_status returning the same Status' do

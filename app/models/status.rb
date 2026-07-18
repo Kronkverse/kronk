@@ -116,7 +116,7 @@ class Status < ApplicationRecord
   has_one :event, inverse_of: :status, dependent: :nullify
   has_one :trend, class_name: 'StatusTrend', inverse_of: :status, dependent: nil
   has_one :quote, inverse_of: :status, dependent: :destroy
-  has_one :proposal, dependent: :nullify, inverse_of: :status
+  has_one :proposal, dependent: :nullify, inverse_of: :discussion
   has_one :booth_set, dependent: :nullify, inverse_of: :status
   has_one :question, dependent: :nullify, inverse_of: :status
   has_one :answer, dependent: :nullify, inverse_of: :status
