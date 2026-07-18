@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_15_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_18_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1247,6 +1247,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_15_120000) do
     t.index ["account_id"], name: "index_profile_sections_on_account_id"
   end
 
+  create_table "proposal_backings", force: :cascade do |t|
+    t.bigint "proposal_id", null: false
+    t.bigint "account_id", null: false
+    t.integer "amount", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_proposal_backings_on_account_id"
+    t.index ["proposal_id", "account_id"], name: "index_proposal_backings_on_proposal_id_and_account_id"
+  end
+
   create_table "proposal_votes", force: :cascade do |t|
     t.bigint "proposal_id", null: false
     t.bigint "account_id", null: false
@@ -1621,6 +1631,24 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_15_120000) do
     t.index ["effective_date"], name: "index_terms_of_services_on_effective_date", unique: true, where: "(effective_date IS NOT NULL)"
   end
 
+  create_table "token_balances", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.integer "balance", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_token_balances_on_account_id", unique: true
+  end
+
+  create_table "token_transactions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.integer "amount", null: false
+    t.integer "kind", null: false
+    t.bigint "proposal_id"
+    t.datetime "created_at", null: false
+    t.index ["account_id"], name: "index_token_transactions_on_account_id"
+    t.index ["proposal_id"], name: "index_token_transactions_on_proposal_id"
+  end
+
   create_table "tombstones", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.string "uri", null: false
@@ -1921,6 +1949,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_15_120000) do
   add_foreign_key "preview_cards", "accounts", column: "author_account_id", on_delete: :nullify
   add_foreign_key "profile_cards", "accounts", on_delete: :cascade
   add_foreign_key "profile_sections", "accounts", on_delete: :cascade
+  add_foreign_key "proposal_backings", "accounts", on_delete: :cascade, validate: false
+  add_foreign_key "proposal_backings", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "proposal_votes", "accounts", on_delete: :cascade, validate: false
   add_foreign_key "proposal_votes", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "proposals", "accounts", column: "created_by_account_id", on_delete: :cascade, validate: false
@@ -1964,6 +1994,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_15_120000) do
   add_foreign_key "tag_trends", "tags", on_delete: :cascade
   add_foreign_key "tasks", "accounts", column: "assigned_to_account_id", on_delete: :nullify, validate: false
   add_foreign_key "tasks", "proposals", on_delete: :cascade, validate: false
+  add_foreign_key "token_balances", "accounts", on_delete: :cascade, validate: false
+  add_foreign_key "token_transactions", "accounts", on_delete: :cascade, validate: false
+  add_foreign_key "token_transactions", "proposals", on_delete: :nullify, validate: false
   add_foreign_key "tombstones", "accounts", on_delete: :cascade
   add_foreign_key "user_hub_orders", "accounts", on_delete: :cascade
   add_foreign_key "user_invite_requests", "users", on_delete: :cascade

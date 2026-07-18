@@ -74,6 +74,8 @@ class Proposal < ApplicationRecord
     Rails.logger.warn('[Proposal] deprecated read of discussion_status(_id); prefer #discussion / #status_id. Column drops in 2.1.0.')
   end
   has_many :proposal_votes, dependent: :destroy
+  has_many :proposal_backings, dependent: :destroy
+  has_many :token_transactions, dependent: :nullify
   has_many :tasks, dependent: :destroy
   has_many :budget_items, dependent: :destroy
 
