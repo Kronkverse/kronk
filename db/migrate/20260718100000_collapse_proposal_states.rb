@@ -22,12 +22,18 @@ class CollapseProposalStates < ActiveRecord::Migration[8.0]
   IN_PROGRESS = 4
 
   def up
-    say_with_time 'remapping retired proposal states to open' do
-      execute <<~SQL.squish
-        UPDATE proposals
-           SET status = #{OPEN}
-         WHERE status IN (#{VETOED}, #{IN_PROGRESS}, 0)
-      SQL
+    # strong_migrations cannot see inside an execute, so it asks for this
+    # explicitly. Safe here: a single UPDATE touching only rows in the three
+    # retired values, on a table with tens of rows, holding a brief row-level
+    # lock. There is no index rebuild and no type change.
+    safety_assured do
+      say_with_time 'remapping retired proposal states to open' do
+        execute <<~SQL.squish
+          UPDATE proposals
+             SET status = #{OPEN}
+           WHERE status IN (#{VETOED}, #{IN_PROGRESS}, 0)
+        SQL
+      end
     end
 
     change_column_default :proposals, :status, from: 0, to: OPEN

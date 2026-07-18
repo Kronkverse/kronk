@@ -80,7 +80,6 @@ module Mastodon
         # NodeRegistry lives in lib/ and isn't eager-loaded in the tootctl
         # context (KornerRegistry is, via its initializer) — require it so the
         # node checks don't crash with an uninitialized-constant NameError.
-        require_relative '../../kronk/node_registry'
         say "Korner framework doctor (Kronk v#{::Kronk::Version})"
         say ''
 
