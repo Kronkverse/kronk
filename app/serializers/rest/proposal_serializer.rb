@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class REST::ProposalSerializer < ActiveModel::Serializer
-  attributes :id, :title, :body, :summary, :status,
+  attributes :id, :title, :body, :summary, :status, :node_id,
              :proposal_type, :categories,
              :parent_proposal_id, :status_id, :discussion_status_id,
              :outcome_notes, :opens_at,
