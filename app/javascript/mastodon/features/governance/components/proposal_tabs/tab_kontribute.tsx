@@ -52,12 +52,24 @@ export const TabKontribute: React.FC<{ proposalId: string }> = ({
     const load = async () => {
       setLoading(true);
       try {
-        const [tasksRes, budgetRes] = await Promise.all([
+        // Settled, not all: budget_items has a controller but no route, so
+        // that request 404s. Under Promise.all the rejection took the whole
+        // tab down with it — setTasks never ran and Kontribute rendered
+        // empty for every proposal, hiding a working tasks API.
+        const [tasksRes, budgetRes] = await Promise.allSettled([
           api().get(`/api/v1/proposals/${proposalId}/tasks`),
           api().get(`/api/v1/proposals/${proposalId}/budget_items`),
         ]);
-        setTasks(tasksRes.data as Task[]);
-        setBudgetItems(budgetRes.data as BudgetItem[]);
+
+        if (tasksRes.status === 'fulfilled') {
+          setTasks(tasksRes.value.data as Task[]);
+        } else {
+          console.error('Failed to load tasks:', tasksRes.reason);
+        }
+
+        if (budgetRes.status === 'fulfilled') {
+          setBudgetItems(budgetRes.value.data as BudgetItem[]);
+        }
       } catch (err) {
         console.error('Failed to load Kontribute tab:', err);
       } finally {
