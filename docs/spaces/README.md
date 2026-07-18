@@ -23,7 +23,7 @@ Slug matches `config/korners/<slug>.yaml`.
 | [`booth.md`](booth.md) | `config/korners/booth.yaml` | Enforced — audio sharing |
 | [`groups.md`](groups.md) | `config/korners/groups.yaml` | Enforced (framework) — UI heads toward "Krew"; slug rename planned |
 | [`huddle.md`](huddle.md) | `config/korners/huddle.yaml` | Models shipped; `/hub/huddle` mount pending |
-| [`in_flow.md`](in_flow.md) | `config/korners/in_flow.yaml` | Models + projection shipped; UI reshape pending Tomas Round 2 |
+| [`inflow.md`](inflow.md) | `config/korners/inflow.yaml` | Models + projection shipped; UI reshape pending Tomas Round 2 |
 | [`kalendar.md`](kalendar.md) | `config/korners/kalendar.yaml` | Enforced — rebuild spiral view pending |
 | [`klot.md`](klot.md) | `config/korners/klot.yaml` | Stub |
 | [`kommons.md`](kommons.md) | `config/korners/kommons.yaml` | Enforced — Tree, token ledger and lifecycle shipped; backing UI pending |

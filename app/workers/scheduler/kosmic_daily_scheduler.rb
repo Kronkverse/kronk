@@ -5,10 +5,10 @@
 # `on_date` index prevents duplicates when the job runs late or is
 # retried.
 #
-# Body defaults are placeholder text; the InFlow team can post custom
+# Body defaults are placeholder text; the Inflow team can post custom
 # text ahead of the scheduled run and this worker will notice and skip.
 # Wiring the update into a Status projection lives on an accompanying
-# service (InFlow::PublishKosmicUpdate) — this scheduler just ensures
+# service (Inflow::PublishKosmicUpdate) — this scheduler just ensures
 # the row exists.
 class Scheduler::KosmicDailyScheduler
   include Sidekiq::Worker

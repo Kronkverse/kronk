@@ -44,14 +44,14 @@ const StrandTabButton: React.FC<StrandTabButtonProps> = ({
   );
 };
 
-export const InFlow: React.FC<Props> = ({ multiColumn }) => {
+export const Inflow: React.FC<Props> = ({ multiColumn }) => {
   const [activeTab, setActiveTab] = useState<StrandTab>('light');
-  const korner = useKorner('in-flow');
+  const korner = useKorner('inflow');
 
   return (
     <Column>
       <ColumnHeader
-        title={korner?.name ?? 'InFlow'}
+        title={korner?.name ?? 'Inflow'}
         icon='public'
         iconComponent={OrbitIcon}
         multiColumn={multiColumn}
@@ -59,7 +59,7 @@ export const InFlow: React.FC<Props> = ({ multiColumn }) => {
 
       <div className='in-flow scrollable'>
         <header className='in-flow__header'>
-          <h1 className='in-flow__title'>In Flow</h1>
+          <h1 className='in-flow__title'>Inflow</h1>
           <p className='in-flow__subtitle'>{LOCATION_LABEL}</p>
           <p className='in-flow__tagline'>
             In Flow is a way to attune to the Kosmos occurring around us, as it

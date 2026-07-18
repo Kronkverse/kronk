@@ -75,7 +75,7 @@ const messages = defineMessages({
   market: { id: 'market.title', defaultMessage: 'Market' },
   booth: { id: 'booth.title', defaultMessage: 'The Booth' },
   events: { id: 'events.title', defaultMessage: '₭alendar' },
-  inFlow: { id: 'in_flow.title', defaultMessage: 'In Flow' },
+  inFlow: { id: 'inflow.title', defaultMessage: 'Inflow' },
   nudges: { id: 'nudges.title', defaultMessage: 'Nudges' },
   preferences: {
     id: 'navigation_bar.preferences',
@@ -346,7 +346,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
         {signedIn && (
           <ColumnLink
             transparent
-            to='/hub/in-flow'
+            to='/hub/inflow'
             icon='public'
             iconComponent={PublicIcon}
             activeIconComponent={PublicActiveIcon}

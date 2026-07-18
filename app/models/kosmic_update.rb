@@ -3,7 +3,7 @@
 # InFlow's daily update — sun/moon phase, seasonal context, whatever
 # the korner's authors want to project. One row per day (enforced by
 # unique index). Projected into the feed via status_id per §5.5;
-# users tuned in to InFlow see the daily Kosmic card there.
+# users tuned in to Inflow see the daily Kosmic card there.
 class KosmicUpdate < ApplicationRecord
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :kosmic_update
 

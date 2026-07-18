@@ -35,17 +35,39 @@ follows from these answers.
 
 | Question                                                                                           | Klot's answer                                        |
 | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| **Slug** — one lowercase word, used everywhere (route, table prefix, i18n keys, manifest filename) | `klot`                                               |
-| **Space name** — TitleCase, used in `SPACE_PLANET` and UI copy                                     | `Klot`                                               |
-| **Planet** — from the eight planets in `planets.tsx` — determines the accent colour                | `Earth`                                              |
+| **Slug** — **one lowercase word**, used everywhere (route, table prefix, i18n keys, manifest filename) | `klot`                                               |
+| **Korner name** — TitleCase, used in UI copy. One word too                                         | `Klot`                                               |
 | **What does a post from this Korner look like?** — the feed projection                             | A shared cycle log entry with phase-of-cycle + emoji |
 | **What are the primary nouns?** — one Ruby model per noun, table name `<slug>_<noun>`              | `KlotPeriod`, `KlotSetting`, `KlotShare`             |
 
-If any of these five is unclear, stop here and clarify. Retro-fitting a slug
-change across nine files is painful.
+If any of these is unclear, stop here and clarify. Retro-fitting a slug change
+is painful — see the warning below.
+
+> ### The slug is one lowercase word. No hyphens, no underscores.
+>
+> This is **Standard L1**, and `korners doctor` enforces it:
+>
+> - one lowercase word — `inflow`, not `in-flow` or `in_flow`
+> - **identical to the manifest filename** — slug `inflow` ⇒ `config/korners/inflow.yaml`
+> - not in `config/korners/reserved_slugs.yaml`, and unique across korners
+>
+> The slug is the URL (`/hub/<slug>`), the manifest filename, the feature
+> directory, the table prefix and the i18n key root. Every one of those has to
+> agree, so pick a word that works as all five.
+>
+> In Flow is the cautionary tale. It shipped as filename `in_flow.yaml`, slug
+> `in-flow` and display name "In Flow" — three forms of one name, which meant
+> `useKorner('in-flow')` and the icon map keyed on a string that matched
+> neither the file nor the directory. Renaming it after the fact touched the
+> manifest, four route entries, the API namespace, the controller class, the
+> feature directory, the stylesheet, three specs and two docs, and needed
+> permanent 301s because the old URLs were already in the wild.
+>
+> If the name you want is two words, join them (`inflow`) or choose another.
+> Do not hyphenate.
 
 **[Spec drift]** The spec (§1) mandates a `config/korners/<slug>.yaml`
-manifest that declares slug/planet/nouns before any code is written.
+manifest that declares slug/nouns before any code is written.
 Manifest-driven registration is not yet enforced — you'll write the manifest
 at the end of this walkthrough as the last step (see §12). Do the five-question
 exercise up front anyway.
@@ -402,29 +424,16 @@ local to your partial for now.
 
 ---
 
-## 8. Register your planet
+## 8. Accent colour — nothing to do
 
-**File:** `app/javascript/mastodon/planets.tsx`
+Korners do not have their own colour. There is no planet to register and no
+`SPACE_PLANET` entry to add; the planet system was retired on 2026-07-10 and
+`planets.tsx` is gone.
 
-Add your Korner's space name to `SPACE_PLANET`:
-
-```tsx
-export const SPACE_PLANET: Record<string, PlanetName> = {
-  // ...
-  Klot: 'Earth',
-};
-```
-
-That entry alone gives `spaceColor('Klot')` a colour, which drives every
-`color-mix()` derivation across your components and card. Nothing else needs
-to know about your Korner's colour.
-
-Two Korners can share a planet — that's fine. Klot and WatchuNeed (now
-`Market`) both orbit Earth on `dev/tbone`. Meaning-of-planet matters more
-than uniqueness. See `docs/kronk_korner_spec.md` §6 for the planet
-semantic table.
-
----
+Every korner uses the shared palette via `var(--accent)`, which also means it
+picks up each user's Personal Appearance settings for free. Differentiation is
+icon, name and content — see Standard L1 ("No colour field") and
+`docs/kronk_aesthetic_system.md`.
 
 ## 9. Navigation panel
 
@@ -450,9 +459,9 @@ so it's not the same drift item. (Klot's absence is captured in
 
 ---
 
-## 10. The Hub (Kosmos) — deferred
+## 10. The Hub — deferred
 
-Spec §4 says your Korner appears as a moon in the Kosmos view at `/hub`.
+Spec §4 says your Korner appears as a tile in the Hub grid at `/hub`.
 **The Hub does not yet exist in code** — `features/hub/index.tsx` is not
 present on either `main` or any dev branch as of writing. When the Hub lands,
 adding a Korner to it will be one array-entry edit. Don't add it now; it
@@ -565,7 +574,7 @@ yarn dev  # or just RAILS_ENV=development bundle exec rails s
 Hit `/<slug>` in a browser signed in as any account. Then:
 
 - Load a post from your Korner into the home timeline — verify the shared
-  card frame renders with your Korner's planet colour.
+  card frame renders with the shared accent colour.
 - Check the nav panel — your Korner's link should be there and highlighted
   when active.
 - Log out — verify the auth gate on `/api/v1/<slug>/*` returns 401 (or
@@ -597,7 +606,6 @@ should touch approximately:
 | `app/javascript/mastodon/features/ui/util/async-components.js` | Chunk registration               |
 | `app/javascript/mastodon/features/ui/index.jsx`                | Route registration               |
 | `app/javascript/mastodon/features/navigation_panel/index.tsx`  | Nav entry                        |
-| `app/javascript/mastodon/planets.tsx`                          | `SPACE_PLANET` entry             |
 | `app/javascript/styles/mastodon/_<slug>.scss`                  | Styles                           |
 | `app/javascript/styles/application.scss`                       | `@use` import                    |
 | `app/models/status.rb` (if feed-projected)                     | `has_one` association            |

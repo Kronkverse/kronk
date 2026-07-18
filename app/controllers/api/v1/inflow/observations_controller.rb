@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Api::V1::InFlow::ObservationsController < Api::BaseController
+class Api::V1::Inflow::ObservationsController < Api::BaseController
   skip_before_action :require_authenticated_user!, only: :show
 
   def show

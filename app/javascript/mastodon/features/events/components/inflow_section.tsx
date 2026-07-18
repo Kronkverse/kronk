@@ -226,11 +226,11 @@ function getMonthEvents(selectedMonth: Date, now: Date): MonthEvent[] {
   return events.sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
-interface InFlowSectionProps {
+interface InflowSectionProps {
   selectedMonth: Date;
 }
 
-export const InFlowSection: React.FC<InFlowSectionProps> = ({
+export const InflowSection: React.FC<InflowSectionProps> = ({
   selectedMonth,
 }) => {
   const [now, setNow] = useState<Date>(nowInSydney);
@@ -265,7 +265,7 @@ export const InFlowSection: React.FC<InFlowSectionProps> = ({
   return (
     <section className='in-flow'>
       <div className='in-flow__header'>
-        <span className='in-flow__header-label'>In Flow</span>
+        <span className='in-flow__header-label'>Inflow</span>
         <span className='in-flow__header-tz'>Sydney · Melbourne</span>
         <p className='in-flow__header-tagline'>
           Returning to the rhythm of the Kosmos returns us to the Syntropic
