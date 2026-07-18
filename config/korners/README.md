@@ -33,7 +33,7 @@ current state across the ecosystem:
 | Kuestions         | `main`           | Live in production |
 | Kalendar (Events) | `main`           | Live in production |
 | Booth             | `main`           | Live in production |
-| InFlow            | `main`           | Live in production |
+| Inflow            | `main`           | Live in production |
 | Nudges            | `main`           | Live in production |
 | Marketplace       | `dev/kashka`     | Live on shadow     |
 | Tree              | `dev/chris`      | Live on shadow     |

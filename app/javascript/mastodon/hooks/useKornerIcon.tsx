@@ -27,7 +27,7 @@ const SLUG_TO_ICON: Record<string, IconProp> = {
   huddle: PartnerExchangeIcon, // handshake — live sessions
   booth: HeadphonesIcon, // headphones — audio
   marketplace: InventoryIcon, // stack — listings
-  'in-flow': DiversityIcon, // people bloom — social
+  'inflow': DiversityIcon, // people bloom — social
   nudges: ChatIcon, // speech bubble — chats
   moments: HourglassIcon, // hourglass — ephemeral
   albutts: PhotoLibraryIcon, // photo stack — albums

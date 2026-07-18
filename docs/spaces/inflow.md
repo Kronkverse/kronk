@@ -1,10 +1,10 @@
-# In Flow (`in_flow`)
+# Inflow (`inflow`)
 
-**Manifest:** `config/korners/in_flow.yaml` · **Mount:** `/hub/in_flow` · **Status:** in-flight (Phase 10.1) — Round 1 with Tomas complete, Round 2 pending
+**Manifest:** `config/korners/inflow.yaml` · **Mount:** `/hub/inflow` · **Status:** in-flight (Phase 10.1) — Round 1 with Tomas complete, Round 2 pending
 
 > **State as of alpha.54 (2026-07-18):** The `kosmic_updates` model, feed
 > projection card (`kosmic_daily_card`), event bus emission
-> (`in_flow.kosmic_update.published`), notification type
+> (`inflow.kosmic_update.published`), notification type
 > (`inflow_daily_posted`), and settings (`daily_delivery_time`,
 > `strands_of_interest: [light, dark, soil, season]`) all ship in the
 > manifest. Design decisions with Tomas below are for the *next-slice
@@ -16,7 +16,7 @@
 
 ## Purpose
 
-In Flow is the space in Kronk for being **in flow with the kosmos** —
+Inflow is the space in Kronk for being **in flow with the kosmos** —
 attuning to the rhythms that exist around and within us (birds, sun,
 moon, stars, seasons) and interacting with them meaningfully.
 
@@ -27,25 +27,25 @@ The animating philosophy is **observe + interact**:
 - **Interact** — respond via planting, contemplation, shared
   observation, or social contribution.
 
-In Flow deliberately **errs away from prescription** (unlike much of
+Inflow deliberately **errs away from prescription** (unlike much of
 astrology, which tells users what to do) and toward **invitation and
 agency**. The daily update doesn't say "you should do X today"; it
 surfaces what's happening and invites a response.
 
 **Ideal user (draft):** someone already interested in ecology,
-planting, photography, seasonal awareness. In Flow is a space to
+planting, photography, seasonal awareness. Inflow is a space to
 build and deepen that passion; it offers something of value to people
 already oriented toward those interests. (Tomas is still refining
 this framing.)
 
 ## Current shape (1.7.x)
 
-- Manifest at `config/korners/in_flow.yaml` — describes as
+- Manifest at `config/korners/inflow.yaml` — describes as
   "celestial navigation + daily Kosmic Update".
 - Resources: `observations` (primary, existing) + `kosmic_updates`
   (new, being added in Phase 10.1).
 - Storage namespace: `kosmic_`.
-- Frontend at `app/javascript/mastodon/features/in_flow/` — currently
+- Frontend at `app/javascript/mastodon/features/inflow/` — currently
   organised as **four strand tabs**: light / dark / soil / season,
   with per-strand components (LightStrand, DarkStrand, EarthStrand,
   FestivalStrand). Uses celestial icons.
@@ -59,7 +59,7 @@ areas explicitly still-refining._
 ### Retire the four-strand tab structure — unified dashboard
 
 The four strands (light / dark / soil / season) as separate tabs
-**separate what should be woven together**. In Flow 2.0 moves toward
+**separate what should be woven together**. Inflow 2.0 moves toward
 a **unified dashboard/panel** where all four dimensions surface
 together and their **interactions with each other** are visible
 (e.g., current lunar phase influences soil chop-and-drop timing;
@@ -92,7 +92,7 @@ Users respond with:
 - An insight / poem / short piece
 - Something they planted or harvested (photo + note)
 
-This turns In Flow into a **participatory attunement space** — the
+This turns Inflow into a **participatory attunement space** — the
 daily kosmic update is a prompt, the observations are the community
 answering.
 
@@ -113,16 +113,16 @@ The daily update evolves from static-templated toward:
 - **Subscribable** — users toggle Kosmic updates on/off.
 - **Ephemeral in the main feed** — appears in the feed for X days,
   then removed. Not permanent Home clutter.
-- **Persisted on the In Flow "profile"** — after leaving the feed,
-  the update lives on an In Flow-specific profile surface (see
+- **Persisted on the Inflow "profile"** — after leaving the feed,
+  the update lives on an Inflow-specific profile surface (see
   below).
 
-### In Flow as a new form of "profile"
+### Inflow as a new form of "profile"
 
-Tomas is exploring whether **In Flow becomes a new form of profile**
+Tomas is exploring whether **Inflow becomes a new form of profile**
 rather than a standalone korner space:
 
-- An In Flow "profile" looks/feels distinct from an individual
+- An Inflow "profile" looks/feels distinct from an individual
   Kronk profile.
 - Archived Kosmic updates live here.
 - A user's observations (their responses to prompts) live here.
@@ -135,13 +135,13 @@ observations to ripple socially.
 
 ### Deep Kalendar coupling
 
-In Flow and Kalendar are **tightly coupled**:
+Inflow and Kalendar are **tightly coupled**:
 
-- **In Flow → Kalendar**: In Flow projects celestial rhythms (moons,
+- **Inflow → Kalendar**: Inflow projects celestial rhythms (moons,
   solstices, equinoxes, key ecological turnpoints) into Kalendar.
   Locked in per `kalendar.md`.
-- **In Flow ← Kalendar**: local events (community planting days,
-  full-moon gatherings) surface in the In Flow dashboard when
+- **Inflow ← Kalendar**: local events (community planting days,
+  full-moon gatherings) surface in the Inflow dashboard when
   relevant.
 
 Exact projection contract still to be defined; will materialise as
@@ -149,7 +149,7 @@ Phase 10.1 work lands.
 
 ### Aesthetic + language
 
-Written language across In Flow needs another pass — Tomas notes it
+Written language across Inflow needs another pass — Tomas notes it
 still needs work. Aesthetic rebuild in line with Kronk 2.0 tokens.
 Coordinating on visual/mockup work through Claude web track.
 
@@ -157,8 +157,8 @@ Coordinating on visual/mockup work through Claude web track.
 
 _(Round 2 questions being sent back to Tomas — see below.)_
 
-- **"In Flow as profile"** vs "In Flow as korner space" — is the
-  In-Flow-as-profile direction the primary shape, or does In Flow
+- **"Inflow as profile"** vs "Inflow as korner space" — is the
+  In-Flow-as-profile direction the primary shape, or does Inflow
   remain a distinct korner space with a dashboard AND some
   profile-surface accretion?
 - **Gamification of responses** — Kosmic points? Or a Kronk-native
@@ -166,7 +166,7 @@ _(Round 2 questions being sent back to Tomas — see below.)_
 - **Observations data integration** — public aggregate feed, private
   to the user, opt-in collective research? What are the audiences?
 - **Kosmic update lifecycle timing** — how many days in the main feed
-  before it's archived to the In Flow profile? 1 day? 3? 7?
+  before it's archived to the Inflow profile? 1 day? 3? 7?
 - **Locality/geo** — location-aware content (e.g., locally edible
   plants) is a stretch goal. What's the minimum locality primitive
   needed to make Soil work well? Deferred until V2 direction is
@@ -182,6 +182,6 @@ _(Round 2 questions being sent back to Tomas — see below.)_
 ## Related drafts
 
 - `/home/shared/rebuild/plan/quiet-napping-hare.md` §Phase 10.1 (kosmic_updates + daily scheduler)
-- `/home/shared/rebuild/spec/kronk_korner_spec.md` §In Flow
+- `/home/shared/rebuild/spec/kronk_korner_spec.md` §Inflow
 - `/home/shared/rebuild/memory/project_kronk_rebuild_feed_projection_spec_draft.md` (Kosmic update projection into feed)
-- Related korners: `kalendar.md` (In Flow → Kalendar celestial projection), `nudges.md` (potential push channel for daily update subscribers)
+- Related korners: `kalendar.md` (Inflow → Kalendar celestial projection), `nudges.md` (potential push channel for daily update subscribers)

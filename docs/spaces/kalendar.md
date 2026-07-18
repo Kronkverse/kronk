@@ -51,9 +51,9 @@ Beyond user-created events, Kalendar surfaces:
   followers to "mates" as its social primitive; visibility settings
   themselves are mid-redesign platform-wide.)
 - **Celestial rhythms** — full moons, solstices, equinoxes, and other
-  cosmic markers. **Projected from In Flow.** In Flow owns the
+  cosmic markers. **Projected from Inflow.** Inflow owns the
   canonical source; Kalendar subscribes and renders. Cross-korner
-  emit/listen wiring: In Flow emits (e.g., `in_flow.rhythm.published`),
+  emit/listen wiring: Inflow emits (e.g., `inflow.rhythm.published`),
   Kalendar listens and materialises the entry in the calendar view.
 
 These non-event rhythms are Kalendar-first-class alongside `events` —
@@ -160,10 +160,10 @@ mockups with Claude web.
 
 ## Open decisions
 
-- **In Flow → Kalendar projection contract** — exact event name(s),
+- **Inflow → Kalendar projection contract** — exact event name(s),
   payload shape, and which celestial markers are canonical
   (moons + solstices + equinoxes minimum; anything else?). Will be
-  refined in `in_flow.md`.
+  refined in `inflow.md`.
 - **Birthday capture UX** — where does a user set their birthday +
   its visibility? Profile? Settings? A per-user dialog on first-run?
   Related to the platform-wide visibility-settings redesign.

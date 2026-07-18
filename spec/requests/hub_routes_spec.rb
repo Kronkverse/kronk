@@ -13,7 +13,7 @@ RSpec.describe 'Hub routes' do
     %w(
       /hub/kommons
       /hub/kuestions
-      /hub/in-flow
+      /hub/inflow
       /hub/marketplace
       /hub/tree
     ).each do |path|
@@ -60,7 +60,8 @@ RSpec.describe 'Hub routes' do
       '/kalendar/42' => '/hub/kalendar/42',
       '/booth' => '/hub/booth',
       '/booth/deep/link' => '/hub/booth/deep/link',
-      '/in-flow' => '/hub/in-flow',
+      '/in-flow' => '/hub/inflow',
+      '/hub/in-flow' => '/hub/inflow',
       '/market' => '/hub/marketplace',
       '/market/listing/1' => '/hub/marketplace/listing/1',
     }.each do |old_path, new_path|

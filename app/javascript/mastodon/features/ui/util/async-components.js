@@ -254,8 +254,8 @@ export function Events () {
   return import("../../events").then(m => ({ default: m.Events }));
 }
 
-export function InFlow () {
-  return import("../../in_flow").then(m => ({ default: m.InFlow }));
+export function Inflow () {
+  return import("../../inflow").then(m => ({ default: m.Inflow }));
 }
 
 export function Nudges () {

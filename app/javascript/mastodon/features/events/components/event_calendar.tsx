@@ -13,7 +13,7 @@ import {
   FlameIcon,
   OrbitIcon,
   StarIcon,
-} from 'mastodon/features/in_flow/components/celestial_icons';
+} from 'mastodon/features/inflow/components/celestial_icons';
 
 import { getCelestialEventsForMonth } from './celestial_calendar';
 import type { CelestialDayEvents } from './celestial_calendar';

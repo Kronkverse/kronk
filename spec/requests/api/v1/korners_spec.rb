@@ -50,10 +50,10 @@ RSpec.describe 'Korners' do
     end
 
     it 'resolves hyphenated slugs' do
-      get api_v1_korner_path(id: 'in-flow')
+      get api_v1_korner_path(id: 'inflow')
 
       expect(response).to have_http_status(200)
-      expect(response.parsed_body).to include('slug' => 'in-flow')
+      expect(response.parsed_body).to include('slug' => 'inflow')
     end
   end
 

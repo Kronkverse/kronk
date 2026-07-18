@@ -271,8 +271,13 @@ Rails.application.routes.draw do
   get '/governance/*path', to: redirect('/hub/kommons/%{path}', status: 301)
   get '/questions', to: redirect('/hub/kuestions', status: 301)
   get '/questions/*path', to: redirect('/hub/kuestions/%{path}', status: 301)
-  get '/in-flow', to: redirect('/hub/in-flow', status: 301)
-  get '/in-flow/*path', to: redirect('/hub/in-flow/%{path}', status: 301)
+  # Legacy: the pre-/hub/ path (Phase 3 URL migration) and the pre-rename
+  # hyphenated mount both fold into /hub/inflow. Kept indefinitely — these
+  # URLs are in already-projected feed cards and in users' bookmarks.
+  get '/in-flow', to: redirect('/hub/inflow', status: 301)
+  get '/in-flow/*path', to: redirect('/hub/inflow/%{path}', status: 301)
+  get '/hub/in-flow', to: redirect('/hub/inflow', status: 301)
+  get '/hub/in-flow/*path', to: redirect('/hub/inflow/%{path}', status: 301)
   get '/market', to: redirect('/hub/marketplace', status: 301)
   get '/market/*path', to: redirect('/hub/marketplace/%{path}', status: 301)
 
@@ -290,8 +295,8 @@ Rails.application.routes.draw do
   get '/hub/booth/*path', to: 'booth#index', format: false
   get '/hub/marketplace', to: 'home#index'
   get '/hub/marketplace/*path', to: 'home#index', format: false
-  get '/hub/in-flow', to: 'home#index'
-  get '/hub/in-flow/*path', to: 'home#index', format: false
+  get '/hub/inflow', to: 'home#index'
+  get '/hub/inflow/*path', to: 'home#index', format: false
   get '/hub/tree', to: 'home#index'
   get '/hub/tree/*path', to: 'home#index', format: false
   get '/hub/groups', to: 'home#index'

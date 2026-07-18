@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class NatureObservationGenerator
-  REDIS_KEY_PREFIX = 'in_flow:observation'
+  REDIS_KEY_PREFIX = 'inflow:observation'
   TTL = 48.hours.to_i
   LAT = -37.8136
   LON = 144.9631

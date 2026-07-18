@@ -50,7 +50,7 @@ export const EarthStrand: React.FC = () => {
   const [observation, setObservation] = useState<string>(staticObservable);
 
   useEffect(() => {
-    fetch('/api/v1/in_flow/observation')
+    fetch('/api/v1/inflow/observation')
       .then((r) => r.json())
       .then((d: { text: string | null }) => {
         if (d.text) setObservation(d.text);

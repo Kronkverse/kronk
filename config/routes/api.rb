@@ -108,7 +108,7 @@ namespace :api, format: false do
       end
     end
 
-    namespace :in_flow do
+    namespace :inflow do
       resource :observation, only: [:show]
     end
 

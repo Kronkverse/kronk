@@ -1,9 +1,9 @@
 # In Flow — celestial navigation + daily Kosmic Update.
 # 2.0.0 gains a scheduled kosmic_updates resource that projects into
-# the feed for users tuned in to InFlow (Tal's 2026-07-10 decision).
+# the feed for users tuned in to Inflow (Tal's 2026-07-10 decision).
 
-slug: in-flow
-name: In Flow
+slug: inflow
+name: Inflow
 icon: diversity_2
 render_target: native
 version: 2.0.0
@@ -12,13 +12,13 @@ permissions:
   - read:statuses
 
 resources:
-  - name: observations # namespace :in_flow in routes/api.rb → resource :observation
+  - name: observations # namespace :inflow in routes/api.rb → resource :observation
     primary: true
   - name: kosmic_updates # new in 2.0.0 — daily row via Scheduler::KosmicDailyScheduler
 
 storage:
   db_namespace: kosmic_ # tables: kosmic_updates
-  media_prefix: spaces/in-flow/
+  media_prefix: spaces/inflow/
   redis_prefix: # not-implemented
 
 visibility_scopes: []
@@ -26,7 +26,7 @@ visibility_scopes: []
 steward_role: moderator
 
 emits:
-  - in_flow.kosmic_update.published
+  - inflow.kosmic_update.published
 listens: []
 
 feed_projection:
@@ -34,7 +34,7 @@ feed_projection:
   title_from: on_date # rendered as the date badge
   summary_from: body
   status_association: kosmic_update # framework: Status.has_one :kosmic_update via status_id (§5.5)
-  links_to: /hub/in-flow/kosmic/<on_date>
+  links_to: /hub/inflow/kosmic/<on_date>
   default_visibility: public
 
 notifications:
@@ -69,8 +69,8 @@ enforced: false # Path A: not conformant (serializer/card/slug) — building
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 nodes:
-  - id: in-flow.index
+  - id: inflow.index
     label: In Flow
-    url: /hub/in-flow
+    url: /hub/inflow
     lifecycle: live
     spa: true

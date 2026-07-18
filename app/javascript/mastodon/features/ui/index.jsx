@@ -91,7 +91,7 @@ import {
   Live,
   Events,
   EventDetail,
-  InFlow,
+  Inflow,
   Nudges,
   NudgesThread,
   Governance,
@@ -268,7 +268,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/@:acct/profile' exact component={SectionedProfile} content={children} />
             {signedIn && <WrappedRoute path={["/kalendar/:id", "/hub/kalendar/:id"]} component={EventDetail} content={children} />}
             {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={Events} content={children} />}
-            {signedIn && <WrappedRoute path={["/in-flow", "/hub/in-flow"]} component={InFlow} content={children} />}
+            {signedIn && <WrappedRoute path="/hub/inflow" component={Inflow} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
             {signedIn && <WrappedRoute path="/hub/groups/:id" component={GroupDetail} content={children} />}
             {signedIn && <WrappedRoute path="/hub/groups" component={Groups} content={children} />}

@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useHistory } from 'react-router-dom';
 
-import { buildDailyIntegrationText } from 'mastodon/features/in_flow/components/daily_integration';
-import { getDailyObservable } from 'mastodon/features/in_flow/components/earth_calendar';
+import { buildDailyIntegrationText } from 'mastodon/features/inflow/components/daily_integration';
+import { getDailyObservable } from 'mastodon/features/inflow/components/earth_calendar';
 
 function getMelbourneMonthDay(): { month: number; day: number } {
   const fmt = new Intl.DateTimeFormat('en-AU', {
@@ -29,7 +29,7 @@ export const DailyKosmicCard: React.FC = () => {
   const [observation, setObservation] = useState<string>(staticObservation);
 
   useEffect(() => {
-    fetch('/api/v1/in_flow/observation')
+    fetch('/api/v1/inflow/observation')
       .then((r) => r.json())
       .then((d: { text: string | null }) => {
         if (d.text) setObservation(firstSentence(d.text));
@@ -45,7 +45,7 @@ export const DailyKosmicCard: React.FC = () => {
   });
 
   const handleClick = useCallback(() => {
-    history.push('/in-flow');
+    history.push('/hub/inflow');
   }, [history]);
 
   return (
