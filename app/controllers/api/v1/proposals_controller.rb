@@ -2,16 +2,17 @@
 
 class Api::V1::ProposalsController < Api::BaseController
   before_action :require_user!
-  before_action :set_proposal, only: [:show, :vote, :unvote, :mark_delivered, :update, :archive, :unarchive]
-  before_action :require_creator_or_steward!, only: [:mark_delivered, :update, :archive, :unarchive]
+  before_action :set_proposal, only: [:show, :vote, :unvote, :complete, :update, :archive, :unarchive]
+  before_action :require_creator_or_steward!, only: [:update, :archive, :unarchive]
 
   def index
     scope = Proposal.active
 
     scope = case params[:filter]
-            when 'vetoed'    then scope.vetoed
             when 'delivered' then scope.delivered
-            else                  scope.where.not(status: :delivered)
+            when 'completed' then scope.completed
+            when 'annulled'  then scope.annulled
+            else                  scope.open
             end
 
     scope = scope.with_category(params[:category]) if params[:category].present? && Proposal::CATEGORY_VALUES.include?(params[:category])
@@ -82,7 +83,6 @@ class Api::V1::ProposalsController < Api::BaseController
       end
     end
 
-    reconcile_status!
     render json: @proposal.reload, serializer: REST::ProposalSerializer
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -93,13 +93,20 @@ class Api::V1::ProposalsController < Api::BaseController
 
     vote = @proposal.proposal_votes.find_by(account: current_account)
     vote&.destroy
-    reconcile_status!
     render json: @proposal.reload, serializer: REST::ProposalSerializer
   end
 
-  def mark_delivered
-    @proposal.update!(status: :delivered, outcome_notes: params[:outcome_notes])
-    render json: @proposal, serializer: REST::ProposalSerializer
+  # The proposer confirming a delivered proposal. This is what returns the
+  # backers' stakes and pays the author. Marking a proposal delivered is not
+  # here on purpose — that is a dev action, done through
+  # `tootctl kommons deliver`.
+  def complete
+    Kronk::ProposalStates.complete!(@proposal, by: current_account)
+    render json: @proposal.reload, serializer: REST::ProposalSerializer
+  rescue Kronk::ProposalStates::NotTheProposer
+    render json: { error: 'Only the proposer can complete this proposal.' }, status: :forbidden
+  rescue Kronk::ProposalStates::InvalidTransition => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
   private
@@ -135,14 +142,4 @@ class Api::V1::ProposalsController < Api::BaseController
     forbidden unless is_creator || is_steward
   end
 
-  def reconcile_status!
-    return if @proposal.delivered?
-
-    has_block = @proposal.proposal_votes.exists?(position: :block)
-    if has_block && !@proposal.vetoed?
-      @proposal.update!(status: :vetoed)
-    elsif !has_block && @proposal.vetoed?
-      @proposal.update!(status: :open)
-    end
-  end
 end

@@ -133,7 +133,7 @@ export interface ApiStatusJSON {
     id: string;
     title: string;
     summary: string | null;
-    status: 'open' | 'in_progress' | 'delivered' | 'vetoed';
+    status: 'open' | 'delivered' | 'completed' | 'annulled';
     proposal_type: 'small' | 'medium' | 'large';
     support_count: number;
     veto_count: number;

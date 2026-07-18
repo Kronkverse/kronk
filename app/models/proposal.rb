@@ -79,7 +79,25 @@ class Proposal < ApplicationRecord
   has_many :tasks, dependent: :destroy
   has_many :budget_items, dependent: :destroy
 
-  enum :status, { open: 1, vetoed: 2, delivered: 3, in_progress: 4 }
+  # The lifecycle. Integers are preserved for open and delivered so no
+  # existing row is rewritten; 2 (vetoed) and 4 (in_progress) are retired
+  # and remapped to open by the CollapseProposalStates migration.
+  #
+  #   open      — accepting backing.
+  #   delivered — a dev has built it and marked it done from the back end.
+  #               Backing is closed. The proposer is notified and is the
+  #               only one who can move it on.
+  #   completed — the proposer confirmed delivery. Backers are refunded and
+  #               the author is paid. Terminal.
+  #   annulled  — a dev released it from the back end. Backers are refunded,
+  #               the author is paid nothing. Terminal.
+  #
+  # There is deliberately no delivered -> annulled edge: once delivered, the
+  # only way out is the proposer completing it. A problem found after
+  # delivery is a new proposal.
+  enum :status, { open: 1, delivered: 3, completed: 5, annulled: 6 }
+
+  TERMINAL_STATES = %w(completed annulled).freeze
   enum :proposal_type, { small: 0, medium: 1, large: 2 }, prefix: :type
 
   validates :title, presence: true, length: { maximum: 240 }
@@ -118,12 +136,26 @@ class Proposal < ApplicationRecord
     proposal_votes.where(position: :agree).count
   end
 
-  def veto_count
+  # Challenges are a response count, not a lifecycle state. This replaces
+  # veto_count and vetoed_by_votes?, which existed to feed the retired
+  # vetoed status.
+  def challenge_count
     proposal_votes.where(position: :block).count
   end
 
-  def vetoed_by_votes?
-    proposal_votes.exists?(position: :block)
+  def backing_total
+    ProposalBacking.total_for(id)
+  end
+
+  def backed?
+    backing_total.positive?
+  end
+
+  # Archive is only permitted while nothing is staked. Once tokens are
+  # committed the proposal is committed too — it can only be completed or
+  # annulled, both of which return the stakes.
+  def archivable?
+    !archived? && !backed? && !TERMINAL_STATES.include?(status)
   end
 
   private

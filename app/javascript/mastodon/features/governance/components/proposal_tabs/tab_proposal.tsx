@@ -501,18 +501,18 @@ export const TabProposal: React.FC<{
     <div className='governance-tab-proposal'>
       <p className='governance-tab-proposal__body'>{proposal.body}</p>
 
-      {proposal.status === 'vetoed' && (
-        <div className='governance-tab-proposal__banner governance-tab-proposal__banner--vetoed'>
+      {proposal.vote_summary.block > 0 && proposal.status === 'open' && (
+        <div className='governance-tab-proposal__banner governance-tab-proposal__banner--challenged'>
           <strong>
             <FormattedMessage
-              id='governance.banner.vetoed'
+              id='governance.banner.challenged'
               defaultMessage='Challenged — discussion required'
             />
           </strong>
           <p>
             <FormattedMessage
-              id='governance.banner.vetoed_body'
-              defaultMessage='One or more members have raised a challenge. The proposal stays open for discussion; once every challenge is withdrawn, it returns to Open.'
+              id='governance.banner.challenged_body'
+              defaultMessage='One or more members have raised a challenge. The proposal stays open for discussion; a challenge is a response, not a veto.'
             />
           </p>
         </div>

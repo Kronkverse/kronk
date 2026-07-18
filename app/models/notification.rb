@@ -108,6 +108,14 @@ class Notification < ApplicationRecord
       filterable: true,
       legacy: false,
     }.freeze,
+    # Korner-native. Fired when a proposal a user authored changes state —
+    # today, when a dev marks it delivered and the proposer needs to confirm
+    # it. Declared in config/korners/kommons.yaml; Standard L10 requires a
+    # declared type to be a registered one.
+    proposal_status_changed: {
+      filterable: false,
+      legacy: false,
+    }.freeze,
     media_tag: {
       filterable: true,
       legacy: true,

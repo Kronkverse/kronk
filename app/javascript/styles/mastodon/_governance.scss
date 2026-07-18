@@ -165,11 +165,11 @@
     --strip-color: var(--accent);
   }
 
-  &--in_progress {
+  &--completed {
     --strip-color: #{var(--decision-pending)};
   }
 
-  &--vetoed {
+  &--annulled {
     --strip-color: #{var(--decision-block)};
 
     opacity: 0.85;
@@ -359,11 +359,11 @@
     background: var(--accent);
   }
 
-  &--in_progress {
+  &--completed {
     background: var(--decision-pending);
   }
 
-  &--vetoed {
+  &--annulled {
     background: var(--decision-block);
   }
 
@@ -443,7 +443,7 @@
   }
 }
 
-// ─── Tab banners for vetoed / delivered ─────────────────────────────────────
+// ─── Tab banners for challenged / delivered ─────────────────────────────────────
 
 .governance-tab-proposal__banner {
   border-radius: 8px;
@@ -462,7 +462,7 @@
     color: $secondary-text-color;
   }
 
-  &--vetoed {
+  &--challenged {
     background: color-mix(in srgb, var(--decision-block) 8%, transparent);
     border-left: 3px solid var(--decision-block);
 
@@ -701,12 +701,12 @@
   white-space: nowrap;
 
   &--open,
-  &--in_progress {
+  &--completed {
     background: var(--accent);
     color: #fff;
   }
 
-  &--vetoed {
+  &--annulled {
     background: var(--decision-block);
     color: #fff;
   }
@@ -1771,7 +1771,7 @@
     color: #{$primary-text-color};
   }
 
-  &--vetoed {
+  &--challenged {
     background: #{color-mix(in srgb, var(--decision-block) 10%, transparent)};
     border-left: 3px solid #{var(--decision-block)};
 

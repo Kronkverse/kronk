@@ -29,9 +29,9 @@ const messages = defineMessages({
 
 const STATUS_LABELS: Record<string, string> = {
   open: 'Open',
-  in_progress: 'In Progress',
+  completed: 'Completed',
   delivered: 'Delivered',
-  vetoed: 'Vetoed',
+  annulled: 'Annulled',
 };
 
 const TYPE_LABELS: Record<string, string> = {

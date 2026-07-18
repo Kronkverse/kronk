@@ -23,7 +23,7 @@ const messages = defineMessages({
   title: { id: 'governance.title', defaultMessage: '₭ommons' },
 });
 
-type FilterType = 'open' | 'vetoed' | 'delivered' | 'in_progress';
+type FilterType = 'open' | 'delivered' | 'completed' | 'annulled';
 
 const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const korner = useKorner('kommons');
