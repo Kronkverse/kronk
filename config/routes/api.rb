@@ -128,6 +128,7 @@ namespace :api, format: false do
       end
     end
     resources :proposals, only: [:index, :show, :create, :update] do
+      resources :attachments, only: [:index, :create, :show, :destroy], module: :proposals
       member do
         post :vote
         delete :unvote

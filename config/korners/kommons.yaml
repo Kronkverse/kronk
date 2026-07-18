@@ -16,6 +16,7 @@ resources:
   - name: proposals
     primary: true # /governance is the canonical entry — moves under /hub/kommons in §4 migration
   - name: proposal_votes
+  - name: proposal_attachments # mockups/briefs attached to a proposal for implementers
   - name: proposal_completion_suggestions # added on feature/kommons-notifications
 
 storage:

@@ -75,6 +75,7 @@ class Proposal < ApplicationRecord
   end
   has_many :proposal_votes, dependent: :destroy
   has_many :proposal_backings, dependent: :destroy
+  has_many :proposal_attachments, dependent: :destroy
   has_many :token_transactions, dependent: :nullify
   has_many :tasks, dependent: :destroy
   has_many :budget_items, dependent: :destroy

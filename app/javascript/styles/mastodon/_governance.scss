@@ -2820,3 +2820,73 @@
     height: 40px;
   }
 }
+
+// ─── Proposal attachments ───────────────────────────────────────────────────
+// Files for whoever implements the proposal: mockups, briefs, references.
+
+.governance-attachments {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px dashed var(--surface-border, rgb(255 255 255 / 10%));
+  border-radius: var(--radius-medium);
+
+  &__heading {
+    margin: 0 0 12px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted, rgb(255 255 255 / 60%));
+  }
+
+  &__list {
+    margin: 0 0 12px;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: baseline;
+    padding: 6px 0;
+  }
+
+  &__kind {
+    padding: 2px 8px;
+    border: 1px solid currentcolor;
+    border-radius: var(--radius-round);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+  }
+
+  &__name {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  &__desc {
+    color: var(--text-muted, rgb(255 255 255 / 60%));
+    font-size: 13px;
+  }
+
+  &__upload {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  &__description {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  &__error {
+    margin: 8px 0 0;
+    color: var(--decision-block);
+    font-size: 13px;
+  }
+}
