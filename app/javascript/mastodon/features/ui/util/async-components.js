@@ -276,8 +276,8 @@ export function Governance () {
 }
 
 
-export function KommonsTree () {
-  return import("../../kommons_tree");
+export function KommonsSkeleton () {
+  return import("../../kommons_skeleton");
 }
 
 

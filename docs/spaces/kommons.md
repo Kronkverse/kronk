@@ -7,7 +7,7 @@
 Kommons is **Kronk's transparency + participation space**. It's where
 users can:
 
-- **See how Kronk fits together** — the Kommons Tree maps every
+- **See how Kronk fits together** — the Kommons Skeleton maps every
   user-facing page, feature, and connection between korners. It makes
   the platform's structure legible.
 - **Participate in guiding Kronk's development** — proposals and
@@ -26,10 +26,10 @@ not through formal proposal machinery.
 
 ## Current shape (2.0 already shipped)
 
-Substantial 2.0 work has already landed in the Kommons Tree series
+Substantial 2.0 work has already landed in the Kommons Skeleton series
 (PRs #287, #292, #295, #297, #300):
 
-### Kommons Tree — the transparency layer
+### Kommons Skeleton — the transparency layer
 
 - **`Kronk::NodeRegistry`** at `lib/kronk/node_registry.rb`. Boots
   from two sources:
@@ -47,7 +47,7 @@ Substantial 2.0 work has already landed in the Kommons Tree series
 - **Live composer** — replaces the old stub; users can compose a real
   Kommons proposal from any node.
 - **Frontend at `app/javascript/mastodon/features/kommons_tree/`**;
-  route `/hub/kommons/tree`.
+  route `/hub/kommons/skeleton`.
 - **API**: `GET /api/v1/kommons/nodes` serves the tree JSON.
 
 ### Proposal model + governance UI
@@ -300,7 +300,7 @@ tokens, backfilled by migration and granted on create. **Dev-signoff** —
 
 ## Related drafts
 
-- `/home/shared/rebuild/plan/quiet-napping-hare.md` (no dedicated phase — Kommons Tree shipped in an early rebuild slice)
+- `/home/shared/rebuild/plan/quiet-napping-hare.md` (no dedicated phase — Kommons Skeleton shipped in an early rebuild slice)
 - `/home/shared/rebuild/spec/kronk_korner_spec.md` §Kommons
 - `/home/shared/rebuild/memory/project_kronk_rebuild_kommons_reflections_spec_draft.md` (reconciled to Kommons framing)
 - Related korners: `krew.md` (no Krew-scoped Kommons in 2.0), all korners (their `nodes:` blocks feed the Tree)

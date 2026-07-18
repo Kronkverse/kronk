@@ -151,7 +151,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                 />
               </button>
               <Link
-                to='/hub/kommons/tree'
+                to='/hub/kommons/skeleton'
                 className='governance-page__tree-link'
               >
                 <Icon id='list_alt' icon={ListAltIcon} />

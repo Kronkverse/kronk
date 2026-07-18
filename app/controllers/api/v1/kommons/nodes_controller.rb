@@ -7,7 +7,7 @@
 # per-korner manifest `nodes:` blocks) with per-node open-proposal
 # counts joined in from the proposals table.
 #
-# Consumers: `app/javascript/mastodon/features/kommons_tree/*`.
+# Consumers: `app/javascript/mastodon/features/kommons_skeleton/*`.
 # The frontend was mocking this in a hardcoded TypeScript array; this
 # endpoint is the swap point.
 
