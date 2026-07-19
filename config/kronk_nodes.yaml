@@ -38,14 +38,35 @@ nodes:
         kind: projects_to
         description: Kuestions project into the feed as question cards.
 
+  # ── NUDGES ────────────────────────────────────────────────────────
+  #
+  # A top-level space, not a sub-tree of the feed and not a korner. It sits
+  # in the primary switcher alongside Me and Home (`hub_switcher.tsx`), and
+  # there is no `/hub/nudges` route — `config/korners/nudges.yaml` still
+  # carries `enforced: false` for exactly that reason.
+  #
+  # `feed.nudges` kept its id: node ids are the anchor feedback attaches to,
+  # so renaming one orphans its proposals. The id records history; the bucket
+  # records where it lives.
   - id: feed.nudges
-    bucket: feed
+    bucket: nudges
     label: Nudges activity
     url: /nudges/activity
     lifecycle: live
-    # SPA route (React Router) — /nudges/activity has no Rails named route, so
-    # `route_name` here failed `korners doctor`. Nudges is the activity surface;
-    # revisit when the Nudges pillar (spec #331) lands a canonical route.
+    spa: true
+
+  - id: nudges.index
+    bucket: nudges
+    label: Nudges
+    url: /nudges
+    lifecycle: live
+    spa: true
+
+  - id: nudges.thread
+    bucket: nudges
+    label: Nudge thread
+    url: /nudges/:accountId
+    lifecycle: live
     spa: true
 
   # The rest of the feed bucket. Every entry below is an existing route,
@@ -138,11 +159,17 @@ nodes:
         kind: related
         description: The sectioned view is the primary render of this profile.
 
+  # `soon`, not `live`: features/profile_compose renders
+  # `profile_compose.header_stub` — "Cover image, avatar and display name —
+  # editing lands in the next step." Display name, bio, avatar, header and
+  # metadata fields are still only editable on the classic Rails page. A
+  # `live` node here told the settings nav, the Skeleton map and anyone
+  # filing feedback that a working composer existed.
   - id: profile.edit
     bucket: profile
     label: Profile composer
     url: /@:user/edit
-    lifecycle: live
+    lifecycle: soon
     spa: true
     links:
       - to: settings.profile
@@ -201,12 +228,38 @@ nodes:
         kind: settings_for
         description: Configures the sectioned profile render.
 
+  # `deprecated`: /settings/preferences is a bare redirect to
+  # /settings/preferences/appearance (config/routes/settings.rb). The registry
+  # was advertising a redirect as a destination, so feedback filed here was
+  # filed against nothing.
   - id: settings.prefs
     bucket: profile
     label: Preferences
     url: /settings/preferences
     route_name: settings_preferences
+    lifecycle: deprecated
+
+  # The two settings roots. Both have shipped routes and neither was
+  # registered, so the settings hub — the surface a user actually lands on —
+  # had nowhere for feedback to attach.
+  #
+  # Bucket is `profile` because that is where the rest of settings.* is filed
+  # and where the code puts it. It is not a claim that settings belongs to
+  # Profile: settings has no honest home under the current scheme, and the
+  # section cut is still open. See docs/rebuild/decisions.md.
+  - id: settings.root
+    bucket: profile
+    label: Settings
+    url: /settings
     lifecycle: live
+    spa: true
+
+  - id: settings.you
+    bucket: profile
+    label: Settings · You
+    url: /settings/you
+    lifecycle: live
+    spa: true
 
   # The rebuilt SPA settings sections (settings rebuild §7). Grouped under
   # Profile ("self-management"); the settings nav projects all settings.* nodes.
