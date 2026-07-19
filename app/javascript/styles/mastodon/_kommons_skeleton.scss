@@ -5,6 +5,18 @@
   padding: 20px;
   max-width: 780px;
   margin: 0 auto;
+  // Explicit, because this is a flex item: the map's children are all
+  // absolutely positioned, so there is no intrinsic width to hold the
+  // container open and it collapses to the width of the breadcrumb text.
+  width: 100%;
+  box-sizing: border-box;
+
+  // The map is spatial and wants the room. The reading column is right for a
+  // node's proposals, wrong for a body you navigate.
+  &--map {
+    max-width: none;
+    padding-inline: 0;
+  }
 }
 
 // ── Breadcrumb ──────────────────────────────────────────────────────
@@ -531,5 +543,267 @@
   &:hover {
     background: var(--accent);
     color: #fff;
+  }
+}
+
+// ─── The Skeleton: one world, one camera ────────────────────────────────────
+//
+// Every node and bone is rendered once into world coordinates. Navigation
+// retargets a single transform on .skel-cam and re-classes nodes for emphasis
+// — nothing is rebuilt, nothing is culled. That is what lets the whole
+// platform stay visible around you while you move through it.
+
+.skel-stage {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  height: calc(100vh - 220px);
+  min-height: 420px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+
+  &--grabbing {
+    cursor: grabbing;
+
+    .skel-cam {
+      transition: none;
+    }
+  }
+}
+
+// A zero-size coordinate frame, not a box. Bones and nodes live inside it and
+// move as one rigid unit.
+.skel-cam {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  transition: transform 720ms var(--ease-out);
+  will-change: transform;
+}
+
+.skel-bones {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.skel-bone,
+.skel-joint {
+  fill: color-mix(in srgb, var(--text-muted) 30%, transparent);
+  transition: fill var(--dur-slow) var(--ease-out);
+}
+
+// Bones carry the same four emphasis tiers as nodes. The hot chain is the
+// path you walked, rendered as anatomy rather than as text.
+.skel-edge {
+  &--ghost .skel-bone { fill: color-mix(in srgb, var(--text-muted) 11%, transparent); }
+  &--ghost .skel-joint { fill: color-mix(in srgb, var(--text-muted) 12%, transparent); }
+  &--near .skel-bone { fill: color-mix(in srgb, var(--text-muted) 26%, transparent); }
+  &--near .skel-joint { fill: color-mix(in srgb, var(--text-muted) 28%, transparent); }
+  &--live .skel-bone { fill: color-mix(in srgb, var(--text-muted) 52%, transparent); }
+  &--live .skel-joint { fill: color-mix(in srgb, var(--text-muted) 56%, transparent); }
+  &--hot .skel-bone { fill: color-mix(in srgb, var(--text-secondary) 64%, transparent); }
+  &--hot .skel-joint { fill: var(--accent); }
+}
+
+.skel-halo {
+  fill: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.skel-world {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+}
+
+.skel-node {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    transform 720ms var(--ease-out),
+    opacity var(--dur-slow) var(--ease-out),
+    filter var(--dur-slow) var(--ease-out);
+
+  &:hover { z-index: 4; }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+    border-radius: var(--radius-medium);
+  }
+
+  // Emphasis is graph distance from the focus, so a near cousin reads
+  // differently from a distant one. Nothing is removed — the periphery dims
+  // but stays explorable on hover.
+  &--near { opacity: 100%; }
+  &--path { opacity: 90%; }
+
+  &--mid {
+    opacity: 55%;
+    filter: saturate(50%);
+
+    &:hover { opacity: 100%; filter: none; }
+
+    .skel-label { opacity: 70%; }
+  }
+
+  &--far {
+    opacity: 22%;
+    filter: saturate(25%);
+
+    &:hover { opacity: 85%; filter: none; }
+
+    // Labels go before discs do — density control that keeps the silhouette.
+    .skel-label { opacity: 0%; }
+  }
+}
+
+.skel-disc {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 38%,
+    color-mix(in srgb, var(--accent) 30%, var(--surface-elevated)),
+    color-mix(in srgb, var(--accent) 12%, var(--surface-elevated))
+  );
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent);
+  box-shadow:
+    0 0 18px -4px color-mix(in srgb, var(--accent) 26%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--text-primary) 10%, transparent);
+  transition:
+    transform var(--dur-medium) var(--ease-spring),
+    border-color var(--dur-fast),
+    box-shadow var(--dur-medium) var(--ease-out),
+    background var(--dur-fast);
+
+  &--core {
+    background: radial-gradient(
+      circle at 50% 38%,
+      color-mix(in srgb, var(--accent) 46%, var(--surface-elevated)),
+      color-mix(in srgb, var(--accent) 30%, var(--surface-elevated))
+    );
+    border-color: color-mix(in srgb, var(--accent) 62%, transparent);
+    box-shadow: 0 0 30px -4px color-mix(in srgb, var(--accent) 42%, transparent);
+  }
+}
+
+// Hover scales the disc, not the node — so it composes with the emphasis
+// scale instead of fighting it.
+.skel-node:hover .skel-disc {
+  transform: scale(1.16);
+  border-color: var(--accent);
+  box-shadow: 0 8px 34px color-mix(in srgb, var(--accent) 34%, transparent);
+}
+
+.skel-node--focus .skel-disc {
+  border-color: var(--accent);
+  background: radial-gradient(
+    circle at 50% 38%,
+    color-mix(in srgb, var(--accent) 62%, var(--surface-elevated)),
+    color-mix(in srgb, var(--accent) 40%, var(--surface-elevated))
+  );
+  box-shadow: 0 8px 34px color-mix(in srgb, var(--accent) 34%, transparent);
+}
+
+.skel-glow {
+  position: absolute;
+  inset: -45%;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--accent) 30%, transparent),
+    transparent 64%
+  );
+  transition: opacity var(--dur-medium) var(--ease-out);
+}
+
+.skel-node:hover .skel-glow { opacity: 100%; }
+
+.skel-glyph {
+  font-family: var(--font-display);
+  font-size: 34px;
+  line-height: 1;
+  color: var(--text-primary);
+  pointer-events: none;
+}
+
+.skel-dot {
+  width: 34%;
+  height: 34%;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-primary) 72%, transparent);
+}
+
+.skel-label {
+  font-family: var(--font-display);
+  font-size: 13px;
+  text-align: center;
+  max-width: 118px;
+  line-height: 1.25;
+  transition: opacity var(--dur-slow) var(--ease-out), color var(--dur-fast);
+}
+
+.skel-node--focus .skel-label,
+.skel-node:hover .skel-label { color: var(--text-primary); }
+.skel-node--d1 .skel-label { font-size: 15px; }
+
+// A count is a subtree sum, so busy regions read as bright pips from across
+// the map even when the node itself is dimmed.
+.skel-count {
+  position: absolute;
+  top: -3px;
+  inset-inline-end: -8px;
+  padding: 1px 6px;
+  border-radius: var(--radius-round);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--accent) 20%, var(--surface-elevated));
+  color: var(--text-primary);
+
+  &--hot {
+    background: var(--accent);
+  }
+}
+
+.skel-hint {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 14px;
+  margin: 0 auto;
+  width: max-content;
+  padding: 6px 14px;
+  border-radius: var(--radius-round);
+  background: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
+  color: var(--text-muted);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skel-cam,
+  .skel-node,
+  .skel-disc {
+    transition-duration: 1ms !important;
   }
 }
