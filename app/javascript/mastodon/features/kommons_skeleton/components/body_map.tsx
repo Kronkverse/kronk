@@ -84,19 +84,6 @@ export const BodyMap: React.FC<{
     retarget(true);
   }, [retarget]);
 
-  // The body resolves into existence rather than snapping in. One frame's
-  // delay so the first camera transform is already applied when it fades up,
-  // otherwise you watch it slide into place from the origin.
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const id = requestAnimationFrame(() => {
-      setReady(true);
-    });
-    return () => {
-      cancelAnimationFrame(id);
-    };
-  }, []);
-
   // Resize refits against the new viewport. The world is viewport-independent,
   // so nothing is rebuilt — only the camera.
   useEffect(() => {
@@ -233,7 +220,7 @@ export const BodyMap: React.FC<{
 
   return (
     <div
-      className={`skel-stage ${grabbing ? 'skel-stage--grabbing' : ''} ${ready ? 'skel-stage--ready' : ''}`}
+      className={`skel-stage ${grabbing ? 'skel-stage--grabbing' : ''}`}
       ref={stageRef}
       onPointerDown={handlePointerDown}
     >

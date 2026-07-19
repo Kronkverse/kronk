@@ -562,12 +562,16 @@
   cursor: grab;
   touch-action: none;
   user-select: none;
-  opacity: 0%;
-  transition: opacity var(--dur-slow) var(--ease-out);
-
-  &--ready {
-    opacity: 100%;
-  }
+  // The body resolves into existence rather than snapping in.
+  //
+  // Deliberately a keyframe and not an opacity toggle driven from JS. The
+  // earlier version parked the stage at opacity 0 and waited for React to
+  // add a class, which meant anything at all going wrong between paint and
+  // that class — a stale cached chunk, an early return — left the map
+  // invisible rather than merely unanimated. An animation ends where it ends
+  // even if it never runs, so the failure mode is a missing fade, not a
+  // missing map. Entrances must fail open.
+  animation: skel-in var(--dur-slow) var(--ease-out) both;
 
   &--grabbing {
     cursor: grabbing;
@@ -823,10 +827,22 @@
   }
 }
 
+@keyframes skel-in {
+  from { opacity: 0%; }
+  to { opacity: 100%; }
+}
+
+// The camera still moves — it just arrives instantly. The model is intact,
+// only the travel is removed. Killing the entrance animation outright leaves
+// the stage at its natural opacity, which is visible.
 @media (prefers-reduced-motion: reduce) {
   .skel-cam,
   .skel-node,
   .skel-disc {
     transition-duration: 1ms !important;
+  }
+
+  .skel-stage {
+    animation: none;
   }
 }
