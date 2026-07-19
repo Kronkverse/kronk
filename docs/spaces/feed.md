@@ -10,7 +10,7 @@ projects into the feed via its `feed_projection.card`; the feed is
 the place a user encounters the whole of Kronk in one continuous
 scroll.
 
-## Nodes in the Tree
+## Nodes in the Skeleton
 
 Declared in `config/kronk_nodes.yaml` under the `feed` bucket:
 

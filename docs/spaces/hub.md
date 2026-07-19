@@ -13,7 +13,7 @@ Hub is one of the three top-level nav surfaces (Feed / Profile /
 Hub) in the 2.0 nav chrome; every korner in the platform is reachable
 from it.
 
-## Nodes in the Tree
+## Nodes in the Skeleton
 
 Declared in `config/kronk_nodes.yaml`:
 

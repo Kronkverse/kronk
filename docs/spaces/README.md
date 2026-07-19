@@ -5,7 +5,7 @@ folder's contents mirror the Kommons Skeleton
 (`bin/tootctl korners doctor` reads the same registry).
 
 A "space" is any addressable surface where a user reflects on Kronk
-in the sense the Tree uses it: a korner, the feed, the profile, the
+in the sense the Skeleton uses it: a korner, the feed, the profile, the
 settings hub. Each file here is the up-to-date reference for that
 space — what it's for, how it works today, how it's changing, what's
 open. Portal-me and other agents read this folder to stay in sync
@@ -26,7 +26,7 @@ Slug matches `config/korners/<slug>.yaml`.
 | [`inflow.md`](inflow.md) | `config/korners/inflow.yaml` | Models + projection shipped; UI reshape pending Tomas Round 2 |
 | [`kalendar.md`](kalendar.md) | `config/korners/kalendar.yaml` | Enforced — rebuild spiral view pending |
 | [`klot.md`](klot.md) | `config/korners/klot.yaml` | Stub |
-| [`kommons.md`](kommons.md) | `config/korners/kommons.yaml` | Enforced — Tree, token ledger and lifecycle shipped; backing UI pending |
+| [`kommons.md`](kommons.md) | `config/korners/kommons.yaml` | Enforced — Skeleton, token ledger and lifecycle shipped; backing UI pending |
 | [`kompass.md`](kompass.md) | `config/korners/kompass.yaml` | Stub — physical map |
 | [`kuestions.md`](kuestions.md) | `config/korners/kuestions.yaml` | Enforced — swipe-deck UI pending |
 | [`marketplace.md`](marketplace.md) | `config/korners/marketplace.yaml` | Enforced — directory shipped; detail/composer pending |

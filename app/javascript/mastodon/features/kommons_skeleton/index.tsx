@@ -1,4 +1,4 @@
-// Kommons Tree — feedback-tree drilldown surface inside Kommons.
+// The Kommons Skeleton — the map of the whole platform, walked by camera.
 //
 // Route: /hub/kommons/skeleton
 // Concept: three top buckets (Feed / Profile / Hub), drill down to a
@@ -8,7 +8,7 @@
 // Nodes come from GET /api/v1/kommons/nodes (backend PR #295 shipped
 // the registry). Connections still mocked client-side pending PR 3.
 
-import { useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -18,17 +18,17 @@ import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 
-import { BucketPicker } from './components/bucket_picker';
 import { Composer } from './components/composer';
 import { NodeDetail } from './components/node_detail';
-import { PagePicker } from './components/page_picker';
-import type { Bucket, KommonsNode } from './data/nodes';
-import { bucketNodes, findNode, fromApiNodes, listKorners } from './data/nodes';
+import { BodyMap } from './components/body_map';
+import type { KommonsNode } from './data/nodes';
+import { findNode, fromApiNodes } from './data/nodes';
+import { ROOT_ID } from './data/layout';
 
 const messages = defineMessages({
   title: {
     id: 'kommons_skeleton.title',
-    defaultMessage: '\u20aeommons \u00b7 Tree',
+    defaultMessage: '\u20aeommons \u00b7 Skeleton',
   },
   crumbBuckets: {
     id: 'kommons_skeleton.crumb.buckets',
@@ -44,7 +44,6 @@ const messages = defineMessages({
   },
 });
 
-type Step = 'buckets' | 'pages' | 'detail';
 
 interface CrumbProps {
   onClick?: () => void;
@@ -62,15 +61,20 @@ const Crumb: React.FC<CrumbProps> = ({ onClick, children }) => (
   </button>
 );
 
-const bucketLabel = (b: Bucket): string => {
-  switch (b) {
-    case 'feed':
-      return 'Feed';
-    case 'profile':
-      return 'Profile';
-    case 'hub':
-      return 'Hub';
+const LIMB_LABELS: Record<string, string> = {
+  feed: 'Feed',
+  profile: 'Profile',
+  hub: 'Hub',
+};
+
+// A crumb id is a limb, a `korner:<slug>` handle, or a real node id.
+const crumbLabel = (nodes: KommonsNode[], id: string): string => {
+  if (LIMB_LABELS[id]) return LIMB_LABELS[id];
+  if (id.startsWith('korner:')) {
+    const slug = id.slice('korner:'.length);
+    return slug.charAt(0).toUpperCase() + slug.slice(1);
   }
+  return findNode(nodes, id)?.label ?? id;
 };
 
 const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
@@ -80,9 +84,9 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) =
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
-  const [step, setStep] = useState<Step>('buckets');
-  const [bucket, setBucket] = useState<Bucket | null>(null);
-  const [kornerSlug, setKornerSlug] = useState<string | null>(null);
+  // Position in the body, root first. The camera and every node's emphasis
+  // derive from this — there is no separate step machine.
+  const [path, setPath] = useState<string[]>([ROOT_ID]);
   const [nodeId, setNodeId] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
@@ -111,49 +115,25 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) =
     setReloadKey((k) => k + 1);
   }, []);
 
-  const goToBuckets = useCallback(() => {
-    setStep('buckets');
-    setBucket(null);
-    setKornerSlug(null);
+  const handleFocus = useCallback((id: string) => {
+    setPath((prev) => {
+      if (id === ROOT_ID) return [ROOT_ID];
+      const idx = prev.indexOf(id);
+      if (idx >= 0) return prev.slice(0, idx + 1);
+      return [...prev, id];
+    });
     setNodeId(null);
   }, []);
 
-  const handleBucket = useCallback((b: Bucket) => {
-    setBucket(b);
-    setKornerSlug(null);
-    setNodeId(null);
-    setStep('pages');
+  const handleOpenLeaf = useCallback((id: string) => {
+    setNodeId(id);
   }, []);
 
-  const handleKorner = useCallback((slug: string) => {
-    setKornerSlug(slug);
-    setNodeId(null);
-  }, []);
-
-  const handleBackFromPages = useCallback(() => {
-    if (bucket === 'hub' && kornerSlug) {
-      setKornerSlug(null);
-    } else {
-      goToBuckets();
-    }
-  }, [bucket, kornerSlug, goToBuckets]);
-
-  const handleNode = useCallback(
-    (id: string) => {
-      const target = findNode(nodes, id);
-      if (target) {
-        setBucket(target.bucket);
-        setKornerSlug(target.parent ?? null);
-      }
-      setNodeId(id);
-      setStep('detail');
-    },
-    [nodes],
-  );
-
+  // Leaving a detail view returns you to the map, not to a remembered
+  // position — `path` was never touched, so the camera reconstitutes the
+  // exact view you left from.
   const handleBackFromDetail = useCallback(() => {
     setNodeId(null);
-    setStep('pages');
   }, []);
 
   const openComposer = useCallback(() => {
@@ -168,6 +148,21 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) =
     refetch();
   }, [refetch]);
 
+  // Escape unwinds one layer at a time, innermost first, so it always undoes
+  // the last thing you did rather than dumping you back at the root.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (composerOpen) setComposerOpen(false);
+      else if (nodeId) setNodeId(null);
+      else setPath((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [composerOpen, nodeId]);
+
   const selectedNode = nodeId ? findNode(nodes, nodeId) : null;
   const title = intl.formatMessage(messages.title);
 
@@ -175,7 +170,9 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) =
     <Column bindToDocument={!multiColumn} label={title}>
       <ColumnHeader icon='gavel' title={title} multiColumn={multiColumn} />
 
-      <div className='kommons-skeleton'>
+      <div
+        className={`kommons-skeleton ${selectedNode ? '' : 'kommons-skeleton--map'}`}
+      >
         {loading && (
           <p className='kommons-skeleton__loading'>
             {intl.formatMessage(messages.loading)}
@@ -190,84 +187,61 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) =
         {!loading && !loadError && (
           <>
             <nav className='kommons-skeleton__breadcrumb' aria-label='breadcrumb'>
-              <Crumb onClick={step === 'buckets' ? undefined : goToBuckets}>
-                {intl.formatMessage(messages.crumbBuckets)}
-              </Crumb>
-              {bucket && (
-                <>
-                  <span className='kommons-skeleton__crumb-sep' aria-hidden='true'>
-                    /
-                  </span>
+              {path.map((stepId, i) => (
+                <Fragment key={stepId}>
+                  {i > 0 && (
+                    <span
+                      className='kommons-skeleton__crumb-sep'
+                      aria-hidden='true'
+                    >
+                      /
+                    </span>
+                  )}
                   <Crumb
                     onClick={
-                      step === 'pages' && !kornerSlug
+                      i === path.length - 1 && !selectedNode
                         ? undefined
-                        : handleBackFromPages
+                        : () => {
+                            handleFocus(stepId);
+                          }
                     }
                   >
-                    {bucketLabel(bucket)}
+                    {i === 0
+                      ? intl.formatMessage(messages.crumbBuckets)
+                      : crumbLabel(nodes, stepId)}
                   </Crumb>
-                </>
-              )}
-              {bucket === 'hub' && kornerSlug && (
-                <>
-                  <span className='kommons-skeleton__crumb-sep' aria-hidden='true'>
-                    /
-                  </span>
-                  <Crumb
-                    onClick={
-                      step === 'pages' ? undefined : handleBackFromDetail
-                    }
-                  >
-                    {kornerSlug}
-                  </Crumb>
-                </>
-              )}
+                </Fragment>
+              ))}
               {selectedNode && (
                 <>
-                  <span className='kommons-skeleton__crumb-sep' aria-hidden='true'>
+                  <span
+                    className='kommons-skeleton__crumb-sep'
+                    aria-hidden='true'
+                  >
                     /
                   </span>
-                  <Crumb>{selectedNode.label}</Crumb>
+                  <Crumb onClick={handleBackFromDetail}>
+                    {selectedNode.label}
+                  </Crumb>
                 </>
               )}
             </nav>
 
-            {step === 'buckets' && (
-              <BucketPicker nodes={nodes} onSelect={handleBucket} />
-            )}
-
-            {step === 'pages' && bucket === 'hub' && !kornerSlug && (
-              <PagePicker
-                bucket='hub'
-                korners={listKorners(nodes)}
-                onSelectKorner={handleKorner}
-                onSelectNode={handleNode}
+            {!selectedNode && (
+              <BodyMap
+                nodes={nodes}
+                path={path}
+                onFocus={handleFocus}
+                onOpenLeaf={handleOpenLeaf}
               />
             )}
 
-            {step === 'pages' && bucket === 'hub' && kornerSlug && (
-              <PagePicker
-                bucket='hub'
-                nodes={bucketNodes(nodes, 'hub', kornerSlug)}
-                onSelectNode={handleNode}
-              />
-            )}
-
-            {step === 'pages' && bucket && bucket !== 'hub' && (
-              <PagePicker
-                bucket={bucket}
-                nodes={bucketNodes(nodes, bucket)}
-                onSelectNode={handleNode}
-              />
-            )}
-
-            {step === 'detail' && selectedNode && (
+            {selectedNode && (
               <NodeDetail
                 node={selectedNode}
                 nodes={nodes}
                 onFile={openComposer}
-                onNavigate={handleNode}
+                onNavigate={handleOpenLeaf}
               />
             )}
           </>

@@ -1,6 +1,6 @@
 # Kommons (`kommons` — rendered ₭ommons)
 
-**Manifest:** `config/korners/kommons.yaml` · **Mount:** `/hub/kommons` · **Status:** shipped-2.0 (Tree, backend, token ledger, lifecycle) — backing UI pending
+**Manifest:** `config/korners/kommons.yaml` · **Mount:** `/hub/kommons` · **Status:** shipped-2.0 (Skeleton, backend, token ledger, lifecycle) — backing UI pending
 
 ## Purpose
 
@@ -11,7 +11,7 @@ users can:
   user-facing page, feature, and connection between korners. It makes
   the platform's structure legible.
 - **Participate in guiding Kronk's development** — proposals and
-  feedback land here, tagged to a specific Tree node so they attach
+  feedback land here, tagged to a specific Skeleton node so they attach
   to what they're about.
 - **Engage with others' contributions** — see what others have
   suggested, second what resonates, discuss, and shape direction
@@ -39,8 +39,8 @@ Substantial 2.0 work has already landed in the Kommons Skeleton series
 - **Every node has a stable `node_id`** independent of URL; feedback
   proposals key on `node_id` so they follow a page across URL changes.
 - **Three-bucket drilldown**: `feed`, `profile`, `hub` — organises
-  the Tree at the top level.
-- **Backend-derived connections** — the Tree shows cross-korner
+  the Skeleton at the top level.
+- **Backend-derived connections** — the Skeleton shows cross-korner
   links (which pages relate to which).
 - **`bin/tootctl korners doctor`** — anti-drift check ensures nodes
   declared in manifests match reality.
@@ -59,7 +59,7 @@ Substantial 2.0 work has already landed in the Kommons Skeleton series
 - **`ProposalVote`**, **`ProposalCompletionSuggestion`**,
   **`ProposalChallengeCondition`** models.
 - **Node-keyed proposals** — `Proposal.node_id` associates a proposal
-  with a Tree node.
+  with a Skeleton node.
 - **Searchable via `Kronk::Search`** — indexed as
   `kommons_proposals`.
 - **Governance UI** at `features/governance/` (legacy route
@@ -79,7 +79,7 @@ retirement in 2.1.0**. As of alpha.54 `Proposal.categories` column +
 validator are still present in `app/models/proposal.rb` — retirement
 lives in the 2.1.0 cleanup migration alongside other dual-write drops.
 
-Rationale for retirement: proposals key on `node_id`, so the Tree
+Rationale for retirement: proposals key on `node_id`, so the Skeleton
 itself locates a proposal; the parallel category taxonomy is
 redundant.
 
@@ -277,7 +277,7 @@ noted here for direction.
 
 ### Aesthetic
 
-Rebuild the governance + Tree UI polish in line with current Kronk
+Rebuild the governance + Skeleton UI polish in line with current Kronk
 aesthetic tokens (post-planet-metaphor). Coordinating on visual
 mockups with Claude web.
 
@@ -303,4 +303,4 @@ tokens, backfilled by migration and granted on create. **Dev-signoff** —
 - `/home/shared/rebuild/plan/quiet-napping-hare.md` (no dedicated phase — Kommons Skeleton shipped in an early rebuild slice)
 - `/home/shared/rebuild/spec/kronk_korner_spec.md` §Kommons
 - `/home/shared/rebuild/memory/project_kronk_rebuild_kommons_reflections_spec_draft.md` (reconciled to Kommons framing)
-- Related korners: `krew.md` (no Krew-scoped Kommons in 2.0), all korners (their `nodes:` blocks feed the Tree)
+- Related korners: `krew.md` (no Krew-scoped Kommons in 2.0), all korners (their `nodes:` blocks feed the Skeleton)
