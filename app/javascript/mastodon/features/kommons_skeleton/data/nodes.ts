@@ -5,9 +5,14 @@
 // Ruby side; links auto-derived from feed_projection + declared in
 // per-node `links:` blocks of the korner manifest).
 
-import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
+import type { ApiKommonsNode, Bucket } from 'mastodon/api/kommons_nodes';
+import { BUCKETS } from 'mastodon/api/kommons_nodes';
 
-export type Bucket = 'feed' | 'profile' | 'hub';
+// One definition, in the API layer — see the note there. Imported as well as
+// re-exported: `export { X } from` forwards a binding without introducing it
+// locally, so uses below would not resolve.
+export { BUCKETS };
+export type { Bucket };
 
 export type Lifecycle = 'live' | 'soon' | 'deprecated' | 'hidden';
 
@@ -123,7 +128,18 @@ export const findNode = (
 ): KommonsNode | undefined => nodes.find((n) => n.id === id);
 
 export const bucketTotals = (nodes: KommonsNode[]): Record<Bucket, number> => {
-  const totals: Record<Bucket, number> = { feed: 0, profile: 0, hub: 0 };
+  // A literal, but one the compiler now polices: `Bucket` is derived from
+  // BUCKETS, so adding a bucket makes this object fail to compile until the
+  // key is added. Previously it was three keys typed against a three-member
+  // union that was itself wrong — so a fourth bucket hit `undefined + n` and
+  // wrote NaN under a key nobody had declared, silently, because NaN
+  // propagates without throwing.
+  const totals: Record<Bucket, number> = {
+    feed: 0,
+    profile: 0,
+    nudges: 0,
+    hub: 0,
+  };
   for (const n of nodes) totals[n.bucket] += n.openProposals;
   return totals;
 };

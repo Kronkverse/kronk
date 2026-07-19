@@ -84,10 +84,40 @@ RSpec.describe Kronk::KornerRegistry do
       expect(slugs).to_not include('reserved_slugs')
     end
 
-    it 'does not collide with any shipping manifest slug' do
-      manifest_slugs = described_class.all.map(&:slug)
-      overlap = manifest_slugs & described_class.reserved_slugs
-      expect(overlap).to be_empty, "manifests collide with reserved slugs: #{overlap}"
+    # Core spaces are exempt. The reservation stops a *korner* claiming a
+    # platform route; a core space claiming its own platform route is the
+    # reservation working. Without the exemption `feed` and `hub` could never
+    # have manifests, and the workaround in use was to un-reserve the slug
+    # instead — which gives the protection away entirely.
+    it 'does not collide with any shipping korner slug' do
+      korner_slugs = described_class.all.reject(&:core?).map(&:slug)
+      overlap = korner_slugs & described_class.reserved_slugs
+      expect(overlap).to be_empty, "korners collide with reserved slugs: #{overlap}"
+    end
+  end
+
+  describe 'core spaces' do
+    let(:korner) { described_class::Manifest.new(slug: 'booth') }
+    let(:core) { described_class::Manifest.new(slug: 'feed', core: true, mount: '/home') }
+
+    it 'defaults a korner to /hub/<slug>' do
+      expect(korner.mount_path).to eq('/hub/booth')
+      expect(korner.core?).to be(false)
+    end
+
+    it 'lets a core space declare its own mount' do
+      expect(core.mount_path).to eq('/home')
+      expect(core.core?).to be(true)
+    end
+
+    it 'treats a blank mount as absent' do
+      # `mount: ""` in YAML should fall back to the korner default rather than
+      # producing an empty path that matches everything.
+      expect(described_class::Manifest.new(slug: 'booth', mount: '').mount_path).to eq('/hub/booth')
+    end
+
+    it 'is not core unless the flag is exactly true' do
+      expect(described_class::Manifest.new(slug: 'x', core: 'yes').core?).to be(false)
     end
   end
 

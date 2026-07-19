@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { KommonsNode } from './nodes';
-import { buildTree, buildWires, layoutTree } from './layout';
+import { BUCKETS, bucketTotals } from './nodes';
+import { LIMBS, buildTree, buildWires, layoutTree } from './layout';
 
 // The map's one hard invariant: no two nodes may overlap.
 //
@@ -63,6 +64,35 @@ const clearance = (
     Math.abs(a.cx - b.cx) - (a.w + b.w) / 2,
     Math.abs(a.cy - b.cy) - (a.h + b.h) / 2,
   );
+
+// The bucket list is duplicated across Ruby and TypeScript with nothing
+// checking the two agree. When Ruby learned `nudges`, the map did not: the
+// nodes shipped over the API and were drawn nowhere, and `bucketTotals`
+// wrote NaN into a key it had never declared — no error, no limb, no badge.
+// These pin the client half; the Ruby half is `Kronk::NodeRegistry::BUCKETS`.
+describe('buckets', () => {
+  it('draws a limb for every bucket', () => {
+    expect([...LIMBS].sort()).toEqual([...BUCKETS].sort());
+  });
+
+  it('counts every bucket without producing NaN', () => {
+    const nodes = BUCKETS.map((bucket, i) => ({
+      id: `n${i}`,
+      bucket,
+      label: bucket,
+      url: `/${bucket}`,
+      lifecycle: 'live' as const,
+      openProposals: 2,
+    }));
+
+    const totals = bucketTotals(nodes);
+
+    for (const bucket of BUCKETS) {
+      expect(totals[bucket], `total for ${bucket}`).toBe(2);
+    }
+    expect(Object.values(totals).some(Number.isNaN)).toBe(false);
+  });
+});
 
 describe('layoutTree', () => {
   it('places every node in the registry', () => {

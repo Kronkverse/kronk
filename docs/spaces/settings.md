@@ -1,6 +1,12 @@
 # Settings
 
-**Node bucket:** `hub` sub-tree at `/settings/*` (Kronk::NodeRegistry) · **Cross-cutting.**
+**Node bucket:** `profile` — every `settings.*` node except `settings.feed`
+and `settings.hub` is filed there (`config/kronk_nodes.yaml`) · **Cross-cutting.**
+
+> Corrected 2026-07-19. This previously read "`hub` sub-tree at `/settings/*`",
+> which was never true in the registry. Settings has no honest home under the
+> current three-bucket scheme — see
+> [`../rebuild/decisions.md`](../rebuild/decisions.md).
 
 ## Purpose
 

@@ -123,6 +123,10 @@ module Mastodon
         end
 
         manifests.each do |manifest|
+          # Core spaces are exempt — see the note at the matching check in
+          # config/initializers/kronk_korner_registry.rb.
+          next if manifest.core?
+
           issues << "#{manifest.slug}: slug is reserved for platform use" if reserved.include?(manifest.slug)
         end
 
@@ -158,12 +162,16 @@ module Mastodon
         # L1 — canonical nested `security:` block.
         issues << 'L1 no `security:` block (canonical manifest shape)' if manifest.security.blank?
 
-        # L1 — icon wired in the slug->icon map.
-        issues << "L1 icon not wired in useKornerIcon (no '#{slug}' key in SLUG_TO_ICON)" unless korner_source('app/javascript/mastodon/hooks/useKornerIcon.tsx').match?(/['"]?#{Regexp.escape(slug)}['"]?\s*:/)
+        # L1 — icon wired in the slug->icon map. Korner-only: the map exists to
+        # give Hub grid tiles an icon, and a core space has no tile.
+        issues << "L1 icon not wired in useKornerIcon (no '#{slug}' key in SLUG_TO_ICON)" if !manifest.core? && !korner_source('app/javascript/mastodon/hooks/useKornerIcon.tsx').match?(/['"]?#{Regexp.escape(slug)}['"]?\s*:/)
 
-        # L5 — /hub/<slug> mount resolves (an enforced korner in the Hub grid
-        # whose tile 404s is exactly the Marketplace/Nudges failure).
-        issues << "L5 no /hub/#{slug} mount in features/ui/index.jsx (enforced korner, dead Hub tile)" unless korner_source('app/javascript/mastodon/features/ui/index.jsx').include?("/hub/#{slug}")
+        # L5 — the space's mount resolves. Korners default to /hub/<slug>,
+        # where a missing mount means a Hub tile that 404s. A core space
+        # declares its own `mount:` and is checked against that instead —
+        # requiring /hub/feed would be nonsense.
+        mount = manifest.mount_path
+        issues << "L5 no #{mount} mount in features/ui/index.jsx (#{manifest.core? ? 'core space' : 'enforced korner, dead Hub tile'})" unless korner_source('app/javascript/mastodon/features/ui/index.jsx').include?(mount)
 
         # L3 — projection is actually serialised.
         assoc = manifest.status_association

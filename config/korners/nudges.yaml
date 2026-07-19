@@ -70,7 +70,18 @@ launch:
 
 feature_flag: # not-implemented
 federates: false # nudges never federate — private by design
-enforced: false # Path A: /hub/nudges mount missing — re-enforce when the pillar mount lands (spec #331)
+# Nudges is a core space, not a korner: it sits in the primary switcher
+# alongside Me and Home (`hub_switcher.tsx`), you cannot tune out of it, and
+# it has no Hub tile. It was only ever a korner manifest because a manifest
+# was the only way to declare anything.
+#
+# This is what `enforced: false` was really recording. The note read "Path A:
+# /hub/nudges mount missing — re-enforce when the pillar mount lands", but the
+# mount was never going to land: Nudges is mounted at /nudges and always was.
+# The manifest was failing a Hub-tile check for a space that has no tile.
+core: true
+mount: /nudges
+enforced: true
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 # The nudges korner is represented by the feed.nudges cross-cutting node.

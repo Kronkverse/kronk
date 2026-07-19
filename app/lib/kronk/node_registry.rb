@@ -39,7 +39,11 @@ require 'yaml'
 
 module Kronk
   module NodeRegistry
-    BUCKETS = %w(feed profile hub).freeze
+    # The top-level spaces. `nudges` was documented in the Korner Standard
+    # (§L6) long before it was accepted here — a node declaring it was dropped
+    # by `build_node` below, silently, because a dropped node cannot be
+    # reported by the doctor either. See docs/rebuild/decisions.md.
+    BUCKETS = %w(feed profile hub nudges).freeze
     LIFECYCLES = %w(live soon deprecated hidden).freeze
     LINK_KINDS = %w(creates listed_on projects_to listens_to settings_for related).freeze
 
@@ -146,7 +150,25 @@ module Kronk
         bucket = entry['bucket'].to_s
         lifecycle = (entry['lifecycle'] || 'live').to_s
 
-        return nil if id.empty? || !BUCKETS.include?(bucket) || !LIFECYCLES.include?(lifecycle)
+        # Say why a node was rejected. This used to `return nil` in silence,
+        # which is the worst available behaviour for a registry other things
+        # read: the node simply is not there, the doctor cannot report it
+        # (nothing reached the registry to be checked), and the manifest looks
+        # fine. A typo'd bucket removed a page from the platform map with no
+        # signal anywhere.
+        reason =
+          if id.empty?
+            'no id'
+          elsif !BUCKETS.include?(bucket)
+            "bucket '#{bucket}' is not one of #{BUCKETS.join('|')}"
+          elsif !LIFECYCLES.include?(lifecycle)
+            "lifecycle '#{lifecycle}' is not one of #{LIFECYCLES.join('|')}"
+          end
+
+        if reason
+          Rails.logger.warn("Kronk::NodeRegistry: dropped #{source} node '#{id.presence || '(unnamed)'}' — #{reason}")
+          return nil
+        end
 
         Node.new(
           id: id,

@@ -1,6 +1,13 @@
 # Nudges (`nudges`)
 
-**Manifest:** `config/korners/nudges.yaml` · **Mount:** `/hub/nudges` · **Status:** shipped-2.0 (activity feed)
+**Manifest:** `config/korners/nudges.yaml` · **Mount:** `/nudges` (there is no `/hub/nudges` route) · **Status:** activity feed shipped; `enforced: false`
+
+> Corrected 2026-07-19. This header previously read "Mount: `/hub/nudges` ·
+> Status: shipped-2.0", which the manifest in the same repo contradicts —
+> `nudges.yaml` carries `enforced: false # Path A: /hub/nudges mount missing`.
+> The real routes are `/nudges`, `/nudges/activity` and `/nudges/:accountId`.
+> Nudges is a top-level space, not a korner reached from the Hub grid; the
+> pillar move is open (PR #331 closed 2026-07-18 pending the nav decision).
 
 ## Purpose
 

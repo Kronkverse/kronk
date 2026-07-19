@@ -4,12 +4,24 @@ This folder holds **one canonical doc per space in Kronk** — the
 folder's contents mirror the Kommons Skeleton
 (`bin/tootctl korners doctor` reads the same registry).
 
-A "space" is any addressable surface where a user reflects on Kronk
-in the sense the Skeleton uses it: a korner, the feed, the profile, the
-settings hub. Each file here is the up-to-date reference for that
-space — what it's for, how it works today, how it's changing, what's
-open. Portal-me and other agents read this folder to stay in sync
-with the platform's direction.
+A **space** is any top-level surface of Kronk. A **korner** is one kind
+of space — pluggable, declared by a manifest, addable and removable.
+Feed, Profile, Nudges and Hub are spaces that are not korners; they
+have no collective name beyond "spaces".
+
+The top-level spaces are **Feed (Home), Profile (Me), Nudges and Hub**,
+matching the shipped `hub_switcher.tsx`.
+
+Each file here is the up-to-date reference for that space — what it's
+for, how it works today, how it's changing, what's open. Portal-me and
+other agents read this folder to stay in sync with the platform's
+direction.
+
+Architecture decisions, with dates and what they supersede, live in
+[`../rebuild/decisions.md`](../rebuild/decisions.md). **Precedence when
+sources disagree: code > repo docs > notes outside the repo.** Several
+docs in this folder describe intended end states in the present tense —
+verify against code before relying on one.
 
 ## Layout
 
@@ -32,7 +44,6 @@ Slug matches `config/korners/<slug>.yaml`.
 | [`marketplace.md`](marketplace.md) | `config/korners/marketplace.yaml` | Enforced — directory shipped; detail/composer pending |
 | [`moments.md`](moments.md) | `config/korners/moments.yaml` | Stub |
 | [`nudges.md`](nudges.md) | `config/korners/nudges.yaml` | Activity feed shipped; pillar move open (PR #331 closed 2026-07-18 pending the nav design decision) |
-| [`skeleton`](tree.md) | `config/korners/tree.yaml` | Kommons Skeleton work lives in `kommons.md`; this manifest may retire |
 | [`you.md`](you.md) | `config/korners/you.yaml` | Portal (link-out to Kashka's YOU PWA) |
 
 ### Cross-cutting spaces (not owned by a korner manifest)
@@ -43,8 +54,21 @@ Nodes declared in `config/kronk_nodes.yaml`.
 |---|---|---|
 | [`feed.md`](feed.md) | `feed` | Home + Nudges activity feed |
 | [`profile.md`](profile.md) | `profile` | Sectioned profile + view/edit/media/connections |
-| [`settings.md`](settings.md) | `hub` sub-tree | Account/global settings (`/settings/*`) |
+| [`settings.md`](settings.md) | `profile` (see note) | Account/global settings (`/settings/*`) |
 | [`hub.md`](hub.md) | `hub.landing` | The `/hub` landing grid itself |
+
+Note on settings: `config/kronk_nodes.yaml` files every `settings.*`
+node except `settings.feed` and `settings.hub` under the `profile`
+bucket. This doc previously claimed a `hub` sub-tree, which was never
+true in the registry. Settings has no honest home under the current
+three-bucket scheme — see
+[`../rebuild/decisions.md`](../rebuild/decisions.md).
+
+The `nudges` bucket documented in
+[`../korners/korner_standard.md`](../korners/korner_standard.md) L6 is
+**not accepted by the code**: `Kronk::NodeRegistry::BUCKETS` is
+`feed|profile|hub`, and a node declaring `bucket: nudges` is silently
+dropped.
 
 ## How this folder is used
 

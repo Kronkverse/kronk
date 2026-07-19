@@ -14,12 +14,24 @@ import type { KommonsNode } from './nodes';
 import { bucketNodes, listKorners } from './nodes';
 
 export const ROOT_ID = 'root';
-export const LIMBS = ['feed', 'profile', 'hub'] as const;
+export const LIMBS = ['feed', 'profile', 'nudges', 'hub'] as const;
 export type Limb = (typeof LIMBS)[number];
 
 // The only hand-chosen angles in the system. Everything else is computed.
-// Degrees, y growing downward: feed upper-left, profile upper-right, hub below.
-const LIMB_ANGLE: Record<Limb, number> = { feed: 203, profile: 317, hub: 76 };
+// Degrees, y growing downward: feed left, profile upper-right, nudges
+// lower-left, hub below.
+//
+// This list must agree with `Kronk::NodeRegistry::BUCKETS` on the Ruby side.
+// Nothing checks that it does — a bucket the registry accepts but this map
+// does not know about produces a node that ships over the API and is then
+// drawn nowhere. Deriving the limbs from the manifests instead is the point
+// of docs/rebuild/decisions.md's one-mechanism decision.
+const LIMB_ANGLE: Record<Limb, number> = {
+  feed: 203,
+  profile: 317,
+  nudges: 140,
+  hub: 76,
+};
 const LIMB_RADIUS = 228;
 
 // disc diameter, and the collision/framing box, per depth.
@@ -91,9 +103,9 @@ export const buildTree = (nodes: KommonsNode[]): Tree => {
     add({ id: limb, label: limbLabel(limb), parent: ROOT_ID, kids: [], count: 0 });
   }
 
-  // feed and profile hold their pages directly; hub holds korners, which hold
-  // pages — so the hub limb is one level deeper than the other two.
-  for (const limb of ['feed', 'profile'] as const) {
+  // Every limb but hub holds its pages directly; hub holds korners, which hold
+  // pages — so the hub limb is one level deeper than the others.
+  for (const limb of ['feed', 'profile', 'nudges'] as const) {
     for (const n of bucketNodes(nodes, limb)) {
       add({
         id: n.id,
@@ -152,8 +164,17 @@ export const buildTree = (nodes: KommonsNode[]): Tree => {
   return tree;
 };
 
-const limbLabel = (limb: Limb) =>
-  limb === 'feed' ? 'Feed' : limb === 'profile' ? 'Profile' : 'Hub';
+const LIMB_LABEL: Record<Limb, string> = {
+  feed: 'Feed',
+  profile: 'Profile',
+  nudges: 'Nudges',
+  hub: 'Hub',
+};
+
+// A record rather than a ternary chain: the chain's final branch was an
+// unconditional 'Hub', so adding a limb silently labelled it Hub instead of
+// failing. A Record<Limb, string> cannot compile with a limb missing.
+const limbLabel = (limb: Limb) => LIMB_LABEL[limb];
 
 // A branch's badge is the sum of its subtree, so density of conversation is
 // visible from across the map without drilling in.
