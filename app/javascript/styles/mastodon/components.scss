@@ -7607,6 +7607,41 @@ a.status-card {
       border-start-end-radius: 0;
     }
   }
+
+  // Five or more.
+  //
+  // Kronk raises MEDIA_ATTACHMENTS_LIMIT to 30, but this grid was written for
+  // upstream's maximum of four: two explicit `1fr` rows, `overflow: hidden`,
+  // and a `min-height` that only the 3- and 4-item layouts raise. Past four no
+  // `--layout-N` rule matched at all, so the two explicit rows had to share
+  // whatever height was left after the auto-sized implicit rows took theirs —
+  // which is close to nothing. The first four items collapsed to near-zero
+  // height while the rest rendered normally.
+  //
+  // The two callers break differently, which is why this is fixed here rather
+  // than in either of them: `media_gallery.jsx` leaves `height` at 100 for any
+  // size above four, so every item gets `--tall`; `upload_form.tsx` sets
+  // `tall` false, so none do. Neutralising both spans here covers both.
+  @for $i from 5 through 30 {
+    &--layout-#{$i} {
+      // Justified rather than gridded: a fixed row height with each item
+      // growing in proportion to its own aspect ratio, so every row spans the
+      // full width and photos keep their shape instead of being forced into
+      // identical cells. Widths come from an inline flex-basis set in
+      // media_gallery.jsx, where the attachment's aspect is known.
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      min-height: 0;
+
+      & > .media-gallery__item {
+        height: 140px;
+        min-width: 0;
+        border-radius: 8px;
+      }
+    }
+  }
+
 }
 
 .media-gallery__item {
