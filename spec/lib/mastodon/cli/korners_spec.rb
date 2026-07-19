@@ -53,4 +53,51 @@ RSpec.describe Mastodon::CLI::Korners do
         .and output(/Korner framework doctor/).to_stdout
     end
   end
+
+  # The URL check is the part that had to be tested by hand against a real
+  # route table before it could be trusted: the first version passed
+  # everything, because Rails' root catch-all matches every string you give
+  # it. A check that cannot fail is worse than no check, since it reads as
+  # coverage. These cases pin the behaviour that made it meaningful.
+  describe 'node URL matching' do
+    subject(:cli) { described_class.new }
+
+    def match?(url, pattern)
+      cli.send(:url_matches_pattern?, url, pattern)
+    end
+
+    it 'matches a literal path' do
+      expect(match?('/explore', '/explore')).to be true
+    end
+
+    it 'treats differently-named params as equivalent' do
+      # The registry writes /@:user/:id; the router writes /@:acct/:statusId.
+      expect(match?('/@:user/:id', '/@:acct/:statusId')).to be true
+    end
+
+    it 'still requires the literal part of a segment to agree' do
+      expect(match?('/@:user', '/:id')).to be false
+    end
+
+    it 'rejects a path with the wrong number of segments' do
+      expect(match?('/publish/extra', '/publish')).to be false
+      expect(match?('/publish', '/publish/:id')).to be false
+    end
+
+    it 'accepts an absent trailing optional param' do
+      expect(match?('/@:user/tagged', '/@:acct/tagged/:tagged?')).to be true
+    end
+
+    it 'matches a prefix glob for anything beneath it' do
+      expect(match?('/hub/kuestions/:id', '/hub/kuestions/*path')).to be true
+    end
+
+    it 'does not let a prefix glob match a different prefix' do
+      expect(match?('/hub/kalendar/:id', '/hub/kuestions/*path')).to be false
+    end
+
+    it 'rejects a renamed route' do
+      expect(match?('/explore-renamed', '/explore')).to be false
+    end
+  end
 end

@@ -196,8 +196,8 @@ module Mastodon
         end
       end
 
-      # Kommons Tree nodes: verify structure, referential integrity, and
-      # (when available) Rails-route matching for non-SPA nodes.
+      # Kommons Skeleton nodes: structure, referential integrity, and whether
+      # each node's URL actually goes anywhere.
       def detect_node_issues
         issues = []
         nodes = ::Kronk::NodeRegistry.all
@@ -208,6 +208,8 @@ module Mastodon
           issues << "node '#{node.id}': parent slug '#{node.parent}' is not a registered korner" if node.bucket == 'hub' && node.parent.present? && !korner_slugs.include?(node.parent)
 
           issues << "node '#{node.id}': route_name '#{node.route_name}' has no matching Rails route" if node.route_name.present? && !node.spa? && !rails_route_exists?(node.route_name)
+
+          issues << "node '#{node.id}': url '#{node.url}' matches no Rails route and no React Router path" if node_url_drifted?(node)
 
           ::Kronk::NodeRegistry.links_for(node.id).each do |link|
             next if node_ids.include?(link['to'])
@@ -221,6 +223,90 @@ module Mastodon
 
       def rails_route_exists?(name)
         Rails.application.routes.named_routes.key?(name.to_sym)
+      end
+
+      # Does this node point at a page that exists?
+      #
+      # The `route_name` check above only covers nodes with a Rails *named*
+      # route, and skips anything marked `spa: true` — which, since the
+      # registry filled out, is most of it. That left the anti-drift check
+      # covering a shrinking minority while the rest could rot silently: a
+      # React route renamed, a korner mount removed, and no node complains.
+      #
+      # Only `live` nodes are held to this. A `soon` surface legitimately has
+      # no route yet — that is what `soon` means — and failing it would just
+      # train people to ignore the doctor.
+      def node_url_drifted?(node)
+        return false unless node.lifecycle.to_s == 'live'
+        return false if node.url.to_s.strip.empty?
+        return false unless node.url.to_s.start_with?('/')
+        # If the route table could not be read at all, stay quiet rather than
+        # reporting every node as broken — a parse failure is not drift, and
+        # burying real issues under 40 false ones is worse than not checking.
+        return false if route_patterns.empty?
+
+        route_patterns.none? { |pattern| url_matches_pattern?(node.url, pattern) }
+      end
+
+      # Every path the app can serve: Rails routes plus the React Router
+      # table, which Rails knows nothing about.
+      def route_patterns
+        @route_patterns ||= (rails_route_paths + react_route_paths).uniq
+      end
+
+      def rails_route_paths
+        Rails.application.routes.routes.map { |r| r.path.spec.to_s.sub(/\(\.:format\)\z/, '') }.uniq.reject do |path|
+          # Root-level catch-alls match literally everything, so leaving them
+          # in makes the check pass unconditionally — which is how a check
+          # ends up green and worthless. Prefix globs like
+          # `/hub/kuestions/*path` are kept: they really do serve that subtree.
+          path.match?(%r{\A/\*})
+        end
+      end
+
+      # Parsed out of the JSX rather than executed. Brittle if the route
+      # declarations change shape — hence the empty-table guard above, which
+      # turns a parser failure into silence instead of a wall of false drift.
+      def react_route_paths
+        korner_source('app/javascript/mastodon/features/ui/index.jsx')
+          .scan(/path=\{?\[?([^}\]>]+?)\]?\}?\s/)
+          .flatten
+          .flat_map { |fragment| fragment.scan(/['"]([^'"]+)['"]/).flatten }
+          .select { |path| path.start_with?('/') }
+          .uniq
+      end
+
+      # Segment-wise match. Node URLs and route patterns name their params
+      # differently (`/@:user/:id` against `/@:acct/:statusId`), so params
+      # compare as wildcards — but the literal part of a segment still has to
+      # agree, or `@:acct` would match a bare `:id`.
+      def url_matches_pattern?(url, pattern)
+        u = url.to_s.split('/').reject(&:empty?)
+        p = pattern.to_s.split('/').reject(&:empty?)
+
+        # A trailing optional param may simply be absent.
+        p = p[0..-2] if p.length == u.length + 1 && p.last.to_s.end_with?('?')
+
+        glob = p.index { |seg| seg.start_with?('*') }
+        if glob
+          return false if u.length < glob
+
+          return p[0...glob].each_with_index.all? { |seg, i| segment_matches?(u[i], seg) }
+        end
+
+        return false unless p.length == u.length
+
+        p.each_with_index.all? { |seg, i| segment_matches?(u[i], seg) }
+      end
+
+      def segment_matches?(node_seg, route_seg)
+        return true if route_seg.start_with?('*')
+
+        if node_seg.include?(':') || route_seg.include?(':')
+          node_seg.split(':').first.to_s.casecmp?(route_seg.split(':').first.to_s)
+        else
+          node_seg.casecmp?(route_seg)
+        end
       end
 
       # A manifest's `listens:` block names events it wants to react to.
