@@ -14,24 +14,32 @@ import type { KommonsNode } from './nodes';
 import { bucketNodes, listKorners } from './nodes';
 
 export const ROOT_ID = 'root';
-export const LIMBS = ['feed', 'profile', 'nudges', 'hub'] as const;
+
+// Listed in the order they appear around the body, clockwise from
+// lower-right — because that order is what sets their angles. Arrow-key
+// hopping follows this list too, so arrowing walks around the ring rather
+// than jumping across it.
+//
+// This list must agree with `Kronk::NodeRegistry::BUCKETS` on the Ruby side;
+// `layout.test.ts` asserts it. Deriving the limbs from the manifests instead
+// is the point of docs/rebuild/decisions.md's one-mechanism decision.
+export const LIMBS = ['hub', 'nudges', 'feed', 'profile'] as const;
 export type Limb = (typeof LIMBS)[number];
 
-// The only hand-chosen angles in the system. Everything else is computed.
-// Degrees, y growing downward: feed left, profile upper-right, nudges
-// lower-left, hub below.
+// Spread evenly rather than hand-placed. Four limbs at angles chosen for
+// three left two tight pairs and two wide gaps; spacing them by construction
+// means a fifth space re-spaces the body automatically instead of waiting for
+// someone to notice it looks lopsided.
 //
-// This list must agree with `Kronk::NodeRegistry::BUCKETS` on the Ruby side.
-// Nothing checks that it does — a bucket the registry accepts but this map
-// does not know about produces a node that ships over the API and is then
-// drawn nowhere. Deriving the limbs from the manifests instead is the point
-// of docs/rebuild/decisions.md's one-mechanism decision.
-const LIMB_ANGLE: Record<Limb, number> = {
-  feed: 203,
-  profile: 317,
-  nudges: 140,
-  hub: 76,
-};
+// Degrees, y growing downward, starting at 45° so the limbs sit in the
+// diagonals: hub lower-right, nudges lower-left, feed upper-left, profile
+// upper-right. That is within ~20° of where each already sat, so the
+// positions stay learnable — the whole premise of the map is that a page
+// keeps an absolute place you can remember.
+const LIMB_SPREAD = 360 / LIMBS.length;
+const LIMB_ANGLE: Record<Limb, number> = Object.fromEntries(
+  LIMBS.map((limb, i) => [limb, 45 + i * LIMB_SPREAD]),
+) as Record<Limb, number>;
 const LIMB_RADIUS = 228;
 
 // disc diameter, and the collision/framing box, per depth.

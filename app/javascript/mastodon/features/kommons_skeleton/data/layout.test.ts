@@ -75,6 +75,29 @@ describe('buckets', () => {
     expect([...LIMBS].sort()).toEqual([...BUCKETS].sort());
   });
 
+  it('spaces the limbs evenly around the core', () => {
+    // Angles are derived from LIMBS' length, so this holds for any number of
+    // spaces. It caught nothing when written — it exists because the previous
+    // angles were hand-placed for three limbs, and adding a fourth left two
+    // tight pairs and two wide gaps that only a person looking would notice.
+    const tree = buildTree(fixture());
+    const lay = layoutTree(tree);
+
+    const angles = LIMBS.map((limb) => lay[limb]?.ang).filter(
+      (a): a is number => typeof a === 'number',
+    );
+    expect(angles).toHaveLength(LIMBS.length);
+
+    const sorted = [...angles].sort((a, b) => a - b);
+    const gaps = sorted.map((a, i) =>
+      i === 0 ? a + 360 - sorted[sorted.length - 1]! : a - sorted[i - 1]!,
+    );
+
+    for (const gap of gaps) {
+      expect(gap).toBeCloseTo(360 / LIMBS.length, 5);
+    }
+  });
+
   it('counts every bucket without producing NaN', () => {
     const nodes = BUCKETS.map((bucket, i) => ({
       id: `n${i}`,
