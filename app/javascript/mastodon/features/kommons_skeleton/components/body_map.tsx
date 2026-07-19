@@ -103,7 +103,15 @@ export const BodyMap: React.FC<{
 
   // ── drag ────────────────────────────────────────────────────────────────
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    // Clear the drag flag on every press, including presses that land on a
+    // node. `handleNode` reads this flag to tell a tap from the end of a pan,
+    // so leaving it set from a previous pan made the next tap — and every tap
+    // after it — do nothing at all. Panning once disabled navigation until
+    // you happened to click empty canvas.
+    dragRef.current.moved = false;
+
     if ((e.target as HTMLElement).closest('.skel-node')) return;
+
     dragRef.current = {
       down: true,
       moved: false,

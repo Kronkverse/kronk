@@ -659,8 +659,11 @@
   // Emphasis is graph distance from the focus, so a near cousin reads
   // differently from a distant one. Nothing is removed — the periphery dims
   // but stays explorable on hover.
-  &--near { opacity: 100%; }
-  &--path { opacity: 90%; }
+  // Stacking follows emphasis, so where two hit boxes are close the one you
+  // are more likely to be reaching for is the one on top.
+  &--focus { z-index: 3; }
+  &--near { opacity: 100%; z-index: 3; }
+  &--path { opacity: 90%; z-index: 2; }
 
   &--mid {
     opacity: 55%;
