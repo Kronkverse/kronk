@@ -129,9 +129,11 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) =
     setNodeId(id);
   }, []);
 
+  // Leaving a detail view returns you to the map, not to a remembered
+  // position — `path` was never touched, so the camera reconstitutes the
+  // exact view you left from.
   const handleBackFromDetail = useCallback(() => {
     setNodeId(null);
-    setStep('pages');
   }, []);
 
   const openComposer = useCallback(() => {
@@ -145,6 +147,21 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) =
     setComposerOpen(false);
     refetch();
   }, [refetch]);
+
+  // Escape unwinds one layer at a time, innermost first, so it always undoes
+  // the last thing you did rather than dumping you back at the root.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (composerOpen) setComposerOpen(false);
+      else if (nodeId) setNodeId(null);
+      else setPath((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [composerOpen, nodeId]);
 
   const selectedNode = nodeId ? findNode(nodes, nodeId) : null;
   const title = intl.formatMessage(messages.title);

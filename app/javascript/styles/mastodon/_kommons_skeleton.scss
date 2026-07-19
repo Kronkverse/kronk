@@ -562,6 +562,12 @@
   cursor: grab;
   touch-action: none;
   user-select: none;
+  opacity: 0%;
+  transition: opacity var(--dur-slow) var(--ease-out);
+
+  &--ready {
+    opacity: 100%;
+  }
 
   &--grabbing {
     cursor: grabbing;
@@ -747,11 +753,20 @@
   pointer-events: none;
 }
 
-.skel-dot {
-  width: 34%;
-  height: 34%;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--text-primary) 72%, transparent);
+// Near-white, not purple — the disc is the coloured field and the glyph has
+// to read against it. The drop shadow is what stops it going flat at the
+// scales the camera settles on.
+.skel-ico {
+  width: 58%;
+  height: 58%;
+  color: var(--text-primary);
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent));
+}
+
+.skel-node--d1 .skel-ico {
+  width: 50%;
+  height: 50%;
 }
 
 .skel-label {
@@ -798,6 +813,14 @@
   color: var(--text-muted);
   font-size: 12px;
   pointer-events: none;
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+
+  &--gone {
+    opacity: 0%;
+    transform: translateY(-14px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

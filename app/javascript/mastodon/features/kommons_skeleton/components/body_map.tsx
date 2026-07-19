@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { KommonsNode } from '../data/nodes';
+import { Glyph, iconFor } from '../data/icons';
 import type { Camera, Layout, Tree } from '../data/layout';
 import {
   LIMBS,
@@ -82,6 +83,19 @@ export const BodyMap: React.FC<{
   useEffect(() => {
     retarget(true);
   }, [retarget]);
+
+  // The body resolves into existence rather than snapping in. One frame's
+  // delay so the first camera transform is already applied when it fades up,
+  // otherwise you watch it slide into place from the origin.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      setReady(true);
+    });
+    return () => {
+      cancelAnimationFrame(id);
+    };
+  }, []);
 
   // Resize refits against the new viewport. The world is viewport-independent,
   // so nothing is rebuilt — only the camera.
@@ -219,7 +233,7 @@ export const BodyMap: React.FC<{
 
   return (
     <div
-      className={`skel-stage ${grabbing ? 'skel-stage--grabbing' : ''}`}
+      className={`skel-stage ${grabbing ? 'skel-stage--grabbing' : ''} ${ready ? 'skel-stage--ready' : ''}`}
       ref={stageRef}
       onPointerDown={handlePointerDown}
     >
@@ -272,7 +286,7 @@ export const BodyMap: React.FC<{
                   {isRoot ? (
                     <span className='skel-glyph'>Ӂ</span>
                   ) : (
-                    <span className='skel-dot' />
+                    <Glyph name={iconFor(tree, id)} />
                   )}
                   {node.count > 0 && (
                     <span className={`skel-count ${node.count >= 6 ? 'skel-count--hot' : ''}`}>
@@ -287,9 +301,11 @@ export const BodyMap: React.FC<{
         </div>
       </div>
 
-      {path.length <= 2 && (
-        <p className='skel-hint'>drag to move through the body · ← → to switch limb</p>
-      )}
+      {/* Kept mounted so it lifts away rather than vanishing — the hint is
+          scaffolding you outgrow, not a control that disappears. */}
+      <p className={`skel-hint ${path.length > 2 ? 'skel-hint--gone' : ''}`}>
+        drag to move through the body · ← → to switch limb
+      </p>
     </div>
   );
 };
