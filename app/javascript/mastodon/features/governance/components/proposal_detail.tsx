@@ -9,8 +9,8 @@ import { me } from 'mastodon/initial_state';
 
 import type { Proposal } from '../types';
 
-import { TabKontribute } from './proposal_tabs/tab_kontribute';
 import { ProposalAttachments } from './proposal_attachments';
+import { TabKontribute } from './proposal_tabs/tab_kontribute';
 import { TabProposal } from './proposal_tabs/tab_proposal';
 
 type Tab = 'proposal' | 'kontribute';
