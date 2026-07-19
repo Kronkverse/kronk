@@ -1,4 +1,4 @@
-// Kommons Tree — feedback-tree drilldown surface inside Kommons.
+// The Kommons Skeleton — the map of the whole platform, walked by camera.
 //
 // Route: /hub/kommons/skeleton
 // Concept: three top buckets (Feed / Profile / Hub), drill down to a
@@ -28,7 +28,7 @@ import { ROOT_ID } from './data/layout';
 const messages = defineMessages({
   title: {
     id: 'kommons_skeleton.title',
-    defaultMessage: '\u20aeommons \u00b7 Tree',
+    defaultMessage: '\u20aeommons \u00b7 Skeleton',
   },
   crumbBuckets: {
     id: 'kommons_skeleton.crumb.buckets',

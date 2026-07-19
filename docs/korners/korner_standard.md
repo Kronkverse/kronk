@@ -57,7 +57,7 @@ A korner's `lifecycle` (in its node) and its manifest `enforced` flag are **prom
 - ⚙︎ **`enforced: true` ⇒ the mount resolves.** No enforced korner may show a Hub tile whose link 404s. _(Audit: Marketplace + Nudges `enforced` with dead `/hub/<slug>`.)_
 - ◇ If the korner graduated from a legacy route (e.g. `/nudges`), that route redirects/aliases to `/hub/<slug>`.
 
-### L6 — Tree & nodes
+### L6 — Skeleton & nodes
 
 - ⚙︎ `nodes:` block: valid `bucket` (`feed|profile|hub|nudges`), `parent` is a registered slug, `lifecycle` set.
 - ⚙︎ Each node's `route_name` resolves to a Rails named route **or** `spa: true`. _(Audit: `feed.nudges` failed this — fixed in #335.)_
@@ -121,7 +121,7 @@ A korner **slides in** when, for its lifecycle stage:
 2. a human has signed off the `◇` items for that stage, **and**
 3. its `enforced` flag and node `lifecycle` honestly reflect what works (§1 golden rule).
 
-For a **live/enforced** korner specifically: you can create its records via API, they project into the feed as a token-clean card, its `/hub/<slug>` and `/hub/<slug>/settings` render, its nodes resolve in the Tree, and it looks identical-in-family to every other korner (icon/name aside) in both themes and under any Personal Appearance choice.
+For a **live/enforced** korner specifically: you can create its records via API, they project into the feed as a token-clean card, its `/hub/<slug>` and `/hub/<slug>/settings` render, its nodes resolve in the Skeleton, and it looks identical-in-family to every other korner (icon/name aside) in both themes and under any Personal Appearance choice.
 
 ## 5. Proving the standard — Marketplace
 

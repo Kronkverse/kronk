@@ -451,6 +451,87 @@ export const buildBones = (tree: Tree, lay: Layout): Bone[] => {
   return bones;
 };
 
+// ── Wires ──────────────────────────────────────────────────────────────────
+//
+// Bones are anatomy: where a page sits in the platform. Wires are the other
+// thing the registry knows — that composing here creates a card there, that
+// this surface listens to that korner's events. They cross the tree rather
+// than following it, which is exactly why they cannot be drawn like bones: a
+// filled tapered ribbon reads as structure, and these are not structure.
+// Thin, dashed, bowed away from the trunk, and — crucially — hidden unless
+// they touch where you are standing. All 26 drawn at once is a hairball that
+// says nothing; the handful attached to your current node is a sentence.
+
+export interface Wire {
+  id: string;
+  from: string;
+  to: string;
+  kind: string;
+  description: string;
+  d: string;
+  labelX: number;
+  labelY: number;
+}
+
+export const buildWires = (
+  tree: Tree,
+  lay: Layout,
+  nodes: KommonsNode[],
+): Wire[] => {
+  const wires: Wire[] = [];
+  const seen = new Set<string>();
+
+  for (const n of nodes) {
+    for (const link of n.links ?? []) {
+      const a = lay[n.id];
+      const b = lay[link.to];
+      // A link may name a node that is not on the map — a korner-level target,
+      // or a page that has not been registered yet. Skipped rather than
+      // guessed at.
+      if (!a || !b || !tree[n.id] || !tree[link.to]) continue;
+
+      // One wire per pair. Links are declared from both ends often enough
+      // that drawing each direction would double every line.
+      const key = [n.id, link.to].sort().join('~');
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const dx = b.cx - a.cx;
+      const dy = b.cy - a.cy;
+      const dist = Math.hypot(dx, dy) || 1;
+      const ux = dx / dist;
+      const uy = dy / dist;
+
+      const p0 = { x: a.cx + ux * (a.disc / 2) * 0.98, y: a.cy + uy * (a.disc / 2) * 0.98 };
+      const p1 = { x: b.cx - ux * (b.disc / 2) * 0.98, y: b.cy - uy * (b.disc / 2) * 0.98 };
+
+      // Bow perpendicular, away from the core, so a wire arcs clear of the
+      // trunk it crosses instead of lying on top of it.
+      const mx = (p0.x + p1.x) / 2;
+      const my = (p0.y + p1.y) / 2;
+      const outward = Math.hypot(mx, my) || 1;
+      const bow = Math.min(dist * 0.22, 150);
+      const cx = mx + (mx / outward) * bow;
+      const cy = my + (my / outward) * bow;
+
+      wires.push({
+        id: `${n.id}~${link.to}`,
+        from: n.id,
+        to: link.to,
+        kind: link.kind,
+        description: link.description,
+        d: `M ${p0.x.toFixed(1)} ${p0.y.toFixed(1)} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`,
+        // Quadratic midpoint, not the chord midpoint — the label has to sit
+        // on the curve or it floats off in empty space beside it.
+        labelX: 0.25 * p0.x + 0.5 * cx + 0.25 * p1.x,
+        labelY: 0.25 * p0.y + 0.5 * cy + 0.25 * p1.y,
+      });
+    }
+  }
+
+  return wires;
+};
+
 // ── Camera ─────────────────────────────────────────────────────────────────
 
 export interface Camera {

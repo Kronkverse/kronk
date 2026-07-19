@@ -35,7 +35,7 @@ Intended outcome: a 2.0.0 release that (a) formalises the Korner framework to sp
 | 7 | Primitives: Kategories → Search → Groups | 7 | 2.5 weeks | Phase 4 |
 | 8 | Kuestions v2 (dedicated model + gate) | 4 | 1 week | Phase 6 |
 | 9 | Huddle korner split (Kalendar decouple) | 4 | 1 week | Phases 3, 6 |
-| 10 | InFlow kosmic + Marketplace greenfield + Tree WIP | 5 | 1.5 weeks | Phase 1 |
+| 10 | InFlow kosmic + Marketplace greenfield + Skeleton WIP | 5 | 1.5 weeks | Phase 1 |
 | 11 | Org space `/kronk/*` + Profile rebuild `/@user` | 4 | 1 week | Phase 3 |
 | 12 | Nav-chrome redesign (Ӂ menu, three-way switcher, wordmark, mobile tab-bar) | 3 | 1 week | Phases 3, 11 |
 | 13 | 2.x new korner manifests (Moments, Albutts, Kompass) — `enforced: false` | 3 | 3 days | Phase 1 |
@@ -162,7 +162,7 @@ Depends on Phase 6, Phase 3.
 - **9.3** New `config/korners/huddle.yaml` with `emits: [huddle.started]`; Kalendar `listens: [huddle.started]`. Add tiny in-process event bus `Kronk::KornerEvents.publish/subscribe` sufficient for §6.
 - **9.4** Huddle korner UI moves to `/hub/huddle`.
 
-### Phase 10 — InFlow, Marketplace, Tree
+### Phase 10 — InFlow, Marketplace, Skeleton
 
 Parallel PRs, single phase for scheduling clarity.
 
@@ -170,7 +170,7 @@ Parallel PRs, single phase for scheduling clarity.
 - **10.2** InFlow manifest updated with `emits`/`feed_projection`.
 - **10.3** Marketplace greenfield — `listings`, `listing_photos`, `listing_offers` tables. Reference implementation.
 - **10.4** Marketplace manifest fully populated + `feed_projection.card = marketplace_card` wired.
-- **10.5** `config/korners/tree.yaml` marked `enforced: false`; Tree UI ships behind flag.
+- **10.5** `config/korners/tree.yaml` marked `enforced: false`; Skeleton UI ships behind flag.
 
 ### Phase 11 — Org space + Profile rebuild
 

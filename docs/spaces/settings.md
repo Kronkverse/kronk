@@ -10,7 +10,7 @@ data. Each korner also owns its own settings sub-page under
 `/hub/<slug>/settings`; the top-level settings hub aggregates the
 account/global controls.
 
-## Nodes in the Tree
+## Nodes in the Skeleton
 
 Declared in `config/kronk_nodes.yaml`:
 

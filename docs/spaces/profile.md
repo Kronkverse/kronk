@@ -14,7 +14,7 @@ korner projection + kategory pillar rather than a flat status stream.
 The owner picks section order via the `profile_section_order`
 column.
 
-## Nodes in the Tree
+## Nodes in the Skeleton
 
 Declared in `config/kronk_nodes.yaml` under the `profile` bucket:
 

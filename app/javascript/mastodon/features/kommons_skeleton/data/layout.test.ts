@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { KommonsNode } from './nodes';
-import { buildTree, layoutTree } from './layout';
+import { buildTree, buildWires, layoutTree } from './layout';
 
 // The map's one hard invariant: no two nodes may overlap.
 //
@@ -92,6 +92,35 @@ describe('layoutTree', () => {
     }
 
     expect(worst, `closest pair: ${pair}`).toBeGreaterThanOrEqual(0);
+  });
+
+  it('draws one wire per linked pair, and none for absent targets', () => {
+    const nodes = fixture();
+    const [a, b] = nodes;
+
+    // Declared from both ends, as the manifests often do, plus a link to a
+    // node that is not on the map at all.
+    a!.links = [
+      { to: b!.id, kind: 'creates', description: 'a creates b' },
+      { to: 'not-a-registered-node', kind: 'related', description: 'dangling' },
+    ];
+    b!.links = [{ to: a!.id, kind: 'listed_on', description: 'b lists a' }];
+
+    const tree = buildTree(nodes);
+    const wires = buildWires(tree, layoutTree(tree), nodes);
+
+    // One wire, not two: a pair linked from both directions is still one
+    // relationship, and drawing it twice doubles every line on the map.
+    const between = wires.filter(
+      (w) =>
+        (w.from === a!.id && w.to === b!.id) ||
+        (w.from === b!.id && w.to === a!.id),
+    );
+    expect(between).toHaveLength(1);
+
+    // A link naming an unregistered node is skipped, not guessed at — it
+    // would otherwise draw a wire to the world origin.
+    expect(wires.some((w) => w.to === 'not-a-registered-node')).toBe(false);
   });
 
   it('is deterministic — the same registry lays out identically', () => {

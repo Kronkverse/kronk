@@ -620,6 +620,41 @@
   &--hot .skel-joint { fill: var(--accent); }
 }
 
+// Wires are the registry's cross-links — what a node does to another node,
+// as opposed to where it sits. Stroked and dashed rather than filled, so
+// they never read as anatomy, and hidden entirely unless they touch the
+// focus or one of its children.
+.skel-wire {
+  pointer-events: none;
+
+  &-line {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    stroke-dasharray: 5 6;
+    stroke-linecap: round;
+    opacity: 0%;
+    transition: opacity var(--dur-slow) var(--ease-out);
+  }
+
+  &-label {
+    fill: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    text-anchor: middle;
+    paint-order: stroke;
+    stroke: var(--surface-primary);
+    stroke-width: 3;
+    opacity: 0%;
+    transition: opacity var(--dur-slow) var(--ease-out);
+  }
+
+  &--live &-line { opacity: 58%; }
+  &--live &-label { opacity: 100%; }
+  &--near &-line { opacity: 20%; }
+}
+
 .skel-halo {
   fill: color-mix(in srgb, var(--accent) 9%, transparent);
 }

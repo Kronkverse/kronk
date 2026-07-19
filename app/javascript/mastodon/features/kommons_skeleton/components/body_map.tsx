@@ -8,6 +8,7 @@ import {
   ROOT_ID,
   buildBones,
   buildTree,
+  buildWires,
   cameraFor,
   distances,
   layoutTree,
@@ -43,10 +44,16 @@ export const BodyMap: React.FC<{
 
   // Built once from the registry. Re-derived only if the registry itself
   // changes, never on navigation.
-  const { tree, lay, bones, world } = useMemo(() => {
+  const { tree, lay, bones, wires, world } = useMemo(() => {
     const t: Tree = buildTree(nodes);
     const l: Layout = layoutTree(t);
-    return { tree: t, lay: l, bones: buildBones(t, l), world: worldBounds(l) };
+    return {
+      tree: t,
+      lay: l,
+      bones: buildBones(t, l),
+      wires: buildWires(t, l, nodes),
+      world: worldBounds(l),
+    };
   }, [nodes]);
 
   const focus = path[path.length - 1] ?? ROOT_ID;
@@ -181,7 +188,7 @@ export const BodyMap: React.FC<{
   }, [hop]);
 
   // ── emphasis ────────────────────────────────────────────────────────────
-  const { emphasis, edgeClass } = useMemo(() => {
+  const { emphasis, edgeClass, wireClass } = useMemo(() => {
     const dist = distances(tree, focus);
     const onPath = new Set(path);
     const kids = new Set(tree[focus]?.kids ?? []);
@@ -205,8 +212,18 @@ export const BodyMap: React.FC<{
       else ec[bone.id] = 'ghost';
     }
 
-    return { emphasis: em, edgeClass: ec };
-  }, [tree, lay, bones, focus, path]);
+    // A wire is drawn only when it touches where you are — the focus itself
+    // or one of its children. Every wire on screen at once is noise; the two
+    // or three attached to this node are the point.
+    const wc: Record<string, string> = {};
+    for (const w of wires) {
+      const touchesFocus = w.from === focus || w.to === focus;
+      const touchesKid = kids.has(w.from) || kids.has(w.to);
+      wc[w.id] = touchesFocus ? 'live' : touchesKid ? 'near' : 'off';
+    }
+
+    return { emphasis: em, edgeClass: ec, wireClass: wc };
+  }, [tree, lay, bones, wires, focus, path]);
 
   const handleNode = useCallback(
     (id: string) => () => {
@@ -248,6 +265,20 @@ export const BodyMap: React.FC<{
             </g>
           ))}
           <circle className='skel-halo' cx={0} cy={0} r={46} />
+
+          {/* Above the bones, below the discs: a wire crosses the anatomy,
+              so it has to read as passing over the trunk rather than
+              disappearing behind it. */}
+          {wires.map((w) => (
+            <g key={w.id} className={`skel-wire skel-wire--${wireClass[w.id] ?? 'off'}`}>
+              <path className='skel-wire-line' d={w.d} />
+              {wireClass[w.id] === 'live' && (
+                <text className='skel-wire-label' x={w.labelX} y={w.labelY}>
+                  {w.kind.replaceAll('_', ' ')}
+                </text>
+              )}
+            </g>
+          ))}
         </svg>
 
         <div className='skel-world'>
