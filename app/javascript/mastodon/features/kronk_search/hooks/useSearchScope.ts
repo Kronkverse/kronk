@@ -29,11 +29,14 @@ const UNIVERSAL_ROUTES = new Set(['/home', '/hub', '/nudges', '/search']);
 const inferScope = (pathname: string): SearchScope => {
   if (UNIVERSAL_ROUTES.has(pathname)) return { kind: 'universal' };
 
-  const korner = KORNER_RE.exec(pathname);
-  if (korner) return { kind: 'korner', slug: korner[1] };
+  // Capture groups are typed as possibly-undefined: a regex can match while a
+  // group does not participate. These two always capture when they match, but
+  // reading the group before checking it is the habit that bites elsewhere.
+  const slug = KORNER_RE.exec(pathname)?.[1];
+  if (slug) return { kind: 'korner', slug };
 
-  const account = ACCOUNT_RE.exec(pathname);
-  if (account) return { kind: 'account', acct: account[1] };
+  const acct = ACCOUNT_RE.exec(pathname)?.[1];
+  if (acct) return { kind: 'account', acct };
 
   return { kind: 'universal' };
 };

@@ -965,9 +965,12 @@ const HighlightsCard: React.FC<{
 
 const HighlightTile: React.FC<{ status: ApiStatusJSON }> = ({ status }) => {
   const media = status.media_attachments[0];
+  // Normalised once, so `excerpt` is a string for certain — both the content
+  // warning and the body are optional on the API type.
+  const spoiler = status.spoiler_text ?? '';
   const excerpt =
-    status.spoiler_text.length > 0
-      ? status.spoiler_text
+    spoiler.length > 0
+      ? spoiler
       : (status.content ?? '')
           .replace(/<[^>]+>/g, '')
           .trim()

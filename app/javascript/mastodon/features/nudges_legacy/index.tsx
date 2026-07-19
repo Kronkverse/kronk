@@ -41,9 +41,12 @@ const summaryFor = (n: ApiNotificationJSON) => {
       return `${actor} invited you to an event`;
     case 'media_tag':
       return `${actor} tagged you in media`;
+    // No `annual_report` case: it exists only as a grouped notification
+    // (AnnualReportNotificationGroupJSON), never as an individual one, so it
+    // cannot reach this archive. The unreachable branch was the error — not a
+    // missing type.
     case 'severed_relationships':
     case 'moderation_warning':
-    case 'annual_report':
       return `System notice: ${n.type.replaceAll('_', ' ')}`;
     default:
       return `${actor} — ${n.type}`;
@@ -54,16 +57,10 @@ export const NudgesLegacyArchive = () => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
 
-  const { entries, loading, loaded } = useAppSelector((state) => {
-    // Redux root state is an Immutable Map (redux-immutable). TS
-    // sees state.get as error-typed; see hooks/useKorner.ts for the
-    // wider context and follow-up plan.
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    const s = state.get('nudges_legacy') as
-      | { entries: ApiNotificationJSON[]; loading: boolean; loaded: boolean }
-      | undefined;
-    return s ?? { entries: [], loading: false, loaded: false };
-  });
+  // Read by property rather than `state.get(...)` — see hooks/useKorner.ts.
+  const { entries, loading, loaded } = useAppSelector(
+    (state) => state.nudges_legacy,
+  );
 
   useEffect(() => {
     void dispatch(fetchNudgesLegacyArchive({}));
