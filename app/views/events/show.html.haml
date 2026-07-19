@@ -1,0 +1,15 @@
+- content_for :page_title, @event.title
+
+- content_for :header_tags do
+  = opengraph 'og:site_name', site_title
+  = opengraph 'og:type', 'article'
+  = opengraph 'og:title', @event.title
+  = opengraph 'og:url', request.original_url
+  - desc = [@event.start_time&.strftime('%A %-d %B %Y'), @event.location_name].compact.join(' · ')
+  - desc += ". " + @event.description.truncate(150) if @event.description.present?
+  = opengraph 'og:description', desc if desc.present?
+  - if @event.image&.file&.present?
+    = opengraph 'og:image', full_asset_url(@event.image.file.url(:original))
+    = opengraph 'og:image:type', @event.image.file_content_type
+
+= render 'shared/web_app'
