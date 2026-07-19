@@ -94,7 +94,7 @@ feature_flag: # not-implemented — Kommons is unconditionally mounted on main
 federates: false # local-only per §8.8
 enforced: true # framework: on this branch; boot validator enforces
 
-# ── Tree nodes (Kommons 2.0 — feedback tree) ────────────────────────
+# ── Skeleton nodes (Kommons 2.0 — feedback map) ────────────────────────
 # See lib/kronk/node_registry.rb for schema.
 nodes:
   - id: kommons.index
@@ -105,7 +105,7 @@ nodes:
     links:
       - to: kommons.skeleton
         kind: related
-        description: Feedback proposals originate from tree nodes.
+        description: Feedback proposals originate from Skeleton nodes.
   - id: kommons.skeleton
     label: Skeleton
     url: /hub/kommons/skeleton
@@ -120,7 +120,7 @@ nodes:
   # Review topics for the rebuild assessment, keyed so each finding can be
   # planted as a proposal against the area it concerns. These are review
   # surfaces, not product pages, so they carry `lifecycle: hidden` — they
-  # resolve in the Tree for reviewers without appearing as shipped surfaces.
+  # resolve in the Skeleton for reviewers without appearing as shipped surfaces.
   # Retire them (and their proposals) once 2.0.0 ships.
   - id: kommons.review.spec
     label: 'Review: spec & documentation'

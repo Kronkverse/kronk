@@ -79,3 +79,9 @@ nodes:
     url: /hub/groups
     lifecycle: live
     spa: true
+
+  - id: groups.detail
+    label: Group detail
+    url: /hub/groups/:id
+    lifecycle: live
+    spa: true
