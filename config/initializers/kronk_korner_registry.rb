@@ -55,11 +55,33 @@ module Kronk
       # `lib/kronk/node_registry.rb`. Optional; a korner with no visible
       # surfaces (pure infra) can declare `nodes: []`.
       :nodes,
+      # Where this space lives. Absent means `/hub/<slug>` — the korner
+      # default. A core space sets it explicitly (`/home`, `/nudges`,
+      # `/@:user`) because it is not reached through the Hub.
+      :mount,
+      # A core space is part of the platform rather than a korner: it cannot
+      # be uninstalled, does not appear in the Hub grid, and cannot be tuned
+      # out of. It is otherwise an ordinary manifest — this flag and `mount`
+      # are the whole of the difference, which is the point.
+      :core,
       # Deployment
       :feature_flag,
       :enforced,
       keyword_init: true
     ) do
+      # The path this space is mounted at. Korners default to /hub/<slug>;
+      # core spaces declare their own.
+      def mount_path
+        mount.presence || "/hub/#{slug}"
+      end
+
+      # Korner-only behaviours: Hub grid membership, tune-in/out, the launch
+      # card. Asking `core?` at each of those sites keeps the distinction in
+      # one vocabulary instead of scattering slug checks.
+      def core?
+        core == true
+      end
+
       def db_namespace
         storage&.dig('db_namespace')
       end
@@ -161,6 +183,8 @@ module Kronk
           hub_teaser: yaml['hub_teaser'].is_a?(Hash) ? yaml['hub_teaser'] : nil,
           launch: yaml['launch'].is_a?(Hash) ? yaml['launch'] : nil,
           nodes: Array(yaml['nodes']),
+          mount: yaml['mount'].is_a?(String) ? yaml['mount'] : nil,
+          core: yaml['core'] == true,
           feature_flag: yaml['feature_flag'],
           enforced: yaml['enforced'] == true
         )
@@ -228,7 +252,15 @@ Rails.application.config.after_initialize do
       Rails.logger.warn("[kronk:korner_registry] slug '#{slug}' declared by #{count} manifests") if count > 1
     end
 
+    # A core manifest is exempt: the reservation exists to stop a *korner*
+    # claiming a platform route, and a core space claiming its own platform
+    # route is the reservation working, not failing. Without this, `feed` and
+    # `hub` could never have manifests — and the workaround already in use was
+    # to un-reserve the slug instead (see the `nudges` note in
+    # reserved_slugs.yaml), which gives the protection away entirely.
     manifests.each do |manifest|
+      next if manifest.core?
+
       Rails.logger.warn("[kronk:korner_registry:#{manifest.slug}] slug is reserved for platform use") if reserved.include?(manifest.slug)
     end
 
