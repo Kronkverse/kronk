@@ -35,9 +35,17 @@ Ordered by how much is lost.
    when privacy is `private`; the API reproduces neither the field nor the
    coupling.
 5. **Single-surface classic settings with no API field** — `chosen_languages`,
-   `time_zone`, `emoji_style`, `always_send_emails`, `noindex`/`indexable`,
-   `show_collections`, `show_application`.
-6. **Rails CRUD with no SPA replacement** — keyword filters (`/filters`),
+   `time_zone`, `emoji_style`, `always_send_emails`.
+6. **Already stranded — reachable by nothing.** `indexable`/`noindex`,
+   `show_collections` (`hide_collections`) and `show_application` live only on
+   the classic privacy view, and **that view can no longer be rendered**:
+   `config/routes.rb:193` declares `get '/settings/privacy', to: 'home#index'`
+   *before* `draw(:settings)` at `:195`, so the GET resolves to the SPA and
+   only PATCH/PUT reaches `Settings::PrivacyController`. Three settings that
+   nobody can currently change. Found while verifying this inventory — it had
+   originally recorded them as safely reachable, which is exactly the error
+   this document exists to prevent.
+7. **Rails CRUD with no SPA replacement** — keyword filters (`/filters`),
    profile verification, featured hashtags, relationships and severed
    relationships.
 
@@ -69,8 +77,8 @@ Ordered by how much is lost.
 | Display name, bio, avatar, header, metadata fields, bot flag | `Settings::ProfilesController` → `/settings/profile` | Classic |
 | Require follow approval | `Account#locked`; privacy API + classic | Both — also Feed |
 | Discoverable | `Account#discoverable` | Both |
-| Indexable by search engines | `Account#indexable`, user `noindex` | Classic |
-| Show follows/followers collections | `Account#hide_collections` | Classic |
+| Indexable by search engines | `Account#indexable`, user `noindex` | **Stranded** — view unrenderable |
+| Show follows/followers collections | `Account#hide_collections` | **Stranded** — view unrenderable |
 | Profile sections layout | `/settings/profile_sections` | SPA (Kronk-only) |
 | Profile verification (rel=me) | `/settings/verification` | Classic |
 | Featured hashtags | `/settings/featured_tags` | Classic |
@@ -85,7 +93,7 @@ Ordered by how much is lost.
 | Server update emails | `notification_emails.software_updates` | Both |
 | Web-push subscription, per-type alerts, policy | `Web::PushSubscription` | SPA |
 | Per-korner push | `/hub/:slug/settings` | SPA — also Korner |
-| In-app desktop alerts, per type (12 types) | Redux `settings.notifications.alerts.*` | SPA (column) |
+| In-app desktop alerts, per type (13 types) | Redux `settings.notifications.alerts.*` | SPA (column) |
 | Show in column, per type | `settings.notifications.shows.*` | SPA (column) |
 | Sounds, per type | `settings.notifications.sounds.*` | SPA (column) |
 | Group follow notifications | `settings.notifications.group.follow` | SPA |
@@ -118,7 +126,7 @@ relationships · moderation strikes and appeals.
 | Default visibility, language, sensitive | posting API + classic | Both |
 | Default quote policy | classic only, **absent from the API** | Classic |
 | Confirm before boosting, quick boosting, confirm delete, warn missing alt | classic only | Classic |
-| Show which app posted | classic `/settings/privacy` | Classic — also Profile |
+| Show which app posted | classic `/settings/privacy` | **Stranded** — view unrenderable |
 | Composer language memory, recent emojis | Redux | SPA |
 | Automated post deletion (10 fields) | `/statuses_cleanup` | Classic |
 
@@ -150,9 +158,11 @@ ordering (`/settings/korners`).
   destination.
 - `/settings/account`, `/settings/data` — nodes exist (`soon`), no route
   exists. A direct hit 404s.
-- `/settings/preferences/feed` — Kronk-authored, fully duplicates the SPA
-  `/home/settings`. Both live, both writeable, no redirect. First candidate
-  to delete.
+- `/settings/preferences/feed` — Kronk-authored. The SPA `/home/settings` is a
+  strict superset of it (the classic view carries only `kronk.feed_scope` plus
+  tune-in checkboxes; the SPA adds `expand_content_warnings` and
+  `show_trends`). Both live, both writeable, no redirect between them. First
+  candidate to delete.
 - `/settings/preferences/other` — down to `aggregate_reblogs` (already
   duplicated in the SPA) and `chosen_languages`. Empty once that is rehomed.
 - `app/views/settings/shared/_profile_navigation.html.haml` — the only route

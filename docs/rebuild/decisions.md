@@ -38,8 +38,8 @@ the korner rail.
 `feed|profile|hub`, and `build_node` returns `nil` for anything else — so a
 node declaring `bucket: nudges` is *silently dropped*, with no error, and the
 doctor cannot report it because the node never enters the registry.
-`docs/korners/korner_standard.md` L6 already documents four buckets including
-`nudges`; the standard is right and the code is behind.
+`docs/korners/korner_standard.md` Layer 6 (§L6) already documents four
+buckets including `nudges`; the standard is right and the code is behind.
 
 ### The Skeleton is plumbing, not only a map
 
@@ -63,6 +63,21 @@ Supersedes the split between `config/korners/*.yaml` (korners) and
 
 Core spaces — feed, profile, nudges, hub — get manifests like any korner,
 flagged non-removable. `config/kronk_nodes.yaml` becomes core manifests.
+
+**Blocked as written.** `config/korners/reserved_slugs.yaml` reserves `feed`,
+`hub`, `home` and `settings`, and `docs/korners/korner_standard.md` §L1 fails
+any manifest whose slug is reserved — so `feed.yaml` and `hub.yaml` cannot
+exist under the current rule. Resolving this needs the reserved-slug check to
+distinguish *core* manifests from korner manifests, rather than forbidding the
+slug outright. Noted here rather than quietly worked around, because the
+reservation exists for a good reason: it stops a korner claiming a platform
+route.
+
+Corroboration that the direction is right: `reserved_slugs.yaml` already
+anticipates it — *"Once the Nudges cutover completes (task #30) and the
+manifest is retired, `nudges` moves back into this list as a reserved platform
+stem."* The repo was already planning for Nudges to stop being a korner and
+become a platform space.
 
 **Reasoning:** if every node must declare what it is wired to, core spaces
 need the same declaration surface korners already have, because they have the
