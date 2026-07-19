@@ -21,9 +21,19 @@ export interface ApiNodeLink {
   description: string;
 }
 
+// The top-level spaces, mirroring `Kronk::NodeRegistry::BUCKETS`. Declared
+// once here, at the layer closest to the server contract, and re-exported
+// rather than restated — this union previously existed in three places
+// (here, the Skeleton's node types, and its layout limbs) and they were
+// allowed to disagree. When Ruby learned a fourth bucket, the server emitted
+// nodes the client had no name for: they arrived, typechecked as impossible,
+// and were drawn nowhere.
+export const BUCKETS = ['feed', 'profile', 'nudges', 'hub'] as const;
+export type Bucket = (typeof BUCKETS)[number];
+
 export interface ApiKommonsNode {
   id: string;
-  bucket: 'feed' | 'profile' | 'hub';
+  bucket: Bucket;
   parent: string | null;
   label: string;
   url: string;
