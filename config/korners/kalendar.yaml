@@ -94,6 +94,12 @@ nodes:
     label: Kalendar
     url: /hub/kalendar
     lifecycle: live
+
+  - id: kalendar.event
+    label: Event detail
+    url: /hub/kalendar/:id
+    lifecycle: live
+    spa: true
     spa: true
     links:
       - to: marketplace.index
