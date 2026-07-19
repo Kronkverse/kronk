@@ -11,5 +11,12 @@ export const fetchNudgesLegacyArchive = createDataLoadingThunk(
     limit,
   }: { maxId?: string; minId?: string; limit?: number } = {}) =>
     apiGetNudgesLegacyArchive({ max_id: maxId, min_id: minId, limit }),
-  ([data]) => data ?? [],
+  // `onData` receives the whole result from `loadData`, which here is the
+  // array of notifications. The previous form destructured it — `([data])` —
+  // and so kept only the first notification, discarding the rest of the page
+  // and handing the reducer an object where it expected a list. That is what
+  // the two "must have a [Symbol.iterator]" errors in reducers/nudges_legacy
+  // were reporting: `state.entries.push(...payload)` cannot spread a single
+  // notification, so paginating the Legacy tab threw.
+  (data) => data,
 );

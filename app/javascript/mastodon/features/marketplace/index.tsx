@@ -52,15 +52,23 @@ const messages = defineMessages({
   },
 });
 
-// Permissive Record<string, …> shape so lookups by the API's `category`
-// string (typed loosely as `string`) can fall through to the `all` label
-// via `??` when a listing's category isn't one of our known keys.
-const filterLabels: Record<string, typeof messages.filterAll> = {
+// Keyed by FilterKey, not `string`. The permissive shape it replaces made
+// *every* lookup optional — including `filterLabels.all`, which meant the
+// `?? filterLabels.all` fallback was itself possibly-undefined and never
+// actually guaranteed a label.
+const filterLabels: Record<FilterKey, typeof messages.filterAll> = {
   all: messages.filterAll,
   creation: messages.filterCreation,
   marketplace: messages.filterMarketplace,
   service: messages.filterService,
 };
+
+// A listing's `category` is a loose string from the API, so it needs a real
+// membership check before it can index the table.
+const labelForCategory = (category: string) =>
+  category in filterLabels
+    ? filterLabels[category as FilterKey]
+    : filterLabels.all;
 
 interface FilterTabProps {
   filterKey: FilterKey;
@@ -181,9 +189,7 @@ const Marketplace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                 <span
                   className={`marketplace__item-category marketplace__item-category--${listing.category}`}
                 >
-                  {intl.formatMessage(
-                    filterLabels[listing.category] ?? filterLabels.all,
-                  )}
+                  {intl.formatMessage(labelForCategory(listing.category))}
                 </span>
                 {listing.location && (
                   <span className='marketplace__item-location'>
