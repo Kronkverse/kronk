@@ -53,8 +53,10 @@ The three-way split is intentional — it foregrounds three fundamentally
 different modes of exchange (making, passing-on, doing-for), each with
 its own conventions and expectations.
 
-**No subcategory field** in the initial 2.0 shape. The `subcategory`
-column on `Listing` retires; three top-level categories are enough.
+**No subcategory field** in the initial 2.0 UI. (The `subcategory` column on
+`Listing` still exists in the schema and is serialized — its removal is a
+follow-up; see the remaining-work backlog. Three top-level categories are
+enough for the UI.)
 Search + filtering leans on title/description tokens plus the top-
 level axis. If a subcategory taxonomy is warranted later, it comes
 in a follow-up.

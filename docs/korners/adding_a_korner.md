@@ -66,10 +66,11 @@ is painful — see the warning below.
 > If the name you want is two words, join them (`inflow`) or choose another.
 > Do not hyphenate.
 
-**[Spec drift]** The spec (§1) mandates a `config/korners/<slug>.yaml`
-manifest that declares slug/nouns before any code is written.
-Manifest-driven registration is not yet enforced — you'll write the manifest
-at the end of this walkthrough as the last step (see §12). Do the five-question
+The spec (§1) mandates a `config/korners/<slug>.yaml` manifest that declares
+slug/nouns before any code is written. Registration is now validated by
+`bin/tootctl korners doctor` (it gates L1/L3/L4/L5/L10 for `enforced` korners),
+though mounting a Korner is not hard-refused on a missing manifest. You'll write
+the manifest at the end of this walkthrough (see §12); do the five-question
 exercise up front anyway.
 
 ---
@@ -459,17 +460,14 @@ so it's not the same drift item. (Klot's absence is captured in
 
 ---
 
-## 10. The Hub — deferred
+## 10. The Hub
 
-Spec §4 says your Korner appears as a tile in the Hub grid at `/hub`.
-**The Hub does not yet exist in code** — `features/hub/index.tsx` is not
-present on either `main` or any dev branch as of writing. When the Hub lands,
-adding a Korner to it will be one array-entry edit. Don't add it now; it
-would fail to compile.
-
-Track this yourself: your Korner appears in the manifest under
-`hub_registered: false # not-implemented — Hub surface pending`. When the
-Hub ships, that gets flipped in a follow-up PR.
+Spec §4 says your Korner appears as a tile in the Hub grid at `/hub`. **The Hub
+is shipped** — `app/javascript/mastodon/features/hub/index.tsx`. You do **not**
+register your Korner with it by hand: the grid renders from the Korner registry,
+so a registered manifest with a Hub-facing node is enough to appear. There is no
+`hub_registered` manifest field. Tile ordering is by tune-in count with a
+per-user override (§4); nothing to wire per-Korner.
 
 ---
 
@@ -487,7 +485,7 @@ your shape:
 | Korner        | Best for                                                                        | Reference files                                                                                                                                                                      |
 | ------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Kommons**   | You have a first-class resource (proposal, decision) with a discussion attached | `app/models/proposal.rb`, `app/controllers/api/v1/proposals_controller.rb`, `app/serializers/rest/proposal_summary_serializer.rb`                                                    |
-| **Kuestions** | Your Korner rides Status directly via `post_type` (no separate table)           | `app/models/status.rb` (`enum :post_type`), `app/javascript/mastodon/components/status_question_card.tsx`                                                                            |
+| **Kuestions** | Dedicated `Question`/`Answer` tables, but the feed card still discriminates on Status `post_type` (rendering from the model is pending — see backlog 8.3) | `app/models/question.rb`, `app/models/answer.rb`, `app/models/status.rb` (`enum :post_type`), `app/javascript/mastodon/components/status_question_card.tsx`                          |
 | **Kalendar**  | You have a primary record (event, workshop) that gets shared on create          | `app/controllers/api/v1/events_controller.rb#create` (post-race-fix — status creation is outside the transaction), `app/models/event.rb`, `app/serializers/rest/event_serializer.rb` |
 | **Booth**     | You have a primary record (audio set, upload) with an explicit share action     | `app/controllers/api/v1/booth_sets_controller.rb#share`, `app/models/booth_set.rb`, `app/serializers/rest/booth_set_summary_serializer.rb`                                           |
 
