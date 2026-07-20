@@ -48,6 +48,9 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
     st: 0,
   });
   const [grabbing, setGrabbing] = useState(false);
+  // The node to ease into view after the next layout (§5) — set on click,
+  // consumed once the new positions are in.
+  const focusRef = useRef<string | null>(null);
 
   const { pos, width, height } = useMemo(
     () => layoutLattice(tree, open, ROOT_ID),
@@ -61,6 +64,23 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
       setComposerOpen(false);
     }
   }, [pos, selected]);
+
+  // After a click changes the layout, ease the plane to bring the acted-on node
+  // into view — biased toward the newly grown column, so you see what appeared,
+  // not just what you pressed (§5). Scroll targets scale with the zoom.
+  useEffect(() => {
+    const id = focusRef.current;
+    focusRef.current = null;
+    const el = scrollRef.current;
+    const p = id ? pos[id] : undefined;
+    if (!el || !p) return;
+    const wantX = p.x + PLANE_PAD.x - 60 + COL_PITCH * 0.35;
+    el.scrollTo({
+      left: Math.max(0, wantX * zoom - el.clientWidth * 0.35),
+      top: Math.max(0, (p.y + PLANE_PAD.y) * zoom - el.clientHeight / 2),
+      behavior: 'smooth',
+    });
+  }, [pos, zoom]);
 
   const path = useMemo(() => activePath(open, tree, ROOT_ID), [open, tree]);
   const wires = useMemo(
@@ -228,6 +248,8 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
       if (!id) return;
       const node = tree[id];
       if (!node) return;
+      // Ease this node into view once the layout settles.
+      focusRef.current = id;
       if (node.kids.length > 0) {
         setSelected(null);
         setOpen((o) => toggleBranch(o, tree, id, ROOT_ID));
