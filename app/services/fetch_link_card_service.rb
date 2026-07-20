@@ -35,7 +35,10 @@ class FetchLinkCardService < BaseService
   end
 
   MARKDOWN_LINK_RE = %r{\[([^\]]+)\]\((https?://[^)]+)\)}
-  ALLOWED_LOCAL_PATHS = %w(/kalendar /governance /huddle /home /booth).freeze
+  # `/hub` covers every korner's canonical 2.0 mount (/hub/<slug>); the bare
+  # paths are the pre-2.0 mounts kept for links that predate the URL migration
+  # (they 301 to /hub/<slug>).
+  ALLOWED_LOCAL_PATHS = %w(/hub /kalendar /governance /huddle /home /booth).freeze
 
   private
 
