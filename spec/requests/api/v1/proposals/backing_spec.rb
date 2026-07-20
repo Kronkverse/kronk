@@ -4,7 +4,7 @@ require 'rails_helper'
 
 RSpec.describe 'POST /api/v1/proposals/:id/back' do
   let(:backer)   { Fabricate(:user) }
-  let(:token)    { Fabricate(:accessible_access_token, resource_owner_id: backer.id, scopes: 'write') }
+  let(:token)    { Fabricate(:accessible_access_token, resource_owner_id: backer.id, scopes: 'read write') }
   let(:headers)  { { 'Authorization' => "Bearer #{token.token}" } }
   let(:proposer) { Fabricate(:account) }
   let(:proposal) do
@@ -52,5 +52,22 @@ RSpec.describe 'POST /api/v1/proposals/:id/back' do
     post "/api/v1/proposals/#{proposal.id}/back", params: { amount: 3 }, headers: headers
     expect(response).to have_http_status(422)
     expect(ProposalBacking.total_for(proposal.id)).to eq(0)
+  end
+
+  describe 'ranked position among open proposals' do
+    it 'ranks the proposal by total tokens backed' do
+      top = Proposal.create!(title: 'More backed', body: 'x', created_by_account_id: proposer.id)
+      Kronk::Tokens.back!(backer.account, top, 6)
+
+      post "/api/v1/proposals/#{proposal.id}/back", params: { amount: 3 }, headers: headers
+
+      # top (6) outranks this (3), so this sits at #2
+      expect(response.parsed_body['backing']['rank']).to eq(2)
+    end
+
+    it 'has no rank until the proposal is backed' do
+      get "/api/v1/proposals/#{proposal.id}", headers: headers
+      expect(response.parsed_body['backing']['rank']).to be_nil
+    end
   end
 end

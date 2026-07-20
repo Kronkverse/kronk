@@ -52,9 +52,11 @@ class REST::ProposalSerializer < ActiveModel::Serializer
   # still open. `my_balance` is nil for a signed-out viewer.
   attribute :backing do
     account_id = current_user&.account&.id
+    total = object.backing_total
     {
-      total: object.backing_total,
+      total: total,
       backers: ProposalBacking.backer_totals(object.id).size,
+      rank: backing_rank(total),
       my_stake: account_id ? ProposalBacking.stake_of(object.id, account_id) : 0,
       my_balance: account_id ? (TokenBalance.find_by(account_id: account_id)&.balance || 0) : nil,
       open: Kronk::ProposalStates.backable?(object),
@@ -112,6 +114,20 @@ class REST::ProposalSerializer < ActiveModel::Serializer
   end
 
   belongs_to :created_by_account, serializer: REST::AccountSerializer
+
+  # This proposal's standing when open proposals are ranked by total tokens
+  # backed (1 = most-backed). nil for an unbacked proposal — "#N most-backed"
+  # only means something once tokens are on it. Ties share a rank.
+  def backing_rank(total)
+    return nil unless total.positive?
+
+    ProposalBacking
+      .where(proposal_id: Proposal.open.select(:id))
+      .group(:proposal_id)
+      .having('SUM(proposal_backings.amount) > ?', total)
+      .count
+      .size + 1
+  end
 
   def id
     object.id.to_s

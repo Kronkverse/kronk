@@ -24,6 +24,7 @@ export interface Proposal {
   backing: {
     total: number;
     backers: number;
+    rank: number | null;
     my_stake: number;
     my_balance: number | null;
     open: boolean;
