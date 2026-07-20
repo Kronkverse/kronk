@@ -72,7 +72,7 @@
 
   &__answer-btn {
     background: var(--accent);
-    color: #fff;
+    color: var(--text-on-accent);
     border: none;
     border-radius: 20px;
     padding: 5px 14px;
@@ -109,7 +109,7 @@
     height: 30px;
     border-radius: 50%;
     background: var(--accent);
-    color: #fff;
+    color: var(--text-on-accent);
     border: none;
     cursor: pointer;
     display: flex;

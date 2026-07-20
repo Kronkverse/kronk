@@ -34,9 +34,7 @@
     text-transform: uppercase;
 
     // White-on-accent, theme-invariant (accent is purple in both themes).
-    // TODO(korner-standard): replace with a --text-on-accent token (added
-    // alongside the stylelint-governance extension for card partials).
-    color: #fff;
+    color: var(--text-on-accent);
   }
 
   &__badge-icon .icon {

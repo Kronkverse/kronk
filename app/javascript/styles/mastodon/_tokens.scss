@@ -11,6 +11,7 @@
 
   // ── Semantic surfaces + text ───────────────────────────────────
   --semantic-accent: #4414cc;
+  --semantic-text-on-accent: #ffffff;
   --semantic-surface-primary: #191b22;
   --semantic-surface-elevated: #292938;
   --semantic-border-default: #47368b;
@@ -26,6 +27,7 @@
 
   // Consumer aliases — SCSS uses the short names below directly.
   --accent: var(--semantic-accent);
+  --text-on-accent: var(--semantic-text-on-accent);
   --surface-primary: var(--semantic-surface-primary);
   --surface-elevated: var(--semantic-surface-elevated);
   --border-default: var(--semantic-border-default);
@@ -73,6 +75,7 @@
   --kronk-purple-accent: #6364ff;
 
   --semantic-accent: #6364ff;
+  --semantic-text-on-accent: #ffffff;
   --semantic-surface-primary: #ffffff;
   --semantic-surface-elevated: #f5f4f9;
   --semantic-border-default: #ddd9e8;
