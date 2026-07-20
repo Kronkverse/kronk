@@ -1328,6 +1328,67 @@
   }
 }
 
+.governance-tab-proposal__backing {
+  text-align: center;
+  margin: 0 0 20px;
+}
+
+.governance-tab-proposal__backing-summary {
+  font-size: 14px;
+  color: $secondary-text-color;
+  margin: 0 0 8px;
+
+  strong {
+    color: $primary-text-color;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.governance-tab-proposal__back-form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.governance-tab-proposal__back-input {
+  inline-size: 84px;
+  padding: 6px 8px;
+  font-size: 14px;
+  color: $primary-text-color;
+  background: var(--surface-elevated);
+  border: 1px solid var(--background-border-color);
+  border-radius: var(--radius-small);
+}
+
+.governance-tab-proposal__back-btn {
+  padding: 6px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-on-accent);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-small);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.governance-tab-proposal__back-balance {
+  font-size: 13px;
+  color: $secondary-text-color;
+}
+
+.governance-tab-proposal__back-error {
+  font-size: 13px;
+  color: var(--warning-red);
+  margin: 6px 0 0;
+}
+
 .governance-tab-proposal__subsection {
   margin-top: 28px;
 }

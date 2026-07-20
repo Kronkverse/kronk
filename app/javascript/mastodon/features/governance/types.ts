@@ -21,6 +21,13 @@ export interface Proposal {
   vote_summary: { agree: number; abstain: number; block: number };
   task_summary: { open: number; in_progress: number; done: number };
   budget_total: number;
+  backing: {
+    total: number;
+    backers: number;
+    my_stake: number;
+    my_balance: number | null;
+    open: boolean;
+  };
   created_by_account: {
     id: string;
     username: string;
