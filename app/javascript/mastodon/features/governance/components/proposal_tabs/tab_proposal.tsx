@@ -302,6 +302,50 @@ export const TabProposal: React.FC<{
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [backAmount, setBackAmount] = useState('');
+  const [backingPending, setBackingPending] = useState(false);
+  const [backError, setBackError] = useState<string | null>(null);
+
+  const handleBackAmountChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setBackAmount(e.target.value);
+    },
+    [],
+  );
+
+  const handleBackSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      const amount = Number.parseInt(backAmount, 10);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        setBackError('Enter a positive number of tokens.');
+        return;
+      }
+      setBackingPending(true);
+      setBackError(null);
+      try {
+        const res = await api().post<Proposal>(
+          `/api/v1/proposals/${proposal.id}/back`,
+          { amount },
+        );
+        onVoteUpdate(res.data);
+        setBackAmount('');
+      } catch {
+        setBackError('Could not back this proposal.');
+      } finally {
+        setBackingPending(false);
+      }
+    },
+    [backAmount, proposal.id, onVoteUpdate],
+  );
+
+  const handleBackSubmitClick = useCallback(
+    (e: React.FormEvent) => {
+      void handleBackSubmit(e);
+    },
+    [handleBackSubmit],
+  );
+
   const composerOpen = !myResponse || editing;
 
   const resetComposer = useCallback(() => {
@@ -538,6 +582,51 @@ export const TabProposal: React.FC<{
           {' · '}
           <strong>{block}</strong> {block === 1 ? 'challenge' : 'challenges'}
         </p>
+
+        <div className='governance-tab-proposal__backing'>
+          <p className='governance-tab-proposal__backing-summary'>
+            <strong>{proposal.backing.total}</strong>{' '}
+            {proposal.backing.total === 1 ? 'token' : 'tokens'} backed
+            {' · '}
+            <strong>{proposal.backing.backers}</strong>{' '}
+            {proposal.backing.backers === 1 ? 'backer' : 'backers'}
+            {proposal.backing.my_stake > 0 && (
+              <>
+                {' · '}you staked <strong>{proposal.backing.my_stake}</strong>
+              </>
+            )}
+          </p>
+          {proposal.backing.open && proposal.backing.my_balance !== null && (
+            <form
+              className='governance-tab-proposal__back-form'
+              onSubmit={handleBackSubmitClick}
+            >
+              <input
+                type='number'
+                min='1'
+                max={proposal.backing.my_balance}
+                className='governance-tab-proposal__back-input'
+                value={backAmount}
+                onChange={handleBackAmountChange}
+                placeholder='Tokens'
+                disabled={backingPending || proposal.backing.my_balance === 0}
+              />
+              <button
+                type='submit'
+                className='governance-tab-proposal__back-btn'
+                disabled={backingPending || proposal.backing.my_balance === 0}
+              >
+                {backingPending ? 'Backing…' : 'Back'}
+              </button>
+              <span className='governance-tab-proposal__back-balance'>
+                {proposal.backing.my_balance} available
+              </span>
+            </form>
+          )}
+          {backError && (
+            <p className='governance-tab-proposal__back-error'>{backError}</p>
+          )}
+        </div>
 
         {myResponse && !editing && (
           <ResponseCard
