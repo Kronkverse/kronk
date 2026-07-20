@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { MapNode, Tree } from '../../kommons_skeleton/data/layout';
+
 import { COL_PITCH, ROW_H, ROW_PITCH, layoutLattice } from './layout';
 
 // The lattice's whole reason to exist is that it is predictable — every row on

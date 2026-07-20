@@ -280,6 +280,10 @@ export function KommonsSkeleton () {
   return import("../../kommons_skeleton");
 }
 
+export function KommonsLattice () {
+  return import("../../kommons_lattice");
+}
+
 
 export function KronkSearch () {
   return import("../../kronk_search");

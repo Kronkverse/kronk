@@ -1,5 +1,4 @@
 import ArticleIcon from '@/material-icons/400-24px/article.svg?react';
-import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
 import CalendarIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
 import DiversityIcon from '@/material-icons/400-24px/diversity_2.svg?react';
@@ -27,7 +26,7 @@ const SLUG_TO_ICON: Record<string, IconProp> = {
   huddle: PartnerExchangeIcon, // handshake — live sessions
   booth: HeadphonesIcon, // headphones — audio
   marketplace: InventoryIcon, // stack — listings
-  'inflow': DiversityIcon, // people bloom — social
+  inflow: DiversityIcon, // people bloom — social
   nudges: ChatIcon, // speech bubble — chats
   moments: HourglassIcon, // hourglass — ephemeral
   albutts: PhotoLibraryIcon, // photo stack — albums
@@ -51,7 +50,13 @@ export const AccentCircle: IconProp = (props) => (
 //
 //   const icon = useKornerIcon('kommons');
 //   <ColumnHeader iconComponent={icon} title='Kommons' />
-export const useKornerIcon = (slug: string | undefined): IconProp => {
+// Plain resolver — same mapping, callable outside a component (e.g. inside a
+// render loop that lays out many rows), where the `use`-prefixed hook form
+// would trip rules-of-hooks. The hook is a thin wrapper so both stay in sync.
+export const kornerIcon = (slug: string | undefined): IconProp => {
   if (!slug) return AccentCircle;
   return SLUG_TO_ICON[slug] ?? AccentCircle;
 };
+
+export const useKornerIcon = (slug: string | undefined): IconProp =>
+  kornerIcon(slug);
