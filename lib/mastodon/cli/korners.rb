@@ -159,8 +159,19 @@ module Mastodon
 
         return issues unless manifest.enforced
 
-        # L1 — canonical nested `security:` block.
-        issues << 'L1 no `security:` block (canonical manifest shape)' if manifest.security.blank?
+        # L1 — canonical nested `security:` block. `extract_security` synthesises
+        # a block from legacy root-level fields (permissions/visibility_scopes/
+        # steward_role/federates), so `manifest.security` is never blank for a
+        # legacy manifest — it papers over the difference. Read the raw manifest
+        # to tell canonical from legacy: a top-level `security:` key means the
+        # nested (canonical) shape; its absence means the synthesised legacy one.
+        manifest_path = Rails.root.join('config', 'korners', "#{slug}.yaml")
+        raw_manifest = File.exist?(manifest_path) ? File.read(manifest_path) : ''
+        if manifest.security.blank?
+          issues << 'L1 no `security:` block (canonical manifest shape)'
+        elsif !raw_manifest.match?(/^security:/)
+          issues << 'L1 legacy root-level security shape — migrate to a nested `security:` block'
+        end
 
         # L1 — icon wired in the slug->icon map. Korner-only: the map exists to
         # give Hub grid tiles an icon, and a core space has no tile.
