@@ -3,7 +3,8 @@
 # toot" because contributors are peers, not one poster's silent guests.
 #
 # WIP manifest — no backend yet. `enforced: false`.
-# See docs/kronk_korner_spec.md §New korners.
+# See docs/spaces/albutts.md for the full space doc (discovery output
+# from docs/korners/proposing_a_korner.md, 2026-07-20).
 
 slug: albutts
 name: Albutts
@@ -19,7 +20,17 @@ resources:
 
 storage:
   db_namespace: album_ # planned: albums, album_photos, album_contributors
-  media_prefix: spaces/albutts/
+  media_prefix: # NOT hosted by Kronk — Albutts federates media to
+    # contributors' own storage. `album_photos` rows carry
+    # references (URLs / IDs) to contributor-hosted files, not
+    # local file paths. Aligns with the Anthemos pod philosophy;
+    # revocation is one-sided (a contributor un-shares → album's
+    # render of that photo goes dark).
+
+visibility_scopes:
+  - public # anyone can view, listed in the Albutts directory
+  - mates # visible only to the owner's mates
+  - krew # scoped to one or more Krews
 
 feed_projection:
   card: albutts_card
@@ -29,18 +40,35 @@ feed_projection:
   links_to: /hub/albutts/albums/<id>
   default_visibility: public
 
+notifications:
+  types:
+    - name: contribution_rights_granted
+      subject_type: album
+      default_push: false # one-off; not push-worthy
+      aggregation: none
+      interactive: false # notice
+    - name: album_new_photo
+      subject_type: album
+      default_push: false # bursty on events; off by default
+      aggregation: { window: 15m, key: album_id }
+      interactive: false # notice
+
 settings:
-  - name: require_contributor_approval
-    kind: boolean
-    default: true
-    scope: user
+  # Contributor set follows the album's visibility scope (open roster
+  # within scope) — no separate approval step. The prior
+  # `require_contributor_approval` setting was superseded by that
+  # decision in the 2026-07-20 discovery round.
   - name: notify_on_new_photo
     kind: boolean
     default: true
     scope: user
 
 emits: []
-listens: []
+listens:
+  # When a Kalendar event with `spawn_album: true` is created, an
+  # Albutt is auto-created + linked. RSVP grants contribution rights.
+  - name: kalendar.event.created
+    behaviour: 'if event.spawn_album → create Albutt linked to event_id'
 
 hub_teaser:
   static: 'Shared albums, credit forward.'
@@ -51,7 +79,7 @@ launch:
 
 enforced: false
 
-# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+# ── Tree nodes (Kommons Skeleton) ──────────────────────────────────
 nodes:
   - id: albutts.index
     label: Albutts
