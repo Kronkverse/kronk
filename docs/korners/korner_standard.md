@@ -30,7 +30,13 @@ A korner's `lifecycle` (in its node) and its manifest `enforced` flag are **prom
 - ⚙︎ **Slug** is one lowercase word (no hyphens/underscores), **equals the filename**, is **not** in `reserved_slugs.yaml`, and is unique across korners. _(Audit: `in-flow` has a hyphen and ≠ its filename `in_flow.yaml`.)_
 - ⚙︎ `name` and `icon` present; **`icon` is wired in `hooks/useKornerIcon.tsx`** and the mapping matches the manifest's `icon:` field. _(Audit: huddle/nudges icons are cross-wired vs their manifests.)_
 - ⚙︎ **No colour field** — no `--space-color`, no per-korner hex/hue. Differentiation is icon + name + content only.
-- ⚙︎ **Canonical manifest shape.** Every manifest carries identity + `resources` + `storage` + a nested **`security:`** block (permissions / visibility / federation / maintainers) + `feed_projection` (if it projects) + `settings` (if it has options) + `nodes`. The nested `security:` shape (matching groups/huddle) is canonical. The ~9 older root-level manifests migrate to it; stubs gain a `security:` block when they graduate to `enforced`.
+- ⚙︎ **Canonical manifest shape.** Every manifest carries identity + `resources` + `storage` + a nested **`security:`** block (permissions / visibility / federation / maintainers) + `feed_projection` (if it projects) + `settings` (if it has options) + `nodes`. The nested `security:` shape (matching groups/huddle) is canonical; `steward_role` is renamed `maintainers`. All enforced korners are migrated (booth, kalendar, kommons, kuestions, marketplace, nudges, inflow, klot — #391, #390-follow); stubs gain a `security:` block when they graduate to `enforced`. The doctor warns on a legacy root-level manifest (it reads the raw file for a top-level `security:` key, since `extract_security` otherwise synthesises a block and hides the difference).
+
+**Accepted exceptions** (deliberate, not drift — do not "fix" these):
+
+- **Nudges** is a `core:` space, not a Hub korner: it declares its own `mount:` (`/nudges`), has no Hub tile, and cannot be tuned out of. It carries a manifest only because a manifest is how anything is declared. L5 checks it against its own mount, not `/hub/nudges`.
+- **Groups** opts out of feed projection by design (`render_target: web`, no `status_association`); its L3/L4 gates are N/A rather than failures.
+- **Klot** keeps a bespoke `klot_phase_viewer` visibility scope enforced by an ownership check + the `KlotShare` allowlist (not the shared authorization layer, which is unbuilt — §7). Sanctioned until §7 lands, at which point it migrates onto it.
 
 ### L2 — Data
 

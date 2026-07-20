@@ -8,9 +8,16 @@ icon: nights_stay
 render_target: native
 version: 0.1.0
 
-permissions:
-  - read:statuses # required for the sovereignty note + phase-only endpoint auth
-  - write:statuses # required for logging periods + updating settings
+security:
+  permissions:
+    - read:statuses # required for the sovereignty note + phase-only endpoint auth
+    - write:statuses # required for logging periods + updating settings
+  visibility_scopes: # Klot's PhasesController is a bespoke capability — see §7 "secure only once"
+    - klot_phase_viewer # implicit; enforced today by ownership check + the KlotShare allowlist.
+      # Sanctioned exception: migrates onto the shared authorization layer (§7) when it lands.
+  maintainers:
+    - moderator # nominal; no cross-user moderation actions exist for Klot data
+  federates: false # explicitly local-only, by the same sovereignty argument as the phase endpoint
 
 resources:
   - name: periods # user-logged period start dates
@@ -23,12 +30,6 @@ storage:
   db_namespace: klot_ # tables: klot_periods, klot_settings, klot_shares
   media_prefix: # not-applicable — Klot deliberately holds no media; it stores only dates and settings
   redis_prefix: # not-implemented — settings could plausibly cache, but per-account footprint is trivial
-
-visibility_scopes: # Klot's PhasesController is a bespoke capability — see §7 "secure only once"
-  - klot_phase_viewer # implicit; enforced today by ownership check + the KlotShare allowlist.
-    # Would migrate onto the shared authorization layer when it lands.
-
-steward_role: moderator # nominal; no cross-user moderation actions exist for Klot data
 
 emits: []
 listens: []
@@ -73,7 +74,6 @@ launch:
   cta: 'Tap in'
 
 feature_flag: # not-implemented
-federates: false # explicitly local-only, by the same sovereignty argument as the phase endpoint
 enforced: false # framework: runtime lives on a contributor dev branch; validator skips
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
