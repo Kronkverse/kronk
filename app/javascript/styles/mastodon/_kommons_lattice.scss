@@ -187,13 +187,83 @@
   font-weight: 700;
 }
 
+// ── Leaf panel (§7) ──────────────────────────────────────────────────────────
+.lattice-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 360px;
+  max-height: 520px;
+  padding: 16px 18px;
+  overflow: auto;
+  border: 1px solid var(--kronk-purple-bright);
+  border-radius: var(--radius-large, 16px);
+  background: color-mix(in srgb, var(--surface-elevated) 98%, transparent);
+  animation: lattice-row-in 200ms var(--ease-out) both;
+
+  &__close {
+    position: absolute;
+    top: 8px;
+    inset-inline-end: 12px;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  &__title {
+    margin: 0;
+    padding-inline-end: 20px;
+    color: var(--text-secondary, #e9e7f2);
+    font-family: var(--font-display);
+    font-size: 1rem;
+  }
+
+  &__url {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    word-break: break-all;
+  }
+
+  &__lifecycle {
+    align-self: flex-start;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--text-muted) 22%, transparent);
+    color: var(--text-secondary, #e9e7f2);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+  }
+
+  &__stat {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+  }
+
+  &__plant {
+    margin-top: 6px;
+    padding: 8px 12px;
+    border-radius: var(--radius-medium);
+    background: var(--kronk-purple-bright);
+    color: var(--text-on-accent);
+    font-family: var(--font-display);
+    font-size: 0.8125rem;
+    cursor: pointer;
+  }
+}
+
 // Reduced motion (§7): the state model is correct with every animation removed,
 // so drop them all to a hair — no drawing, no stagger, no glide.
 @media (prefers-reduced-motion: reduce) {
   .lattice-row,
   .lattice-row__icon,
   .lattice-row__chevron,
-  .lattice-wire {
+  .lattice-wire,
+  .lattice-panel {
     transition-duration: 0.01ms;
     animation-duration: 0.01ms;
   }

@@ -2,12 +2,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Icon } from 'mastodon/components/icon';
 
+import { Composer } from '../../kommons_skeleton/components/composer';
 import { ROOT_ID, buildTree } from '../../kommons_skeleton/data/layout';
 import type { KommonsNode } from '../../kommons_skeleton/data/nodes';
 import { latticeIcon } from '../data/icons';
-import { COL_W, PLANE_PAD, ROW_H, layoutLattice } from '../data/layout';
+import {
+  COL_PITCH,
+  COL_W,
+  PLANE_PAD,
+  ROW_H,
+  layoutLattice,
+} from '../data/layout';
 import { activePath, toggleBranch } from '../data/state';
 import { latticeWires } from '../data/wires';
+
+import { LeafPanel } from './leaf_panel';
 
 // The Lattice plane. Structure is fixed; branches open one-per-level and fold
 // on click. Everything is recomputed from `open` on each change — cheap, never
@@ -19,11 +28,22 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
   const [open, setOpen] = useState<ReadonlySet<string>>(
     () => new Set([ROOT_ID]),
   );
+  const [selected, setSelected] = useState<string | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
 
   const { pos, width, height } = useMemo(
     () => layoutLattice(tree, open, ROOT_ID),
     [tree, open],
   );
+
+  // A fold can prune the selected leaf; don't leave a panel attached to a row
+  // that is no longer on screen (§8).
+  useEffect(() => {
+    if (selected && !pos[selected]) {
+      setSelected(null);
+      setComposerOpen(false);
+    }
+  }, [pos, selected]);
   const path = useMemo(() => activePath(open, tree, ROOT_ID), [open, tree]);
   const wires = useMemo(
     () => latticeWires(tree, pos, open, path),
@@ -66,11 +86,37 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
       const id = row?.getAttribute('data-id');
       if (!id) return;
       const node = tree[id];
-      if (!node || node.kids.length === 0) return; // leaves: panel is a later step
-      setOpen((o) => toggleBranch(o, tree, id, ROOT_ID));
+      if (!node) return;
+      if (node.kids.length > 0) {
+        // A branch opens (folding its siblings) and clears any leaf panel.
+        setSelected(null);
+        setOpen((o) => toggleBranch(o, tree, id, ROOT_ID));
+      } else {
+        // A leaf toggles its detail panel.
+        setSelected((s) => (s === id ? null : id));
+      }
     },
     [tree],
   );
+
+  const openComposer = useCallback(() => {
+    setComposerOpen(true);
+  }, []);
+  const closeComposer = useCallback(() => {
+    setComposerOpen(false);
+  }, []);
+  const closePanel = useCallback(() => {
+    setSelected(null);
+  }, []);
+  const onComposerSuccess = useCallback(() => {
+    setComposerOpen(false);
+  }, []);
+
+  const selectedNode = selected ? tree[selected] : undefined;
+  const selectedApiNode = selected
+    ? nodes.find((n) => n.id === selected)
+    : undefined;
+  const selectedPos = selected ? pos[selected] : undefined;
 
   const planeW = width + PLANE_PAD.x * 2;
   const planeH = height + PLANE_PAD.y * 2 + 40;
@@ -163,7 +209,25 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
             </button>
           );
         })}
+
+        {selectedNode && selectedPos && (
+          <LeafPanel
+            node={selectedNode}
+            x={selectedPos.x + COL_PITCH + PLANE_PAD.x}
+            y={Math.max(PLANE_PAD.y, selectedPos.y + PLANE_PAD.y - 90)}
+            onPlant={openComposer}
+            onClose={closePanel}
+          />
+        )}
       </div>
+
+      {composerOpen && selectedApiNode && (
+        <Composer
+          node={selectedApiNode}
+          onSuccess={onComposerSuccess}
+          onDismiss={closeComposer}
+        />
+      )}
     </div>
   );
 };
