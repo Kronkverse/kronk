@@ -9,7 +9,9 @@
 > canonical statement of what each phase contains, and nothing supersedes them. The *phase
 > statuses*, PR counts and the "~15 calendar weeks" estimate are from 2026-07-10 and are
 > stale. Several phases described here as planned have since shipped. For current status
-> always check the latest audit in `~/kronk-notes/audits/` on the mainframe, not this file.
+> see the latest in-repo audit — **`docs/rebuild/phase_audit_2026-07-20.md`** — not this
+> file's inline statuses. (Audits live in the repo now, per the source-of-truth doctrine;
+> the old `~/kronk-notes/audits/` location on mainframe is retired.)
 
 ## Context
 
