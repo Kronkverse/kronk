@@ -1,0 +1,436 @@
+# Kommons build-tracker — seed data.
+#
+# The rebuild's remaining backlog, run as Kommons proposals so the platform
+# tracks its own construction (docs/spaces/kommons_tracker.md). Seeded
+# idempotently by `bin/rails kommons:tracker:seed` — each entry is keyed on the
+# `tracker:<key>` category, so re-running updates in place. `node` anchors the
+# proposal to a Skeleton node, so the Skeleton/Lattice show live build status.
+#
+# Sources: docs/rebuild/phase_audit_2026-07-20.md,
+#          docs/rebuild/remaining_work_2026-07-20.md.
+
+# ── Build proposals: one per theme, steps as tasks (the checklist) ───────────
+proposals:
+  # ① Release track — the path to 2.0.0
+  - key: phase-5-nudges
+    title: 'Phase 5 — Nudges cutover'
+    node: nudges.index
+    type: large
+    categories: [release, 'phase:5']
+    summary: 'Finish the Nudges cutover — the headline user-facing change: kill the bell, unify the surface, fold prefs in.'
+    body: |
+      Phase 5 is the least-complete phase (phase_audit). Backend shipped; the
+      user-facing cutover and preference fold-in remain.
+    tasks:
+      - 'Remove the notifications bell from the nav (navigation_bar.tsx)'
+      - 'Unify the Nudges UI — retire the notifications_v2 import (async-components.js)'
+      - 'Build a generic korner-notification service (§5.7); stop hand-wiring producers'
+      - 'Fold notification preferences into Nudges (retire standalone Notifications settings)'
+
+  - key: phase-14-hardening
+    title: 'Phase 14 — Release hardening'
+    node: kommons.review.release
+    type: large
+    categories: [release, 'phase:14']
+    summary: 'Everything between a working rebuild branch and a shipped 2.0.0.'
+    body: |
+      Not started. The mechanical + ceremonial steps to cut the release.
+    tasks:
+      - 'Bump lib/kronk/version.rb to 2.0.0'
+      - 'Flip Kronk::FeatureFlags.tune_in_enforced default to true'
+      - 'Flip SEARCH_BACKEND default to meilisearch'
+      - 'Promote the spec from Draft v0.5 to v1.0'
+      - 'Finalise the CHANGELOG'
+      - 'Cut the rebuild -> main PR and the DNS cutover'
+
+  - key: base-ci-green
+    title: 'Green the base CI before release'
+    node: kommons.review.health
+    type: medium
+    categories: [release]
+    summary: 'Clear the pre-existing lint/format/i18n offenses so release CI is clean.'
+    body: |
+      Base CI carries pre-existing offenses unrelated to any one change; green
+      it before cutting the release.
+    tasks:
+      - 'Fix pre-existing prettier/format offenses'
+      - 'Fix pre-existing eslint offenses'
+      - 'Fix pre-existing stylelint offenses'
+      - 'Fix pre-existing i18n check failures'
+
+  # ② Feature gaps — backend shipped, one piece missing
+  - key: kosmic-projection
+    title: '10.1 — Real Kosmic feed projection'
+    node: inflow.index
+    type: medium
+    categories: ['feature-gap', 'phase:10']
+    summary: 'InFlow Kosmic updates should project into the feed as Statuses, not a client banner.'
+    body: |
+      The scheduler writes a row; no Status is created; the visible card is a
+      client-side banner. Build the real projection.
+    tasks:
+      - 'Build Inflow::PublishKosmicUpdate'
+      - 'Scheduler creates the Status (not just a row)'
+      - 'Retire the client-side banner in favour of the projected card'
+
+  - key: kuestions-card-model
+    title: '8.3 — Kuestions card from the Question model'
+    node: kuestions.index
+    type: small
+    categories: ['feature-gap', 'phase:8']
+    summary: 'The feed card still renders off Status post_type instead of the dedicated Question model.'
+    body: |
+      Question/Answer models + tables shipped; the feed card never moved onto
+      them.
+    tasks:
+      - 'Render the kuestions feed card from the Question model'
+      - 'Make status_association optional so non-Status korners project cleanly'
+
+  - key: group-moderation-events
+    title: '7.5 — group_moderation_events'
+    node: groups.index
+    type: small
+    categories: ['feature-gap', 'phase:7']
+    summary: 'Planned table was never created.'
+    body: |
+      Either build the table or drop it from the plan.
+    tasks:
+      - 'Create the group_moderation_events table, or drop it from the plan'
+
+  - key: adopt-hub-path
+    title: '3.3 — Adopt hub_path in links'
+    node: hub.landing
+    type: small
+    categories: ['feature-gap', 'phase:3']
+    summary: 'Kronk::Url.hub_path exists but has no callers.'
+    body: |
+      Mailers and share-links still generate legacy paths.
+    tasks:
+      - 'Sweep mailers onto Kronk::Url.hub_path'
+      - 'Sweep share-links onto Kronk::Url.hub_path'
+
+  # ③ Framework gaps — the korner platform
+  - key: launch-card-producer
+    title: 'Launch card producer (§8.7)'
+    node: kommons.review.framework
+    type: medium
+    categories: [framework]
+    summary: 'Declared in 10 manifests, parsed by the registry, but nothing emits it.'
+    body: |
+      The one-time launch announcement never projects — no producer/service.
+    tasks:
+      - 'Build the launch-card producer/service'
+      - "Verify the announcement projects once on a korner's launch"
+
+  - key: korner-tombstones
+    title: 'Korner tombstones / 410 Gone (§5.6)'
+    node: kommons.review.framework
+    type: medium
+    categories: [framework]
+    summary: 'Only AP Statuses tombstone; korner objects have no deleted_at / 410 resolution.'
+    body: |
+      Deleted korner objects (Listing, etc.) should resolve to 410 Gone.
+    tasks:
+      - 'Add deleted_at to korner objects'
+      - 'Resolve deleted korner URLs to 410 Gone'
+      - 'Document the tombstone contract in the korner standard'
+
+  - key: every-space-manifest
+    title: 'Complete "every space gets a manifest"'
+    node: kommons.review.korners
+    type: medium
+    categories: [framework]
+    summary: 'Core-space manifests exist; node ownership still split between kronk_nodes.yaml and manifests.'
+    body: |
+      feed/profile/hub/nudges/settings manifests landed. Finish migrating node
+      ownership off config/kronk_nodes.yaml into the manifests.
+    tasks:
+      - 'Migrate cross-cutting nodes into their core-space manifests'
+      - 'Retire config/kronk_nodes.yaml once empty'
+      - 'Doctor validates manifest-owned nodes'
+
+  - key: l7-doctor-check
+    title: 'L7 stylelint-governance doctor check'
+    node: kommons.review.framework
+    type: small
+    categories: [framework]
+    summary: 'Spec lists L7 as ⚙︎ but the doctor implements L1/L3/L4/L5/L10 only.'
+    body: |
+      Add the L7 stylelint-governance conformance check to korners doctor.
+    tasks:
+      - 'Implement the L7 check in tootctl korners doctor'
+
+  - key: render-target-live
+    title: 'Make render_target live (§9.1)'
+    node: kommons.review.framework
+    type: large
+    categories: [framework]
+    summary: 'Every manifest sets render_target; nothing consumes it; the app-shell path is unbuilt.'
+    body: |
+      Depends on the §13.2 render_target-default decision.
+    tasks:
+      - 'Decide the render_target default (§13.2 — tracked separately)'
+      - 'Build the hosted-shell / hybrid render path'
+      - 'Consume render_target in the router/app shell'
+
+  # ④ Per-korner UI — backend shipped, surface unbuilt
+  - key: groups-krew
+    title: 'Groups → Krew'
+    node: groups.index
+    type: large
+    categories: ['korner:groups']
+    summary: 'The central promise: audience-scoping. Posts are currently plain public Statuses merely tagged.'
+    body: |
+      Plus the groups -> krew vocab/URL rename.
+    tasks:
+      - 'Audience-scoping — posts scoped to the Krew, not public + tagged'
+      - 'Krew badge in the timeline'
+      - 'Listed / unlisted + invite links'
+      - 'Event <-> Krew bidirectional spawn'
+      - 'Rename groups -> krew (vocab + /hub/krew URL)'
+
+  - key: marketplace-ui
+    title: 'Marketplace UI'
+    node: marketplace.index
+    type: large
+    categories: ['korner:marketplace']
+    summary: 'Discovery-only today; detail + composer + interaction modes are follow-ups.'
+    body: |
+      features/marketplace is discovery-only per its own header.
+    tasks:
+      - 'Listing detail page'
+      - 'Listing composer'
+      - 'The 5 interaction modes'
+      - '"or trade" flag + mate-affinity signals'
+
+  - key: kommons-backing-ui
+    title: 'Kommons backing / token UI'
+    node: kommons.index
+    type: medium
+    categories: ['korner:kommons']
+    summary: 'Backing is console-only; no in-app token/backing surface.'
+    body: |
+      The token ledger + backing lifecycle ship; the UI does not.
+    tasks:
+      - 'In-app backing UI (invest tokens in a proposal)'
+      - 'Token balance display + glyph'
+      - '"Reflect on this page" button'
+
+  - key: kuestions-ui
+    title: 'Kuestions UI'
+    node: kuestions.index
+    type: large
+    categories: ['korner:kuestions']
+    summary: 'Swipe deck + answer formats + daily prompt.'
+    body: |
+      Design-heavy UI on top of the shipped Question/Answer backend.
+    tasks:
+      - 'Swipe deck'
+      - 'Answer-format field (free-text / MC / yes-no)'
+      - 'Daily-prompt post-box'
+      - 'Answer edit history'
+
+  - key: kalendar-ui
+    title: 'Kalendar features'
+    node: kalendar.index
+    type: large
+    categories: ['korner:kalendar']
+    summary: 'Birthdays, visibility scopes, Krew-spawn, spiral view.'
+    body: |
+      On top of the shipped events backend.
+    tasks:
+      - 'Birthdays'
+      - 'Event visibility scopes'
+      - 'Krew-spawn-from-event'
+      - 'Playful RSVP labels'
+      - 'Spiral view'
+
+  - key: huddle-ui
+    title: 'Huddle model + UI'
+    node: huddle.index
+    type: medium
+    categories: ['korner:huddle']
+    summary: 'Main + per-Krew Huddle; the current model is host-scheduled sessions.'
+    body: |
+      Tables/models/mount shipped (Phase 9).
+    tasks:
+      - 'Main Huddle + per-Krew Huddle model'
+      - 'Flat moderation'
+      - 'Capacity cap'
+
+  - key: booth-ui
+    title: 'Booth rebuild'
+    node: booth.index
+    type: large
+    categories: ['korner:booth']
+    summary: 'kind taxonomy, series, save/library, storage migration.'
+    body: |
+      1.7 carry; rebuild in progress.
+    tasks:
+      - 'kind taxonomy'
+      - 'BoothSeries primitive'
+      - 'Save / library + live listener count'
+      - 'Storage migration to spaces/booth/'
+
+  - key: inflow-ui
+    title: 'Inflow dashboard'
+    node: inflow.index
+    type: medium
+    categories: ['korner:inflow']
+    summary: 'Unify the 4 strand tabs; observation responses; Kosmic subscribe.'
+    body: |
+      Kosmic feed projection itself is tracked separately (kosmic-projection).
+    tasks:
+      - 'Unified dashboard — retire the 4 strand tabs'
+      - 'Observations user-response UI'
+      - 'Kosmic subscribe toggle'
+
+  # ⑤ Settings retirement — blocks killing classic /settings
+  - key: account-security-rehome
+    title: 'Account & Security rehome'
+    node: settings.account
+    type: large
+    categories: [settings]
+    summary: '2FA, sessions, apps, migration, delete, export/import — still classic-only.'
+    body: |
+      These belong to no one space and must move to the SPA before classic
+      /settings can retire.
+    tasks:
+      - '2FA + sessions + authorised apps -> SPA'
+      - 'Account migration -> SPA'
+      - 'Delete-account + data export/import -> SPA'
+
+  - key: notifications-to-nudges
+    title: 'Notifications → Nudges'
+    node: nudges.index
+    type: medium
+    categories: [settings, 'korner:nudges']
+    summary: 'Fold notification prefs into Nudges; retire the standalone page + node (decided 2026-07-20).'
+    body: |
+      Per docs/kronk_settings_ia.md §3 and the decisions.md section-cut.
+    tasks:
+      - 'Move notification_emails.* + software_updates + push prefs into Nudges'
+      - 'Retire the standalone Notifications settings surface'
+      - 'Remove the settings.notifications registry node'
+
+  - key: privacy-to-profile
+    title: 'Privacy → Profile'
+    node: profile.edit
+    type: medium
+    categories: [settings]
+    summary: 'Fold Privacy into "Me"; retire the standalone node (decided 2026-07-20).'
+    body: |
+      Discoverability -> Profile; incoming blocks/mutes/filters -> Feed.
+    tasks:
+      - 'Fold privacy controls into the Profile ("Me") surface'
+      - 'Remove the settings.privacy registry node'
+
+  - key: profile-composer-complete
+    title: 'Profile composer completeness'
+    node: profile.edit
+    type: small
+    categories: [settings]
+    summary: "Can't edit avatar/header/display-name yet, but advertises lifecycle: live."
+    body: |
+      The registry advertises a surface the composer can't fulfil.
+    tasks:
+      - 'Composer edits avatar / header / display-name'
+
+  # ⑥ Quick correctness fixes — one proposal, a task each
+  - key: quick-fixes
+    title: 'Rebuild — quick correctness fixes'
+    node: kommons.review.health
+    type: small
+    categories: ['quick-fix']
+    summary: 'Small dead-ends and stale wiring surfaced by the audit (Tier 0).'
+    body: |
+      Each is <½ day; batchable.
+    tasks:
+      - 'settings.account / settings.data nav nodes lead nowhere (URLs, no route)'
+      - 'default_quote_policy absent from the posting-settings API'
+      - 'Remove the dead features/market "Coming Soon" placeholder'
+      - 'fetch_link_card allow-list: legacy korner paths -> /hub/<slug>'
+      - 'Remove dead interactions.must_be_follower/following settings keys'
+      - 'Drop the retired Marketplace subcategory column'
+
+  # ⑦ Kommons building Kommons — the usability the tracker itself needs
+  - key: kommons-task-checklist-ui
+    title: 'Kommons: task checklist on the proposal page'
+    node: kommons.index
+    type: medium
+    categories: ['korner:kommons', 'tracker-meta']
+    summary: "Surface proposal.tasks as a checkable list — without it the build-tracker's checklists are invisible."
+    body: |
+      The tasks model + api/v1/tasks_controller exist; the proposal page
+      doesn't render them.
+    tasks:
+      - 'Render proposal.tasks as a checklist on the proposal detail page'
+      - 'Toggle a task (done/open) via the tasks_controller'
+      - 'Show done ÷ total progress on the proposal card'
+
+  - key: kommons-browse-node-category
+    title: 'Kommons: browse proposals by node and category'
+    node: kommons.index
+    type: medium
+    categories: ['korner:kommons', 'tracker-meta']
+    summary: 'A node lists its proposals ("what’s left here"); a category lens shows the whole board.'
+    body: |
+      Query filters on node_id and categories, which already exist.
+    tasks:
+      - "Node detail lists that node's proposals"
+      - 'Filter proposals by category (e.g. the rebuild board)'
+      - 'Progress reads through to the Skeleton/Lattice node badge'
+
+# ── Decision proposals: open product calls, tracked so blockers stay visible ──
+decisions:
+  - key: decision-render-target
+    title: 'Decide: render_target default (§13.2)'
+    node: kommons.review.spec
+    categories: [decision]
+    summary: 'native / hosted-shell / hybrid — blocks making render_target live.'
+    body: |
+      Options: native, hosted-shell, hybrid. Recommendation in the spec leans
+      hybrid-leaning-hosted.
+    tasks:
+      - 'Choose: native / hosted-shell / hybrid'
+
+  - key: decision-subscription-posture
+    title: 'Decide: subscription default posture (§13.3)'
+    node: kommons.review.spec
+    categories: [decision]
+    summary: 'opt-in vs opt-out for korner subscription.'
+    body: |
+      The default tune-in posture for a new korner.
+    tasks:
+      - 'Choose: opt-in / opt-out'
+
+  - key: decision-manifest-enforcement
+    title: 'Decide: manifest enforcement model (§13.1)'
+    node: kommons.review.spec
+    categories: [decision]
+    summary: 'Hard-refuse-to-mount vs doctor/CI-gate-plus-discipline.'
+    body: |
+      Partially resolved (doctor gates conformance); the remaining fork is
+      whether an invalid manifest hard-refuses to mount.
+    tasks:
+      - 'Choose: hard-refuse-to-mount / doctor+CI gate'
+
+  - key: decision-naming-grammar
+    title: 'Decide: naming grammar — rule vs default (§2)'
+    node: kommons.review.spec
+    categories: [decision]
+    summary: 'Is the naming grammar a hard rule or a default?'
+    body: |
+      Small pending item from the spec.
+    tasks:
+      - 'Choose: hard rule / soft default'
+
+  - key: decision-push-transport
+    title: 'Decide: notification transport (§9.2)'
+    node: kommons.review.framework
+    categories: [decision]
+    summary: 'UnifiedPush vs FCM for push.'
+    body: |
+      Push transport for the app.
+    tasks:
+      - 'Choose: UnifiedPush / FCM'

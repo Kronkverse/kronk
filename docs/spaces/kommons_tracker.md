@@ -161,14 +161,18 @@ human-readable backlog in the repo.
    and file the friction (backing UI, sorting, whatever's missing) as fresh
    Kommons proposals. Kommons hardens by carrying its own build.
 
-## Open calls (Tal)
+## Decisions (resolved 2026-07-20)
 
-1. **Granularity** — one proposal per theme with tasks-as-checklist
-   (recommended, ~30 proposals), or finer/coarser?
-2. **Anchor to the map?** — pin each proposal to a Skeleton `node_id` so the
-   Skeleton/Lattice become the live build-status view? (Strongly recommend — it
-   reuses what we just built.)
-3. **Checklist UI first, or seed first?** — lean UI-first (step 1) so the
-   tracker is legible the moment it's populated.
-4. **Open decisions** (§13 / Tier-4 calls) — track them as their own "decision"
-   proposals on the board, or keep them out? They're inputs, not build work.
+1. **Granularity** — one proposal per theme, its steps as a task-checklist
+   (~30 proposals).
+2. **Anchor to the map** — yes; each proposal pins to a Skeleton `node_id`, so
+   the Skeleton/Lattice node badges read as live build status.
+3. **Order** — **seed first.** The map lights up with build-status badges the
+   moment the proposals land (the badges already render); the task-checklist UI
+   follows so the checklists themselves become visible.
+4. **Open decisions** — tracked as their own `decision`-category proposals on
+   the board, so blockers stay visible.
+
+Implemented as `config/kommons_tracker.yaml` (the backlog, source of truth) plus
+`bin/rails kommons:tracker:seed` (idempotent, keyed on `tracker:<key>`). Run on
+shadow's rebuild DB with `ACCOUNT=<username>`.
