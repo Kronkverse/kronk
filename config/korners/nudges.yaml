@@ -7,9 +7,14 @@ icon: partner_exchange
 render_target: native
 version: 0.1.0
 
-permissions:
-  - read:notifications
-  - write:notifications
+security:
+  permissions:
+    - read:notifications
+    - write:notifications
+  visibility_scopes: [] # nudges are private (recipient-scoped) by construction
+  maintainers:
+    - moderator
+  federates: false # nudges never federate — private by design
 
 resources:
   - name: nudges # a Nudge is emitted as a notification, threaded via nudge_messages
@@ -21,10 +26,6 @@ storage:
   db_namespace: nudge_ # tables: nudges, nudge_messages, nudge_reactions
   media_prefix: # not-implemented — nudge media (voice, image) uses Mastodon media_attachments
   redis_prefix: # not-implemented
-
-visibility_scopes: [] # nudges are private (recipient-scoped) by construction
-
-steward_role: moderator
 
 emits:
   - notification.nudge # via NotifyService, not the framework event bus
@@ -69,7 +70,6 @@ launch:
   cta: # not-applicable
 
 feature_flag: # not-implemented
-federates: false # nudges never federate — private by design
 # Nudges is a core space, not a korner: it sits in the primary switcher
 # alongside Me and Home (`hub_switcher.tsx`), you cannot tune out of it, and
 # it has no Hub tile. It was only ever a korner manifest because a manifest
