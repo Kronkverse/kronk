@@ -425,11 +425,11 @@ Open, plantable moves need no proposal; anything touching shared structure — s
 
 Forks that change the spine of this document:
 
-1. **Manifest enforcement.** Enforced in code (platform refuses to mount a space without a valid manifest) or a documentation convention followed by discipline? Enforced is more work now but is what actually guarantees the uniformity described here.
+1. **Manifest enforcement.** Partially resolved: `bin/tootctl korners doctor` now validates and gates conformance (L1/L3/L4/L5/L10) for `enforced` korners, so uniformity is machine-checked. The remaining fork is whether the platform should *hard-refuse to mount* a space with no valid manifest, or keep the doctor as a boot/CI gate followed by discipline.
 2. **App `render_target` default** (§9.1). Native-per-space vs hosted-shell vs hybrid. Recommended: hybrid, leaning hosted. Also sets the cost of iOS.
 3. **Subscription default posture** (§8.6). Platform-wide, do new spaces default opt-in (off) or opt-out (on)? Per-space override via `subscription.default` is assumed either way. Recommended: opt-in.
 
-Smaller pending items: naming grammar as rule vs default (§2); notification transport UnifiedPush vs FCM (§9.2); single-source token generation (§3.4).
+Smaller pending items: naming grammar as rule vs default (§2); notification transport UnifiedPush vs FCM (§9.2). (Single-source token generation, §3.4, is resolved — `bin/generate-tokens` + CI `--check` shipped in Phase 2.)
 
 ---
 
