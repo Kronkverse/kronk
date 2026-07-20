@@ -4,7 +4,7 @@ Append-only. Newest first. One entry per decision, dated, with the reasoning
 and what it supersedes.
 
 **Why this file exists.** Until 2026-07-19, rebuild decisions were kept
-deliberately *outside* the repo, in the maintainer's working notes. That
+deliberately _outside_ the repo, in the maintainer's working notes. That
 produced a failure worth remembering: a settings IA was "locked" on 07-12 in
 a note; a different settings IA was written into `docs/kronk_settings_ia.md`
 on 07-15; and on 07-18 the node registry was built from the repo doc — the
@@ -29,7 +29,7 @@ Klot's bespoke visibility scope points at a shared authorization layer (§7) tha
 does not exist yet. Rather than build §7 to satisfy one scope, `klot_phase_viewer`
 stays enforced by its existing ownership check + `KlotShare` allowlist and is
 documented as a **sanctioned exception** in `korner_standard.md`. It migrates onto
-the shared layer when §7 lands. (Klot's manifest *shape* was still migrated to the
+the shared layer when §7 lands. (Klot's manifest _shape_ was still migrated to the
 nested `security:` block — #392.)
 
 ### D3 — Nudges and Groups are accepted structural exceptions
@@ -45,17 +45,18 @@ its L3/L4 gates are N/A, not failures.
 The L10 gate (#388) requires every declared `notifications.types[].name` to be a
 registered `Notification` type. Rather than register dead types to satisfy it, the
 rule is: **declare only what has a working producer.** Built `proposal_challenged`
-+ `task_assigned` (real hooks exist); removed the declarations whose trigger
-surfaces don't exist yet — kommons `proposal_backed`/`proposal_comment`, kuestions
-`question_answered`/`answer_frothed`, marketplace's four `listing_*` — each with a
-manifest comment on when it returns (#393). They come back *with their producers*.
+
+- `task_assigned` (real hooks exist); removed the declarations whose trigger
+  surfaces don't exist yet — kommons `proposal_backed`/`proposal_comment`, kuestions
+  `question_answered`/`answer_frothed`, marketplace's four `listing_*` — each with a
+  manifest comment on when it returns (#393). They come back _with their producers_.
 
 ### §9.5 — event-bus wiring is deferred
 
 The bus (`Kronk::KornerEvents`) has publishers but no runtime subscribers and no
 handler-naming convention. The entire system has **one** cross-korner listen
 (huddle ← `kalendar.event.created`; the names align, so it is not an orphan), its
-handler is unbuilt *feature* work, and huddle is `enforced: false`. Building a
+handler is unbuilt _feature_ work, and huddle is `enforced: false`. Building a
 generic wiring framework + convention for a single non-enforced consumer is
 premature. Deferred until a second real listener or a concrete need exists; the
 `listens:`/`emits:` text check in `korners doctor` remains adequate until then.
@@ -88,14 +89,14 @@ the korner rail.
 
 **Consequence, not yet applied:** `Kronk::NodeRegistry::BUCKETS` accepts only
 `feed|profile|hub`, and `build_node` returns `nil` for anything else — so a
-node declaring `bucket: nudges` is *silently dropped*, with no error, and the
+node declaring `bucket: nudges` is _silently dropped_, with no error, and the
 doctor cannot report it because the node never enters the registry.
 `docs/korners/korner_standard.md` Layer 6 (§L6) already documents four
 buckets including `nudges`; the standard is right and the code is behind.
 
 ### The Skeleton is plumbing, not only a map
 
-A Skeleton node is not merely a page. Each node carries what it is *wired to*
+A Skeleton node is not merely a page. Each node carries what it is _wired to_
 — its settings, its notifications, its projections — and other subsystems
 read the Skeleton to find out: Nudges reads it to know what can notify,
 settings reads it to know what can be configured, feed rendering reads it to
@@ -120,15 +121,15 @@ flagged non-removable. `config/kronk_nodes.yaml` becomes core manifests.
 `hub`, `home` and `settings`, and `docs/korners/korner_standard.md` §L1 fails
 any manifest whose slug is reserved — so `feed.yaml` and `hub.yaml` cannot
 exist under the current rule. Resolving this needs the reserved-slug check to
-distinguish *core* manifests from korner manifests, rather than forbidding the
+distinguish _core_ manifests from korner manifests, rather than forbidding the
 slug outright. Noted here rather than quietly worked around, because the
 reservation exists for a good reason: it stops a korner claiming a platform
 route.
 
 Corroboration that the direction is right: `reserved_slugs.yaml` already
-anticipates it — *"Once the Nudges cutover completes (task #30) and the
+anticipates it — _"Once the Nudges cutover completes (task #30) and the
 manifest is retired, `nudges` moves back into this list as a reserved platform
-stem."* The repo was already planning for Nudges to stop being a korner and
+stem."_ The repo was already planning for Nudges to stop being a korner and
 become a platform space.
 
 **Reasoning:** if every node must declare what it is wired to, core spaces
@@ -141,7 +142,7 @@ That privileged core is what produced the settings mess: settings had no
 honest home, so it was filed under the `profile` bucket in the registry while
 `docs/spaces/settings.md` claimed it was a `hub` sub-tree.
 
-### Settings: a hub *and* contextual entry, converging
+### Settings: a hub _and_ contextual entry, converging
 
 Both reachable, both opening the same canonical area — a central hub that
 indexes everything, and entry from within each space and korner.
@@ -156,6 +157,17 @@ import/export do not belong to any one space and still need somewhere to
 live. Retiring before that inventory is complete would silently drop
 capabilities users rely on.
 
+### Settings section cut: Privacy → Profile, Notifications → Nudges (2026-07-20)
+
+Resolves the "section cut" open item, confirming `docs/kronk_settings_ia.md`
+(07-15). **Privacy is not a standalone page** — it folds into Profile ("Me"),
+with its incoming blocks/mutes/filters facet living on Feed. **Notifications has
+no standalone section** — notification preferences fold into **Nudges** (IA §3,
+"Notifications ≡ Nudges"). The registry still carries `settings.privacy` and
+`settings.notifications` as `lifecycle: live` nodes; re-homing them is
+implementation follow-up — notifications with the Nudges work, privacy with the
+Profile/settings work.
+
 ---
 
 ## Open
@@ -164,6 +176,3 @@ capabilities users rely on.
   import/export) live under the subset model.
 - Whether `settings.*` nodes survive at all once each space declares its own
   settings, or whether `/settings` becomes purely a view over the Skeleton.
-- The section cut. `docs/kronk_settings_ia.md` (07-15) says "Privacy is not a
-  page" and "no standalone Notifications section"; the registry currently
-  registers both as `lifecycle: live`. Neither has been applied.
