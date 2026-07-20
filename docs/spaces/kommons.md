@@ -2,6 +2,10 @@
 
 **Manifest:** `config/korners/kommons.yaml` · **Mount:** `/hub/kommons` · **Status:** shipped-2.0 (Skeleton, backend, token ledger, lifecycle) — backing UI pending
 
+> **Companion:** [`kommons_lattice.md`](./kommons_lattice.md) (the operable second
+> view of the map) and [`kommons_tracker.md`](./kommons_tracker.md) (the plan to
+> run the rebuild's own backlog as Kommons proposals + task-checklists).
+
 ## Purpose
 
 Kommons is **Kronk's transparency + participation space**. It's where
@@ -88,6 +92,7 @@ itself locates a proposal; the parallel category taxonomy is
 redundant.
 
 **Model changes (in the 2.1.0 cleanup migration):**
+
 - `Proposal.categories` column drops
 - `CATEGORY_VALUES` constant retires
 - `categories_within_allowed_values` validator retires
@@ -254,7 +259,7 @@ this").
 ### Kommons feed projection
 
 Proposals surface in Home feeds via the existing `kommons_card`
-projection — but the *social triggers* need shaping. Feed appearance
+projection — but the _social triggers_ need shaping. Feed appearance
 scenarios to design:
 
 - Someone in your network raises a proposal
@@ -274,8 +279,8 @@ Exact corner + visual treatment coming from the Claude web track.
 
 Later phases (post-2.0.0) aim to let users **design or build their
 own spaces from within Kommons**. This turns Kommons into the
-meta-mechanism for platform growth: a proposal could be *"a new
-korner for [purpose]"*, and the Kommons workflow gates its transition
+meta-mechanism for platform growth: a proposal could be _"a new
+korner for [purpose]"_, and the Kommons workflow gates its transition
 from idea → prototype → shipped korner. Out of scope for 2.0.0;
 noted here for direction.
 
