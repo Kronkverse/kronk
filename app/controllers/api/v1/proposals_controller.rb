@@ -2,7 +2,7 @@
 
 class Api::V1::ProposalsController < Api::BaseController
   before_action :require_user!
-  before_action :set_proposal, only: [:show, :vote, :unvote, :complete, :update, :archive, :unarchive]
+  before_action :set_proposal, only: [:show, :vote, :unvote, :back, :complete, :update, :archive, :unarchive]
   before_action :require_creator_or_steward!, only: [:update, :archive, :unarchive]
 
   def index
@@ -108,6 +108,18 @@ class Api::V1::ProposalsController < Api::BaseController
     vote = @proposal.proposal_votes.find_by(account: current_account)
     vote&.destroy
     render json: @proposal.reload, serializer: REST::ProposalSerializer
+  end
+
+  # Any signed-in account stakes tokens on an open proposal. Backing closes
+  # once the proposal is delivered or archived (ProposalStates.backable?);
+  # stakes are locked until it completes or is annulled, then returned.
+  def back
+    return render json: { error: 'Backing is closed for this proposal.' }, status: :unprocessable_entity unless Kronk::ProposalStates.backable?(@proposal) # rubocop:disable I18n/RailsI18n/DecorateString
+
+    Kronk::Tokens.back!(current_account, @proposal, params[:amount])
+    render json: @proposal.reload, serializer: REST::ProposalSerializer
+  rescue Kronk::Tokens::InvalidAmount, Kronk::Tokens::InsufficientBalance => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
   # The proposer confirming a delivered proposal. This is what returns the

@@ -47,6 +47,20 @@ class REST::ProposalSerializer < ActiveModel::Serializer
     object.budget_items.sum(:cost_estimate).to_f
   end
 
+  # Token backing: the proposal's total staked, distinct backer count, the
+  # viewer's own stake, the viewer's spendable balance, and whether backing is
+  # still open. `my_balance` is nil for a signed-out viewer.
+  attribute :backing do
+    account_id = current_user&.account&.id
+    {
+      total: object.backing_total,
+      backers: ProposalBacking.backer_totals(object.id).size,
+      my_stake: account_id ? ProposalBacking.stake_of(object.id, account_id) : 0,
+      my_balance: account_id ? (TokenBalance.find_by(account_id: account_id)&.balance || 0) : nil,
+      open: Kronk::ProposalStates.backable?(object),
+    }
+  end
+
   attribute :voters do
     object.proposal_votes.includes(:account).order(created_at: :desc).map do |v|
       {
