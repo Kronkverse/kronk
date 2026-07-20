@@ -22,10 +22,10 @@ resources:
     primary: true # /governance is the canonical entry — moves under /hub/kommons in §4 migration
   - name: proposal_votes
   - name: proposal_attachments # mockups/briefs attached to a proposal for implementers
-  - name: proposal_completion_suggestions # added on feature/kommons-notifications
+  - name: proposal_backings # token stakes on a proposal (token ledger, #366)
 
 storage:
-  db_namespace: proposal_ # actual tables: proposals, proposal_votes, proposal_completion_suggestions, proposal_challenge_conditions
+  db_namespace: proposal_ # proposal_* tables: proposals, proposal_votes, proposal_attachments, proposal_backings
   media_prefix: # not-implemented — proposal media currently uses Mastodon default paths
   redis_prefix: # not-implemented — no dedicated Kommons Redis usage
 

@@ -46,7 +46,7 @@ Substantial 2.0 work has already landed in the Kommons Skeleton series
   declared in manifests match reality.
 - **Live composer** — replaces the old stub; users can compose a real
   Kommons proposal from any node.
-- **Frontend at `app/javascript/mastodon/features/kommons_tree/`**;
+- **Frontend at `app/javascript/mastodon/features/kommons_skeleton/`**;
   route `/hub/kommons/skeleton`.
 - **API**: `GET /api/v1/kommons/nodes` serves the tree JSON.
 
@@ -56,8 +56,12 @@ Substantial 2.0 work has already landed in the Kommons Skeleton series
   `summary`, `created_by_account`, `status`, `parent_proposal`
   (hierarchy), optional discussion Status linkage (pre-2.0
   `discussion_status_id` dual-writes during transition).
-- **`ProposalVote`**, **`ProposalCompletionSuggestion`**,
-  **`ProposalChallengeCondition`** models.
+- Sibling models: **`ProposalVote`**, **`ProposalBacking`**,
+  **`ProposalAttachment`**, **`Task`**, **`BudgetItem`**,
+  **`ChallengeCondition`**, **`ChallengeResponse`**, **`TokenBalance`**,
+  **`TokenTransaction`**. (There is no `ProposalCompletionSuggestion` or
+  `ProposalChallengeCondition` model — challenge data lives in
+  `ChallengeCondition`/`ChallengeResponse`.)
 - **Node-keyed proposals** — `Proposal.node_id` associates a proposal
   with a Skeleton node.
 - **Searchable via `Kronk::Search`** — indexed as
@@ -292,15 +296,15 @@ tokens, backfilled by migration and granted on create. **Dev-signoff** —
 - **User-designed spaces roadmap** — even though out of scope for
   2.0, capture the shape (what does a "propose a korner" proposal
   look like? What state moves it from proposal to prototype?).
-- **`ProposalChallengeCondition` retention** — the existing model
-  isn't obviously used post-tokens; decide whether it survives, gets
-  repurposed, or retires.
+- _Resolved:_ **`ChallengeCondition`** (the model this doc once called
+  `ProposalChallengeCondition`) **is** in active use — created on every block
+  vote in `ProposalsController#vote` and serialized into a proposal's
+  `challenges`. It stays.
 - **Token icon/glyph** — a specific glyph for the tokens (something
   Kronk-native, not a generic coin)?
 
 ## Related drafts
 
-- `/home/shared/rebuild/plan/quiet-napping-hare.md` (no dedicated phase — Kommons Skeleton shipped in an early rebuild slice)
-- `/home/shared/rebuild/spec/kronk_korner_spec.md` §Kommons
-- `/home/shared/rebuild/memory/project_kronk_rebuild_kommons_reflections_spec_draft.md` (reconciled to Kommons framing)
-- Related korners: `krew.md` (no Krew-scoped Kommons in 2.0), all korners (their `nodes:` blocks feed the Skeleton)
+- `docs/rebuild/implementation_plan.md` (no dedicated phase — Kommons Skeleton shipped in an early rebuild slice)
+- `docs/kronk_korner_spec.md` §Kommons
+- Related korners: `docs/spaces/groups.md` (no Krew-scoped Kommons in 2.0); all korners' `nodes:` blocks feed the Skeleton.
