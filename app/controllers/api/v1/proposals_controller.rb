@@ -83,6 +83,18 @@ class Api::V1::ProposalsController < Api::BaseController
       end
     end
 
+    # Notify the proposer that their proposal was challenged — only on the
+    # transition into a block (not on re-saving an existing block, and not when
+    # the challenger is the proposer). Fire-and-forget after the commit.
+    if vote.block? && vote.saved_change_to_position?
+      Kronk::KornerNotifier.notify(
+        recipient_id: @proposal.created_by_account_id,
+        from_account: current_account,
+        activity: @proposal,
+        type: 'proposal_challenged'
+      )
+    end
+
     render json: @proposal.reload, serializer: REST::ProposalSerializer
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity

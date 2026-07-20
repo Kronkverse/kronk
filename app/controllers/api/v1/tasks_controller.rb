@@ -13,6 +13,7 @@ class Api::V1::TasksController < Api::BaseController
   def create
     @task = @proposal.tasks.new(task_params)
     if @task.save
+      notify_assignee_if_changed
       render json: @task, serializer: REST::TaskSerializer, status: 201
     else
       render json: { error: @task.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -21,6 +22,7 @@ class Api::V1::TasksController < Api::BaseController
 
   def update
     if @task.update(task_params)
+      notify_assignee_if_changed
       render json: @task, serializer: REST::TaskSerializer
     else
       render json: { error: @task.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -28,6 +30,22 @@ class Api::V1::TasksController < Api::BaseController
   end
 
   private
+
+  # Notify the assignee when a task is newly assigned or re-assigned to them.
+  # Only fires when assigned_to_account_id actually changed in the last save,
+  # so an unrelated update (title, status) doesn't re-notify. Self-assignment
+  # is skipped by KornerNotifier's self-notify guard.
+  def notify_assignee_if_changed
+    return unless @task.saved_change_to_assigned_to_account_id?
+    return if @task.assigned_to_account_id.blank?
+
+    Kronk::KornerNotifier.notify(
+      recipient_id: @task.assigned_to_account_id,
+      from_account: current_account,
+      activity: @task,
+      type: 'task_assigned'
+    )
+  end
 
   def set_proposal
     @proposal = Proposal.find(params[:proposal_id])
