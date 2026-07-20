@@ -22,6 +22,7 @@ kronk:
 # ── Semantic surfaces + text ───────────────────────────────────────
 semantic:
   accent: { dark: '#4414cc', light: '#6364ff' }
+  text-on-accent: { dark: '#ffffff', light: '#ffffff' } # white on the purple accent; theme-invariant (accent is purple in both themes)
   surface-primary: { dark: '#191b22', light: '#ffffff' }
   surface-elevated: { dark: '#292938', light: '#f5f4f9' }
   border-default: { dark: '#47368b', light: '#ddd9e8' }
