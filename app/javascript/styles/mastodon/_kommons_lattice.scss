@@ -14,6 +14,46 @@
   }
 }
 
+// ── View toggle (Skeleton ⇄ Lattice) ─────────────────────────────────────────
+// One map, two modes. The floating switch anchors to whichever view holds it.
+.kommons-skeleton,
+.kommons-lattice {
+  position: relative;
+}
+
+.kommons-view-toggle {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 10;
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
+  transform: translateX(-50%);
+
+  &__opt {
+    padding: 4px 14px;
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    text-decoration: none;
+    transition: color var(--dur-medium) var(--ease-out);
+
+    &:hover {
+      color: var(--text-secondary, #e9e7f2);
+    }
+
+    &.is-active {
+      background: var(--kronk-purple-bright);
+      color: var(--text-on-accent);
+    }
+  }
+}
+
 // The plane is a normal scrolling container (spec §5 — no camera).
 .lattice-scroll {
   position: relative;

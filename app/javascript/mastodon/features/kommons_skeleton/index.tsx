@@ -21,12 +21,13 @@ import {
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 
+import { BodyMap } from './components/body_map';
 import { Composer } from './components/composer';
 import { NodeDetail } from './components/node_detail';
-import { BodyMap } from './components/body_map';
+import { ViewToggle } from './components/view_toggle';
+import { ROOT_ID } from './data/layout';
 import type { KommonsNode } from './data/nodes';
 import { findNode, fromApiNodes } from './data/nodes';
-import { ROOT_ID } from './data/layout';
 
 const messages = defineMessages({
   title: {
@@ -180,6 +181,7 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({
       <div
         className={`kommons-skeleton ${selectedNode ? '' : 'kommons-skeleton--map'}`}
       >
+        <ViewToggle />
         {loading && (
           <p className='kommons-skeleton__loading'>
             {intl.formatMessage(messages.loading)}
