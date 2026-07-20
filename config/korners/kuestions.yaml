@@ -7,9 +7,14 @@ icon: question_mark
 render_target: native
 version: 2.0.0 # rework: dedicated Question + Answer models + visibility gate
 
-permissions:
-  - read:questions
-  - write:questions
+security:
+  permissions:
+    - read:questions
+    - write:questions
+  visibility_scopes: [] # uses Mastodon visibility as-is
+  maintainers:
+    - moderator
+  federates: false
 
 resources:
   - name: questions
@@ -23,10 +28,6 @@ storage:
     # walks them into questions/answers on migration.
   media_prefix: # not-implemented
   redis_prefix: # not-implemented
-
-visibility_scopes: [] # uses Mastodon visibility as-is
-
-steward_role: moderator
 
 emits: []
 listens: []
@@ -80,7 +81,6 @@ launch:
   cta: 'Tap in'
 
 feature_flag: # not-implemented
-federates: false
 enforced: true # framework: on this branch; boot validator enforces
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
