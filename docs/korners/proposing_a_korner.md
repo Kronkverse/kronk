@@ -18,7 +18,7 @@ Also verify the proposed slug against `config/korners/reserved_slugs.yaml` — r
 
 ---
 
-## Round 1 — nine topics
+## Round 1 — ten topics
 
 The canonical opening set. Ask in one or two batches via `AskUserQuestion` (mode allows 1–4 questions per call). Answers map directly to manifest fields; the Round 1 output IS the initial draft.
 
@@ -33,14 +33,15 @@ The canonical opening set. Ask in one or two batches via `AskUserQuestion` (mode
 | 7 | **Feed card** — does content project into Home feed? | Y/N (drill in R2 if Y) | `feed_projection:` block |
 | 8 | **Kategory-taggable** — do items carry curated Kategory tags? | Y/N | `tags` gating |
 | 9 | **Cross-korner connections** — what other korners does this touch, and how? | Open free-text | `emits:` + `listens:` |
+| 10 | **User-facing settings** — does the korner give users toggles/preferences to control it? | Y/N (drill in R2 if Y) | `settings:` block + Korner Standard §L8 |
 
 ### Suggested Round 1 batching
 
 - **Batch A** (open text, framing): Q1 description + Q2 content unit + Q9 connections.
 - **Batch B** (Y/N + multi-select): Q3 composer + Q4 visibility + Q5 storage/media.
-- **Batch C** (Y/N structural): Q6 notifications + Q7 feed card + Q8 kategory.
+- **Batch C** (Y/N structural): Q6 notifications + Q7 feed card + Q8 kategory + Q10 settings.
 
-Three calls total, three questions each. Adjust as makes sense for the shape of the korner being discussed.
+Three calls total. Adjust as makes sense for the shape of the korner being discussed.
 
 ---
 
@@ -67,6 +68,13 @@ Round 2 drills into whichever Round 1 answer came back "yes" or needs sharpening
 - When does the card appear in a viewer's feed? (creator's mates? tune-in only? kategory-follow? krew members?)
 - What audience sees it? (`default_visibility`)
 - What does tapping the card do? (`links_to` URL grammar)
+
+**If user-facing settings = yes:**
+
+- Which settings? Enumerate each with `kind` (boolean / integer / string / enum / multi_enum / time), `default`, `scope` (`user` for per-account, `group`/`korner` for per-scope), and a short human `label` + `description`.
+- Which live at `/hub/<slug>/settings` (per-korner) vs `/settings/*` (account-global)?
+- Any tune-in gate settings? (Notification opt-in per type is often a settings-level toggle: `notify_on_<event>` booleans mirroring the `notifications:` block.)
+- Any settings that carry sovereignty implications? (E.g., Klot's `share_phase_publicly` — "even when on, only accounts you've granted a KlotShare to see it. Raw dates never leave your account.")
 
 **Cross-korner connections (from Q9):**
 
