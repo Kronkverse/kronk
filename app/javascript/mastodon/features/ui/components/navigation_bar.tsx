@@ -15,17 +15,13 @@ import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import HomeActiveIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import MenuIcon from '@/material-icons/400-24px/menu.svg?react';
-import NotificationsActiveIcon from '@/material-icons/400-24px/notifications-fill.svg?react';
-import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import { openModal } from 'mastodon/actions/modal';
 import { toggleNavigation } from 'mastodon/actions/navigation';
 import { fetchServer } from 'mastodon/actions/server';
 import { Icon } from 'mastodon/components/icon';
-import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { useIdentity } from 'mastodon/identity_context';
 import { registrationsOpen, sso_redirect } from 'mastodon/initial_state';
-import { selectUnreadNotificationGroupsCount } from 'mastodon/selectors/notifications';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 export const messages = defineMessages({
@@ -56,34 +52,6 @@ const IconLabelButton: React.FC<{
     >
       {match && activeIcon ? activeIcon : icon}
     </NavLink>
-  );
-};
-
-const NotificationsButton = () => {
-  const count = useAppSelector(selectUnreadNotificationGroupsCount);
-  const intl = useIntl();
-
-  return (
-    <IconLabelButton
-      to='/notifications'
-      icon={
-        <IconWithBadge
-          id='bell'
-          icon={NotificationsIcon}
-          count={count}
-          className=''
-        />
-      }
-      activeIcon={
-        <IconWithBadge
-          id='bell'
-          icon={NotificationsActiveIcon}
-          count={count}
-          className=''
-        />
-      }
-      title={intl.formatMessage(messages.notifications)}
-    />
   );
 };
 
@@ -193,7 +161,6 @@ export const NavigationBar: React.FC = () => {
               to='/publish'
               icon={<Icon id='' icon={AddIcon} />}
             />
-            <NotificationsButton />
           </>
         )}
 

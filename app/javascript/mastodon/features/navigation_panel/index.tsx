@@ -26,8 +26,6 @@ import HomeActiveIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import InfoIcon from '@/material-icons/400-24px/info.svg?react';
 import MenuIcon from '@/material-icons/400-24px/menu.svg?react';
-import NotificationsActiveIcon from '@/material-icons/400-24px/notifications-fill.svg?react';
-import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
@@ -52,10 +50,7 @@ import { useBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
 import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
 import { transientSingleColumn } from 'mastodon/is_mobile';
-import {
-  selectUnreadNotificationGroupsCount,
-  selectUnreadNudgesCount,
-} from 'mastodon/selectors/notifications';
+import { selectUnreadNudgesCount } from 'mastodon/selectors/notifications';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
 import { DisabledAccountBanner } from './components/disabled_account_banner';
@@ -134,36 +129,6 @@ const NudgesLink: React.FC = () => {
         />
       }
       text={intl.formatMessage(messages.nudges)}
-    />
-  );
-};
-
-const NotificationsLink = () => {
-  const count = useAppSelector(selectUnreadNotificationGroupsCount);
-  const intl = useIntl();
-
-  return (
-    <ColumnLink
-      key='notifications'
-      transparent
-      to='/notifications'
-      icon={
-        <IconWithBadge
-          id='bell'
-          icon={NotificationsIcon}
-          count={count}
-          className='column-link__icon'
-        />
-      }
-      activeIcon={
-        <IconWithBadge
-          id='bell'
-          icon={NotificationsActiveIcon}
-          count={count}
-          className='column-link__icon'
-        />
-      }
-      text={intl.formatMessage(messages.notifications)}
     />
   );
 };
@@ -358,8 +323,6 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
         {signedIn && (
           <>
             <hr />
-
-            <NotificationsLink />
 
             <ColumnLink
               transparent
