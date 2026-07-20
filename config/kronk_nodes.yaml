@@ -136,11 +136,15 @@ nodes:
     lifecycle: live
     spa: true
 
-  # Settings surfaces — in the `settings` bucket (its own core space). They
-  # link back to the profile pages they configure via `settings_for`.
+  # Settings surfaces — the `settings` bucket is Settings' own core space
+  # (manifest config/korners/settings.yaml). The section pages sit directly on
+  # the Settings limb, flat like Feed/Profile pages: the limb *is* the entry, so
+  # there is no /settings landing node to open through. settings.feed and
+  # settings.hub live in the feed/hub buckets (below) — a space configures itself
+  # in its own limb. Some pages link back to the profile page they configure via
+  # `settings_for`. See docs/rebuild/decisions.md and docs/spaces/settings.md.
   - id: settings.profile
     bucket: settings
-    parent: settings.root
     label: Settings · Profile
     url: /settings/profile
     route_name: settings_profile
@@ -152,7 +156,6 @@ nodes:
 
   - id: settings.sections
     bucket: settings
-    parent: settings.root
     label: Settings · Sections
     url: /settings/profile_sections
     lifecycle: live
@@ -168,29 +171,13 @@ nodes:
   # filed against nothing.
   - id: settings.prefs
     bucket: settings
-    parent: settings.root
     label: Preferences
     url: /settings/preferences
     route_name: settings_preferences
     lifecycle: deprecated
 
-  # Settings is its own core space (bucket `settings`, manifest
-  # config/korners/settings.yaml) as of the "every space gets a manifest"
-  # decision — it is no longer filed under `profile`. `settings.root` is the
-  # /settings landing (the surface a user lands on); the sections nest under it,
-  # exactly as korner pages nest under their korner. settings.feed and
-  # settings.hub live in the feed/hub buckets (below) — a space configures
-  # itself in its own limb. See docs/rebuild/decisions.md and docs/spaces/settings.md.
-  - id: settings.root
-    bucket: settings
-    label: All settings
-    url: /settings
-    lifecycle: live
-    spa: true
-
   - id: settings.you
     bucket: settings
-    parent: settings.root
     label: Settings · You
     url: /settings/you
     lifecycle: live
@@ -200,28 +187,24 @@ nodes:
   # projects all settings.* nodes from this bucket.
   - id: settings.appearance
     bucket: settings
-    parent: settings.root
     label: Appearance
     url: /settings/appearance
     lifecycle: live
     spa: true
   - id: settings.posting
     bucket: settings
-    parent: settings.root
     label: Posting
     url: /settings/posting
     lifecycle: live
     spa: true
   - id: settings.privacy
     bucket: settings
-    parent: settings.root
     label: Privacy
     url: /settings/privacy
     lifecycle: live
     spa: true
   - id: settings.notifications
     bucket: settings
-    parent: settings.root
     label: Notifications
     url: /settings/notifications
     lifecycle: live
@@ -229,14 +212,12 @@ nodes:
   # Still the classic Mastodon monolith — surfaced as `soon` until rehomed.
   - id: settings.account
     bucket: settings
-    parent: settings.root
     label: Account & security
     url: /settings/account
     lifecycle: soon
     spa: true
   - id: settings.data
     bucket: settings
-    parent: settings.root
     label: Data
     url: /settings/data
     lifecycle: soon

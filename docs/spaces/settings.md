@@ -2,8 +2,9 @@
 
 **Node bucket:** `settings` — its own core space (manifest
 `config/korners/settings.yaml`, `core: true`, mount `/settings`). Every
-personal/account `settings.*` node lands in this bucket on `settings.root`
-(`config/kronk_nodes.yaml`); `settings.feed` and `settings.hub` stay in the
+personal/account `settings.*` section page sits **flat on the Settings limb**
+(`config/kronk_nodes.yaml`) — the limb is the entry, so there is no `/settings`
+landing node to open through; `settings.feed` and `settings.hub` stay in the
 feed/hub buckets — a space configures itself in its own limb. **Cross-cutting.**
 
 > Updated 2026-07-20. Settings previously had no honest home under the

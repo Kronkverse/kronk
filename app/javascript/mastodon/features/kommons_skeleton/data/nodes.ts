@@ -87,9 +87,9 @@ const KORNER_LABELS: Record<string, string> = {
 
 export const listKorners = (nodes: KommonsNode[]): KornerSummary[] => {
   // A korner is a Hub tenant, so only `hub`-bucket nodes name one. Other
-  // buckets nest too — the settings.* pages hang off `settings.root` in the
-  // `settings` bucket — and without this filter every such parent leaked in as
-  // a phantom, empty korner under Hub (settings.root was the visible one).
+  // buckets can carry parent relationships too (a page nested under another in
+  // the same bucket); without this filter such a parent would leak in as a
+  // phantom, empty korner under Hub.
   const withParent = nodes.filter(
     (n): n is KommonsNode & { parent: string } =>
       n.bucket === 'hub' && typeof n.parent === 'string',
