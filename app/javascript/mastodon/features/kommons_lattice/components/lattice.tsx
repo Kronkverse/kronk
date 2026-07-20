@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Icon } from 'mastodon/components/icon';
 
@@ -29,6 +29,34 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
     () => latticeWires(tree, pos, open, path),
     [tree, pos, open, path],
   );
+
+  // Sprout choreography (§3): growth is drawn, not revealed. Only genuinely new
+  // rows and wires animate in — everything already on screen reflows into its
+  // new place. We diff against the previous frame's ids (updated after paint, so
+  // during render this still holds the prior frame).
+  const prev = useRef<{ nodes: Set<string>; wires: Set<string> }>({
+    nodes: new Set(),
+    wires: new Set(),
+  });
+  const enteredNodes = useMemo(() => {
+    const order = new Map<string, number>();
+    let i = 0;
+    for (const id of Object.keys(pos)) {
+      if (!prev.current.nodes.has(id)) order.set(id, i++);
+    }
+    return order;
+  }, [pos]);
+  const enteredWires = useMemo(() => {
+    const set = new Set<string>();
+    for (const w of wires) if (!prev.current.wires.has(w.id)) set.add(w.id);
+    return set;
+  }, [wires]);
+  useEffect(() => {
+    prev.current = {
+      nodes: new Set(Object.keys(pos)),
+      wires: new Set(wires.map((w) => w.id)),
+    };
+  });
 
   // One delegated handler rather than a bound closure per row — a click reads
   // the row's id off the DOM and toggles that branch.
@@ -68,7 +96,9 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
             {wires.map((w) => (
               <path
                 key={w.id}
-                className={`lattice-wire ${w.on ? 'lattice-wire--on' : ''}`}
+                className={`lattice-wire ${w.on ? 'lattice-wire--on' : ''} ${
+                  enteredWires.has(w.id) ? 'lattice-wire--draw' : ''
+                }`}
                 d={w.d}
               />
             ))}
@@ -81,12 +111,14 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
           const isCore = id === ROOT_ID;
           const isOpen = open.has(id);
           const hasKids = node.kids.length > 0;
+          const enterIndex = enteredNodes.get(id);
           const cls = [
             'lattice-row',
             `lattice-row--d${p.depth}`,
             isCore ? 'lattice-row--core' : '',
             isOpen ? 'is-open' : '',
             path.has(id) ? 'is-on' : '',
+            enterIndex === undefined ? '' : 'lattice-row--enter',
           ]
             .filter(Boolean)
             .join(' ');
@@ -101,6 +133,12 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
                 transform: `translate(${p.x + PLANE_PAD.x}px, ${p.y + PLANE_PAD.y}px)`,
                 width: COL_W,
                 height: ROW_H,
+                // Stagger new rows in; cap the delay so a 14-child fan doesn't
+                // take a full second to populate (§3).
+                animationDelay:
+                  enterIndex === undefined
+                    ? undefined
+                    : `${Math.min(enterIndex * 26, 340)}ms`,
               }}
             >
               <span className='lattice-row__icon'>

@@ -49,6 +49,34 @@
     stroke: var(--kronk-purple-bright);
     stroke-width: 2;
   }
+
+  // A newly appearing wire draws itself outward from the parent (§3). The line
+  // grows toward where the child will be, then the row arrives at its end. A
+  // fixed dash length large enough for any wire here avoids measuring each path.
+  &--draw {
+    stroke-dasharray: 2000;
+    animation: lattice-wire-draw 340ms var(--ease-out) both;
+  }
+}
+
+@keyframes lattice-wire-draw {
+  from {
+    stroke-dashoffset: 2000;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes lattice-row-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 // ── Rows (§6) ────────────────────────────────────────────────────────────────
@@ -69,6 +97,7 @@
   text-align: start;
   cursor: pointer;
   will-change: transform;
+
   // Reflow glide (§4): existing rows slide to their new place, never jump.
   transition:
     transform 380ms var(--ease-out),
@@ -144,6 +173,11 @@
       transform: rotate(90deg);
     }
   }
+
+  // Newly appearing rows fade in at the end of their drawing wire (§3).
+  &--enter {
+    animation: lattice-row-in 260ms var(--ease-out) both;
+  }
 }
 
 .lattice-core-glyph {
@@ -151,4 +185,16 @@
   font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 700;
+}
+
+// Reduced motion (§7): the state model is correct with every animation removed,
+// so drop them all to a hair — no drawing, no stagger, no glide.
+@media (prefers-reduced-motion: reduce) {
+  .lattice-row,
+  .lattice-row__icon,
+  .lattice-row__chevron,
+  .lattice-wire {
+    transition-duration: 0.01ms;
+    animation-duration: 0.01ms;
+  }
 }
