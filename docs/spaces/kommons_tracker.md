@@ -174,5 +174,9 @@ human-readable backlog in the repo.
    the board, so blockers stay visible.
 
 Implemented as `config/kommons_tracker.yaml` (the backlog, source of truth) plus
-`bin/rails kommons:tracker:seed` (idempotent, keyed on `tracker:<key>`). Run on
-shadow's rebuild DB with `ACCOUNT=<username>`.
+`bin/rails kommons:tracker:seed` (idempotent, keyed on proposal title). Every
+theme hangs off one root proposal, `Kronk rebuild — build tracker`, via
+`parent_proposal` — so the board is `root.child_proposals` and each theme still
+anchors to its own `node_id`. (Track/phase tags live in the proposal body, not
+the `categories` column, which is a validated legacy taxonomy slated for
+retirement.) Run on shadow's rebuild DB with `ACCOUNT=<username>`.
