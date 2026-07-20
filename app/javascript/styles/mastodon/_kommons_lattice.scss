@@ -20,11 +20,77 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
+  cursor: grab;
+
+  // While panning, rows can't snag the pointer (§6c).
+  &.is-grabbing {
+    cursor: grabbing;
+
+    .lattice-row {
+      pointer-events: none;
+    }
+  }
 }
 
+// The plane's box carries the scaled dimensions (honest scrollbars); the
+// content inside is unscaled and scaled by a transform (§5).
 .lattice-plane {
   position: relative;
-  cursor: default;
+}
+
+.lattice-content {
+  position: relative;
+  transform-origin: 0 0;
+
+  // Stepped zoom (buttons/keys) eases; wheel zoom has no transition so it
+  // tracks the gesture.
+  &.is-zooming {
+    transition: transform 220ms var(--ease-out);
+  }
+
+  // Zoomed out, the lattice reads as shape, not text (§5).
+  &.is-tiny {
+    .lattice-row__label,
+    .lattice-row__count,
+    .lattice-row__chevron {
+      opacity: 0;
+    }
+  }
+}
+
+// Zoom controls, bottom-right (§5).
+.lattice-zoom {
+  position: sticky;
+  bottom: 12px;
+  left: 100%;
+  z-index: 6;
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  width: max-content;
+  margin: 12px;
+  padding: 3px;
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-elevated) 96%, transparent);
+
+  button {
+    min-width: 34px;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 999px;
+    color: var(--text-secondary, #e9e7f2);
+    font-size: 0.75rem;
+    cursor: pointer;
+
+    &:hover {
+      background: color-mix(
+        in srgb,
+        var(--kronk-purple-bright) 20%,
+        transparent
+      );
+    }
+  }
 }
 
 // ── Wires (§2) ───────────────────────────────────────────────────────────────
@@ -117,6 +183,13 @@
   &.is-open {
     background: color-mix(in srgb, var(--surface-elevated) 96%, transparent);
     border-color: var(--kronk-purple-bright);
+  }
+
+  // Selected leaf (§6) — filled and ringed.
+  &.is-sel {
+    background: color-mix(in srgb, var(--kronk-purple-bright) 16%, transparent);
+    border-color: var(--kronk-purple-bright);
+    box-shadow: 0 0 0 1px var(--kronk-purple-bright);
   }
 
   &--core {
