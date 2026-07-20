@@ -1,0 +1,58 @@
+# Settings — where a person shapes how they experience Kronk. A core platform
+# space, not a korner.
+#
+# Manifest-declared per the one-mechanism decision (docs/rebuild/decisions.md):
+# settings had no honest home under the old three-bucket scheme and was filed
+# under `profile`. It now owns the `settings` bucket and this manifest. The
+# space is a hub AND a contextual entry: /settings aggregates the personal and
+# account-level controls, while each korner and core space declares its own
+# settings surface (feed → /home/settings, hub → /settings/korners, each korner
+# → /hub/<slug>/settings). See docs/spaces/settings.md.
+
+slug: settings
+name: Settings
+icon: settings
+render_target: native
+version: 0.1.0
+
+security:
+  permissions:
+    - read:accounts
+    - write:accounts
+  visibility_scopes: [] # a person only ever sees their own settings
+  maintainers:
+    - moderator
+  federates: false # settings are local; nothing federates
+
+resources: [] # rides Mastodon's User/UserSettings + Kronk's settings SPA; no korner tables
+
+storage:
+  db_namespace: # not-applicable — core user settings
+  media_prefix: # not-applicable
+  redis_prefix: # not-applicable
+
+emits: []
+listens: []
+
+feed_projection:
+  card: # not-applicable — settings is a destination, not a feed card
+  discriminator: # n/a
+
+subscription:
+  default: # not-applicable — you cannot tune out of your own settings
+
+launch:
+  blurb: # not-applicable — core space, no launch card
+  cta: # not-applicable
+
+feature_flag: # not-implemented
+# Settings is a core space, not a korner: it claims the reserved `/settings`
+# stem (core: true exempts it from the reserved-slug check), has no Hub tile,
+# and cannot be tuned out of.
+core: true
+mount: /settings
+enforced: true
+
+# Nodes are the cross-cutting settings.* entries in config/kronk_nodes.yaml
+# (bucket: settings), landing on settings.root.
+nodes: []
