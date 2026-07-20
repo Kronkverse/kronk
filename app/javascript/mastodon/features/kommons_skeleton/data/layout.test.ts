@@ -186,3 +186,38 @@ describe('layoutTree', () => {
     expect(a).toEqual(b);
   });
 });
+
+// The settings.* pages all live in the `profile` bucket (settings has no bucket
+// of its own) but must nest under `settings.root`, not pile up flat under the
+// Profile limb — otherwise Profile shows ~16 siblings instead of a handful of
+// pages plus a Settings branch.
+describe('intra-bucket nesting', () => {
+  it('nests a node under a same-bucket parent rather than flat under the limb', () => {
+    const nodes: KommonsNode[] = [
+      node('settings.root', 'profile'),
+      node('settings.appearance', 'profile', 'settings.root'),
+      node('settings.privacy', 'profile', 'settings.root'),
+      node('profile.view', 'profile'),
+    ];
+    const tree = buildTree(nodes);
+
+    // The Profile limb holds only the un-parented nodes.
+    expect(tree.profile?.kids).toContain('settings.root');
+    expect(tree.profile?.kids).toContain('profile.view');
+    expect(tree.profile?.kids).not.toContain('settings.appearance');
+
+    // The settings pages hang off settings.root.
+    expect(tree['settings.root']?.kids).toEqual(
+      expect.arrayContaining(['settings.appearance', 'settings.privacy']),
+    );
+    expect(tree['settings.appearance']?.parent).toBe('settings.root');
+  });
+
+  it('falls back to the limb when the declared parent is absent from the bucket', () => {
+    const nodes: KommonsNode[] = [node('feed.orphan', 'feed', 'nonexistent')];
+    const tree = buildTree(nodes);
+
+    expect(tree.feed?.kids).toContain('feed.orphan');
+    expect(tree['feed.orphan']?.parent).toBe('feed');
+  });
+});

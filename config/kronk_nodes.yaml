@@ -208,6 +208,7 @@ nodes:
   # are the self-management side of the same identity.
   - id: settings.profile
     bucket: profile
+    parent: settings.root
     label: Settings · Profile
     url: /settings/profile
     route_name: settings_profile
@@ -219,6 +220,7 @@ nodes:
 
   - id: settings.sections
     bucket: profile
+    parent: settings.root
     label: Settings · Sections
     url: /settings/profile_sections
     lifecycle: live
@@ -234,6 +236,7 @@ nodes:
   # filed against nothing.
   - id: settings.prefs
     bucket: profile
+    parent: settings.root
     label: Preferences
     url: /settings/preferences
     route_name: settings_preferences
@@ -256,6 +259,7 @@ nodes:
 
   - id: settings.you
     bucket: profile
+    parent: settings.root
     label: Settings · You
     url: /settings/you
     lifecycle: live
@@ -265,24 +269,28 @@ nodes:
   # Profile ("self-management"); the settings nav projects all settings.* nodes.
   - id: settings.appearance
     bucket: profile
+    parent: settings.root
     label: Appearance
     url: /settings/appearance
     lifecycle: live
     spa: true
   - id: settings.posting
     bucket: profile
+    parent: settings.root
     label: Posting
     url: /settings/posting
     lifecycle: live
     spa: true
   - id: settings.privacy
     bucket: profile
+    parent: settings.root
     label: Privacy
     url: /settings/privacy
     lifecycle: live
     spa: true
   - id: settings.notifications
     bucket: profile
+    parent: settings.root
     label: Notifications
     url: /settings/notifications
     lifecycle: live
@@ -290,12 +298,14 @@ nodes:
   # Still the classic Mastodon monolith — surfaced as `soon` until rehomed.
   - id: settings.account
     bucket: profile
+    parent: settings.root
     label: Account & security
     url: /settings/account
     lifecycle: soon
     spa: true
   - id: settings.data
     bucket: profile
+    parent: settings.root
     label: Data
     url: /settings/data
     lifecycle: soon
