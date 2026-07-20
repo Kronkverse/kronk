@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_18_090000) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_18_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1247,6 +1247,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_18_090000) do
     t.index ["account_id"], name: "index_profile_sections_on_account_id"
   end
 
+  create_table "proposal_attachments", force: :cascade do |t|
+    t.bigint "proposal_id", null: false
+    t.bigint "account_id", null: false
+    t.integer "kind", default: 0, null: false
+    t.text "description"
+    t.string "file_file_name"
+    t.string "file_content_type"
+    t.bigint "file_file_size"
+    t.datetime "file_updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_proposal_attachments_on_account_id"
+    t.index ["proposal_id"], name: "index_proposal_attachments_on_proposal_id"
+  end
+
   create_table "proposal_backings", force: :cascade do |t|
     t.bigint "proposal_id", null: false
     t.bigint "account_id", null: false
@@ -1272,7 +1287,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_18_090000) do
   create_table "proposals", id: :bigint, default: -> { "timestamp_id('proposals'::text)" }, force: :cascade do |t|
     t.string "title", null: false
     t.text "body", null: false
-    t.integer "status", default: 0, null: false
+    t.integer "status", default: 1, null: false
     t.integer "decision_type", default: 0, null: false
     t.datetime "opens_at"
     t.datetime "closes_at"
@@ -1949,6 +1964,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_18_090000) do
   add_foreign_key "preview_cards", "accounts", column: "author_account_id", on_delete: :nullify
   add_foreign_key "profile_cards", "accounts", on_delete: :cascade
   add_foreign_key "profile_sections", "accounts", on_delete: :cascade
+  add_foreign_key "proposal_attachments", "accounts", on_delete: :cascade, validate: false
+  add_foreign_key "proposal_attachments", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "proposal_backings", "accounts", on_delete: :cascade, validate: false
   add_foreign_key "proposal_backings", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "proposal_votes", "accounts", on_delete: :cascade, validate: false
