@@ -131,6 +131,12 @@ class Account < ApplicationRecord
 
   enum :protocol, { ostatus: 0, activitypub: 1 }
   enum :suspension_origin, { local: 0, remote: 1 }, prefix: true
+  # `id_scheme`'s column is added by a 2025 migration (add_id_scheme_to_accounts);
+  # old migrations that instantiate Account load this model before it exists. As
+  # with Status#post_type, declare the attribute explicitly so the enum does not
+  # raise on model load during a from-scratch migration replay. Default matches
+  # the schema (1) so runtime behaviour is unchanged.
+  attribute :id_scheme, :integer, default: 1
   enum :id_scheme, { username_ap_id: 0, numeric_ap_id: 1 }
 
   validates :username, presence: true
