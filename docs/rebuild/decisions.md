@@ -17,6 +17,58 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-07-20 — Korner conformance gates (L1 / L10) + event bus
+
+Decisions taken while building the conformance gates from
+`implementation_plan.md` Phases 1.7 / 5.7 / 9.5 (PRs #387–#393). All verified on
+a real Postgres + Redis env before merge.
+
+### D2 — Klot's `klot_phase_viewer` is a sanctioned exception, not migrated now
+
+Klot's bespoke visibility scope points at a shared authorization layer (§7) that
+does not exist yet. Rather than build §7 to satisfy one scope, `klot_phase_viewer`
+stays enforced by its existing ownership check + `KlotShare` allowlist and is
+documented as a **sanctioned exception** in `korner_standard.md`. It migrates onto
+the shared layer when §7 lands. (Klot's manifest *shape* was still migrated to the
+nested `security:` block — #392.)
+
+### D3 — Nudges and Groups are accepted structural exceptions
+
+Named in `korner_standard.md` so they stop reading as drift: **Nudges** is a
+`core:` space (own mount `/nudges`, no Hub tile, not tune-out-able) that carries a
+manifest only because a manifest is how anything is declared; **Groups** opts out
+of feed projection by design (`render_target: web`, no `status_association`), so
+its L3/L4 gates are N/A, not failures.
+
+### §5.7 — a manifest declares only notification types that actually fire
+
+The L10 gate (#388) requires every declared `notifications.types[].name` to be a
+registered `Notification` type. Rather than register dead types to satisfy it, the
+rule is: **declare only what has a working producer.** Built `proposal_challenged`
++ `task_assigned` (real hooks exist); removed the declarations whose trigger
+surfaces don't exist yet — kommons `proposal_backed`/`proposal_comment`, kuestions
+`question_answered`/`answer_frothed`, marketplace's four `listing_*` — each with a
+manifest comment on when it returns (#393). They come back *with their producers*.
+
+### §9.5 — event-bus wiring is deferred
+
+The bus (`Kronk::KornerEvents`) has publishers but no runtime subscribers and no
+handler-naming convention. The entire system has **one** cross-korner listen
+(huddle ← `kalendar.event.created`; the names align, so it is not an orphan), its
+handler is unbuilt *feature* work, and huddle is `enforced: false`. Building a
+generic wiring framework + convention for a single non-enforced consumer is
+premature. Deferred until a second real listener or a concrete need exists; the
+`listens:`/`emits:` text check in `korners doctor` remains adequate until then.
+
+### Process — a reverted feature must restore its migrations too
+
+The 2026-04-27 "Kommons" revert deleted 8 migrations; when Kommons was re-added
+only `create_tasks` came back, leaving `proposals` (and others) in `schema.rb`
+with no creating migration — the from-scratch migration replay was red for weeks.
+Recovered verbatim from the pre-revert commit (#390). Lesson: when reverting then
+re-landing a feature, the migration set travels with it; the replay job is the
+check that catches a half-restore.
+
 ## 2026-07-19 — The space model
 
 ### A space is the general thing; a korner is one kind of space
