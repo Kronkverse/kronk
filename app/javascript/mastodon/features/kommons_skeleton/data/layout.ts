@@ -220,11 +220,15 @@ export const layoutTree = (tree: Tree): Layout => {
     if (kids.length === 0) return;
 
     const n = kids.length;
-    // Fan width, sibling spacing and minimum radius all tighten with depth:
-    // a limb sweeps wide off the core, a page cluster stays compact.
+    // Fan width and sibling spacing tighten with depth — a limb sweeps wide off
+    // the core, a page cluster stays angularly compact — but the minimum radius
+    // stays generous so each level lands in a *distinct outer ring* rather than
+    // hugging its parent. Korner pages used to sit only ~160 out from their
+    // korner and, once fanned, read as the same level as the korners themselves;
+    // pushing depth 2/3 out layers the branch so the hierarchy is legible.
     const span = depth === 1 ? 126 : depth === 2 ? 98 : 76;
     const spacing = depth === 1 ? 132 : depth === 2 ? 116 : 104;
-    const base = depth === 1 ? 215 : depth === 2 ? 160 : 128;
+    const base = depth === 1 ? 225 : depth === 2 ? 210 : 170;
 
     // Dense fans stack into concentric rings rather than sprawling. Radius is
     // arc-length driven — seating n siblings `spacing` apart along an arc of
