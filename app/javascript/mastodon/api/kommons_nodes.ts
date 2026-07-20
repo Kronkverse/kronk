@@ -33,7 +33,13 @@ export interface ApiNodeLink {
 // (below) closes that seam at runtime — the /nodes endpoint now ships the
 // registry's authoritative `buckets`, so a divergence surfaces as a console
 // warning against the live contract rather than silently vanishing nodes.
-export const BUCKETS = ['feed', 'profile', 'nudges', 'hub'] as const;
+export const BUCKETS = [
+  'feed',
+  'profile',
+  'nudges',
+  'hub',
+  'settings',
+] as const;
 export type Bucket = (typeof BUCKETS)[number];
 
 // Compare the server's authoritative bucket list against this client union and

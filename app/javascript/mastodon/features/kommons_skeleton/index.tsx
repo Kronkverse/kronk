@@ -25,7 +25,7 @@ import { Composer } from './components/composer';
 import { NodeDetail } from './components/node_detail';
 import { BodyMap } from './components/body_map';
 import type { KommonsNode } from './data/nodes';
-import { findNode, fromApiNodes, mapNodes } from './data/nodes';
+import { findNode, fromApiNodes } from './data/nodes';
 import { ROOT_ID } from './data/layout';
 
 const messages = defineMessages({
@@ -67,6 +67,8 @@ const LIMB_LABELS: Record<string, string> = {
   feed: 'Feed',
   profile: 'Profile',
   hub: 'Hub',
+  nudges: 'Nudges',
+  settings: 'Settings',
 };
 
 // A crumb id is a limb, a `korner:<slug>` handle, or a real node id.
@@ -103,7 +105,7 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({
       .then((res) => {
         if (cancelled) return;
         warnOnBucketDrift(res.buckets);
-        setNodes(mapNodes(fromApiNodes(res.nodes)));
+        setNodes(fromApiNodes(res.nodes));
         setLoading(false);
       })
       .catch(() => {

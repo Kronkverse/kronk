@@ -1,20 +1,26 @@
 # Settings
 
-**Node bucket:** `profile` — every `settings.*` node except `settings.feed`
-and `settings.hub` is filed there (`config/kronk_nodes.yaml`) · **Cross-cutting.**
+**Node bucket:** `settings` — its own core space (manifest
+`config/korners/settings.yaml`, `core: true`, mount `/settings`). Every
+personal/account `settings.*` node lands in this bucket on `settings.root`
+(`config/kronk_nodes.yaml`); `settings.feed` and `settings.hub` stay in the
+feed/hub buckets — a space configures itself in its own limb. **Cross-cutting.**
 
-> Corrected 2026-07-19. This previously read "`hub` sub-tree at `/settings/*`",
-> which was never true in the registry. Settings has no honest home under the
-> current three-bucket scheme — see
-> [`../rebuild/decisions.md`](../rebuild/decisions.md).
+> Updated 2026-07-20. Settings previously had no honest home under the
+> three-bucket scheme and was filed under `profile`; it now owns the `settings`
+> bucket and a core-space manifest per the "every space gets a manifest"
+> decision — see [`../rebuild/decisions.md`](../rebuild/decisions.md). (It read
+> "`hub` sub-tree at `/settings/*`" before 2026-07-19, which was never true in
+> the registry.)
 
 ## Purpose
 
 Settings is the surface where users shape **how they experience
 Kronk** — appearance, posting defaults, privacy, notifications,
-data. Each korner also owns its own settings sub-page under
-`/hub/<slug>/settings`; the top-level settings hub aggregates the
-account/global controls.
+data. It is both a hub and a contextual entry: `/settings` aggregates the
+account/global controls, while each korner owns its own settings sub-page
+under `/hub/<slug>/settings` and each core space configures itself in its own
+limb (`settings.feed` → `/home/settings`, `settings.hub` → `/settings/korners`).
 
 ## Nodes in the Skeleton
 

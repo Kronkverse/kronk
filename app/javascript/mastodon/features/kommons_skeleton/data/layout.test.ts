@@ -187,24 +187,23 @@ describe('layoutTree', () => {
   });
 });
 
-// The settings.* pages all live in the `profile` bucket (settings has no bucket
-// of its own) but must nest under `settings.root`, not pile up flat under the
-// Profile limb — otherwise Profile shows ~16 siblings instead of a handful of
-// pages plus a Settings branch.
+// The settings.* pages live in the `settings` bucket (its own core space) and
+// nest under `settings.root` — the /settings landing — rather than piling up
+// flat under the Settings limb, exactly as korner pages nest under their korner.
 describe('intra-bucket nesting', () => {
   it('nests a node under a same-bucket parent rather than flat under the limb', () => {
     const nodes: KommonsNode[] = [
-      node('settings.root', 'profile'),
-      node('settings.appearance', 'profile', 'settings.root'),
-      node('settings.privacy', 'profile', 'settings.root'),
-      node('profile.view', 'profile'),
+      node('settings.root', 'settings'),
+      node('settings.appearance', 'settings', 'settings.root'),
+      node('settings.privacy', 'settings', 'settings.root'),
+      node('settings.you', 'settings'),
     ];
     const tree = buildTree(nodes);
 
-    // The Profile limb holds only the un-parented nodes.
-    expect(tree.profile?.kids).toContain('settings.root');
-    expect(tree.profile?.kids).toContain('profile.view');
-    expect(tree.profile?.kids).not.toContain('settings.appearance');
+    // The Settings limb holds only the un-parented nodes.
+    expect(tree.settings?.kids).toContain('settings.root');
+    expect(tree.settings?.kids).toContain('settings.you');
+    expect(tree.settings?.kids).not.toContain('settings.appearance');
 
     // The settings pages hang off settings.root.
     expect(tree['settings.root']?.kids).toEqual(

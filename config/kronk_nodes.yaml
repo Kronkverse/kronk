@@ -204,10 +204,10 @@ nodes:
     lifecycle: live
     spa: true
 
-  # Settings surfaces — grouped under Profile in the tree since they
-  # are the self-management side of the same identity.
+  # Settings surfaces — in the `settings` bucket (its own core space). They
+  # link back to the profile pages they configure via `settings_for`.
   - id: settings.profile
-    bucket: profile
+    bucket: settings
     parent: settings.root
     label: Settings · Profile
     url: /settings/profile
@@ -219,7 +219,7 @@ nodes:
         description: Same account attributes; the composer is the modern entry point.
 
   - id: settings.sections
-    bucket: profile
+    bucket: settings
     parent: settings.root
     label: Settings · Sections
     url: /settings/profile_sections
@@ -235,61 +235,60 @@ nodes:
   # was advertising a redirect as a destination, so feedback filed here was
   # filed against nothing.
   - id: settings.prefs
-    bucket: profile
+    bucket: settings
     parent: settings.root
     label: Preferences
     url: /settings/preferences
     route_name: settings_preferences
     lifecycle: deprecated
 
-  # The two settings roots. Both have shipped routes and neither was
-  # registered, so the settings hub — the surface a user actually lands on —
-  # had nowhere for feedback to attach.
-  #
-  # Bucket is `profile` because that is where the rest of settings.* is filed
-  # and where the code puts it. It is not a claim that settings belongs to
-  # Profile: settings has no honest home under the current scheme, and the
-  # section cut is still open. See docs/rebuild/decisions.md.
+  # Settings is its own core space (bucket `settings`, manifest
+  # config/korners/settings.yaml) as of the "every space gets a manifest"
+  # decision — it is no longer filed under `profile`. `settings.root` is the
+  # /settings landing (the surface a user lands on); the sections nest under it,
+  # exactly as korner pages nest under their korner. settings.feed and
+  # settings.hub live in the feed/hub buckets (below) — a space configures
+  # itself in its own limb. See docs/rebuild/decisions.md and docs/spaces/settings.md.
   - id: settings.root
-    bucket: profile
-    label: Settings
+    bucket: settings
+    label: All settings
     url: /settings
     lifecycle: live
     spa: true
 
   - id: settings.you
-    bucket: profile
+    bucket: settings
     parent: settings.root
     label: Settings · You
     url: /settings/you
     lifecycle: live
     spa: true
 
-  # The rebuilt SPA settings sections (settings rebuild §7). Grouped under
-  # Profile ("self-management"); the settings nav projects all settings.* nodes.
+  # The rebuilt SPA settings sections (settings rebuild §7). The settings nav
+  # projects all settings.* nodes from this bucket.
   - id: settings.appearance
-    bucket: profile
+    bucket: settings
     parent: settings.root
     label: Appearance
     url: /settings/appearance
     lifecycle: live
     spa: true
   - id: settings.posting
-    bucket: profile
+    bucket: settings
     parent: settings.root
     label: Posting
     url: /settings/posting
     lifecycle: live
     spa: true
   - id: settings.privacy
-    bucket: profile
+    bucket: settings
     parent: settings.root
     label: Privacy
     url: /settings/privacy
     lifecycle: live
     spa: true
   - id: settings.notifications
-    bucket: profile
+    bucket: settings
     parent: settings.root
     label: Notifications
     url: /settings/notifications
@@ -297,14 +296,14 @@ nodes:
     spa: true
   # Still the classic Mastodon monolith — surfaced as `soon` until rehomed.
   - id: settings.account
-    bucket: profile
+    bucket: settings
     parent: settings.root
     label: Account & security
     url: /settings/account
     lifecycle: soon
     spa: true
   - id: settings.data
-    bucket: profile
+    bucket: settings
     parent: settings.root
     label: Data
     url: /settings/data
@@ -319,11 +318,10 @@ nodes:
     lifecycle: live
     spa: true
 
-  # ── SETTINGS (see docs/kronk_settings_ia.md) — three surfaces mapped to the
-  # three buckets: Feed (incoming), Profile (self-management: composer + posting
-  # + discoverability + Account/Appearance/Data folded in as sections), Hub
-  # (spaces). Profile settings already exist above (settings.profile/.sections/
-  # .prefs in the profile bucket); these are the two genuinely-new surfaces.
+  # ── Per-limb settings (see docs/kronk_settings_ia.md). The personal/account
+  # settings live in the `settings` bucket above; a space configures itself in
+  # its own limb — Feed's display prefs hang off the feed limb, the Hub's tile
+  # prefs off the hub limb — so these two stay in feed/hub, not `settings`.
   - id: settings.feed
     bucket: feed
     label: Feed settings
