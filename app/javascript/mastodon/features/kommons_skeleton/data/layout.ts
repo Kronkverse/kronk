@@ -111,10 +111,15 @@ export const buildTree = (nodes: KommonsNode[]): Tree => {
     add({ id: limb, label: limbLabel(limb), parent: ROOT_ID, kids: [], count: 0 });
   }
 
-  // Every limb but hub holds its pages directly; hub holds korners, which hold
-  // pages — so the hub limb is one level deeper than the others.
+  // feed/profile/nudges hold their pages directly — but a page may declare a
+  // `parent` that is another node in the same bucket (the settings.* pages nest
+  // under `settings.root`), forming a sub-branch instead of piling up flat under
+  // the limb. (hub is the general case of this: korners hold pages.) Two passes —
+  // create every node, then wire each under its parent, falling back to the limb
+  // when the parent isn't a node in this bucket.
   for (const limb of ['feed', 'profile', 'nudges'] as const) {
-    for (const n of bucketNodes(nodes, limb)) {
+    const inBucket = bucketNodes(nodes, limb);
+    for (const n of inBucket) {
       add({
         id: n.id,
         label: n.label,
@@ -124,7 +129,13 @@ export const buildTree = (nodes: KommonsNode[]): Tree => {
         lifecycle: n.lifecycle,
         count: n.openProposals,
       });
-      tree[limb]?.kids.push(n.id);
+    }
+    for (const n of inBucket) {
+      const node = tree[n.id];
+      if (!node) continue;
+      const parentId = n.parent && tree[n.parent] ? n.parent : limb;
+      node.parent = parentId;
+      tree[parentId]?.kids.push(n.id);
     }
   }
 
