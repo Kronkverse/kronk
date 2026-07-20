@@ -181,6 +181,29 @@ module Mastodon
         card = manifest.feed_projection&.dig('card')
         issues << "L4 feed card '#{card}' not registered in korner_cards.tsx (no slug: '#{slug}' entry)" if card.present? && !korner_source('app/javascript/mastodon/components/korner_cards.tsx').match?(/slug:\s*['"]#{Regexp.escape(slug)}['"]/)
 
+        # L10 — every notification type the manifest declares is actually a
+        # registered `Notification` type, and its subject resolves to a model.
+        # This is the check the doctor historically lacked: a korner could
+        # declare a whole notification subsystem (Kommons declared five) of
+        # which only some — or none — were ever built, and nothing caught it.
+        # A declared-but-unregistered type never fires, so the manifest is
+        # promising a surface that does not exist.
+        Array(manifest.notifications).each do |entry|
+          type_name = entry.is_a?(Hash) ? entry['name'] : entry
+          next if type_name.blank?
+
+          unless ::Notification::TYPES.include?(type_name.to_sym)
+            issues << "L10 notification type '#{type_name}' is not registered in Notification::PROPERTIES (declared but never built — it can never fire)"
+            next
+          end
+
+          subject_type = entry['subject_type'] if entry.is_a?(Hash)
+          next if subject_type.blank?
+
+          model = subject_type.to_s.camelize.safe_constantize
+          issues << "L10 notification type '#{type_name}' subject_type '#{subject_type}' resolves to no model" unless model.is_a?(Class) && model < ActiveRecord::Base
+        end
+
         issues
       end
 
