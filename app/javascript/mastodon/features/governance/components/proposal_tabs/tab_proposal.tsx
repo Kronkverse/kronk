@@ -590,6 +590,11 @@ export const TabProposal: React.FC<{
             {' · '}
             <strong>{proposal.backing.backers}</strong>{' '}
             {proposal.backing.backers === 1 ? 'backer' : 'backers'}
+            {proposal.backing.rank !== null && (
+              <>
+                {' · '}#{proposal.backing.rank} most-backed
+              </>
+            )}
             {proposal.backing.my_stake > 0 && (
               <>
                 {' · '}you staked <strong>{proposal.backing.my_stake}</strong>
