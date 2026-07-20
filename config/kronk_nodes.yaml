@@ -69,80 +69,12 @@ nodes:
     lifecycle: live
     spa: true
 
-  # The rest of the feed bucket. Every entry below is an existing route,
-  # not a plan — the Skeleton is a map of what Kronk *is*, and a node that
-  # names nothing is a place feedback can be filed against and never acted
-  # on. Where a surface has no node, proposals about it have nowhere to
-  # land except the korner index, which is how a specific complaint turns
-  # into a vague one.
-  - id: feed.local
-    bucket: feed
-    label: Local timeline
-    url: /public/local
-    lifecycle: live
-    spa: true
-
-  - id: feed.federated
-    bucket: feed
-    label: Federated timeline
-    url: /public
-    lifecycle: live
-    spa: true
-
-  - id: feed.explore
-    bucket: feed
-    label: Explore
-    url: /explore
-    lifecycle: live
-    spa: true
-
-  - id: feed.tag
-    bucket: feed
-    label: Hashtag timeline
-    url: /tags/:id
-    lifecycle: live
-    spa: true
-
-  - id: feed.compose
-    bucket: feed
-    label: Composer
-    url: /publish
-    lifecycle: live
-    spa: true
-    links:
-      - to: feed.home
-        kind: creates
-        description: Posting here is what puts a card in the home feed.
-
-  - id: feed.status
-    bucket: feed
-    label: Post detail
-    url: /@:user/:id
-    lifecycle: live
-    spa: true
-
-  # "Froth" is the Kronk word for a favourite — user-facing copy uses it,
-  # the column and route keep Mastodon's spelling.
-  - id: feed.froths
-    bucket: feed
-    label: Froths
-    url: /favourites
-    lifecycle: live
-    spa: true
-
-  - id: feed.bookmarks
-    bucket: feed
-    label: Bookmarks
-    url: /bookmarks
-    lifecycle: live
-    spa: true
-
-  - id: feed.lists
-    bucket: feed
-    label: Lists
-    url: /lists/:id
-    lifecycle: live
-    spa: true
+  # Feed is the one continuous-scroll surface, and feed.home is it. The
+  # local/federated/explore/tag timelines, the froths/bookmarks/lists
+  # collections, and the compose/status routes were removed as Skeleton nodes:
+  # feed *scope* (Friends / FoF / Kommunity) is a setting on the one feed
+  # (settings.feed), not a set of separate destinations — and a post permalink
+  # and the Post action are not places on the map. See docs/spaces/feed.md.
 
   # ── PROFILE ───────────────────────────────────────────────────────
   - id: profile.view
