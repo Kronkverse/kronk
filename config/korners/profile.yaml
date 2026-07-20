@@ -1,0 +1,50 @@
+# Profile — a person's space at /@:acct. A core platform space, not a korner.
+#
+# Manifest-declared per the one-mechanism decision (docs/rebuild/decisions.md).
+# Profile rides Mastodon's core Account model plus the Kronk sectioned-profile
+# layer (profile_sections); it owns no korner-namespaced tables.
+
+slug: profile
+name: Profile
+icon: account_circle
+render_target: native
+version: 0.1.0
+
+security:
+  permissions:
+    - read:accounts
+  visibility_scopes: [] # account/status visibility governs what a viewer sees
+  maintainers:
+    - moderator
+  federates: true # accounts federate
+
+resources: [] # rides the core Account model + profile_sections; no korner tables
+
+storage:
+  db_namespace: # not-applicable — core accounts table
+  media_prefix: # not-applicable — avatar/header use Mastodon media
+  redis_prefix: # not-applicable
+
+emits: []
+listens: []
+
+feed_projection:
+  card: # not-applicable — the profile is a destination, not a feed card
+  discriminator: # n/a
+
+subscription:
+  default: # not-applicable — following, not subscription, is the profile primitive
+
+launch:
+  blurb: # not-applicable — core space, no launch card
+  cta: # not-applicable
+
+feature_flag: # not-implemented
+# Profile is a core space, not a korner: it is the "Me" pillar of the primary
+# switcher, has no Hub tile, and cannot be tuned out of.
+core: true
+mount: /@:acct
+enforced: true
+
+# Nodes are the cross-cutting profile.* entries in config/kronk_nodes.yaml.
+nodes: []

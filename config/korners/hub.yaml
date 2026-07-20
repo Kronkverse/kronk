@@ -1,0 +1,52 @@
+# Hub — the grid of korners at /hub. A core platform space, not a korner.
+#
+# Manifest-declared per the one-mechanism decision (docs/rebuild/decisions.md).
+# The Hub is pure navigation: a grid of every korner's tile, ordered by tune-in
+# count with a per-user override (spec §4). It owns no tables of its own —
+# `user_hub_orders` is the tune-in/ordering layer, not a Hub resource.
+
+slug: hub
+name: Hub
+icon: apps
+render_target: native
+version: 0.1.0
+
+security:
+  permissions:
+    - read:statuses # the Hub reads korner registration; no write surface
+  visibility_scopes: [] # the grid shows every registered korner tile
+  maintainers:
+    - moderator
+  federates: false # the Hub is local navigation; it does not federate
+
+resources: [] # rides the KornerRegistry; no korner-namespaced tables
+
+storage:
+  db_namespace: # not-applicable
+  media_prefix: # not-applicable
+  redis_prefix: # not-applicable
+
+emits: []
+listens: []
+
+feed_projection:
+  card: # not-applicable — the Hub is a grid of korners, not a feed surface
+  discriminator: # n/a
+
+subscription:
+  default: # not-applicable
+
+launch:
+  blurb: # not-applicable — core space, no launch card
+  cta: # not-applicable
+
+feature_flag: # not-implemented
+# Hub is a core space, not a korner: it is the korner rail / grid itself, so it
+# cannot be a tile within itself and cannot be tuned out of. The reserved-slug
+# boot check exempts `core:` manifests, so it may own the reserved `hub` slug.
+core: true
+mount: /hub
+enforced: true
+
+# Nodes are the cross-cutting hub.* entries in config/kronk_nodes.yaml.
+nodes: []

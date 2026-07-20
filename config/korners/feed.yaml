@@ -1,0 +1,54 @@
+# Feed — the Home timeline. A core platform space, not a korner.
+#
+# Feed carries a manifest for the same reason Nudges does: the one-mechanism
+# decision (docs/rebuild/decisions.md) is that *every* space is manifest-declared,
+# so the Skeleton and nav can derive their structure from the registry instead of
+# a hardcoded list. Feed rides Mastodon's core Status timeline; it owns no
+# korner-namespaced tables.
+
+slug: feed
+name: Home
+icon: home
+render_target: native
+version: 0.1.0
+
+security:
+  permissions:
+    - read:statuses
+  visibility_scopes: [] # rides Mastodon status visibility as-is
+  maintainers:
+    - moderator
+  federates: true # the home timeline surfaces federated posts
+
+resources: [] # rides the core Status model (FeedManager); no korner tables
+
+storage:
+  db_namespace: # not-applicable — core statuses table
+  media_prefix: # not-applicable
+  redis_prefix: # not-applicable — Mastodon's home feed (FeedManager) Redis
+
+emits: []
+listens: []
+
+feed_projection:
+  card: # not-applicable — Feed *is* the timeline; it does not project into itself
+  discriminator: # n/a
+
+subscription:
+  default: # not-applicable — Feed is the reader surface, not a broadcast source
+
+launch:
+  blurb: # not-applicable — core space, no launch card
+  cta: # not-applicable
+
+feature_flag: # not-implemented
+# Feed is a core space, not a korner: mounted at /home in the primary switcher
+# (Me / Home / Nudges), it has no Hub tile and cannot be tuned out of. The
+# reserved-slug boot check exempts `core:` manifests, so it may own the reserved
+# `feed` slug.
+core: true
+mount: /home
+enforced: true
+
+# Nodes are the cross-cutting feed.* entries in config/kronk_nodes.yaml.
+nodes: []
