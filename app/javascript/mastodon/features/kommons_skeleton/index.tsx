@@ -25,7 +25,7 @@ import { Composer } from './components/composer';
 import { NodeDetail } from './components/node_detail';
 import { BodyMap } from './components/body_map';
 import type { KommonsNode } from './data/nodes';
-import { findNode, fromApiNodes } from './data/nodes';
+import { findNode, fromApiNodes, mapNodes } from './data/nodes';
 import { ROOT_ID } from './data/layout';
 
 const messages = defineMessages({
@@ -103,7 +103,7 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({
       .then((res) => {
         if (cancelled) return;
         warnOnBucketDrift(res.buckets);
-        setNodes(fromApiNodes(res.nodes));
+        setNodes(mapNodes(fromApiNodes(res.nodes)));
         setLoading(false);
       })
       .catch(() => {
