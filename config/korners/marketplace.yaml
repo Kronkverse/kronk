@@ -51,27 +51,11 @@ feed_projection:
   default_visibility: public
 
 notifications:
-  types:
-    - name: listing_saved
-      subject_type: listing
-      default_push: false
-      aggregation: { window: 6h, key: listing_id }
-      interactive: false
-    - name: listing_message
-      subject_type: listing_offer
-      default_push: true
-      aggregation: default
-      interactive: true # nudge — reply-able
-    - name: listing_updated
-      subject_type: listing
-      default_push: false # only for accounts that have saved the listing
-      aggregation: { window: 1h, key: listing_id }
-      interactive: false
-    - name: listing_offer_received
-      subject_type: listing_offer
-      default_push: true
-      aggregation: none
-      interactive: true
+  types: []
+  # All four listing_* types are deferred: Marketplace has no notification
+  # producers (and its subject_types listing/listing_offer are not yet wired to
+  # delivery). They return here — with producers — when Marketplace notification
+  # delivery ships. The L10 gate requires a declared type to be registered (§5.7).
 
 settings:
   - name: default_publish_visibility

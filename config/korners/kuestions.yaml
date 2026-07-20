@@ -43,17 +43,11 @@ feed_projection:
   status_post_type: question # legacy path; both resolve during the transition
 
 notifications:
-  types:
-    - name: question_answered
-      subject_type: question
-      default_push: true
-      aggregation: default
-      interactive: true # nudge — reply-able
-    - name: answer_frothed
-      subject_type: answer
-      default_push: false
-      aggregation: { window: 1h, key: answer_id }
-      interactive: false # notice — inline count in the answer's thread
+  types: []
+  # question_answered + answer_frothed are deferred: no producers exist yet
+  # (no answer-created or answer-froth hook wired to a notification). They
+  # return here — with producers — when Kuestions v2 delivery ships. The L10
+  # gate requires a declared type to be registered + fired (§5.7).
 
 # Per-user settings surfaced at /hub/kuestions/settings (spec §K.3.3).
 settings:

@@ -45,21 +45,15 @@ feed_projection:
 
 notifications:
   types:
-    - name: proposal_backed
-      subject_type: proposal
-      default_push: false
-      aggregation: { window: 1h, key: proposal_id }
-      interactive: false # notice — inline count in the proposal's Nudges thread
+    # proposal_backed + proposal_comment are deferred: their trigger surfaces
+    # don't exist yet (token backing has no caller; there's no proposal-comment
+    # model/endpoint). They return here — and L10 requires their producers —
+    # once those surfaces ship. Declaring only what actually fires (§5.7).
     - name: proposal_challenged
       subject_type: proposal
       default_push: true
       aggregation: default
       interactive: true # nudge — reply-able, react-able
-    - name: proposal_comment
-      subject_type: proposal
-      default_push: true
-      aggregation: default
-      interactive: true
     - name: proposal_status_changed
       subject_type: proposal
       default_push: false # noisy for backers/opposers — off by default

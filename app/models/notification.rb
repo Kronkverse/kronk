@@ -116,6 +116,20 @@ class Notification < ApplicationRecord
       filterable: false,
       legacy: false,
     }.freeze,
+    # Korner-native (Kommons). Fired when someone casts a block vote that
+    # challenges a proposal (config/korners/kommons.yaml) — the proposer is
+    # notified that their proposal was challenged. Producer:
+    # Api::V1::ProposalsController#vote.
+    proposal_challenged: {
+      filterable: false,
+      legacy: false,
+    }.freeze,
+    # Korner-native (Kommons). Fired when a task on a proposal is assigned to
+    # an account. Producer: Api::V1::TasksController create/update.
+    task_assigned: {
+      filterable: false,
+      legacy: false,
+    }.freeze,
     media_tag: {
       filterable: true,
       legacy: true,
