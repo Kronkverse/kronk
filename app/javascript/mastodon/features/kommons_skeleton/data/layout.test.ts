@@ -187,29 +187,31 @@ describe('layoutTree', () => {
   });
 });
 
-// The settings.* pages live in the `settings` bucket (its own core space) and
-// nest under `settings.root` — the /settings landing — rather than piling up
-// flat under the Settings limb, exactly as korner pages nest under their korner.
+// buildTree lets a page nest under another node in the *same* bucket, forming a
+// sub-branch instead of piling up flat under the limb, and falls back to the
+// limb when the named parent isn't present. No core space uses this today — the
+// settings.* pages sit flat on the Settings limb — but the capability is general
+// (hub is the specialised case of it: korners hold pages), so it is pinned here.
 describe('intra-bucket nesting', () => {
   it('nests a node under a same-bucket parent rather than flat under the limb', () => {
     const nodes: KommonsNode[] = [
-      node('settings.root', 'settings'),
-      node('settings.appearance', 'settings', 'settings.root'),
-      node('settings.privacy', 'settings', 'settings.root'),
-      node('settings.you', 'settings'),
+      node('feed.hub', 'feed'),
+      node('feed.hub.a', 'feed', 'feed.hub'),
+      node('feed.hub.b', 'feed', 'feed.hub'),
+      node('feed.solo', 'feed'),
     ];
     const tree = buildTree(nodes);
 
-    // The Settings limb holds only the un-parented nodes.
-    expect(tree.settings?.kids).toContain('settings.root');
-    expect(tree.settings?.kids).toContain('settings.you');
-    expect(tree.settings?.kids).not.toContain('settings.appearance');
+    // The limb holds only the un-parented nodes.
+    expect(tree.feed?.kids).toContain('feed.hub');
+    expect(tree.feed?.kids).toContain('feed.solo');
+    expect(tree.feed?.kids).not.toContain('feed.hub.a');
 
-    // The settings pages hang off settings.root.
-    expect(tree['settings.root']?.kids).toEqual(
-      expect.arrayContaining(['settings.appearance', 'settings.privacy']),
+    // The children hang off their same-bucket parent.
+    expect(tree['feed.hub']?.kids).toEqual(
+      expect.arrayContaining(['feed.hub.a', 'feed.hub.b']),
     );
-    expect(tree['settings.appearance']?.parent).toBe('settings.root');
+    expect(tree['feed.hub.a']?.parent).toBe('feed.hub');
   });
 
   it('falls back to the limb when the declared parent is absent from the bucket', () => {
