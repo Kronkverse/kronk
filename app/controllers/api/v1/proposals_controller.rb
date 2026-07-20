@@ -58,8 +58,10 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   def archive
-    @proposal.update!(archived_at: Time.now.utc)
+    Kronk::ProposalStates.archive!(@proposal)
     render json: @proposal, serializer: REST::ProposalSerializer
+  rescue Kronk::ProposalStates::StillBacked, Kronk::ProposalStates::InvalidTransition => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
   def unarchive

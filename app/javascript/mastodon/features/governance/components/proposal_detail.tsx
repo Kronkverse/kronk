@@ -176,7 +176,7 @@ export const ProposalDetail: React.FC<{
         onVoteUpdate(res.data);
         setDelivering(false);
       } catch {
-        setDeliverError('Failed to mark as delivered.');
+        setDeliverError('Failed to confirm completion.');
       } finally {
         setDeliverPending(false);
       }
@@ -207,13 +207,13 @@ export const ProposalDetail: React.FC<{
             <h3 className='governance-form__heading'>
               <FormattedMessage
                 id='governance.deliver.heading'
-                defaultMessage='Mark as delivered'
+                defaultMessage='Confirm completion'
               />
             </h3>
             <p className='governance-form__hint'>
               <FormattedMessage
                 id='governance.deliver.hint'
-                defaultMessage='This permanently closes the seed and locks all voting. Optionally describe how it was delivered.'
+                defaultMessage='Confirm this delivered proposal is done. Backers’ stakes are returned and the author is paid. Optionally add outcome notes.'
               />
             </p>
             {deliverError && (
@@ -231,7 +231,7 @@ export const ProposalDetail: React.FC<{
                 value={deliverNotes}
                 onChange={handleDeliverNotesChange}
                 rows={4}
-                placeholder='Describe what was shipped…'
+                placeholder='Describe the outcome…'
               />
             </label>
             <div className='governance-form__actions'>
@@ -254,12 +254,12 @@ export const ProposalDetail: React.FC<{
                 {deliverPending ? (
                   <FormattedMessage
                     id='governance.deliver.submitting'
-                    defaultMessage='Marking…'
+                    defaultMessage='Confirming…'
                   />
                 ) : (
                   <FormattedMessage
                     id='governance.deliver.submit'
-                    defaultMessage='Mark as delivered'
+                    defaultMessage='Confirm completion'
                   />
                 )}
               </button>
@@ -365,28 +365,32 @@ export const ProposalDetail: React.FC<{
               {isSeeder && (
                 <div className='governance-detail__seeder-actions'>
                   {!proposal.archived_at && proposal.status !== 'delivered' && (
-                    <>
-                      <button
-                        type='button'
-                        className='governance-detail__action-btn governance-detail__action-btn--edit'
-                        onClick={handleEditOpen}
-                      >
-                        <FormattedMessage
-                          id='governance.action.edit'
-                          defaultMessage='Edit'
-                        />
-                      </button>
-                      <button
-                        type='button'
-                        className='governance-detail__action-btn governance-detail__action-btn--deliver'
-                        onClick={handleDeliverOpen}
-                      >
-                        <FormattedMessage
-                          id='governance.action.deliver'
-                          defaultMessage='Mark as delivered'
-                        />
-                      </button>
-                    </>
+                    <button
+                      type='button'
+                      className='governance-detail__action-btn governance-detail__action-btn--edit'
+                      onClick={handleEditOpen}
+                    >
+                      <FormattedMessage
+                        id='governance.action.edit'
+                        defaultMessage='Edit'
+                      />
+                    </button>
+                  )}
+                  {/* Completion is the proposer confirming an already-delivered
+                      proposal (delivery itself is a dev action via `tootctl
+                      kommons deliver`). POSTing /complete on an open proposal
+                      422s, so this only shows once status is `delivered`. */}
+                  {!proposal.archived_at && proposal.status === 'delivered' && (
+                    <button
+                      type='button'
+                      className='governance-detail__action-btn governance-detail__action-btn--deliver'
+                      onClick={handleDeliverOpen}
+                    >
+                      <FormattedMessage
+                        id='governance.action.deliver'
+                        defaultMessage='Confirm completion'
+                      />
+                    </button>
                   )}
                   {proposal.archived_at ? (
                     <button
