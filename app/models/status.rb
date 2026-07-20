@@ -124,6 +124,13 @@ class Status < ApplicationRecord
   has_one :kosmic_update, dependent: :nullify, inverse_of: :status
   has_one :listing, dependent: :nullify, inverse_of: :status
 
+  # `post_type`'s column is added by a 2026 migration (add_post_type_to_statuses),
+  # but old migrations that instantiate Status (e.g. AddInReplyToAccountIdToStatuses,
+  # 2016) load this model before that column exists. Under Rails 8 an enum with no
+  # backing column raises unless the attribute type is declared explicitly, which
+  # broke the migration-replay CI job. Declaring it here (type + column default)
+  # keeps runtime behaviour identical while making the model load column-free.
+  attribute :post_type, :integer, default: 0
   enum :post_type, { normal: 0, question: 1, answer: 2, proposal: 3 }, prefix: :kronk
 
   scope :questions, -> { where(post_type: :question) }
