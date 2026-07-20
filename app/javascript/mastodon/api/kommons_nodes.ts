@@ -28,8 +28,34 @@ export interface ApiNodeLink {
 // allowed to disagree. When Ruby learned a fourth bucket, the server emitted
 // nodes the client had no name for: they arrived, typechecked as impossible,
 // and were drawn nowhere.
+//
+// This constant is still hand-synced with the Ruby side; `warnOnBucketDrift`
+// (below) closes that seam at runtime — the /nodes endpoint now ships the
+// registry's authoritative `buckets`, so a divergence surfaces as a console
+// warning against the live contract rather than silently vanishing nodes.
 export const BUCKETS = ['feed', 'profile', 'nudges', 'hub'] as const;
 export type Bucket = (typeof BUCKETS)[number];
+
+// Compare the server's authoritative bucket list against this client union and
+// warn on any divergence. Kept as a runtime guard (not a compile-time derive)
+// on purpose: the `Bucket` union powers exhaustive `Record<Bucket, …>` maps in
+// the layout engine, and that exhaustiveness is what caught the "drawn nowhere"
+// bug in the first place.
+export const warnOnBucketDrift = (serverBuckets: readonly string[]): void => {
+  const client = new Set<string>(BUCKETS);
+  const server = new Set(serverBuckets);
+  const serverOnly = serverBuckets.filter((b) => !client.has(b));
+  const clientOnly = [...client].filter((b) => !server.has(b));
+
+  if (serverOnly.length > 0 || clientOnly.length > 0) {
+    console.warn(
+      '[kommons] bucket drift vs Kronk::NodeRegistry::BUCKETS — add the ' +
+        'missing bucket(s) to api/kommons_nodes.ts BUCKETS. ' +
+        `server-only (nodes drawn nowhere): [${serverOnly.join(', ')}]; ` +
+        `client-only (stale): [${clientOnly.join(', ')}]`,
+    );
+  }
+};
 
 export interface ApiKommonsNode {
   id: string;
@@ -45,7 +71,9 @@ export interface ApiKommonsNode {
 }
 
 export const apiGetKommonsNodes = () =>
-  apiRequestGet<{ nodes: ApiKommonsNode[] }>('v1/kommons/nodes');
+  apiRequestGet<{ buckets: string[]; nodes: ApiKommonsNode[] }>(
+    'v1/kommons/nodes',
+  );
 
 export interface ApiCreateProposalParams {
   title: string;
