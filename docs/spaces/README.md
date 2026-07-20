@@ -31,7 +31,7 @@ Slug matches `config/korners/<slug>.yaml`.
 
 | Doc | Manifest | Notes |
 |---|---|---|
-| [`albutts.md`](albutts.md) | `config/korners/albutts.yaml` | Stub — enforced: false |
+| [`albutts.md`](albutts.md) | `config/korners/albutts.yaml` | Discovery landed 2026-07-20 (R1+R2) — enforced: false, models pending |
 | [`booth.md`](booth.md) | `config/korners/booth.yaml` | Enforced — audio sharing |
 | [`groups.md`](groups.md) | `config/korners/groups.yaml` | Enforced (framework) — UI heads toward "Krew"; slug rename planned |
 | [`huddle.md`](huddle.md) | `config/korners/huddle.yaml` | Models shipped; `/hub/huddle` mount pending |
