@@ -100,4 +100,45 @@ RSpec.describe Mastodon::CLI::Korners do
       expect(match?('/explore-renamed', '/explore')).to be false
     end
   end
+
+  # L10 (Korner Standard §3): a manifest may only declare notification types
+  # that are actually registered, with a subject that resolves to a model.
+  # Built on a synthetic manifest so it stays stable once the real Kommons
+  # types are registered in Phase 5.7.
+  describe 'L10 notification conformance' do
+    subject(:cli) { described_class.new }
+
+    def issues_for(notifications)
+      manifest = Kronk::KornerRegistry::Manifest.new(
+        slug: 'testkorner',
+        enforced: true,
+        security: { 'visibility_scopes' => %w(public) },
+        notifications: notifications
+      )
+      cli.send(:detect_conformance_issues, manifest)
+    end
+
+    it 'flags a declared type that is not a registered Notification type' do
+      issues = issues_for([{ 'name' => 'totally_made_up', 'subject_type' => 'proposal' }])
+      expect(issues).to include(a_string_matching(/L10 notification type 'totally_made_up' is not registered/))
+    end
+
+    it 'accepts a registered type with a resolvable subject' do
+      issues = issues_for([{ 'name' => 'proposal_status_changed', 'subject_type' => 'proposal' }])
+      expect(issues).to all(satisfy { |line| line.exclude?('L10') })
+    end
+
+    it 'flags a registered type whose subject_type resolves to no model' do
+      issues = issues_for([{ 'name' => 'proposal_status_changed', 'subject_type' => 'not_a_model' }])
+      expect(issues).to include(a_string_matching(/L10 notification type 'proposal_status_changed' subject_type 'not_a_model' resolves to no model/))
+    end
+
+    it 'ignores notifications on a non-enforced manifest' do
+      manifest = Kronk::KornerRegistry::Manifest.new(
+        slug: 'testkorner', enforced: false,
+        notifications: [{ 'name' => 'totally_made_up' }]
+      )
+      expect(cli.send(:detect_conformance_issues, manifest)).to all(satisfy { |line| line.exclude?('L10') })
+    end
+  end
 end
