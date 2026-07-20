@@ -18,7 +18,14 @@ class Api::V1::Kommons::NodesController < Api::BaseController
     @nodes = Kronk::NodeRegistry.all
     @counts = Proposal.open.where.not(node_id: nil).group(:node_id).count
 
-    render json: { nodes: @nodes.map { |n| serialize_node(n) } }
+    # `buckets` is the registry's ordered top-level list. The client keeps its
+    # own compile-time `BUCKETS` union for exhaustiveness safety; shipping the
+    # authoritative list here lets the client detect drift against the live
+    # contract instead of silently drawing nodes of an unknown bucket nowhere.
+    render json: {
+      buckets: Kronk::NodeRegistry::BUCKETS,
+      nodes: @nodes.map { |n| serialize_node(n) },
+    }
   end
 
   private

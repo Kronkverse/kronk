@@ -14,7 +14,10 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
+import {
+  apiGetKommonsNodes,
+  warnOnBucketDrift,
+} from 'mastodon/api/kommons_nodes';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 
@@ -43,7 +46,6 @@ const messages = defineMessages({
     defaultMessage: 'Could not load the Kommons tree. Refresh to try again.',
   },
 });
-
 
 interface CrumbProps {
   onClick?: () => void;
@@ -77,7 +79,9 @@ const crumbLabel = (nodes: KommonsNode[], id: string): string => {
   return findNode(nodes, id)?.label ?? id;
 };
 
-const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({
+  multiColumn,
+}) => {
   const intl = useIntl();
 
   const [nodes, setNodes] = useState<KommonsNode[]>([]);
@@ -98,6 +102,7 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) =
     apiGetKommonsNodes()
       .then((res) => {
         if (cancelled) return;
+        warnOnBucketDrift(res.buckets);
         setNodes(fromApiNodes(res.nodes));
         setLoading(false);
       })
@@ -186,7 +191,10 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) =
 
         {!loading && !loadError && (
           <>
-            <nav className='kommons-skeleton__breadcrumb' aria-label='breadcrumb'>
+            <nav
+              className='kommons-skeleton__breadcrumb'
+              aria-label='breadcrumb'
+            >
               {path.map((stepId, i) => (
                 <Fragment key={stepId}>
                   {i > 0 && (

@@ -31,6 +31,11 @@ RSpec.describe 'GET /api/v1/kommons/nodes' do
       expect(ids).to include('kommons.index', 'booth.index', 'kalendar.index')
     end
 
+    it 'ships the registry bucket list so the client can detect drift' do
+      get '/api/v1/kommons/nodes', headers: headers
+      expect(response.parsed_body['buckets']).to eq(Kronk::NodeRegistry::BUCKETS)
+    end
+
     it 'includes bucket, label, url, lifecycle, spa, open_proposals per node' do
       get '/api/v1/kommons/nodes', headers: headers
       home = response.parsed_body['nodes'].find { |n| n['id'] == 'feed.home' }
