@@ -45,6 +45,21 @@ export interface KommonsNode {
   links?: NodeLink[];
 }
 
+// The single Settings destination on the map. Its children — the ten
+// settings.* pages — carry `parent: SETTINGS_ROOT` in the registry.
+export const SETTINGS_ROOT = 'settings.root';
+
+// What belongs on the body-map: platform destinations, not configuration.
+//
+// The settings.* sub-pages live in the `profile` bucket because the settings
+// nav is a NodeRegistry projection of them (see docs/kronk_settings_ia.md) —
+// but they are config surfaces, not places on the platform. Drawing all ten
+// as discs is what made Profile read as sixteen branches. They were never map
+// nodes; drop them here and keep `settings.root` as the single Settings
+// destination. The registry — and the settings nav it feeds — still hold them.
+export const mapNodes = (nodes: KommonsNode[]): KommonsNode[] =>
+  nodes.filter((n) => n.parent !== SETTINGS_ROOT);
+
 // ── API → UI shape converter ───────────────────────────────────────
 
 export const fromApiNodes = (api: ApiKommonsNode[]): KommonsNode[] =>
@@ -75,7 +90,7 @@ const KORNER_LABELS: Record<string, string> = {
   kalendar: 'Kalendar',
   marketplace: 'Marketplace',
   kuestions: 'Kuestions',
-  'inflow': 'Inflow',
+  inflow: 'Inflow',
   groups: 'Groups',
   huddle: 'Huddle',
   kompass: 'Kompass',
