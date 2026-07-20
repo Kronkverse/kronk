@@ -1,23 +1,21 @@
 # Anatomy of a Korner
 
-> **Stale (pre-2.0.0):** this walkthrough predates the rebuild. The
-> `planets.tsx` / `SPACE_PLANET` / `spaceColor()` / `--space-color`
-> layer has been retired — every Korner now inherits the shared
-> `var(--accent)` from `_tokens.scss` and per-Korner colour identity
-> is gone. See `docs/kronk_korner_spec.md` for the current authoritative
-> framework; treat this document as a rough shape guide only.
+Visual companion to [adding_a_korner.md](./adding_a_korner.md) and the framework
+spec [kronk_korner_spec.md](../kronk_korner_spec.md). Two diagrams to hold the
+shape in your head — the **runtime map**, and **feed projection** (the layer
+only some Korners need).
 
-Visual companion to [adding_a_korner.md](./adding_a_korner.md).
-Two diagrams to hold the shape in your head — the **runtime map**, and
-**feed projection** (the layer only some Korners need).
+Per-Korner colour identity is gone: every Korner inherits the shared
+`var(--accent)` (Kronk-purple) from `_tokens.scss`, and its icon comes from the
+manifest via `useKornerIcon`. The retired `planets.tsx` / `--space-color` layer
+is not part of this.
 
 ## The runtime map
 
 Everything you touch to make a new Korner exist. Solid arrows are runtime
-data flow; **dotted arrows are declarative** — `planets.tsx` doesn't call
-your code, it just exposes a colour your module reads via
-`spaceColor(...)`. Thick arrows highlight the two moments a Korner
-"activates": the lazy-load into the SPA, and the one-time table creation.
+data flow; **dotted arrows are declarative** — edited once, referenced forever.
+Thick arrows highlight the two moments a Korner "activates": the lazy-load into
+the SPA, and the one-time table creation.
 
 ```mermaid
 graph TB
@@ -26,14 +24,14 @@ graph TB
     subgraph SPA["Browser — React SPA"]
         UIRoute["ui/index.jsx<br/>WrappedRoute path='/slug'"]
         Async["ui/util/async-components.js<br/>lazy import"]
-        Module["features/slug/index.tsx<br/>sets --space-color"]
+        Module["features/slug/index.tsx"]
         Comp["features/slug/components/*"]
         API["features/slug/api.ts<br/>fetch wrappers"]
         Types["features/slug/types.ts"]
     end
 
     subgraph Reg["Cross-Korner registration"]
-        Planets["planets.tsx<br/>SPACE_PLANET entry"]
+        Icon["hooks/useKornerIcon.tsx<br/>slug → manifest icon"]
         Nav["navigation_panel/index.tsx<br/>ColumnLink to='/slug'"]
     end
 
@@ -74,7 +72,7 @@ graph TB
     Migration ==>|creates| Tables
     Assoc -.->|Account has_many| Model
 
-    Planets -.->|--space-color| Module
+    Icon -.->|icon| Nav
     Nav -.->|link to /slug| UIRoute
     AppScss --> SlugScss
     SlugScss -.->|scoped rules| Module
@@ -89,7 +87,7 @@ graph TB
 2. Rails matches the SPA wildcard route in `config/routes.rb` and returns the SPA shell.
 3. The React route registered in `ui/index.jsx` mounts the async component for your Korner.
 4. `async-components.js` lazy-loads `features/<slug>/index.tsx`.
-5. Your feature module sets `--space-color`, renders your components, and calls `api.ts` for data.
+5. Your feature module renders your components and calls `api.ts` for data.
 6. `api.ts` hits `/api/v1/<slug>/*`, which dispatches to your API controller.
 7. The controller authorises via Doorkeeper, scopes to `current_account`, hits the model.
 8. The model reads/writes your `<slug>_*` tables.
@@ -100,10 +98,10 @@ graph TB
 Four boxes in the diagram aren't in the request path. They're **declarative**
 — edited once, referenced forever:
 
-- **`planets.tsx`** — makes your Korner's space colour derivable everywhere via `spaceColor('SlugName')`.
+- **`hooks/useKornerIcon.tsx`** — maps your slug to the Material Symbol your manifest's `icon:` declares, so the Hub tile / rail / column header all show it.
 - **`navigation_panel/index.tsx`** — how a user _discovers_ your Korner without knowing the URL.
 - **`concerns/account/associations.rb`** — one line so `Account.first.slug_periods` works.
-- **`config/korners/slug.yaml`** — machine-readable declaration of your Korner's shape. Not enforced yet; will be Phase 3.
+- **`config/korners/slug.yaml`** — machine-readable declaration of your Korner's shape, validated at boot/CI by `bin/tootctl korners doctor`.
 
 These are the most common source of "why isn't my Korner showing up" bugs.
 
@@ -131,7 +129,7 @@ graph TB
         TL["Timeline JSON<br/>status.slug_thing = {...}"]
         Disc["components/status.jsx<br/>if status.get('slug_thing')"]
         Card["components/status_slug_card.tsx<br/>adapter for your shape"]
-        Frame["StatusKornerCard<br/>shared frame + badge + space-color border"]
+        Frame["StatusKornerCard<br/>shared frame + badge (accent)"]
     end
 
     Post ==>|writes| Model2
@@ -153,10 +151,10 @@ graph TB
 ### Where the drift lives
 
 **The discriminator is currently a branch chain in `status.jsx`.** Adding a
-feed-projected Korner still means editing that file. Manifest-driven
-discrimination is a Phase 3 move — the manifest will declare which
-association triggers which card, and `status.jsx` becomes a lookup instead
-of a switch.
+feed-projected Korner still means editing that file. The manifest already
+declares the card via `feed_projection.card`, but `status.jsx` doesn't yet read
+it — collapsing that switch into a manifest-driven lookup is the outstanding
+move (the drift).
 
 ---
 
@@ -168,12 +166,12 @@ of a switch.
 | **API**                          | `app/controllers/api/v1/<slug>/*.rb`, `app/serializers/rest/<slug>_*.rb`                                | JSON boundary; thin controllers, authorise via Doorkeeper.                             |
 | **Routes**                       | `config/routes.rb`, `config/routes/api.rb`                                                              | SPA wildcard + `namespace :<slug>` for the API.                                        |
 | **Feature module**               | `app/javascript/mastodon/features/<slug>/*`                                                             | The UI. `index.tsx` mounts, `api.ts` fetches, `components/` renders, `types.ts` types. |
-| **Registration**                 | `ui/index.jsx`, `async-components.js`, `navigation_panel/*`, `planets.tsx`                              | Cross-cutting existing-file edits that make your Korner known.                         |
+| **Registration**                 | `ui/index.jsx`, `async-components.js`, `navigation_panel/*`, `hooks/useKornerIcon.tsx`                  | Cross-cutting existing-file edits that make your Korner known.                         |
 | **Styles**                       | `_<slug>.scss`, `application.scss`                                                                      | One partial, one `@use` line.                                                          |
 | **Feed projection** _(optional)_ | `Status.rb`, `StatusSerializer`, `<slug>_summary_serializer.rb`, `status_<slug>_card.tsx`, `status.jsx` | Only if posts from this Korner render as cards in the home timeline.                   |
-| **Manifest**                     | `config/korners/<slug>.yaml`                                                                            | Declaration of your Korner's shape. Not enforced yet.                                  |
+| **Manifest**                     | `config/korners/<slug>.yaml`                                                                            | Declaration of your Korner's shape, validated at boot/CI by `korners doctor`.          |
 
 Everything above is _the pattern as of today_. The spec's endpoint is a
 Korner that ships in half these touchpoints because manifest-driven
-registration collapses many into one file. Getting there is Phase 3.
+registration collapses many into one file. That consolidation is ongoing.
 For now: match the pattern, mark the drift.
