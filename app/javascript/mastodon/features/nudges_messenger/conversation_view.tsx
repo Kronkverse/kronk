@@ -13,7 +13,6 @@ import {
 import type {
   ApiNudgeConversationDetail,
   ApiNudgeMessageJSON,
-  ApiNudgeStreamItem,
 } from 'mastodon/api_types/nudges_conversations';
 import { Avatar } from 'mastodon/components/avatar';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
@@ -37,24 +36,103 @@ const sameDay = (a: string, b: string) => {
   );
 };
 
-// Fold a freshly-sent message into the detail without a refetch. The
-// server response already has the created message; we just prepend
-// it to the (most-recent-first) stream and update the conversation's
-// sidebar-shape fields so the row hoists locally.
-const applySentMessage = (
+// Prepend a client-authored optimistic message onto the stream while
+// the POST is in-flight. `tempId` starts with `tmp-` so the id space
+// can never collide with a server snowflake bigint id.
+//
+// `author` is a stub — the row is self-authored so the render path
+// gates `showSender=false` for both Mate and Krew, and the reaction
+// row is suppressed while `sending=true`. When the server row
+// arrives, it replaces this stub entirely.
+const OPTIMISTIC_AUTHOR_STUB = {
+  id: '',
+  username: '',
+  display_name: '',
+} as unknown as ApiNudgeMessageJSON['author'];
+
+const prependOptimistic = (
   detail: ApiNudgeConversationDetail | null,
+  tempId: string,
+  body: string,
+): ApiNudgeConversationDetail => {
+  if (!detail) throw new Error('prependOptimistic called without detail');
+  const now = new Date().toISOString();
+  const optimistic: ApiNudgeMessageJSON = {
+    id: tempId,
+    conversation_id: detail.conversation.id,
+    body: body || null,
+    media: null,
+    voice: null,
+    reactions: [],
+    created_at: now,
+    deleted: false,
+    deleted_at: null,
+    author_is_self: true,
+    author: OPTIMISTIC_AUTHOR_STUB,
+    sending: true,
+  };
+  return {
+    conversation: {
+      ...detail.conversation,
+      last_activity_at: now,
+      preview: body || '📷 media',
+      latest_kind: 'message',
+    },
+    stream: [{ kind: 'message', ...optimistic }, ...detail.stream],
+  };
+};
+
+// Replace the optimistic row (matched by tempId) with the
+// server-authoritative message once the POST returns.
+const replaceOptimistic = (
+  detail: ApiNudgeConversationDetail | null,
+  tempId: string,
   message: ApiNudgeMessageJSON,
 ): ApiNudgeConversationDetail => {
-  if (!detail) throw new Error('applySentMessage called without detail');
-  const item: ApiNudgeStreamItem = { kind: 'message', ...message };
+  if (!detail) throw new Error('replaceOptimistic called without detail');
   return {
+    ...detail,
     conversation: {
       ...detail.conversation,
       last_activity_at: message.created_at,
       preview: message.body ?? '📷 media',
       latest_kind: 'message',
     },
-    stream: [item, ...detail.stream],
+    stream: detail.stream.map((item) =>
+      item.kind === 'message' && item.id === tempId
+        ? { kind: 'message', ...message }
+        : item,
+    ),
+  };
+};
+
+// Mark the optimistic row as failed so the retry affordance appears.
+// The row stays in place — user can retry or dismiss.
+const markOptimisticFailed = (
+  detail: ApiNudgeConversationDetail | null,
+  tempId: string,
+): ApiNudgeConversationDetail => {
+  if (!detail) throw new Error('markOptimisticFailed called without detail');
+  return {
+    ...detail,
+    stream: detail.stream.map((item) =>
+      item.kind === 'message' && item.id === tempId
+        ? { ...item, sending: false, failed: true }
+        : item,
+    ),
+  };
+};
+
+const removeOptimistic = (
+  detail: ApiNudgeConversationDetail | null,
+  tempId: string,
+): ApiNudgeConversationDetail => {
+  if (!detail) throw new Error('removeOptimistic called without detail');
+  return {
+    ...detail,
+    stream: detail.stream.filter(
+      (item) => !(item.kind === 'message' && item.id === tempId),
+    ),
   };
 };
 
@@ -112,22 +190,61 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     void apiMarkNudgeConversationRead(conversationId);
   }, [conversationId, detail]);
 
-  // Skip-refetch: after each write the server response has enough to
-  // update the local detail in place. Halves the round-trip count on
-  // every send and every react. Truly optimistic (tempId + rollback
-  // on failure) is a follow-up; this is the low-risk first step.
+  // Truly optimistic: prepend a client-authored row with a tempId
+  // before the POST, then reconcile with the server response (replace
+  // on success, mark failed on rejection). Composer clears instantly;
+  // the bubble shows a subtle "sending…" tick until acknowledged.
   const handleSend = useCallback(
     async (body: string, mediaAttachmentId?: string) => {
       const trimmed = body.trim();
       if (!trimmed && !mediaAttachmentId) return;
-      const created = await apiSendNudgeMessage(
-        conversationId,
-        trimmed,
-        mediaAttachmentId,
-      );
-      onMessageSent(applySentMessage(detail, created));
+      const tempId = `tmp-${crypto.randomUUID()}`;
+
+      onMessageSent(prependOptimistic(detail, tempId, trimmed));
+
+      try {
+        const created = await apiSendNudgeMessage(
+          conversationId,
+          trimmed,
+          mediaAttachmentId,
+        );
+        onMessageSent(replaceOptimistic(detail, tempId, created));
+      } catch {
+        onMessageSent(markOptimisticFailed(detail, tempId));
+      }
     },
     [conversationId, detail, onMessageSent],
+  );
+
+  const handleRetry = useCallback(
+    async (failed: ApiNudgeMessageJSON) => {
+      const tempId = failed.id;
+      // Reset the row to sending-state.
+      onMessageSent(
+        applyUpdatedMessage(detail, {
+          ...failed,
+          sending: true,
+          failed: false,
+        }),
+      );
+      try {
+        const created = await apiSendNudgeMessage(
+          conversationId,
+          failed.body ?? '',
+        );
+        onMessageSent(replaceOptimistic(detail, tempId, created));
+      } catch {
+        onMessageSent(markOptimisticFailed(detail, tempId));
+      }
+    },
+    [conversationId, detail, onMessageSent],
+  );
+
+  const handleDismissFailed = useCallback(
+    (failed: ApiNudgeMessageJSON) => {
+      onMessageSent(removeOptimistic(detail, failed.id));
+    },
+    [detail, onMessageSent],
   );
 
   const handleReact = useCallback(
@@ -237,6 +354,8 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
                 onReact={handleReact}
                 onUnreact={handleUnreact}
                 onDelete={handleDelete}
+                onRetry={handleRetry}
+                onDismissFailed={handleDismissFailed}
               />
             </React.Fragment>
           );

@@ -47,6 +47,11 @@ export interface ApiNudgeMessageJSON {
   deleted_at: string | null;
   author_is_self: boolean;
   author: ApiAccountJSON;
+  // Client-only optimistic-send fields — server never emits these.
+  // `sending` = optimistic row awaiting server response;
+  // `failed` = POST rejected, retry affordance is shown.
+  sending?: boolean;
+  failed?: boolean;
 }
 
 export interface ApiNudgeEventJSON {
