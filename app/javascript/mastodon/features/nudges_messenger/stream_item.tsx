@@ -34,6 +34,7 @@ type ReactionHandler = (
 
 interface StreamItemProps {
   item: ApiNudgeStreamItem;
+  conversationKind?: 'mate' | 'krew';
   onReact?: ReactionHandler;
   onUnreact?: ReactionHandler;
 }
@@ -44,11 +45,19 @@ interface StreamItemProps {
 // affordances.
 export const StreamItem: React.FC<StreamItemProps> = ({
   item,
+  conversationKind,
   onReact,
   onUnreact,
 }) => {
   if (item.kind === 'message') {
-    return <MessageItem item={item} onReact={onReact} onUnreact={onUnreact} />;
+    return (
+      <MessageItem
+        item={item}
+        conversationKind={conversationKind}
+        onReact={onReact}
+        onUnreact={onUnreact}
+      />
+    );
   }
 
   return <EventItem item={item} />;
@@ -56,12 +65,14 @@ export const StreamItem: React.FC<StreamItemProps> = ({
 
 interface MessageItemProps {
   item: ApiNudgeMessageJSON & { kind: 'message' };
+  conversationKind?: 'mate' | 'krew';
   onReact?: ReactionHandler;
   onUnreact?: ReactionHandler;
 }
 
 const MessageItem: React.FC<MessageItemProps> = ({
   item,
+  conversationKind,
   onReact,
   onUnreact,
 }) => {
@@ -98,12 +109,25 @@ const MessageItem: React.FC<MessageItemProps> = ({
     [item, onReact, onUnreact, grouped, canAdd],
   );
 
+  // Krew incoming bubbles show sender name + avatar (per brief
+  // §Surface 3). Mate bubbles stay bare — the pair is already known
+  // from the conversation header.
+  const showSender = conversationKind === 'krew' && !item.author_is_self;
+
   return (
     <div
       className={`nudges-msg ${
         item.author_is_self ? 'nudges-msg--out' : 'nudges-msg--in'
       }`}
     >
+      {showSender && (
+        <div className='nudges-msg__sender'>
+          <SenderAvatar author={item.author} />
+          <span className='nudges-msg__sender-name'>
+            {item.author.display_name || item.author.username}
+          </span>
+        </div>
+      )}
       <div className='nudges-msg__bubble'>
         {item.media && <MessageMedia media={item.media} />}
         {item.body && <span className='nudges-msg__body'>{item.body}</span>}
@@ -142,6 +166,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
       </span>
     </div>
   );
+};
+
+const SenderAvatar: React.FC<{
+  author: ApiNudgeMessageJSON['author'];
+}> = ({ author }) => {
+  const account = createAccountFromServerJSON(author);
+  return <Avatar account={account} size={20} />;
 };
 
 const MessageMedia: React.FC<{

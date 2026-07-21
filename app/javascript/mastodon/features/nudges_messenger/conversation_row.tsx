@@ -1,6 +1,10 @@
 import { useCallback } from 'react';
 
-import type { ApiNudgeConversationJSON } from 'mastodon/api_types/nudges_conversations';
+import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
+import type {
+  ApiNudgeConversationJSON,
+  ApiNudgeKrewJSON,
+} from 'mastodon/api_types/nudges_conversations';
 import { Avatar } from 'mastodon/components/avatar';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
@@ -20,12 +24,7 @@ export const ConversationRow: React.FC<ConversationRowProps> = ({
     onOpen(conversation.id);
   }, [conversation.id, onOpen]);
 
-  const account = conversation.other_account
-    ? createAccountFromServerJSON(conversation.other_account)
-    : null;
-
-  const displayName =
-    account?.display_name ?? account?.username ?? 'Conversation';
+  const isKrew = conversation.kind === 'krew';
 
   return (
     <li
@@ -39,11 +38,15 @@ export const ConversationRow: React.FC<ConversationRowProps> = ({
         onClick={handleClick}
       >
         <span className='nudges-row__avatar'>
-          {account && <Avatar account={account} size={40} />}
+          {isKrew ? (
+            <KrewAvatar krew={conversation.krew} />
+          ) : (
+            <MateAvatar account={conversation.other_account} />
+          )}
         </span>
         <span className='nudges-row__body'>
           <span className='nudges-row__head'>
-            <span className='nudges-row__name'>{displayName}</span>
+            <span className='nudges-row__name'>{titleFor(conversation)}</span>
             {conversation.last_activity_at && (
               <span className='nudges-row__time'>
                 <RelativeTimestamp
@@ -76,3 +79,29 @@ export const ConversationRow: React.FC<ConversationRowProps> = ({
     </li>
   );
 };
+
+const titleFor = (c: ApiNudgeConversationJSON) => {
+  if (c.kind === 'krew') return c.krew?.name ?? 'Krew';
+  if (c.other_account) {
+    return c.other_account.display_name || c.other_account.username;
+  }
+  return 'Conversation';
+};
+
+const MateAvatar: React.FC<{
+  account: ApiNudgeConversationJSON['other_account'];
+}> = ({ account }) => {
+  if (!account) return null;
+  const shape = createAccountFromServerJSON(account);
+  return <Avatar account={shape} size={40} />;
+};
+
+const KrewAvatar: React.FC<{ krew: ApiNudgeKrewJSON | null }> = ({ krew }) => (
+  <span
+    className='nudges-row__krew-avatar'
+    aria-label={krew?.name ?? 'Krew'}
+    title={krew?.name}
+  >
+    <GroupsIcon />
+  </span>
+);
