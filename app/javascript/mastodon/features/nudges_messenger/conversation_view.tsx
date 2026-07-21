@@ -4,7 +4,6 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import {
   apiSendNudgeMessage,
-  apiGetNudgeConversation,
   apiMarkNudgeConversationRead,
   apiAddNudgeReaction,
   apiRemoveNudgeReaction,
@@ -12,6 +11,7 @@ import {
 import type {
   ApiNudgeConversationDetail,
   ApiNudgeMessageJSON,
+  ApiNudgeStreamItem,
 } from 'mastodon/api_types/nudges_conversations';
 import { Avatar } from 'mastodon/components/avatar';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
@@ -30,6 +30,44 @@ const sameDay = (a: string, b: string) => {
     da.getMonth() === db.getMonth() &&
     da.getDate() === db.getDate()
   );
+};
+
+// Fold a freshly-sent message into the detail without a refetch. The
+// server response already has the created message; we just prepend
+// it to the (most-recent-first) stream and update the conversation's
+// sidebar-shape fields so the row hoists locally.
+const applySentMessage = (
+  detail: ApiNudgeConversationDetail | null,
+  message: ApiNudgeMessageJSON,
+): ApiNudgeConversationDetail => {
+  if (!detail) throw new Error('applySentMessage called without detail');
+  const item: ApiNudgeStreamItem = { kind: 'message', ...message };
+  return {
+    conversation: {
+      ...detail.conversation,
+      last_activity_at: message.created_at,
+      preview: message.body ?? '📷 media',
+      latest_kind: 'message',
+    },
+    stream: [item, ...detail.stream],
+  };
+};
+
+// Fold an updated message (e.g. reactions changed) back into the
+// stream by matching id. Everything else on the detail is untouched.
+const applyUpdatedMessage = (
+  detail: ApiNudgeConversationDetail | null,
+  message: ApiNudgeMessageJSON,
+): ApiNudgeConversationDetail => {
+  if (!detail) throw new Error('applyUpdatedMessage called without detail');
+  return {
+    ...detail,
+    stream: detail.stream.map((item) =>
+      item.kind === 'message' && item.id === message.id
+        ? { kind: 'message', ...message }
+        : item,
+    ),
+  };
 };
 
 const messages = defineMessages({
@@ -69,33 +107,46 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     void apiMarkNudgeConversationRead(conversationId);
   }, [conversationId, detail]);
 
+  // Skip-refetch: after each write the server response has enough to
+  // update the local detail in place. Halves the round-trip count on
+  // every send and every react. Truly optimistic (tempId + rollback
+  // on failure) is a follow-up; this is the low-risk first step.
   const handleSend = useCallback(
     async (body: string, mediaAttachmentId?: string) => {
       const trimmed = body.trim();
       if (!trimmed && !mediaAttachmentId) return;
-      await apiSendNudgeMessage(conversationId, trimmed, mediaAttachmentId);
-      const refreshed = await apiGetNudgeConversation(conversationId);
-      onMessageSent(refreshed);
+      const created = await apiSendNudgeMessage(
+        conversationId,
+        trimmed,
+        mediaAttachmentId,
+      );
+      onMessageSent(applySentMessage(detail, created));
     },
-    [conversationId, onMessageSent],
+    [conversationId, detail, onMessageSent],
   );
 
   const handleReact = useCallback(
     async (message: ApiNudgeMessageJSON, symbol: string) => {
-      await apiAddNudgeReaction(conversationId, message.id, symbol);
-      const refreshed = await apiGetNudgeConversation(conversationId);
-      onMessageSent(refreshed);
+      const updated = await apiAddNudgeReaction(
+        conversationId,
+        message.id,
+        symbol,
+      );
+      onMessageSent(applyUpdatedMessage(detail, updated));
     },
-    [conversationId, onMessageSent],
+    [conversationId, detail, onMessageSent],
   );
 
   const handleUnreact = useCallback(
     async (message: ApiNudgeMessageJSON, symbol: string) => {
-      await apiRemoveNudgeReaction(conversationId, message.id, symbol);
-      const refreshed = await apiGetNudgeConversation(conversationId);
-      onMessageSent(refreshed);
+      const updated = await apiRemoveNudgeReaction(
+        conversationId,
+        message.id,
+        symbol,
+      );
+      onMessageSent(applyUpdatedMessage(detail, updated));
     },
-    [conversationId, onMessageSent],
+    [conversationId, detail, onMessageSent],
   );
 
   if (loading && !detail) {
