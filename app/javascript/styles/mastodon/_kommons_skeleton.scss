@@ -258,17 +258,65 @@
 
 .kommons-skeleton__detail-proposals {
   margin: 20px 0;
-  padding: 16px;
-  border: 1px dashed var(--surface-border, rgba(255, 255, 255, 10%));
-  border-radius: var(--radius-sm, 6px);
   color: var(--text-muted, rgba(255, 255, 255, 65%));
-  text-align: center;
   font-size: 14px;
 }
 
 .kommons-skeleton__detail-empty {
   margin: 0;
   color: var(--text-muted, rgba(255, 255, 255, 60%));
+}
+
+// ── Node proposals list (a page → the proposals suggesting changes to it) ──
+// Shared by the Skeleton node detail and the Lattice leaf panel; each row deep
+// links to the routed proposal page (/hub/kommons/p/:id).
+.kommons-node-proposals {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: start;
+}
+
+.kommons-node-proposals__item + .kommons-node-proposals__item {
+  margin-top: 6px;
+}
+
+.kommons-node-proposals__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm, 6px);
+  background: var(--surface-elevated, rgba(255, 255, 255, 4%));
+  color: var(--text-default, #fff);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--accent, #7241ff);
+    color: #fff;
+  }
+}
+
+.kommons-node-proposals__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kommons-node-proposals__chevron {
+  flex: 0 0 auto;
+  opacity: 70%;
+}
+
+.kommons-node-proposals__status,
+.kommons-node-proposals__empty {
+  margin: 0;
+  color: var(--text-muted, rgba(255, 255, 255, 60%));
+  font-size: 14px;
 }
 
 // ── Connections (cross-branch links) ────────────────────────────────
