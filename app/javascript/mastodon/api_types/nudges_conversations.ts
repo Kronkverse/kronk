@@ -10,6 +10,7 @@ export interface ApiNudgeConversationJSON {
   expires_at: string | null;
   unread_count: number;
   preview: string;
+  latest_kind: 'message' | 'event' | null;
   other_account: ApiAccountJSON | null;
 }
 

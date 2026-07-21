@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -17,8 +17,20 @@ import { Avatar } from 'mastodon/components/avatar';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 import { Composer } from './composer';
+import { DaySeparator } from './day_separator';
 import { ExpiryCountdown } from './expiry_countdown';
 import { StreamItem } from './stream_item';
+
+// Two timestamps land on the same local day.
+const sameDay = (a: string, b: string) => {
+  const da = new Date(a);
+  const db = new Date(b);
+  return (
+    da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate()
+  );
+};
 
 const messages = defineMessages({
   loading: { id: 'nudges.loading', defaultMessage: 'Loading…' },
@@ -122,14 +134,21 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
       </header>
 
       <div className='nudges-conversation__stream'>
-        {oldestFirst.map((item) => (
-          <StreamItem
-            key={`${item.kind}-${item.id}`}
-            item={item}
-            onReact={handleReact}
-            onUnreact={handleUnreact}
-          />
-        ))}
+        {oldestFirst.map((item, index) => {
+          const previous = index > 0 ? oldestFirst[index - 1] : null;
+          const showDay =
+            !previous || !sameDay(previous.created_at, item.created_at);
+          return (
+            <React.Fragment key={`${item.kind}-${item.id}`}>
+              {showDay && <DaySeparator timestamp={item.created_at} />}
+              <StreamItem
+                item={item}
+                onReact={handleReact}
+                onUnreact={handleUnreact}
+              />
+            </React.Fragment>
+          );
+        })}
         <div ref={streamEndRef} />
       </div>
 

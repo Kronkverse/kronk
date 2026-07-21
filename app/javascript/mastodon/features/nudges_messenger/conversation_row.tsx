@@ -53,7 +53,16 @@ export const ConversationRow: React.FC<ConversationRowProps> = ({
               </span>
             )}
           </span>
-          <span className='nudges-row__preview'>{conversation.preview}</span>
+          <span className='nudges-row__preview'>
+            {conversation.latest_kind === 'event' && (
+              <span
+                className='nudges-row__preview-dot'
+                aria-hidden
+                title='Nudge'
+              />
+            )}
+            {conversation.preview}
+          </span>
         </span>
         {conversation.unread_count > 0 && (
           <span

@@ -141,11 +141,25 @@
 }
 
 .nudges-row__preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--text-secondary);
   font-size: 0.85rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+// Tiny dot before the preview text when the latest row-item was an
+// event (nudge), not a message. Signals waiting-item type at a glance.
+.nudges-row__preview-dot {
+  flex: 0 0 auto;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: var(--radius-round);
+  background: var(--kronk-purple-bright);
+  box-shadow: 0 0 4px 0 var(--kronk-purple-bright);
 }
 
 .nudges-row--unread .nudges-row__preview {
@@ -338,6 +352,22 @@
     color: var(--text-primary);
     border-color: var(--border-default);
   }
+}
+
+// ── Day separator ────────────────────────────────────────────────
+// Sits between stream items when the date changes; recedes so the
+// messages lead.
+.nudges-day-separator {
+  align-self: center;
+  margin: 0.75rem 0 0.25rem;
+}
+
+.nudges-day-separator__label {
+  padding: 0.15rem 0.75rem;
+  border-radius: var(--radius-round);
+  background: var(--surface-elevated);
+  color: var(--text-muted);
+  font-size: 0.75rem;
 }
 
 .nudges-msg__media {
