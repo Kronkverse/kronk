@@ -162,4 +162,27 @@ Rails.application.config.after_initialize do
       interaction: 'passive'
     )
   end
+
+  # ── Groups: a Kronker joined a group ─────────────────────────────
+  # Different flow from the Mate routes above: the target is the Krew
+  # conversation itself, not a 1:1 Mate chat, so `NUDGE_ROUTE` (which
+  # enforces the Mates gate) doesn't apply. Ensures the Krew
+  # conversation exists, adds the account to its memberships, and
+  # drops a `joined` system-line event onto the stream.
+  Kronk::KornerEvents.subscribe('groups.member.joined') do |payload|
+    group = Group.find_by(id: payload[:group_id])
+    actor = Account.find_by(id: payload[:actor_account_id])
+    next unless group && actor
+
+    convo = Nudges::Conversation.krew_for!(group)
+    convo.memberships.find_or_create_by!(account_id: actor.id) do |m|
+      m.joined_at = Time.current
+    end
+    convo.events.create!(
+      actor_account: actor,
+      source_korner_slug: 'groups',
+      verb: 'joined',
+      interaction: 'passive'
+    )
+  end
 end
