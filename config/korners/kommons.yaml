@@ -90,7 +90,7 @@ launch: # retrospective — Kommons predates launch cards
 # IS proposing: a proposal is Kommons content. On a Space page the composer
 # scopes the proposal to that space (the bubble appends ?space=<slug>).
 compose:
-  label: 'Plant a proposal'
+  label: 'Open a Proposal'
   route: '/hub/kommons/propose'
 
 feature_flag: # not-implemented — Kommons is unconditionally mounted on main
