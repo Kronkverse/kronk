@@ -2,10 +2,12 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import EditIcon from '@/material-icons/400-24px/edit_square-fill.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import type { ApiNudgeConversationJSON } from 'mastodon/api_types/nudges_conversations';
 
 import { ConversationRow } from './conversation_row';
+import { MatePicker } from './mate_picker';
 
 const messages = defineMessages({
   searchPlaceholder: {
@@ -20,6 +22,10 @@ const messages = defineMessages({
   noResults: {
     id: 'nudges.no_search_results',
     defaultMessage: 'No match',
+  },
+  newChat: {
+    id: 'nudges.new_chat',
+    defaultMessage: 'New chat',
   },
 });
 
@@ -38,12 +44,29 @@ export const ConversationList: React.FC<ConversationListProps> = ({
 }) => {
   const intl = useIntl();
   const [query, setQuery] = useState('');
+  const [picking, setPicking] = useState(false);
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setQuery(e.target.value);
     },
     [],
+  );
+
+  const handleOpenPicker = useCallback(() => {
+    setPicking(true);
+  }, []);
+
+  const handleClosePicker = useCallback(() => {
+    setPicking(false);
+  }, []);
+
+  const handlePickerOpen = useCallback(
+    (conversationId: string) => {
+      setPicking(false);
+      onOpen(conversationId);
+    },
+    [onOpen],
   );
 
   const filtered = useMemo(() => {
@@ -67,6 +90,15 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           value={query}
           onChange={handleSearchChange}
         />
+        <button
+          type='button'
+          className='nudges-sidebar__new-chat'
+          onClick={handleOpenPicker}
+          aria-label={intl.formatMessage(messages.newChat)}
+          title={intl.formatMessage(messages.newChat)}
+        >
+          <EditIcon />
+        </button>
       </div>
 
       {loading && (
@@ -91,6 +123,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           />
         ))}
       </ul>
+
+      {picking && (
+        <MatePicker
+          onOpenConversation={handlePickerOpen}
+          onClose={handleClosePicker}
+        />
+      )}
     </div>
   );
 };

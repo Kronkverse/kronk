@@ -66,10 +66,189 @@
   }
 }
 
+.nudges-sidebar__new-chat {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    color: var(--kronk-purple-bright);
+    border-color: var(--kronk-purple-bright);
+  }
+}
+
 .nudges-sidebar__status {
   padding: 1rem;
   color: var(--text-muted);
   text-align: center;
+}
+
+// ── Mate picker modal (new-chat pencil) ─────────────────────────────
+.nudges-mate-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nudges-mate-picker__backdrop {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: none;
+  background: rgb(0 0 0 / 55%);
+  cursor: pointer;
+}
+
+.nudges-mate-picker__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(420px, 92vw);
+  max-height: 80vh;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 30%);
+  overflow: hidden;
+}
+
+.nudges-mate-picker__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.nudges-mate-picker__title {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.nudges-mate-picker__close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    color: var(--text-primary);
+  }
+}
+
+.nudges-mate-picker__search {
+  margin: 0.75rem 1rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--surface-base);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  font: inherit;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--kronk-purple-bright);
+    outline-offset: 0;
+  }
+}
+
+.nudges-mate-picker__status {
+  padding: 1rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.nudges-mate-picker__status--error {
+  color: var(--warning-red);
+}
+
+.nudges-mate-picker__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0.5rem;
+  overflow-y: auto;
+}
+
+.nudges-mate-picker__row-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
+    background: var(--surface-hover);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.nudges-mate-picker__row-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nudges-mate-picker__row-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nudges-mate-picker__row-handle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .nudges-sidebar__list {
