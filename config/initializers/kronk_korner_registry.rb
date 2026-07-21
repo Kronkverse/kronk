@@ -50,6 +50,13 @@ module Kronk
       :hub_teaser,
       # Launch card (§8.7)
       :launch,
+      # Space page — the "why" and "who" a member sees when they open the
+      # space in the Kommons tree. `purpose` is the evolutionary purpose (why
+      # this space was seeded); `steward` is the handle of the account who
+      # stewards it (optional — no korner->account link exists yet, so this is
+      # a declared handle, not a derived one).
+      :purpose,
+      :steward,
       # Tree nodes (§Kronk 2.0 tree registry) — user-facing page-types
       # owned by this korner. Each entry follows the schema in
       # `lib/kronk/node_registry.rb`. Optional; a korner with no visible
@@ -182,6 +189,8 @@ module Kronk
           listens: Array(yaml['listens']),
           hub_teaser: yaml['hub_teaser'].is_a?(Hash) ? yaml['hub_teaser'] : nil,
           launch: yaml['launch'].is_a?(Hash) ? yaml['launch'] : nil,
+          purpose: yaml['purpose'].is_a?(String) ? yaml['purpose'] : nil,
+          steward: yaml['steward'].is_a?(String) ? yaml['steward'] : nil,
           nodes: Array(yaml['nodes']),
           mount: yaml['mount'].is_a?(String) ? yaml['mount'] : nil,
           core: yaml['core'] == true,

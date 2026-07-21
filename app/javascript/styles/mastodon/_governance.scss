@@ -2951,3 +2951,98 @@
     font-size: 13px;
   }
 }
+
+// ── Space page (/hub/kommons/space/:slug) ──────────────────────────────
+// The "why / who / what's being proposed" view of a korner, opened from the
+// Kommons tree.
+.space-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+
+  &__hero {
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
+  }
+
+  &__name {
+    margin: 0 0 8px;
+    font-family: var(--font-display, inherit);
+    font-size: 28px;
+    font-weight: 700;
+  }
+
+  &__purpose {
+    margin: 0 0 14px;
+    color: var(--text-muted, rgba(255, 255, 255, 75%));
+    font-size: 17px;
+    line-height: 1.5;
+  }
+
+  &__visit {
+    display: inline-block;
+    padding: 7px 14px;
+    border-radius: var(--radius-round, 999px);
+    background: var(--accent, #7241ff);
+    color: var(--text-on-accent, #fff);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      filter: brightness(1.08);
+    }
+  }
+
+  &__section {
+    margin-top: 28px;
+  }
+
+  &__heading {
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, rgba(255, 255, 255, 55%));
+  }
+
+  &__steward {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent, #7241ff);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__links {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__link {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    border-radius: var(--radius-small, 6px);
+    background: var(--surface-elevated, rgba(255, 255, 255, 4%));
+  }
+
+  &__link-label {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  &__link-desc {
+    font-size: 13px;
+    color: var(--text-muted, rgba(255, 255, 255, 60%));
+  }
+}

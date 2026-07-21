@@ -279,6 +279,10 @@ export function KommonsProposal () {
   return import("../../governance/proposal_page").then(m => ({ default: m.ProposalPage }));
 }
 
+export function KommonsSpace () {
+  return import("../../governance/space_page").then(m => ({ default: m.SpacePage }));
+}
+
 
 export function KommonsSkeleton () {
   return import("../../kommons_skeleton");

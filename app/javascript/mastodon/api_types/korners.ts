@@ -58,6 +58,10 @@ export interface ApiKornerJSON {
   listens?: string[];
   hub_teaser?: Record<string, unknown> | null;
   launch?: Record<string, unknown> | null;
+  // Space page — the evolutionary purpose ("why this space exists") and the
+  // handle of its steward. Both optional; declared in the manifest.
+  purpose?: string | null;
+  steward?: string | null;
   feature_flag?: string | null;
   enforced?: boolean;
   // Populated by /api/v1/korners for the current viewer. Anonymous

@@ -8,6 +8,7 @@
 
 slug: groups
 name: Groups
+purpose: "To let several people post as one — shareable spaces that gather context and act together."
 icon: groups
 render_target: web
 version: 1.0.0
