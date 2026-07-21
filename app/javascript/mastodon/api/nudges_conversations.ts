@@ -18,11 +18,11 @@ export const apiGetNudgeConversation = (id: string) =>
 export const apiSendNudgeMessage = (
   conversationId: string,
   body: string,
-  mediaAttachmentId?: string,
+  mediaAttachmentIds: string[] = [],
 ) =>
   apiRequestPost<ApiNudgeMessageJSON>(
     `v1/nudges/conversations/${conversationId}/messages`,
-    { body, media_attachment_id: mediaAttachmentId },
+    { body, media_attachment_ids: mediaAttachmentIds },
   );
 
 export const apiDeleteNudgeMessage = (

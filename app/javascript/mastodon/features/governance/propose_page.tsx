@@ -93,7 +93,8 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canSubmit = title.trim().length > 0 && body.trim().length > 0 && !submitting;
+  const canSubmit =
+    title.trim().length > 0 && body.trim().length > 0 && !submitting;
 
   const handleStepChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,14 +167,19 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             const form = new FormData();
             form.append('file', file);
             form.append('kind', 'reference');
-            await api().post(`/api/v1/proposals/${created.id}/attachments`, form);
+            await api().post(
+              `/api/v1/proposals/${created.id}/attachments`,
+              form,
+            );
           }
           history.push(`/hub/kommons/p/${created.id}`);
           return undefined;
         })
         .catch((err: unknown) => {
           setError(
-            err instanceof Error ? err.message : 'Could not plant the proposal.',
+            err instanceof Error
+              ? err.message
+              : 'Could not plant the proposal.',
           );
           setSubmitting(false);
         });
@@ -313,7 +319,10 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             className='propose-page__add-step'
             onClick={addStep}
           >
-            <FormattedMessage id='propose.add_step' defaultMessage='+ Add step' />
+            <FormattedMessage
+              id='propose.add_step'
+              defaultMessage='+ Add step'
+            />
           </button>
         </fieldset>
 

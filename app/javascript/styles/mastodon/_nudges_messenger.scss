@@ -418,11 +418,47 @@
 
 .nudges-msg__media {
   display: block;
-  max-width: 100%;
-  max-height: 20rem;
-  margin-bottom: 0.35rem;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   border-radius: var(--radius-medium);
   object-fit: cover;
+}
+
+// Grid of message media — 1/2/3/4-tile layouts. Bubble constrains
+// the outer width; each tile fills its cell.
+.nudges-msg__media-grid {
+  display: grid;
+  gap: 0.15rem;
+  margin-bottom: 0.35rem;
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+
+  &--1 {
+    grid-template-columns: 1fr;
+    max-height: 20rem;
+  }
+
+  &--2 {
+    grid-template-columns: 1fr 1fr;
+    max-height: 14rem;
+  }
+
+  &--3 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    max-height: 16rem;
+
+    > :first-child {
+      grid-row: span 2;
+    }
+  }
+
+  &--4 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    max-height: 16rem;
+  }
 }
 
 .nudges-msg__body {

@@ -169,7 +169,7 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
         </div>
       )}
       <div className='nudges-msg__bubble'>
-        {item.media && <MessageMedia media={item.media} />}
+        {item.media.length > 0 && <MessageMediaGrid media={item.media} />}
         {item.body && <span className='nudges-msg__body'>{item.body}</span>}
       </div>
 
@@ -299,8 +299,21 @@ const SenderAvatar: React.FC<{
   return <Avatar account={account} size={20} />;
 };
 
-const MessageMedia: React.FC<{
-  media: NonNullable<ApiNudgeMessageJSON['media']>;
+const MessageMediaGrid: React.FC<{
+  media: ApiNudgeMessageJSON['media'];
+}> = ({ media }) => {
+  const count = Math.min(media.length, 4);
+  return (
+    <div className={`nudges-msg__media-grid nudges-msg__media-grid--${count}`}>
+      {media.map((m) => (
+        <MessageMediaTile key={m.id} media={m} />
+      ))}
+    </div>
+  );
+};
+
+const MessageMediaTile: React.FC<{
+  media: ApiNudgeMessageJSON['media'][number];
 }> = ({ media }) => {
   if (media.type === 'video' || media.type === 'gifv') {
     return (

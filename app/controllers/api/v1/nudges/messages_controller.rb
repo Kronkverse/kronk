@@ -15,19 +15,24 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
 
   def create
     body = params[:body].to_s.strip
-    media_attachment_id = params[:media_attachment_id].presence
+    # Accept both `media_attachment_id` (singular, back-compat with Phase
+    # 1i) and `media_attachment_ids` (plural, new). Merge, dedup, cap
+    # enforced in the model.
+    media_ids = Array(params[:media_attachment_ids])
+    media_ids << params[:media_attachment_id] if params[:media_attachment_id].present?
+    media_ids = media_ids.map(&:to_s).compact_blank.uniq
 
-    if body.blank? && media_attachment_id.blank?
+    if body.blank? && media_ids.empty?
       render json: { error: 'body_or_attachment_required' }, status: :unprocessable_entity
       return
     end
 
-    validate_media_ownership!(media_attachment_id) if media_attachment_id
+    return unless validate_media_ownership!(media_ids)
 
     message = @conversation.messages.create!(
       author_account: current_account,
       body: body.presence,
-      media_attachment_id: media_attachment_id
+      media_attachment_ids: media_ids
     )
 
     render json: REST::Nudges::MessageSerializer.new(message, scope: current_account), status: 201
@@ -60,14 +65,17 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
     render json: { error: 'not_found' }, status: 404
   end
 
-  # Guard against attaching someone else's upload. The MediaAttachment
-  # must belong to the current account and not already be attached to
-  # a Status.
-  def validate_media_ownership!(id)
-    media = MediaAttachment.find_by(id: id, account_id: current_account.id, status_id: nil)
-    return if media
+  # Guard against attaching someone else's upload. Every id in `ids`
+  # must be an uncommitted MediaAttachment belonging to the current
+  # account (status_id nil). Returns true on success, false + renders
+  # the error response otherwise.
+  def validate_media_ownership!(ids)
+    return true if ids.empty?
+
+    valid_count = MediaAttachment.where(id: ids, account_id: current_account.id, status_id: nil).count
+    return true if valid_count == ids.size
 
     render json: { error: 'media_not_found' }, status: :unprocessable_entity
-    raise ActionController::BadRequest, 'media_not_found'
+    false
   end
 end

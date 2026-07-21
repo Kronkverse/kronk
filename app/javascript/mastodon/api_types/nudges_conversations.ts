@@ -39,7 +39,7 @@ export interface ApiNudgeMessageJSON {
   id: string;
   conversation_id: string;
   body: string | null;
-  media: ApiNudgeMessageMediaJSON | null;
+  media: ApiNudgeMessageMediaJSON[];
   voice: ApiNudgeMessageVoiceJSON | null;
   reactions: { account_id: number; symbol: string; created_at: string }[];
   created_at: string;

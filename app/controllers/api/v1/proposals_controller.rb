@@ -145,7 +145,7 @@ class Api::V1::ProposalsController < Api::BaseController
     Kronk::ProposalStates.complete!(@proposal, by: current_account)
     render json: @proposal.reload, serializer: REST::ProposalSerializer
   rescue Kronk::ProposalStates::NotTheProposer
-    render json: { error: 'Only the proposer can complete this proposal.' }, status: :forbidden
+    render json: { error: 'Only the proposer can complete this proposal.' }, status: 403 # rubocop:disable I18n/RailsI18n/DecorateString
   rescue Kronk::ProposalStates::InvalidTransition => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
@@ -182,5 +182,4 @@ class Api::V1::ProposalsController < Api::BaseController
     is_steward = current_user.role&.can?(:administrator) || current_user.role&.can?(:manage_reports)
     forbidden unless is_creator || is_steward
   end
-
 end

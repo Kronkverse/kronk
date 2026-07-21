@@ -29,7 +29,7 @@ const messages = defineMessages({
 });
 
 interface ComposerProps {
-  onSend: (body: string, mediaAttachmentId?: string) => Promise<void> | void;
+  onSend: (body: string, mediaAttachmentIds: string[]) => Promise<void> | void;
 }
 
 interface StagedMedia {
@@ -39,14 +39,17 @@ interface StagedMedia {
 }
 
 const ACCEPT = 'image/*,video/*';
+const MAX_MEDIA = 4;
 
-// Composer with a text field + attach affordance. Voice recording is
-// kronk-app parity-gated per docs/kronk_nudges.md §Surface 4.
+// Composer with a text field + attach affordance. Up to MAX_MEDIA
+// attachments per message (matches Mastodon Status default). Voice
+// recording is kronk-app parity-gated per docs/kronk_nudges.md
+// §Surface 4.
 export const Composer: React.FC<ComposerProps> = ({ onSend }) => {
   const intl = useIntl();
   const [value, setValue] = useState('');
   const [sending, setSending] = useState(false);
-  const [staged, setStaged] = useState<StagedMedia | null>(null);
+  const [staged, setStaged] = useState<StagedMedia[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -60,17 +63,32 @@ export const Composer: React.FC<ComposerProps> = ({ onSend }) => {
   );
 
   const clearStaged = useCallback(() => {
-    if (staged) URL.revokeObjectURL(staged.previewUrl);
-    setStaged(null);
+    setStaged((prev) => {
+      prev.forEach((m) => {
+        URL.revokeObjectURL(m.previewUrl);
+      });
+      return [];
+    });
     if (fileRef.current) fileRef.current.value = '';
-  }, [staged]);
+  }, []);
+
+  const removeStagedById = useCallback((id: string) => {
+    setStaged((prev) => {
+      const target = prev.find((m) => m.id === id);
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((m) => m.id !== id);
+    });
+  }, []);
 
   const submit = useCallback(async () => {
     const body = value.trim();
-    if ((!body && !staged) || sending) return;
+    if ((!body && staged.length === 0) || sending) return;
     setSending(true);
     try {
-      await onSend(body, staged?.id);
+      await onSend(
+        body,
+        staged.map((m) => m.id),
+      );
       setValue('');
       clearStaged();
       inputRef.current?.focus();
@@ -103,33 +121,53 @@ export const Composer: React.FC<ComposerProps> = ({ onSend }) => {
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+      const files = Array.from(e.target.files ?? []);
+      if (files.length === 0) return;
+
       setUploadError(null);
       setUploading(true);
-      const previewUrl = URL.createObjectURL(file);
+
+      const remaining = MAX_MEDIA - staged.length;
+      const toUpload = files.slice(0, remaining);
+
       const run = async () => {
         try {
-          const uploaded = await apiUploadMedia(file);
-          setStaged({ id: uploaded.id, previewUrl, type: uploaded.type });
+          const uploaded = await Promise.all(
+            toUpload.map(async (file) => {
+              const previewUrl = URL.createObjectURL(file);
+              try {
+                const result = await apiUploadMedia(file);
+                return {
+                  id: result.id,
+                  previewUrl,
+                  type: result.type,
+                } satisfies StagedMedia;
+              } catch (err) {
+                URL.revokeObjectURL(previewUrl);
+                throw err;
+              }
+            }),
+          );
+          setStaged((prev) => [...prev, ...uploaded]);
         } catch {
-          URL.revokeObjectURL(previewUrl);
           setUploadError(intl.formatMessage(messages.uploadFailed));
         } finally {
           setUploading(false);
+          if (fileRef.current) fileRef.current.value = '';
         }
       };
       void run();
     },
-    [intl],
+    [intl, staged.length],
   );
 
   const canSend =
-    (value.trim() !== '' || staged !== null) && !sending && !uploading;
+    (value.trim() !== '' || staged.length > 0) && !sending && !uploading;
+  const canAttachMore = staged.length < MAX_MEDIA;
 
   return (
     <form className='nudges-composer' onSubmit={handleSubmit}>
-      {(staged !== null || uploading || uploadError !== null) && (
+      {(staged.length > 0 || uploading || uploadError !== null) && (
         <div className='nudges-composer__staged'>
           {uploading && (
             <span className='nudges-composer__staged-status'>
@@ -144,33 +182,14 @@ export const Composer: React.FC<ComposerProps> = ({ onSend }) => {
               {uploadError}
             </span>
           )}
-          {staged && (
-            <div
-              className={`nudges-composer__staged-preview nudges-composer__staged-preview--${staged.type}`}
-            >
-              {staged.type === 'video' ? (
-                <video
-                  className='nudges-composer__staged-media'
-                  src={staged.previewUrl}
-                  muted
-                />
-              ) : (
-                <img
-                  className='nudges-composer__staged-media'
-                  src={staged.previewUrl}
-                  alt=''
-                />
-              )}
-              <button
-                type='button'
-                className='nudges-composer__staged-remove'
-                onClick={clearStaged}
-                aria-label={intl.formatMessage(messages.remove)}
-              >
-                <CloseIcon />
-              </button>
-            </div>
-          )}
+          {staged.map((m) => (
+            <StagedPreview
+              key={m.id}
+              media={m}
+              onRemove={removeStagedById}
+              removeLabel={intl.formatMessage(messages.remove)}
+            />
+          ))}
         </div>
       )}
 
@@ -180,7 +199,7 @@ export const Composer: React.FC<ComposerProps> = ({ onSend }) => {
           className='nudges-composer__attach'
           onClick={handleFileClick}
           aria-label={intl.formatMessage(messages.attach)}
-          disabled={sending || uploading || staged !== null}
+          disabled={sending || uploading || !canAttachMore}
         >
           <AttachIcon />
         </button>
@@ -189,6 +208,7 @@ export const Composer: React.FC<ComposerProps> = ({ onSend }) => {
           ref={fileRef}
           type='file'
           accept={ACCEPT}
+          multiple
           className='nudges-composer__file'
           onChange={handleFileChange}
         />
@@ -213,5 +233,49 @@ export const Composer: React.FC<ComposerProps> = ({ onSend }) => {
         </button>
       </div>
     </form>
+  );
+};
+
+interface StagedPreviewProps {
+  media: StagedMedia;
+  removeLabel: string;
+  onRemove: (id: string) => void;
+}
+
+const StagedPreview: React.FC<StagedPreviewProps> = ({
+  media,
+  removeLabel,
+  onRemove,
+}) => {
+  const handleRemove = useCallback(() => {
+    onRemove(media.id);
+  }, [media.id, onRemove]);
+
+  return (
+    <div
+      className={`nudges-composer__staged-preview nudges-composer__staged-preview--${media.type}`}
+    >
+      {media.type === 'video' ? (
+        <video
+          className='nudges-composer__staged-media'
+          src={media.previewUrl}
+          muted
+        />
+      ) : (
+        <img
+          className='nudges-composer__staged-media'
+          src={media.previewUrl}
+          alt=''
+        />
+      )}
+      <button
+        type='button'
+        className='nudges-composer__staged-remove'
+        onClick={handleRemove}
+        aria-label={removeLabel}
+      >
+        <CloseIcon />
+      </button>
+    </div>
   );
 };
