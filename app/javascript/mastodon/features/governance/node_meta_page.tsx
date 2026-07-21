@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
@@ -32,6 +32,13 @@ const messages = defineMessages({
 // Create a proposal about this page via the Ӂ menu (scoped to this node).
 const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const { nodeId = '' } = useParams<{ nodeId: string }>();
+  const location = useLocation();
+  // Return to the map you arrived from, so you can open a Finger, glance, and
+  // move to the next without leaving the skeleton behind.
+  const from =
+    new URLSearchParams(location.search).get('from') === 'lattice'
+      ? 'lattice'
+      : 'skeleton';
   const intl = useIntl();
   const kommonsIcon = useKornerIcon('kommons');
   const [nodes, setNodes] = useState<ApiKommonsNode[]>([]);
@@ -89,6 +96,13 @@ const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       </Helmet>
 
       <div className='space-page'>
+        <Link to={`/hub/kommons/${from}`} className='kommons-back-map'>
+          <FormattedMessage
+            id='kommons.back_to_map'
+            defaultMessage='← Back to the map'
+          />
+        </Link>
+
         {loaded && !node && (
           <div className='governance-page__empty'>
             {intl.formatMessage(messages.notFound)}

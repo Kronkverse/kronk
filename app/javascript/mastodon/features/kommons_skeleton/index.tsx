@@ -23,6 +23,7 @@ import { ColumnHeader } from 'mastodon/components/column_header';
 
 import { BodyMap } from './components/body_map';
 import { Composer } from './components/composer';
+import { KommonsExit } from './components/kommons_exit';
 import { NodeDetail } from './components/node_detail';
 import { ViewToggle } from './components/view_toggle';
 import { ROOT_ID } from './data/layout';
@@ -181,7 +182,10 @@ const KommonsSkeleton: React.FC<{ multiColumn?: boolean }> = ({
       <div
         className={`kommons-skeleton ${selectedNode ? '' : 'kommons-skeleton--map'}`}
       >
-        <ViewToggle />
+        <div className='kommons-skeleton__chrome'>
+          <KommonsExit />
+          <ViewToggle />
+        </div>
         {loading && (
           <p className='kommons-skeleton__loading'>
             {intl.formatMessage(messages.loading)}

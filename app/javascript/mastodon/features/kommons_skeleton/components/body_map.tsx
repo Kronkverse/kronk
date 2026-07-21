@@ -239,13 +239,13 @@ export const BodyMap: React.FC<{
       // (matches the Lattice).
       const spaceTarget = node.korner ?? node.space;
       if (spaceTarget) {
-        history.push(`/hub/kommons/space/${spaceTarget}`);
+        history.push(`/hub/kommons/space/${spaceTarget}?from=skeleton`);
         return;
       }
       // A Finger opens its meta page (info + proposals about this page + a
       // "go to this page" button), never the product page directly.
       if (node.url) {
-        history.push(`/hub/kommons/node/${node.id}`);
+        history.push(`/hub/kommons/node/${node.id}?from=skeleton`);
         return;
       }
       if (node.kids.length > 0) {

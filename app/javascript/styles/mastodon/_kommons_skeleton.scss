@@ -932,3 +932,35 @@
     animation: none;
   }
 }
+
+// Chrome row: the "⟵ Hub" exit sits opposite the view toggle, above the map.
+.kommons-skeleton__chrome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+// A pinned, clearly-labeled exit from Kommons back to the Hub. Styled as an
+// outlined pill — deliberately unlike the plain-text in-map breadcrumb, so
+// "leave Kommons" never reads the same as "move within the skeleton".
+.kommons-exit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: var(--radius-round, 999px);
+  border: 1px solid var(--accent, #7241ff);
+  color: var(--accent, #7241ff);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--accent, #7241ff);
+    color: var(--text-on-accent, #fff);
+  }
+}

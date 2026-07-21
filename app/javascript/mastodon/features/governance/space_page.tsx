@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
@@ -36,6 +36,11 @@ const messages = defineMessages({
 // the show endpoint, so we lazy-load the manifest when the store misses.
 const SpacePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const { slug = '' } = useParams<{ slug: string }>();
+  const location = useLocation();
+  const from =
+    new URLSearchParams(location.search).get('from') === 'lattice'
+      ? 'lattice'
+      : 'skeleton';
   const intl = useIntl();
   const stored = useKorner(slug);
   const kornerIcon = useKornerIcon(slug);
@@ -131,6 +136,13 @@ const SpacePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       </Helmet>
 
       <div className='space-page'>
+        <Link to={`/hub/kommons/${from}`} className='kommons-back-map'>
+          <FormattedMessage
+            id='kommons.back_to_map'
+            defaultMessage='← Back to the map'
+          />
+        </Link>
+
         <header className='space-page__hero'>
           <h1 className='space-page__name'>{name}</h1>
           {korner?.purpose ? (
