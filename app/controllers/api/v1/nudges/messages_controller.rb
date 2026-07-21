@@ -11,6 +11,7 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
   before_action :require_user!
   before_action :set_conversation
   before_action :authorize_participant!
+  before_action :reject_if_expired!
   before_action :set_message, only: [:destroy]
 
   def create
@@ -63,6 +64,12 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
     return if @conversation.participant?(current_account)
 
     render json: { error: 'not_found' }, status: 404
+  end
+
+  def reject_if_expired!
+    return unless @conversation.expired?
+
+    render json: { error: 'gone' }, status: 410
   end
 
   # Guard against attaching someone else's upload. Every id in `ids`

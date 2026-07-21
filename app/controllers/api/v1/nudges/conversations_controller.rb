@@ -13,6 +13,7 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
   before_action :require_user!
   before_action :set_conversation, only: [:show, :read, :leave, :mute, :unmute]
   before_action :authorize_participant!, only: [:show, :read, :leave, :mute, :unmute]
+  before_action :reject_if_expired!, only: [:show, :read, :leave, :mute, :unmute]
 
   DEFAULT_LIMIT = 40
   MAX_LIMIT     = 80
@@ -121,6 +122,16 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
     return if @conversation.participant?(current_account)
 
     render json: { error: 'not_found' }, status: 404
+  end
+
+  # Time-boxed conversations clear on expiry per brief §Surface 3.
+  # The sidebar list already filters via the `.active` scope; this
+  # closes the direct-URL gap by returning 410 on any read/write to
+  # an expired row (participant or not).
+  def reject_if_expired!
+    return unless @conversation.expired?
+
+    render json: { error: 'gone' }, status: 410
   end
 
   # Interleave messages + events chronologically. STREAM_LIMIT rows
