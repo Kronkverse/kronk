@@ -34,6 +34,7 @@ interface ConversationListProps {
   loading: boolean;
   activeId: string | null;
   onOpen: (id: string) => void;
+  onNewConversation: (conversation: ApiNudgeConversationJSON) => void;
 }
 
 export const ConversationList: React.FC<ConversationListProps> = ({
@@ -41,6 +42,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   loading,
   activeId,
   onOpen,
+  onNewConversation,
 }) => {
   const intl = useIntl();
   const [query, setQuery] = useState('');
@@ -62,11 +64,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   }, []);
 
   const handlePickerOpen = useCallback(
-    (conversationId: string) => {
+    (conversation: ApiNudgeConversationJSON) => {
       setPicking(false);
-      onOpen(conversationId);
+      onNewConversation(conversation);
+      onOpen(conversation.id);
     },
-    [onOpen],
+    [onNewConversation, onOpen],
   );
 
   const filtered = useMemo(() => {

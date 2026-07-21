@@ -8,6 +8,7 @@ import {
   apiOpenMateConversation,
 } from 'mastodon/api/nudges_conversations';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+import type { ApiNudgeConversationJSON } from 'mastodon/api_types/nudges_conversations';
 import { Avatar } from 'mastodon/components/avatar';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
@@ -34,7 +35,7 @@ const messages = defineMessages({
 });
 
 interface MatePickerProps {
-  onOpenConversation: (conversationId: string) => void;
+  onOpenConversation: (conversation: ApiNudgeConversationJSON) => void;
   onClose: () => void;
 }
 
@@ -91,7 +92,7 @@ export const MatePicker: React.FC<MatePickerProps> = ({
       void (async () => {
         try {
           const conversation = await apiOpenMateConversation(accountId);
-          onOpenConversation(conversation.id);
+          onOpenConversation(conversation);
         } catch {
           setError(intl.formatMessage(messages.error));
         } finally {
