@@ -43,6 +43,8 @@ export interface ApiNudgeMessageJSON {
   voice: ApiNudgeMessageVoiceJSON | null;
   reactions: { account_id: number; symbol: string; created_at: string }[];
   created_at: string;
+  deleted: boolean;
+  deleted_at: string | null;
   author_is_self: boolean;
   author: ApiAccountJSON;
 }

@@ -32,11 +32,14 @@ type ReactionHandler = (
   symbol: string,
 ) => void | Promise<void>;
 
+type DeleteHandler = (message: ApiNudgeMessageJSON) => void | Promise<void>;
+
 interface StreamItemProps {
   item: ApiNudgeStreamItem;
   conversationKind?: 'mate' | 'krew';
   onReact?: ReactionHandler;
   onUnreact?: ReactionHandler;
+  onDelete?: DeleteHandler;
 }
 
 // One row in the conversation stream — either a message bubble or an
@@ -48,6 +51,7 @@ export const StreamItem: React.FC<StreamItemProps> = ({
   conversationKind,
   onReact,
   onUnreact,
+  onDelete,
 }) => {
   if (item.kind === 'message') {
     return (
@@ -56,6 +60,7 @@ export const StreamItem: React.FC<StreamItemProps> = ({
         conversationKind={conversationKind}
         onReact={onReact}
         onUnreact={onUnreact}
+        onDelete={onDelete}
       />
     );
   }
@@ -68,13 +73,25 @@ interface MessageItemProps {
   conversationKind?: 'mate' | 'krew';
   onReact?: ReactionHandler;
   onUnreact?: ReactionHandler;
+  onDelete?: DeleteHandler;
 }
 
-const MessageItem: React.FC<MessageItemProps> = ({
+// Tombstoned messages redact to a "deleted" placeholder — brief
+// non-negotiable (§Deletion model). Keeping the slot preserves the
+// stream's timing so no re-flow occurs on later fetches.
+const MessageItem: React.FC<MessageItemProps> = (props) => {
+  if (props.item.deleted) {
+    return <DeletedMessage item={props.item} />;
+  }
+  return <LiveMessageItem {...props} />;
+};
+
+const LiveMessageItem: React.FC<MessageItemProps> = ({
   item,
   conversationKind,
   onReact,
   onUnreact,
+  onDelete,
 }) => {
   const intl = useIntl();
 
@@ -163,8 +180,65 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
       <span className='nudges-msg__time'>
         <RelativeTimestamp timestamp={item.created_at} short />
+        {item.author_is_self && onDelete && (
+          <DeleteButton item={item} onDelete={onDelete} />
+        )}
       </span>
     </div>
+  );
+};
+
+const DeletedMessage: React.FC<{ item: ApiNudgeMessageJSON }> = ({ item }) => (
+  <div
+    className={`nudges-msg nudges-msg--deleted ${
+      item.author_is_self ? 'nudges-msg--out' : 'nudges-msg--in'
+    }`}
+  >
+    <div className='nudges-msg__bubble nudges-msg__bubble--deleted'>
+      <FormattedMessage
+        id='nudges.message_deleted'
+        defaultMessage='Message deleted'
+      />
+    </div>
+    <span className='nudges-msg__time'>
+      <RelativeTimestamp timestamp={item.created_at} short />
+    </span>
+  </div>
+);
+
+const DeleteButton: React.FC<{
+  item: ApiNudgeMessageJSON;
+  onDelete: DeleteHandler;
+}> = ({ item, onDelete }) => {
+  const intl = useIntl();
+  const handleClick = useCallback(() => {
+    if (
+      window.confirm(
+        intl.formatMessage({
+          id: 'nudges.confirm_delete',
+          defaultMessage: 'Delete this message?',
+        }),
+      )
+    ) {
+      void onDelete(item);
+    }
+  }, [item, onDelete, intl]);
+  return (
+    <button
+      type='button'
+      className='nudges-msg__delete'
+      onClick={handleClick}
+      aria-label={intl.formatMessage({
+        id: 'nudges.delete',
+        defaultMessage: 'Delete',
+      })}
+      title={intl.formatMessage({
+        id: 'nudges.delete',
+        defaultMessage: 'Delete',
+      })}
+    >
+      ×
+    </button>
   );
 };
 
