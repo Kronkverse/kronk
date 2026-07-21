@@ -742,6 +742,15 @@
   color: var(--text-muted);
 }
 
+// Mate-only "Seen" indicator on self-authored bubbles. Kept subtle —
+// same font size + muted-color slot as the timestamp; the eye-glyph
+// weight lets it read without shouting.
+.nudges-msg__seen {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 // Tiny × affordance shown next to the timestamp on self-authored
 // messages. Reveals only on hover so the timestamp stays clean.
 .nudges-msg__delete {

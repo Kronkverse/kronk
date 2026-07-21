@@ -141,6 +141,16 @@ module Nudges
       expires_at.present? && expires_at <= Time.current
     end
 
+    # The OTHER Mate account's last-read pointer. Powers the sent-by-me
+    # "seen" indicator client-side. Null for Krew (multiple recipients,
+    # different UX) and null when the other party hasn't read anything
+    # yet.
+    def other_last_read_message_id(viewer)
+      return nil unless mate?
+
+      account_a_id == viewer.id ? last_read_message_id_b : last_read_message_id_a
+    end
+
     private
 
     def last_read_message_id_for(account)

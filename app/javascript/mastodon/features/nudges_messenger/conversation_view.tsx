@@ -411,6 +411,9 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
               <StreamItem
                 item={item}
                 conversationKind={detail.conversation.kind}
+                otherLastReadMessageId={
+                  detail.conversation.other_last_read_message_id
+                }
                 onReact={handleReact}
                 onUnreact={handleUnreact}
                 onDelete={handleDelete}
