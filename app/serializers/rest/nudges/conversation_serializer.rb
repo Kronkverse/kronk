@@ -12,7 +12,7 @@ class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
   include RoutingHelper
 
   attributes :id, :kind, :last_activity_at, :expires_at, :unread_count,
-             :preview, :latest_kind, :muted, :krew
+             :preview, :latest_kind, :muted, :other_last_read_message_id, :krew
 
   belongs_to :other_account, serializer: REST::AccountSerializer
 
@@ -21,6 +21,17 @@ class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
     return false unless viewer
 
     object.muted_for?(viewer)
+  end
+
+  # Mate-only: the id of the last message the OTHER party has read.
+  # Client renders a "seen" indicator on self-authored messages whose
+  # id is ≤ this value. Nil for Krew and when the other party hasn't
+  # read anything yet.
+  def other_last_read_message_id
+    return nil unless viewer
+
+    id = object.other_last_read_message_id(viewer)
+    id&.to_s
   end
 
   def id

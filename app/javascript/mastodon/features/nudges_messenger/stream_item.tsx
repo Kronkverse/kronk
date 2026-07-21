@@ -39,6 +39,7 @@ type MessageHandler = (message: ApiNudgeMessageJSON) => void | Promise<void>;
 interface StreamItemProps {
   item: ApiNudgeStreamItem;
   conversationKind?: 'mate' | 'krew';
+  otherLastReadMessageId?: string | null;
   onReact?: ReactionHandler;
   onUnreact?: ReactionHandler;
   onDelete?: DeleteHandler;
@@ -53,6 +54,7 @@ interface StreamItemProps {
 export const StreamItem: React.FC<StreamItemProps> = ({
   item,
   conversationKind,
+  otherLastReadMessageId,
   onReact,
   onUnreact,
   onDelete,
@@ -64,6 +66,7 @@ export const StreamItem: React.FC<StreamItemProps> = ({
       <MessageItem
         item={item}
         conversationKind={conversationKind}
+        otherLastReadMessageId={otherLastReadMessageId}
         onReact={onReact}
         onUnreact={onUnreact}
         onDelete={onDelete}
@@ -79,6 +82,7 @@ export const StreamItem: React.FC<StreamItemProps> = ({
 interface MessageItemProps {
   item: ApiNudgeMessageJSON & { kind: 'message' };
   conversationKind?: 'mate' | 'krew';
+  otherLastReadMessageId?: string | null;
   onReact?: ReactionHandler;
   onUnreact?: ReactionHandler;
   onDelete?: DeleteHandler;
@@ -99,6 +103,7 @@ const MessageItem: React.FC<MessageItemProps> = (props) => {
 const LiveMessageItem: React.FC<MessageItemProps> = ({
   item,
   conversationKind,
+  otherLastReadMessageId,
   onReact,
   onUnreact,
   onDelete,
@@ -146,6 +151,19 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
     conversationKind === 'krew' && !item.author_is_self && !item.sending;
 
   const isOptimistic = item.sending || item.failed;
+
+  // Mate "seen" indicator: self-authored, other party's read pointer
+  // has advanced past this message. Snowflake ids compare
+  // lexicographically as decimal strings only when zero-padded — but
+  // they're always the same length, so string comparison works. Guard
+  // with parseInt anyway to be robust to future format changes.
+  const seenByOther =
+    item.author_is_self &&
+    conversationKind === 'mate' &&
+    !isOptimistic &&
+    !!otherLastReadMessageId &&
+    !item.id.startsWith('tmp-') &&
+    BigInt(item.id) <= BigInt(otherLastReadMessageId);
 
   const handleRetryClick = useCallback(() => {
     void onRetry?.(item);
@@ -210,6 +228,11 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
           />
         ) : (
           <RelativeTimestamp timestamp={item.created_at} short />
+        )}
+        {seenByOther && (
+          <span className='nudges-msg__seen' aria-label='Seen' title='Seen'>
+            <FormattedMessage id='nudges.seen' defaultMessage='Seen' />
+          </span>
         )}
         {!isOptimistic && item.author_is_self && onDelete && (
           <DeleteButton item={item} onDelete={onDelete} />

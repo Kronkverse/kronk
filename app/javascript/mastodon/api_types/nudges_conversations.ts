@@ -22,6 +22,9 @@ export interface ApiNudgeConversationJSON {
   preview: string;
   latest_kind: 'message' | 'event' | null;
   muted: boolean;
+  // Mate-only: the id of the last message the OTHER party read.
+  // Null for Krew and when the other party hasn't read anything yet.
+  other_last_read_message_id: string | null;
   other_account: ApiAccountJSON | null;
   krew: ApiNudgeKrewJSON | null;
 }
