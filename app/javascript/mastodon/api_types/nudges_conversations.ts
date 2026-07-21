@@ -13,12 +13,26 @@ export interface ApiNudgeConversationJSON {
   other_account: ApiAccountJSON | null;
 }
 
+export interface ApiNudgeMessageMediaJSON {
+  id: string;
+  type: string; // 'image' | 'video' | 'gifv' | 'audio' | 'unknown'
+  url: string | null;
+  preview_url: string | null;
+  description: string | null;
+}
+
+export interface ApiNudgeMessageVoiceJSON {
+  id: string;
+  url: string | null;
+  duration: number | null;
+}
+
 export interface ApiNudgeMessageJSON {
   id: string;
   conversation_id: string;
   body: string | null;
-  media_attachment_id: string | null;
-  voice_attachment_id: string | null;
+  media: ApiNudgeMessageMediaJSON | null;
+  voice: ApiNudgeMessageVoiceJSON | null;
   reactions: { account_id: number; symbol: string; created_at: string }[];
   created_at: string;
   author_is_self: boolean;
