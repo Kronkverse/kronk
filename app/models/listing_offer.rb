@@ -19,10 +19,12 @@ class ListingOffer < ApplicationRecord
   def accept!
     update!(state: 'accepted')
     listing.update!(state: 'reserved')
+    publish_offer_response('wachuneed.offer.accepted')
   end
 
   def decline!
     update!(state: 'declined')
+    publish_offer_response('wachuneed.offer.declined')
   end
 
   def withdraw!
@@ -44,6 +46,20 @@ class ListingOffer < ApplicationRecord
       'wachuneed.offer.made',
       actor_account_id: offerer_id,
       recipient_account_id: listing.account_id,
+      listing_id: listing_id,
+      offer_id: id
+    )
+  end
+
+  # Buyer-facing response direction: seller accepts or declines the
+  # buyer's offer; Nudges routes to the buyer's Mate chat with the
+  # seller. Actor = seller (they took the action); recipient =
+  # offerer (they see the outcome).
+  def publish_offer_response(event_name)
+    Kronk::KornerEvents.publish(
+      event_name,
+      actor_account_id: listing.account_id,
+      recipient_account_id: offerer_id,
       listing_id: listing_id,
       offer_id: id
     )

@@ -38,7 +38,10 @@ listens:
   - kommons.proposal.backed
   - kalendar.event.rsvpd
   - wachuneed.offer.made
+  - wachuneed.offer.accepted
+  - wachuneed.offer.declined
   - kuestions.question.answered
+  - booth.set.frothed
 
 feed_projection:
   card: # not-applicable — Nudges appear in the notifications drawer, not the timeline.

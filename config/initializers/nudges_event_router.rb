@@ -91,4 +91,49 @@ Rails.application.config.after_initialize do
       cta_route: "/hub/kuestions/q/#{payload[:question_id]}"
     )
   end
+
+  # ── Booth: a Favourite landed on a set's shared Status ───────────
+  # The set creator gets a nudge if the frother is a Mate. Passive
+  # — a froth is an appreciation signal; no direct action required.
+  # CTA still opens the set page for a curious click-through.
+  Kronk::KornerEvents.subscribe('booth.set.frothed') do |payload|
+    NUDGE_ROUTE.call(
+      payload,
+      source_korner_slug: 'booth',
+      verb: 'frothed',
+      source_type: 'BoothSet',
+      source_id: payload[:booth_set_id],
+      interaction: 'passive'
+    )
+  end
+
+  # ── Wachuneed: seller accepted a buyer's offer ───────────────────
+  # The buyer gets a nudge if the seller is a Mate. Interactive —
+  # buyer needs to complete the deal. CTA jumps to the listing.
+  Kronk::KornerEvents.subscribe('wachuneed.offer.accepted') do |payload|
+    NUDGE_ROUTE.call(
+      payload,
+      source_korner_slug: 'wachuneed',
+      verb: 'offer_accepted',
+      source_type: 'Listing',
+      source_id: payload[:listing_id],
+      interaction: 'interactive',
+      cta_label: 'View listing',
+      cta_route: "/hub/wachuneed/listings/#{payload[:listing_id]}"
+    )
+  end
+
+  # ── Wachuneed: seller declined a buyer's offer ───────────────────
+  # The buyer gets a nudge if the seller is a Mate. Passive — the
+  # answer is no; no further action expected here.
+  Kronk::KornerEvents.subscribe('wachuneed.offer.declined') do |payload|
+    NUDGE_ROUTE.call(
+      payload,
+      source_korner_slug: 'wachuneed',
+      verb: 'offer_declined',
+      source_type: 'Listing',
+      source_id: payload[:listing_id],
+      interaction: 'passive'
+    )
+  end
 end
