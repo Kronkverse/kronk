@@ -13,6 +13,7 @@ import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import EmojiPickerDropdown from 'mastodon/features/compose/containers/emoji_picker_dropdown_container';
+import { useKorner } from 'mastodon/hooks/useKorner';
 import { me } from 'mastodon/initial_state';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
@@ -414,12 +415,15 @@ const MILESTONE_PREFIX = 'milestone_';
 const EventItem: React.FC<{
   item: Extract<ApiNudgeStreamItem, { kind: 'event' }>;
 }> = ({ item }) => {
+  const sourceKorner = useKorner(item.source_korner_slug);
+
   if (item.verb.startsWith(MILESTONE_PREFIX)) {
     return <MilestonePin item={item} />;
   }
 
   const actor = createAccountFromServerJSON(item.actor);
   const actorName = actor.display_name || actor.username;
+  const sourceLabel = sourceKorner?.name ?? item.source_korner_slug;
 
   return (
     <div className={`nudges-event nudges-event--${item.source_korner_slug}`}>
@@ -430,9 +434,7 @@ const EventItem: React.FC<{
         </span>
         <span className='nudges-event__text'>
           <strong>{actorName}</strong> {item.verb}{' '}
-          <span className='nudges-event__source'>
-            in {item.source_korner_slug}
-          </span>
+          <span className='nudges-event__source'>in {sourceLabel}</span>
         </span>
         {item.interaction === 'interactive' &&
           item.cta_label &&
