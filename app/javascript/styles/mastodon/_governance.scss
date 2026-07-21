@@ -3181,3 +3181,19 @@
   font-size: 12px;
   text-transform: capitalize;
 }
+
+// "← Back to the map" on a Meta/Space page — returns to the skeleton/lattice
+// you arrived from (Kommons UI proposal, kommons.index).
+.kommons-back-map {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 16px;
+  color: var(--text-muted, rgba(255, 255, 255, 70%));
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--accent, #7241ff);
+  }
+}
