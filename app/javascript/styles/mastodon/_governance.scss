@@ -3278,3 +3278,146 @@
     color: var(--accent, #7241ff);
   }
 }
+
+// ── Proposal steps checklist ───────────────────────────────────────────
+// A proposal's tasks surfaced up front (docs/spaces/kommons_proposal_page.md):
+// progress bar + done-count, each step tickable. Uses the governance decision
+// palette for state (agree = done, pending = in progress).
+.proposal-steps {
+  margin: 0 0 20px;
+  padding: 18px 18px 16px;
+  background: var(--surface-primary, rgba(255, 255, 255, 3%));
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
+  border-radius: var(--radius-md, 16px);
+
+  &__heading {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, rgba(255, 255, 255, 60%));
+  }
+
+  &__count {
+    margin-left: auto;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary, rgba(255, 255, 255, 70%));
+  }
+
+  &__progress {
+    height: 7px;
+    border-radius: 999px;
+    background: var(--surface-elevated, rgba(255, 255, 255, 8%));
+    overflow: hidden;
+    margin-bottom: 14px;
+
+    span {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(
+        90deg,
+        var(--accent, #6364ff),
+        var(--purple-bright, #7241ff)
+      );
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
+    border-radius: var(--radius-sm, 10px);
+    background: var(--surface-primary, rgba(255, 255, 255, 2%));
+    color: var(--text-primary, #fff);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color 0.12s ease,
+      background 0.12s ease;
+
+    &:hover {
+      border-color: var(--border-default, rgba(255, 255, 255, 18%));
+    }
+  }
+
+  &__check {
+    flex: 0 0 auto;
+    width: 21px;
+    height: 21px;
+    margin-top: 1px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border-default, rgba(255, 255, 255, 25%));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-on-accent, #fff);
+    font-size: 13px;
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  &__step.is-done .proposal-steps__check {
+    background: var(--decision-agree, #22c55e);
+    border-color: var(--decision-agree, #22c55e);
+  }
+
+  &__text {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 550;
+  }
+
+  &__step.is-done .proposal-steps__text {
+    color: var(--text-muted, rgba(255, 255, 255, 55%));
+    text-decoration: line-through;
+  }
+
+  &__tag {
+    flex: 0 0 auto;
+    margin-top: 1px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 3px 8px;
+    border-radius: 999px;
+
+    &--done {
+      background: var(--decision-agree-soft, rgba(34, 197, 94, 14%));
+      color: var(--decision-agree, #22c55e);
+    }
+
+    &--in_progress {
+      background: var(--decision-pending-soft, rgba(245, 158, 11, 15%));
+      color: var(--decision-pending, #f59e0b);
+    }
+
+    &--open {
+      background: var(--surface-elevated, rgba(255, 255, 255, 8%));
+      color: var(--text-muted, rgba(255, 255, 255, 55%));
+    }
+  }
+}
