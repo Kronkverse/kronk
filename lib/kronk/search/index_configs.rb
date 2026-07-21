@@ -45,7 +45,7 @@ module Kronk
           filterable_attributes: %w(account_id published created_at),
           sortable_attributes: %w(created_at play_count),
         },
-        marketplace_listings: {
+        wachuneed_listings: {
           searchable_attributes: %w(title description category subcategory),
           filterable_attributes: %w(account_id category state price_currency),
           sortable_attributes: %w(created_at price_cents),

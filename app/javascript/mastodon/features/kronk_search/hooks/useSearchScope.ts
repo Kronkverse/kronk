@@ -8,7 +8,7 @@ import { useLocation } from 'react-router-dom';
 //   /hub/kalendar/*    → events (kalendar korner scope)
 //   /hub/kommons/*     → proposals
 //   /hub/booth/*       → sets
-//   /hub/marketplace/* → listings
+//   /hub/wachuneed/*   → listings
 //   /@:user/*          → that account's content
 //   /home /hub /nudges → universal (no scope)
 //

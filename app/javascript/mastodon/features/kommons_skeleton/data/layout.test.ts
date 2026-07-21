@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { describe, expect, it } from 'vitest';
 
+import { LIMBS, buildTree, buildWires, layoutTree } from './layout';
 import type { KommonsNode } from './nodes';
 import { BUCKETS, bucketTotals } from './nodes';
-import { LIMBS, buildTree, buildWires, layoutTree } from './layout';
 
 // The map's one hard invariant: no two nodes may overlap.
 //
@@ -37,7 +38,7 @@ const fixture = (): KommonsNode[] => {
     'booth',
     'kalendar',
     'huddle',
-    'marketplace',
+    'wachuneed',
     'kompass',
     'moments',
     'albutts',

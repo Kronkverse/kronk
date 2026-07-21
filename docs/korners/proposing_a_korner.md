@@ -22,18 +22,18 @@ Also verify the proposed slug against `config/korners/reserved_slugs.yaml` — r
 
 The canonical opening set. Ask in one or two batches via `AskUserQuestion` (mode allows 1–4 questions per call). Answers map directly to manifest fields; the Round 1 output IS the initial draft.
 
-| # | Topic | Format | Maps to manifest field |
-|---|---|---|---|
-| 1 | **Description** — what is this korner for? | Open free-text | `hub_teaser.static` / `launch.blurb` |
-| 2 | **Primary content unit** — what do users create here? | Open free-text | `resources:` (models) |
-| 3 | **Composer** — does the korner need one? | Y/N (drill in R2 if Y) | UI + `write:` permissions |
-| 4 | **Visibility** — public / mates / krew-scoped / direct? | Multi-select | `security.visibility_scopes:` |
-| 5 | **Storage/media** — does it host media (audio/video/images/files)? | Y/N (drill in R2 if Y) | `storage.media_prefix:` |
-| 6 | **Notifications** — does the korner emit any? | Y/N (drill in R2 if Y) | `notifications:` block |
-| 7 | **Feed card** — does content project into Home feed? | Y/N (drill in R2 if Y) | `feed_projection:` block |
-| 8 | **Kategory-taggable** — do items carry curated Kategory tags? | Y/N | `tags` gating |
-| 9 | **Cross-korner connections** — what other korners does this touch, and how? | Open free-text | `emits:` + `listens:` |
-| 10 | **User-facing settings** — does the korner give users toggles/preferences to control it? | Y/N (drill in R2 if Y) | `settings:` block + Korner Standard §L8 |
+| #   | Topic                                                                                    | Format                 | Maps to manifest field                  |
+| --- | ---------------------------------------------------------------------------------------- | ---------------------- | --------------------------------------- |
+| 1   | **Description** — what is this korner for?                                               | Open free-text         | `hub_teaser.static` / `launch.blurb`    |
+| 2   | **Primary content unit** — what do users create here?                                    | Open free-text         | `resources:` (models)                   |
+| 3   | **Composer** — does the korner need one?                                                 | Y/N (drill in R2 if Y) | UI + `write:` permissions               |
+| 4   | **Visibility** — public / mates / krew-scoped / direct?                                  | Multi-select           | `security.visibility_scopes:`           |
+| 5   | **Storage/media** — does it host media (audio/video/images/files)?                       | Y/N (drill in R2 if Y) | `storage.media_prefix:`                 |
+| 6   | **Notifications** — does the korner emit any?                                            | Y/N (drill in R2 if Y) | `notifications:` block                  |
+| 7   | **Feed card** — does content project into Home feed?                                     | Y/N (drill in R2 if Y) | `feed_projection:` block                |
+| 8   | **Kategory-taggable** — do items carry curated Kategory tags?                            | Y/N                    | `tags` gating                           |
+| 9   | **Cross-korner connections** — what other korners does this touch, and how?              | Open free-text         | `emits:` + `listens:`                   |
+| 10  | **User-facing settings** — does the korner give users toggles/preferences to control it? | Y/N (drill in R2 if Y) | `settings:` block + Korner Standard §L8 |
 
 ### Suggested Round 1 batching
 
@@ -82,7 +82,7 @@ Round 2 drills into whichever Round 1 answer came back "yes" or needs sharpening
 - Which korners listen and what they do with the payload.
 - Any bidirectional patterns (event ↔ Krew, etc.).
 
-**Optional Round 3** — anything still open. Not every korner needs one. Kuestions, Krew, Kalendar, Kommons, Marketplace each ran a Round 3 during the 2.0 rebuild; simpler korners settled in two rounds.
+**Optional Round 3** — anything still open. Not every korner needs one. Kuestions, Krew, Kalendar, Kommons, Wachuneed (then Marketplace) each ran a Round 3 during the 2.0 rebuild; simpler korners settled in two rounds.
 
 ---
 
@@ -92,7 +92,7 @@ Once Round 1 and any Round 2 drilldowns land, produce three artefacts in a singl
 
 ### 1. `docs/spaces/<slug>.md` — the space doc
 
-Same shape as the existing per-space docs (see `docs/spaces/kuestions.md`, `docs/spaces/marketplace.md` for reference structure). Standard sections:
+Same shape as the existing per-space docs (see `docs/spaces/kuestions.md`, `docs/spaces/wachuneed.md` for reference structure). Standard sections:
 
 - **Purpose** — what the korner is for (from Q1 description)
 - **Current shape** — "not shipped yet" note; models/routes to come per Standard §L2

@@ -48,7 +48,7 @@ rule is: **declare only what has a working producer.** Built `proposal_challenge
 
 - `task_assigned` (real hooks exist); removed the declarations whose trigger
   surfaces don't exist yet — kommons `proposal_backed`/`proposal_comment`, kuestions
-  `question_answered`/`answer_frothed`, marketplace's four `listing_*` — each with a
+  `question_answered`/`answer_frothed`, wachuneed's four `listing_*` — each with a
   manifest comment on when it returns (#393). They come back _with their producers_.
 
 ### §9.5 — event-bus wiring is deferred

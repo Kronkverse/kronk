@@ -35,7 +35,7 @@ current state across the ecosystem:
 | Booth             | `main`           | Live in production |
 | Inflow            | `main`           | Live in production |
 | Nudges            | `main`           | Live in production |
-| Marketplace       | `dev/kashka`     | Live on shadow     |
+| Wachuneed         | `dev/kashka`     | Live on shadow     |
 | Tree              | `dev/chris`      | Live on shadow     |
 | Klot              | `dev/tbone`      | Live on shadow     |
 
@@ -52,8 +52,8 @@ Skim the manifests together and the picture is:
   paths on DO Spaces yet — Kronk media still lives under Mastodon's
   default `accounts/` and `media_attachments/` roots.
 - **Feed projection is the newest convention.** Kommons and Kuestions
-  have been projecting for a while; Marketplace was wired in on
-  `feature/korner-cards` with the `StatusMarketplaceCard`. Booth still
+  have been projecting for a while; Wachuneed was wired in on
+  `feature/korner-cards` with the `StatusWachuneedCard`. Booth still
   needs the reverse status association (see the manifest).
 - **Subscription is universally not-implemented.** This is the biggest
   Phase 2 gap: no Korner has a per-space subscribe/mute today.

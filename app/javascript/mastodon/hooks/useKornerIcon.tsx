@@ -25,7 +25,7 @@ const SLUG_TO_ICON: Record<string, IconProp> = {
   kalendar: CalendarIcon, // calendar — events
   huddle: PartnerExchangeIcon, // handshake — live sessions
   booth: HeadphonesIcon, // headphones — audio
-  marketplace: InventoryIcon, // stack — listings
+  wachuneed: InventoryIcon, // stack — listings
   inflow: DiversityIcon, // people bloom — social
   nudges: ChatIcon, // speech bubble — chats
   moments: HourglassIcon, // hourglass — ephemeral

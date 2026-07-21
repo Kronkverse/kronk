@@ -6,8 +6,8 @@
 
 A Krew is **audience-scoping for posts** — it lets you share
 selectively with a defined group of people. There is **no physical
-Krew space** you visit to see Krew posts; the Krew is the *filter on
-who sees what*, not a destination.
+Krew space** you visit to see Krew posts; the Krew is the _filter on
+who sees what_, not a destination.
 
 Concrete examples:
 
@@ -101,7 +101,7 @@ all target Krews — anyone in any one of them sees the post.
 followers / direct) gains a **`Krew…`** entry. Selecting it opens a
 Krew multi-select of the Krews you're a member of. Krew visibility is
 mutually exclusive with the other visibility modes — a post either
-goes to a Public/Followers/Direct audience *or* it goes to one-or-more
+goes to a Public/Followers/Direct audience _or_ it goes to one-or-more
 Krews, not both. No new composer surface; the change lives inside the
 existing dropdown.
 
@@ -119,7 +119,7 @@ a post stream.
 
 Krews already own **Huddle** spaces (opt-in at Krew creation; any
 member can instantiate later). Other candidate accretions (Krew-scoped
-Kalendar events, Kommons proposals, Booth sets, Marketplace listings,
+Kalendar events, Kommons proposals, Booth sets, Wachuneed listings,
 Krew-only Kuestions) are **not decided yet** — will be resolved
 per-korner as those rebuild docs get written.
 
@@ -184,7 +184,7 @@ individual rooms cap around ~35 regardless of Krew size, see
 - **Account deletion** — when a member's account is deleted, what
   happens to their Krew-targeted posts? Standard Kronk deletion path
   should handle it, but worth confirming for the audience-scoping case.
-- **Krew accretion (Kalendar events, Kommons, Booth, Marketplace,
+- **Krew accretion (Kalendar events, Kommons, Booth, Wachuneed,
   Kuestions)** — will be resolved as each korner's rebuild doc
   materialises.
 - **Immutable identity edge cases** — if a Krew is created with a
