@@ -113,7 +113,6 @@ import {
   Groups,
   GroupDetail,
   Hub,
-  NudgesActivity,
   MomentsStub,
   AlbuttsStub,
   KompassStub,
@@ -246,7 +245,11 @@ class SwitchingColumnsArea extends PureComponent {
                 any residual muscle-memory links to /notifications
                 redirect to the Activity feed. Old routes still mount
                 for the archive tab. */}
-            <Redirect from='/notifications' to='/nudges/activity' exact />
+            {/* Nudges activity feed retired 2026-07-21 in favour of the Signal-shaped
+                messenger surface. Legacy /notifications and /nudges/activity
+                URLs redirect to /nudges. See docs/kronk_nudges.md. */}
+            <Redirect from='/notifications' to='/nudges' exact />
+            <Redirect from='/nudges/activity' to='/nudges' exact />
             <WrappedRoute path='/notifications/requests' component={NotificationRequests} content={children} exact />
             <WrappedRoute path='/notifications/requests/:id' component={NotificationRequest} content={children} exact />
             <WrappedRoute path='/favourites' component={FavouritedStatuses} content={children} />
@@ -285,7 +288,6 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/kompass' component={KompassStub} content={children} />
             <WrappedRoute path='/hub/wachuneed' component={Wachuneed} content={children} />
             <WrappedRoute path='/@:acct/connections' exact component={Connections} content={children} />
-            {signedIn && <WrappedRoute path="/nudges/activity" component={NudgesActivity} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/:accountId" component={NudgesThread} content={children} />}
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/skeleton" component={KommonsSkeleton} content={children} />}
@@ -618,8 +620,9 @@ class UI extends PureComponent {
   };
 
   handleHotkeyGoToNotifications = () => {
-    // Phase 5.5 — notifications hotkey routes to Nudges Activity.
-    this.props.history.push('/nudges/activity');
+    // Notifications hotkey routes to Nudges (activity feed retired
+    // 2026-07-21 for the messenger surface — see docs/kronk_nudges.md).
+    this.props.history.push('/nudges');
   };
 
   handleHotkeyGoToLocal = () => {

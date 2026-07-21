@@ -3,7 +3,7 @@
 
 slug: nudges
 name: Nudges
-purpose: "To surface the activity that involves you — replies, reactions, prompts — as a living stream, not a bell."
+purpose: 'To surface the activity that involves you — replies, reactions, prompts — as a living stream, not a bell.'
 icon: partner_exchange
 render_target: native
 version: 0.1.0
@@ -83,6 +83,16 @@ feature_flag: # not-implemented
 core: true
 mount: /nudges
 enforced: true
+
+# Nav vs. Hub-grid concerns kept as separate declarations per brief
+# (docs/kronk_nudges.md §Data model / Surface 1) so the two never
+# collapse into one overloaded field:
+#   hub_visible: false — the Hub grid filters this out (Nudges has no
+#     tile alongside Kalendar / Kommons / etc.)
+#   pillar: true       — the HubSwitcher includes this as a top-nav
+#     pillar (Me / Home / Hub / Nudges).
+hub_visible: false
+pillar: true
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 # The nudges korner is represented by the feed.nudges cross-cutting node.

@@ -355,10 +355,6 @@ export function Hub () {
   return import("../../hub").then(m => ({ default: m.Hub }));
 }
 
-export function NudgesActivity () {
-  return import("../../nudges_activity").then(m => ({ default: m.NudgesActivity }));
-}
-
 export function MomentsStub () {
   return import("../../korner_stub").then(m => ({ default: m.MomentsStub }));
 }
