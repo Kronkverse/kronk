@@ -82,4 +82,17 @@ Rails.application.config.after_initialize do
       interaction: 'passive'
     )
   end
+
+  # ── Hand-wired: groups.member.left ───────────────────────────────
+  # Cleans up ConversationMembership when an account leaves the
+  # underlying Group (via either the Group leave endpoint or Nudges'
+  # own Krew leave). Idempotent: destroys 0 or 1 rows depending on
+  # who fired first. No system-line event: leaving is a private
+  # signal, not a room announcement.
+  Kronk::KornerEvents.subscribe('groups.member.left') do |payload|
+    convo = Nudges::Conversation.find_by(kind: Nudges::Conversation::KREW, krew_id: payload[:group_id])
+    next unless convo
+
+    convo.memberships.where(account_id: payload[:actor_account_id]).destroy_all
+  end
 end

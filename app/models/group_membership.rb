@@ -13,6 +13,7 @@ class GroupMembership < ApplicationRecord
 
   before_validation :ensure_joined_at
   after_commit :publish_groups_member_joined, on: :create
+  after_commit :publish_groups_member_left,   on: :destroy
 
   private
 
@@ -28,6 +29,18 @@ class GroupMembership < ApplicationRecord
   def publish_groups_member_joined
     Kronk::KornerEvents.publish(
       'groups.member.joined',
+      actor_account_id: account_id,
+      group_id: group_id
+    )
+  end
+
+  # groups.member.left — the inverse. Fires whether the account left
+  # via the group's own leave endpoint or via the Nudges Krew leave
+  # (which destroys the GroupMembership in the same transaction). The
+  # Nudges subscriber cleans up ConversationMembership idempotently.
+  def publish_groups_member_left
+    Kronk::KornerEvents.publish(
+      'groups.member.left',
       actor_account_id: account_id,
       group_id: group_id
     )
