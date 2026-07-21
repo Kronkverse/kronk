@@ -242,10 +242,10 @@ export const BodyMap: React.FC<{
         history.push(`/hub/kommons/space/${spaceTarget}`);
         return;
       }
-      // A Finger opens its page (Kronk's org pages are Rails-served).
+      // A Finger opens its meta page (info + proposals about this page + a
+      // "go to this page" button), never the product page directly.
       if (node.url) {
-        if (node.url.startsWith('/kronk')) window.location.assign(node.url);
-        else history.push(node.url);
+        history.push(`/hub/kommons/node/${node.id}`);
         return;
       }
       if (node.kids.length > 0) {

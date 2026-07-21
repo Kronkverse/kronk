@@ -260,11 +260,11 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
         history.push(`/hub/kommons/space/${spaceTarget}`);
         return;
       }
-      // A Finger opens its page. Kronk's org pages are Rails-served (full
-      // navigation); everything else is an in-app route.
+      // A Finger opens its meta page — info about this page, the proposals
+      // about it, and a "go to this page" button. It never jumps straight to
+      // the product page: the tree is a governance surface, not a launcher.
       if (node.url) {
-        if (node.url.startsWith('/kronk')) window.location.assign(node.url);
-        else history.push(node.url);
+        history.push(`/hub/kommons/node/${node.id}`);
         return;
       }
       // Ease this node into view once the layout settles.

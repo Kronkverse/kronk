@@ -97,6 +97,7 @@ import {
   Governance,
   KommonsProposal,
   KommonsSpace,
+  KommonsNodeMeta,
   KommonsPropose,
   KommonsSkeleton,
   KommonsLattice,
@@ -291,6 +292,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/hub/kommons/lattice" component={KommonsLattice} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/p/:proposalId" component={KommonsProposal} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/space/:slug" component={KommonsSpace} content={children} />}
+            {signedIn && <WrappedRoute path="/hub/kommons/node/:nodeId" component={KommonsNodeMeta} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/propose" component={KommonsPropose} content={children} />}
             {signedIn && <WrappedRoute path={["/governance", "/hub/kommons"]} component={Governance} content={children} />}
             {signedIn && <WrappedRoute path={["/questions/:id", "/hub/kuestions/:id"]} component={QuestionPage} content={children} />}

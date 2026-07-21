@@ -1,11 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 import { useHistory, useLocation } from 'react-router-dom';
 
-import { apiCreateKommonsProposal } from 'mastodon/api/kommons_nodes';
+import { apiCreateKommonsProposal, apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { useKorner } from 'mastodon/hooks/useKorner';
@@ -36,12 +36,39 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const location = useLocation();
   const kommonsIcon = useKornerIcon('kommons');
 
-  const space = useMemo(
-    () => new URLSearchParams(location.search).get('space') ?? '',
+  // Scope: `?space=<slug>` targets a korner (anchors to its index node);
+  // `?node=<id>` targets an exact page-node (the meta-page "propose" path).
+  const params = useMemo(
+    () => new URLSearchParams(location.search),
     [location.search],
   );
+  const space = params.get('space') ?? '';
+  const nodeId = params.get('node') ?? '';
   const korner = useKorner(space);
-  const spaceName = korner?.name ?? space;
+  const [nodeLabel, setNodeLabel] = useState('');
+
+  useEffect(() => {
+    if (!nodeId) return undefined;
+    let active = true;
+    apiGetKommonsNodes()
+      .then((res) => {
+        if (active)
+          setNodeLabel(res.nodes.find((n) => n.id === nodeId)?.label ?? nodeId);
+        return undefined;
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [nodeId]);
+
+  const targetNodeId = nodeId || (space ? `${space}.index` : undefined);
+  const scoped = Boolean(nodeId || space);
+  const scopeName = nodeId
+    ? nodeLabel || nodeId
+    : space
+      ? (korner?.name ?? space)
+      : '';
 
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -77,9 +104,9 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         title: title.trim(),
         body: body.trim(),
         proposal_type: type,
-        // Anchor to the space's index node so it lands on the Space page and
+        // Anchor to the scoped node so it lands on that page's meta page and
         // the tree. Unscoped proposals carry no node.
-        ...(space ? { node_id: `${space}.index` } : {}),
+        ...(targetNodeId ? { node_id: targetNodeId } : {}),
       })
         .then((created) => {
           history.push(`/hub/kommons/p/${created.id}`);
@@ -92,7 +119,7 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           setSubmitting(false);
         });
     },
-    [canSubmit, title, body, type, space, history],
+    [canSubmit, title, body, type, targetNodeId, history],
   );
 
   return (
@@ -111,11 +138,11 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       <form className='propose-page' onSubmit={handleSubmit}>
         <header className='propose-page__hero'>
           <h1 className='propose-page__title'>
-            {space ? (
+            {scoped ? (
               <FormattedMessage
                 id='propose.heading_scoped'
                 defaultMessage='Propose a change to {space}'
-                values={{ space: spaceName }}
+                values={{ space: scopeName }}
               />
             ) : (
               <FormattedMessage
