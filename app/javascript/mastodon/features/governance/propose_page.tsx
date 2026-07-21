@@ -12,7 +12,7 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 const messages = defineMessages({
-  title: { id: 'propose.title', defaultMessage: 'Plant a proposal' },
+  title: { id: 'propose.title', defaultMessage: 'Open a Proposal' },
   titlePlaceholder: {
     id: 'propose.title_placeholder',
     defaultMessage: 'A short, clear title',
@@ -120,7 +120,7 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             ) : (
               <FormattedMessage
                 id='propose.heading'
-                defaultMessage='Plant a proposal'
+                defaultMessage='Open a Proposal'
               />
             )}
           </h1>
@@ -186,7 +186,7 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             className='propose-page__submit'
             disabled={!canSubmit}
           >
-            <FormattedMessage id='propose.submit' defaultMessage='Plant it' />
+            <FormattedMessage id='propose.submit' defaultMessage='Open it' />
           </button>
         </div>
       </form>

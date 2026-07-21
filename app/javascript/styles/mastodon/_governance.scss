@@ -3047,34 +3047,6 @@
   }
 }
 
-// ── Space-page "Plant a proposal" affordance ───────────────────────────
-.space-page__section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-
-  .space-page__heading {
-    margin: 0;
-  }
-}
-
-.space-page__propose {
-  flex: 0 0 auto;
-  padding: 6px 12px;
-  border-radius: var(--radius-round, 999px);
-  background: var(--accent, #7241ff);
-  color: var(--text-on-accent, #fff);
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-
-  &:hover {
-    filter: brightness(1.08);
-  }
-}
-
 // ── Propose page (/hub/kommons/propose) ────────────────────────────────
 .propose-page {
   max-width: 640px;
