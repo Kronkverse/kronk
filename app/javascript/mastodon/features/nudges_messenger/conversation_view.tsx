@@ -10,6 +10,8 @@ import {
   apiDeleteNudgeMessage,
   apiLeaveNudgeConversation,
   apiMarkNudgeConversationRead,
+  apiMuteNudgeConversation,
+  apiUnmuteNudgeConversation,
   apiAddNudgeReaction,
   apiRemoveNudgeReaction,
 } from 'mastodon/api/nudges_conversations';
@@ -252,6 +254,20 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     [detail, onMessageSent],
   );
 
+  const handleToggleMute = useCallback(() => {
+    if (!detail) return;
+    const muted = detail.conversation.muted;
+    void (async () => {
+      const updated = muted
+        ? await apiUnmuteNudgeConversation(conversationId)
+        : await apiMuteNudgeConversation(conversationId);
+      onMessageSent({
+        ...detail,
+        conversation: { ...detail.conversation, ...updated },
+      });
+    })();
+  }, [conversationId, detail, onMessageSent]);
+
   const handleLeaveKrew = useCallback(() => {
     if (
       !window.confirm(
@@ -350,6 +366,21 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
                 />
               </span>
             )}
+            <button
+              type='button'
+              className='nudges-conversation__mute'
+              onClick={handleToggleMute}
+              aria-pressed={detail.conversation.muted}
+            >
+              {detail.conversation.muted ? (
+                <FormattedMessage
+                  id='nudges.krew.unmute'
+                  defaultMessage='Unmute'
+                />
+              ) : (
+                <FormattedMessage id='nudges.krew.mute' defaultMessage='Mute' />
+              )}
+            </button>
             <button
               type='button'
               className='nudges-conversation__leave'

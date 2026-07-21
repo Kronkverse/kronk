@@ -105,10 +105,18 @@ module Nudges
     end
 
     def unread_count_for(account)
+      return 0 if muted_for?(account)
+
       pointer = last_read_message_id_for(account)
       scope   = messages.where.not(author_account_id: account.id)
       scope = scope.where(Nudges::ConversationMessage.arel_table[:id].gt(pointer)) if pointer
       scope.count
+    end
+
+    def muted_for?(account)
+      return false if mate?
+
+      memberships.exists?(account_id: account.id, muted: true)
     end
 
     def mark_read!(account, up_to_message_id)

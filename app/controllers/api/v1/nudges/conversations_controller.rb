@@ -9,10 +9,10 @@
 # conversations they're a participant in.
 class Api::V1::Nudges::ConversationsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:notifications' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:notifications' }, only: [:read, :leave]
+  before_action -> { doorkeeper_authorize! :write, :'write:notifications' }, only: [:read, :leave, :mute, :unmute]
   before_action :require_user!
-  before_action :set_conversation, only: [:show, :read, :leave]
-  before_action :authorize_participant!, only: [:show, :read, :leave]
+  before_action :set_conversation, only: [:show, :read, :leave, :mute, :unmute]
+  before_action :authorize_participant!, only: [:show, :read, :leave, :mute, :unmute]
 
   DEFAULT_LIMIT = 40
   MAX_LIMIT     = 80
@@ -61,7 +61,34 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
     head 204
   end
 
+  # Mute a Krew conversation for the current account: it stays visible
+  # in the sidebar (dimmed) but stops driving unread badges. Krew-only;
+  # a Mate mute is effectively unfollowing, which is a different flow.
+  def mute
+    set_muted!(true)
+  end
+
+  def unmute
+    set_muted!(false)
+  end
+
   private
+
+  def set_muted!(value)
+    unless @conversation.krew?
+      render json: { error: 'mate_conversations_cannot_be_muted' }, status: :unprocessable_entity
+      return
+    end
+
+    membership = @conversation.memberships.find_by(account_id: current_account.id)
+    unless membership
+      render json: { error: 'not_a_member' }, status: :unprocessable_entity
+      return
+    end
+
+    membership.update!(muted: value)
+    render json: REST::Nudges::ConversationSerializer.new(@conversation.reload, scope: current_account)
+  end
 
   def set_conversation
     @conversation = Nudges::Conversation.find(params[:id])
