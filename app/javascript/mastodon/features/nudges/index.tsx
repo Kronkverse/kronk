@@ -496,23 +496,9 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
         >
           <FormattedMessage id='nudges.tab.chats' defaultMessage='Chats' />
         </span>
-        <Link
-          to='/nudges/activity'
-          style={{
-            padding: '0.35rem 0.85rem',
-            borderRadius: 'var(--radius-round, 999px)',
-            border: '1px solid var(--border-default)',
-            background: 'var(--surface-elevated)',
-            color: 'var(--text-secondary)',
-            textDecoration: 'none',
-            fontSize: '0.85rem',
-          }}
-        >
-          <FormattedMessage
-            id='nudges.tab.activity'
-            defaultMessage='Activity'
-          />
-        </Link>
+        {/* Activity tab retired 2026-07-21 — the aggregated notification feed is
+            superseded by the messenger surface. Legacy tab remains until 2.1.x
+            per the sunset plan. See docs/kronk_nudges.md. */}
         <Link
           to='/nudges/legacy'
           style={{
