@@ -85,6 +85,7 @@ export const apiGetKommonsNodes = () =>
 export interface ApiCreateProposalParams {
   title: string;
   body: string;
+  summary?: string;
   node_id?: string;
   proposal_type?: 'small' | 'medium' | 'large';
 }
