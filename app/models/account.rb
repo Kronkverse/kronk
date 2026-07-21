@@ -530,7 +530,7 @@ class Account < ApplicationRecord
   # never block account creation.
   def grant_starting_tokens
     Kronk::Tokens.grant!(self, TokenBalance::STARTING_BALANCE)
-  rescue StandardError => e
+  rescue => e
     Rails.logger.error("Failed to grant starting tokens to account #{id}: #{e.class} #{e.message}")
   end
 

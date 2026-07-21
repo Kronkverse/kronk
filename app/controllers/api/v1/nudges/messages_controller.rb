@@ -37,7 +37,7 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
   end
 
   def authorize_participant!
-    return if [@conversation.account_a_id, @conversation.account_b_id].include?(current_account.id)
+    return if @conversation.participant?(current_account)
 
     render json: { error: 'not_found' }, status: 404
   end

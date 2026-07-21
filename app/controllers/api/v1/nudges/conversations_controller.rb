@@ -48,9 +48,10 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
     @conversation = Nudges::Conversation.find(params[:id])
   end
 
-  # A conversation is only accessible to the two accounts on the row.
+  # A conversation is only accessible to its participants — the two
+  # Mate accounts or the Krew's members.
   def authorize_participant!
-    return if [@conversation.account_a_id, @conversation.account_b_id].include?(current_account.id)
+    return if @conversation.participant?(current_account)
 
     render json: { error: 'not_found' }, status: 404
   end

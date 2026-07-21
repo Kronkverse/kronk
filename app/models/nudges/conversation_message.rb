@@ -79,8 +79,12 @@ module Nudges
     # Bump the shared Mate counter. If the increment crosses a milestone,
     # drop a pinned event into the stream so the pair sees it (§Surfaces
     # 3 — milestone pins are Mate-only). Attributed to the message
-    # author — they tipped it over.
+    # author — they tipped it over. Krew conversations don't have a
+    # relationship counter (no 1:1 pair) so this short-circuits for
+    # kind='krew'.
     def increment_relationship_counter
+      return unless conversation.mate?
+
       relationship = Nudges::Relationship.for_pair(conversation.account_a_id, conversation.account_b_id)
       threshold    = relationship.record_message!
       return unless threshold
