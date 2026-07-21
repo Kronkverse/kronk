@@ -31,20 +31,93 @@ storage:
 emits:
   - notification.nudge # via NotifyService, not the framework event bus
 # Nudges is the terminal listener for cross-korner events. Each entry
-# maps to a subscriber in config/initializers/nudges_event_router.rb
-# that resolves the payload and calls Nudges::EventRouter.deliver.
-# Additional korner events wire in incrementally per Phase 1c+.
+# declares how a bus event becomes a Nudges::Event on the recipient's
+# Mate chat. The `nudges_event_bus` initializer reads this block at
+# boot and registers subscribers automatically — no hand-wiring per
+# event required (impl plan §9.5).
+#
+# Shape:
+#   - event:         'namespace.entity.verb'          — the bus event name
+#     verb:          'frothed'                        — Nudges::Event.verb
+#     verb_template: 'rsvpd_{status}'                 — OR templated from payload
+#     source_type:   'Proposal'                       — polymorphic ref class
+#     source_id_key: 'proposal_id'                    — payload key for the source_id
+#     interaction:   'interactive' | 'passive'
+#     cta_label:     'View proposal'                  — interactive only
+#     cta_route:     '/hub/kommons/p/{proposal_id}'   — {…} tokens interpolate off payload
+#     source_korner: 'kommons'                        — the korner slug for the orb
+#
+# Entries WITHOUT a Mates gate live in nudges_event_bus.rb as
+# hand-wired special cases (groups.member.joined populates the Krew
+# conversation directly, not a Mate chat).
 listens:
-  - kommons.proposal.backed
-  - kommons.proposal.frothed
-  - kalendar.event.rsvpd
-  - wachuneed.offer.made
-  - wachuneed.offer.accepted
-  - wachuneed.offer.declined
-  - kuestions.question.answered
-  - kuestions.question.frothed
-  - booth.set.frothed
-  - groups.member.joined
+  - event: kommons.proposal.backed
+    source_korner: kommons
+    verb: backed
+    source_type: Proposal
+    source_id_key: proposal_id
+    interaction: interactive
+    cta_label: 'View proposal'
+    cta_route: '/hub/kommons/p/{proposal_id}'
+  - event: kommons.proposal.frothed
+    source_korner: kommons
+    verb: frothed
+    source_type: Proposal
+    source_id_key: proposal_id
+    interaction: passive
+  - event: kalendar.event.rsvpd
+    source_korner: kalendar
+    verb_template: 'rsvpd_{status}'
+    source_type: Event
+    source_id_key: event_id
+    interaction: interactive
+    cta_label: 'View event'
+    cta_route: '/hub/kalendar/{event_id}'
+  - event: wachuneed.offer.made
+    source_korner: wachuneed
+    verb: offered
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: interactive
+    cta_label: 'View offer'
+    cta_route: '/hub/wachuneed/listings/{listing_id}'
+  - event: wachuneed.offer.accepted
+    source_korner: wachuneed
+    verb: offer_accepted
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: interactive
+    cta_label: 'View listing'
+    cta_route: '/hub/wachuneed/listings/{listing_id}'
+  - event: wachuneed.offer.declined
+    source_korner: wachuneed
+    verb: offer_declined
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: passive
+  - event: kuestions.question.answered
+    source_korner: kuestions
+    verb: answered
+    source_type: Question
+    source_id_key: question_id
+    interaction: interactive
+    cta_label: 'View answer'
+    cta_route: '/hub/kuestions/q/{question_id}'
+  - event: kuestions.question.frothed
+    source_korner: kuestions
+    verb: frothed
+    source_type: Question
+    source_id_key: question_id
+    interaction: passive
+  - event: booth.set.frothed
+    source_korner: booth
+    verb: frothed
+    source_type: BoothSet
+    source_id_key: booth_set_id
+    interaction: passive
+  # groups.member.joined is NOT here — routes into the Krew conversation
+  # directly (no Mates gate) and stays hand-wired in
+  # config/initializers/nudges_event_bus.rb.
 
 feed_projection:
   card: # not-applicable — Nudges appear in the notifications drawer, not the timeline.
