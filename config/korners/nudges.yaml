@@ -30,7 +30,12 @@ storage:
 
 emits:
   - notification.nudge # via NotifyService, not the framework event bus
-listens: []
+# Nudges is the terminal listener for cross-korner events. Each entry
+# maps to a subscriber in config/initializers/nudges_event_router.rb
+# that resolves the payload and calls Nudges::EventRouter.deliver.
+# Additional korner events wire in incrementally per Phase 1c+.
+listens:
+  - kommons.proposal.backed
 
 feed_projection:
   card: # not-applicable — Nudges appear in the notifications drawer, not the timeline.

@@ -30,7 +30,8 @@ storage:
   media_prefix: # not-implemented — proposal media currently uses Mastodon default paths
   redis_prefix: # not-implemented — no dedicated Kommons Redis usage
 
-emits: [] # no internal event bus yet (§6)
+emits:
+  - kommons.proposal.backed # a Kronker stakes tokens on a proposal; Nudges routes to the author's Mate chat
 listens: []
 
 feed_projection:
