@@ -290,6 +290,54 @@
   flex: 0 0 auto;
 }
 
+// Group placeholder — used when the Krew has no member avatars we
+// can show. Solid-fill circle with the material Groups glyph.
+.nudges-row__krew-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgb(114 65 255 / 20%);
+  color: var(--kronk-purple-bright);
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Stacked pair of member avatars for Krew rows in the sidebar per
+// docs/kronk_nudges.md §Surface 2. The second avatar sits offset
+// down-and-right, mimicking a "chat" grouping.
+.nudges-row__krew-stack {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+}
+
+.nudges-row__krew-stack-avatar {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--surface-base);
+  object-fit: cover;
+  background: var(--surface-elevated);
+}
+
+.nudges-row__krew-stack-avatar--0 {
+  top: 0;
+  left: 0;
+}
+
+.nudges-row__krew-stack-avatar--1 {
+  bottom: 0;
+  right: 0;
+}
+
 .nudges-row__body {
   flex: 1 1 auto;
   min-width: 0;

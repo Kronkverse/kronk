@@ -106,12 +106,33 @@ const MateAvatar: React.FC<{
   return <Avatar account={shape} size={40} />;
 };
 
-const KrewAvatar: React.FC<{ krew: ApiNudgeKrewJSON | null }> = ({ krew }) => (
-  <span
-    className='nudges-row__krew-avatar'
-    aria-label={krew?.name ?? 'Krew'}
-    title={krew?.name}
-  >
-    <GroupsIcon />
-  </span>
-);
+const KrewAvatar: React.FC<{ krew: ApiNudgeKrewJSON | null }> = ({ krew }) => {
+  const urls = krew?.avatar_urls ?? [];
+  if (urls.length === 0) {
+    return (
+      <span
+        className='nudges-row__krew-avatar'
+        aria-label={krew?.name ?? 'Krew'}
+        title={krew?.name}
+      >
+        <GroupsIcon />
+      </span>
+    );
+  }
+  return (
+    <span
+      className='nudges-row__krew-stack'
+      aria-label={krew?.name ?? 'Krew'}
+      title={krew?.name}
+    >
+      {urls.slice(0, 2).map((url, i) => (
+        <img
+          key={url}
+          className={`nudges-row__krew-stack-avatar nudges-row__krew-stack-avatar--${i}`}
+          src={url}
+          alt=''
+        />
+      ))}
+    </span>
+  );
+};
