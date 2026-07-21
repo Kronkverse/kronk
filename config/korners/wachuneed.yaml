@@ -1,10 +1,14 @@
-# Marketplace — listings, offers, services.
+# Wachuneed — creations, goods, services traded person-to-person.
 # Greenfield reference korner: built to spec §5 from day one — canonical
 # status_id linkage, dedicated tables, no retrofitting.
+#
+# Slug history: renamed from `marketplace` (2026-07-21). The three
+# top-level categories became creations / goods / services so the middle
+# category no longer collides with the old korner name.
 
-slug: marketplace
-name: Marketplace
-purpose: "To let kronkers offer and find creations, listings, and services person-to-person."
+slug: wachuneed
+name: Wachuneed
+purpose: "To let kronkers offer and find creations, goods, and services person-to-person."
 icon: inventory_2
 render_target: native
 version: 2.0.0
@@ -31,31 +35,31 @@ resources:
 
 storage:
   db_namespace: listing_ # tables: listings, listing_photos, listing_offers
-  media_prefix: spaces/marketplace/
-  redis_prefix: 'marketplace:'
+  media_prefix: spaces/wachuneed/
+  redis_prefix: 'wachuneed:'
 
 emits:
-  - marketplace.listing.published
-  - marketplace.listing.reserved
-  - marketplace.listing.closed
-  - marketplace.offer.made
-  - marketplace.offer.accepted
+  - wachuneed.listing.published
+  - wachuneed.listing.reserved
+  - wachuneed.listing.closed
+  - wachuneed.offer.made
+  - wachuneed.offer.accepted
 
 listens: []
 
 feed_projection:
-  card: marketplace_card
+  card: wachuneed_card
   title_from: title
   summary_from: description
   status_association: listing # framework: Status.has_one :listing via status_id (§5.5)
-  links_to: /hub/marketplace/listings/<id>
+  links_to: /hub/wachuneed/listings/<id>
   default_visibility: public
 
 notifications:
   types: []
-  # All four listing_* types are deferred: Marketplace has no notification
+  # All four listing_* types are deferred: Wachuneed has no notification
   # producers (and its subject_types listing/listing_offer are not yet wired to
-  # delivery). They return here — with producers — when Marketplace notification
+  # delivery). They return here — with producers — when Wachuneed notification
   # delivery ships. The L10 gate requires a declared type to be registered (§5.7).
 
 settings:
@@ -75,23 +79,23 @@ settings:
 
 compose:
   label: 'New listing'
-  route: '/hub/marketplace/new'
+  route: '/hub/wachuneed/new'
 
 hub_teaser:
-  static: 'Creations, listings, services — traded person-to-person.'
+  static: 'What you need — creations, goods, services from the community.'
 
 launch:
-  blurb: 'Marketplace — creations, listings, and services from the Kronk community.'
+  blurb: 'Wachuneed — creations, goods, and services from the Kronk community.'
   cta: 'Tap in'
 
-feature_flag: # not-implemented — Marketplace ships enabled at 2.0.0
-enforced: true # item 8: serializer (L3) + /hub/marketplace mount (L5) shipped — conformant
+feature_flag: # not-implemented — Wachuneed ships enabled at 2.0.0
+enforced: true # item 8: serializer (L3) + /hub/wachuneed mount (L5) shipped — conformant
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 nodes:
-  - id: marketplace.index
-    label: Marketplace
-    url: /hub/marketplace
+  - id: wachuneed.index
+    label: Wachuneed
+    url: /hub/wachuneed
     lifecycle: live
     spa: true
     links:

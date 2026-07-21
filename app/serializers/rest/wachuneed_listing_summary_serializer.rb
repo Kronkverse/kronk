@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 # Trimmed shape of a Listing for timeline embedding on the shared status,
-# read by StatusMarketplaceCard. The full listing detail lives at the
-# marketplace API; this ships only what the feed card renders. Mirrors
+# read by StatusWachuneedCard. The full listing detail lives at the
+# wachuneed API; this ships only what the feed card renders. Mirrors
 # REST::BoothSetSummarySerializer / REST::ProposalSummarySerializer.
-class REST::MarketplaceListingSummarySerializer < ActiveModel::Serializer
+class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attributes :id, :title, :description, :category, :subcategory,
              :price_display, :location, :state
 

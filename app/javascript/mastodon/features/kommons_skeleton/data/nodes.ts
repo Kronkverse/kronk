@@ -73,7 +73,7 @@ const KORNER_LABELS: Record<string, string> = {
   kommons: 'Kommons',
   booth: 'Booth',
   kalendar: 'Kalendar',
-  marketplace: 'Marketplace',
+  wachuneed: 'Wachuneed',
   kuestions: 'Kuestions',
   inflow: 'Inflow',
   groups: 'Groups',

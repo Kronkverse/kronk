@@ -335,8 +335,8 @@ export function Groups () {
   return import("../../groups").then(m => ({ default: m.Groups }));
 }
 
-export function Marketplace () {
-  return import("../../marketplace");
+export function Wachuneed () {
+  return import("../../wachuneed");
 }
 
 export function GroupDetail () {

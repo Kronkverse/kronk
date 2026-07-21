@@ -33,12 +33,12 @@ components in the feed.
 Answer these five questions before touching the repo. Every subsequent step
 follows from these answers.
 
-| Question                                                                                           | Klot's answer                                        |
-| -------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Question                                                                                               | Klot's answer                                        |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
 | **Slug** — **one lowercase word**, used everywhere (route, table prefix, i18n keys, manifest filename) | `klot`                                               |
-| **Korner name** — TitleCase, used in UI copy. One word too                                         | `Klot`                                               |
-| **What does a post from this Korner look like?** — the feed projection                             | A shared cycle log entry with phase-of-cycle + emoji |
-| **What are the primary nouns?** — one Ruby model per noun, table name `<slug>_<noun>`              | `KlotPeriod`, `KlotSetting`, `KlotShare`             |
+| **Korner name** — TitleCase, used in UI copy. One word too                                             | `Klot`                                               |
+| **What does a post from this Korner look like?** — the feed projection                                 | A shared cycle log entry with phase-of-cycle + emoji |
+| **What are the primary nouns?** — one Ruby model per noun, table name `<slug>_<noun>`                  | `KlotPeriod`, `KlotSetting`, `KlotShare`             |
 
 If any of these is unclear, stop here and clarify. Retro-fitting a slug change
 is painful — see the warning below.
@@ -151,19 +151,19 @@ end
 **No `foreign_key:` argument.** Kronk uses Ruby-level `dependent: :nullify`
 on the `Status has_one :your_thing` for cascade. Adding a DB-level FK is
 what `strong_migrations` refuses (adding a FK locks writes on both tables).
-Every existing feed-projected Korner (`events`, `marketplace_listings`,
+Every existing feed-projected Korner (`events`, `wachuneed`/`listings`,
 `booth_sets`) follows this pattern.
 
 ### Column naming — use `status_id`
 
 The existing Korners have drifted here:
 
-| Korner      | Column                           | Notes                           |
-| ----------- | -------------------------------- | ------------------------------- |
-| Kalendar    | `events.status_id`               | Canonical                       |
-| Marketplace | `marketplace_listings.status_id` | Canonical                       |
-| Booth       | `booth_sets.shared_status_id`    | Legacy — kept for compatibility |
-| Kommons     | `proposals.discussion_status_id` | Legacy — kept for compatibility |
+| Korner    | Column                           | Notes                           |
+| --------- | -------------------------------- | ------------------------------- |
+| Kalendar  | `events.status_id`               | Canonical                       |
+| Wachuneed | `listings.status_id`             | Canonical                       |
+| Booth     | `booth_sets.shared_status_id`    | Legacy — kept for compatibility |
+| Kommons   | `proposals.discussion_status_id` | Legacy — kept for compatibility |
 
 **For a new Korner, use `status_id`.** Two of four existing Korners agree,
 the naming is shorter, and it's what the ORM naturally infers from
@@ -254,7 +254,7 @@ these thin — business logic lives in `app/lib/<slug>/` if it's substantial.
 
 **[Spec drift]** Spec §7 mandates a single authorisation layer. Today each
 Korner authorises independently — Kommons uses one pattern, Klot uses another,
-Marketplace a third. Follow the pattern of whichever Korner is closest to
+Wachuneed a third. Follow the pattern of whichever Korner is closest to
 yours in shape until the auth-layer consolidation lands (Phase 2).
 
 ---
@@ -276,7 +276,7 @@ end
 
 For a Korner whose posts show up in the feed (see §11), you'll also need a
 **summary serializer** — a thin projection exposed on `Status` for the feed
-card. See how `REST::MarketplaceListingSummarySerializer` handles this on
+card. See how `REST::WachuneedListingSummarySerializer` handles this on
 `dev/kashka`.
 
 ---
@@ -482,12 +482,12 @@ three moving parts:
 Four Korners currently ship feed projection. Copy the closest match to
 your shape:
 
-| Korner        | Best for                                                                        | Reference files                                                                                                                                                                      |
-| ------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Kommons**   | You have a first-class resource (proposal, decision) with a discussion attached | `app/models/proposal.rb`, `app/controllers/api/v1/proposals_controller.rb`, `app/serializers/rest/proposal_summary_serializer.rb`                                                    |
+| Korner        | Best for                                                                                                                                                  | Reference files                                                                                                                                                                      |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Kommons**   | You have a first-class resource (proposal, decision) with a discussion attached                                                                           | `app/models/proposal.rb`, `app/controllers/api/v1/proposals_controller.rb`, `app/serializers/rest/proposal_summary_serializer.rb`                                                    |
 | **Kuestions** | Dedicated `Question`/`Answer` tables, but the feed card still discriminates on Status `post_type` (rendering from the model is pending — see backlog 8.3) | `app/models/question.rb`, `app/models/answer.rb`, `app/models/status.rb` (`enum :post_type`), `app/javascript/mastodon/components/status_question_card.tsx`                          |
-| **Kalendar**  | You have a primary record (event, workshop) that gets shared on create          | `app/controllers/api/v1/events_controller.rb#create` (post-race-fix — status creation is outside the transaction), `app/models/event.rb`, `app/serializers/rest/event_serializer.rb` |
-| **Booth**     | You have a primary record (audio set, upload) with an explicit share action     | `app/controllers/api/v1/booth_sets_controller.rb#share`, `app/models/booth_set.rb`, `app/serializers/rest/booth_set_summary_serializer.rb`                                           |
+| **Kalendar**  | You have a primary record (event, workshop) that gets shared on create                                                                                    | `app/controllers/api/v1/events_controller.rb#create` (post-race-fix — status creation is outside the transaction), `app/models/event.rb`, `app/serializers/rest/event_serializer.rb` |
+| **Booth**     | You have a primary record (audio set, upload) with an explicit share action                                                                               | `app/controllers/api/v1/booth_sets_controller.rb#share`, `app/models/booth_set.rb`, `app/serializers/rest/booth_set_summary_serializer.rb`                                           |
 
 ### 11a. Association on `Status`
 
@@ -495,7 +495,7 @@ Your Korner attaches to a status via `has_one`:
 
 ```ruby
 # app/models/status.rb (or a concern) — one line per Korner
-has_one :marketplace_listing, dependent: :nullify
+has_one :listing, dependent: :nullify   # Wachuneed
 has_one :booth_share,         dependent: :nullify   # spec drift — see below
 ```
 
@@ -503,21 +503,21 @@ has_one :booth_share,         dependent: :nullify   # spec drift — see below
 
 Add a `has_one` in `REST::StatusSerializer` pointing at a **summary**
 serializer — deliberately thin, so the timeline JSON stays small. Look at
-`REST::MarketplaceListingSummarySerializer` as the template.
+`REST::WachuneedListingSummarySerializer` as the template.
 
 ### 11c. Adapter component
 
 Create `app/javascript/mastodon/components/status_<slug>_card.tsx` that
 renders your Korner's data through the shared `StatusKornerCard` frame.
-Same anatomy for every Korner — see `status_marketplace_card.tsx` and
+Same anatomy for every Korner — see `status_wachuneed_card.tsx` and
 `status_booth_card.tsx` as templates.
 
 The rendering discriminator in `status.jsx` picks the right card based on
 which association is populated:
 
 ```jsx
-} else if (status.get('marketplace_listing')) {
-  card = <StatusMarketplaceCard listing={...} />;
+} else if (status.get('listing')) {
+  card = <StatusWachuneedCard listing={...} />;
 } else if (status.get('booth_set')) {
   card = <StatusBoothCard set={...} />;
 }

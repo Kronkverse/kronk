@@ -1,14 +1,19 @@
-# Marketplace (`marketplace`)
+# Wachuneed (`wachuneed`)
 
-**Manifest:** `config/korners/marketplace.yaml` · **Mount:** `/hub/marketplace` · **Status:** in-flight (Phase 10.3) — scaffolding shipped, UI + flow work pending
+**Manifest:** `config/korners/wachuneed.yaml` · **Mount:** `/hub/wachuneed` · **Status:** in-flight (Phase 10.3) — scaffolding shipped, UI + flow work pending
+
+> Slug history: renamed from `marketplace` on 2026-07-21. The middle
+> category also renamed from `marketplace` → `goods` so the trio
+> (creations / goods / services) no longer collides with the old korner
+> name.
 
 ## Purpose
 
-Marketplace is Kronk's **community-scale trade + service exchange**.
-Members can list creations, goods, and services for other Kronk
-users to browse, contact, and transact around. Trust flows from
-being **in the same Kronk community** — not from platform-brokered
-reputation systems.
+Wachuneed ("what you need") is Kronk's **community-scale trade +
+service exchange**. Members can list creations, goods, and services
+for other Kronk users to browse, contact, and transact around. Trust
+flows from being **in the same Kronk community** — not from
+platform-brokered reputation systems.
 
 Kronk **does not broker payment**. Same as Facebook Marketplace: the
 listing is a discovery + negotiation surface; buyer and seller work
@@ -28,24 +33,23 @@ Greenfield reference korner — built to spec §5 from day one:
   `MediaAttachment`.
 - **`ListingOffer`** — offers on listings (interaction mechanism —
   see open decisions for shape).
-- Storage: `spaces/marketplace/` media prefix (spec §5.5 conformant).
-- Searchable via `Kronk::Search` (indexed as `marketplace_listings`).
-- Manifest at `config/korners/marketplace.yaml`; no UI at
-  `features/marketplace/` yet.
+- Storage: `spaces/wachuneed/` media prefix (spec §5.5 conformant).
+- Searchable via `Kronk::Search` (indexed as `wachuneed_listings`).
+- Manifest at `config/korners/wachuneed.yaml`; browse-only UI at
+  `features/wachuneed/`.
 
 ## Rebuild vision (2.0.0)
 
 ### The three top-level categories
 
-Kronk splits marketplace listings along **what the thing IS**:
+Kronk splits Wachuneed listings along **what the thing IS**:
 
 - **Creations** — someone's original artistic output. Leatherwork, a
   song, a painting, handmade jewelry, a zine. The making is what
   gives it its identity.
-- **Marketplace (goods)** — physical items being passed on. Second-
-  hand bikes, kitchenware, plants for sale. Circulating existing
-  stuff.
-- **Service** — time or skill being offered. Massages, music
+- **Goods** — physical items being passed on. Second-hand bikes,
+  kitchenware, plants for sale. Circulating existing stuff.
+- **Services** — time or skill being offered. Massages, music
   production, sound healings, tutoring, coaching. What someone can
   do for someone else.
 
@@ -66,7 +70,7 @@ in a follow-up.
 Listings move through:
 
 - **`draft`** — being composed; not visible to others.
-- **`live`** — public, listed in the Marketplace directory,
+- **`live`** — public, listed in the Wachuneed directory,
   discoverable in feeds and search.
 - **`reserved`** — someone has committed to buying/receiving it;
   visible but not open to new interest.
@@ -113,7 +117,7 @@ message; others (contact_to_discuss) just seed a Nudges thread.
 
 Location is **required** for most listings, and integrates with the
 **Kompass** korner (the map korner still in the pipeline). Rather
-than building a bespoke Marketplace-only location model, Marketplace
+than building a bespoke Wachuneed-only location model, Wachuneed
 listings surface on Kompass, and Kompass's location primitives
 (city/region/point) apply. Exact integration shape depends on
 Kompass's own scoping — see `kompass.md` when we work it up.
@@ -155,7 +159,7 @@ several. Sellers judge.
 
 **All listings are public** in the initial 2.0 shape. No mates-only or
 Krew-scoped listings; every listing is publicly discoverable via the
-Marketplace directory + Home feed + universal search. Krew-scoped
+Wachuneed directory + Home feed + universal search. Krew-scoped
 listings can be added later if community demand emerges.
 
 ### Discovery
@@ -163,24 +167,24 @@ listings can be added later if community demand emerges.
 - **Feed projection** — listings surface as cards in Home feed when
   a mate or someone in your network posts one. Social-graph-driven.
 - **Profile section** — a user's profile shows their **active
-  listings** (via the sectioned-profile Marketplace section from
+  listings** (via the sectioned-profile Wachuneed section from
   Phase 11). Discovery via browsing who a person is.
-- **`/hub/marketplace` directory** — chronological listing of live
+- **`/hub/wachuneed` directory** — chronological listing of live
   listings, filterable by the 3 top-level categories.
 - **Universal search** — listings indexed in `Kronk::Search`; find by
   title, description, category, price range, seller.
 
 ### Aesthetic
 
-Marketplace ships greenfield UI in line with current Kronk aesthetic
+Wachuneed ships greenfield UI in line with current Kronk aesthetic
 tokens. Coordinating on visual mockups with Claude web.
 
 ## Open decisions
 
-- **Kompass integration** — Marketplace listings need location; the
+- **Kompass integration** — Wachuneed listings need location; the
   Kompass map korner is still in the pipeline. Actual integration
-  contract (does Marketplace embed Kompass? does Kompass list
-  Marketplace pins?) waits for Kompass scoping. Flagged in
+  contract (does Wachuneed embed Kompass? does Kompass list
+  Wachuneed pins?) waits for Kompass scoping. Flagged in
   `kompass.md` too.
 - **Digital-delivery services** — how does location work for
   remote/digital service listings? A "remote/no location" flag?
@@ -194,9 +198,13 @@ tokens. Coordinating on visual mockups with Claude web.
   Kalendar event with a price. Is it one primitive with two views,
   or two primitives that reference each other?
 
-## Related drafts
+## Related
 
-- `/home/shared/rebuild/plan/quiet-napping-hare.md` §Phase 10.3 (Marketplace greenfield)
-- `/home/shared/rebuild/memory/project_kronk_rebuild_storage_spec_draft.md` (spaces/marketplace/ layout)
-- `/home/shared/rebuild/spec/kronk_korner_spec.md` §Marketplace
-- Related korners: `nudges.md` (buyer↔seller contact via Nudges), `krew.md` (potential Krew-scoped listings)
+- `docs/rebuild/implementation_plan.md` §Phase 10.3 (Wachuneed
+  greenfield — filed under its previous name "Marketplace" pending
+  next plan revision).
+- `docs/korners/korner_standard.md` — L1/L3/L5/L6/L7 requirements the
+  Wachuneed manifest satisfies.
+- Related korners: `nudges.md` (buyer↔seller contact via Nudges),
+  `groups.md` (potential Krew-scoped listings), `kompass.md`
+  (location primitives), `kalendar.md` (workshop/book_service tie-in).

@@ -52,10 +52,10 @@ backlog — the tracker's initial content.
 
 ### ① Release track — the path to 2.0.0 (critical)
 
-| Proposal                         | Anchor                  | Tasks                                                                                                                                          |
-| -------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Phase 5 — Nudges cutover**     | `nudges.index`          | remove the bell (nav); unify the Nudges UI (retire `notifications_v2`); generic korner-notification service (§5.7); fold notification prefs in |
-| **Phase 14 — Release hardening** | `kronk.how_it_works`             | bump `version.rb` → 2.0.0; flip `tune_in_enforced` + `SEARCH_BACKEND`; spec v0.5 → v1.0; finalise CHANGELOG; cut rebuild→main PR + DNS         |
+| Proposal                         | Anchor               | Tasks                                                                                                                                          |
+| -------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Phase 5 — Nudges cutover**     | `nudges.index`       | remove the bell (nav); unify the Nudges UI (retire `notifications_v2`); generic korner-notification service (§5.7); fold notification prefs in |
+| **Phase 14 — Release hardening** | `kronk.how_it_works` | bump `version.rb` → 2.0.0; flip `tune_in_enforced` + `SEARCH_BACKEND`; spec v0.5 → v1.0; finalise CHANGELOG; cut rebuild→main PR + DNS         |
 | **Green the base CI**            | `kronk.how_it_works` | clear pre-existing lint/format/i18n offenses so release CI is clean                                                                            |
 
 ### ② Feature gaps — backend shipped, piece missing
@@ -69,26 +69,26 @@ backlog — the tracker's initial content.
 
 ### ③ Framework gaps — the korner platform
 
-| Proposal                                   | Anchor                     | Tasks                                                                               |
-| ------------------------------------------ | -------------------------- | ----------------------------------------------------------------------------------- |
+| Proposal                                   | Anchor               | Tasks                                                                               |
+| ------------------------------------------ | -------------------- | ----------------------------------------------------------------------------------- |
 | **Launch card producer (§8.7)**            | `kronk.how_it_works` | declared in 10 manifests, parsed, but nothing emits it — build the producer/service |
 | **Korner tombstones / 410 Gone (§5.6)**    | `kronk.how_it_works` | `deleted_at` + 410 resolution for korner objects, not just AP Statuses              |
-| **Complete "every space gets a manifest"** | `kronk.how_it_works`   | core-space manifests done; finish node-ownership migration off `kronk_nodes.yaml`   |
+| **Complete "every space gets a manifest"** | `kronk.how_it_works` | core-space manifests done; finish node-ownership migration off `kronk_nodes.yaml`   |
 | **L7 stylelint-governance doctor check**   | `kronk.how_it_works` | spec lists it ⚙︎; doctor implements L1/L3/L4/L5/L10 only                           |
 | **Make `render_target` live (§9.1)**       | `kronk.how_it_works` | inert today; app-shell path unbuilt — also open decision §13.2                      |
 
 ### ④ Per-korner UI — backend shipped, surface unbuilt
 
-| Proposal                       | Anchor              | Tasks                                                                                                                               |
-| ------------------------------ | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **Groups → Krew**              | `groups.index`      | audience-scoping (the central promise); Krew badge; listed/unlisted + invite links; Event↔Krew; the `groups→krew` vocab/URL rename |
-| **Marketplace UI**             | `marketplace.index` | listing detail + composer; the 5 interaction modes; "or trade" flag; mate-affinity signals                                          |
-| **Kommons backing / token UI** | `kommons.index`     | backing is console-only; token display glyph; "reflect on this page" button                                                         |
-| **Kuestions UI**               | `kuestions.index`   | swipe deck; answer-format field; daily-prompt post-box; answer edit history                                                         |
-| **Kalendar**                   | `kalendar.index`    | birthdays; event visibility scopes; Krew-spawn-from-event; playful RSVP labels; spiral view                                         |
-| **Huddle**                     | `huddle.index`      | Main + per-Krew Huddle model; flat moderation; capacity cap                                                                         |
-| **Booth**                      | `booth.index`       | `kind` taxonomy; BoothSeries; save/library + live listener count; storage migration                                                 |
-| **Inflow**                     | `inflow.index`      | unified dashboard (retire 4 strand tabs); observations response UI; Kosmic subscribe toggle                                         |
+| Proposal                       | Anchor            | Tasks                                                                                                                               |
+| ------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Groups → Krew**              | `groups.index`    | audience-scoping (the central promise); Krew badge; listed/unlisted + invite links; Event↔Krew; the `groups→krew` vocab/URL rename |
+| **Wachuneed UI**               | `wachuneed.index` | listing detail + composer; the 5 interaction modes; "or trade" flag; mate-affinity signals                                          |
+| **Kommons backing / token UI** | `kommons.index`   | backing is console-only; token display glyph; "reflect on this page" button                                                         |
+| **Kuestions UI**               | `kuestions.index` | swipe deck; answer-format field; daily-prompt post-box; answer edit history                                                         |
+| **Kalendar**                   | `kalendar.index`  | birthdays; event visibility scopes; Krew-spawn-from-event; playful RSVP labels; spiral view                                         |
+| **Huddle**                     | `huddle.index`    | Main + per-Krew Huddle model; flat moderation; capacity cap                                                                         |
+| **Booth**                      | `booth.index`     | `kind` taxonomy; BoothSeries; save/library + live listener count; storage migration                                                 |
+| **Inflow**                     | `inflow.index`    | unified dashboard (retire 4 strand tabs); observations response UI; Kosmic subscribe toggle                                         |
 
 ### ⑤ Settings retirement — blocks killing classic `/settings`
 
@@ -108,7 +108,7 @@ Anchor `kronk.how_it_works`:
 - dead `features/market` "Coming Soon" placeholder
 - `fetch_link_card` allow-list uses legacy korner paths, not `/hub/<slug>`
 - dead `interactions.must_be_follower/following` settings keys
-- Marketplace `subcategory` column removal (doc says retired; still persists)
+- Wachuneed `subcategory` column removal (doc says retired; still persists)
 
 ## Kommons building Kommons
 

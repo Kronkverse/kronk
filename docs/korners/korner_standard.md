@@ -8,7 +8,7 @@
 
 ## 0. Why this exists
 
-`korners doctor` and stylelint gave false confidence: the audit found `enforced: true` korners (Marketplace, In Flow) that passed every automated check yet had no serializer, no card, and a dead `/hub/<slug>` mount. The guardrails validated _slugs and associations_ but not _whether the korner actually works end to end_. This standard names every layer a korner must satisfy, so "it passes" means "it slides in" — and §3 makes the automatable layers into doctor checks so the gap can't reopen.
+`korners doctor` and stylelint gave false confidence: the audit found `enforced: true` korners (Wachuneed [then `marketplace`], In Flow) that passed every automated check yet had no serializer, no card, and a dead `/hub/<slug>` mount. The guardrails validated _slugs and associations_ but not _whether the korner actually works end to end_. This standard names every layer a korner must satisfy, so "it passes" means "it slides in" — and §3 makes the automatable layers into doctor checks so the gap can't reopen.
 
 ## 1. The lifecycle gate — what's required when
 
@@ -20,7 +20,7 @@ A korner's `lifecycle` (in its node) and its manifest `enforced` flag are **prom
 | **building** (partial) | `false`             | no                   | no                | + L2 data (models/tables/migrations/schema)                                            |
 | **live** (complete)    | `true`              | yes                  | yes               | **all ten layers L1–L10**                                                              |
 
-> **⚠ The golden rule.** `enforced: true` says: _this korner mounts, projects, serialises, and renders — right now._ Do not set it until every layer in §2 passes. Marketplace and Nudges were `enforced: true` while their `/hub/<slug>` was a dead link — that's the exact failure this rule prevents. A korner under construction stays `enforced: false` (and its node `lifecycle: soon|building`), which keeps it out of the Hub grid and the feed until it's real.
+> **⚠ The golden rule.** `enforced: true` says: _this korner mounts, projects, serialises, and renders — right now._ Do not set it until every layer in §2 passes. Wachuneed and Nudges were `enforced: true` while their `/hub/<slug>` was a dead link — that's the exact failure this rule prevents. A korner under construction stays `enforced: false` (and its node `lifecycle: soon|building`), which keeps it out of the Hub grid and the feed until it's real.
 
 ## 2. The ten layers
 
@@ -30,7 +30,7 @@ A korner's `lifecycle` (in its node) and its manifest `enforced` flag are **prom
 - ⚙︎ **Slug** is one lowercase word (no hyphens/underscores), **equals the filename**, is **not** in `reserved_slugs.yaml`, and is unique across korners. _(Audit: `in-flow` has a hyphen and ≠ its filename `in_flow.yaml`.)_
 - ⚙︎ `name` and `icon` present; **`icon` is wired in `hooks/useKornerIcon.tsx`** and the mapping matches the manifest's `icon:` field. _(Audit: huddle/nudges icons are cross-wired vs their manifests.)_
 - ⚙︎ **No colour field** — no `--space-color`, no per-korner hex/hue. Differentiation is icon + name + content only.
-- ⚙︎ **Canonical manifest shape.** Every manifest carries identity + `resources` + `storage` + a nested **`security:`** block (permissions / visibility / federation / maintainers) + `feed_projection` (if it projects) + `settings` (if it has options) + `nodes`. The nested `security:` shape (matching groups/huddle) is canonical; `steward_role` is renamed `maintainers`. All enforced korners are migrated (booth, kalendar, kommons, kuestions, marketplace, nudges, inflow, klot — #391, #390-follow); stubs gain a `security:` block when they graduate to `enforced`. The doctor warns on a legacy root-level manifest (it reads the raw file for a top-level `security:` key, since `extract_security` otherwise synthesises a block and hides the difference).
+- ⚙︎ **Canonical manifest shape.** Every manifest carries identity + `resources` + `storage` + a nested **`security:`** block (permissions / visibility / federation / maintainers) + `feed_projection` (if it projects) + `settings` (if it has options) + `nodes`. The nested `security:` shape (matching groups/huddle) is canonical; `steward_role` is renamed `maintainers`. All enforced korners are migrated (booth, kalendar, kommons, kuestions, wachuneed, nudges, inflow, klot — #391, #390-follow); stubs gain a `security:` block when they graduate to `enforced`. The doctor warns on a legacy root-level manifest (it reads the raw file for a top-level `security:` key, since `extract_security` otherwise synthesises a block and hides the difference).
 
 **Accepted exceptions** (deliberate, not drift — do not "fix" these):
 
@@ -48,7 +48,7 @@ A korner's `lifecycle` (in its node) and its manifest `enforced` flag are **prom
 ### L3 — API & serialization
 
 - ⚙︎ CRUD controllers exist for the korner's resources (`app/controllers/api/v1/<korner>/…`) with routes in `config/routes/api.rb`.
-- ⚙︎ **Serializer exposure** — `REST::StatusSerializer` exposes the projection attribute, **and** the `REST::<Korner>SummarySerializer` the card needs actually exists. _(Audit: Marketplace `enforced` but no controllers, no serializer attr, summary serializer only referenced in a comment — the single biggest doctor blind spot.)_
+- ⚙︎ **Serializer exposure** — `REST::StatusSerializer` exposes the projection attribute, **and** the `REST::<Korner>SummarySerializer` the card needs actually exists. _(Audit: Wachuneed `enforced` but no controllers, no serializer attr, summary serializer only referenced in a comment — the single biggest doctor blind spot.)_
 
 ### L4 — Feed projection
 
@@ -60,7 +60,7 @@ A korner's `lifecycle` (in its node) and its manifest `enforced` flag are **prom
 ### L5 — Mount & routing
 
 - ⚙︎ **`/hub/<slug>` resolves** in `features/ui/index.jsx` — either the real feature, or a `KornerStub` for `soon`.
-- ⚙︎ **`enforced: true` ⇒ the mount resolves.** No enforced korner may show a Hub tile whose link 404s. _(Audit: Marketplace + Nudges `enforced` with dead `/hub/<slug>`.)_
+- ⚙︎ **`enforced: true` ⇒ the mount resolves.** No enforced korner may show a Hub tile whose link 404s. _(Audit: Wachuneed + Nudges `enforced` with dead `/hub/<slug>`.)_
 - ◇ If the korner graduated from a legacy route (e.g. `/nudges`), that route redirects/aliases to `/hub/<slug>`.
 
 ### L6 — Skeleton & nodes
@@ -105,17 +105,17 @@ A korner that generates activity a user would want to know about declares it, an
 
 Everything marked ⚙︎ above is **machine-checkable** and becomes an extended `korners doctor` check (item 7). Today's doctor validates only L1 (slug/reserved) + L2 (db-namespace) + the `Status` association — which is why the L3/L4/L5 gaps sailed through. The extension adds:
 
-| Check                                                                                          | Layer | Catches                                       |
-| ---------------------------------------------------------------------------------------------- | ----- | --------------------------------------------- |
-| slug is a word · == filename · unique                                                          | L1    | `in-flow`                                     |
-| icon wired in `useKornerIcon`, matches manifest                                                | L1    | huddle/nudges cross-wiring                    |
-| model + table + schema present per resource                                                    | L2    | stale-schema failures                         |
-| serializer exposes projection attr; summary serializer exists                                  | L3    | Marketplace/In Flow non-functional projection |
-| card component exists **and** is registered                                                    | L4    | groups/in_flow phantom cards                  |
-| `/hub/<slug>` resolves; **enforced ⇒ mount resolves**                                          | L5    | Marketplace/Nudges dead tiles                 |
-| node bucket/parent/lifecycle valid; route_name resolves or spa; no id collision; links resolve | L6    | `feed.nudges` route                           |
-| card partial is stylelint-governed (no raw hex)                                                | L7    | ungoverned card drift                         |
-| every declared `notifications.types` entry is a registered type; `subject_type` resolves      | L10   | Kommons' five declared, zero built            |
+| Check                                                                                          | Layer | Catches                                     |
+| ---------------------------------------------------------------------------------------------- | ----- | ------------------------------------------- |
+| slug is a word · == filename · unique                                                          | L1    | `in-flow`                                   |
+| icon wired in `useKornerIcon`, matches manifest                                                | L1    | huddle/nudges cross-wiring                  |
+| model + table + schema present per resource                                                    | L2    | stale-schema failures                       |
+| serializer exposes projection attr; summary serializer exists                                  | L3    | Wachuneed/In Flow non-functional projection |
+| card component exists **and** is registered                                                    | L4    | groups/in_flow phantom cards                |
+| `/hub/<slug>` resolves; **enforced ⇒ mount resolves**                                          | L5    | Wachuneed/Nudges dead tiles                 |
+| node bucket/parent/lifecycle valid; route_name resolves or spa; no id collision; links resolve | L6    | `feed.nudges` route                         |
+| card partial is stylelint-governed (no raw hex)                                                | L7    | ungoverned card drift                       |
+| every declared `notifications.types` entry is a registered type; `subject_type` resolves       | L10   | Kommons' five declared, zero built          |
 
 `◇` items stay human sign-off (aesthetic judgment, tests). Canonical manifest-shape conformance (nested `security:`) is `⚙︎` per L1.
 
@@ -129,9 +129,9 @@ A korner **slides in** when, for its lifecycle stage:
 
 For a **live/enforced** korner specifically: you can create its records via API, they project into the feed as a token-clean card, its `/hub/<slug>` and `/hub/<slug>/settings` render, its nodes resolve in the Skeleton, and it looks identical-in-family to every other korner (icon/name aside) in both themes and under any Personal Appearance choice.
 
-## 5. Proving the standard — Marketplace
+## 5. Proving the standard — Wachuneed
 
-Marketplace is the v0 test case (item 8): billed as the greenfield "reference korner," `enforced: true`, yet failing L3 (no controllers/serializer), L4 (card never populated), and L5 (dead mount). Bringing it to this standard — and watching the extended doctor light up every gap, then go green — is how we validate both the standard and the checker against a real rebuild. What Marketplace _teaches_ during that rebuild feeds back into this doc (v1).
+Wachuneed (then called Marketplace; slug renamed 2026-07-21) is the v0 test case (item 8): billed as the greenfield "reference korner," `enforced: true`, yet failing L3 (no controllers/serializer), L4 (card never populated), and L5 (dead mount). Bringing it to this standard — and watching the extended doctor light up every gap, then go green — is how we validate both the standard and the checker against a real rebuild. What Wachuneed _teaches_ during that rebuild feeds back into this doc (v1).
 
 ---
 

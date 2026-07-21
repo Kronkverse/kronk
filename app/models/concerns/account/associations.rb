@@ -93,7 +93,7 @@ module Account::Associations
     has_many :answers, inverse_of: :account, dependent: :delete_all
     has_many :created_questions, class_name: 'Question', foreign_key: :created_by_account_id, dependent: :destroy, inverse_of: :created_by_account
 
-    # Marketplace listings + offers made by this account.
+    # Wachuneed listings + offers made by this account.
     has_many :listings, inverse_of: :account, dependent: :destroy
     has_many :listing_offers, foreign_key: :offerer_id, inverse_of: :offerer, dependent: :destroy
 

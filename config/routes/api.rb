@@ -147,7 +147,7 @@ namespace :api, format: false do
       resources :nodes, only: [:index]
     end
 
-    namespace :marketplace do
+    namespace :wachuneed do
       resources :listings, only: [:index, :show, :create]
     end
 

@@ -12,7 +12,7 @@ As Kronk grows, spaces will be built by many hands. Without a shared framework, 
 
 This document defines the contract a new space (a **Korner**) is built against so that spaces interoperate: they share storage discipline, talk to each other through defined channels, enforce the same access rules, and **converge on one feed**.
 
-The feed is the payoff. It is the single surface where a user encounters Kronk as _one thing_ rather than a set of separate tools. Every space projects into it — a new Marketplace listing, a Kommons question, a comment — and each projection appears not as a plain written post but as a **space card**: visibly from a specific space, tappable through to that space. Standardising how spaces project into the feed, and who receives those projections, is the core the rest of this framework serves.
+The feed is the payoff. It is the single surface where a user encounters Kronk as _one thing_ rather than a set of separate tools. Every space projects into it — a new Wachuneed listing, a Kommons question, a comment — and each projection appears not as a plain written post but as a **space card**: visibly from a specific space, tappable through to that space. Standardising how spaces project into the feed, and who receives those projections, is the core the rest of this framework serves.
 
 The framework's spine is a **manifest** — a declaration each Korner registers itself with. Navigation, theming, storage namespacing, permissions, and feed projection are all derived _from_ the manifest.
 
@@ -425,7 +425,7 @@ Open, plantable moves need no proposal; anything touching shared structure — s
 
 Forks that change the spine of this document:
 
-1. **Manifest enforcement.** Partially resolved: `bin/tootctl korners doctor` now validates and gates conformance (L1/L3/L4/L5/L10) for `enforced` korners, so uniformity is machine-checked. The remaining fork is whether the platform should *hard-refuse to mount* a space with no valid manifest, or keep the doctor as a boot/CI gate followed by discipline.
+1. **Manifest enforcement.** Partially resolved: `bin/tootctl korners doctor` now validates and gates conformance (L1/L3/L4/L5/L10) for `enforced` korners, so uniformity is machine-checked. The remaining fork is whether the platform should _hard-refuse to mount_ a space with no valid manifest, or keep the doctor as a boot/CI gate followed by discipline.
 2. **App `render_target` default** (§9.1). Native-per-space vs hosted-shell vs hybrid. Recommended: hybrid, leaning hosted. Also sets the cost of iOS.
 3. **Subscription default posture** (§8.6). Platform-wide, do new spaces default opt-in (off) or opt-out (on)? Per-space override via `subscription.default` is assumed either way. Recommended: opt-in.
 
