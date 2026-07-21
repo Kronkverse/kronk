@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 
-import { defineMessages, useIntl } from 'react-intl';
+import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
+import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import {
   apiSendNudgeMessage,
   apiMarkNudgeConversationRead,
@@ -20,6 +21,9 @@ import { Composer } from './composer';
 import { DaySeparator } from './day_separator';
 import { ExpiryCountdown } from './expiry_countdown';
 import { StreamItem } from './stream_item';
+
+// Alias so the import order stays lexicographic without cluttering the read.
+const KrewIcon = GroupsIcon;
 
 // Two timestamps land on the same local day.
 const sameDay = (a: string, b: string) => {
@@ -165,10 +169,13 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     );
   }
 
-  const other = detail.conversation.other_account
-    ? createAccountFromServerJSON(detail.conversation.other_account)
-    : null;
+  const isKrew = detail.conversation.kind === 'krew';
+  const other =
+    !isKrew && detail.conversation.other_account
+      ? createAccountFromServerJSON(detail.conversation.other_account)
+      : null;
   const otherName = other?.display_name ?? other?.username ?? 'Conversation';
+  const krewName = detail.conversation.krew?.name ?? 'Krew';
 
   // Stream is delivered most-recent-first; render oldest-first so a
   // new message appears at the bottom.
@@ -177,8 +184,28 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   return (
     <div className='nudges-conversation'>
       <header className='nudges-conversation__head'>
-        {other && <Avatar account={other} size={32} />}
-        <span className='nudges-conversation__name'>{otherName}</span>
+        {isKrew ? (
+          <>
+            <span className='nudges-conversation__krew-icon' aria-hidden>
+              <KrewIcon />
+            </span>
+            <span className='nudges-conversation__name'>{krewName}</span>
+            {detail.conversation.krew && (
+              <span className='nudges-conversation__krew-count'>
+                <FormattedMessage
+                  id='nudges.krew.member_count'
+                  defaultMessage='{count, plural, one {# member} other {# members}}'
+                  values={{ count: detail.conversation.krew.member_count }}
+                />
+              </span>
+            )}
+          </>
+        ) : (
+          <>
+            {other && <Avatar account={other} size={32} />}
+            <span className='nudges-conversation__name'>{otherName}</span>
+          </>
+        )}
         {detail.conversation.expires_at && (
           <ExpiryCountdown expiresAt={detail.conversation.expires_at} />
         )}
@@ -194,6 +221,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
               {showDay && <DaySeparator timestamp={item.created_at} />}
               <StreamItem
                 item={item}
+                conversationKind={detail.conversation.kind}
                 onReact={handleReact}
                 onUnreact={handleUnreact}
               />

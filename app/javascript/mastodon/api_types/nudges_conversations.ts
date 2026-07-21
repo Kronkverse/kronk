@@ -3,6 +3,12 @@
 
 import type { ApiAccountJSON } from './accounts';
 
+export interface ApiNudgeKrewJSON {
+  id: string;
+  name: string;
+  member_count: number;
+}
+
 export interface ApiNudgeConversationJSON {
   id: string;
   kind: 'mate' | 'krew';
@@ -12,6 +18,7 @@ export interface ApiNudgeConversationJSON {
   preview: string;
   latest_kind: 'message' | 'event' | null;
   other_account: ApiAccountJSON | null;
+  krew: ApiNudgeKrewJSON | null;
 }
 
 export interface ApiNudgeMessageMediaJSON {
