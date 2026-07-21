@@ -64,6 +64,12 @@ emits:
     payload:
       - actor_account_id
       - group_id
+  # Nudges listens for this to clean up the ConversationMembership so
+  # a direct group-leave doesn't leave a stale Nudges row.
+  - name: groups.member.left
+    payload:
+      - actor_account_id
+      - group_id
 listens: []
 
 compose:
