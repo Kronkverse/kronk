@@ -27,7 +27,10 @@ class Api::V1::KornersController < Api::BaseController
   def index
     tuned_out = tuned_out_slugs
     counts = Kronk::TuneInCounts.for_all_korners
-    render json: Kronk::KornerRegistry.all.map { |m|
+    # Core spaces (feed/profile/hub/nudges/settings) are not Hub tenants — they
+    # have their own nav (the primary switcher) and no Hub tile. The korners
+    # endpoint is for korners, so the Hub grid never renders them as cards.
+    render json: Kronk::KornerRegistry.all.reject(&:core?).map { |m|
       m.to_h.merge(
         'tuned_in' => !tuned_out.include?(m.slug),
         'tune_in_count' => counts.fetch(m.slug, 0)

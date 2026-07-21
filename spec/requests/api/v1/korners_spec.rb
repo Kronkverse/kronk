@@ -20,6 +20,13 @@ RSpec.describe 'Korners' do
       expect(slugs).to include('kommons', 'kalendar', 'booth')
     end
 
+    it 'excludes core spaces — they are not Hub tenants and get no tile' do
+      get '/api/v1/korners'
+
+      slugs = response.parsed_body.pluck('slug')
+      expect(slugs).to_not include('feed', 'profile', 'hub', 'nudges', 'settings')
+    end
+
     it 'exposes the manifest structural fields on each korner' do
       get api_v1_korners_path
 
