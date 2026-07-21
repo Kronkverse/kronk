@@ -2,13 +2,15 @@
 
 # REST::Nudges::ConversationSerializer — sidebar-shape summary for the
 # conversation list. Includes the other account, last-activity time,
-# unread count for the current viewer, and a one-line preview
-# (message body or event verb).
+# unread count for the current viewer, a one-line preview, and the
+# `latest_kind` (message | event | null) so the client can hint at
+# waiting-item type before opening.
 #
 # Pass `scope: current_account` — the serializer needs it to compute
 # per-viewer unread + orient "other party" for Mate.
 class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
-  attributes :id, :kind, :last_activity_at, :expires_at, :unread_count, :preview
+  attributes :id, :kind, :last_activity_at, :expires_at, :unread_count,
+             :preview, :latest_kind
 
   belongs_to :other_account, serializer: REST::AccountSerializer
 
@@ -36,24 +38,36 @@ class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
     object.unread_count_for(viewer)
   end
 
-  # One-line preview: the latest of (message body, event verb),
-  # whichever has the newer created_at. Attachment-only messages fall
-  # back to a type label; events fall back to a compact verb.
   def preview
-    latest_message = object.messages.order(id: :desc).first
-    latest_event   = object.events.order(created_at: :desc).first
+    latest = latest_item
+    return '' unless latest
 
-    candidates = []
-    candidates << { at: latest_message.created_at, text: message_preview(latest_message) } if latest_message
-    candidates << { at: latest_event.created_at, text: event_preview(latest_event) } if latest_event
+    latest[:text]
+  end
 
-    candidates.max_by { |c| c[:at] }&.dig(:text) || ''
+  def latest_kind
+    latest_item&.dig(:kind)
   end
 
   private
 
   def viewer
     scope
+  end
+
+  # Cached across the two consumers (`preview` + `latest_kind`) so
+  # the sidebar list isn't billed for a double DB round-trip per row.
+  def latest_item
+    @latest_item ||= begin
+      latest_message = object.messages.order(id: :desc).first
+      latest_event   = object.events.order(created_at: :desc).first
+
+      candidates = []
+      candidates << { kind: 'message', at: latest_message.created_at, text: message_preview(latest_message) } if latest_message
+      candidates << { kind: 'event', at: latest_event.created_at, text: event_preview(latest_event) } if latest_event
+
+      candidates.max_by { |c| c[:at] }
+    end
   end
 
   def message_preview(message)
