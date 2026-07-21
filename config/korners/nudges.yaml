@@ -36,11 +36,13 @@ emits:
 # Additional korner events wire in incrementally per Phase 1c+.
 listens:
   - kommons.proposal.backed
+  - kommons.proposal.frothed
   - kalendar.event.rsvpd
   - wachuneed.offer.made
   - wachuneed.offer.accepted
   - wachuneed.offer.declined
   - kuestions.question.answered
+  - kuestions.question.frothed
   - booth.set.frothed
 
 feed_projection:

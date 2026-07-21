@@ -33,6 +33,8 @@ storage:
 emits:
   # Nudges listens for this to route to the asker's Mate chat with the answerer.
   - kuestions.question.answered
+  # A Favourite lands on the Question's Status; Nudges routes to the asker.
+  - kuestions.question.frothed
 listens: []
 
 feed_projection:

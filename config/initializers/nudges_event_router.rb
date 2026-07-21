@@ -136,4 +136,30 @@ Rails.application.config.after_initialize do
       interaction: 'passive'
     )
   end
+
+  # ── Kommons: Favourite on a proposal's discussion Status ─────────
+  # The proposer gets a nudge if the frother is a Mate. Passive.
+  Kronk::KornerEvents.subscribe('kommons.proposal.frothed') do |payload|
+    NUDGE_ROUTE.call(
+      payload,
+      source_korner_slug: 'kommons',
+      verb: 'frothed',
+      source_type: 'Proposal',
+      source_id: payload[:proposal_id],
+      interaction: 'passive'
+    )
+  end
+
+  # ── Kuestions: Favourite on a Question's Status ──────────────────
+  # The asker gets a nudge if the frother is a Mate. Passive.
+  Kronk::KornerEvents.subscribe('kuestions.question.frothed') do |payload|
+    NUDGE_ROUTE.call(
+      payload,
+      source_korner_slug: 'kuestions',
+      verb: 'frothed',
+      source_type: 'Question',
+      source_id: payload[:question_id],
+      interaction: 'passive'
+    )
+  end
 end
