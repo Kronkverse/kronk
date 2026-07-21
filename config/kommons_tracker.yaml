@@ -29,7 +29,7 @@ proposals:
 
   - key: phase-14-hardening
     title: 'Phase 14 — Release hardening'
-    node: kommons.review.release
+    node: kronk.how_it_works
     type: large
     categories: [release, 'phase:14']
     summary: 'Everything between a working rebuild branch and a shipped 2.0.0.'
@@ -45,7 +45,7 @@ proposals:
 
   - key: base-ci-green
     title: 'Green the base CI before release'
-    node: kommons.review.health
+    node: kronk.how_it_works
     type: medium
     categories: [release]
     summary: 'Clear the pre-existing lint/format/i18n offenses so release CI is clean.'
@@ -112,7 +112,7 @@ proposals:
   # ③ Framework gaps — the korner platform
   - key: launch-card-producer
     title: 'Launch card producer (§8.7)'
-    node: kommons.review.framework
+    node: kronk.how_it_works
     type: medium
     categories: [framework]
     summary: 'Declared in 10 manifests, parsed by the registry, but nothing emits it.'
@@ -124,7 +124,7 @@ proposals:
 
   - key: korner-tombstones
     title: 'Korner tombstones / 410 Gone (§5.6)'
-    node: kommons.review.framework
+    node: kronk.how_it_works
     type: medium
     categories: [framework]
     summary: 'Only AP Statuses tombstone; korner objects have no deleted_at / 410 resolution.'
@@ -137,7 +137,7 @@ proposals:
 
   - key: every-space-manifest
     title: 'Complete "every space gets a manifest"'
-    node: kommons.review.korners
+    node: kronk.how_it_works
     type: medium
     categories: [framework]
     summary: 'Core-space manifests exist; node ownership still split between kronk_nodes.yaml and manifests.'
@@ -151,7 +151,7 @@ proposals:
 
   - key: l7-doctor-check
     title: 'L7 stylelint-governance doctor check'
-    node: kommons.review.framework
+    node: kronk.how_it_works
     type: small
     categories: [framework]
     summary: 'Spec lists L7 as ⚙︎ but the doctor implements L1/L3/L4/L5/L10 only.'
@@ -162,7 +162,7 @@ proposals:
 
   - key: render-target-live
     title: 'Make render_target live (§9.1)'
-    node: kommons.review.framework
+    node: kronk.how_it_works
     type: large
     categories: [framework]
     summary: 'Every manifest sets render_target; nothing consumes it; the app-shell path is unbuilt.'
@@ -339,7 +339,7 @@ proposals:
   # ⑥ Quick correctness fixes — one proposal, a task each
   - key: quick-fixes
     title: 'Rebuild — quick correctness fixes'
-    node: kommons.review.health
+    node: kronk.how_it_works
     type: small
     categories: ['quick-fix']
     summary: 'Small dead-ends and stale wiring surfaced by the audit (Tier 0).'
@@ -385,7 +385,7 @@ proposals:
 decisions:
   - key: decision-render-target
     title: 'Decide: render_target default (§13.2)'
-    node: kommons.review.spec
+    node: kronk.how_it_works
     categories: [decision]
     summary: 'native / hosted-shell / hybrid — blocks making render_target live.'
     body: |
@@ -396,7 +396,7 @@ decisions:
 
   - key: decision-subscription-posture
     title: 'Decide: subscription default posture (§13.3)'
-    node: kommons.review.spec
+    node: kronk.how_it_works
     categories: [decision]
     summary: 'opt-in vs opt-out for korner subscription.'
     body: |
@@ -406,7 +406,7 @@ decisions:
 
   - key: decision-manifest-enforcement
     title: 'Decide: manifest enforcement model (§13.1)'
-    node: kommons.review.spec
+    node: kronk.how_it_works
     categories: [decision]
     summary: 'Hard-refuse-to-mount vs doctor/CI-gate-plus-discipline.'
     body: |
@@ -417,7 +417,7 @@ decisions:
 
   - key: decision-naming-grammar
     title: 'Decide: naming grammar — rule vs default (§2)'
-    node: kommons.review.spec
+    node: kronk.how_it_works
     categories: [decision]
     summary: 'Is the naming grammar a hard rule or a default?'
     body: |
@@ -427,7 +427,7 @@ decisions:
 
   - key: decision-push-transport
     title: 'Decide: notification transport (§9.2)'
-    node: kommons.review.framework
+    node: kronk.how_it_works
     categories: [decision]
     summary: 'UnifiedPush vs FCM for push.'
     body: |

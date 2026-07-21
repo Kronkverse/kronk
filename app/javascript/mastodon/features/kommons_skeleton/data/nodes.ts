@@ -145,6 +145,7 @@ export const bucketTotals = (nodes: KommonsNode[]): Record<Bucket, number> => {
     nudges: 0,
     hub: 0,
     settings: 0,
+    kronk: 0,
   };
   for (const n of nodes) totals[n.bucket] += n.openProposals;
   return totals;

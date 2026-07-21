@@ -55,8 +55,8 @@ backlog — the tracker's initial content.
 | Proposal                         | Anchor                  | Tasks                                                                                                                                          |
 | -------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Phase 5 — Nudges cutover**     | `nudges.index`          | remove the bell (nav); unify the Nudges UI (retire `notifications_v2`); generic korner-notification service (§5.7); fold notification prefs in |
-| **Phase 14 — Release hardening** | `kronk.org`             | bump `version.rb` → 2.0.0; flip `tune_in_enforced` + `SEARCH_BACKEND`; spec v0.5 → v1.0; finalise CHANGELOG; cut rebuild→main PR + DNS         |
-| **Green the base CI**            | `kommons.review.health` | clear pre-existing lint/format/i18n offenses so release CI is clean                                                                            |
+| **Phase 14 — Release hardening** | `kronk.how_it_works`             | bump `version.rb` → 2.0.0; flip `tune_in_enforced` + `SEARCH_BACKEND`; spec v0.5 → v1.0; finalise CHANGELOG; cut rebuild→main PR + DNS         |
+| **Green the base CI**            | `kronk.how_it_works` | clear pre-existing lint/format/i18n offenses so release CI is clean                                                                            |
 
 ### ② Feature gaps — backend shipped, piece missing
 
@@ -71,11 +71,11 @@ backlog — the tracker's initial content.
 
 | Proposal                                   | Anchor                     | Tasks                                                                               |
 | ------------------------------------------ | -------------------------- | ----------------------------------------------------------------------------------- |
-| **Launch card producer (§8.7)**            | `kommons.review.framework` | declared in 10 manifests, parsed, but nothing emits it — build the producer/service |
-| **Korner tombstones / 410 Gone (§5.6)**    | `kommons.review.framework` | `deleted_at` + 410 resolution for korner objects, not just AP Statuses              |
-| **Complete "every space gets a manifest"** | `kommons.review.korners`   | core-space manifests done; finish node-ownership migration off `kronk_nodes.yaml`   |
-| **L7 stylelint-governance doctor check**   | `kommons.review.framework` | spec lists it ⚙︎; doctor implements L1/L3/L4/L5/L10 only                           |
-| **Make `render_target` live (§9.1)**       | `kommons.review.framework` | inert today; app-shell path unbuilt — also open decision §13.2                      |
+| **Launch card producer (§8.7)**            | `kronk.how_it_works` | declared in 10 manifests, parsed, but nothing emits it — build the producer/service |
+| **Korner tombstones / 410 Gone (§5.6)**    | `kronk.how_it_works` | `deleted_at` + 410 resolution for korner objects, not just AP Statuses              |
+| **Complete "every space gets a manifest"** | `kronk.how_it_works`   | core-space manifests done; finish node-ownership migration off `kronk_nodes.yaml`   |
+| **L7 stylelint-governance doctor check**   | `kronk.how_it_works` | spec lists it ⚙︎; doctor implements L1/L3/L4/L5/L10 only                           |
+| **Make `render_target` live (§9.1)**       | `kronk.how_it_works` | inert today; app-shell path unbuilt — also open decision §13.2                      |
 
 ### ④ Per-korner UI — backend shipped, surface unbuilt
 
@@ -101,7 +101,7 @@ backlog — the tracker's initial content.
 
 ### ⑥ Quick correctness fixes (Tier 0) — one proposal, a task each
 
-Anchor `kommons.review.health`:
+Anchor `kronk.how_it_works`:
 
 - `settings.account` / `settings.data` nav nodes lead nowhere (URLs, no route)
 - `default_quote_policy` absent from the posting-settings API
