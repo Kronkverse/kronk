@@ -57,9 +57,10 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   }, [conversationId, detail]);
 
   const handleSend = useCallback(
-    async (body: string) => {
-      if (!body.trim()) return;
-      await apiSendNudgeMessage(conversationId, body.trim());
+    async (body: string, mediaAttachmentId?: string) => {
+      const trimmed = body.trim();
+      if (!trimmed && !mediaAttachmentId) return;
+      await apiSendNudgeMessage(conversationId, trimmed, mediaAttachmentId);
       const refreshed = await apiGetNudgeConversation(conversationId);
       onMessageSent(refreshed);
     },

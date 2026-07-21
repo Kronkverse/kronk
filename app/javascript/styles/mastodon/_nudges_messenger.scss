@@ -323,6 +323,15 @@
   }
 }
 
+.nudges-msg__media {
+  display: block;
+  max-width: 100%;
+  max-height: 20rem;
+  margin-bottom: 0.35rem;
+  border-radius: var(--radius-medium);
+  object-fit: cover;
+}
+
 .nudges-msg__body {
   white-space: pre-wrap;
 }
@@ -430,11 +439,17 @@
 // ── Composer ─────────────────────────────────────────────────────
 .nudges-composer {
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   border-top: 1px solid var(--border-subtle);
   background: var(--surface-primary);
+}
+
+.nudges-composer__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
 }
 
 .nudges-composer__input {
@@ -455,6 +470,101 @@
   &:focus-visible {
     outline: 2px solid var(--kronk-purple-bright);
     outline-offset: 0;
+  }
+}
+
+.nudges-composer__attach {
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: currentcolor;
+  }
+
+  &:hover:not(:disabled) {
+    color: var(--text-primary);
+    border-color: var(--kronk-purple-bright);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.nudges-composer__file {
+  display: none;
+}
+
+// Staged-preview row above the input.
+.nudges-composer__staged {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nudges-composer__staged-status {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+
+  &--error {
+    color: var(--warning-red);
+  }
+}
+
+.nudges-composer__staged-preview {
+  position: relative;
+  width: 5rem;
+  height: 5rem;
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+  background: var(--surface-elevated);
+}
+
+.nudges-composer__staged-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.nudges-composer__staged-remove {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in oklab, #000 60%, transparent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-round);
+  cursor: pointer;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: currentcolor;
+  }
+
+  &:hover {
+    background: color-mix(in oklab, #000 80%, transparent);
   }
 }
 

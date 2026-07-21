@@ -105,6 +105,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
       }`}
     >
       <div className='nudges-msg__bubble'>
+        {item.media && <MessageMedia media={item.media} />}
         {item.body && <span className='nudges-msg__body'>{item.body}</span>}
       </div>
 
@@ -140,6 +141,31 @@ const MessageItem: React.FC<MessageItemProps> = ({
         <RelativeTimestamp timestamp={item.created_at} short />
       </span>
     </div>
+  );
+};
+
+const MessageMedia: React.FC<{
+  media: NonNullable<ApiNudgeMessageJSON['media']>;
+}> = ({ media }) => {
+  if (media.type === 'video' || media.type === 'gifv') {
+    return (
+      // eslint-disable-next-line jsx-a11y/media-has-caption
+      <video
+        className='nudges-msg__media'
+        src={media.url ?? undefined}
+        poster={media.preview_url ?? undefined}
+        controls
+        playsInline
+      />
+    );
+  }
+
+  return (
+    <img
+      className='nudges-msg__media'
+      src={media.preview_url ?? media.url ?? undefined}
+      alt={media.description ?? ''}
+    />
   );
 };
 

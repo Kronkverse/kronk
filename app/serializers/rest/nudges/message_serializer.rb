@@ -5,9 +5,8 @@
 # current viewer) so the client can distinguish out/in bubbles
 # without hitting `me` from the store.
 class REST::Nudges::MessageSerializer < ActiveModel::Serializer
-  attributes :id, :conversation_id, :body, :media_attachment_id,
-             :voice_attachment_id, :reactions, :created_at,
-             :author_is_self, :author
+  attributes :id, :conversation_id, :body, :media, :voice,
+             :reactions, :created_at, :author_is_self, :author
 
   def id
     object.id.to_s
@@ -17,12 +16,31 @@ class REST::Nudges::MessageSerializer < ActiveModel::Serializer
     object.conversation_id.to_s
   end
 
-  def media_attachment_id
-    object.media_attachment_id&.to_s
+  # Compact media payload for the client: url + type + preview so the
+  # bubble can render without a follow-up fetch. Nil when the message
+  # has no attachment.
+  def media
+    attachment = object.media_attachment
+    return nil unless attachment
+
+    {
+      id: attachment.id.to_s,
+      type: attachment.type,
+      url: attachment.file&.url(:original),
+      preview_url: attachment.file&.url(attachment.file.styles.keys.first || :original),
+      description: attachment.description,
+    }
   end
 
-  def voice_attachment_id
-    object.voice_attachment_id&.to_s
+  def voice
+    attachment = object.voice_attachment
+    return nil unless attachment
+
+    {
+      id: attachment.id.to_s,
+      url: attachment.file&.url(:original),
+      duration: attachment.file_meta&.dig('duration'),
+    }
   end
 
   def created_at

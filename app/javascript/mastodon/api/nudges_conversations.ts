@@ -1,4 +1,8 @@
-import { apiRequestDelete, apiRequestGet, apiRequestPost } from 'mastodon/api';
+import api, {
+  apiRequestDelete,
+  apiRequestGet,
+  apiRequestPost,
+} from 'mastodon/api';
 import type {
   ApiNudgeConversationJSON,
   ApiNudgeConversationDetail,
@@ -11,11 +15,32 @@ export const apiListNudgeConversations = () =>
 export const apiGetNudgeConversation = (id: string) =>
   apiRequestGet<ApiNudgeConversationDetail>(`v1/nudges/conversations/${id}`);
 
-export const apiSendNudgeMessage = (conversationId: string, body: string) =>
+export const apiSendNudgeMessage = (
+  conversationId: string,
+  body: string,
+  mediaAttachmentId?: string,
+) =>
   apiRequestPost<ApiNudgeMessageJSON>(
     `v1/nudges/conversations/${conversationId}/messages`,
-    { body },
+    { body, media_attachment_id: mediaAttachmentId },
   );
+
+// Upload a file to Mastodon's media endpoint. Returns the id we can
+// then attach to a Nudge message. Uses the axios instance directly
+// because FormData needs a multipart POST.
+interface ApiUploadedMedia {
+  id: string;
+  type: string;
+  url: string | null;
+  preview_url: string | null;
+}
+
+export const apiUploadMedia = async (file: File): Promise<ApiUploadedMedia> => {
+  const form = new FormData();
+  form.append('file', file);
+  const response = await api().post<ApiUploadedMedia>('/api/v2/media', form);
+  return response.data;
+};
 
 export const apiMarkNudgeConversationRead = (
   conversationId: string,
