@@ -3,8 +3,10 @@
 **Manifest:** `config/korners/kommons.yaml` · **Mount:** `/hub/kommons` · **Status:** shipped-2.0 (Skeleton, backend, token ledger, lifecycle) — backing UI pending
 
 > **Companion:** [`kommons_lattice.md`](./kommons_lattice.md) (the operable second
-> view of the map) and [`kommons_tracker.md`](./kommons_tracker.md) (the plan to
-> run the rebuild's own backlog as Kommons proposals + task-checklists).
+> view of the map), [`kommons_tracker.md`](./kommons_tracker.md) (the plan to
+> run the rebuild's own backlog as Kommons proposals + task-checklists), and
+> [`kommons_proposal_page.md`](./kommons_proposal_page.md) (the build spec for a
+> single proposal's page — one scroll, steps checklist up front).
 
 ## Purpose
 
