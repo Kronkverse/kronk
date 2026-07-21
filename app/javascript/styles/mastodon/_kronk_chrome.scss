@@ -29,6 +29,7 @@ body::before {
   height: 5.5rem; // solid behind the chrome, then fades out below it
   z-index: 24; // above content, below the chrome (wordmark/switcher = 25)
   pointer-events: none;
+
   // Solid black where the chrome actually sits (top ~3.25rem), then a soft
   // fade to transparent so the bar dissolves into the starfield instead of
   // ending on a hard edge. Content scrolling up passes through the fade
@@ -41,6 +42,7 @@ body::before {
     rgb(0 0 0 / 45%) 4.7rem,
     rgb(0 0 0 / 0%) 5.5rem
   );
+
   // A whisper of purple glow under the bar — keeps the header identity
   // without a sharp accent line.
   filter: drop-shadow(
@@ -123,30 +125,22 @@ body::after {
   }
 }
 
+// ── Hub switcher — the Membrane nav ────────────────────────────────
+// Spec: KRONK_MEMBRANE_NAV. A row of flat text pillars (Me / Home /
+// Hub / Nudges) with a 1px wire along the bottom edge and a pool of
+// purple light that glides under the active pillar. The wire is
+// decorative reinforcement; text colour carries active state so the
+// state remains legible without motion (see prefers-reduced-motion).
 .hub-switcher {
-  position: fixed;
-  top: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 25;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15rem;
-  padding: 0.3rem;
-  border-radius: var(--radius-round);
-  background: transparent;
-  border: none;
-  box-shadow: none;
-
   &__badge {
     position: absolute;
-    top: 0.05rem;
-    right: 0.4rem;
+    top: 0.15rem;
+    right: 0.35rem;
     min-width: 1.05rem;
     height: 1.05rem;
     padding: 0 0.28rem;
     border-radius: var(--radius-round);
-    background: var(--kronk-purple-accent);
+    background: var(--kronk-purple-bright);
     color: #fff;
     font-size: 0.62rem;
     font-weight: 700;
@@ -155,72 +149,144 @@ body::after {
     pointer-events: none;
   }
 
-  &__item {
-    padding: 0.5rem 1.35rem;
-    border-radius: var(--radius-round);
-    color: color-mix(in oklab, #fff 75%, var(--kronk-purple-accent));
-    text-decoration: none;
-    font-family: var(--font-display);
-    font-size: 0.95rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
+  &--top {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 25;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: stretch;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  &__row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  &__pillar {
     position: relative;
-    transition:
-      color var(--dur-medium) var(--ease-out),
-      background var(--dur-medium) var(--ease-out),
-      transform var(--dur-medium) var(--ease-spring);
+    padding: 11px 16px 14px; // extra bottom pad seats the wire
+    color: var(--text-muted);
+    text-decoration: none;
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+    transition: color var(--dur-medium) var(--ease-out);
 
     &:hover {
-      color: #fff;
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 20%,
-        transparent
-      );
+      color: var(--text-secondary);
     }
 
     &:focus-visible {
-      outline: 2px solid var(--kronk-purple-accent);
-      outline-offset: 2px;
+      outline: 3px solid var(--kronk-purple-bright);
+      outline-offset: -3px;
+      border-radius: var(--radius-small);
     }
 
     &--active {
-      background: linear-gradient(
-        135deg,
-        var(--kronk-purple-accent),
-        var(--kronk-purple-bright)
-      );
-      color: #fff;
-      box-shadow:
-        0 4px 12px -2px
-          color-mix(in oklab, var(--kronk-purple-accent) 65%, transparent),
-        inset 0 1px 0 color-mix(in oklab, #fff 25%, transparent),
-        inset 0 -1px 0 color-mix(in oklab, #000 15%, transparent);
-
-      &:hover {
-        color: #fff;
-        transform: scale(1.03);
-      }
+      color: var(--text-primary);
     }
   }
 
+  &__wire {
+    position: relative;
+    height: 2px;
+    margin-top: 0;
+    background: linear-gradient(
+      to right,
+      transparent 0,
+      var(--border-subtle) 8px,
+      var(--border-subtle) calc(100% - 8px),
+      transparent 100%
+    );
+  }
+
+  // The pool — a soft rounded bar riding on the wire under the active
+  // pillar. `left` and `width` are set inline from JS; the transition
+  // does the glide. `is-ready` gates the transition so first mount and
+  // resize snap without animating in from zero.
+  &__pool {
+    position: absolute;
+    top: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--kronk-purple-bright);
+    box-shadow:
+      0 0 10px 1px var(--kronk-purple-bright),
+      0 0 20px 3px
+        color-mix(in oklab, var(--kronk-purple-bright) 50%, transparent);
+    pointer-events: none;
+    transform: translateZ(0); // separate compositor layer for the glow
+
+    // Radial halo behind the core — reads as light spilling off the
+    // wire onto the surface below.
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -8px -18px;
+      background: radial-gradient(
+        ellipse at center,
+        color-mix(in oklab, var(--kronk-purple-bright) 28%, transparent) 0%,
+        transparent 70%
+      );
+      border-radius: var(--radius-round);
+      pointer-events: none;
+    }
+  }
+
+  // Enable the glide only after the first measurement lands.
+  &.is-ready &__pool {
+    transition:
+      left var(--dur-slow) var(--ease-out),
+      width var(--dur-slow) var(--ease-out);
+    animation: hub-switcher-land 700ms var(--ease-out);
+  }
+
+  // Arrival signal — a bright glint travels the length of the wire
+  // toward the Nudges pillar (rightmost). Fires only when the parent
+  // acquires `is-arriving` on a genuine unread increase.
+  &.is-arriving &__wire::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    height: 2px;
+    width: 60px;
+    border-radius: 2px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--kronk-purple-bright) 50%,
+      transparent
+    );
+    box-shadow:
+      0 0 8px 1px var(--kronk-purple-bright),
+      0 0 18px 3px
+        color-mix(in oklab, var(--kronk-purple-bright) 60%, transparent);
+    pointer-events: none;
+    animation: hub-switcher-arrival 900ms var(--ease-out);
+  }
+
+  // ── Bottom: mobile tab-bar (no Membrane, existing treatment) ─────
   &--bottom {
-    // Mobile bottom-tab-bar variant: fixed to viewport bottom, spans
-    // full width. Loses the pill shape and glow but keeps the black-on-
-    // stars treatment so it reads as chrome, not surface.
     position: fixed;
     inset: auto 0 0;
     top: auto;
     left: 0;
-    transform: none;
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
     justify-content: space-around;
-    border-radius: 0;
-    border: none;
-    border-top: 1.5px solid var(--kronk-purple-accent);
     padding: 0.5rem 0.25rem env(safe-area-inset-bottom, 0);
     background: #000;
+    border-top: 1.5px solid var(--kronk-purple-accent);
     box-shadow: 0 -6px 20px -6px rgb(0 0 0 / 55%);
-    z-index: 20;
 
     .hub-switcher__item {
       flex: 1;
@@ -228,9 +294,10 @@ body::after {
       flex-direction: column;
       align-items: center;
       gap: 0.15rem;
-      text-align: center;
-      border-radius: var(--radius-medium);
       padding: 0.45rem 0.5rem;
+      text-align: center;
+      text-decoration: none;
+      border-radius: var(--radius-medium);
       color: color-mix(in oklab, #fff 75%, var(--kronk-purple-accent));
 
       &--active {
@@ -253,6 +320,52 @@ body::after {
       font-size: 0.72rem;
       line-height: 1;
     }
+  }
+}
+
+@keyframes hub-switcher-land {
+  0% {
+    filter: brightness(1);
+  }
+
+  40% {
+    filter: brightness(1.8);
+  }
+
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@keyframes hub-switcher-arrival {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    left: calc(100% - 60px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hub-switcher.is-ready .hub-switcher__pool {
+    transition: none;
+    animation: none;
+  }
+
+  .hub-switcher.is-arriving .hub-switcher__wire::after {
+    animation: none;
+    display: none;
   }
 }
 

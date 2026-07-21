@@ -1,36 +1,42 @@
--# Static chrome for Rails-served pages (org space /kronk/*, classic
--# settings /settings/preferences/*). Mirrors the React chrome
--# (top strip, wordmark, HubSwitcher, sidebar, Ӂ menu) as pure HAML
--# so those surfaces feel like the same Kronk as the SPA. All styles
--# come from _kronk_chrome.scss / _korner_sidebar.scss so a token
--# retune here follows through automatically.
+-# Static chrome for Rails-served pages — wordmark + Membrane HubSwitcher + korner sidebar + Ӂ menu, mirrored from React. Styles: _kronk_chrome.scss / _korner_sidebar.scss. Membrane pool is JS-positioned in React and omitted here; active state carries via text colour on the pillar.
 
-- korners = Kronk::KornerRegistry.all.select { |k| k.enforced } rescue []
-- current_slug = params[:slug] || (request.path[%r{^/hub/([a-z0-9-]+)}, 1])
+:ruby
+  korners =
+    begin
+      Kronk::KornerRegistry.all.select(&:enforced)
+    rescue
+      []
+    end
+  current_slug = params[:slug] || request.path[%r{^/hub/([a-z0-9-]+)}, 1]
+  path = request.path
 
 %a.kronk-wordmark{ href: '/kronk' }
   %span{ 'aria-hidden' => 'true' } ӁЯѺƝ₭
 
-%nav.hub-switcher{ 'aria-label' => 'Primary surfaces' }
-  %a.hub-switcher__item{ href: '/home' } Feed
-  - if user_signed_in?
-    %a.hub-switcher__item{ href: "/@#{current_user.account.username}" } Profile
-  %a.hub-switcher__item{ href: '/hub', class: ('hub-switcher__item--active' if request.path.start_with?('/hub')) } Hub
+%nav.hub-switcher.hub-switcher--top{ 'aria-label' => 'Primary surfaces' }
+  .hub-switcher__row{ role: 'tablist' }
+    - if user_signed_in?
+      %a.hub-switcher__pillar{ href: "/@#{current_user.account.username}", role: 'tab', 'aria-selected': path.start_with?('/@').to_s, class: ('hub-switcher__pillar--active' if path.start_with?('/@')) }
+        %span.hub-switcher__label Me
+    %a.hub-switcher__pillar{ href: '/home', role: 'tab', 'aria-selected': (path == '/home' || path.start_with?('/home/')).to_s, class: ('hub-switcher__pillar--active' if path == '/home' || path.start_with?('/home/')) }
+      %span.hub-switcher__label Home
+    %a.hub-switcher__pillar{ href: '/hub', role: 'tab', 'aria-selected': path.start_with?('/hub').to_s, class: ('hub-switcher__pillar--active' if path.start_with?('/hub')) }
+      %span.hub-switcher__label Hub
+    - if user_signed_in?
+      %a.hub-switcher__pillar{ href: '/nudges', role: 'tab', 'aria-selected': path.start_with?('/nudges').to_s, class: ('hub-switcher__pillar--active' if path.start_with?('/nudges')) }
+        %span.hub-switcher__label Nudges
+  .hub-switcher__wire{ 'aria-hidden' => 'true' }
 
 - if user_signed_in?
   %aside.korner-sidebar{ 'aria-label' => 'Korners' }
     %nav.korner-sidebar__list
       - korners.each do |k|
-        %a.korner-sidebar__row{ href: "/hub/#{k.slug}",
-                                class: ('korner-sidebar__row--active' if current_slug == k.slug),
-                                'data-name' => k.name,
-                                'aria-label' => k.name,
-                                title: k.name }
+        %a.korner-sidebar__row{ href: "/hub/#{k.slug}", class: ('korner-sidebar__row--active' if current_slug == k.slug), 'data-name': k.name, 'aria-label': k.name, title: k.name }
           %span.korner-sidebar__glyph{ 'aria-hidden' => 'true' }
             = k.name.first.upcase
           %span.korner-sidebar__label= k.name
-    %a.korner-sidebar__all{ href: '/hub', title: 'All korners', 'data-name' => 'All korners' } ⋯
+    %a.korner-sidebar__all{ href: '/hub', title: 'All korners', 'data-name': 'All korners' } ⋯
 
   .kronk-menu
-    %a.kronk-menu__trigger{ href: '/publish', 'aria-label' => 'Post', title: 'Post' }
-      %span{ 'aria-hidden' => 'true' } Ӂ
+    %a.kronk-menu__trigger{ href: '/publish', 'aria-label': 'Post', title: 'Post' }
+      %span{ 'aria-hidden': 'true' } Ӂ

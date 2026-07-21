@@ -40,37 +40,37 @@ app/javascript/styles/mastodon/_tokens.scss    ← GENERATED — never hand-edit
 
 These are the underlying brand ramp. **Feature code should almost never reference these directly** — use the semantic aliases in §2.3. Listed here so the palette is legible.
 
-| Token             | Dark      | Light     | Role                          |
-| ----------------- | --------- | --------- | ----------------------------- |
-| `--kronk-purple-primary` | `#32237c` | `#3034a0` | Core brand purple             |
-| `--kronk-purple-bright`  | `#7241ff` | `#6364ff` | Luminous highlight (glows)    |
-| `--kronk-purple-deep`    | `#3a218b` | `#36248c` | Deep shadow purple            |
-| `--kronk-purple-muted`   | `#413c8c` | `#45455f` | Desaturated support purple    |
-| `--kronk-purple-accent`  | `#4414cc` | `#6364ff` | Interactive indigo accent     |
+| Token                    | Dark      | Light     | Role                       |
+| ------------------------ | --------- | --------- | -------------------------- |
+| `--kronk-purple-primary` | `#32237c` | `#3034a0` | Core brand purple          |
+| `--kronk-purple-bright`  | `#7241ff` | `#6364ff` | Luminous highlight (glows) |
+| `--kronk-purple-deep`    | `#3a218b` | `#36248c` | Deep shadow purple         |
+| `--kronk-purple-muted`   | `#413c8c` | `#45455f` | Desaturated support purple |
+| `--kronk-purple-accent`  | `#4414cc` | `#6364ff` | Interactive indigo accent  |
 
 ### 2.3 Semantic tokens (the contract — build against these)
 
 **Accent**
 
-| Token       | Dark      | Light     |
-| ----------- | --------- | --------- |
-| `--accent`  | `#4414cc` | `#6364ff` |
+| Token      | Dark      | Light     |
+| ---------- | --------- | --------- |
+| `--accent` | `#4414cc` | `#6364ff` |
 
 **Surfaces**
 
-| Token                | Dark      | Light     | Use                              |
-| -------------------- | --------- | --------- | -------------------------------- |
-| `--surface-primary`  | `#191b22` | `#ffffff` | Page background                  |
-| `--surface-elevated` | `#292938` | `#f5f4f9` | Cards, menus, raised panels      |
+| Token                | Dark      | Light     | Use                         |
+| -------------------- | --------- | --------- | --------------------------- |
+| `--surface-primary`  | `#191b22` | `#ffffff` | Page background             |
+| `--surface-elevated` | `#292938` | `#f5f4f9` | Cards, menus, raised panels |
 
 **Borders & text**
 
-| Token               | Dark      | Light     |
-| ------------------- | --------- | --------- |
-| `--border-default`  | `#47368b` | `#ddd9e8` |
-| `--text-primary`    | (light)   | (dark)    |
-| `--text-secondary`  | muted     | muted     |
-| `--text-muted`      | faint     | faint     |
+| Token              | Dark      | Light     |
+| ------------------ | --------- | --------- |
+| `--border-default` | `#47368b` | `#ddd9e8` |
+| `--text-primary`   | (light)   | (dark)    |
+| `--text-secondary` | muted     | muted     |
+| `--text-muted`     | faint     | faint     |
 
 **Status**
 
@@ -92,11 +92,11 @@ Consumers that need a translucent tint of a decision colour use `color-mix()` ag
 
 ### 2.4 Typography
 
-| Token          | Value                                                    |
-| -------------- | -------------------------------------------------------- |
-| `--font-display` | `'Liberation Serif', Georgia, serif`                   |
-| `--font-body`    | `mastodon-font-sans-serif, sans-serif`                 |
-| `--font-mono`    | `'Roboto Mono', 'Fira Mono', ui-monospace, monospace`  |
+| Token            | Value                                                 |
+| ---------------- | ----------------------------------------------------- |
+| `--font-display` | `'Liberation Serif', Georgia, serif`                  |
+| `--font-body`    | `mastodon-font-sans-serif, sans-serif`                |
+| `--font-mono`    | `'Roboto Mono', 'Fira Mono', ui-monospace, monospace` |
 
 Display serif is used for headings and feature titles; body sans for everything else. The serif is what gives Kronk its editorial character — reach for `--font-display` on titles rather than bolding the sans.
 
@@ -104,12 +104,12 @@ Display serif is used for headings and feature titles; body sans for everything 
 
 Kronk's **universal corner language** — everything rounds; there are no sharp corners in the shell. If a surface can't fit a radius, it becomes a hairline divider (a `--border-default` line, not a box).
 
-| Token             | Value   | Use                                                                       |
-| ----------------- | ------- | ------------------------------------------------------------------------- |
-| `--radius-small`  | `6px`   | Inline chips, small icon buttons, focus rings, dropdown items             |
+| Token             | Value   | Use                                                                      |
+| ----------------- | ------- | ------------------------------------------------------------------------ |
+| `--radius-small`  | `6px`   | Inline chips, small icon buttons, focus rings, dropdown items            |
 | `--radius-medium` | `10px`  | Cards, panels, dropdowns, sidebar korner tiles, menu items               |
 | `--radius-large`  | `16px`  | Hero surfaces — top strip, sidebar, hub korner cards, menu panel, modals |
-| `--radius-round`  | `999px` | Pills — hub switcher, tags, badges, capsule buttons, avatars, toggles     |
+| `--radius-round`  | `999px` | Pills — hub switcher, tags, badges, capsule buttons, avatars, toggles    |
 
 Buttons follow the same rules: primary CTAs are `round` pills; secondary/tertiary are `small` or `medium`; chip picks are `round`. Borders on interactive surfaces are always **1–1.5px** in `--border-default` or a semantic-accent tint — never thicker.
 
@@ -119,14 +119,14 @@ Four levels, each a token defining a box-shadow: `--elevation-subtle`, `--elevat
 
 ### 2.7 Motion
 
-| Token             | Value    | Use                              |
-| ----------------- | -------- | -------------------------------- |
-| `--motion-dur-fast`   | `120ms` | Hovers, small state changes     |
-| `--motion-dur-medium` | `200ms` | Most transitions                |
-| `--motion-dur-slow`   | `400ms` | Sheets, large reveals           |
-| `--motion-ease-out`     | ease-out curve   | Enter transitions       |
-| `--motion-ease-in-out`  | ease-in-out curve| Move/resize             |
-| `--motion-ease-spring`  | spring curve     | Playful/emphasis        |
+| Token                  | Value             | Use                         |
+| ---------------------- | ----------------- | --------------------------- |
+| `--motion-dur-fast`    | `120ms`           | Hovers, small state changes |
+| `--motion-dur-medium`  | `200ms`           | Most transitions            |
+| `--motion-dur-slow`    | `400ms`           | Sheets, large reveals       |
+| `--motion-ease-out`    | ease-out curve    | Enter transitions           |
+| `--motion-ease-in-out` | ease-in-out curve | Move/resize                 |
+| `--motion-ease-spring` | spring curve      | Playful/emphasis            |
 
 ---
 
@@ -188,7 +188,7 @@ Use this for any "managed list of things the user can remove" surface rather tha
 
 ### 4.3 Navigation & chrome
 
-- **`hub_switcher.tsx`** — the hub navigation. Its **bottom variant** renders the mobile tab-bar: icon+label tabs (home / person / explore), styled via `.hub-switcher--bottom` in `_kronk_chrome.scss`.
+- **`hub_switcher.tsx`** — the four-way platform nav (Me / Home / Hub / Nudges). The **top variant** renders the **Membrane** (spec: `KRONK_MEMBRANE_NAV.md`): flat text pillars + a 1px wire + a purple pool of light that glides under the active pillar, styled via `.hub-switcher--top` in `_kronk_chrome.scss`. The **bottom variant** renders the mobile tab-bar: icon+label tabs, styled via `.hub-switcher--bottom`.
 - **`kronk_menu.tsx` / settings `nav.tsx`** — the "K" menu and settings navigation. Section rows route to their destination; the profile section routes to `/@:acct/edit`.
 
 ### 4.4 Governance / kommons cards
@@ -233,7 +233,7 @@ security:
   # access/permission rules
 
 feed_projection:
-  card: StatusKommonsCard   # component that renders this korner's items in feeds
+  card: StatusKommonsCard # component that renders this korner's items in feeds
 
 settings:
   # §K — the per-korner settings space, rendered with the settings widget kit (§4.1)
@@ -273,21 +273,21 @@ When planning or building a korner rebuild, confirm each:
 
 ## 7. Quick reference — files
 
-| Concern                 | File                                                        |
-| ----------------------- | ---------------------------------------------------------- |
-| Token source of truth   | `app/javascript/mastodon/tokens/tokens.yaml`               |
-| Token generator         | `bin/generate-tokens` (`--check` in CI)                    |
-| Generated tokens (SCSS) | `app/javascript/styles/mastodon/_tokens.scss` (don't edit) |
-| Cover-glow mixin        | `_mixins.scss` → `@mixin kronk-cover-glow`                 |
-| Settings widgets        | `features/settings/setting_widgets.tsx`                    |
-| List manager            | `features/settings/list_manager.tsx`                       |
-| Hub switcher / tab-bar  | `features/.../hub_switcher.tsx`, `_kronk_chrome.scss`      |
-| Governance / kommons    | `_status_kommons_card.scss`, `_governance.scss`            |
+| Concern                 | File                                                                |
+| ----------------------- | ------------------------------------------------------------------- |
+| Token source of truth   | `app/javascript/mastodon/tokens/tokens.yaml`                        |
+| Token generator         | `bin/generate-tokens` (`--check` in CI)                             |
+| Generated tokens (SCSS) | `app/javascript/styles/mastodon/_tokens.scss` (don't edit)          |
+| Cover-glow mixin        | `_mixins.scss` → `@mixin kronk-cover-glow`                          |
+| Settings widgets        | `features/settings/setting_widgets.tsx`                             |
+| List manager            | `features/settings/list_manager.tsx`                                |
+| Hub switcher / tab-bar  | `features/.../hub_switcher.tsx`, `_kronk_chrome.scss`               |
+| Governance / kommons    | `_status_kommons_card.scss`, `_governance.scss`                     |
 | Live styleguide         | `features/styleguide/index.tsx`, `_styleguide.scss` → `/styleguide` |
-| Korner manifests        | `config/korners/*.yaml`                                    |
-| Reserved slugs          | `config/korners/reserved_slugs.yaml`                       |
-| Korner registry         | `config/initializers/kronk_korner_registry.rb`            |
-| Korner doctor           | `bin/tootctl korners doctor`                               |
+| Korner manifests        | `config/korners/*.yaml`                                             |
+| Reserved slugs          | `config/korners/reserved_slugs.yaml`                                |
+| Korner registry         | `config/initializers/kronk_korner_registry.rb`                      |
+| Korner doctor           | `bin/tootctl korners doctor`                                        |
 
 ---
 
