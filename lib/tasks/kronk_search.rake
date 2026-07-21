@@ -15,7 +15,7 @@ MODEL_FOR_SEARCH_TYPE = {
   kalendar_events: 'Event',
   kommons_proposals: 'Proposal',
   booth_sets: 'BoothSet',
-  marketplace_listings: 'Listing',
+  wachuneed_listings: 'Listing',
   groups: 'Group',
   kategories: 'Tag',
   nudge_messages: 'NudgeMessage',

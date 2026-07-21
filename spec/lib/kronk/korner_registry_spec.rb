@@ -4,7 +4,7 @@ require 'rails_helper'
 
 RSpec.describe Kronk::KornerRegistry do
   let(:main_branch_slugs) { %w(kommons kuestions kalendar booth inflow nudges) }
-  let(:dev_branch_slugs)  { %w(marketplace tree klot) }
+  let(:dev_branch_slugs)  { %w(wachuneed tree klot) }
 
   before { described_class.reload! }
 

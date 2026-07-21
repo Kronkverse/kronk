@@ -20,8 +20,7 @@
 | `settings.account` + `settings.data` nav nodes lead nowhere — declared with URLs but no route/component                                                                                           | `config/kronk_nodes.yaml:291,297`; no route in `config/routes.rb:187-193` | S      |
 | Verify SPA `/settings/privacy` covers the classic fields (`indexable`/`noindex`, `hide_collections`, `show_application`) — GET→SPA is intentional, but confirm these aren't stranded classic-only | `Settings::PrivacyController` vs `features/privacy_settings/`             | S      |
 | `default_quote_policy` absent from posting settings API (lives only in credentials)                                                                                                               | `app/controllers/api/v1/settings/posting_controller.rb:17-21`             | S      |
-| Marketplace `subcategory` column doc says "retires" but persists + is serialized                                                                                                                  | `docs/spaces/marketplace.md:56`; `app/models/listing.rb:19`               | S      |
-| Dead `features/market/index.tsx` "Coming Soon" placeholder (router uses `../../marketplace`)                                                                                                      | `features/ui/util/async-components.js:326`                                | S      |
+| Wachuneed `subcategory` column doc says "retires" but persists + is serialized                                                                                                                    | `docs/spaces/wachuneed.md`; `app/models/listing.rb`                       | S      |
 | `fetch_link_card` `ALLOWED_LOCAL_PATHS` lists legacy korner paths, not `/hub/<slug>`                                                                                                              | `app/services/fetch_link_card_service.rb:38`                              | S      |
 | Dead `interactions.must_be_follower`/`must_be_following` settings keys (writeable, wired to nothing)                                                                                              | `app/models/user_settings.rb:67-68`                                       | S      |
 
@@ -60,7 +59,7 @@
 The recurring reality: backend shipped, **per-korner UI largely unbuilt**. Grouped by space; each is design-heavy (mostly L).
 
 - **Groups → Krew:** audience-scoping (the central promise — posts are currently normal public Statuses merely tagged to a group), Krew badge in timeline, listed/unlisted + invite links, Event↔Krew bidirectional, and the `groups`→`krew` URL/vocab rename. `groups/statuses_controller.rb:35-47`.
-- **Marketplace:** listing detail + composer UI, the 5 interaction modes, "or trade" flag, mate-affinity signals. `features/marketplace/index.tsx` is discovery-only (its own header says detail/composer are follow-ups).
+- **Wachuneed:** listing detail + composer UI, the 5 interaction modes, "or trade" flag, mate-affinity signals. `features/wachuneed/index.tsx` is discovery-only (its own header says detail/composer are follow-ups).
 - **Kommons:** backing/token UI (backing is console-only today), token display glyph, "reflect on this page" button.
 - **Kuestions:** swipe deck, answer-format field (free-text/MC/yes-no), daily-prompt post-box, answer edit history.
 - **Kalendar:** birthdays, event visibility scopes, Krew-spawn-from-event, RSVP playful labels (S, copy), spiral view, Inflow→Kalendar celestial projection.
@@ -73,7 +72,7 @@ The recurring reality: backend shipped, **per-korner UI largely unbuilt**. Group
 - Spec §13 unresolved forks: `render_target` default (§13.2), subscription default posture (§13.3), naming-grammar rule-vs-default (§2), notification transport UnifiedPush vs FCM (§9.2).
 - Nudges "pillar move" — promote to a top-level nav pillar? (PR #331 closed pending the nav call.)
 - You-portal / Anthemos membrane items — post-2.0, membrane-blocked.
-- Marketplace "fully shipped" in the phase audit is over-stated for UI — reconcile against Tier-3 Marketplace items before release.
+- Wachuneed "fully shipped" in the phase audit is over-stated for UI — reconcile against Tier-3 Wachuneed items before release.
 
 ## Suggested first moves
 

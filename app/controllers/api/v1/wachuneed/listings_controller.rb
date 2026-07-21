@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
-# Marketplace listings API (korner: marketplace). Read the live listings for
-# the /hub/marketplace browse page; create a listing. Detail/browse render via
-# REST::MarketplaceListingSummarySerializer (the same shape the feed card
+# Wachuneed listings API (korner: wachuneed, renamed from `marketplace`
+# 2026-07-21). Reads the live listings for the /hub/wachuneed browse
+# page; creates a listing. Detail/browse render via
+# REST::WachuneedListingSummarySerializer (the same shape the feed card
 # embeds). Mirrors the Events/Proposals korner controllers.
-class Api::V1::Marketplace::ListingsController < Api::BaseController
+class Api::V1::Wachuneed::ListingsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create]
   before_action :require_user!
@@ -12,11 +13,11 @@ class Api::V1::Marketplace::ListingsController < Api::BaseController
 
   def index
     @listings = Listing.live.includes(:account, :listing_photos).order(created_at: :desc).limit(40)
-    render json: @listings, each_serializer: REST::MarketplaceListingSummarySerializer
+    render json: @listings, each_serializer: REST::WachuneedListingSummarySerializer
   end
 
   def show
-    render json: @listing, serializer: REST::MarketplaceListingSummarySerializer
+    render json: @listing, serializer: REST::WachuneedListingSummarySerializer
   end
 
   def create
@@ -24,7 +25,7 @@ class Api::V1::Marketplace::ListingsController < Api::BaseController
     @listing.account = current_account
     @listing.save!
 
-    render json: @listing, serializer: REST::MarketplaceListingSummarySerializer
+    render json: @listing, serializer: REST::WachuneedListingSummarySerializer
   end
 
   private

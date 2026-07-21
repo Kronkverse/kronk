@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
-# Marketplace listing — the primary Marketplace resource. States move
-# forward through draft → live → (reserved | closed). Closing sets
-# `closed_at`; reopening a closed listing means creating a fresh row.
+# Wachuneed listing — the primary Wachuneed resource (renamed from
+# `Marketplace` 2026-07-21). States move forward through draft → live →
+# (reserved | closed). Closing sets `closed_at`; reopening a closed
+# listing means creating a fresh row.
 class Listing < ApplicationRecord
   include Searchable
 
-  searchable_as :marketplace_listings
+  searchable_as :wachuneed_listings
 
   def as_json_for_search
     {
@@ -23,7 +24,7 @@ class Listing < ApplicationRecord
     }
   end
 
-  CATEGORIES = %w(creation marketplace service).freeze
+  CATEGORIES = %w(creation goods service).freeze
   STATES     = %w(draft live reserved closed).freeze
 
   belongs_to :account

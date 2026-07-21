@@ -10,25 +10,25 @@ import { StatusKornerCard } from './status_korner_card';
 
 const messages = defineMessages({
   badge: {
-    id: 'status_marketplace_card.badge',
+    id: 'status_wachuneed_card.badge',
     defaultMessage: 'LISTING',
   },
   view: {
-    id: 'status_marketplace_card.view',
+    id: 'status_wachuneed_card.view',
     defaultMessage: 'View listing',
   },
 });
 
-// Sub-category slugs from MarketplaceListing::CATEGORY_LABELS (backend enum).
+// Category slugs from Listing::CATEGORIES (backend enum).
 const CATEGORY_LABELS: Record<string, string> = {
   creation: 'Creation',
-  marketplace: 'Marketplace',
+  goods: 'Goods',
   service: 'Service',
 };
 
 // Route to the listing detail page; matches the SPA route we set up in
-// features/ui/index.jsx for `/marketplace/listing/:id`.
-const listingPath = (id: string) => `/marketplace/listing/${id}`;
+// features/ui/index.jsx for `/wachuneed/listing/:id`.
+const listingPath = (id: string) => `/wachuneed/listing/${id}`;
 
 interface Listing {
   id: string;
@@ -40,7 +40,7 @@ interface Listing {
   location?: string | null;
 }
 
-export const StatusMarketplaceCard: React.FC<{ listing: Listing }> = ({
+export const StatusWachuneedCard: React.FC<{ listing: Listing }> = ({
   listing,
 }) => {
   const intl = useIntl();
@@ -51,9 +51,9 @@ export const StatusMarketplaceCard: React.FC<{ listing: Listing }> = ({
 
   return (
     <StatusKornerCard
-      korner='Marketplace'
+      korner='Wachuneed'
       variant='listing'
-      className='status-marketplace-card'
+      className='status-wachuneed-card'
       badge={{
         icon: InventoryIcon,
         iconId: 'inventory_2',
@@ -70,20 +70,20 @@ export const StatusMarketplaceCard: React.FC<{ listing: Listing }> = ({
         )}
       </div>
 
-      <div className='status-korner-card__footer status-marketplace-card__footer'>
+      <div className='status-korner-card__footer status-wachuneed-card__footer'>
         <div className='status-korner-card__meta'>
           {listing.price_display && (
-            <span className='status-marketplace-card__price'>
+            <span className='status-wachuneed-card__price'>
               {listing.price_display}
             </span>
           )}
           {listing.location && (
-            <span className='status-marketplace-card__location'>
+            <span className='status-wachuneed-card__location'>
               {listing.location}
             </span>
           )}
           {listing.subcategory && (
-            <span className='status-marketplace-card__subcategory'>
+            <span className='status-wachuneed-card__subcategory'>
               {listing.subcategory}
             </span>
           )}

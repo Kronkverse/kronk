@@ -110,7 +110,7 @@ These are the most common source of "why isn't my Korner showing up" bugs.
 ## Feed projection
 
 Only Korners whose data appears in the home timeline need this layer.
-Currently: **Kommons, Kuestions, Marketplace**, and **Booth once its
+Currently: **Kommons, Kuestions, Wachuneed**, and **Booth once its
 `shared_status_id` backend lands**. Klot deliberately does not — its data
 is private.
 

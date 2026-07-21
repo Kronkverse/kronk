@@ -20,8 +20,8 @@ import type { Map as ImmutableMap } from 'immutable';
 import { StatusBoothCard } from './status_booth_card';
 import { StatusEventCard } from './status_event_card';
 import { StatusKommonsCard } from './status_kommons_card';
-import { StatusMarketplaceCard } from './status_marketplace_card';
 import { StatusQuestionCard } from './status_question_card';
+import { StatusWachuneedCard } from './status_wachuneed_card';
 
 type StatusLike = ImmutableMap<string, unknown>;
 
@@ -109,9 +109,9 @@ export const KORNER_CARDS: KornerCardEntry[] = [
     },
   },
   {
-    slug: 'marketplace',
+    slug: 'wachuneed',
     matches: (s) => s.get('listing') != null,
-    card: (s) => <StatusMarketplaceCard listing={dataFrom(s, 'listing')} />,
+    card: (s) => <StatusWachuneedCard listing={dataFrom(s, 'listing')} />,
   },
   {
     slug: 'booth',

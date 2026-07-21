@@ -6,7 +6,7 @@ import type { IconProp } from 'mastodon/components/icon';
 import { Icon } from 'mastodon/components/icon';
 
 // Shared "Korner card" — the frame that every space (Kommons, Kuestions,
-// Marketplace, Booth, Events…) uses when its post_type or attached record
+// Wachuneed, Booth, Events…) uses when its post_type or attached record
 // warrants a distinguished feed presentation.
 //
 // The wrapper owns:

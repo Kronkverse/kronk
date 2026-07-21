@@ -98,8 +98,9 @@ branch.
   `events.huddle_session_id` FK
 - InFlow: `kosmic_updates` model + `Scheduler::KosmicDailyScheduler`
   posting one daily update
-- Marketplace greenfield: `listings`, `listing_photos`,
-  `listing_offers` tables built to spec §5 from day one
+- Wachuneed (originally shipped as `marketplace`) greenfield:
+  `listings`, `listing_photos`, `listing_offers` tables built to
+  spec §5 from day one
 - Tree: `enforced: false` manifest ships alongside the WIP code
 
 #### Org space + Profile

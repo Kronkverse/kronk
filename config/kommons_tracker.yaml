@@ -189,14 +189,14 @@ proposals:
       - 'Event <-> Krew bidirectional spawn'
       - 'Rename groups -> krew (vocab + /hub/krew URL)'
 
-  - key: marketplace-ui
-    title: 'Marketplace UI'
-    node: marketplace.index
+  - key: wachuneed-ui
+    title: 'Wachuneed UI'
+    node: wachuneed.index
     type: large
-    categories: ['korner:marketplace']
+    categories: ['korner:wachuneed']
     summary: 'Discovery-only today; detail + composer + interaction modes are follow-ups.'
     body: |
-      features/marketplace is discovery-only per its own header.
+      features/wachuneed is discovery-only per its own header.
     tasks:
       - 'Listing detail page'
       - 'Listing composer'
@@ -351,7 +351,7 @@ proposals:
       - 'Remove the dead features/market "Coming Soon" placeholder'
       - 'fetch_link_card allow-list: legacy korner paths -> /hub/<slug>'
       - 'Remove dead interactions.must_be_follower/following settings keys'
-      - 'Drop the retired Marketplace subcategory column'
+      - 'Drop the retired Wachuneed subcategory column'
 
   # ⑦ Kommons building Kommons — the usability the tracker itself needs
   - key: kommons-task-checklist-ui

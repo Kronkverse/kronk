@@ -5,9 +5,9 @@
 > mainframe, which was its only copy. Local clone paths (`/home/claude/kronk-rebuild/...`)
 > were rewritten repo-relative; nothing else was changed.
 >
-> **Read this correctly.** The *phase definitions* below are authoritative — they are the
-> canonical statement of what each phase contains, and nothing supersedes them. The *phase
-> statuses*, PR counts and the "~15 calendar weeks" estimate are from 2026-07-10 and are
+> **Read this correctly.** The _phase definitions_ below are authoritative — they are the
+> canonical statement of what each phase contains, and nothing supersedes them. The _phase
+> statuses_, PR counts and the "~15 calendar weeks" estimate are from 2026-07-10 and are
 > stale. Several phases described here as planned have since shipped. For current status
 > see the latest in-repo audit — **`docs/rebuild/phase_audit_2026-07-20.md`** — not this
 > file's inline statuses. (Audits live in the repo now, per the source-of-truth doctrine;
@@ -25,29 +25,30 @@ Intended outcome: a 2.0.0 release that (a) formalises the Korner framework to sp
 
 ## Phase overview
 
-| # | Phase | PRs | Est. cal. time | Blocked by |
-|---|---|---|---|---|
-| 0 | Warm-up (ships to `main` as 1.7.x) | 5 | 1 week | none |
-| 1 | Framework core (manifest v2, registry rename, API, CLI) | 6 | 1.5 weeks | Phase 0 |
-| 2 | Aesthetic system (tokens, planet retirement) | 5 | 1.5 weeks | Phase 0 (parallel with 1) |
-| 3 | URL & routing migration to `/hub/<slug>` | 3 | 3 days | Phases 1, 2 |
-| 4 | Tune-in + Hub personalisation | 4 | 1 week | Phase 3 |
-| 5 | Nudges cutover (retire bell) | 6 | 2 weeks | Phase 4 |
-| 6 | Status linkage canonicalisation | 3 | 4 days | Phase 1 |
-| 7 | Primitives: Kategories → Search → Groups | 7 | 2.5 weeks | Phase 4 |
-| 8 | Kuestions v2 (dedicated model + gate) | 4 | 1 week | Phase 6 |
-| 9 | Huddle korner split (Kalendar decouple) | 4 | 1 week | Phases 3, 6 |
-| 10 | InFlow kosmic + Marketplace greenfield + Skeleton WIP | 5 | 1.5 weeks | Phase 1 |
-| 11 | Org space `/kronk/*` + Profile rebuild `/@user` | 4 | 1 week | Phase 3 |
-| 12 | Nav-chrome redesign (Ӂ menu, three-way switcher, wordmark, mobile tab-bar) | 3 | 1 week | Phases 3, 11 |
-| 13 | 2.x new korner manifests (Moments, Albutts, Kompass) — `enforced: false` | 3 | 3 days | Phase 1 |
-| 14 | Release hardening + main PR | 3 | 1 week | all above |
+| #   | Phase                                                                      | PRs | Est. cal. time | Blocked by                |
+| --- | -------------------------------------------------------------------------- | --- | -------------- | ------------------------- |
+| 0   | Warm-up (ships to `main` as 1.7.x)                                         | 5   | 1 week         | none                      |
+| 1   | Framework core (manifest v2, registry rename, API, CLI)                    | 6   | 1.5 weeks      | Phase 0                   |
+| 2   | Aesthetic system (tokens, planet retirement)                               | 5   | 1.5 weeks      | Phase 0 (parallel with 1) |
+| 3   | URL & routing migration to `/hub/<slug>`                                   | 3   | 3 days         | Phases 1, 2               |
+| 4   | Tune-in + Hub personalisation                                              | 4   | 1 week         | Phase 3                   |
+| 5   | Nudges cutover (retire bell)                                               | 6   | 2 weeks        | Phase 4                   |
+| 6   | Status linkage canonicalisation                                            | 3   | 4 days         | Phase 1                   |
+| 7   | Primitives: Kategories → Search → Groups                                   | 7   | 2.5 weeks      | Phase 4                   |
+| 8   | Kuestions v2 (dedicated model + gate)                                      | 4   | 1 week         | Phase 6                   |
+| 9   | Huddle korner split (Kalendar decouple)                                    | 4   | 1 week         | Phases 3, 6               |
+| 10  | InFlow kosmic + Wachuneed greenfield + Skeleton WIP                        | 5   | 1.5 weeks      | Phase 1                   |
+| 11  | Org space `/kronk/*` + Profile rebuild `/@user`                            | 4   | 1 week         | Phase 3                   |
+| 12  | Nav-chrome redesign (Ӂ menu, three-way switcher, wordmark, mobile tab-bar) | 3   | 1 week         | Phases 3, 11              |
+| 13  | 2.x new korner manifests (Moments, Albutts, Kompass) — `enforced: false`   | 3   | 3 days         | Phase 1                   |
+| 14  | Release hardening + main PR                                                | 3   | 1 week         | all above                 |
 
 **Total:** ~65 PRs, ~15 calendar weeks with parallelisation. Serial critical path ~10 weeks.
 
 **Version scheme:** Phase 0 PRs bump 1.7.x on `main`. Phases 1–13 PRs into `rebuild/2.0.0` bump `2.0.0-alpha.N` as needed. Phase 14 opens the single main PR titled `2.0.0`.
 
 **Parallelisation tracks** feeding `rebuild/2.0.0`:
+
 - **A (framework):** 1 → 3 → 4 → 5 (serial critical path)
 - **B (aesthetic):** 2 in parallel with 1; rebases when 1.2 lands
 - **C (data):** 6 → 8 → 9 after Phase 1
@@ -82,7 +83,7 @@ Bring the manifest system in line with spec §1; boot warnings only (never raise
 - **1.4** `GET /api/v1/korners` + `GET /api/v1/korners/:slug/manifest`. New `Api::V1::KornersController` + `REST::V1::KornerSerializer` following `Api::V1::InstancesController` pattern (`app/controllers/api/v1/instances_controller.rb`, `app/serializers/rest/v1/instance_serializer.rb`).
 - **1.5** `bin/tootctl korners describe <slug>` — dumps manifest as JSON/YAML.
 - **1.6** `bin/tootctl korners doctor` — runs boot validator synchronously, exits non-zero on drift.
-- **1.7** Security-shape conformance (spec §L1). Migrate the 8 root-level manifests (`booth`, `inflow`, `kalendar`, `klot`, `kommons`, `kuestions`, `marketplace`, `nudges`) to the nested `security:` block; rename remaining `steward_role` → `maintainers` (8 manifests — the same set; `you.yaml` already renamed, `groups.yaml` uses `ownership_model`). If `nudges.yaml` is retired in Phase 5 (see `decisions.md`), skip migrating it. Today `extract_security` (`config/initializers/kronk_korner_registry.rb:200`) synthesizes a block from the legacy root-level fields, so the doctor's `security.blank?` L1 check cannot tell canonical from legacy — stop it masking the difference (or tag synthesized blocks) so `doctor` can warn. Gate: enforced korners require the canonical nested block. Decide Klot's `klot_phase_viewer` scope — fold into the shared scope model or record a sanctioned bespoke exception (see `decisions.md`).
+- **1.7** Security-shape conformance (spec §L1). Migrate the 8 root-level manifests (`booth`, `inflow`, `kalendar`, `klot`, `kommons`, `kuestions`, `wachuneed`, `nudges`) to the nested `security:` block; rename remaining `steward_role` → `maintainers` (8 manifests — the same set; `you.yaml` already renamed, `groups.yaml` uses `ownership_model`). If `nudges.yaml` is retired in Phase 5 (see `decisions.md`), skip migrating it. Today `extract_security` (`config/initializers/kronk_korner_registry.rb:200`) synthesizes a block from the legacy root-level fields, so the doctor's `security.blank?` L1 check cannot tell canonical from legacy — stop it masking the difference (or tag synthesized blocks) so `doctor` can warn. Gate: enforced korners require the canonical nested block. Decide Klot's `klot_phase_viewer` scope — fold into the shared scope model or record a sanctioned bespoke exception (see `decisions.md`).
 
 Testing: RSpec heavy; new request specs for API; CLI specs.
 Blocks: everything downstream that talks to the registry.
@@ -166,16 +167,16 @@ Depends on Phase 6, Phase 3.
 - **9.2** Retire `Event.event_type: 'huddle'` — data migration moves existing rows into `huddle_sessions`; leaves `events.huddle_session_id` FK for Kalendar linkage.
 - **9.3** New `config/korners/huddle.yaml` with `emits: [huddle.started]`; Kalendar `listens: [huddle.started]`. Add tiny in-process event bus `Kronk::KornerEvents.publish/subscribe` sufficient for §6.
 - **9.4** Huddle korner UI moves to `/hub/huddle`.
-- **9.5** Event-bus wiring + runtime gate. The 9.3 `publish/subscribe` primitive shipped (`lib/kronk/korner_events.rb`), but the wiring did not — there are zero `KornerEvents.subscribe` calls in application code (only in specs), so every emit publishes into a void. Add the boot initializer that reads each manifest's `listens:` and registers real `Kronk::KornerEvents.subscribe` handlers. Upgrade `detect_orphan_listens` (`lib/mastodon/cli/korners.rb:323`) to check registered subscribers, not manifest text. Reconcile declared-but-unpublished `emits` (Marketplace declares 5, publishes 0 — the Marketplace/InFlow emit *implementation* lands in Phase 10; 9.5 owns only the gate) and unwired `listens` (Huddle → `kalendar.event.created`): wire or drop each. Gate: a declared `emits`/`listens` with no runtime counterpart = `doctor` fail.
+- **9.5** Event-bus wiring + runtime gate. The 9.3 `publish/subscribe` primitive shipped (`lib/kronk/korner_events.rb`), but the wiring did not — there are zero `KornerEvents.subscribe` calls in application code (only in specs), so every emit publishes into a void. Add the boot initializer that reads each manifest's `listens:` and registers real `Kronk::KornerEvents.subscribe` handlers. Upgrade `detect_orphan_listens` (`lib/mastodon/cli/korners.rb:323`) to check registered subscribers, not manifest text. Reconcile declared-but-unpublished `emits` (Wachuneed declares 5, publishes 0 — the Wachuneed/InFlow emit _implementation_ lands in Phase 10; 9.5 owns only the gate) and unwired `listens` (Huddle → `kalendar.event.created`): wire or drop each. Gate: a declared `emits`/`listens` with no runtime counterpart = `doctor` fail.
 
-### Phase 10 — InFlow, Marketplace, Skeleton
+### Phase 10 — InFlow, Wachuneed, Skeleton
 
 Parallel PRs, single phase for scheduling clarity.
 
 - **10.1** `kosmic_updates` model + migration + scheduled job projecting daily InFlow update into feed.
 - **10.2** InFlow manifest updated with `emits`/`feed_projection`.
-- **10.3** Marketplace greenfield — `listings`, `listing_photos`, `listing_offers` tables. Reference implementation.
-- **10.4** Marketplace manifest fully populated + `feed_projection.card = marketplace_card` wired.
+- **10.3** Wachuneed greenfield — `listings`, `listing_photos`, `listing_offers` tables. Reference implementation.
+- **10.4** Wachuneed manifest fully populated + `feed_projection.card = wachuneed_card` wired.
 - **10.5** `config/korners/tree.yaml` marked `enforced: false`; Skeleton UI ships behind flag.
 
 ### Phase 11 — Org space + Profile rebuild
@@ -213,18 +214,18 @@ Tiny PRs; each ships a manifest with `enforced: false` and a "coming soon" card.
 
 ## Risk register
 
-| # | Risk | Mitigation |
-|---|---|---|
-| R1 | Explicit-row backfill for tune-in (`korner_tune_ins` × all users × all korners) locks DB at scale. | **Resolved:** use `korner_tune_outs` (implicit-default) instead. Absence = tuned in. Matches Tal's decision and eliminates the backfill cost. |
-| R2 | Boot-time validator explodes with expanded §1 manifest fields. | Parser null-safe in 1.2; boot check remains warn-only (`Rails.logger.warn`), never raises. `doctor` CLI is where errors become non-zero. |
-| R3 | URL migration breaks external deep links (federation, email, iOS PWA). | Every old route 301s to `/hub/<slug>` for the full 2.x cycle. Federation URLs continue account-scoped, unaffected. |
-| R4 | Nudges cutover (Phase 5) removes the bell — user surprise. | Legacy tab under `/hub/nudges?tab=legacy` mounts the entire old UI for 2.0.0. Sunset call in 2.1.0 with warning banner. Shadow dogfood ≥3 days before 5.5. |
-| R5 | `discussion_status_id` rename risks silent read failures in ActivityPub serializers. | Column aliased and dual-written; deprecated getter logs warning at first read; old column dropped only in 2.1.0. Federation roundtrip integration spec. |
-| R6 | Storybook drift as tokens + korner cards change simultaneously in Phase 2. | Stories updated in the same PR that changes the token/component. CI runs Storybook build to catch dangling stories. |
-| R7 | `tsc --noEmit` OOM on portal during hooks (documented at 2048MB). Phase 2 sweep + Phase 5 renames spike memory. | Route commits through mainframe per CLAUDE.md; break sweep PR (2.3) into per-directory series if `tsc` fails. |
-| R8 | Meilisearch adds a new CI service (Phase 7.3). | Tag Meilisearch specs; run nightly, not per-PR, until Phase 14 flips default. Elasticsearch remains CI default. |
-| R9 | Feature flag mechanism assumed by later phases (tune-in, search backend, org space visibility) not built. | **Resolved:** built in Phase 0.3 as `Kronk::FeatureFlags`. All later phases depend on it existing before their PRs open. |
-| R10 | Kuestions data migration (Phase 8.4) irrecoverably loses answer visibility for legacy questions. | Dual-read one release: old post_type=answer statuses continue to resolve; new answers land in `answers` table. Shadow-tested backfill before landing. |
+| #   | Risk                                                                                                            | Mitigation                                                                                                                                                 |
+| --- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | Explicit-row backfill for tune-in (`korner_tune_ins` × all users × all korners) locks DB at scale.              | **Resolved:** use `korner_tune_outs` (implicit-default) instead. Absence = tuned in. Matches Tal's decision and eliminates the backfill cost.              |
+| R2  | Boot-time validator explodes with expanded §1 manifest fields.                                                  | Parser null-safe in 1.2; boot check remains warn-only (`Rails.logger.warn`), never raises. `doctor` CLI is where errors become non-zero.                   |
+| R3  | URL migration breaks external deep links (federation, email, iOS PWA).                                          | Every old route 301s to `/hub/<slug>` for the full 2.x cycle. Federation URLs continue account-scoped, unaffected.                                         |
+| R4  | Nudges cutover (Phase 5) removes the bell — user surprise.                                                      | Legacy tab under `/hub/nudges?tab=legacy` mounts the entire old UI for 2.0.0. Sunset call in 2.1.0 with warning banner. Shadow dogfood ≥3 days before 5.5. |
+| R5  | `discussion_status_id` rename risks silent read failures in ActivityPub serializers.                            | Column aliased and dual-written; deprecated getter logs warning at first read; old column dropped only in 2.1.0. Federation roundtrip integration spec.    |
+| R6  | Storybook drift as tokens + korner cards change simultaneously in Phase 2.                                      | Stories updated in the same PR that changes the token/component. CI runs Storybook build to catch dangling stories.                                        |
+| R7  | `tsc --noEmit` OOM on portal during hooks (documented at 2048MB). Phase 2 sweep + Phase 5 renames spike memory. | Route commits through mainframe per CLAUDE.md; break sweep PR (2.3) into per-directory series if `tsc` fails.                                              |
+| R8  | Meilisearch adds a new CI service (Phase 7.3).                                                                  | Tag Meilisearch specs; run nightly, not per-PR, until Phase 14 flips default. Elasticsearch remains CI default.                                            |
+| R9  | Feature flag mechanism assumed by later phases (tune-in, search backend, org space visibility) not built.       | **Resolved:** built in Phase 0.3 as `Kronk::FeatureFlags`. All later phases depend on it existing before their PRs open.                                   |
+| R10 | Kuestions data migration (Phase 8.4) irrecoverably loses answer visibility for legacy questions.                | Dual-read one release: old post_type=answer statuses continue to resolve; new answers land in `answers` table. Shadow-tested backfill before landing.      |
 
 ---
 
@@ -250,9 +251,10 @@ Files that will be modified or authored:
 - `CLAUDE.md` — update Spaces section reference (Phase 2.5)
 
 Files existing on `dev/chris` that will need decisions **before** Phase 1 lands:
+
 - `app/javascript/mastodon/components/status_korner_card.tsx` (untracked WIP by Tal — needs commit or discard)
 - `app/javascript/mastodon/components/status_booth_card.tsx` (untracked WIP)
-- `app/javascript/mastodon/components/status_marketplace_card.tsx` (untracked WIP)
+- `app/javascript/mastodon/components/status_wachuneed_card.tsx` (untracked WIP)
 - `app/javascript/mastodon/features/questions/answers_page.tsx` (untracked WIP)
 - Various SCSS partials (untracked WIP)
 
@@ -263,17 +265,20 @@ Coordinated separately from this plan — Tal owns the disposition.
 ## Verification
 
 **Per-PR:**
+
 - `test-ruby`, `test-js`, `test-migrations` CI workflows pass on every PR.
 - Pre-commit hooks (prettier, eslint, stylelint, `tsc --noEmit`) pass.
 - New behaviour has RSpec (backend) and/or Vitest (frontend) coverage.
 - Migrations have `up`/`down` specs where relevant.
 
 **Per-phase:**
+
 - Merge integration-branch tip into shadow env (`~/deploy-staging.sh rebuild/2.0.0`).
 - Manual walkthrough of the surface each phase touches (e.g., Phase 5 = walk every notification path; Phase 3 = walk every korner's redirect).
 - `bin/tootctl korners doctor` returns clean for enforced korners after each phase touching manifests.
 
 **Pre-launch (Phase 14):**
+
 - Full-fleet shadow dogfood by Tal + core contributors (~3 days).
 - `bin/tootctl korners doctor` clean across all 10 enforced korners.
 - Meilisearch index rebuilt and searchable on shadow.
@@ -282,6 +287,7 @@ Coordinated separately from this plan — Tal owns the disposition.
 - Documentation live: `kronk_korner_spec.md` v1.0 published, `content/kronk/` seeded, CHANGELOG landed.
 
 **Post-launch:**
+
 - 2.0.0 tagged; `mastodon.kronk.info` DNS flipped to `kronk.info`.
 - Legacy tab (`/hub/nudges?tab=legacy`) monitored for 30 days.
 - `bin/tootctl korners doctor` runs on cron; drift alerts to instance admins.

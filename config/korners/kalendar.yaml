@@ -100,11 +100,10 @@ nodes:
     url: /hub/kalendar/:id
     lifecycle: live
     spa: true
-    spa: true
     links:
-      - to: marketplace.index
+      - to: wachuneed.index
         kind: creates
-        description: Events can list tickets on Marketplace.
+        description: Events can list tickets on Wachuneed.
       - to: huddle.index
         kind: related
         description: Huddles are scheduled through Kalendar and emit calendar events.
