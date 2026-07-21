@@ -5,7 +5,11 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useHistory, useLocation } from 'react-router-dom';
 
-import { apiCreateKommonsProposal, apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
+import {
+  apiCreateKommonsProposal,
+  apiCreateProposalTask,
+  apiGetKommonsNodes,
+} from 'mastodon/api/kommons_nodes';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { useKorner } from 'mastodon/hooks/useKorner';
@@ -21,6 +25,11 @@ const messages = defineMessages({
     id: 'propose.body_placeholder',
     defaultMessage: 'What should change, and why?',
   },
+  stepPlaceholder: {
+    id: 'propose.step_placeholder',
+    defaultMessage: 'A step to complete',
+  },
+  removeStep: { id: 'propose.remove_step', defaultMessage: 'Remove step' },
 });
 
 const TYPES = ['small', 'medium', 'large'] as const;
@@ -73,10 +82,29 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [type, setType] = useState<ProposalType>('small');
+  // The steps: an extendable list, each becomes a Task on the new proposal.
+  // Start with one empty row so the affordance is visible.
+  const [steps, setSteps] = useState<string[]>(['']);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const canSubmit = title.trim().length > 0 && body.trim().length > 0 && !submitting;
+
+  const handleStepChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const i = Number(e.currentTarget.dataset.index);
+      const value = e.target.value;
+      setSteps((prev) => prev.map((s, idx) => (idx === i ? value : s)));
+    },
+    [],
+  );
+  const addStep = useCallback(() => {
+    setSteps((prev) => [...prev, '']);
+  }, []);
+  const removeStep = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const i = Number(e.currentTarget.dataset.index);
+    setSteps((prev) => prev.filter((_, idx) => idx !== i));
+  }, []);
 
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,6 +128,7 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       if (!canSubmit) return;
       setSubmitting(true);
       setError(null);
+      const cleanSteps = steps.map((s) => s.trim()).filter(Boolean);
       apiCreateKommonsProposal({
         title: title.trim(),
         body: body.trim(),
@@ -108,7 +137,12 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         // the tree. Unscoped proposals carry no node.
         ...(targetNodeId ? { node_id: targetNodeId } : {}),
       })
-        .then((created) => {
+        .then(async (created) => {
+          // Each step becomes a Task, in order. Best-effort: a failed step
+          // doesn't lose the proposal — it's already created.
+          for (const step of cleanSteps) {
+            await apiCreateProposalTask(created.id, step);
+          }
           history.push(`/hub/kommons/p/${created.id}`);
           return undefined;
         })
@@ -119,7 +153,7 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           setSubmitting(false);
         });
     },
-    [canSubmit, title, body, type, targetNodeId, history],
+    [canSubmit, title, body, type, steps, targetNodeId, history],
   );
 
   return (
@@ -175,16 +209,65 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
         <label className='propose-page__field'>
           <span className='propose-page__label'>
-            <FormattedMessage id='propose.body_label' defaultMessage='Details' />
+            <FormattedMessage
+              id='propose.body_label'
+              defaultMessage='Description'
+            />
           </span>
           <textarea
             className='propose-page__textarea'
             value={body}
             onChange={handleBodyChange}
             placeholder={intl.formatMessage(messages.bodyPlaceholder)}
-            rows={8}
+            rows={5}
           />
         </label>
+
+        <fieldset className='propose-page__field'>
+          <span className='propose-page__label'>
+            <FormattedMessage id='propose.steps_label' defaultMessage='Steps' />
+          </span>
+          <p className='propose-page__hint'>
+            <FormattedMessage
+              id='propose.steps_hint'
+              defaultMessage='Break the proposal into steps to tick off as each is done. Optional — add as many as you need.'
+            />
+          </p>
+          <ol className='propose-page__steps'>
+            {steps.map((step, i) => (
+              <li key={i} className='propose-page__step'>
+                <span className='propose-page__step-num'>{i + 1}</span>
+                <input
+                  type='text'
+                  className='propose-page__input'
+                  value={step}
+                  data-index={i}
+                  onChange={handleStepChange}
+                  placeholder={intl.formatMessage(messages.stepPlaceholder)}
+                  maxLength={240}
+                />
+                {steps.length > 1 && (
+                  <button
+                    type='button'
+                    className='propose-page__step-remove'
+                    data-index={i}
+                    onClick={removeStep}
+                    aria-label={intl.formatMessage(messages.removeStep)}
+                  >
+                    ×
+                  </button>
+                )}
+              </li>
+            ))}
+          </ol>
+          <button
+            type='button'
+            className='propose-page__add-step'
+            onClick={addStep}
+          >
+            <FormattedMessage id='propose.add_step' defaultMessage='+ Add step' />
+          </button>
+        </fieldset>
 
         <fieldset className='propose-page__field'>
           <span className='propose-page__label'>
