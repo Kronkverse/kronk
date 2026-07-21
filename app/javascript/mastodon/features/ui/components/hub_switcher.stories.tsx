@@ -2,8 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { HubSwitcher } from './hub_switcher';
 
-// Kronk's Feed / Profile / Hub three-way switcher. Sits centred in the
-// top strip on desktop, drops to a bottom tab bar on mobile.
+// Kronk's Me / Home / Hub / Nudges four-way switcher. Renders the
+// Membrane (flat pillars + gliding pool of light) on desktop, drops to
+// a bottom tab bar on mobile.
 
 const meta = {
   title: 'Chrome/HubSwitcher',
