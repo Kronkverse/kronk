@@ -4,12 +4,15 @@ import { FormattedMessage, useIntl, defineMessages } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import type {
   ApiNudgeMessageJSON,
   ApiNudgeStreamItem,
 } from 'mastodon/api_types/nudges_conversations';
 import { Avatar } from 'mastodon/components/avatar';
+import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
+import EmojiPickerDropdown from 'mastodon/features/compose/containers/emoji_picker_dropdown_container';
 import { me } from 'mastodon/initial_state';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
@@ -19,11 +22,6 @@ const messages = defineMessages({
     defaultMessage: 'Add reaction',
   },
 });
-
-// Small preset. Custom-picker lands later; for a v1 shell three
-// common expressions cover most reactions and stay well under the
-// server-enforced 3-DISTINCT cap.
-const PRESETS = ['👍', '❤️', '🎉'];
 
 const REACTION_CAP = 3;
 
@@ -161,19 +159,11 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
               onToggle={handleToggle}
             />
           ))}
-          {onReact && (
-            <div className='nudges-msg__react-picker' role='group'>
-              {PRESETS.filter(
-                (symbol) => !grouped.some((g) => g.symbol === symbol) && canAdd,
-              ).map((symbol) => (
-                <AddReactionButton
-                  key={symbol}
-                  symbol={symbol}
-                  label={intl.formatMessage(messages.addReaction)}
-                  onAdd={handleToggle}
-                />
-              ))}
-            </div>
+          {onReact && canAdd && (
+            <AddReactionPicker
+              onPick={handleToggle}
+              label={intl.formatMessage(messages.addReaction)}
+            />
           )}
         </div>
       )}
@@ -274,30 +264,40 @@ const MessageMedia: React.FC<{
   );
 };
 
-interface AddReactionButtonProps {
-  symbol: string;
+interface AddReactionPickerProps {
   label: string;
-  onAdd: (symbol: string, mine: boolean) => void;
+  onPick: (symbol: string, mine: boolean) => void;
 }
 
-const AddReactionButton: React.FC<AddReactionButtonProps> = ({
-  symbol,
+// Wraps Mastodon's Compose EmojiPickerDropdown (same picker Compose
+// uses) so the full emoji palette + search + recents come along.
+// EmojiPickerDropdown owns its trigger button + positioning; we
+// just hand it the "+" icon and translate its onPickEmoji callback
+// into our reaction-toggle contract.
+const AddReactionPicker: React.FC<AddReactionPickerProps> = ({
   label,
-  onAdd,
+  onPick,
 }) => {
-  const handleClick = useCallback(() => {
-    onAdd(symbol, false);
-  }, [symbol, onAdd]);
+  const handlePick = useCallback(
+    (emoji: { native?: string; shortcode?: string }) => {
+      // Mastodon's picker returns Unicode via `native` and custom
+      // emojis via `shortcode`; we only accept the Unicode ones here
+      // — custom-emoji reactions live in Announcements-land, not
+      // here (yet).
+      const symbol = emoji.native?.replaceAll(':', '');
+      if (!symbol) return;
+      onPick(symbol, false);
+    },
+    [onPick],
+  );
 
   return (
-    <button
-      type='button'
-      className='nudges-msg__react-add'
-      aria-label={label}
-      onClick={handleClick}
-    >
-      {symbol}
-    </button>
+    <span className='nudges-msg__react-add' title={label}>
+      <EmojiPickerDropdown
+        onPickEmoji={handlePick}
+        button={<Icon id='plus' icon={AddIcon} />}
+      />
+    </span>
   );
 };
 
