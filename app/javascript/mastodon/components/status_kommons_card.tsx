@@ -34,12 +34,6 @@ const STATUS_LABELS: Record<string, string> = {
   annulled: 'Annulled',
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  small: 'Small',
-  medium: 'Medium',
-  large: 'Large',
-};
-
 interface ProposalSummary {
   id: string;
   title: string;
@@ -70,7 +64,6 @@ export const StatusKommonsCard: React.FC<{ proposal: ProposalSummary }> = ({
         icon: ToysFanIcon,
         iconId: 'toys_fan',
         label: intl.formatMessage(messages.badge),
-        tag: TYPE_LABELS[proposal.proposal_type] ?? proposal.proposal_type,
       }}
     >
       <div className='status-korner-card__body status-kommons-card__body'>
