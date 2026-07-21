@@ -17,6 +17,13 @@ class Api::V1::ProposalsController < Api::BaseController
 
     scope = scope.with_category(params[:category]) if params[:category].present? && Proposal::CATEGORY_VALUES.include?(params[:category])
 
+    # Node-scoped listing: the Kommons tree's page-node panel asks for the
+    # proposals anchored to one node (`node_id`), i.e. the feedback suggesting
+    # changes to that page. When present, the viewer's cross-node archived
+    # proposals are not appended — this is a single page's list, not the board.
+    node_scoped = params[:node_id].present?
+    scope = scope.where(node_id: params[:node_id]) if node_scoped
+
     scope = case params[:sort]
             when 'newest'         then scope.recent
             when 'most_discussed' then scope.most_discussed
@@ -24,7 +31,7 @@ class Api::V1::ProposalsController < Api::BaseController
             end
 
     active = scope.limit(40).to_a
-    own_archived = Proposal.archived.where(created_by_account_id: current_account.id).order(archived_at: :desc).to_a
+    own_archived = node_scoped ? [] : Proposal.archived.where(created_by_account_id: current_account.id).order(archived_at: :desc).to_a
     @proposals = active + own_archived
     render json: @proposals, each_serializer: REST::ProposalSerializer
   end

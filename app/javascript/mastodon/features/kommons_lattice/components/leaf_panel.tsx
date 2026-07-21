@@ -1,12 +1,13 @@
 import { FormattedMessage } from 'react-intl';
 
+import { NodeProposals } from '../../kommons_skeleton/components/node_proposals';
 import type { MapNode } from '../../kommons_skeleton/data/layout';
 
 // The leaf panel (spec §7). Selecting a node with a URL — a real page, not a
 // branch — opens this in the next column, attached to its row, so content sits
-// in the lattice rather than a modal or a side rail. Proposals list and the
-// cross-branch "wired to" list are later additions; this is identity plus the
-// plant-feedback entry point.
+// in the lattice rather than a modal or a side rail. The proposals list drills
+// from the page to the feedback on it; the cross-branch "wired to" list is a
+// later addition.
 interface Props {
   node: MapNode;
   x: number;
@@ -52,6 +53,8 @@ export const LeafPanel: React.FC<Props> = ({
         values={{ count: node.count }}
       />
     </div>
+
+    <NodeProposals nodeId={node.id} />
 
     <button type='button' className='lattice-panel__plant' onClick={onPlant}>
       <FormattedMessage

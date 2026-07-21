@@ -5,21 +5,14 @@ import { defineMessages, useIntl } from 'react-intl';
 import type { KommonsNode, LinkKind } from '../data/nodes';
 import { findNode } from '../data/nodes';
 
+import { NodeProposals } from './node_proposals';
+
 const messages = defineMessages({
   url: { id: 'kommons_skeleton.node.url', defaultMessage: 'URL' },
   status: { id: 'kommons_skeleton.node.status', defaultMessage: 'Status' },
   file: {
     id: 'kommons_skeleton.node.file',
     defaultMessage: 'Plant feedback on this page',
-  },
-  empty: {
-    id: 'kommons_skeleton.node.empty',
-    defaultMessage: 'No open proposals on this page yet. Plant the first one.',
-  },
-  mockOpen: {
-    id: 'kommons_skeleton.node.mock_open',
-    defaultMessage:
-      '{count, plural, one {# open proposal} other {# open proposals}} on this page (backend pending).',
   },
   lifecycleLive: { id: 'kommons_skeleton.lifecycle.live', defaultMessage: 'Live' },
   lifecycleSoon: { id: 'kommons_skeleton.lifecycle.soon', defaultMessage: 'Soon' },
@@ -146,17 +139,7 @@ export const NodeDetail: React.FC<Props> = ({
       </dl>
 
       <div className='kommons-skeleton__detail-proposals'>
-        {node.openProposals > 0 ? (
-          <p>
-            {intl.formatMessage(messages.mockOpen, {
-              count: node.openProposals,
-            })}
-          </p>
-        ) : (
-          <p className='kommons-skeleton__detail-empty'>
-            {intl.formatMessage(messages.empty)}
-          </p>
-        )}
+        <NodeProposals nodeId={node.id} />
       </div>
 
       {links.length > 0 && (
