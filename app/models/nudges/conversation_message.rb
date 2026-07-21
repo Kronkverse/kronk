@@ -76,8 +76,22 @@ module Nudges
       conversation.update_column(:last_activity_at, created_at)
     end
 
+    # Bump the shared Mate counter. If the increment crosses a milestone,
+    # drop a pinned event into the stream so the pair sees it (§Surfaces
+    # 3 — milestone pins are Mate-only). Attributed to the message
+    # author — they tipped it over.
     def increment_relationship_counter
-      Nudges::Relationship.for_pair(conversation.account_a_id, conversation.account_b_id).record_message!
+      relationship = Nudges::Relationship.for_pair(conversation.account_a_id, conversation.account_b_id)
+      threshold    = relationship.record_message!
+      return unless threshold
+
+      Nudges::Event.create!(
+        conversation: conversation,
+        actor_account: author_account,
+        source_korner_slug: 'nudges',
+        verb: "milestone_#{threshold}",
+        interaction: 'passive'
+      )
     end
   end
 end

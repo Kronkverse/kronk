@@ -34,6 +34,22 @@ RSpec.describe Nudges::ConversationMessage do
       end.to change { Nudges::Relationship.for_pair(alice.id, bob.id).message_count }.by(1)
     end
 
+    it 'drops a milestone pin into the stream when a threshold is crossed' do
+      # Prime the counter to just below the first milestone so the next
+      # message trips it.
+      Nudges::Relationship.for_pair(alice.id, bob.id).update!(message_count: 249)
+
+      expect do
+        described_class.create!(conversation: convo, author_account: alice, body: 'crosses 250')
+      end.to change { convo.events.where("verb LIKE 'milestone_%'").count }.by(1)
+
+      pin = convo.events.where("verb LIKE 'milestone_%'").last
+      expect(pin.verb).to eq('milestone_250')
+      expect(pin.actor_account).to eq(alice)
+      expect(pin.source_korner_slug).to eq('nudges')
+      expect(pin.interaction).to eq('passive')
+    end
+
     it 'inherits expiry from the conversation' do
       convo.update!(expires_at: 1.hour.from_now)
       msg = described_class.create!(conversation: convo, author_account: alice, body: 'hi')

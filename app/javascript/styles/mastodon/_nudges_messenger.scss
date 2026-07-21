@@ -332,6 +332,41 @@
   color: var(--text-muted);
 }
 
+// ── Milestone pin ────────────────────────────────────────────────
+// Rendered when a message tips the Mate pair past a milestone
+// threshold (250/500/1_000/2_000/4_000/8_000/10_000 combined). Centered
+// so it reads distinct from message bubbles + inline events.
+.nudges-milestone {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--kronk-purple-bright);
+  border-radius: var(--radius-round);
+  background: color-mix(
+    in oklab,
+    var(--kronk-purple-bright) 15%,
+    var(--surface-elevated)
+  );
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  margin: 0.5rem 0;
+}
+
+.nudges-milestone__marker {
+  color: var(--kronk-purple-bright);
+}
+
+.nudges-milestone__text {
+  font-weight: 500;
+}
+
+.nudges-milestone__time {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
 // ── Inline event ─────────────────────────────────────────────────
 .nudges-event {
   display: flex;

@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 
-import { useIntl, defineMessages } from 'react-intl';
+import { FormattedMessage, useIntl, defineMessages } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
@@ -201,9 +201,19 @@ const ReactionChip: React.FC<ReactionChipProps> = ({
   );
 };
 
+// Milestone events carry verb `milestone_<threshold>` and render as a
+// centered pin distinct from ordinary korner events. Threshold is
+// parsed off the verb; the source korner slug on these events is
+// `nudges` itself.
+const MILESTONE_PREFIX = 'milestone_';
+
 const EventItem: React.FC<{
   item: Extract<ApiNudgeStreamItem, { kind: 'event' }>;
 }> = ({ item }) => {
+  if (item.verb.startsWith(MILESTONE_PREFIX)) {
+    return <MilestonePin item={item} />;
+  }
+
   const actor = createAccountFromServerJSON(item.actor);
   const actorName = actor.display_name || actor.username;
 
@@ -229,6 +239,30 @@ const EventItem: React.FC<{
           )}
       </span>
       <span className='nudges-event__time'>
+        <RelativeTimestamp timestamp={item.created_at} short />
+      </span>
+    </div>
+  );
+};
+
+const MilestonePin: React.FC<{
+  item: Extract<ApiNudgeStreamItem, { kind: 'event' }>;
+}> = ({ item }) => {
+  const threshold = item.verb.slice(MILESTONE_PREFIX.length);
+
+  return (
+    <div className='nudges-milestone' role='note'>
+      <span className='nudges-milestone__marker' aria-hidden>
+        ✦
+      </span>
+      <span className='nudges-milestone__text'>
+        <FormattedMessage
+          id='nudges.milestone'
+          defaultMessage='{count, number} messages together'
+          values={{ count: Number(threshold) }}
+        />
+      </span>
+      <span className='nudges-milestone__time'>
         <RelativeTimestamp timestamp={item.created_at} short />
       </span>
     </div>
