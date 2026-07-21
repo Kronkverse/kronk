@@ -167,6 +167,27 @@
   font-weight: 500;
 }
 
+.nudges-row--muted {
+  opacity: 0.6;
+
+  .nudges-row__preview,
+  .nudges-row__name {
+    color: var(--text-muted);
+  }
+}
+
+.nudges-row__muted-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  color: var(--text-muted);
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
 .nudges-row__badge {
   flex: 0 0 auto;
   min-width: 1.25rem;
@@ -248,7 +269,8 @@
   font-size: 0.85rem;
 }
 
-.nudges-conversation__leave {
+.nudges-conversation__leave,
+.nudges-conversation__mute {
   flex: 0 0 auto;
   padding: 0.25rem 0.75rem;
   border: 1px solid var(--border-default);
@@ -260,10 +282,18 @@
   transition:
     color var(--dur-fast) var(--ease-out),
     border-color var(--dur-fast) var(--ease-out);
+}
 
-  &:hover {
-    color: var(--warning-red);
-    border-color: var(--warning-red);
+.nudges-conversation__leave:hover {
+  color: var(--warning-red);
+  border-color: var(--warning-red);
+}
+
+.nudges-conversation__mute {
+  &:hover,
+  &[aria-pressed='true'] {
+    color: var(--accent);
+    border-color: var(--accent);
   }
 }
 

@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
+import MutedIcon from '@/material-icons/400-24px/volume_off-fill.svg?react';
 import type {
   ApiNudgeConversationJSON,
   ApiNudgeKrewJSON,
@@ -30,7 +31,7 @@ export const ConversationRow: React.FC<ConversationRowProps> = ({
     <li
       className={`nudges-row ${active ? 'nudges-row--active' : ''} ${
         conversation.unread_count > 0 ? 'nudges-row--unread' : ''
-      }`}
+      } ${conversation.muted ? 'nudges-row--muted' : ''}`}
     >
       <button
         type='button'
@@ -47,6 +48,15 @@ export const ConversationRow: React.FC<ConversationRowProps> = ({
         <span className='nudges-row__body'>
           <span className='nudges-row__head'>
             <span className='nudges-row__name'>{titleFor(conversation)}</span>
+            {conversation.muted && (
+              <span
+                className='nudges-row__muted-icon'
+                aria-label='Muted'
+                title='Muted'
+              >
+                <MutedIcon />
+              </span>
+            )}
             {conversation.last_activity_at && (
               <span className='nudges-row__time'>
                 <RelativeTimestamp

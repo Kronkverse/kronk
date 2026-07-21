@@ -10,9 +10,16 @@
 # per-viewer unread + orient "other party" for Mate.
 class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
   attributes :id, :kind, :last_activity_at, :expires_at, :unread_count,
-             :preview, :latest_kind, :krew
+             :preview, :latest_kind, :muted, :krew
 
   belongs_to :other_account, serializer: REST::AccountSerializer
+
+  # Krew-only per-viewer mute state. Always false for Mate (no mute).
+  def muted
+    return false unless viewer
+
+    object.muted_for?(viewer)
+  end
 
   def id
     object.id.to_s

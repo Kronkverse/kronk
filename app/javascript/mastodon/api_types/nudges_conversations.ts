@@ -17,6 +17,7 @@ export interface ApiNudgeConversationJSON {
   unread_count: number;
   preview: string;
   latest_kind: 'message' | 'event' | null;
+  muted: boolean;
   other_account: ApiAccountJSON | null;
   krew: ApiNudgeKrewJSON | null;
 }

@@ -14,6 +14,9 @@ module Nudges
 
     validates :account_id, uniqueness: { scope: :conversation_id }
 
+    scope :muted,   -> { where(muted: true) }
+    scope :unmuted, -> { where(muted: false) }
+
     before_validation :ensure_joined_at, on: :create
 
     private
