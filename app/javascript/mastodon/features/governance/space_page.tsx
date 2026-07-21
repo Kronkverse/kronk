@@ -7,6 +7,8 @@ import { Link, useParams } from 'react-router-dom';
 
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
+import { apiGetKorner } from 'mastodon/api/korners';
+import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { NodeProposals } from 'mastodon/features/kommons_skeleton/components/node_proposals';
@@ -24,17 +26,41 @@ const messages = defineMessages({
   links: { id: 'space.links', defaultMessage: 'Connected spaces' },
 });
 
-// The Space page (/hub/kommons/space/:slug). Opened from a korner in the
-// Kommons tree: the "why / who / what's being proposed" view of a space, so
-// members can engage with how Kronk evolves. The tree is the map; this is the
-// place. Reads identity + purpose + steward from the korner manifest (already
-// in the store), the korner's open proposals, and its links to other spaces.
+// The Space page (/hub/kommons/space/:slug). Opened from a korner OR a
+// space-pillar (Nudges, Feed…) in the Kommons tree: the "why / who / what's
+// being proposed" view of a space, so members can engage with how Kronk
+// evolves. The tree is the map; this is the place.
+//
+// Korners live in the client store (`useKorner`). Core pillars are excluded
+// from that store (they have no Hub tile) but are still fetchable by slug via
+// the show endpoint, so we lazy-load the manifest when the store misses.
 const SpacePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const { slug = '' } = useParams<{ slug: string }>();
   const intl = useIntl();
-  const korner = useKorner(slug);
+  const stored = useKorner(slug);
   const kornerIcon = useKornerIcon(slug);
+  const [fetched, setFetched] = useState<ApiKornerJSON | null>(null);
+  const korner = stored ?? fetched;
   const [nodes, setNodes] = useState<ApiKommonsNode[]>([]);
+
+  useEffect(() => {
+    // Already in the store (a korner) — no fetch needed.
+    if (stored || !slug) return undefined;
+    let active = true;
+    setFetched(null);
+    apiGetKorner(slug)
+      .then((m) => {
+        if (active) setFetched(m);
+        return undefined;
+      })
+      .catch(() => {
+        // A slug with no manifest (or a fetch error) just renders the fallback
+        // identity (slug as name, no purpose).
+      });
+    return () => {
+      active = false;
+    };
+  }, [stored, slug]);
 
   useEffect(() => {
     let active = true;
@@ -81,6 +107,16 @@ const SpacePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
   const name = korner?.name ?? slug;
 
+  // Where "Visit" goes: a korner defaults to /hub/<slug>; a core pillar
+  // declares its own mount (/nudges, /home). A parameterised mount (profile's
+  // /@:acct) has no single destination, so we omit the Visit link there.
+  const mount = korner?.mount;
+  const visitPath = mount
+    ? mount.includes(':')
+      ? null
+      : mount
+    : `/hub/${slug}`;
+
   return (
     <Column>
       <ColumnHeader
@@ -102,13 +138,15 @@ const SpacePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           ) : (
             blurb && <p className='space-page__purpose'>{blurb}</p>
           )}
-          <Link to={`/hub/${slug}`} className='space-page__visit'>
-            <FormattedMessage
-              id='space.visit'
-              defaultMessage='Visit {name}'
-              values={{ name }}
-            />
-          </Link>
+          {visitPath && (
+            <Link to={visitPath} className='space-page__visit'>
+              <FormattedMessage
+                id='space.visit'
+                defaultMessage='Visit {name}'
+                values={{ name }}
+              />
+            </Link>
+          )}
         </header>
 
         {korner?.steward && (
