@@ -126,9 +126,20 @@ const SpacePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         )}
 
         <section className='space-page__section'>
-          <h2 className='space-page__heading'>
-            {intl.formatMessage(messages.proposals)}
-          </h2>
+          <div className='space-page__section-head'>
+            <h2 className='space-page__heading'>
+              {intl.formatMessage(messages.proposals)}
+            </h2>
+            <Link
+              to={`/hub/kommons/propose?space=${slug}`}
+              className='space-page__propose'
+            >
+              <FormattedMessage
+                id='space.propose'
+                defaultMessage='Plant a proposal'
+              />
+            </Link>
+          </div>
           <NodeProposals korner={slug} />
         </section>
 
