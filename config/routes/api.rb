@@ -241,6 +241,7 @@ namespace :api, format: false do
       resources :conversations, only: [:index, :show] do
         member do
           post :read
+          post :leave
         end
         resources :messages, only: [:create, :destroy] do
           resources :reactions, only: [:create], controller: :reactions

@@ -2,10 +2,13 @@ import React, { useEffect, useRef, useCallback } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
+import { useHistory } from 'react-router-dom';
+
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import {
   apiSendNudgeMessage,
   apiDeleteNudgeMessage,
+  apiLeaveNudgeConversation,
   apiMarkNudgeConversationRead,
   apiAddNudgeReaction,
   apiRemoveNudgeReaction,
@@ -175,6 +178,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   onMessageSent,
 }) => {
   const intl = useIntl();
+  const history = useHistory();
   const streamEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom on load / message.
@@ -246,6 +250,23 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     },
     [detail, onMessageSent],
   );
+
+  const handleLeaveKrew = useCallback(() => {
+    if (
+      !window.confirm(
+        intl.formatMessage({
+          id: 'nudges.confirm_leave_krew',
+          defaultMessage: 'Leave this Krew? You will also leave the group.',
+        }),
+      )
+    ) {
+      return;
+    }
+    void (async () => {
+      await apiLeaveNudgeConversation(conversationId);
+      history.push('/nudges');
+    })();
+  }, [conversationId, history, intl]);
 
   const handleReact = useCallback(
     async (message: ApiNudgeMessageJSON, symbol: string) => {
@@ -328,6 +349,13 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
                 />
               </span>
             )}
+            <button
+              type='button'
+              className='nudges-conversation__leave'
+              onClick={handleLeaveKrew}
+            >
+              <FormattedMessage id='nudges.krew.leave' defaultMessage='Leave' />
+            </button>
           </>
         ) : (
           <>

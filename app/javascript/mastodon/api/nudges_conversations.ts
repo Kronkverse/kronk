@@ -33,6 +33,11 @@ export const apiDeleteNudgeMessage = (
     `v1/nudges/conversations/${conversationId}/messages/${messageId}`,
   );
 
+export const apiLeaveNudgeConversation = (conversationId: string) =>
+  apiRequestPost<Record<string, never>>(
+    `v1/nudges/conversations/${conversationId}/leave`,
+  );
+
 // Upload a file to Mastodon's media endpoint. Returns the id we can
 // then attach to a Nudge message. Uses the axios instance directly
 // because FormData needs a multipart POST.
