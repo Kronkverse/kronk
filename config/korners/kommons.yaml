@@ -86,6 +86,13 @@ launch: # retrospective — Kommons predates launch cards
   blurb: '₭ommons — the space where structural moves are decided.'
   cta: 'Tap in'
 
+# The Ӂ menu's Post button while inside Kommons. Kommons' native create action
+# IS proposing: a proposal is Kommons content. On a Space page the composer
+# scopes the proposal to that space (the bubble appends ?space=<slug>).
+compose:
+  label: 'Plant a proposal'
+  route: '/hub/kommons/propose'
+
 feature_flag: # not-implemented — Kommons is unconditionally mounted on main
 enforced: true # framework: on this branch; boot validator enforces
 

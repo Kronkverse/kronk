@@ -43,6 +43,9 @@ const messages = defineMessages({
 const KORNER_RE = /^\/hub\/([a-z0-9-]+)(?:\/|$)/;
 const PROFILE_RE = /^\/@([^/]+)(?:\/|$)/;
 const FEED_RE = /^\/home(?:\/|$)/;
+// A Kommons Space page (/hub/kommons/space/:slug) — used to scope the propose
+// action to the space you're looking at.
+const SPACE_RE = /^\/hub\/kommons\/space\/([a-z0-9-]+)/;
 
 // ---- movable-button config ----
 const POS_KEY = 'kronk:menu-pos';
@@ -85,7 +88,13 @@ const usePostTarget = (): PostTarget | null => {
   return useMemo(() => {
     if (kornerSlug) {
       if (korner?.compose?.route && korner.compose.label) {
-        return { href: korner.compose.route, label: korner.compose.label };
+        // On a Kommons Space page the propose action carries the space it's
+        // about, so the composer lands the new proposal on that space.
+        const spaceMatch = SPACE_RE.exec(location.pathname);
+        const href = spaceMatch
+          ? `${korner.compose.route}?space=${spaceMatch[1]}`
+          : korner.compose.route;
+        return { href, label: korner.compose.label };
       }
       return null;
     }
