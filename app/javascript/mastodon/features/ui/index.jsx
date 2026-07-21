@@ -93,7 +93,6 @@ import {
   EventDetail,
   Inflow,
   Nudges,
-  NudgesThread,
   Governance,
   KommonsProposal,
   KommonsSpace,
@@ -288,8 +287,12 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/kompass' component={KompassStub} content={children} />
             <WrappedRoute path='/hub/wachuneed' component={Wachuneed} content={children} />
             <WrappedRoute path='/@:acct/connections' exact component={Connections} content={children} />
-            {signedIn && <WrappedRoute path="/nudges/:accountId" component={NudgesThread} content={children} />}
-            {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} />}
+            {/* Phase 1b: the messenger shell handles both /nudges (empty pane)
+                and /nudges/:conversationId (open pane). Legacy account-scoped
+                thread route deprecated — existing NudgeMessage history stays
+                queryable via /nudges/legacy until Phase 14. */}
+            {signedIn && <WrappedRoute path="/nudges/:conversationId(\d+)" component={Nudges} content={children} />}
+            {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} exact />}
             {signedIn && <WrappedRoute path="/hub/kommons/skeleton" component={KommonsSkeleton} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/lattice" component={KommonsLattice} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/p/:proposalId" component={KommonsProposal} content={children} />}

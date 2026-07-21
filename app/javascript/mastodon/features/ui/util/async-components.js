@@ -259,12 +259,12 @@ export function Inflow () {
 }
 
 export function Nudges () {
-  return import("../../nudges");
+  // Phase 1b: /nudges renders the Signal-shaped messenger shell.
+  // Legacy features/nudges (partner-based 1:1 view) retires with the
+  // legacy notification-bell view in the same sunset window.
+  return import("../../nudges_messenger");
 }
 
-export function NudgesThread () {
-  return import("../../nudges/thread");
-}
 
 export function EventDetail () {
   return import("../../events/event_detail").then(m => ({ default: m.EventDetail }));
