@@ -242,7 +242,10 @@ namespace :api, format: false do
         member do
           post :read
         end
-        resources :messages, only: [:create]
+        resources :messages, only: [:create] do
+          resources :reactions, only: [:create], controller: :reactions
+          delete 'reactions/:symbol', to: 'reactions#destroy', constraints: { symbol: %r{[^/]+} }
+        end
       end
     end
 

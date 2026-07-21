@@ -6,8 +6,13 @@ import {
   apiSendNudgeMessage,
   apiGetNudgeConversation,
   apiMarkNudgeConversationRead,
+  apiAddNudgeReaction,
+  apiRemoveNudgeReaction,
 } from 'mastodon/api/nudges_conversations';
-import type { ApiNudgeConversationDetail } from 'mastodon/api_types/nudges_conversations';
+import type {
+  ApiNudgeConversationDetail,
+  ApiNudgeMessageJSON,
+} from 'mastodon/api_types/nudges_conversations';
 import { Avatar } from 'mastodon/components/avatar';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
@@ -61,6 +66,24 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     [conversationId, onMessageSent],
   );
 
+  const handleReact = useCallback(
+    async (message: ApiNudgeMessageJSON, symbol: string) => {
+      await apiAddNudgeReaction(conversationId, message.id, symbol);
+      const refreshed = await apiGetNudgeConversation(conversationId);
+      onMessageSent(refreshed);
+    },
+    [conversationId, onMessageSent],
+  );
+
+  const handleUnreact = useCallback(
+    async (message: ApiNudgeMessageJSON, symbol: string) => {
+      await apiRemoveNudgeReaction(conversationId, message.id, symbol);
+      const refreshed = await apiGetNudgeConversation(conversationId);
+      onMessageSent(refreshed);
+    },
+    [conversationId, onMessageSent],
+  );
+
   if (loading && !detail) {
     return (
       <p className='nudges-conversation__status'>
@@ -95,7 +118,12 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
 
       <div className='nudges-conversation__stream'>
         {oldestFirst.map((item) => (
-          <StreamItem key={`${item.kind}-${item.id}`} item={item} />
+          <StreamItem
+            key={`${item.kind}-${item.id}`}
+            item={item}
+            onReact={handleReact}
+            onUnreact={handleUnreact}
+          />
         ))}
         <div ref={streamEndRef} />
       </div>

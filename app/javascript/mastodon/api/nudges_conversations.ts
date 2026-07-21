@@ -1,4 +1,4 @@
-import { apiRequestGet, apiRequestPost } from 'mastodon/api';
+import { apiRequestDelete, apiRequestGet, apiRequestPost } from 'mastodon/api';
 import type {
   ApiNudgeConversationJSON,
   ApiNudgeConversationDetail,
@@ -24,4 +24,23 @@ export const apiMarkNudgeConversationRead = (
   apiRequestPost<ApiNudgeConversationJSON>(
     `v1/nudges/conversations/${conversationId}/read`,
     upToMessageId ? { up_to_message_id: upToMessageId } : {},
+  );
+
+export const apiAddNudgeReaction = (
+  conversationId: string,
+  messageId: string,
+  symbol: string,
+) =>
+  apiRequestPost<ApiNudgeMessageJSON>(
+    `v1/nudges/conversations/${conversationId}/messages/${messageId}/reactions`,
+    { symbol },
+  );
+
+export const apiRemoveNudgeReaction = (
+  conversationId: string,
+  messageId: string,
+  symbol: string,
+) =>
+  apiRequestDelete<ApiNudgeMessageJSON>(
+    `v1/nudges/conversations/${conversationId}/messages/${messageId}/reactions/${encodeURIComponent(symbol)}`,
   );
