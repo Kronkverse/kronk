@@ -117,6 +117,15 @@ nodes:
       - to: kommons.index
         kind: creates
         description: Every planted feedback item becomes a proposal on the Kommons list.
+  - id: kommons.propose
+    label: Proposer
+    url: /hub/kommons/propose
+    lifecycle: live
+    spa: true
+    links:
+      - to: kommons.index
+        kind: creates
+        description: The Proposer drafts a new proposal onto the Kommons list.
 
   # The 2.0.0 rebuild-review nodes that used to live here were removed in
   # favour of the Kronk org pillar (`kronk.*` in config/kronk_nodes.yaml): a

@@ -242,6 +242,12 @@ export const BodyMap: React.FC<{
         history.push(`/hub/kommons/space/${spaceTarget}`);
         return;
       }
+      // A Finger opens its page (Kronk's org pages are Rails-served).
+      if (node.url) {
+        if (node.url.startsWith('/kronk')) window.location.assign(node.url);
+        else history.push(node.url);
+        return;
+      }
       if (node.kids.length > 0) {
         // Clicking the node you are already on climbs back out.
         onFocus(focus === id && node.parent ? node.parent : id);

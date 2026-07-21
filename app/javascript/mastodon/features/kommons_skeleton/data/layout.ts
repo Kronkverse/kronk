@@ -163,29 +163,42 @@ export const buildTree = (nodes: KommonsNode[]): Tree => {
     }
   }
 
+  // Anatomy: the Hub arm holds korners. Fingers are real, navigable pages —
+  // parameterised routes (…/:id) are internal templates, not fingers. A korner
+  // with one Finger stays a Finger itself (clicking opens its Space page); a
+  // korner with several Fingers becomes a Hand that holds them and expands
+  // (e.g. Kommons → Proposals / Skeleton / Proposer).
   for (const korner of listKorners(nodes)) {
     const kornerId = `korner:${korner.slug}`;
+    const fingers = bucketNodes(nodes, 'hub', korner.slug).filter(
+      (n) => n.url && !n.url.includes(':'),
+    );
+    const isHand = fingers.length > 1;
     add({
       id: kornerId,
       label: korner.label,
       parent: 'hub',
       kids: [],
       count: korner.openProposals,
-      korner: korner.slug,
+      // A Hand has no destination of its own — it expands to its Fingers. A
+      // single-page korner is a Finger that opens its Space page.
+      korner: isHand ? undefined : korner.slug,
     });
     tree.hub?.kids.push(kornerId);
 
-    for (const n of bucketNodes(nodes, 'hub', korner.slug)) {
-      add({
-        id: n.id,
-        label: n.label,
-        parent: kornerId,
-        kids: [],
-        url: n.url,
-        lifecycle: n.lifecycle,
-        count: n.openProposals,
-      });
-      tree[kornerId]?.kids.push(n.id);
+    if (isHand) {
+      for (const n of fingers) {
+        add({
+          id: n.id,
+          label: n.label,
+          parent: kornerId,
+          kids: [],
+          url: n.url,
+          lifecycle: n.lifecycle,
+          count: n.openProposals,
+        });
+        tree[kornerId]?.kids.push(n.id);
+      }
     }
   }
 

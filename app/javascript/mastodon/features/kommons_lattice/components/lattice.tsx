@@ -260,6 +260,13 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
         history.push(`/hub/kommons/space/${spaceTarget}`);
         return;
       }
+      // A Finger opens its page. Kronk's org pages are Rails-served (full
+      // navigation); everything else is an in-app route.
+      if (node.url) {
+        if (node.url.startsWith('/kronk')) window.location.assign(node.url);
+        else history.push(node.url);
+        return;
+      }
       // Ease this node into view once the layout settles.
       focusRef.current = id;
       if (node.kids.length > 0) {
