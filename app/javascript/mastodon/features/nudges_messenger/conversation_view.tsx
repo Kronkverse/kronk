@@ -5,6 +5,7 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import {
   apiSendNudgeMessage,
+  apiDeleteNudgeMessage,
   apiMarkNudgeConversationRead,
   apiAddNudgeReaction,
   apiRemoveNudgeReaction,
@@ -153,6 +154,17 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     [conversationId, detail, onMessageSent],
   );
 
+  const handleDelete = useCallback(
+    async (message: ApiNudgeMessageJSON) => {
+      const tombstoned = await apiDeleteNudgeMessage(
+        conversationId,
+        message.id,
+      );
+      onMessageSent(applyUpdatedMessage(detail, tombstoned));
+    },
+    [conversationId, detail, onMessageSent],
+  );
+
   if (loading && !detail) {
     return (
       <p className='nudges-conversation__status'>
@@ -224,6 +236,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
                 conversationKind={detail.conversation.kind}
                 onReact={handleReact}
                 onUnreact={handleUnreact}
+                onDelete={handleDelete}
               />
             </React.Fragment>
           );

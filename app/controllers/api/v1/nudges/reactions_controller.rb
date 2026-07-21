@@ -20,12 +20,16 @@ class Api::V1::Nudges::ReactionsController < Api::BaseController
     render json: REST::Nudges::MessageSerializer.new(@message.reload, scope: current_account)
   rescue Nudges::ConversationMessage::ReactionCapReached
     render json: { error: 'reaction_cap_reached' }, status: :unprocessable_entity
+  rescue Nudges::ConversationMessage::Tombstoned
+    render json: { error: 'gone' }, status: 410
   end
 
   def destroy
     symbol = params.require(:symbol).to_s
     @message.remove_reaction!(current_account, symbol)
     render json: REST::Nudges::MessageSerializer.new(@message.reload, scope: current_account)
+  rescue Nudges::ConversationMessage::Tombstoned
+    render json: { error: 'gone' }, status: 410
   end
 
   private

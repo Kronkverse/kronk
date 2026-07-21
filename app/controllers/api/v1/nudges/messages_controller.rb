@@ -1,14 +1,17 @@
 # frozen_string_literal: true
 
-# POST /api/v1/nudges/conversations/:conversation_id/messages — send a
-# message into an existing Mate conversation. Text and/or a
-# media_attachment (photo/video). Voice recording is kronk-app
-# parity-gated per docs/kronk_nudges.md §Surface 4.
+# Nudges::ConversationMessage REST controller. Text/media send +
+# tombstone-and-410 deletion (author-only) per
+# docs/kronk_nudges.md non-negotiables.
+#
+#   POST   /api/v1/nudges/conversations/:conversation_id/messages
+#   DELETE /api/v1/nudges/conversations/:conversation_id/messages/:id
 class Api::V1::Nudges::MessagesController < Api::BaseController
   before_action -> { doorkeeper_authorize! :write, :'write:notifications' }
   before_action :require_user!
   before_action :set_conversation
   before_action :authorize_participant!
+  before_action :set_message, only: [:destroy]
 
   def create
     body = params[:body].to_s.strip
@@ -30,10 +33,25 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
     render json: REST::Nudges::MessageSerializer.new(message, scope: current_account), status: 201
   end
 
+  # Author-only soft delete. The row stays (id claimed, no reuse);
+  # the serializer redacts body/media/reactions past this point. A
+  # subsequent DELETE on the same id returns 410.
+  def destroy
+    return render json: { error: 'gone' }, status: 410 if @message.tombstoned?
+    return render json: { error: 'forbidden' }, status: 403 unless @message.author_account_id == current_account.id
+
+    @message.tombstone!
+    render json: REST::Nudges::MessageSerializer.new(@message, scope: current_account)
+  end
+
   private
 
   def set_conversation
     @conversation = Nudges::Conversation.find(params[:conversation_id])
+  end
+
+  def set_message
+    @message = @conversation.messages.find(params[:id])
   end
 
   def authorize_participant!

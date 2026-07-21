@@ -32,8 +32,30 @@ module Nudges
     after_create_commit :increment_relationship_counter
 
     scope :not_expired, -> { where('expires_at IS NULL OR expires_at > ?', Time.current) }
+    scope :live,        -> { where(deleted_at: nil) }
+    scope :tombstoned,  -> { where.not(deleted_at: nil) }
+
+    # Tombstone-and-410 per docs/kronk_nudges.md non-negotiables. The
+    # row stays (id claimed, no reuse) but body/media/reactions are
+    # cleared and the serializer redacts. Reactions on a tombstoned
+    # message raise `Tombstoned` so the controller can 410.
+    def tombstone!
+      update!(
+        deleted_at: Time.current,
+        body: nil,
+        media_attachment_id: nil,
+        voice_attachment_id: nil,
+        reactions: []
+      )
+    end
+
+    def tombstoned?
+      deleted_at.present?
+    end
 
     def add_reaction!(account, symbol)
+      raise Tombstoned if tombstoned?
+
       distinct = reactions.pluck('symbol').uniq
       return if distinct.include?(symbol) && already_reacted?(account, symbol)
       raise ReactionCapReached if distinct.count >= REACTION_CAP && distinct.exclude?(symbol)
@@ -43,11 +65,14 @@ module Nudges
     end
 
     def remove_reaction!(account, symbol)
+      raise Tombstoned if tombstoned?
+
       self.reactions = reactions.reject { |r| r['account_id'] == account.id && r['symbol'] == symbol }
       save!
     end
 
     class ReactionCapReached < StandardError; end
+    class Tombstoned < StandardError; end
 
     private
 

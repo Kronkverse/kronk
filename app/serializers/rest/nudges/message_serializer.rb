@@ -4,9 +4,13 @@
 # stream. `author_is_self` is computed relative to `scope` (the
 # current viewer) so the client can distinguish out/in bubbles
 # without hitting `me` from the store.
+#
+# Tombstoned messages redact body / media / reactions; the client
+# renders a "message deleted" placeholder.
 class REST::Nudges::MessageSerializer < ActiveModel::Serializer
   attributes :id, :conversation_id, :body, :media, :voice,
-             :reactions, :created_at, :author_is_self, :author
+             :reactions, :created_at, :deleted, :deleted_at,
+             :author_is_self, :author
 
   def id
     object.id.to_s
@@ -16,10 +20,16 @@ class REST::Nudges::MessageSerializer < ActiveModel::Serializer
     object.conversation_id.to_s
   end
 
+  def body
+    object.tombstoned? ? nil : object.body
+  end
+
   # Compact media payload for the client: url + type + preview so the
   # bubble can render without a follow-up fetch. Nil when the message
-  # has no attachment.
+  # has no attachment or is tombstoned.
   def media
+    return nil if object.tombstoned?
+
     attachment = object.media_attachment
     return nil unless attachment
 
@@ -33,6 +43,8 @@ class REST::Nudges::MessageSerializer < ActiveModel::Serializer
   end
 
   def voice
+    return nil if object.tombstoned?
+
     attachment = object.voice_attachment
     return nil unless attachment
 
@@ -43,8 +55,20 @@ class REST::Nudges::MessageSerializer < ActiveModel::Serializer
     }
   end
 
+  def reactions
+    object.tombstoned? ? [] : object.reactions
+  end
+
   def created_at
     object.created_at.iso8601
+  end
+
+  def deleted
+    object.tombstoned?
+  end
+
+  def deleted_at
+    object.deleted_at&.iso8601
   end
 
   def author_is_self
