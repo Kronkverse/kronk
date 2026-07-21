@@ -36,6 +36,9 @@ emits:
 # Additional korner events wire in incrementally per Phase 1c+.
 listens:
   - kommons.proposal.backed
+  - kalendar.event.rsvpd
+  - wachuneed.offer.made
+  - kuestions.question.answered
 
 feed_projection:
   card: # not-applicable — Nudges appear in the notifications drawer, not the timeline.

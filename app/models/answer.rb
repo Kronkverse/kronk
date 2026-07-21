@@ -11,4 +11,20 @@ class Answer < ApplicationRecord
 
   validates :body, presence: true
   validates :account_id, uniqueness: { scope: :question_id }
+
+  after_commit :publish_kuestions_question_answered, on: :create
+
+  private
+
+  # kuestions.question.answered — someone answered a Question; Nudges
+  # routes to the asker's Mate chat with the answerer (if Mates).
+  def publish_kuestions_question_answered
+    Kronk::KornerEvents.publish(
+      'kuestions.question.answered',
+      actor_account_id: account_id,
+      recipient_account_id: question.created_by_account_id,
+      question_id: question_id,
+      answer_id: id
+    )
+  end
 end
