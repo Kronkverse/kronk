@@ -3116,6 +3116,79 @@
     line-height: 1.5;
   }
 
+  &__hint {
+    margin: 0;
+    color: var(--text-muted, rgba(255, 255, 255, 55%));
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  &__steps {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .propose-page__input {
+      flex: 1;
+    }
+  }
+
+  &__step-num {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-round, 999px);
+    background: var(--surface-elevated, rgba(255, 255, 255, 8%));
+    color: var(--text-muted, rgba(255, 255, 255, 70%));
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  &__step-remove {
+    flex: 0 0 auto;
+    background: none;
+    border: 0;
+    color: var(--text-muted, rgba(255, 255, 255, 55%));
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 6px;
+
+    &:hover {
+      color: var(--decision-block, #e0567b);
+    }
+  }
+
+  &__add-step {
+    align-self: flex-start;
+    margin-top: 10px;
+    background: none;
+    border: 1px dashed var(--border-color, rgba(255, 255, 255, 20%));
+    border-radius: var(--radius-small, 6px);
+    color: var(--text-muted, rgba(255, 255, 255, 75%));
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 12px;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--accent, #7241ff);
+      color: var(--accent, #7241ff);
+    }
+  }
+
   &__sizes {
     display: flex;
     gap: 8px;

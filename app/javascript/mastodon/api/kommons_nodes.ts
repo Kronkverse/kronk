@@ -94,3 +94,11 @@ export const apiCreateKommonsProposal = (params: ApiCreateProposalParams) =>
     'v1/proposals',
     { proposal: params },
   );
+
+// A proposal's steps are its tasks (open -> in_progress -> done). Add one at
+// draft time (the Proposer) or later (the proposal's Kontribute tab).
+export const apiCreateProposalTask = (proposalId: string, title: string) =>
+  apiRequestPost<{ id: string; title: string; status: string }>(
+    `v1/proposals/${proposalId}/tasks`,
+    { task: { title } },
+  );
