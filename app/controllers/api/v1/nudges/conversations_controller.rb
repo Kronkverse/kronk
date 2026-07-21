@@ -9,10 +9,10 @@
 # conversations they're a participant in.
 class Api::V1::Nudges::ConversationsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:notifications' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:notifications' }, only: [:read]
+  before_action -> { doorkeeper_authorize! :write, :'write:notifications' }, only: [:read, :leave]
   before_action :require_user!
-  before_action :set_conversation, only: [:show, :read]
-  before_action :authorize_participant!, only: [:show, :read]
+  before_action :set_conversation, only: [:show, :read, :leave]
+  before_action :authorize_participant!, only: [:show, :read, :leave]
 
   DEFAULT_LIMIT = 40
   MAX_LIMIT     = 80
@@ -40,6 +40,25 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
     up_to = params[:up_to_message_id].to_i
     @conversation.mark_read!(current_account, up_to.positive? ? up_to : @conversation.messages.maximum(:id))
     render json: REST::Nudges::ConversationSerializer.new(@conversation.reload, scope: current_account)
+  end
+
+  # Leave a Krew conversation. Removes the account's
+  # ConversationMembership + underlying GroupMembership so they exit
+  # the Krew entirely. Krew-only — Mate has no "leave" (the two are
+  # locked together by definition; deletion of the pair is a
+  # different concern).
+  def leave
+    unless @conversation.krew?
+      render json: { error: 'mate_conversations_cannot_be_left' }, status: :unprocessable_entity
+      return
+    end
+
+    ActiveRecord::Base.transaction do
+      @conversation.memberships.where(account_id: current_account.id).destroy_all
+      @conversation.krew&.group_memberships&.where(account_id: current_account.id)&.destroy_all
+    end
+
+    head 204
   end
 
   private
