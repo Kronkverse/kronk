@@ -31,6 +31,7 @@ type ReactionHandler = (
 ) => void | Promise<void>;
 
 type DeleteHandler = (message: ApiNudgeMessageJSON) => void | Promise<void>;
+type MessageHandler = (message: ApiNudgeMessageJSON) => void | Promise<void>;
 
 interface StreamItemProps {
   item: ApiNudgeStreamItem;
@@ -38,6 +39,8 @@ interface StreamItemProps {
   onReact?: ReactionHandler;
   onUnreact?: ReactionHandler;
   onDelete?: DeleteHandler;
+  onRetry?: MessageHandler;
+  onDismissFailed?: MessageHandler;
 }
 
 // One row in the conversation stream — either a message bubble or an
@@ -50,6 +53,8 @@ export const StreamItem: React.FC<StreamItemProps> = ({
   onReact,
   onUnreact,
   onDelete,
+  onRetry,
+  onDismissFailed,
 }) => {
   if (item.kind === 'message') {
     return (
@@ -59,6 +64,8 @@ export const StreamItem: React.FC<StreamItemProps> = ({
         onReact={onReact}
         onUnreact={onUnreact}
         onDelete={onDelete}
+        onRetry={onRetry}
+        onDismissFailed={onDismissFailed}
       />
     );
   }
@@ -72,6 +79,8 @@ interface MessageItemProps {
   onReact?: ReactionHandler;
   onUnreact?: ReactionHandler;
   onDelete?: DeleteHandler;
+  onRetry?: MessageHandler;
+  onDismissFailed?: MessageHandler;
 }
 
 // Tombstoned messages redact to a "deleted" placeholder — brief
@@ -90,6 +99,8 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
   onReact,
   onUnreact,
   onDelete,
+  onRetry,
+  onDismissFailed,
 }) => {
   const intl = useIntl();
 
@@ -126,13 +137,27 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
 
   // Krew incoming bubbles show sender name + avatar (per brief
   // §Surface 3). Mate bubbles stay bare — the pair is already known
-  // from the conversation header.
-  const showSender = conversationKind === 'krew' && !item.author_is_self;
+  // from the conversation header. Suppressed for optimistic-sending
+  // rows since the author stub isn't a real account yet.
+  const showSender =
+    conversationKind === 'krew' && !item.author_is_self && !item.sending;
+
+  const isOptimistic = item.sending || item.failed;
+
+  const handleRetryClick = useCallback(() => {
+    void onRetry?.(item);
+  }, [item, onRetry]);
+
+  const handleDismissClick = useCallback(() => {
+    void onDismissFailed?.(item);
+  }, [item, onDismissFailed]);
 
   return (
     <div
       className={`nudges-msg ${
         item.author_is_self ? 'nudges-msg--out' : 'nudges-msg--in'
+      } ${item.sending ? 'nudges-msg--sending' : ''} ${
+        item.failed ? 'nudges-msg--failed' : ''
       }`}
     >
       {showSender && (
@@ -148,7 +173,7 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
         {item.body && <span className='nudges-msg__body'>{item.body}</span>}
       </div>
 
-      {(grouped.length > 0 || onReact) && (
+      {!isOptimistic && (grouped.length > 0 || onReact) && (
         <div className='nudges-msg__reactions'>
           {grouped.map((r) => (
             <ReactionChip
@@ -169,14 +194,49 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
       )}
 
       <span className='nudges-msg__time'>
-        <RelativeTimestamp timestamp={item.created_at} short />
-        {item.author_is_self && onDelete && (
+        {item.sending ? (
+          <FormattedMessage id='nudges.sending' defaultMessage='Sending…' />
+        ) : item.failed ? (
+          <FailedControls
+            onRetry={handleRetryClick}
+            onDismiss={handleDismissClick}
+          />
+        ) : (
+          <RelativeTimestamp timestamp={item.created_at} short />
+        )}
+        {!isOptimistic && item.author_is_self && onDelete && (
           <DeleteButton item={item} onDelete={onDelete} />
         )}
       </span>
     </div>
   );
 };
+
+const FailedControls: React.FC<{
+  onRetry: () => void;
+  onDismiss: () => void;
+}> = ({ onRetry, onDismiss }) => (
+  <span className='nudges-msg__failed-controls'>
+    <span className='nudges-msg__failed-label'>
+      <FormattedMessage id='nudges.send_failed' defaultMessage='Send failed' />
+    </span>
+    <button
+      type='button'
+      className='nudges-msg__failed-action'
+      onClick={onRetry}
+    >
+      <FormattedMessage id='nudges.retry' defaultMessage='Retry' />
+    </button>
+    <button
+      type='button'
+      className='nudges-msg__failed-action nudges-msg__failed-action--dismiss'
+      onClick={onDismiss}
+      aria-label='Dismiss'
+    >
+      ×
+    </button>
+  </span>
+);
 
 const DeletedMessage: React.FC<{ item: ApiNudgeMessageJSON }> = ({ item }) => (
   <div
