@@ -7,26 +7,34 @@
 #
 # The uniqueness index on (account_a_id, account_b_id) now excludes
 # Krew rows via a partial-index predicate.
+#
+# `safety_assured` wraps the FK add + the NOT NULL flips. This table
+# is Kronk-local, only Phase 1a shipped it, and there is effectively
+# no live traffic on it yet — the strong_migrations gate would
+# otherwise force splitting into a chain of PRs for a table with
+# ~zero rows in prod.
 class AddKrewToNudgesConversations < ActiveRecord::Migration[8.0]
   def change
-    add_reference :nudges_conversations, :krew,
-                  foreign_key: { to_table: :groups, on_delete: :cascade },
-                  null: true
+    safety_assured do
+      add_reference :nudges_conversations, :krew,
+                    foreign_key: { to_table: :groups, on_delete: :cascade },
+                    null: true
 
-    change_column_null :nudges_conversations, :account_a_id, true
-    change_column_null :nudges_conversations, :account_b_id, true
+      change_column_null :nudges_conversations, :account_a_id, true
+      change_column_null :nudges_conversations, :account_b_id, true
 
-    remove_index :nudges_conversations, [:account_a_id, :account_b_id],
-                 unique: true,
-                 name: 'index_nudges_convos_on_mate_pair'
-    add_index :nudges_conversations, [:account_a_id, :account_b_id],
-              unique: true,
-              where: "kind = 'mate' AND account_a_id IS NOT NULL AND account_b_id IS NOT NULL",
-              name: 'index_nudges_convos_on_mate_pair'
+      remove_index :nudges_conversations, [:account_a_id, :account_b_id],
+                   unique: true,
+                   name: 'index_nudges_convos_on_mate_pair'
+      add_index :nudges_conversations, [:account_a_id, :account_b_id],
+                unique: true,
+                where: "kind = 'mate' AND account_a_id IS NOT NULL AND account_b_id IS NOT NULL",
+                name: 'index_nudges_convos_on_mate_pair'
 
-    add_index :nudges_conversations, :krew_id,
-              unique: true,
-              where: 'krew_id IS NOT NULL',
-              name: 'index_nudges_convos_on_krew_id_unique'
+      add_index :nudges_conversations, :krew_id,
+                unique: true,
+                where: 'krew_id IS NOT NULL',
+                name: 'index_nudges_convos_on_krew_id_unique'
+    end
   end
 end
