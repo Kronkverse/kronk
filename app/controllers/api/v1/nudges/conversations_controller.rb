@@ -9,7 +9,7 @@
 # conversations they're a participant in.
 class Api::V1::Nudges::ConversationsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:notifications' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:notifications' }, only: [:read, :leave, :mute, :unmute]
+  before_action -> { doorkeeper_authorize! :write, :'write:notifications' }, only: [:create, :read, :leave, :mute, :unmute]
   before_action :require_user!
   before_action :set_conversation, only: [:show, :read, :leave, :mute, :unmute]
   before_action :authorize_participant!, only: [:show, :read, :leave, :mute, :unmute]
@@ -34,6 +34,20 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
       conversation: REST::Nudges::ConversationSerializer.new(@conversation, scope: current_account).as_json,
       stream: interleaved_stream(@conversation),
     }
+  end
+
+  # Open (find-or-create) a Mate conversation with a target account.
+  # Powers the new-chat pencil in the sidebar. Both parties must be
+  # Mates (mutual follows) — the same gate the router enforces. The
+  # target account cannot be the current account.
+  def create
+    target = Account.find_by(id: params[:account_id])
+    return render(json: { error: 'account_not_found' }, status: 404) unless target
+    return render(json: { error: 'cannot_chat_with_self' }, status: :unprocessable_entity) if target.id == current_account.id
+    return render(json: { error: 'not_mates' }, status: 403) unless mates?(current_account, target)
+
+    conversation = Nudges::Conversation.mate_between!(current_account, target)
+    render json: conversation, serializer: REST::Nudges::ConversationSerializer, scope: current_account
   end
 
   def read
@@ -73,6 +87,13 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
   end
 
   private
+
+  # Mates = mutual follow. Mirrors Nudges::EventRouter#mates? — the
+  # Nudges privacy stance per docs/kronk_nudges.md §Amendments.
+  def mates?(one, two)
+    Follow.exists?(account: one, target_account: two) &&
+      Follow.exists?(account: two, target_account: one)
+  end
 
   def set_muted!(value)
     unless @conversation.krew?

@@ -3,6 +3,7 @@ import api, {
   apiRequestGet,
   apiRequestPost,
 } from 'mastodon/api';
+import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import type {
   ApiNudgeConversationJSON,
   ApiNudgeConversationDetail,
@@ -11,6 +12,14 @@ import type {
 
 export const apiListNudgeConversations = () =>
   apiRequestGet<ApiNudgeConversationJSON[]>('v1/nudges/conversations');
+
+export const apiListNudgeMates = () =>
+  apiRequestGet<ApiAccountJSON[]>('v1/nudges/mates');
+
+export const apiOpenMateConversation = (accountId: string) =>
+  apiRequestPost<ApiNudgeConversationJSON>('v1/nudges/conversations', {
+    account_id: accountId,
+  });
 
 export const apiGetNudgeConversation = (id: string) =>
   apiRequestGet<ApiNudgeConversationDetail>(`v1/nudges/conversations/${id}`);
