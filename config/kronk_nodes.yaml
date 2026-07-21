@@ -247,3 +247,48 @@ nodes:
     url: /settings/korners
     lifecycle: live
     spa: true
+
+  # ── KRONK (the organisation pillar, §O) ──────────────────────────────
+  #
+  # The org space is served by KronkController from markdown under
+  # content/kronk/ (routes: `/kronk/:page`); the ӁЯѺƝ₭ wordmark links here.
+  # These nodes put its real pages on the Kommons map so members can see and
+  # plant proposals about how Kronk itself is run and built. `spa: true` skips
+  # the route-name drift check — there is no per-page named Rails route (the
+  # single `/kronk/:page` route serves them all), so there is nothing to bind.
+  - id: kronk.about
+    bucket: kronk
+    label: About Kronk
+    url: /kronk
+    lifecycle: live
+    spa: true
+  - id: kronk.how_it_works
+    bucket: kronk
+    label: How Kronk works
+    url: /kronk/how-it-works
+    lifecycle: live
+    spa: true
+  - id: kronk.values
+    bucket: kronk
+    label: Values & manifesto
+    url: /kronk/values
+    lifecycle: live
+    spa: true
+  - id: kronk.governance
+    bucket: kronk
+    label: Governance
+    url: /kronk/governance
+    lifecycle: live
+    spa: true
+  - id: kronk.contributors
+    bucket: kronk
+    label: Contributors
+    url: /kronk/contributors
+    lifecycle: live
+    spa: true
+  - id: kronk.privacy
+    bucket: kronk
+    label: Privacy
+    url: /kronk/privacy
+    lifecycle: live
+    spa: true

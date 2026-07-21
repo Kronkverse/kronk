@@ -35,7 +35,7 @@ namespace :kommons do
         body: 'Live board of the 2.0 rebuild backlog. Each child is a theme; ' \
               "a theme's steps are its tasks. See docs/spaces/kommons_tracker.md.",
         summary: 'The rebuild backlog, tracked as Kommons proposals.',
-        node_id: 'kommons.review.phases',
+        node_id: 'kronk.how_it_works',
         proposal_type: :large,
         status: :open
       )

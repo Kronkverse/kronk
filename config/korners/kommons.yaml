@@ -110,39 +110,8 @@ nodes:
         kind: creates
         description: Every planted feedback item becomes a proposal on the Kommons list.
 
-  # ── 2.0.0 rebuild review (2026-07-18) ─────────────────────────────
-  # Review topics for the rebuild assessment, keyed so each finding can be
-  # planted as a proposal against the area it concerns. These are review
-  # surfaces, not product pages, so they carry `lifecycle: hidden` — they
-  # resolve in the Skeleton for reviewers without appearing as shipped surfaces.
-  # Retire them (and their proposals) once 2.0.0 ships.
-  - id: kommons.review.spec
-    label: 'Review: spec & documentation'
-    url: /hub/kommons/skeleton
-    lifecycle: hidden
-    spa: true
-  - id: kommons.review.framework
-    label: 'Review: framework surfaces'
-    url: /hub/kommons/skeleton
-    lifecycle: hidden
-    spa: true
-  - id: kommons.review.korners
-    label: 'Review: korner conformance'
-    url: /hub/kommons/skeleton
-    lifecycle: hidden
-    spa: true
-  - id: kommons.review.phases
-    label: 'Review: phases & scope'
-    url: /hub/kommons/skeleton
-    lifecycle: hidden
-    spa: true
-  - id: kommons.review.health
-    label: 'Review: branch & CI health'
-    url: /hub/kommons/skeleton
-    lifecycle: hidden
-    spa: true
-  - id: kommons.review.release
-    label: 'Review: release readiness'
-    url: /hub/kommons/skeleton
-    lifecycle: hidden
-    spa: true
+  # The 2.0.0 rebuild-review nodes that used to live here were removed in
+  # favour of the Kronk org pillar (`kronk.*` in config/kronk_nodes.yaml): a
+  # proposal is Kommons content that sits within a real Kronk surface, not a
+  # tree node of its own, so the rebuild backlog re-homed onto `kronk.how_it_works`
+  # (how Kronk is built) rather than synthetic "Review: …" page-nodes.

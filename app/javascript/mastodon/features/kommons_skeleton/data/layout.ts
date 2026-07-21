@@ -23,7 +23,14 @@ export const ROOT_ID = 'root';
 // This list must agree with `Kronk::NodeRegistry::BUCKETS` on the Ruby side;
 // `layout.test.ts` asserts it. Deriving the limbs from the manifests instead
 // is the point of docs/rebuild/decisions.md's one-mechanism decision.
-export const LIMBS = ['hub', 'nudges', 'feed', 'profile', 'settings'] as const;
+export const LIMBS = [
+  'hub',
+  'nudges',
+  'feed',
+  'profile',
+  'settings',
+  'kronk',
+] as const;
 export type Limb = (typeof LIMBS)[number];
 
 // Spread evenly rather than hand-placed. Four limbs at angles chosen for
@@ -117,7 +124,7 @@ export const buildTree = (nodes: KommonsNode[]): Tree => {
   // flat under the limb. (hub is the general case of this: korners hold pages.)
   // Two passes — create every node, then wire each under its parent, falling
   // back to the limb when the parent isn't a node in this bucket.
-  for (const limb of ['feed', 'profile', 'nudges', 'settings'] as const) {
+  for (const limb of ['feed', 'profile', 'nudges', 'settings', 'kronk'] as const) {
     const inBucket = bucketNodes(nodes, limb);
     for (const n of inBucket) {
       add({
@@ -189,6 +196,7 @@ const LIMB_LABEL: Record<Limb, string> = {
   nudges: 'Nudges',
   hub: 'Hub',
   settings: 'Settings',
+  kronk: 'Kronk',
 };
 
 // A record rather than a ternary chain: the chain's final branch was an

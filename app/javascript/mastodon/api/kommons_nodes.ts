@@ -39,6 +39,7 @@ export const BUCKETS = [
   'nudges',
   'hub',
   'settings',
+  'kronk',
 ] as const;
 export type Bucket = (typeof BUCKETS)[number];
 
