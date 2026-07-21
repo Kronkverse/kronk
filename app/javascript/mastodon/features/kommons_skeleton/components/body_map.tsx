@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import type { KommonsNode } from '../data/nodes';
+import { useHistory } from 'react-router-dom';
+
 import { Glyph, iconFor } from '../data/icons';
 import type { Camera, Layout, Tree } from '../data/layout';
 import {
@@ -15,6 +16,7 @@ import {
   pathTo,
   worldBounds,
 } from '../data/layout';
+import type { KommonsNode } from '../data/nodes';
 
 // The Skeleton — one world, one camera.
 //
@@ -225,11 +227,19 @@ export const BodyMap: React.FC<{
     return { emphasis: em, edgeClass: ec, wireClass: wc };
   }, [tree, lay, bones, wires, focus, path]);
 
+  const history = useHistory();
+
   const handleNode = useCallback(
     (id: string) => () => {
       if (dragRef.current.moved) return;
       const node = tree[id];
       if (!node) return;
+      // A korner is a space, not a branch to drill: open its Space page
+      // rather than focusing its internal pages (matches the Lattice).
+      if (node.korner) {
+        history.push(`/hub/kommons/space/${node.korner}`);
+        return;
+      }
       if (node.kids.length > 0) {
         // Clicking the node you are already on climbs back out.
         onFocus(focus === id && node.parent ? node.parent : id);
@@ -237,7 +247,7 @@ export const BodyMap: React.FC<{
         onOpenLeaf(id);
       }
     },
-    [tree, focus, onFocus, onOpenLeaf],
+    [tree, focus, onFocus, onOpenLeaf, history],
   );
 
   const worldW = world.x2 - world.x1;

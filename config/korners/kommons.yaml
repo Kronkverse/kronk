@@ -4,6 +4,7 @@
 
 slug: kommons
 name: Kommons # rendered as ₭ommons in nav (unicode Kra)
+purpose: "To let the community decide Kronk's structural moves together, in the open."
 icon: gavel # material-icon; no dedicated 4096×2048 logo yet — TODO
 render_target: native # web-native React; §9 render_target semantics not enforced yet
 version: 0.1.0 # retrospective; predates the spec

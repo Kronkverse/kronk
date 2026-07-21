@@ -4,6 +4,7 @@
 
 slug: marketplace
 name: Marketplace
+purpose: "To let kronkers offer and find creations, listings, and services person-to-person."
 icon: inventory_2
 render_target: native
 version: 2.0.0

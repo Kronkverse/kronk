@@ -27,7 +27,12 @@ const messages = defineMessages({
   },
 });
 
-export const NodeProposals: React.FC<{ nodeId: string }> = ({ nodeId }) => {
+// Scope to a single page-node (`nodeId`) or to a whole korner (`korner`, the
+// union across its pages — used by the Space page). Exactly one is expected.
+export const NodeProposals: React.FC<{ nodeId?: string; korner?: string }> = ({
+  nodeId,
+  korner,
+}) => {
   const intl = useIntl();
   const [proposals, setProposals] = useState<NodeProposal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,8 +40,11 @@ export const NodeProposals: React.FC<{ nodeId: string }> = ({ nodeId }) => {
   useEffect(() => {
     let active = true;
     setLoading(true);
+    const params = korner
+      ? { korner, filter: 'open' }
+      : { node_id: nodeId, filter: 'open' };
     api()
-      .get('/api/v1/proposals', { params: { node_id: nodeId, filter: 'open' } })
+      .get('/api/v1/proposals', { params })
       .then((res) => {
         if (active) setProposals(res.data as NodeProposal[]);
         return undefined;
@@ -50,7 +58,7 @@ export const NodeProposals: React.FC<{ nodeId: string }> = ({ nodeId }) => {
     return () => {
       active = false;
     };
-  }, [nodeId]);
+  }, [nodeId, korner]);
 
   if (loading) {
     return (

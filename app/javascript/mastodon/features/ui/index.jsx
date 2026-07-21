@@ -96,6 +96,7 @@ import {
   NudgesThread,
   Governance,
   KommonsProposal,
+  KommonsSpace,
   KommonsSkeleton,
   KommonsLattice,
   KronkSearch,
@@ -288,6 +289,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/hub/kommons/skeleton" component={KommonsSkeleton} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/lattice" component={KommonsLattice} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/p/:proposalId" component={KommonsProposal} content={children} />}
+            {signedIn && <WrappedRoute path="/hub/kommons/space/:slug" component={KommonsSpace} content={children} />}
             {signedIn && <WrappedRoute path={["/governance", "/hub/kommons"]} component={Governance} content={children} />}
             {signedIn && <WrappedRoute path={["/questions/:id", "/hub/kuestions/:id"]} component={QuestionPage} content={children} />}
             {signedIn && <WrappedRoute path={["/questions", "/hub/kuestions"]} component={Questions} content={children} />}

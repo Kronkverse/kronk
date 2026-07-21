@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useHistory } from 'react-router-dom';
+
 import { Icon } from 'mastodon/components/icon';
 
 import { Composer } from '../../kommons_skeleton/components/composer';
@@ -32,6 +34,7 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
   );
   const [selected, setSelected] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
+  const history = useHistory();
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -248,6 +251,13 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
       if (!id) return;
       const node = tree[id];
       if (!node) return;
+      // A korner is a space, not a branch to drill: open its Space page (the
+      // why / who / open-proposals view) rather than expanding its internal
+      // pages. The tree is the map; the Space page is the place.
+      if (node.korner) {
+        history.push(`/hub/kommons/space/${node.korner}`);
+        return;
+      }
       // Ease this node into view once the layout settles.
       focusRef.current = id;
       if (node.kids.length > 0) {
@@ -257,7 +267,7 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
         setSelected((s) => (s === id ? null : id));
       }
     },
-    [tree],
+    [tree, history],
   );
 
   const openComposer = useCallback(() => {

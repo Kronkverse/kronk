@@ -3,6 +3,7 @@
 
 slug: kalendar
 name: Kalendar
+purpose: "To hold Kronk's shared time — the events and gatherings a community organises around."
 icon: calendar_month
 render_target: native
 version: 0.1.0

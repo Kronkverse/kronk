@@ -21,8 +21,16 @@ class Api::V1::ProposalsController < Api::BaseController
     # proposals anchored to one node (`node_id`), i.e. the feedback suggesting
     # changes to that page. When present, the viewer's cross-node archived
     # proposals are not appended — this is a single page's list, not the board.
-    node_scoped = params[:node_id].present?
-    scope = scope.where(node_id: params[:node_id]) if node_scoped
+    #
+    # Korner-scoped listing: the Space page asks for every proposal about a
+    # korner — the union across all its page-nodes, whose ids are `<slug>.*`
+    # (plus the bare slug). Same "not the board" treatment.
+    node_scoped = params[:node_id].present? || params[:korner].present?
+    scope = scope.where(node_id: params[:node_id]) if params[:node_id].present?
+    if params[:korner].present?
+      slug = params[:korner].to_s
+      scope = scope.where('node_id = :s OR node_id LIKE :p', s: slug, p: "#{Proposal.sanitize_sql_like(slug)}.%")
+    end
 
     scope = case params[:sort]
             when 'newest'         then scope.recent
