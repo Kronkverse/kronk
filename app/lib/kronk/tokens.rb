@@ -45,6 +45,18 @@ module Kronk
         TokenTransaction.create!(account_id: account.id, amount: -amount, kind: :backing, proposal_id: proposal.id)
         ProposalBacking.create!(proposal_id: proposal.id, account_id: account.id, amount: amount)
       end
+
+      # Announce on the cross-korner bus — Nudges listens and routes to
+      # the proposal author's Mate conversation with the backer (if
+      # they are Mates). Published outside the transaction so a
+      # subscriber failure never rolls back the token movement.
+      Kronk::KornerEvents.publish(
+        'kommons.proposal.backed',
+        actor_account_id: account.id,
+        recipient_account_id: proposal.created_by_account_id,
+        proposal_id: proposal.id,
+        amount: amount
+      )
     end
 
     # Return every backer's stake in a proposal. Called when a proposal is
@@ -72,7 +84,7 @@ module Kronk
       total = ProposalBacking.total_for(proposal.id)
       amount = author_payout_for(total)
 
-      already = TokenTransaction.for_proposal(proposal.id).where(kind: :payout).exists?
+      already = TokenTransaction.for_proposal(proposal.id).exists?(kind: :payout)
       return 0 if already
 
       apply!(proposal.created_by_account, amount, kind: :payout, proposal: proposal)
