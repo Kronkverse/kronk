@@ -29,6 +29,7 @@ class Favourite < ApplicationRecord
   end
 
   after_create :increment_cache_counters
+  after_create :publish_booth_set_frothed_if_booth
   after_destroy :decrement_cache_counters
   after_destroy :invalidate_cleanup_info
 
@@ -36,6 +37,25 @@ class Favourite < ApplicationRecord
 
   def increment_cache_counters
     status&.increment_count!(:favourites_count)
+  end
+
+  # booth.set.frothed — a Favourite landed on a Status that carries a
+  # BoothSet; Nudges routes to the set creator's Mate chat with the
+  # frother (if Mates). Guarded by association lookup so plain
+  # favourites don't touch the bus.
+  #
+  # Analogous froth publishers for other korner-attached Statuses
+  # (Proposal, Question) land as follow-ups.
+  def publish_booth_set_frothed_if_booth
+    return unless status&.booth_set
+
+    Kronk::KornerEvents.publish(
+      'booth.set.frothed',
+      actor_account_id: account_id,
+      recipient_account_id: status.account_id,
+      booth_set_id: status.booth_set.id,
+      status_id: status.id
+    )
   end
 
   def decrement_cache_counters

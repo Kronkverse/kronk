@@ -8,7 +8,7 @@
 
 slug: wachuneed
 name: Wachuneed
-purpose: "To let kronkers offer and find creations, goods, and services person-to-person."
+purpose: 'To let kronkers offer and find creations, goods, and services person-to-person.'
 icon: inventory_2
 render_target: native
 version: 2.0.0
@@ -44,6 +44,7 @@ emits:
   - wachuneed.listing.closed
   - wachuneed.offer.made
   - wachuneed.offer.accepted
+  - wachuneed.offer.declined # seller declines a buyer's offer; Nudges routes to buyer
 
 listens: []
 
