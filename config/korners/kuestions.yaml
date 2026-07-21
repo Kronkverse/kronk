@@ -3,7 +3,7 @@
 
 slug: kuestions
 name: Kuestions # rendered with Ƙ in nav
-purpose: "To prompt kronkers to share by asking each other questions — turning curiosity into connection."
+purpose: 'To prompt kronkers to share by asking each other questions — turning curiosity into connection.'
 icon: question_mark
 render_target: native
 version: 2.0.0 # rework: dedicated Question + Answer models + visibility gate
@@ -30,7 +30,9 @@ storage:
   media_prefix: # not-implemented
   redis_prefix: # not-implemented
 
-emits: []
+emits:
+  # Nudges listens for this to route to the asker's Mate chat with the answerer.
+  - kuestions.question.answered
 listens: []
 
 feed_projection:

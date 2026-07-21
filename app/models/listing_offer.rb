@@ -14,6 +14,8 @@ class ListingOffer < ApplicationRecord
   scope :pending,  -> { where(state: 'pending') }
   scope :accepted, -> { where(state: 'accepted') }
 
+  after_commit :publish_wachuneed_offer_made, on: :create
+
   def accept!
     update!(state: 'accepted')
     listing.update!(state: 'reserved')
@@ -33,5 +35,17 @@ class ListingOffer < ApplicationRecord
     return if amount_cents.nil? || amount_cents >= 0
 
     errors.add(:amount_cents, 'must not be negative')
+  end
+
+  # wachuneed.offer.made — buyer offers on a listing; Nudges routes
+  # to the seller's Mate chat with the offerer (if Mates).
+  def publish_wachuneed_offer_made
+    Kronk::KornerEvents.publish(
+      'wachuneed.offer.made',
+      actor_account_id: offerer_id,
+      recipient_account_id: listing.account_id,
+      listing_id: listing_id,
+      offer_id: id
+    )
   end
 end

@@ -41,6 +41,13 @@ emits:
   # notification system rather than the korner event bus; documented
   # here for discoverability of Kalendar's outbound signals.
   - notification.event_invitation
+  # Nudges listens for this to route to the event creator's Mate chat.
+  - name: kalendar.event.rsvpd
+    payload:
+      - actor_account_id
+      - recipient_account_id
+      - event_id
+      - status
 listens: []
 
 feed_projection:
