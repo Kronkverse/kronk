@@ -17,6 +17,7 @@ import { Avatar } from 'mastodon/components/avatar';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 import { Composer } from './composer';
+import { ExpiryCountdown } from './expiry_countdown';
 import { StreamItem } from './stream_item';
 
 const messages = defineMessages({
@@ -115,6 +116,9 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
       <header className='nudges-conversation__head'>
         {other && <Avatar account={other} size={32} />}
         <span className='nudges-conversation__name'>{otherName}</span>
+        {detail.conversation.expires_at && (
+          <ExpiryCountdown expiresAt={detail.conversation.expires_at} />
+        )}
       </header>
 
       <div className='nudges-conversation__stream'>
