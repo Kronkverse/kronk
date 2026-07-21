@@ -5,6 +5,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useHistory, useLocation } from 'react-router-dom';
 
+import api from 'mastodon/api';
 import {
   apiCreateKommonsProposal,
   apiCreateProposalTask,
@@ -25,15 +26,17 @@ const messages = defineMessages({
     id: 'propose.body_placeholder',
     defaultMessage: 'What should change, and why?',
   },
+  summaryPlaceholder: {
+    id: 'propose.summary_placeholder',
+    defaultMessage: 'One line that sums it up',
+  },
   stepPlaceholder: {
     id: 'propose.step_placeholder',
     defaultMessage: 'A step to complete',
   },
   removeStep: { id: 'propose.remove_step', defaultMessage: 'Remove step' },
+  removeDoc: { id: 'propose.remove_doc', defaultMessage: 'Remove document' },
 });
-
-const TYPES = ['small', 'medium', 'large'] as const;
-type ProposalType = (typeof TYPES)[number];
 
 // Plant a proposal (Kommons' native "compose"). Reached from the Ӂ menu or a
 // Space page's button. When opened with ?space=<slug> it scopes the proposal
@@ -80,15 +83,18 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       : '';
 
   const [title, setTitle] = useState('');
+  const [summary, setSummary] = useState('');
   const [body, setBody] = useState('');
-  const [type, setType] = useState<ProposalType>('small');
   // The steps: an extendable list, each becomes a Task on the new proposal.
   // Start with one empty row so the affordance is visible.
   const [steps, setSteps] = useState<string[]>(['']);
+  // Design docs staged locally; uploaded to the proposal once it's created.
+  const [docs, setDocs] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canSubmit = title.trim().length > 0 && body.trim().length > 0 && !submitting;
+  const canSubmit =
+    title.trim().length > 0 && body.trim().length > 0 && !submitting;
 
   const handleStepChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,14 +118,26 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     },
     [],
   );
+  const handleSummaryChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSummary(e.target.value);
+    },
+    [],
+  );
   const handleBodyChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setBody(e.target.value);
     },
     [],
   );
-  const handleSize = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    setType(e.currentTarget.dataset.size as ProposalType);
+  const handleDocs = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files ?? []);
+    if (picked.length) setDocs((prev) => [...prev, ...picked]);
+    e.target.value = '';
+  }, []);
+  const removeDoc = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const i = Number(e.currentTarget.dataset.index);
+    setDocs((prev) => prev.filter((_, idx) => idx !== i));
   }, []);
 
   const handleSubmit = useCallback(
@@ -132,28 +150,41 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       apiCreateKommonsProposal({
         title: title.trim(),
         body: body.trim(),
-        proposal_type: type,
+        ...(summary.trim() ? { summary: summary.trim() } : {}),
         // Anchor to the scoped node so it lands on that page's meta page and
         // the tree. Unscoped proposals carry no node.
         ...(targetNodeId ? { node_id: targetNodeId } : {}),
       })
         .then(async (created) => {
-          // Each step becomes a Task, in order. Best-effort: a failed step
-          // doesn't lose the proposal — it's already created.
+          // Steps become Tasks; staged design docs upload as attachments. The
+          // attachment route is nested under a persisted proposal, so it must
+          // run after create. Best-effort — a failure here doesn't lose the
+          // proposal, which already exists.
           for (const step of cleanSteps) {
             await apiCreateProposalTask(created.id, step);
+          }
+          for (const file of docs) {
+            const form = new FormData();
+            form.append('file', file);
+            form.append('kind', 'reference');
+            await api().post(
+              `/api/v1/proposals/${created.id}/attachments`,
+              form,
+            );
           }
           history.push(`/hub/kommons/p/${created.id}`);
           return undefined;
         })
         .catch((err: unknown) => {
           setError(
-            err instanceof Error ? err.message : 'Could not plant the proposal.',
+            err instanceof Error
+              ? err.message
+              : 'Could not plant the proposal.',
           );
           setSubmitting(false);
         });
     },
-    [canSubmit, title, body, type, steps, targetNodeId, history],
+    [canSubmit, title, body, summary, steps, docs, targetNodeId, history],
   );
 
   return (
@@ -204,6 +235,29 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             onChange={handleTitleChange}
             placeholder={intl.formatMessage(messages.titlePlaceholder)}
             maxLength={240}
+          />
+        </label>
+
+        <label className='propose-page__field'>
+          <span className='propose-page__label'>
+            <FormattedMessage
+              id='propose.summary_label'
+              defaultMessage='Summary'
+            />
+          </span>
+          <p className='propose-page__hint'>
+            <FormattedMessage
+              id='propose.summary_hint'
+              defaultMessage='One line, shown on the proposal’s feed card. Optional.'
+            />
+          </p>
+          <input
+            type='text'
+            className='propose-page__input'
+            value={summary}
+            onChange={handleSummaryChange}
+            placeholder={intl.formatMessage(messages.summaryPlaceholder)}
+            maxLength={500}
           />
         </label>
 
@@ -265,27 +319,57 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             className='propose-page__add-step'
             onClick={addStep}
           >
-            <FormattedMessage id='propose.add_step' defaultMessage='+ Add step' />
+            <FormattedMessage
+              id='propose.add_step'
+              defaultMessage='+ Add step'
+            />
           </button>
         </fieldset>
 
         <fieldset className='propose-page__field'>
           <span className='propose-page__label'>
-            <FormattedMessage id='propose.size_label' defaultMessage='Size' />
+            <FormattedMessage
+              id='propose.docs_label'
+              defaultMessage='Design docs'
+            />
           </span>
-          <div className='propose-page__sizes'>
-            {TYPES.map((t) => (
-              <button
-                type='button'
-                key={t}
-                data-size={t}
-                className={`propose-page__size ${type === t ? 'propose-page__size--active' : ''}`}
-                onClick={handleSize}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
+          <p className='propose-page__hint'>
+            <FormattedMessage
+              id='propose.docs_hint'
+              defaultMessage='Attach mockups, briefs, or references (PDF, image, markdown). Optional.'
+            />
+          </p>
+          {docs.length > 0 && (
+            <ul className='propose-page__docs'>
+              {docs.map((doc, i) => (
+                <li key={`${doc.name}-${i}`} className='propose-page__doc'>
+                  <span className='propose-page__doc-name'>{doc.name}</span>
+                  <button
+                    type='button'
+                    className='propose-page__step-remove'
+                    data-index={i}
+                    onClick={removeDoc}
+                    aria-label={intl.formatMessage(messages.removeDoc)}
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <label className='propose-page__add-step propose-page__add-doc'>
+            <FormattedMessage
+              id='propose.add_doc'
+              defaultMessage='+ Attach a document'
+            />
+            <input
+              type='file'
+              multiple
+              accept='.pdf,.png,.jpg,.jpeg,.gif,.webp,.md,.markdown,.html,.txt'
+              onChange={handleDocs}
+              hidden
+            />
+          </label>
         </fieldset>
 
         {error && <p className='propose-page__error'>{error}</p>}
