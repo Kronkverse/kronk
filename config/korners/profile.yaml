@@ -6,6 +6,7 @@
 
 slug: profile
 name: Profile
+purpose: "To let you shape how you show up on Kronk — your presence, your sections, your story."
 icon: account_circle
 render_target: native
 version: 0.1.0

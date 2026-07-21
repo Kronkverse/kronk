@@ -251,11 +251,13 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
       if (!id) return;
       const node = tree[id];
       if (!node) return;
-      // A korner is a space, not a branch to drill: open its Space page (the
-      // why / who / open-proposals view) rather than expanding its internal
-      // pages. The tree is the map; the Space page is the place.
-      if (node.korner) {
-        history.push(`/hub/kommons/space/${node.korner}`);
+      // A korner (or a space-pillar like Nudges) is a space, not a branch to
+      // drill: open its Space page (the why / who / open-proposals view) rather
+      // than expanding its internal pages. The tree is the map; the Space page
+      // is the place.
+      const spaceTarget = node.korner ?? node.space;
+      if (spaceTarget) {
+        history.push(`/hub/kommons/space/${spaceTarget}`);
         return;
       }
       // Ease this node into view once the layout settles.

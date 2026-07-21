@@ -62,6 +62,9 @@ export interface ApiKornerJSON {
   // handle of its steward. Both optional; declared in the manifest.
   purpose?: string | null;
   steward?: string | null;
+  // Where the space actually lives (a core space declares it, e.g. `/nudges`).
+  // Absent for korners, which default to `/hub/<slug>`.
+  mount?: string | null;
   feature_flag?: string | null;
   enforced?: boolean;
   // Populated by /api/v1/korners for the current viewer. Anonymous

@@ -77,7 +77,12 @@ export interface MapNode {
   url?: string;
   lifecycle?: string;
   count: number;
+  // The slug of the korner this node IS (set on `korner:<slug>` nodes).
   korner?: string;
+  // The slug of the space to open when this node is clicked, for pillars that
+  // are a space in their own right (feed/profile/nudges/settings). Distinct
+  // from `korner` so it doesn't make a pillar look like a Hub tenant.
+  space?: string;
 }
 
 export interface Placed {
@@ -114,8 +119,20 @@ export const buildTree = (nodes: KommonsNode[]): Tree => {
 
   add({ id: ROOT_ID, label: 'Kronk', kids: [...LIMBS], count: 0 });
 
+  // These pillars are a space in their own right: clicking them opens a Space
+  // page rather than drilling into internal pages. Hub is excluded (it contains
+  // the korners — navigating would hide them); Kronk is excluded (org markdown
+  // space, no manifest to drive a Space page yet).
+  const SPACE_LIMBS = new Set(['feed', 'profile', 'nudges', 'settings']);
   for (const limb of LIMBS) {
-    add({ id: limb, label: limbLabel(limb), parent: ROOT_ID, kids: [], count: 0 });
+    add({
+      id: limb,
+      label: limbLabel(limb),
+      parent: ROOT_ID,
+      kids: [],
+      count: 0,
+      space: SPACE_LIMBS.has(limb) ? limb : undefined,
+    });
   }
 
   // feed/profile/nudges/settings hold their pages directly — but a page may

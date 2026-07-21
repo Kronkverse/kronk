@@ -234,10 +234,12 @@ export const BodyMap: React.FC<{
       if (dragRef.current.moved) return;
       const node = tree[id];
       if (!node) return;
-      // A korner is a space, not a branch to drill: open its Space page
-      // rather than focusing its internal pages (matches the Lattice).
-      if (node.korner) {
-        history.push(`/hub/kommons/space/${node.korner}`);
+      // A korner (or a space-pillar like Nudges) is a space, not a branch to
+      // drill: open its Space page rather than focusing its internal pages
+      // (matches the Lattice).
+      const spaceTarget = node.korner ?? node.space;
+      if (spaceTarget) {
+        history.push(`/hub/kommons/space/${spaceTarget}`);
         return;
       }
       if (node.kids.length > 0) {
