@@ -16,16 +16,18 @@ module Nudges
     self.table_name = 'nudges_conversation_messages'
 
     REACTION_CAP = 3
+    MAX_MEDIA    = 4 # matches Mastodon Status default
 
     belongs_to :conversation,
                class_name: 'Nudges::Conversation',
                inverse_of: :messages
     belongs_to :author_account, class_name: 'Account'
-    belongs_to :media_attachment, optional: true
+    belongs_to :media_attachment, optional: true # legacy Phase 1i column
     belongs_to :voice_attachment, class_name: 'MediaAttachment', optional: true
 
     validate :body_or_attachment_present
     validate :reactions_within_cap
+    validate :media_within_cap
 
     before_validation :inherit_expiry_from_conversation, on: :create
     after_create_commit :bump_conversation_activity
@@ -44,9 +46,24 @@ module Nudges
         deleted_at: Time.current,
         body: nil,
         media_attachment_id: nil,
+        media_attachment_ids: [],
         voice_attachment_id: nil,
         reactions: []
       )
+    end
+
+    # Unified view of attachments — legacy singular column + new array
+    # column merged, dedup preserving insertion order. Callers should
+    # prefer this over the raw fields.
+    def all_media_ids
+      [media_attachment_id, *media_attachment_ids].compact.uniq
+    end
+
+    def media_attachments_all
+      ids = all_media_ids
+      return [] if ids.empty?
+
+      MediaAttachment.where(id: ids).index_by(&:id).values_at(*ids).compact
     end
 
     def tombstoned?
@@ -81,9 +98,14 @@ module Nudges
     end
 
     def body_or_attachment_present
-      return if body.present? || media_attachment_id.present? || voice_attachment_id.present?
+      return if body.present? || media_attachment_id.present? || voice_attachment_id.present? || media_attachment_ids.present?
 
       errors.add(:base, 'body or attachment required')
+    end
+
+    def media_within_cap
+      count = all_media_ids.size
+      errors.add(:media_attachment_ids, "cannot exceed #{MAX_MEDIA} attachments") if count > MAX_MEDIA
     end
 
     def reactions_within_cap

@@ -25,21 +25,21 @@ class REST::Nudges::MessageSerializer < ActiveModel::Serializer
   end
 
   # Compact media payload for the client: url + type + preview so the
-  # bubble can render without a follow-up fetch. Nil when the message
-  # has no attachment or is tombstoned.
+  # bubble can render without a follow-up fetch. Always an array so
+  # single-vs-multi doesn't require two code paths on the client.
+  # Empty when the message has no attachments or is tombstoned.
   def media
-    return nil if object.tombstoned?
+    return [] if object.tombstoned?
 
-    attachment = object.media_attachment
-    return nil unless attachment
-
-    {
-      id: attachment.id.to_s,
-      type: attachment.type,
-      url: attachment.file&.url(:original),
-      preview_url: attachment.file&.url(attachment.file.styles.keys.first || :original),
-      description: attachment.description,
-    }
+    object.media_attachments_all.map do |attachment|
+      {
+        id: attachment.id.to_s,
+        type: attachment.type,
+        url: attachment.file&.url(:original),
+        preview_url: attachment.file&.url(attachment.file.styles.keys.first || :original),
+        description: attachment.description,
+      }
+    end
   end
 
   def voice

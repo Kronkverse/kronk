@@ -64,7 +64,7 @@ const prependOptimistic = (
     id: tempId,
     conversation_id: detail.conversation.id,
     body: body || null,
-    media: null,
+    media: [],
     voice: null,
     reactions: [],
     created_at: now,
@@ -98,7 +98,7 @@ const replaceOptimistic = (
     conversation: {
       ...detail.conversation,
       last_activity_at: message.created_at,
-      preview: message.body ?? '📷 media',
+      preview: message.body ?? (message.media.length > 0 ? '📷 media' : ''),
       latest_kind: 'message',
     },
     stream: detail.stream.map((item) =>
@@ -199,9 +199,9 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   // on success, mark failed on rejection). Composer clears instantly;
   // the bubble shows a subtle "sending…" tick until acknowledged.
   const handleSend = useCallback(
-    async (body: string, mediaAttachmentId?: string) => {
+    async (body: string, mediaAttachmentIds: string[]) => {
       const trimmed = body.trim();
-      if (!trimmed && !mediaAttachmentId) return;
+      if (!trimmed && mediaAttachmentIds.length === 0) return;
       const tempId = `tmp-${crypto.randomUUID()}`;
 
       onMessageSent(prependOptimistic(detail, tempId, trimmed));
@@ -210,7 +210,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         const created = await apiSendNudgeMessage(
           conversationId,
           trimmed,
-          mediaAttachmentId,
+          mediaAttachmentIds,
         );
         onMessageSent(replaceOptimistic(detail, tempId, created));
       } catch {
@@ -235,6 +235,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         const created = await apiSendNudgeMessage(
           conversationId,
           failed.body ?? '',
+          [],
         );
         onMessageSent(replaceOptimistic(detail, tempId, created));
       } catch {
