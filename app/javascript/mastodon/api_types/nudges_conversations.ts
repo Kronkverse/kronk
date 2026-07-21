@@ -7,6 +7,10 @@ export interface ApiNudgeKrewJSON {
   id: string;
   name: string;
   member_count: number;
+  // Up to 2 URLs — the sidebar renders these as a stacked pair per
+  // docs/kronk_nudges.md §Surface 2. Empty array on Krews with no
+  // members visible to the viewer.
+  avatar_urls: string[];
 }
 
 export interface ApiNudgeConversationJSON {

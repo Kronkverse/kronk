@@ -9,6 +9,8 @@
 # Pass `scope: current_account` — the serializer needs it to compute
 # per-viewer unread + orient "other party" for Mate.
 class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
+  include RoutingHelper
+
   attributes :id, :kind, :last_activity_at, :expires_at, :unread_count,
              :preview, :latest_kind, :muted, :krew
 
@@ -39,7 +41,10 @@ class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
     object.other_account_for(viewer)
   end
 
-  # Krew descriptor for kind=krew rows. Null for Mate.
+  # Krew descriptor for kind=krew rows. Null for Mate. Includes up to
+  # two member avatar URLs to render the stacked-pair thumbnail in the
+  # sidebar per docs/kronk_nudges.md §Surface 2. Preference: (viewer
+  # first if a member), then remaining members ordered by join time.
   def krew
     return nil unless object.krew?
 
@@ -50,7 +55,14 @@ class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
       id: group.id.to_s,
       name: group.name,
       member_count: group.group_memberships.count,
+      avatar_urls: krew_avatar_urls(group),
     }
+  end
+
+  def krew_avatar_urls(group)
+    ordered = group.group_memberships.order(:id).limit(4).map(&:account)
+    ordered = [viewer] + ordered.reject { |a| a.id == viewer&.id } if viewer && ordered.any? { |a| a.id == viewer.id }
+    ordered.first(2).map { |a| full_asset_url(a.avatar_original_url) }
   end
 
   def unread_count
