@@ -1,0 +1,51 @@
+// Nudges::Conversation-backed messenger API shapes. Backend:
+// Api::V1::Nudges::ConversationsController + MessagesController.
+
+import type { ApiAccountJSON } from './accounts';
+
+export interface ApiNudgeConversationJSON {
+  id: string;
+  kind: 'mate' | 'krew';
+  last_activity_at: string | null;
+  expires_at: string | null;
+  unread_count: number;
+  preview: string;
+  other_account: ApiAccountJSON | null;
+}
+
+export interface ApiNudgeMessageJSON {
+  id: string;
+  conversation_id: string;
+  body: string | null;
+  media_attachment_id: string | null;
+  voice_attachment_id: string | null;
+  reactions: { account_id: number; symbol: string; created_at: string }[];
+  created_at: string;
+  author_is_self: boolean;
+  author: ApiAccountJSON;
+}
+
+export interface ApiNudgeEventJSON {
+  id: string;
+  conversation_id: string;
+  source_korner_slug: string;
+  verb: string;
+  source_type: string | null;
+  source_id: string | null;
+  interaction: 'interactive' | 'passive';
+  cta_label: string | null;
+  cta_route: string | null;
+  created_at: string;
+  actor: ApiAccountJSON;
+}
+
+// The stream endpoint interleaves messages and events; each item
+// carries a `kind` discriminator.
+export type ApiNudgeStreamItem =
+  | ({ kind: 'message' } & ApiNudgeMessageJSON)
+  | ({ kind: 'event' } & ApiNudgeEventJSON);
+
+export interface ApiNudgeConversationDetail {
+  conversation: ApiNudgeConversationJSON;
+  stream: ApiNudgeStreamItem[];
+}

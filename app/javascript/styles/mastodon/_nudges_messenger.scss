@@ -1,0 +1,397 @@
+// Nudges messenger — the Signal-shaped surface at /nudges.
+// Spec: docs/kronk_nudges.md §Surface 2. Prototype:
+// kronk-nudges-chat.html (visual source of truth). Layout: sidebar +
+// open pane, one continuous surface.
+// Token-only. All colours reference --semantic-* / --kronk-* / the
+// existing radius + motion scale.
+
+.nudges-messenger {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: calc(100vh - 6rem);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-primary);
+}
+
+// ── Sidebar ──────────────────────────────────────────────────────
+.nudges-messenger__sidebar {
+  flex: 0 0 320px;
+  border-right: 1px solid var(--border-subtle);
+  overflow-y: auto;
+  background: var(--surface-primary);
+}
+
+.nudges-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.nudges-sidebar__search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface-primary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.nudges-sidebar__search-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  flex: 0 0 auto;
+}
+
+.nudges-sidebar__search-input {
+  flex: 1 1 auto;
+  padding: 0.4rem 0.6rem;
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  font: inherit;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--kronk-purple-bright);
+    outline-offset: 0;
+  }
+}
+
+.nudges-sidebar__status {
+  padding: 1rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.nudges-sidebar__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+// ── One conversation row ─────────────────────────────────────────
+.nudges-row {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.nudges-row__button {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  color: inherit;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--surface-elevated);
+    outline: none;
+  }
+}
+
+.nudges-row--active .nudges-row__button {
+  background: var(--surface-elevated);
+}
+
+.nudges-row__avatar {
+  flex: 0 0 auto;
+}
+
+.nudges-row__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.nudges-row__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.nudges-row__name {
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nudges-row__time {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.nudges-row__preview {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nudges-row--unread .nudges-row__preview {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.nudges-row__badge {
+  flex: 0 0 auto;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.4rem;
+  border-radius: var(--radius-round);
+  background: var(--kronk-purple-bright);
+  color: var(--text-on-accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+  text-align: center;
+}
+
+// ── Right pane ───────────────────────────────────────────────────
+.nudges-messenger__pane {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-primary);
+}
+
+.nudges-empty {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.nudges-conversation {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.nudges-conversation__head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-primary);
+}
+
+.nudges-conversation__name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.nudges-conversation__status {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.nudges-conversation__stream {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1rem;
+}
+
+// ── Message bubble ───────────────────────────────────────────────
+.nudges-msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+  gap: 0.15rem;
+}
+
+.nudges-msg--out {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.nudges-msg--in {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.nudges-msg__bubble {
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--radius-large);
+  color: var(--text-primary);
+  background: var(--surface-elevated);
+  overflow-wrap: break-word;
+
+  .nudges-msg--out & {
+    background: var(--kronk-purple-primary);
+    color: var(--text-on-accent);
+  }
+}
+
+.nudges-msg__body {
+  white-space: pre-wrap;
+}
+
+.nudges-msg__time {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+// ── Inline event ─────────────────────────────────────────────────
+.nudges-event {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+  align-self: center;
+  max-width: 90%;
+}
+
+.nudges-event__orb {
+  width: 10px;
+  height: 10px;
+  margin-top: 0.35rem;
+  border-radius: var(--radius-round);
+  background: var(--kronk-purple-bright);
+  box-shadow: 0 0 8px 1px var(--kronk-purple-bright);
+  flex: 0 0 auto;
+}
+
+.nudges-event__body {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.nudges-event__avatar {
+  flex: 0 0 auto;
+}
+
+.nudges-event__text {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.nudges-event__source {
+  color: var(--text-muted);
+}
+
+.nudges-event__cta {
+  color: var(--kronk-purple-bright);
+  font-size: 0.85rem;
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.nudges-event__time {
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+// ── Composer ─────────────────────────────────────────────────────
+.nudges-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-primary);
+}
+
+.nudges-composer__input {
+  flex: 1 1 auto;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-large);
+  font: inherit;
+  resize: none;
+  max-height: 8rem;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--kronk-purple-bright);
+    outline-offset: 0;
+  }
+}
+
+.nudges-composer__send {
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--kronk-purple-bright);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: var(--radius-round);
+  cursor: pointer;
+  transition: opacity var(--dur-fast) var(--ease-out);
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: currentcolor;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// ── Mobile ───────────────────────────────────────────────────────
+// Below the tablet breakpoint, sidebar and pane stack: sidebar full
+// width until a conversation is chosen, then the pane replaces it.
+@media (width <= 889px) {
+  .nudges-messenger {
+    height: calc(100vh - 5rem);
+  }
+
+  .nudges-messenger:has(.nudges-conversation) .nudges-messenger__sidebar {
+    display: none;
+  }
+
+  .nudges-messenger__sidebar,
+  .nudges-messenger__pane {
+    flex: 1 1 100%;
+  }
+}

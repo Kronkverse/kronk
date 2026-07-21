@@ -238,6 +238,12 @@ namespace :api, format: false do
     namespace :nudges do
       resources :legacy, only: [:index], controller: :legacy_archive
       resources :activity, only: [:index], controller: :activity
+      resources :conversations, only: [:index, :show] do
+        member do
+          post :read
+        end
+        resources :messages, only: [:create]
+      end
     end
 
     resources :groups, only: [:index, :show, :create, :update, :destroy] do
