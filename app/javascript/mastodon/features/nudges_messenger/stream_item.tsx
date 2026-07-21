@@ -17,6 +17,8 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 import { me } from 'mastodon/initial_state';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
+import { LinkifiedBody } from './linkified_body';
+
 const messages = defineMessages({
   addReaction: {
     id: 'nudges.reactions.add',
@@ -171,7 +173,11 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
       )}
       <div className='nudges-msg__bubble'>
         {item.media.length > 0 && <MessageMediaGrid media={item.media} />}
-        {item.body && <span className='nudges-msg__body'>{item.body}</span>}
+        {item.body && (
+          <span className='nudges-msg__body'>
+            <LinkifiedBody body={item.body} />
+          </span>
+        )}
       </div>
 
       {!isOptimistic && (grouped.length > 0 || onReact) && (

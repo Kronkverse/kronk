@@ -720,6 +720,18 @@
 
 .nudges-msg__body {
   white-space: pre-wrap;
+  overflow-wrap: anywhere; // long URLs shouldn't blow out the bubble
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+
+    &:hover {
+      text-decoration-thickness: 2px;
+    }
+  }
 }
 
 .nudges-msg__time {
