@@ -105,6 +105,16 @@ const NudgesMessenger: React.FC<{ multiColumn?: boolean }> = ({
     [history],
   );
 
+  const handleNewConversation = useCallback(
+    (conversation: ApiNudgeConversationJSON) => {
+      setConversations((prev) => {
+        const others = prev.filter((c) => c.id !== conversation.id);
+        return [conversation, ...others];
+      });
+    },
+    [],
+  );
+
   // When a message send lands, prepend it into the local stream and
   // re-sort the sidebar so the row leaps to the top.
   const handleMessageSent = useCallback(
@@ -147,6 +157,7 @@ const NudgesMessenger: React.FC<{ multiColumn?: boolean }> = ({
             loading={conversationsLoading}
             activeId={conversationId ?? null}
             onOpen={handleOpenConversation}
+            onNewConversation={handleNewConversation}
           />
         </aside>
 
