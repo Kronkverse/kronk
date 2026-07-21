@@ -10,7 +10,7 @@
 # per-viewer unread + orient "other party" for Mate.
 class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
   attributes :id, :kind, :last_activity_at, :expires_at, :unread_count,
-             :preview, :latest_kind
+             :preview, :latest_kind, :krew
 
   belongs_to :other_account, serializer: REST::AccountSerializer
 
@@ -30,6 +30,20 @@ class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
     return nil unless viewer
 
     object.other_account_for(viewer)
+  end
+
+  # Krew descriptor for kind=krew rows. Null for Mate.
+  def krew
+    return nil unless object.krew?
+
+    group = object.krew
+    return nil unless group
+
+    {
+      id: group.id.to_s,
+      name: group.name,
+      member_count: group.group_memberships.count,
+    }
   end
 
   def unread_count
