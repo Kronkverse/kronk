@@ -21,6 +21,7 @@ import type {
   ApiNudgeMessageJSON,
 } from 'mastodon/api_types/nudges_conversations';
 import { Avatar } from 'mastodon/components/avatar';
+import { me } from 'mastodon/initial_state';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 import { aggregateStream } from './aggregate_stream';
@@ -29,6 +30,7 @@ import { Composer } from './composer';
 import { DaySeparator } from './day_separator';
 import { ExpiryCountdown } from './expiry_countdown';
 import { StreamItem } from './stream_item';
+import { useNudgesConversationStream } from './use_nudges_stream';
 
 // Alias so the import order stays lexicographic without cluttering the read.
 const KrewIcon = GroupsIcon;
@@ -185,6 +187,12 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   const intl = useIntl();
   const history = useHistory();
   const streamEndRef = useRef<HTMLDivElement>(null);
+  // A ref keeps the latest detail visible to stream handlers without
+  // re-subscribing every re-render.
+  const detailRef = useRef<ApiNudgeConversationDetail | null>(detail);
+  useEffect(() => {
+    detailRef.current = detail;
+  }, [detail]);
   const [loadingOlder, setLoadingOlder] = useState(false);
   // `hasMore` starts true and flips false the first time a page comes
   // back short of STREAM_LIMIT. Reset on conversationId change so a
@@ -202,6 +210,99 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
       streamEndRef.current.scrollIntoView({ block: 'end' });
     }
   }, [detail?.stream.length]);
+
+  // Real-time streaming — subscribe to nudges:conversation events for
+  // the open conversation and fold updates into the local detail. The
+  // handlers are stable (they read `detailRef` for the current stream)
+  // so the effect doesn't re-subscribe on every render.
+  useNudgesConversationStream(conversationId, {
+    onMessageCreated: (msg) => {
+      const current = detailRef.current;
+      if (!current) return;
+      // Drop echoes for messages already in the stream (self-send lands
+      // via the optimistic path first).
+      if (
+        current.stream.some(
+          (item) => item.kind === 'message' && item.id === msg.id,
+        )
+      ) {
+        return;
+      }
+      onMessageSent({
+        ...current,
+        stream: [{ kind: 'message', ...msg }, ...current.stream],
+        conversation: {
+          ...current.conversation,
+          last_activity_at: msg.created_at,
+          preview:
+            msg.body ??
+            (msg.media.length > 0 ? '📷 media' : current.conversation.preview),
+          latest_kind: 'message',
+        },
+      });
+    },
+    onMessageUpdated: (msg) => {
+      const current = detailRef.current;
+      if (!current) return;
+      onMessageSent({
+        ...current,
+        stream: current.stream.map((item) =>
+          item.kind === 'message' && item.id === msg.id
+            ? { kind: 'message', ...msg }
+            : item,
+        ),
+      });
+    },
+    onMessageDeleted: (msg) => {
+      const current = detailRef.current;
+      if (!current) return;
+      // Tombstoned rows come through as an update flavour (payload
+      // has `deleted: true`); treat as an update so the row stays but
+      // the serializer's redaction applies.
+      onMessageSent({
+        ...current,
+        stream: current.stream.map((item) =>
+          item.kind === 'message' && item.id === msg.id
+            ? { kind: 'message', ...msg }
+            : item,
+        ),
+      });
+    },
+    onEventCreated: (event) => {
+      const current = detailRef.current;
+      if (!current) return;
+      if (
+        current.stream.some(
+          (item) => item.kind === 'event' && item.id === event.id,
+        )
+      ) {
+        return;
+      }
+      onMessageSent({
+        ...current,
+        stream: [{ kind: 'event', ...event }, ...current.stream],
+        conversation: {
+          ...current.conversation,
+          last_activity_at: event.created_at,
+          latest_kind: 'event',
+        },
+      });
+    },
+    onRead: (payload) => {
+      const current = detailRef.current;
+      if (!current) return;
+      if (current.conversation.kind !== 'mate') return;
+      // Only the OTHER party's read pointer moves the "Seen" flag.
+      if (me && payload.reader_account_id === me) return;
+      onMessageSent({
+        ...current,
+        conversation: {
+          ...current.conversation,
+          other_last_read_message_id: payload.last_read_message_id,
+        },
+      });
+    },
+  });
 
   const handleLoadOlder = useCallback(() => {
     if (!detail || loadingOlder || !hasMore) return;
