@@ -149,16 +149,12 @@ class Api::V1::StatusesController < Api::BaseController
     @statuses = Status.permitted_statuses_from_ids(status_ids, current_account)
   end
 
+  # Kuestions v2 owns its own visibility gate on the dedicated
+  # Question/Answer tables (see Kuestions::VisibilityGate). Any
+  # remaining `post_type: :answer` Status rows from the legacy path
+  # are hidden here rather than exposed as free-standing replies.
   def filter_locked_answers(statuses)
-    return statuses if statuses.none?(&:kronk_answer?)
-    return statuses.reject(&:kronk_answer?) if current_account.nil?
-
-    answered_question_ids = Status.where(
-      account: current_account,
-      post_type: :answer
-    ).pluck(:in_reply_to_id).to_set
-
-    statuses.reject { |s| s.kronk_answer? && !answered_question_ids.include?(s.in_reply_to_id) }
+    statuses.reject(&:kronk_answer?)
   end
 
   def set_status
