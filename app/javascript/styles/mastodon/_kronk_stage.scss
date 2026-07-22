@@ -29,9 +29,9 @@
   display: flex;
   flex-direction: column;
 
-  // The single scrollable region — inner space content shouldn't
-  // wrap itself in another overflow container.
-  scrollbar-gutter: stable;
+  // No `scrollbar-gutter: stable` — a reserved gutter on a fixed
+  // rectangle floats a vertical line in the middle of the frame when
+  // content is short. Let the scrollbar appear only when needed.
 
   @media (width >= 890px) {
     right: 7.75rem;
