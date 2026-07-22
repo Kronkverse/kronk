@@ -533,6 +533,9 @@ namespace :api, format: false do
     # Kuestions v2 rebuild — swipe-deck shape + gated answers. Legacy
     # /api/v1/questions stays for the transition (see docs/spaces/kuestions.md).
     resources :kuestions, only: [:index, :show, :create] do
+      collection do
+        get 'prompt/today', to: 'kuestions/daily_prompt#show'
+      end
       resources :answers, only: [:create], module: :kuestions
       resource  :skip,    only: [:create, :destroy], module: :kuestions
     end
