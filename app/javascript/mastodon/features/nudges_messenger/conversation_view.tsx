@@ -23,6 +23,8 @@ import type {
 import { Avatar } from 'mastodon/components/avatar';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
+import { aggregateStream } from './aggregate_stream';
+import { AggregatedEventItem } from './aggregated_event';
 import { Composer } from './composer';
 import { DaySeparator } from './day_separator';
 import { ExpiryCountdown } from './expiry_countdown';
@@ -386,8 +388,13 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   const krewName = detail.conversation.krew?.name ?? 'Krew';
 
   // Stream is delivered most-recent-first; render oldest-first so a
-  // new message appears at the bottom.
-  const oldestFirst = [...detail.stream].reverse();
+  // new message appears at the bottom. Then run through
+  // `aggregateStream` to collapse consecutive passive nudges per
+  // brief §Open decisions (resolved 2026-07-22).
+  const oldestFirst = aggregateStream(
+    [...detail.stream].reverse(),
+    detail.conversation.kind,
+  );
 
   return (
     <div className='nudges-conversation'>
@@ -469,18 +476,25 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           return (
             <React.Fragment key={`${item.kind}-${item.id}`}>
               {showDay && <DaySeparator timestamp={item.created_at} />}
-              <StreamItem
-                item={item}
-                conversationKind={detail.conversation.kind}
-                otherLastReadMessageId={
-                  detail.conversation.other_last_read_message_id
-                }
-                onReact={handleReact}
-                onUnreact={handleUnreact}
-                onDelete={handleDelete}
-                onRetry={handleRetry}
-                onDismissFailed={handleDismissFailed}
-              />
+              {item.kind === 'aggregate' ? (
+                <AggregatedEventItem
+                  item={item}
+                  conversationKind={detail.conversation.kind}
+                />
+              ) : (
+                <StreamItem
+                  item={item}
+                  conversationKind={detail.conversation.kind}
+                  otherLastReadMessageId={
+                    detail.conversation.other_last_read_message_id
+                  }
+                  onReact={handleReact}
+                  onUnreact={handleUnreact}
+                  onDelete={handleDelete}
+                  onRetry={handleRetry}
+                  onDismissFailed={handleDismissFailed}
+                />
+              )}
             </React.Fragment>
           );
         })}

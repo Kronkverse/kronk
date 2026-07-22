@@ -1008,6 +1008,57 @@
   }
 }
 
+// ── Aggregated event (passive nudge rollup) ────────────────────────
+// Clickable summary; the caret flips ▸/▾ and reveals a list of the
+// underlying nudges. Sits inside the same event bubble as a single
+// event so mixed streams read consistently.
+.nudges-event__aggregate-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.nudges-event__aggregate-caret {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.nudges-event__aggregate-list {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0.35rem 0.5rem;
+  background: rgb(0 0 0 / 15%);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+}
+
+.nudges-event__aggregate-row {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.15rem 0;
+
+  & + & {
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
+.nudges-event__aggregate-row-actor {
+  font-weight: 500;
+}
+
+.nudges-event__aggregate-row-time {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
 .nudges-event__time {
   flex: 0 0 auto;
   font-size: 0.7rem;
