@@ -9,9 +9,14 @@
 //            content that scrolls up under them.
 //   right  = korner sidebar edge on ≥890px (matches the right fade
 //            band width, `7.75rem`); 0 below the sidebar breakpoint.
+//            The Stage's own vertical scrollbar sits at this edge,
+//            right against the sidebar's inner edge, so it reads as
+//            part of that boundary — not a floating line mid-frame.
 //   bottom = viewport.
-//   left   = mirrors the right inset so the space sits symmetrically
-//            in the frame; 0 below the sidebar breakpoint.
+//   left   = 0. There's no left rail to match; a mirrored left inset
+//            just opened a mysterious gutter down the left side that
+//            "boxed in" the space instead of letting it meet the
+//            wordmark's column.
 // If the KornerSubBar is present it stacks below the switcher — Stage
 // pushes down another notch via a `body:has(.korner-sub-bar)`
 // override so the space's top edge clears the pill.
@@ -35,7 +40,6 @@
 
   @media (width >= 890px) {
     right: 7.75rem;
-    left: 7.75rem;
   }
 }
 
