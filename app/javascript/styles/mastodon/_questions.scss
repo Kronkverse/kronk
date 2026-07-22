@@ -4,13 +4,18 @@
 // Prototype: docs/kronk_kuestions_prototype.html.
 // Space doc: docs/spaces/kuestions.md.
 
+// The shell fills the Column pane so the star field, membrane nav
+// and content all sit inside the same envelope the rest of the app
+// uses. The prototype (docs/kronk_kuestions_prototype.html) bakes a
+// mobile-first 560px `.shell`, which on desktop pulled Kuestions
+// into a narrow floating box — the Kronk chrome pane already caps
+// `.columns-area__panels` at 720px on wide viewports, so a further
+// cap here just disintegrated the space from its surroundings.
 .kuestions-shell {
   position: relative;
   flex: 1;
   overflow-y: auto;
   width: 100%;
-  max-width: 560px;
-  margin: 0 auto;
   padding: 16px 16px 120px;
 }
 
