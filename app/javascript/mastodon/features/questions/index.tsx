@@ -58,7 +58,10 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   }, [panel]);
 
   return (
-    <Column bindToDocument label={intl.formatMessage(messages.title)}>
+    <Column
+      bindToDocument={!multiColumn}
+      label={intl.formatMessage(messages.title)}
+    >
       <ColumnHeader
         title={intl.formatMessage(messages.title)}
         icon='korner'
