@@ -702,10 +702,20 @@
 
 // One scroll — sections stack with breathing room now the tabs are gone.
 .governance-detail__content {
+  // One scroll — sections stack with breathing room now the tabs are gone,
+  // each as a card (mockup rhythm). The parent .governance-detail scrolls.
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   margin-top: 8px;
+
+  > .governance-tab-proposal,
+  > .governance-attachments {
+    background: var(--surface-primary, rgba(255, 255, 255, 3%));
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
+    border-radius: var(--radius-md, 16px);
+    padding: 20px;
+  }
 }
 
 .governance-detail__status {
@@ -718,8 +728,7 @@
   border-radius: 99px;
   white-space: nowrap;
 
-  &--open,
-  &--completed {
+  &--open {
     background: var(--accent);
     color: #fff;
   }
@@ -729,7 +738,8 @@
     color: #fff;
   }
 
-  &--delivered {
+  &--delivered,
+  &--completed {
     background: var(--decision-agree);
     color: #fff;
   }
@@ -771,10 +781,6 @@
   &:hover:not(.active) {
     color: $primary-text-color;
   }
-}
-
-.governance-detail__content {
-  // no height/overflow here; the parent .governance-detail handles scroll
 }
 
 .governance-detail__divider {
@@ -1474,20 +1480,33 @@
   cursor: pointer;
   transition: all 0.15s;
 
-  &:hover:not(:disabled) {
-    border-color: var(--accent);
-    color: $primary-text-color;
+  // Decision palette (mockup): support = agree (green), question = pending
+  // (amber), challenge = block (red). Hover tints toward the type's colour;
+  // active fills it.
+  &--support:hover:not(:disabled) {
+    border-color: var(--decision-agree);
+    color: var(--decision-agree);
+  }
+
+  &--question:hover:not(:disabled) {
+    border-color: var(--decision-pending);
+    color: var(--decision-pending);
+  }
+
+  &--challenge:hover:not(:disabled) {
+    border-color: var(--decision-block);
+    color: var(--decision-block);
   }
 
   &--support.active {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--decision-agree);
+    border-color: var(--decision-agree);
     color: #fff;
   }
 
   &--question.active {
-    background: $secondary-text-color;
-    border-color: $secondary-text-color;
+    background: var(--decision-pending);
+    border-color: var(--decision-pending);
     color: #fff;
   }
 
