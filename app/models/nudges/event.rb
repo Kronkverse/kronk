@@ -27,6 +27,7 @@ module Nudges
 
     before_validation :ensure_created_at, on: :create
     after_create_commit :bump_conversation_activity
+    after_create_commit :publish_stream_created
 
     def source
       return nil unless source_type.present? && source_id.present?
@@ -52,6 +53,10 @@ module Nudges
 
     def bump_conversation_activity
       conversation.update_column(:last_activity_at, created_at)
+    end
+
+    def publish_stream_created
+      Nudges::StreamPublisher.event_created(self)
     end
   end
 end

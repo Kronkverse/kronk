@@ -32,6 +32,8 @@ module Nudges
     before_validation :inherit_expiry_from_conversation, on: :create
     after_create_commit :bump_conversation_activity
     after_create_commit :increment_relationship_counter
+    after_create_commit :publish_stream_created
+    after_update_commit :publish_stream_updated
 
     scope :not_expired, -> { where('expires_at IS NULL OR expires_at > ?', Time.current) }
     scope :live,        -> { where(deleted_at: nil) }
@@ -121,6 +123,19 @@ module Nudges
 
     def bump_conversation_activity
       conversation.update_column(:last_activity_at, created_at)
+    end
+
+    # Emit stream events so open WebSocket subscribers see the row
+    # land without a poll. Tombstone flows through `publish_stream_updated`
+    # (an update, not a destroy) and the client reads `deleted: true` off
+    # the serialized payload — so a dedicated `message.deleted` publish
+    # would be redundant.
+    def publish_stream_created
+      Nudges::StreamPublisher.message_created(self)
+    end
+
+    def publish_stream_updated
+      Nudges::StreamPublisher.message_updated(self)
     end
 
     # Bump the shared Mate counter. If the increment crosses a milestone,

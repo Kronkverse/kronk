@@ -127,6 +127,12 @@ module Nudges
         membership = memberships.find_by(account_id: account.id)
         membership&.update!(last_read_message_id: up_to_message_id)
       end
+
+      Nudges::StreamPublisher.read_pointer(
+        conversation: self,
+        reader_account_id: account.id,
+        up_to_message_id: up_to_message_id
+      )
     end
 
     def participant?(account)
