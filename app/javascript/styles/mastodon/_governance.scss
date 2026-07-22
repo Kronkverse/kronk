@@ -3773,3 +3773,165 @@
     color: var(--text-muted, rgba(255, 255, 255, 55%));
   }
 }
+
+// ── Comments (discussion; support-model proposal page) ──────────────────
+.proposal-comments {
+  background: var(--surface-primary, rgba(255, 255, 255, 3%));
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
+  border-radius: var(--radius-md, 16px);
+  padding: 20px;
+
+  &__heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 14px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, rgba(255, 255, 255, 60%));
+  }
+
+  &__count {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 13px;
+    color: var(--text-secondary, rgba(255, 255, 255, 70%));
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  &__empty {
+    margin: 0;
+    color: var(--text-muted, rgba(255, 255, 255, 55%));
+    font-size: 14px;
+  }
+
+  &__thread {
+    padding: 8px 0;
+    border-top: 1px solid var(--surface-border, rgba(255, 255, 255, 6%));
+
+    &:first-child {
+      border-top: 0;
+    }
+  }
+
+  &__reply-form,
+  &__add {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__reply-form {
+    margin: 8px 0 4px 46px;
+  }
+
+  &__textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm, 10px);
+    border: 1px solid var(--border-default, rgba(255, 255, 255, 14%));
+    background: var(--input-background-color, rgba(255, 255, 255, 4%));
+    color: inherit;
+    font: inherit;
+    resize: vertical;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent, #6364ff);
+    }
+  }
+
+  &__add-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &__post {
+    align-self: flex-end;
+    padding: 7px 16px;
+    border-radius: var(--radius-round, 999px);
+    border: 0;
+    background: var(--accent, #6364ff);
+    color: var(--text-on-accent, #fff);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.proposal-comment {
+  display: flex;
+  gap: 10px;
+  padding: 6px 0;
+
+  &--reply {
+    margin-left: 46px;
+  }
+
+  &__avatar img {
+    border-radius: 8px;
+    display: block;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  &__name {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-primary, #fff);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__at,
+  &__time {
+    font-size: 12px;
+    color: var(--text-muted, rgba(255, 255, 255, 50%));
+  }
+
+  &__text {
+    margin-top: 2px;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--text-primary, #fff);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+
+  &__reply-btn {
+    margin-top: 4px;
+    background: none;
+    border: 0;
+    padding: 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--accent, #6364ff);
+    cursor: pointer;
+  }
+}
