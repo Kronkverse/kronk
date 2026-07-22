@@ -14,19 +14,19 @@ import type { KuestionsPanelKey } from './index';
 //                   secondary nav *inside* a korner; every space that
 //                   needs a sub-nav can adopt this pattern.
 //
-// The gear (space settings) sits alongside the pills but visually
-// separate — it's a fifth thing, not a fourth tab.
+// Space-level settings are reached via the gear on the KornerSubBar
+// breadcrumb — no gear in the tab row.
 
 const messages = defineMessages({
   today: { id: 'kuestions.nav.today', defaultMessage: 'Today' },
   deck: { id: 'kuestions.nav.deck', defaultMessage: 'Deck' },
   answered: { id: 'kuestions.nav.answered', defaultMessage: 'Answered' },
-  settings: { id: 'kuestions.nav.settings', defaultMessage: 'Settings' },
 });
 
 // Ask / Settings aren't top-level tabs — they're modal-ish sub-panels
-// launched from the deck or the gear. When either is active we still
-// highlight the "parent" tab so the user knows where they'll return.
+// launched from the deck or the breadcrumb gear. When either is
+// active we still highlight the "parent" tab so the user knows where
+// they'll return.
 const PARENT_TAB: Record<KuestionsPanelKey, KuestionsPanelKey> = {
   today: 'today',
   deck: 'deck',
@@ -51,9 +51,6 @@ export const SpaceTabs: React.FC<SpaceTabsProps> = ({ active, onChange }) => {
   }, [onChange]);
   const handleAnswered = useCallback(() => {
     onChange('answered');
-  }, [onChange]);
-  const handleSettings = useCallback(() => {
-    onChange('settings');
   }, [onChange]);
 
   const parent = PARENT_TAB[active];
@@ -89,26 +86,6 @@ export const SpaceTabs: React.FC<SpaceTabsProps> = ({ active, onChange }) => {
           {intl.formatMessage(messages.answered)}
         </button>
       </div>
-      <button
-        type='button'
-        className='space-tabs__gear'
-        onClick={handleSettings}
-        aria-label={intl.formatMessage(messages.settings)}
-        aria-pressed={active === 'settings'}
-        title={intl.formatMessage(messages.settings)}
-      >
-        <svg
-          width='18'
-          height='18'
-          viewBox='0 0 24 24'
-          fill='none'
-          stroke='currentColor'
-          strokeWidth='1.75'
-        >
-          <circle cx='12' cy='12' r='3' />
-          <path d='M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z' />
-        </svg>
-      </button>
     </div>
   );
 };

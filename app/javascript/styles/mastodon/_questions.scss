@@ -14,7 +14,12 @@
   flex: 1;
   width: 100%;
   padding: 16px 16px 120px;
-  min-height: 100%;
+  box-sizing: border-box;
+
+  // No `min-height: 100%` — combined with `flex: 1` in the Stage's
+  // column flex layout it pushed the shell just past the Stage's
+  // bottom (padding-bottom added to the min-height floor), triggering
+  // Stage's vertical scrollbar even when the content itself fits.
 }
 
 // Content sits inside a reading column so wide viewports don't stretch
@@ -98,34 +103,6 @@
   &:focus-visible {
     outline: 2px solid var(--kronk-purple-bright);
     outline-offset: 2px;
-  }
-}
-
-.space-tabs__gear {
-  margin-left: auto;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition:
-    color var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
-
-  &:hover {
-    color: var(--text-primary);
-    border-color: var(--border-default);
-    transform: rotate(35deg);
-  }
-
-  &[aria-pressed='true'] {
-    color: var(--kronk-purple-bright);
-    border-color: var(--kronk-purple-bright);
   }
 }
 
