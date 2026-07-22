@@ -73,7 +73,6 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         icon='kommons'
         iconComponent={kornerIcon}
         multiColumn={multiColumn}
-        extraButton={<KoinBalance refreshKey={balanceRefresh} />}
       />
 
       <Helmet>
@@ -81,6 +80,9 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       </Helmet>
 
       <div className='governance-page'>
+        <div className='governance-page__toolbar'>
+          <KoinBalance refreshKey={balanceRefresh} />
+        </div>
         {loading && (
           <div className='governance-page__empty'>
             <FormattedMessage
