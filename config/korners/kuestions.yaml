@@ -74,6 +74,12 @@ settings:
     scope: user
     label: Confirm before answering
     description: Answering unlocks other people's answers. When on, we ask for confirmation so you don't burn the unlock by accident.
+  - name: daily_prompt_in_post_box
+    kind: boolean
+    default: true
+    scope: user
+    label: Daily prompt in my post box
+    description: Kronk sets one prompt a day — the same for everyone. It sits faint in your composer as a starting point; your reply is a normal post.
 
 launch:
   blurb: 'Kuestions — ask, answer, unlock.'
