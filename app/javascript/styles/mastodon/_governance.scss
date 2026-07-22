@@ -625,16 +625,33 @@
 .governance-detail__topbar {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   margin-bottom: 12px;
-  text-align: center;
+  text-align: left;
+}
+
+// Status pill + kind label ("⚖ Kommons proposal") in a row above the title.
+.governance-detail__status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.governance-detail__kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, rgba(255, 255, 255, 55%));
 }
 
 .governance-detail__seeder-actions {
   display: flex;
   gap: 8px;
-  justify-content: center;
+  justify-content: flex-start;
   margin-top: 4px;
 }
 
@@ -681,20 +698,22 @@
 }
 
 .governance-detail__title {
-  font-family: Georgia, 'Times New Roman', var(--font-display);
-  font-size: 28px;
-  font-weight: 500;
+  font-family: var(--font-display, inherit);
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   color: #{$primary-text-color};
-  line-height: 1.25;
+  line-height: 1.12;
   margin: 0;
-  text-align: center;
+  text-align: left;
+  text-wrap: balance;
 }
 
 // One-line summary under the title (mockup hero). Fed by proposal.summary.
 .governance-detail__summary {
-  margin: 10px auto 0;
-  max-width: 52ch;
-  text-align: center;
+  margin: 10px 0 0;
+  max-width: 56ch;
+  text-align: left;
   font-size: 17px;
   line-height: 1.5;
   color: var(--text-secondary, rgba(255, 255, 255, 70%));
@@ -746,10 +765,33 @@
 }
 
 .governance-detail__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px 10px;
+  flex-wrap: wrap;
   font-size: 13px;
   color: #{$secondary-text-color};
   margin: 0;
-  text-align: center;
+  text-align: left;
+}
+
+// Node chip in the hero meta — links to the page the proposal is about.
+.governance-detail__node-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 7px;
+  background: var(--surface-elevated, rgba(255, 255, 255, 5%));
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
+  color: var(--text-primary, #fff);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
 }
 
 .governance-detail__tabs {

@@ -3,6 +3,7 @@ export interface Proposal {
   title: string;
   summary: string | null;
   body: string;
+  node_id: string | null;
   status: 'open' | 'delivered' | 'completed' | 'annulled';
   proposal_type: 'small' | 'medium' | 'large';
   categories: string[];

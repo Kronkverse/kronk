@@ -2,6 +2,8 @@ import { useCallback, useState } from 'react';
 
 import { FormattedMessage, FormattedDate } from 'react-intl';
 
+import { Link } from 'react-router-dom';
+
 import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
 import api from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
@@ -333,11 +335,20 @@ export const ProposalDetail: React.FC<{
         ) : (
           <>
             <div className='governance-detail__topbar'>
-              <span
-                className={`governance-detail__status governance-detail__status--${proposal.status}`}
-              >
-                {statusLabels[proposal.status]}
-              </span>
+              <div className='governance-detail__status-row'>
+                <span
+                  className={`governance-detail__status governance-detail__status--${proposal.status}`}
+                >
+                  {statusLabels[proposal.status]}
+                </span>
+                <span className='governance-detail__kind'>
+                  <span aria-hidden='true'>⚖</span>
+                  <FormattedMessage
+                    id='governance.detail.kind'
+                    defaultMessage='Kommons proposal'
+                  />
+                </span>
+              </div>
               <h1 className='governance-detail__title'>{proposal.title}</h1>
               {proposal.summary && (
                 <p className='governance-detail__summary'>{proposal.summary}</p>
@@ -355,6 +366,14 @@ export const ProposalDetail: React.FC<{
                   month='short'
                   year='numeric'
                 />
+                {proposal.node_id && (
+                  <Link
+                    to={`/hub/kommons/node/${proposal.node_id}`}
+                    className='governance-detail__node-chip'
+                  >
+                    ◇ {proposal.node_id}
+                  </Link>
+                )}
               </p>
               {isSeeder && (
                 <div className='governance-detail__seeder-actions'>
