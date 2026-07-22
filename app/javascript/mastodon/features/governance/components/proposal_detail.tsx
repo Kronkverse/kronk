@@ -13,6 +13,7 @@ import type { Proposal } from '../types';
 
 import { ProposalAttachments } from './proposal_attachments';
 import { ProposalBacking } from './proposal_backing';
+import { ProposalComments } from './proposal_comments';
 import { ProposalSteps } from './proposal_steps';
 
 
@@ -468,6 +469,7 @@ export const ProposalDetail: React.FC<{
                 <div className='governance-detail__body'>{proposal.body}</div>
               </section>
               <ProposalAttachments proposalId={proposal.id} />
+              <ProposalComments proposalId={proposal.id} />
             </div>
           </>
         )}
