@@ -4,108 +4,83 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import api from 'mastodon/api';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
-import { QuestionCard } from './components/question_card';
-import { QuestionComposer } from './components/question_composer';
-import type { Question } from './types';
+import { AnsweredPanel } from './answered_panel';
+import { AskPanel } from './ask_panel';
+import { DeckPanel } from './deck_panel';
+import { MembraneNav } from './membrane_nav';
+import { SettingsPanel } from './settings_panel';
+import { StarsBackground } from './stars_background';
+import { TodayPanel } from './today_panel';
+
+// Kuestions v2 shell. Membrane nav across the top (Today / Ƙuestions
+// / Answered), gear ➞ Settings, FAB ➞ Ask. Prototype:
+// docs/kronk_kuestions_prototype.html (visual source of truth).
+// Space doc: docs/spaces/kuestions.md.
 
 const messages = defineMessages({
-  title: { id: 'questions.title', defaultMessage: 'Ƙuestions' },
-  empty: {
-    id: 'questions.empty',
-    defaultMessage: 'No questions yet. Ask something!',
-  },
+  title: { id: 'kuestions.title', defaultMessage: 'Ƙuestions' },
 });
 
+export type KuestionsPanelKey =
+  | 'today'
+  | 'deck'
+  | 'answered'
+  | 'ask'
+  | 'settings';
+
 const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
-  const korner = useKorner('kuestions');
-  const kornerIcon = useKornerIcon('kuestions');
   const intl = useIntl();
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'ask' | 'browse'>('ask');
+  const Icon = useKornerIcon('kuestions');
+  const [panel, setPanel] = useState<KuestionsPanelKey>('deck');
 
-  const fetchQuestions = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await api().get('/api/v1/questions');
-      setQuestions(res.data as Question[]);
-    } catch (err) {
-      console.error('Failed to fetch questions:', err);
-    } finally {
-      setLoading(false);
-    }
+  const handleGoDeck = useCallback(() => {
+    setPanel('deck');
   }, []);
 
+  // Keyboard: Escape closes any sheet-y modal panel (Ask / Settings)
+  // to the deck. Deck / Today / Answered are top-level; leave them
+  // alone. Matches the prototype's "back to deck" affordance.
   useEffect(() => {
-    void fetchQuestions();
-  }, [fetchQuestions]);
-
-  const handleCreated = useCallback((question: Question) => {
-    setQuestions((prev) => [question, ...prev]);
-    setActiveTab('browse');
-  }, []);
-
-  const handleTabAsk = useCallback(() => {
-    setActiveTab('ask');
-  }, []);
-  const handleTabBrowse = useCallback(() => {
-    setActiveTab('browse');
-  }, []);
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (panel === 'ask' || panel === 'settings') {
+        setPanel('deck');
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [panel]);
 
   return (
-    <Column>
+    <Column bindToDocument label={intl.formatMessage(messages.title)}>
       <ColumnHeader
-        title={korner?.name ?? 'Questions'}
-        icon='saturn'
-        iconComponent={kornerIcon}
+        title={intl.formatMessage(messages.title)}
+        icon='korner'
+        iconComponent={Icon}
         multiColumn={multiColumn}
       />
+
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      <div className='questions-page'>
-        <div className='questions-tab-nav'>
-          <button
-            className={`questions-tab-nav__tab ${activeTab === 'ask' ? 'questions-tab-nav__tab--active' : ''}`}
-            onClick={handleTabAsk}
-          >
-            {'Ask'}
-          </button>
-          <button
-            className={`questions-tab-nav__tab ${activeTab === 'browse' ? 'questions-tab-nav__tab--active' : ''}`}
-            onClick={handleTabBrowse}
-          >
-            {'Ƙuestions'}
-          </button>
+      <div className='kuestions-shell'>
+        <StarsBackground />
+        <MembraneNav active={panel} onChange={setPanel} />
+
+        <div className='kuestions-panels'>
+          {panel === 'today' && <TodayPanel />}
+          {panel === 'deck' && <DeckPanel />}
+          {panel === 'answered' && <AnsweredPanel onGoDeck={handleGoDeck} />}
+          {panel === 'ask' && <AskPanel onDone={handleGoDeck} />}
+          {panel === 'settings' && <SettingsPanel />}
         </div>
-
-        {activeTab === 'ask' && (
-          <div className='questions-page__above-fold'>
-            <div className='questions-page__hero'>{'Ƙuestions'}</div>
-            <QuestionComposer onCreated={handleCreated} />
-          </div>
-        )}
-
-        {activeTab === 'browse' && (
-          <div className='questions-page__list'>
-            {loading && <div className='questions-page__loading' />}
-            {!loading && questions.length === 0 && (
-              <p className='questions-page__empty'>
-                {intl.formatMessage(messages.empty)}
-              </p>
-            )}
-            {questions.map((question) => (
-              <QuestionCard key={question.id} question={question} />
-            ))}
-          </div>
-        )}
       </div>
     </Column>
   );
