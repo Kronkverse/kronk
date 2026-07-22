@@ -602,7 +602,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         <div ref={streamEndRef} />
       </div>
 
-      <Composer onSend={handleSend} />
+      <Composer onSend={handleSend} conversationId={conversationId} />
     </div>
   );
 };
