@@ -2,6 +2,10 @@
 
 **Manifest:** `config/korners/groups.yaml` (rename → `krew` planned) · **Mount:** `/hub/krew` (currently `/hub/groups`) · **Status:** shipped-2.0 (framework), rebuild in progress (URL + accretion)
 
+> **Build spec:** [`krew_build_spec.md`](./krew_build_spec.md) — the actionable
+> layer (the four UI surfaces with locked decisions, built-vs-needed, build
+> order). This file is the full rationale.
+
 ## Purpose
 
 A Krew is **audience-scoping for posts** — it lets you share
