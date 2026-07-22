@@ -1155,3 +1155,118 @@
   justify-content: flex-end;
   margin-top: 16px;
 }
+
+// ── Today panel ─────────────────────────────────────────────────
+.kuestions-today__card {
+  position: relative;
+  background: linear-gradient(168deg, #22222e 0%, var(--surface-elevated) 62%);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg, 16px);
+  padding: 22px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px -18px rgb(0 0 0 / 70%);
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: -70px;
+    top: -90px;
+    width: 230px;
+    height: 230px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgb(142 92 255 / 16%), transparent 65%);
+    pointer-events: none;
+  }
+}
+
+.kuestions-today__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgb(114 65 255 / 10%);
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.kuestions-today__tag b {
+  color: var(--kronk-purple-bright);
+  font-weight: 600;
+}
+
+.kuestions-today__q {
+  font-family: Georgia, var(--font-display);
+  font-size: 26px;
+  line-height: 1.24;
+  color: var(--text-primary);
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.kuestions-today__text {
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  padding: 12px 14px;
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font: inherit;
+  position: relative;
+  z-index: 1;
+
+  &:focus-visible {
+    outline: 2px solid var(--kronk-purple-bright);
+    outline-offset: 0;
+  }
+}
+
+.kuestions-today__foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.kuestions-today__note {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 14px 0 0;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.kuestions-today__posted {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgb(48 141 76 / 12%);
+  border: 1px solid rgb(48 141 76 / 40%);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
+
+  b {
+    color: var(--text-primary);
+  }
+
+  span {
+    color: #4ade80;
+    font-weight: 700;
+  }
+}
