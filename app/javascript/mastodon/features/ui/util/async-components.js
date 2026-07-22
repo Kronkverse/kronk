@@ -319,10 +319,6 @@ export function Questions () {
   return import("../../questions").then(m => ({ default: m.Questions }));
 }
 
-export function QuestionPage () {
-  return import("../../questions/question_page").then(m => ({ default: m.QuestionPage }));
-}
-
 export function Booth () {
   return import("../../booth");
 }

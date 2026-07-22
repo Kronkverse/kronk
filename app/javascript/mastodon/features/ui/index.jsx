@@ -104,7 +104,6 @@ import {
   KronkSearch,
   YouPortal,
   Questions,
-  QuestionPage,
   Booth,
   BoothSetPage,
   ProfileSectionsSettings,
@@ -302,8 +301,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/hub/kommons/pick" component={KommonsProposePicker} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/propose" component={KommonsPropose} content={children} />}
             {signedIn && <WrappedRoute path={["/governance", "/hub/kommons"]} component={Governance} content={children} />}
-            {signedIn && <WrappedRoute path={["/questions/:id", "/hub/kuestions/:id"]} component={QuestionPage} content={children} />}
-            {signedIn && <WrappedRoute path={["/questions", "/hub/kuestions"]} component={Questions} content={children} />}
+            {signedIn && <WrappedRoute path={["/questions/:id", "/hub/kuestions/:id", "/questions", "/hub/kuestions"]} component={Questions} content={children} />}
             <WrappedRoute path='/hub/search' component={KronkSearch} content={children} />
             <WrappedRoute path='/hub/you' component={YouPortal} content={children} />
             <WrappedRoute path='/search' component={Search} content={children} />
