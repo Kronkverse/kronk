@@ -92,12 +92,16 @@ const usePostTarget = (): PostTarget | null => {
       if (korner?.compose?.route && korner.compose.label) {
         // On a Kommons Space page the propose action carries the space it's
         // about, so the composer lands the new proposal on that space.
+        // On a Kommons space/meta page a space is already chosen, so go
+        // straight to the Proposer scoped to it. Everywhere else the korner's
+        // compose route applies — for Kommons that's the target picker (choose
+        // the page first); for other korners it's their native create action.
         const spaceMatch = SPACE_RE.exec(location.pathname);
         const nodeMatch = NODE_RE.exec(location.pathname);
         const href = spaceMatch
-          ? `${korner.compose.route}?space=${spaceMatch[1]}`
+          ? `/hub/kommons/propose?space=${spaceMatch[1]}`
           : nodeMatch
-            ? `${korner.compose.route}?node=${nodeMatch[1]}`
+            ? `/hub/kommons/propose?node=${nodeMatch[1]}`
             : korner.compose.route;
         return { href, label: korner.compose.label };
       }

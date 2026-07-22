@@ -93,7 +93,10 @@ launch: # retrospective — Kommons predates launch cards
 # scopes the proposal to that space (the bubble appends ?space=<slug>).
 compose:
   label: 'Open a Proposal'
-  route: '/hub/kommons/propose'
+  # Unscoped entry: the target picker (choose which page the proposal is about).
+  # On a space/meta page the Ӂ menu skips this and scopes straight to the
+  # Proposer — see kronk_menu.tsx.
+  route: '/hub/kommons/pick'
 
 feature_flag: # not-implemented — Kommons is unconditionally mounted on main
 enforced: true # framework: on this branch; boot validator enforces

@@ -5,7 +5,6 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ListAltIcon from '@/material-icons/400-24px/list_alt.svg?react';
 import api from 'mastodon/api';
 import { Column } from 'mastodon/components/column';
@@ -110,14 +109,9 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               </p>
             </section>
 
+            {/* Creating a proposal is the Ӂ menu's "Open a Proposal" (→ the
+                target picker); no separate button here. */}
             <div className='governance-page__header'>
-              <Link to='/hub/kommons/pick' className='governance-page__new-btn'>
-                <Icon id='add' icon={AddIcon} />
-                <FormattedMessage
-                  id='governance.new_proposal'
-                  defaultMessage='Plant a seed'
-                />
-              </Link>
               <Link
                 to='/hub/kommons/skeleton'
                 className='governance-page__tree-link'
