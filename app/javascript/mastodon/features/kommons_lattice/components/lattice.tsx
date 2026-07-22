@@ -201,7 +201,13 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     if (e.button !== 0) return;
     const target = e.target as HTMLElement;
-    if (target.closest('.lattice-row, .lattice-panel, .lattice-zoom')) return;
+    if (target.closest('.lattice-row, .lattice-panel, .lattice-zoom')) {
+      // A fresh press on a row is a click, not a pan. Clear any `moved` left by
+      // a previous pan so the click that follows isn't swallowed by handleClick
+      // — otherwise the first node you tap after panning does nothing.
+      dragRef.current.moved = false;
+      return;
+    }
     const el = scrollRef.current;
     if (!el) return;
     dragRef.current = {
