@@ -5,6 +5,14 @@
 
 // ─── ₭oin balance counter (column header) ───────────────────────────────────
 
+.governance-page__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  min-height: 28px;
+  margin-bottom: 4px;
+}
+
 .kommons-koin {
   display: inline-flex;
   align-items: baseline;
@@ -12,8 +20,8 @@
   padding: 4px 12px;
   border-radius: 999px;
   border: 1px solid var(--border-default, rgba(139, 99, 255, 24%));
-  background: color-mix(in srgb, var(--accent) 7%, transparent);
-  color: var(--accent);
+  background: color-mix(in srgb, var(--accent, #8b63ff) 7%, transparent);
+  color: var(--accent, #8b63ff);
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;

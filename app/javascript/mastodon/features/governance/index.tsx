@@ -95,7 +95,6 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         icon='kommons'
         iconComponent={kornerIcon}
         multiColumn={multiColumn}
-        extraButton={<KoinBalance refreshKey={balanceRefresh} />}
       />
 
       <Helmet>
@@ -103,6 +102,9 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       </Helmet>
 
       <div className='governance-page'>
+        <div className='governance-page__toolbar'>
+          <KoinBalance refreshKey={balanceRefresh} />
+        </div>
         {selectedId && selected ? (
           <ProposalDetail
             proposal={selected}
