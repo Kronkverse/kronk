@@ -291,14 +291,35 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     onRead: (payload) => {
       const current = detailRef.current;
       if (!current) return;
-      if (current.conversation.kind !== 'mate') return;
-      // Only the OTHER party's read pointer moves the "Seen" flag.
+      // Skip our own reads; we already know them.
       if (me && payload.reader_account_id === me) return;
+
+      if (current.conversation.kind === 'mate') {
+        onMessageSent({
+          ...current,
+          conversation: {
+            ...current.conversation,
+            other_last_read_message_id: payload.last_read_message_id,
+          },
+        });
+        return;
+      }
+
+      // Krew: upsert the reader's pointer in `krew.read_pointers`.
+      const krew = current.conversation.krew;
+      if (!krew || !payload.last_read_message_id) return;
+      const nextPointers = krew.read_pointers.filter(
+        (p) => p.account_id !== payload.reader_account_id,
+      );
+      nextPointers.push({
+        account_id: payload.reader_account_id,
+        last_read_message_id: payload.last_read_message_id,
+      });
       onMessageSent({
         ...current,
         conversation: {
           ...current.conversation,
-          other_last_read_message_id: payload.last_read_message_id,
+          krew: { ...krew, read_pointers: nextPointers },
         },
       });
     },
@@ -589,6 +610,8 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
                   otherLastReadMessageId={
                     detail.conversation.other_last_read_message_id
                   }
+                  krewReadPointers={detail.conversation.krew?.read_pointers}
+                  krewMemberCount={detail.conversation.krew?.member_count}
                   onReact={handleReact}
                   onUnreact={handleUnreact}
                   onDelete={handleDelete}

@@ -3,6 +3,11 @@
 
 import type { ApiAccountJSON } from './accounts';
 
+export interface ApiNudgeKrewReadPointer {
+  account_id: string;
+  last_read_message_id: string;
+}
+
 export interface ApiNudgeKrewJSON {
   id: string;
   name: string;
@@ -11,6 +16,9 @@ export interface ApiNudgeKrewJSON {
   // docs/kronk_nudges.md §Surface 2. Empty array on Krews with no
   // members visible to the viewer.
   avatar_urls: string[];
+  // Per-member last-read pointers, excluding the viewer. Used to
+  // render an M-of-N read indicator on self-authored bubbles.
+  read_pointers: ApiNudgeKrewReadPointer[];
 }
 
 export interface ApiNudgeConversationJSON {

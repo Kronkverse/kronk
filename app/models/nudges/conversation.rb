@@ -157,6 +157,20 @@ module Nudges
       account_a_id == viewer.id ? last_read_message_id_b : last_read_message_id_a
     end
 
+    # Per-member last-read pointers for a Krew, excluding the viewer.
+    # Each entry `{account_id:, last_read_message_id:}`; skips
+    # unread-nothing members (nil pointer) since they contribute no
+    # signal. Nil for Mate (use `other_last_read_message_id` there).
+    def krew_read_pointers(viewer)
+      return nil unless krew?
+
+      memberships
+        .where.not(account_id: viewer.id)
+        .where.not(last_read_message_id: nil)
+        .pluck(:account_id, :last_read_message_id)
+        .map { |aid, mid| { account_id: aid.to_s, last_read_message_id: mid.to_s } }
+    end
+
     private
 
     def last_read_message_id_for(account)

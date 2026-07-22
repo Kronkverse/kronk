@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import type {
+  ApiNudgeKrewReadPointer,
   ApiNudgeMessageJSON,
   ApiNudgeStreamItem,
 } from 'mastodon/api_types/nudges_conversations';
@@ -40,6 +41,10 @@ interface StreamItemProps {
   item: ApiNudgeStreamItem;
   conversationKind?: 'mate' | 'krew';
   otherLastReadMessageId?: string | null;
+  // Krew-only: per-member last-read pointers + total member count.
+  // Used to render an M-of-N read receipt on self-authored bubbles.
+  krewReadPointers?: ApiNudgeKrewReadPointer[];
+  krewMemberCount?: number;
   onReact?: ReactionHandler;
   onUnreact?: ReactionHandler;
   onDelete?: DeleteHandler;
@@ -55,6 +60,8 @@ export const StreamItem: React.FC<StreamItemProps> = ({
   item,
   conversationKind,
   otherLastReadMessageId,
+  krewReadPointers,
+  krewMemberCount,
   onReact,
   onUnreact,
   onDelete,
@@ -67,6 +74,8 @@ export const StreamItem: React.FC<StreamItemProps> = ({
         item={item}
         conversationKind={conversationKind}
         otherLastReadMessageId={otherLastReadMessageId}
+        krewReadPointers={krewReadPointers}
+        krewMemberCount={krewMemberCount}
         onReact={onReact}
         onUnreact={onUnreact}
         onDelete={onDelete}
@@ -83,6 +92,8 @@ interface MessageItemProps {
   item: ApiNudgeMessageJSON & { kind: 'message' };
   conversationKind?: 'mate' | 'krew';
   otherLastReadMessageId?: string | null;
+  krewReadPointers?: ApiNudgeKrewReadPointer[];
+  krewMemberCount?: number;
   onReact?: ReactionHandler;
   onUnreact?: ReactionHandler;
   onDelete?: DeleteHandler;
@@ -104,6 +115,8 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
   item,
   conversationKind,
   otherLastReadMessageId,
+  krewReadPointers,
+  krewMemberCount,
   onReact,
   onUnreact,
   onDelete,
@@ -153,10 +166,7 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
   const isOptimistic = item.sending || item.failed;
 
   // Mate "seen" indicator: self-authored, other party's read pointer
-  // has advanced past this message. Snowflake ids compare
-  // lexicographically as decimal strings only when zero-padded — but
-  // they're always the same length, so string comparison works. Guard
-  // with parseInt anyway to be robust to future format changes.
+  // has advanced past this message. BigInt for the snowflake compare.
   const seenByOther =
     item.author_is_self &&
     conversationKind === 'mate' &&
@@ -164,6 +174,26 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
     !!otherLastReadMessageId &&
     !item.id.startsWith('tmp-') &&
     BigInt(item.id) <= BigInt(otherLastReadMessageId);
+
+  // Krew M-of-N read receipt: self-authored, count of members whose
+  // read pointer has advanced past this message id. Denominator is
+  // (member_count - 1) since the sender doesn't count.
+  const krewReadCount =
+    item.author_is_self &&
+    conversationKind === 'krew' &&
+    !isOptimistic &&
+    !item.id.startsWith('tmp-') &&
+    krewReadPointers
+      ? krewReadPointers.filter(
+          (p) => BigInt(p.last_read_message_id) >= BigInt(item.id),
+        ).length
+      : 0;
+  const krewReadTotal = krewMemberCount ? Math.max(0, krewMemberCount - 1) : 0;
+  const showKrewReadReceipt =
+    conversationKind === 'krew' &&
+    item.author_is_self &&
+    !isOptimistic &&
+    krewReadTotal > 0;
 
   const handleRetryClick = useCallback(() => {
     void onRetry?.(item);
@@ -232,6 +262,19 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
         {seenByOther && (
           <span className='nudges-msg__seen' aria-label='Seen' title='Seen'>
             <FormattedMessage id='nudges.seen' defaultMessage='Seen' />
+          </span>
+        )}
+        {showKrewReadReceipt && (
+          <span
+            className='nudges-msg__seen'
+            aria-label={`Read by ${krewReadCount} of ${krewReadTotal}`}
+            title={`Read by ${krewReadCount} of ${krewReadTotal}`}
+          >
+            <FormattedMessage
+              id='nudges.krew_seen'
+              defaultMessage='Read {count}/{total}'
+              values={{ count: krewReadCount, total: krewReadTotal }}
+            />
           </span>
         )}
         {!isOptimistic && item.author_is_self && onDelete && (
