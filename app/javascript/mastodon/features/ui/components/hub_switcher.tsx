@@ -11,9 +11,9 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { NavLink, useLocation } from 'react-router-dom';
 
-import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
 import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
+import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import PersonIcon from '@/material-icons/400-24px/person.svg?react';
 import { useAppSelector } from 'mastodon/store';
 
@@ -96,7 +96,7 @@ export const HubSwitcher = ({
         key: 'nudges',
         to: '/nudges',
         label: messages.nudges,
-        Icon: ChatIcon,
+        Icon: NotificationsIcon,
         isActive: (p) => p === '/nudges' || p.startsWith('/nudges/'),
       },
     ],
@@ -195,19 +195,27 @@ const MembraneTop = ({
     setReady(false);
     const raf = requestAnimationFrame(() => {
       measure();
-      requestAnimationFrame(() => { setReady(true); });
+      requestAnimationFrame(() => {
+        setReady(true);
+      });
     });
-    return () => { cancelAnimationFrame(raf); };
+    return () => {
+      cancelAnimationFrame(raf);
+    };
   }, [measure]);
 
   useEffect(() => {
     const onResize = () => {
       setReady(false);
       measure();
-      requestAnimationFrame(() => { setReady(true); });
+      requestAnimationFrame(() => {
+        setReady(true);
+      });
     };
     window.addEventListener('resize', onResize);
-    return () => { window.removeEventListener('resize', onResize); };
+    return () => {
+      window.removeEventListener('resize', onResize);
+    };
   }, [measure]);
 
   // Landing glint: on every pillar change, re-key the pool so its glint
@@ -223,9 +231,13 @@ const MembraneTop = ({
   useEffect(() => {
     if (unreadNudges > prevUnread.current) {
       setArriving(true);
-      const t = window.setTimeout(() => { setArriving(false); }, 900);
+      const t = window.setTimeout(() => {
+        setArriving(false);
+      }, 900);
       prevUnread.current = unreadNudges;
-      return () => { window.clearTimeout(t); };
+      return () => {
+        window.clearTimeout(t);
+      };
     }
     prevUnread.current = unreadNudges;
     return undefined;
