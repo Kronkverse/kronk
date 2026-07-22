@@ -12,8 +12,8 @@ import { me } from 'mastodon/initial_state';
 import type { Proposal } from '../types';
 
 import { ProposalAttachments } from './proposal_attachments';
+import { ProposalBacking } from './proposal_backing';
 import { ProposalSteps } from './proposal_steps';
-import { TabProposal } from './proposal_tabs/tab_proposal';
 
 
 const statusLabels: Record<Proposal['status'], string> = {
@@ -448,15 +448,25 @@ export const ProposalDetail: React.FC<{
               )}
             </div>
 
-            {/* One scroll — the Seed/Kontribute tabs are retired (spec:
-                docs/spaces/kommons_proposal_page.md). Steps up front (they own
-                the task checklist), then the proposal's description / votes /
-                backing / discussion, then the design docs. Budget + task
-                claim/assign are deferred, to fold into the steps checklist. */}
+            {/* One scroll, support-model (spec: kommons_proposal_page.md).
+                Backing is the primary support action (₭ is scarce), then the
+                steps checklist, description, and design docs. The old
+                Support/Question/Challenge votes are retired; a real comments
+                model is the next build. */}
+            <ProposalBacking proposal={proposal} onUpdate={onVoteUpdate} />
+
             <ProposalSteps proposalId={proposal.id} />
 
             <div className='governance-detail__content'>
-              <TabProposal proposal={proposal} onVoteUpdate={onVoteUpdate} />
+              <section className='governance-detail__description'>
+                <h2 className='governance-detail__section-heading'>
+                  <FormattedMessage
+                    id='governance.detail.description'
+                    defaultMessage='Description'
+                  />
+                </h2>
+                <div className='governance-detail__body'>{proposal.body}</div>
+              </section>
               <ProposalAttachments proposalId={proposal.id} />
             </div>
           </>
