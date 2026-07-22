@@ -86,6 +86,14 @@ settings:
     label: Daily prompt in my post box
     description: Kronk sets one prompt a day — the same for everyone. It sits faint in your composer as a starting point; your reply is a normal post.
 
+compose:
+  label: 'Ask a Kuestion'
+  # Reuses the same Kuestions shell — the component opens on the Ask
+  # panel when the pathname ends `/ask`. Deep-linkable so the Ӂ menu's
+  # Post can drop the user straight into the composer regardless of
+  # which panel they were on last.
+  route: '/hub/kuestions/ask'
+
 launch:
   blurb: 'Kuestions — ask, answer, unlock.'
   cta: 'Tap in'
