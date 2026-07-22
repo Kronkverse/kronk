@@ -529,6 +529,13 @@ namespace :api, format: false do
 
       resources :accounts, only: [:index], module: :notifications
     end
+
+    # Kuestions v2 rebuild — swipe-deck shape + gated answers. Legacy
+    # /api/v1/questions stays for the transition (see docs/spaces/kuestions.md).
+    resources :kuestions, only: [:index, :show, :create] do
+      resources :answers, only: [:create], module: :kuestions
+      resource  :skip,    only: [:create, :destroy], module: :kuestions
+    end
   end
 
   namespace :web do
