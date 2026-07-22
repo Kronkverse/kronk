@@ -11,32 +11,31 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  min-height: 34px;
+  min-height: 40px;
   margin-bottom: 6px;
 }
 
 .kommons-koin {
   display: inline-flex;
   align-items: baseline;
-  gap: 5px;
-  padding: 5px 14px;
+  gap: 6px;
+  padding: 7px 16px;
   border-radius: 999px;
-  border: 1px solid var(--border-default, rgba(139, 99, 255, 24%));
-  background: color-mix(in srgb, var(--accent, #8b63ff) 6%, transparent);
+  background: var(--accent, #8b63ff);
+  color: #fff;
   line-height: 1;
   white-space: nowrap;
 
   &__symbol {
     font-size: 15px;
     font-weight: 600;
-    color: var(--accent, #8b63ff);
+    color: rgba(255, 255, 255, 80%);
   }
 
   &__amount {
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 700;
     letter-spacing: -0.01em;
-    color: $primary-text-color;
     font-variant-numeric: tabular-nums;
   }
 }
