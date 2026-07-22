@@ -62,3 +62,18 @@ body:has(.korner-sub-bar) .kronk-stage {
     bottom: 3.5rem;
   }
 }
+
+// Escape the classic-Mastodon columns-area containing block. The
+// ancestor `.columns-area__panels__main` declares
+// `contain: paint layout style`, and the `paint` (and `layout`)
+// tokens make the element a containing block for `position: fixed`
+// descendants. That's why Stage's `right: 0` was landing on the
+// 720px column edge instead of the viewport edge — the containing
+// block ate the fixed positioning.
+// Only override when a Stage is actually mounted inside; feed-style
+// routes still using `<Column>` want the classic containment.
+.columns-area__panels__main:has(.kronk-stage) {
+  contain: none;
+  container-type: normal;
+  max-width: none;
+}
