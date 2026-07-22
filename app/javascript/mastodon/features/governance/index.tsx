@@ -13,7 +13,7 @@ import { Icon } from 'mastodon/components/icon';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
-import { KoinBalance } from './components/koin_balance';
+import { KoinWallet } from './components/koin_wallet';
 import { ProposalCard } from './components/proposal_card';
 import { ProposalDetail } from './components/proposal_detail';
 import type { Proposal } from './types';
@@ -102,9 +102,6 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       </Helmet>
 
       <div className='governance-page'>
-        <div className='governance-page__toolbar'>
-          <KoinBalance refreshKey={balanceRefresh} />
-        </div>
         {selectedId && selected ? (
           <ProposalDetail
             proposal={selected}
@@ -113,6 +110,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           />
         ) : (
           <>
+            <KoinWallet refreshKey={balanceRefresh} />
             <section className='governance-page__hero'>
               <h1 className='governance-page__hero-title'>
                 <FormattedMessage
