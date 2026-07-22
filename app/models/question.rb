@@ -17,6 +17,7 @@ class Question < ApplicationRecord
   belongs_to :created_by_account, class_name: 'Account'
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :question
   has_many   :answers, dependent: :destroy
+  has_many   :question_skips, dependent: :destroy
 
   validates :title, presence: true, length: { maximum: 240 }
   validates :answer_format, inclusion: { in: ANSWER_FORMATS }
@@ -27,6 +28,18 @@ class Question < ApplicationRecord
   scope :active,   -> { where(archived_at: nil) }
   scope :archived, -> { where.not(archived_at: nil) }
   scope :locked_only, -> { where(locked: true) }
+
+  # Deck: active Kuestions minus (a) the account's own asks, (b) any
+  # they've already answered, (c) any they've skipped. Newest first.
+  scope :deck_for, lambda { |account|
+    return active.order(id: :desc) if account.nil?
+
+    active
+      .where.not(created_by_account_id: account.id)
+      .where.not(id: Answer.where(account_id: account.id).select(:question_id))
+      .where.not(id: QuestionSkip.where(account_id: account.id).select(:question_id))
+      .order(id: :desc)
+  }
 
   def archived?
     archived_at.present?
