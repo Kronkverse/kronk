@@ -30,17 +30,32 @@
   bottom: 0;
   left: 0;
   z-index: 20;
+
+  // Explicit two-axis overflow. Vertical `auto` keeps scroll available
+  // when a space's content actually overflows; horizontal `hidden`
+  // stops the ambient star field (glyphs positioned at `left: 100%`
+  // stick a few pixels past the right edge) from triggering an
+  // implicit horizontal scrollbar. Per the CSS spec, setting
+  // overflow-y to `auto` while overflow-x is `visible` promotes
+  // overflow-x to `auto` too — explicit `hidden` prevents that.
+  overflow-x: hidden;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
 
-  // No `scrollbar-gutter: stable` — a reserved gutter on a fixed
-  // rectangle floats a vertical line in the middle of the frame when
-  // content is short. Let the scrollbar appear only when needed.
-
   @media (width >= 890px) {
     right: 7.75rem;
   }
+}
+
+// Classic Mastodon `body.layout-single-column { overflow-y: scroll }`
+// forces an always-on vertical scrollbar even when content fits —
+// the body's role is scrolling the timeline. Stage owns its own
+// scroll now, and the body doesn't need to. Kill the body's forced
+// scrollbar (both axes) whenever a Stage is mounted; feed routes
+// still on `<Column>` keep the classic body scrollbar.
+body:has(.kronk-stage) {
+  overflow: hidden;
 }
 
 // KornerSubBar (breadcrumb) pushes the Stage down another notch when
