@@ -1270,3 +1270,119 @@
     font-weight: 700;
   }
 }
+
+// ── Settings panel ───────────────────────────────────────────────
+.kuestions-settings {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg, 16px);
+  padding: 4px 18px;
+  margin-bottom: 18px;
+}
+
+.kuestions-settings__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border-subtle);
+
+  &:first-child {
+    border-top: 0;
+  }
+}
+
+.kuestions-settings__row--stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.kuestions-settings__row-body {
+  flex: 1;
+  min-width: 0;
+
+  b {
+    display: block;
+    color: var(--text-primary);
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  span {
+    display: block;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+}
+
+.kuestions-settings__switch {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-default);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.kuestions-settings__switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface-elevated);
+  transition: left var(--dur-fast) var(--ease-out);
+}
+
+.kuestions-settings__switch--on {
+  background: var(--kronk-purple-bright);
+  border-color: var(--kronk-purple-bright);
+}
+
+.kuestions-settings__switch--on .kuestions-settings__switch-knob {
+  left: 20px;
+}
+
+// Post-box preview showing where the prompt appears in Murmur.
+.kuestions-settings__postbox {
+  background: var(--surface-primary);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
+
+.kuestions-settings__postbox-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgb(114 65 255 / 10%);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-bottom: 8px;
+
+  b {
+    color: var(--kronk-purple-bright);
+    font-weight: 600;
+  }
+}
+
+.kuestions-settings__postbox-ph {
+  color: var(--text-muted);
+  font-family: Georgia, var(--font-display);
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.kuestions-settings__postbox-note {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-align: center;
+  margin: 0;
+}
