@@ -3,6 +3,31 @@
 // Commons — governance feature styles
 // Theme-aware via --accent shared token (set by governance/index.tsx)
 
+// ─── ₭oin balance counter (column header) ───────────────────────────────────
+
+.kommons-koin {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-default, rgba(139, 99, 255, 24%));
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  color: var(--accent);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+
+  &__symbol {
+    font-size: 14px;
+  }
+
+  &__amount {
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
 // ─── Page shell ────────────────────────────────────────────────────────────
 
 .governance-page {
@@ -48,6 +73,8 @@
 .governance-page__filters {
   display: flex;
   gap: 4px;
+  justify-content: center;
+  margin-bottom: 12px;
 }
 
 .governance-page__filter-btn {

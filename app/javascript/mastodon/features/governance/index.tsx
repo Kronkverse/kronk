@@ -13,6 +13,7 @@ import { Icon } from 'mastodon/components/icon';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
+import { KoinBalance } from './components/koin_balance';
 import { ProposalCard } from './components/proposal_card';
 import { ProposalDetail } from './components/proposal_detail';
 import type { Proposal } from './types';
@@ -23,14 +24,26 @@ const messages = defineMessages({
 
 type FilterType = 'open' | 'delivered' | 'completed' | 'annulled';
 
+// Delivered isn't a tab: a proposer's delivered proposals already surface at
+// the top of the Open board (proposals#index), and non-proposers have nothing
+// to act on there. The tabs are the states worth browsing as a record.
+const FILTER_ORDER = ['open', 'completed', 'annulled'] as const;
+
+const filterMessages = defineMessages({
+  open: { id: 'governance.filter.open', defaultMessage: 'Open' },
+  completed: { id: 'governance.filter.completed', defaultMessage: 'Completed' },
+  annulled: { id: 'governance.filter.annulled', defaultMessage: 'Annulled' },
+});
+
 const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const korner = useKorner('kommons');
   const kornerIcon = useKornerIcon('kommons');
   const intl = useIntl();
   const [proposals, setProposals] = useState<Proposal[]>([]);
-  const [filter, _setFilter] = useState<FilterType>('open');
+  const [filter, setFilter] = useState<FilterType>('open');
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [balanceRefresh, setBalanceRefresh] = useState(0);
 
   const fetchProposals = useCallback(async () => {
     setLoading(true);
@@ -52,11 +65,22 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setProposals((prev) =>
       prev.map((p) => (p.id === updated.id ? updated : p)),
     );
+    // Backing / completing moves ₭oin — nudge the header counter to refetch.
+    setBalanceRefresh((n) => n + 1);
   }, []);
 
   const handleBack = useCallback(() => {
     setSelectedId(null);
   }, []);
+
+  const handleFilterClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const next = e.currentTarget.dataset.filter as FilterType;
+      setFilter(next);
+      setSelectedId(null);
+    },
+    [],
+  );
 
   const handleSelectProposal = useCallback((id: string) => {
     setSelectedId(id);
@@ -71,6 +95,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         icon='kommons'
         iconComponent={kornerIcon}
         multiColumn={multiColumn}
+        extraButton={<KoinBalance refreshKey={balanceRefresh} />}
       />
 
       <Helmet>
@@ -116,6 +141,22 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               </Link>
             </div>
 
+            <div className='governance-page__filters' role='tablist'>
+              {FILTER_ORDER.map((key) => (
+                <button
+                  key={key}
+                  type='button'
+                  role='tab'
+                  aria-selected={filter === key}
+                  data-filter={key}
+                  className={`governance-page__filter-btn${filter === key ? ' active' : ''}`}
+                  onClick={handleFilterClick}
+                >
+                  {intl.formatMessage(filterMessages[key])}
+                </button>
+              ))}
+            </div>
+
             {!loading && proposals.length > 0 && (
               <p className='governance-page__result-count'>
                 <FormattedMessage
@@ -137,10 +178,17 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
             {!loading && proposals.length === 0 && (
               <div className='governance-page__empty'>
-                <FormattedMessage
-                  id='governance.empty'
-                  defaultMessage='No seeds yet. Be the first to plant one.'
-                />
+                {filter === 'open' ? (
+                  <FormattedMessage
+                    id='governance.empty'
+                    defaultMessage='No seeds yet. Be the first to plant one.'
+                  />
+                ) : (
+                  <FormattedMessage
+                    id='governance.empty_filtered'
+                    defaultMessage='Nothing here yet.'
+                  />
+                )}
               </div>
             )}
 

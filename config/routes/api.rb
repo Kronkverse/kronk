@@ -71,6 +71,7 @@ namespace :api, format: false do
     resources :preferences, only: [:index]
 
     resource :huddle_token, only: [:show]
+    resource :token_balance, only: [:show]
     resources :annual_reports, only: [:index, :show] do
       member do
         post :read
