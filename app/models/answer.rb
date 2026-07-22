@@ -14,8 +14,11 @@ class Answer < ApplicationRecord
   belongs_to :account
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :answer
 
+  VISIBILITY_SCOPES = %w(everyone kronk_members connections vouched only_me).freeze
+
   validates :body, presence: true
   validates :account_id, uniqueness: { scope: :question_id }
+  validates :visibility_scope, inclusion: { in: VISIBILITY_SCOPES }
   validate  :choice_index_matches_format
 
   after_commit :publish_kuestions_question_answered, on: :create
