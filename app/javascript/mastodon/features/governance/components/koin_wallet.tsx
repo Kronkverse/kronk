@@ -18,15 +18,15 @@ interface Wallet {
 }
 
 const messages = defineMessages({
-  label: { id: 'governance.wallet.label', defaultMessage: 'Your ₭oin' },
+  label: { id: 'governance.wallet.label', defaultMessage: 'Your Koin' },
   info: {
     id: 'governance.wallet.info',
     defaultMessage:
-      '₭oin is your governance weight. Stake it behind proposals you support; it returns to you when a proposal resolves.',
+      'Koin is your governance weight. Stake it behind proposals you support; it returns to you when a proposal resolves.',
   },
   available: {
     id: 'governance.wallet.available',
-    defaultMessage: '₭oin available',
+    defaultMessage: 'Koin available',
   },
 });
 
@@ -134,7 +134,7 @@ export const KoinWallet: React.FC<{ refreshKey?: number }> = ({
       <p className='kommons-wallet__note'>
         <FormattedMessage
           id='governance.wallet.note'
-          defaultMessage='₭oin returns to you when a proposal resolves. Nothing is spent for good.'
+          defaultMessage='Koin returns to you when a proposal resolves. Nothing is spent for good.'
         />
       </p>
     </section>

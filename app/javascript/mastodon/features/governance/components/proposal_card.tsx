@@ -1,174 +1,168 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
-import { FormattedRelativeTime } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
-import CalendarIcon from '@/material-icons/400-24px/calendar_month.svg?react';
-import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
-import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
-import HomeIcon from '@/material-icons/400-24px/home.svg?react';
-import SmartphoneIcon from '@/material-icons/400-24px/smartphone.svg?react';
-import ToysFanIcon from '@/material-icons/400-24px/toys_fan.svg?react';
-import api from 'mastodon/api';
-import type { IconProp } from 'mastodon/components/icon';
+import DoneAllIcon from '@/material-icons/400-24px/done_all.svg?react';
+import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import { Icon } from 'mastodon/components/icon';
-import { me } from 'mastodon/initial_state';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import type { Proposal } from '../types';
 
-interface CategoryMeta {
-  icon: IconProp;
-  id: string;
-}
+// A proposal on the Kommons board. Support here is token backing, not votes:
+// the card leads with a backing ring (this proposal's staked ₭ relative to the
+// strongest-backed one on screen), then backers, rank and steps. The retired
+// agree/abstain/block "fans" are gone.
 
-const CATEGORY_META: Record<string, CategoryMeta> = {
-  timeline: { icon: HomeIcon, id: 'home' },
-  huddle: { icon: Diversity2Icon, id: 'diversity_2' },
-  events: { icon: CalendarIcon, id: 'calendar_month' },
-  governance: { icon: GavelIcon, id: 'gavel' },
-  app: { icon: SmartphoneIcon, id: 'smartphone' },
+// node_id like "kommons.index" → the space (korner) it's about.
+const SPACE_LABELS: Record<string, string> = {
+  kommons: 'Kommons',
+  profile: 'Profile',
+  feed: 'Feed',
+  booth: 'The Booth',
+  kompass: 'Kompass',
+  huddle: 'Huddle',
+  kalendar: 'Kalendar',
+  wachuneed: 'Wachuneed',
+  kuestions: 'Kuestions',
+  inflow: 'InFlow',
+  nudges: 'Nudges',
+  moments: 'Moments',
+  albutts: 'Albutts',
+  groups: 'Groups',
+  klot: 'Klot',
+  settings: 'Settings',
+  kronk: 'Kronk',
 };
 
-const stripBodyMeta = (body: string) =>
-  body.replace(/^(\[.*?\]\s*\n?)+/s, '').trim();
-
-const buildStripBackground = (summary: Proposal['vote_summary']) => {
-  const total = summary.agree + summary.abstain + summary.block;
-  if (total === 0) return undefined;
-  const agreeEnd = (summary.agree / total) * 100;
-  const abstainEnd = agreeEnd + (summary.abstain / total) * 100;
-  return `linear-gradient(to bottom, var(--vote-agree) 0 ${agreeEnd}%, var(--vote-abstain) ${agreeEnd}% ${abstainEnd}%, var(--vote-block) ${abstainEnd}% 100%)`;
+const SIZE_LABELS: Record<Proposal['proposal_type'], string> = {
+  small: 'Small',
+  medium: 'Medium',
+  large: 'Large',
 };
 
-const truncate = (text: string, maxLen: number) =>
-  text.length > maxLen ? `${text.slice(0, maxLen)}…` : text;
+const STATUS_LABELS: Record<Proposal['status'], string> = {
+  open: 'Open',
+  delivered: 'Delivered',
+  completed: 'Completed',
+  annulled: 'Annulled',
+};
+
+const RING_R = 21;
+const RING_C = 2 * Math.PI * RING_R;
+
+const spaceSlug = (nodeId: string | null): string | undefined =>
+  nodeId?.split('.')[0];
 
 export const ProposalCard: React.FC<{
   proposal: Proposal;
+  maxBacking: number;
   onSelect: (id: string) => void;
-  onVoteUpdate: (updated: Proposal) => void;
-}> = ({ proposal, onSelect, onVoteUpdate }) => {
-  const [fanning, setFanning] = useState(false);
-
-  const ageSeconds = Math.round(
-    (new Date(proposal.created_at).getTime() - Date.now()) / 1000,
-  );
-  const stripBackground = buildStripBackground(proposal.vote_summary);
-  const isFanned = proposal.current_vote?.position === 'agree';
-  const displayBody = truncate(stripBodyMeta(proposal.body), 160);
-
-  const isNewSpace = proposal.body.startsWith('[New Space]');
-  const spaceMeta: CategoryMeta = isNewSpace
-    ? { icon: AddIcon, id: 'add' }
-    : (proposal.categories
-        .map((cat) => CATEGORY_META[cat])
-        .find((m): m is CategoryMeta => m !== undefined) ?? {
-        icon: GavelIcon,
-        id: 'gavel',
-      });
-
+}> = ({ proposal, maxBacking, onSelect }) => {
   const handleClick = useCallback(() => {
     onSelect(proposal.id);
   }, [onSelect, proposal.id]);
 
-  const handleFan = useCallback(
-    async (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (!me || fanning) return;
-      setFanning(true);
-      try {
-        let res;
-        if (isFanned) {
-          res = await api().delete<Proposal>(
-            `/api/v1/proposals/${proposal.id}/unvote`,
-          );
-        } else {
-          res = await api().post<Proposal>(
-            `/api/v1/proposals/${proposal.id}/vote`,
-            { vote: { position: 'agree' } },
-          );
-        }
-        onVoteUpdate(res.data);
-      } catch {
-        // silently ignore
-      } finally {
-        setFanning(false);
-      }
-    },
-    [proposal.id, isFanned, fanning, onVoteUpdate],
-  );
+  const { backing } = proposal;
+  const steps = proposal.task_summary;
+  const totalSteps = steps.open + steps.in_progress + steps.done;
+  const ringOffset =
+    maxBacking > 0 ? RING_C * (1 - backing.total / maxBacking) : RING_C;
 
-  const handleFanClick = useCallback(
-    (e: React.MouseEvent) => {
-      void handleFan(e);
-    },
-    [handleFan],
-  );
+  const slug = spaceSlug(proposal.node_id);
+  const spaceLabel = slug ? (SPACE_LABELS[slug] ?? slug) : null;
 
   return (
     <button
-      className={`governance-card governance-card--${proposal.status}`}
+      className={`kommons-proposal kommons-proposal--${proposal.status}`}
       onClick={handleClick}
     >
-      <span
-        className='governance-card__strip'
-        style={stripBackground ? { background: stripBackground } : undefined}
-        aria-hidden='true'
-      />
+      {backing.my_stake > 0 && (
+        <span className='kommons-proposal__mystake'>
+          ₭{backing.my_stake} staked
+        </span>
+      )}
 
-      <div className='governance-card__inner'>
-        <div className='governance-card__fan-col'>
-          <span className='governance-card__fan-count'>
-            {proposal.vote_summary.agree}
+      <div className='kommons-proposal__gauge'>
+        <div className='kommons-proposal__ring'>
+          <svg viewBox='0 0 52 52' aria-hidden='true'>
+            <circle
+              className='kommons-proposal__ring-track'
+              cx={26}
+              cy={26}
+              r={RING_R}
+            />
+            <circle
+              className='kommons-proposal__ring-fill'
+              cx={26}
+              cy={26}
+              r={RING_R}
+              strokeDasharray={RING_C.toFixed(1)}
+              strokeDashoffset={ringOffset.toFixed(1)}
+            />
+          </svg>
+          <span className='kommons-proposal__ring-num'>{backing.total}</span>
+        </div>
+        <span className='kommons-proposal__ring-label'>
+          <FormattedMessage id='governance.card.backed' defaultMessage='backed' />
+        </span>
+      </div>
+
+      <div className='kommons-proposal__body'>
+        <div className='kommons-proposal__chips'>
+          {slug && spaceLabel && (
+            <span className='kommons-proposal__space'>
+              <Icon id={`space-${slug}`} icon={kornerIcon(slug)} />
+              {spaceLabel}
+            </span>
+          )}
+          <span
+            className={`kommons-proposal__size kommons-proposal__size--${proposal.proposal_type}`}
+          >
+            {SIZE_LABELS[proposal.proposal_type]}
           </span>
-          {me && (
-            <button
-              type='button'
-              className={
-                'governance-card__fan-btn' + (isFanned ? ' active' : '')
-              }
-              onClick={handleFanClick}
-              disabled={fanning}
-              aria-pressed={isFanned}
-              aria-label={isFanned ? 'Unfan' : 'Fan'}
+          {proposal.status !== 'open' && (
+            <span
+              className={`kommons-proposal__statuschip kommons-proposal__statuschip--${proposal.status}`}
             >
-              <Icon id='toys-fan' icon={ToysFanIcon} />
-            </button>
+              {STATUS_LABELS[proposal.status]}
+            </span>
           )}
         </div>
 
-        <div className='governance-card__main'>
-          <h3 className='governance-card__title'>{proposal.title}</h3>
+        <h3 className='kommons-proposal__title'>{proposal.title}</h3>
 
-          {displayBody && (
-            <p className='governance-card__body'>{displayBody}</p>
-          )}
-
-          <div className='governance-card__author'>
+        <div className='kommons-proposal__meta'>
+          <span className='kommons-proposal__seeder'>
             {proposal.created_by_account.avatar && (
               <img
-                className='governance-card__avatar'
+                className='kommons-proposal__avatar'
                 src={proposal.created_by_account.avatar}
                 alt=''
                 aria-hidden='true'
               />
             )}
-            <span className='governance-card__author-name'>
-              @{proposal.created_by_account.username}
+            @{proposal.created_by_account.username}
+          </span>
+          <span className='kommons-proposal__m'>
+            <Icon id='group' icon={GroupIcon} />
+            <FormattedMessage
+              id='governance.card.backers'
+              defaultMessage='{count, plural, one {# backer} other {# backers}}'
+              values={{ count: backing.backers }}
+            />
+          </span>
+          {backing.rank !== null && (
+            <span className='kommons-proposal__m kommons-proposal__rank'>
+              #{backing.rank}
             </span>
-            <span className='governance-card__author-dot'>·</span>
-            <span className='governance-card__author-time'>
-              <FormattedRelativeTime
-                value={ageSeconds}
-                numeric='auto'
-                updateIntervalInSeconds={60}
-              />
+          )}
+          {totalSteps > 0 && (
+            <span className='kommons-proposal__m'>
+              <Icon id='done_all' icon={DoneAllIcon} />
+              {steps.done}/{totalSteps}
             </span>
-          </div>
-        </div>
-
-        <div className='governance-card__space-icon' aria-hidden='true'>
-          <Icon id={spaceMeta.id} icon={spaceMeta.icon} />
+          )}
         </div>
       </div>
     </button>

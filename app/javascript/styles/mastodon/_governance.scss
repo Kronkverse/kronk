@@ -1,31 +1,23 @@
 @use 'variables' as *;
+@use 'mixins' as *;
 
 // Commons — governance feature styles
 // Theme-aware via --accent shared token (set by governance/index.tsx)
 
-// ─── ₭oin wallet card ───────────────────────────────────────────────────────
+// ─── Koin wallet card ───────────────────────────────────────────────────────
 // It's people's governance weight — give it the presence of a wallet, not a
 // counter: available-of-total, a staked-vs-available bar, and a plain reminder
 // that staking is never spending. Adapted from Tal's kronk_kommons_home mockup.
 
 .kommons-wallet {
+  @include kronk-cover-glow;
+
   position: relative;
   overflow: hidden;
   padding: 20px;
   margin-bottom: 20px;
-  border-radius: var(--radius-large, 16px);
+  border-radius: var(--radius-large, 16px); // override the mixin's bottom-only radius
   border: 1px solid color-mix(in srgb, var(--kronk-purple-bright, #7241ff) 30%, transparent);
-  background:
-    radial-gradient(
-      120% 140% at 88% -20%,
-      color-mix(in srgb, var(--kronk-purple-bright, #7241ff) 34%, transparent),
-      transparent 60%
-    ),
-    linear-gradient(
-      150deg,
-      color-mix(in srgb, var(--kronk-purple-deep, #3a218b) 45%, var(--surface-elevated, #292938)),
-      var(--surface-elevated, #292938)
-    );
 
   &__top {
     display: flex;
@@ -168,85 +160,140 @@
   box-sizing: border-box;
 }
 
-.governance-page__hero {
-  text-align: center;
-  padding: 28px 8px;
+// ─── Board head: title + count + actions ────────────────────────────────────
+
+.governance-page__head {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
 }
 
-.governance-page__hero-title {
-  font-family: Georgia, var(--font-display);
-  font-size: 36px;
+.governance-page__head-text {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.governance-page__head-title {
+  font-family: var(--font-display);
+  font-size: 28px;
   font-weight: 500;
   color: $primary-text-color;
-  margin: 0 0 14px;
+  margin: 0;
   line-height: 1.1;
 }
 
-.governance-page__hero-intro {
-  font-size: 15px;
+.governance-page__head-count {
+  font-size: 13px;
   color: $secondary-text-color;
-  line-height: 1.6;
-  margin: 0 auto;
-  max-width: 540px;
 }
 
-.governance-page__header {
+.governance-page__head-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
   gap: 8px;
+}
+
+.governance-page__browse,
+.governance-page__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-round);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    filter 0.15s,
+    color 0.15s;
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.governance-page__browse {
+  color: $secondary-text-color;
+  border: 1px solid var(--border-default);
+  background: transparent;
+
+  &:hover {
+    color: $primary-text-color;
+    background: color-mix(in srgb, var(--kronk-purple-bright) 10%, transparent);
+  }
+}
+
+.governance-page__cta {
+  color: #fff;
+  background: var(--accent);
+
+  &:hover {
+    filter: brightness(1.12);
+  }
+}
+
+// ─── Filter / sort strip ────────────────────────────────────────────────────
+
+.governance-page__strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
+.governance-page__strip-grow {
+  flex: 1;
+}
+
 .governance-page__filters {
-  display: flex;
-  gap: 4px;
-  justify-content: center;
-  margin-bottom: 12px;
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-round);
+  border: 1px solid var(--border-default);
 }
 
 .governance-page__filter-btn {
   background: transparent;
   border: none;
-  border-bottom: 3px solid transparent;
-  border-radius: 0;
-  padding: 8px 14px;
+  border-radius: var(--radius-round);
+  padding: 5px 14px;
   font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   color: $secondary-text-color;
   transition:
     color 0.15s,
-    border-bottom-color 0.15s;
+    background 0.15s;
 
   &:hover {
     color: $primary-text-color;
   }
 
   &.active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
+    color: #fff;
+    background: var(--accent);
     font-weight: 600;
   }
 }
 
-.governance-page__new-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 999px;
-  padding: 9px 22px;
-  font-size: 14px;
-  font-weight: 600;
+.governance-page__sort {
+  font-size: 13px;
+  color: $primary-text-color;
+  padding: 6px 12px;
+  border-radius: var(--radius-round);
+  border: 1px solid var(--border-default);
+  background: var(--surface-elevated);
   cursor: pointer;
-  transition: opacity 0.15s;
-
-  &:hover {
-    opacity: 0.88;
-  }
 }
 
 .governance-page__result-count {
@@ -296,202 +343,219 @@
 }
 
 // ─── Proposal card ─────────────────────────────────────────────────────────
+// Support = token backing (votes retired). The card leads with a backing ring
+// (staked ₭ vs the strongest-backed proposal on screen), then backers, rank
+// and steps. Adapted from Tal's kronk_kommons_home mockup.
 
-.governance-card {
-  --vote-agree: var(--accent);
-  --vote-abstain: #{$dark-text-color};
-  --vote-block: #{var(--decision-block)};
-  --strip-color: var(--background-border-color);
-
+.kommons-proposal {
   position: relative;
-  display: block;
+  display: flex;
+  gap: 16px;
   width: 100%;
   text-align: left;
-  background: var(--background-color);
-  border: 1px solid var(--background-border-color);
-  border-radius: 10px;
-  padding: 16px 20px;
-  overflow: hidden;
+  padding: 16px;
+  border-radius: var(--radius-large);
+  border: 1px solid var(--border-default);
+  background: color-mix(in srgb, var(--surface-elevated) 55%, transparent);
   cursor: pointer;
   transition:
-    box-shadow 0.15s,
-    transform 0.05s;
-
-  &--open {
-    --strip-color: var(--accent);
-  }
-
-  &--completed {
-    --strip-color: #{var(--decision-pending)};
-  }
-
-  &--annulled {
-    --strip-color: #{var(--decision-block)};
-
-    opacity: 0.85;
-  }
-
-  &--delivered {
-    --strip-color: #{var(--decision-agree)};
-  }
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.1s,
+    box-shadow 0.2s;
 
   &:hover {
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 8%);
+    border-color: var(--kronk-purple-bright);
+    background: color-mix(in srgb, var(--surface-elevated) 85%, transparent);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px -12px color-mix(in srgb, #000 60%, transparent);
   }
 
   &:active {
-    transform: translateY(1px);
+    transform: translateY(0);
   }
-}
 
-.governance-card__strip {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: var(--strip-color);
-  transition: background 0.3s;
-}
+  &--annulled {
+    opacity: 0.7;
+  }
 
-.governance-card__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
+  &__gauge {
+    flex: none;
+    width: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
 
-.governance-card__header-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
-}
+  &__ring {
+    position: relative;
+    width: 52px;
+    height: 52px;
 
-.governance-card__size-chip {
-  display: inline-block;
-  background: var(--background-color);
-  border: 1px solid var(--background-border-color);
-  color: $secondary-text-color;
-  border-radius: 10px;
-  padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: capitalize;
-}
+    svg {
+      width: 52px;
+      height: 52px;
+      transform: rotate(-90deg);
+    }
+  }
 
-.governance-card__category-chip {
-  display: inline-block;
-  background: transparent;
-  border: 1px solid var(--background-border-color);
-  color: $primary-text-color;
-  border-radius: 10px;
-  padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: capitalize;
-}
+  &__ring-track {
+    fill: none;
+    stroke: color-mix(in srgb, var(--text-primary) 10%, transparent);
+    stroke-width: 5;
+  }
 
-.governance-card__support-inline {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--accent);
-  color: #fff;
-  font-weight: 700;
-  flex-shrink: 0;
+  &__ring-fill {
+    fill: none;
+    stroke: var(--kronk-purple-bright);
+    stroke-width: 5;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.4s ease;
+  }
 
-  svg {
+  &__ring-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 16px;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__ring-label {
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__chips {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+
+  &__space {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--kronk-purple-bright);
+    padding: 1px 8px;
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--kronk-purple-bright) 12%, transparent);
+
+    .icon {
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  &__size {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--radius-round);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+  }
+
+  &__statuschip {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--radius-round);
+    color: #fff;
+
+    &--completed {
+      background: var(--decision-agree);
+    }
+
+    &--annulled {
+      background: var(--decision-block);
+    }
+
+    &--delivered {
+      background: var(--decision-pending);
+    }
+  }
+
+  &__title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 1.2;
+    color: var(--text-primary);
+    margin: 4px 0 8px;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  &__m {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    .icon {
+      width: 13px;
+      height: 13px;
+    }
+  }
+
+  &__rank {
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__seeder {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-secondary);
+  }
+
+  &__avatar {
     width: 16px;
     height: 16px;
+    border-radius: 34%;
+    object-fit: cover;
   }
-}
 
-.governance-card__support-inline-count {
-  font-variant-numeric: tabular-nums;
-  font-size: 13px;
-}
-
-.governance-card__title {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
-  color: $primary-text-color;
-  margin: 0 0 6px;
-  line-height: 1.3;
-}
-
-.governance-card__body {
-  font-size: 13px;
-  color: $secondary-text-color;
-  margin: 0 0 12px;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.governance-card__author {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 12px;
-  color: $secondary-text-color;
-}
-
-.governance-card__avatar {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.governance-card__author-name {
-  color: $primary-text-color;
-  font-weight: 500;
-}
-
-.governance-card__author-dot {
-  opacity: 0.6;
-}
-
-.governance-card__footer-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 12px;
-  color: $secondary-text-color;
-  margin-left: auto;
-}
-
-.governance-card__needs-help {
-  background: color-mix(in srgb, var(--decision-pending) 15%, transparent);
-  color: color-mix(in srgb, var(--decision-pending) 90%, black);
-  border-radius: 12px;
-  padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.governance-card__meta {
-  font-size: 12px;
-  color: $secondary-text-color;
-  margin-bottom: 8px;
-}
-
-.governance-card__footer {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  font-size: 12px;
-  color: $secondary-text-color;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--background-border-color);
+  &__mystake {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--kronk-purple-bright);
+    padding: 2px 8px;
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--kronk-purple-bright) 14%, transparent);
+  }
 }
 
 // ─── Status pills ───────────────────────────────────────────────────────────
@@ -520,77 +584,6 @@
 
   &--delivered {
     background: var(--decision-agree);
-  }
-}
-
-// ─── Card two-column layout ─────────────────────────────────────────────────
-
-.governance-card__inner {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  width: 100%;
-  text-align: left;
-}
-
-.governance-card__fan-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  min-width: 40px;
-  flex-shrink: 0;
-  padding-top: 2px;
-}
-
-.governance-card__fan-count {
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1;
-  color: $secondary-text-color;
-  font-variant-numeric: tabular-nums;
-}
-
-.governance-card__main {
-  flex: 1;
-  min-width: 0;
-}
-
-.governance-card__veto-count {
-  font-size: 11px;
-  color: var(--decision-block);
-  margin-top: 2px;
-}
-
-.governance-card__fan-btn {
-  padding: 4px;
-  border: none;
-  background: transparent;
-  color: $secondary-text-color;
-  cursor: pointer;
-  opacity: 0.6;
-  transition:
-    color 0.12s,
-    opacity 0.12s;
-
-  .icon {
-    width: 20px;
-    height: 20px;
-  }
-
-  &:hover {
-    opacity: 1;
-    color: var(--accent);
-  }
-
-  &.active {
-    color: var(--accent);
-    opacity: 1;
-  }
-
-  &:disabled {
-    opacity: 0.3;
-    cursor: default;
   }
 }
 
@@ -3093,22 +3086,6 @@
     color: var(--accent);
     min-width: 32px;
     text-align: right;
-  }
-}
-
-// ─── Proposal card: space icon ──────────────────────────────────────────────
-
-.governance-card__space-icon {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: $secondary-text-color;
-  opacity: 0.5;
-
-  .icon {
-    width: 40px;
-    height: 40px;
   }
 }
 

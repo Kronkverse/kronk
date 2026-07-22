@@ -121,6 +121,14 @@ class Proposal < ApplicationRecord
       .group('proposals.id')
       .order(Arel.sql('total_votes DESC, proposals.created_at DESC'))
   }
+  # Support is token backing (votes retired) — rank the board by staked total
+  # so strongly-backed proposals surface without an explicit threshold.
+  scope :most_backed, lambda {
+    left_joins(:proposal_backings)
+      .select('proposals.*, COALESCE(SUM(proposal_backings.amount), 0) AS backed_total')
+      .group('proposals.id')
+      .order(Arel.sql('backed_total DESC, proposals.created_at DESC'))
+  }
   scope :with_category, ->(cat) { where('? = ANY(categories)', cat) }
 
   def participation_count
