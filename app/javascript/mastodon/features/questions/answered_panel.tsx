@@ -78,8 +78,8 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({ onGoDeck }) => {
   if (list === null) {
     return (
       <section className='kuestions-panel'>
-        <h1 className='kuestions-wordmark'>Answered</h1>
-        <p className='kuestions-sub'>{intl.formatMessage(messages.loading)}</p>
+        <h1 className='space-title'>Answered</h1>
+        <p className='space-subtitle'>{intl.formatMessage(messages.loading)}</p>
       </section>
     );
   }
@@ -87,8 +87,8 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({ onGoDeck }) => {
   if (list.length === 0) {
     return (
       <section className='kuestions-panel'>
-        <h1 className='kuestions-wordmark'>Answered</h1>
-        <p className='kuestions-sub'>
+        <h1 className='space-title'>Answered</h1>
+        <p className='space-subtitle'>
           <FormattedMessage
             id='kuestions.answered.subtitle'
             defaultMessage='Unlocked by you. These stay open.'
@@ -124,8 +124,8 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({ onGoDeck }) => {
 
   return (
     <section className='kuestions-panel'>
-      <h1 className='kuestions-wordmark'>Answered</h1>
-      <p className='kuestions-sub'>
+      <h1 className='space-title'>Answered</h1>
+      <p className='space-subtitle'>
         <FormattedMessage
           id='kuestions.answered.subtitle'
           defaultMessage='Unlocked by you. These stay open.'
