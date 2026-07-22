@@ -18,42 +18,41 @@ predictable across spaces.
 ## Desktop layout (≥890px)
 
 ```
- Frame layer ─────────────────────────────────────────────────────
-┌────────────────────────────────────────────────────────────────┐
-│  Ж KRONK              Me   Home   Hub   Nudges                 │
-│  .kronk-wordmark      .hub-switcher (top membrane)             │
-│  (top-left, fixed)    ── ── ═════ ── ──   ← gliding pool wire  │
-├────────────────────────────────────────────────────────────────┤
-│                                                        ┌─────┐ │
-│  ┌────────┐                        ┌───────────────┐   │     │ │
-│  │ ← Hub  │                        │ Today  Deck A │   │  🎧 │ │
-│  └────────┘                        └───────────────┘   │  🎯 │ │
-│  .korner-exit                      .space-tabs         │  ✦  │ │
-│  (top-left, floating)              (top-right,         │  ⚙  │ │
-│                                     floating)          │     │ │
-│                                                        │.korn│ │
-│                  ┌────────────────────┐                │er-  │ │
-│                  │    Kuestions       │  ← .space-title│sideb│ │
-│                  │  (serif, centred)  │    (regular    │ar   │ │
-│                  └────────────────────┘     position)  │     │ │
-│                                                        │(top,│ │
-│                Ask and answer, unlock. ← .space-subtitle│     │ │
-│                                                        │right│ │
-│                                                        │fixed│ │
-│         ┌────────────────────────────────────┐         │)    │ │
-│         │                                    │         │     │ │
-│         │       Panel content                │         │     │ │
-│         │       (deck / today / answered /   │         │     │ │
-│         │        ask / settings)             │         │     │ │
-│         │                                    │         │     │ │
-│         │                                    │         │     │ │
-│         │      ✦ ambient stars ✦             │         │     │ │
-│         │        fill Stage                  │         │     │ │
-│         │                                    │         │     │ │
-│         └────────────────────────────────────┘         │     │ │
-│                                                        └─────┘ │
-│  ↑ .kronk-stage — from viewport-left to sidebar-inner-edge     │
-└────────────────────────────────────────────────────────────────┘
+ Frame layer ────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────┐
+│  Ж KRONK              Me   Home   Hub   Nudges                │
+│  .kronk-wordmark      .hub-switcher (top membrane)            │
+│  (top-left, fixed)    ── ── ═════ ── ──   ← gliding pool wire │
+├───────────────────────────────────────────────────────────┬───┤
+│                                                           │🎧│ │
+│ ┌────────┐                          ┌───────────────┐     │🎯│ │
+│ │ ← Hub  │                          │ Today  Deck A │     │✦│ │
+│ └────────┘                          └───────────────┘     │⚙│ │
+│ .korner-exit                        .space-tabs           │  │ │
+│ (top-left, floating)                (top-right,           │  │ │
+│                                      floating)            │.k│ │
+│                                                           │or│ │
+│                 ┌────────────────────┐                    │ne│ │
+│                 │    Kuestions       │  ← .space-title    │r-│ │
+│                 │  (serif, centred)  │    (regular        │si│ │
+│                 └────────────────────┘     position)      │de│ │
+│                                                           │ba│ │
+│               Ask and answer, unlock. ← .space-subtitle   │r │ │
+│                                                           │  │ │
+│        ┌────────────────────────────────────┐             │  │ │
+│        │                                    │             │  │ │
+│        │       Panel content                │             │  │ │
+│        │       (deck / today / answered /   │             │  │ │
+│        │        ask / settings)             │             │  │ │
+│        │                                    │             │  │ │
+│        │      ✦ ambient stars ✦             │             │  │ │
+│        │        fill Stage                  │             │  │ │
+│        │                                    │             │  │ │
+│        └────────────────────────────────────┘             │  │ │
+│                                                           │  │ │
+├───────────────────────────────────────────────────────────┴───┤
+│  ↑ .kronk-stage — butts against .korner-sidebar's inner edge  │
+└───────────────────────────────────────────────────────────────┘
 ```
 
 ## Mobile layout (≤629px)

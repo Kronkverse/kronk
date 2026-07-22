@@ -7,11 +7,11 @@
 //            (defined in _kronk_chrome.scss) sit above the Stage on
 //            z-24; Stage lives on z-20 so those fades still darken
 //            content that scrolls up under them.
-//   right  = korner sidebar edge on ≥890px (matches the right fade
-//            band width, `7.75rem`); 0 below the sidebar breakpoint.
-//            The Stage's own vertical scrollbar sits at this edge,
-//            right against the sidebar's inner edge, so it reads as
-//            part of that boundary — not a floating line mid-frame.
+//   right  = sidebar inner edge on ≥890px (`5.25rem` = sidebar width
+//            `4.5rem` + right inset `0.75rem`). Stage butts right up
+//            against the sidebar rail; nothing in between. Below the
+//            sidebar breakpoint the sidebar is hidden and Stage runs
+//            to the viewport edge (`right: 0`).
 //   bottom = viewport.
 //   left   = 0. There's no left rail to match; a mirrored left inset
 //            just opened a mysterious gutter down the left side that
@@ -44,8 +44,21 @@
   flex-direction: column;
 
   @media (width >= 890px) {
-    right: 7.75rem;
+    // Butt against the sidebar's inner edge. Sidebar: `right: 0.75rem;
+    // width: 4.5rem` → its inner edge sits at `viewport-right - 5.25rem`.
+    right: 5.25rem;
   }
+}
+
+// The classic right-edge fade band (`body::after` in _kronk_chrome.scss)
+// was the sidebar's soft dark backdrop when the space content stopped
+// short of the rail. On Stage routes content butts right up against
+// the sidebar — the band's fade zone would overlap Stage content on
+// z-24 (above Stage's z-20), darkening the rightmost strip. Hide it;
+// the sidebar tiles carry their own subtle background so they read
+// fine on the plain body dark.
+body:has(.kronk-stage)::after {
+  display: none;
 }
 
 // Classic Mastodon `body.layout-single-column { overflow-y: scroll }`
