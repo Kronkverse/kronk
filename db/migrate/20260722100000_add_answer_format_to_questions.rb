@@ -13,8 +13,11 @@ class AddAnswerFormatToQuestions < ActiveRecord::Migration[8.0]
       add_column :questions, :answer_format, :string, null: false, default: 'text'
       add_column :questions, :mc_options, :jsonb, null: false, default: []
       add_column :answers,   :choice_index, :integer
-    end
 
-    add_index :questions, :answer_format, where: "answer_format <> 'text'", name: 'index_questions_on_answer_format_nontext'
+      # Partial index — tiny (only non-`text` rows). Non-concurrent is fine on
+      # this small table; `safety_assured` clears the strong_migrations gate
+      # that was aborting the deploy.
+      add_index :questions, :answer_format, where: "answer_format <> 'text'", name: 'index_questions_on_answer_format_nontext'
+    end
   end
 end
