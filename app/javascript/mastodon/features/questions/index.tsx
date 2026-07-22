@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
+import { useLocation, useHistory } from 'react-router-dom';
 
 import { KornerExit } from 'mastodon/components/korner_exit';
 import { Stage } from 'mastodon/components/stage';
@@ -37,16 +38,42 @@ export type KuestionsPanelKey =
   | 'ask'
   | 'settings';
 
+// Deep-linkable sub-paths per KuestionsPanelKey. `/hub/kuestions/ask`
+// is the compose target the Ӂ menu Post points at; `/hub/kuestions`
+// alone opens the deck. The Ask panel is modal-ish (per the Kuestions
+// prototype) so once submitted it returns to deck via history back or
+// the panel's internal cancel.
+const PATH_TO_PANEL: Record<string, KuestionsPanelKey> = {
+  ask: 'ask',
+  today: 'today',
+  answered: 'answered',
+  settings: 'settings',
+};
+
+const initialPanelFromPath = (pathname: string): KuestionsPanelKey => {
+  const tail = pathname.split('/').filter(Boolean).pop();
+  return (tail ? PATH_TO_PANEL[tail] : undefined) ?? 'deck';
+};
+
 // Route signature keeps `multiColumn` for compatibility with the
 // generic route wrapper but the Stage owns its own geometry so the
 // prop is not read here.
 const Questions: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
-  const [panel, setPanel] = useState<KuestionsPanelKey>('deck');
+  const location = useLocation();
+  const history = useHistory();
+  const [panel, setPanel] = useState<KuestionsPanelKey>(() =>
+    initialPanelFromPath(location.pathname),
+  );
 
   const handleGoDeck = useCallback(() => {
     setPanel('deck');
-  }, []);
+    // Keep URL in sync when leaving the modal-ish sub-panels so a
+    // refresh doesn't drop the user back into Ask/Settings.
+    if (location.pathname !== '/hub/kuestions') {
+      history.replace('/hub/kuestions');
+    }
+  }, [history, location.pathname]);
 
   // Keyboard: Escape closes any sheet-y modal panel (Ask / Settings)
   // to the deck. Deck / Today / Answered are top-level; leave them
