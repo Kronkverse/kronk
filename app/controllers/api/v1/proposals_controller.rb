@@ -2,11 +2,11 @@
 
 class Api::V1::ProposalsController < Api::BaseController
   before_action :require_user!
-  before_action :set_proposal, only: [:show, :vote, :unvote, :back, :complete, :update, :archive, :unarchive]
-  before_action :require_creator_or_steward!, only: [:update, :archive, :unarchive]
+  before_action :set_proposal, only: [:show, :vote, :unvote, :back, :complete, :update]
+  before_action :require_creator_or_steward!, only: [:update]
 
   def index
-    scope = Proposal.active
+    scope = Proposal.all
 
     scope = case params[:filter]
             when 'delivered' then scope.delivered
@@ -19,7 +19,7 @@ class Api::V1::ProposalsController < Api::BaseController
 
     # Node-scoped listing: the Kommons tree's page-node panel asks for the
     # proposals anchored to one node (`node_id`), i.e. the feedback suggesting
-    # changes to that page. When present, the viewer's cross-node archived
+    # changes to that page. When present, the viewer's cross-node delivered
     # proposals are not appended — this is a single page's list, not the board.
     #
     # Korner-scoped listing: the Space page asks for every proposal about a
@@ -39,9 +39,19 @@ class Api::V1::ProposalsController < Api::BaseController
             end
 
     active = scope.limit(40).to_a
-    own_archived = node_scoped ? [] : Proposal.archived.where(created_by_account_id: current_account.id).order(archived_at: :desc).to_a
-    @proposals = active + own_archived
-    render json: @proposals, each_serializer: REST::ProposalSerializer
+    # A proposer's delivered proposals await their Complete sign-off but fall
+    # out of the default `open` filter — surface the viewer's own delivered
+    # ones on the board so a handed-back proposal never becomes unreachable.
+    # (Skipped when already viewing the `delivered` filter, and on node/korner
+    # single-page lists.)
+    own_delivered =
+      if node_scoped || params[:filter] == 'delivered'
+        []
+      else
+        Proposal.delivered.where(created_by_account_id: current_account.id).order(updated_at: :desc).to_a
+      end
+    @proposals = own_delivered + active
+    render json: @proposals.uniq, each_serializer: REST::ProposalSerializer
   end
 
   def show
@@ -70,18 +80,6 @@ class Api::V1::ProposalsController < Api::BaseController
     else
       render json: { error: @proposal.errors.full_messages.to_sentence }, status: :unprocessable_entity
     end
-  end
-
-  def archive
-    Kronk::ProposalStates.archive!(@proposal)
-    render json: @proposal, serializer: REST::ProposalSerializer
-  rescue Kronk::ProposalStates::StillBacked, Kronk::ProposalStates::InvalidTransition => e
-    render json: { error: e.message }, status: :unprocessable_entity
-  end
-
-  def unarchive
-    @proposal.update!(archived_at: nil)
-    render json: @proposal, serializer: REST::ProposalSerializer
   end
 
   def vote
@@ -126,8 +124,8 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   # Any signed-in account stakes tokens on an open proposal. Backing closes
-  # once the proposal is delivered or archived (ProposalStates.backable?);
-  # stakes are locked until it completes or is annulled, then returned.
+  # once the proposal is delivered (ProposalStates.backable?); stakes are
+  # locked until it completes or is annulled, then returned.
   def back
     return render json: { error: 'Backing is closed for this proposal.' }, status: :unprocessable_entity unless Kronk::ProposalStates.backable?(@proposal) # rubocop:disable I18n/RailsI18n/DecorateString
 

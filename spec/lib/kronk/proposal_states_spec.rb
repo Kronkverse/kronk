@@ -8,24 +8,14 @@ RSpec.describe Kronk::ProposalStates do
     Proposal.create!(title: 'Add a thing', body: 'It would help.', created_by_account_id: account.id)
   end
 
-  describe '.archive!' do
-    it 'archives an unbacked, non-terminal proposal' do
-      described_class.archive!(proposal)
-      expect(proposal.reload.archived_at).to be_present
+  describe '.backable?' do
+    it 'is true for an open proposal' do
+      expect(described_class.backable?(proposal)).to be(true)
     end
 
-    it 'refuses to archive a backed proposal (guard the endpoint bypassed)' do
-      allow(proposal).to receive_messages(backed?: true, backing_total: 5)
-
-      expect { described_class.archive!(proposal) }.to raise_error(described_class::StillBacked)
-      expect(proposal.reload.archived_at).to be_nil
-    end
-
-    it 'refuses to archive a terminal (completed/annulled) proposal' do
-      proposal.update!(status: :completed)
-
-      expect { described_class.archive!(proposal) }.to raise_error(described_class::InvalidTransition)
-      expect(proposal.reload.archived_at).to be_nil
+    it 'is false once delivered' do
+      proposal.update!(status: :delivered)
+      expect(described_class.backable?(proposal)).to be(false)
     end
   end
 
