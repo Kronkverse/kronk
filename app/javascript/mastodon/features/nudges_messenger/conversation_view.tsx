@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -14,6 +14,7 @@ import {
   apiUnmuteNudgeConversation,
   apiAddNudgeReaction,
   apiRemoveNudgeReaction,
+  apiGetNudgeConversationPage,
 } from 'mastodon/api/nudges_conversations';
 import type {
   ApiNudgeConversationDetail,
@@ -182,6 +183,16 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   const intl = useIntl();
   const history = useHistory();
   const streamEndRef = useRef<HTMLDivElement>(null);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  // `hasMore` starts true and flips false the first time a page comes
+  // back short of STREAM_LIMIT. Reset on conversationId change so a
+  // different chat gets a fresh chance.
+  const [hasMore, setHasMore] = useState(true);
+
+  useEffect(() => {
+    setHasMore(true);
+    setLoadingOlder(false);
+  }, [conversationId]);
 
   // Scroll to bottom on load / message.
   useEffect(() => {
@@ -189,6 +200,36 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
       streamEndRef.current.scrollIntoView({ block: 'end' });
     }
   }, [detail?.stream.length]);
+
+  const handleLoadOlder = useCallback(() => {
+    if (!detail || loadingOlder || !hasMore) return;
+    const oldest = detail.stream[detail.stream.length - 1];
+    if (!oldest) return;
+    setLoadingOlder(true);
+    void (async () => {
+      try {
+        const { stream } = await apiGetNudgeConversationPage(
+          conversationId,
+          oldest.created_at,
+        );
+        if (stream.length === 0) {
+          setHasMore(false);
+        } else {
+          // Backend caps each page at STREAM_LIMIT (100). A short page
+          // means we've reached the tail.
+          if (stream.length < 100) setHasMore(false);
+          onMessageSent({
+            ...detail,
+            stream: [...detail.stream, ...stream],
+          });
+        }
+      } catch {
+        // Silent — the button stays clickable so the user can retry.
+      } finally {
+        setLoadingOlder(false);
+      }
+    })();
+  }, [conversationId, detail, loadingOlder, hasMore, onMessageSent]);
 
   // On open, mark read.
   useEffect(() => {
@@ -401,6 +442,26 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
       </header>
 
       <div className='nudges-conversation__stream'>
+        {hasMore && detail.stream.length > 0 && (
+          <button
+            type='button'
+            className='nudges-conversation__load-older'
+            onClick={handleLoadOlder}
+            disabled={loadingOlder}
+          >
+            {loadingOlder ? (
+              <FormattedMessage
+                id='nudges.loading_older'
+                defaultMessage='Loading…'
+              />
+            ) : (
+              <FormattedMessage
+                id='nudges.load_older'
+                defaultMessage='Load older messages'
+              />
+            )}
+          </button>
+        )}
         {oldestFirst.map((item, index) => {
           const previous = index > 0 ? oldestFirst[index - 1] : null;
           const showDay =

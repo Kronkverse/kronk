@@ -30,11 +30,22 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
            scope: current_account
   end
 
+  # `?before=<iso8601>` returns the next STREAM_LIMIT items older than
+  # the cursor — powers the sidebar's "Load older" affordance. Without
+  # `before` the conversation header is included; with it, only the
+  # incremental page is returned.
   def show
-    render json: {
-      conversation: REST::Nudges::ConversationSerializer.new(@conversation, scope: current_account).as_json,
-      stream: interleaved_stream(@conversation),
-    }
+    if params[:before].present?
+      before = parse_before(params[:before])
+      return render(json: { error: 'bad_before' }, status: 400) unless before
+
+      render json: { stream: interleaved_stream(@conversation, before: before) }
+    else
+      render json: {
+        conversation: REST::Nudges::ConversationSerializer.new(@conversation, scope: current_account).as_json,
+        stream: interleaved_stream(@conversation),
+      }
+    end
   end
 
   # Open (find-or-create) a Mate conversation with a target account.
@@ -135,14 +146,25 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
   end
 
   # Interleave messages + events chronologically. STREAM_LIMIT rows
-  # per fetch is enough for a first render; pagination lands in a
-  # follow-up once the shell exercises the API.
-  def interleaved_stream(conversation)
+  # per fetch. `before` is an optional Time cursor — only items with
+  # `created_at < before` are considered, powering "Load older".
+  def interleaved_stream(conversation, before: nil)
     messages = conversation.messages.order(id: :desc).limit(STREAM_LIMIT)
     events   = conversation.events.order(created_at: :desc).limit(STREAM_LIMIT)
 
+    if before
+      messages = messages.where(Nudges::ConversationMessage.arel_table[:created_at].lt(before))
+      events   = events.where(Nudges::Event.arel_table[:created_at].lt(before))
+    end
+
     items = messages.map { |m| serialize_message(m) } + events.map { |e| serialize_event(e) }
     items.sort_by { |item| item[:created_at] }.reverse.first(STREAM_LIMIT)
+  end
+
+  def parse_before(value)
+    Time.iso8601(value.to_s)
+  rescue ArgumentError
+    nil
   end
 
   def serialize_message(message)

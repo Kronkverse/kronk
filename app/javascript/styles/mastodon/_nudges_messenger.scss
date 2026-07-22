@@ -555,6 +555,34 @@
   padding: 1rem;
 }
 
+// "Load older messages" button at the top of the stream. Kept
+// centered + understated — it's a discovery affordance, not the
+// primary action.
+.nudges-conversation__load-older {
+  align-self: center;
+  padding: 0.35rem 0.9rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    color: var(--kronk-purple-bright);
+    border-color: var(--kronk-purple-bright);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
 // ── Message bubble ───────────────────────────────────────────────
 .nudges-msg {
   display: flex;
@@ -732,6 +760,69 @@
       text-decoration-thickness: 2px;
     }
   }
+}
+
+// ── Post-share card (inline status preview) ─────────────────────────
+// Renders inside `.nudges-msg__body` when a shared Kronk status URL
+// is detected. Kept lightweight — avatar + author + one-line body.
+.nudges-share-card {
+  display: block;
+  margin-top: 0.35rem;
+  padding: 0.5rem 0.65rem;
+  background: rgb(0 0 0 / 15%);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+
+  &:hover {
+    background: rgb(0 0 0 / 25%);
+    text-decoration: none;
+  }
+
+  &--loading {
+    min-height: 2.5rem;
+    opacity: 0.5;
+  }
+}
+
+.nudges-share-card__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.nudges-share-card__author {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.nudges-share-card__name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nudges-share-card__handle {
+  font-size: 0.75rem;
+  opacity: 0.75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nudges-share-card__body {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.9rem;
+  opacity: 0.9;
 }
 
 .nudges-msg__time {
