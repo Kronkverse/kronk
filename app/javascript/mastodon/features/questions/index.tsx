@@ -9,8 +9,8 @@ import { Stage } from 'mastodon/components/stage';
 import { AnsweredPanel } from './answered_panel';
 import { AskPanel } from './ask_panel';
 import { DeckPanel } from './deck_panel';
-import { MembraneNav } from './membrane_nav';
 import { SettingsPanel } from './settings_panel';
+import { SpaceTabs } from './space_tabs';
 import { StarsBackground } from './stars_background';
 import { TodayPanel } from './today_panel';
 
@@ -71,7 +71,7 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
 
       <div className='kuestions-shell'>
         <StarsBackground />
-        <MembraneNav active={panel} onChange={setPanel} />
+        <SpaceTabs active={panel} onChange={setPanel} />
 
         <div className='kuestions-panels'>
           {panel === 'today' && <TodayPanel />}

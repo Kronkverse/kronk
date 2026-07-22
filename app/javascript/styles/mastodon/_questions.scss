@@ -50,63 +50,61 @@
   background: rgb(65 60 140 / 60%);
 }
 
-// ── Membrane nav (Ƙ glyph + pillars + gear + gliding pool) ───────
-.kuestions-membrane {
+// ── Space tabs — in-korner secondary nav ─────────────────────────
+// Deliberately DIFFERENT from the top Membrane switcher: pill
+// segments with a filled active state, not a sliding-underline
+// wire+pool. Reusable pattern any korner can drop in for its own
+// sub-nav.
+.space-tabs {
   position: relative;
   z-index: 2;
   display: flex;
   align-items: center;
+  gap: 6px;
+  padding: 4px 2px;
+  margin-bottom: 16px;
+}
+
+.space-tabs__group {
+  display: inline-flex;
   gap: 4px;
-  padding: 4px 2px 0;
-  margin-bottom: 10px;
+  padding: 4px;
+  background: rgb(0 0 0 / 25%);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
 }
 
-.kuestions-membrane__glyph {
-  font-family: Georgia, var(--font-display);
-  font-size: 22px;
-  color: var(--kronk-purple-bright);
-  width: 34px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-}
-
-.kuestions-membrane__pillars {
-  display: flex;
-  gap: 2px;
-  margin-left: 4px;
-}
-
-.kuestions-membrane__pillar {
-  position: relative;
-  font: 500 15px / 1 var(--font-body);
-  color: var(--text-muted);
-  background: transparent;
+.space-tabs__pill {
+  padding: 8px 16px;
   border: 0;
-  padding: 11px 16px 14px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: 500 13px / 1 var(--font-body);
   cursor: pointer;
-  transition: color var(--dur-med) var(--ease-out);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 
   &:hover {
     color: var(--text-secondary);
   }
 
   &[aria-selected='true'] {
-    color: var(--text-primary);
+    background: var(--kronk-purple-bright);
+    color: var(--text-on-accent, #fff);
   }
 
   &:focus-visible {
-    outline: 3px solid var(--kronk-purple-bright);
-    outline-offset: -2px;
-    border-radius: var(--radius-sm);
+    outline: 2px solid var(--kronk-purple-bright);
+    outline-offset: 2px;
   }
 }
 
-.kuestions-membrane__gear {
+.space-tabs__gear {
   margin-left: auto;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -114,70 +112,20 @@
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-out);
-  align-self: center;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 
   &:hover {
     color: var(--text-primary);
     border-color: var(--border-default);
     transform: rotate(35deg);
   }
-}
 
-.kuestions-membrane__wire {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: var(--border-subtle);
-  overflow: visible;
-}
-
-.kuestions-membrane__pool {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 64px;
-  height: 2px;
-  border-radius: 2px;
-  transform: translate(-50%, -50%);
-  background: var(--kronk-purple-bright);
-  box-shadow:
-    0 0 10px 1px var(--kronk-purple-bright),
-    0 0 20px 3px rgb(114 65 255 / 50%);
-  transition:
-    left var(--dur-slow) var(--ease-out),
-    width var(--dur-slow) var(--ease-out);
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: -1px -30px;
-    background: radial-gradient(
-      ellipse at center,
-      rgb(114 65 255 / 28%),
-      transparent 70%
-    );
-    border-radius: 50%;
-  }
-}
-
-.kuestions-membrane__pool--glint {
-  animation: kuestions-membrane-glint 700ms var(--ease-out);
-}
-
-@keyframes kuestions-membrane-glint {
-  0% {
-    filter: brightness(1);
-  }
-
-  40% {
-    filter: brightness(1.8);
-  }
-
-  100% {
-    filter: brightness(1);
+  &[aria-pressed='true'] {
+    color: var(--kronk-purple-bright);
+    border-color: var(--kronk-purple-bright);
   }
 }
 
