@@ -66,7 +66,13 @@ const ProposePicker: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => 
   const pickResult = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const id = e.currentTarget.dataset.id;
-      if (id) history.push(`/hub/kommons/propose?node=${id}`);
+      // Location object, not a string — the history wrapper mangles `?query`
+      // into pathname otherwise (see components/router.tsx).
+      if (id)
+        history.push({
+          pathname: '/hub/kommons/propose',
+          search: `?node=${id}`,
+        });
     },
     [history],
   );

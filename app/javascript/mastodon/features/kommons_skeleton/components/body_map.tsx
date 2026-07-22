@@ -237,15 +237,23 @@ export const BodyMap: React.FC<{
       // A korner (or a space-pillar like Nudges) is a space, not a branch to
       // drill: open its Space page rather than focusing its internal pages
       // (matches the Lattice).
+      // Push a location object — a `/x?q=1` string is stuffed whole into
+      // `pathname` by the history wrapper and breaks matching (router.tsx).
       const spaceTarget = node.korner ?? node.space;
       if (spaceTarget) {
-        history.push(`/hub/kommons/space/${spaceTarget}?from=skeleton`);
+        history.push({
+          pathname: `/hub/kommons/space/${spaceTarget}`,
+          search: '?from=skeleton',
+        });
         return;
       }
       // A Finger opens its meta page (info + proposals about this page + a
       // "go to this page" button), never the product page directly.
       if (node.url) {
-        history.push(`/hub/kommons/node/${node.id}?from=skeleton`);
+        history.push({
+          pathname: `/hub/kommons/node/${node.id}`,
+          search: '?from=skeleton',
+        });
         return;
       }
       if (node.kids.length > 0) {

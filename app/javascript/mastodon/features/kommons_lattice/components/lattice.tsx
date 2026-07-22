@@ -268,12 +268,18 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
       // drill: open its Space page (the why / who / open-proposals view) rather
       // than expanding its internal pages. The tree is the map; the Space page
       // is the place.
+      // Push a location object (pathname + search kept separate). A string like
+      // `/x?q=1` is stuffed whole into `pathname` by the app's history wrapper,
+      // which breaks route matching — see components/router.tsx.
       const spaceTarget = node.korner ?? node.space;
       if (spaceTarget) {
         history.push(
           pick
-            ? `/hub/kommons/propose?space=${spaceTarget}`
-            : `/hub/kommons/space/${spaceTarget}?from=lattice`,
+            ? { pathname: '/hub/kommons/propose', search: `?space=${spaceTarget}` }
+            : {
+                pathname: `/hub/kommons/space/${spaceTarget}`,
+                search: '?from=lattice',
+              },
         );
         return;
       }
@@ -284,8 +290,11 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
       if (node.url) {
         history.push(
           pick
-            ? `/hub/kommons/propose?node=${node.id}`
-            : `/hub/kommons/node/${node.id}?from=lattice`,
+            ? { pathname: '/hub/kommons/propose', search: `?node=${node.id}` }
+            : {
+                pathname: `/hub/kommons/node/${node.id}`,
+                search: '?from=lattice',
+              },
         );
         return;
       }
