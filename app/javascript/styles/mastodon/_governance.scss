@@ -3611,3 +3611,165 @@
     overflow: hidden;
   }
 }
+
+// ── Description card (support-model proposal page) ──────────────────────
+.governance-detail__description {
+  background: var(--surface-primary, rgba(255, 255, 255, 3%));
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
+  border-radius: var(--radius-md, 16px);
+  padding: 20px;
+}
+
+.governance-detail__section-heading {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, rgba(255, 255, 255, 60%));
+}
+
+.governance-detail__body {
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--text-primary, #fff);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+// ── Backing = support (the primary action; ₭ is scarce) ─────────────────
+.proposal-backing {
+  margin: 16px 0 20px;
+  padding: 20px;
+  border: 1px solid var(--accent, #6364ff);
+  border-radius: var(--radius-md, 16px);
+  background: color-mix(in srgb, var(--accent, #6364ff) 7%, transparent);
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  &__heading {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, rgba(255, 255, 255, 60%));
+  }
+
+  &__rank {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent, #6364ff);
+  }
+
+  &__figures {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 8px 0 16px;
+  }
+
+  &__total {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--text-primary, #fff);
+  }
+
+  &__k {
+    color: var(--accent, #6364ff);
+    margin-right: 4px;
+  }
+
+  &__sub {
+    font-size: 14px;
+    color: var(--text-secondary, rgba(255, 255, 255, 70%));
+  }
+
+  &__form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  &__input-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  &__input-k {
+    position: absolute;
+    left: 12px;
+    color: var(--text-muted, rgba(255, 255, 255, 55%));
+    pointer-events: none;
+  }
+
+  &__input {
+    width: 120px;
+    padding: 9px 12px 9px 26px;
+    border-radius: var(--radius-round, 999px);
+    border: 1px solid var(--border-default, rgba(255, 255, 255, 16%));
+    background: var(--input-background-color, rgba(255, 255, 255, 4%));
+    color: inherit;
+    font-size: 15px;
+    font-family: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent, #6364ff);
+    }
+  }
+
+  &__btn {
+    padding: 9px 20px;
+    border-radius: var(--radius-round, 999px);
+    border: 0;
+    background: var(--accent, #6364ff);
+    color: var(--text-on-accent, #fff);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    &:not(:disabled):hover {
+      filter: brightness(1.08);
+    }
+  }
+
+  &__balance {
+    font-size: 13px;
+    color: var(--text-muted, rgba(255, 255, 255, 60%));
+  }
+
+  &__closed {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-muted, rgba(255, 255, 255, 60%));
+  }
+
+  &__error {
+    margin: 10px 0 0;
+    font-size: 14px;
+    color: var(--decision-block, #ef4444);
+  }
+
+  &__note {
+    margin: 14px 0 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-muted, rgba(255, 255, 255, 55%));
+  }
+}
