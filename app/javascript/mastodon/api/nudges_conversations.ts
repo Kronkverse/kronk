@@ -24,6 +24,14 @@ export const apiOpenMateConversation = (accountId: string) =>
 export const apiGetNudgeConversation = (id: string) =>
   apiRequestGet<ApiNudgeConversationDetail>(`v1/nudges/conversations/${id}`);
 
+// Paginated "load older" — returns just `{ stream }`, without the
+// conversation envelope, since it's an incremental page.
+export const apiGetNudgeConversationPage = (id: string, before: string) =>
+  apiRequestGet<{ stream: ApiNudgeConversationDetail['stream'] }>(
+    `v1/nudges/conversations/${id}`,
+    { before },
+  );
+
 export const apiSendNudgeMessage = (
   conversationId: string,
   body: string,
