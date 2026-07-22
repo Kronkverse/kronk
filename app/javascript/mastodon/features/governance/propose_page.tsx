@@ -57,27 +57,49 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const space = params.get('space') ?? '';
   const nodeId = params.get('node') ?? '';
   const korner = useKorner(space);
-  const [nodeLabel, setNodeLabel] = useState('');
+  // The real registered nodes, so we anchor to one that actually exists.
+  const [nodeIds, setNodeIds] = useState<Set<string>>(() => new Set());
+  const [nodeLabels, setNodeLabels] = useState<Map<string, string>>(
+    () => new Map(),
+  );
 
   useEffect(() => {
-    if (!nodeId) return undefined;
     let active = true;
     apiGetKommonsNodes()
       .then((res) => {
-        if (active)
-          setNodeLabel(res.nodes.find((n) => n.id === nodeId)?.label ?? nodeId);
+        if (active) {
+          setNodeIds(new Set(res.nodes.map((n) => n.id)));
+          setNodeLabels(new Map(res.nodes.map((n) => [n.id, n.label])));
+        }
         return undefined;
       })
       .catch(() => undefined);
     return () => {
       active = false;
     };
-  }, [nodeId]);
+  }, []);
 
-  const targetNodeId = nodeId || (space ? `${space}.index` : undefined);
+  // Resolve the anchor node robustly against the registry. `?node=` uses that
+  // node (if it exists); `?space=` prefers `<slug>.index` but many spaces have
+  // no index node (pillars: feed/profile/settings…), so fall back to the space's
+  // first real node, then to unscoped — never send an unregistered node_id (the
+  // model rejects it with a 422).
+  const targetNodeId = useMemo(() => {
+    if (nodeId) return nodeIds.has(nodeId) ? nodeId : undefined;
+    if (space) {
+      const idx = `${space}.index`;
+      if (nodeIds.has(idx)) return idx;
+      const prefix = `${space}.`;
+      for (const id of nodeIds) if (id.startsWith(prefix)) return id;
+    }
+    return undefined;
+  }, [nodeId, space, nodeIds]);
+
+  // While the node list is still loading, don't submit an unresolved scope.
+  const resolving = Boolean((nodeId || space) && nodeIds.size === 0);
   const scoped = Boolean(nodeId || space);
   const scopeName = nodeId
-    ? nodeLabel || nodeId
+    ? (nodeLabels.get(nodeId) ?? nodeId)
     : space
       ? (korner?.name ?? space)
       : '';
@@ -94,7 +116,10 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [error, setError] = useState<string | null>(null);
 
   const canSubmit =
-    title.trim().length > 0 && body.trim().length > 0 && !submitting;
+    title.trim().length > 0 &&
+    body.trim().length > 0 &&
+    !submitting &&
+    !resolving;
 
   const handleStepChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
