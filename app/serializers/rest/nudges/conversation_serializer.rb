@@ -67,6 +67,7 @@ class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
       name: group.name,
       member_count: group.group_memberships.count,
       avatar_urls: krew_avatar_urls(group),
+      read_pointers: viewer ? object.krew_read_pointers(viewer) : [],
     }
   end
 
