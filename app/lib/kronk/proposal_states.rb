@@ -6,8 +6,7 @@ module Kronk
   #
   #   open ──dev──> delivered ──proposer──> completed   refund + payout
   #    │
-  #    ├──dev──> annulled                               refund, no payout
-  #    └──archive (only while backing is zero)
+  #    └──dev──> annulled                               refund, no payout
   #
   # Two deliberate asymmetries:
   #
@@ -24,7 +23,6 @@ module Kronk
 
     InvalidTransition = Class.new(StandardError)
     NotTheProposer = Class.new(StandardError)
-    StillBacked = Class.new(StandardError)
 
     # open -> delivered. A dev has built the thing and is handing it back to
     # the proposer to confirm. No tokens move; backing simply closes.
@@ -65,21 +63,10 @@ module Kronk
       proposal
     end
 
-    # Archiving is not a state — it is a timestamp, and it is only allowed
-    # while nothing is staked. Once tokens are committed the proposal is
-    # committed too.
-    def archive!(proposal)
-      raise StillBacked, "proposal has #{proposal.backing_total} tokens backed" if proposal.backed?
-      raise InvalidTransition, "cannot archive a #{proposal.status} proposal" if Proposal::TERMINAL_STATES.include?(proposal.status)
-
-      proposal.update!(archived_at: Time.now.utc)
-      proposal
-    end
-
     # Backing closes at delivered — the work is done, so there is nothing
     # left to signal support for.
     def backable?(proposal)
-      proposal.open? && !proposal.archived?
+      proposal.open?
     end
 
     def require_state!(proposal, expected, action)

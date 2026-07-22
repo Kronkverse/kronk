@@ -14,7 +14,6 @@ class Proposal < ApplicationRecord
       created_by_account_id: created_by_account_id,
       status: status,
       categories: Array(categories),
-      archived: archived?,
       created_at: created_at&.to_i,
     }
   end
@@ -109,9 +108,7 @@ class Proposal < ApplicationRecord
 
   scope :for_node, ->(node_id) { where(node_id: node_id) }
 
-  scope :active,        -> { where(archived_at: nil) }
-  scope :archived,      -> { where.not(archived_at: nil) }
-  scope :recent,        -> { order(created_at: :desc) }
+  scope :recent, -> { order(created_at: :desc) }
   scope :most_supported, lambda {
     left_joins(:proposal_votes)
       .select("proposals.*, COUNT(CASE WHEN proposal_votes.position = #{ProposalVote.positions[:agree]} THEN 1 END) AS agree_count")
@@ -125,10 +122,6 @@ class Proposal < ApplicationRecord
       .order(Arel.sql('total_votes DESC, proposals.created_at DESC'))
   }
   scope :with_category, ->(cat) { where('? = ANY(categories)', cat) }
-
-  def archived?
-    archived_at.present?
-  end
 
   def participation_count
     proposal_votes.count
@@ -151,13 +144,6 @@ class Proposal < ApplicationRecord
 
   def backed?
     backing_total.positive?
-  end
-
-  # Archive is only permitted while nothing is staked. Once tokens are
-  # committed the proposal is committed too — it can only be completed or
-  # annulled, both of which return the stakes.
-  def archivable?
-    !archived? && !backed? && !TERMINAL_STATES.include?(status)
   end
 
   private

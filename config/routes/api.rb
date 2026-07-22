@@ -129,8 +129,6 @@ namespace :api, format: false do
         delete :unvote
         post :back
         post :complete
-        post :archive
-        post :unarchive
       end
       resources :tasks, only: [:index, :create, :update], shallow: true
     end

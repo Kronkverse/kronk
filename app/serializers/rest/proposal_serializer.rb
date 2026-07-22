@@ -6,7 +6,7 @@ class REST::ProposalSerializer < ActiveModel::Serializer
              :parent_proposal_id, :status_id, :discussion_status_id,
              :outcome_notes, :opens_at,
              :support_count, :challenge_count, :participation_count,
-             :created_at, :archived_at
+             :created_at
 
   def parent_proposal_id
     object.parent_proposal_id&.to_s

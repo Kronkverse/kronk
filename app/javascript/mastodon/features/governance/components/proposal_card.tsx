@@ -107,7 +107,7 @@ export const ProposalCard: React.FC<{
 
   return (
     <button
-      className={`governance-card governance-card--${proposal.status}${proposal.archived_at ? ' governance-card--archived' : ''}`}
+      className={`governance-card governance-card--${proposal.status}`}
       onClick={handleClick}
     >
       <span

@@ -63,10 +63,6 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setProposal(updated);
   }, []);
 
-  const handleArchived = useCallback(() => {
-    history.push('/hub/kommons');
-  }, [history]);
-
   return (
     <Column>
       <ColumnHeader
@@ -104,7 +100,6 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             proposal={proposal}
             onBack={handleBack}
             onVoteUpdate={handleVoteUpdate}
-            onArchived={handleArchived}
           />
         )}
       </div>

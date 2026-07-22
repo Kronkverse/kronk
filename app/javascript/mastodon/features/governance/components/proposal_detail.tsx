@@ -30,13 +30,11 @@ export const ProposalDetail: React.FC<{
   proposal: Proposal;
   onBack: () => void;
   onVoteUpdate: (updated: Proposal) => void;
-  onArchived: (updated: Proposal) => void;
-}> = ({ proposal, onBack, onVoteUpdate, onArchived }) => {
+}> = ({ proposal, onBack, onVoteUpdate }) => {
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(proposal.title);
   const [editBody, setEditBody] = useState(proposal.body);
   const [saving, setSaving] = useState(false);
-  const [archiving, setArchiving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const [delivering, setDelivering] = useState(false);
   const [deliverNotes, setDeliverNotes] = useState('');
@@ -99,44 +97,6 @@ export const ProposalDetail: React.FC<{
     },
     [handleEditSave],
   );
-
-  const handleArchive = useCallback(async () => {
-    if (
-      !window.confirm(
-        'Archive this seed? It will be hidden from the main list.',
-      )
-    )
-      return;
-    setArchiving(true);
-    try {
-      const res = await api().post<Proposal>(
-        `/api/v1/proposals/${proposal.id}/archive`,
-      );
-      onArchived(res.data);
-    } catch {
-      setArchiving(false);
-    }
-  }, [proposal.id, onArchived]);
-
-  const handleUnarchive = useCallback(async () => {
-    setArchiving(true);
-    try {
-      const res = await api().post<Proposal>(
-        `/api/v1/proposals/${proposal.id}/unarchive`,
-      );
-      onVoteUpdate(res.data);
-    } catch {
-    } finally {
-      setArchiving(false);
-    }
-  }, [proposal.id, onVoteUpdate]);
-
-  const handleArchiveClick = useCallback(() => {
-    void handleArchive();
-  }, [handleArchive]);
-  const handleUnarchiveClick = useCallback(() => {
-    void handleUnarchive();
-  }, [handleUnarchive]);
 
   const handleDeliverOpen = useCallback(() => {
     setDeliverNotes('');
@@ -378,7 +338,7 @@ export const ProposalDetail: React.FC<{
               </p>
               {isSeeder && (
                 <div className='governance-detail__seeder-actions'>
-                  {!proposal.archived_at && proposal.status !== 'delivered' && (
+                  {proposal.status !== 'delivered' && (
                     <button
                       type='button'
                       className='governance-detail__action-btn governance-detail__action-btn--edit'
@@ -394,7 +354,7 @@ export const ProposalDetail: React.FC<{
                       proposal (delivery itself is a dev action via `tootctl
                       kommons deliver`). POSTing /complete on an open proposal
                       422s, so this only shows once status is `delivered`. */}
-                  {!proposal.archived_at && proposal.status === 'delivered' && (
+                  {proposal.status === 'delivered' && (
                     <button
                       type='button'
                       className='governance-detail__action-btn governance-detail__action-btn--deliver'
@@ -404,45 +364,6 @@ export const ProposalDetail: React.FC<{
                         id='governance.action.deliver'
                         defaultMessage='Confirm completion'
                       />
-                    </button>
-                  )}
-                  {proposal.archived_at ? (
-                    <button
-                      type='button'
-                      className='governance-detail__action-btn governance-detail__action-btn--unarchive'
-                      onClick={handleUnarchiveClick}
-                      disabled={archiving}
-                    >
-                      {archiving ? (
-                        <FormattedMessage
-                          id='governance.action.unarchiving'
-                          defaultMessage='Unarchiving…'
-                        />
-                      ) : (
-                        <FormattedMessage
-                          id='governance.action.unarchive'
-                          defaultMessage='Unarchive'
-                        />
-                      )}
-                    </button>
-                  ) : (
-                    <button
-                      type='button'
-                      className='governance-detail__action-btn governance-detail__action-btn--archive'
-                      onClick={handleArchiveClick}
-                      disabled={archiving}
-                    >
-                      {archiving ? (
-                        <FormattedMessage
-                          id='governance.action.archiving'
-                          defaultMessage='Archiving…'
-                        />
-                      ) : (
-                        <FormattedMessage
-                          id='governance.action.archive'
-                          defaultMessage='Archive'
-                        />
-                      )}
                     </button>
                   )}
                 </div>

@@ -37,7 +37,7 @@ module Kronk
         },
         kommons_proposals: {
           searchable_attributes: %w(title body summary),
-          filterable_attributes: %w(created_by_account_id status categories archived),
+          filterable_attributes: %w(created_by_account_id status categories),
           sortable_attributes: %w(created_at),
         },
         booth_sets: {
