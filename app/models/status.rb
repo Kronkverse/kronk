@@ -132,8 +132,9 @@ class Status < ApplicationRecord
   # keeps runtime behaviour identical while making the model load column-free.
   attribute :post_type, :integer, default: 0
   enum :post_type, { normal: 0, question: 1, answer: 2, proposal: 3 }, prefix: :kronk
-
-  scope :questions, -> { where(post_type: :question) }
+  # The `question` / `answer` values are retained on the enum only to
+  # keep any legacy rows readable; Kuestions v2 uses the dedicated
+  # Question + Answer tables (Phase 3a — 2026-07-22 retire).
 
   validates :uri, uniqueness: true, presence: true, unless: :local?
   validates :text, presence: true, unless: -> { with_media? || reblog? || with_quote? }

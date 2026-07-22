@@ -102,12 +102,6 @@ namespace :api, format: false do
     resources :favourites, only: [:index]
     resources :bookmarks, only: [:index]
 
-    resources :questions, only: [:index, :show] do
-      member do
-        get :answers
-      end
-    end
-
     namespace :inflow do
       resource :observation, only: [:show]
     end

@@ -20,7 +20,6 @@ import type { Map as ImmutableMap } from 'immutable';
 import { StatusBoothCard } from './status_booth_card';
 import { StatusEventCard } from './status_event_card';
 import { StatusKommonsCard } from './status_kommons_card';
-import { StatusQuestionCard } from './status_question_card';
 import { StatusWachuneedCard } from './status_wachuneed_card';
 
 type StatusLike = ImmutableMap<string, unknown>;
@@ -58,56 +57,10 @@ export const KORNER_CARDS: KornerCardEntry[] = [
       s.get('post_type') === 'proposal' && s.get('proposal') != null,
     card: (s) => <StatusKommonsCard proposal={dataFrom(s, 'proposal')} />,
   },
-  {
-    slug: 'kuestions',
-    matches: (s) => {
-      const pt = s.get('post_type');
-      return pt === 'question' || pt === 'answer';
-    },
-    card: (s, ctx) => {
-      const isAnswer = s.get('post_type') === 'answer';
-      const questionObj = isAnswer
-        ? (s.get('question') as
-            | ImmutableMap<string, unknown>
-            | null
-            | undefined)
-        : null;
-      const answerersSrc = isAnswer
-        ? (questionObj?.get('answerers') as
-            | ImmutableMap<string, unknown>
-            | null
-            | undefined)
-        : (s.get('answerers') as
-            | ImmutableMap<string, unknown>
-            | null
-            | undefined);
-      return (
-        <StatusQuestionCard
-          postType='question'
-          contentHtml={
-            isAnswer
-              ? ((questionObj?.get('content') as string | undefined) ?? '')
-              : (s.get('contentHtml') as string)
-          }
-          answersCount={
-            isAnswer
-              ? ((questionObj?.get('answers_count') as number | undefined) ?? 0)
-              : (s.get('answers_count') as number | undefined)
-          }
-          answerers={answerersSrc?.toJS() as any}
-          hasAnswered={
-            isAnswer ? true : (s.get('has_answered') as boolean | undefined)
-          }
-          statusId={
-            isAnswer
-              ? (s.get('in_reply_to_id') as string)
-              : (s.get('id') as string)
-          }
-          onCardClick={ctx.onCardClick}
-        />
-      );
-    },
-  },
+  // Kuestions feed projection is out of scope for the rebuild — the
+  // Status-polymorphic path retired in Phase 3a. The kuestions_card
+  // per §Feed projection (docs/spaces/kuestions.md §Phase 8.3) will
+  // return here backed by the dedicated Question model.
   {
     slug: 'wachuneed',
     matches: (s) => s.get('listing') != null,

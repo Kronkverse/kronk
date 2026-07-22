@@ -38,14 +38,19 @@ emits:
 listens: []
 
 feed_projection:
-  card: question_card # StatusQuestionCard, unified onto StatusKornerCard
-  title_from: title # Question#title (v2 model)
-  summary_from: prompt # Question#prompt — the body text
+  card: question_card # Retired 2026-07-22 (Phase 3a) — StatusQuestionCard gone.
+  # A dedicated `kuestions_card` per docs/spaces/kuestions.md §Feed
+  # projection returns here backed by the Question model (Phase 8.3),
+  # not the legacy Status-polymorphic path.
+  title_from: title
+  summary_from: prompt
   links_to: /hub/kuestions/<id>
   default_visibility: public
 
   status_association: question # framework: Status.has_one :question via status_id (§5.5)
-  status_post_type: question # legacy path; both resolve during the transition
+  # `status_post_type: question` removed 2026-07-22 — no writer sets
+  # post_type=question anymore; Kuestions v2 uses the dedicated
+  # `questions` table exclusively.
 
 notifications:
   types: []
