@@ -23,7 +23,15 @@ class Api::V2::KuestionsController < Api::BaseController
   MAX_LIMIT     = 50
 
   def index
-    scope = Question.deck_for(current_account).limit(clamp_limit)
+    scope = case params[:filter]
+            when 'answered'
+              Question.active
+                      .where(id: Answer.where(account_id: current_account.id).select(:question_id))
+                      .order(id: :desc)
+            else
+              Question.deck_for(current_account)
+            end
+    scope = scope.limit(clamp_limit)
     render json: scope, each_serializer: REST::Kuestions::QuestionSerializer, scope: current_account
   end
 
