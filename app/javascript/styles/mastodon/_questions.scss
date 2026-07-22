@@ -13,13 +13,13 @@
   position: relative;
   flex: 1;
   width: 100%;
-  padding: 16px 16px 120px;
-  box-sizing: border-box;
 
-  // No `min-height: 100%` — combined with `flex: 1` in the Stage's
-  // column flex layout it pushed the shell just past the Stage's
-  // bottom (padding-bottom added to the min-height floor), triggering
-  // Stage's vertical scrollbar even when the content itself fits.
+  // Top padding clears the reserved Stage header row (`.korner-exit`
+  // top-left, `.space-tabs` top-right — both float over content).
+  // Bottom padding gives the swipe-deck room to breathe above the
+  // page fold.
+  padding: 3.75rem 1rem 7.5rem;
+  box-sizing: border-box;
 }
 
 // Content sits inside a reading column so wide viewports don't stretch
@@ -55,82 +55,13 @@
   background: rgb(65 60 140 / 60%);
 }
 
-// ── Space tabs — in-korner secondary nav ─────────────────────────
-// Deliberately DIFFERENT from the top Membrane switcher: pill
-// segments with a filled active state, not a sliding-underline
-// wire+pool. Reusable pattern any korner can drop in for its own
-// sub-nav.
-.space-tabs {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 2px;
-  margin-bottom: 16px;
-}
-
-.space-tabs__group {
-  display: inline-flex;
-  gap: 4px;
-  padding: 4px;
-  background: rgb(0 0 0 / 25%);
-  border: 1px solid var(--border-subtle);
-  border-radius: 999px;
-}
-
-.space-tabs__pill {
-  padding: 8px 16px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text-muted);
-  font: 500 13px / 1 var(--font-body);
-  cursor: pointer;
-  transition:
-    background var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
-
-  &:hover {
-    color: var(--text-secondary);
-  }
-
-  &[aria-selected='true'] {
-    background: var(--kronk-purple-bright);
-    color: var(--text-on-accent, #fff);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--kronk-purple-bright);
-    outline-offset: 2px;
-  }
-}
+// Reusable Stage-layer patterns (korner exit, space tabs, space title
+// slot) live in `_kronk_stage.scss`. This file is Kuestions-specific.
 
 // ── Panel shared bits ────────────────────────────────────────────
 .kuestions-panel {
   position: relative;
   z-index: 1;
-}
-
-.kuestions-wordmark {
-  font-family: Georgia, var(--font-display);
-  font-size: 46px;
-  line-height: 1.1;
-  text-align: center;
-  color: var(--kronk-purple-bright);
-  margin: 20px 0 4px;
-}
-
-.kuestions-sub {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 13px;
-  margin-bottom: 18px;
-
-  b {
-    color: var(--text-secondary);
-    font-weight: 500;
-  }
 }
 
 .kuestions-panel__placeholder {

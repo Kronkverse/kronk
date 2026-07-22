@@ -4,6 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
+import { KornerExit } from 'mastodon/components/korner_exit';
 import { Stage } from 'mastodon/components/stage';
 
 import { AnsweredPanel } from './answered_panel';
@@ -69,9 +70,13 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
+      {/* Reserved Stage top zones — floating over content. See docs on
+          the Stage layer in components/stage.tsx. */}
+      <KornerExit />
+      <SpaceTabs active={panel} onChange={setPanel} />
+
       <div className='kuestions-shell'>
         <StarsBackground />
-        <SpaceTabs active={panel} onChange={setPanel} />
 
         <div className='kuestions-panels'>
           {panel === 'today' && <TodayPanel />}

@@ -154,8 +154,8 @@ export const DeckPanel: React.FC = () => {
   if (deck === null) {
     return (
       <section className='kuestions-panel'>
-        <h1 className='kuestions-wordmark'>Ƙuestions</h1>
-        <p className='kuestions-sub'>{intl.formatMessage(messages.loading)}</p>
+        <h1 className='space-title'>Ƙuestions</h1>
+        <p className='space-subtitle'>{intl.formatMessage(messages.loading)}</p>
       </section>
     );
   }
@@ -165,8 +165,8 @@ export const DeckPanel: React.FC = () => {
 
   return (
     <section className='kuestions-panel'>
-      <h1 className='kuestions-wordmark'>Ƙuestions</h1>
-      <p className='kuestions-sub'>
+      <h1 className='space-title'>Ƙuestions</h1>
+      <p className='space-subtitle'>
         <FormattedMessage
           id='kuestions.deck.subtitle'
           defaultMessage='Answer to unlock. {left}'

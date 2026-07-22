@@ -150,8 +150,8 @@ export const AskPanel: React.FC<AskPanelProps> = ({ onDone }) => {
 
   return (
     <section className='kuestions-panel'>
-      <h1 className='kuestions-wordmark'>Ask</h1>
-      <p className='kuestions-sub'>
+      <h1 className='space-title'>Ask</h1>
+      <p className='space-subtitle'>
         <FormattedMessage
           id='kuestions.ask.subtitle'
           defaultMessage="Nobody sees answers until they've given one."
