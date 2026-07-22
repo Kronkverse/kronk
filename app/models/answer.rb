@@ -21,7 +21,16 @@ class Answer < ApplicationRecord
   validates :visibility_scope, inclusion: { in: VISIBILITY_SCOPES }
   validate  :choice_index_matches_format
 
-  after_commit :publish_kuestions_question_answered, on: :create
+  before_update :snapshot_prior_version
+  after_commit  :publish_kuestions_question_answered, on: :create
+
+  # Public-by-design edit trail per brief. Each entry is a hash:
+  #   { "body" => "...", "choice_index" => n | nil, "edited_at" => ISO8601 }
+  # The current values live on the row; edit_history holds the
+  # supplanted versions in chronological order (oldest first).
+  def edited?
+    Array(edit_history).any?
+  end
 
   private
 
@@ -35,6 +44,22 @@ class Answer < ApplicationRecord
     elsif choice_index.present?
       errors.add(:choice_index, 'must be blank for a free-text Kuestion')
     end
+  end
+
+  # If body or choice_index is about to change, push the prior values
+  # onto edit_history so the audit trail persists. `updated_at` isn't
+  # yet set to Time.current here (that's Rails' concern), so we
+  # timestamp explicitly with the pre-change updated_at — that's when
+  # this row _was_ its former self.
+  def snapshot_prior_version
+    return unless body_changed? || choice_index_changed?
+
+    prior = {
+      'body' => body_was,
+      'choice_index' => choice_index_was,
+      'edited_at' => (updated_at || Time.current).iso8601,
+    }
+    self.edit_history = Array(edit_history) + [prior]
   end
 
   # kuestions.question.answered — someone answered a Question; Nudges
