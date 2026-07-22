@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -30,6 +30,10 @@ const messages = defineMessages({
 
 interface ComposerProps {
   onSend: (body: string, mediaAttachmentIds: string[]) => Promise<void> | void;
+  // Namespaces the draft store so multiple open conversations don't
+  // stomp each other. Optional so callers without a stable id (rare)
+  // still get a working composer, just without persistence.
+  conversationId?: string;
 }
 
 interface StagedMedia {
@@ -40,14 +44,53 @@ interface StagedMedia {
 
 const ACCEPT = 'image/*,video/*';
 const MAX_MEDIA = 4;
+const DRAFT_KEY_PREFIX = 'nudges:draft:';
+
+const draftKey = (id: string | undefined) =>
+  id ? `${DRAFT_KEY_PREFIX}${id}` : null;
+
+const readDraft = (id: string | undefined): string => {
+  const key = draftKey(id);
+  if (!key || typeof window === 'undefined') return '';
+  try {
+    return window.localStorage.getItem(key) ?? '';
+  } catch {
+    // Private-mode Safari + storage-disabled browsers throw on read.
+    return '';
+  }
+};
+
+const writeDraft = (id: string | undefined, value: string) => {
+  const key = draftKey(id);
+  if (!key || typeof window === 'undefined') return;
+  try {
+    if (value === '') window.localStorage.removeItem(key);
+    else window.localStorage.setItem(key, value);
+  } catch {
+    // Quota exceeded / storage disabled — silent, drafts are best-effort.
+  }
+};
 
 // Composer with a text field + attach affordance. Up to MAX_MEDIA
 // attachments per message (matches Mastodon Status default). Voice
 // recording is kronk-app parity-gated per docs/kronk_nudges.md
-// §Surface 4.
-export const Composer: React.FC<ComposerProps> = ({ onSend }) => {
+// §Surface 4. Unsent text is persisted per conversation to
+// localStorage so a nav-away doesn't drop what you were typing.
+export const Composer: React.FC<ComposerProps> = ({
+  onSend,
+  conversationId,
+}) => {
   const intl = useIntl();
-  const [value, setValue] = useState('');
+  // Load-once from storage on mount / conversationId change. This
+  // pattern (initial state via a function) avoids clobbering an
+  // in-progress compose if the parent re-renders.
+  const [value, setValue] = useState(() => readDraft(conversationId));
+  useEffect(() => {
+    setValue(readDraft(conversationId));
+  }, [conversationId]);
+  useEffect(() => {
+    writeDraft(conversationId, value);
+  }, [conversationId, value]);
   const [sending, setSending] = useState(false);
   const [staged, setStaged] = useState<StagedMedia[]>([]);
   const [uploading, setUploading] = useState(false);
