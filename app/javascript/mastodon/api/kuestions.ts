@@ -9,6 +9,9 @@ import type {
 export const apiListKuestions = () =>
   apiRequestGet<ApiKuestionJSON[]>('v2/kuestions');
 
+export const apiListAnsweredKuestions = () =>
+  apiRequestGet<ApiKuestionJSON[]>('v2/kuestions', { filter: 'answered' });
+
 export const apiGetKuestion = (id: string) =>
   apiRequestGet<ApiKuestionJSON>(`v2/kuestions/${id}`);
 
