@@ -163,6 +163,10 @@ enum value, so any row written without an explicit status landed unmapped.
 
 ### Token backing
 
+**User-facing name: Koin** (the currency is called **Koin** in the UI, shown
+with the **₭** glyph before amounts — e.g. `₭3 staked`; code/DB stay `token_*`).
+Decided 2026-07-22 with Tal, from the Kommons home mockup.
+
 **Shipped 2026-07-18** (#366). The old "seconding threshold" gate retires.
 In its place, a per-user token system:
 
