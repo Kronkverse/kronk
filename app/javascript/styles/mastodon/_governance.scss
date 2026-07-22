@@ -731,7 +731,7 @@
   > .governance-tab-proposal,
   > .governance-attachments {
     background: var(--surface-primary, rgba(255, 255, 255, 3%));
-    border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
+    border: 1px solid var(--border-default, rgba(139, 99, 255, 24%));
     border-radius: var(--radius-md, 16px);
     padding: 20px;
   }
@@ -3364,9 +3364,9 @@
 // palette for state (agree = done, pending = in progress).
 .proposal-steps {
   margin: 0 0 20px;
-  padding: 18px 18px 16px;
+  padding: 20px;
   background: var(--surface-primary, rgba(255, 255, 255, 3%));
-  border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
+  border: 1px solid var(--border-default, rgba(139, 99, 255, 24%));
   border-radius: var(--radius-md, 16px);
 
   &__heading {
@@ -3615,7 +3615,7 @@
 // ── Description card (support-model proposal page) ──────────────────────
 .governance-detail__description {
   background: var(--surface-primary, rgba(255, 255, 255, 3%));
-  border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
+  border: 1px solid var(--border-default, rgba(139, 99, 255, 24%));
   border-radius: var(--radius-md, 16px);
   padding: 20px;
 }
@@ -3777,7 +3777,7 @@
 // ── Comments (discussion; support-model proposal page) ──────────────────
 .proposal-comments {
   background: var(--surface-primary, rgba(255, 255, 255, 3%));
-  border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
+  border: 1px solid var(--border-default, rgba(139, 99, 255, 24%));
   border-radius: var(--radius-md, 16px);
   padding: 20px;
 
