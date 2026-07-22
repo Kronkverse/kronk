@@ -4,24 +4,27 @@
 // Prototype: docs/kronk_kuestions_prototype.html.
 // Space doc: docs/spaces/kuestions.md.
 
-// The shell fills the Column pane so the star field, membrane nav
-// and content all sit inside the same envelope the rest of the app
-// uses. The prototype (docs/kronk_kuestions_prototype.html) bakes a
-// mobile-first 560px `.shell`, which on desktop pulled Kuestions
-// into a narrow floating box — the Kronk chrome pane already caps
-// `.columns-area__panels` at 720px on wide viewports, so a further
-// cap here just disintegrated the space from its surroundings.
+// Kuestions runs on the new Stage layer (see components/stage.tsx).
+// The Stage owns scrolling + the outer geometry; the shell here is a
+// simple flex container that grows to fill the Stage rectangle so the
+// star field extends edge-to-edge and the membrane nav has an
+// unambiguous top strip.
 .kuestions-shell {
   position: relative;
   flex: 1;
-  overflow-y: auto;
   width: 100%;
   padding: 16px 16px 120px;
+  min-height: 100%;
 }
 
+// Content sits inside a reading column so wide viewports don't stretch
+// the swipe deck out to the full stage width. The stars behind still
+// fill the Stage — only the interactive material is capped.
 .kuestions-panels {
   position: relative;
   z-index: 1;
+  max-width: 560px;
+  margin: 0 auto;
 }
 
 // ── Star field background ────────────────────────────────────────
