@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ƙuestions — Kronk</title>
+<style>
+:root{
+  --accent:#4414cc;--surface-primary:#191b22;--surface-elevated:#292938;--surface-sunken:#12131a;
+  --border-default:#47368b;--border-strong:#5a4aa0;--border-subtle:#2a2740;
+  --text-primary:#ece9f5;--text-secondary:#9c9cc9;--text-muted:#606085;--text-on-accent:#fff;
+  --focus-ring:#7241ff;--purple-bright:#7241ff;--purple-deep:#3a218b;--purple-muted:#413c8c;--success:#308d4c;
+  --vis-0:#e8a24e;--vis-1:#c97be8;--vis-2:#7241ff;--vis-3:#4e5bd6;--vis-4:#5a6b8c;
+  --font-display:"Liberation Serif",Georgia,"Times New Roman",serif;
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r-xs:4px;--r-sm:6px;--r-md:10px;--r-lg:16px;--r-xl:22px;--sq:34%;
+  --dur-fast:120ms;--dur-med:200ms;--dur-slow:400ms;
+  --ease-out:cubic-bezier(.16,1,.3,1);--ease-spring:cubic-bezier(.34,1.56,.64,1);
+  --card-shadow:0 18px 40px -18px rgb(0 0 0 / 70%);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font-body);background:var(--surface-sunken);color:var(--text-primary);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+.star{position:absolute;color:var(--purple-bright);opacity:.5;line-height:1;user-select:none}
+.star.dot{width:2px;height:2px;border-radius:50%;background:var(--purple-muted);opacity:.6}
+.shell{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:16px 16px 120px;min-height:100%}
+/* ── membrane nav: flat pillars, gliding light pool on a wire ── */
+.membar{position:relative;display:flex;align-items:center;gap:4px;padding:4px 2px 0;margin-bottom:10px}
+.gly{font-family:var(--font-display);font-size:22px;color:var(--purple-bright);width:34px;height:38px;display:grid;place-items:center;flex:none}
+.pillars{display:flex;gap:2px;margin-left:4px}
+.pillar{
+  position:relative;font:500 15px/1 var(--font-body);
+  color:var(--text-muted);background:transparent;border:0;
+  padding:11px 16px 14px;cursor:pointer;
+  transition:color var(--dur-med) var(--ease-out);
+}
+.pillar:hover{color:var(--text-secondary)}
+.pillar[aria-selected="true"]{color:var(--text-primary)}
+.pillar:focus-visible{outline:3px solid var(--focus-ring);outline-offset:-2px;border-radius:var(--r-sm)}
+.gear{margin-left:auto;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:transparent;border:1px solid var(--border-subtle);color:var(--text-secondary);cursor:pointer;transition:all var(--dur-fast) var(--ease-out);align-self:center}
+.gear:hover{color:var(--text-primary);border-color:var(--border-default);transform:rotate(35deg)}
+.wire{position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--border-subtle);overflow:visible}
+.pool{
+  position:absolute;top:50%;left:0;width:64px;height:2px;border-radius:2px;
+  transform:translate(-50%,-50%);
+  background:var(--purple-bright);
+  box-shadow:0 0 10px 1px var(--purple-bright),0 0 20px 3px rgba(114,65,255,.5);
+  transition:left var(--dur-slow) var(--ease-out),width var(--dur-slow) var(--ease-out);
+}
+.pool::before{content:"";position:absolute;inset:-1px -30px;background:radial-gradient(ellipse at center,rgba(114,65,255,.28),transparent 70%);border-radius:50%}
+.pool.glint{animation:glint 700ms var(--ease-out)}
+@keyframes glint{0%{filter:brightness(1)}40%{filter:brightness(1.8)}100%{filter:brightness(1)}}
+
+/* ── Today (home) ── */
+.today-card{background:linear-gradient(168deg,#22222e 0%,var(--surface-primary) 62%);border:1px solid var(--border-subtle);border-radius:var(--r-xl);padding:22px;position:relative;overflow:hidden;box-shadow:var(--card-shadow)}
+.today-card::after{content:"";position:absolute;right:-70px;top:-90px;width:230px;height:230px;border-radius:50%;background:radial-gradient(circle,rgba(142,92,255,.16),transparent 65%);pointer-events:none}
+.today-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(114,65,255,.10);border:1px solid var(--border-default);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--text-secondary);margin-bottom:16px}
+.today-tag b{color:var(--purple-bright);font-weight:600}
+.today-q{font-family:var(--font-display);font-size:30px;line-height:1.24;margin-bottom:18px;color:var(--text-primary)}
+.today-foot{display:flex;align-items:center;gap:14px;margin-top:14px}
+.today-count{flex:1;display:flex;align-items:center;gap:10px}
+.today-count .faces{display:flex}
+.today-count .faces .avatar{margin-left:-7px;border:2px solid var(--surface-primary)}
+.today-count .faces .avatar:first-child{margin-left:0}
+.today-count .ct{font-size:13px;color:var(--text-secondary)}
+.today-count .ct b{color:var(--text-primary);font-weight:600}
+.today-note{font-size:11px;color:var(--text-muted);margin-top:14px;text-align:center}
+.today-posted{display:flex;align-items:center;gap:10px;background:rgba(48,141,76,.10);border:1px solid rgba(48,141,76,.35);border-radius:var(--r-md);padding:12px 14px;margin-top:14px;font-size:13px;color:var(--text-secondary);animation:pop var(--dur-slow) var(--ease-spring)}
+.today-posted b{color:var(--text-primary)}
+.wordmark{font-family:var(--font-display);font-size:46px;line-height:1.1;text-align:center;color:var(--purple-bright);margin:20px 0 4px}
+.sub{text-align:center;color:var(--text-muted);font-size:13px;margin-bottom:18px}
+.sub b{color:var(--text-secondary);font-weight:500}
+.panel{display:none;animation:fade var(--dur-med) var(--ease-out)}
+.panel.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.deck-wrap{position:relative;height:440px;margin-bottom:18px;perspective:1400px}
+.kard{position:absolute;inset:0;background:linear-gradient(168deg,#22222e 0%,var(--surface-primary) 62%);border:1px solid var(--border-subtle);border-radius:var(--r-xl);box-shadow:var(--card-shadow);padding:22px 22px 20px;display:flex;flex-direction:column;cursor:grab;touch-action:none;will-change:transform;overflow:hidden}
+.kard::after{content:"";position:absolute;right:-70px;top:-90px;width:230px;height:230px;border-radius:50%;background:radial-gradient(circle,rgba(142,92,255,.18),transparent 65%);pointer-events:none}
+.kard:active{cursor:grabbing}
+.kard.gone{transition:transform var(--dur-slow) var(--ease-out),opacity var(--dur-slow) var(--ease-out);opacity:0}
+.asker{display:flex;align-items:center;gap:10px}
+.avatar{width:38px;height:38px;border-radius:var(--sq);display:grid;place-items:center;flex:none;font:600 13px/1 var(--font-body);color:#fff;border:1px solid rgba(255,255,255,.10)}
+.avatar.sm{width:24px;height:24px;font-size:10px;border-radius:32%}
+.avatar.ghost{background:var(--surface-elevated)!important;color:var(--text-muted)}
+.asker .name{font-weight:600;font-size:14px}
+.asker .handle{color:var(--text-muted);font-size:12px}
+.fmt-badge{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);border:1px solid var(--border-subtle);border-radius:999px;padding:5px 10px;background:rgba(0,0,0,.2)}
+.qtext{font-family:var(--font-display);font-size:30px;line-height:1.24;margin:28px 0 auto;color:var(--text-primary)}
+.qtext.long{font-size:24px}
+.locked{border-top:1px dashed var(--border-subtle);padding-top:14px;margin-top:16px;display:flex;align-items:center;gap:10px}
+.lock{width:30px;height:30px;border-radius:8px;flex:none;display:grid;place-items:center;background:rgba(114,65,255,.10);border:1px solid var(--border-subtle);color:var(--purple-bright)}
+.faces{display:flex}
+.faces .avatar{margin-left:-7px;border:2px solid var(--surface-primary)}
+.faces .avatar:first-child{margin-left:0}
+.overflow{margin-left:-7px;width:24px;height:24px;border-radius:32%;background:var(--surface-elevated);border:2px solid var(--surface-primary);display:grid;place-items:center;font-size:10px;color:var(--text-secondary)}
+.count{font-size:13px;color:var(--text-secondary)}
+.count b{color:var(--text-primary);font-weight:600}
+.friendline{font-size:11px;color:var(--text-muted);margin-top:2px}
+.stamp{position:absolute;top:22px;font:700 15px/1 var(--font-body);letter-spacing:.14em;padding:9px 14px;border-radius:var(--r-sm);opacity:0;pointer-events:none;text-transform:uppercase}
+.stamp.answer{right:22px;color:var(--purple-bright);border:2px solid var(--purple-bright);transform:rotate(9deg);background:rgba(114,65,255,.08)}
+.stamp.skip{left:22px;color:var(--text-muted);border:2px solid var(--text-muted);transform:rotate(-9deg);background:rgba(0,0,0,.25)}
+.controls{display:flex;justify-content:center;align-items:center;gap:16px}
+.ctl{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;cursor:pointer;background:var(--surface-primary);border:1px solid var(--border-subtle);color:var(--text-secondary);transition:transform var(--dur-fast) var(--ease-spring),border-color var(--dur-fast),color var(--dur-fast)}
+.ctl:hover{transform:translateY(-2px) scale(1.05);color:var(--text-primary);border-color:var(--border-default)}
+.ctl:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px}
+.ctl.undo{width:44px;height:44px}
+.ctl.answer{background:var(--accent);border-color:var(--purple-bright);color:#fff;box-shadow:0 8px 22px -10px var(--purple-bright)}
+.hint{text-align:center;font-size:11px;color:var(--text-muted);margin-top:14px}
+kbd{font:inherit;font-size:10px;background:var(--surface-primary);border:1px solid var(--border-subtle);border-radius:var(--r-xs);padding:2px 5px;color:var(--text-secondary)}
+.empty{text-align:center;padding:56px 20px;border:1px dashed var(--border-subtle);border-radius:var(--r-xl)}
+.empty h3{font-family:var(--font-display);font-size:26px;font-weight:400;margin-bottom:8px}
+.empty p{color:var(--text-muted);font-size:14px;margin-bottom:20px}
+.btn{font:600 14px/1 var(--font-body);padding:13px 22px;border-radius:999px;cursor:pointer;border:1px solid var(--purple-bright);background:var(--accent);color:#fff;transition:all var(--dur-fast) var(--ease-out)}
+.btn:hover{background:#5320e6}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;border-color:var(--border-subtle);color:var(--text-secondary)}
+.btn.ghost:hover{color:var(--text-primary);border-color:var(--border-default);background:transparent}
+.btn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px}
+.scrim{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.62);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity var(--dur-med) var(--ease-out)}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:50%;bottom:0;z-index:41;width:min(560px,100%);transform:translate(-50%,102%);background:var(--surface-primary);border:1px solid var(--border-subtle);border-bottom:0;border-radius:var(--r-xl) var(--r-xl) 0 0;padding:10px 20px 26px;max-height:90vh;overflow-y:auto;transition:transform var(--dur-slow) var(--ease-out);box-shadow:0 -20px 60px -20px #000}
+.sheet.on{transform:translate(-50%,0)}
+.grab{width:38px;height:4px;border-radius:2px;background:var(--border-subtle);margin:0 auto 16px}
+.sheet h2{font-family:var(--font-display);font-weight:400;font-size:24px;line-height:1.3;margin-bottom:4px}
+.sheet .by{color:var(--text-muted);font-size:12px;margin-bottom:16px}
+textarea{width:100%;min-height:100px;resize:vertical;background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:14px;color:var(--text-primary);font:15px/1.55 var(--font-body)}
+textarea:focus{outline:none;border-color:var(--border-default);box-shadow:0 0 0 3px rgba(114,65,255,.18)}
+textarea::placeholder{color:var(--text-muted)}
+.mc-opts{display:flex;flex-direction:column;gap:10px;margin:4px 0 8px}
+.mc-chip{display:flex;align-items:center;gap:12px;background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:15px 16px;cursor:pointer;font-size:15px;color:var(--text-primary);transition:all var(--dur-fast) var(--ease-out);text-align:left}
+.mc-chip:hover{border-color:var(--border-default);background:rgba(114,65,255,.06)}
+.mc-chip .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border-strong);flex:none}
+.yn-row{display:flex;gap:12px;margin:4px 0 8px}
+.yn{flex:1;padding:20px;border-radius:var(--r-lg);font:600 16px/1 var(--font-body);cursor:pointer;border:1px solid var(--border-subtle);background:var(--surface-sunken);color:var(--text-primary);transition:all var(--dur-fast) var(--ease-out)}
+.yn:hover{border-color:var(--border-default)}
+.yn.yes:hover{border-color:var(--success);color:#5fce85}
+.yn.no:hover{border-color:var(--vis-4)}
+.dial{margin:14px 0 18px}
+.dial-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+.dial-head span{font-size:12px;color:var(--text-muted)}
+.dial-head strong{font-size:13px;font-weight:600}
+.dial-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--vis-0),var(--vis-1),var(--vis-2),var(--vis-3),var(--vis-4));position:relative;margin:0 6px}
+.dial-stops{display:flex;justify-content:space-between;margin:-14px 0 0;position:relative}
+.stop{width:22px;height:22px;border-radius:50%;cursor:pointer;background:var(--surface-primary);border:2px solid var(--border-subtle);transition:transform var(--dur-fast) var(--ease-spring)}
+.stop:hover{transform:scale(1.15)}
+.stop[aria-pressed="true"]{transform:scale(1.25);box-shadow:0 0 0 4px rgba(0,0,0,.4)}
+.dial-note{font-size:11px;color:var(--text-muted);margin-top:12px;text-align:center}
+.sheet-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+.unlock-banner{display:flex;align-items:center;gap:12px;background:rgba(48,141,76,.10);border:1px solid rgba(48,141,76,.35);border-radius:var(--r-md);padding:12px 14px;margin-bottom:18px;animation:pop var(--dur-slow) var(--ease-spring)}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
+.unlock-banner div{font-size:13px;color:var(--text-secondary)}
+.unlock-banner b{color:var(--text-primary);display:block;font-size:14px;margin-bottom:2px}
+.agg-row{margin-bottom:14px}
+.agg-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.agg-label{font-size:14px;font-weight:500}
+.agg-label.picked{color:var(--purple-bright)}
+.agg-pct{font-size:12px;color:var(--text-muted)}
+.agg-bar{height:34px;border-radius:var(--r-sm);background:var(--surface-sunken);border:1px solid var(--border-subtle);overflow:hidden;position:relative}
+.agg-fill{height:100%;border-radius:var(--r-sm);background:linear-gradient(90deg,var(--purple-deep),var(--purple-bright));width:0;transition:width var(--dur-slow) var(--ease-out)}
+.agg-fill.mine{background:linear-gradient(90deg,#5a3ad6,var(--purple-bright))}
+.agg-faces{display:flex;margin-top:8px;padding-left:2px}
+.agg-faces .avatar{margin-left:-7px;border:2px solid var(--surface-primary)}
+.agg-faces .avatar:first-child{margin-left:0}
+.ans{border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:14px;margin-bottom:10px;background:var(--surface-sunken);animation:fade var(--dur-slow) var(--ease-out) backwards}
+.ans.mine{border-color:var(--border-default);background:rgba(68,20,204,.12)}
+.ans-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ans-head .name{font-size:13px;font-weight:600}
+.ans-head .handle{font-size:11px;color:var(--text-muted)}
+.ans-head .mine-tag{margin-left:auto;font-size:10px;color:var(--purple-bright);border:1px solid var(--border-default);border-radius:999px;padding:3px 8px;cursor:pointer}
+.ans p{font-size:14px;line-height:1.55;color:var(--text-primary)}
+.edited{margin-top:8px;font-size:11px;color:var(--text-muted);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.edited:hover{color:var(--text-secondary)}
+.history{margin-top:10px;border-left:2px solid var(--border-subtle);padding-left:12px;display:none}
+.history.on{display:block}
+.history .hv{font-size:12px;color:var(--text-secondary);margin-bottom:8px;line-height:1.5}
+.history .hv time{display:block;font-size:10px;color:var(--text-muted);margin-bottom:2px}
+.froth{margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--border-subtle);border-radius:999px;padding:5px 11px;color:var(--text-muted);font-size:12px;cursor:pointer;transition:all var(--dur-fast) var(--ease-out)}
+.froth:hover{color:var(--text-primary);border-color:var(--border-default)}
+.froth.on{color:var(--purple-bright);border-color:var(--border-default);background:rgba(114,65,255,.10)}
+.more-btn{width:100%;margin-top:6px}
+.ask-box{background:var(--surface-primary);border:1px solid var(--border-subtle);border-radius:var(--r-xl);padding:20px}
+.field-label{font-size:12px;color:var(--text-muted);margin-bottom:8px;display:block}
+.charcount{font-size:11px;color:var(--text-muted);text-align:right;margin-top:8px}
+.stage-dots{display:flex;gap:6px;justify-content:center;margin-bottom:16px}
+.sd{width:26px;height:3px;border-radius:2px;background:var(--border-subtle)}
+.sd.on{background:var(--purple-bright)}
+.fmt-grid{display:flex;flex-direction:column;gap:10px}
+.fmt-opt{display:flex;align-items:center;gap:14px;padding:16px;cursor:pointer;background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:var(--r-md);transition:all var(--dur-fast) var(--ease-out)}
+.fmt-opt:hover{border-color:var(--border-default)}
+.fmt-opt[aria-pressed="true"]{border-color:var(--purple-bright);background:rgba(114,65,255,.08)}
+.fmt-ic{width:40px;height:40px;border-radius:10px;flex:none;display:grid;place-items:center;background:rgba(114,65,255,.10);color:var(--purple-bright)}
+.fmt-opt b{font-size:15px;display:block;margin-bottom:2px}
+.fmt-opt>span:last-child>span{font-size:12px;color:var(--text-muted)}
+.mc-editor{margin-top:14px;display:none}
+.mc-editor.on{display:block}
+.mc-input{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.mc-input input{flex:1;background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:var(--r-sm);padding:11px 12px;color:var(--text-primary);font:14px var(--font-body)}
+.mc-input input:focus{outline:none;border-color:var(--border-default)}
+.mc-input .rm{width:32px;height:32px;flex:none;border-radius:var(--r-sm);border:1px solid var(--border-subtle);background:transparent;color:var(--text-muted);cursor:pointer}
+.mc-input .rm:hover{color:var(--text-primary)}
+.add-opt{font-size:13px;color:var(--purple-bright);background:transparent;border:none;cursor:pointer;padding:4px 0}
+.ask-review{background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:16px;margin-bottom:14px}
+.ask-review .rq{font-family:var(--font-display);font-size:20px;line-height:1.3;margin-bottom:10px}
+.ask-review .rf{font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+.row{display:flex;align-items:center;gap:12px;background:var(--surface-primary);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:14px;margin-bottom:10px;cursor:pointer;transition:border-color var(--dur-fast) var(--ease-out)}
+.row:hover{border-color:var(--border-default)}
+.row .q{font-family:var(--font-display);font-size:17px;line-height:1.3;flex:1}
+.row .meta{font-size:11px;color:var(--text-muted);margin-top:4px;font-family:var(--font-body)}
+.row .open{color:var(--success);font-size:11px;white-space:nowrap}
+.setting{display:flex;align-items:flex-start;gap:14px;padding:16px 0;border-bottom:1px solid var(--border-subtle)}
+.setting:last-of-type{border-bottom:0}
+.setting .txt{flex:1}
+.setting .txt b{font-size:14px;font-weight:600;display:block;margin-bottom:3px}
+.setting .txt span{font-size:12px;color:var(--text-muted);line-height:1.5;display:block}
+.switch{width:46px;height:27px;border-radius:999px;flex:none;background:var(--surface-elevated);border:1px solid var(--border-subtle);position:relative;cursor:pointer;transition:background var(--dur-med) var(--ease-out)}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:var(--text-muted);transition:transform var(--dur-med) var(--ease-spring),background var(--dur-med)}
+.switch[aria-checked="true"]{background:var(--accent);border-color:var(--purple-bright)}
+.switch[aria-checked="true"]::after{transform:translateX(19px);background:#fff}
+.postbox{margin-top:20px;background:var(--surface-primary);border:1px solid var(--border-subtle);border-radius:var(--r-lg);padding:16px}
+.prompt-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(114,65,255,.10);border:1px solid var(--border-default);border-radius:999px;padding:7px 12px;font-size:12px;color:var(--text-secondary);margin-bottom:12px}
+.prompt-chip b{color:var(--purple-bright);font-weight:600}
+.postbox .ph{color:var(--text-muted);font-family:var(--font-display);font-size:19px;opacity:.5}
+.postbox .pb-actions{display:flex;gap:8px;margin-top:14px;align-items:center}
+.tiny{font-size:11px;color:var(--text-muted)}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:var(--surface-elevated);border:1px solid var(--border-default);color:var(--text-primary);font-size:13px;padding:11px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:all var(--dur-med) var(--ease-out);z-index:60;max-width:80%;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.fab{position:fixed;right:calc(50% - 280px + 16px);bottom:26px;z-index:50;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;cursor:pointer;font-family:var(--font-display);font-size:26px;line-height:1;background:var(--accent);color:#fff;border:1px solid var(--purple-bright);box-shadow:0 10px 30px -10px var(--purple-bright);transition:transform var(--dur-fast) var(--ease-spring)}
+.fab:hover{transform:scale(1.07)}
+.fab:focus-visible{outline:3px solid var(--focus-ring);outline-offset:3px}
+@media(max-width:592px){.fab{right:16px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:520px){.wordmark{font-size:40px}.deck-wrap{height:420px}.qtext{font-size:26px}}
+</style>
+</head>
+<body>
+<div id="stars"></div>
+<div class="shell">
+  <div class="membar">
+    <div class="gly">Ƙ</div>
+    <nav class="pillars" role="tablist" id="pillars">
+      <button class="pillar" role="tab" data-k="today" aria-selected="false">Today</button>
+      <button class="pillar" role="tab" data-k="deck" aria-selected="true">Ƙuestions</button>
+      <button class="pillar" role="tab" data-k="mine" aria-selected="false">Answered</button>
+    </nav>
+    <button class="gear" id="t-set" title="Kuestions settings" aria-label="Kuestions settings">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <div class="wire"><div class="pool" id="pool"></div></div>
+  </div>
+
+  <!-- TODAY (home) -->
+  <section class="panel" id="p-today">
+    <h1 class="wordmark">Today</h1>
+    <p class="sub">One prompt from Kronk. Same for everyone.</p>
+    <div class="today-card">
+      <div class="today-tag"><b>Ƙ</b> Today's prompt</div>
+      <div class="today-q" id="today-q">What's one thing you changed your mind about this year?</div>
+      <textarea id="today-text" placeholder="Say your piece — it posts to Murmur, like any other post."></textarea>
+      <div class="today-foot">
+        <div class="today-count" id="today-count"></div>
+        <button class="btn" id="today-post" disabled>Post response</button>
+      </div>
+      <p class="today-note">Prompt replies aren't locked — they're just posts. It resets at midnight.</p>
+    </div>
+  </section>
+
+  <section class="panel on" id="p-deck">
+    <h1 class="wordmark">Ƙuestions</h1>
+    <p class="sub">Answer to unlock. <b id="left-count">4 waiting</b></p>
+    <div class="deck-wrap" id="deck"></div>
+    <div class="controls">
+      <button class="ctl" id="c-skip" title="Skip" aria-label="Skip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <button class="ctl undo" id="c-undo" title="Undo" aria-label="Undo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M3.5 13a9 9 0 1 0 2.1-5.9L3 10"/></svg></button>
+      <button class="ctl answer" id="c-answer" title="Answer" aria-label="Answer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+    </div>
+    <p class="hint"><kbd>&larr;</kbd> skip &middot; <kbd>&rarr;</kbd> answer &middot; drag the card</p>
+  </section>
+
+  <section class="panel" id="p-mine">
+    <h1 class="wordmark">Answered</h1>
+    <p class="sub">Unlocked by you. These stay open.</p>
+    <div id="mine-list"></div>
+  </section>
+
+  <section class="panel" id="p-ask">
+    <h1 class="wordmark">Ask</h1>
+    <p class="sub">Nobody sees answers until they've given one.</p>
+    <div class="ask-box">
+      <div class="stage-dots"><div class="sd on" id="sd0"></div><div class="sd" id="sd1"></div></div>
+      <div id="ask-s0">
+        <label class="field-label" for="askq">Your kuestion</label>
+        <textarea id="askq" maxlength="240" placeholder="What do you want to know?"></textarea>
+        <div class="charcount"><span id="cc">0</span>/240</div>
+      </div>
+      <div id="ask-s1" style="display:none">
+        <label class="field-label">How should people answer?</label>
+        <div class="fmt-grid">
+          <button class="fmt-opt" data-fmt="text" aria-pressed="true"><span class="fmt-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span><b>Free text</b><span>Open answers, shown as a feed</span></span></button>
+          <button class="fmt-opt" data-fmt="mc" aria-pressed="false"><span class="fmt-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 7h7M14 17h7"/></svg></span><span><b>Multiple choice</b><span>2&ndash;4 options, shown as a chart</span></span></button>
+          <button class="fmt-opt" data-fmt="yn" aria-pressed="false"><span class="fmt-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></span><span><b>Yes / No</b><span>A clean split</span></span></button>
+        </div>
+        <div class="mc-editor" id="mc-editor">
+          <label class="field-label" style="margin-top:16px">Options</label>
+          <div id="mc-list"></div>
+          <button class="add-opt" id="mc-add">+ Add option</button>
+        </div>
+        <div class="ask-review" id="ask-review" style="margin-top:16px;display:none"></div>
+      </div>
+      <div class="sheet-actions" style="margin-top:16px">
+        <button class="btn ghost" id="ask-back">Back to deck</button>
+        <button class="btn" id="ask-next" disabled>Next</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-set">
+    <h1 class="wordmark">Settings</h1>
+    <p class="sub">How much of the Q&amp;A reaches you.</p>
+    <div class="ask-box">
+      <div class="setting"><div class="txt"><b>Daily prompt in my post box</b><span>Kronk sets one prompt a day &mdash; the same for everyone. It sits faint in your composer as a starting point; your reply is just a normal post.</span></div><div class="switch" id="s-prompts" role="switch" aria-checked="true" tabindex="0"></div></div>
+      <div class="setting"><div class="txt"><b>Hide kuestions I've answered</b><span>Keeps the deck to what's still locked.</span></div><div class="switch" id="s-hide" role="switch" aria-checked="true" tabindex="0"></div></div>
+      <div class="setting"><div class="txt"><b>Confirm before unlocking</b><span>Ask once more before your answer posts and the thread opens.</span></div><div class="switch" id="s-confirm" role="switch" aria-checked="false" tabindex="0"></div></div>
+      <div class="setting"><div class="txt" style="width:100%"><b>Default answer visibility</b><span>Applied to every free-text answer unless you change it on the card.</span>
+        <div class="dial" data-dial="def" style="margin-top:14px"><div class="dial-head"><span>Answers visible to</span><strong id="def-scope-label">Connections</strong></div><div class="dial-track"></div><div class="dial-stops"></div></div>
+      </div></div>
+    </div>
+    <div class="postbox">
+      <div class="prompt-chip"><b>Ƙ</b> Today's prompt &middot; from Kronk</div>
+      <div class="ph">What's one thing Kronk should never do?</div>
+      <div class="pb-actions"><button class="btn" style="padding:10px 18px">Post</button><span class="tiny" style="margin-left:auto">Dismiss &times;</span></div>
+    </div>
+    <p class="tiny" style="text-align:center;margin-top:12px">This is how the prompt sits in Murmur's composer.</p>
+  </section>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet-answer">
+  <div class="grab"></div>
+  <h2 id="sa-q">&mdash;</h2>
+  <p class="by" id="sa-by">&mdash;</p>
+  <div id="sa-affordance"></div>
+  <div class="dial" data-dial="ans" id="sa-dial"><div class="dial-head"><span>Answer visible to</span><strong id="ans-scope-label">Connections</strong></div><div class="dial-track"></div><div class="dial-stops"></div><p class="dial-note" id="ans-scope-note">People you're connected with can see this answer.</p></div>
+  <div class="sheet-actions" id="sa-actions"><button class="btn ghost" id="sa-cancel">Back to deck</button><button class="btn" id="sa-send" disabled>Answer &amp; unlock</button></div>
+</div>
+<div class="sheet" id="sheet-reveal">
+  <div class="grab"></div>
+  <div class="unlock-banner"><div class="lock" style="color:var(--success);background:rgba(48,141,76,.10)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></div><div><b>Unlocked</b>Your answer's in. Here's everyone's.</div></div>
+  <h2 id="sr-q">&mdash;</h2>
+  <p class="by" id="sr-by">&mdash;</p>
+  <div id="sr-body"></div>
+  <div class="sheet-actions" style="margin-top:16px"><button class="btn" id="sr-next">Next kuestion</button></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<button class="fab" id="fab" title="Ask a kuestion (lives in the Ӂ cascade)" aria-label="Ask a kuestion">Ӂ</button>
+
+<script>
+(function(){const wrap=document.getElementById('stars');for(let i=0;i<90;i++){const s=document.createElement('div');const plus=Math.random()>.45;s.className='star'+(plus?'':' dot');if(plus){s.textContent='\u2726';s.style.fontSize=(7+Math.random()*6)+'px';}s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.opacity=(.18+Math.random()*.5).toFixed(2);wrap.appendChild(s);}})();
+
+const PAL=['#7241ff','#c97be8','#e8a24e','#4e5bd6','#308d4c','#9f4bcf','#5a6b8c','#c2410c'];
+function av(name,cls){if(!name||name==='deleted user')return '<div class="avatar '+(cls||'')+' ghost">\u00b7</div>';const i=[...name].reduce((a,c)=>a+c.charCodeAt(0),0)%PAL.length;const j=(i+3)%PAL.length;const init=name.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();return '<div class="avatar '+(cls||'')+'" style="background:linear-gradient(140deg,'+PAL[i]+','+PAL[j]+')">'+init+'</div>';}
+
+const SCOPES=[{k:'Everyone',v:'--vis-0',note:'Federated. Anyone on the fediverse can see and answer.'},{k:'Kronk members',v:'--vis-1',note:'Anyone with a Kronk account can see and answer.'},{k:'Connections',v:'--vis-2',note:"People you're connected with can see this."},{k:'Vouched',v:'--vis-3',note:'Only people vouched for by someone you trust.'},{k:'Only me',v:'--vis-4',note:'Private. A note to yourself.'}];
+const FMT={text:'Free text',mc:'Multiple choice',yn:'Yes / No'};
+function fmtIcon(f){if(f==='text')return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>';if(f==='mc')return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 7h7M14 17h7"/></svg>';return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>';}
+
+let QS=[
+  {id:4,asker:'Rogan',handle:'@Rogan',fmt:'text',q:'What are you actually building this month?',friends:['mango bee'],others:1,answers:[{who:'mango bee',h:'@mangobee',t:'A Krate of every set I played this year, private until I stop cringing.',f:2},{who:'Nadia',h:'@nadia',t:'Nothing. Resting is building.',f:7}]},
+  {id:3,asker:'Isabelle',handle:'@isa',fmt:'yn',q:'Should Kronk ever raise the member cap past 50?',friends:['Chris'],others:11,options:[{label:'Yes',voters:['mango bee'],count:4},{label:'No',voters:['Chris','Rogan'],count:9}]},
+  {id:2,asker:'Chris',handle:'@tal',fmt:'text',q:'What was your favourite moment of Mayhem?',friends:['mango bee','Rogan','Isabelle'],others:2,answers:[{who:'mango bee',h:'@mangobee',t:'The 4am set when the generator died and everyone just kept singing.',f:9,history:[{t:'The 4am set.',at:'2d ago'}]},{who:'Rogan',h:'@Rogan',t:'Watching Chris try to fix the generator.',f:14},{who:'Nadia',h:'@nadia',t:'Sunrise on the ridge. Nobody said anything for ten minutes.',f:6},{who:'Priya',h:'@priya',t:'The walk back.',f:1},{who:'Sam',h:'@sam',t:'When the speakers came back on.',f:3}]},
+  {id:1,asker:'mango bee',handle:'@mangobee',fmt:'mc',q:'What should we build next in \u04C1ronk?',friends:['Rogan','Chris'],others:14,options:[{label:'Shared Krates',voters:['Rogan'],count:8},{label:'Expiring Kompass pins',voters:['Chris'],count:5},{label:'Tides on profile',voters:[],count:3},{label:'None of these',voters:[],count:1}]},
+  {id:5,asker:null,handle:null,fmt:'text',q:'Is anonymity worth the cost of accountability?',friends:[],others:2,answers:[{who:'Rogan',h:'@Rogan',t:'No. You should own what you say here.',f:4},{who:'Nadia',h:'@nadia',t:'Sometimes the truth needs cover.',f:6}]}
+];
+let ANSWERED=[],history=[],current=null;
+
+const dialState={ans:2,def:2};
+document.querySelectorAll('[data-dial]').forEach(d=>{const key=d.dataset.dial,stops=d.querySelector('.dial-stops');SCOPES.forEach((s,i)=>{const b=document.createElement('button');b.className='stop';b.type='button';b.style.borderColor='var('+s.v+')';b.setAttribute('aria-pressed',i===dialState[key]);b.title=s.k;b.setAttribute('aria-label',s.k);if(i===dialState[key])b.style.background='var('+s.v+')';b.onclick=()=>setDial(key,i);stops.appendChild(b);});});
+function setDial(key,i){dialState[key]=i;const d=document.querySelector('[data-dial="'+key+'"]');[...d.querySelectorAll('.stop')].forEach((b,j)=>{const on=j===i;b.setAttribute('aria-pressed',on);b.style.background=on?'var('+SCOPES[j].v+')':'var(--surface-primary)';});const lbl=document.getElementById(key+'-scope-label');if(lbl)lbl.textContent=SCOPES[i].k;const note=document.getElementById(key+'-scope-note');if(note)note.textContent=SCOPES[i].note;}
+setDial('ans',2);setDial('def',2);
+
+const deck=document.getElementById('deck');
+function render(){
+  deck.innerHTML='';
+  document.getElementById('left-count').textContent=QS.length?QS.length+' waiting':'all caught up';
+  if(!QS.length){deck.innerHTML='<div class="empty"><h3>All caught up</h3><p>You\'ve answered everything in range. New kuestions land here as the community asks them.</p><button class="btn" onclick="go(\'ask\')">Start asking</button></div>';current=null;return;}
+  QS.slice(0,3).reverse().forEach((q,idx,arr)=>{
+    const depth=arr.length-1-idx;
+    const el=document.createElement('article');el.className='kard';
+    el.style.transform='translateY('+(depth*10)+'px) scale('+(1-depth*.035)+')';el.style.zIndex=10-depth;el.style.opacity=depth>1?.5:1;
+    const totalA=q.fmt==='text'?q.friends.length+q.others:q.options.reduce((s,o)=>s+o.count,0);
+    const shown=q.friends.slice(0,5),extra=Math.max(0,q.friends.length-5);
+    const faces=shown.map(f=>av(f,'sm')).join('')+(extra?'<div class="overflow">+'+extra+'</div>':'');
+    const askerName=q.asker||'deleted user';
+    const friendlineTxt=q.friends.length?q.friends.slice(0,2).join(' and ')+' answered':(totalA?totalA+' answered':'Be the first');
+    el.innerHTML='<div class="stamp answer">Answer</div><div class="stamp skip">Skip</div>'+
+      '<div class="asker">'+av(q.asker)+'<div><div class="name">'+askerName+'</div><div class="handle">'+(q.handle||'')+'</div></div><div class="fmt-badge">'+fmtIcon(q.fmt)+FMT[q.fmt]+'</div></div>'+
+      '<div class="qtext'+(q.q.length>58?' long':'')+'">'+q.q+'</div>'+
+      '<div class="locked"><div class="lock"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>'+
+      (q.friends.length?'<div class="faces">'+faces+'</div>':'')+
+      '<div><div class="count"><b>'+totalA+'</b> answer'+(totalA===1?'':'s')+' \u00b7 locked</div><div class="friendline">'+friendlineTxt+'</div></div></div>';
+    deck.appendChild(el);
+    if(depth===0){current=q;arm(el,q);}
+  });
+}
+function arm(el,q){let sx=0,dx=0,down=false;const sA=el.querySelector('.stamp.answer'),sS=el.querySelector('.stamp.skip');
+  const start=e=>{down=true;el.style.transition='none';const p=e.touches?e.touches[0]:e;sx=p.clientX;};
+  const move=e=>{if(!down)return;const p=e.touches?e.touches[0]:e;dx=p.clientX-sx;el.style.transform='translate('+dx+'px,'+(Math.abs(dx)*.06)+'px) rotate('+(dx*.045)+'deg)';sA.style.opacity=Math.min(1,Math.max(0,dx/90));sS.style.opacity=Math.min(1,Math.max(0,-dx/90));if(e.cancelable)e.preventDefault();};
+  const end=()=>{if(!down)return;down=false;el.style.transition='';if(dx>95){fling(el,1);openAnswer(q);}else if(dx<-95){fling(el,-1);skip(q);}else{el.style.transform='translateY(0) scale(1)';sA.style.opacity=0;sS.style.opacity=0;}dx=0;};
+  el.addEventListener('mousedown',start);window.addEventListener('mousemove',move);window.addEventListener('mouseup',end);
+  el.addEventListener('touchstart',start,{passive:true});el.addEventListener('touchmove',move,{passive:false});el.addEventListener('touchend',end);}
+function fling(el,dir){el.classList.add('gone');el.style.transform='translate('+(dir*window.innerWidth)+'px,-40px) rotate('+(dir*22)+'deg)';}
+function skip(q){history.push({q,skipped:true});QS=QS.filter(x=>x.id!==q.id);setTimeout(render,220);toast('Skipped \u2014 stays locked');}
+
+function openAnswer(q){
+  document.getElementById('sa-q').textContent=q.q;
+  const askerName=q.asker||'deleted user';
+  const totalA=q.fmt==='text'?q.friends.length+q.others:q.options.reduce((s,o)=>s+o.count,0);
+  document.getElementById('sa-by').textContent='asked by '+askerName+(q.handle?' '+q.handle:'')+' \u00b7 '+totalA+' locked answer'+(totalA===1?'':'s');
+  const aff=document.getElementById('sa-affordance'),dial=document.getElementById('sa-dial'),actions=document.getElementById('sa-actions'),send=document.getElementById('sa-send');
+  if(q.fmt==='text'){
+    aff.innerHTML='<textarea id="sa-text" placeholder="Your answer unlocks everyone else\'s."></textarea>';
+    dial.style.display='';actions.style.display='';send.disabled=true;setDial('ans',dialState.def);
+    document.getElementById('sa-text').addEventListener('input',e=>{send.disabled=!e.target.value.trim();});
+    setTimeout(()=>document.getElementById('sa-text').focus(),380);
+  }else if(q.fmt==='mc'){
+    aff.innerHTML='<p class="tiny" style="margin-bottom:10px">Tap your pick \u2014 that submits and unlocks.</p><div class="mc-opts">'+q.options.map((o,i)=>'<button class="mc-chip" data-i="'+i+'"><span class="dot"></span>'+o.label+'</button>').join('')+'</div>';
+    dial.style.display='none';actions.style.display='none';
+    aff.querySelectorAll('.mc-chip').forEach(c=>c.onclick=()=>submitChoice(q,+c.dataset.i));
+  }else{
+    aff.innerHTML='<div class="yn-row"><button class="yn yes" data-i="0">Yes</button><button class="yn no" data-i="1">No</button></div>';
+    dial.style.display='none';actions.style.display='none';
+    aff.querySelectorAll('.yn').forEach(b=>b.onclick=()=>submitChoice(q,+b.dataset.i));
+  }
+  open('sheet-answer');
+}
+document.getElementById('sa-cancel').onclick=()=>{closeAll();render();};
+document.getElementById('sa-send').onclick=()=>{const q=current,text=document.getElementById('sa-text').value.trim();q.mine={who:'Chris',h:'@tal',t:text,f:0,scope:dialState.ans,history:[]};finishAnswer(q);};
+function submitChoice(q,i){q.myChoice=i;q.options[i].voters=['Chris',...q.options[i].voters];q.options[i].count++;q.mine={who:'Chris',h:'@tal'};finishAnswer(q);}
+function finishAnswer(q){ANSWERED.push(q);QS=QS.filter(x=>x.id!==q.id);closeAll();setTimeout(()=>reveal(q),260);renderMine();}
+
+function reveal(q){
+  document.getElementById('sr-q').textContent=q.q;
+  const askerName=q.asker||'deleted user';
+  document.getElementById('sr-by').textContent='asked by '+askerName+(q.handle?' '+q.handle:'');
+  const body=document.getElementById('sr-body');
+  if(q.fmt==='text'){
+    const list=[Object.assign({},q.mine,{mine:true}),...q.answers];const PAGE=4;let shown=PAGE;
+    const draw=()=>{body.innerHTML=list.slice(0,shown).map((a,i)=>ansCard(a,i)).join('')+(shown<list.length?'<button class="btn ghost more-btn" id="more">Show '+Math.min(PAGE,list.length-shown)+' more</button>':'');wireAns(body);const m=document.getElementById('more');if(m)m.onclick=()=>{shown+=PAGE;draw();};};
+    draw();
+  }else{
+    const total=q.options.reduce((s,o)=>s+o.count,0)||1;
+    body.innerHTML=q.options.map(o=>{const pct=Math.round(o.count/total*100);const mine=q.myChoice!=null&&q.options[q.myChoice]===o;const faces=o.voters.slice(0,5).map(v=>av(v,'sm')).join('');const extra=Math.max(0,o.voters.length-5);return '<div class="agg-row"><div class="agg-top"><span class="agg-label '+(mine?'picked':'')+'">'+o.label+(mine?' \u00b7 yours':'')+'</span><span class="agg-pct">'+o.count+' \u00b7 '+pct+'%</span></div><div class="agg-bar"><div class="agg-fill '+(mine?'mine':'')+'" data-w="'+pct+'"></div></div>'+(o.voters.length?'<div class="agg-faces">'+faces+(extra?'<div class="overflow">+'+extra+'</div>':'')+'</div>':'')+'</div>';}).join('');
+    requestAnimationFrame(()=>body.querySelectorAll('.agg-fill').forEach(f=>f.style.width=f.dataset.w+'%'));
+  }
+  open('sheet-reveal');
+}
+function ansCard(a,i){const hist=a.history&&a.history.length;return '<div class="ans '+(a.mine?'mine':'')+'" style="animation-delay:'+(i*60)+'ms"><div class="ans-head">'+av(a.who,'sm')+'<div><div class="name">'+a.who+'</div><div class="handle">'+a.h+'</div></div>'+(a.mine?'<span class="mine-tag" data-edit="1">Edit</span>':'')+'</div><p>'+a.t+'</p>'+(hist?'<div class="edited" data-hist="1"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>edited \u00b7 view history</div><div class="history">'+a.history.map(h=>'<div class="hv"><time>'+h.at+'</time>'+h.t+'</div>').join('')+'</div>':'')+'<button class="froth" data-f="'+a.f+'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 14c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M2 8c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg><span>'+a.f+'</span> froth</button></div>';}
+function wireAns(box){box.querySelectorAll('.froth').forEach(b=>b.onclick=()=>{const on=b.classList.toggle('on');b.querySelector('span').textContent=+b.dataset.f+(on?1:0);});box.querySelectorAll('[data-hist]').forEach(e=>e.onclick=()=>e.nextElementSibling.classList.toggle('on'));box.querySelectorAll('[data-edit]').forEach(e=>e.onclick=()=>toast('Edit reopens the answer surface; the prior version is kept as public history'));}
+document.getElementById('sr-next').onclick=()=>{closeAll();render();};
+
+const scrim=document.getElementById('scrim');
+function open(id){scrim.classList.add('on');document.getElementById(id).classList.add('on');}
+function closeAll(){scrim.classList.remove('on');document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on'));}
+scrim.onclick=()=>{closeAll();render();};
+
+document.getElementById('c-skip').onclick=()=>{if(!current)return;const el=deck.querySelector('.kard:last-child');if(el)fling(el,-1);skip(current);};
+document.getElementById('c-answer').onclick=()=>{if(current)openAnswer(current);};
+document.getElementById('c-undo').onclick=()=>{const last=history.pop();if(!last){toast('Nothing to undo');return;}QS.unshift(last.q);render();toast('Back it comes');};
+window.addEventListener('keydown',e=>{if(document.querySelector('.sheet.on'))return;if(e.key==='ArrowLeft')document.getElementById('c-skip').click();if(e.key==='ArrowRight')document.getElementById('c-answer').click();});
+
+function renderMine(){const box=document.getElementById('mine-list');if(!ANSWERED.length){box.innerHTML='<div class="empty"><h3>Nothing unlocked yet</h3><p>Answer a kuestion and it lands here, open for good.</p><button class="btn" onclick="go(\'deck\')">Open the deck</button></div>';return;}box.innerHTML=ANSWERED.map(q=>{const n=q.fmt==='text'?q.answers.length+1:q.options.reduce((s,o)=>s+o.count,0);return '<div class="row" data-id="'+q.id+'">'+av(q.asker,'sm')+'<div style="flex:1"><div class="q">'+q.q+'</div><div class="meta">'+(q.asker||'deleted user')+' \u00b7 '+FMT[q.fmt]+' \u00b7 '+n+' answers</div></div><div class="open">Unlocked \u2713</div></div>';}).join('');box.querySelectorAll('.row').forEach(r=>r.onclick=()=>reveal(ANSWERED.find(q=>q.id==r.dataset.id)));}
+renderMine();
+
+let askStage=0,askFmt='text',mcOpts=['',''];
+const askq=document.getElementById('askq');
+askq.addEventListener('input',()=>{document.getElementById('cc').textContent=askq.value.length;updateAskBtn();});
+function stage(n){askStage=n;document.getElementById('ask-s0').style.display=n===0?'':'none';document.getElementById('ask-s1').style.display=n===1?'':'none';document.getElementById('sd1').classList.toggle('on',n>=1);document.getElementById('ask-next').textContent=n===0?'Next':'Ask';document.getElementById('ask-back').textContent=n===0?'Back to deck':'Back';if(n===1)renderReview();updateAskBtn();}
+function updateAskBtn(){const b=document.getElementById('ask-next');if(askStage===0)b.disabled=!askq.value.trim();else if(askFmt==='mc')b.disabled=mcOpts.filter(o=>o.trim()).length<2;else b.disabled=false;}
+document.querySelectorAll('.fmt-opt').forEach(o=>o.onclick=()=>{askFmt=o.dataset.fmt;document.querySelectorAll('.fmt-opt').forEach(x=>x.setAttribute('aria-pressed',x===o));document.getElementById('mc-editor').classList.toggle('on',askFmt==='mc');if(askFmt==='mc'&&!document.querySelector('#mc-list .mc-input'))renderMcInputs();renderReview();updateAskBtn();});
+function renderMcInputs(){const list=document.getElementById('mc-list');list.innerHTML=mcOpts.map((v,i)=>'<div class="mc-input"><input data-i="'+i+'" placeholder="Option '+(i+1)+'" value="'+v.replace(/"/g,'&quot;')+'"><button class="rm" data-rm="'+i+'" '+(mcOpts.length<=2?'style="visibility:hidden"':'')+'>\u00d7</button></div>').join('');list.querySelectorAll('input').forEach(inp=>inp.oninput=()=>{mcOpts[+inp.dataset.i]=inp.value;renderReview();updateAskBtn();});list.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{mcOpts.splice(+b.dataset.rm,1);renderMcInputs();renderReview();updateAskBtn();});document.getElementById('mc-add').style.display=mcOpts.length>=4?'none':'';}
+document.getElementById('mc-add').onclick=()=>{if(mcOpts.length<4){mcOpts.push('');renderMcInputs();}};
+function renderReview(){const r=document.getElementById('ask-review');if(askStage!==1){r.style.display='none';return;}r.style.display='';let f=FMT[askFmt];if(askFmt==='mc')f+=' \u00b7 '+(mcOpts.filter(o=>o.trim()).join(' / ')||'\u2026');if(askFmt==='yn')f+=' \u00b7 Yes / No';r.innerHTML='<div class="rq">'+(askq.value.trim()||'\u2026')+'</div><div class="rf">'+fmtIcon(askFmt)+' '+f+'</div>';}
+document.getElementById('ask-back').onclick=()=>{if(askStage===1)stage(0);else{resetAsk();go('deck');}};
+document.getElementById('ask-next').onclick=()=>{if(askStage===0){stage(1);return;}const q={id:Date.now(),asker:'Chris',handle:'@tal',fmt:askFmt,q:askq.value.trim(),friends:[],others:0};if(askFmt==='text')q.answers=[];else if(askFmt==='mc')q.options=mcOpts.filter(o=>o.trim()).map(l=>({label:l,voters:[],count:0}));else q.options=[{label:'Yes',voters:[],count:0},{label:'No',voters:[],count:0}];QS.unshift(q);resetAsk();toast('Asked. It\'s in the deck.');go('deck');};
+function resetAsk(){askq.value='';document.getElementById('cc').textContent=0;askFmt='text';mcOpts=['',''];document.querySelectorAll('.fmt-opt').forEach(x=>x.setAttribute('aria-pressed',x.dataset.fmt==='text'));document.getElementById('mc-editor').classList.remove('on');stage(0);}
+
+document.querySelectorAll('.switch').forEach(s=>{const flip=()=>s.setAttribute('aria-checked',s.getAttribute('aria-checked')==='false');s.onclick=flip;s.onkeydown=e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();flip();}};});
+
+/* ── Today (daily prompt home) ── */
+let todayAnswered=22;
+const todayFriends=['Rogan','Isabelle','mango bee'];
+function renderTodayCount(){
+  const box=document.getElementById('today-count');
+  const faces=todayFriends.slice(0,5).map(f=>av(f,'sm')).join('');
+  box.innerHTML='<div class="faces">'+faces+'</div><div class="ct"><b>'+todayAnswered+'</b> answered today</div>';
+}
+renderTodayCount();
+const tText=document.getElementById('today-text');
+tText.addEventListener('input',()=>{document.getElementById('today-post').disabled=!tText.value.trim();});
+document.getElementById('today-post').onclick=()=>{
+  todayAnswered++;todayFriends.unshift('Chris');
+  const card=tText.closest('.today-card');
+  tText.style.display='none';document.getElementById('today-post').style.display='none';
+  renderTodayCount();
+  if(!card.querySelector('.today-posted')){
+    const d=document.createElement('div');d.className='today-posted';
+    d.innerHTML='<span>✓</span><div>Posted to Murmur. <b>You answered today.</b></div>';
+    card.querySelector('.today-foot').after(d);
+  }
+  toast('Response posted to Murmur');
+};
+
+/* ── membrane nav: pillars + gliding pool ── */
+const PANELS={today:'p-today',deck:'p-deck',mine:'p-mine',ask:'p-ask',set:'p-set'};
+const pillars=[...document.querySelectorAll('.pillar')];
+const pool=document.getElementById('pool');
+function movePool(k){
+  // pool glides under the active pillar; for ask/settings (no pillar) it parks under the nearest peer
+  const map={ask:'today',set:'mine'};
+  const target=pillars.find(p=>p.dataset.k===(map[k]||k))||pillars[1];
+  const nav=document.getElementById('pillars');
+  const r=target.getBoundingClientRect(),nr=nav.parentElement.getBoundingClientRect();
+  pool.style.left=(r.left-nr.left+r.width/2)+'px';
+  pool.style.width=Math.max(40,r.width-20)+'px';
+}
+function glintPool(){pool.classList.remove('glint');void pool.offsetWidth;pool.classList.add('glint');}
+function go(k){
+  Object.entries(PANELS).forEach(([key,pid])=>document.getElementById(pid).classList.toggle('on',key===k));
+  pillars.forEach(p=>p.setAttribute('aria-selected',p.dataset.k===k));
+  if(k==='today')renderTodayCount();
+  if(k==='deck')render();
+  if(k==='mine')renderMine();
+  document.getElementById('fab').style.display=k==='ask'?'none':'grid';
+  movePool(k);glintPool();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+window.go=go;
+pillars.forEach(p=>p.onclick=()=>go(p.dataset.k));
+document.getElementById('t-set').onclick=()=>go('set');
+document.getElementById('fab').onclick=()=>go('ask');
+addEventListener('resize',()=>movePool(document.querySelector('.pillar[aria-selected="true"]').dataset.k));
+
+let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2100);}
+
+stage(0);render();
+requestAnimationFrame(()=>movePool('deck'));
+</script>
+</body>
+</html>
