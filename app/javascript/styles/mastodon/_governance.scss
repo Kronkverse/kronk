@@ -3421,3 +3421,105 @@
     }
   }
 }
+
+// ── Propose picker (pick the page a proposal is about) ──────────────────
+.propose-picker {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+
+  &__hero {
+    margin-bottom: 18px;
+  }
+
+  &__title {
+    margin: 0 0 8px;
+    font-family: var(--font-display, inherit);
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  &__intro {
+    margin: 0;
+    color: var(--text-muted, rgba(255, 255, 255, 70%));
+    font-size: 15px;
+
+    a {
+      color: var(--accent, #6364ff);
+      font-weight: 600;
+    }
+  }
+
+  &__search {
+    position: relative;
+    margin-bottom: 8px;
+  }
+
+  &__input {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: var(--radius-round, 999px);
+    border: 1px solid var(--border-default, rgba(255, 255, 255, 14%));
+    background: var(--surface-elevated, rgba(255, 255, 255, 5%));
+    color: inherit;
+    font-size: 15px;
+    font-family: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent, #6364ff);
+    }
+  }
+
+  &__results {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 6px;
+    border: 1px solid var(--border-default, rgba(255, 255, 255, 12%));
+    border-radius: var(--radius-md, 12px);
+    background: var(--surface-primary, rgba(255, 255, 255, 4%));
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__result {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: var(--radius-sm, 8px);
+    background: transparent;
+    color: var(--text-primary, #fff);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--accent, #6364ff);
+      color: var(--text-on-accent, #fff);
+
+      .propose-picker__result-url {
+        color: rgba(255, 255, 255, 80%);
+      }
+    }
+  }
+
+  &__result-label {
+    font-size: 14.5px;
+    font-weight: 600;
+  }
+
+  &__result-url {
+    font-size: 12px;
+    color: var(--text-muted, rgba(255, 255, 255, 55%));
+    font-family: var(--font-mono, monospace);
+  }
+
+  &__map {
+    margin-top: 12px;
+  }
+}

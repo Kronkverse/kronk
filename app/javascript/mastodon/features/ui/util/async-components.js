@@ -291,6 +291,10 @@ export function KommonsPropose () {
   return import("../../governance/propose_page").then(m => ({ default: m.ProposePage }));
 }
 
+export function KommonsProposePicker () {
+  return import("../../governance/propose_picker").then(m => ({ default: m.ProposePicker }));
+}
+
 
 export function KommonsSkeleton () {
   return import("../../kommons_skeleton");

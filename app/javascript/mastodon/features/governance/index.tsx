@@ -16,7 +16,6 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import { ProposalCard } from './components/proposal_card';
 import { ProposalDetail } from './components/proposal_detail';
-import { SpaceProposalWizard } from './components/space_proposal_wizard';
 import type { Proposal } from './types';
 
 const messages = defineMessages({
@@ -33,7 +32,6 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [filter, _setFilter] = useState<FilterType>('open');
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
 
   const fetchProposals = useCallback(async () => {
     setLoading(true);
@@ -51,12 +49,6 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     void fetchProposals();
   }, [fetchProposals]);
 
-  const handleProposalCreated = useCallback((proposal: Proposal) => {
-    setProposals((prev) => [proposal, ...prev]);
-    setShowForm(false);
-    setSelectedId(proposal.id);
-  }, []);
-
   const handleVoteUpdate = useCallback((updated: Proposal) => {
     setProposals((prev) =>
       prev.map((p) => (p.id === updated.id ? updated : p)),
@@ -72,14 +64,6 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       prev.map((p) => (p.id === updated.id ? updated : p)),
     );
     setSelectedId(null);
-  }, []);
-
-  const handleShowForm = useCallback(() => {
-    setShowForm(true);
-  }, []);
-
-  const handleHideForm = useCallback(() => {
-    setShowForm(false);
   }, []);
 
   const handleSelectProposal = useCallback((id: string) => {
@@ -109,19 +93,6 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             onVoteUpdate={handleVoteUpdate}
             onArchived={handleArchived}
           />
-        ) : showForm ? (
-          <div className='governance-plant'>
-            <button className='chrome-back-link' onClick={handleHideForm}>
-              <FormattedMessage
-                id='governance.back_to_seeds'
-                defaultMessage='← All seeds'
-              />
-            </button>
-            <SpaceProposalWizard
-              onCreated={handleProposalCreated}
-              onCancel={handleHideForm}
-            />
-          </div>
         ) : (
           <>
             <section className='governance-page__hero'>
@@ -140,16 +111,13 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             </section>
 
             <div className='governance-page__header'>
-              <button
-                className='governance-page__new-btn'
-                onClick={handleShowForm}
-              >
+              <Link to='/hub/kommons/pick' className='governance-page__new-btn'>
                 <Icon id='add' icon={AddIcon} />
                 <FormattedMessage
                   id='governance.new_proposal'
                   defaultMessage='Plant a seed'
                 />
-              </button>
+              </Link>
               <Link
                 to='/hub/kommons/skeleton'
                 className='governance-page__tree-link'

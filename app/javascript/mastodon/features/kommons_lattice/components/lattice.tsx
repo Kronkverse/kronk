@@ -27,7 +27,14 @@ const Z_MAX = 1.6;
 const Z_TINY = 0.62; // below this the lattice reads as shape, not text
 const clampZoom = (z: number): number => Math.max(Z_MIN, Math.min(Z_MAX, z));
 
-export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
+// `pick` turns the map into a target picker: selecting a node opens the
+// Proposer scoped to it (rather than its meta/Space page), so someone can
+// browse the tree to find the page their proposal is about. Branches still
+// expand, so the tree stays navigable.
+export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
+  nodes,
+  pick = false,
+}) => {
   const tree = useMemo(() => buildTree(nodes), [nodes]);
   const [open, setOpen] = useState<ReadonlySet<string>>(
     () => new Set([ROOT_ID]),
@@ -257,14 +264,23 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
       // is the place.
       const spaceTarget = node.korner ?? node.space;
       if (spaceTarget) {
-        history.push(`/hub/kommons/space/${spaceTarget}?from=lattice`);
+        history.push(
+          pick
+            ? `/hub/kommons/propose?space=${spaceTarget}`
+            : `/hub/kommons/space/${spaceTarget}?from=lattice`,
+        );
         return;
       }
       // A Finger opens its meta page — info about this page, the proposals
       // about it, and a "go to this page" button. It never jumps straight to
       // the product page: the tree is a governance surface, not a launcher.
+      // In pick mode it opens the Proposer scoped to this page instead.
       if (node.url) {
-        history.push(`/hub/kommons/node/${node.id}?from=lattice`);
+        history.push(
+          pick
+            ? `/hub/kommons/propose?node=${node.id}`
+            : `/hub/kommons/node/${node.id}?from=lattice`,
+        );
         return;
       }
       // Ease this node into view once the layout settles.
@@ -276,7 +292,7 @@ export const Lattice: React.FC<{ nodes: KommonsNode[] }> = ({ nodes }) => {
         setSelected((s) => (s === id ? null : id));
       }
     },
-    [tree, history],
+    [tree, history, pick],
   );
 
   const openComposer = useCallback(() => {
