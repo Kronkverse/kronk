@@ -959,3 +959,199 @@
   color: var(--text-secondary);
   font-size: 10px;
 }
+
+// ── Ask flow ─────────────────────────────────────────────────────
+.kuestions-ask {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg, 16px);
+  padding: 22px;
+  margin-bottom: 18px;
+}
+
+.kuestions-ask__stage-dots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.kuestions-ask__dot {
+  width: 24px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border-subtle);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.kuestions-ask__dot--on {
+  background: var(--kronk-purple-bright);
+}
+
+.kuestions-ask__field-label {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.kuestions-ask__textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  padding: 12px 14px;
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font: inherit;
+
+  &:focus-visible {
+    outline: 2px solid var(--kronk-purple-bright);
+    outline-offset: 0;
+  }
+}
+
+.kuestions-ask__charcount {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-align: right;
+  margin-top: 6px;
+}
+
+.kuestions-ask__fmt-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.kuestions-ask__fmt-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 12px 14px;
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+
+  &:hover {
+    border-color: var(--kronk-purple-bright);
+  }
+}
+
+.kuestions-ask__fmt-opt--active {
+  border-color: var(--kronk-purple-bright);
+  background: rgb(114 65 255 / 10%);
+}
+
+.kuestions-ask__fmt-title {
+  font-weight: 500;
+}
+
+.kuestions-ask__fmt-body {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.kuestions-ask__mc {
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+
+.kuestions-ask__mc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kuestions-ask__mc-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  input {
+    flex: 1;
+    padding: 10px 12px;
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    font: inherit;
+
+    &:focus-visible {
+      outline: 2px solid var(--kronk-purple-bright);
+      outline-offset: 0;
+    }
+  }
+}
+
+.kuestions-ask__mc-remove {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+
+  &:hover {
+    color: var(--warning-red);
+    border-color: var(--warning-red);
+  }
+}
+
+.kuestions-ask__mc-add {
+  margin-top: 8px;
+  padding: 6px 12px;
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font: inherit;
+
+  &:hover {
+    color: var(--kronk-purple-bright);
+    border-color: var(--kronk-purple-bright);
+  }
+}
+
+.kuestions-ask__review {
+  margin-top: 8px;
+  padding: 12px 14px;
+  background: rgb(114 65 255 / 8%);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.kuestions-ask__review-q {
+  color: var(--text-primary);
+  font-family: Georgia, var(--font-display);
+  font-size: 15px;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.kuestions-ask__review-fmt {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.kuestions-ask__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
