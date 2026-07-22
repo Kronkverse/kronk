@@ -3,40 +3,157 @@
 // Commons — governance feature styles
 // Theme-aware via --accent shared token (set by governance/index.tsx)
 
-// ─── ₭oin balance counter ───────────────────────────────────────────────────
-// Quiet and considered: a hairline pill (same border as the proposal cards),
-// the ₭ as an accent unit-marker, the number in strong neutral text. No words.
+// ─── ₭oin wallet card ───────────────────────────────────────────────────────
+// It's people's governance weight — give it the presence of a wallet, not a
+// counter: available-of-total, a staked-vs-available bar, and a plain reminder
+// that staking is never spending. Adapted from Tal's kronk_kommons_home mockup.
 
-.governance-page__toolbar {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  min-height: 40px;
-  margin-bottom: 6px;
-}
+.kommons-wallet {
+  position: relative;
+  overflow: hidden;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: var(--radius-large, 16px);
+  border: 1px solid color-mix(in srgb, var(--kronk-purple-bright, #7241ff) 30%, transparent);
+  background:
+    radial-gradient(
+      120% 140% at 88% -20%,
+      color-mix(in srgb, var(--kronk-purple-bright, #7241ff) 34%, transparent),
+      transparent 60%
+    ),
+    linear-gradient(
+      150deg,
+      color-mix(in srgb, var(--kronk-purple-deep, #3a218b) 45%, var(--surface-elevated, #292938)),
+      var(--surface-elevated, #292938)
+    );
 
-.kommons-koin {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 7px 16px;
-  border-radius: 999px;
-  background: var(--accent, #8b63ff);
-  color: #fff;
-  line-height: 1;
-  white-space: nowrap;
-
-  &__symbol {
-    font-size: 15px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 80%);
+  &__top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
   }
 
-  &__amount {
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
+  &__coin {
+    width: 18px;
+    height: 18px;
+    color: var(--kronk-purple-bright, #7241ff);
+  }
+
+  &__label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-secondary, #9c9cc9);
+  }
+
+  &__info {
+    margin-inline-start: auto;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--border-subtle, rgba(139, 99, 255, 16%));
+    color: var(--text-muted, #606085);
+    font-size: 11px;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: help;
+  }
+
+  &__bal {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  &__big {
+    font-family: var(--font-display, Georgia, serif);
+    font-size: 48px;
+    line-height: 0.9;
+    color: var(--text-primary, #ece9f5);
     font-variant-numeric: tabular-nums;
+  }
+
+  &__of {
+    font-size: 15px;
+    color: var(--text-secondary, #9c9cc9);
+    padding-bottom: 4px;
+  }
+
+  &__unit {
+    font-size: 13px;
+    color: var(--text-muted, #606085);
+    padding-bottom: 6px;
+  }
+
+  &__bar {
+    display: flex;
+    height: 10px;
+    margin-bottom: 8px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: color-mix(in srgb, #000 30%, transparent);
+  }
+
+  &__staked-fill {
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      var(--accent, #8b63ff),
+      var(--kronk-purple-bright, #7241ff)
+    );
+  }
+
+  &__avail-fill {
+    height: 100%;
+    background: color-mix(in srgb, var(--text-primary, #ece9f5) 14%, transparent);
+  }
+
+  &__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-secondary, #9c9cc9);
+  }
+
+  &__leg {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    b {
+      font-family: var(--font-display, Georgia, serif);
+      font-weight: 600;
+      color: var(--text-primary, #ece9f5);
+    }
+  }
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex: none;
+
+    &--staked {
+      background: var(--kronk-purple-bright, #7241ff);
+    }
+
+    &--avail {
+      background: color-mix(in srgb, var(--text-primary, #ece9f5) 26%, transparent);
+    }
+  }
+
+  &__note {
+    margin: 12px 0 0;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--text-secondary, #9c9cc9);
+    opacity: 0.85;
   }
 }
 

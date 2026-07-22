@@ -11,7 +11,6 @@ import { ColumnHeader } from 'mastodon/components/column_header';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
-import { KoinBalance } from './components/koin_balance';
 import { ProposalDetail } from './components/proposal_detail';
 import type { Proposal } from './types';
 
@@ -34,7 +33,6 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [balanceRefresh, setBalanceRefresh] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -63,7 +61,6 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
   const handleVoteUpdate = useCallback((updated: Proposal) => {
     setProposal(updated);
-    setBalanceRefresh((n) => n + 1);
   }, []);
 
   return (
@@ -80,9 +77,6 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       </Helmet>
 
       <div className='governance-page'>
-        <div className='governance-page__toolbar'>
-          <KoinBalance refreshKey={balanceRefresh} />
-        </div>
         {loading && (
           <div className='governance-page__empty'>
             <FormattedMessage
