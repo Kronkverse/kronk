@@ -4,9 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { Stage } from 'mastodon/components/stage';
 
 import { AnsweredPanel } from './answered_panel';
 import { AskPanel } from './ask_panel';
@@ -20,6 +18,12 @@ import { TodayPanel } from './today_panel';
 // / Answered), gear ➞ Settings, FAB ➞ Ask. Prototype:
 // docs/kronk_kuestions_prototype.html (visual source of truth).
 // Space doc: docs/spaces/kuestions.md.
+//
+// First korner on the new Stage layer (see components/stage.tsx). The
+// Stage sits inside the invariant Frame edges; Kuestions attaches its
+// own backdrop (StarsBackground + MembraneNav) directly to the Stage
+// so the space's chrome MESHES with the frame instead of sitting in a
+// boxed sub-panel.
 
 const messages = defineMessages({
   title: { id: 'kuestions.title', defaultMessage: 'Ƙuestions' },
@@ -32,9 +36,11 @@ export type KuestionsPanelKey =
   | 'ask'
   | 'settings';
 
-const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+// Route signature keeps `multiColumn` for compatibility with the
+// generic route wrapper but the Stage owns its own geometry so the
+// prop is not read here.
+const Questions: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
-  const Icon = useKornerIcon('kuestions');
   const [panel, setPanel] = useState<KuestionsPanelKey>('deck');
 
   const handleGoDeck = useCallback(() => {
@@ -58,17 +64,7 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   }, [panel]);
 
   return (
-    <Column
-      bindToDocument={!multiColumn}
-      label={intl.formatMessage(messages.title)}
-    >
-      <ColumnHeader
-        title={intl.formatMessage(messages.title)}
-        icon='korner'
-        iconComponent={Icon}
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
@@ -85,7 +81,7 @@ const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           {panel === 'settings' && <SettingsPanel />}
         </div>
       </div>
-    </Column>
+    </Stage>
   );
 };
 

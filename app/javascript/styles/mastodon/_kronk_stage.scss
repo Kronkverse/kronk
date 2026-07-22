@@ -1,0 +1,60 @@
+@use 'variables' as *;
+
+// Kronk Stage — the well-defined rectangle every korner space renders
+// into. Sits inside the invariant Frame:
+//   top    = chrome baseline (below wordmark + membrane switcher).
+//            The two `body::before` / `body::after` fade bands
+//            (defined in _kronk_chrome.scss) sit above the Stage on
+//            z-24; Stage lives on z-20 so those fades still darken
+//            content that scrolls up under them.
+//   right  = korner sidebar edge on ≥890px (matches the right fade
+//            band width, `7.75rem`); 0 below the sidebar breakpoint.
+//   bottom = viewport.
+//   left   = mirrors the right inset so the space sits symmetrically
+//            in the frame; 0 below the sidebar breakpoint.
+// If the KornerSubBar is present it stacks below the switcher — Stage
+// pushes down another notch via a `body:has(.korner-sub-bar)`
+// override so the space's top edge clears the pill.
+// Content is expected to fill the Stage. Per-space backdrops (stars,
+// gradients) attach to the space's root INSIDE Stage; the Stage
+// itself has no chrome of its own so nothing "boxes in" the content.
+.kronk-stage {
+  position: fixed;
+  top: 4.25rem;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+
+  // The single scrollable region — inner space content shouldn't
+  // wrap itself in another overflow container.
+  scrollbar-gutter: stable;
+
+  @media (width >= 890px) {
+    right: 7.75rem;
+    left: 7.75rem;
+  }
+}
+
+// KornerSubBar (breadcrumb) pushes the Stage down another notch when
+// present so the pill doesn't overlap the space header.
+body:has(.korner-sub-bar) .kronk-stage {
+  top: 6.75rem;
+}
+
+// Mobile: no side rail, no top chrome. Stage fills the viewport
+// completely — the HubSwitcher lives in the bottom tab-bar on this
+// breakpoint so no top inset is needed either.
+@media (width <= 629px) {
+  .kronk-stage {
+    top: 0;
+    right: 0;
+    left: 0;
+
+    // Room for the bottom tab-bar HubSwitcher.
+    bottom: 3.5rem;
+  }
+}
