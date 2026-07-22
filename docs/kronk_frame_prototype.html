@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kronk Frame — foundational layout prototype</title>
+    <style>
+      /* ── Tokens (subset of Kronk's live palette) ─────────────────── */
+      :root {
+        --kronk-purple-accent: #6d3fc0;
+        --kronk-purple-bright: #a97bff;
+        --kronk-purple-deep: #2a1656;
+        --surface-primary: #0e0b19;
+        --surface-elevated: #171126;
+        --text-primary: #f2eefc;
+        --text-secondary: #c7b8e6;
+        --text-muted: #7c6d99;
+        --border-subtle: rgb(255 255 255 / 8%);
+        --border-default: rgb(255 255 255 / 14%);
+        --font-body:
+          'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        --font-display: Georgia, 'Times New Roman', serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(
+            ellipse at 20% 30%,
+            rgb(109 63 192 / 12%),
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse at 80% 70%,
+            rgb(169 123 255 / 8%),
+            transparent 55%
+          ),
+          #050308;
+        color: var(--text-primary);
+        font-family: var(--font-body);
+        font-size: 15px;
+        line-height: 1.4;
+      }
+
+      /* Ambient stars — decorative, sits behind the frame */
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image:
+          radial-gradient(1px 1px at 15% 22%, #fff, transparent),
+          radial-gradient(1px 1px at 42% 68%, #fff, transparent),
+          radial-gradient(1px 1px at 78% 34%, #fff, transparent),
+          radial-gradient(1px 1px at 61% 88%, #d4c2ff, transparent),
+          radial-gradient(1px 1px at 24% 51%, #fff, transparent),
+          radial-gradient(1px 1px at 88% 79%, #fff, transparent),
+          radial-gradient(1px 1px at 33% 12%, #a97bff, transparent),
+          radial-gradient(1px 1px at 55% 44%, #fff, transparent);
+        opacity: 0.4;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* ── The Frame — a single grid that owns the page ─────────────
+         Two tracks:
+           columns: 1fr [stage]  5.25rem [right-band]
+           rows:    4.25rem [top-band]  1fr [stage/right-band]
+         No fixed-position chrome. No pseudo-element fade bands.
+         The Frame IS the frame.
+      ─────────────────────────────────────────────────────────────── */
+      .kronk-frame {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 1fr 5.25rem;
+        grid-template-rows: 4.25rem 1fr;
+        grid-template-areas:
+          'top top'
+          'stage right';
+        min-height: 100vh;
+      }
+
+      @media (width <= 889px) {
+        .kronk-frame {
+          /* Mobile: right band retires; bottom band appears */
+          grid-template-columns: 1fr;
+          grid-template-rows: 4.25rem 1fr 3.5rem;
+          grid-template-areas:
+            'top'
+            'stage'
+            'bottom';
+        }
+      }
+
+      /* ── Slot: TopBand — was body::before + wordmark + switcher ── */
+      .frame-top-band {
+        grid-area: top;
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        padding: 0 1.5rem;
+        /* The band OWNS its own dark backdrop. No more body::before. */
+        background: linear-gradient(
+          to bottom,
+          #000 0,
+          #000 3.25rem,
+          rgb(0 0 0 / 82%) 3.9rem,
+          rgb(0 0 0 / 45%) 4.7rem,
+          rgb(0 0 0 / 0%) 100%
+        );
+        /* Extend the fade below the band's grid track without moving
+           the layout. Visually identical to what body::before did — but
+           now it's part of the band's paint, not an anonymous pseudo. */
+        &::after {
+          content: '';
+          position: absolute;
+          inset: 100% 0 auto;
+          height: 1.25rem;
+          background: linear-gradient(
+            to bottom,
+            rgb(0 0 0 / 45%),
+            rgb(0 0 0 / 0%)
+          );
+          pointer-events: none;
+        }
+      }
+
+      .kronk-wordmark {
+        grid-column: 1;
+        color: var(--kronk-purple-accent);
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-decoration: none;
+      }
+
+      .hub-switcher {
+        grid-column: 2;
+        display: inline-flex;
+        gap: 0;
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .hub-switcher__row {
+        display: inline-flex;
+        gap: 0;
+      }
+
+      .hub-switcher__pillar {
+        padding: 11px 16px 14px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 500;
+      }
+
+      .hub-switcher__pillar--active {
+        color: var(--text-primary);
+      }
+
+      .hub-switcher__wire {
+        position: relative;
+        height: 2px;
+        background: linear-gradient(
+          to right,
+          transparent 0,
+          var(--border-subtle) 8px,
+          var(--border-subtle) calc(100% - 8px),
+          transparent 100%
+        );
+      }
+
+      .hub-switcher__pool {
+        position: absolute;
+        top: 0;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--kronk-purple-bright);
+        box-shadow:
+          0 0 10px 1px var(--kronk-purple-bright),
+          0 0 20px 3px rgb(169 123 255 / 50%);
+        left: calc(50% + 22px);
+        width: 42px;
+      }
+
+      /* ── Slot: RightBand — was body::after + KornerSidebar ─────── */
+      .frame-right-band {
+        grid-area: right;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 1rem 0;
+        /* The band owns its own dark backdrop, fading inward toward
+           the Stage. No more body::after. */
+        background: linear-gradient(
+          to left,
+          #000 0,
+          #000 5.5rem,
+          rgb(0 0 0 / 82%) 6.15rem,
+          rgb(0 0 0 / 45%) 6.95rem,
+          rgb(0 0 0 / 0%) 100%
+        );
+      }
+
+      @media (width <= 889px) {
+        .frame-right-band {
+          display: none;
+        }
+      }
+
+      .sidebar-tile {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.6rem;
+        background: rgb(255 255 255 / 6%);
+        border: 1px solid rgb(255 255 255 / 8%);
+        display: grid;
+        place-items: center;
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        cursor: pointer;
+      }
+
+      .sidebar-tile--active {
+        background: color-mix(
+          in oklab,
+          var(--kronk-purple-accent) 25%,
+          transparent
+        );
+        border-color: color-mix(
+          in oklab,
+          var(--kronk-purple-accent) 55%,
+          transparent
+        );
+        color: var(--text-primary);
+      }
+
+      /* ── Slot: BottomBand — mobile HubSwitcher ─────────────────── */
+      .frame-bottom-band {
+        grid-area: bottom;
+        display: none;
+        background: #000;
+        border-top: 1.5px solid var(--kronk-purple-accent);
+      }
+
+      @media (width <= 889px) {
+        .frame-bottom-band {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+
+      .bottom-tab {
+        display: grid;
+        place-items: center;
+        color: var(--text-secondary);
+        font-size: 0.72rem;
+        text-decoration: none;
+      }
+
+      .bottom-tab--active {
+        color: var(--text-primary);
+      }
+
+      /* ── Slot: Stage — where the korner space renders ──────────── */
+      .frame-stage {
+        grid-area: stage;
+        position: relative;
+        overflow-x: hidden;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        padding: 3.75rem 1rem 2rem; /* clear floats, breathe */
+      }
+
+      /* Reserved slots INSIDE Stage — unchanged from today */
+      .korner-exit {
+        position: absolute;
+        top: 0.75rem;
+        left: 0.75rem;
+        z-index: 5;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.75rem 0.35rem 0.55rem;
+        background: color-mix(
+          in srgb,
+          var(--surface-elevated) 75%,
+          transparent
+        );
+        border: 1px solid var(--border-subtle);
+        border-radius: 999px;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        text-decoration: none;
+        backdrop-filter: blur(6px);
+      }
+
+      .space-tabs {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        z-index: 5;
+        display: inline-flex;
+        gap: 4px;
+        padding: 4px;
+        background: color-mix(
+          in srgb,
+          var(--surface-elevated) 75%,
+          transparent
+        );
+        border: 1px solid var(--border-subtle);
+        border-radius: 999px;
+        backdrop-filter: blur(6px);
+      }
+
+      .space-tab {
+        padding: 8px 16px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--text-muted);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .space-tab--active {
+        background: var(--kronk-purple-bright);
+        color: #fff;
+      }
+
+      .space-title {
+        font-family: var(--font-display);
+        font-size: 2.5rem;
+        line-height: 1.1;
+        text-align: center;
+        color: var(--kronk-purple-bright);
+        margin: 0 0 0.35rem;
+      }
+
+      .space-subtitle {
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin: 0 0 1.25rem;
+      }
+
+      .demo-panel {
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 1.25rem;
+        background: var(--surface-elevated);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        color: var(--text-secondary);
+      }
+
+      /* ── Overlay slot: floating pieces (Ӂ menu) ────────────────── */
+      .kronk-menu {
+        position: fixed;
+        bottom: 1.5rem;
+        left: 1.5rem;
+        z-index: 30;
+        width: 2.65rem;
+        height: 2.65rem;
+        border-radius: 50%;
+        border: none;
+        background: var(--kronk-purple-accent);
+        color: #fff;
+        font-family: var(--font-display);
+        font-size: 1.35rem;
+        cursor: pointer;
+        box-shadow: 0 4px 12px -2px rgb(109 63 192 / 65%);
+      }
+
+      @media (width <= 889px) {
+        .kronk-menu {
+          left: auto;
+          right: 1rem;
+          bottom: 4.75rem; /* clear the bottom tab-bar */
+        }
+      }
+
+      /* ── Debug: reveal the grid ────────────────────────────────── */
+      .frame-controls {
+        position: fixed;
+        top: 0.75rem;
+        right: 6.25rem;
+        z-index: 100;
+        display: inline-flex;
+        gap: 0.5rem;
+        padding: 0.35rem 0.5rem;
+        background: rgb(0 0 0 / 65%);
+        border: 1px solid var(--border-default);
+        border-radius: 999px;
+        backdrop-filter: blur(8px);
+      }
+
+      @media (width <= 889px) {
+        .frame-controls {
+          top: 0.35rem;
+          right: 0.5rem;
+        }
+      }
+
+      .frame-controls button {
+        background: transparent;
+        border: 1px solid var(--border-subtle);
+        color: var(--text-secondary);
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        cursor: pointer;
+      }
+
+      .frame-controls button.on {
+        background: var(--kronk-purple-accent);
+        color: #fff;
+        border-color: var(--kronk-purple-accent);
+      }
+
+      body.show-grid .kronk-frame > * {
+        outline: 2px dashed var(--kronk-purple-bright);
+        outline-offset: -2px;
+      }
+
+      body.show-grid .kronk-frame > *[data-cell]::before {
+        content: attr(data-cell);
+        position: absolute;
+        top: 0.25rem;
+        left: 0.5rem;
+        z-index: 99;
+        padding: 0.15rem 0.5rem;
+        background: var(--kronk-purple-bright);
+        color: #000;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        border-radius: 4px;
+      }
+
+      body.show-grid .kronk-menu {
+        outline: 2px dashed var(--kronk-purple-bright);
+      }
+
+      body.show-grid .kronk-menu::after {
+        content: 'OVERLAY';
+        position: absolute;
+        bottom: -1.5rem;
+        left: 0;
+        padding: 0.15rem 0.5rem;
+        background: var(--kronk-purple-bright);
+        color: #000;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        border-radius: 4px;
+        white-space: nowrap;
+      }
+
+      /* Legend panel */
+      .legend {
+        position: fixed;
+        bottom: 1rem;
+        right: 6.5rem;
+        max-width: 320px;
+        padding: 0.75rem 1rem;
+        background: rgb(23 17 38 / 92%);
+        border: 1px solid var(--border-default);
+        border-radius: 10px;
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        backdrop-filter: blur(8px);
+        display: none;
+      }
+
+      body.show-grid .legend {
+        display: block;
+      }
+
+      @media (width <= 889px) {
+        .legend {
+          right: 0.5rem;
+          bottom: 5.5rem;
+          max-width: unset;
+          left: 0.5rem;
+        }
+      }
+
+      .legend h4 {
+        margin: 0 0 0.35rem;
+        color: var(--text-primary);
+        font-size: 0.85rem;
+      }
+
+      .legend ul {
+        margin: 0;
+        padding-left: 1rem;
+      }
+
+      .legend code {
+        color: var(--kronk-purple-bright);
+        font-size: 0.75rem;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- The whole page IS the Frame. Everything else renders into a slot. -->
+    <div class="kronk-frame">
+      <!-- TopBand: replaces body::before + KronkWordmark + HubSwitcher -->
+      <header class="frame-top-band" data-cell="TopBand">
+        <a href="#" class="kronk-wordmark">Ж&nbsp;KRONK</a>
+        <nav class="hub-switcher">
+          <div class="hub-switcher__row">
+            <a href="#" class="hub-switcher__pillar">Me</a>
+            <a href="#" class="hub-switcher__pillar">Home</a>
+            <a href="#" class="hub-switcher__pillar hub-switcher__pillar--active"
+              >Hub</a
+            >
+            <a href="#" class="hub-switcher__pillar">Nudges</a>
+          </div>
+          <div class="hub-switcher__wire">
+            <div class="hub-switcher__pool"></div>
+          </div>
+        </nav>
+        <span></span>
+      </header>
+
+      <!-- Stage: the well-defined rectangle where a korner space renders -->
+      <main class="frame-stage" data-cell="Stage">
+        <a href="#" class="korner-exit">← Hub</a>
+        <div class="space-tabs">
+          <button class="space-tab space-tab--active">Today</button>
+          <button class="space-tab">Deck</button>
+          <button class="space-tab">Answered</button>
+          <button class="space-tab">Ask</button>
+        </div>
+        <h1 class="space-title">Kuestions</h1>
+        <p class="space-subtitle">Ask, answer, unlock.</p>
+        <div class="demo-panel">
+          <p>
+            <b>This panel is the space's own content.</b> It renders into the
+            Stage cell of the Frame grid. Notice: no <code>position: fixed</code
+            >, no <code>:has()</code> escape hatches, no <code>z-index</code>
+            war with a fade band. The Stage is just a grid cell that Owns Its
+            Own Overflow.
+          </p>
+          <p style="margin-bottom: 0">
+            The dark bands to the top and right aren't
+            <code>body::before</code>/<code>::after</code> anymore — they're
+            the TopBand and RightBand painting their own backgrounds. The
+            Frame <em>is</em> the frame.
+          </p>
+        </div>
+      </main>
+
+      <!-- RightBand: replaces body::after + KornerSidebar -->
+      <aside class="frame-right-band" data-cell="RightBand">
+        <div class="sidebar-tile sidebar-tile--active" title="Kuestions">Ƙ</div>
+        <div class="sidebar-tile" title="Booth">🎧</div>
+        <div class="sidebar-tile" title="Nudges">◉</div>
+        <div class="sidebar-tile" title="Kommons">✦</div>
+        <div class="sidebar-tile" title="Settings">⚙</div>
+      </aside>
+
+      <!-- BottomBand: mobile HubSwitcher tab-bar (hidden on desktop) -->
+      <nav class="frame-bottom-band" data-cell="BottomBand">
+        <a href="#" class="bottom-tab">Me</a>
+        <a href="#" class="bottom-tab">Home</a>
+        <a href="#" class="bottom-tab bottom-tab--active">Hub</a>
+        <a href="#" class="bottom-tab">Nudges</a>
+      </nav>
+    </div>
+
+    <!-- Overlay layer: floats above the grid (KronkMenu). Kept OUT of the
+         grid on purpose — the Ӂ menu is user-movable and belongs to the
+         viewport, not to a layout cell. -->
+    <button class="kronk-menu" aria-label="Post">Ӂ</button>
+
+    <div class="frame-controls">
+      <button id="toggle-grid">Show grid cells</button>
+      <button id="toggle-size">Preview: mobile</button>
+    </div>
+
+    <div class="legend">
+      <h4>The Frame is a grid</h4>
+      <ul>
+        <li>
+          <code>TopBand</code> — wordmark, HubSwitcher. Owns its own dark
+          fade (was <code>body::before</code>).
+        </li>
+        <li>
+          <code>RightBand</code> — korner sidebar tiles. Owns its own dark
+          fade (was <code>body::after</code>).
+        </li>
+        <li>
+          <code>Stage</code> — where the korner space renders. Grid cell, not
+          <code>position: fixed</code>. Owns its own scrollbar.
+        </li>
+        <li>
+          <code>BottomBand</code> — mobile HubSwitcher (only appears
+          ≤889px).
+        </li>
+        <li>
+          <code>OVERLAY</code> — Ӂ menu. Deliberately outside the grid;
+          floats above and can be dragged anywhere.
+        </li>
+      </ul>
+    </div>
+
+    <script>
+      document.getElementById('toggle-grid').addEventListener('click', (e) => {
+        document.body.classList.toggle('show-grid');
+        e.target.classList.toggle('on');
+      });
+      document.getElementById('toggle-size').addEventListener('click', (e) => {
+        const iframe = document.body;
+        const isMobile = iframe.dataset.preview === 'mobile';
+        if (isMobile) {
+          iframe.style.maxWidth = '';
+          iframe.dataset.preview = '';
+          e.target.textContent = 'Preview: mobile';
+          e.target.classList.remove('on');
+        } else {
+          iframe.style.maxWidth = '600px';
+          iframe.style.margin = '0 auto';
+          iframe.style.borderLeft = '1px dashed rgba(255,255,255,0.15)';
+          iframe.style.borderRight = '1px dashed rgba(255,255,255,0.15)';
+          iframe.dataset.preview = 'mobile';
+          e.target.textContent = 'Preview: desktop';
+          e.target.classList.add('on');
+        }
+      });
+    </script>
+  </body>
+</html>
