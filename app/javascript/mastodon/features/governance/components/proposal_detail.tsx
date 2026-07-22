@@ -11,10 +11,8 @@ import type { Proposal } from '../types';
 
 import { ProposalAttachments } from './proposal_attachments';
 import { ProposalSteps } from './proposal_steps';
-import { TabKontribute } from './proposal_tabs/tab_kontribute';
 import { TabProposal } from './proposal_tabs/tab_proposal';
 
-type Tab = 'proposal' | 'kontribute';
 
 const statusLabels: Record<Proposal['status'], string> = {
   open: 'Open',
@@ -31,7 +29,6 @@ export const ProposalDetail: React.FC<{
   onVoteUpdate: (updated: Proposal) => void;
   onArchived: (updated: Proposal) => void;
 }> = ({ proposal, onBack, onVoteUpdate, onArchived }) => {
-  const [activeTab, setActiveTab] = useState<Tab>('proposal');
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(proposal.title);
   const [editBody, setEditBody] = useState(proposal.body);
@@ -44,13 +41,6 @@ export const ProposalDetail: React.FC<{
   const [deliverError, setDeliverError] = useState<string | null>(null);
 
   const isSeeder = proposal.created_by_account.id === me;
-
-  const handleProposalTab = useCallback(() => {
-    setActiveTab('proposal');
-  }, []);
-  const handleKontributeTab = useCallback(() => {
-    setActiveTab('kontribute');
-  }, []);
 
   const handleEditOpen = useCallback(() => {
     setEditTitle(proposal.title);
@@ -349,6 +339,9 @@ export const ProposalDetail: React.FC<{
                 {statusLabels[proposal.status]}
               </span>
               <h1 className='governance-detail__title'>{proposal.title}</h1>
+              {proposal.summary && (
+                <p className='governance-detail__summary'>{proposal.summary}</p>
+              )}
               <p className='governance-detail__meta'>
                 <FormattedMessage
                   id='governance.detail.seeded_by'
@@ -436,39 +429,16 @@ export const ProposalDetail: React.FC<{
               )}
             </div>
 
+            {/* One scroll — the Seed/Kontribute tabs are retired (spec:
+                docs/spaces/kommons_proposal_page.md). Steps up front (they own
+                the task checklist), then the proposal's description / votes /
+                backing / discussion, then the design docs. Budget + task
+                claim/assign are deferred, to fold into the steps checklist. */}
             <ProposalSteps proposalId={proposal.id} />
 
-            <nav className='governance-detail__tabs'>
-              <button
-                className={`governance-detail__tab ${activeTab === 'proposal' ? 'active' : ''}`}
-                onClick={handleProposalTab}
-              >
-                <FormattedMessage
-                  id='governance.tab.proposal'
-                  defaultMessage='Seed'
-                />
-              </button>
-              <button
-                className={`governance-detail__tab ${activeTab === 'kontribute' ? 'active' : ''}`}
-                onClick={handleKontributeTab}
-              >
-                <FormattedMessage
-                  id='governance.tab.kontribute'
-                  defaultMessage='Kontribute'
-                />
-              </button>
-            </nav>
-
             <div className='governance-detail__content'>
-              {activeTab === 'proposal' && (
-                <ProposalAttachments proposalId={proposal.id} />
-              )}
-              {activeTab === 'proposal' && (
-                <TabProposal proposal={proposal} onVoteUpdate={onVoteUpdate} />
-              )}
-              {activeTab === 'kontribute' && (
-                <TabKontribute proposalId={proposal.id} />
-              )}
+              <TabProposal proposal={proposal} onVoteUpdate={onVoteUpdate} />
+              <ProposalAttachments proposalId={proposal.id} />
             </div>
           </>
         )}

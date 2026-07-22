@@ -690,6 +690,24 @@
   text-align: center;
 }
 
+// One-line summary under the title (mockup hero). Fed by proposal.summary.
+.governance-detail__summary {
+  margin: 10px auto 0;
+  max-width: 52ch;
+  text-align: center;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--text-secondary, rgba(255, 255, 255, 70%));
+}
+
+// One scroll — sections stack with breathing room now the tabs are gone.
+.governance-detail__content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 8px;
+}
+
 .governance-detail__status {
   display: inline-block;
   font-size: 11px;

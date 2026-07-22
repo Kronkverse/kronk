@@ -1,6 +1,7 @@
 export interface Proposal {
   id: string;
   title: string;
+  summary: string | null;
   body: string;
   status: 'open' | 'delivered' | 'completed' | 'annulled';
   proposal_type: 'small' | 'medium' | 'large';
