@@ -3,50 +3,40 @@
 // Commons — governance feature styles
 // Theme-aware via --accent shared token (set by governance/index.tsx)
 
-// ─── ₭oin balance counter — it's people's Kronk money, give it weight ───────
+// ─── ₭oin balance counter ───────────────────────────────────────────────────
+// Quiet and considered: a hairline pill (same border as the proposal cards),
+// the ₭ as an accent unit-marker, the number in strong neutral text. No words.
 
 .governance-page__toolbar {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  min-height: 48px;
-  margin-bottom: 8px;
+  min-height: 34px;
+  margin-bottom: 6px;
 }
 
 .kommons-koin {
   display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  padding: 6px 20px 6px 6px;
+  align-items: baseline;
+  gap: 5px;
+  padding: 5px 14px;
   border-radius: 999px;
-  background: linear-gradient(
-    135deg,
-    var(--accent, #8b63ff),
-    color-mix(in srgb, var(--accent, #8b63ff) 74%, #000)
-  );
-  color: #fff;
+  border: 1px solid var(--border-default, rgba(139, 99, 255, 24%));
+  background: color-mix(in srgb, var(--accent, #8b63ff) 6%, transparent);
   line-height: 1;
   white-space: nowrap;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent, #8b63ff) 42%, transparent);
 
-  // The ₭ sits in its own coin — a soft translucent disc — so the counter
-  // reads as currency at a glance, without a single word.
   &__symbol {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 20%);
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent, #8b63ff);
   }
 
   &__amount {
-    font-size: 24px;
-    font-weight: 800;
+    font-size: 17px;
+    font-weight: 700;
     letter-spacing: -0.01em;
+    color: $primary-text-color;
     font-variant-numeric: tabular-nums;
   }
 }
