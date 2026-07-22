@@ -3519,7 +3519,16 @@
     font-family: var(--font-mono, monospace);
   }
 
+  // The Lattice needs a fixed-height scroll viewport to pan/centre within
+  // (`.lattice-scroll` is flex:1 / overflow:auto). Give it one.
   &__map {
     margin-top: 12px;
+    height: 62vh;
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-default, rgba(255, 255, 255, 12%));
+    border-radius: var(--radius-md, 12px);
+    overflow: hidden;
   }
 }

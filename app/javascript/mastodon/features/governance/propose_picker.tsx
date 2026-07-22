@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import { Column } from 'mastodon/components/column';
@@ -89,25 +89,9 @@ const ProposePicker: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => 
           <h1 className='propose-picker__title'>
             <FormattedMessage
               id='propose_picker.heading'
-              defaultMessage='What is your proposal about?'
+              defaultMessage='Where does your proposal live?'
             />
           </h1>
-          <p className='propose-picker__intro'>
-            <FormattedMessage
-              id='propose_picker.intro'
-              defaultMessage='Find the page your proposal concerns — search for it, or browse the map below. You can also {skip}.'
-              values={{
-                skip: (
-                  <Link to='/hub/kommons/propose'>
-                    <FormattedMessage
-                      id='propose_picker.skip'
-                      defaultMessage='propose without a page'
-                    />
-                  </Link>
-                ),
-              }}
-            />
-          </p>
         </header>
 
         <div className='propose-picker__search'>
