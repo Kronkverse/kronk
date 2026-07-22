@@ -718,3 +718,244 @@
   font-size: 12px;
   margin: 8px 0 0;
 }
+
+// ── Reveal sheet ─────────────────────────────────────────────────
+.kuestions-sheet__actions--single {
+  justify-content: center;
+}
+
+.kuestions-reveal__banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgb(48 141 76 / 12%);
+  border: 1px solid rgb(48 141 76 / 40%);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  color: var(--text-secondary);
+  font-size: 13px;
+
+  b {
+    color: var(--text-primary);
+    display: block;
+  }
+}
+
+.kuestions-reveal__lock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgb(48 141 76 / 15%);
+  color: #308d4c;
+  flex: 0 0 auto;
+}
+
+.kuestions-reveal__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.kuestions-reveal__row {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  animation: kuestions-reveal-fade 320ms var(--ease-out);
+}
+
+@keyframes kuestions-reveal-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.kuestions-reveal__row--mine {
+  border-color: var(--kronk-purple-bright);
+}
+
+.kuestions-reveal__row-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.kuestions-reveal__row-who {
+  flex: 1;
+  min-width: 0;
+}
+
+.kuestions-reveal__row-name {
+  color: var(--text-primary);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kuestions-reveal__row-handle {
+  color: var(--text-muted);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kuestions-reveal__mine-tag {
+  padding: 2px 8px;
+  background: rgb(114 65 255 / 12%);
+  border-radius: 999px;
+  color: var(--kronk-purple-bright);
+  font-size: 11px;
+}
+
+.kuestions-reveal__row-body {
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.kuestions-reveal__edited {
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+
+  &:hover {
+    color: var(--text-secondary);
+  }
+}
+
+.kuestions-reveal__history {
+  list-style: none;
+  margin: 8px 0 0;
+  background: rgb(0 0 0 / 15%);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+
+.kuestions-reveal__history-row {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 4px 0;
+  border-top: 1px solid var(--border-subtle);
+
+  &:first-child {
+    border-top: 0;
+  }
+
+  time {
+    color: var(--text-muted);
+    flex: 0 0 auto;
+  }
+}
+
+.kuestions-reveal__more {
+  margin-top: 4px;
+  align-self: center;
+}
+
+// ── Aggregate (choice-based reveal) ─────────────────────────────
+.kuestions-reveal__aggregate {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.kuestions-reveal__agg-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kuestions-reveal__agg-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.kuestions-reveal__agg-label {
+  flex: 1;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.kuestions-reveal__agg-pct {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.kuestions-reveal__agg-bar {
+  height: 8px;
+  background: rgb(114 65 255 / 10%);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.kuestions-reveal__agg-fill {
+  height: 100%;
+  background: var(--kronk-purple-bright);
+  transition: width var(--dur-slow) var(--ease-out);
+}
+
+.kuestions-reveal__agg-faces {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.kuestions-reveal__agg-face {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--surface-primary);
+  margin-left: -6px;
+  background: var(--surface-elevated);
+
+  &:first-child {
+    margin-left: 0;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.kuestions-reveal__agg-overflow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--surface-primary);
+  margin-left: -6px;
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  font-size: 10px;
+}

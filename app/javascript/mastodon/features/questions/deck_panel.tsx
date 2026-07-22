@@ -11,6 +11,7 @@ import type { ApiKuestionJSON } from 'mastodon/api_types/kuestions';
 
 import { AnswerSheet } from './answer_sheet';
 import { DeckCard } from './deck_card';
+import { RevealSheet } from './reveal_sheet';
 
 const messages = defineMessages({
   loading: { id: 'kuestions.loading', defaultMessage: 'Loading…' },
@@ -45,6 +46,7 @@ export const DeckPanel: React.FC = () => {
   // When set, opens the answer sheet on that Kuestion. Cleared on
   // cancel or a successful submit.
   const [answering, setAnswering] = useState<ApiKuestionJSON | null>(null);
+  const [revealing, setRevealing] = useState<ApiKuestionJSON | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -115,11 +117,16 @@ export const DeckPanel: React.FC = () => {
   }, []);
 
   const handleAnswered = useCallback((updated: ApiKuestionJSON) => {
-    // Successful submit: drop this Kuestion from the deck. The reveal
-    // sheet (Phase 2d) will open on top; for now the sheet just
-    // closes and we advance.
+    // Successful submit: drop this Kuestion from the deck and open the
+    // reveal sheet on top. Reveal payload comes back in the answer
+    // POST response (`answers` for text, `aggregate` for choice).
     setAnswering(null);
     setDeck((prev) => (prev ? prev.filter((k) => k.id !== updated.id) : prev));
+    setRevealing(updated);
+  }, []);
+
+  const closeRevealSheet = useCallback(() => {
+    setRevealing(null);
   }, []);
 
   // Keyboard: ← skip, → answer. Bail on typing surfaces so the deck
@@ -273,6 +280,9 @@ export const DeckPanel: React.FC = () => {
           onCancel={closeAnswerSheet}
           onSubmitted={handleAnswered}
         />
+      )}
+      {revealing && (
+        <RevealSheet kuestion={revealing} onNext={closeRevealSheet} />
       )}
     </section>
   );
