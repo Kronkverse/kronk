@@ -9,6 +9,7 @@ import {
 } from 'mastodon/api/kuestions';
 import type { ApiKuestionJSON } from 'mastodon/api_types/kuestions';
 
+import { AnswerSheet } from './answer_sheet';
 import { DeckCard } from './deck_card';
 
 const messages = defineMessages({
@@ -41,6 +42,9 @@ export const DeckPanel: React.FC = () => {
   const [deck, setDeck] = useState<ApiKuestionJSON[] | null>(null);
   const [undoStack, setUndoStack] = useState<UndoEntry[]>([]);
   const [pending, setPending] = useState(false);
+  // When set, opens the answer sheet on that Kuestion. Cleared on
+  // cancel or a successful submit.
+  const [answering, setAnswering] = useState<ApiKuestionJSON | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -97,10 +101,25 @@ export const DeckPanel: React.FC = () => {
   }, []);
 
   const answerTop = useCallback(() => {
-    // Phase 2c wires the answer sheet. For now: log-and-drop so the
-    // control is live for QA of gestures + keyboard, without any
-    // network write.
-    setDeck((prev) => (prev && prev.length > 0 ? prev.slice(1) : prev));
+    setDeck((prev) => {
+      if (!prev || prev.length === 0) return prev;
+      const [top] = prev;
+      if (!top) return prev;
+      setAnswering(top);
+      return prev;
+    });
+  }, []);
+
+  const closeAnswerSheet = useCallback(() => {
+    setAnswering(null);
+  }, []);
+
+  const handleAnswered = useCallback((updated: ApiKuestionJSON) => {
+    // Successful submit: drop this Kuestion from the deck. The reveal
+    // sheet (Phase 2d) will open on top; for now the sheet just
+    // closes and we advance.
+    setAnswering(null);
+    setDeck((prev) => (prev ? prev.filter((k) => k.id !== updated.id) : prev));
   }, []);
 
   // Keyboard: ← skip, → answer. Bail on typing surfaces so the deck
@@ -245,6 +264,15 @@ export const DeckPanel: React.FC = () => {
             </svg>
           </button>
         </div>
+      )}
+
+      {answering && (
+        <AnswerSheet
+          kuestion={answering}
+          defaultScope='connections'
+          onCancel={closeAnswerSheet}
+          onSubmitted={handleAnswered}
+        />
       )}
     </section>
   );

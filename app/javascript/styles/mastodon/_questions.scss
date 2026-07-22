@@ -464,3 +464,257 @@
 .kuestions-deck__ctl--answer:hover:not(:disabled) {
   background: rgb(74 222 128 / 16%);
 }
+
+// ── Answer sheet (bottom modal) ─────────────────────────────────
+.kuestions-sheet-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.kuestions-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: rgb(0 0 0 / 55%);
+  cursor: pointer;
+}
+
+.kuestions-sheet {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: 84vh;
+  overflow-y: auto;
+  background: var(--surface-elevated);
+  border-top-left-radius: var(--radius-lg, 16px);
+  border-top-right-radius: var(--radius-lg, 16px);
+  padding: 20px 22px 22px;
+  animation: kuestions-sheet-slide-in var(--dur-slow) var(--ease-out);
+}
+
+@keyframes kuestions-sheet-slide-in {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+.kuestions-sheet__grab {
+  width: 44px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-default);
+  margin: 0 auto 16px;
+}
+
+.kuestions-sheet__q {
+  font-family: Georgia, var(--font-display);
+  font-size: 22px;
+  line-height: 1.3;
+  color: var(--text-primary);
+  margin: 0 0 6px;
+}
+
+.kuestions-sheet__by {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 0 0 16px;
+}
+
+.kuestions-sheet__hint {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 0 0 10px;
+}
+
+.kuestions-sheet__text {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  padding: 12px 14px;
+  background: var(--surface-base, var(--surface-primary));
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font: inherit;
+  margin-bottom: 12px;
+
+  &:focus-visible {
+    outline: 2px solid var(--kronk-purple-bright);
+    outline-offset: 0;
+  }
+}
+
+.kuestions-sheet__error {
+  color: var(--warning-red);
+  font-size: 13px;
+  margin: 8px 0 0;
+}
+
+.kuestions-sheet__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+// ── Choice chips (mc / yn) ──────────────────────────────────────
+.kuestions-sheet__choices {
+  display: grid;
+  gap: 10px;
+}
+
+.kuestions-sheet__choices--mc {
+  grid-template-columns: 1fr;
+}
+
+.kuestions-sheet__choices--yn {
+  grid-template-columns: 1fr 1fr;
+}
+
+.kuestions-sheet__choice {
+  padding: 14px 16px;
+  background: rgb(114 65 255 / 8%);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    background: rgb(114 65 255 / 18%);
+    border-color: var(--kronk-purple-bright);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.kuestions-sheet__choice--yes {
+  color: #4ade80;
+  border-color: #4ade80;
+  background: rgb(74 222 128 / 8%);
+}
+
+.kuestions-sheet__choice--yes:hover:not(:disabled) {
+  background: rgb(74 222 128 / 18%);
+}
+
+.kuestions-sheet__choice--no {
+  color: #f87171;
+  border-color: #f87171;
+  background: rgb(248 113 113 / 8%);
+}
+
+.kuestions-sheet__choice--no:hover:not(:disabled) {
+  background: rgb(248 113 113 / 18%);
+}
+
+// ── Visibility dial ─────────────────────────────────────────────
+.kuestions-dial {
+  padding: 12px 0 8px;
+}
+
+.kuestions-dial__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 8px;
+
+  strong {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+}
+
+.kuestions-dial__label {
+  margin-left: auto;
+}
+
+.kuestions-dial__track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.kuestions-dial__stop {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid;
+  background: var(--surface-primary);
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.kuestions-dial__stop--everyone {
+  border-color: #e8a24e;
+}
+
+.kuestions-dial__stop--kronk_members {
+  border-color: #c97be8;
+}
+
+.kuestions-dial__stop--connections {
+  border-color: #7241ff;
+}
+
+.kuestions-dial__stop--vouched {
+  border-color: #4e5bd6;
+}
+
+.kuestions-dial__stop--only_me {
+  border-color: #5a6b8c;
+}
+
+.kuestions-dial__stop--everyone.kuestions-dial__stop--active {
+  background: #e8a24e;
+}
+
+.kuestions-dial__stop--kronk_members.kuestions-dial__stop--active {
+  background: #c97be8;
+}
+
+.kuestions-dial__stop--connections.kuestions-dial__stop--active {
+  background: #7241ff;
+}
+
+.kuestions-dial__stop--vouched.kuestions-dial__stop--active {
+  background: #4e5bd6;
+}
+
+.kuestions-dial__stop--only_me.kuestions-dial__stop--active {
+  background: #5a6b8c;
+}
+
+.kuestions-dial__stop--active {
+  transform: scale(1.1);
+}
+
+.kuestions-dial__note {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin: 8px 0 0;
+}
