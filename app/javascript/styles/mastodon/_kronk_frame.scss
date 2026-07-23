@@ -196,3 +196,62 @@
     }
   }
 }
+
+// ── SpaceBadge — the "you are in X, tap to go back" pill ───────────
+// A reserved-slot component per docs/kronk_frame.md § SpaceNav. On
+// Stage-based korners it floats top-left over content; on mobile it
+// stays top-left in the horizontal SpaceNav row.
+.space-badge {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem 0.35rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--kronk-purple-deep) 60%, transparent);
+  border: 1px solid
+    color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
+  color: var(--kronk-purple-bright);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--kronk-purple-deep) 85%, transparent);
+    border-color: var(--kronk-purple-bright);
+    outline: none;
+
+    .space-badge__arrow {
+      transform: translateX(-2px);
+    }
+  }
+
+  &__arrow {
+    width: 0.95rem;
+    height: 0.95rem;
+    flex: 0 0 auto;
+    color: color-mix(in oklab, var(--kronk-purple-bright) 85%, white);
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+
+  &__glyph {
+    font-size: 1.1rem;
+    line-height: 1;
+    font-family: var(--font-display);
+  }
+
+  &__name {
+    font-family: var(--font-display);
+  }
+}
