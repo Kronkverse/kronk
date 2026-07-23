@@ -1,10 +1,27 @@
 # Kronk Settings — Information Architecture
 
-> **Status:** spec (rev. 2026-07-15). Defines the canonical settings layout, organised by Kronk's own structure and tied to the Kommons Skeleton node registry. Supersedes the flat section list in `features/settings/nav.tsx`.
+> **⚠️ SUPERSEDED (2026-07-20) — see [`docs/spaces/settings.md`](./spaces/settings.md) + [`docs/rebuild/decisions.md`](./rebuild/decisions.md).**
+> This doc's central thesis — "exactly three surfaces, no new bucket,
+> account/app settings fold into Profile" — was **reversed**. Settings now
+> owns a **dedicated `settings` bucket** (`Kronk::NodeRegistry::BUCKETS =
+> feed profile hub nudges settings kronk`, in `app/lib/kronk/node_registry.rb`)
+> and a core-space manifest (`config/korners/settings.yaml`). Personal/account
+> section pages sit **flat** at `/settings/{profile,sections,appearance,posting,privacy,notifications,account,data,you}`
+> (`config/kronk_nodes.yaml`, routes in `features/ui/index.jsx`), **not** as
+> sections of Profile, and **not** in the `profile` bucket. Notifications is a
+> **live standalone** `/settings/notifications` page, not folded into Nudges.
+> The historical rev below is kept for context only; do not build from it.
+
+> **Status:** SUPERSEDED spec (rev. 2026-07-15). Originally defined the settings layout as three surfaces tied to the Kommons Directory node registry.
 
 ## 1. The organising principle
 
-Settings mirror **the shape of Kronk itself**, not a flat preferences dump. There are exactly **three surfaces — the three Kommons Skeleton buckets** — and every setting belongs to one:
+> **Superseded:** the "exactly three surfaces / no account surface / fold into
+> Profile" model below did not ship. Settings is its own `settings` bucket and
+> core space, with flat `/settings/*` section pages. See the banner at top and
+> `docs/spaces/settings.md`. The three-surface framing here is historical.
+
+Settings mirror **the shape of Kronk itself**, not a flat preferences dump. There are exactly **three surfaces — the three Kommons Directory buckets** — and every setting belongs to one:
 
 | Surface     | Test                                                                  | Skeleton bucket |
 | ----------- | --------------------------------------------------------------------- | ----------- |
@@ -50,9 +67,22 @@ Your identity, what you publish, and your account — all the "about me and my a
 
 ## 3. Notifications ≡ Nudges
 
+> **Superseded / factually wrong now:** a **standalone `/settings/notifications`
+> page is live** (`settings.notifications`, `bucket: settings`, `lifecycle: live`
+> in `config/kronk_nodes.yaml`; `NotificationsSettings` route in
+> `features/ui/index.jsx`). Folding notification prefs into Nudges is a possible
+> future direction, but the section is not gone. The paragraph below is
+> historical.
+
 Notifications are **merging into Nudges** (the classic bell is already retired; Nudges is the activity surface). So there is **no standalone Notifications section** — notification preferences (which activity nudges you, email digests, push, `notification_emails.*`, `software_updates`) live with **Nudges** (a korner → its §K settings under Hub). Treat the existing `NotificationsSettings` as folding into Nudges.
 
 ## 4. Node model
+
+> **Superseded:** there **is** a new bucket. `Kronk::NodeRegistry::BUCKETS`
+> now includes `settings` (and `nudges`, `kronk`), and every personal/account
+> `settings.*` node declares `bucket: settings` in `config/kronk_nodes.yaml`
+> (only `settings.feed` / `settings.hub` stay in their space's bucket). The
+> "no new bucket, everything folds into `profile`" model below is historical.
 
 **No new bucket.** Settings nodes live in the `feed | profile | hub` bucket of the space they configure — the convention the Skeleton already established:
 

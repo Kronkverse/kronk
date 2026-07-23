@@ -1,7 +1,7 @@
 # Per-space docs
 
 This folder holds **one canonical doc per space in Kronk** — the
-folder's contents mirror the Kommons Skeleton
+folder's contents mirror the Kommons Directory
 (`bin/tootctl korners doctor` reads the same registry).
 
 A **space** is any top-level surface of Kronk. A **korner** is one kind
@@ -38,12 +38,12 @@ Slug matches `config/korners/<slug>.yaml`.
 | [`inflow.md`](inflow.md)       | `config/korners/inflow.yaml`    | Models + projection shipped; UI reshape pending Tomas Round 2                                       |
 | [`kalendar.md`](kalendar.md)   | `config/korners/kalendar.yaml`  | Enforced — rebuild spiral view pending                                                              |
 | [`klot.md`](klot.md)           | `config/korners/klot.yaml`      | Stub                                                                                                |
-| [`kommons.md`](kommons.md)     | `config/korners/kommons.yaml`   | Enforced — Skeleton, token ledger and lifecycle shipped; backing UI pending                         |
+| [`kommons.md`](kommons.md)     | `config/korners/kommons.yaml`   | Enforced — Directory, token ledger, lifecycle and backing UI shipped                                |
 | [`kompass.md`](kompass.md)     | `config/korners/kompass.yaml`   | Stub — physical map                                                                                 |
-| [`kuestions.md`](kuestions.md) | `config/korners/kuestions.yaml` | Enforced — swipe-deck UI pending                                                                    |
+| [`kuestions.md`](kuestions.md) | `config/korners/kuestions.yaml` | Enforced — v2 shipped (dedicated models, swipe deck, gated answers, daily prompt)                   |
 | [`wachuneed.md`](wachuneed.md) | `config/korners/wachuneed.yaml` | Enforced — directory shipped; detail/composer pending. Renamed from `marketplace` 2026-07-21.       |
 | [`moments.md`](moments.md)     | `config/korners/moments.yaml`   | Stub                                                                                                |
-| [`nudges.md`](nudges.md)       | `config/korners/nudges.yaml`    | Activity feed shipped; pillar move open (PR #331 closed 2026-07-18 pending the nav design decision) |
+| [`nudges.md`](nudges.md)       | `config/korners/nudges.yaml`    | Activity feed + unified messenger shipped; pillar move done (`core: true`, `pillar: true`, in `hub_switcher.tsx`) |
 | [`you.md`](you.md)             | `config/korners/you.yaml`       | Portal (link-out to Kashka's YOU PWA)                                                               |
 
 ### Cross-cutting spaces (not owned by a korner manifest)
@@ -54,21 +54,23 @@ Nodes declared in `config/kronk_nodes.yaml`.
 | ---------------------------- | -------------------- | ----------------------------------------------- |
 | [`feed.md`](feed.md)         | `feed`               | Home + Nudges activity feed                     |
 | [`profile.md`](profile.md)   | `profile`            | Sectioned profile + view/edit/media/connections |
-| [`settings.md`](settings.md) | `profile` (see note) | Account/global settings (`/settings/*`)         |
+| [`settings.md`](settings.md) | `settings` (see note) | Account/global settings (`/settings/*`)         |
 | [`hub.md`](hub.md)           | `hub.landing`        | The `/hub` landing grid itself                  |
 
-Note on settings: `config/kronk_nodes.yaml` files every `settings.*`
-node except `settings.feed` and `settings.hub` under the `profile`
-bucket. This doc previously claimed a `hub` sub-tree, which was never
-true in the registry. Settings has no honest home under the current
-three-bucket scheme — see
+Note on settings: settings now owns its **own `settings` bucket** and a
+core-space manifest (`config/korners/settings.yaml`). Every personal/account
+`settings.*` node declares `bucket: settings` in `config/kronk_nodes.yaml`
+(only `settings.feed` and `settings.hub` stay in their space's bucket). The
+earlier "no honest home under the three-bucket scheme" is resolved — see
+[`settings.md`](settings.md) and
 [`../rebuild/decisions.md`](../rebuild/decisions.md).
 
-The `nudges` bucket documented in
-[`../korners/korner_standard.md`](../korners/korner_standard.md) L6 is
-**not accepted by the code**: `Kronk::NodeRegistry::BUCKETS` is
-`feed|profile|hub`, and a node declaring `bucket: nudges` is silently
-dropped.
+`Kronk::NodeRegistry::BUCKETS` is now
+`feed profile hub nudges settings kronk` (`app/lib/kronk/node_registry.rb`),
+so the `nudges` bucket documented in
+[`../korners/korner_standard.md`](../korners/korner_standard.md) L6 **is
+accepted** — `feed.nudges`, `nudges.index` and `nudges.thread` all declare
+`bucket: nudges`.
 
 ## How this folder is used
 

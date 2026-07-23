@@ -1,6 +1,6 @@
 # Kuestions (`kuestions`)
 
-**Manifest:** `config/korners/kuestions.yaml` · **Mount:** `/hub/kuestions` · **Status:** in-flight (Phase 8)
+**Manifest:** `config/korners/kuestions.yaml` · **Mount:** `/hub/kuestions` · **Status:** shipped-2.0 (v2: dedicated models, swipe deck, gated answers, daily prompt)
 
 ## Purpose
 
@@ -17,53 +17,58 @@ respond to", it serves two loosely-coupled modes:
   yourself.** Always-on gate. Swipe-deck UI at `/hub/kuestions`
   surfaces community-asked Kuestions one at a time.
 
-## Current shape (1.7.x)
+## Current shape (2.0 — v2 shipped)
 
-Kuestions today is a lightweight Q&A affordance built on Status
-polymorphism — a Status with `question: true` renders as a Kuestion
-card. Under `app/javascript/mastodon/features/questions/` and
-`app/controllers/api/v1/kuestions_controller.rb`. Rendered with the
-Ƙ glyph in nav.
+Kuestions v2 has shipped. The Status-polymorphic affordance (a Status
+with `question: true` rendering a card) is retired — v2 uses the
+dedicated `questions` table exclusively (`status_post_type: question`
+and the `question_card`/`StatusQuestionCard` projection were removed
+2026-07-22; see `config/korners/kuestions.yaml`).
 
-## Rebuild vision (2.0.0)
+- **Dedicated models** — `app/models/question.rb` (with
+  `ANSWER_FORMATS = %w(text mc yn)` — free text, multiple choice,
+  yes/no) and `app/models/answer.rb`. A `Question` links to its Status
+  via `status_id`. No more Status polymorphism.
+- **Controllers** — `app/controllers/api/v2/kuestions_controller.rb`
+  plus `kuestions/answers_controller.rb`,
+  `kuestions/skips_controller.rb`, and
+  `kuestions/daily_prompt_controller.rb`. Routes:
+  `resources :kuestions` with nested `answers`, `skip`, and
+  `prompt/today` (`config/routes/api.rb`). The legacy
+  `/api/v1/questions` path stays only for the transition.
+- **Answer-before-view gate** — enforced by
+  `app/services/kuestions/visibility_gate.rb`: unanswered users see the
+  Kuestion card but never the answers; submitting opens the gate.
+  Always-on, not opt-in.
+- **Swipe deck + skip** — the one-card-at-a-time swipe UI at
+  `/hub/kuestions`, with per-user skip state persisted via the `skip`
+  endpoint (`kuestions/skips_controller.rb`).
+- **Daily prompt** — the post-box prompt is served by
+  `app/lib/kuestions/daily_prompt.rb` (via
+  `kuestions/daily_prompt_controller.rb`), one deterministic prompt per
+  day from the seed pool.
+- **Frontend** under `app/javascript/mastodon/features/questions/`.
+  Rendered with the Ƙ glyph in nav.
 
-The 2.0 rebuild is both architectural and experiential.
+## Rebuild vision (2.0.0 — remaining)
 
-**Data model (Phase 8.1 + 8.4):** Dedicated `questions` and `answers`
-tables — no more Status polymorphism. Migration backfills existing
-question-shaped Statuses. Dual-read for one release.
+The mechanics below are the parts of the rebuild that are **not yet
+built**; the shipped v2 above covers the rest.
 
-**Interaction model — Tinder for Kuestions:** The list view retires.
-Kuestions surface one card at a time; swipe-left skips, swipe-right
-opens the answer affordance. Each card renders:
+**Interaction card signals:** Each swipe card is intended to render, in
+addition to the Kuestion text and asker:
 
-- The Kuestion text
-- Who asked it (avatar + display name)
 - Number of answers so far
 - Small profile thumbnails of **friends** who have already answered
   (encouragement signal)
 
-**Answer-before-view gate (Phase 8.2):** Central to the space, not
-opt-in. `Kuestions::VisibilityGate` policy enforces: unanswered users
-see the Kuestion card but never the answers. Once you submit, the
-gate opens.
-
-**Answer format — asker picks per-Kuestion:** At creation the asker
-chooses one of:
-
-- Free text
-- Multiple choice (2–4 options)
-- Yes/no
-
-The card and swipe interaction adapt: MC/yes-no is tap-to-choose;
-free text opens a small compose surface.
-
-**Feed projection (Phase 8.3):** One card per **ask**, not one per
+**Feed projection (still to build):** One card per **ask**, not one per
 answer (a busy swipe session would otherwise flood the feed of anyone
-tuned into Kuestions). The `kuestions_card` renders in the home/hub
-feed and shows the Kuestion, the running answer count, and friend
-thumbnails — same signals as the swipe card, so the feed and the
-swipe queue are visually consistent.
+tuned into Kuestions). A dedicated `kuestions_card` — backed by the
+`Question` model, **not** the retired Status-polymorphic
+`question_card` — needs to be re-added; it should show the Kuestion,
+the running answer count, and friend thumbnails, so feed and swipe
+queue stay visually consistent.
 
 **Swipe queue:** Purely chronological, latest first. No personalisation
 weighting, no Kategory filtering at the queue level. The swipe UI
@@ -73,7 +78,8 @@ carries the discovery weight on its own; simpler backend contract.
 view adapts to the Kuestion's format:
 
 - **MC / yes-no** — aggregate chart with percentages per option, plus
-  friend avatars grouped under the option they picked.
+  friend avatars grouped under the option they picked. _(Still to
+  build — the aggregate chart is not yet shipped.)_
 - **Free text** — chronological feed of others' answers, paginated.
 
 **Lifetime:** Kuestions never close. The count keeps ticking
