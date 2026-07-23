@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -11,20 +11,14 @@ import { AnsweredPanel } from './answered_panel';
 import { AskPanel } from './ask_panel';
 import { DeckPanel } from './deck_panel';
 import { SettingsPanel } from './settings_panel';
-import { SpaceTabs } from './space_tabs';
 import { StarsBackground } from './stars_background';
 import { TodayPanel } from './today_panel';
 
-// Kuestions v2 shell. Membrane nav across the top (Today / Ƙuestions
-// / Answered), gear ➞ Settings, FAB ➞ Ask. Prototype:
-// docs/kronk_kuestions_prototype.html (visual source of truth).
-// Space doc: docs/spaces/kuestions.md.
-//
-// First korner on the new Stage layer (see components/stage.tsx). The
-// Stage sits inside the invariant Frame edges; Kuestions attaches its
-// own backdrop (StarsBackground + MembraneNav) directly to the Stage
-// so the space's chrome MESHES with the frame instead of sitting in a
-// boxed sub-panel.
+// Kuestions v2 shell. Panel state is fully URL-driven now — the
+// Frame's <AutoSpaceViewPicker> in KronkFrame.SpaceNav navigates by
+// pushing /hub/kuestions/<view>, and this component derives the
+// current panel from location.pathname on every render. No internal
+// state, no per-space in-Stage nav bar; the Frame provides both.
 
 const messages = defineMessages({
   title: { id: 'kuestions.title', defaultMessage: 'Ƙuestions' },
@@ -37,11 +31,6 @@ export type KuestionsPanelKey =
   | 'ask'
   | 'settings';
 
-// Deep-linkable sub-paths per KuestionsPanelKey. `/hub/kuestions/ask`
-// is the compose target the Ӂ menu Post points at; `/hub/kuestions`
-// alone opens the deck. The Ask panel is modal-ish (per the Kuestions
-// prototype) so once submitted it returns to deck via history back or
-// the panel's internal cancel.
 const PATH_TO_PANEL: Record<string, KuestionsPanelKey> = {
   ask: 'ask',
   today: 'today',
@@ -49,7 +38,7 @@ const PATH_TO_PANEL: Record<string, KuestionsPanelKey> = {
   settings: 'settings',
 };
 
-const initialPanelFromPath = (pathname: string): KuestionsPanelKey => {
+const panelFromPath = (pathname: string): KuestionsPanelKey => {
   const tail = pathname.split('/').filter(Boolean).pop();
   return (tail ? PATH_TO_PANEL[tail] : undefined) ?? 'deck';
 };
@@ -61,34 +50,29 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const location = useLocation();
   const history = useHistory();
-  const [panel, setPanel] = useState<KuestionsPanelKey>(() =>
-    initialPanelFromPath(location.pathname),
-  );
+  const panel = panelFromPath(location.pathname);
 
   const handleGoDeck = useCallback(() => {
-    setPanel('deck');
-    // Keep URL in sync when leaving the modal-ish sub-panels so a
-    // refresh doesn't drop the user back into Ask/Settings.
     if (location.pathname !== '/hub/kuestions') {
       history.replace('/hub/kuestions');
     }
   }, [history, location.pathname]);
 
   // Keyboard: Escape closes any sheet-y modal panel (Ask / Settings)
-  // to the deck. Deck / Today / Answered are top-level; leave them
-  // alone. Matches the prototype's "back to deck" affordance.
+  // back to the deck. Deck / Today / Answered are top-level; leave
+  // them alone. Matches the prototype's "back to deck" affordance.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       if (panel === 'ask' || panel === 'settings') {
-        setPanel('deck');
+        handleGoDeck();
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => {
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [panel]);
+  }, [panel, handleGoDeck]);
 
   return (
     <Stage label={intl.formatMessage(messages.title)}>
@@ -96,9 +80,9 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      {/* SpaceBadge is now Frame-provided via <AutoSpaceBadge> in
-          ui/index.jsx — same badge appears on every korner route. */}
-      <SpaceTabs active={panel} onChange={setPanel} />
+      {/* SpaceBadge + view picker are Frame-provided via
+          <AutoSpaceBadge> and <AutoSpaceViewPicker> in ui/index.jsx —
+          same treatment on every korner route. */}
 
       <div className='kuestions-shell'>
         <StarsBackground />
