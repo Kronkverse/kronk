@@ -5,7 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useLocation, useHistory } from 'react-router-dom';
 
-import { KornerExit } from 'mastodon/components/korner_exit';
+import { SpaceBadge } from 'mastodon/components/space_badge';
 import { Stage } from 'mastodon/components/stage';
 
 import { AnsweredPanel } from './answered_panel';
@@ -97,9 +97,8 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      {/* Reserved Stage top zones — floating over content. See docs on
-          the Stage layer in components/stage.tsx. */}
-      <KornerExit />
+      {/* Reserved SpaceNav slot components — see docs/kronk_frame.md. */}
+      <SpaceBadge glyph='Ƙ' name='Kuestions' backTo='/hub' />
       <SpaceTabs active={panel} onChange={setPanel} />
 
       <div className='kuestions-shell'>
