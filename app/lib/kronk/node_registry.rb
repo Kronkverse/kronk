@@ -17,7 +17,7 @@
 #
 # Consumers:
 #   - `GET /api/v1/kommons/nodes` — serves this tree to the frontend
-#     (`app/javascript/mastodon/features/kommons_skeleton/`)
+#     (`app/javascript/mastodon/features/kommons_tree/`)
 #   - `Proposal.node_id` — feedback proposals tag themselves with a node
 #   - `bin/tootctl korners doctor` — anti-drift check
 #

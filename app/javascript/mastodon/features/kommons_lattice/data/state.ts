@@ -5,7 +5,7 @@
 // Hub must also drop Booth and Booth's pages, or orphans in the set make
 // branches reappear unexpectedly later.
 
-import type { Tree } from '../../kommons_skeleton/data/layout';
+import type { Tree } from '../../kommons_tree/data/layout';
 
 // Remove `id` and its whole subtree from the open set.
 const prune = (

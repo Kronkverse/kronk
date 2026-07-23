@@ -296,10 +296,6 @@ export function KommonsProposePicker () {
 }
 
 
-export function KommonsSkeleton () {
-  return import("../../kommons_skeleton");
-}
-
 export function KommonsLattice () {
   return import("../../kommons_lattice");
 }

@@ -16,10 +16,9 @@ import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 
-import { KommonsExit } from '../kommons_skeleton/components/kommons_exit';
-import { ViewToggle } from '../kommons_skeleton/components/view_toggle';
-import type { KommonsNode } from '../kommons_skeleton/data/nodes';
-import { fromApiNodes } from '../kommons_skeleton/data/nodes';
+import { KommonsExit } from '../kommons_tree/components/kommons_exit';
+import type { KommonsNode } from '../kommons_tree/data/nodes';
+import { fromApiNodes } from '../kommons_tree/data/nodes';
 
 import { Lattice } from './components/lattice';
 
@@ -71,9 +70,8 @@ const KommonsLattice: React.FC<{ multiColumn?: boolean }> = ({
       <ColumnHeader icon='gavel' title={title} multiColumn={multiColumn} />
 
       <div className='kommons-lattice'>
-        <div className='kommons-skeleton__chrome'>
+        <div className='kommons-tree__chrome'>
           <KommonsExit />
-          <ViewToggle />
         </div>
         {loading && (
           <p className='kommons-lattice__loading'>

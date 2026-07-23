@@ -9,8 +9,8 @@ import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { Lattice } from 'mastodon/features/kommons_lattice/components/lattice';
-import type { KommonsNode } from 'mastodon/features/kommons_skeleton/data/nodes';
-import { fromApiNodes } from 'mastodon/features/kommons_skeleton/data/nodes';
+import type { KommonsNode } from 'mastodon/features/kommons_tree/data/nodes';
+import { fromApiNodes } from 'mastodon/features/kommons_tree/data/nodes';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 const messages = defineMessages({

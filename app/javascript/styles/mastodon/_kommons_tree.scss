@@ -1,10 +1,11 @@
 // Kommons Skeleton — three-bucket drilldown feedback surface.
-// Route: /hub/kommons/skeleton
+// Shared Kommons map (tree) styles — the Lattice view at /hub/kommons/lattice
 
-.kommons-skeleton {
+.kommons-tree {
   padding: 20px;
   max-width: 780px;
   margin: 0 auto;
+
   // Explicit, because this is a flex item: the map's children are all
   // absolutely positioned, so there is no intrinsic width to hold the
   // container open and it collapses to the width of the breadcrumb text.
@@ -20,7 +21,7 @@
 }
 
 // ── Breadcrumb ──────────────────────────────────────────────────────
-.kommons-skeleton__breadcrumb {
+.kommons-tree__breadcrumb {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -31,7 +32,7 @@
   font-size: 13px;
 }
 
-.kommons-skeleton__crumb {
+.kommons-tree__crumb {
   background: transparent;
   border: 0;
   padding: 4px 6px;
@@ -50,23 +51,23 @@
   }
 }
 
-.kommons-skeleton__crumb-sep {
+.kommons-tree__crumb-sep {
   color: var(--text-muted, rgba(255, 255, 255, 40%));
 }
 
 // ── Picker layout ───────────────────────────────────────────────────
-.kommons-skeleton__picker {
+.kommons-tree__picker {
   margin-top: 8px;
 }
 
-.kommons-skeleton__intro {
+.kommons-tree__intro {
   color: var(--text-muted, rgba(255, 255, 255, 70%));
   margin-bottom: 20px;
   line-height: 1.5;
 }
 
 // ── Bucket grid (step 1) ────────────────────────────────────────────
-.kommons-skeleton__bucket-grid {
+.kommons-tree__bucket-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
@@ -76,7 +77,7 @@
   }
 }
 
-.kommons-skeleton__bucket {
+.kommons-tree__bucket {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -100,24 +101,24 @@
   }
 }
 
-.kommons-skeleton__bucket-glyph {
+.kommons-tree__bucket-glyph {
   font-size: 28px;
   color: var(--accent);
   line-height: 1;
 }
 
-.kommons-skeleton__bucket-label {
+.kommons-tree__bucket-label {
   font-size: 20px;
   font-weight: 600;
 }
 
-.kommons-skeleton__bucket-blurb {
+.kommons-tree__bucket-blurb {
   color: var(--text-muted, rgba(255, 255, 255, 60%));
   font-size: 13px;
   flex: 1;
 }
 
-.kommons-skeleton__bucket-count {
+.kommons-tree__bucket-count {
   color: var(--text-muted, rgba(255, 255, 255, 55%));
   font-size: 12px;
   padding-top: 8px;
@@ -125,7 +126,7 @@
 }
 
 // ── Page list (step 2) ──────────────────────────────────────────────
-.kommons-skeleton__list {
+.kommons-tree__list {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -134,7 +135,7 @@
   gap: 6px;
 }
 
-.kommons-skeleton__row {
+.kommons-tree__row {
   display: grid;
   grid-template-columns: 1fr auto;
   grid-template-rows: auto auto;
@@ -155,12 +156,12 @@
   }
 }
 
-.kommons-skeleton__row-label {
+.kommons-tree__row-label {
   font-weight: 500;
   font-size: 15px;
 }
 
-.kommons-skeleton__row-url {
+.kommons-tree__row-url {
   grid-column: 1;
   grid-row: 2;
   color: var(--text-muted, rgba(255, 255, 255, 50%));
@@ -168,7 +169,7 @@
   font-size: 12px;
 }
 
-.kommons-skeleton__row-meta {
+.kommons-tree__row-meta {
   grid-column: 2;
   grid-row: 1 / span 2;
   color: var(--text-muted, rgba(255, 255, 255, 55%));
@@ -178,7 +179,7 @@
 }
 
 // ── Lifecycle badges ────────────────────────────────────────────────
-.kommons-skeleton__badge {
+.kommons-tree__badge {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
@@ -209,18 +210,18 @@
 }
 
 // ── Node detail (step 3) ────────────────────────────────────────────
-.kommons-skeleton__detail {
+.kommons-tree__detail {
   padding: 4px 0;
 }
 
-.kommons-skeleton__detail-title {
+.kommons-tree__detail-title {
   font-size: 24px;
   font-weight: 600;
   margin: 0 0 20px;
   color: var(--text-primary, #fff);
 }
 
-.kommons-skeleton__detail-meta {
+.kommons-tree__detail-meta {
   display: grid;
   grid-template-columns: 100px 1fr;
   gap: 8px 20px;
@@ -230,7 +231,7 @@
   border-radius: var(--radius-sm, 6px);
 }
 
-.kommons-skeleton__detail-row {
+.kommons-tree__detail-row {
   display: contents;
 
   dt {
@@ -256,13 +257,13 @@
   }
 }
 
-.kommons-skeleton__detail-proposals {
+.kommons-tree__detail-proposals {
   margin: 20px 0;
   color: var(--text-muted, rgba(255, 255, 255, 65%));
   font-size: 14px;
 }
 
-.kommons-skeleton__detail-empty {
+.kommons-tree__detail-empty {
   margin: 0;
   color: var(--text-muted, rgba(255, 255, 255, 60%));
 }
@@ -309,7 +310,7 @@
 
 .kommons-node-proposals__chevron {
   flex: 0 0 auto;
-  opacity: 70%;
+  opacity: 0.7;
 }
 
 .kommons-node-proposals__status,
@@ -320,14 +321,14 @@
 }
 
 // ── Connections (cross-branch links) ────────────────────────────────
-.kommons-skeleton__connections {
+.kommons-tree__connections {
   margin: 20px 0;
   border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
   border-radius: var(--radius-sm, 6px);
   background: var(--surface-primary, rgba(255, 255, 255, 2%));
 }
 
-.kommons-skeleton__connections-toggle {
+.kommons-tree__connections-toggle {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -345,31 +346,31 @@
   }
 }
 
-.kommons-skeleton__connections-chevron {
+.kommons-tree__connections-chevron {
   color: var(--accent);
   font-size: 10px;
   width: 12px;
   display: inline-block;
 }
 
-.kommons-skeleton__connections-count {
+.kommons-tree__connections-count {
   color: var(--text-primary, #fff);
   font-weight: 500;
 }
 
-.kommons-skeleton__connections-body {
+.kommons-tree__connections-body {
   padding: 0 14px 14px;
   border-top: 1px solid var(--surface-border, rgba(255, 255, 255, 6%));
 }
 
-.kommons-skeleton__connections-hint {
+.kommons-tree__connections-hint {
   margin: 10px 0 12px;
   color: var(--text-muted, rgba(255, 255, 255, 55%));
   font-size: 12px;
   font-style: italic;
 }
 
-.kommons-skeleton__connections-list {
+.kommons-tree__connections-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -378,7 +379,7 @@
   gap: 8px;
 }
 
-.kommons-skeleton__connection {
+.kommons-tree__connection {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 4px 12px;
@@ -388,7 +389,7 @@
   font-size: 13px;
 }
 
-.kommons-skeleton__connection-kind {
+.kommons-tree__connection-kind {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
@@ -404,31 +405,31 @@
   white-space: nowrap;
 }
 
-.kommons-skeleton__connection-kind--creates {
+.kommons-tree__connection-kind--creates {
   color: var(--decision-agree, #22c55e);
 }
 
-.kommons-skeleton__connection-kind--listed_on {
+.kommons-tree__connection-kind--listed_on {
   color: var(--decision-pending, #f59e0b);
 }
 
-.kommons-skeleton__connection-kind--projects_to {
+.kommons-tree__connection-kind--projects_to {
   color: var(--accent);
 }
 
-.kommons-skeleton__connection-kind--listens_to {
+.kommons-tree__connection-kind--listens_to {
   color: var(--text-muted, rgba(255, 255, 255, 60%));
 }
 
-.kommons-skeleton__connection-kind--settings_for {
+.kommons-tree__connection-kind--settings_for {
   color: var(--text-muted, rgba(255, 255, 255, 60%));
 }
 
-.kommons-skeleton__connection-kind--related {
+.kommons-tree__connection-kind--related {
   color: var(--text-muted, rgba(255, 255, 255, 50%));
 }
 
-.kommons-skeleton__connection-target {
+.kommons-tree__connection-target {
   grid-column: 2;
   grid-row: 1;
   color: var(--accent);
@@ -444,7 +445,7 @@
   }
 }
 
-.kommons-skeleton__connection-desc {
+.kommons-tree__connection-desc {
   grid-column: 1 / span 2;
   grid-row: 2;
   color: var(--text-muted, rgba(255, 255, 255, 65%));
@@ -452,20 +453,20 @@
 }
 
 // ── Loading + error banners ─────────────────────────────────────────
-.kommons-skeleton__loading,
-.kommons-skeleton__error {
+.kommons-tree__loading,
+.kommons-tree__error {
   padding: 20px;
   text-align: center;
   color: var(--text-muted, rgba(255, 255, 255, 65%));
   font-size: 14px;
 }
 
-.kommons-skeleton__error {
+.kommons-tree__error {
   color: var(--decision-block, #ef4444);
 }
 
 // ── Composer (functional form; replaces the stub) ───────────────────
-.kommons-skeleton__composer {
+.kommons-tree__composer {
   margin-top: 20px;
   padding: 20px;
   background: var(--surface-primary, rgba(255, 255, 255, 4%));
@@ -473,21 +474,21 @@
   border-radius: var(--radius-md, 8px);
 }
 
-.kommons-skeleton__composer-heading {
+.kommons-tree__composer-heading {
   margin: 0 0 8px;
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary, #fff);
 }
 
-.kommons-skeleton__composer-hint {
+.kommons-tree__composer-hint {
   margin: 0 0 16px;
   color: var(--text-muted, rgba(255, 255, 255, 60%));
   font-size: 13px;
   line-height: 1.4;
 }
 
-.kommons-skeleton__composer-node {
+.kommons-tree__composer-node {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -515,7 +516,7 @@
   }
 }
 
-.kommons-skeleton__composer-field {
+.kommons-tree__composer-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -546,7 +547,7 @@
   }
 }
 
-.kommons-skeleton__composer-error {
+.kommons-tree__composer-error {
   margin: 0 0 12px;
   padding: 8px 12px;
   color: var(--decision-block, #ef4444);
@@ -555,13 +556,13 @@
   font-size: 13px;
 }
 
-.kommons-skeleton__composer-actions {
+.kommons-tree__composer-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
 }
 
-.button--kommons-skeleton {
+.button--kommons-tree {
   display: inline-block;
   margin-top: 8px;
 }
@@ -594,347 +595,8 @@
   }
 }
 
-// ─── The Skeleton: one world, one camera ────────────────────────────────────
-//
-// Every node and bone is rendered once into world coordinates. Navigation
-// retargets a single transform on .skel-cam and re-classes nodes for emphasis
-// — nothing is rebuilt, nothing is culled. That is what lets the whole
-// platform stay visible around you while you move through it.
-
-.skel-stage {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  height: calc(100vh - 220px);
-  min-height: 420px;
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-  // The body resolves into existence rather than snapping in.
-  //
-  // Deliberately a keyframe and not an opacity toggle driven from JS. The
-  // earlier version parked the stage at opacity 0 and waited for React to
-  // add a class, which meant anything at all going wrong between paint and
-  // that class — a stale cached chunk, an early return — left the map
-  // invisible rather than merely unanimated. An animation ends where it ends
-  // even if it never runs, so the failure mode is a missing fade, not a
-  // missing map. Entrances must fail open.
-  animation: skel-in var(--dur-slow) var(--ease-out) both;
-
-  &--grabbing {
-    cursor: grabbing;
-
-    .skel-cam {
-      transition: none;
-    }
-  }
-}
-
-// A zero-size coordinate frame, not a box. Bones and nodes live inside it and
-// move as one rigid unit.
-.skel-cam {
-  position: absolute;
-  inset-inline-start: 0;
-  top: 0;
-  width: 0;
-  height: 0;
-  transform-origin: 0 0;
-  transition: transform 720ms var(--ease-out);
-  will-change: transform;
-}
-
-.skel-bones {
-  position: absolute;
-  overflow: visible;
-  pointer-events: none;
-}
-
-.skel-bone,
-.skel-joint {
-  fill: color-mix(in srgb, var(--text-muted) 30%, transparent);
-  transition: fill var(--dur-slow) var(--ease-out);
-}
-
-// Bones carry the same four emphasis tiers as nodes. The hot chain is the
-// path you walked, rendered as anatomy rather than as text.
-.skel-edge {
-  &--ghost .skel-bone { fill: color-mix(in srgb, var(--text-muted) 11%, transparent); }
-  &--ghost .skel-joint { fill: color-mix(in srgb, var(--text-muted) 12%, transparent); }
-  &--near .skel-bone { fill: color-mix(in srgb, var(--text-muted) 26%, transparent); }
-  &--near .skel-joint { fill: color-mix(in srgb, var(--text-muted) 28%, transparent); }
-  &--live .skel-bone { fill: color-mix(in srgb, var(--text-muted) 52%, transparent); }
-  &--live .skel-joint { fill: color-mix(in srgb, var(--text-muted) 56%, transparent); }
-  &--hot .skel-bone { fill: color-mix(in srgb, var(--text-secondary) 64%, transparent); }
-  &--hot .skel-joint { fill: var(--accent); }
-}
-
-// Wires are the registry's cross-links — what a node does to another node,
-// as opposed to where it sits. Stroked and dashed rather than filled, so
-// they never read as anatomy, and hidden entirely unless they touch the
-// focus or one of its children.
-.skel-wire {
-  pointer-events: none;
-
-  &-line {
-    fill: none;
-    stroke: var(--accent);
-    stroke-width: 1.5;
-    stroke-dasharray: 5 6;
-    stroke-linecap: round;
-    opacity: 0%;
-    transition: opacity var(--dur-slow) var(--ease-out);
-  }
-
-  &-label {
-    fill: var(--text-secondary);
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.04em;
-    text-anchor: middle;
-    paint-order: stroke;
-    stroke: var(--surface-primary);
-    stroke-width: 3;
-    opacity: 0%;
-    transition: opacity var(--dur-slow) var(--ease-out);
-  }
-
-  &--live &-line { opacity: 58%; }
-  &--live &-label { opacity: 100%; }
-  &--near &-line { opacity: 20%; }
-}
-
-.skel-halo {
-  fill: color-mix(in srgb, var(--accent) 9%, transparent);
-}
-
-.skel-world {
-  position: absolute;
-  inset-inline-start: 0;
-  top: 0;
-}
-
-.skel-node {
-  position: absolute;
-  inset-inline-start: 0;
-  top: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 0;
-  background: none;
-  border: 0;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition:
-    transform 720ms var(--ease-out),
-    opacity var(--dur-slow) var(--ease-out),
-    filter var(--dur-slow) var(--ease-out);
-
-  &:hover { z-index: 4; }
-
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 4px;
-    border-radius: var(--radius-medium);
-  }
-
-  // Emphasis is graph distance from the focus, so a near cousin reads
-  // differently from a distant one. Nothing is removed — the periphery dims
-  // but stays explorable on hover.
-  // Stacking follows emphasis, so where two hit boxes are close the one you
-  // are more likely to be reaching for is the one on top.
-  &--focus { z-index: 3; }
-  &--near { opacity: 100%; z-index: 3; }
-  &--path { opacity: 90%; z-index: 2; }
-
-  &--mid {
-    opacity: 55%;
-    filter: saturate(50%);
-
-    &:hover { opacity: 100%; filter: none; }
-
-    .skel-label { opacity: 70%; }
-  }
-
-  &--far {
-    opacity: 22%;
-    filter: saturate(25%);
-
-    &:hover { opacity: 85%; filter: none; }
-
-    // Labels go before discs do — density control that keeps the silhouette.
-    .skel-label { opacity: 0%; }
-  }
-}
-
-.skel-disc {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 50% 38%,
-    color-mix(in srgb, var(--accent) 30%, var(--surface-elevated)),
-    color-mix(in srgb, var(--accent) 12%, var(--surface-elevated))
-  );
-  border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent);
-  box-shadow:
-    0 0 18px -4px color-mix(in srgb, var(--accent) 26%, transparent),
-    inset 0 1px 0 color-mix(in srgb, var(--text-primary) 10%, transparent);
-  transition:
-    transform var(--dur-medium) var(--ease-spring),
-    border-color var(--dur-fast),
-    box-shadow var(--dur-medium) var(--ease-out),
-    background var(--dur-fast);
-
-  &--core {
-    background: radial-gradient(
-      circle at 50% 38%,
-      color-mix(in srgb, var(--accent) 46%, var(--surface-elevated)),
-      color-mix(in srgb, var(--accent) 30%, var(--surface-elevated))
-    );
-    border-color: color-mix(in srgb, var(--accent) 62%, transparent);
-    box-shadow: 0 0 30px -4px color-mix(in srgb, var(--accent) 42%, transparent);
-  }
-}
-
-// Hover scales the disc, not the node — so it composes with the emphasis
-// scale instead of fighting it.
-.skel-node:hover .skel-disc {
-  transform: scale(1.16);
-  border-color: var(--accent);
-  box-shadow: 0 8px 34px color-mix(in srgb, var(--accent) 34%, transparent);
-}
-
-.skel-node--focus .skel-disc {
-  border-color: var(--accent);
-  background: radial-gradient(
-    circle at 50% 38%,
-    color-mix(in srgb, var(--accent) 62%, var(--surface-elevated)),
-    color-mix(in srgb, var(--accent) 40%, var(--surface-elevated))
-  );
-  box-shadow: 0 8px 34px color-mix(in srgb, var(--accent) 34%, transparent);
-}
-
-.skel-glow {
-  position: absolute;
-  inset: -45%;
-  border-radius: 50%;
-  pointer-events: none;
-  opacity: 0%;
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--accent) 30%, transparent),
-    transparent 64%
-  );
-  transition: opacity var(--dur-medium) var(--ease-out);
-}
-
-.skel-node:hover .skel-glow { opacity: 100%; }
-
-.skel-glyph {
-  font-family: var(--font-display);
-  font-size: 34px;
-  line-height: 1;
-  color: var(--text-primary);
-  pointer-events: none;
-}
-
-// Near-white, not purple — the disc is the coloured field and the glyph has
-// to read against it. The drop shadow is what stops it going flat at the
-// scales the camera settles on.
-.skel-ico {
-  width: 58%;
-  height: 58%;
-  color: var(--text-primary);
-  pointer-events: none;
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent));
-}
-
-.skel-node--d1 .skel-ico {
-  width: 50%;
-  height: 50%;
-}
-
-.skel-label {
-  font-family: var(--font-display);
-  font-size: 13px;
-  text-align: center;
-  max-width: 118px;
-  line-height: 1.25;
-  transition: opacity var(--dur-slow) var(--ease-out), color var(--dur-fast);
-}
-
-.skel-node--focus .skel-label,
-.skel-node:hover .skel-label { color: var(--text-primary); }
-.skel-node--d1 .skel-label { font-size: 15px; }
-
-// A count is a subtree sum, so busy regions read as bright pips from across
-// the map even when the node itself is dimmed.
-.skel-count {
-  position: absolute;
-  top: -3px;
-  inset-inline-end: -8px;
-  padding: 1px 6px;
-  border-radius: var(--radius-round);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-variant-numeric: tabular-nums;
-  background: color-mix(in srgb, var(--accent) 20%, var(--surface-elevated));
-  color: var(--text-primary);
-
-  &--hot {
-    background: var(--accent);
-  }
-}
-
-.skel-hint {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 14px;
-  margin: 0 auto;
-  width: max-content;
-  padding: 6px 14px;
-  border-radius: var(--radius-round);
-  background: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
-  color: var(--text-muted);
-  font-size: 12px;
-  pointer-events: none;
-  transition:
-    opacity var(--dur-slow) var(--ease-out),
-    transform var(--dur-slow) var(--ease-out);
-
-  &--gone {
-    opacity: 0%;
-    transform: translateY(-14px);
-  }
-}
-
-@keyframes skel-in {
-  from { opacity: 0%; }
-  to { opacity: 100%; }
-}
-
-// The camera still moves — it just arrives instantly. The model is intact,
-// only the travel is removed. Killing the entrance animation outright leaves
-// the stage at its natural opacity, which is visible.
-@media (prefers-reduced-motion: reduce) {
-  .skel-cam,
-  .skel-node,
-  .skel-disc {
-    transition-duration: 1ms !important;
-  }
-
-  .skel-stage {
-    animation: none;
-  }
-}
-
-// Chrome row: the "⟵ Hub" exit sits opposite the view toggle, above the map.
-.kommons-skeleton__chrome {
+// Chrome row: the "⟵ Hub" exit sits above the map.
+.kommons-tree__chrome {
   display: flex;
   align-items: center;
   justify-content: space-between;

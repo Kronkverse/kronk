@@ -4,9 +4,9 @@ import { useHistory } from 'react-router-dom';
 
 import { Icon } from 'mastodon/components/icon';
 
-import { Composer } from '../../kommons_skeleton/components/composer';
-import { ROOT_ID, buildTree } from '../../kommons_skeleton/data/layout';
-import type { KommonsNode } from '../../kommons_skeleton/data/nodes';
+import { Composer } from '../../kommons_tree/components/composer';
+import { ROOT_ID, buildTree } from '../../kommons_tree/data/layout';
+import type { KommonsNode } from '../../kommons_tree/data/nodes';
 import { latticeIcon } from '../data/icons';
 import {
   COL_PITCH,

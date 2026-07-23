@@ -15,7 +15,7 @@ import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import type { IconProp } from 'mastodon/components/icon';
 import { AccentCircle, kornerIcon } from 'mastodon/hooks/useKornerIcon';
 
-import type { MapNode } from '../../kommons_skeleton/data/layout';
+import type { MapNode } from '../../kommons_tree/data/layout';
 
 // Core-space limbs, keyed by bucket. Matches each manifest's `icon:` where an
 // asset ships (Hub's `apps` isn't vendored yet — it falls back to the accent
