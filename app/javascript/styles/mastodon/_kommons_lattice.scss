@@ -98,6 +98,45 @@
   }
 }
 
+// Action cluster (bottom-left) — the "+ Propose a new Korner" entry.
+// Sits opposite the zoom cluster (bottom-right) so it doesn't crowd
+// the zoom controls. The Directory is where every space in Kronk is
+// visible, so it's the natural place to notice a space that's missing.
+.lattice-actions {
+  position: sticky;
+  bottom: 12px;
+  left: 0;
+  z-index: 6;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  margin: 12px;
+
+  &__new-korner {
+    padding: 0.4rem 0.85rem 0.4rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
+    background: color-mix(in srgb, var(--kronk-purple-deep) 60%, transparent);
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in srgb, var(--kronk-purple-deep) 85%, transparent);
+      border-color: var(--kronk-purple-bright);
+      outline: none;
+    }
+  }
+}
+
 // Zoom controls, bottom-right (§5).
 .lattice-zoom {
   position: sticky;

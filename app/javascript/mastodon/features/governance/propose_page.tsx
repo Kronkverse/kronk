@@ -100,6 +100,12 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = () => {
     : space
       ? (korner?.name ?? space)
       : '';
+  // Tailored copy path — a proposal anchored at `kommons.new_korner`
+  // is a request to add a whole new space to Kronk, not a change to
+  // an existing one. Heading + intro + body placeholder swap so the
+  // form reads as "propose a new space" instead of "propose a change
+  // to Propose a new Korner".
+  const isNewKorner = nodeId === 'kommons.new_korner';
 
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
@@ -218,7 +224,12 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = () => {
       <form className='propose-page' onSubmit={handleSubmit}>
         <header className='propose-page__hero'>
           <h1 className='propose-page__title'>
-            {scoped ? (
+            {isNewKorner ? (
+              <FormattedMessage
+                id='propose.heading_new_korner'
+                defaultMessage='Propose a new Korner'
+              />
+            ) : scoped ? (
               <FormattedMessage
                 id='propose.heading_scoped'
                 defaultMessage='Propose a change to {space}'
@@ -232,10 +243,17 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = () => {
             )}
           </h1>
           <p className='propose-page__intro'>
-            <FormattedMessage
-              id='propose.intro'
-              defaultMessage='A proposal is how Kronk changes. Say what should be different and why — others can back it, question it, and help build it.'
-            />
+            {isNewKorner ? (
+              <FormattedMessage
+                id='propose.intro_new_korner'
+                defaultMessage='A Korner is a space in Kronk — Kalendar, Kommons, Booth. Say what this new space is for, who it serves, and what one action it makes possible. Others can back the idea; a shipped proposal ends with a new manifest under config/korners/.'
+              />
+            ) : (
+              <FormattedMessage
+                id='propose.intro'
+                defaultMessage='A proposal is how Kronk changes. Say what should be different and why — others can back it, question it, and help build it.'
+              />
+            )}
           </p>
         </header>
 
