@@ -2,31 +2,33 @@
 // Ships in 2.0.0 as the third tab of the HubSwitcher (Feed / Profile / Hub).
 
 .hub-page {
-  padding: 2rem 1.5rem 4rem;
-  max-width: 60rem;
+  padding: 1.75rem 1.5rem 4rem;
+  max-width: 64rem;
   margin: 0 auto;
   width: 100%;
 
-  &__hero {
-    margin-bottom: 2.5rem;
+  // Slim intro — the old "Hub" hero title was redundant with the
+  // Frame's top-strip wordmark. Keep one line of onboarding copy;
+  // that's enough context on a page whose grid speaks for itself.
+  &__intro {
+    display: block;
+    max-width: 40rem;
+    margin: 0 auto 1.75rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
     text-align: center;
   }
 
-  &__hero-title {
-    margin: 0 0 0.5rem;
-    color: var(--kronk-purple-accent);
+  &__section-label {
+    margin: 2rem 0 1rem;
+    color: var(--text-muted);
     font-family: var(--font-display);
-    font-size: 2.75rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-  }
-
-  &__hero-intro {
-    margin: 0 auto;
-    color: var(--text-secondary);
-    font-size: 1.05rem;
-    line-height: 1.5;
-    max-width: 32rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: center;
   }
 
   &__empty {
@@ -37,8 +39,14 @@
 
   &__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+    gap: 1rem;
+  }
+
+  // Soon-grid: same shape, but each card carries the dim/soon
+  // treatment declared under `&__card--soon` below.
+  &__grid--soon {
+    opacity: 0.94;
   }
 
   &__card {
@@ -115,6 +123,60 @@
         background: var(--kronk-purple-bright);
       }
     }
+  }
+
+  // Coming-soon card: dimmed, no tune-in / settings footer. The card
+  // still opens the korner (lands on the KornerStub) so the user can
+  // read what's coming; interaction affordances retire until the
+  // korner ships enforced.
+  &__card--soon {
+    opacity: 0.72;
+
+    &::after {
+      opacity: 0.25;
+    }
+
+    &:hover,
+    &:focus-within {
+      opacity: 0.85;
+
+      // Muted hover — coming-soon cards don't get the full purple
+      // pop; they're not tuned-in surfaces.
+      transform: translateY(-2px);
+      border-color: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 55%,
+        var(--border-default)
+      );
+      box-shadow: 0 6px 18px -8px
+        color-mix(in oklab, var(--kronk-purple-accent) 25%, transparent);
+
+      .hub-page__card-icon {
+        // no glyph brighten — it's not live yet
+        transform: none;
+        background: var(--kronk-purple-accent);
+      }
+    }
+  }
+
+  // Small pill in the top-right of a coming-soon card. Sits above
+  // the card's ::before atmosphere layer, below the hero glyph.
+  &__card-soon-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 2;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-round);
+    background: color-mix(in oklab, var(--kronk-purple-deep) 65%, transparent);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    backdrop-filter: blur(6px);
   }
 
   &__card-open {
