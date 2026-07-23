@@ -56,6 +56,9 @@
   // of self-anchoring with their own position: fixed. Each component
   // retires its own position: fixed in _kronk_chrome.scss to become a
   // flow child here.
+  // Interior-L rounding: mask cuts a quarter-circle out of TopBand's
+  // bottom-right area, meeting RightBand's mask at the corner to form
+  // one continuous curved interior. See RightBand for the pair.
   position: fixed;
   inset: 0 0 auto;
   height: 5.5rem;
@@ -70,6 +73,16 @@
   );
   filter: drop-shadow(
     0 2px 16px color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent)
+  );
+  mask-image: radial-gradient(
+    circle 3rem at calc(100% - 7.75rem) 100%,
+    transparent 2.75rem,
+    black 3.25rem
+  );
+  -webkit-mask-image: radial-gradient(
+    circle 3rem at calc(100% - 7.75rem) 100%,
+    transparent 2.75rem,
+    black 3.25rem
   );
 
   // Layout for children (wordmark left, switcher centre). The strip
@@ -143,6 +156,9 @@
   // Fade strip still viewport-anchored; child KornerSidebar sits
   // inside as a flow element instead of self-anchoring. Sidebar's
   // own `position: fixed` retires in _korner_sidebar.scss.
+  // Interior-L rounding: mask cuts the mirror quarter-circle out of
+  // RightBand's top-left area. TopBand's mask + RightBand's mask
+  // together produce one continuous curved interior corner.
   position: fixed;
   inset: 0 0 0 auto;
   width: 7.75rem;
@@ -157,6 +173,16 @@
   );
   filter: drop-shadow(
     -2px 0 16px color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent)
+  );
+  mask-image: radial-gradient(
+    circle 3rem at 0 5.5rem,
+    transparent 2.75rem,
+    black 3.25rem
+  );
+  -webkit-mask-image: radial-gradient(
+    circle 3rem at 0 5.5rem,
+    transparent 2.75rem,
+    black 3.25rem
   );
 
   // Sidebar sits at the right edge with the classic 0.75rem inset.
@@ -202,14 +228,12 @@
 }
 
 // ── SpaceBadge — the "you are in X, tap to go back" pill ───────────
-// A reserved-slot component per docs/kronk_frame.md § SpaceNav. On
-// Stage-based korners it floats top-left over content; on mobile it
-// stays top-left in the horizontal SpaceNav row.
+// A reserved-slot component per docs/kronk_frame.md § SpaceNav.
+// Rendered as a flow child of .kronk-frame__space-nav — the SpaceNav
+// grid cell's flex layout positions it (top of the left rail on
+// desktop; left of the horizontal row on mobile).
 .space-badge {
-  position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  z-index: 5;
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -262,25 +286,24 @@
 
 // ── SpaceViewPicker — the collapsible per-view dropdown ────────────
 // Only the current view pill is visible by default. Tap reveals the
-// other views underneath. Selecting one closes the dropdown and
-// swaps the trigger label. Prototype: v11.
-// position: fixed rather than living inside the SpaceNav grid cell,
-// because visually it belongs at the top-right of the content area
-// (viewport minus right rail) — not inside the narrow left rail cell.
-// SpaceNav is a stacking context at z-26 so this picker inherits that
-// tier and paints above Kuestions' .kronk-stage (z-25).
+// other views underneath. Selecting one closes the dropdown and swaps
+// the trigger label. Prototype: v11.
+// Rendered as a flow child of .kronk-frame__space-nav — sits directly
+// below the space badge on desktop (SpaceNav is flex column), opposite
+// end of the row from the badge on mobile (SpaceNav is flex row,
+// justify-content: space-between).
 .space-view-picker {
-  position: fixed;
-  top: 0.75rem;
-  right: calc(5.25rem + 0.75rem);
+  align-self: flex-start;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  align-items: flex-end;
+  align-items: flex-start;
 
   @container frame (width <= 889px) {
-    // No right rail on mobile — picker hugs the viewport's right edge.
-    right: 0.75rem;
+    // On mobile the picker sits at the right end of the SpaceNav row;
+    // its dropdown drops down aligned to the right edge of the trigger.
+    align-self: flex-end;
+    align-items: flex-end;
   }
 
   &__trigger {
@@ -317,7 +340,7 @@
     display: none;
     flex-direction: column;
     gap: 0.35rem;
-    align-items: flex-end;
+    align-items: inherit;
   }
 
   &[data-open='true'] &__options {
@@ -362,36 +385,6 @@
   }
 }
 
-// ── Rounded interior corner where TopBand meets RightBand ──────────
-// The two fade bands (top + right) each paint a straight linear
-// gradient. Where they meet at the top-right, the interior corner of
-// the L is a sharp right angle. This overlay softens that meeting
-// point into a curved quarter-circle: dark fills the outer wedge of
-// the corner (where both bands are already dark) and fades along a
-// radial arc into the content area. Retired on ≤889px alongside the
-// right-hand fade band.
-.kronk-frame::after {
-  content: '';
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 8rem;
-  height: 6rem;
-  z-index: 24;
-  pointer-events: none;
-  background: radial-gradient(
-    circle 6rem at bottom left,
-    rgb(0 0 0 / 0%) 4.5rem,
-    rgb(0 0 0 / 45%) 5rem,
-    rgb(0 0 0 / 85%) 5.5rem,
-    #000 6rem
-  );
-  filter: drop-shadow(
-    -1px 2px 12px
-      color-mix(in oklab, var(--kronk-purple-accent) 12%, transparent)
-  );
-
-  @media (width <= 889px) {
-    display: none;
-  }
-}
+// Rounded interior L corner — now painted inline via mask-image on
+// TopBand and RightBand (see .kronk-frame__top-band and
+// .kronk-frame__right-band above). No third element required.
