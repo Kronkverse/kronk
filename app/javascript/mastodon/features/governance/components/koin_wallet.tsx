@@ -30,20 +30,6 @@ const messages = defineMessages({
   },
 });
 
-const CoinIcon = () => (
-  <svg
-    className='kommons-wallet__coin'
-    viewBox='0 0 24 24'
-    fill='none'
-    stroke='currentColor'
-    strokeWidth={1.75}
-    aria-hidden='true'
-  >
-    <circle cx={12} cy={12} r={8.4} />
-    <circle cx={12} cy={12} r={4} />
-  </svg>
-);
-
 export const KoinWallet: React.FC<{ refreshKey?: number }> = ({
   refreshKey = 0,
 }) => {
@@ -72,21 +58,25 @@ export const KoinWallet: React.FC<{ refreshKey?: number }> = ({
 
   return (
     <section className='kommons-wallet'>
-      <div className='kommons-wallet__top'>
-        <CoinIcon />
-        <span className='kommons-wallet__label'>
-          {intl.formatMessage(messages.label)}
-        </span>
-        <span
-          className='kommons-wallet__info'
-          title={intl.formatMessage(messages.info)}
-          aria-label={intl.formatMessage(messages.info)}
-        >
-          i
-        </span>
+      <div className='kommons-wallet__coin-badge' aria-hidden='true'>
+        <span className='kommons-wallet__kip'>₭</span>
       </div>
 
-      <div className='kommons-wallet__bal'>
+      <div className='kommons-wallet__content'>
+        <div className='kommons-wallet__top'>
+          <span className='kommons-wallet__label'>
+            {intl.formatMessage(messages.label)}
+          </span>
+          <span
+            className='kommons-wallet__info'
+            title={intl.formatMessage(messages.info)}
+            aria-label={intl.formatMessage(messages.info)}
+          >
+            i
+          </span>
+        </div>
+
+        <div className='kommons-wallet__bal'>
         <span className='kommons-wallet__big'>{available}</span>
         <span className='kommons-wallet__of'>/ {total}</span>
         <span className='kommons-wallet__unit'>
@@ -131,12 +121,13 @@ export const KoinWallet: React.FC<{ refreshKey?: number }> = ({
         </span>
       </div>
 
-      <p className='kommons-wallet__note'>
-        <FormattedMessage
-          id='governance.wallet.note'
-          defaultMessage='Koin returns to you when a proposal resolves. Nothing is spent for good.'
-        />
-      </p>
+        <p className='kommons-wallet__note'>
+          <FormattedMessage
+            id='governance.wallet.note'
+            defaultMessage='Koin returns to you when a proposal resolves. Nothing is spent for good.'
+          />
+        </p>
+      </div>
     </section>
   );
 };
