@@ -14,6 +14,7 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import { KoinWallet } from './components/koin_wallet';
+import type { Wallet } from './components/koin_wallet';
 import { ProposalCard } from './components/proposal_card';
 import { ProposalDetail } from './components/proposal_detail';
 import type { Proposal } from './types';
@@ -65,8 +66,10 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const kornerIcon = useKornerIcon('kommons');
   const intl = useIntl();
   const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [wallet, setWallet] = useState<Wallet | null>(null);
   const [filter, setFilter] = useState<FilterType>('open');
   const [sort, setSort] = useState<SortType>('most_backed');
+  const [lens, setLens] = useState<'all' | 'mine'>('all');
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [balanceRefresh, setBalanceRefresh] = useState(0);
@@ -88,6 +91,20 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   useEffect(() => {
     void fetchProposals();
   }, [fetchProposals]);
+
+  useEffect(() => {
+    let active = true;
+    api()
+      .get<Wallet>('/api/v1/token_balance')
+      .then((res) => {
+        if (active) setWallet(res.data);
+        return undefined;
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [balanceRefresh]);
 
   const handleVoteUpdate = useCallback((updated: Proposal) => {
     setProposals((prev) =>
@@ -120,8 +137,17 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setSelectedId(id);
   }, []);
 
+  const handleToggleBacked = useCallback(() => {
+    setLens((l) => (l === 'mine' ? 'all' : 'mine'));
+    setSelectedId(null);
+  }, []);
+
   const selected = proposals.find((p) => p.id === selectedId) ?? null;
-  const maxBacking = Math.max(0, ...proposals.map((p) => p.backing.total));
+  const shown =
+    lens === 'mine'
+      ? proposals.filter((p) => p.backing.my_stake > 0)
+      : proposals;
+  const maxBacking = Math.max(0, ...shown.map((p) => p.backing.total));
 
   return (
     <Column>
@@ -145,7 +171,27 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           />
         ) : (
           <>
-            <KoinWallet refreshKey={balanceRefresh} />
+            {wallet && (
+              <div className='kommons-wallet-row'>
+                <KoinWallet wallet={wallet} />
+                <button
+                  type='button'
+                  className={`kommons-backed${lens === 'mine' ? ' active' : ''}`}
+                  onClick={handleToggleBacked}
+                  aria-pressed={lens === 'mine'}
+                >
+                  <span className='kommons-backed__num'>
+                    {wallet.staked_seeds}
+                  </span>
+                  <span className='kommons-backed__label'>
+                    <FormattedMessage
+                      id='governance.backed'
+                      defaultMessage='Backed'
+                    />
+                  </span>
+                </button>
+              </div>
+            )}
 
             <div className='governance-page__head'>
               <div className='governance-page__head-text'>
@@ -155,7 +201,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                 {!loading && (
                   <span className='governance-page__head-count'>
                     {intl.formatMessage(messages.count, {
-                      count: proposals.length,
+                      count: shown.length,
                     })}
                   </span>
                 )}
@@ -214,9 +260,14 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               </div>
             )}
 
-            {!loading && proposals.length === 0 && (
+            {!loading && shown.length === 0 && (
               <div className='governance-page__empty'>
-                {filter === 'open' ? (
+                {lens === 'mine' ? (
+                  <FormattedMessage
+                    id='governance.empty_backed'
+                    defaultMessage="You haven't backed anything here yet."
+                  />
+                ) : filter === 'open' ? (
                   <FormattedMessage
                     id='governance.empty'
                     defaultMessage='No open proposals yet.'
@@ -231,7 +282,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             )}
 
             <div className='governance-page__list'>
-              {proposals.map((proposal) => (
+              {shown.map((proposal) => (
                 <ProposalCard
                   key={proposal.id}
                   proposal={proposal}

@@ -9,24 +9,33 @@
 // counter: available-of-total, a staked-vs-available bar, and a plain reminder
 // that staking is never spending. Adapted from Tal's kronk_kommons_home mockup.
 
+// Wallet (2/3) + Backed card (1/3) share the top row.
+.kommons-wallet-row {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
 .kommons-wallet {
   @include kronk-cover-glow;
 
   position: relative;
+  flex: 2;
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 14px;
   overflow: hidden;
-  padding: 20px;
-  margin-bottom: 20px;
+  padding: 16px;
   border-radius: var(--radius-large, 16px); // override the mixin's bottom-only radius
   border: 1px solid color-mix(in srgb, var(--kronk-purple-bright, #7241ff) 30%, transparent);
 
-  // A large minted ₭ coin — the money signifier, in front of the balance.
+  // A minted ₭ coin — the money signifier, in front of the balance.
   &__coin-badge {
     flex: none;
-    width: 76px;
-    height: 76px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -51,7 +60,7 @@
 
   &__kip {
     font-family: var(--font-display);
-    font-size: 42px;
+    font-size: 30px;
     font-weight: 600;
     line-height: 1;
     color: #fff;
@@ -72,7 +81,7 @@
 
   &__big {
     font-family: var(--font-display, Georgia, serif);
-    font-size: 48px;
+    font-size: 36px;
     line-height: 0.9;
     color: var(--text-primary, #ece9f5);
     font-variant-numeric: tabular-nums;
@@ -101,6 +110,55 @@
       var(--kronk-purple-bright, #7241ff)
     );
     transition: width 0.4s ease;
+  }
+}
+
+// The matched 1/3 card — count of proposals you're backing; toggles the list
+// to just those.
+.kommons-backed {
+  @include kronk-cover-glow;
+
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: var(--radius-large, 16px);
+  border: 1px solid color-mix(in srgb, var(--kronk-purple-bright, #7241ff) 30%, transparent);
+  transition:
+    border-color 0.15s,
+    transform 0.1s,
+    box-shadow 0.2s;
+
+  &:hover {
+    border-color: var(--kronk-purple-bright, #7241ff);
+    transform: translateY(-2px);
+  }
+
+  &.active {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+
+  &__num {
+    font-family: var(--font-display, Georgia, serif);
+    font-size: 36px;
+    line-height: 0.9;
+    color: var(--text-primary, #ece9f5);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: var(--text-secondary, #9c9cc9);
   }
 }
 

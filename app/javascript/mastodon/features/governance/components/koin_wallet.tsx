@@ -1,15 +1,11 @@
-import { useEffect, useState } from 'react';
-
 import { defineMessages, useIntl } from 'react-intl';
 
-import api from 'mastodon/api';
-
 // The Koin wallet at the top of the Kommons surface — the money signifier: a
-// big minted ₭ coin, the available-of-total balance, and a bar showing how much
-// of your Koin is free to stake. Read-only; refetched on mount and whenever
-// `refreshKey` changes (bumped after a backing).
+// minted ₭ coin, the available-of-total balance, and a bar showing how much of
+// your Koin is free to stake. Presentational; the page owns the fetch and
+// shares the wallet data with the sibling "Backed" card.
 
-interface Wallet {
+export interface Wallet {
   available: number;
   staked: number;
   staked_seeds: number;
@@ -23,28 +19,8 @@ const messages = defineMessages({
   },
 });
 
-export const KoinWallet: React.FC<{ refreshKey?: number }> = ({
-  refreshKey = 0,
-}) => {
+export const KoinWallet: React.FC<{ wallet: Wallet }> = ({ wallet }) => {
   const intl = useIntl();
-  const [wallet, setWallet] = useState<Wallet | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    api()
-      .get<Wallet>('/api/v1/token_balance')
-      .then((res) => {
-        if (active) setWallet(res.data);
-        return undefined;
-      })
-      .catch(() => undefined);
-    return () => {
-      active = false;
-    };
-  }, [refreshKey]);
-
-  if (wallet === null) return null;
-
   const { available, total } = wallet;
   const availPct = total > 0 ? (available / total) * 100 : 0;
 
