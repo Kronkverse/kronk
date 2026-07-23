@@ -38,7 +38,7 @@ post lives. None of those are Skeleton destinations, so they carry no node.
 ## Status
 
 Home feed is a stable Mastodon-inherited surface, dressed in Kronk
-chrome. Nudges activity feed lands via PR #331 (Nudges pillar spec).
+chrome. The Nudges activity feed shipped (Nudges pillar spec).
 
 *This is a stub. Contributions welcome — see the pattern of the
 korner-space docs in this folder for the target shape.*

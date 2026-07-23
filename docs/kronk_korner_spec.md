@@ -29,14 +29,19 @@ A Korner is a thematically-scoped space that mounts into Kronk's Cosmos and decl
 ```yaml
 slug:            market                # route segment + namespace root; lowercase, unique
 name:            Market                # display name (follows §2 naming grammar)
-planet:          jupiter               # domain assignment; determines inherited palette
-icon:            market.svg            # 4096×2048 space logo, planet-coloured
+icon:            storefront            # a Material Symbol NAME (not a file); shared Kronk-purple accent
 render_target:   hosted                # native | hosted | hybrid   (see §9 — OPEN)
 version:         0.2.0                 # semver; app reads this for compatibility
 
-permissions:                           # what the space asks to do
-  - read:listings
-  - write:listings
+security:                              # the nested access block every manifest carries (see §7)
+  permissions:                         # what the space asks to do
+    - read:listings
+    - write:listings
+  visibility_scopes:                   # any NEW scopes this space introduces
+    - listing_buyers
+  maintainers:                         # space roles mapped onto the shared vocabulary (moderator, …)
+    - moderator
+  federates:     false                 # PARKED — local-only for now (see §8.8)
 
 resources:                             # the addressable things this space owns (see §4, §5)
   - name:         listings             # → /hub/market/listings, market_listings, spaces/market/listings/
@@ -46,11 +51,6 @@ storage:
   db_namespace:  market_               # table/model prefix  → market_listings
   media_prefix:  spaces/market/        # DO Spaces path root → spaces/market/listings/<id>/…
   redis_prefix:  market:               # Redis key root      → market:listing:<id>:…
-
-visibility_scopes:                     # any NEW scopes this space introduces (see §7)
-  - listing_buyers
-
-steward_role:    moderator             # maps space roles onto the shared permission vocabulary
 
 emits:                                 # internal events this space publishes (see §6)
   - market.listing.created
@@ -64,15 +64,15 @@ feed_projection:                       # how this space appears in the feed (see
   links_to:       /hub/market/listings/<id>   # canonical permalink (§4); <id> is the domain id, not the Status id
   default_visibility: public           # default scope; poster may narrow (see §8.5)
 
-subscription:                          # MUST-HAVE for every Korner (see §8.6)
-  default:        off                  # off = opt-in (recommended) | on = opt-out
+subscription:                          # MUST-HAVE for every Korner (see §8.6); the
+  default:        off                  # user-facing verb is "tune in" — the manifest field stays `subscription`
+                                       # off = opt-in (recommended) | on = opt-out
 
 launch:                                # one-time announcement when the space opens (see §8.7)
   blurb:          "Market is open — buy, sell, and trade within Kronk."
-  cta:            "Tap in"             # inline subscribe action shown on the launch card
+  cta:            "Tap in"             # inline tune-in action shown on the launch card
 
 feature_flag:    market_enabled        # merge-dark switch (see §10)
-federates:       false                 # PARKED — local-only for now (see §8.8)
 ```
 
 ### 1.2 The manifest must be server-served
@@ -85,9 +85,9 @@ The manifest is exposed as a queryable endpoint so the Android app (and future i
 
 Kronk has a distinctive lexicon; new spaces extend it rather than diverge from it.
 
-- **Naming grammar.** The K-alliteration (Kommons, Kalendar) and the celestial metaphor (planets/moons) are the house style. Whether these are _rules_ or _strong defaults_ is open (§13).
-- **Shared verb set.** Common actions read identically everywhere: join/leave, post/publish, back/block, subscribe/unsubscribe, "I'm a fan." A space does not invent its own verb for a shared concept.
-- **Reserved terms.** Words with platform-wide meaning: **steward** (= Mastodon moderator), **membrane**, **capability**, **fan**, **moon**, **planet**, **subscribe**. A space must not repurpose these.
+- **Naming grammar.** The K-alliteration (Kommons, Kalendar) is the house style. (The celestial metaphor — planets/moons — was retired 2026-07-10; see §3.) Whether the K-grammar is a _rule_ or a _strong default_ is open (§13).
+- **Shared verb set.** Common actions read identically everywhere: join/leave, post/publish, back/block, tune in/tune out. A space does not invent its own verb for a shared concept.
+- **Reserved terms.** Words with platform-wide meaning: **steward** (= Mastodon moderator), **membrane**, **capability**, **tune-in**. A space must not repurpose these. (**fan**, **moon**, and **planet** are retired, not reserved.)
 - **i18n as the enforcement point.** All user-facing strings pass through Mastodon's react-intl locale pipeline — never hardcoded. Translation hygiene _and_ the chokepoint where shared vocabulary stays consistent.
 
 ---
@@ -318,13 +318,13 @@ A space-originated feed item remains a real Mastodon `Status`, flowing through t
 
 One anatomy, filled per space:
 
-- Space icon + **planet colour** (origin obvious at a glance)
+- Space **icon + name** (origin obvious at a glance)
 - "from {Space}" attribution
 - Type badge (Question, Listing, Comment, …)
 - Title / summary drawn from manifest-declared fields
 - Tap-through **deep link** into the object in its space
 
-Consistency comes from shared anatomy; recognisability comes from the inherited planet colour.
+Consistency comes from shared anatomy; recognisability comes from **icon + name + content** against the one shared accent (Kronk-purple) — colour no longer distinguishes spaces (§3).
 
 ### 8.3 The manifest declares the projection
 
@@ -353,7 +353,7 @@ Because algorithmic burying is off the table by principle, subscription is the *
 
 ### 8.7 Launch announcement (a lifecycle projection)
 
-When a space opens, it announces itself with a one-time **launch card** in the feed — the framework projecting its own new member. The card carries the space icon and planet colour, a "new Korner" badge, the manifest `launch.blurb`, and taps through to the space's root (not to any object).
+When a space opens, it announces itself with a one-time **launch card** in the feed — the framework projecting its own new member. The card carries the space icon and name (shared Kronk-purple accent), a "new Korner" badge, the manifest `launch.blurb`, and taps through to the space's root (not to any object).
 
 The launch card is the one projection **exempt from the subscription gate (§8.4)** — and must be, because no one can have subscribed to a space that did not yet exist. It stays permission-gated (respecting the perimeter and any restriction on who may see the space at all) but bypasses subscription by nature. The launch card _is_ the invitation to subscribe: it carries the inline `launch.cta` action ("Tap in"), so a user goes announce → subscribe → receiving that space's projections in one step. This is a deliberate, named exception; do not "fix" it by requiring subscription, which would make launches invisible.
 
@@ -438,11 +438,11 @@ Smaller pending items: naming grammar as rule vs default (§2); notification tra
 - **Korner** — a thematically-scoped space built against this framework and mounted into the Cosmos.
 - **Manifest** — the per-space declaration the platform reads to place, theme, wire, gate, and project a space; the spine of the framework.
 - **Feed projection** — how a space appears in the feed: a space card rendered from status metadata, tapping through to the space.
-- **Space card** — the standardised feed item for space-originated content; shared anatomy, planet-coloured, deep-linked.
-- **Launch card** — the one-time announcement projected when a space opens; permission-gated but subscription-exempt, carries the inline subscribe action.
-- **Subscription** — a user's opt-in to a space's projections appearing in their feed; the injection gate, separate from permission. A Korner must-have.
+- **Space card** — the standardised feed item for space-originated content; shared anatomy, identified by icon + name (one shared Kronk-purple accent), deep-linked.
+- **Launch card** — the one-time announcement projected when a space opens; permission-gated but tune-in-exempt, carries the inline tune-in action.
+- **Tune-in** (manifest field: `subscription`) — a user's opt-in to a space's projections appearing in their feed; the injection gate, separate from permission. A Korner must-have. "Tune in / tune out" is the user-facing verb; the manifest field and code stay `subscription`.
 - **Permission gate / visibility scope** — who is allowed to see an object; enforced in the authorisation layer.
-- **Cosmos / Hub** — the planetary navigation surface; planets are domains, moons are spaces.
+- **Hub** — the korner navigation surface at `/hub`; a flat grid of korner tiles (the planet/moon metaphor was retired 2026-07-10).
 - **Membrane** — Anthemos's consent layer; where self-data is projected outward under consent.
 - **Steward** — a space role mapping to Mastodon's moderator.
 - **Seed** — the open coordination primitive for planting buildable ideas.

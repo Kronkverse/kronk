@@ -13,7 +13,11 @@ alignment pass:
   platform-wide; Wachuneed replaced "Market" 2026-07-21. Decision:
   **orbs stay `--kronk-purple-bright`; source korner is conveyed by
   icon + label** ("Kommons", "Kalendar", "Wachuneed"). No per-korner
-  colour axis reintroduced for Nudges.
+  colour axis reintroduced for Nudges. Consequently the preserved body
+  below (the `korner` enum `sun|mercury|neptune|jupiter|pluto` and its
+  "planet ramp" colours) is superseded: the real source-korner axis is
+  **slug-based** (keyed off the manifest `emits:`/`listens:` bus), and
+  every orb renders `--kronk-purple-bright` regardless of source.
 - **Data model.** Greenfield tables per §Data model — the existing
   `NudgeMessage` (`belongs_to :notification`) stays put backing the
   retiring `/nudges/activity` machinery until Phase 14, at which

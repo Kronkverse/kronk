@@ -49,7 +49,8 @@ this framing.)
   organised as **four strand tabs**: light / dark / soil / season,
   with per-strand components (LightStrand, DarkStrand, EarthStrand,
   FestivalStrand). Uses celestial icons.
-- No emits/listens on the manifest yet.
+- Manifest declares `emits: [inflow.kosmic_update.published]`
+  (`listens: []`).
 
 ## Rebuild vision (2.0.0)
 
@@ -181,7 +182,6 @@ _(Round 2 questions being sent back to Tomas — see below.)_
 
 ## Related drafts
 
-- `/home/shared/rebuild/plan/quiet-napping-hare.md` §Phase 10.1 (kosmic_updates + daily scheduler)
-- `/home/shared/rebuild/spec/kronk_korner_spec.md` §Inflow
-- `/home/shared/rebuild/memory/project_kronk_rebuild_feed_projection_spec_draft.md` (Kosmic update projection into feed)
-- Related korners: `kalendar.md` (Inflow → Kalendar celestial projection), `nudges.md` (potential push channel for daily update subscribers)
+- `../rebuild/implementation_plan.md` — the rebuild plan (Phase 10.1: kosmic_updates + daily scheduler).
+- `../kronk_korner_spec.md` — the korner framework spec (feed projection §8).
+- Related korners: `kalendar.md` (Inflow → Kalendar celestial projection), `nudges.md` (potential push channel for daily update subscribers).

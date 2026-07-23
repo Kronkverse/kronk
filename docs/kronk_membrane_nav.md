@@ -130,9 +130,8 @@ In-korner sub-navs (Kuestions, etc.) **do not** carry the arrival signal — the
 ## 10. Open decisions to resolve before build
 
 1. **Park vs. fade** for the pool in non-pillar (utility) views — §5. Prototype ships _park_.
-2. **Pool tint** — stays `--purple-bright` everywhere, or picks up the planet colour of the korner you're viewing when deep in one, so the wire tints to where you are. Adds meaning, costs restraint. Prototype ships _always purple_.
-3. **Thread edge** — pool sits _on_ the bar's bottom border (current), or floats a few px below it, detached, reading more as a membrane _between_ chrome and content than as an underline. Prototype ships _on the border_.
-4. **Resize handling** — suppress the glide on resize (clean) vs. allow a single glide (playful). Prototype suppresses.
+2. **Thread edge** — pool sits _on_ the bar's bottom border (current), or floats a few px below it, detached, reading more as a membrane _between_ chrome and content than as an underline. Prototype ships _on the border_.
+3. **Resize handling** — suppress the glide on resize (clean) vs. allow a single glide (playful). Prototype suppresses.
 
 ---
 

@@ -74,7 +74,7 @@ At event creation the host sees a checkbox:
   is created.
 - Anyone who RSVPs to the event is **auto-added to the Krew**.
 - Attendees can opt out of the Krew at any time without cancelling
-  their RSVP (see `krew.md`).
+  their RSVP (see `groups.md`).
 - The Krew persists after the event ends (Krews persist forever;
   event-associated Krews are not special-lived).
 
@@ -99,6 +99,12 @@ the standard Kronk visibility scopes:
 Kalendar's visibility scopes align with the broader Kronk visibility
 scopes for posts and birthdays.
 
+> **Not yet shipped.** These four scopes are aspirational. The shipped
+> `create_event_form.tsx` uses the standard 4-option Mastodon
+> visibility select — Public / Unlisted / Followers only / Mentioned
+> only — and `db/schema.rb` has no Krew-spawn or visibility-scope
+> columns on `events` yet.
+
 ### RSVP states — "Be there or be square"
 
 Three states, with Kronk-native labels that play on the old
@@ -108,8 +114,9 @@ Three states, with Kronk-native labels that play on the old
 - **"I'm a round"** — maybe (pun: "I'm around" + geometric shape).
 - **"I'll be square"** — not attending, declined.
 
-Internal enum can be `going / maybe / declined` (or similar); the UI
-copy uses the playful labels.
+The shipped `EventRsvp` enum is `going / interested / not_going`
+(`app/models/event_rsvp.rb`) — the playful labels above are aspirational
+copy, not yet built; the UI still shows the plain states.
 
 ### Recurring events
 
@@ -176,6 +183,6 @@ mockups with Claude web.
 
 ## Related drafts
 
-- `/home/shared/rebuild/plan/quiet-napping-hare.md` §Phase 9 (Huddle decouple), §Phase 10.1 (InFlow kosmic overlap)
-- `/home/shared/rebuild/spec/kronk_korner_spec.md` §Kalendar
-- Related korners: `huddle.md` (Huddle-decouple + Event → Krew → Huddle chain), `krew.md` (Krew spawn from RSVPs), `in_flow.md` (potential celestial overlap — TBD)
+- `../rebuild/implementation_plan.md` — the rebuild plan (Phase 9: Huddle decouple; Phase 10.1: InFlow kosmic overlap).
+- `../kronk_korner_spec.md` — the korner framework spec.
+- Related korners: `huddle.md` (Huddle-decouple + Event → Krew → Huddle chain), `groups.md` (Krew spawn from RSVPs), `inflow.md` (potential celestial overlap — TBD)

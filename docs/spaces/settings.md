@@ -30,6 +30,8 @@ Declared in `config/kronk_nodes.yaml`:
 - **`settings.profile`** — profile settings entry.
 - **`settings.sections`** — sectioned-profile section order + toggles.
 - **`settings.prefs`** — general preferences.
+- **`settings.you`** — the "Me"/You settings section (`/settings/you`,
+  `lifecycle: live`, SPA).
 - **`settings.appearance`** — theme, palette, font, scale (Personal
   Appearance layer — see `docs/kronk_aesthetic_system.md` §"Personal
   Appearance").
@@ -37,7 +39,9 @@ Declared in `config/kronk_nodes.yaml`:
   defaults, kategory-taggability).
 - **`settings.privacy`** — visibility scopes, block/mute lists,
   discoverability.
-- **`settings.notifications`** — notification type toggles per korner.
+- **`settings.notifications`** — a standalone live page
+  (`/settings/notifications`, `lifecycle: live`, SPA) for notification
+  type toggles; not a per-korner surface.
 - **`settings.account`** — account-level (email, password, delete).
 - **`settings.data`** — data export/import.
 - **`settings.feed`** — feed display prefs (see PR #325 Feed surface

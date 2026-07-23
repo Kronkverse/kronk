@@ -198,7 +198,6 @@ individual rooms cap around ~35 regardless of Krew size, see
 
 ## Related drafts
 
-- `/home/shared/rebuild/plan/quiet-napping-hare.md` §Phase 7.5–7.7 (Groups)
-- `/home/shared/rebuild/memory/project_kronk_rebuild_groups_spec_draft.md`
-- `/home/shared/rebuild/spec/kronk_korner_spec.md` §Groups
+- `../rebuild/implementation_plan.md` — the rebuild plan (Phases 7.5–7.7: Groups).
+- `../kronk_korner_spec.md` — the korner framework spec (Groups as a framework primitive).
 - Related korners: `huddle.md` (Krews own Huddles), `kalendar.md` (Event ↔ Krew bidirectional), `kommons.md` (Krew-scoped proposals TBD)

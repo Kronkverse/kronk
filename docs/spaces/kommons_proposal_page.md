@@ -81,10 +81,15 @@ Build accordingly, don't fake the gaps:
   checklist (`tasks`), design-doc cards, and the **support/backing panel** (the
   `backing` payload + `POST /back` were already live; the panel surfaces them).
   Votes have been **removed** from the page.
-- **Comments are a future model** — there is **no** proposal-comments model
-  today (the old "Discussion" was really the vote-responses, now retired). A
-  **dedicated `proposal_comments` model + API + threaded UI** is the next build
-  — do not stub a fake comments store or reuse the vote-responses.
+- **Comments shipped** — the dedicated `proposal_comments` model
+  (`app/models/proposal_comment.rb`, one level of threading), its migration
+  (`db/migrate/20260722150000_create_proposal_comments.rb`), the API
+  (`app/controllers/api/v1/proposals/comments_controller.rb`, routed at
+  `config/routes/api.rb` — `resources :comments, module: :proposals`), and the
+  threaded UI (`features/governance/components/proposal_comments.tsx`) all
+  landed. The old "Discussion" (vote-responses) stays retired. **Pending:** the
+  `db/schema.rb` dump has not been regenerated, so `proposal_comments` is absent
+  from the committed schema despite the migration — re-dump before release.
 - **Economy caveat** — ₭ is tight (10 at signup, no recurring income, earned
   only via completion payouts). If backing is the only support signal, token
   liquidity may need revisiting for the model to feel usable — flagged, not yet
@@ -96,4 +101,5 @@ Build accordingly, don't fake the gaps:
 2. ✅ Steps checklist with progress + done-count, wired to `tasks`.
 3. ✅ Hero restyle (mockup) + design-doc cards.
 4. ✅ Support = backing panel (primary action); **votes retired**.
-5. **Comments** — build the `proposal_comments` model + API + threaded UI.
+5. ✅ **Comments** — `proposal_comments` model + migration + API + threaded UI
+   shipped; only the `db/schema.rb` re-dump is outstanding.

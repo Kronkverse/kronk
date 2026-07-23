@@ -9,14 +9,15 @@ Landing at `/hub` shows the grid of korner tiles — each korner card
 communicates its identity (icon, name, tune-in gate, current
 lifecycle) and taps through to `/hub/<slug>`.
 
-Hub is one of the four top-level spaces. It is **not** in the primary
-switcher: `hub_switcher.tsx` ships `Me · Home · Nudges`, and Hub lives
-as an icon at the top of the korner rail. Every korner in the platform
+Hub is one of the four top-level surfaces (incl. Hub). It **is** in the
+primary switcher: `hub_switcher.tsx` ships `Me · Home · Hub · Nudges`
+(`/@me` · `/home` · `/hub` · `/nudges`). Every korner in the platform
 is reachable from it.
 
-> Corrected 2026-07-19. This previously read "one of the three top-level
-> nav surfaces (Feed / Profile / Hub)", which the shipped switcher
-> contradicts.
+> Corrected 2026-07-23. An earlier note claimed Hub was *not* in the
+> switcher (`Me · Home · Nudges`); the shipped `hub_switcher.tsx`
+> renders four pillars including Hub, so that correction was itself
+> wrong and has been reverted.
 
 ## Nodes in the Skeleton
 

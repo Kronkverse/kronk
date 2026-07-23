@@ -22,7 +22,8 @@ to as content, not conversational or ephemeral.
 ## Current shape (1.7.x)
 
 - **`BoothSet`** model (`app/models/booth_set.rb`) — `title`,
-  `artist_name`, `genre`, `event_name`, `account_id` (uploader),
+  `artist_name`, `genres` (string array, default `[]`), `event_name`,
+  `account_id` (uploader),
   `audio_attachment` + `cover_attachment` (both MediaAttachments),
   `status_id` (canonical, pre-2.0 `shared_status_id` dual-writes),
   optional `event_id`, `published`, `play_count`.
@@ -31,8 +32,10 @@ to as content, not conversational or ephemeral.
   and a Booth listing.
 - Searchable via `Kronk::Search` (indexed as `booth_sets`).
 - Feed projection: `booth_card` renders sets in Home feeds.
-- Manifest at `config/korners/booth.yaml`; no cross-korner emits/
-  listens yet.
+- Manifest at `config/korners/booth.yaml` declares
+  `emits: [booth.set.frothed]` (a Favourite on the set's shared Status;
+  Nudges routes it to the creator's Mate chat with the frother);
+  `listens: []`.
 - Audio + cover currently ride Mastodon's paperclip media
   attachments; not moved under `spaces/booth/` yet.
 
@@ -40,7 +43,7 @@ to as content, not conversational or ephemeral.
 
 ### Kind taxonomy replaces genre-only
 
-Today a BoothSet has a `genre` field (music-oriented). 2.0 introduces
+Today a BoothSet has a `genres` field (music-oriented). 2.0 introduces
 a **kind** (content-type) field to accommodate the expanded scope:
 
 - `music`
@@ -137,11 +140,12 @@ on visual mockups with Claude web.
 
 ### Framework integration
 
-Currently the Booth manifest has no `emits` / `listens`. Candidate
-emissions for 2.0: `booth.set.published` (Home feed could react;
-Nudges could surface "your mate just published a set"). Candidate
-listens: `kalendar.event.created` (auto-suggest event-recording
-upload when a Kalendar event you RSVP'd to just passed).
+The Booth manifest already declares `emits: [booth.set.frothed]`
+(`listens: []`). An additional candidate emission for 2.0 is
+`booth.set.published` (Home feed could react; Nudges could surface
+"your mate just published a set"). Candidate listens:
+`kalendar.event.created` (auto-suggest event-recording upload when a
+Kalendar event you RSVP'd to just passed).
 
 ## Open decisions
 
@@ -162,6 +166,6 @@ upload when a Kalendar event you RSVP'd to just passed).
 
 ## Related drafts
 
-- `/home/shared/rebuild/spec/kronk_korner_spec.md` §Booth
-- `/home/shared/rebuild/memory/project_kronk_rebuild_storage_spec_draft.md` (storage migration under `spaces/booth/`)
+- `../kronk_korner_spec.md` — the korner framework spec (manifest, feed projection §8, storage §5).
+- `../rebuild/implementation_plan.md` — the rebuild plan (Booth phase, storage migration under `spaces/booth/`).
 - Related korners: `kalendar.md` (event-linked sets), `nudges.md` (candidate listener for `booth.set.published`)
