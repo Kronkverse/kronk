@@ -96,7 +96,11 @@
   grid-column: nav-start / nav-end;
   grid-row: 2;
   position: relative;
-  z-index: 3;
+
+  // z-26 sits above the .kronk-stage layer (Kuestions Stage, z-25) so
+  // the shared space badge is visible on Stage-based korners. Also
+  // above the TopBand/RightBand fade strips (z-24).
+  z-index: 26;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;

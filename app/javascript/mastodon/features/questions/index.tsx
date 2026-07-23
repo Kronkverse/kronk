@@ -5,7 +5,6 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useLocation, useHistory } from 'react-router-dom';
 
-import { SpaceBadge } from 'mastodon/components/space_badge';
 import { Stage } from 'mastodon/components/stage';
 
 import { AnsweredPanel } from './answered_panel';
@@ -97,8 +96,8 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      {/* Reserved SpaceNav slot components — see docs/kronk_frame.md. */}
-      <SpaceBadge glyph='Ƙ' name='Kuestions' backTo='/hub' />
+      {/* SpaceBadge is now Frame-provided via <AutoSpaceBadge> in
+          ui/index.jsx — same badge appears on every korner route. */}
       <SpaceTabs active={panel} onChange={setPanel} />
 
       <div className='kuestions-shell'>
