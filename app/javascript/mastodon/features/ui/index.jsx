@@ -85,7 +85,6 @@ import {
   Quotes,
   Orbit,
   Live,
-  Events,
   EventDetail,
   KalendarSpiral,
   Inflow,
@@ -267,12 +266,13 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/settings/privacy' exact component={PrivacySettings} content={children} />}
             {signedIn && <WrappedRoute path="/settings/profile_sections" component={ProfileSectionsSettings} content={children} />}
             <WrappedRoute path='/@:acct/profile' exact component={SectionedProfile} content={children} />
-            {/* Kalendar view switch (proposal #116969253949249128): the Spiral must
-                match before the `:id` route so /hub/kalendar/spiral isn't
-                interpreted as an event id. */}
-            {signedIn && <WrappedRoute exact path="/hub/kalendar/spiral" component={KalendarSpiral} content={children} />}
+            {/* Kalendar Rebuild (proposal #116969253949249128) — the Spiral
+                is now the Kalendar. Bare /hub/kalendar renders KalendarSpiral;
+                the old Events list component retires. /hub/kalendar/:id
+                still opens EventDetail (individual events keep their own
+                pages until the Spiral wires day-picking into them). */}
             {signedIn && <WrappedRoute path={["/kalendar/:id", "/hub/kalendar/:id"]} component={EventDetail} content={children} />}
-            {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={Events} content={children} />}
+            {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={KalendarSpiral} content={children} />}
             {signedIn && <WrappedRoute path="/hub/inflow" component={Inflow} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
             {signedIn && <WrappedRoute path="/hub/groups/:id" component={GroupDetail} content={children} />}

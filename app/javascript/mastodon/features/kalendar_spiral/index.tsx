@@ -4,25 +4,25 @@ import { Helmet } from 'react-helmet';
 
 import { Stage } from 'mastodon/components/stage';
 
-// The Spiral view (Kalendar Rebuild — Kommons proposal
-// #116969253949249128). First step: mount the interactive prototype
-// authored in the Claude-web track as a preview view alongside the
-// classic list view (SLUG_TO_VIEWS[kalendar]).
+// The Kalendar (Kalendar Rebuild — Kommons proposal
+// #116969253949249128). The Spiral IS the Kalendar — as of alpha.201
+// the classic Events list retired; /hub/kalendar renders this
+// component. Individual /hub/kalendar/:id event detail pages remain
+// (EventDetail) until the Spiral wires day-picking into them.
 //
 // The prototype is a self-contained HTML+JS+CSS bundle (1100+ lines,
 // hand-drawn spiral positioning, moon-phase maths, in-flow sky data,
-// mock EVENTS array). Rather than port line-by-line — which changes
-// the visual under review — we ship it as-is at
+// mock EVENTS array). We ship it as-is at
 // public/kalendar-spiral-preview.html and iframe it inside the Kronk
-// chrome. Space badge + view picker come from the Frame; only the
-// spiral canvas lives inside the iframe.
+// chrome. The Frame's space badge sits over top-left; only the spiral
+// canvas lives inside the iframe.
 //
-// Follow-up (task 2 of the proposal): port the prototype into a real
-// React component, wire real Event / EventRsvp / celestial data,
-// replace the classic /hub/kalendar list view.
+// Follow-up: port the prototype into a real React component and wire
+// real Event / EventRsvp / celestial data (currently reads from an
+// inline EVENTS mock).
 
 const messages = defineMessages({
-  title: { id: 'kalendar_spiral.title', defaultMessage: '₭alendar — Spiral' },
+  title: { id: 'kalendar_spiral.title', defaultMessage: '₭alendar' },
 });
 
 const KalendarSpiral: React.FC<{ multiColumn?: boolean }> = () => {
