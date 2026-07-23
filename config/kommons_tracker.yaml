@@ -2,8 +2,9 @@
 #
 # The rebuild's remaining backlog, run as Kommons proposals so the platform
 # tracks its own construction (docs/spaces/kommons_tracker.md). Seeded
-# idempotently by `bin/rails kommons:tracker:seed` — each entry is keyed on the
-# `tracker:<key>` category, so re-running updates in place. `node` anchors the
+# idempotently by `bin/rails kommons:tracker:seed` — each entry is keyed on its
+# `title` (`find_or_initialize_by(title:)`), so re-running updates in place;
+# track/phase tags live in the body `Tracker:` line, not a category. `node` anchors the
 # proposal to a Directory node, so the Directory shows live build status.
 #
 # Sources: docs/rebuild/phase_audit_2026-07-20.md,
