@@ -131,6 +131,17 @@ nodes:
       - to: kommons.index
         kind: creates
         description: The Proposer drafts a new proposal onto the Kommons list.
+  - id: kommons.new_korner
+    label: Propose a new Korner
+    # Deep-link into the Proposer with this node as the anchor. Proposals
+    # tagged here are "there should be a new space in Kronk for X."
+    url: /hub/kommons/propose?node=kommons.new_korner
+    lifecycle: live
+    spa: true
+    links:
+      - to: kommons.index
+        kind: creates
+        description: A shipped new-korner proposal spawns a manifest under `config/korners/` and lights up the tile on the Hub.
 
   # The 2.0.0 rebuild-review nodes that used to live here were removed in
   # favour of the Kronk org pillar (`kronk.*` in config/kronk_nodes.yaml): a
