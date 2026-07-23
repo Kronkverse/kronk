@@ -103,19 +103,21 @@ A korner that generates activity a user would want to know about declares it, an
 
 ## 3. Conformance matrix — the automated gate
 
-Everything marked ⚙︎ above is **machine-checkable** and becomes an extended `korners doctor` check (item 7). Today's doctor validates only L1 (slug/reserved) + L2 (db-namespace) + the `Status` association — which is why the L3/L4/L5 gaps sailed through. The extension adds:
+Everything marked ⚙︎ above is **machine-checkable**, and the extended `korners doctor` (item 7) **has shipped** — `lib/mastodon/cli/korners.rb#detect_conformance_issues` now gates L1, L3, L4, L5, L7 and L10, alongside the L6 node checks (`detect_node_issues` + orphan-listens) and the L2 drift check. The L3/L4/L5 gaps that once sailed through are now enforced. What each check catches:
 
 | Check                                                                                          | Layer | Catches                                     |
 | ---------------------------------------------------------------------------------------------- | ----- | ------------------------------------------- |
 | slug is a word · == filename · unique                                                          | L1    | `in-flow`                                   |
 | icon wired in `useKornerIcon`, matches manifest                                                | L1    | huddle/nudges cross-wiring                  |
-| model + table + schema present per resource                                                    | L2    | stale-schema failures                       |
-| serializer exposes projection attr; summary serializer exists                                  | L3    | Wachuneed/In Flow non-functional projection |
+| `db_namespace` prefix has matching tables · `Status` association exists         | L2    | namespace/association drift                  |
+| serializer exposes projection attr                                             | L3    | Wachuneed/In Flow non-functional projection |
 | card component exists **and** is registered                                                    | L4    | groups/in_flow phantom cards                |
 | `/hub/<slug>` resolves; **enforced ⇒ mount resolves**                                          | L5    | Wachuneed/Nudges dead tiles                 |
 | node bucket/parent/lifecycle valid; route_name resolves or spa; no id collision; links resolve | L6    | `feed.nudges` route                         |
 | card partial is stylelint-governed (no raw hex)                                                | L7    | ungoverned card drift                       |
 | every declared `notifications.types` entry is a registered type; `subject_type` resolves       | L10   | Kommons' five declared, zero built          |
+
+**L2 caveat — the gate is narrower than the layer.** `detect_drift` only checks that some table matches the manifest's `db_namespace` prefix and that any declared `Status` association exists. It does **not** verify a real model + table + `schema.rb` entry *per resource* (the full L2 definition in §2). So a korner can declare three resources, ship one namespaced table, and pass L2. The per-resource model/table/schema checks remain human sign-off until the drift check is deepened.
 
 `◇` items stay human sign-off (aesthetic judgment, tests). Canonical manifest-shape conformance (nested `security:`) is `⚙︎` per L1.
 

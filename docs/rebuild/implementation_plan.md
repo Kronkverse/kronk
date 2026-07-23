@@ -9,8 +9,8 @@
 > canonical statement of what each phase contains, and nothing supersedes them. The _phase
 > statuses_, PR counts and the "~15 calendar weeks" estimate are from 2026-07-10 and are
 > stale. Several phases described here as planned have since shipped. For current status
-> see the latest in-repo audit — **`docs/rebuild/phase_audit_2026-07-20.md`** — not this
-> file's inline statuses. (Audits live in the repo now, per the source-of-truth doctrine;
+> see the latest in-repo backlog — **`docs/rebuild/remaining_work_2026-07-23.md`** — not this
+> file's inline statuses (the earlier `phase_audit_2026-07-20.md` it superseded). (Audits live in the repo now, per the source-of-truth doctrine;
 > the old `~/kronk-notes/audits/` location on mainframe is retired.)
 
 ## Context
@@ -234,7 +234,7 @@ Tiny PRs; each ships a manifest with `enforced: false` and a "coming soon" card.
 Files that will be modified or authored:
 
 - `config/initializers/korners.rb` — module rename, struct expansion, reserved-slug check (Phase 1)
-- `config/korners/*.yaml` — 10 existing manifests need planet drop + full field population (Phase 1, 2)
+- `config/korners/*.yaml` — 10 existing manifests need planet drop + full field population (Phase 1, 2) _(as of 2026-07-23 this is 19 `config/korners/*.yaml`, core manifests + new-korner stubs included)_
 - `lib/mastodon/cli/korners.rb` — `describe`, `doctor` subcommands (Phase 1)
 - `app/controllers/api/v1/instances_controller.rb` — reference pattern for new `KornersController` (Phase 1.4)
 - `app/serializers/rest/v1/instance_serializer.rb` — reference for `KornerSerializer` (Phase 1.4)

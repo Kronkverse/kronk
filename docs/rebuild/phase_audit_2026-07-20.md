@@ -1,4 +1,6 @@
-# Rebuild phase audit — 2026-07-20
+# Rebuild phase audit — 2026-07-20 (superseded)
+
+**SUPERSEDED on 2026-07-23 by [`remaining_work_2026-07-23.md`](./remaining_work_2026-07-23.md) (repo now alpha.196).** This snapshot was pinned to alpha.79 and has been displaced; read the newer doc for current status. The phase-by-phase notes below are kept for history only — do not treat them as current.
 
 > **This is the current status source** for `implementation_plan.md`. That file's
 > phase _definitions_ remain authoritative; its inline statuses are from
