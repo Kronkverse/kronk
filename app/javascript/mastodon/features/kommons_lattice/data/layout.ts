@@ -1,15 +1,14 @@
 // Lattice layout — a tidy lateral dendrogram.
 //
-// The Lattice is the second view of the Kommons map: same tree, same node ids,
-// same proposal store as the radial Skeleton (kommons_tree), a different
-// spatial model. Where the Skeleton is a body you travel with a camera, the
-// Lattice is a mechanism you operate — structure is fixed and orthogonal,
-// branches sprout on demand and fold away when you leave them.
+// The Lattice lays out the Kommons Directory tree: the node ids and proposal
+// store come from kommons_tree; this owns the spatial model. A mechanism you
+// operate — structure is fixed and orthogonal, branches sprout on demand and
+// fold away when you leave them.
 //
 // Spec: docs/spaces/ (KRONK_KOMMONS_LATTICE.md §1). Every constant here is
 // lifted from that spec; where a token exists, the component uses the token.
 //
-// The `Tree` type is shared with the Skeleton — one source of truth for what
+// The `Tree` type is shared with kommons_tree — one source of truth for what
 // exists. Imported as a type only, so this stays a pure function with no DOM or
 // API dependencies and can be exercised in isolation.
 

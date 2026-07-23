@@ -1,9 +1,9 @@
-// The Kommons Lattice — the map as an operable, orthogonal dendrogram.
+// The Kommons Lattice — the Directory as an operable, orthogonal dendrogram.
 //
 // Route: /hub/kommons/lattice
-// The second view of the same data the radial Skeleton draws: same node ids
-// (GET /api/v1/kommons/nodes), same proposal store, same tokens. Structure is
-// fixed; branches open one-per-level and fold away. Spec: docs/spaces/
+// The rendering of the Directory tree: nodes from GET /api/v1/kommons/nodes,
+// the shared proposal store, the same tokens. Structure is fixed; branches
+// open one-per-level and fold away. Spec: docs/spaces/
 // (KRONK_KOMMONS_LATTICE.md).
 
 import { useEffect, useState } from 'react';
