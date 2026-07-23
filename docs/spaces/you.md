@@ -18,10 +18,11 @@ Anthemos membrane — not by absorbing YOU into Kronk.
 
 ## Anthemos context
 
-YOU is Kronk's first **pod client**. Per
-`/home/shared/rebuild/memory/reference_kronk_anthemos_architecture.md`,
-Anthemos is the personal-pod infrastructure (self-hosted, capability-
-tokened, schema-neutral); YOU is one app on top of it defining
+YOU is Kronk's first **pod client**. Anthemos is the personal-pod
+infrastructure (self-hosted, capability-tokened, schema-neutral) — see
+`../kronk_korner_spec.md` §7 (Security & access control), which frames
+the membrane as the optional future layer; YOU is one app on top of it
+defining
 personal-growth schemas. Kronk is a social-fabric *consumer* of the
 pod via the membrane. Multiple apps (habit tracker, reading log, etc.)
 may later sit alongside YOU inside the same pod.
@@ -40,9 +41,11 @@ See memory `project_kronk_token_system.md` and
   intro paragraph, bulleted list of what YOU offers, big "Open YOU"
   CTA opening the external app in a new tab, "How it fits together"
   section explaining the portal-is-target framing.
-- **Icon** — wired in `hooks/useKornerIcon.tsx`: slug `you` →
-  `AccountCircleIcon` (self/identity, proxy for the `self_improvement`
-  icon which isn't shipped in the material asset set).
+- **Icon** — `config/korners/you.yaml` sets `icon: star`; wired in
+  `hooks/useKornerIcon.tsx`: slug `you` → `StarIcon` (four-point star,
+  "Your Own Universe", proxy for the `self_improvement` icon which
+  isn't shipped in the material asset set). (`AccountCircleIcon` is the
+  `profile` icon, not YOU's.)
 - **SCSS** — `_you_portal.scss`, in the stylelint governance list per
   Standard §L7.
 - **Node** — `you.index` node with `lifecycle: soon`, `bucket: hub`.

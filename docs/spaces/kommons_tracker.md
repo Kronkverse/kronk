@@ -14,7 +14,7 @@ checklist is already a model.**
 
 A `Proposal` already carries: `title`, `body`, `summary`, a `status` lifecycle
 (`open` → `delivered` → `completed` / `annulled`), a **`node_id`** that pins it
-to a Skeleton node, a **`categories`** tag array (GIN-indexed), a
+to a Directory node, a **`categories`** tag array (GIN-indexed), a
 `proposal_type` (small/medium/large), and `parent_proposal_id` for nesting.
 
 And a `Proposal` **has many `tasks`** — each a row with a `title`,
@@ -23,7 +23,7 @@ checklist.** There is already an `api/v1/tasks_controller`.
 
 So this is not "build a tracker." It is two moves: **populate the model** from
 the docs, and **surface it** in the UI. And the second fit is the payoff: every
-proposal's `node_id` means the **Skeleton and Lattice already draw the count of
+proposal's `node_id` means the **Directory already draws the count of
 open proposals on each node**. Anchor the build items to nodes and the map
 _becomes_ the build-status view for free — a glance shows which limb has the
 most left to do.
@@ -34,7 +34,7 @@ One **proposal per theme** (a phase, a korner's UI, a track), not one per
 micro-item, so the board stays readable. Inside each, the concrete steps become
 **tasks** (the checklist). Fields do the organising:
 
-- **`node_id`** — anchor to the Skeleton node the work lives on
+- **`node_id`** — anchor to the Directory node the work lives on
   (`nudges.index`, `booth.index`, `kommons.index`…). Drives the map badges.
 - **`categories`** — filter tags: `rebuild` on every tracker proposal, plus
   `phase-5`, `release`, `korner:booth`, `framework`, `settings`, so a lens can
@@ -120,7 +120,7 @@ needs to be usable — and each becomes its own tracked proposal, anchored to
   checkable list; toggling a task hits `tasks_controller`. The single
   highest-value piece: without it, the checklists are invisible.
 - **Progress on the card + the map** — a proposal card shows `done ÷ total`;
-  the Skeleton/Lattice node badge (already drawing open-proposal counts) reads
+  the Directory node badge (already drawing open-proposal counts) reads
   the same, so the map shows build progress.
 - **Browse by node and by category** — a node's detail lists its proposals
   ("what's left here"); a `category: rebuild` lens is the whole board. Both are
@@ -155,7 +155,7 @@ human-readable backlog in the repo.
    - node/category filtering (minus backing). Small, and everything else depends
      on being able to _see_ it.
 2. **Author & seed the backlog.** Write `kommons_tracker.yaml` from this plan,
-   create 2–3 via the composer, seed the rest. Now the Skeleton/Lattice show
+   create 2–3 via the composer, seed the rest. Now the Directory shows
    live build progress.
 3. **Use it, and let it drive the next round.** Work items off it, tick tasks,
    and file the friction (backing UI, sorting, whatever's missing) as fresh
@@ -165,8 +165,8 @@ human-readable backlog in the repo.
 
 1. **Granularity** — one proposal per theme, its steps as a task-checklist
    (~30 proposals).
-2. **Anchor to the map** — yes; each proposal pins to a Skeleton `node_id`, so
-   the Skeleton/Lattice node badges read as live build status.
+2. **Anchor to the map** — yes; each proposal pins to a Directory `node_id`, so
+   the Directory node badges read as live build status.
 3. **Order** — **seed first.** The map lights up with build-status badges the
    moment the proposals land (the badges already render); the task-checklist UI
    follows so the checklists themselves become visible.
@@ -180,3 +180,8 @@ theme hangs off one root proposal, `Kronk rebuild — build tracker`, via
 anchors to its own `node_id`. (Track/phase tags live in the proposal body, not
 the `categories` column, which is a validated legacy taxonomy slated for
 retirement.) Run on shadow's rebuild DB with `ACCOUNT=<username>`.
+
+The reverse direction ships too: `lib/tasks/kommons_proposals.rake` exports the
+live proposal list (title, status, backing totals, task progress, seeder handle)
+via `bin/rails kommons:proposals:export DEST=<dir>` — a read-only snapshot of the
+tracker as it actually stands.

@@ -79,20 +79,24 @@ attachment scope TBD). `Event.event_type: :huddle` retires.
 
 ### Cross-korner event bus (Phase 9.3)
 
-Introduce `Kronk::KornerEvents.publish/subscribe`. Huddle
-`emits: [huddle.joined, huddle.left]`; Groups listens to update
-member-online indicators.
+Introduce `Kronk::KornerEvents.publish/subscribe`. The manifest
+declares `emits: [huddle.started, huddle.ended, huddle.participant.joined]`
+(`HuddleSession#start!`/`#end!` publish `huddle.started`/`huddle.ended`);
+Groups listens to update member-online indicators.
 
 **Kalendar interplay — Krew-mediated, not Huddle-direct.** Kalendar
 Events do **not** attach Huddles directly. Instead, attending an
 Event is the mechanism by which a user gets access to a Krew, and
-therefore to that Krew's Huddle. This means: no
-`events.huddle_session_id` general FK on the Event side; Events belong
-to Krews, Krews own Huddles, so the chain is
-Event → Krew → Krew Huddle. (Precise semantics of "attending an event
-introduces you to the Krew" — permanent vs event-scoped access — is
-open, see decisions below and will be refined in `kalendar.md` and
-`groups.md`.)
+therefore to that Krew's Huddle. The vision wants no direct
+Event→Huddle link (Events belong to Krews, Krews own Huddles, so the
+chain is Event → Krew → Krew Huddle) — but note this is **unresolved
+against the code**: `events.huddle_session_id` still exists as a column
++ index in `db/schema.rb`, so the "drop the FK" step has not landed.
+The Data-model section above (which keeps the FK as optional) and this
+one disagree; treat the removal as an open decision, not a done fact.
+(Precise semantics of "attending an event introduces you to the Krew"
+— permanent vs event-scoped access — is also open, see decisions below
+and will be refined in `kalendar.md` and `groups.md`.)
 
 ### URL move (Phase 9.4)
 
@@ -156,7 +160,6 @@ mockups with Claude web.
 
 ## Related drafts
 
-- `/home/shared/rebuild/plan/quiet-napping-hare.md` §Phase 9 (Huddle korner split)
-- `/home/shared/rebuild/memory/project_kronk_rebuild_inter_korner_spec_draft.md` (event bus wiring — Huddle → Kalendar, Groups)
-- `/home/shared/rebuild/spec/kronk_korner_spec.md` §6 (Huddle)
+- `../rebuild/implementation_plan.md` — the rebuild plan (Phase 9: Huddle korner split; event-bus wiring to Kalendar/Groups).
+- `../kronk_korner_spec.md` — the korner framework spec (inter-korner events §6).
 - Related korner: `groups.md` (Krews own Huddle spaces)

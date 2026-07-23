@@ -1,34 +1,39 @@
 # Kommons Lattice
 
-The second view of the Kommons map (`/hub/kommons/lattice`) — an operable,
-orthogonal dendrogram, sibling to the radial Skeleton (`/hub/kommons/skeleton`).
-**Same tree, same node ids, same proposal store**; only the spatial model and
-motion language differ. A toggle at the top of either view switches between
-them, landing on the same node.
+The Kommons map (`/hub/kommons/lattice`) — an operable, orthogonal dendrogram,
+branded the **Directory** in the UI. It is *the* map: the old radial Skeleton
+view has been retired, and `/hub/kommons/skeleton` now 301-redirects to
+`/hub/kommons/lattice`. There is no longer a two-view toggle; the Frame's
+Proposals ⇄ Directory picker switches between the proposals list and this map,
+not between two rival maps.
 
 Implemented against the spec below (from the Kommons Rebuild proposal filed
 through Kommons itself). Shipped: the tidy-tree layout with its invariants, one
 branch open per level with recursive prune, the sprout choreography (wires draw,
 rows stagger, existing rows reflow), the leaf panel with *Plant feedback here*
-wired to the **shared** Skeleton composer, zoom (scale-not-camera, fit, anchored
-ctrl+wheel, detail-shedding), drag-to-pan, scroll-into-view on open, and the
-reduced-motion pass.
+wired to the composer, zoom (scale-not-camera, fit, anchored ctrl+wheel,
+detail-shedding), drag-to-pan, scroll-into-view on open, and the reduced-motion
+pass. **The composer/picker also shipped** (previously deferred): the Directory
+has a `pick` mode (`Lattice pick` prop) that scopes selection to a target node,
+`features/governance/propose_page.tsx` + `propose_picker.tsx` provide the
+Proposer, routed at `/hub/kommons/pick` and `/hub/kommons/propose`, and the
+Directory carries a "+ Propose a new Korner" affordance
+(`kommons_lattice/components/lattice.tsx`).
 
 **Deferred follow-ups / tidy-up:**
 
-- **Manifest names + icons consolidation** — both views still hardcode limb
-  labels, and the Skeleton keeps its own hand-drawn glyph set while the Lattice
-  uses Material Symbols. The Lattice's Hub icon and a couple of korners fall back
-  until the manifest `name`/`icon` become the single source both read.
-- **Leaf panel** — proposals list and the cross-branch *wired to* list (§7).
+- **Manifest names + icons consolidation** — the Directory still hardcodes some
+  limb labels; its Hub icon and a couple of korners fall back until the manifest
+  `name`/`icon` become the single source it reads.
+- **Leaf panel** — the cross-branch *wired to* list (§7).
 - **Pan momentum** (§6c) and **keyboard navigation** (open question 4: ↑↓ within
   a column, → to open, ← to fold).
 - General visual tidy-up once the feel settles on shadow.
 
 Code: `app/javascript/mastodon/features/kommons_lattice/` (view) and the shared
-data layer in `app/javascript/mastodon/features/kommons_skeleton/data/`. The
-sibling `KRONK_KOMMONS_MOTION.md` referenced below (the Skeleton's motion spec)
-was not part of this fold-in.
+data layer in `app/javascript/mastodon/features/kommons_tree/data/` (`nodes.ts`,
+`layout.ts`). The `KRONK_KOMMONS_MOTION.md` referenced below (the retired
+Skeleton's motion spec) was not part of this fold-in.
 
 ---
 
