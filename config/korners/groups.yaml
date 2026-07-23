@@ -7,7 +7,8 @@
 # archival/rename. See app/models/group.rb + Groups spec.
 
 slug: groups
-name: Groups
+name: Krews # UI label — Kronk vocab (Krew = Group). Code, DB, URL
+# slug all stay `groups`; only the display string flips.
 purpose: 'To let several people post as one — shareable spaces that gather context and act together.'
 icon: groups
 render_target: web

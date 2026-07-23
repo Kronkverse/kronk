@@ -9,14 +9,17 @@ import type { ApiGroupJSON } from 'mastodon/api/groups';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 
+// User-facing copy: Kronk calls Groups "Krews" (code, DB, URL slug all
+// stay `groups`; only the display strings flip). See docs/spaces/groups.md
+// + memory `reference_kronk_vocab_krew`.
 const messages = defineMessages({
-  title: { id: 'groups.title', defaultMessage: 'Groups' },
+  title: { id: 'groups.title', defaultMessage: 'Krews' },
 });
 
 type Scope = 'mine' | 'discoverable' | 'all';
 
 const SCOPE_LABELS: [Scope, string][] = [
-  ['mine', 'My groups'],
+  ['mine', 'My krews'],
   ['discoverable', 'Discoverable'],
   ['all', 'All'],
 ];
@@ -115,7 +118,7 @@ export const Groups = () => {
         <p className='groups-page__intro'>
           <FormattedMessage
             id='groups.intro'
-            defaultMessage='Groups are shareable multi-poster spaces. Seeders plant them; membership is opt-in. Choose a governance framework at creation to shape how structural changes get enacted.'
+            defaultMessage='Krews are shareable multi-poster spaces. Seeders plant them; membership is opt-in. Choose a governance framework at creation to shape how structural changes get enacted.'
           />
         </p>
 
