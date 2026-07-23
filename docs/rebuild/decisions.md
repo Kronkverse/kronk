@@ -170,6 +170,27 @@ Profile/settings work.
 
 ---
 
+### Upstream Mastodon pages: search unified, lists cut, discovery to be rebuilt (2026-07-23)
+
+Audit of the ~29 leftover Mastodon page-components during the Frame migration
+(`docs/kronk_frame.md`). Decisions:
+
+- **Search** — KronkSearch (`/hub/search`) is canonical. The Ӂ menu now opens it;
+  Mastodon's `/search` + `features/search` are retired.
+- **Lists** — cut. Mastodon lists (`features/lists`, `list_timeline`, the deck
+  `LIST` column, the list nav panel) are removed; Feed scope
+  (Friends / FoF / ₭ommunity) is the only reading filter.
+- **DMs** — `/conversations` redirects to Nudges (the messenger is the DM home).
+- **Dead code** — `community_timeline`, `public_timeline` (superseded by Firehose)
+  and the unrouted `notifications_v2/index` page are removed.
+- **Discovery — TODO** — Mastodon's `explore` (trends) and `directory` (profile
+  listing) are kept as **placeholders** for now. Kronk should build its **own
+  find-people / directory surface** designed for Kronk users (korners, froths,
+  presence) rather than the federated Mastodon directory; then retire
+  explore/directory. Tracked here until it has a spec.
+
+---
+
 ## Open
 
 - Where account-level settings (security, sessions, account lifecycle,

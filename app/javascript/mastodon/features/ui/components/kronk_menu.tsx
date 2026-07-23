@@ -331,7 +331,7 @@ export const KronkMenu = () => {
           )}
           <Link
             className='kronk-menu__item'
-            to='/search'
+            to='/hub/search'
             role='menuitem'
             onClick={close}
           >
