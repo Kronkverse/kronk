@@ -704,11 +704,13 @@ class UI extends PureComponent {
         <BoothPlaybackProvider>
         <div className={classNames('ui', { 'is-composing': isComposing })} ref={this.setRef}>
           {/* KronkFrame — foundational page layout (docs/kronk_frame.md).
-              Landing: only Stage is wired; band slots are empty. Existing
-              chrome (Wordmark, HubSwitcher, KornerSidebar, KornerSubBar)
-              still renders position: fixed below as siblings and paints
-              over the Frame; later PRs migrate them into the slots. */}
+              PR 2 renders TopBand + RightBand as empty slots so the fade
+              backgrounds (migrated off body::before/body::after) attach
+              to real DOM. Chrome components stay position: fixed for now
+              — PR 3 un-fixes them into these slots. */}
           <KronkFrame>
+            <KronkFrame.TopBand />
+            <KronkFrame.RightBand />
             <KronkFrame.Stage>
               <SwitchingColumnsArea identity={this.props.identity} location={location} singleColumn={layout === 'mobile' || layout === 'single-column'} forceOnboarding={firstLaunch && newAccount}>
                 {children}

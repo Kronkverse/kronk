@@ -45,13 +45,34 @@
 // tracks are declared but nothing paints them yet.
 
 .kronk-frame__top-band {
-  grid-column: 1 / -1;
-  grid-row: 1;
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  padding: 0 1.5rem;
+  // PR 2 landing: fade band lifted-and-shifted from body::before into
+  // this Frame slot but kept viewport-anchored (position: fixed) so
+  // its behaviour is identical to the old pseudo — chrome painted
+  // over it in the same z-order, content scrolled up under it. The
+  // grid row is still declared above but goes unused for this slot
+  // in PR 2 because the element is fixed. PR 3 un-fixes it.
+  position: fixed;
+  inset: 0 0 auto;
+  height: 5.5rem;
+  z-index: 24;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 3.25rem,
+    rgb(0 0 0 / 82%) 3.9rem,
+    rgb(0 0 0 / 45%) 4.7rem,
+    rgb(0 0 0 / 0%) 5.5rem
+  );
+  filter: drop-shadow(
+    0 2px 16px color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent)
+  );
+
+  @media (width <= 629px) {
+    // Switcher lives in the bottom tab-bar on mobile; no top chrome
+    // to back. Matches the classic body::before mobile hide behaviour.
+    display: none;
+  }
 }
 
 .kronk-frame__space-nav {
@@ -99,19 +120,29 @@
 }
 
 .kronk-frame__right-band {
-  grid-column: right-start / right-end;
-  grid-row: 2;
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 1rem 0;
-}
+  // PR 2 landing: fade band lifted from body::after; kept viewport-
+  // anchored via position: fixed so behaviour matches the old pseudo.
+  // PR 3 un-fixes into the grid.
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: 7.75rem;
+  z-index: 24;
+  pointer-events: none;
+  background: linear-gradient(
+    to left,
+    #000 0,
+    #000 5.5rem,
+    rgb(0 0 0 / 82%) 6.15rem,
+    rgb(0 0 0 / 45%) 6.95rem,
+    rgb(0 0 0 / 0%) 7.75rem
+  );
+  filter: drop-shadow(
+    -2px 0 16px color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent)
+  );
 
-@container frame (width <= 889px) {
-  .kronk-frame__right-band {
+  @media (width <= 889px) {
+    // Korner rail is hidden below this width; nothing to back.
+    // Matches the classic body::after mobile hide behaviour.
     display: none;
   }
 }
