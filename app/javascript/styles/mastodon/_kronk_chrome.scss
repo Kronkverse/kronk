@@ -13,77 +13,9 @@
   display: none !important;
 }
 
-// The full-height black side "rails" are gone (they read as dead bars).
-// What stays is a TOP bar: an opaque black band behind the fixed chrome
-// (wordmark + HubSwitcher). Without it, content scrolls up UNDER the
-// fixed chrome and collides with it — the wordmark printed over the
-// first card. Solid black so scrolled content disappears cleanly behind
-// the chrome, with a thin purple accent edge so it reads as a header.
-// Hidden on mobile, where the switcher lives in the bottom tab-bar and
-// there is no top chrome. The korner rail (right) keeps its own glass
-// backing — see _korner_sidebar.scss.
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0 0 auto; // top:0; right:0; left:0
-  height: 5.5rem; // solid behind the chrome, then fades out below it
-  z-index: 24; // above content, below the chrome (wordmark/switcher = 25)
-  pointer-events: none;
-
-  // Solid black where the chrome actually sits (top ~3.25rem), then a soft
-  // fade to transparent so the bar dissolves into the starfield instead of
-  // ending on a hard edge. Content scrolling up passes through the fade
-  // before it disappears behind the solid band.
-  background: linear-gradient(
-    to bottom,
-    #000 0,
-    #000 3.25rem,
-    rgb(0 0 0 / 82%) 3.9rem,
-    rgb(0 0 0 / 45%) 4.7rem,
-    rgb(0 0 0 / 0%) 5.5rem
-  );
-
-  // A whisper of purple glow under the bar — keeps the header identity
-  // without a sharp accent line.
-  filter: drop-shadow(
-    0 2px 16px color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent)
-  );
-
-  @media (width <= 629px) {
-    // Switcher is in the bottom tab-bar; no top chrome to back.
-    display: none;
-  }
-}
-
-// Matching right-edge band behind the korner rail — the same treatment as
-// the top bar, rotated: solid black at the outer (right) edge, fading
-// inward to transparent so it dissolves into the starfield, with the same
-// faint purple glow. Together the two read as one soft chrome frame.
-// Hidden below the rail breakpoint, where the korner rail isn't shown.
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0 0 0 auto; // top:0; right:0; bottom:0; left:auto → full-height right band
-  width: 7.75rem;
-  z-index: 24; // above content, below the rail (z-index 25)
-  pointer-events: none;
-  background: linear-gradient(
-    to left,
-    #000 0,
-    #000 5.5rem,
-    rgb(0 0 0 / 82%) 6.15rem,
-    rgb(0 0 0 / 45%) 6.95rem,
-    rgb(0 0 0 / 0%) 7.75rem
-  );
-  filter: drop-shadow(
-    -2px 0 16px color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent)
-  );
-
-  @media (width <= 889px) {
-    // Korner rail is hidden below this width; nothing to back.
-    display: none;
-  }
-}
+// Fade bands migrated to KronkFrame slots in alpha.178 —
+// see .kronk-frame__top-band and .kronk-frame__right-band in
+// _kronk_frame.scss. body::before / body::after are retired.
 
 .kronk-wordmark {
   position: fixed;
