@@ -31,6 +31,12 @@ const KornerCard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
   const [tunedIn, setTunedIn] = useState(korner.tuned_in !== false);
   const [saving, setSaving] = useState(false);
 
+  // Coming-soon korners: manifest is declared (`enforced: false`) but
+  // the space isn't ready to be tuned into. Card still renders so the
+  // Hub reads as "here's every space Kronk grows toward"; tune-in +
+  // settings affordances retire until the korner ships.
+  const soon = korner.enforced === false;
+
   const toggleTuneInInner = useCallback(
     async (e: React.MouseEvent) => {
       e.preventDefault();
@@ -67,7 +73,12 @@ const KornerCard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
   }, []);
 
   return (
-    <div className='hub-page__card'>
+    <div className={`hub-page__card ${soon ? 'hub-page__card--soon' : ''}`}>
+      {soon && (
+        <span className='hub-page__card-soon-badge'>
+          <FormattedMessage id='hub.soon' defaultMessage='Coming soon' />
+        </span>
+      )}
       {/* Open-korner surface fills the top of the card without wrapping
           the whole card; nesting a <Link> inside another <Link> collapses
           the inner one, which was making the settings gear silently
@@ -85,30 +96,32 @@ const KornerCard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
           {teaser && <p className='hub-page__card-teaser'>{teaser}</p>}
         </div>
       </Link>
-      <div className='hub-page__card-footer'>
-        <Link
-          to={`/hub/${korner.slug}/settings`}
-          className='hub-page__card-settings-link'
-          onClick={stopClick}
-          aria-label={`Settings for ${korner.name}`}
-          title={`${korner.name} settings`}
-        >
-          <SettingsIcon />
-        </Link>
-        <button
-          type='button'
-          onClick={toggleTuneIn}
-          className={`hub-page__card-tune ${tunedIn ? 'hub-page__card-tune--in' : 'hub-page__card-tune--out'}`}
-          aria-pressed={tunedIn}
-          title={tunedIn ? 'Tune out' : 'Tune in'}
-        >
-          {tunedIn ? (
-            <FormattedMessage id='hub.tuned_in' defaultMessage='Tuned in' />
-          ) : (
-            <FormattedMessage id='hub.tuned_out' defaultMessage='Tune in' />
-          )}
-        </button>
-      </div>
+      {!soon && (
+        <div className='hub-page__card-footer'>
+          <Link
+            to={`/hub/${korner.slug}/settings`}
+            className='hub-page__card-settings-link'
+            onClick={stopClick}
+            aria-label={`Settings for ${korner.name}`}
+            title={`${korner.name} settings`}
+          >
+            <SettingsIcon />
+          </Link>
+          <button
+            type='button'
+            onClick={toggleTuneIn}
+            className={`hub-page__card-tune ${tunedIn ? 'hub-page__card-tune--in' : 'hub-page__card-tune--out'}`}
+            aria-pressed={tunedIn}
+            title={tunedIn ? 'Tune out' : 'Tune in'}
+          >
+            {tunedIn ? (
+              <FormattedMessage id='hub.tuned_in' defaultMessage='Tuned in' />
+            ) : (
+              <FormattedMessage id='hub.tuned_out' defaultMessage='Tune in' />
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -120,34 +133,30 @@ const Hub: React.FC<{ multiColumn?: boolean }> = () => {
   // Spec §4.7.1: default Hub order is most-tuned-in first. Ties break
   // alphabetically so the grid is stable when many korners share a
   // count (fresh instance before anyone's tuned out of anything).
-  const listed = korners
-    .filter((k) => k.enforced !== false)
-    .sort((a, b) => {
-      const diff = (b.tune_in_count ?? 0) - (a.tune_in_count ?? 0);
-      return diff !== 0 ? diff : a.name.localeCompare(b.name);
-    });
+  // Coming-soon (enforced: false) korners sort after live ones so the
+  // Hub reads as "here's what's ready, and here's what's coming."
+  const sorted = korners.slice().sort((a, b) => {
+    const diff = (b.tune_in_count ?? 0) - (a.tune_in_count ?? 0);
+    return diff !== 0 ? diff : a.name.localeCompare(b.name);
+  });
+  const live = sorted.filter((k) => k.enforced !== false);
+  const soon = sorted.filter((k) => k.enforced === false);
 
   return (
     <Stage label={intl.formatMessage(messages.title)}>
-
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
       <div className='hub-page'>
-        <section className='hub-page__hero'>
-          <h1 className='hub-page__hero-title'>
-            <FormattedMessage id='hub.hero_title' defaultMessage='Hub' />
-          </h1>
-          <p className='hub-page__hero-intro'>
-            <FormattedMessage
-              id='hub.hero_intro'
-              defaultMessage='Every korner on this instance. Drop into whichever fits what you feel like doing.'
-            />
-          </p>
-        </section>
+        <header className='hub-page__intro'>
+          <FormattedMessage
+            id='hub.hero_intro'
+            defaultMessage='Every korner on this instance. Drop into whichever fits what you feel like doing.'
+          />
+        </header>
 
-        {listed.length === 0 && (
+        {live.length === 0 && soon.length === 0 && (
           <p className='hub-page__empty'>
             <FormattedMessage
               id='hub.empty'
@@ -156,11 +165,29 @@ const Hub: React.FC<{ multiColumn?: boolean }> = () => {
           </p>
         )}
 
-        <div className='hub-page__grid'>
-          {listed.map((k) => (
-            <KornerCard key={k.slug} korner={k} />
-          ))}
-        </div>
+        {live.length > 0 && (
+          <div className='hub-page__grid'>
+            {live.map((k) => (
+              <KornerCard key={k.slug} korner={k} />
+            ))}
+          </div>
+        )}
+
+        {soon.length > 0 && (
+          <>
+            <h2 className='hub-page__section-label'>
+              <FormattedMessage
+                id='hub.soon_section'
+                defaultMessage='Coming to Kronk'
+              />
+            </h2>
+            <div className='hub-page__grid hub-page__grid--soon'>
+              {soon.map((k) => (
+                <KornerCard key={k.slug} korner={k} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </Stage>
   );
