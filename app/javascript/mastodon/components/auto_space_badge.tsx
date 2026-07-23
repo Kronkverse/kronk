@@ -30,7 +30,7 @@ const SLUG_TO_GLYPH: Record<string, string> = {
   kalendar: '🗓',
   huddle: '◊',
   inflow: '≈',
-  krew: 'ĸ',
+  groups: 'ĸ', // Kronk vocab: slug stays `groups`, display label is "Krews".
 };
 
 export const AutoSpaceBadge: React.FC = () => {

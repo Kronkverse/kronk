@@ -29,7 +29,7 @@ const SPACE_LABELS: Record<string, string> = {
   nudges: 'Nudges',
   moments: 'Moments',
   albutts: 'Albutts',
-  groups: 'Groups',
+  groups: 'Krews', // Kronk vocab — slug stays `groups`; display label is Krews.
   klot: 'Klot',
   settings: 'Settings',
   kronk: 'Kronk',
@@ -104,7 +104,10 @@ export const ProposalCard: React.FC<{
           <span className='kommons-proposal__ring-num'>{backing.total}</span>
         </div>
         <span className='kommons-proposal__ring-label'>
-          <FormattedMessage id='governance.card.backed' defaultMessage='backed' />
+          <FormattedMessage
+            id='governance.card.backed'
+            defaultMessage='backed'
+          />
         </span>
       </div>
 
