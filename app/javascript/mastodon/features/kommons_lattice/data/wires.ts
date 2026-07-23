@@ -1,8 +1,8 @@
 // Lattice connectors — orthogonal elbows (spec §2).
 //
-// Stroked, uniform-width right angles with a fixed corner radius — the opposite
-// of the Skeleton's tapered, curved bones. One wire per open parent → visible
-// child. A wire is `on` when both ends sit on the active path.
+// Stroked, uniform-width right angles with a fixed corner radius. One wire per
+// open parent → visible child. A wire is `on` when both ends sit on the active
+// path.
 
 import type { Tree } from '../../kommons_tree/data/layout';
 

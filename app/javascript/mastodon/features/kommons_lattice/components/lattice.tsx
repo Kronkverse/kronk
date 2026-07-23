@@ -27,7 +27,7 @@ const Z_MAX = 1.6;
 const Z_TINY = 0.62; // below this the lattice reads as shape, not text
 const clampZoom = (z: number): number => Math.max(Z_MIN, Math.min(Z_MAX, z));
 
-// `pick` turns the map into a target picker: selecting a node opens the
+// `pick` turns the Directory into a target picker: selecting a node opens the
 // Proposer scoped to it (rather than its meta/Space page), so someone can
 // browse the tree to find the page their proposal is about. Branches still
 // expand, so the tree stays navigable.
@@ -266,7 +266,7 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
       if (!node) return;
       // A korner (or a space-pillar like Nudges) is a space, not a branch to
       // drill: open its Space page (the why / who / open-proposals view) rather
-      // than expanding its internal pages. The tree is the map; the Space page
+      // than expanding its internal pages. The tree is for browsing; the Space page
       // is the place.
       // Push a location object (pathname + search kept separate). A string like
       // `/x?q=1` is stuffed whole into `pathname` by the app's history wrapper,

@@ -29,7 +29,7 @@ const messages = defineMessages({
 // The Space page (/hub/kommons/space/:slug). Opened from a korner OR a
 // space-pillar (Nudges, Feed…) in the Kommons tree: the "why / who / what's
 // being proposed" view of a space, so members can engage with how Kronk
-// evolves. The tree is the map; this is the place.
+// evolves. The tree is for browsing; this is the place.
 //
 // Korners live in the client store (`useKorner`). Core pillars are excluded
 // from that store (they have no Hub tile) but are still fetchable by slug via

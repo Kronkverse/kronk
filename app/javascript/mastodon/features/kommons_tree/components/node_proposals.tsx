@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import api from 'mastodon/api';
 
 // A page-node's open proposals — the feedback suggesting changes to that page.
-// Shared by the Skeleton node detail and the Lattice leaf panel so both drill
+// Shared by the Lattice leaf panel and the space/node meta pages so both drill
 // from a page (the tree leaf) to the proposals on it. Each links to the routed
 // proposal page (`/hub/kommons/p/:id`).
 
