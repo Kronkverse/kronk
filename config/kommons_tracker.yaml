@@ -4,7 +4,7 @@
 # tracks its own construction (docs/spaces/kommons_tracker.md). Seeded
 # idempotently by `bin/rails kommons:tracker:seed` — each entry is keyed on the
 # `tracker:<key>` category, so re-running updates in place. `node` anchors the
-# proposal to a Skeleton node, so the Skeleton/Lattice show live build status.
+# proposal to a map node, so the Lattice map shows live build status.
 #
 # Sources: docs/rebuild/phase_audit_2026-07-20.md,
 #          docs/rebuild/remaining_work_2026-07-20.md.
@@ -379,7 +379,7 @@ proposals:
     tasks:
       - "Node detail lists that node's proposals"
       - 'Filter proposals by category (e.g. the rebuild board)'
-      - 'Progress reads through to the Skeleton/Lattice node badge'
+      - 'Progress reads through to the Lattice node badge'
 
 # ── Decision proposals: open product calls, tracked so blockers stay visible ──
 decisions:
