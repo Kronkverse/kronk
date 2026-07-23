@@ -108,12 +108,17 @@ Mobile (container ≤ 889px)
 
 ## Responsive strategy
 
-**The Frame uses container queries, not media queries.**
+**The Frame prefers container queries over media queries.**
 
-Body has `container-type: inline-size; container-name: frame`. All
-responsive rules fire as `@container frame (width <= 889px)` /
-`@container frame (width >= 1400px)`, so the Frame responds to its
-own width — not the viewport's.
+The `.kronk-frame` element carries `container-type: inline-size;
+container-name: frame` — scoped to the Frame, **not `body`**, on
+purpose: putting it on `body` would change the containing block for
+`position: fixed` descendants, which the classic chrome still relies
+on during the migration. Container rules fire as
+`@container frame (width <= 889px)`, so the Frame responds to its own
+width, not the viewport's. A few band breakpoints still use plain
+`@media` today; those convert to `@container` as the classic chrome
+retires (see Current state).
 
 The one breakpoint the Frame owns:
 
@@ -128,13 +133,19 @@ the Frame's.
 Every Stage-based korner renders these classes so the shape stays
 consistent:
 
-| Slot         | Class                     | Owned by                             |
-| ------------ | ------------------------- | ------------------------------------ |
-| Space badge  | `.space-badge`            | shared `<SpaceBadge>` component      |
-| View picker  | `.space-nav__picker`      | shared `<SpaceViewPicker>` component |
-| Stage        | `.frame-stage` (or child) | per korner                           |
-| Sidebar tile | `.korner-sidebar__tile`   | `<KornerSidebar>` (Frame-owned)      |
-| Ӂ menu       | `.kronk-menu`             | `<KronkMenu>` (Frame-owned)          |
+| Slot         | Class                     | Owned by                                    |
+| ------------ | ------------------------- | ------------------------------------------- |
+| Space badge  | `.space-badge`            | shared `<SpaceBadge>` component             |
+| View picker  | `.space-view-picker`      | shared `<SpaceViewPicker>` component        |
+| Stage        | `.kronk-stage`            | shared `<Stage>` component (per-korner body) |
+| Sidebar tile | `.korner-sidebar__tile`   | `<KornerSidebar>` (Frame-owned)             |
+| Ӂ menu       | `.kronk-menu`             | `<KronkMenu>` (Frame-owned)                 |
+
+(The Frame grid cells themselves are `.kronk-frame__stage`,
+`.kronk-frame__space-nav`, `.kronk-frame__top-band`,
+`.kronk-frame__right-band`, `.kronk-frame__bottom-band` — Frame-owned;
+a korner renders its content into the Stage cell via the shared
+`<Stage>` component.)
 
 The shared components are the source of truth. A korner **should not**
 reimplement its own back-out pill or view tabs.
@@ -146,9 +157,16 @@ reimplement its own back-out pill or view tabs.
    persistent affordances propose a Frame change, not a per-space
    add-on.
 
-2. **Chrome is a grid child, not a fixed overlay.** `position: fixed`
-   in chrome components is retired. If it comes back for a specific
-   reason (e.g., a scroll-following element), document why.
+2. **Chrome is a grid child, not a fixed overlay — the target.** The
+   goal is that no chrome uses `position: fixed`; each lays out as a
+   flow child of its grid slot. This is **not yet fully true.** The
+   inner chrome (wordmark, HubSwitcher, sidebar) was un-fixed, but the
+   slot strips themselves are still `position: fixed` fade bands
+   (~16 `fixed` declarations remain across the Frame/chrome SCSS),
+   because the real geometry is still owned by Mastodon's classic
+   `.columns-area` until every page migrates off `<Column>`. The strips
+   become true grid children once `.columns-area` retires. New chrome
+   added meanwhile still targets the grid, never a fresh fixed overlay.
 
 3. **Stage owns its content, not its geometry.** The Frame gives
    Stage a rectangle. What Stage renders inside it is the korner's
@@ -164,20 +182,47 @@ reimplement its own back-out pill or view tabs.
    any, is inline panel copy on the landing view only — not a
    reserved band.
 
+## Current state (migration status)
+
+The Frame is a two-part rollout: the **scaffolding** (done) and the
+**per-page migration** (barely started). Read the rules above as the
+*target*; this section is the *current* reality (as of alpha.183).
+
+**Landed (scaffolding):** the Frame and all five slots are mounted
+platform-wide in `ui/index.jsx`; the shared components exist and are
+wired — `<SpaceBadge>`/`<AutoSpaceBadge>`, `<SpaceViewPicker>`,
+`<KornerSidebar>`, `<KronkMenu>`. This came in the four-PR series
+(#587 / #589 / #592 / #594) plus badge/picker/sidebar follow-ons
+(#597 / #599 / #602), spanning roughly alpha.176 → alpha.183.
+
+**Not yet done (per-page):** only **Kuestions** renders through the
+shared `<Stage>`. Every other page — Kommons, Nudges, Booth, Feed,
+InFlow, Groups, and the upstream Mastodon timelines/settings — still
+renders classic `<Column>` + `<ColumnHeader>` chrome *inside* the Stage
+cell (~68 files import `ColumnHeader`, ~94 use `<Column>`). Until a
+page migrates:
+
+- the slot strips stay `position: fixed` (rule 2 target unmet);
+- the `.columns-area` padding dance is reshaped, not gone — a
+  `padding-top` remains to clear the still-fixed `KornerSubBar`;
+- `KornerSubBar` is still rendered (as a Frame sibling) on non-Stage
+  routes, so rule 4 only holds per-migrated-route;
+- `_kronk_stage.scss` uses a `:has(.kronk-stage) { container-type:
+  normal }` escape hatch so a Stage's fixed children anchor to the
+  viewport rather than the classic columns-area containing block.
+
+The end state (fixed retired, `.columns-area` gone, SubBar gone) is
+reachable only once the pages are migrated.
+
 ## Historical
 
 - `docs/kronk_stage_zones.md` — Stage-only precursor spec. Retired
   when the Frame layer was formalized.
-- The `body::before` and `body::after` fade bands, the classic
-  `.columns-area` padding-top / centring dance, and each chrome
-  component's `position: fixed` self-anchoring are all retired
-  incrementally in the KronkFrame migration PRs (v2.0.0-alpha.176 →
-  alpha.180 range).
 
 ## Related files
 
 - `app/javascript/mastodon/features/ui/index.jsx` — the Frame mounts here.
 - `app/javascript/mastodon/components/kronk_frame.tsx` — the Frame component.
+- `app/javascript/mastodon/components/stage.tsx` — the shared `<Stage>` content component.
 - `app/javascript/styles/mastodon/_kronk_frame.scss` — the grid CSS.
 - `app/javascript/styles/mastodon/_kronk_chrome.scss` — the chrome components inside the slots.
-- `docs/kronk_frame_prototype_v12.html` — visual reference (pre-implementation).

@@ -6,11 +6,12 @@
 //
 // Full spec: docs/kronk_frame.md.
 //
-// This first landing wires the wrapper + Stage slot only — TopBand,
-// SpaceNav, RightBand, BottomBand exist as slot components but are
-// unused by ui/index.jsx yet (the existing chrome stays position:
-// fixed for now). Later PRs migrate the fade bands and un-fix the
-// individual chrome components into their slots.
+// All five slots (TopBand, SpaceNav, Stage, RightBand, BottomBand) are
+// wired in ui/index.jsx. The inner chrome has been un-fixed into flow
+// children, but the slot strips themselves are still position: fixed
+// during the migration — see the "Current state" section of the spec.
+// The per-page migration off classic <Column>/<ColumnHeader> and into
+// the shared <Stage> is ongoing (only Kuestions so far).
 import type { ReactNode } from 'react';
 
 interface KronkFrameProps {
