@@ -128,9 +128,7 @@ module Mastodon
           next if manifest.core?
 
           issues << "#{manifest.slug}: slug is reserved for platform use" if reserved.include?(manifest.slug)
-        end
 
-        manifests.each do |manifest|
           detect_conformance_issues(manifest).each { |line| issues << "#{manifest.slug}: #{line}" }
         end
 
@@ -155,7 +153,7 @@ module Mastodon
 
         # L1 — slug is one lowercase word, and names its own manifest file.
         issues << "L1 slug '#{slug}' is not one lowercase word (a-z0-9)" unless slug.match?(/\A[a-z0-9]+\z/)
-        issues << "L1 no config/korners/#{slug}.yaml (slug != filename)" unless File.exist?(Rails.root.join('config', 'korners', "#{slug}.yaml"))
+        issues << "L1 no config/korners/#{slug}.yaml (slug != filename)" unless Rails.root.join('config', 'korners', "#{slug}.yaml").exist?
 
         return issues unless manifest.enforced
 
@@ -192,6 +190,23 @@ module Mastodon
         card = manifest.feed_projection&.dig('card')
         issues << "L4 feed card '#{card}' not registered in korner_cards.tsx (no slug: '#{slug}' entry)" if card.present? && !korner_source('app/javascript/mastodon/components/korner_cards.tsx').match?(/slug:\s*['"]#{Regexp.escape(slug)}['"]/)
 
+        # L7 — every korner-owned SCSS file is in the stylelint governance
+        # list. The governance list applies `color-no-hex` +
+        # `border-radius` token-only rules; SCSS not on the list can drift
+        # in raw hexes and legacy pre-token vars without lint catching it.
+        # Convention: a korner ships `_<slug>.scss` (main styles) and
+        # optionally `_status_<slug>_card.scss` (feed-card partial). Only
+        # files that actually exist are enforced — a korner with no SCSS
+        # of its own is fine.
+        stylelint_governance_list.tap do |governed|
+          expected_scss_files(slug).each do |scss_relative_path|
+            next unless Rails.root.join(scss_relative_path).exist?
+            next if governed.include?(scss_relative_path)
+
+            issues << "L7 SCSS '#{scss_relative_path}' is not in the stylelint governance list (raw hex + legacy tokens can drift; add it to stylelint.config.js)"
+          end
+        end
+
         # L10 — every notification type the manifest declares is actually a
         # registered `Notification` type, and its subject resolves to a model.
         # This is the check the doctor historically lacked: a korner could
@@ -227,6 +242,33 @@ module Mastodon
         end
       end
 
+      # SCSS files a korner is expected to have. Only ones that actually
+      # exist are enforced by the L7 check — a korner without a card
+      # partial (yet) doesn't need it in the governance list.
+      def expected_scss_files(slug)
+        [
+          "app/javascript/styles/mastodon/_#{slug}.scss",
+          "app/javascript/styles/mastodon/_status_#{slug}_card.scss",
+        ]
+      end
+
+      # Parse stylelint.config.js once and return the governance list
+      # (the `files:` array under the token-enforcing overrides block).
+      # We match by literal string extraction — the config file is
+      # hand-authored JS, and the file paths inside the array are
+      # single-line quoted strings, so a regex over that section is
+      # good enough without loading Node.
+      def stylelint_governance_list
+        @stylelint_governance_list ||= begin
+          config_path = Rails.root.join('stylelint.config.js')
+          if File.exist?(config_path)
+            File.read(config_path).scan(%r{'(app/javascript/styles/mastodon/_[^']+\.scss)'}).flatten.to_set
+          else
+            Set.new
+          end
+        end
+      end
+
       # The attribute + association names REST::StatusSerializer exposes.
       def status_serializer_attributes
         @status_serializer_attributes ||= begin
@@ -234,7 +276,7 @@ module Mastodon
           attrs = attrs.keys if attrs.respond_to?(:keys)
           refls = REST::StatusSerializer._reflections
           refls = refls.keys if refls.respond_to?(:keys)
-          (Array(attrs) + Array(refls)).map(&:to_sym).to_set
+          (Array(attrs) + Array(refls)).to_set(&:to_sym)
         end
       end
 
@@ -297,13 +339,7 @@ module Mastodon
       end
 
       def rails_route_paths
-        Rails.application.routes.routes.map { |r| r.path.spec.to_s.sub(/\(\.:format\)\z/, '') }.uniq.reject do |path|
-          # Root-level catch-alls match literally everything, so leaving them
-          # in makes the check pass unconditionally — which is how a check
-          # ends up green and worthless. Prefix globs like
-          # `/hub/kuestions/*path` are kept: they really do serve that subtree.
-          path.match?(%r{\A/\*})
-        end
+        Rails.application.routes.routes.map { |r| r.path.spec.to_s.delete_suffix('(.:format)') }.uniq.grep_v(%r{\A/\*})
       end
 
       # Parsed out of the JSX rather than executed. Brittle if the route
