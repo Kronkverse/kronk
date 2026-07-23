@@ -111,7 +111,6 @@ export const Groups = () => {
 
   return (
     <Stage label={intl.formatMessage(messages.title)}>
-
       <div className='scrollable groups-page'>
         <p className='groups-page__intro'>
           <FormattedMessage
@@ -260,7 +259,7 @@ export const Groups = () => {
         <ul className='groups-page__list'>
           {groups.map((g) => (
             <li key={g.id} className='groups-page__row'>
-              <Link to={`/hub/groups/${g.id}`}>
+              <Link to={`/hub/krew/${g.id}`}>
                 <div className='groups-page__row-header'>
                   <h3 className='groups-page__row-name'>{g.name}</h3>
                   <small className='groups-page__row-slug'>@{g.slug}</small>

@@ -303,6 +303,12 @@ Rails.application.routes.draw do
   get '/hub/wachuneed/*path', to: 'home#index', format: false
   get '/hub/inflow', to: 'home#index'
   get '/hub/inflow/*path', to: 'home#index', format: false
+  # Krews — Phase 1 flips the URL from /hub/groups to /hub/krew (singular,
+  # per the KRONK_KREWS brief). The /hub/groups routes stay for one
+  # release so cached links keep working; Phase 2 drops them alongside
+  # the backend Group → Krew rename.
+  get '/hub/krew', to: 'home#index'
+  get '/hub/krew/*path', to: 'home#index', format: false
   get '/hub/groups', to: 'home#index'
   get '/hub/groups/*path', to: 'home#index', format: false
   # Framework surfaces reached from the Ӂ menu — SPA-only, no controller.
