@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_23_150000) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_23_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -718,6 +718,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_23_150000) do
     t.index ["account_id", "year"], name: "index_generated_annual_reports_on_account_id_and_year", unique: true
   end
 
+  create_table "krew_korners", force: :cascade do |t|
+    t.bigint "krew_id", null: false
+    t.string "korner", null: false
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["krew_id", "korner"], name: "index_krew_korners_on_krew_id_and_korner", unique: true
+    t.index ["krew_id"], name: "index_krew_korners_on_krew_id"
+  end
+
   create_table "krew_memberships", force: :cascade do |t|
     t.bigint "krew_id", null: false
     t.bigint "account_id", null: false
@@ -725,10 +733,26 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_23_150000) do
     t.datetime "joined_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "source", default: "direct", null: false
+    t.bigint "rsvp_event_id"
     t.index ["account_id"], name: "index_krew_memberships_on_account_id"
     t.index ["krew_id", "account_id"], name: "index_krew_memberships_on_krew_id_and_account_id", unique: true
     t.index ["krew_id", "role"], name: "index_krew_memberships_on_krew_id_and_role"
     t.index ["krew_id"], name: "index_krew_memberships_on_krew_id"
+    t.index ["rsvp_event_id"], name: "index_krew_memberships_on_rsvp_event_id"
+    t.index ["source"], name: "index_krew_memberships_on_source"
+  end
+
+  create_table "krew_requirements", force: :cascade do |t|
+    t.bigint "krew_id", null: false
+    t.string "kind", null: false
+    t.bigint "event_id"
+    t.string "region"
+    t.jsonb "vouch_params"
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["event_id"], name: "index_krew_requirements_on_event_id"
+    t.index ["kind"], name: "index_krew_requirements_on_kind"
+    t.index ["krew_id"], name: "index_krew_requirements_on_krew_id"
   end
 
   create_table "krews", force: :cascade do |t|
@@ -741,8 +765,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_23_150000) do
     t.datetime "archived_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "seeded_by_account_id"
+    t.string "access", default: "open", null: false
+    t.string "invite_token"
+    t.integer "member_count", default: 0, null: false
+    t.datetime "last_activity_at"
+    t.index ["access"], name: "index_krews_on_access"
     t.index ["archived_at"], name: "index_krews_on_archived_at", where: "(archived_at IS NOT NULL)"
     t.index ["discoverable"], name: "index_krews_on_discoverable", where: "(discoverable = true)"
+    t.index ["invite_token"], name: "index_krews_on_invite_token", unique: true, where: "(invite_token IS NOT NULL)"
+    t.index ["last_activity_at"], name: "index_krews_on_last_activity_at", order: :desc
+    t.index ["seeded_by_account_id"], name: "index_krews_on_seeded_by_account_id"
     t.index ["slug"], name: "index_krews_on_slug", unique: true
   end
 
@@ -1907,8 +1940,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_23_150000) do
   add_foreign_key "follows", "accounts", column: "target_account_id", name: "fk_745ca29eac", on_delete: :cascade
   add_foreign_key "follows", "accounts", name: "fk_32ed1b5560", on_delete: :cascade
   add_foreign_key "generated_annual_reports", "accounts"
+  add_foreign_key "krew_korners", "krews", on_delete: :cascade
   add_foreign_key "krew_memberships", "accounts", on_delete: :cascade
+  add_foreign_key "krew_memberships", "events", column: "rsvp_event_id", on_delete: :nullify
   add_foreign_key "krew_memberships", "krews", on_delete: :cascade
+  add_foreign_key "krew_requirements", "events", on_delete: :cascade
+  add_foreign_key "krew_requirements", "krews", on_delete: :cascade
+  add_foreign_key "krews", "accounts", column: "seeded_by_account_id", on_delete: :nullify
   add_foreign_key "huddle_participants", "accounts", on_delete: :cascade
   add_foreign_key "huddle_participants", "huddle_sessions", on_delete: :cascade
   add_foreign_key "huddle_sessions", "accounts", column: "host_account_id", on_delete: :cascade

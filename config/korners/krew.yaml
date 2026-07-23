@@ -20,6 +20,8 @@ resources:
     primary: true
   - name: krew_memberships
   - name: statuses_krews # join to Status for multi-krew posts
+  - name: krew_korners # attachment registry (Phase 3a)
+  - name: krew_requirements # gate rows for requirement_gated (Phase 3a)
 
 storage:
   db_namespace: krew_

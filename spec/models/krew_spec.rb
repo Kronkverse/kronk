@@ -5,8 +5,8 @@ require 'rails_helper'
 RSpec.describe Krew do
   let(:seeder) { Fabricate(:account) }
 
-  def build(slug: 'test-krew', name: 'Test Krew', **rest)
-    described_class.new(slug: slug, name: name, **rest)
+  def build(slug: 'test-krew', name: 'Test Krew', access: 'open', **rest)
+    described_class.new(slug: slug, name: name, access: access, **rest)
   end
 
   describe 'validations' do
@@ -28,8 +28,19 @@ RSpec.describe Krew do
     end
 
     it 'enforces slug uniqueness' do
-      described_class.create!(slug: 'unique', name: 'One')
-      expect(described_class.new(slug: 'unique', name: 'Two')).to_not be_valid
+      described_class.create!(slug: 'unique', name: 'One', access: 'open')
+      expect(described_class.new(slug: 'unique', name: 'Two', access: 'open')).to_not be_valid
+    end
+
+    it 'accepts every registered access level' do
+      described_class::ACCESS_LEVELS.each do |level|
+        krew = build(slug: level.tr('_', '-'), access: level)
+        expect(krew).to be_valid, "#{level} should be a valid access level"
+      end
+    end
+
+    it 'rejects unknown access levels' do
+      expect(build(access: 'whatever')).to_not be_valid
     end
 
     it 'accepts every registered governance framework' do
@@ -44,19 +55,36 @@ RSpec.describe Krew do
     end
   end
 
-  describe '#seeder? and #member?' do
-    let(:krew) { described_class.create!(slug: 'peer', name: 'Peer Krew') }
+  describe 'access helpers' do
+    it 'reports listed? as the inverse of invite_only' do
+      expect(build(access: 'open').listed?).to be true
+      expect(build(access: 'requirement_gated').listed?).to be true
+      expect(build(access: 'invite_only').listed?).to be false
+    end
+  end
 
-    it 'reports seeder for a seeder membership' do
-      krew.krew_memberships.create!(account: seeder, role: 'seeder')
+  describe '#seeder?' do
+    let(:krew) { described_class.create!(slug: 'peer', name: 'Peer Krew', access: 'open', seeded_by: seeder) }
+
+    it 'reports the seeded_by account as seeder without a legacy role row' do
       expect(krew.seeder?(seeder)).to be true
     end
 
-    it 'reports member for any membership' do
+    it 'still honours the legacy role=seeder membership' do
       member = Fabricate(:account)
-      krew.krew_memberships.create!(account: member, role: 'member')
-      expect(krew.member?(member)).to be true
-      expect(krew.seeder?(member)).to be false
+      krew.krew_memberships.create!(account: member, role: 'seeder')
+      expect(krew.seeder?(member)).to be true
+    end
+  end
+
+  describe '#regenerate_invite_token!' do
+    let(:krew) { described_class.create!(slug: 'ir', name: 'Invite Regen', access: 'invite_only') }
+
+    it 'rotates the token when called' do
+      krew.regenerate_invite_token!
+      first = krew.invite_token
+      krew.regenerate_invite_token!
+      expect(krew.invite_token).to_not eq(first)
     end
   end
 end
