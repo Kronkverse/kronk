@@ -26,6 +26,7 @@ import { PictureInPicture } from 'mastodon/features/picture_in_picture';
 import { HubSwitcher } from './components/hub_switcher';
 import { KornerSubBar } from './components/korner_sub_bar';
 import { KornerSidebar } from './components/korner_sidebar';
+import { KronkFrame } from 'mastodon/components/kronk_frame';
 import { KronkMenu } from './components/kronk_menu';
 import { KronkWordmark } from './components/kronk_wordmark';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
@@ -702,9 +703,18 @@ class UI extends PureComponent {
       <Hotkeys global handlers={handlers}>
         <BoothPlaybackProvider>
         <div className={classNames('ui', { 'is-composing': isComposing })} ref={this.setRef}>
-          <SwitchingColumnsArea identity={this.props.identity} location={location} singleColumn={layout === 'mobile' || layout === 'single-column'} forceOnboarding={firstLaunch && newAccount}>
-            {children}
-          </SwitchingColumnsArea>
+          {/* KronkFrame — foundational page layout (docs/kronk_frame.md).
+              Landing: only Stage is wired; band slots are empty. Existing
+              chrome (Wordmark, HubSwitcher, KornerSidebar, KornerSubBar)
+              still renders position: fixed below as siblings and paints
+              over the Frame; later PRs migrate them into the slots. */}
+          <KronkFrame>
+            <KronkFrame.Stage>
+              <SwitchingColumnsArea identity={this.props.identity} location={location} singleColumn={layout === 'mobile' || layout === 'single-column'} forceOnboarding={firstLaunch && newAccount}>
+                {children}
+              </SwitchingColumnsArea>
+            </KronkFrame.Stage>
+          </KronkFrame>
 
           {layout !== 'mobile' && <PictureInPicture />}
           <BoothMiniPlayer />
