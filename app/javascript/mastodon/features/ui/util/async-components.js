@@ -319,6 +319,26 @@ export function KalendarSpiral () {
   return import("../../kalendar_spiral");
 }
 
+export function HubArrangeable () {
+  return import("../../hub_arrangeable");
+}
+
+export function BoothV2 () {
+  return import("../../booth_v2");
+}
+
+export function WachuneedV2 () {
+  return import("../../wachuneed_v2");
+}
+
+export function InflowV2 () {
+  return import("../../inflow_v2");
+}
+
+export function KompassV2 () {
+  return import("../../kompass_v2");
+}
+
 export function MomentsStub () {
   return import("../../korner_stub").then(m => ({ default: m.MomentsStub }));
 }

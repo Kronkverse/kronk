@@ -1,13 +1,14 @@
-// Kalendar Spiral — first ship (Kommons proposal #116969253949249128).
-// The interactive prototype lives at public/kalendar-spiral-preview.html;
-// this stylesheet just sizes its iframe host so the spiral fills the
-// Frame's Stage rectangle. Real component-level styles land when the
-// prototype is ported to React (task 2 of the proposal).
+// Shared iframe host for korner-preview prototypes. Sizes the iframe
+// to fill the Stage; the prototype inside owns its own layout and
+// scrolling. Filename kept as _kalendar_spiral.scss for now — this
+// stylesheet was first added for that korner and now covers every
+// korner using the KornerIframe pattern (Hub / Booth / Wachuneed /
+// Inflow / Kompass). Sweep in a rename PR later.
 
-.kalendar-spiral {
+.korner-iframe {
   flex: 1 1 auto;
   width: 100%;
-  min-height: 0; // permit flex parent to size us
+  min-height: 0;
   border: 0;
   background: transparent;
   display: block;

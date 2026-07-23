@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kronk · In Flow — the veil</title>
+<style>
+  :root{
+    --purple:#563ACC;--purple-bright:#7B5CFF;
+    --canvas:#08060f;--panel:#100c1e;--panel-2:#160f2b;--line:#241a3f;
+    --ink:#ECE9F6;--muted:#9187ad;--faint:#6a6187;--gold:#E0B341;
+    --void:#040309;
+    --serif:"Liberation Serif","Times New Roman",Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --squircle:34% / 34%;
+
+    /* ---- sticky-reveal choreography ----
+       reveal 100vh (curtain slides off) + hold 40vh + cover 100vh (curtain slides back)
+       scope height must be sticky height (100vh) + that total (240vh) = 340vh          */
+    --hold:40vh;
+    --scope:340vh;
+    --fringe:170px;   /* soft dissolve at the curtain's edges */
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--canvas);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+
+  /* ambient starfield behind the ordinary feed */
+  #stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;
+    background:radial-gradient(1100px 760px at 78% -10%,rgba(86,58,204,.14),transparent 60%)}
+  .spark{position:absolute;color:var(--purple);opacity:.2;font-size:11px;line-height:1}
+  .dot{position:absolute;width:2px;height:2px;border-radius:50%;background:var(--purple-bright);opacity:.32}
+
+  .topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;
+    padding:13px 24px;background:linear-gradient(180deg,rgba(8,6,15,.9),rgba(8,6,15,.55));
+    backdrop-filter:blur(10px);border-bottom:1px solid rgba(36,26,63,.7)}
+  .brand{font-family:var(--serif);font-size:28px;letter-spacing:1px;color:var(--purple-bright)}
+  .mono{width:48px;height:48px;border-radius:50%;border:1px solid var(--purple-bright);
+    background:radial-gradient(circle at 32% 28%,#6f52ef,#3f2ba6);color:#fff;font-family:var(--serif);
+    font-size:27px;display:grid;place-items:center;box-shadow:0 8px 24px rgba(86,58,204,.45)}
+
+  .stage{position:relative;z-index:5}
+
+  /* ---- the curtain: opaque sheets of feed that slide over the void ---- */
+  .deck{position:relative;z-index:2}
+  .deck .col{max-width:640px;margin:0 auto;padding:0 18px}
+  .deck-before{
+    padding:24px 0 var(--fringe);
+    background:linear-gradient(180deg,var(--canvas) 0,var(--canvas) calc(100% - var(--fringe)),rgba(8,6,15,0) 100%);
+  }
+  .deck-after{
+    margin-top:-100vh;                       /* rides up over the pinned void */
+    padding:var(--fringe) 0 200px;
+    background:linear-gradient(0deg,var(--canvas) 0,var(--canvas) calc(100% - var(--fringe)),rgba(8,6,15,0) 100%);
+  }
+
+  /* ---- the void: pinned, stationary, behind everything ---- */
+  .veil-scope{position:relative;z-index:0;height:var(--scope);margin-top:-100vh}
+  .veil{position:sticky;top:0;height:100vh;overflow:hidden}
+  .void{position:absolute;inset:0;
+    background:radial-gradient(125% 85% at 50% 44%,#0b0817 0%,var(--void) 56%,#020106 100%)}
+  .layer{position:absolute;inset:-14% -6%;will-change:transform}
+  .layer span{position:absolute}
+  .layer .s{color:var(--purple);font-size:10px}
+  .layer .d{border-radius:50%;background:#cfc7ff}
+
+  .scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;padding:70px 26px 0}
+  .moonwrap{position:relative;width:186px;height:186px;display:grid;place-items:center;will-change:transform}
+  .halo{position:absolute;inset:-42%;border-radius:50%;
+    background:radial-gradient(circle,rgba(198,186,255,.5) 0%,rgba(123,92,255,.16) 42%,rgba(123,92,255,0) 70%);
+    filter:blur(4px);will-change:opacity}
+  .moon{position:relative;width:148px;height:148px}
+
+  .read{max-width:400px;margin-top:24px;will-change:transform,opacity}
+  .read .eye{display:flex;gap:9px;align-items:center;justify-content:center;color:var(--purple-bright);
+    font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+  .read h2{font-family:var(--serif);font-weight:400;font-size:27px;margin:0 0 4px;color:#fff}
+  .read .phase{font-family:var(--serif);font-size:15px;color:#cfc7ff;margin-bottom:14px}
+  .read p{font-family:var(--serif);font-size:16px;line-height:1.62;margin:0 auto 16px;opacity:.94}
+  .almanac{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;color:var(--muted);font-size:12px;letter-spacing:.4px}
+  .almanac b{color:#cfc7ff;font-weight:600}
+  .read .close{margin-top:20px;color:var(--faint);font-style:italic;font-size:13px;font-family:var(--serif)}
+
+  /* ---- feed furniture ---- */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px}
+  .daily{padding:18px 20px;margin-bottom:16px}
+  .daily .eyebrow{display:flex;gap:10px;align-items:baseline;color:var(--muted);font-size:13px;margin-bottom:8px}
+  .daily .eyebrow b{font-family:var(--serif);font-size:16px;color:var(--ink);font-weight:400}
+  .daily p{margin:0;font-family:var(--serif);font-size:16px;line-height:1.5}
+  .daily a{display:inline-block;margin-top:10px;color:var(--purple-bright);text-decoration:none;font-size:13px}
+  .post{padding:16px 18px;margin-bottom:14px}
+  .post .head{display:flex;align-items:center;gap:11px}
+  .post .av{width:42px;height:42px;border-radius:var(--squircle);overflow:hidden;flex:0 0 auto}
+  .post .av img{width:100%;height:100%;object-fit:cover;display:block}
+  .post .name{font-family:var(--serif);font-size:16px}
+  .post .handle{color:var(--muted);font-size:13px}
+  .post .time{margin-left:auto;color:var(--faint);font-size:12px}
+  .post .txt{margin-top:11px;font-size:15px;line-height:1.55}
+  .post .rail{display:flex;gap:28px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);color:var(--faint)}
+  .post .rail svg{width:18px;height:18px}
+  .post .rail .liked{color:var(--gold)}
+
+  .hintline{max-width:640px;margin:0 auto;padding:0 18px 8px;color:var(--faint);
+    font-family:var(--serif);font-size:13px;font-style:italic;text-align:center}
+
+  @media (max-width:680px){
+    :root{--fringe:130px}
+    .read h2{font-size:23px}
+    .moonwrap{width:150px;height:150px}
+    .moon{width:118px;height:118px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .layer,.moonwrap,.read{transform:none!important;opacity:1!important}
+    .halo{opacity:.9!important}
+  }
+</style>
+</head>
+<body>
+<div id="stars"></div>
+
+<header class="topbar">
+  <div class="brand">ӁЯѺƝ₭</div>
+  <div class="mono">Ӂ</div>
+</header>
+
+<main class="stage">
+
+  <!-- ===== curtain: feed above ===== -->
+  <div class="deck deck-before" id="deckBefore">
+    <div class="col">
+      <div class="card daily">
+        <div class="eyebrow"><b>Kosmic Daily</b> · Friday 10 July</div>
+        <p>The land rests under a waning crescent — winter quiet, the sky turning slowly overhead.</p>
+        <a href="#">Open in Flow ↓</a>
+      </div>
+
+      <article class="card post">
+        <div class="head"><div class="av"><img src="https://i.pravatar.cc/80?img=45"></div><div><div class="name">Manoé ☀️</div><div class="handle">@Manono</div></div><div class="time">22h</div></div>
+        <div class="txt">Anyone around for a Huddle later? Thinking 8pm, bring tea.</div>
+        <div class="rail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><svg class="liked" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6C19 16.5 12 21 12 21Z"/></svg></div>
+      </article>
+
+      <article class="card post">
+        <div class="head"><div class="av"><img src="https://i.pravatar.cc/80?img=32"></div><div><div class="name">Wren</div><div class="handle">@wren</div></div><div class="time">1d</div></div>
+        <div class="txt">planted a seed in ₭ommons about quiet hours for Nudges. worth a look.</div>
+        <div class="rail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6C19 16.5 12 21 12 21Z"/></svg></div>
+      </article>
+
+      <article class="card post">
+        <div class="head"><div class="av"><img src="https://i.pravatar.cc/80?img=12"></div><div><div class="name">Chris</div><div class="handle">@tal</div></div><div class="time">1d</div></div>
+        <div class="txt">the shell redesign is coming together. three spaces, one Ӂ, everything else a moon.</div>
+        <div class="rail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><svg class="liked" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6C19 16.5 12 21 12 21Z"/></svg></div>
+      </article>
+
+      <div class="hintline">keep scrolling ↓</div>
+    </div>
+  </div>
+
+  <!-- ===== the void, pinned behind ===== -->
+  <div class="veil-scope" id="scope">
+    <section class="veil">
+      <div class="void"></div>
+      <div class="layer" id="far"></div>
+      <div class="layer" id="mid"></div>
+      <div class="layer" id="near"></div>
+
+      <div class="scene">
+        <div class="moonwrap" id="moonwrap">
+          <div class="halo" id="halo"></div>
+          <svg class="moon" viewBox="0 0 200 200">
+            <defs>
+              <radialGradient id="mface" cx="40%" cy="34%" r="78%">
+                <stop offset="0%" stop-color="#f6f4fc"/>
+                <stop offset="55%" stop-color="#dad7ec"/>
+                <stop offset="100%" stop-color="#b3afce"/>
+              </radialGradient>
+              <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6"/></filter>
+            </defs>
+            <circle cx="100" cy="100" r="70" fill="url(#mface)"/>
+            <circle cx="78" cy="76" r="9" fill="#c4c1da" opacity=".5"/>
+            <circle cx="118" cy="124" r="7" fill="#c4c1da" opacity=".45"/>
+            <circle cx="92" cy="120" r="5" fill="#c4c1da" opacity=".4"/>
+            <circle cx="66" cy="108" r="4" fill="#c4c1da" opacity=".35"/>
+            <!-- terminator disc, offset right → left-lit waning crescent -->
+            <circle cx="126" cy="94" r="68" fill="#040309" filter="url(#soft)"/>
+          </svg>
+        </div>
+
+        <div class="read" id="read">
+          <div class="eye"><span>☾</span> In Flow · Friday 10 July</div>
+          <h2>Beyond the veil</h2>
+          <div class="phase">Waning crescent · 18% lit</div>
+          <p>The moon has thinned to a paring, rising in the small hours and trailing the sun by a little less each day. Deep winter still holds the land — but the solstice is behind us now, and the light is returning, a minute at a time.</p>
+          <div class="almanac">
+            <span>Moonrise <b>3:14</b></span>
+            <span>Moonset <b>2:41</b></span>
+            <span>Sunrise <b>7:16</b></span>
+            <span>Sunset <b>5:28</b></span>
+          </div>
+          <div class="close">Then the feed closes over again.</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== curtain: feed slides back over ===== -->
+  <div class="deck deck-after" id="deckAfter">
+    <div class="col">
+      <article class="card post">
+        <div class="head"><div class="av"><img src="https://i.pravatar.cc/80?img=5"></div><div><div class="name">Odessa</div><div class="handle">@odessa</div></div><div class="time">2d</div></div>
+        <div class="txt">back to it — anyone selling a second-hand tent in Wachuneed? camping trip next month.</div>
+        <div class="rail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6C19 16.5 12 21 12 21Z"/></svg></div>
+      </article>
+
+      <article class="card post">
+        <div class="head"><div class="av"><img src="https://i.pravatar.cc/80?img=45"></div><div><div class="name">Manoé ☀️</div><div class="handle">@Manono</div></div><div class="time">2d</div></div>
+        <div class="txt">that In Flow window gets me every time. love this place.</div>
+        <div class="rail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><svg class="liked" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6C19 16.5 12 21 12 21Z"/></svg></div>
+      </article>
+
+      <article class="card post">
+        <div class="head"><div class="av"><img src="https://i.pravatar.cc/80?img=32"></div><div><div class="name">Wren</div><div class="handle">@wren</div></div><div class="time">3d</div></div>
+        <div class="txt">kalendar: winter fire, next saturday. bring something to burn and something to share.</div>
+        <div class="rail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6C19 16.5 12 21 12 21Z"/></svg></div>
+      </article>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  /* ambient starfield */
+  (function(){var s=document.getElementById('stars'),h='';
+    for(var i=0;i<62;i++){var x=Math.random()*100,y=Math.random()*100;
+      h+= Math.random()>.45 ? '<span class="spark" style="left:'+x+'%;top:'+y+'%">+</span>'
+                            : '<span class="dot" style="left:'+x+'%;top:'+y+'%"></span>';}
+    s.innerHTML=h;})();
+
+  /* depth layers inside the void */
+  function fill(el,n,kind,a,b){var h='';
+    for(var i=0;i<n;i++){var x=(Math.random()*100).toFixed(2),y=(Math.random()*100).toFixed(2),
+        o=(0.28+Math.random()*0.5).toFixed(2);
+      if(kind==='d'){var z=(a+Math.random()*(b-a)).toFixed(1);
+        h+='<span class="d" style="left:'+x+'%;top:'+y+'%;width:'+z+'px;height:'+z+'px;opacity:'+o+'"></span>';}
+      else h+='<span class="s" style="left:'+x+'%;top:'+y+'%;opacity:'+o+'">+</span>';}
+    el.innerHTML=h;}
+  fill(document.getElementById('far'),52,'d',1,2);
+  fill(document.getElementById('mid'),24,'s');
+  fill(document.getElementById('near'),15,'d',2.2,3.6);
+
+  var before=document.getElementById('deckBefore'),
+      after=document.getElementById('deckAfter'),
+      far=document.getElementById('far'),mid=document.getElementById('mid'),near=document.getElementById('near'),
+      moonwrap=document.getElementById('moonwrap'),halo=document.getElementById('halo'),read=document.getElementById('read');
+  var reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches, ticking=false;
+
+  function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+  function smooth(t){t=clamp(t,0,1);return t*t*(3-2*t);}
+
+  function frame(){
+    ticking=false; if(reduce) return;
+    var V=window.innerHeight;
+
+    /* how far the upper curtain has slid off: 0 = void hidden, 1 = fully revealed */
+    var revealed=clamp(1-before.getBoundingClientRect().bottom/V,0,1);
+    /* how far the lower curtain has slid back on: 0 = not yet, 1 = fully covered */
+    var covered =clamp(1-after.getBoundingClientRect().top/V,0,1);
+    /* how much void is actually open */
+    var open=smooth(revealed)*(1-smooth(covered));
+    /* signed drift: + while opening, - while closing */
+    var drift=smooth(revealed)-smooth(covered);
+
+    far.style.transform ='translateY('+((1-drift)*10).toFixed(2)+'px)';
+    mid.style.transform ='translateY('+((1-drift)*26).toFixed(2)+'px)';
+    near.style.transform='translateY('+((1-drift)*52).toFixed(2)+'px)';
+
+    moonwrap.style.transform='translateY('+((1-drift)*34-4).toFixed(2)+'px) scale('+(0.94+open*0.06).toFixed(3)+')';
+    halo.style.opacity=(0.18+open*0.86).toFixed(3);
+
+    read.style.opacity=open.toFixed(3);
+    read.style.transform='translateY('+((1-open)*20).toFixed(2)+'px)';
+  }
+  function onScroll(){if(!ticking){ticking=true;requestAnimationFrame(frame);}}
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
+  frame();
+</script>
+</body>
+</html>
