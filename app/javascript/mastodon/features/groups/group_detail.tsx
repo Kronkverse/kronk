@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import { List as ImmutableList } from 'immutable';
 
@@ -16,13 +16,13 @@ import {
   apiPostGroupStatus,
 } from 'mastodon/api/groups';
 import type { ApiGroupJSON } from 'mastodon/api/groups';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 import StatusList from 'mastodon/components/status_list';
 import { useAppDispatch } from 'mastodon/store';
 
 const messages = defineMessages({
   title: { id: 'groups.detail.title', defaultMessage: 'Group' },
+  back: { id: 'groups.detail.back', defaultMessage: '← Back to Groups' },
 });
 
 export const GroupDetail = () => {
@@ -142,13 +142,12 @@ export const GroupDetail = () => {
   }, []);
 
   return (
-    <Column bindToDocument label={intl.formatMessage(messages.title)}>
-      <ColumnHeader
-        title={group?.name ?? intl.formatMessage(messages.title)}
-        showBackButton
-      />
-
+    <Stage label={group?.name ?? intl.formatMessage(messages.title)}>
       <div className='scrollable group-detail'>
+        <Link to='/hub/groups' className='group-detail__back'>
+          {intl.formatMessage(messages.back)}
+        </Link>
+
         {error && <p className='group-detail__error'>{error}</p>}
 
         {!group && !error && (
@@ -292,6 +291,6 @@ export const GroupDetail = () => {
           </>
         )}
       </div>
-    </Column>
+    </Stage>
   );
 };

@@ -14,8 +14,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // Where the YOU PWA is deployed. Kept as a module constant for now;
@@ -71,20 +70,13 @@ interface Props {
   multiColumn?: boolean;
 }
 
-const YouPortal: React.FC<Props> = ({ multiColumn }) => {
+const YouPortal: React.FC<Props> = () => {
   const intl = useIntl();
   const Icon = useKornerIcon('you');
   const title = intl.formatMessage(messages.title);
 
   return (
-    <Column bindToDocument={!multiColumn} label={title}>
-      <ColumnHeader
-        title={title}
-        icon='korner'
-        iconComponent={Icon}
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={title}>
       <Helmet>
         <title>{title}</title>
       </Helmet>
@@ -132,7 +124,7 @@ const YouPortal: React.FC<Props> = ({ multiColumn }) => {
           </p>
         </section>
       </div>
-    </Column>
+    </Stage>
   );
 };
 

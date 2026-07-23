@@ -6,9 +6,7 @@ import { Helmet } from 'react-helmet';
 
 import { apiGetWachuneedListings } from 'mastodon/api/wachuneed';
 import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { Stage } from 'mastodon/components/stage';
 
 // /hub/wachuneed browse page — Korner Standard L5 mount.
 //
@@ -96,9 +94,8 @@ const FilterTab: React.FC<FilterTabProps> = ({
   );
 };
 
-const Wachuneed: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+const Wachuneed: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
-  const Icon = useKornerIcon('wachuneed');
   const [listings, setListings] = useState<ApiListingJSON[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterKey>('all');
@@ -133,15 +130,7 @@ const Wachuneed: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     filter === 'all' ? messages.empty : messages.emptyForFilter;
 
   return (
-    <Column bindToDocument label={intl.formatMessage(messages.title)}>
-      <ColumnHeader
-        title={intl.formatMessage(messages.title)}
-        icon='korner'
-        iconComponent={Icon}
-        showBackButton
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
@@ -203,7 +192,7 @@ const Wachuneed: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           ))}
         </ul>
       </div>
-    </Column>
+    </Stage>
   );
 };
 

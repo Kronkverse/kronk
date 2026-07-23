@@ -1,10 +1,7 @@
 import { useCallback, useState } from 'react';
 
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { useKorner } from 'mastodon/hooks/useKorner';
+import { Stage } from 'mastodon/components/stage';
 
-import { OrbitIcon } from './components/celestial_icons';
 import { DarkStrand } from './components/dark_strand';
 import { EarthStrand } from './components/earth_strand';
 import { FestivalStrand } from './components/festival_strand';
@@ -44,19 +41,11 @@ const StrandTabButton: React.FC<StrandTabButtonProps> = ({
   );
 };
 
-export const Inflow: React.FC<Props> = ({ multiColumn }) => {
+export const Inflow: React.FC<Props> = () => {
   const [activeTab, setActiveTab] = useState<StrandTab>('light');
-  const korner = useKorner('inflow');
 
   return (
-    <Column>
-      <ColumnHeader
-        title={korner?.name ?? 'Inflow'}
-        icon='public'
-        iconComponent={OrbitIcon}
-        multiColumn={multiColumn}
-      />
-
+    <Stage label='Inflow'>
       <div className='in-flow scrollable'>
         <header className='in-flow__header'>
           <h1 className='in-flow__title'>Inflow</h1>
@@ -104,6 +93,6 @@ export const Inflow: React.FC<Props> = ({ multiColumn }) => {
           )}
         </div>
       </div>
-    </Column>
+    </Stage>
   );
 };

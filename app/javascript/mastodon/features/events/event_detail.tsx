@@ -15,9 +15,8 @@ import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import RepeatIcon from '@/material-icons/400-24px/repeat.svg?react';
 import StarIcon from '@/material-icons/400-24px/star.svg?react';
 import api from 'mastodon/api';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
+import { Stage } from 'mastodon/components/stage';
 
 import { CreateEventForm } from './components/create_event_form';
 
@@ -89,7 +88,7 @@ const RSVP_CONFIG: Record<
   },
 };
 
-const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
   const { id } = useParams<{ id: string }>();
   const history = useHistory();
   const [event, setEvent] = useState<Event | null>(null);
@@ -264,27 +263,15 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
   if (loading || !event) {
     return (
-      <Column>
-        <ColumnHeader
-          title='Event'
-          icon='calendar_month'
-          iconComponent={CalendarMonthIcon}
-          multiColumn={multiColumn}
-        />
+      <Stage label='Event'>
         <div className='events-page__empty'>Loading...</div>
-      </Column>
+      </Stage>
     );
   }
 
   if (editing) {
     return (
-      <Column>
-        <ColumnHeader
-          title='Edit Event'
-          icon='edit'
-          iconComponent={EditIcon}
-          multiColumn={multiColumn}
-        />
+      <Stage label='Edit Event'>
         <div className='events-page'>
           <CreateEventForm
             onEventCreated={handleEventUpdated}
@@ -292,7 +279,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             editEvent={event}
           />
         </div>
-      </Column>
+      </Stage>
     );
   }
 
@@ -338,14 +325,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   };
 
   return (
-    <Column>
-      <ColumnHeader
-        title={event.title}
-        icon='calendar_month'
-        iconComponent={CalendarMonthIcon}
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={event.title}>
       <Helmet>
         <title>{event.title}</title>
       </Helmet>
@@ -584,7 +564,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           )}
         </div>
       </div>
-    </Column>
+    </Stage>
   );
 };
 

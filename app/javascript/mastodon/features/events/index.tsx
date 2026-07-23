@@ -5,10 +5,7 @@ import { useIntl, defineMessages, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import api from 'mastodon/api';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { useKorner } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { Stage } from 'mastodon/components/stage';
 
 import { CreateEventForm } from './components/create_event_form';
 import { EventCalendar } from './components/event_calendar';
@@ -74,9 +71,7 @@ interface EventAccount {
 
 type FilterType = 'upcoming' | 'past' | 'mine' | 'invited';
 
-const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
-  const korner = useKorner('kalendar');
-  const kornerIcon = useKornerIcon('kalendar');
+const Events: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const [events, setEvents] = useState<Event[]>([]);
   const [filter, setFilter] = useState<FilterType>('upcoming');
@@ -174,14 +169,7 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 
   return (
-    <Column>
-      <ColumnHeader
-        title={korner?.name ?? 'Kalendar'}
-        icon='neptune'
-        iconComponent={kornerIcon}
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
@@ -294,7 +282,7 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </>
         )}
       </div>
-    </Column>
+    </Stage>
   );
 };
 
