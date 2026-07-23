@@ -62,9 +62,7 @@ import {
   Following,
   Reblogs,
   Favourites,
-  DirectTimeline,
   HashtagTimeline,
-  Notifications,
   NotificationRequests,
   NotificationRequest,
   FollowRequests,
@@ -72,10 +70,6 @@ import {
   BookmarkedStatuses,
   FollowedTags,
   LinkTimeline,
-  ListTimeline,
-  Lists,
-  ListEdit,
-  ListMembers,
   Blocks,
   DomainBlocks,
   Mutes,
@@ -84,7 +78,6 @@ import {
   OnboardingProfile,
   OnboardingFollows,
   Explore,
-  Search,
   About,
   PrivacyPolicy,
   TermsOfService,
@@ -234,13 +227,11 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/public' exact component={Firehose} componentParams={{ feedType: 'public' }} content={children} />
             <WrappedRoute path='/public/local' exact component={Firehose} componentParams={{ feedType: 'community' }} content={children} />
             <WrappedRoute path='/public/remote' exact component={Firehose} componentParams={{ feedType: 'public:remote' }} content={children} />
-            <WrappedRoute path={['/conversations', '/timelines/direct']} component={DirectTimeline} content={children} />
+            {/* DMs live in the Nudges messenger — the classic direct-timeline is retired. */}
+            <Redirect from='/conversations' to='/nudges' />
+            <Redirect from='/timelines/direct' to='/nudges' />
             <WrappedRoute path='/tags/:id' component={HashtagTimeline} content={children} />
             <WrappedRoute path='/links/:url' component={LinkTimeline} content={children} />
-            <WrappedRoute path='/lists/new' component={ListEdit} content={children} />
-            <WrappedRoute path='/lists/:id/edit' component={ListEdit} content={children} />
-            <WrappedRoute path='/lists/:id/members' component={ListMembers} content={children} />
-            <WrappedRoute path='/lists/:id' component={ListTimeline} content={children} />
             {/* Phase 5.5 — Nudges takes over the notification surface.
                 Classic bell UI is CSS-hidden via _kronk_chrome.scss;
                 any residual muscle-memory links to /notifications
@@ -307,7 +298,6 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path={["/questions/:id", "/hub/kuestions/:id", "/questions", "/hub/kuestions"]} component={Questions} content={children} />}
             <WrappedRoute path='/hub/search' component={KronkSearch} content={children} />
             <WrappedRoute path='/hub/you' component={YouPortal} content={children} />
-            <WrappedRoute path='/search' component={Search} content={children} />
             <WrappedRoute path={['/publish', '/statuses/new']} component={Compose} content={children} />
 
             {/* /@:acct renders the sectioned profile by default (Kronk 2.0
@@ -331,7 +321,6 @@ class SwitchingColumnsArea extends PureComponent {
 
             {/* Legacy routes, cannot be easily factored with other routes because they share a param name */}
             <WrappedRoute path='/timelines/tag/:id' component={HashtagTimeline} content={children} />
-            <WrappedRoute path='/timelines/list/:id' component={ListTimeline} content={children} />
             <WrappedRoute path='/statuses/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/statuses/:statusId/reblogs' component={Reblogs} content={children} />
             <WrappedRoute path='/statuses/:statusId/favourites' component={Favourites} content={children} />
@@ -341,7 +330,6 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/domain_blocks' component={DomainBlocks} content={children} />
             <WrappedRoute path='/followed_tags' component={FollowedTags} content={children} />
             <WrappedRoute path='/mutes' component={Mutes} content={children} />
-            <WrappedRoute path='/lists' component={Lists} content={children} />
 
             <Route component={BundleColumnError} />
           </WrappedSwitch>

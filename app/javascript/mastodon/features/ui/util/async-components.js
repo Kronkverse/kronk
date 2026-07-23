@@ -6,20 +6,8 @@ export function Compose () {
   return import('../../compose');
 }
 
-export function Notifications () {
-  return import('../../notifications_v2');
-}
-
 export function HomeTimeline () {
   return import('../../home_timeline');
-}
-
-export function PublicTimeline () {
-  return import('../../public_timeline');
-}
-
-export function CommunityTimeline () {
-  return import('../../community_timeline');
 }
 
 export function Firehose () {
@@ -28,18 +16,6 @@ export function Firehose () {
 
 export function HashtagTimeline () {
   return import('../../hashtag_timeline');
-}
-
-export function DirectTimeline() {
-  return import('../../direct_timeline');
-}
-
-export function ListTimeline () {
-  return import('../../list_timeline');
-}
-
-export function Lists () {
-  return import('../../lists');
 }
 
 export function Status () {
@@ -186,10 +162,6 @@ export function Explore () {
   return import('../../explore');
 }
 
-export function Search () {
-  return import('../../search');
-}
-
 export function FilterModal () {
   return import('../components/filter_modal');
 }
@@ -232,14 +204,6 @@ export function LinkTimeline () {
 
 export function AnnualReportModal () {
   return import('../components/annual_report_modal');
-}
-
-export function ListEdit () {
-  return import('../../lists/new');
-}
-
-export function ListMembers () {
-  return import('../../lists/members');
 }
 
 export function Orbit () {
