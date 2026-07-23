@@ -305,6 +305,10 @@ Rails.application.routes.draw do
   get '/hub/inflow/*path', to: 'home#index', format: false
   get '/hub/groups', to: 'home#index'
   get '/hub/groups/*path', to: 'home#index', format: false
+  # Framework surfaces reached from the Ӂ menu — SPA-only, no controller.
+  # Without these, a direct load / hard-reload of the deep link 404s.
+  get '/hub/search', to: 'home#index'
+  get '/hub/you', to: 'home#index'
   get '/hub/huddle', to: 'huddle#index'
   get '/hub/huddle/*path', to: 'huddle#index', format: false
 
