@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wachuneed — Kronk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* semantic */
+  --accent:#4414cc;
+  --surface-primary:#191b22;
+  --surface-elevated:#292938;
+  --surface-sunken:#12131a;
+  --border-default:#47368b;
+  --border-strong:#5a4aa0;
+  --border-subtle:#2a2740;
+  --text-primary:#ece9f5;
+  --text-secondary:#9c9cc9;
+  --text-muted:#606085;
+  --text-on-accent:#ffffff;
+  --link:#8c8dff;
+  --focus-ring:#7241ff;
+  --success-green:#308d4c;
+  /* kronk */
+  --purple-primary:#32237c;
+  --purple-bright:#7241ff;
+  --purple-deep:#3a218b;
+  --purple-muted:#413c8c;
+  /* exchange-mode hues, drawn from the platform warm->cool ramp */
+  --hue-creations:#e6a857;
+  --hue-goods:#7241ff;
+  --hue-service:#38b2a3;
+  /* type */
+  --font-display:'Playfair Display',Georgia,serif;
+  --font-body:'IBM Plex Sans',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
+  --font-mark:'Liberation Serif','Times New Roman',serif;
+  /* scale */
+  --fs-xs:11px;--fs-sm:13px;--fs-base:15px;--fs-lg:18px;--fs-xl:24px;--fs-2xl:32px;--fs-3xl:48px;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;
+  --r-xs:4px;--r-sm:6px;--r-md:10px;--r-lg:16px;
+  --ctrl-h:38px;--avatar:36px;
+  --elev-card:0 4px 12px -4px rgb(0 0 0 / 30%);
+  --dur-fast:120ms;--dur-med:200ms;--dur-slow:400ms;
+  --ease-out:cubic-bezier(0.16,1,0.3,1);
+  --ease-spring:cubic-bezier(0.34,1.56,0.64,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scrollbar-color:var(--purple-muted) var(--surface-primary)}
+body{
+  font-family:var(--font-body);
+  font-size:var(--fs-base);
+  line-height:1.5;
+  color:var(--text-primary);
+  background:var(--surface-sunken);
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(114,65,255,.10), transparent 40%),
+    radial-gradient(circle at 88% 8%, rgba(56,178,163,.06), transparent 45%);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+/* starfield: plus-marks + dots, the Kronk backdrop */
+.starfield{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5}
+.starfield::before,.starfield::after{content:"";position:absolute;inset:0}
+.starfield::before{
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, var(--purple-muted) 50%, transparent),
+    radial-gradient(1px 1px at 70% 60%, var(--purple-muted) 50%, transparent),
+    radial-gradient(1px 1px at 40% 80%, var(--border-default) 50%, transparent),
+    radial-gradient(1px 1px at 85% 25%, var(--border-default) 50%, transparent),
+    radial-gradient(1px 1px at 55% 15%, var(--purple-muted) 50%, transparent),
+    radial-gradient(1px 1px at 10% 70%, var(--purple-muted) 50%, transparent);
+  background-size:100% 100%;
+}
+.starfield::after{
+  color:var(--border-subtle);
+  background-image:
+    radial-gradient(circle, transparent 0);
+}
+.plus{position:absolute;color:var(--border-subtle);font-family:var(--font-mono);font-size:12px;user-select:none}
+
+.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:var(--sp-5) var(--sp-4) 120px}
+
+/* masthead */
+.masthead{padding:var(--sp-6) 0 var(--sp-5);border-bottom:1px solid var(--border-subtle)}
+.crumb{font-family:var(--font-mono);font-size:var(--fs-xs);letter-spacing:.04em;color:var(--text-muted);text-transform:uppercase;margin-bottom:var(--sp-3)}
+.crumb b{color:var(--text-secondary);font-weight:500}
+.title-row{display:flex;align-items:center;gap:var(--sp-4)}
+.monogram{
+  font-family:var(--font-mark);font-size:44px;line-height:1;color:var(--text-primary);
+  width:64px;height:64px;flex:none;display:grid;place-items:center;
+  border:1px solid var(--border-default);border-radius:34%;
+  background:linear-gradient(160deg,var(--purple-deep),var(--surface-primary));
+  box-shadow:inset 0 0 24px rgba(114,65,255,.18);
+}
+h1.space-name{font-family:var(--font-display);font-weight:600;font-size:var(--fs-3xl);letter-spacing:-.01em;line-height:1}
+.tagline{color:var(--text-secondary);font-size:var(--fs-base);margin-top:var(--sp-1)}
+.disclaimer{
+  margin-top:var(--sp-4);display:inline-flex;align-items:center;gap:var(--sp-2);
+  font-size:var(--fs-sm);color:var(--text-secondary);
+  padding:var(--sp-2) var(--sp-3);border:1px dashed var(--border-subtle);border-radius:var(--r-md);
+}
+.disclaimer .dot{width:6px;height:6px;border-radius:50%;background:var(--hue-service)}
+
+/* toolbar */
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-3);margin:var(--sp-5) 0 var(--sp-4)}
+.trade-toggle{
+  height:var(--ctrl-h);padding:0 var(--sp-3);display:inline-flex;align-items:center;gap:var(--sp-2);
+  background:var(--surface-primary);border:1px solid var(--border-subtle);border-radius:var(--r-md);
+  color:var(--text-secondary);font-size:var(--fs-sm);cursor:pointer;transition:border-color var(--dur-fast)}
+.trade-toggle[aria-pressed="true"]{border-color:var(--hue-creations);color:var(--text-primary)}
+.trade-toggle .mark{width:8px;height:8px;border-radius:2px;border:1.5px solid var(--hue-creations);transition:background var(--dur-fast)}
+.trade-toggle[aria-pressed="true"] .mark{background:var(--hue-creations)}
+
+/* three-mode spine — the signature */
+.modes{display:grid;grid-template-columns:auto repeat(3,1fr);gap:var(--sp-2);margin-bottom:var(--sp-5)}
+.mode-btn{
+  position:relative;background:var(--surface-primary);border:1px solid var(--border-subtle);
+  border-radius:var(--r-md);padding:var(--sp-3) var(--sp-4);text-align:left;cursor:pointer;
+  color:var(--text-secondary);transition:border-color var(--dur-med),background var(--dur-med),transform var(--dur-fast) var(--ease-spring);
+  overflow:hidden;
+}
+.mode-btn:hover{transform:translateY(-1px)}
+.mode-btn .m-glyph{font-family:var(--font-mono);font-size:var(--fs-lg);display:block;margin-bottom:var(--sp-1)}
+.mode-btn .m-name{font-family:var(--font-display);font-size:var(--fs-lg);font-weight:600;color:var(--text-primary);display:block}
+.mode-btn .m-desc{font-size:var(--fs-xs);color:var(--text-muted);margin-top:2px;display:block}
+.mode-btn .m-count{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--text-muted);position:absolute;top:var(--sp-3);right:var(--sp-3)}
+.mode-btn[data-cat="all"]{align-self:stretch;display:flex;flex-direction:column;justify-content:center}
+.mode-btn[data-cat="all"] .m-name{font-family:var(--font-body);font-size:var(--fs-sm);letter-spacing:.02em}
+/* active state carries the mode hue */
+.mode-btn::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--h,var(--purple-bright));transform:scaleX(0);transform-origin:left;transition:transform var(--dur-med) var(--ease-out)}
+.mode-btn[aria-pressed="true"]{border-color:var(--h,var(--border-default));background:var(--surface-elevated)}
+.mode-btn[aria-pressed="true"]::after{transform:scaleX(1)}
+.mode-btn[data-cat="creations"]{--h:var(--hue-creations)}
+.mode-btn[data-cat="goods"]{--h:var(--hue-goods)}
+.mode-btn[data-cat="service"]{--h:var(--hue-service)}
+.mode-btn[data-cat="creations"] .m-glyph{color:var(--hue-creations)}
+.mode-btn[data-cat="goods"] .m-glyph{color:var(--hue-goods)}
+.mode-btn[data-cat="service"] .m-glyph{color:var(--hue-service)}
+
+/* grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:var(--sp-4)}
+.card{
+  position:relative;background:var(--surface-primary);border:1px solid var(--border-subtle);
+  border-radius:var(--r-lg);overflow:hidden;display:flex;flex-direction:column;
+  transition:transform var(--dur-med) var(--ease-out),border-color var(--dur-med),box-shadow var(--dur-med);
+}
+.card:hover{transform:translateY(-3px);border-color:var(--border-default);box-shadow:var(--elev-card)}
+.card.reserved{opacity:.72}
+.cover{position:relative;aspect-ratio:4/3;display:grid;place-items:center;border-bottom:1px solid var(--border-subtle)}
+.cover.has-photo{background:linear-gradient(150deg,color-mix(in srgb,var(--ch) 30%,var(--surface-sunken)),var(--surface-sunken))}
+.cover .cover-glyph{font-family:var(--font-mono);font-size:40px;color:color-mix(in srgb,var(--ch) 70%,transparent)}
+.cover.no-photo{background:var(--surface-sunken)}
+.cover.no-photo .none{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--text-muted);letter-spacing:.04em}
+.mode-tag{
+  position:absolute;top:var(--sp-3);left:var(--sp-3);font-family:var(--font-mono);font-size:var(--fs-xs);
+  letter-spacing:.03em;padding:3px var(--sp-2);border-radius:var(--r-sm);
+  background:rgba(18,19,26,.72);border:1px solid color-mix(in srgb,var(--ch) 50%,transparent);
+  color:color-mix(in srgb,var(--ch) 85%,var(--text-primary));backdrop-filter:blur(4px);
+}
+.state-ribbon{
+  position:absolute;top:var(--sp-3);right:var(--sp-3);font-family:var(--font-mono);font-size:var(--fs-xs);
+  padding:3px var(--sp-2);border-radius:var(--r-sm);background:var(--surface-elevated);
+  border:1px solid var(--border-default);color:var(--text-secondary);
+}
+.body{padding:var(--sp-3) var(--sp-4) var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-3);flex:1}
+.listing-title{font-size:var(--fs-base);font-weight:500;line-height:1.3;color:var(--text-primary)}
+.price-row{display:flex;align-items:baseline;gap:var(--sp-2);flex-wrap:wrap}
+.price{font-family:var(--font-mono);font-weight:500;font-size:var(--fs-lg);color:var(--text-primary)}
+.price.free{color:var(--success-green)}
+.trade-flag{font-size:var(--fs-xs);color:var(--hue-creations);font-family:var(--font-mono)}
+.meta{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-xs);color:var(--text-muted);font-family:var(--font-mono)}
+.meta .pin{color:var(--text-secondary)}
+.seller{display:flex;align-items:center;gap:var(--sp-2);padding-top:var(--sp-3);border-top:1px solid var(--border-subtle);margin-top:auto}
+.avatar{width:var(--avatar);height:var(--avatar);border-radius:34%;flex:none;display:grid;place-items:center;
+  font-family:var(--font-display);font-weight:600;font-size:var(--fs-sm);color:var(--text-on-accent);
+  background:linear-gradient(150deg,var(--purple-bright),var(--purple-deep));border:1px solid var(--border-default)}
+.seller-info{min-width:0;line-height:1.25}
+.seller-name{font-size:var(--fs-sm);color:var(--text-primary);font-weight:500}
+.rep{font-size:var(--fs-xs);color:var(--text-muted);font-family:var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rep b{color:var(--text-secondary);font-weight:400}
+.cta{
+  width:100%;height:var(--ctrl-h);margin-top:var(--sp-2);border:1px solid var(--border-default);
+  border-radius:var(--r-md);background:transparent;color:var(--text-primary);font:inherit;font-size:var(--fs-sm);
+  cursor:pointer;transition:background var(--dur-fast),border-color var(--dur-fast)}
+.cta:hover{background:var(--surface-elevated);border-color:var(--border-strong)}
+.card.reserved .cta{cursor:default;color:var(--text-muted);border-color:var(--border-subtle)}
+.card.reserved .cta:hover{background:transparent}
+
+.empty{grid-column:1/-1;text-align:center;padding:var(--sp-6);color:var(--text-muted);font-size:var(--fs-sm)}
+.empty b{color:var(--text-secondary);display:block;margin-bottom:var(--sp-1)}
+
+/* floating new-listing action */
+.fab{
+  position:fixed;right:var(--sp-5);bottom:var(--sp-5);z-index:10;height:56px;padding:0 var(--sp-4);
+  display:inline-flex;align-items:center;gap:var(--sp-2);border:none;border-radius:var(--r-lg);
+  background:var(--purple-bright);color:var(--text-on-accent);font:inherit;font-weight:600;font-size:var(--fs-sm);
+  cursor:pointer;box-shadow:0 8px 28px -6px rgba(114,65,255,.55);transition:transform var(--dur-fast) var(--ease-spring)}
+.fab:hover{transform:translateY(-2px)}
+.fab .mono{font-family:var(--font-mark);font-size:22px;line-height:1}
+
+/* focus + motion floor */
+:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;border-radius:var(--r-xs)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:640px){
+  h1.space-name{font-size:var(--fs-2xl)}
+  .modes{grid-template-columns:1fr 1fr}
+  .mode-btn[data-cat="all"]{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+<div class="starfield" aria-hidden="true">
+  <span class="plus" style="top:14%;left:8%">+</span>
+  <span class="plus" style="top:26%;left:78%">+</span>
+  <span class="plus" style="top:64%;left:22%">+</span>
+  <span class="plus" style="top:78%;left:64%">+</span>
+  <span class="plus" style="top:44%;left:92%">+</span>
+</div>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="crumb">Ӂ Kronk · Pluto — Exchange · <b>/hub/marketplace</b></div>
+    <div class="title-row">
+      <div class="monogram" aria-hidden="true">Ӂ</div>
+      <div>
+        <h1 class="space-name">Wachuneed</h1>
+        <p class="tagline">Trade, pass things on, and offer what you're good at — between people who already know each other.</p>
+      </div>
+    </div>
+    <div class="disclaimer"><span class="dot"></span> Kronk stays out of it — you sort payment directly, however you both agree.</div>
+  </header>
+
+  <div class="toolbar">
+    <button class="trade-toggle" id="tradeToggle" aria-pressed="false">
+      <span class="mark" aria-hidden="true"></span> Open to trade
+    </button>
+  </div>
+
+  <nav class="modes" aria-label="Exchange modes">
+    <button class="mode-btn" data-cat="all" aria-pressed="true">
+      <span class="m-name">All</span>
+      <span class="m-count" id="cnt-all"></span>
+    </button>
+    <button class="mode-btn" data-cat="creations" aria-pressed="false">
+      <span class="m-glyph" aria-hidden="true">✦</span>
+      <span class="m-name">Art</span>
+      <span class="m-desc">Original work, made by hand</span>
+      <span class="m-count" id="cnt-creations"></span>
+    </button>
+    <button class="mode-btn" data-cat="goods" aria-pressed="false">
+      <span class="m-glyph" aria-hidden="true">◈</span>
+      <span class="m-name">Stuff</span>
+      <span class="m-desc">Things being passed on</span>
+      <span class="m-count" id="cnt-goods"></span>
+    </button>
+    <button class="mode-btn" data-cat="service" aria-pressed="false">
+      <span class="m-glyph" aria-hidden="true">⟡</span>
+      <span class="m-name">Offerings</span>
+      <span class="m-desc">Time and skill offered</span>
+      <span class="m-count" id="cnt-service"></span>
+    </button>
+  </nav>
+
+  <section class="grid" id="grid" aria-live="polite"></section>
+</div>
+
+<button class="fab" aria-label="Post a listing"><span class="mono" aria-hidden="true">Ӂ</span> Post a listing</button>
+
+<script>
+const HUE={creations:'var(--hue-creations)',goods:'var(--hue-goods)',service:'var(--hue-service)'};
+const GLYPH={creations:'✦',goods:'◈',service:'⟡'};
+const MODE={
+  buy_now:{tag:'Buy',cta:'Message to buy'},
+  buy_or_bargain:{tag:'Or bargain',cta:'Make an offer'},
+  book_service:{tag:'Booking',cta:'Request a time'},
+  contact_to_discuss:{tag:'Chat',cta:'Start a chat'},
+  workshop_join:{tag:'Workshop',cta:s=>`Join — ${s} spots left`}
+};
+
+const LISTINGS=[
+  {cat:'creations',mode:'buy_or_bargain',title:"Risograph print — 'Tidal' no.3",price:'AU$45',trade:true,loc:'Mount Lawley',photo:true,state:'live',
+   seller:{name:'Devi H.',initials:'D',mutual:6,krew:'Inkwell',tenure:'2y'}},
+  {cat:'creations',mode:'buy_now',title:'Hand-bound notebook, salvaged paper',price:'AU$28',trade:false,loc:'North Perth',photo:true,state:'live',
+   seller:{name:'Marn K.',initials:'M',mutual:3,krew:null,tenure:'1y'}},
+  {cat:'goods',mode:'buy_now',title:'Yamaha bookshelf speakers, pair',price:'AU$60',trade:true,loc:'Fremantle',photo:true,state:'live',
+   seller:{name:'Cass O.',initials:'C',mutual:9,krew:'Nightshift',tenure:'3y'}},
+  {cat:'goods',mode:'buy_now',title:'Box of Cat-6 + a patch panel',price:'Free',free:true,trade:false,loc:'Vic Park',photo:false,state:'live',
+   seller:{name:'Toby L.',initials:'T',mutual:4,krew:null,tenure:'2y'}},
+  {cat:'goods',mode:'buy_or_bargain',title:'Anglepoise-style desk lamp',price:'AU$15',trade:false,loc:'Bayswater',photo:true,state:'reserved',
+   seller:{name:'Pip R.',initials:'P',mutual:2,krew:null,tenure:'8mo'}},
+  {cat:'service',mode:'book_service',title:'Bike tune-up — I bring the tools',price:'AU$30',trade:false,loc:'Inglewood',photo:true,state:'live',
+   seller:{name:'Wren A.',initials:'W',mutual:7,krew:'Spokes',tenure:'2y'}},
+  {cat:'service',mode:'book_service',title:'Rails / Postgres pair-debugging',price:'AU$0',trade:true,loc:'Remote',remote:true,photo:false,state:'live',
+   seller:{name:'Sol V.',initials:'S',mutual:5,krew:null,tenure:'4y'}},
+  {cat:'service',mode:'contact_to_discuss',title:'Sourdough starter + a lesson',price:null,trade:true,loc:'Maylands',photo:true,state:'live',
+   seller:{name:'Juni B.',initials:'J',mutual:8,krew:'Rise',tenure:'1y'}},
+  {cat:'service',mode:'workshop_join',title:'Screenprinting night — my studio',price:'AU$25',trade:false,loc:'Mount Lawley',photo:true,state:'live',spots:6,
+   seller:{name:'Devi H.',initials:'D',mutual:6,krew:'Inkwell',tenure:'2y'}}
+];
+
+let activeCat='all', tradeOnly=false;
+const grid=document.getElementById('grid');
+
+function repLine(s){
+  const parts=[`<b>${s.mutual}</b> mutual`];
+  if(s.krew) parts.push(`Krew: ${s.krew}`);
+  parts.push(`${s.tenure} on Kronk`);
+  return parts.join(' · ');
+}
+
+function ctaLabel(l){
+  const m=MODE[l.mode];
+  if(l.state==='reserved') return 'Reserved';
+  return typeof m.cta==='function'? m.cta(l.spots): m.cta;
+}
+
+function priceBlock(l){
+  if(l.price===null) return `<span class="price">Trade only</span>`;
+  const cls=l.free?'price free':'price';
+  const trade=l.trade?`<span class="trade-flag">or trade</span>`:'';
+  return `<span class="${cls}">${l.price}</span>${trade}`;
+}
+
+function cover(l){
+  const style=`--ch:${HUE[l.cat]}`;
+  if(l.photo){
+    return `<div class="cover has-photo" style="${style}"><span class="cover-glyph" aria-hidden="true">${GLYPH[l.cat]}</span>
+      <span class="mode-tag">${MODE[l.mode].tag}</span>${l.state==='reserved'?'<span class="state-ribbon">Reserved</span>':''}</div>`;
+  }
+  return `<div class="cover no-photo" style="${style}"><span class="none">no photo</span>
+    <span class="mode-tag">${MODE[l.mode].tag}</span>${l.state==='reserved'?'<span class="state-ribbon">Reserved</span>':''}</div>`;
+}
+
+function cardHTML(l){
+  const pin=l.remote?'⟢ Remote':`◍ ${l.loc}`;
+  return `<article class="card ${l.state==='reserved'?'reserved':''}" style="--ch:${HUE[l.cat]}">
+    ${cover(l)}
+    <div class="body">
+      <h3 class="listing-title">${l.title}</h3>
+      <div class="price-row">${priceBlock(l)}</div>
+      <div class="meta"><span class="pin">${pin}</span></div>
+      <div class="seller">
+        <div class="avatar" aria-hidden="true">${l.seller.initials}</div>
+        <div class="seller-info">
+          <div class="seller-name">${l.seller.name}</div>
+          <div class="rep">${repLine(l.seller)}</div>
+        </div>
+      </div>
+      <button class="cta" ${l.state==='reserved'?'disabled':''}>${ctaLabel(l)}</button>
+    </div>
+  </article>`;
+}
+
+function match(l){
+  if(activeCat!=='all' && l.cat!==activeCat) return false;
+  if(tradeOnly && !l.trade) return false;
+  return true;
+}
+
+function render(){
+  const rows=LISTINGS.filter(match);
+  grid.innerHTML = rows.length
+    ? rows.map(cardHTML).join('')
+    : `<div class="empty"><b>Nothing here yet.</b>Try another mode, or post the first one.</div>`;
+}
+
+function counts(){
+  document.getElementById('cnt-all').textContent=LISTINGS.length;
+  ['creations','goods','service'].forEach(c=>{
+    document.getElementById('cnt-'+c).textContent=LISTINGS.filter(l=>l.cat===c).length;
+  });
+}
+
+document.querySelectorAll('.mode-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.mode-btn').forEach(b=>b.setAttribute('aria-pressed','false'));
+    btn.setAttribute('aria-pressed','true');
+    activeCat=btn.dataset.cat;
+    render();
+  });
+});
+
+const tt=document.getElementById('tradeToggle');
+tt.addEventListener('click',()=>{
+  tradeOnly=!tradeOnly;
+  tt.setAttribute('aria-pressed',String(tradeOnly));
+  render();
+});
+
+counts();
+render();
+</script>
+</body>
+</html>

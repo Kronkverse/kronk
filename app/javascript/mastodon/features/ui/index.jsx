@@ -87,7 +87,11 @@ import {
   Live,
   EventDetail,
   KalendarSpiral,
-  Inflow,
+  HubArrangeable,
+  BoothV2,
+  WachuneedV2,
+  InflowV2,
+  KompassV2,
   Nudges,
   Governance,
   KommonsProposal,
@@ -99,18 +103,14 @@ import {
   KronkSearch,
   YouPortal,
   Questions,
-  Booth,
   BoothSetPage,
   ProfileSectionsSettings,
   SectionedProfile,
   NudgesLegacyArchive,
   Groups,
   GroupDetail,
-  Hub,
   MomentsStub,
   AlbuttsStub,
-  KompassStub,
-  Wachuneed,
   KornerSettings,
   ProfileCompose,
   FeedSettings,
@@ -256,7 +256,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path="/orbit" component={Orbit} content={children} />
             {signedIn && <WrappedRoute path="/huddle" component={Live} content={children} />}
             <WrappedRoute path={["/booth/sets/:id", "/hub/booth/sets/:id"]} component={BoothSetPage} content={children} />
-            <WrappedRoute path={["/booth", "/hub/booth"]} component={Booth} content={children} />
+            <WrappedRoute path={["/booth", "/hub/booth"]} component={BoothV2} content={children} />
             {signedIn && <WrappedRoute path='/settings' exact component={SettingsHub} content={children} />}
             {signedIn && <WrappedRoute path='/settings/you' exact component={SettingsYou} content={children} />}
             {signedIn && <WrappedRoute path='/settings/korners' exact component={SettingsKorners} content={children} />}
@@ -273,17 +273,17 @@ class SwitchingColumnsArea extends PureComponent {
                 pages until the Spiral wires day-picking into them). */}
             {signedIn && <WrappedRoute path={["/kalendar/:id", "/hub/kalendar/:id"]} component={EventDetail} content={children} />}
             {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={KalendarSpiral} content={children} />}
-            {signedIn && <WrappedRoute path="/hub/inflow" component={Inflow} content={children} />}
+            {signedIn && <WrappedRoute path="/hub/inflow" component={InflowV2} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
             {signedIn && <WrappedRoute path="/hub/groups/:id" component={GroupDetail} content={children} />}
             {signedIn && <WrappedRoute path="/hub/groups" component={Groups} content={children} />}
-            <WrappedRoute path='/hub' exact component={Hub} content={children} />
+            <WrappedRoute path='/hub' exact component={HubArrangeable} content={children} />
             {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
             <WrappedRoute path='/hub/moments' component={MomentsStub} content={children} />
             <WrappedRoute path='/hub/albutts' component={AlbuttsStub} content={children} />
-            <WrappedRoute path='/hub/kompass' component={KompassStub} content={children} />
-            <WrappedRoute path='/hub/wachuneed' component={Wachuneed} content={children} />
+            <WrappedRoute path='/hub/kompass' component={KompassV2} content={children} />
+            <WrappedRoute path='/hub/wachuneed' component={WachuneedV2} content={children} />
             <WrappedRoute path='/@:acct/connections' exact component={Connections} content={children} />
             {/* Phase 1b: the messenger shell handles both /nudges (empty pane)
                 and /nudges/:conversationId (open pane). Legacy account-scoped

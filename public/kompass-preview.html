@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kompass — ӁЯѺƝ₭</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<style>
+  :root{
+    /* surfaces */
+    --bg:#0d0a17; --panel:#161227; --panel-2:#1f1938; --line:#2c2547; --map-canvas:#0b0814;
+    /* ink */
+    --ink:#ece9f6; --ink-dim:#a49dc4; --ink-faint:#7f79a0; --ink-ghost:#6f6a8e; --ink-link:#8f88b8;
+    /* brand */
+    --primary:#563ACC; --primary-br:#7241ff; --sun:#9b7bff; --sun-2:#c4b0ff; --on-sun:#1a1330;
+    /* semantic */
+    --ok:#3aa9a0; --ok-2:#4ec9be; --danger:#e0567a; --danger-2:#f08aa5; --trim:#5c5578;
+    /* type */
+    --serif:"Liberation Serif","Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden}
+  #app{position:fixed;inset:0;display:flex;flex-direction:column}
+
+  /* ---------- chrome ---------- */
+  header{display:flex;align-items:center;gap:11px;padding:11px 16px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(86,58,204,.14),rgba(86,58,204,0));z-index:1200}
+  .wordmark{font-family:var(--serif);font-size:21px;letter-spacing:1px}
+  .moon{font-family:var(--serif);font-size:21px;color:var(--sun-2)}
+  .crumb{font-size:11.5px;color:var(--ink-faint)}
+  header .spacer{flex:1}
+  .lens{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:3px}
+  .lens button{border:none;background:transparent;color:var(--ink-dim);font-size:12.5px;font-weight:600;
+    padding:7px 17px;border-radius:999px;cursor:pointer;font-family:var(--sans)}
+  .lens button.on{background:var(--primary);color:#fff}
+
+  .body{flex:1;display:flex;min-height:0}
+  aside{width:310px;flex:none;border-right:1px solid var(--line);background:var(--panel);
+    display:flex;flex-direction:column;min-height:0}
+  aside.gone{display:none}
+  .aside-head{padding:14px 16px 11px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+  .aside-head h2{margin:0;font-family:var(--serif);font-size:17px;font-weight:400}
+  .aside-head .spacer{flex:1}
+  .list{overflow-y:auto;flex:1;padding:8px}
+  .empty{padding:26px 18px;text-align:center;color:var(--ink-faint);font-size:12.5px;line-height:1.6}
+
+  .main{flex:1;position:relative;min-width:0}
+  #map{position:absolute;inset:0;background:var(--map-canvas)}
+  #map.gone{display:none}
+  .leaflet-container{background:var(--map-canvas);font-family:var(--sans)}
+  .leaflet-control-attribution{background:rgba(13,10,23,.7)!important;color:var(--ink-ghost)!important;font-size:10px}
+  .leaflet-control-attribution a{color:var(--ink-link)!important}
+  .leaflet-bar a{background:var(--panel)!important;color:var(--ink)!important;border-color:var(--line)!important}
+  .leaflet-bar a:hover{background:var(--panel-2)!important}
+
+  /* ---------- buttons ---------- */
+  .btn{border:none;border-radius:999px;padding:10px 18px;font-size:12.5px;font-weight:650;cursor:pointer;
+    white-space:nowrap;font-family:var(--sans)}
+  .btn.primary{background:var(--primary);color:#fff}
+  .btn.primary:hover{background:var(--primary-br)}
+  .btn.ghost{background:transparent;color:var(--ink-dim);border:1px solid var(--line)}
+  .btn.ghost:hover{color:var(--ink);border-color:var(--ink-dim)}
+  .btn.danger{background:transparent;color:var(--danger);border:1px solid rgba(224,86,122,.4)}
+  .btn.danger:hover{background:rgba(224,86,122,.12)}
+  .btn.sm{padding:6px 13px;font-size:11.5px}
+  .tag{font-size:9px;letter-spacing:.6px;text-transform:uppercase;padding:3px 7px;border-radius:5px;font-weight:700}
+  .tag.now{background:rgba(58,169,160,.14);color:var(--ok-2);border:1px solid rgba(58,169,160,.3)}
+  .tag.no{background:rgba(224,86,122,.12);color:var(--danger-2);border:1px solid rgba(224,86,122,.28)}
+  .tag.rec{background:rgba(155,123,255,.14);color:var(--sun-2);border:1px solid rgba(155,123,255,.3)}
+  .tag.soon{background:rgba(127,121,160,.15);color:var(--ink-faint);border:1px solid rgba(127,121,160,.32)}
+  .tag.draft{background:rgba(224,86,122,.14);color:var(--danger-2);border:1px solid rgba(224,86,122,.3)}
+  .tag.pub{background:rgba(58,169,160,.13);color:var(--ok-2);border:1px solid rgba(58,169,160,.28)}
+
+  /* ---------- MATES ---------- */
+  .mate{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:11px;cursor:pointer;margin-bottom:3px}
+  .mate:hover{background:var(--panel-2)}
+  .mate .av{width:34px;height:34px;border-radius:50%;overflow:hidden;border:2px solid var(--primary);flex:none}
+  .mate.me .av{border-color:var(--sun)}
+  .mate .av img{width:100%;height:100%;display:block}
+  .mate .nm{font-size:13px;font-weight:620}
+  .mate .lo{font-size:11px;color:var(--ink-faint);margin-top:2px}
+
+  .pin{position:relative;transform:translate(-50%,-100%)}
+  .pin .disc{width:42px;height:42px;border-radius:50%;overflow:hidden;border:2.5px solid var(--primary);
+    box-shadow:0 4px 14px rgba(0,0,0,.55),0 0 0 3px rgba(86,58,204,.18);background:var(--panel)}
+  .pin .disc img{width:100%;height:100%;display:block}
+  .pin .stem{position:absolute;left:50%;bottom:-6px;width:2px;height:9px;background:var(--primary);
+    transform:translateX(-50%);border-radius:2px}
+  .pin.self .disc{border-color:var(--sun);box-shadow:0 4px 16px rgba(0,0,0,.6),0 0 0 3px rgba(155,123,255,.35)}
+  .pin.self .stem{background:var(--sun)}
+  .pin.self::before{content:"";position:absolute;left:50%;top:50%;width:58px;height:58px;
+    transform:translate(-50%,-50%);border-radius:50%;border:1.5px solid rgba(155,123,255,.5);
+    animation:pulse 2.4s ease-out infinite}
+  @keyframes pulse{0%{opacity:.7;transform:translate(-50%,-50%) scale(.6)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}}
+
+  .leaflet-popup-content-wrapper{background:var(--panel);color:var(--ink);border:1px solid var(--line);
+    border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.55)}
+  .leaflet-popup-tip{background:var(--panel);border:1px solid var(--line)}
+  .leaflet-popup-content{margin:0}
+  .card{width:224px;padding:14px}
+  .card .top{display:flex;gap:11px;align-items:center}
+  .card .av{width:44px;height:44px;border-radius:50%;overflow:hidden;border:2px solid var(--primary);flex:none}
+  .card.self .av{border-color:var(--sun)}
+  .card .av img{width:100%;height:100%}
+  .card .nm{font-weight:650;font-size:14.5px;line-height:1.2}
+  .card .hd{font-size:11.5px;color:var(--ink-faint)}
+  .card .lo{margin-top:9px;font-size:11.5px;color:var(--ink-dim);display:flex;align-items:center;gap:6px}
+  .card .pr{font-size:10.5px;color:var(--ink-ghost);margin-top:2px}
+  .card .acts{display:flex;gap:7px;margin-top:12px}
+  .card .acts .btn{flex:1;padding:8px 0;text-align:center}
+
+  .bar{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:800;display:flex;gap:8px;
+    align-items:center;background:rgba(22,18,39,.92);backdrop-filter:blur(10px);border:1px solid var(--line);
+    border-radius:999px;padding:7px 8px 7px 16px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+  .bar .hint{font-size:12.5px;color:var(--ink-dim);white-space:nowrap}
+  .arming{position:absolute;inset:0;z-index:700;pointer-events:none;box-shadow:inset 0 0 0 2px var(--sun)}
+  .arming .tg{position:absolute;left:50%;top:16px;transform:translateX(-50%);background:var(--sun);
+    color:var(--on-sun);font-weight:650;font-size:12.5px;padding:7px 14px;border-radius:999px}
+
+  /* ---------- TREKS ---------- */
+  .trek{padding:12px;border-radius:12px;cursor:pointer;border:1px solid transparent;margin-bottom:3px}
+  .trek:hover{background:var(--panel-2)}
+  .trek.on{background:var(--panel-2);border-color:var(--primary)}
+  .trek .r1{display:flex;align-items:center;gap:8px}
+  .trek .ic{width:26px;height:26px;border-radius:8px;background:rgba(86,58,204,.22);flex:none;
+    display:flex;align-items:center;justify-content:center}
+  .trek .tt{font-size:13.5px;font-weight:620;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .trek .r2{display:flex;gap:12px;margin-top:7px;padding-left:34px;font-family:var(--mono);
+    font-size:11px;color:var(--ink-dim)}
+  .trek .wh{padding-left:34px;margin-top:3px;font-size:10.5px;color:var(--ink-faint)}
+
+  .endcap{width:13px;height:13px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.6)}
+  .endcap.s{background:var(--ok)} .endcap.e{background:var(--danger)}
+
+  .stat{flex:1;padding:11px 14px;border-right:1px solid var(--line);min-width:0}
+  .stat:last-child{border-right:none}
+  .stat .k{font-size:9.5px;letter-spacing:.7px;text-transform:uppercase;color:var(--ink-faint)}
+  .stat .v{font-family:var(--mono);font-size:18px;margin-top:3px;letter-spacing:-.4px;white-space:nowrap}
+  .stat .v small{font-size:11px;color:var(--ink-dim);margin-left:2px;font-family:var(--sans)}
+
+  .note{padding:11px 16px;border-top:1px solid var(--line);font-size:11.5px;line-height:1.5;
+    display:flex;gap:9px;align-items:flex-start}
+  .note.purple{background:rgba(155,123,255,.07);color:var(--sun-2)}
+  .note.red{background:rgba(224,86,122,.06);color:var(--danger-2)}
+  .note svg{flex:none;margin-top:1px}
+  .note b{font-weight:660}
+  .note .spacer{flex:1}
+
+  /* ---------- TREK FEED / DETAIL ---------- */
+  .filt{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:3px;margin:0 8px 8px}
+  .filt button{flex:1;border:none;background:transparent;color:var(--ink-dim);font-size:11.5px;
+    font-weight:640;padding:7px 4px;border-radius:999px;cursor:pointer;font-family:var(--sans)}
+  .filt button.on{background:var(--primary);color:#fff}
+  .trek .au{display:flex;align-items:center;gap:6px;padding-left:34px;margin-top:6px}
+  .trek .au img{width:17px;height:17px;border-radius:50%;border:1px solid var(--line)}
+  .trek .au span{font-size:10.5px;color:var(--ink-faint)}
+  .trek .fr{margin-left:auto;font-size:10.5px;color:var(--ink-faint);display:flex;align-items:center;gap:4px}
+
+  .pane{position:absolute;inset:0;overflow-y:auto;background:var(--bg)}
+  .pane.gone{display:none}
+  .pw{max-width:620px;margin:0 auto;padding:0 0 60px}
+  #trekMap{height:250px;background:var(--map-canvas);border-bottom:1px solid var(--line)}
+  .noroute{height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    border-bottom:1px solid var(--line);background:var(--panel);color:var(--ink-faint);font-size:12px}
+  .pbody{padding:18px 20px 0}
+  .byline{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+  .byline img{width:38px;height:38px;border-radius:50%;border:2px solid var(--primary)}
+  .byline .n{font-size:13.5px;font-weight:645}
+  .byline .h{font-size:11px;color:var(--ink-faint);margin-top:1px}
+  .byline .spacer{flex:1}
+  .ptitle{font-family:var(--serif);font-size:25px;font-weight:400;line-height:1.2;margin:0 0 4px}
+  .pmeta{font-size:11.5px;color:var(--ink-faint);margin-bottom:16px;display:flex;align-items:center;gap:7px}
+  .pstats{display:flex;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel)}
+  .pstats .stat{border-color:var(--line)}
+  .pelev{margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:12px 15px}
+
+  .frothbar{display:flex;align-items:center;gap:9px;margin-top:16px;padding-top:15px;border-top:1px solid var(--line)}
+  .froth{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);
+    color:var(--ink-dim);border-radius:999px;padding:9px 16px;font-size:12.5px;font-weight:640;
+    cursor:pointer;font-family:var(--sans);transition:background .15s,border-color .15s,color .15s}
+  .froth:hover{border-color:var(--sun);color:var(--ink)}
+  .froth.on{background:rgba(155,123,255,.16);border-color:var(--sun);color:var(--sun-2)}
+  .frothers{display:flex;align-items:center}
+  .frothers img{width:24px;height:24px;border-radius:50%;border:2px solid var(--bg);margin-left:-7px}
+  .frothers img:first-child{margin-left:0}
+  .frothbar .cnt{font-size:11.5px;color:var(--ink-faint);margin-left:auto}
+
+  .thread{margin-top:18px}
+  .cm{display:flex;gap:11px;padding:13px 0;border-top:1px solid var(--line)}
+  .cm img{width:32px;height:32px;border-radius:50%;flex:none;border:1px solid var(--line)}
+  .cm .cb{flex:1;min-width:0}
+  .cm .ch{display:flex;align-items:baseline;gap:7px}
+  .cm .cn{font-size:12.5px;font-weight:645}
+  .cm .cw{font-size:10.5px;color:var(--ink-faint)}
+  .cm .ct{font-size:13px;line-height:1.55;color:var(--ink);margin-top:4px}
+  .compose{display:flex;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+  .compose img{width:32px;height:32px;border-radius:50%;flex:none;border:2px solid var(--sun)}
+  .compose input{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    border-radius:999px;padding:10px 15px;font-size:13px;font-family:var(--sans)}
+  .compose input::placeholder{color:var(--ink-ghost)}
+
+  /* ---------- LOGGER ---------- */
+  .logger{position:absolute;inset:0;overflow-y:auto}
+  .lw{max-width:600px;margin:0 auto;padding:30px 22px 70px}
+  .lw h1{font-family:var(--serif);font-size:26px;font-weight:400;margin:0 0 5px}
+  .lede{font-size:12.5px;color:var(--ink-dim);line-height:1.6;margin:0 0 24px}
+  .step{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-faint);
+    margin:0 0 11px;display:flex;align-items:center;gap:9px}
+  .step::after{content:"";flex:1;height:1px;background:var(--line)}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .pick{border:1px solid var(--line);border-radius:15px;background:var(--panel);padding:17px 15px;
+    cursor:pointer;transition:border-color .15s,background .15s;display:flex;flex-direction:column;gap:10px}
+  .pick:hover:not(.off){border-color:var(--primary);background:var(--panel-2)}
+  .pick.on{border-color:var(--primary-br);background:var(--panel-2);box-shadow:0 0 0 1px var(--primary-br)}
+  .pick.off{opacity:.45;cursor:not-allowed}
+  .pick .ic{width:40px;height:40px;border-radius:12px;background:rgba(86,58,204,.2);
+    display:flex;align-items:center;justify-content:center}
+  .pick.off .ic{background:rgba(120,114,150,.13)}
+  .pick .nm{font-size:14px;font-weight:645;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .pick .ds{font-size:11.5px;color:var(--ink-dim);line-height:1.5;flex:1}
+  .disclose{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  .disclose summary{cursor:pointer;font-size:12px;color:var(--ink-faint);list-style:none;
+    display:flex;align-items:center;gap:7px}
+  .disclose summary::-webkit-details-marker{display:none}
+  .disclose summary:hover{color:var(--ink-dim)}
+  .why-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);
+    font-size:11.5px;line-height:1.55}
+  .why-row:last-child{border-bottom:none}
+  .why-row b{color:var(--ink);font-weight:645;flex:none;width:56px}
+  .why-row span{color:var(--ink-dim)}
+  .why-foot{font-size:11.5px;color:var(--sun-2);line-height:1.55;margin-top:12px;
+    padding:11px 12px;background:rgba(155,123,255,.07);border:1px solid rgba(155,123,255,.2);border-radius:11px}
+  .two{display:flex;gap:10px}
+  .two .field{flex:1}
+  .drop{border:1.5px dashed var(--line);border-radius:15px;padding:32px 20px;text-align:center;
+    background:var(--panel);cursor:pointer;transition:border-color .15s,background .15s}
+  .drop:hover{border-color:var(--primary-br);background:var(--panel-2)}
+  .drop .bg{font-size:14px;font-weight:620;margin-top:11px}
+  .drop .sm{font-size:11.5px;color:var(--ink-faint);margin-top:5px}
+  .drop .fm{font-family:var(--mono);font-size:11px;color:var(--sun-2);margin-top:12px;letter-spacing:.5px}
+  .rcard{border:1px solid var(--line);border-radius:15px;background:var(--panel);overflow:hidden}
+  .rc-h{display:flex;align-items:center;gap:11px;padding:13px 15px;border-bottom:1px solid var(--line)}
+  .rc-h .fn{font-family:var(--mono);font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rc-h .sz{font-size:11px;color:var(--ink-faint)}
+  .cols{display:flex}
+  .col{flex:1;padding:14px 15px}
+  .col+.col{border-left:1px solid var(--line)}
+  .col h4{margin:0 0 10px;font-size:10px;letter-spacing:.9px;text-transform:uppercase;
+    display:flex;align-items:center;gap:6px}
+  .col.keep h4{color:var(--ok-2)}
+  .col.bin h4{color:var(--danger-2)}
+  .row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:12.5px}
+  .row .k{color:var(--ink-dim)} .row .v{font-family:var(--mono);font-size:12px;white-space:nowrap}
+  .col.bin .row .k{text-decoration:line-through;text-decoration-color:rgba(224,86,122,.55);color:var(--ink-faint)}
+  .col.bin .row .v{color:var(--ink-faint)}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:10px;letter-spacing:.9px;text-transform:uppercase;
+    color:var(--ink-faint);margin-bottom:7px}
+  select,input[type=text]{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    border-radius:11px;padding:11px 12px;font-size:13.5px;font-family:var(--sans)}
+  .seg{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:3px}
+  .seg button{flex:1;border:none;background:transparent;color:var(--ink-dim);padding:9px 4px;
+    font-size:12.5px;font-weight:600;border-radius:8px;cursor:pointer;font-family:var(--sans)}
+  .seg button.on{background:var(--primary);color:#fff}
+  .actions{display:flex;gap:10px;margin-top:20px}
+  .actions .btn{flex:1;text-align:center;padding:12px 0}
+  .spin{width:15px;height:15px;border:2px solid rgba(255,255,255,.22);border-top-color:#fff;border-radius:50%;
+    animation:sp .7s linear infinite;display:inline-block;vertical-align:-3px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  .hidden{display:none}
+  .modal-wrap{position:absolute;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;
+    background:rgba(6,4,14,.55);backdrop-filter:blur(3px)}
+  .modal-wrap.on{display:flex}
+  .modal{width:min(360px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--line);
+    border-radius:18px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+  .modal h3{margin:0 0 3px;font-family:var(--serif);font-size:20px;font-weight:400}
+  .modal .sub{margin:0 0 16px;font-size:12.5px;color:var(--ink-dim);line-height:1.5}
+  .pnote{font-size:11.5px;color:var(--ink-faint);margin-top:8px;line-height:1.45;min-height:32px}
+  .prov{display:flex;gap:9px;align-items:flex-start;margin-top:14px;padding:11px 12px;
+    background:rgba(155,123,255,.08);border:1px solid rgba(155,123,255,.22);border-radius:11px}
+  .prov span{font-size:11.5px;color:var(--sun-2);line-height:1.45}
+
+  @media (max-width:860px){ aside{display:none} }
+  @media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <span class="wordmark">ӁЯѺƝ₭</span>
+    <span class="moon">Kompass</span>
+    <span class="crumb">· Neptune</span>
+    <span class="spacer"></span>
+    <div class="lens" id="lens">
+      <button data-l="mates" class="on">Mates</button>
+      <button data-l="treks">Treks</button>
+      <button data-l="logger">Logger</button>
+    </div>
+  </header>
+
+  <div class="body">
+    <aside id="aside">
+      <div class="aside-head"><h2 id="asideTitle">On the map</h2><span class="spacer"></span>
+        <span id="asideAction"></span></div>
+      <div class="list" id="list"></div>
+    </aside>
+
+    <div class="main">
+      <div id="map"></div>
+      <div id="overlays"></div>
+      <div class="pane gone" id="trekPane"><div class="pw" id="pw"></div></div>
+      <div class="logger hidden" id="logger"><div class="lw" id="lw"></div></div>
+    </div>
+  </div>
+
+  <div class="modal-wrap" id="modalWrap"><div class="modal" id="modal"></div></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ══════════════ shared helpers ══════════════ */
+const el = id => document.getElementById(id);
+const AV_BG = ['#563ACC','#7c5cff','#4b78d8','#3aa9a0','#c07ad8','#d88b5c','#5aa06a','#c05c8a'];
+function shade(hex,a){let n=parseInt(hex.slice(1),16),r=(n>>16)+a,g=((n>>8)&255)+a,b=(n&255)+a;
+  const c=v=>Math.max(0,Math.min(255,v));return '#'+(0x1000000+(c(r)<<16)+(c(g)<<8)+c(b)).toString(16).slice(1);}
+function avatar(name,seed){
+  const ini=name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(), bg=AV_BG[seed%AV_BG.length];
+  return 'data:image/svg+xml;base64,'+btoa(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='88' height='88'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>`+
+    `<stop offset='0' stop-color='${bg}'/><stop offset='1' stop-color='${shade(bg,-28)}'/></linearGradient></defs>`+
+    `<rect width='88' height='88' fill='url(#g)'/><text x='44' y='55' font-family='Times New Roman,serif' `+
+    `font-size='34' fill='#fff' text-anchor='middle'>${ini}</text></svg>`);
+}
+const R=6371000, rad=d=>d*Math.PI/180;
+function hav(a,b){const dA=rad(b[0]-a[0]),dO=rad(b[1]-a[1]);
+  const h=Math.sin(dA/2)**2+Math.cos(rad(a[0]))*Math.cos(rad(b[0]))*Math.sin(dO/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));}
+function plen(p){let d=0;for(let i=1;i<p.length;i++)d+=hav(p[i-1],p[i]);return d;}
+let _s=1; const rnd=()=>{_s=(_s*16807)%2147483647;return _s/2147483647;}; const seed=n=>{_s=n;};
+function mkRoute(wp,per,jit,sd){seed(sd);const o=[];
+  for(let i=0;i<wp.length-1;i++){const a=wp[i],b=wp[i+1];
+    for(let j=0;j<per;j++){const t=j/per;
+      o.push([a[0]+(b[0]-a[0])*t+(rnd()-.5)*jit, a[1]+(b[1]-a[1])*t+(rnd()-.5)*jit]);}}
+  o.push(wp[wp.length-1]);return o;}
+function mkElev(n,sd,base,amp){seed(sd);const o=[];let v=base;
+  for(let i=0;i<n;i++){v+=(rnd()-.48)*amp;o.push(Math.max(0,v));}return o;}
+function ico(path,col,size){return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none"
+  stroke="${col}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  ${path.split('|').map(d=>`<path d="${d}"/>`).join('')}</svg>`;}
+const PATH={pin:"M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z|M12 10m-2.5 0a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0",
+  shield:"M12 3l7 3v6c0 4.4-3 7.9-7 9-4-1.1-7-4.6-7-9V6z", tick:"M20 6L9 17l-5-5", cross:"M18 6L6 18M6 6l12 12",
+  up:"M12 16V4m0 0L7 9m5-5l5 5M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2",
+  froth:"M6 13a6 6 0 0 1 12 0|M5 16h14|M6.5 19h11|M12 4v1.6|M7.3 5.7l.9 1.3|M16.7 5.7l-.9 1.3",
+  info:"M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18|M12 8v4M12 16h.01"};
+
+/* ══════════════ domain ══════════════ */
+const TYPES={
+  run:{label:'Run',metric:'pace',g:"M13 4a2 2 0 1 0 0-.01|M7 21l3-6 3 2 1 4|M6 12l3-4 4 1 3 3"},
+  ride:{label:'Ride',metric:'speed',g:"M5.5 18a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z|M18.5 18a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z|M9 14l3-6h4"},
+  walk:{label:'Walk',metric:'pace',g:"M12 4a1.6 1.6 0 1 0 0-.01|M10 21l1-6-2-3 1-4 3 2 2 2|M9 21l-1-5"},
+  hike:{label:'Hike',metric:'pace',g:"M3 20h18|M7 20l5-13 5 13|M10 12h4"},
+  swim:{label:'Swim',metric:'pace',g:"M2 17c2 0 2 1.5 4 1.5s2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5|M6 12l5-4 4 3"},
+  paddle:{label:'Paddle',metric:'speed',g:"M3 18h18|M4 14l7-9 3 3-7 9z|M15 9l5 5"},
+};
+const HOME=[-31.9762,115.8562], PZ_RADIUS=350;
+
+const PRECISION={
+  exact:{label:'Exact pin',round:5,jit:0,radius:0,note:'Your exact point. Only for a public venue — never your home.'},
+  hood:{label:'Neighbourhood',round:3,jit:.004,radius:600,note:'Snapped to roughly a 500 m area. Your real point is never stored.'},
+  city:{label:'City',round:1,jit:.03,radius:6000,note:'Snapped to city scale. Present without being findable.'}
+};
+function coarsen(lat,lng,p,sd){const P=PRECISION[p],f=10**P.round;
+  let a=Math.round(lat*f)/f,o=Math.round(lng*f)/f;
+  if(P.jit){const x=(Math.sin((sd+1)*12.9898)*43758.5453)%1,y=(Math.sin((sd+1)*78.233)*43758.5453)%1;
+    a+=(x-.5)*P.jit*2;o+=(y-.5)*P.jit*2;}
+  return {lat:a,lng:o};}
+
+const MATES=[
+  {id:1,name:'Isabelle Renard',handle:'@isabelle',lat:-31.9505,lng:115.8605,prec:'hood',loc:'Perth, WA'},
+  {id:2,name:'Tomás Vega',handle:'@tomas',lat:-32.0569,lng:115.7439,prec:'city',loc:'Fremantle, WA'},
+  {id:3,name:'Aya Nakamura',handle:'@aya',lat:35.6762,lng:139.6503,prec:'city',loc:'Tokyo'},
+  {id:4,name:'Ken Okafor',handle:'@ken',lat:51.5072,lng:-0.1276,prec:'hood',loc:'London'},
+  {id:5,name:'Mara Silva',handle:'@mara',lat:-23.5505,lng:-46.6333,prec:'city',loc:'São Paulo'},
+  {id:6,name:'Dev Patel',handle:'@dev',lat:37.7749,lng:-122.4194,prec:'hood',loc:'San Francisco'},
+];
+MATES.forEach(m=>m.av=avatar(m.name,m.id));
+
+const TREKS=[
+  {id:'t1',type:'run',title:'River loop before work',when:'Tue 21 Jul',status:'draft',paceSec:312,label:'Perth, WA',
+   by:'me',froth:[],comments:[],
+   pts:mkRoute([HOME,[-31.9718,115.8498],[-31.9664,115.8452],[-31.9612,115.8486],[-31.9583,115.8558],
+     [-31.9607,115.8641],[-31.9668,115.8679],[-31.9724,115.8646],HOME],14,.00055,7)},
+  {id:'t2',type:'ride',title:'Freo and back the long way',when:'Sun 19 Jul',status:'published',speedKmh:26.4,label:'Fremantle, WA',
+   by:'me',froth:[1,4],comments:[{by:1,text:'That headwind on the way back is criminal. Respect.',when:'2d'}],
+   pts:mkRoute([HOME,[-31.9905,115.8404],[-32.0121,115.8188],[-32.0334,115.7902],[-32.0521,115.7561],
+     [-32.0569,115.7439],[-32.0402,115.7688],[-32.0155,115.8071],[-31.9932,115.8362],HOME],16,.0011,21)},
+  {id:'t3',type:'walk',title:'Kings Park wander',when:'Sat 18 Jul',status:'published',paceSec:735,label:'Perth, WA',
+   by:'me',froth:[2],comments:[],
+   pts:mkRoute([HOME,[-31.9741,115.8489],[-31.9702,115.8412],[-31.9673,115.8348],[-31.9709,115.8391],
+     [-31.9748,115.8471],HOME],12,.0004,43)},
+
+  {id:'m1',type:'ride',title:'Up Zig Zag before the heat',when:'Wed 22 Jul',status:'published',speedKmh:19.8,label:'Gooseberry Hill, WA',
+   by:1,froth:[2,4,5],
+   comments:[{by:4,text:'You did that climb before 7am? Absolute unit.',when:'6h'},
+             {by:2,text:'Frothing. Coming next time \u2014 what were you holding on the steep bit?',when:'4h'},
+             {by:1,text:'Barely moving, honestly. More of a negotiation than a ride.',when:'3h'}],
+   pts:mkRoute([[-31.9412,116.0521],[-31.9455,116.0602],[-31.9503,116.0688],[-31.9548,116.0741],
+     [-31.9502,116.0673],[-31.9448,116.0588],[-31.9412,116.0521]],15,.0006,61)},
+
+  {id:'m2',type:'swim',title:'Cottesloe to the pylon and back',when:'Tue 21 Jul',status:'published',paceSec:1580,label:'Cottesloe, WA',
+   by:2,froth:[1,5,4,3],
+   comments:[{by:5,text:'Water temp? Asking for a coward.',when:'1d'},
+             {by:2,text:'Cold enough that the first hundred metres are a personality test.',when:'1d'}],
+   pts:mkRoute([[-31.9962,115.7508],[-31.9948,115.7489],[-31.9931,115.7476],[-31.9946,115.7491],
+     [-31.9961,115.7507]],14,.00025,77)},
+
+  {id:'m3',type:'hike',title:'Bibbulmun section, Mundaring to Ball Creek',when:'Sun 19 Jul',status:'published',paceSec:920,label:'Mundaring, WA',
+   by:4,froth:[1,2],
+   comments:[{by:1,text:'Was the creek crossing passable? Turned back there in June.',when:'3d'}],
+   pts:mkRoute([[-31.8998,116.1652],[-31.9082,116.1741],[-31.9165,116.1836],[-31.9241,116.1954],
+     [-31.9318,116.2071],[-31.9395,116.2168]],16,.0008,93)},
+
+  {id:'m4',type:'walk',title:'Dog lap, nothing heroic',when:'Mon 20 Jul',status:'published',label:'Perth, WA',
+   by:5,froth:[2],hasRoute:false,dist:3120,movingSec:2280,pts:null,pub:null,trimS:[],trimE:[],trimmed:0,
+   elev:null,gain:null,
+   comments:[{by:2,text:'The most honest Trek on here.',when:'2d'}]},
+];
+function hydrate(t){
+  t.hasRoute=true;
+  t.dist=plen(t.pts);
+  const inZ=t.pts.map(p=>hav(p,HOME)<PZ_RADIUS);
+  let s=0; while(s<inZ.length&&inZ[s])s++;
+  let e=inZ.length-1; while(e>=0&&inZ[e])e--;
+  t.trimS=t.pts.slice(0,Math.min(s+1,t.pts.length));
+  t.trimE=t.pts.slice(Math.max(e,0));
+  t.pub=t.pts.slice(s,e+1);
+  t.trimmed=plen(t.trimS)+plen(t.trimE);
+  t.elev=mkElev(t.pts.length,(t.id.charCodeAt(1)||5)*13,20,2.4);
+  let g=0;for(let i=1;i<t.elev.length;i++){const d=t.elev[i]-t.elev[i-1];if(d>0)g+=d;}
+  t.gain=Math.round(g);
+  t.movingSec=TYPES[t.type].metric==='pace'
+    ? Math.round(t.dist/1000*t.paceSec) : Math.round(t.dist/1000/t.speedKmh*3600);
+  return t;
+}
+TREKS.forEach(t=>{ if(t.pts) hydrate(t); });
+const byId=id=>id==='me'?(me||{name:'You',handle:'@you',av:avatar('You',0)}):MATES.find(m=>m.id===id);
+
+const km=m=>(m/1000).toFixed(2);
+function hms(s){const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=Math.round(s%60);
+  return h?`${h}:${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`:`${m}:${String(x).padStart(2,'0')}`;}
+const paceStr=t=>{const s=t.movingSec/(t.dist/1000);return `${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')}`;};
+const speedStr=t=>(t.dist/1000/(t.movingSec/3600)).toFixed(1);
+
+/* ══════════════ map ══════════════ */
+const map=L.map('map',{zoomControl:true,worldCopyJump:true}).setView([-15,60],2.4);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  {attribution:'© OpenStreetMap · © CARTO',subdomains:'abcd',maxZoom:19}).addTo(map);
+let layers=[];
+const clearMap=()=>{layers.forEach(l=>l.remove());layers=[];};
+const add=l=>{l.addTo(map);layers.push(l);return l;};
+
+/* ══════════════ lens router ══════════════ */
+let lens='mates';
+el('lens').onclick=e=>{const b=e.target.closest('button');if(!b)return;setLens(b.dataset.l);};
+function setLens(l){
+  lens=l;
+  document.querySelectorAll('#lens button').forEach(x=>x.classList.toggle('on',x.dataset.l===l));
+  el('overlays').innerHTML=''; clearMap(); killTMap();
+  el('logger').classList.toggle('hidden',l!=='logger');
+  el('trekPane').classList.toggle('gone',l!=='treks');
+  el('map').classList.toggle('gone',l!=='mates');
+  el('aside').classList.toggle('gone',l==='logger');
+  if(l==='mates') renderMates();
+  if(l==='treks') renderTreks();
+  if(l==='logger') renderLogger();
+  if(l==='mates') setTimeout(()=>map.invalidateSize(),0);
+}
+
+/* ══════════════ MATES ══════════════ */
+let me=null, pendingPt=null, prec='hood';
+function pinIcon(m,self){return L.divIcon({className:'',iconSize:[42,51],iconAnchor:[21,51],popupAnchor:[0,-50],
+  html:`<div class="pin ${self?'self':''}"><div class="disc"><img src="${m.av}"/></div><div class="stem"></div></div>`});}
+function mateCard(m,self){const p=PRECISION[m.prec];
+  return `<div class="card ${self?'self':''}"><div class="top">
+    <div class="av"><img src="${m.av}"/></div>
+    <div><div class="nm">${m.name}${self?' · you':''}</div><div class="hd">${m.handle}</div></div></div>
+    <div class="lo">${ico(PATH.pin,'#a49dc4',12)} ${m.loc||p.label}</div>
+    <div class="pr">${p.label} precision</div>
+    <div class="acts">${self
+      ? `<button class="btn primary sm" onclick="editMe()">Edit</button><button class="btn ghost sm" onclick="removeMe()">Remove</button>`
+      : `<button class="btn primary sm">Profile</button><button class="btn ghost sm">Nudge</button>`}</div></div>`;}
+
+function drawMates(){
+  clearMap();
+  const all=[...MATES,...(me?[me]:[])];
+  all.forEach(m=>{
+    const self=m.id==='me';
+    const mk=add(L.marker([m.lat,m.lng],{icon:pinIcon(m,self)}));
+    mk.bindPopup(mateCard(m,self),{closeButton:false,offset:[0,-6]});
+    const p=PRECISION[m.prec];
+    if(p.radius) add(L.circle([m.lat,m.lng],{radius:p.radius,color:self?'#9b7bff':'#563ACC',
+      fillColor:self?'#9b7bff':'#563ACC',fillOpacity:.07,weight:1,opacity:.35}));
+  });
+}
+function renderMates(){
+  el('asideTitle').textContent='On the map';
+  el('asideAction').innerHTML=`<span style="font-size:11.5px;color:var(--ink-faint)">${MATES.length+(me?1:0)}</span>`;
+  el('list').innerHTML=[...(me?[me]:[]),...MATES].map(m=>`
+    <div class="mate ${m.id==='me'?'me':''}" data-id="${m.id}">
+      <div class="av"><img src="${m.av}"/></div>
+      <div><div class="nm">${m.name}${m.id==='me'?' · you':''}</div><div class="lo">${m.loc||PRECISION[m.prec].label}</div></div>
+    </div>`).join('');
+  document.querySelectorAll('.mate').forEach(x=>x.onclick=()=>{
+    const m=x.dataset.id==='me'?me:MATES.find(v=>v.id==+x.dataset.id);
+    map.setView([m.lat,m.lng],Math.max(map.getZoom(),9),{animate:true});});
+  el('overlays').innerHTML=`
+    <div class="arming hidden" id="arming"><span class="tg">Tap the map to place yourself</span></div>
+    <div class="bar">
+      <span class="hint" id="hint">${me?'You are on the map':"You're not on the map yet"}</span>
+      <button class="btn primary" id="placeBtn">${me?'Center on me':'Place me on the map'}</button>
+      ${me?'<button class="btn danger" onclick="removeMe()">Remove me</button>':''}
+    </div>`;
+  el('placeBtn').onclick=()=>me?centerMe():armPlace();
+  drawMates();
+}
+function armPlace(){
+  el('arming').classList.remove('hidden');
+  map.getContainer().style.cursor='crosshair';
+  map.once('click',e=>{el('arming').classList.add('hidden');map.getContainer().style.cursor='';
+    pendingPt=e.latlng;openPlaceModal(false);});
+}
+function openPlaceModal(edit){
+  el('modal').innerHTML=`<h3>Place yourself</h3>
+    <p class="sub">Mates will see your profile here. Remove yourself any time — nothing about where you've been is kept.</p>
+    <div class="field"><label>How precise?</label>
+      <div class="seg" id="segP">${Object.keys(PRECISION).reverse().map(k=>
+        `<button data-p="${k}" class="${k===prec?'on':''}">${PRECISION[k].label}</button>`).join('')}</div>
+      <div class="pnote" id="pnote">${PRECISION[prec].note}</div></div>
+    <div class="field"><label>Label (optional)</label>
+      <input type="text" id="lbl" placeholder="e.g. Fremantle, WA" maxlength="40" value="${edit&&me?(me.loc||''):''}"/></div>
+    <div class="prov">${ico(PATH.info,'#c4b0ff',15)}
+      <span><b>Provisional.</b> Your location lives on Kronk for now. When Anthemos lands it moves into your
+      pod and is shared as a revocable capability — Kronk stops holding it.</span></div>
+    <div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" id="confirmPlace">${edit?'Save':'Add me here'}</button></div>`;
+  el('segP').onclick=e=>{const b=e.target.closest('button');if(!b)return;prec=b.dataset.p;
+    document.querySelectorAll('#segP button').forEach(x=>x.classList.toggle('on',x===b));
+    el('pnote').textContent=PRECISION[prec].note;};
+  el('confirmPlace').onclick=()=>{
+    const src=pendingPt||(me&&{lat:me._sLat,lng:me._sLng}); if(!src)return closeModal();
+    const c=coarsen(src.lat,src.lng,prec,999);
+    me={id:'me',name:'You',handle:'@you',lat:c.lat,lng:c.lng,prec,loc:el('lbl').value.trim(),
+        av:avatar('You',0),_sLat:src.lat,_sLng:src.lng};
+    pendingPt=null; closeModal(); renderMates();
+    map.setView([c.lat,c.lng],Math.max(map.getZoom(),10),{animate:true});
+  };
+  el('modalWrap').classList.add('on');
+}
+window.closeModal=()=>el('modalWrap').classList.remove('on');
+window.editMe=()=>openPlaceModal(true);
+window.removeMe=()=>{me=null;renderMates();};
+function centerMe(){map.setView([me.lat,me.lng],Math.max(map.getZoom(),11),{animate:true});}
+el('modalWrap').onclick=e=>{if(e.target===el('modalWrap'))closeModal();};
+
+/* ══════════════ TREKS ══════════════ */
+let curTrek=TREKS.find(t=>t.by!=='me'), trekFilter='mates', tmap=null;
+function killTMap(){ if(tmap){ tmap.remove(); tmap=null; } }
+function spark(t){const w=300,h=34,e=t.elev,mn=Math.min(...e),mx=Math.max(...e),sp=(mx-mn)||1;
+  const p=e.map((v,i)=>`${(i/(e.length-1))*w},${h-((v-mn)/sp)*h}`).join(' ');
+  return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polyline points="${p}" fill="none" stroke="#7241ff" stroke-width="1.6" opacity=".85"/>
+    <polyline points="0,${h} ${p} ${w},${h}" fill="#7241ff" opacity=".1" stroke="none"/></svg>`;}
+
+function visibleTreks(){
+  return TREKS.filter(t=> trekFilter==='mine' ? t.by==='me' : (t.by!=='me' && t.status==='published'));
+}
+function renderTreks(){
+  el('asideTitle').textContent='Treks';
+  el('asideAction').innerHTML=`<button class="btn primary sm" onclick="setLens('logger')">Add</button>`;
+  const list=visibleTreks();
+  if(list.length && !list.includes(curTrek)) curTrek=list[0];
+  el('list').innerHTML=`
+    <div class="filt" id="filt">
+      <button data-f="mates" class="${trekFilter==='mates'?'on':''}">Mates'</button>
+      <button data-f="mine" class="${trekFilter==='mine'?'on':''}">Yours</button>
+    </div>` + (list.length? list.map(t=>{
+      const a=byId(t.by);
+      return `<div class="trek ${t===curTrek?'on':''}" data-id="${t.id}">
+        <div class="r1"><div class="ic">${ico(TYPES[t.type].g,'#c4b0ff',15)}</div>
+          <div class="tt">${t.title}</div>
+          ${t.by==='me'?`<span class="tag ${t.status==='draft'?'draft':'pub'}">${t.status}</span>`:''}</div>
+        <div class="r2"><span>${km(t.dist)} km</span><span>${hms(t.movingSec)}</span>
+          <span>${TYPES[t.type].metric==='pace'?paceStr(t)+' /km':speedStr(t)+' km/h'}</span></div>
+        <div class="au"><img src="${a.av}"/><span>${t.by==='me'?'You':a.name} · ${t.when}</span>
+          <span class="fr">${ico(PATH.froth,'#7f79a0',11)} ${t.froth.length}</span></div>
+      </div>`;}).join('')
+    : `<div class="empty">${trekFilter==='mine'
+        ? 'No Treks yet.<br/>Bring one in from the Logger.'
+        : 'No mates have posted a Trek yet.'}</div>`);
+  el('filt').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+    trekFilter=b.dataset.f; curTrek=visibleTreks()[0]||curTrek; renderTreks();};
+  document.querySelectorAll('.trek').forEach(x=>x.onclick=()=>{
+    curTrek=TREKS.find(v=>v.id===x.dataset.id); renderTreks();});
+  renderTrekDetail();
+}
+
+function renderTrekDetail(){
+  killTMap();
+  const t=curTrek, list=visibleTreks();
+  if(!t || !list.length){ el('pw').innerHTML=`<div class="empty" style="padding:60px 20px">Nothing to show here.</div>`; return; }
+  const a=byId(t.by), mine=t.by==='me', mt=TYPES[t.type].metric;
+  const frothed=t.froth.includes('me');
+  el('pw').innerHTML=`
+    ${t.hasRoute?`<div id="trekMap"></div>`
+      :`<div class="noroute">${ico(PATH.shield,'#7f79a0',20)}
+          <span>Recorded by hand — no route</span></div>`}
+    <div class="pbody">
+      <div class="byline">
+        <img src="${a.av}"/>
+        <div><div class="n">${mine?'You':a.name}</div><div class="h">${a.handle}</div></div>
+        <span class="spacer"></span>
+        ${mine
+          ? (t.status==='draft'
+             ? `<button class="btn primary sm" id="pubBtn">Publish</button>`
+             : `<button class="btn ghost sm" id="unpubBtn">Unpublish</button>`)
+          : `<button class="btn ghost sm">Profile</button>`}
+      </div>
+      <h2 class="ptitle">${t.title}</h2>
+      <div class="pmeta">${ico(TYPES[t.type].g,'#7f79a0',13)} ${TYPES[t.type].label} · ${t.when} · ${t.label}</div>
+
+      <div class="pstats">
+        <div class="stat"><div class="k">Distance</div><div class="v">${km(t.dist)}<small>km</small></div></div>
+        <div class="stat"><div class="k">Moving time</div><div class="v">${hms(t.movingSec)}</div></div>
+        <div class="stat"><div class="k">${mt==='pace'?'Avg pace':'Avg speed'}</div>
+          <div class="v">${mt==='pace'?paceStr(t):speedStr(t)}<small>${mt==='pace'?'/km':'km/h'}</small></div></div>
+        <div class="stat"><div class="k">Elevation</div>
+          <div class="v">${t.hasRoute?t.gain:'—'}${t.hasRoute?'<small>m</small>':''}</div></div>
+      </div>
+
+      ${t.hasRoute?`<div class="pelev"><div class="lb" style="font-size:9.5px;letter-spacing:.7px;
+        text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px">Elevation profile</div>${spark(t)}</div>`:''}
+
+      ${mine?`<div class="note purple" style="border:1px solid var(--line);border-radius:13px;margin-top:14px">
+        ${ico(PATH.shield,'#c4b0ff',14)}
+        <span>${t.hasRoute
+          ? `<b>Your privacy zone trimmed ${Math.round(t.trimmed)} m</b> before this was saved. Mates see
+             ${km(plen(t.pub))} km, starting ${Math.round(hav(t.pub[0],HOME))} m from home.`
+          : `<b>No route was recorded.</b> Only the numbers are published — there is no line to follow.`}
+        </span></div>`:''}
+
+      <div class="frothbar">
+        <button class="froth ${frothed?'on':''}" id="frothBtn">
+          ${ico(PATH.froth,frothed?'#c4b0ff':'#a49dc4',15)} ${frothed?'Frothing':'Froth'}
+        </button>
+        <div class="frothers">${t.froth.slice(0,5).map(f=>`<img src="${byId(f).av}"/>`).join('')}</div>
+        <span class="cnt">${t.froth.length} frothing · ${t.comments.length} ${t.comments.length===1?'reply':'replies'}</span>
+      </div>
+
+      <div class="thread">
+        ${t.comments.map(c=>{const ca=byId(c.by);
+          return `<div class="cm"><img src="${ca.av}"/><div class="cb">
+            <div class="ch"><span class="cn">${c.by==='me'?'You':ca.name}</span><span class="cw">${c.when}</span></div>
+            <div class="ct">${c.text}</div></div></div>`;}).join('')}
+        <div class="compose">
+          <img src="${byId('me').av}"/>
+          <input type="text" id="cmIn" placeholder="Say something to ${mine?'your mates':a.name.split(' ')[0]}…"/>
+        </div>
+      </div>
+    </div>`;
+
+  const fb=el('frothBtn');
+  fb.onclick=()=>{ const i=t.froth.indexOf('me');
+    if(i>=0) t.froth.splice(i,1); else t.froth.push('me');
+    renderTrekDetail(); renderTrekListCounts(); };
+  const pb=el('pubBtn'); if(pb) pb.onclick=()=>{t.status='published';renderTreks();};
+  const ub=el('unpubBtn'); if(ub) ub.onclick=()=>{t.status='draft';renderTreks();};
+  const ci=el('cmIn');
+  ci.onkeydown=e=>{ if(e.key!=='Enter'||!ci.value.trim())return;
+    t.comments.push({by:'me',text:ci.value.trim(),when:'now'}); renderTrekDetail(); };
+
+  if(t.hasRoute){
+    tmap=L.map('trekMap',{zoomControl:false,attributionControl:true,dragging:true,scrollWheelZoom:false});
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      {attribution:'© OpenStreetMap · © CARTO',subdomains:'abcd',maxZoom:19}).addTo(tmap);
+    L.polyline(t.pub,{color:'#7241ff',weight:4.5,opacity:.95,lineJoin:'round'}).addTo(tmap);
+    const cap=c=>L.divIcon({className:'',html:`<div class="endcap ${c}"></div>`,iconSize:[13,13],iconAnchor:[6,6]});
+    L.marker(t.pub[0],{icon:cap('s')}).addTo(tmap);
+    L.marker(t.pub[t.pub.length-1],{icon:cap('e')}).addTo(tmap);
+    tmap.fitBounds(L.latLngBounds(t.pub),{padding:[28,28]});
+    setTimeout(()=>tmap&&tmap.invalidateSize(),0);
+  }
+}
+function renderTrekListCounts(){
+  document.querySelectorAll('.trek').forEach(x=>{
+    const t=TREKS.find(v=>v.id===x.dataset.id); if(!t)return;
+    const fr=x.querySelector('.fr'); if(fr) fr.innerHTML=`${ico(PATH.froth,'#7f79a0',11)} ${t.froth.length}`;});
+}
+
+/* ══════════════ LOGGER ══════════════ */
+const CARDS=[
+  {id:'file',nm:'Upload a file',tag:'now',tt:'Available',ok:true,
+   ic:"M12 16V4m0 0L7 9m5-5l5 5|M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2",
+   ds:'A GPX, TCX or FIT export from your watch or phone. Read once, then discarded.'},
+  {id:'manual',nm:'Record it by hand',tag:'now',tt:'Available',ok:true,
+   ic:"M12 20h9|M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z",
+   ds:'Just the numbers — distance and time, no route. The most private option.'},
+  {id:'anthemos',nm:'From Anthemos',tag:'soon',tt:'Not yet',ok:false,
+   ic:"M12 3v18|M12 8c0-2.8 2.2-5 5-5 0 2.8-2.2 5-5 5z|M12 14c0-2.8-2.2-5-5-5 0 2.8 2.2 5 5 5z",
+   ds:'Your pod holds the activity; Kronk receives a signed, revocable summary. Arrives with the membrane.'},
+];
+const WHY=[
+  ['Garmin','Developer program suspended to new applicants, with no timeline. Push-only delivery would mean continuous ingestion, which is the wrong shape for something you author and publish.'],
+  ['Fitbit','Legacy API shuts down Sept 2026. Its replacement makes the developer responsible for retaining data at the granularity collected — the opposite of coarsening and discarding.'],
+  ['Strava','Their agreement forbids showing your activity data to anyone but you. A map your mates can see is the prohibited case, named in their own explanation.'],
+];
+const KEPT=[['Activity type','Run'],['Distance','8.42 km'],['Moving time','43:47'],['Elapsed','45:12'],
+  ['Avg pace','5:12 /km'],['Elevation gain','64 m'],['Route points','1,247 → 500'],['Start (coarsened)','−31.972, 115.850']];
+const BINNED=[['Heart rate','1,247 samples'],['Cadence','1,247 samples'],['Running power','1,180 samples'],
+  ['Stride length','1,247 samples'],['Body temperature','412 samples'],['Device serial','3xxxxxx91'],
+  ['Device model','Forerunner 265'],['Wi-Fi / cell IDs','6 entries']];
+let logSrc=null;
+
+function renderLogger(){
+  el('lw').innerHTML=`
+    <h1>Log a Trek</h1>
+    <p class="lede">Kronk doesn't record your movement — your watch or phone already does that better.
+      Bring the activity across when it's finished, and choose what to publish.</p>
+    <div class="cards">${CARDS.map(c=>`
+      <div class="pick ${c.ok?'':'off'}" data-id="${c.id}">
+        <div class="ic">${ico(c.ic,c.ok?'#c4b0ff':'#7f79a0',19)}</div>
+        <div class="nm">${c.nm}<span class="tag ${c.tag}">${c.tt}</span></div>
+        <div class="ds">${c.ds}</div></div>`).join('')}</div>
+    <details class="disclose">
+      <summary>${ico(PATH.info,'#7f79a0',13)} Why can't I connect Garmin, Fitbit or Strava?</summary>
+      <div style="margin-top:12px">
+        ${WHY.map(([n,r])=>`<div class="why-row"><b>${n}</b><span>${r}</span></div>`).join('')}
+        <div class="why-foot">All three still let you export your own activities, and that file works here.
+          Data portability is the member's right — we'd rather lean on that than hold a credential to
+          anyone's health account.</div>
+      </div>
+    </details>
+    <div id="dropStage" class="hidden"></div>
+    <div id="parseOut"></div>`;
+  document.querySelectorAll('.pick').forEach(x=>x.onclick=()=>{
+    if(x.classList.contains('off'))return;
+    document.querySelectorAll('.pick').forEach(y=>y.classList.remove('on'));
+    x.classList.add('on'); logSrc=x.dataset.id; el('parseOut').innerHTML='';
+    const d=el('dropStage'); d.classList.remove('hidden');
+    if(logSrc==='file') renderUpload(d); else renderManual(d);
+    d.scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+}
+function renderUpload(d){
+  d.innerHTML=`<div class="step" style="margin-top:24px">The file</div>
+    <div class="drop" id="drop">${ico(PATH.up,'#7241ff',28)}
+      <div class="bg">Drop a file, or choose one</div>
+      <div class="sm">Read once, then discarded. The original is never stored.</div>
+      <div class="fm">GPX · TCX · FIT</div></div>`;
+  el('drop').onclick=doParse;
+}
+function renderManual(d){
+  d.innerHTML=`<div class="step" style="margin-top:24px">The numbers</div>
+    <div class="field"><label>Activity type</label>
+      <select id="mType">${Object.keys(TYPES).map(k=>
+        `<option value="${k}"${k==='walk'?' selected':''}>${TYPES[k].label}</option>`).join('')}</select></div>
+    <div class="field"><label>Title</label>
+      <input type="text" id="mTitle" value="Evening walk" maxlength="60"/></div>
+    <div class="two">
+      <div class="field"><label>Distance (km)</label><input type="text" id="mDist" value="4.20"/></div>
+      <div class="field"><label>Duration</label><input type="text" id="mDur" value="48:30"/></div>
+    </div>
+    <div class="field"><label>Where (optional)</label>
+      <input type="text" id="mLabel" value="Perth, WA" maxlength="40"/></div>
+    <div class="note purple" style="border:1px solid var(--line);border-radius:13px;margin-top:4px">
+      ${ico(PATH.shield,'#c4b0ff',14)}
+      <span><b>No route, no coordinates.</b> A hand-recorded Trek publishes the numbers and nothing else —
+      there is no line for anyone to follow.</span></div>
+    <div class="actions">
+      <button class="btn ghost" id="mDraft">Save as draft</button>
+      <button class="btn primary" id="mPub">Publish Trek</button></div>`;
+  el('mDraft').onclick=()=>commitManual('draft');
+  el('mPub').onclick=()=>commitManual('published');
+}
+function parseDur(s){
+  const p=String(s).split(':').map(Number).filter(n=>!isNaN(n));
+  if(!p.length) return 0;
+  return p.reduce((a,v)=>a*60+v,0);
+}
+function commitManual(status){
+  const distKm=parseFloat(el('mDist').value)||0, dur=parseDur(el('mDur').value);
+  const t={id:'t'+(TREKS.length+1),type:el('mType').value,title:el('mTitle').value||'Untitled Trek',
+    when:'Tue 21 Jul',status,label:el('mLabel').value.trim(),hasRoute:false,by:'me',froth:[],comments:[],
+    dist:distKm*1000,movingSec:dur,pts:null,pub:null,trimS:[],trimE:[],trimmed:0,elev:null,gain:null};
+  TREKS.unshift(t); curTrek=t; trekFilter='mine'; setLens('treks');
+}
+function doParse(){
+  const o=el('parseOut');
+  o.innerHTML=`<div class="step" style="margin-top:24px">Reading</div>
+    <div class="rcard"><div class="rc-h"><span class="spin"></span>
+      <span class="fn">morning_run_2026-07-21.fit</span><span class="sz">412 KB</span></div></div>`;
+  o.scrollIntoView({behavior:'smooth',block:'nearest'});
+  setTimeout(()=>{
+    o.innerHTML=`<div class="step" style="margin-top:24px">What came out of the file</div>
+    <div class="rcard">
+      <div class="rc-h">${ico(PATH.tick,'#4ec9be',17)}
+        <span class="fn">morning_run_2026-07-21.fit</span><span class="sz">412 KB</span></div>
+      <div class="cols">
+        <div class="col keep"><h4>${ico(PATH.tick,'#4ec9be',12)} Kept</h4>
+          ${KEPT.map(([k,v])=>`<div class="row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('')}</div>
+        <div class="col bin"><h4>${ico(PATH.cross,'#f08aa5',12)} Discarded at the door</h4>
+          ${BINNED.map(([k,v])=>`<div class="row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('')}</div>
+      </div>
+      <div class="note red">${ico(PATH.shield,'#f08aa5',14)}
+        <span><b>Kronk never stores health data.</b> Heart rate, cadence, power and device identifiers are
+        stripped while the file is read and never written to disk. When Anthemos lands, that's where they
+        belong — in your pod, for you.</span></div>
+      <div class="note purple">${ico(PATH.pin,'#c4b0ff',14)}
+        <span><b>Privacy zone trims 340 m</b> from the start and 290 m from the end. Others will see
+        7.79 km of route. The trimmed section is removed before the Trek is saved.</span></div>
+    </div>
+    <div class="step" style="margin-top:24px">Before it goes up</div>
+    <div class="field"><label>Activity type</label>
+      <select id="newType">${Object.keys(TYPES).map(k=>
+        `<option value="${k}"${k==='run'?' selected':''}>${TYPES[k].label}</option>`).join('')}</select></div>
+    <div class="field"><label>Title</label>
+      <input type="text" id="newTitle" value="Morning run along the river" maxlength="60"/></div>
+    <div class="actions">
+      <button class="btn ghost" id="saveDraft">Save as draft</button>
+      <button class="btn primary" id="pubNow">Publish Trek</button></div>`;
+    el('saveDraft').onclick=()=>commitTrek('draft');
+    el('pubNow').onclick=()=>commitTrek('published');
+  },900);
+}
+function commitTrek(status){
+  const type=el('newType').value;
+  const t=hydrate({id:'t'+(TREKS.length+1),type,title:el('newTitle').value||'Untitled Trek',
+    when:'Tue 21 Jul',status,paceSec:312,speedKmh:26.4,label:'Perth, WA',by:'me',froth:[],comments:[],
+    pts:mkRoute([HOME,[-31.9731,115.8471],[-31.9668,115.8419],[-31.9601,115.8462],[-31.9569,115.8571],
+      [-31.9618,115.8668],[-31.9701,115.8692],[-31.9749,115.8618],HOME],14,.0006,88)});
+  TREKS.unshift(t); curTrek=t; trekFilter='mine'; setLens('treks');
+}
+
+setLens('mates');
+</script>
+</body>
+</html>

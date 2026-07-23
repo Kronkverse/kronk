@@ -2,10 +2,13 @@
 # to say. Every share is a deliberate act; nothing is broadcast unless
 # the user flips a toggle each session.
 #
-# WIP manifest — no backend yet. `enforced: false`. Presence needs
-# real-time infrastructure (WebSocket or similar) that hasn't been
-# built; this is one of the more infrastructure-heavy 2.x korners.
-# See docs/kronk_korner_spec.md §New korners.
+# Ships in 2.0.0 as a prototype-driven surface at /hub/kompass (Kommons
+# proposal #116969555027300161 "New Korner: Map — To see where your
+# mates are and share activities"). The frontend view is the
+# hand-authored prototype iframed via features/kompass_v2/. Backend
+# (presence_states + real-time infra) still to build — this manifest
+# stays enforced so the tile lights up on the Hub, but the surface is
+# read-only until wiring lands.
 
 slug: kompass
 name: Kompass
@@ -46,7 +49,7 @@ launch:
   blurb: 'Kompass — opt-in presence. Nothing shared unless you choose to.'
   cta: 'Peek in'
 
-enforced: false
+enforced: true
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 nodes:

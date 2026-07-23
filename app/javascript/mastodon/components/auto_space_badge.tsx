@@ -22,14 +22,20 @@ const HUB_ROUTE_RE = /^\/hub\/([a-z0-9-]+)/;
 // entries here as new korners take over Stage-based rendering. Any
 // slug not in the map falls back to the first letter of the space's
 // name.
+// Hand-picked text glyphs — deliberately NOT emoji, so a badge reads
+// as a Kronk letterform rather than colour-emoji chrome from the OS.
+// Add entries here as korners take over Stage-based rendering; a slug
+// without a mapping falls back to the first letter of the space name.
 const SLUG_TO_GLYPH: Record<string, string> = {
   kuestions: 'Ƙ',
   kommons: '✦',
   nudges: '◉',
-  booth: '🎧',
-  kalendar: '🗓',
+  booth: 'Ƀ',
+  kalendar: 'Ķ',
+  kompass: 'Ǩ',
   huddle: '◊',
   inflow: '≈',
+  klot: 'Ł',
   groups: 'ĸ', // Kronk vocab: slug stays `groups`, display label is "Krews".
 };
 
