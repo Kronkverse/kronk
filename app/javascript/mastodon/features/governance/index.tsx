@@ -3,15 +3,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link } from 'react-router-dom';
 
-import ListAltIcon from '@/material-icons/400-24px/list_alt.svg?react';
 import api from 'mastodon/api';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { Icon } from 'mastodon/components/icon';
-import { useKorner } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { Stage } from 'mastodon/components/stage';
 
 import { KoinWallet } from './components/koin_wallet';
 import type { Wallet } from './components/koin_wallet';
@@ -61,9 +55,11 @@ const sortMessages = defineMessages({
   newest: { id: 'governance.sort.newest', defaultMessage: 'Newest' },
 });
 
-const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
-  const korner = useKorner('kommons');
-  const kornerIcon = useKornerIcon('kommons');
+// Renders into the Frame's Stage. Identity chrome (the ✦ Kommons space badge)
+// and the Proposals ⇄ Directory view picker are Frame-provided via
+// AutoSpaceBadge / AutoSpaceViewPicker in ui/index.jsx — this page renders
+// neither. See docs/kronk_frame.md.
+const Governance: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [wallet, setWallet] = useState<Wallet | null>(null);
@@ -150,14 +146,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const maxBacking = Math.max(0, ...shown.map((p) => p.backing.total));
 
   return (
-    <Column>
-      <ColumnHeader
-        title={korner?.name ?? 'Kommons'}
-        icon='kommons'
-        iconComponent={kornerIcon}
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
@@ -205,18 +194,6 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                     })}
                   </span>
                 )}
-              </div>
-              <div className='governance-page__head-actions'>
-                <Link
-                  to='/hub/kommons/lattice'
-                  className='governance-page__browse'
-                >
-                  <Icon id='list_alt' icon={ListAltIcon} />
-                  <FormattedMessage
-                    id='governance.browse_by_page'
-                    defaultMessage='Browse by page'
-                  />
-                </Link>
               </div>
             </div>
 
@@ -294,7 +271,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </>
         )}
       </div>
-    </Column>
+    </Stage>
   );
 };
 

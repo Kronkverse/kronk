@@ -29,6 +29,10 @@ const SLUG_TO_VIEWS: Record<string, SpaceView[]> = {
     { key: 'answered', label: 'Answered' },
     { key: 'ask', label: 'Ask' },
   ],
+  kommons: [
+    { key: 'proposals', label: 'Proposals' },
+    { key: 'lattice', label: 'Directory' },
+  ],
 };
 
 export const AutoSpaceViewPicker: React.FC = () => {

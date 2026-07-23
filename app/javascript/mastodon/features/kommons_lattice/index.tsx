@@ -13,10 +13,8 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 
-import { KommonsExit } from '../kommons_tree/components/kommons_exit';
 import type { KommonsNode } from '../kommons_tree/data/nodes';
 import { fromApiNodes } from '../kommons_tree/data/nodes';
 
@@ -37,9 +35,10 @@ const messages = defineMessages({
   },
 });
 
-const KommonsLattice: React.FC<{ multiColumn?: boolean }> = ({
-  multiColumn,
-}) => {
+// Renders into the Frame's Stage. The ✦ Kommons space badge (back to Hub) and
+// the Proposals ⇄ Directory view picker are Frame-provided; the old in-Stage
+// KommonsExit pill is retired per docs/kronk_frame.md rule 4.
+const KommonsLattice: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const [nodes, setNodes] = useState<KommonsNode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,13 +65,13 @@ const KommonsLattice: React.FC<{ multiColumn?: boolean }> = ({
   const title = intl.formatMessage(messages.title);
 
   return (
-    <Column bindToDocument={!multiColumn} label={title}>
-      <ColumnHeader icon='gavel' title={title} multiColumn={multiColumn} />
+    <Stage label={title}>
+      <Helmet>
+        <title>{title}</title>
+        <meta name='robots' content='noindex' />
+      </Helmet>
 
       <div className='kommons-lattice'>
-        <div className='kommons-tree__chrome'>
-          <KommonsExit />
-        </div>
         {loading && (
           <p className='kommons-lattice__loading'>
             {intl.formatMessage(messages.loading)}
@@ -85,12 +84,7 @@ const KommonsLattice: React.FC<{ multiColumn?: boolean }> = ({
         )}
         {!loading && !loadError && <Lattice nodes={nodes} />}
       </div>
-
-      <Helmet>
-        <title>{title}</title>
-        <meta name='robots' content='noindex' />
-      </Helmet>
-    </Column>
+    </Stage>
   );
 };
 
