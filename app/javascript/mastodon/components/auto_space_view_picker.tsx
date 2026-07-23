@@ -33,13 +33,9 @@ const SLUG_TO_VIEWS: Record<string, SpaceView[]> = {
     { key: 'proposals', label: 'Proposals' },
     { key: 'lattice', label: 'Directory' },
   ],
-  kalendar: [
-    // `list` = classic /hub/kalendar (Events component).
-    // `spiral` = the interactive Spiral prototype at
-    // /hub/kalendar/spiral (Kommons proposal #116969253949249128).
-    { key: 'list', label: 'List' },
-    { key: 'spiral', label: 'Spiral' },
-  ],
+  // Kalendar has only one view (Spiral, at /hub/kalendar) since the
+  // classic Events list retired in alpha.201. No picker needed until
+  // it grows a second view.
 };
 
 export const AutoSpaceViewPicker: React.FC = () => {
