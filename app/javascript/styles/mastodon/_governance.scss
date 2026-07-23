@@ -198,8 +198,7 @@
   gap: 8px;
 }
 
-.governance-page__browse,
-.governance-page__cta {
+.governance-page__browse {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -209,34 +208,21 @@
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
+  color: $secondary-text-color;
+  border: 1px solid var(--border-default);
+  background: transparent;
   transition:
     background 0.15s,
-    filter 0.15s,
     color 0.15s;
 
   .icon {
     width: 16px;
     height: 16px;
   }
-}
-
-.governance-page__browse {
-  color: $secondary-text-color;
-  border: 1px solid var(--border-default);
-  background: transparent;
 
   &:hover {
     color: $primary-text-color;
     background: color-mix(in srgb, var(--kronk-purple-bright) 10%, transparent);
-  }
-}
-
-.governance-page__cta {
-  color: #fff;
-  background: var(--accent);
-
-  &:hover {
-    filter: brightness(1.12);
   }
 }
 
