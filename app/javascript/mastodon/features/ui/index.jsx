@@ -27,6 +27,7 @@ import { HubSwitcher } from './components/hub_switcher';
 import { KornerSubBar } from './components/korner_sub_bar';
 import { KornerSidebar } from './components/korner_sidebar';
 import { AutoSpaceBadge } from 'mastodon/components/auto_space_badge';
+import { AutoSpaceViewPicker } from 'mastodon/components/auto_space_view_picker';
 import { KronkFrame } from 'mastodon/components/kronk_frame';
 import { KronkMenu } from './components/kronk_menu';
 import { KronkWordmark } from './components/kronk_wordmark';
@@ -716,11 +717,12 @@ class UI extends PureComponent {
               {layout !== 'mobile' && <HubSwitcher variant='top' currentAccountUsername={this.props.username} />}
             </KronkFrame.TopBand>
             <KronkFrame.SpaceNav>
-              {/* Renders <SpaceBadge> automatically on any /hub/<slug>
-                  route by matching against the korner registry — so
-                  every korner gets the same back-to-Hub affordance
-                  without opting in per-space. */}
+              {/* Frame-provided per-space nav — every korner renders the
+                  same badge (back to Hub) and view picker (per-korner
+                  views declared in the pickers' SLUG_TO_* maps) without
+                  opting in. */}
               <AutoSpaceBadge />
+              <AutoSpaceViewPicker />
             </KronkFrame.SpaceNav>
             <KronkFrame.RightBand>
               {this.props.identity.signedIn && <KornerSidebar />}

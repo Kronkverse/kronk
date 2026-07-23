@@ -12,7 +12,11 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
   // Top / bottom offsets and right inset now come from the band's
   // padding, so the sidebar just fills the remaining vertical space.
   width: $rail-width;
-  align-self: stretch;
+  flex: 1 1 auto; // fill RightBand vertically; align-self alone
+  // only handles cross-axis, so we need flex-grow
+  // to stretch on the main (column) axis.
+  min-height: 0; // permit the inner __list to scroll when the
+  // sidebar's flex height overflows.
   z-index: 25;
   background: transparent;
   border: none;

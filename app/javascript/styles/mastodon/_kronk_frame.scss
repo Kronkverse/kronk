@@ -259,3 +259,105 @@
     font-family: var(--font-display);
   }
 }
+
+// ── SpaceViewPicker — the collapsible per-view dropdown ────────────
+// Only the current view pill is visible by default. Tap reveals the
+// other views underneath. Selecting one closes the dropdown and
+// swaps the trigger label. Prototype: v11.
+// position: fixed rather than living inside the SpaceNav grid cell,
+// because visually it belongs at the top-right of the content area
+// (viewport minus right rail) — not inside the narrow left rail cell.
+// SpaceNav is a stacking context at z-26 so this picker inherits that
+// tier and paints above Kuestions' .kronk-stage (z-25).
+.space-view-picker {
+  position: fixed;
+  top: 0.75rem;
+  right: calc(5.25rem + 0.75rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-end;
+
+  @container frame (width <= 889px) {
+    // No right rail on mobile — picker hugs the viewport's right edge.
+    right: 0.75rem;
+  }
+
+  &__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.75rem 0.4rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--kronk-purple-bright);
+    background: var(--kronk-purple-accent);
+    color: var(--text-on-accent, white);
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    box-shadow:
+      0 2px 12px -2px
+        color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent),
+      0 0 0 1px color-mix(in oklab, var(--kronk-purple-bright) 30%, transparent);
+  }
+
+  &__caret {
+    width: 0.65rem;
+    height: 0.65rem;
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+
+  &[data-open='true'] &__caret {
+    transform: rotate(180deg);
+  }
+
+  &__options {
+    display: none;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: flex-end;
+  }
+
+  &[data-open='true'] &__options {
+    display: flex;
+    animation: space-view-picker-in 140ms var(--ease-out);
+  }
+
+  &__option {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, black 65%, transparent);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px -2px rgb(0 0 0 / 45%);
+    border: 1px solid var(--border-subtle);
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      color: var(--text-primary);
+      background: color-mix(in srgb, #16102a 85%, transparent);
+    }
+  }
+}
+
+@keyframes space-view-picker-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
