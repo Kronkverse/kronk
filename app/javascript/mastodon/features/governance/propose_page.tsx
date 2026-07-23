@@ -11,10 +11,8 @@ import {
   apiCreateProposalTask,
   apiGetKommonsNodes,
 } from 'mastodon/api/kommons_nodes';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 import { useKorner } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 const messages = defineMessages({
   title: { id: 'propose.title', defaultMessage: 'Open a Proposal' },
@@ -42,11 +40,10 @@ const messages = defineMessages({
 // Space page's button. When opened with ?space=<slug> it scopes the proposal
 // to that space, anchoring it to the space's index node so it lands on the
 // Space page and the Kommons tree. Without a space it's an unscoped proposal.
-const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+const ProposePage: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const history = useHistory();
   const location = useLocation();
-  const kommonsIcon = useKornerIcon('kommons');
 
   // Scope: `?space=<slug>` targets a korner (anchors to its index node);
   // `?node=<id>` targets an exact page-node (the meta-page "propose" path).
@@ -213,14 +210,7 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 
   return (
-    <Column>
-      <ColumnHeader
-        title={intl.formatMessage(messages.title)}
-        icon='kommons'
-        iconComponent={kommonsIcon}
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
@@ -409,7 +399,7 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </button>
         </div>
       </form>
-    </Column>
+    </Stage>
   );
 };
 

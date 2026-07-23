@@ -6,12 +6,10 @@ import { Helmet } from 'react-helmet';
 import { useHistory } from 'react-router-dom';
 
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 import { Lattice } from 'mastodon/features/kommons_lattice/components/lattice';
 import type { KommonsNode } from 'mastodon/features/kommons_tree/data/nodes';
 import { fromApiNodes } from 'mastodon/features/kommons_tree/data/nodes';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 const messages = defineMessages({
   title: { id: 'propose_picker.title', defaultMessage: 'Open a Proposal' },
@@ -25,10 +23,9 @@ const messages = defineMessages({
 // Kommons map (in pick mode — selecting a node opens the Proposer scoped to it)
 // or search for the page by name. Every result / node routes to
 // /hub/kommons/propose?node=<id>, so the proposal lands on that page.
-const ProposePicker: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+const ProposePicker: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const history = useHistory();
-  const kommonsIcon = useKornerIcon('kommons');
   const [nodes, setNodes] = useState<KommonsNode[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState('');
@@ -78,14 +75,7 @@ const ProposePicker: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => 
   );
 
   return (
-    <Column>
-      <ColumnHeader
-        title={intl.formatMessage(messages.title)}
-        icon='kommons'
-        iconComponent={kommonsIcon}
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
@@ -136,7 +126,7 @@ const ProposePicker: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => 
           </div>
         )}
       </div>
-    </Column>
+    </Stage>
   );
 };
 

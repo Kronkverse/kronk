@@ -9,11 +9,9 @@ import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
 import { apiGetKorner } from 'mastodon/api/korners';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 import { NodeProposals } from 'mastodon/features/kommons_tree/components/node_proposals';
 import { useKorner } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 const messages = defineMessages({
   title: { id: 'space.title', defaultMessage: 'Space' },
@@ -34,11 +32,10 @@ const messages = defineMessages({
 // Korners live in the client store (`useKorner`). Core pillars are excluded
 // from that store (they have no Hub tile) but are still fetchable by slug via
 // the show endpoint, so we lazy-load the manifest when the store misses.
-const SpacePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+const SpacePage: React.FC<{ multiColumn?: boolean }> = () => {
   const { slug = '' } = useParams<{ slug: string }>();
   const intl = useIntl();
   const stored = useKorner(slug);
-  const kornerIcon = useKornerIcon(slug);
   const [fetched, setFetched] = useState<ApiKornerJSON | null>(null);
   const korner = stored ?? fetched;
   const [nodes, setNodes] = useState<ApiKommonsNode[]>([]);
@@ -118,14 +115,7 @@ const SpacePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     : `/hub/${slug}`;
 
   return (
-    <Column>
-      <ColumnHeader
-        title={name}
-        icon='kommons'
-        iconComponent={kornerIcon}
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={name}>
       <Helmet>
         <title>{`${name} — ${intl.formatMessage(messages.title)}`}</title>
       </Helmet>
@@ -195,7 +185,7 @@ const SpacePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </section>
         )}
       </div>
-    </Column>
+    </Stage>
   );
 };
 

@@ -7,10 +7,8 @@ import { Link, useParams } from 'react-router-dom';
 
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 import { NodeProposals } from 'mastodon/features/kommons_tree/components/node_proposals';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 const messages = defineMessages({
   title: { id: 'node_meta.title', defaultMessage: 'Page' },
@@ -30,10 +28,9 @@ const messages = defineMessages({
 // being proposed about it" view. It never opens the product page directly —
 // a "Go to this page" button does that, so the tree stays a governance surface.
 // Create a proposal about this page via the Ӂ menu (scoped to this node).
-const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
   const { nodeId = '' } = useParams<{ nodeId: string }>();
   const intl = useIntl();
-  const kommonsIcon = useKornerIcon('kommons');
   const [nodes, setNodes] = useState<ApiKommonsNode[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -76,14 +73,7 @@ const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const isRails = node?.url.startsWith('/kronk') ?? false;
 
   return (
-    <Column>
-      <ColumnHeader
-        title={name}
-        icon='kommons'
-        iconComponent={kommonsIcon}
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={name}>
       <Helmet>
         <title>{`${name} — ${intl.formatMessage(messages.title)}`}</title>
       </Helmet>
@@ -158,7 +148,7 @@ const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </>
         )}
       </div>
-    </Column>
+    </Stage>
   );
 };
 

@@ -6,10 +6,7 @@ import { Helmet } from 'react-helmet';
 import { useHistory, useParams } from 'react-router-dom';
 
 import api from 'mastodon/api';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { useKorner } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { Stage } from 'mastodon/components/stage';
 
 import { ProposalDetail } from './components/proposal_detail';
 import type { Proposal } from './types';
@@ -23,11 +20,9 @@ const messages = defineMessages({
 // proposals on it; also shareable as a plain URL. Wraps the existing in-place
 // ProposalDetail, fetching the proposal by id and adapting its callbacks to
 // navigation.
-const ProposalPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+const ProposalPage: React.FC<{ multiColumn?: boolean }> = () => {
   const { proposalId } = useParams<{ proposalId: string }>();
   const history = useHistory();
-  const korner = useKorner('kommons');
-  const kornerIcon = useKornerIcon('kommons');
   const intl = useIntl();
 
   const [proposal, setProposal] = useState<Proposal | null>(null);
@@ -64,14 +59,7 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   }, []);
 
   return (
-    <Column>
-      <ColumnHeader
-        title={korner?.name ?? 'Kommons'}
-        icon='kommons'
-        iconComponent={kornerIcon}
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{proposal?.title ?? intl.formatMessage(messages.title)}</title>
       </Helmet>
@@ -103,7 +91,7 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           />
         )}
       </div>
-    </Column>
+    </Stage>
   );
 };
 
