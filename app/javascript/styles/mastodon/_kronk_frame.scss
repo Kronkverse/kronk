@@ -35,7 +35,12 @@
 @container frame (width <= 889px) {
   .kronk-frame {
     grid-template-columns: [nav-start stage-start] 1fr [nav-end stage-end];
-    grid-template-rows: 4.25rem 1fr 3.5rem;
+
+    // Row 1 collapses on mobile (TopBand hides at ≤629px; row-1's
+    // 4.25rem offset for the wordmark strip isn't needed when the
+    // strip isn't showing). `auto` sizes the row to its (empty)
+    // content, i.e. 0.
+    grid-template-rows: auto 1fr 3.5rem;
   }
 }
 
@@ -115,20 +120,19 @@
 }
 
 .kronk-frame__stage {
-  // Landing state: Stage spans the whole Frame grid (row 1 through the
-  // end) so classic Mastodon content — SwitchingColumnsArea, which
-  // centres its own reading column — occupies the full viewport as
-  // before. Existing chrome (still position: fixed) overlays on top,
-  // preserving the pre-Frame visual result.
-  // Later PRs constrain Stage to `nav-start / stage-end` when
-  // RightBand becomes a grid child with actual width.
+  // Stage now starts at row 2 so the grid's row-1 track (4.25rem)
+  // offsets content below the TopBand strip. This retires the classic
+  // `.columns-area { padding-top: 4.25rem }` hack in _kronk_chrome.scss
+  // — the Frame owns the top offset now.
+  // Grid-column stays full-width so classic Mastodon content (which
+  // centres its own reading column and hides the right nav pane) keeps
+  // its viewport-centred visual placement.
   grid-column: 1 / -1;
-  grid-row: 1 / -1;
+  grid-row: 2 / -1;
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
 }
 
 .kronk-frame__right-band {

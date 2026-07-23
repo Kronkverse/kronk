@@ -302,20 +302,15 @@
   }
 }
 
-// Push the columns area down so the fixed top strip doesn't overlap.
-.columns-area,
-.column {
-  padding-top: 4.25rem;
-
-  @media (width <= 629px) {
-    padding-top: 3.75rem;
-  }
-}
-
+// Column padding-top hack retired in alpha.180 — KronkFrame.Stage
+// now starts at grid row 2 (offset by the row-1 TopBand track),
+// giving classic Mastodon content its top clearance for free.
+// The KornerSubBar (still position: fixed) needs its own clearance
+// when it's present, since it stacks below the TopBand at ~4.25rem.
 body:has(.korner-sub-bar) {
   .columns-area,
   .column {
-    padding-top: 6.75rem;
+    padding-top: 2.5rem;
   }
 }
 
