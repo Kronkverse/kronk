@@ -168,9 +168,11 @@
   padding: 16px;
   max-width: 680px;
   margin: 0 auto;
-  overflow-y: auto;
-  flex: 1;
+  width: 100%;
   box-sizing: border-box;
+
+  // Scroll is owned by the Frame's Stage (.kronk-stage); this is a plain
+  // centred content block, not its own scroll container.
 }
 
 // ─── Board head: title + count + actions ────────────────────────────────────
@@ -203,40 +205,6 @@
 .governance-page__head-count {
   font-size: 13px;
   color: $secondary-text-color;
-}
-
-.governance-page__head-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.governance-page__browse {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border-radius: var(--radius-round);
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  white-space: nowrap;
-  color: $secondary-text-color;
-  border: 1px solid var(--border-default);
-  background: transparent;
-  transition:
-    background 0.15s,
-    color 0.15s;
-
-  .icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  &:hover {
-    color: $primary-text-color;
-    background: color-mix(in srgb, var(--kronk-purple-bright) 10%, transparent);
-  }
 }
 
 // ─── Filter / sort strip ────────────────────────────────────────────────────
