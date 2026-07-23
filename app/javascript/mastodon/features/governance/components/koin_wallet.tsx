@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 
-import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+import { defineMessages, useIntl } from 'react-intl';
 
 import api from 'mastodon/api';
 
-// The ₭oin wallet card at the top of the Kommons surface. It's people's
-// governance weight, so it's given the presence of a wallet rather than a
-// counter: available-of-total balance, a staked-vs-available bar, and a plain
-// reminder that staking is never spending. Read-only; refetched on mount and
-// whenever `refreshKey` changes (bumped after a backing).
+// The Koin wallet at the top of the Kommons surface — the money signifier: a
+// big minted ₭ coin, the available-of-total balance, and a bar showing how much
+// of your Koin is free to stake. Read-only; refetched on mount and whenever
+// `refreshKey` changes (bumped after a backing).
 
 interface Wallet {
   available: number;
@@ -18,12 +17,6 @@ interface Wallet {
 }
 
 const messages = defineMessages({
-  label: { id: 'governance.wallet.label', defaultMessage: 'Your Koin' },
-  info: {
-    id: 'governance.wallet.info',
-    defaultMessage:
-      'Koin is your governance weight. Stake it behind proposals you support; it returns to you when a proposal resolves.',
-  },
   available: {
     id: 'governance.wallet.available',
     defaultMessage: 'Koin available',
@@ -52,8 +45,7 @@ export const KoinWallet: React.FC<{ refreshKey?: number }> = ({
 
   if (wallet === null) return null;
 
-  const { available, staked, staked_seeds: stakedSeeds, total } = wallet;
-  const stakedPct = total > 0 ? (staked / total) * 100 : 0;
+  const { available, total } = wallet;
   const availPct = total > 0 ? (available / total) * 100 : 0;
 
   return (
@@ -63,70 +55,21 @@ export const KoinWallet: React.FC<{ refreshKey?: number }> = ({
       </div>
 
       <div className='kommons-wallet__content'>
-        <div className='kommons-wallet__top'>
-          <span className='kommons-wallet__label'>
-            {intl.formatMessage(messages.label)}
-          </span>
-          <span
-            className='kommons-wallet__info'
-            title={intl.formatMessage(messages.info)}
-            aria-label={intl.formatMessage(messages.info)}
-          >
-            i
-          </span>
+        <div className='kommons-wallet__bal'>
+          <span className='kommons-wallet__big'>{available}</span>
+          <span className='kommons-wallet__of'>/ {total}</span>
         </div>
 
-        <div className='kommons-wallet__bal'>
-        <span className='kommons-wallet__big'>{available}</span>
-        <span className='kommons-wallet__of'>/ {total}</span>
-        <span className='kommons-wallet__unit'>
-          {intl.formatMessage(messages.available)}
-        </span>
-      </div>
-
-      <div
-        className='kommons-wallet__bar'
-        role='img'
-        aria-label={intl.formatMessage(messages.available)}
-      >
         <div
-          className='kommons-wallet__staked-fill'
-          style={{ width: `${stakedPct}%` }}
-        />
-        <div
-          className='kommons-wallet__avail-fill'
-          style={{ width: `${availPct}%` }}
-        />
-      </div>
-
-      <div className='kommons-wallet__foot'>
-        <span className='kommons-wallet__leg'>
-          <span className='kommons-wallet__dot kommons-wallet__dot--staked' />
-          <FormattedMessage
-            id='governance.wallet.staked'
-            defaultMessage='Staked {staked} across {seeds, plural, one {# proposal} other {# proposals}}'
-            values={{
-              staked: <b>{staked}</b>,
-              seeds: stakedSeeds,
-            }}
+          className='kommons-wallet__bar'
+          role='img'
+          aria-label={intl.formatMessage(messages.available)}
+        >
+          <div
+            className='kommons-wallet__fill'
+            style={{ width: `${availPct}%` }}
           />
-        </span>
-        <span className='kommons-wallet__leg'>
-          <span className='kommons-wallet__dot kommons-wallet__dot--avail' />
-          <FormattedMessage
-            id='governance.wallet.available_legend'
-            defaultMessage='Available {available}'
-            values={{ available: <b>{available}</b> }}
-          />
-        </span>
-      </div>
-
-        <p className='kommons-wallet__note'>
-          <FormattedMessage
-            id='governance.wallet.note'
-            defaultMessage='Koin returns to you when a proposal resolves. Nothing is spent for good.'
-          />
-        </p>
+        </div>
       </div>
     </section>
   );
