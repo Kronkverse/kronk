@@ -5,7 +5,6 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ListAltIcon from '@/material-icons/400-24px/list_alt.svg?react';
 import api from 'mastodon/api';
 import { Column } from 'mastodon/components/column';
@@ -170,13 +169,6 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                   <FormattedMessage
                     id='governance.browse_by_page'
                     defaultMessage='Browse by page'
-                  />
-                </Link>
-                <Link to='/hub/kommons/pick' className='governance-page__cta'>
-                  <Icon id='add' icon={AddIcon} />
-                  <FormattedMessage
-                    id='governance.open_proposal'
-                    defaultMessage='Open a Proposal'
                   />
                 </Link>
               </div>
