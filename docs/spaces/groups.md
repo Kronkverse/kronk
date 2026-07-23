@@ -1,6 +1,6 @@
 # Krew (`krew` — code: `Group`)
 
-**Manifest:** `config/korners/groups.yaml` (rename → `krew` planned) · **Mount:** `/hub/krew` (currently `/hub/groups`) · **Status:** shipped-2.0 (framework), rebuild in progress (URL + accretion)
+**Manifest:** `config/korners/krew.yaml` · **Mount:** `/hub/krew` (`/hub/groups` still resolves as a Phase 1 legacy redirect; removed in Phase 2) · **Status:** shipped-2.0 (framework), rebuild in progress (URL flipped Phase 1; backend rename + accretion queued)
 
 > **Build spec:** [`krew_build_spec.md`](./krew_build_spec.md) — the actionable
 > layer (the four UI surfaces with locked decisions, built-vs-needed, build

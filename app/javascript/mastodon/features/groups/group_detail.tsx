@@ -144,7 +144,7 @@ export const GroupDetail = () => {
   return (
     <Stage label={group?.name ?? intl.formatMessage(messages.title)}>
       <div className='scrollable group-detail'>
-        <Link to='/hub/groups' className='group-detail__back'>
+        <Link to='/hub/krew' className='group-detail__back'>
           {intl.formatMessage(messages.back)}
         </Link>
 

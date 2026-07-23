@@ -25,6 +25,14 @@
 - kronk
 - feed
 
+# Ex-slugs — reserved because the URL still resolves as a legacy
+# redirect. Adding them here stops another manifest from claiming a
+# path that already has meaning in the app.
+# `groups` — retired when the Krews rebuild flipped the URL to
+# /hub/krew (Phase 1). /hub/groups continues to resolve for one
+# release; nothing else should be able to grab the slug.
+- groups
+
 # Mastodon route stems (single-word top-level paths)
 - notifications
 - favourites
