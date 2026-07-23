@@ -56,33 +56,37 @@
   // of self-anchoring with their own position: fixed. Each component
   // retires its own position: fixed in _kronk_chrome.scss to become a
   // flow child here.
-  // Interior-L rounding: mask cuts a quarter-circle out of TopBand's
-  // bottom-right area, meeting RightBand's mask at the corner to form
-  // one continuous curved interior. See RightBand for the pair.
   position: fixed;
   inset: 0 0 auto;
-  height: 5.5rem;
+  height: 8.5rem;
   z-index: 24;
-  background: linear-gradient(
-    to bottom,
-    #000 0,
-    #000 3.25rem,
-    rgb(0 0 0 / 82%) 3.9rem,
-    rgb(0 0 0 / 45%) 4.7rem,
-    rgb(0 0 0 / 0%) 5.5rem
-  );
+
+  // Layered backgrounds paint the top strip AND the corner fillet
+  // where TopBand meets RightBand. The radial (declared first, on
+  // top) bulges dark into the content area at the interior L corner
+  // via a rounded arc, matching RightBand's radial for a continuous
+  // curved interior boundary. The linear below is the classic top
+  // fade, clipped at 5.5rem (so extra height below is only used by
+  // the radial, not by a rectangular strip).
+  background:
+    radial-gradient(
+      circle 3rem at calc(100% - 7.75rem) 5.5rem,
+      #000 2rem,
+      rgb(0 0 0 / 82%) 2.5rem,
+      rgb(0 0 0 / 45%) 2.85rem,
+      transparent 3rem
+    ),
+    linear-gradient(
+      to bottom,
+      #000 0,
+      #000 3.25rem,
+      rgb(0 0 0 / 82%) 3.9rem,
+      rgb(0 0 0 / 45%) 4.7rem,
+      rgb(0 0 0 / 0%) 5.5rem,
+      transparent 8.5rem
+    );
   filter: drop-shadow(
     0 2px 16px color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent)
-  );
-  mask-image: radial-gradient(
-    circle 3rem at calc(100% - 7.75rem) 100%,
-    transparent 2.75rem,
-    black 3.25rem
-  );
-  -webkit-mask-image: radial-gradient(
-    circle 3rem at calc(100% - 7.75rem) 100%,
-    transparent 2.75rem,
-    black 3.25rem
   );
 
   // Layout for children (wordmark left, switcher centre). The strip
@@ -156,9 +160,9 @@
   // Fade strip still viewport-anchored; child KornerSidebar sits
   // inside as a flow element instead of self-anchoring. Sidebar's
   // own `position: fixed` retires in _korner_sidebar.scss.
-  // Interior-L rounding: mask cuts the mirror quarter-circle out of
-  // RightBand's top-left area. TopBand's mask + RightBand's mask
-  // together produce one continuous curved interior corner.
+  // The interior corner fillet is painted entirely by TopBand (see
+  // its layered radial background above), so RightBand here stays as
+  // a plain vertical fade strip.
   position: fixed;
   inset: 0 0 0 auto;
   width: 7.75rem;
@@ -173,16 +177,6 @@
   );
   filter: drop-shadow(
     -2px 0 16px color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent)
-  );
-  mask-image: radial-gradient(
-    circle 3rem at 0 5.5rem,
-    transparent 2.75rem,
-    black 3.25rem
-  );
-  -webkit-mask-image: radial-gradient(
-    circle 3rem at 0 5.5rem,
-    transparent 2.75rem,
-    black 3.25rem
   );
 
   // Sidebar sits at the right edge with the classic 0.75rem inset.
@@ -288,22 +282,25 @@
 // Only the current view pill is visible by default. Tap reveals the
 // other views underneath. Selecting one closes the dropdown and swaps
 // the trigger label. Prototype: v11.
-// Rendered as a flow child of .kronk-frame__space-nav — sits directly
-// below the space badge on desktop (SpaceNav is flex column), opposite
-// end of the row from the badge on mobile (SpaceNav is flex row,
-// justify-content: space-between).
+// Rendered inside .kronk-frame__space-nav but breaks out with
+// position: fixed so it lands top-right of the content area on all
+// breakpoints. Below TopBand's fade tail on desktop, viewport corner
+// on mobile.
 .space-view-picker {
-  align-self: flex-start;
+  position: fixed;
+  top: 5.75rem;
+  right: 6rem;
+  z-index: 27;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  align-items: flex-start;
+  align-items: flex-end;
 
   @container frame (width <= 889px) {
-    // On mobile the picker sits at the right end of the SpaceNav row;
-    // its dropdown drops down aligned to the right edge of the trigger.
-    align-self: flex-end;
-    align-items: flex-end;
+    // No right rail on mobile — picker hugs the viewport's right edge
+    // at top-right, opposite the SpaceBadge in the top-left.
+    top: 0.75rem;
+    right: 0.75rem;
   }
 
   &__trigger {
