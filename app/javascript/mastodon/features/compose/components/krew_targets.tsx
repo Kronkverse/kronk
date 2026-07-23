@@ -10,42 +10,42 @@ import { FormattedMessage } from 'react-intl';
 
 import { List as ImmutableList } from 'immutable';
 
-import { changeComposeGroupTargets } from 'mastodon/actions/compose';
+import { changeComposeKrewTargets } from 'mastodon/actions/compose';
 import { apiRequestGet } from 'mastodon/api';
-import type { ApiGroupJSON } from 'mastodon/api/groups';
+import type { ApiKrewJSON } from 'mastodon/api/krew';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
-// Compact multi-select for targeting a post at one or more Groups.
-// Renders a chip per selected group + an "add" affordance that lists
-// groups the current user is a member of. Server-side, statuses can
-// be attached to N groups (see statuses_groups join).
+// Compact multi-select for targeting a post at one or more Krews.
+// Renders a chip per selected krew + an "add" affordance that lists
+// krews the current user is a member of. Server-side, statuses can
+// be attached to N krews (see statuses_krews join).
 
-export const GroupTargets = () => {
+export const KrewTargets = () => {
   const dispatch = useAppDispatch();
   const selectedIds = useAppSelector(
     (state) =>
-      (state.compose.get('group_ids') ??
+      (state.compose.get('krew_ids') ??
         ImmutableList()) as ImmutableList<string>,
   );
 
-  const [available, setAvailable] = useState<ApiGroupJSON[]>([]);
+  const [available, setAvailable] = useState<ApiKrewJSON[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
-        const groups = await apiRequestGet<ApiGroupJSON[]>('v1/groups', {
+        const krews = await apiRequestGet<ApiKrewJSON[]>('v1/krews', {
           limit: 100,
         });
         if (!cancelled) {
-          // Only show groups the viewer is a member of.
+          // Only show krews the viewer is a member of.
           setAvailable(
-            groups.filter((g) => g.viewer_role !== null && !g.archived),
+            krews.filter((k) => k.viewer_role !== null && !k.archived),
           );
         }
       } catch {
-        // Best-effort — composer stays usable without groups.
+        // Best-effort — composer stays usable without krews.
       }
     })();
     return () => {
@@ -53,20 +53,20 @@ export const GroupTargets = () => {
     };
   }, []);
 
-  const toggleGroup = useCallback(
+  const toggleKrew = useCallback(
     (id: string) => {
       const next = selectedIds.includes(id)
         ? selectedIds.filter((x) => x !== id)
         : selectedIds.push(id);
-      dispatch(changeComposeGroupTargets(next.toArray()));
+      dispatch(changeComposeKrewTargets(next.toArray()));
     },
     [dispatch, selectedIds],
   );
 
-  const removeGroup = useCallback(
+  const removeKrew = useCallback(
     (id: string) => {
       const next = selectedIds.filter((x) => x !== id);
-      dispatch(changeComposeGroupTargets(next.toArray()));
+      dispatch(changeComposeKrewTargets(next.toArray()));
     },
     [dispatch, selectedIds],
   );
@@ -74,9 +74,9 @@ export const GroupTargets = () => {
   const handleRemove = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
     (e) => {
       const id = e.currentTarget.dataset.id;
-      if (id) removeGroup(id);
+      if (id) removeKrew(id);
     },
-    [removeGroup],
+    [removeKrew],
   );
 
   const handleToggleOpen = useCallback(() => {
@@ -86,27 +86,27 @@ export const GroupTargets = () => {
   const handleToggle = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
     (e) => {
       const id = e.currentTarget.dataset.id;
-      if (id) toggleGroup(id);
+      if (id) toggleKrew(id);
     },
-    [toggleGroup],
+    [toggleKrew],
   );
 
   if (available.length === 0 && selectedIds.size === 0) return null;
 
-  const byId = new Map(available.map((g) => [g.id, g] as const));
+  const byId = new Map(available.map((k) => [k.id, k] as const));
 
   return (
     <div className='compose-form__group-targets'>
       {selectedIds.map((id) => {
-        const group = byId.get(id);
+        const krew = byId.get(id);
         return (
           <span key={id} className='compose-form__group-chip'>
-            {group?.name ?? `#${id}`}
+            {krew?.name ?? `#${id}`}
             <button
               type='button'
               data-id={id}
               onClick={handleRemove}
-              aria-label='Remove group target'
+              aria-label='Remove krew target'
               className='compose-form__group-chip-remove'
             >
               ×
@@ -123,13 +123,13 @@ export const GroupTargets = () => {
       >
         {selectedIds.size === 0 ? (
           <FormattedMessage
-            id='compose.group_targets.add'
-            defaultMessage='+ Post to group…'
+            id='compose.krew_targets.add'
+            defaultMessage='+ Post to krew…'
           />
         ) : (
           <FormattedMessage
-            id='compose.group_targets.more'
-            defaultMessage='+ Another group'
+            id='compose.krew_targets.more'
+            defaultMessage='+ Another krew'
           />
         )}
       </button>
@@ -139,25 +139,25 @@ export const GroupTargets = () => {
           {available.length === 0 && (
             <p className='compose-form__group-target-empty'>
               <FormattedMessage
-                id='compose.group_targets.none'
-                defaultMessage='No groups yet.'
+                id='compose.krew_targets.none'
+                defaultMessage='No krews yet.'
               />
             </p>
           )}
-          {available.map((g) => {
-            const selected = selectedIds.includes(g.id);
+          {available.map((k) => {
+            const selected = selectedIds.includes(k.id);
             return (
               <button
-                key={g.id}
+                key={k.id}
                 type='button'
                 role='menuitemcheckbox'
                 aria-checked={selected}
-                data-id={g.id}
+                data-id={k.id}
                 onClick={handleToggle}
                 className={`compose-form__group-target-option ${selected ? 'compose-form__group-target-option--active' : ''}`}
               >
                 {selected ? '✓ ' : ''}
-                {g.name}
+                {k.name}
               </button>
             );
           })}

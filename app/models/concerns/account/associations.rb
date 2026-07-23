@@ -83,10 +83,10 @@ module Account::Associations
     # default (tune-in popularity per Kronk::TuneInCounts).
     has_many :user_hub_orders, inverse_of: :account, dependent: :delete_all
 
-    # Group memberships (§Groups). Cascade delete rather than destroy —
+    # Krew memberships (§Krews). Cascade delete rather than destroy —
     # membership carries no callbacks beyond timestamps.
-    has_many :group_memberships, inverse_of: :account, dependent: :delete_all
-    has_many :groups, through: :group_memberships
+    has_many :krew_memberships, inverse_of: :account, dependent: :delete_all
+    has_many :krews, through: :krew_memberships
 
     # Kuestions v2: an account has answers (one per question), and can
     # be the creator of questions. Cascade delete on account destroy.

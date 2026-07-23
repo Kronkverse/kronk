@@ -299,16 +299,16 @@ export function NudgesLegacyArchive () {
   return import("../../nudges_legacy").then(m => ({ default: m.NudgesLegacyArchive }));
 }
 
-export function Groups () {
-  return import("../../groups").then(m => ({ default: m.Groups }));
+export function Krews () {
+  return import("../../krew").then(m => ({ default: m.Krews }));
 }
 
 export function Wachuneed () {
   return import("../../wachuneed");
 }
 
-export function GroupDetail () {
-  return import("../../groups/group_detail").then(m => ({ default: m.GroupDetail }));
+export function KrewDetail () {
+  return import("../../krew/krew_detail").then(m => ({ default: m.KrewDetail }));
 }
 
 export function Hub () {

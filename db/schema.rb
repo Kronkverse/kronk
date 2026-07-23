@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_22_130000) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_23_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -718,20 +718,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_22_130000) do
     t.index ["account_id", "year"], name: "index_generated_annual_reports_on_account_id_and_year", unique: true
   end
 
-  create_table "group_memberships", force: :cascade do |t|
-    t.bigint "group_id", null: false
+  create_table "krew_memberships", force: :cascade do |t|
+    t.bigint "krew_id", null: false
     t.bigint "account_id", null: false
     t.string "role", default: "member", null: false
     t.datetime "joined_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_group_memberships_on_account_id"
-    t.index ["group_id", "account_id"], name: "index_group_memberships_on_group_id_and_account_id", unique: true
-    t.index ["group_id", "role"], name: "index_group_memberships_on_group_id_and_role"
-    t.index ["group_id"], name: "index_group_memberships_on_group_id"
+    t.index ["account_id"], name: "index_krew_memberships_on_account_id"
+    t.index ["krew_id", "account_id"], name: "index_krew_memberships_on_krew_id_and_account_id", unique: true
+    t.index ["krew_id", "role"], name: "index_krew_memberships_on_krew_id_and_role"
+    t.index ["krew_id"], name: "index_krew_memberships_on_krew_id"
   end
 
-  create_table "groups", force: :cascade do |t|
+  create_table "krews", force: :cascade do |t|
     t.string "slug", null: false
     t.string "name", null: false
     t.text "description"
@@ -741,9 +741,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_22_130000) do
     t.datetime "archived_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["archived_at"], name: "index_groups_on_archived_at", where: "(archived_at IS NOT NULL)"
-    t.index ["discoverable"], name: "index_groups_on_discoverable", where: "(discoverable = true)"
-    t.index ["slug"], name: "index_groups_on_slug", unique: true
+    t.index ["archived_at"], name: "index_krews_on_archived_at", where: "(archived_at IS NOT NULL)"
+    t.index ["discoverable"], name: "index_krews_on_discoverable", where: "(discoverable = true)"
+    t.index ["slug"], name: "index_krews_on_slug", unique: true
   end
 
   create_table "huddle_participants", force: :cascade do |t|
@@ -1571,12 +1571,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_22_130000) do
     t.index ["uri"], name: "index_statuses_on_uri", unique: true, opclass: :text_pattern_ops, where: "(uri IS NOT NULL)"
   end
 
-  create_table "statuses_groups", id: false, force: :cascade do |t|
+  create_table "statuses_krews", id: false, force: :cascade do |t|
     t.bigint "status_id", null: false
-    t.bigint "group_id", null: false
-    t.index ["group_id"], name: "index_statuses_groups_on_group_id"
-    t.index ["status_id", "group_id"], name: "index_statuses_groups_on_status_id_and_group_id", unique: true
-    t.index ["status_id"], name: "index_statuses_groups_on_status_id"
+    t.bigint "krew_id", null: false
+    t.index ["krew_id"], name: "index_statuses_krews_on_krew_id"
+    t.index ["status_id", "krew_id"], name: "index_statuses_krews_on_status_id_and_krew_id", unique: true
+    t.index ["status_id"], name: "index_statuses_krews_on_status_id"
   end
 
   create_table "statuses_tags", primary_key: ["tag_id", "status_id"], force: :cascade do |t|
@@ -1907,8 +1907,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_22_130000) do
   add_foreign_key "follows", "accounts", column: "target_account_id", name: "fk_745ca29eac", on_delete: :cascade
   add_foreign_key "follows", "accounts", name: "fk_32ed1b5560", on_delete: :cascade
   add_foreign_key "generated_annual_reports", "accounts"
-  add_foreign_key "group_memberships", "accounts", on_delete: :cascade
-  add_foreign_key "group_memberships", "groups", on_delete: :cascade
+  add_foreign_key "krew_memberships", "accounts", on_delete: :cascade
+  add_foreign_key "krew_memberships", "krews", on_delete: :cascade
   add_foreign_key "huddle_participants", "accounts", on_delete: :cascade
   add_foreign_key "huddle_participants", "huddle_sessions", on_delete: :cascade
   add_foreign_key "huddle_sessions", "accounts", column: "host_account_id", on_delete: :cascade
@@ -2002,8 +2002,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_22_130000) do
   add_foreign_key "statuses", "accounts", name: "fk_9bda1543f7", on_delete: :cascade
   add_foreign_key "statuses", "statuses", column: "in_reply_to_id", on_delete: :nullify
   add_foreign_key "statuses", "statuses", column: "reblog_of_id", on_delete: :cascade
-  add_foreign_key "statuses_groups", "groups", on_delete: :cascade
-  add_foreign_key "statuses_groups", "statuses", on_delete: :cascade
+  add_foreign_key "statuses_krews", "krews", on_delete: :cascade
+  add_foreign_key "statuses_krews", "statuses", on_delete: :cascade
   add_foreign_key "statuses_tags", "statuses", on_delete: :cascade
   add_foreign_key "statuses_tags", "tags", name: "fk_3081861e21", on_delete: :cascade
   add_foreign_key "tag_follows", "accounts", on_delete: :cascade

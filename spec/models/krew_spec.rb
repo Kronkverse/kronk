@@ -2,10 +2,10 @@
 
 require 'rails_helper'
 
-RSpec.describe Group do
+RSpec.describe Krew do
   let(:seeder) { Fabricate(:account) }
 
-  def build(slug: 'test-group', name: 'Test Group', **rest)
+  def build(slug: 'test-krew', name: 'Test Krew', **rest)
     described_class.new(slug: slug, name: name, **rest)
   end
 
@@ -19,12 +19,12 @@ RSpec.describe Group do
     end
 
     it 'rejects slugs with uppercase or spaces' do
-      expect(build(slug: 'Test Group')).to_not be_valid
-      expect(build(slug: 'test group')).to_not be_valid
+      expect(build(slug: 'Test Krew')).to_not be_valid
+      expect(build(slug: 'test krew')).to_not be_valid
     end
 
     it 'accepts slugs with lowercase and hyphens' do
-      expect(build(slug: 'test-group')).to be_valid
+      expect(build(slug: 'test-krew')).to be_valid
     end
 
     it 'enforces slug uniqueness' do
@@ -34,8 +34,8 @@ RSpec.describe Group do
 
     it 'accepts every registered governance framework' do
       described_class::GOVERNANCE_FRAMEWORKS.each do |framework|
-        group = build(slug: framework, governance_framework: framework, governance_threshold: 2)
-        expect(group).to be_valid, "#{framework} should be a valid framework"
+        krew = build(slug: framework, governance_framework: framework, governance_threshold: 2)
+        expect(krew).to be_valid, "#{framework} should be a valid framework"
       end
     end
 
@@ -45,18 +45,18 @@ RSpec.describe Group do
   end
 
   describe '#seeder? and #member?' do
-    let(:group) { described_class.create!(slug: 'peer', name: 'Peer Group') }
+    let(:krew) { described_class.create!(slug: 'peer', name: 'Peer Krew') }
 
     it 'reports seeder for a seeder membership' do
-      group.group_memberships.create!(account: seeder, role: 'seeder')
-      expect(group.seeder?(seeder)).to be true
+      krew.krew_memberships.create!(account: seeder, role: 'seeder')
+      expect(krew.seeder?(seeder)).to be true
     end
 
     it 'reports member for any membership' do
       member = Fabricate(:account)
-      group.group_memberships.create!(account: member, role: 'member')
-      expect(group.member?(member)).to be true
-      expect(group.seeder?(member)).to be false
+      krew.krew_memberships.create!(account: member, role: 'member')
+      expect(krew.member?(member)).to be true
+      expect(krew.seeder?(member)).to be false
     end
   end
 end

@@ -4,15 +4,16 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
-import { apiGetGroups, apiCreateGroup } from 'mastodon/api/groups';
-import type { ApiGroupJSON } from 'mastodon/api/groups';
+import { apiGetKrews, apiCreateKrew } from 'mastodon/api/krew';
+import type { ApiKrewJSON } from 'mastodon/api/krew';
 import { Stage } from 'mastodon/components/stage';
 
-// User-facing copy: Kronk calls Groups "Krews" (code, DB, URL slug all
-// stay `groups`; only the display strings flip). See docs/spaces/groups.md
-// + memory `reference_kronk_vocab_krew`.
+// User-facing copy: Krews is Kronk's audience-scoping primitive (see
+// docs/spaces/krew_build_spec.md). CSS class names still say
+// `groups-page__*` — those flip in a follow-up SCSS-only sweep so this
+// rename doesn't churn styling in the same PR.
 const messages = defineMessages({
-  title: { id: 'groups.title', defaultMessage: 'Krews' },
+  title: { id: 'krew.title', defaultMessage: 'Krews' },
 });
 
 type Scope = 'mine' | 'discoverable' | 'all';
@@ -23,9 +24,9 @@ const SCOPE_LABELS: [Scope, string][] = [
   ['all', 'All'],
 ];
 
-export const Groups = () => {
+export const Krews = () => {
   const intl = useIntl();
-  const [groups, setGroups] = useState<ApiGroupJSON[]>([]);
+  const [krews, setKrews] = useState<ApiKrewJSON[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,11 +43,11 @@ export const Groups = () => {
     async (nextScope?: Scope) => {
       setLoading(true);
       try {
-        const data = await apiGetGroups({
+        const data = await apiGetKrews({
           limit: 40,
           scope: nextScope ?? scope,
         });
-        setGroups(data);
+        setKrews(data);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : String(e));
       } finally {
@@ -63,7 +64,7 @@ export const Groups = () => {
   const submitCreate = useCallback(async () => {
     setError(null);
     try {
-      await apiCreateGroup(form);
+      await apiCreateKrew(form);
       setForm({
         slug: '',
         name: '',
@@ -114,7 +115,7 @@ export const Groups = () => {
       <div className='scrollable groups-page'>
         <p className='groups-page__intro'>
           <FormattedMessage
-            id='groups.intro'
+            id='krew.intro'
             defaultMessage='Krews are shareable multi-poster spaces. Seeders plant them; membership is opt-in. Choose a governance framework at creation to shape how structural changes get enacted.'
           />
         </p>
@@ -139,14 +140,11 @@ export const Groups = () => {
           className='groups-page__new-btn'
         >
           {creating ? (
-            <FormattedMessage
-              id='groups.cancel_create'
-              defaultMessage='Cancel'
-            />
+            <FormattedMessage id='krew.cancel_create' defaultMessage='Cancel' />
           ) : (
             <FormattedMessage
-              id='groups.new'
-              defaultMessage='+ Plant a new group'
+              id='krew.new'
+              defaultMessage='+ Plant a new krew'
             />
           )}
         </button>
@@ -155,14 +153,14 @@ export const Groups = () => {
           <div className='groups-page__form'>
             <h3>
               <FormattedMessage
-                id='groups.plant_title'
-                defaultMessage='Plant a new group'
+                id='krew.plant_title'
+                defaultMessage='Plant a new krew'
               />
             </h3>
 
             <label>
               <FormattedMessage
-                id='groups.form.slug'
+                id='krew.form.slug'
                 defaultMessage='Slug (lowercase, hyphens ok)'
               />
               <input
@@ -174,7 +172,7 @@ export const Groups = () => {
             </label>
 
             <label>
-              <FormattedMessage id='groups.form.name' defaultMessage='Name' />
+              <FormattedMessage id='krew.form.name' defaultMessage='Name' />
               <input
                 type='text'
                 data-field='name'
@@ -185,7 +183,7 @@ export const Groups = () => {
 
             <label>
               <FormattedMessage
-                id='groups.form.description'
+                id='krew.form.description'
                 defaultMessage='Description'
               />
               <textarea
@@ -198,7 +196,7 @@ export const Groups = () => {
 
             <label>
               <FormattedMessage
-                id='groups.form.governance'
+                id='krew.form.governance'
                 defaultMessage='Governance framework'
               />
               <select
@@ -228,13 +226,13 @@ export const Groups = () => {
                 onChange={handleFieldChange}
               />
               <FormattedMessage
-                id='groups.form.discoverable'
-                defaultMessage='List this group in the public discovery page'
+                id='krew.form.discoverable'
+                defaultMessage='List this krew in the public discovery page'
               />
             </label>
 
             <button type='button' onClick={handleSubmitCreate}>
-              <FormattedMessage id='groups.plant' defaultMessage='Plant it' />
+              <FormattedMessage id='krew.plant' defaultMessage='Plant it' />
             </button>
           </div>
         )}
@@ -243,41 +241,41 @@ export const Groups = () => {
 
         {loading && (
           <p className='groups-page__loading'>
-            <FormattedMessage id='groups.loading' defaultMessage='Loading…' />
+            <FormattedMessage id='krew.loading' defaultMessage='Loading…' />
           </p>
         )}
 
-        {!loading && groups.length === 0 && (
+        {!loading && krews.length === 0 && (
           <p className='groups-page__empty'>
             <FormattedMessage
-              id='groups.empty'
-              defaultMessage='No groups here. Try another scope or plant one.'
+              id='krew.empty'
+              defaultMessage='No krews here. Try another scope or plant one.'
             />
           </p>
         )}
 
         <ul className='groups-page__list'>
-          {groups.map((g) => (
-            <li key={g.id} className='groups-page__row'>
-              <Link to={`/hub/krew/${g.id}`}>
+          {krews.map((k) => (
+            <li key={k.id} className='groups-page__row'>
+              <Link to={`/hub/krew/${k.id}`}>
                 <div className='groups-page__row-header'>
-                  <h3 className='groups-page__row-name'>{g.name}</h3>
-                  <small className='groups-page__row-slug'>@{g.slug}</small>
-                  {g.viewer_role === 'seeder' && (
+                  <h3 className='groups-page__row-name'>{k.name}</h3>
+                  <small className='groups-page__row-slug'>@{k.slug}</small>
+                  {k.viewer_role === 'seeder' && (
                     <span className='groups-page__chip groups-page__chip--seeder'>
                       seeder
                     </span>
                   )}
-                  {g.viewer_role === 'member' && (
+                  {k.viewer_role === 'member' && (
                     <span className='groups-page__chip'>member</span>
                   )}
                 </div>
-                {g.description && (
-                  <p className='groups-page__row-desc'>{g.description}</p>
+                {k.description && (
+                  <p className='groups-page__row-desc'>{k.description}</p>
                 )}
                 <small className='groups-page__row-meta'>
-                  {g.member_count} members · governance:{' '}
-                  {g.governance_framework}
+                  {k.member_count} members · governance:{' '}
+                  {k.governance_framework}
                 </small>
               </Link>
             </li>

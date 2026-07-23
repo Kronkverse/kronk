@@ -6,7 +6,7 @@ import {
 } from 'mastodon/api';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 
-export interface ApiGroupJSON {
+export interface ApiKrewJSON {
   id: string;
   slug: string;
   name: string;
@@ -20,28 +20,28 @@ export interface ApiGroupJSON {
   viewer_role: 'seeder' | 'member' | null;
 }
 
-export const apiGetGroups = (
+export const apiGetKrews = (
   params: {
     max_id?: string;
     min_id?: string;
     limit?: number;
     scope?: 'mine' | 'discoverable' | 'all';
   } = {},
-) => apiRequestGet<ApiGroupJSON[]>('v1/groups', params);
+) => apiRequestGet<ApiKrewJSON[]>('v1/krews', params);
 
-export const apiGetGroup = (id: string) =>
-  apiRequestGet<ApiGroupJSON>(`v1/groups/${id}`);
+export const apiGetKrew = (id: string) =>
+  apiRequestGet<ApiKrewJSON>(`v1/krews/${id}`);
 
-export const apiCreateGroup = (params: {
+export const apiCreateKrew = (params: {
   slug: string;
   name: string;
   description?: string;
   discoverable?: boolean;
   governance_framework?: string;
   governance_threshold?: number;
-}) => apiRequestPost<ApiGroupJSON>('v1/groups', params);
+}) => apiRequestPost<ApiKrewJSON>('v1/krews', params);
 
-export const apiUpdateGroup = (
+export const apiUpdateKrew = (
   id: string,
   params: Partial<{
     name: string;
@@ -50,23 +50,23 @@ export const apiUpdateGroup = (
     governance_framework: string;
     governance_threshold: number;
   }>,
-) => apiRequestPut<ApiGroupJSON>(`v1/groups/${id}`, params);
+) => apiRequestPut<ApiKrewJSON>(`v1/krews/${id}`, params);
 
-export const apiArchiveGroup = (id: string) =>
-  apiRequestDelete<ApiGroupJSON>(`v1/groups/${id}`);
+export const apiArchiveKrew = (id: string) =>
+  apiRequestDelete<ApiKrewJSON>(`v1/krews/${id}`);
 
-export const apiJoinGroup = (id: string) =>
-  apiRequestPost<ApiGroupJSON>(`v1/groups/${id}/join`, {});
+export const apiJoinKrew = (id: string) =>
+  apiRequestPost<ApiKrewJSON>(`v1/krews/${id}/join`, {});
 
-export const apiLeaveGroup = (id: string) =>
-  apiRequestPost<ApiGroupJSON>(`v1/groups/${id}/leave`, {});
+export const apiLeaveKrew = (id: string) =>
+  apiRequestPost<ApiKrewJSON>(`v1/krews/${id}/leave`, {});
 
-export const apiGetGroupStatuses = (
+export const apiGetKrewStatuses = (
   id: string,
   params: { max_id?: string; min_id?: string; limit?: number } = {},
-) => apiRequestGet<ApiStatusJSON[]>(`v1/groups/${id}/statuses`, params);
+) => apiRequestGet<ApiStatusJSON[]>(`v1/krews/${id}/statuses`, params);
 
-export const apiPostGroupStatus = (
+export const apiPostKrewStatus = (
   id: string,
   params: { status: string; visibility?: string },
-) => apiRequestPost<ApiStatusJSON>(`v1/groups/${id}/statuses`, params);
+) => apiRequestPost<ApiStatusJSON>(`v1/krews/${id}/statuses`, params);

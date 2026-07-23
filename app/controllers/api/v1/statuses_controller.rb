@@ -99,7 +99,7 @@ class Api::V1::StatusesController < Api::BaseController
       with_rate_limit: true
     )
 
-    attach_status_to_groups!(@status, status_params[:group_ids]) if status_params[:group_ids].present?
+    attach_status_to_krews!(@status, status_params[:krew_ids]) if status_params[:krew_ids].present?
 
     render json: @status, serializer: serializer_for_status
   rescue PostStatusService::UnexpectedMentionsError => e
@@ -204,7 +204,7 @@ class Api::V1::StatusesController < Api::BaseController
       :language,
       :scheduled_at,
       allowed_mentions: [],
-      group_ids: [],
+      krew_ids: [],
       media_ids: [],
       media_attributes: [
         :id,
@@ -236,26 +236,26 @@ class Api::V1::StatusesController < Api::BaseController
     ActiveModel::Serializer::CollectionSerializer.new(accounts, serializer: REST::AccountSerializer)
   end
 
-  # Attach a freshly-created Status to one or more Groups. Silently
-  # drops groups the author is not a member of, or that are archived —
+  # Attach a freshly-created Status to one or more Krews. Silently
+  # drops krews the author is not a member of, or that are archived —
   # the status itself is already saved, so this is best-effort join.
-  def attach_status_to_groups!(status, group_ids)
-    ids = Array(group_ids).map(&:to_i).reject(&:zero?).uniq
+  def attach_status_to_krews!(status, krew_ids)
+    ids = Array(krew_ids).map(&:to_i).reject(&:zero?).uniq
     return if ids.empty?
 
-    groups = Group.where(id: ids, archived: false).select { |g| g.member?(status.account) }
-    return if groups.empty?
+    krews = Krew.where(id: ids, archived: false).select { |k| k.member?(status.account) }
+    return if krews.empty?
 
     ActiveRecord::Base.transaction do
-      groups.each do |g|
-        g.statuses << status unless g.statuses.exists?(id: status.id)
+      krews.each do |k|
+        k.statuses << status unless k.statuses.exists?(id: status.id)
       end
     end
 
-    groups.each do |g|
+    krews.each do |k|
       Kronk::KornerEvents.publish(
-        'group.post.created',
-        group_id: g.id,
+        'krew.post.created',
+        krew_id: k.id,
         status_id: status.id,
         account_id: status.account_id
       )

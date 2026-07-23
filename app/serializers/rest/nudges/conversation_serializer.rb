@@ -59,20 +59,20 @@ class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
   def krew
     return nil unless object.krew?
 
-    group = object.krew
-    return nil unless group
+    krew = object.krew
+    return nil unless krew
 
     {
-      id: group.id.to_s,
-      name: group.name,
-      member_count: group.group_memberships.count,
-      avatar_urls: krew_avatar_urls(group),
+      id: krew.id.to_s,
+      name: krew.name,
+      member_count: krew.krew_memberships.count,
+      avatar_urls: krew_avatar_urls(krew),
       read_pointers: viewer ? object.krew_read_pointers(viewer) : [],
     }
   end
 
-  def krew_avatar_urls(group)
-    ordered = group.group_memberships.order(:id).limit(4).map(&:account)
+  def krew_avatar_urls(krew)
+    ordered = krew.krew_memberships.order(:id).limit(4).map(&:account)
     ordered = [viewer] + ordered.reject { |a| a.id == viewer&.id } if viewer && ordered.any? { |a| a.id == viewer.id }
     ordered.first(2).map { |a| full_asset_url(a.avatar_original_url) }
   end
