@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# Kronk Groups — a framework-level primitive. Seeders (not owners)
-# planted the group; multiple seeders permitted from creation. Structural
+# Kronk Krews — a framework-level primitive. Seeders (not owners)
+# planted the krew; multiple seeders permitted from creation. Structural
 # changes route through the governance framework the seeders chose:
 #
 #   peer_support  (default) — one second required to enact
@@ -10,11 +10,17 @@
 #   majority                — >50% of members must support
 #   consensus               — unanimous
 #
-# See docs/kronk_korner_spec.md §Groups.
-class Group < ApplicationRecord
+# The brief in docs/spaces/krew_build_spec.md redefines Krews as a
+# single-seeder, no-governance, no-feed audience-scoping primitive —
+# Phase 3 of the rebuild is where those field-level changes land.
+# Phase 2 (this class) is the mechanical rename; behaviour is
+# unchanged from the pre-rename Group class.
+#
+# See docs/kronk_korner_spec.md §Krews.
+class Krew < ApplicationRecord
   include Searchable
 
-  searchable_as :groups, if: :discoverable?
+  searchable_as :krews, if: :discoverable?
 
   def as_json_for_search
     {
@@ -30,9 +36,9 @@ class Group < ApplicationRecord
   GOVERNANCE_FRAMEWORKS = %w(peer_support two_key threshold majority consensus).freeze
   SLUG_PATTERN = /\A[a-z][a-z0-9-]*\z/
 
-  has_many :group_memberships, dependent: :destroy
-  has_many :members, through: :group_memberships, source: :account
-  has_and_belongs_to_many :statuses, join_table: :statuses_groups # rubocop:disable Rails/HasAndBelongsToMany
+  has_many :krew_memberships, dependent: :destroy
+  has_many :members, through: :krew_memberships, source: :account
+  has_and_belongs_to_many :statuses, join_table: :statuses_krews # rubocop:disable Rails/HasAndBelongsToMany
 
   validates :slug, presence: true, uniqueness: true, format: { with: SLUG_PATTERN }
   validates :name, presence: true
@@ -43,15 +49,15 @@ class Group < ApplicationRecord
   scope :discoverable, -> { active.where(discoverable: true) }
 
   def seeders
-    group_memberships.where(role: 'seeder').includes(:account).map(&:account)
+    krew_memberships.where(role: 'seeder').includes(:account).map(&:account)
   end
 
   def seeder?(account)
-    group_memberships.exists?(role: 'seeder', account_id: account.id)
+    krew_memberships.exists?(role: 'seeder', account_id: account.id)
   end
 
   def member?(account)
-    group_memberships.exists?(account_id: account.id)
+    krew_memberships.exists?(account_id: account.id)
   end
 
   def archived?

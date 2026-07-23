@@ -16,7 +16,7 @@ MODEL_FOR_SEARCH_TYPE = {
   kommons_proposals: 'Proposal',
   booth_sets: 'BoothSet',
   wachuneed_listings: 'Listing',
-  groups: 'Group',
+  krews: 'Krew',
   kategories: 'Tag',
   nudge_messages: 'NudgeMessage',
 }.freeze

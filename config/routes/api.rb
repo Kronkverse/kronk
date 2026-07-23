@@ -247,13 +247,13 @@ namespace :api, format: false do
       end
     end
 
-    resources :groups, only: [:index, :show, :create, :update, :destroy] do
+    resources :krews, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :join
         post :leave
       end
 
-      scope module: :groups do
+      scope module: :krews do
         resources :statuses, only: [:index, :create]
       end
     end

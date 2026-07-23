@@ -24,7 +24,7 @@ import { countableText } from '../util/counter';
 import { CharacterCounter } from './character_counter';
 import { EditIndicator } from './edit_indicator';
 import { LanguageDropdown } from './language_dropdown';
-import { GroupTargets } from './group_targets';
+import { KrewTargets } from './krew_targets';
 import { KategoryPicker } from './kategory_picker';
 import { NavigationBar } from './navigation_bar';
 import { PollForm } from "./poll_form";
@@ -268,7 +268,7 @@ class ComposeForm extends ImmutablePureComponent {
             <LanguageDropdown />
           </div>
 
-          <GroupTargets />
+          <KrewTargets />
 
           <KategoryPicker />
 

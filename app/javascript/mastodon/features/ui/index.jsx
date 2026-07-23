@@ -107,8 +107,8 @@ import {
   ProfileSectionsSettings,
   SectionedProfile,
   NudgesLegacyArchive,
-  Groups,
-  GroupDetail,
+  Krews,
+  KrewDetail,
   MomentsStub,
   AlbuttsStub,
   KornerSettings,
@@ -275,13 +275,11 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={KalendarSpiral} content={children} />}
             {signedIn && <WrappedRoute path="/hub/inflow" component={InflowV2} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
-            {/* Krews (aka Groups) — Phase 1 of the rebuild is the URL flip: the
-                canonical route is now /hub/krew (singular, per the brief).
-                /hub/groups continues to render for one release so any bookmarked
-                or cached links stay usable; it will be removed in the Phase 2
-                backend rename PR. */}
-            {signedIn && <WrappedRoute path={["/hub/krew/:id", "/hub/groups/:id"]} component={GroupDetail} content={children} />}
-            {signedIn && <WrappedRoute path={["/hub/krew", "/hub/groups"]} component={Groups} content={children} />}
+            {/* Krews — Phase 2 finalizes the surface: /hub/krew is the only
+                route; the legacy /hub/groups alias retires with the backend
+                rename. `Krews` and `KrewDetail` load from features/krew. */}
+            {signedIn && <WrappedRoute path='/hub/krew/:id' component={KrewDetail} content={children} />}
+            {signedIn && <WrappedRoute path='/hub/krew' component={Krews} content={children} />}
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
             {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />

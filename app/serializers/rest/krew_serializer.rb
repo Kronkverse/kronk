@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class REST::GroupSerializer < ActiveModel::Serializer
+class REST::KrewSerializer < ActiveModel::Serializer
   attributes :id, :slug, :name, :description, :discoverable,
              :governance_framework, :governance_threshold,
              :archived, :member_count, :seeder_count, :viewer_role
@@ -14,18 +14,18 @@ class REST::GroupSerializer < ActiveModel::Serializer
   end
 
   def member_count
-    object.group_memberships.count
+    object.krew_memberships.count
   end
 
   def seeder_count
-    object.group_memberships.where(role: 'seeder').count
+    object.krew_memberships.where(role: 'seeder').count
   end
 
-  # 'seeder' | 'member' | nil when the viewer isn't in the group.
+  # 'seeder' | 'member' | nil when the viewer isn't in the krew.
   def viewer_role
     return nil if current_user.blank?
 
-    object.group_memberships.find_by(account: current_user.account)&.role
+    object.krew_memberships.find_by(account: current_user.account)&.role
   end
 
   private

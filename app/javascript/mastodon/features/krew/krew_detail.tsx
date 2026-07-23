@@ -8,28 +8,28 @@ import { List as ImmutableList } from 'immutable';
 
 import { importFetchedStatuses } from 'mastodon/actions/importer';
 import {
-  apiGetGroup,
-  apiJoinGroup,
-  apiLeaveGroup,
-  apiArchiveGroup,
-  apiGetGroupStatuses,
-  apiPostGroupStatus,
-} from 'mastodon/api/groups';
-import type { ApiGroupJSON } from 'mastodon/api/groups';
+  apiGetKrew,
+  apiJoinKrew,
+  apiLeaveKrew,
+  apiArchiveKrew,
+  apiGetKrewStatuses,
+  apiPostKrewStatus,
+} from 'mastodon/api/krew';
+import type { ApiKrewJSON } from 'mastodon/api/krew';
 import { Stage } from 'mastodon/components/stage';
 import StatusList from 'mastodon/components/status_list';
 import { useAppDispatch } from 'mastodon/store';
 
 const messages = defineMessages({
-  title: { id: 'groups.detail.title', defaultMessage: 'Group' },
-  back: { id: 'groups.detail.back', defaultMessage: '← Back to Groups' },
+  title: { id: 'krew.detail.title', defaultMessage: 'Krew' },
+  back: { id: 'krew.detail.back', defaultMessage: '← Back to Krews' },
 });
 
-export const GroupDetail = () => {
+export const KrewDetail = () => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const { id } = useParams<{ id?: string }>();
-  const [group, setGroup] = useState<ApiGroupJSON | null>(null);
+  const [krew, setKrew] = useState<ApiKrewJSON | null>(null);
   const [statusIds, setStatusIds] =
     useState<ImmutableList<string>>(ImmutableList());
   const [composerText, setComposerText] = useState('');
@@ -40,11 +40,11 @@ export const GroupDetail = () => {
   const refetch = useCallback(async () => {
     if (!id) return;
     try {
-      const [g, s] = await Promise.all([
-        apiGetGroup(id),
-        apiGetGroupStatuses(id, { limit: 20 }),
+      const [k, s] = await Promise.all([
+        apiGetKrew(id),
+        apiGetKrewStatuses(id, { limit: 20 }),
       ]);
-      setGroup(g);
+      setKrew(k);
       dispatch(importFetchedStatuses(s));
       setStatusIds(ImmutableList(s.map((st) => st.id)));
     } catch (e: unknown) {
@@ -65,7 +65,7 @@ export const GroupDetail = () => {
     setBusy(true);
     setError(null);
     try {
-      await apiPostGroupStatus(id, { status: composerText.trim() });
+      await apiPostKrewStatus(id, { status: composerText.trim() });
       setComposerText('');
       await refetch();
     } catch (e: unknown) {
@@ -80,8 +80,8 @@ export const GroupDetail = () => {
     setBusy(true);
     setError(null);
     try {
-      const data = await apiJoinGroup(id);
-      setGroup(data);
+      const data = await apiJoinKrew(id);
+      setKrew(data);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -94,8 +94,8 @@ export const GroupDetail = () => {
     setBusy(true);
     setError(null);
     try {
-      const data = await apiLeaveGroup(id);
-      setGroup(data);
+      const data = await apiLeaveKrew(id);
+      setKrew(data);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -107,15 +107,15 @@ export const GroupDetail = () => {
     if (!id) return;
     if (
       !window.confirm(
-        'Archive this group? Posts stay resolvable but new activity is blocked.',
+        'Archive this krew? Posts stay resolvable but new activity is blocked.',
       )
     )
       return;
     setBusy(true);
     setError(null);
     try {
-      const data = await apiArchiveGroup(id);
-      setGroup(data);
+      const data = await apiArchiveKrew(id);
+      setKrew(data);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -142,7 +142,7 @@ export const GroupDetail = () => {
   }, []);
 
   return (
-    <Stage label={group?.name ?? intl.formatMessage(messages.title)}>
+    <Stage label={krew?.name ?? intl.formatMessage(messages.title)}>
       <div className='scrollable group-detail'>
         <Link to='/hub/krew' className='group-detail__back'>
           {intl.formatMessage(messages.back)}
@@ -150,52 +150,52 @@ export const GroupDetail = () => {
 
         {error && <p className='group-detail__error'>{error}</p>}
 
-        {!group && !error && (
+        {!krew && !error && (
           <p className='group-detail__loading'>
             <FormattedMessage
-              id='groups.detail.loading'
+              id='krew.detail.loading'
               defaultMessage='Loading…'
             />
           </p>
         )}
 
-        {group && (
+        {krew && (
           <>
             <div className='group-detail__header'>
-              <small className='group-detail__slug'>@{group.slug}</small>
-              {group.archived && (
+              <small className='group-detail__slug'>@{krew.slug}</small>
+              {krew.archived && (
                 <span className='group-detail__archived-badge'>archived</span>
               )}
             </div>
 
-            {group.description && (
-              <p className='group-detail__description'>{group.description}</p>
+            {krew.description && (
+              <p className='group-detail__description'>{krew.description}</p>
             )}
 
             <dl className='group-detail__meta'>
               <dt>Members</dt>
-              <dd>{group.member_count}</dd>
+              <dd>{krew.member_count}</dd>
               <dt>Seeders</dt>
-              <dd>{group.seeder_count}</dd>
+              <dd>{krew.seeder_count}</dd>
               <dt>Governance</dt>
               <dd>
-                {group.governance_framework}
-                {group.governance_threshold
-                  ? ` (threshold ${group.governance_threshold})`
+                {krew.governance_framework}
+                {krew.governance_threshold
+                  ? ` (threshold ${krew.governance_threshold})`
                   : ''}
               </dd>
               <dt>Discoverable</dt>
-              <dd>{group.discoverable ? 'yes' : 'no'}</dd>
-              {group.viewer_role && (
+              <dd>{krew.discoverable ? 'yes' : 'no'}</dd>
+              {krew.viewer_role && (
                 <>
                   <dt>Your role</dt>
-                  <dd>{group.viewer_role}</dd>
+                  <dd>{krew.viewer_role}</dd>
                 </>
               )}
             </dl>
 
             <div className='group-detail__actions'>
-              {!group.archived && !group.viewer_role && (
+              {!krew.archived && !krew.viewer_role && (
                 <button
                   type='button'
                   onClick={handleJoin}
@@ -203,13 +203,13 @@ export const GroupDetail = () => {
                   className='group-detail__btn-primary'
                 >
                   <FormattedMessage
-                    id='groups.detail.join'
+                    id='krew.detail.join'
                     defaultMessage='Join'
                   />
                 </button>
               )}
 
-              {group.viewer_role && !group.archived && (
+              {krew.viewer_role && !krew.archived && (
                 <button
                   type='button'
                   onClick={handleLeave}
@@ -217,13 +217,13 @@ export const GroupDetail = () => {
                   className='group-detail__btn-secondary'
                 >
                   <FormattedMessage
-                    id='groups.detail.leave'
+                    id='krew.detail.leave'
                     defaultMessage='Leave'
                   />
                 </button>
               )}
 
-              {group.viewer_role === 'seeder' && !group.archived && (
+              {krew.viewer_role === 'seeder' && !krew.archived && (
                 <button
                   type='button'
                   onClick={handleArchive}
@@ -231,19 +231,19 @@ export const GroupDetail = () => {
                   className='group-detail__btn-danger'
                 >
                   <FormattedMessage
-                    id='groups.detail.archive'
+                    id='krew.detail.archive'
                     defaultMessage='Archive'
                   />
                 </button>
               )}
             </div>
 
-            {group.viewer_role && !group.archived && (
+            {krew.viewer_role && !krew.archived && (
               <div className='group-detail__composer'>
                 <h3>
                   <FormattedMessage
-                    id='groups.detail.post_here'
-                    defaultMessage='Post to this group'
+                    id='krew.detail.post_here'
+                    defaultMessage='Post to this krew'
                   />
                 </h3>
                 <textarea
@@ -251,8 +251,8 @@ export const GroupDetail = () => {
                   onChange={handleComposerChange}
                   rows={3}
                   placeholder={intl.formatMessage({
-                    id: 'groups.detail.composer_placeholder',
-                    defaultMessage: "What's happening in the group?",
+                    id: 'krew.detail.composer_placeholder',
+                    defaultMessage: "What's happening in the krew?",
                   })}
                 />
                 <button
@@ -261,7 +261,7 @@ export const GroupDetail = () => {
                   disabled={busy || !composerText.trim()}
                 >
                   <FormattedMessage
-                    id='groups.detail.post_send'
+                    id='krew.detail.post_send'
                     defaultMessage='Post'
                   />
                 </button>
@@ -270,20 +270,20 @@ export const GroupDetail = () => {
 
             <h3 className='group-detail__timeline-heading'>
               <FormattedMessage
-                id='groups.detail.timeline'
-                defaultMessage='Group timeline'
+                id='krew.detail.timeline'
+                defaultMessage='Krew timeline'
               />
             </h3>
             <StatusList
-              scrollKey={`group_timeline:${group.id}`}
+              scrollKey={`krew_timeline:${krew.id}`}
               statusIds={statusIds}
               isLoading={loading}
               hasMore={false}
               onLoadMore={noopLoadMore}
-              timelineId={`group_timeline:${group.id}`}
+              timelineId={`krew_timeline:${krew.id}`}
               emptyMessage={
                 <FormattedMessage
-                  id='groups.detail.empty_timeline'
+                  id='krew.detail.empty_timeline'
                   defaultMessage='No posts yet.'
                 />
               }

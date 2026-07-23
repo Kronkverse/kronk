@@ -1,9 +1,10 @@
 # Krew — build spec
 
-**Surface:** `krew` (code: `Group` until Phase 2) · **Mount:** `/hub/krew`
-(`/hub/groups` still resolves as a legacy alias until Phase 2 removes it)
-· **Status:** framework shipped, rebuild in progress (Phase 1 URL flip
-landed; backend rename queued).
+**Surface:** `krew` (code: `Krew`) · **Mount:** `/hub/krew` · **Status:**
+framework shipped, rebuild in progress (Phases 1 + 2 landed — URL flip
+
+- backend model rename. Phase 3 adds new capabilities per §Data model
+  in this brief).
 
 > **Companion:** [`groups.md`](./groups.md) is the full Krew spec (rationale,
 > governance frameworks, visibility, Event ↔ Krew, accretion). This file is the

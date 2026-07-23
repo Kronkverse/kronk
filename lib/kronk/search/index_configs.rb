@@ -22,7 +22,7 @@ module Kronk
       CONFIGS = {
         statuses: {
           searchable_attributes: %w(text spoiler_text),
-          filterable_attributes: %w(account_id visibility created_at kategory_names group_ids),
+          filterable_attributes: %w(account_id visibility created_at kategory_names krew_ids),
           sortable_attributes: %w(created_at),
         },
         accounts: {
@@ -50,7 +50,7 @@ module Kronk
           filterable_attributes: %w(account_id category state price_currency),
           sortable_attributes: %w(created_at price_cents),
         },
-        groups: {
+        krews: {
           searchable_attributes: %w(name description),
           filterable_attributes: %w(discoverable archived),
           sortable_attributes: %w(created_at),

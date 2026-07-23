@@ -1,11 +1,12 @@
 # Krew — a framework primitive for shareable, multi-poster spaces.
 # Krews are standalone (they can exist without a hosting korner) but
-# can also be attached to any korner (spec §Krews). Phase 1 of the
-# Krews rebuild is the URL + manifest flip: slug `groups` → `krew`,
-# `/hub/groups` → `/hub/krew`. The DB tables (`groups`,
-# `group_memberships`, `statuses_groups`), the `Group` model, and the
-# `/api/v1/groups` API stay named as-is until the Phase 2 backend
-# rename lands. See docs/KRONK_KREWS.md for the full concept.
+# can also be attached to any korner (spec §Krews). Phases 1 and 2 of
+# the Krews rebuild landed the surface + backend rename (URL slug,
+# tables `krews`/`krew_memberships`/`statuses_krews`, `Krew` model,
+# `/api/v1/krews`). Phase 3 adds the new capabilities from the brief
+# (`krew` status visibility scope, KrewKorner attachments,
+# KrewRequirement, invite tokens). See
+# docs/spaces/krew_build_spec.md for the full concept.
 
 slug: krew
 name: Krews
@@ -14,17 +15,14 @@ icon: groups
 render_target: web
 version: 1.0.0
 
-# Table names are still `groups*`; only Phase 2 flips them. The
-# resources block is normative for the boot validator, so leave the
-# names matching the schema until Phase 2 renames both together.
 resources:
-  - name: groups
+  - name: krews
     primary: true
-  - name: group_memberships
-  - name: statuses_groups # join to Status for multi-group posts
+  - name: krew_memberships
+  - name: statuses_krews # join to Status for multi-krew posts
 
 storage:
-  db_namespace: group_ # unchanged until Phase 2
+  db_namespace: krew_
   media_prefix: (none)
 
 security:
@@ -52,23 +50,20 @@ settings:
     default: public
     scope: group
 
-# Event names still say `group.*` because the emitting code hasn't
-# renamed yet (Phase 2). Payload keys stay `group_id` for the same
-# reason. Nudges listeners are wired to these names.
 emits:
-  - name: group.post.created
+  - name: krew.post.created
     payload:
-      - group_id
+      - krew_id
       - status_id
       - account_id
-  - name: groups.member.joined
+  - name: krews.member.joined
     payload:
       - actor_account_id
-      - group_id
-  - name: groups.member.left
+      - krew_id
+  - name: krews.member.left
     payload:
       - actor_account_id
-      - group_id
+      - krew_id
 listens: []
 
 compose:

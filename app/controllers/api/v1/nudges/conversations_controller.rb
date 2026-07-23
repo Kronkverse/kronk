@@ -69,7 +69,7 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
   end
 
   # Leave a Krew conversation. Removes the account's
-  # ConversationMembership + underlying GroupMembership so they exit
+  # ConversationMembership + underlying KrewMembership so they exit
   # the Krew entirely. Krew-only — Mate has no "leave" (the two are
   # locked together by definition; deletion of the pair is a
   # different concern).
@@ -81,7 +81,7 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
 
     ActiveRecord::Base.transaction do
       @conversation.memberships.where(account_id: current_account.id).destroy_all
-      @conversation.krew&.group_memberships&.where(account_id: current_account.id)&.destroy_all
+      @conversation.krew&.krew_memberships&.where(account_id: current_account.id)&.destroy_all
     end
 
     head 204

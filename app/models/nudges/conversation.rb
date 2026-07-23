@@ -7,9 +7,9 @@
 #   (`account_a_id < account_b_id`) so there is exactly one row per
 #   pair and lookups from either direction hit the same row. Read
 #   state lives inline (`last_read_message_id_a` / `_b`).
-# - **krew** — a group chat attached to a `Group` (`krew_id`).
+# - **krew** — a group chat attached to a `Krew` (`krew_id`).
 #   Membership + per-account read state live on
-#   `Nudges::ConversationMembership`. One row per group.
+#   `Nudges::ConversationMembership`. One row per krew.
 #
 # The uniqueness invariants are enforced at the DB level (partial
 # indexes on `(account_a_id, account_b_id)` where kind='mate' and on
@@ -24,7 +24,7 @@ module Nudges
 
     belongs_to :account_a, class_name: 'Account', optional: true
     belongs_to :account_b, class_name: 'Account', optional: true
-    belongs_to :krew, class_name: 'Group', optional: true
+    belongs_to :krew, class_name: 'Krew', optional: true
 
     has_many :messages,
              -> { order(id: :asc) },
@@ -73,16 +73,16 @@ module Nudges
       end
     end
 
-    # Find or create the Krew conversation for a Group. Backfills a
-    # `Nudges::ConversationMembership` for every current group member
+    # Find or create the Krew conversation for a Krew. Backfills a
+    # `Nudges::ConversationMembership` for every current krew member
     # on first creation; subsequent joins land via the Phase 2c
-    # `groups.member.joined` subscriber.
-    def self.krew_for!(group)
-      convo = find_or_create_by!(kind: KREW, krew: group) do |c|
+    # `krews.member.joined` subscriber.
+    def self.krew_for!(krew)
+      convo = find_or_create_by!(kind: KREW, krew: krew) do |c|
         c.last_activity_at = Time.current
       end
 
-      group.members.find_each do |account|
+      krew.members.find_each do |account|
         convo.memberships.find_or_create_by!(account_id: account.id) do |m|
           m.joined_at = Time.current
         end
@@ -182,7 +182,7 @@ module Nudges
     end
 
     # Shape gate: a mate row needs two distinct sorted accounts and no
-    # krew; a krew row needs a group and no mate accounts. This holds
+    # krew; a krew row needs a krew and no mate accounts. This holds
     # the schema invariant at model level in addition to the DB
     # partial indexes.
     def mate_or_krew_shape

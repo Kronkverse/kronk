@@ -10,7 +10,7 @@
 # (in the emitting model) — no touch to this file.
 #
 # Special cases that don't fit the Mate-routed template stay
-# hand-wired below (currently: `groups.member.joined` targets the
+# hand-wired below (currently: `krews.member.joined` targets the
 # Krew conversation itself, bypassing the Mates gate).
 
 # Interpolate {token} placeholders in a string from a symbol-keyed
@@ -60,37 +60,37 @@ Rails.application.config.after_initialize do
     end
   end
 
-  # ── Hand-wired: groups.member.joined ─────────────────────────────
+  # ── Hand-wired: krews.member.joined ──────────────────────────────
   # Different flow from the manifest-driven Mate routes: the target
   # is the Krew conversation itself, not a 1:1 Mate chat, so the
   # Mates gate doesn't apply. Ensures the Krew conversation exists,
   # adds the account to its memberships, and drops a `joined`
   # system-line event onto the stream.
-  Kronk::KornerEvents.subscribe('groups.member.joined') do |payload|
-    group = Group.find_by(id: payload[:group_id])
+  Kronk::KornerEvents.subscribe('krews.member.joined') do |payload|
+    krew  = Krew.find_by(id: payload[:krew_id])
     actor = Account.find_by(id: payload[:actor_account_id])
-    next unless group && actor
+    next unless krew && actor
 
-    convo = Nudges::Conversation.krew_for!(group)
+    convo = Nudges::Conversation.krew_for!(krew)
     convo.memberships.find_or_create_by!(account_id: actor.id) do |m|
       m.joined_at = Time.current
     end
     convo.events.create!(
       actor_account: actor,
-      source_korner_slug: 'groups',
+      source_korner_slug: 'krew',
       verb: 'joined',
       interaction: 'passive'
     )
   end
 
-  # ── Hand-wired: groups.member.left ───────────────────────────────
+  # ── Hand-wired: krews.member.left ────────────────────────────────
   # Cleans up ConversationMembership when an account leaves the
-  # underlying Group (via either the Group leave endpoint or Nudges'
+  # underlying Krew (via either the Krew leave endpoint or Nudges'
   # own Krew leave). Idempotent: destroys 0 or 1 rows depending on
   # who fired first. No system-line event: leaving is a private
   # signal, not a room announcement.
-  Kronk::KornerEvents.subscribe('groups.member.left') do |payload|
-    convo = Nudges::Conversation.find_by(kind: Nudges::Conversation::KREW, krew_id: payload[:group_id])
+  Kronk::KornerEvents.subscribe('krews.member.left') do |payload|
+    convo = Nudges::Conversation.find_by(kind: Nudges::Conversation::KREW, krew_id: payload[:krew_id])
     next unless convo
 
     convo.memberships.where(account_id: payload[:actor_account_id]).destroy_all
