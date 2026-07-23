@@ -97,7 +97,6 @@ export const TodayPanel: React.FC = () => {
   if (!prompt) {
     return (
       <section className='kuestions-panel'>
-        <h1 className='space-title'>Today</h1>
         <p className='space-subtitle'>{intl.formatMessage(messages.loading)}</p>
       </section>
     );
@@ -106,7 +105,6 @@ export const TodayPanel: React.FC = () => {
   if (!prompt.prompt) {
     return (
       <section className='kuestions-panel'>
-        <h1 className='space-title'>Today</h1>
         <p className='space-subtitle'>{intl.formatMessage(messages.none)}</p>
       </section>
     );
@@ -114,7 +112,6 @@ export const TodayPanel: React.FC = () => {
 
   return (
     <section className='kuestions-panel'>
-      <h1 className='space-title'>Today</h1>
       <p className='space-subtitle'>
         <FormattedMessage
           id='kuestions.today.subtitle'

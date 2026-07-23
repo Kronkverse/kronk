@@ -16,6 +16,7 @@ class Api::V1::Settings::PostingController < Api::BaseController
 
   FIELDS = {
     'default_privacy' => { key: 'default_privacy', kind: 'enum', options: -> { %w(public unlisted private) } },
+    'default_quote_policy' => { key: 'default_quote_policy', kind: 'enum', options: -> { %w(public followers nobody) } },
     'default_language' => { key: 'default_language', kind: 'enum', options: -> { [''] + LanguagesHelper::SUPPORTED_LOCALES.keys.map(&:to_s) } },
     'default_sensitive' => { key: 'default_sensitive', kind: 'boolean', options: -> {} },
   }.freeze
@@ -63,6 +64,7 @@ class Api::V1::Settings::PostingController < Api::BaseController
       end,
       values: {
         'default_privacy' => current_user.settings['default_privacy'],
+        'default_quote_policy' => current_user.settings['default_quote_policy'],
         'default_language' => current_user.settings['default_language'],
         'default_sensitive' => current_user.settings['default_sensitive'],
       },

@@ -150,7 +150,6 @@ export const AskPanel: React.FC<AskPanelProps> = ({ onDone }) => {
 
   return (
     <section className='kuestions-panel'>
-      <h1 className='space-title'>Ask</h1>
       <p className='space-subtitle'>
         <FormattedMessage
           id='kuestions.ask.subtitle'
