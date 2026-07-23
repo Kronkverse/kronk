@@ -288,7 +288,7 @@ Rails.application.routes.draw do
   # The Kommons Skeleton was called the Tree until 2026-07-18. `tree` is
   # being reserved for a future invite-lineage space, so the old path
   # redirects rather than staying a live alias.
-  get '/hub/kommons/tree', to: redirect('/hub/kommons/skeleton', status: 301)
+  get '/hub/kommons/tree', to: redirect('/hub/kommons/lattice', status: 301)
   get '/hub/kommons', to: 'home#index'
   get '/hub/kommons/*path', to: 'home#index', format: false
   get '/hub/kuestions', to: 'home#index'

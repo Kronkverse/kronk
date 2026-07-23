@@ -1,7 +1,7 @@
 // Lattice layout — a tidy lateral dendrogram.
 //
 // The Lattice is the second view of the Kommons map: same tree, same node ids,
-// same proposal store as the radial Skeleton (kommons_skeleton), a different
+// same proposal store as the radial Skeleton (kommons_tree), a different
 // spatial model. Where the Skeleton is a body you travel with a camera, the
 // Lattice is a mechanism you operate — structure is fixed and orthogonal,
 // branches sprout on demand and fold away when you leave them.
@@ -13,7 +13,7 @@
 // exists. Imported as a type only, so this stays a pure function with no DOM or
 // API dependencies and can be exercised in isolation.
 
-import type { Tree } from '../../kommons_skeleton/data/layout';
+import type { Tree } from '../../kommons_tree/data/layout';
 
 // ── Grid constants (§1) ──────────────────────────────────────────────────────
 export const ROW_H = 40;

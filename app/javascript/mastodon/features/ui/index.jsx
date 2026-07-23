@@ -100,7 +100,6 @@ import {
   KommonsNodeMeta,
   KommonsPropose,
   KommonsProposePicker,
-  KommonsSkeleton,
   KommonsLattice,
   KronkSearch,
   YouPortal,
@@ -294,7 +293,7 @@ class SwitchingColumnsArea extends PureComponent {
                 queryable via /nudges/legacy until Phase 14. */}
             {signedIn && <WrappedRoute path="/nudges/:conversationId(\d+)" component={Nudges} content={children} />}
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} exact />}
-            {signedIn && <WrappedRoute path="/hub/kommons/skeleton" component={KommonsSkeleton} content={children} />}
+            {signedIn && <Redirect from="/hub/kommons/skeleton" to="/hub/kommons/lattice" />}
             {signedIn && <WrappedRoute path="/hub/kommons/lattice" component={KommonsLattice} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/p/:proposalId" component={KommonsProposal} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/space/:slug" component={KommonsSpace} content={children} />}

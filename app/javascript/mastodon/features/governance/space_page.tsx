@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
@@ -11,7 +11,7 @@ import { apiGetKorner } from 'mastodon/api/korners';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { NodeProposals } from 'mastodon/features/kommons_skeleton/components/node_proposals';
+import { NodeProposals } from 'mastodon/features/kommons_tree/components/node_proposals';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
@@ -36,11 +36,6 @@ const messages = defineMessages({
 // the show endpoint, so we lazy-load the manifest when the store misses.
 const SpacePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const { slug = '' } = useParams<{ slug: string }>();
-  const location = useLocation();
-  const from =
-    new URLSearchParams(location.search).get('from') === 'lattice'
-      ? 'lattice'
-      : 'skeleton';
   const intl = useIntl();
   const stored = useKorner(slug);
   const kornerIcon = useKornerIcon(slug);
@@ -136,7 +131,7 @@ const SpacePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       </Helmet>
 
       <div className='space-page'>
-        <Link to={`/hub/kommons/${from}`} className='kommons-back-map'>
+        <Link to='/hub/kommons/lattice' className='kommons-back-map'>
           <FormattedMessage
             id='kommons.back_to_map'
             defaultMessage='← Back to the map'

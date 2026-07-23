@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { MapNode, Tree } from '../../kommons_skeleton/data/layout';
+import type { MapNode, Tree } from '../../kommons_tree/data/layout';
 
 import { COL_PITCH, ROW_H, ROW_PITCH, layoutLattice } from './layout';
 

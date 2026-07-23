@@ -4,7 +4,7 @@
 // of the Skeleton's tapered, curved bones. One wire per open parent → visible
 // child. A wire is `on` when both ends sit on the active path.
 
-import type { Tree } from '../../kommons_skeleton/data/layout';
+import type { Tree } from '../../kommons_tree/data/layout';
 
 import type { LatticeLayout, LatticePos } from './layout';
 import { COL_GAP, COL_W, ROW_H } from './layout';

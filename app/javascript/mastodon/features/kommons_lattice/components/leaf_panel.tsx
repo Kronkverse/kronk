@@ -1,7 +1,7 @@
 import { FormattedMessage } from 'react-intl';
 
-import { NodeProposals } from '../../kommons_skeleton/components/node_proposals';
-import type { MapNode } from '../../kommons_skeleton/data/layout';
+import { NodeProposals } from '../../kommons_tree/components/node_proposals';
+import type { MapNode } from '../../kommons_tree/data/layout';
 
 // The leaf panel (spec §7). Selecting a node with a URL — a real page, not a
 // branch — opens this in the next column, attached to its row, so content sits

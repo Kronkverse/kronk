@@ -208,7 +208,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               </div>
               <div className='governance-page__head-actions'>
                 <Link
-                  to='/hub/kommons/skeleton'
+                  to='/hub/kommons/lattice'
                   className='governance-page__browse'
                 >
                   <Icon id='list_alt' icon={ListAltIcon} />

@@ -101,8 +101,8 @@ compose:
 feature_flag: # not-implemented — Kommons is unconditionally mounted on main
 enforced: true # framework: on this branch; boot validator enforces
 
-# ── Skeleton nodes (Kommons 2.0 — feedback map) ────────────────────────
-# See lib/kronk/node_registry.rb for schema.
+# ── Map nodes (Kommons 2.0 — feedback map) ─────────────────────────────
+# See lib/kronk/node_registry.rb for schema. The map is the Lattice view.
 nodes:
   - id: kommons.index
     label: Proposals
@@ -110,12 +110,12 @@ nodes:
     lifecycle: live
     spa: true
     links:
-      - to: kommons.skeleton
+      - to: kommons.map
         kind: related
-        description: Feedback proposals originate from Skeleton nodes.
-  - id: kommons.skeleton
-    label: Skeleton
-    url: /hub/kommons/skeleton
+        description: Feedback proposals originate from nodes on the map.
+  - id: kommons.map
+    label: Map
+    url: /hub/kommons/lattice
     lifecycle: live
     spa: true
     links:
