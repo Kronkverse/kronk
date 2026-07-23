@@ -1,6 +1,7 @@
 import { defineMessages, useIntl } from 'react-intl';
 
 import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
+import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import PublicIcon from '@/material-icons/400-24px/public.svg?react';
 import QuietTimeIcon from '@/material-icons/400-24px/quiet_time.svg?react';
@@ -21,6 +22,10 @@ const messages = defineMessages({
   direct_short: {
     id: 'privacy.direct.short',
     defaultMessage: 'Specific people',
+  },
+  krew_short: {
+    id: 'privacy.krew.short',
+    defaultMessage: 'Krew',
   },
 });
 
@@ -49,6 +54,11 @@ export const VisibilityIcon: React.FC<{ visibility: StatusVisibility }> = ({
       icon: 'at',
       iconComponent: AlternateEmailIcon,
       text: intl.formatMessage(messages.direct_short),
+    },
+    krew: {
+      icon: 'group',
+      iconComponent: GroupsIcon,
+      text: intl.formatMessage(messages.krew_short),
     },
   };
 

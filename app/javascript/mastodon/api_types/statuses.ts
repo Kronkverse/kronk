@@ -12,7 +12,10 @@ export type StatusVisibility =
   | 'unlisted'
   | 'private'
   // | 'limited' // This is never exposed to the API (they become `private`)
-  | 'direct';
+  | 'direct'
+  // Kronk krew-scoped audience — the union of members across the
+  // targeted Krews. Local-only; no federation. Requires krew_ids.
+  | 'krew';
 
 export interface ApiStatusApplicationJSON {
   name: string;
@@ -123,6 +126,11 @@ export interface ApiStatusJSON {
   quote?: ApiQuoteJSON;
   quote_approval?: ApiQuotePolicyJSON;
 
+  // Krew IDs this status is scoped to. Populated for
+  // visibility='krew' posts (and any status the author explicitly
+  // attached to Krews via the composer). Empty array otherwise.
+  krew_ids?: string[];
+
   post_type?: 'normal' | 'question' | 'answer' | 'proposal';
   question?: ApiStatusJSON;
   answers_count?: number;
@@ -176,5 +184,7 @@ export interface ApiStatusSourceJSON {
 export function isStatusVisibility(
   visibility: string,
 ): visibility is StatusVisibility {
-  return ['public', 'unlisted', 'private', 'direct'].includes(visibility);
+  return ['public', 'unlisted', 'private', 'direct', 'krew'].includes(
+    visibility,
+  );
 }

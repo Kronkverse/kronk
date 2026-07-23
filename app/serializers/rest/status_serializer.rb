@@ -9,7 +9,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
              :sensitive, :spoiler_text, :visibility, :language,
              :uri, :url, :replies_count, :reblogs_count,
              :favourites_count, :quotes_count, :edited_at,
-             :post_type
+             :post_type, :krew_ids
 
   attribute :favourited, if: :current_user?
   attribute :reblogged, if: :current_user?
@@ -59,6 +59,13 @@ class REST::StatusSerializer < ActiveModel::Serializer
 
   def in_reply_to_account_id
     object.in_reply_to_account_id&.to_s
+  end
+
+  # IDs of the Krews this status is scoped to (via `statuses_krews`).
+  # Populated for `visibility='krew'` posts and any status the author
+  # explicitly attached to Krews. Empty array otherwise.
+  def krew_ids
+    object.krews.pluck(:id).map(&:to_s)
   end
 
   def current_user?

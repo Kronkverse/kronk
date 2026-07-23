@@ -10,7 +10,12 @@ class StatusPolicy < ApplicationPolicy
   def show?
     return false if author.unavailable?
 
-    if requires_mention?
+    if krew_scoped?
+      # KRONK_KREWS §3 — a krew-scoped status is visible to the
+      # author + members of any targeted Krew. Not federated; not
+      # visible outside that membership set.
+      owned? || viewer_in_targeted_krew?
+    elsif requires_mention?
       owned? || mention_exists?
     elsif private?
       owned? || following_author? || mention_exists?
@@ -24,7 +29,7 @@ class StatusPolicy < ApplicationPolicy
   end
 
   def reblog?
-    !requires_mention? && (!private? || owned?) && show? && !blocking_author?
+    !requires_mention? && !krew_scoped? && (!private? || owned?) && show? && !blocking_author?
   end
 
   def favourite?
@@ -53,6 +58,21 @@ class StatusPolicy < ApplicationPolicy
 
   def private?
     record.private_visibility?
+  end
+
+  def krew_scoped?
+    record.krew_visibility?
+  end
+
+  def viewer_in_targeted_krew?
+    return false if current_account.nil?
+
+    # The join is small (a Status targets N Krews, typically 1). A
+    # single EXISTS is fine at API-scale.
+    KrewMembership.exists?(
+      account_id: current_account.id,
+      krew_id: record.krews.select(:id)
+    )
   end
 
   def mention_exists?

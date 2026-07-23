@@ -53,6 +53,10 @@ class FanOutOnWriteService < BaseService
       deliver_to_lists!
     when :limited
       deliver_to_mentioned_followers!
+    when :krew
+      # KRONK_KREWS §3 — audience is the union of members across the
+      # targeted Krews, deduplicated. No followers/lists fan-out.
+      deliver_to_krew_members!
     else
       deliver_to_mentioned_followers!
       deliver_to_conversation!
@@ -139,6 +143,29 @@ class FanOutOnWriteService < BaseService
         [@status.id, mention.account_id, 'home', { 'update' => update? }]
       end
     end
+  end
+
+  # Krew audience per KRONK_KREWS §3 — pushes to the Home feed of every
+  # local member across all targeted Krews, deduplicated. Excludes the
+  # author (deliver_to_self! already handled them) and any account
+  # that isn't local (federation for krew visibility is deferred).
+  def deliver_to_krew_members!
+    krew_ids = @status.krews.pluck(:id)
+    return if krew_ids.empty?
+
+    KrewMembership
+      .where(krew_id: krew_ids)
+      .where.not(account_id: @account.id)
+      .joins(:account)
+      .merge(Account.local)
+      .distinct
+      .select(:account_id)
+      .reorder(nil)
+      .find_in_batches do |batch|
+        FeedInsertWorker.push_bulk(batch) do |membership|
+          [@status.id, membership.account_id, 'home', { 'update' => update? }]
+        end
+      end
   end
 
   def broadcast_to_hashtag_streams!

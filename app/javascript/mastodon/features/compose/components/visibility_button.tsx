@@ -15,6 +15,7 @@ import type { StatusVisibility } from '@/mastodon/api_types/statuses';
 import { Icon } from '@/mastodon/components/icon';
 import { useAppSelector, useAppDispatch } from '@/mastodon/store';
 import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
+import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import PublicIcon from '@/material-icons/400-24px/public.svg?react';
 import QuietTimeIcon from '@/material-icons/400-24px/quiet_time.svg?react';
@@ -71,6 +72,12 @@ const visibilityOptions = {
     value: 'direct',
     text: privacyMessages.direct_short,
   },
+  krew: {
+    icon: 'group',
+    iconComponent: GroupsIcon,
+    value: 'krew',
+    text: privacyMessages.krew_short,
+  },
 };
 
 const PrivacyModalButton: FC<PrivacyDropdownProps> = ({ disabled = false }) => {
@@ -91,7 +98,11 @@ const PrivacyModalButton: FC<PrivacyDropdownProps> = ({ disabled = false }) => {
     const visibilityText = intl.formatMessage(
       visibilityOptions[visibility].text,
     );
-    if (visibility === 'private' || visibility === 'direct') {
+    if (
+      visibility === 'private' ||
+      visibility === 'direct' ||
+      visibility === 'krew'
+    ) {
       return visibilityText;
     }
     if (quotePolicy === 'nobody') {

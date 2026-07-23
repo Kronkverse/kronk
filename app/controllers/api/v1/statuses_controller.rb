@@ -79,6 +79,8 @@ class Api::V1::StatusesController < Api::BaseController
   end
 
   def create
+    return render json: { error: 'krew_visibility_requires_krew_ids' }, status: 422 if status_params[:visibility] == 'krew' && Array(status_params[:krew_ids]).compact_blank.empty?
+
     @status = PostStatusService.new.call(
       current_user.account,
       text: status_params[:status],
@@ -96,10 +98,13 @@ class Api::V1::StatusesController < Api::BaseController
       poll: status_params[:poll],
       allowed_mentions: status_params[:allowed_mentions],
       idempotency: request.headers['Idempotency-Key'],
+      # Attachment happens inside PostStatusService's transaction so
+      # the fan-out (enqueued in postprocess_status!) sees the join
+      # rows on `visibility='krew'` posts. See PostStatusService
+      # #attach_status_to_krews!.
+      krew_ids: status_params[:krew_ids],
       with_rate_limit: true
     )
-
-    attach_status_to_krews!(@status, status_params[:krew_ids]) if status_params[:krew_ids].present?
 
     render json: @status, serializer: serializer_for_status
   rescue PostStatusService::UnexpectedMentionsError => e
@@ -234,31 +239,5 @@ class Api::V1::StatusesController < Api::BaseController
 
   def serialized_accounts(accounts)
     ActiveModel::Serializer::CollectionSerializer.new(accounts, serializer: REST::AccountSerializer)
-  end
-
-  # Attach a freshly-created Status to one or more Krews. Silently
-  # drops krews the author is not a member of, or that are archived —
-  # the status itself is already saved, so this is best-effort join.
-  def attach_status_to_krews!(status, krew_ids)
-    ids = Array(krew_ids).map(&:to_i).reject(&:zero?).uniq
-    return if ids.empty?
-
-    krews = Krew.where(id: ids, archived: false).select { |k| k.member?(status.account) }
-    return if krews.empty?
-
-    ActiveRecord::Base.transaction do
-      krews.each do |k|
-        k.statuses << status unless k.statuses.exists?(id: status.id)
-      end
-    end
-
-    krews.each do |k|
-      Kronk::KornerEvents.publish(
-        'krew.post.created',
-        krew_id: k.id,
-        status_id: status.id,
-        account_id: status.account_id
-      )
-    end
   end
 end

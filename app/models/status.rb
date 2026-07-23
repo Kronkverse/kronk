@@ -107,6 +107,7 @@ class Status < ApplicationRecord
   has_many :local_bookmarked, -> { merge(Account.local) }, through: :bookmarks, source: :account
 
   has_and_belongs_to_many :tags # rubocop:disable Rails/HasAndBelongsToMany
+  has_and_belongs_to_many :krews, join_table: :statuses_krews # rubocop:disable Rails/HasAndBelongsToMany
 
   has_one :preview_cards_status, inverse_of: :status, dependent: :delete
 
