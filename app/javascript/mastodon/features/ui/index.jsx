@@ -704,13 +704,23 @@ class UI extends PureComponent {
         <BoothPlaybackProvider>
         <div className={classNames('ui', { 'is-composing': isComposing })} ref={this.setRef}>
           {/* KronkFrame — foundational page layout (docs/kronk_frame.md).
-              PR 2 renders TopBand + RightBand as empty slots so the fade
-              backgrounds (migrated off body::before/body::after) attach
-              to real DOM. Chrome components stay position: fixed for now
-              — PR 3 un-fixes them into these slots. */}
+              Chrome components render inside their named slots as flow
+              children instead of self-anchoring with position: fixed.
+              KornerSubBar stays as a Frame sibling because it's route-
+              conditional (Stage routes retire it, Column routes keep
+              it) and isn't tied to a single slot. KronkMenu (Ӂ) is the
+              OVERLAY layer — deliberately outside the grid. */}
           <KronkFrame>
-            <KronkFrame.TopBand />
-            <KronkFrame.RightBand />
+            <KronkFrame.TopBand>
+              <KronkWordmark />
+              {layout !== 'mobile' && <HubSwitcher variant='top' currentAccountUsername={this.props.username} />}
+            </KronkFrame.TopBand>
+            <KronkFrame.RightBand>
+              {this.props.identity.signedIn && <KornerSidebar />}
+            </KronkFrame.RightBand>
+            <KronkFrame.BottomBand>
+              {layout === 'mobile' && <HubSwitcher variant='bottom' currentAccountUsername={this.props.username} />}
+            </KronkFrame.BottomBand>
             <KronkFrame.Stage>
               <SwitchingColumnsArea identity={this.props.identity} location={location} singleColumn={layout === 'mobile' || layout === 'single-column'} forceOnboarding={firstLaunch && newAccount}>
                 {children}
@@ -723,13 +733,7 @@ class UI extends PureComponent {
           <HuddlePip />
           <AlertsController />
 
-          {/* Kronk-native nav chrome (Phase 12). The classic Mastodon
-              NavigationBar + side panel are retired — these ARE the
-              navigation surface, invariant across every space. */}
-          <KronkWordmark />
-          <HubSwitcher variant={layout === 'mobile' ? 'bottom' : 'top'} currentAccountUsername={this.props.username} />
           <KornerSubBar />
-          {this.props.identity.signedIn && <KornerSidebar />}
           {this.props.identity.signedIn && <KronkMenu />}
           {!disableHoverCards && <HoverCardController />}
           <HashtagMenuController />

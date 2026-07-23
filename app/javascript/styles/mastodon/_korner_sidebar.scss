@@ -7,21 +7,19 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
 // content grids collapse columns as space shrinks.
 
 .korner-sidebar {
-  position: fixed;
-  top: 3.75rem;
-  right: 0.75rem;
-  bottom: 0.75rem;
+  // Un-fixed in alpha.179 — flow child of .kronk-frame__right-band,
+  // which is position: fixed and provides the viewport-anchored strip.
+  // Top / bottom offsets and right inset now come from the band's
+  // padding, so the sidebar just fills the remaining vertical space.
   width: $rail-width;
-  z-index: 25; // Above other chrome so tile hover states register
-  // The rail floats over the right-edge fade band (body::after in
-  // _kronk_chrome.scss) — the mirror of the top bar — so the icons sit
-  // on the black-to-transparent fade with no panel of their own, exactly
-  // as the wordmark sits on the top bar. No background/border/radius here.
+  align-self: stretch;
+  z-index: 25;
   background: transparent;
   border: none;
   box-shadow: none;
   display: flex;
   flex-direction: column;
+
   // Visible (not hidden) so the row hover tooltips can fly out past the
   // rail's right edge; the inner list owns its own scroll.
   overflow: visible;
