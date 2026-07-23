@@ -46,6 +46,10 @@ both lag reality. Confirmed shipped on `rebuild/2.0.0` (tip alpha.189):
 - **Kommons token/Koin system** — wallet redesign, Minted Kin coin
   badge, backing-with-tokens wiring (alpha.169–.175). Not
   itemized on the board.
+- **"Propose a new Korner" flow shipped** — the structured Korner
+  Composer at `features/governance/propose_page.tsx`, reached via the
+  `kommons.propose` node → `/hub/kommons/propose` (#629, alpha.196).
+  Not reflected on the board.
 
 ## What's genuinely still open
 
@@ -67,8 +71,8 @@ both lag reality. Confirmed shipped on `rebuild/2.0.0` (tip alpha.189):
 | **moments / albutts / kompass** — manifests set `enforced: false`; no models. Phase 13 stubs (each a "coming soon" card).                                | todo  | S each × 3                |
 | **klot** — manifest-only; runtime lives on `dev/tbone` (not merged)                                                                                      | todo  | L (out-of-scope for 2.0?) |
 | CLAUDE.md must-read line for the Standard before editing `config/korners/*.yaml`                                                                         | todo  | S                         |
-| L7 stylelint-governance doctor check — §3 lists it as ⚙︎ but `korners.rb` implements L1/L3/L4/L5/L6/L10 only                                            | todo  | S                         |
-| Core-space manifests for Feed/Profile/Hub — 1/4 done (only `nudges.yaml`); Settings core-space too (`config/korners/settings.yaml` — done, not on board) | work  | M                         |
+| ~~L7 stylelint-governance doctor check~~ — **DONE** (alpha.196): `korners.rb` now implements the L7 check + `stylelint_governance_list` helper, so the doctor gates L1/L3/L4/L5/L6/L7/L10 | done  | —                         |
+| ~~Core-space manifests for Feed/Profile/Hub~~ — **DONE**: `config/korners/{feed,hub,profile,settings}.yaml` all present; doctor distinguishes core via `manifest.core?`                                  | done  | —                         |
 | Launch card (§8.7) declared in 10 manifests, parsed, but no producer/service — the one-time launch announcement never projects                           | todo  | M                         |
 | Korner tombstones / 410 Gone (§5.6) — only AP Statuses tombstone; Listing etc. have no `deleted_at`/410 resolution                                       | todo  | M                         |
 | `render_target` inert (§9.1) — every manifest sets it; nothing consumes it (also open decision §13.2)                                                    | todo  | L / defer                 |
@@ -90,7 +94,7 @@ Copied from `remaining_work_2026-07-20.md`; none moved off the list:
 | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | `settings.account` + `settings.data` nav nodes lead nowhere (declared with URLs but no route/component)                                             | S      |
 | Verify SPA `/settings/privacy` covers `indexable`/`noindex`, `hide_collections`, `show_application`                                                 | S      |
-| `default_quote_policy` absent from posting settings API (lives only in credentials)                                                                 | S      |
+| ~~`default_quote_policy` absent from posting settings API~~ — **DONE**: now in `PostingController::FIELDS` + serialized (the private→`nobody` coupling is still not reproduced in the API)          | —      |
 | Wachuneed `subcategory` column doc says "retires" but persists + is serialized                                                                      | S      |
 | `fetch_link_card` `ALLOWED_LOCAL_PATHS` lists legacy korner paths, not `/hub/<slug>`                                                                | S      |
 | Dead `interactions.must_be_follower`/`must_be_following` settings keys (writeable, wired to nothing)                                                | S      |
@@ -115,8 +119,9 @@ Ordered by dependency:
    correctness bugs and the Frame dead code. Board still lists
    these as visible gaps.
 2. **CLAUDE.md must-read line + L7 doctor check** (~1 hr, one PR).
-3. **Feed/Profile/Hub core-space manifests** (M) — parity with
-   `nudges.yaml` + `settings.yaml`.
+3. ~~**Feed/Profile/Hub core-space manifests** (M) — parity with
+   `nudges.yaml` + `settings.yaml`.~~ **DONE** — all four core manifests
+   now exist.
 4. **Launch card producer** (M) — Phase 5 side-quest; needed for
    Phase 14 announcement flow.
 5. **Nudges Phase 5 cutover proper** — retire the classic bell UI

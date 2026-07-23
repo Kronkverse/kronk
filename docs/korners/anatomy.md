@@ -19,10 +19,10 @@ the SPA, and the one-time table creation.
 
 ```mermaid
 graph TB
-    User(["User navigates to /slug"])
+    User(["User navigates to /hub/slug"])
 
     subgraph SPA["Browser — React SPA"]
-        UIRoute["ui/index.jsx<br/>WrappedRoute path='/slug'"]
+        UIRoute["ui/index.jsx<br/>WrappedRoute path='/hub/slug'"]
         Async["ui/util/async-components.js<br/>lazy import"]
         Module["features/slug/index.tsx"]
         Comp["features/slug/components/*"]
@@ -32,7 +32,7 @@ graph TB
 
     subgraph Reg["Cross-Korner registration"]
         Icon["hooks/useKornerIcon.tsx<br/>slug → manifest icon"]
-        Nav["navigation_panel/index.tsx<br/>ColumnLink to='/slug'"]
+        Nav["navigation_panel/index.tsx<br/>ColumnLink to='/hub/slug'"]
     end
 
     subgraph Styl["Styles"]
@@ -73,7 +73,7 @@ graph TB
     Assoc -.->|Account has_many| Model
 
     Icon -.->|icon| Nav
-    Nav -.->|link to /slug| UIRoute
+    Nav -.->|link to /hub/slug| UIRoute
     AppScss --> SlugScss
     SlugScss -.->|scoped rules| Module
 
@@ -83,7 +83,7 @@ graph TB
 
 ### Reading order
 
-1. User navigates to `/<slug>`.
+1. User navigates to `/hub/<slug>` (every korner mounts under the `/hub/` prefix; `AutoSpaceBadge` matches `^/hub/([a-z0-9-]+)`).
 2. Rails matches the SPA wildcard route in `config/routes.rb` and returns the SPA shell.
 3. The React route registered in `ui/index.jsx` mounts the async component for your Korner.
 4. `async-components.js` lazy-loads `features/<slug>/index.tsx`.
@@ -110,9 +110,11 @@ These are the most common source of "why isn't my Korner showing up" bugs.
 ## Feed projection
 
 Only Korners whose data appears in the home timeline need this layer.
-Currently: **Kommons, Kuestions, Wachuneed**, and **Booth once its
-`shared_status_id` backend lands**. Klot deliberately does not — its data
-is private.
+The registry (`components/korner_cards.tsx` → `KORNER_CARDS`) currently
+holds four cards: **Kalendar, Kommons, Wachuneed, Booth**. Kuestions is
+_not_ a korner card — its posts render via `post_type` +
+`StatusSpaceBar`, a separate path. Klot deliberately projects nothing —
+its data is private.
 
 ```mermaid
 graph TB
@@ -146,15 +148,17 @@ graph TB
 
 - **Backend**: your model owns a `status_id`, `Status.rb` gets a matching `has_one`, and a **summary serializer** projects just the slice the timeline needs (deliberately thin, so timeline JSON stays small).
 - **Timeline JSON**: the caller receives a `status` with your association populated. If it's not populated, this Korner's card doesn't fire.
-- **Discriminator**: `status.jsx` picks the right card component based on which association is populated. Also add your association name to the suppression list at `status.jsx:692` so the raw text body doesn't render beneath your card.
+- **Discriminator**: `status.jsx` picks the right card component via `pickKornerCard(status)` from the registry. Registering your card (with a `matches` predicate) also drives the body-suppression guard in `status.jsx` — the raw text body is gated behind `!hasKornerCard(status)`, so a registered card automatically suppresses it.
 
 ### Where the drift lives
 
-**The discriminator is currently a branch chain in `status.jsx`.** Adding a
-feed-projected Korner still means editing that file. The manifest already
-declares the card via `feed_projection.card`, but `status.jsx` doesn't yet read
-it — collapsing that switch into a manifest-driven lookup is the outstanding
-move (the drift).
+**The discriminator is now a slug-keyed registry, not a branch chain.**
+`status.jsx` imports `pickKornerCard` / `hasKornerCard` from
+`components/korner_cards.tsx`; adding a feed-projected Korner means adding an
+entry to `KORNER_CARDS` rather than editing a `status.jsx` `if` ladder. The
+remaining drift is one step further out: the registry is keyed by slug in TS,
+not yet read from each manifest's `feed_projection.card` — closing that
+manifest-to-registry gap is the outstanding move.
 
 ---
 

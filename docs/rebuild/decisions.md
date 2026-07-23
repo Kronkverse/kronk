@@ -191,6 +191,26 @@ Audit of the ~29 leftover Mastodon page-components during the Frame migration
 
 ---
 
+### Two earlier "blocked/consequence" notes are now resolved in code (2026-07-23)
+
+Both landed while their prior notes above still read as open:
+
+- **`NodeRegistry::BUCKETS` (from "The top-level spaces are Feed, Profile,
+  Nudges, Hub", 07-19) is caught up.** `app/lib/kronk/node_registry.rb:46` now
+  reads `BUCKETS = %w(feed profile hub nudges settings kronk)` — a `bucket:
+  nudges` (or `settings`/`kronk`) node is no longer silently dropped. The "not
+  yet applied" consequence is applied; the standard's four-bucket §L6 and the
+  code agree.
+- **Core-space manifests exist (from "One mechanism: every space gets a
+  manifest", 07-19) — the reserved-slug block is gone.**
+  `config/korners/{feed,hub,profile,settings}.yaml` are all present, and the
+  doctor distinguishes core from korner via `manifest.core?`
+  (`config/initializers/kronk_korner_registry.rb#core?`; the reserved-slug and
+  conformance gates in `lib/mastodon/cli/korners.rb` skip on `next if
+  manifest.core?`). A reserved slug no longer forbids its own core manifest.
+
+---
+
 ## Open
 
 - Where account-level settings (security, sessions, account lifecycle,

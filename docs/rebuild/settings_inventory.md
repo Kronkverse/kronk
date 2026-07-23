@@ -30,10 +30,11 @@ Ordered by how much is lost.
    renders `profile_compose.header_stub`: *"Cover image, avatar and display
    name — editing lands in the next step."* **The registry advertises a live
    surface that cannot do the thing it names.**
-4. **`default_quote_policy`** — classic only, and omitted from
-   `PostingController::FIELDS`. The classic page also forces it to `nobody`
-   when privacy is `private`; the API reproduces neither the field nor the
-   coupling.
+4. **`default_quote_policy`** — now in the API: it is present in
+   `PostingController::FIELDS` (an enum of `public|followers|nobody`) and
+   serialized in the controller's payload. What the API still does **not**
+   reproduce is the classic page's coupling that forces it to `nobody` when
+   privacy is `private` — that constraint lives only on the classic view.
 5. **Single-surface classic settings with no API field** — `chosen_languages`,
    `time_zone`, `emoji_style`, `always_send_emails`.
 6. **Already stranded — reachable by nothing.** `indexable`/`noindex`,

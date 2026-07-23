@@ -162,7 +162,7 @@ reimplement its own back-out pill or view tabs.
    flow child of its grid slot. This is **not yet fully true.** The
    inner chrome (wordmark, HubSwitcher, sidebar) was un-fixed, but the
    slot strips themselves are still `position: fixed` fade bands
-   (~16 `fixed` declarations remain across the Frame/chrome SCSS),
+   (~5 `fixed` declarations remain across the Frame/chrome SCSS),
    because the real geometry is still owned by Mastodon's classic
    `.columns-area` until every page migrates off `<Column>`. The strips
    become true grid children once `.columns-area` retires. New chrome
@@ -185,8 +185,8 @@ reimplement its own back-out pill or view tabs.
 ## Current state (migration status)
 
 The Frame is a two-part rollout: the **scaffolding** (done) and the
-**per-page migration** (barely started). Read the rules above as the
-*target*; this section is the *current* reality (as of alpha.183).
+**per-page migration** (well underway). Read the rules above as the
+*target*; this section is the *current* reality (as of alpha.196).
 
 **Landed (scaffolding):** the Frame and all five slots are mounted
 platform-wide in `ui/index.jsx`; the shared components exist and are
@@ -195,24 +195,31 @@ wired — `<SpaceBadge>`/`<AutoSpaceBadge>`, `<SpaceViewPicker>`,
 (#587 / #589 / #592 / #594) plus badge/picker/sidebar follow-ons
 (#597 / #599 / #602), spanning roughly alpha.176 → alpha.183.
 
-**Not yet done (per-page):** only **Kuestions** renders through the
-shared `<Stage>`. Every other page — Kommons, Nudges, Booth, Feed,
-InFlow, Groups, and the upstream Mastodon timelines/settings — still
-renders classic `<Column>` + `<ColumnHeader>` chrome *inside* the Stage
-cell (~68 files import `ColumnHeader`, ~94 use `<Column>`). Until a
-page migrates:
+**In progress (per-page):** the Kronk-native surfaces have largely
+migrated. **21 files** across ~13 feature areas import
+`components/stage` — all the `/hub` korner pages (Hub, Booth, Kalendar,
+Groups, InFlow, Wachuneed, Kronk Search, You, plus korner settings and
+stubs), the whole **Kommons** governance suite (proposal / space / node
+/ propose / picker), and **Kuestions**. What remains on classic chrome
+is the upstream Mastodon layer — timelines, account/status pages, and
+settings — plus a shrinking set of Kronk pages not yet moved: **~39
+files import `ColumnHeader`, ~55 use `<Column>`**. Until each of those
+migrates:
 
-- the slot strips stay `position: fixed` (rule 2 target unmet);
+- the slot strips stay `position: fixed` (rule 2 target unmet), though
+  only ~5 such declarations remain across the Frame/chrome SCSS;
 - the `.columns-area` padding dance is reshaped, not gone — a
   `padding-top` remains to clear the still-fixed `KornerSubBar`;
-- `KornerSubBar` is still rendered (as a Frame sibling) on non-Stage
-  routes, so rule 4 only holds per-migrated-route;
+- `KornerSubBar` is still rendered (as a Frame sibling) but is
+  **route-conditional** — Stage routes retire it, the remaining
+  `<Column>` routes keep it — so rule 4 holds on every migrated route
+  and only the unmigrated ones still show it;
 - `_kronk_stage.scss` uses a `:has(.kronk-stage) { container-type:
   normal }` escape hatch so a Stage's fixed children anchor to the
   viewport rather than the classic columns-area containing block.
 
 The end state (fixed retired, `.columns-area` gone, SubBar gone) is
-reachable only once the pages are migrated.
+reachable only once the remaining Column-based pages are migrated.
 
 ## Historical
 
