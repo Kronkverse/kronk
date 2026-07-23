@@ -285,7 +285,7 @@ Rails.application.routes.draw do
 
   # Korner framework — every korner mounts under /hub/<slug> per
   # docs/kronk_korner_spec.md §4. Legacy top-level paths above 301 here.
-  # The Kommons Skeleton was called the Tree until 2026-07-18. `tree` is
+  # The Kommons Directory was called the Tree until 2026-07-18. `tree` is
   # being reserved for a future invite-lineage space, so the old path
   # redirects rather than staying a live alias.
   get '/hub/kommons/tree', to: redirect('/hub/kommons/lattice', status: 301)

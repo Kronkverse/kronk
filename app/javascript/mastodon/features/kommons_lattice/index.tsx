@@ -25,15 +25,15 @@ import { Lattice } from './components/lattice';
 const messages = defineMessages({
   title: {
     id: 'kommons_lattice.title',
-    defaultMessage: '₮ommons · Lattice',
+    defaultMessage: '₭ommons · Directory',
   },
   loading: {
     id: 'kommons_lattice.loading',
-    defaultMessage: 'Loading the lattice…',
+    defaultMessage: 'Loading the Directory…',
   },
   loadError: {
     id: 'kommons_lattice.load_error',
-    defaultMessage: 'Could not load the Kommons lattice. Refresh to try again.',
+    defaultMessage: 'Could not load the Kommons Directory. Refresh to try again.',
   },
 });
 

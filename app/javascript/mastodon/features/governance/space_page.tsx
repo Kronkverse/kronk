@@ -134,7 +134,7 @@ const SpacePage: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         <Link to='/hub/kommons/lattice' className='kommons-back-map'>
           <FormattedMessage
             id='kommons.back_to_map'
-            defaultMessage='← Back to the map'
+            defaultMessage='← Back to the Directory'
           />
         </Link>
 

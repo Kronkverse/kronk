@@ -101,8 +101,8 @@ compose:
 feature_flag: # not-implemented — Kommons is unconditionally mounted on main
 enforced: true # framework: on this branch; boot validator enforces
 
-# ── Map nodes (Kommons 2.0 — feedback map) ─────────────────────────────
-# See lib/kronk/node_registry.rb for schema. The map is the Lattice view.
+# ── Directory nodes (Kommons 2.0 — the feedback tree) ──────────────
+# See lib/kronk/node_registry.rb for schema. The Directory renders as the Lattice view.
 nodes:
   - id: kommons.index
     label: Proposals
@@ -110,11 +110,11 @@ nodes:
     lifecycle: live
     spa: true
     links:
-      - to: kommons.map
+      - to: kommons.directory
         kind: related
-        description: Feedback proposals originate from nodes on the map.
-  - id: kommons.map
-    label: Map
+        description: Feedback proposals originate from nodes in the Directory.
+  - id: kommons.directory
+    label: Directory
     url: /hub/kommons/lattice
     lifecycle: live
     spa: true
