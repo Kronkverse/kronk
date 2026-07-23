@@ -361,3 +361,37 @@
     transform: translateY(0);
   }
 }
+
+// ── Rounded interior corner where TopBand meets RightBand ──────────
+// The two fade bands (top + right) each paint a straight linear
+// gradient. Where they meet at the top-right, the interior corner of
+// the L is a sharp right angle. This overlay softens that meeting
+// point into a curved quarter-circle: dark fills the outer wedge of
+// the corner (where both bands are already dark) and fades along a
+// radial arc into the content area. Retired on ≤889px alongside the
+// right-hand fade band.
+.kronk-frame::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 8rem;
+  height: 6rem;
+  z-index: 24;
+  pointer-events: none;
+  background: radial-gradient(
+    circle 6rem at bottom left,
+    rgb(0 0 0 / 0%) 4.5rem,
+    rgb(0 0 0 / 45%) 5rem,
+    rgb(0 0 0 / 85%) 5.5rem,
+    #000 6rem
+  );
+  filter: drop-shadow(
+    -1px 2px 12px
+      color-mix(in oklab, var(--kronk-purple-accent) 12%, transparent)
+  );
+
+  @media (width <= 889px) {
+    display: none;
+  }
+}
