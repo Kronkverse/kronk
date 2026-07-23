@@ -12,7 +12,6 @@ import { Helmet } from 'react-helmet';
 import { useParams, Link } from 'react-router-dom';
 
 import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
-import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import api, {
   apiRequestGet,
   apiRequestPost,
@@ -22,8 +21,7 @@ import type {
   ApiKornerSettingJSON,
   ApiKornerNotificationTypeJSON,
 } from 'mastodon/api_types/korners';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
@@ -327,9 +325,7 @@ const NamedSettingRow: React.FC<{
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
-  multiColumn,
-}) => {
+export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const { slug } = useParams<{ slug: string }>();
   const korner = useKorner(slug);
@@ -455,15 +451,7 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
     : intl.formatMessage(messages.title, { name: slug });
 
   return (
-    <Column>
-      <ColumnHeader
-        title={title}
-        icon='settings'
-        iconComponent={SettingsIcon}
-        multiColumn={multiColumn}
-        showBackButton
-      />
-
+    <Stage label={title}>
       <Helmet>
         <title>{title}</title>
       </Helmet>
@@ -583,6 +571,6 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = ({
           </>
         )}
       </div>
-    </Column>
+    </Stage>
   );
 };

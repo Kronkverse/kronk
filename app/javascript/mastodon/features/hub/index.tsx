@@ -5,12 +5,10 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 
-import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { apiRequestPost, apiRequestDelete } from 'mastodon/api';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
@@ -115,7 +113,7 @@ const KornerCard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
   );
 };
 
-const Hub: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+const Hub: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const korners = useAllKorners();
 
@@ -130,13 +128,7 @@ const Hub: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     });
 
   return (
-    <Column>
-      <ColumnHeader
-        title={intl.formatMessage(messages.title)}
-        icon='hub'
-        iconComponent={ExploreIcon}
-        multiColumn={multiColumn}
-      />
+    <Stage label={intl.formatMessage(messages.title)}>
 
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
@@ -170,7 +162,7 @@ const Hub: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           ))}
         </div>
       </div>
-    </Column>
+    </Stage>
   );
 };
 

@@ -27,8 +27,7 @@ import { Helmet } from 'react-helmet';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import type { ApiSearchResults } from 'mastodon/api/kronk_search';
 import { apiKronkSearch } from 'mastodon/api/kronk_search';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 
 import { RecentList } from './components/recent_list';
 import { ResultGroups } from './components/result_groups';
@@ -53,7 +52,7 @@ const messages = defineMessages({
 
 const universalScope = (): SearchScope => ({ kind: 'universal' });
 
-const KronkSearch: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+const KronkSearch: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const inferredScope = useSearchScope();
   const { recent, record, forget, clear } = useRecentSearches();
@@ -125,9 +124,7 @@ const KronkSearch: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const title = intl.formatMessage(messages.title);
 
   return (
-    <Column bindToDocument={!multiColumn} label={title}>
-      <ColumnHeader icon='search' title={title} multiColumn={multiColumn} />
-
+    <Stage label={title}>
       <div className='kronk-search'>
         <form className='kronk-search__form' onSubmit={handleSubmit}>
           <label className='kronk-search__input-wrap'>
@@ -178,7 +175,7 @@ const KronkSearch: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       <Helmet>
         <title>{title}</title>
       </Helmet>
-    </Column>
+    </Stage>
   );
 };
 

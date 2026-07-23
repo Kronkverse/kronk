@@ -6,8 +6,7 @@ import { Link } from 'react-router-dom';
 
 import { apiGetGroups, apiCreateGroup } from 'mastodon/api/groups';
 import type { ApiGroupJSON } from 'mastodon/api/groups';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 
 // User-facing copy: Kronk calls Groups "Krews" (code, DB, URL slug all
 // stay `groups`; only the display strings flip). See docs/spaces/groups.md
@@ -111,8 +110,7 @@ export const Groups = () => {
   }, [submitCreate]);
 
   return (
-    <Column bindToDocument label={intl.formatMessage(messages.title)}>
-      <ColumnHeader title={intl.formatMessage(messages.title)} showBackButton />
+    <Stage label={intl.formatMessage(messages.title)}>
 
       <div className='scrollable groups-page'>
         <p className='groups-page__intro'>
@@ -287,6 +285,6 @@ export const Groups = () => {
           ))}
         </ul>
       </div>
-    </Column>
+    </Stage>
   );
 };

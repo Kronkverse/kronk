@@ -3,8 +3,7 @@ import { FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
 
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
@@ -19,7 +18,6 @@ interface Params {
 }
 
 export const KornerStub: React.FC<{ multiColumn?: boolean; slug?: string }> = ({
-  multiColumn,
   slug: propSlug,
 }) => {
   const params = useParams<Params>();
@@ -35,15 +33,7 @@ export const KornerStub: React.FC<{ multiColumn?: boolean; slug?: string }> = ({
     '';
 
   return (
-    <Column bindToDocument label={title}>
-      <ColumnHeader
-        title={title}
-        icon='korner'
-        iconComponent={Icon}
-        showBackButton
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={title}>
       <Helmet>
         <title>{title}</title>
       </Helmet>
@@ -61,7 +51,7 @@ export const KornerStub: React.FC<{ multiColumn?: boolean; slug?: string }> = ({
           />
         </p>
       </div>
-    </Column>
+    </Stage>
   );
 };
 

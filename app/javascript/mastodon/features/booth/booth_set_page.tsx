@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -7,11 +7,7 @@ import { useParams, Link } from 'react-router-dom';
 
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import api from 'mastodon/api';
-import { Column } from 'mastodon/components/column';
-import type { ColumnRef } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { useKorner } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { Stage } from 'mastodon/components/stage';
 
 import { AudioPlayer } from './components/audio_player';
 import type { BoothSet } from './types';
@@ -25,19 +21,12 @@ const messages = defineMessages({
   copyLink: { id: 'booth.copy_link', defaultMessage: 'Copied!' },
 });
 
-const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
-  const korner = useKorner('booth');
-  const kornerIcon = useKornerIcon('booth');
+const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
   const intl = useIntl();
-  const columnRef = useRef<ColumnRef>(null);
   const { id } = useParams<{ id: string }>();
   const [set, setSet] = useState<BoothSet | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-
-  const handleHeaderClick = useCallback(() => {
-    columnRef.current?.scrollTop();
-  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -64,19 +53,7 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
   }, [set]);
 
   return (
-    <Column
-      bindToDocument={!multiColumn}
-      ref={columnRef}
-      label={intl.formatMessage(messages.heading)}
-    >
-      <ColumnHeader
-        title={korner?.name ?? 'Booth'}
-        icon='headphones'
-        iconComponent={kornerIcon}
-        onClick={handleHeaderClick}
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={intl.formatMessage(messages.heading)}>
       <div className='booth booth--set-page scrollable'>
         <Link to='/hub/booth' className='booth__back-link'>
           ← {intl.formatMessage(messages.back)}
@@ -153,7 +130,7 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         </title>
         <meta name='robots' content='noindex' />
       </Helmet>
-    </Column>
+    </Stage>
   );
 };
 

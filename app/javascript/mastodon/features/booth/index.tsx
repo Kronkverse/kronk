@@ -7,11 +7,7 @@ import { Helmet } from 'react-helmet';
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import api from 'mastodon/api';
-import { Column } from 'mastodon/components/column';
-import type { ColumnRef } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { useKorner } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { Stage } from 'mastodon/components/stage';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { useBoothPlayback } from './booth_playback_context';
@@ -41,11 +37,8 @@ const messages = defineMessages({
   },
 });
 
-const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
-  const korner = useKorner('booth');
-  const kornerIcon = useKornerIcon('booth');
+const Booth: React.FC<{ multiColumn: boolean }> = () => {
   const intl = useIntl();
-  const columnRef = useRef<ColumnRef>(null);
   const { signedIn } = useIdentity();
   const playerRef = useRef<InlinePlayerHandle>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
@@ -78,10 +71,6 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
     }
     // Only on mount — subsequent global changes shouldn't force-expand.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleHeaderClick = useCallback(() => {
-    columnRef.current?.scrollTop();
   }, []);
 
   useEffect(() => {
@@ -243,19 +232,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
   });
 
   return (
-    <Column
-      bindToDocument={!multiColumn}
-      ref={columnRef}
-      label={intl.formatMessage(messages.heading)}
-    >
-      <ColumnHeader
-        title={korner?.name ?? 'Booth'}
-        icon='headphones'
-        iconComponent={kornerIcon}
-        onClick={handleHeaderClick}
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={intl.formatMessage(messages.heading)}>
       <div className='booth scrollable'>
         <section className='booth__hero'>
           <h1 className='booth__hero-title'>
@@ -395,7 +372,7 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         <title>{intl.formatMessage(messages.heading)}</title>
         <meta name='robots' content='noindex' />
       </Helmet>
-    </Column>
+    </Stage>
   );
 };
 
