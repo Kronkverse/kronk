@@ -1,22 +1,16 @@
 # frozen_string_literal: true
 
-# Kronk Krews — a framework-level primitive. Seeders (not owners)
-# planted the krew; multiple seeders permitted from creation. Structural
-# changes route through the governance framework the seeders chose:
+# Kronk Krews — the audience-scoping primitive from
+# docs/spaces/krew_build_spec.md.
 #
-#   peer_support  (default) — one second required to enact
-#   two_key                 — two seconds required
-#   threshold               — governance_threshold members must support
-#   majority                — >50% of members must support
-#   consensus               — unanimous
-#
-# The brief in docs/spaces/krew_build_spec.md redefines Krews as a
-# single-seeder, no-governance, no-feed audience-scoping primitive —
-# Phase 3 of the rebuild is where those field-level changes land.
-# Phase 2 (this class) is the mechanical rename; behaviour is
-# unchanged from the pre-rename Group class.
-#
-# See docs/kronk_korner_spec.md §Krews.
+# Phase 3a of the rebuild adds the brief's data model additively:
+# `seeded_by_account_id` (single seeder), `access` enum,
+# `invite_token` (revocable capability), `member_count` counter,
+# `last_activity_at` ordering, plus attachment (KrewKorner) + gate
+# (KrewRequirement) associations. The existing `governance_framework`
+# / `discoverable` / role-based multi-seeder machinery is kept for
+# now so this PR doesn't have to switch modes on the controller; a
+# later cleanup drops what the new shape supersedes.
 class Krew < ApplicationRecord
   include Searchable
 
@@ -33,26 +27,57 @@ class Krew < ApplicationRecord
     }
   end
 
+  ACCESS_LEVELS = %w(open invite_only requirement_gated).freeze
   GOVERNANCE_FRAMEWORKS = %w(peer_support two_key threshold majority consensus).freeze
   SLUG_PATTERN = /\A[a-z][a-z0-9-]*\z/
+
+  INVITE_TOKEN_BYTES = 24
+
+  belongs_to :seeded_by, class_name: 'Account', optional: true
 
   has_many :krew_memberships, dependent: :destroy
   has_many :members, through: :krew_memberships, source: :account
   has_and_belongs_to_many :statuses, join_table: :statuses_krews # rubocop:disable Rails/HasAndBelongsToMany
 
+  has_many :krew_korners, dependent: :destroy
+  has_many :krew_requirements, dependent: :destroy
+
   validates :slug, presence: true, uniqueness: true, format: { with: SLUG_PATTERN }
   validates :name, presence: true
+  validates :access, inclusion: { in: ACCESS_LEVELS }
   validates :governance_framework, inclusion: { in: GOVERNANCE_FRAMEWORKS }
   validate  :threshold_present_when_required
 
   scope :active,       -> { where(archived_at: nil) }
   scope :discoverable, -> { active.where(discoverable: true) }
+  scope :listed,       -> { active.where.not(access: 'invite_only') }
+  scope :recent,       -> { order(last_activity_at: :desc) }
+
+  # Brief §4: a Krew is `listed` when access != invite_only. Preserved
+  # as a helper so the API + Discover query read cleanly.
+  def listed?
+    access != 'invite_only'
+  end
+
+  def open?
+    access == 'open'
+  end
+
+  def invite_only?
+    access == 'invite_only'
+  end
+
+  def requirement_gated?
+    access == 'requirement_gated'
+  end
 
   def seeders
     krew_memberships.where(role: 'seeder').includes(:account).map(&:account)
   end
 
   def seeder?(account)
+    return true if seeded_by_account_id.present? && seeded_by_account_id == account.id
+
     krew_memberships.exists?(role: 'seeder', account_id: account.id)
   end
 
@@ -62,6 +87,20 @@ class Krew < ApplicationRecord
 
   def archived?
     archived_at.present?
+  end
+
+  # Regenerate the invite capability token. Any outstanding invite link
+  # built from the previous token is invalidated by this write.
+  def regenerate_invite_token!
+    update!(invite_token: SecureRandom.urlsafe_base64(INVITE_TOKEN_BYTES))
+  end
+
+  # Bump last_activity_at to now — called by the same-transaction event
+  # bus emitters (post to krew, member joined) so the Yours lens
+  # ordering is live. Does not touch updated_at (per brief §3 — no
+  # per-member "last seen" leaks).
+  def touch_activity!
+    update_column(:last_activity_at, Time.current)
   end
 
   private

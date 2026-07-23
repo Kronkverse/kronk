@@ -6,11 +6,31 @@ import {
 } from 'mastodon/api';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 
+export type KrewAccess = 'open' | 'invite_only' | 'requirement_gated';
+export type KrewKornerSlug =
+  | 'booth'
+  | 'huddle'
+  | 'kalendar'
+  | 'kommons'
+  | 'kompass'
+  | 'albutts'
+  | 'kuestions';
+
+export interface ApiKrewRequirementJSON {
+  id: string;
+  kind: 'attending_event' | 'located_in' | 'vouched_by_member';
+  event_id?: string;
+  region?: string;
+  vouch_params?: Record<string, unknown>;
+}
+
 export interface ApiKrewJSON {
   id: string;
   slug: string;
   name: string;
   description: string | null;
+  access: KrewAccess;
+  listed: boolean;
   discoverable: boolean;
   governance_framework: string;
   governance_threshold: number | null;
@@ -18,6 +38,12 @@ export interface ApiKrewJSON {
   member_count: number;
   seeder_count: number;
   viewer_role: 'seeder' | 'member' | null;
+  seeded_by_account_id: string | null;
+  last_activity_at: string | null;
+  // Only present in responses to the seeder; other viewers get null.
+  invite_token: string | null;
+  korners: KrewKornerSlug[];
+  requirements: ApiKrewRequirementJSON[];
 }
 
 export const apiGetKrews = (
@@ -36,6 +62,7 @@ export const apiCreateKrew = (params: {
   slug: string;
   name: string;
   description?: string;
+  access?: KrewAccess;
   discoverable?: boolean;
   governance_framework?: string;
   governance_threshold?: number;
@@ -46,6 +73,7 @@ export const apiUpdateKrew = (
   params: Partial<{
     name: string;
     description: string;
+    access: KrewAccess;
     discoverable: boolean;
     governance_framework: string;
     governance_threshold: number;
