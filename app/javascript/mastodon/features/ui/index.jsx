@@ -87,6 +87,7 @@ import {
   Live,
   Events,
   EventDetail,
+  KalendarSpiral,
   Inflow,
   Nudges,
   Governance,
@@ -266,6 +267,10 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/settings/privacy' exact component={PrivacySettings} content={children} />}
             {signedIn && <WrappedRoute path="/settings/profile_sections" component={ProfileSectionsSettings} content={children} />}
             <WrappedRoute path='/@:acct/profile' exact component={SectionedProfile} content={children} />
+            {/* Kalendar view switch (proposal #116969253949249128): the Spiral must
+                match before the `:id` route so /hub/kalendar/spiral isn't
+                interpreted as an event id. */}
+            {signedIn && <WrappedRoute exact path="/hub/kalendar/spiral" component={KalendarSpiral} content={children} />}
             {signedIn && <WrappedRoute path={["/kalendar/:id", "/hub/kalendar/:id"]} component={EventDetail} content={children} />}
             {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={Events} content={children} />}
             {signedIn && <WrappedRoute path="/hub/inflow" component={Inflow} content={children} />}

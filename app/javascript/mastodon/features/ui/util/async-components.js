@@ -315,6 +315,10 @@ export function Hub () {
   return import("../../hub").then(m => ({ default: m.Hub }));
 }
 
+export function KalendarSpiral () {
+  return import("../../kalendar_spiral");
+}
+
 export function MomentsStub () {
   return import("../../korner_stub").then(m => ({ default: m.MomentsStub }));
 }

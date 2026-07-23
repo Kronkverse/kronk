@@ -1,0 +1,1103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>₭ALENDAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --accent:#4414cc;
+  --surface-primary:#191b22; --surface-elevated:#292938; --surface-sunken:#12131a;
+  --border-default:#47368b; --border-strong:#5a4aa0; --border-subtle:#2a2740;
+  --text-primary:#ece9f5; --text-secondary:#9c9cc9; --text-muted:#606085;
+  --link:#8c8dff; --info-blue:#3b82f6; --success-green:#308d4c;
+  --purple-bright:#7241ff; --purple-deep:#3a218b; --purple-muted:#413c8c;
+  --focus-ring:#7241ff;
+
+  --font-display:'Playfair Display',Georgia,'Liberation Serif',serif;
+  --font-body:'IBM Plex Sans',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
+
+  --fs-xs:11px; --fs-sm:13px; --fs-base:15px; --fs-lg:18px; --fs-xl:24px; --fs-2xl:32px;
+  --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px;
+  --r-xs:4px; --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --control-h:38px;
+  --elev-card:0 4px 12px -4px rgb(0 0 0 / 30%);
+  --dur-fast:120ms; --dur-med:200ms; --dur-slow:400ms;
+  --ease-out:cubic-bezier(.16,1,.3,1);
+
+  --k-self:#b981ff; --k-express:#8e5cff; --k-gather:#7241ff;
+  --k-govern:#5f57c9; --k-exchange:#5a6b9c; --k-flow:#c9b6ff;
+
+  --vis-everyone:#e0a35c; --vis-kronk:#c07fd8; --vis-connections:#8e5cff;
+  --vis-vouched:#5f57c9; --vis-only-me:#4a5578;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--surface-sunken);color:var(--text-primary);font-family:var(--font-body);
+  font-size:var(--fs-base);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;border-radius:var(--r-xs)}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--purple-muted);border-radius:8px}
+
+/* ═══ stage ═══ */
+#stage{position:fixed;inset:0;overflow:hidden;cursor:grab;touch-action:none;
+  background:radial-gradient(ellipse at 50% 44%, #1c1839 0%, var(--surface-sunken) 60%)}
+#stage:active{cursor:grabbing}
+#stars{position:absolute;inset:0;pointer-events:none;opacity:.5}
+.vignette{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 44%, transparent 24%, rgba(6,6,12,.92) 96%)}
+#field{position:absolute;left:50%;top:44%;transform-origin:center;will-change:transform}
+#thread{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);pointer-events:none;overflow:visible}
+
+/* ═══ month wall — a circle centred on the eye is a single moment in time ═══ */
+.wall{pointer-events:none;overflow:visible;will-change:opacity}
+.wall path{will-change:d}
+.wall-name{position:absolute;left:0;top:0;transform:translate(-50%,-50%);pointer-events:none;
+  font-family:var(--font-display);font-style:italic;letter-spacing:.12em;
+  color:var(--text-muted);white-space:nowrap;line-height:1;font-weight:400;
+  will-change:transform,opacity}
+
+/* ═══ day cell ═══ */
+.day{position:absolute;left:0;top:0;transform-origin:center;border:1px solid var(--border-subtle);
+  background:rgba(114,65,255,.03);border-radius:var(--r-sm);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;cursor:pointer;will-change:transform,opacity}
+.day:hover{border-color:var(--border-strong);background:rgba(114,65,255,.14)}
+.day .num{font-family:var(--font-display);line-height:1;color:var(--text-primary)}
+.day .mon{font-size:.38em;letter-spacing:.16em;text-transform:uppercase;color:var(--text-muted);
+  margin-top:.3em;font-family:var(--font-mono)}
+.day.edge{border-color:var(--border-default);background:rgba(114,65,255,.10)}
+.day.head{border-color:var(--purple-bright);background:rgba(114,65,255,.20);
+  box-shadow:0 0 44px rgba(114,65,255,.45)}
+.day.today{border-color:var(--k-flow)}
+.day.today .num{color:var(--k-flow)}
+.day.gone{filter:saturate(.35)}
+.day.station{border-color:var(--k-flow)}
+.moonpip{position:absolute;top:6%;right:6%;width:22%;height:22%;pointer-events:none}
+.seasontint{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:.09}
+.dots{position:absolute;bottom:7%;left:0;right:0;display:flex;justify-content:center;gap:8%;pointer-events:none}
+.dots i{width:8%;aspect-ratio:1;border-radius:50%;background:var(--d);max-width:6px;min-width:2px}
+.stationglyph{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;opacity:.16}
+.stationglyph svg{width:58%;height:58%}
+.daylabel{position:absolute;top:100%;left:50%;transform:translate(-50%,5px);white-space:nowrap;
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--k-flow);pointer-events:none;opacity:.9}
+
+/* ═══ head marker: fixed ring at top centre ═══ */
+#headring{position:absolute;left:50%;pointer-events:none;transform:translate(-50%,-50%);
+  border:1px solid var(--purple-bright);border-radius:var(--r-md);opacity:.55}
+#headline{position:absolute;left:50%;width:1px;pointer-events:none;
+  background:linear-gradient(to bottom, transparent, rgba(114,65,255,.5));}
+
+/* ═══ minimal HUD ═══ */
+.hud{position:fixed;pointer-events:none;color:var(--text-muted);font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;font-family:var(--font-mono);z-index:4}
+#hint{bottom:22px;left:26px}
+#depth{top:22px;right:26px;text-align:right}
+#depth b{color:var(--purple-bright);font-weight:500;font-size:11px}
+/* ═══ corner: Chooseday card ═══ */
+.corner{position:fixed;left:24px;top:22px;z-index:5;display:flex;flex-direction:column;gap:6px;width:158px}
+
+#todayCard{position:relative;text-align:left;overflow:hidden;
+  background:var(--surface-elevated);border:1px solid var(--border-subtle);
+  border-radius:var(--r-md);padding:10px 12px 11px 14px;box-shadow:var(--elev-card);
+  transition:border-color var(--dur-med),box-shadow var(--dur-med),transform var(--dur-fast) var(--ease-out)}
+#todayCard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--k-gather)}
+#todayCard:hover{border-color:var(--border-default);transform:translateY(-1px)}
+.tc-top{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.tc-kicker{font-family:var(--font-mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-muted)}
+.tc-moon{margin-left:auto;width:16px;height:16px;display:block}
+.tc-num{font-family:var(--font-display);font-size:30px;line-height:1;font-weight:500;color:var(--text-primary)}
+.tc-sub{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--text-secondary);margin-top:3px}
+.tc-foot{font-size:11px;color:var(--text-muted);margin-top:7px}
+.tc-return{position:absolute;right:10px;bottom:9px;font-family:var(--font-mono);font-size:9px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--k-flow);
+  opacity:0;transform:translateX(4px);transition:all var(--dur-med) var(--ease-out);pointer-events:none}
+/* away state — you've drifted from today */
+#todayCard.away{border-color:var(--border-strong);
+  box-shadow:0 4px 12px -4px rgb(0 0 0 / 30%), 0 0 0 1px rgba(114,65,255,.25), 0 0 22px -6px rgba(114,65,255,.5)}
+#todayCard.away .tc-foot{opacity:0}
+#todayCard.away .tc-return{opacity:1;transform:none}
+
+/* ═══ the sheet — peek is a bottom preview; full is a whole page ═══ */
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:6;
+  height:100vh;height:100dvh;display:flex;flex-direction:column;
+  background:linear-gradient(to bottom, rgba(25,27,34,.94), var(--surface-primary) 14%);
+  backdrop-filter:blur(10px);
+  border-top:1px solid var(--border-default);border-radius:var(--r-lg) var(--r-lg) 0 0;
+  box-shadow:0 -18px 50px -18px rgba(0,0,0,.75);
+  transform:translateY(100%);transition:transform 520ms var(--ease-out),border-radius 300ms var(--ease-out);
+  will-change:transform}
+#sheet.peek{transform:translateY(calc(100% - 236px))}
+#sheet.full{transform:translateY(0);border-radius:0;background:var(--surface-primary)}
+/* a back-to-spiral bar, only in full */
+.sheet-back{display:none;align-items:center;gap:8px;flex:0 0 auto;
+  padding:14px var(--sp-5) 4px;font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--text-secondary);cursor:pointer}
+.sheet-back:hover{color:var(--text-primary)}
+.sheet-back svg{width:14px;height:14px}
+#sheet.full .sheet-back{display:flex}
+#sheet.full #grip{display:none}
+#grip{flex:0 0 auto;padding:10px 0 6px;display:grid;place-items:center;cursor:pointer;
+  touch-action:none}
+#grip .bar{width:44px;height:3px;border-radius:3px;background:var(--purple-muted)}
+.sheet-head{padding:6px var(--sp-5) var(--sp-4);flex:0 0 auto}
+.sheet-row{display:flex;align-items:flex-end;gap:var(--sp-4)}
+.s-date{font-family:var(--font-display);font-size:var(--fs-2xl);line-height:1;font-weight:500}
+.s-dow{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--text-muted);display:block;margin-bottom:7px}
+.s-rel{margin-left:auto;font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--text-muted);text-align:right;padding-bottom:3px}
+.flowstrip{margin-top:var(--sp-4);padding:var(--sp-3);border-radius:var(--r-md);
+  background:var(--surface-sunken);border:1px solid var(--border-subtle);
+  display:flex;align-items:center;gap:var(--sp-3)}
+.flow-title{font-size:var(--fs-sm)}
+.flow-sub{font-size:var(--fs-xs);color:var(--text-muted);font-family:var(--font-mono)}
+.flow-mark{margin-left:auto;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--k-flow);
+  border:1px solid var(--k-flow);border-radius:999px;padding:3px 8px;white-space:nowrap}
+
+/* In Flow almanac — only in full mode; peek stays short */
+.inflow{max-height:0;opacity:0;overflow:hidden;
+  transition:max-height var(--dur-slow) var(--ease-out),opacity var(--dur-med),margin var(--dur-slow)}
+#sheet.full .inflow{max-height:320px;opacity:1;margin-top:var(--sp-4)}
+.if-title{font-family:var(--font-mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--k-flow);margin-bottom:12px}
+.if-grid{display:flex;flex-direction:column;gap:14px}
+.if-row{display:flex;gap:var(--sp-3);align-items:flex-start}
+.if-ico{flex:0 0 30px;width:30px;height:30px;display:grid;place-items:center;
+  border-radius:50%;border:1px solid var(--border-subtle);background:var(--surface-sunken);font-size:15px}
+.if-moon{padding:3px}
+.if-sun{color:var(--vis-everyone);border-color:color-mix(in srgb,var(--vis-everyone) 40%,transparent)}
+.if-sign{color:var(--k-flow);font-size:16px}
+.if-head{font-size:var(--fs-sm);color:var(--text-primary);line-height:1.4}
+.if-sub{font-size:var(--fs-xs);color:var(--text-muted);font-family:var(--font-mono);
+  margin-top:3px;line-height:1.6}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-top:var(--sp-4)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:10px;
+  border:1px solid var(--border-subtle);color:var(--text-muted);transition:all var(--dur-fast)}
+.chip .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip[aria-pressed=true]{border-color:var(--border-strong);color:var(--c);background:rgba(114,65,255,.10)}
+.newbtn{margin-left:auto;height:30px;padding:0 12px;border-radius:999px;background:var(--accent);
+  color:#fff;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.newbtn:hover{background:var(--purple-bright)}
+.sheet-list{flex:1 1 auto;overflow-y:auto;padding:0 var(--sp-5) var(--sp-5);
+  display:flex;flex-direction:column;gap:var(--sp-3);min-height:0}
+.sheet-empty{color:var(--text-muted);font-size:var(--fs-sm);padding:var(--sp-5);text-align:center;
+  border:1px dashed var(--border-subtle);border-radius:var(--r-md);line-height:1.7}
+.sheet-empty b{display:block;color:var(--text-secondary);font-weight:500;margin-bottom:4px}
+
+/* ═══ event kard ═══ */
+.kard{position:relative;border-radius:var(--r-md);background:var(--surface-elevated);
+  border:1px solid var(--border-subtle);padding:var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4);
+  box-shadow:var(--elev-card);cursor:pointer;overflow:hidden;
+  transition:border-color var(--dur-fast),transform var(--dur-fast) var(--ease-out)}
+.kard:hover{border-color:var(--border-default);transform:translateY(-1px)}
+.kard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--k)}
+.kard-top{display:flex;align-items:center;gap:var(--sp-2);margin-bottom:6px}
+.k-time{font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--text-secondary)}
+.k-src{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--k);border:1px solid var(--k);
+  border-radius:var(--r-xs);padding:2px 5px}
+.k-live{background:var(--info-blue);color:#fff;border-color:var(--info-blue);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.5}}
+.k-vis{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--text-muted)}
+.k-vis i{width:8px;height:8px;border-radius:50%;background:var(--v);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--v) 22%,transparent)}
+.k-title{font-family:var(--font-display);font-size:var(--fs-lg);line-height:1.2;margin:0 0 5px;font-weight:500}
+.k-meta{font-size:var(--fs-xs);color:var(--text-muted);display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center}
+.k-tag{display:inline-flex;align-items:center;gap:5px;padding:2px 7px;border-radius:999px;
+  background:rgba(114,65,255,.12);border:1px solid var(--border-subtle);color:var(--text-secondary);font-size:10px}
+.ticket{color:var(--k-exchange);border:1px dashed var(--k-exchange);border-radius:var(--r-xs);
+  padding:2px 6px;font-size:10px}
+.k-foot{display:flex;align-items:center;gap:var(--sp-3);margin-top:var(--sp-3)}
+.stack{display:flex}
+.stack img,.stack .more{width:24px;height:24px;border-radius:34%;border:2px solid var(--surface-elevated);
+  margin-left:-7px;object-fit:cover;background:var(--purple-deep)}
+.stack :first-child{margin-left:0}
+.stack .more{display:grid;place-items:center;font-size:9px;color:var(--text-secondary);font-family:var(--font-mono)}
+.count{font-size:var(--fs-xs);color:var(--text-muted)}
+.rsvp{margin-left:auto;display:flex;gap:4px}
+.rsvp button{padding:4px 9px;border-radius:var(--r-sm);font-size:10px;border:1px solid var(--border-subtle);
+  color:var(--text-secondary)}
+.rsvp button[aria-pressed=true]{background:var(--success-green);border-color:var(--success-green);color:#fff}
+.rsvp button.maybe[aria-pressed=true]{background:var(--purple-muted);border-color:var(--purple-muted)}
+
+/* ═══ drawer ═══ */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);opacity:0;
+  pointer-events:none;transition:opacity var(--dur-med);z-index:1999}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);z-index:2000;
+  background:var(--surface-primary);border-left:1px solid var(--border-default);
+  transform:translateX(100%);transition:transform var(--dur-slow) var(--ease-out);
+  display:flex;flex-direction:column}
+.drawer.on{transform:none}
+.d-hero{position:relative;height:130px;flex:0 0 130px}
+.d-hero .close{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;
+  background:rgba(0,0,0,.45);display:grid;place-items:center}
+.d-hero .b{position:absolute;left:24px;bottom:16px;font-size:9px;letter-spacing:.12em;
+  text-transform:uppercase;border:1px solid #fff;border-radius:var(--r-xs);padding:3px 7px}
+.d-body{flex:1;overflow-y:auto;padding:var(--sp-5)}
+.d-title{font-family:var(--font-display);font-size:var(--fs-xl);margin-bottom:6px;font-weight:500}
+.d-when{font-family:var(--font-mono);font-size:var(--fs-sm);color:var(--text-secondary);margin-bottom:var(--sp-4)}
+.tabs{display:flex;gap:var(--sp-4);border-bottom:1px solid var(--border-subtle);margin-bottom:var(--sp-4)}
+.tab{padding:8px 0;font-size:var(--fs-sm);color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab[aria-selected=true]{color:var(--text-primary);border-bottom-color:var(--purple-bright)}
+.pane{display:none}.pane.on{display:block}
+.d-desc{color:var(--text-secondary);font-size:var(--fs-sm);line-height:1.7}
+.d-rows{margin-top:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-2)}
+.d-row{display:flex;gap:var(--sp-3);padding:var(--sp-3);border-radius:var(--r-sm);
+  background:var(--surface-sunken);font-size:var(--fs-sm)}
+.d-row .lab{color:var(--text-muted);width:92px;flex:0 0 92px;font-size:10px;text-transform:uppercase;
+  letter-spacing:.1em;padding-top:2px;font-family:var(--font-mono)}
+.cmt{display:flex;gap:var(--sp-3);margin-bottom:var(--sp-3)}
+.cmt img{width:32px;height:32px;border-radius:34%;flex:0 0 32px}
+.who{font-size:var(--fs-sm);font-weight:500}
+.who span{color:var(--text-muted);font-weight:400;font-size:var(--fs-xs);margin-left:6px;font-family:var(--font-mono)}
+.txt{font-size:var(--fs-sm);color:var(--text-secondary);margin-top:2px}
+.composer{margin-top:var(--sp-4);display:flex;gap:var(--sp-2)}
+.composer input{flex:1;height:var(--control-h);background:var(--surface-sunken);
+  border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:0 var(--sp-3);
+  color:var(--text-primary);font:inherit;font-size:var(--fs-sm)}
+.att{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0;border-bottom:1px solid var(--border-subtle)}
+.att img{width:36px;height:36px;border-radius:34%}
+.att .via{margin-left:auto;font-size:10px;color:var(--text-muted);font-family:var(--font-mono)}
+.d-foot{padding:var(--sp-4) var(--sp-5);border-top:1px solid var(--border-subtle);display:flex;gap:var(--sp-2)}
+.btn{height:var(--control-h);padding:0 var(--sp-4);border-radius:var(--r-md);background:var(--accent);
+  color:#fff;font-weight:600;font-size:var(--fs-sm);display:inline-flex;align-items:center;justify-content:center}
+.btn:hover{background:var(--purple-bright)}
+.ghost{padding:0 14px;height:38px;border-radius:var(--r-md);border:1px solid var(--border-subtle);
+  color:var(--text-secondary);font-size:var(--fs-sm)}
+
+@media (max-width:640px){
+  .corner{left:14px;top:14px;width:132px}
+  #tcNum{font-size:26px}
+  #depth{right:14px;top:14px}
+  #hint{display:none}
+  #sheet.peek{transform:translateY(calc(100% - 250px))}
+}
+@media (prefers-reduced-motion:reduce){
+  #sheet{transition:none}
+}
+</style>
+</head>
+<body>
+
+<div id="stage" tabindex="0" role="application" aria-label="Spiral calendar. Scroll to travel through time, click a day to spin to it.">
+  <svg id="stars" aria-hidden="true"></svg>
+  <svg id="thread" width="2600" height="2600" viewBox="0 0 2600 2600" aria-hidden="true"></svg>
+  <div id="field"></div>
+  <div id="headline"></div>
+  <div id="headring"></div>
+  <div class="vignette"></div>
+</div>
+
+<div class="corner">
+  <button id="todayCard" aria-label="Jump to today">
+    <div class="tc-top"><span class="tc-kicker">Chooseday</span><span id="tcMoon" class="tc-moon"></span></div>
+    <div class="tc-num" id="tcNum">—</div>
+    <div class="tc-sub" id="tcSub">—</div>
+    <div class="tc-foot" id="tcFoot">—</div>
+    <span class="tc-return" id="tcReturn">↺ back to now</span>
+  </button>
+</div>
+
+<div class="hud" id="depth"><b id="depthLabel">today</b><br><span id="depthSub">at the head</span></div>
+<div class="hud" id="hint">scroll to wind · click a day to spin to it</div>
+
+<!-- the sheet rises when you settle -->
+<section id="sheet" aria-label="Selected day">
+  <button class="sheet-back" id="sheetBack" aria-label="Back to spiral">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    Spiral
+  </button>
+  <div id="grip"><div class="bar"></div></div>
+  <div class="sheet-head">
+    <div class="sheet-row">
+      <div><span class="s-dow" id="sDow">—</span><span class="s-date" id="sDate">—</span></div>
+      <div class="s-rel" id="sRel"></div>
+    </div>
+    <div class="flowstrip">
+      <span id="sMoon"></span>
+      <div>
+        <div class="flow-title" id="sMoonName">—</div>
+        <div class="flow-sub" id="sMoonSub">—</div>
+      </div>
+      <div class="flow-mark" id="sMark" hidden></div>
+    </div>
+    <div class="inflow" id="inflow">
+      <div class="if-title">In Flow · the sky on this day</div>
+      <div class="if-grid">
+        <div class="if-row">
+          <span class="if-ico if-moon" id="ifMoonIco"></span>
+          <div><div class="if-head" id="ifMoonHead">—</div><div class="if-sub" id="ifMoonSub">—</div></div>
+        </div>
+        <div class="if-row">
+          <span class="if-ico if-sun">☉</span>
+          <div><div class="if-head" id="ifSunHead">—</div><div class="if-sub" id="ifSunSub">—</div></div>
+        </div>
+        <div class="if-row">
+          <span class="if-ico if-sign" id="ifSignIco">—</span>
+          <div><div class="if-head" id="ifSignHead">—</div><div class="if-sub" id="ifSignSub">—</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="filters">
+      <button class="chip" aria-pressed="true" data-f="kalendar" style="--c:var(--k-gather)"><i class="dot"></i>Events</button>
+      <button class="chip" aria-pressed="true" data-f="market"   style="--c:var(--k-exchange)"><i class="dot"></i>Ticketed</button>
+      <button class="chip" aria-pressed="true" data-f="huddle"   style="--c:var(--info-blue)"><i class="dot"></i>Huddles</button>
+      <button class="chip" aria-pressed="true" data-f="group"    style="--c:var(--k-govern)"><i class="dot"></i>Groups</button>
+      <button class="chip" aria-pressed="true" data-f="self"     style="--c:var(--k-self)"><i class="dot"></i>Orbits</button>
+      <button class="chip" aria-pressed="true" data-f="flow"     style="--c:var(--k-flow)"><i class="dot"></i>In&nbsp;Flow</button>
+      <button class="newbtn">＋ New</button>
+    </div>
+  </div>
+  <div class="sheet-list" id="sList"></div>
+</section>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="d-hero" id="dHero"><button class="close" id="dClose" aria-label="Close">✕</button><span class="b" id="dSrc">EVENT</span></div>
+  <div class="d-body">
+    <h2 class="d-title" id="dTitle"></h2>
+    <div class="d-when" id="dWhen"></div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-p="about">About</button>
+      <button class="tab" role="tab" aria-selected="false" data-p="talk">Discussion <span class="count" id="dTalkN"></span></button>
+      <button class="tab" role="tab" aria-selected="false" data-p="who">Who's coming</button>
+      <button class="tab" role="tab" aria-selected="false" data-p="ripples">Ripples</button>
+    </div>
+    <div class="pane on" id="p-about"><p class="d-desc" id="dDesc"></p><div class="d-rows" id="dRows"></div></div>
+    <div class="pane" id="p-talk">
+      <div id="dThread"></div>
+      <div class="composer"><input placeholder="Say something to the people coming…" aria-label="Comment" /><button class="btn">Post</button></div>
+      <p style="color:var(--text-muted);font-size:var(--fs-xs);margin-top:12px">Comments are replies to the event's post. They travel exactly as far as the event's visibility allows.</p>
+    </div>
+    <div class="pane" id="p-who"><div id="dWho"></div></div>
+    <div class="pane" id="p-ripples">
+      <p class="d-desc">What the gathering leaves behind. Ripples appear once it ends.</p>
+      <div class="d-rows">
+        <div class="d-row"><span class="lab">Album</span><span style="color:var(--text-secondary)">Albutts album opens an hour in — anyone present can add to it.</span></div>
+        <div class="d-row"><span class="lab">Recording</span><span style="color:var(--text-secondary)">Booth release, if the host publishes one.</span></div>
+        <div class="d-row"><span class="lab">Minutes</span><span style="color:var(--text-secondary)">Kommons record, for governance gatherings.</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="d-foot">
+    <button class="btn" style="flex:1">I'm going</button>
+    <button class="ghost">Interested</button>
+    <button class="ghost">Share</button>
+  </div>
+</aside>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   ₭ALENDAR — spiral, eye-tunnel camera.  v3
+
+   CAMERA (Tomas): the future is born at the eye and travels
+   outward to the rim, where it arrives. You stand at the mouth.
+   The read head sits at TOP CENTRE. Wherever you stand in time,
+   you are looking forward from there — so the tunnel works in the
+   past exactly as it works in the future. Travel is unbounded
+   both ways; cells are POOLED and rebound as you move.
+
+   GEOMETRY: logarithmic, not Archimedean.
+       u        = day − head
+       f(u)     = exp(−K·STEP·u)
+       radius   = RIM  · f(u)
+       size     = CELL · f(u)
+       angle    = HEAD_ANGLE − STEP·u
+   Radius and size share f(u) ⇒ the figure is self-similar ⇒
+   travelling through time is a pure zoom + rotate.
+
+   MONTH WALLS: because radius is monotonic in depth, a circle
+   centred on the eye IS a single moment in time. So the 1st of
+   each month is drawn as a translucent plane — it swells out of
+   the eye and washes past you. Not decoration: a time-plane.
+
+   WINDING: default 14.765 d/turn = half a lunation, so new and
+   full moons alternate on one axis through the eye.
+   ══════════════════════════════════════════════════════════════ */
+
+const DAY = 86400000;
+const RIM = 285;
+const CELL = 84;
+const HEAD_ANGLE = -Math.PI / 2;   // read head at 12 o'clock
+const GROWTH_PER_TURN = 2.6;
+const AHEAD = 132;                 // pooled cells drawn ahead of the head
+const BEHIND = 8;                  // pooled cells still looming past the rim
+const WALLS = 8;                   // pooled month planes
+
+const state = {
+  turnDays: 14.765,
+  travel: 0, target: 0,
+  spin: null,                       // {from, to, t0, dur} — click-to-spin tween
+  hemisphere: 'south',
+  filters: new Set(['kalendar','market','huddle','group','self','flow']),
+  lastInput: 0,
+  sheet: 'hidden',                  // hidden | peek | full
+  userClosed: false,
+};
+
+const today = new Date(); today.setHours(0,0,0,0);
+const dayFrom = n => new Date(today.getTime() + n*DAY);
+const STEP = () => (2*Math.PI) / state.turnDays;
+const K    = () => Math.log(GROWTH_PER_TURN) / (2*Math.PI);
+const KS   = () => K() * STEP();
+
+/* ── In Flow ─────────────────────────────────────────────── */
+const SYN = 29.530588853;
+const NEW_MOON = Date.UTC(2026,0,18,19,52);
+const moonAge = d => { let a = ((d - NEW_MOON)/DAY) % SYN; return a<0?a+SYN:a; };
+const phase = d => moonAge(d)/SYN;
+const illum = d => (1 - Math.cos(2*Math.PI*phase(d)))/2;
+const moonName = d => ['New moon','Waxing crescent','First quarter','Waxing gibbous',
+  'Full moon','Waning gibbous','Last quarter','Waning crescent'][Math.round(phase(d)*8)%8];
+const principal = d => { const p = phase(d)*4; return Math.abs(p-Math.round(p)) < 4*(0.55/SYN); };
+
+const SKY = [
+  {m:3,d:20, north:'Spring equinox',  south:'Autumn equinox',  kind:'station'},
+  {m:6,d:21, north:'Summer solstice', south:'Winter solstice', kind:'station'},
+  {m:9,d:22, north:'Autumn equinox',  south:'Spring equinox',  kind:'station'},
+  {m:12,d:21,north:'Winter solstice', south:'Summer solstice', kind:'station'},
+  {m:2,d:1,  north:'Imbolc',     south:'Lughnasadh', kind:'cross'},
+  {m:5,d:1,  north:'Beltane',    south:'Samhain',    kind:'cross'},
+  {m:8,d:1,  north:'Lughnasadh', south:'Imbolc',     kind:'cross'},
+  {m:11,d:1, north:'Samhain',    south:'Beltane',    kind:'cross'},
+];
+const skyMark = dt => {
+  const h = SKY.find(s => s.m===dt.getMonth()+1 && s.d===dt.getDate());
+  return h ? {name:h[state.hemisphere], kind:h.kind} : null;
+};
+function season(dt){
+  const m = dt.getMonth();
+  const n = (m<2||m===11)?'winter':m<5?'spring':m<8?'summer':'autumn';
+  return state.hemisphere==='north' ? n
+    : {winter:'summer',spring:'autumn',summer:'winter',autumn:'spring'}[n];
+}
+const TINT = {spring:'#7fc98a',summer:'#e0a35c',autumn:'#c07fd8',winter:'#6e8fd6'};
+
+/* ── almanac maths (deterministic; the real build reads In Flow) ── */
+const dayDiff = (a,b) => Math.round((a - b) / DAY);
+/* days forward from `date` to the next time the moon reaches `frac` (0 new, .5 full) */
+function daysToPhase(date, frac){
+  let d = ((frac - phase(date)) % 1 + 1) % 1;
+  return d * SYN;
+}
+/* nearest solar stations & cross-quarters around a date, hemisphere-aware */
+function stationsAround(date){
+  const y = date.getFullYear();
+  const all = [];
+  for(const yy of [y-1, y, y+1]) for(const s of SKY)
+    all.push({ date: new Date(yy, s.m-1, s.d), name: s[state.hemisphere], kind: s.kind });
+  all.sort((a,b) => a.date - b.date);
+  const t = new Date(date); t.setHours(0,0,0,0);
+  const tm = t.getTime();
+  const st = all.filter(s => s.kind === 'station');
+  const cq = all.filter(s => s.kind === 'cross');
+  return {
+    today:   all.find(s => s.date.getTime() === tm) || null,
+    nextSt:  st.find(s => s.date.getTime() > tm) || null,
+    prevSt:  [...st].reverse().find(s => s.date.getTime() < tm) || null,
+    nextCq:  cq.find(s => s.date.getTime() > tm) || null,
+  };
+}
+const SIGNS = [
+  {s:'Capricorn', g:'♑', end:[1,19]},  {s:'Aquarius', g:'♒', end:[2,18]},
+  {s:'Pisces', g:'♓', end:[3,20]},     {s:'Aries', g:'♈', end:[4,19]},
+  {s:'Taurus', g:'♉', end:[5,20]},     {s:'Gemini', g:'♊', end:[6,20]},
+  {s:'Cancer', g:'♋', end:[7,22]},     {s:'Leo', g:'♌', end:[8,22]},
+  {s:'Virgo', g:'♍', end:[9,22]},      {s:'Libra', g:'♎', end:[10,22]},
+  {s:'Scorpio', g:'♏', end:[11,21]},   {s:'Sagittarius', g:'♐', end:[12,21]},
+  {s:'Capricorn', g:'♑', end:[12,31]},
+];
+function sunSign(date){
+  const m = date.getMonth()+1, d = date.getDate();
+  return SIGNS.find(e => m < e.end[0] || (m === e.end[0] && d <= e.end[1])) || SIGNS[0];
+}
+function nextIngress(date){
+  const cur = sunSign(date).s;
+  for(let i=1;i<=33;i++){
+    const d2 = new Date(date.getTime() + i*DAY);
+    const s2 = sunSign(d2);
+    if(s2.s !== cur) return { sign:s2, date:d2, days:i };
+  }
+  return null;
+}
+const fmtDate = d => d.toLocaleDateString('en',{weekday:'short',day:'numeric',month:'short'});
+const plural = (n,w) => `${n} ${w}${n===1?'':'s'}`;
+
+function moonSVG(size, p, cls=''){
+  const r = size/2 - size*0.06, c = size/2;
+  const k = Math.cos(2*Math.PI*p), rx = Math.abs(k)*r, lit = p < .5;
+  const so = lit?1:0, si = (k>0)===lit?0:1;
+  return `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
+    <circle cx="${c}" cy="${c}" r="${r}" fill="var(--surface-sunken)" stroke="var(--k-flow)"
+      stroke-width="${Math.max(.6,size*.05)}" opacity=".8"/>
+    <path d="M ${c} ${c-r} A ${r} ${r} 0 0 ${so} ${c} ${c+r} A ${rx} ${r} 0 0 ${si} ${c} ${c-r} Z"
+      fill="var(--k-flow)" opacity=".92"/></svg>`;
+}
+const stationGlyph = kind => `<div class="stationglyph">${
+  kind==='station'
+    ? '<svg viewBox="0 0 24 24"><path d="M12 2 L22 12 L12 22 L2 12 Z" fill="var(--k-flow)"/></svg>'
+    : '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="var(--k-flow)" stroke-width="2"/><circle cx="12" cy="12" r="2.5" fill="var(--k-flow)"/></svg>'
+}</div>`;
+
+/* ── events (past and future) ────────────────────────────── */
+const AV = n => `https://api.dicebear.com/7.x/shapes/svg?seed=k${n}`;
+const EVENTS = [
+  {id:1, d:0,  t:'19:30', title:'Kronk Huddle — open floor', src:'huddle', live:true, host:'tal', place:'Huddle room', vis:'kronk', going:7, talk:12, desc:'Weekly open call. No agenda beyond what people bring. Camera optional, presence appreciated.'},
+  {id:2, d:1,  t:'18:00', title:'Fermentation workshop', src:'market', ticket:'A$35 · 6 left', host:'mira', place:'The Green Room, West End', vis:'everyone', going:14, talk:8, desc:'Three hours with crocks and cabbage. The ticket covers the jar you take home. Bring a tea towel.'},
+  {id:3, d:2,  t:'11:00', title:'Kommons — treasury proposal', src:'group', group:'Stewards', host:'ren', place:'Kommons + Huddle', vis:'vouched', going:9, talk:31, desc:'Consent round on the Q3 allocation. Read the proposal first. Blocks need a written statement.'},
+  {id:4, d:3,  t:'—', title:"Ada's orbit", src:'self', orbit:true, host:'ada', place:'—', vis:'connections', going:0, talk:4, desc:'A birthday, held quietly. Ada shared the day through Anthemos; Kronk never saw the year.'},
+  {id:5, d:5,  t:'20:00', title:'Booth: Deep Field, live set', src:'kalendar', host:'juno', place:'The Booth', vis:'kronk', going:31, talk:6, desc:'Two hours of ambient techno, recorded live. The set lands in The Booth afterwards as a Release.'},
+  {id:6, d:8,  t:'07:00', title:'Full moon swim', src:'kalendar', flow:true, host:'sami', place:'Kings Beach', vis:'everyone', going:11, talk:5, desc:'We go in at first light the morning after the full moon. Cold, brief, worth it.'},
+  {id:7, d:11, t:'13:00', title:'Repair café', src:'group', group:'Makers', host:'ben', place:'Toolshed', vis:'kronk', going:6, talk:2, desc:'Bring the thing that broke. We have solder, thread, and stubbornness.'},
+  {id:8, d:14, t:'09:00', title:'Syntocracy reading circle', src:'group', group:'Stewards', host:'tal', place:'Huddle room', vis:'vouched', going:5, talk:17, desc:'Chapter four. Come having read it, or come honest about not having.'},
+  {id:9, d:19, t:'17:30', title:'Solstice fire', src:'kalendar', flow:true, host:'mira', place:'The paddock', vis:'kronk', going:24, talk:9, desc:'Longest night. Lit at dusk, kept going. Bring wood, and something to burn on purpose.'},
+  {id:10,d:22, t:'10:00', title:'Market day', src:'market', ticket:'Free · stall A$10', host:'ren', place:'Commons yard', vis:'everyone', going:41, talk:14, desc:'Stalls open at ten. If you want a table, buy a stall slot — that is your ticket and your spot.'},
+  {id:11,d:27, t:'19:00', title:'New moon circle', src:'kalendar', flow:true, host:'ada', place:'Studio', vis:'connections', going:8, talk:3, desc:'Dark sky, quiet room. We each name one thing, then we do not speak of it for a month.'},
+  {id:12,d:34, t:'18:30', title:'Kronk assembly', src:'group', group:'All members', host:'tal', place:'Huddle room', vis:'kronk', going:17, talk:22, desc:'The monthly whole-instance gathering. Governance, gripes, and what got built.'},
+  {id:13,d:41, t:'12:00', title:'Long table lunch', src:'market', ticket:'A$25', host:'juno', place:'Riverside', vis:'everyone', going:19, talk:7, desc:'One table, thirty chairs, four hours. Tickets cover the food; the wine is a shared problem.'},
+  {id:14,d:56, t:'19:00', title:'Equinox listening', src:'kalendar', flow:true, host:'sami', place:'The Booth', vis:'kronk', going:12, talk:1, desc:'A krate, front to back, on the night the light turns.'},
+  {id:15,d:-2, t:'19:00', title:'Booth: krate listening', src:'kalendar', past:true, host:'sami', place:'The Booth', vis:'kronk', going:12, talk:11, desc:'We listened front to back and said almost nothing. The recording is up.'},
+  {id:16,d:-5, t:'10:00', title:'Kompass walk', src:'group', group:'Makers', past:true, host:'ben', place:'Mt Coot-tha', vis:'connections', going:9, talk:6, desc:'Slow walk, no phones out except to drop a pin.'},
+  {id:17,d:-9, t:'18:00', title:'Repair café', src:'group', group:'Makers', past:true, host:'ben', place:'Toolshed', vis:'kronk', going:8, talk:3, desc:'Two lamps, a toaster, and a jacket zip. All three lamps live.'},
+  {id:18,d:-16,t:'19:30', title:'Kronk assembly', src:'group', group:'All members', past:true, host:'tal', place:'Huddle room', vis:'kronk', going:19, talk:41, desc:'Where the shell redesign got consent. Minutes are in Kommons.'},
+  {id:19,d:-23,t:'08:00', title:'New moon walk', src:'kalendar', flow:true, past:true, host:'ada', place:'Kangaroo Point', vis:'everyone', going:6, talk:2, desc:'Dark morning, no torches. We were all a bit lost, briefly.'},
+  {id:20,d:-31,t:'12:00', title:'Market day', src:'market', past:true, ticket:'Closed', host:'ren', place:'Commons yard', vis:'everyone', going:38, talk:9, desc:'The first one. Eleven stalls, one blown fuse, a good day.'},
+  {id:21,d:-44,t:'20:00', title:'Booth: Deep Field', src:'kalendar', past:true, host:'juno', place:'The Booth', vis:'kronk', going:22, talk:5, desc:'The set that became the first Release in The Booth.'},
+];
+const SRC = {
+  kalendar:{label:'Event',   c:'var(--k-gather)'},
+  market:  {label:'Ticketed',c:'var(--k-exchange)'},
+  huddle:  {label:'Live',    c:'var(--info-blue)'},
+  group:   {label:'Group',   c:'var(--k-govern)'},
+  self:    {label:'Orbit',   c:'var(--k-self)'},
+};
+const VIS = {
+  everyone:{label:'Everyone',c:'var(--vis-everyone)'}, kronk:{label:'Kronk',c:'var(--vis-kronk)'},
+  connections:{label:'Connections',c:'var(--vis-connections)'}, vouched:{label:'Vouched',c:'var(--vis-vouched)'},
+  'only-me':{label:'Only me',c:'var(--vis-only-me)'},
+};
+const eventsOn = n => EVENTS.filter(e => e.d===n && state.filters.has(e.src));
+
+/* ── pooled cells (unbounded travel, fixed DOM) ──────────── */
+const field = document.getElementById('field');
+const thread = document.getElementById('thread');
+const headring = document.getElementById('headring');
+const headline = document.getElementById('headline');
+const cells = [], walls = [];
+let base = 0;   // integer day the pool is currently anchored to
+
+for(let o = -BEHIND; o <= AHEAD; o++){
+  const el = document.createElement('div');
+  el.className = 'day';
+  el.innerHTML =
+    `<div class="seasontint"></div><div class="glyphslot"></div>` +
+    `<div class="num"></div><div class="mon"></div>` +
+    `<div class="daylabel"></div><div class="dots"></div>`;
+  el.addEventListener('click', () => spinTo(cellOf(el).n, true));
+  field.appendChild(el);
+  cells.push({el, offset:o, n:null, dt:null, mark:null, principal:false, shown:true,
+    num:el.querySelector('.num'), mon:el.querySelector('.mon'),
+    lab:el.querySelector('.daylabel'), tint:el.querySelector('.seasontint'),
+    dots:el.querySelector('.dots'), glyph:el.querySelector('.glyphslot')});
+}
+const cellOf = el => cells.find(c => c.el === el);
+
+/* One SVG holds every month arc, centred on the eye with a fixed
+   viewport (like #thread). Arc coordinates are eye-relative, offset
+   by WC. Keeping them in one SVG avoids WALLS separate clipping boxes. */
+const SVGNS = 'http://www.w3.org/2000/svg';
+const WC = 1300;  // eye centre inside the wall viewport
+const wallSVG = document.createElementNS(SVGNS,'svg');
+wallSVG.setAttribute('width','2600'); wallSVG.setAttribute('height','2600');
+wallSVG.setAttribute('viewBox','0 0 2600 2600');
+wallSVG.setAttribute('class','wall');
+wallSVG.style.position='absolute'; wallSVG.style.left='50%'; wallSVG.style.top='44%';
+wallSVG.style.transform='translate(-50%,-50%)'; wallSVG.style.pointerEvents='none';
+wallSVG.style.overflow='visible';
+field.appendChild(wallSVG);
+for(let i=0;i<WALLS;i++){
+  const arc = document.createElementNS(SVGNS,'path');
+  arc.setAttribute('fill','none');
+  arc.setAttribute('stroke','var(--k-flow)');
+  arc.setAttribute('stroke-linecap','round');
+  wallSVG.appendChild(arc);
+  const name = document.createElement('div');
+  name.className = 'wall-name';
+  field.appendChild(name);
+  walls.push({arc, name});
+}
+
+function bindCell(c, n){
+  if(c.n === n) return;
+  c.n = n;
+  const dt = dayFrom(n);
+  c.dt = dt;
+  c.mark = skyMark(dt);
+  c.principal = principal(dt);
+  c.num.textContent = dt.getDate();
+  c.mon.textContent = dt.toLocaleString('en',{month:'short'});
+  c.tint.style.background = TINT[season(dt)];
+  c.el.classList.toggle('edge', dt.getDate()===1);
+  c.el.classList.toggle('today', n===0);
+  c.el.classList.toggle('gone', n<0);
+  c.el.classList.toggle('station', !!c.mark);
+  c.lab.textContent = c.mark ? c.mark.name : '';
+  c.glyph.innerHTML = (c.mark ? stationGlyph(c.mark.kind) : '') +
+    (state.filters.has('flow')
+      ? moonSVG(24, phase(dt), 'moonpip').replace('<svg','<svg style="opacity:'+(c.principal?1:.35)+'"')
+      : '');
+  const evs = eventsOn(n);
+  c.dots.innerHTML = evs.slice(0,4).map(e => `<i style="--d:${SRC[e.src].c}"></i>`).join('');
+}
+function rebind(force){
+  const b = Math.round(state.travel);
+  if(b === base && !force) return;
+  base = b;
+  cells.forEach(c => { if(force) c.n = null; bindCell(c, base + c.offset); });
+}
+
+/* ── the loop ────────────────────────────────────────────── */
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+let lastHead = null, sheetTimer = null;
+
+function layout(now){
+  /* travel: spin tween wins, otherwise ease toward target */
+  if(state.spin){
+    const p = Math.min(1, (now - state.spin.t0) / state.spin.dur);
+    state.travel = state.spin.from + (state.spin.to - state.spin.from) * easeOut(p);
+    if(p >= 1){ state.travel = state.spin.to; state.target = state.spin.to; state.spin = null; }
+  } else {
+    state.travel += (state.target - state.travel) * 0.10;
+    if(Math.abs(state.target - state.travel) < 0.001) state.travel = state.target;
+  }
+  rebind();
+
+  const ks = KS(), step = STEP(), t = state.travel;
+  const maxR = Math.hypot(innerWidth, innerHeight) * 0.62;
+
+  /* ── day cells ── */
+  cells.forEach(c => {
+    const u = c.n - t;
+    const f = Math.exp(-ks * u);
+    const r = RIM * f;
+    const size = CELL * f;
+
+    if(size > CELL*4.6 || size < 1.1){
+      if(c.shown){ c.el.style.opacity = 0; c.el.style.pointerEvents = 'none'; c.shown = false; }
+      return;
+    }
+    c.shown = true;
+
+    const a = HEAD_ANGLE - step * u;
+    const x = Math.cos(a) * r, y = Math.sin(a) * r;
+
+    let op = 1;
+    if(size > CELL*1.75) op = Math.max(0, (CELL*4.6 - size) / (CELL*2.85));
+    if(size < 9) op = Math.max(0, (size - 1.1) / 7.9);
+
+    const tiny = size < 16 && !c.mark && !c.principal && c.dt.getDate() !== 1;
+    const shown = tiny ? Math.max(1.8, size*0.24) : size;
+
+    const s = c.el.style;
+    s.width = shown+'px'; s.height = shown+'px';
+    s.fontSize = (size*0.40)+'px';
+    s.opacity = op;
+    s.pointerEvents = size > 13 ? 'auto' : 'none';
+    s.zIndex = 4000 - Math.round(u*6);
+    s.transform = `translate(-50%,-50%) translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`;
+    s.borderRadius = size < 18 ? '50%' : '';
+    s.borderWidth = tiny ? '0' : '1px';
+    s.background = tiny ? 'rgba(156,156,201,.22)' : '';
+
+    c.num.style.display = size > 26 ? '' : 'none';
+    c.mon.style.display = (size > 54 || (size > 26 && c.dt.getDate()===1)) ? '' : 'none';
+    c.lab.style.display = size > 34 ? '' : 'none';
+    c.dots.style.display = size > 20 ? '' : 'none';
+    c.glyph.style.display = (size > 30 || c.principal || c.mark) ? '' : 'none';
+    c.tint.style.display = tiny ? 'none' : '';
+    c.el.classList.toggle('head', Math.abs(c.n - Math.round(t)) < .5);
+  });
+
+  /* ── month boundaries: a circle centred on the eye is one moment in
+        time, and it shares the day cells' radius exactly — so the arc
+        passes precisely through the 1st (the .edge cell). We draw only
+        the crown: it brightens as it nears the head, holds full as it
+        reaches the 1st, then rides up and off the top as you cross into
+        the month — it leaves the screen, it doesn't fade in place. ── */
+  const firsts = cells.filter(c => c.dt && c.dt.getDate() === 1)
+                      .sort((a,b) => a.n - b.n).slice(0, WALLS);
+  walls.forEach((w, i) => {
+    const c = firsts[i];
+    if(!c){ w.arc.setAttribute('opacity',0); w.name.style.opacity = 0; return; }
+    const u = c.n - t;
+    const r = RIM * Math.exp(-ks * u);
+    if(r < 6 || r > maxR){ w.arc.setAttribute('opacity',0); w.name.style.opacity = 0; return; }
+
+    /* brightness rises with proximity to the head ring (r → RIM) and
+       holds at full once at/past it. Quadratic so distant boundaries
+       stay quiet and the approaching one clearly gains presence. */
+    const near = Math.min(1, r / RIM);            // 0 at eye → 1 at the head
+    let op = 0.05 + 0.34 * near * near;
+    if(r < 28)        op *= (r - 6) / 22;          // gentle birth at the eye
+    if(r > maxR*0.9)  op *= Math.max(0, (maxR - r) / (maxR*0.1));  // clip only at the true edge
+
+    /* arc spans ±SPAN around the head axis. Distant rings show a short
+       brow; the nearest sweeps wide, then narrows again as it climbs out. */
+    const SPAN = Math.PI * (r > 240 ? 0.30 : r > 120 ? 0.46 : 0.62);
+    const a0 = HEAD_ANGLE - SPAN, a1 = HEAD_ANGLE + SPAN;
+    const large = SPAN > Math.PI/2 ? 1 : 0;
+    const x0 = (WC + Math.cos(a0)*r).toFixed(1), y0 = (WC + Math.sin(a0)*r).toFixed(1);
+    const x1 = (WC + Math.cos(a1)*r).toFixed(1), y1 = (WC + Math.sin(a1)*r).toFixed(1);
+    w.arc.setAttribute('d', `M ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1}`);
+    w.arc.setAttribute('stroke-width', (0.9 + 1.1*near).toFixed(2));
+    /* dash tightens as it nears — reads more solid when close, more like
+       a scattering of light when far */
+    w.arc.setAttribute('stroke-dasharray', near > 0.7 ? '4 4' : near > 0.4 ? '3 5' : '2 7');
+    w.arc.setAttribute('opacity', op.toFixed(3));
+
+    /* name floats under the crown, brightening with the arc */
+    const ny = -r + Math.max(11, r*0.06);
+    w.name.textContent = c.dt.toLocaleString('en',{month:'long'});
+    w.name.style.fontSize = Math.max(8, Math.min(15, r*0.055))+'px';
+    w.name.style.transform = `translate(-50%,-50%) translate(0px, ${ny.toFixed(1)}px)`;
+    w.name.style.opacity = (Math.min(0.85, op * 2.4) * (r > 40 ? 1 : 0)).toFixed(2);
+    w.name.style.zIndex = 4000;
+  });
+
+  drawThread(ks, step, maxR);
+
+  /* head marker sits at the top, on the rim */
+  const hs = CELL, hr = RIM;
+  headring.style.width = (hs+16)+'px';
+  headring.style.height = (hs+16)+'px';
+  headring.style.top = `calc(44% - ${hr}px)`;
+  headline.style.top = '0px';
+  headline.style.height = `calc(44% - ${hr + hs/2 + 14}px)`;
+
+  /* HUD */
+  const head = Math.round(t);
+  document.getElementById('depthLabel').textContent =
+    head === 0 ? 'today' : dayFrom(head).toLocaleDateString('en',{day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('depthSub').textContent =
+    head === 0 ? 'at the head' : (head > 0 ? `${head} days ahead` : `${-head} days back`);
+  todayCard.classList.toggle('away', head !== 0);
+
+  if(head !== lastHead){
+    lastHead = head;
+    renderSheet(head);
+    if(state.sheet !== 'full'){ setSheet('hidden'); }
+    scheduleSettle();
+  }
+  requestAnimationFrame(layout);
+}
+
+function drawThread(ks, step, maxR){
+  let p = '';
+  for(let u = -BEHIND; u <= AHEAD; u += 0.3){
+    const r = RIM * Math.exp(-ks*u);
+    if(r > maxR || r < 0.5) continue;
+    const a = HEAD_ANGLE - step*u;
+    p += (p?'L':'M') + (1300 + Math.cos(a)*r).toFixed(1) + ' ' + (1300 + Math.sin(a)*r).toFixed(1);
+  }
+  thread.innerHTML = `<path d="${p}" fill="none" stroke="var(--border-default)" stroke-width="1" opacity=".36"/>`;
+}
+
+/* ── the sheet rises when you settle ─────────────────────── */
+function setSheet(s){
+  state.sheet = s;
+  const el = document.getElementById('sheet');
+  el.classList.toggle('peek', s === 'peek');
+  el.classList.toggle('full', s === 'full');
+}
+function scheduleSettle(){
+  clearTimeout(sheetTimer);
+  sheetTimer = setTimeout(() => {
+    if(state.sheet === 'hidden' && !state.userClosed && !state.spin) setSheet('peek');
+  }, 620);
+}
+function markInput(){
+  state.lastInput = performance.now();
+  state.userClosed = false;
+  if(state.sheet === 'peek') setSheet('hidden');
+  scheduleSettle();
+}
+
+function renderSheet(n){
+  const dt = dayFrom(n);
+  document.getElementById('sDow').textContent = dt.toLocaleDateString('en',{weekday:'long'});
+  document.getElementById('sDate').textContent = dt.toLocaleDateString('en',{day:'numeric',month:'long'});
+  const rel = n===0?'today':n===1?'tomorrow':n===-1?'yesterday':n>0?`in ${n} days`:`${-n} days ago`;
+  document.getElementById('sRel').innerHTML = `${rel}<br>${season(dt)} · ${dt.getFullYear()}`;
+  document.getElementById('sMoon').innerHTML = moonSVG(34, phase(dt));
+  document.getElementById('sMoonName').textContent = moonName(dt);
+  document.getElementById('sMoonSub').textContent =
+    `${Math.round(illum(dt)*100)}% lit · day ${moonAge(dt).toFixed(1)} of ${SYN.toFixed(1)}`;
+  const mk = skyMark(dt), mkEl = document.getElementById('sMark');
+  if(mk){ mkEl.hidden = false; mkEl.textContent = mk.name; } else mkEl.hidden = true;
+
+  renderInFlow(dt);
+
+  const list = document.getElementById('sList');
+  const evs = eventsOn(n);
+  list.innerHTML = '';
+  if(!evs.length){
+    list.innerHTML = n < 0
+      ? `<div class="sheet-empty"><b>Nothing was held here.</b>An ordinary day. It still counted.</div>`
+      : `<div class="sheet-empty"><b>Nothing held here yet.</b>This day is open. Put something in it —<br>a gathering, a ritual, a repair.</div>`;
+    return;
+  }
+  evs.forEach(e => list.appendChild(kard(e)));
+}
+function renderInFlow(dt){
+  /* ── Moon ── */
+  document.getElementById('ifMoonIco').innerHTML = moonSVG(24, phase(dt));
+  const ill = Math.round(illum(dt)*100);
+  const waxing = phase(dt) < 0.5;
+  document.getElementById('ifMoonHead').textContent = `${moonName(dt)} · ${ill}% lit`;
+  const toFull = daysToPhase(dt, 0.5), toNew = daysToPhase(dt, 0);
+  const near = Math.min(toFull, toNew);
+  let moonSub;
+  if(near < 0.75){
+    moonSub = principal(dt) ? 'At its turn tonight.' : 'On the turn.';
+  } else if(waxing){
+    const dFull = dayFrom(dayDiff(dt, today) + Math.round(toFull));
+    moonSub = `Waxing — full moon in ${plural(Math.round(toFull),'day')}, ${fmtDate(dFull)}.`;
+  } else {
+    const dNew = dayFrom(dayDiff(dt, today) + Math.round(toNew));
+    moonSub = `Waning — new moon in ${plural(Math.round(toNew),'day')}, ${fmtDate(dNew)}.`;
+  }
+  document.getElementById('ifMoonSub').textContent = moonSub;
+
+  /* ── Sun & season ── */
+  const seas = season(dt);
+  const hemi = state.hemisphere === 'south' ? 'southern' : 'northern';
+  const st = stationsAround(dt);
+  document.getElementById('ifSunHead').textContent =
+    `${hemi.charAt(0).toUpperCase()+hemi.slice(1)} ${seas}`;
+  let sunSub;
+  if(st.today && st.today.kind === 'station'){
+    sunSub = `${st.today.name} — today. The year pivots here.`;
+  } else if(st.nextSt){
+    const dToNext = dayDiff(st.nextSt.date, dt);
+    const dSincePrev = st.prevSt ? dayDiff(dt, st.prevSt.date) : null;
+    sunSub = `${st.nextSt.name} in ${plural(dToNext,'day')}` +
+      (dSincePrev != null ? ` · ${st.prevSt.name} was ${plural(dSincePrev,'day')} back.` : '.');
+  } else sunSub = '';
+  document.getElementById('ifSunSub').textContent = sunSub;
+
+  /* ── Sun sign ── */
+  const sign = sunSign(dt), ing = nextIngress(dt);
+  document.getElementById('ifSignIco').textContent = sign.g;
+  document.getElementById('ifSignHead').textContent = `Sun in ${sign.s}`;
+  document.getElementById('ifSignSub').textContent = ing
+    ? `Enters ${ing.sign.s} ${ing.sign.g} in ${plural(ing.days,'day')}, ${fmtDate(ing.date)}.`
+    : '';
+}
+function stackHTML(e){
+  const k = Math.min(4, Math.max(1, e.going));
+  let h = '';
+  for(let i=0;i<k;i++) h += `<img src="${AV(e.id*3+i)}" alt="">`;
+  if(e.going > 4) h += `<span class="more">+${e.going-4}</span>`;
+  return h;
+}
+function kard(e){
+  const s = SRC[e.src], v = VIS[e.vis];
+  const n = document.createElement('article');
+  n.className = 'kard'; n.style.setProperty('--k', s.c); n.tabIndex = 0;
+  n.innerHTML = `
+    <div class="kard-top">
+      <span class="k-time">${e.orbit?'all day':e.t}</span>
+      <span class="k-src ${e.live?'k-live':''}">${e.live?'● Live now':s.label}</span>
+      <span class="k-vis" style="--v:${v.c}"><i></i>${v.label}</span>
+    </div>
+    <h3 class="k-title">${e.title}</h3>
+    <div class="k-meta">
+      ${e.place!=='—'?`<span>◈ ${e.place}</span>`:''}
+      <span>by @${e.host}</span>
+      ${e.group?`<span class="k-tag">⬡ ${e.group}</span>`:''}
+      ${e.ticket?`<span class="ticket">◆ ${e.ticket}</span>`:''}
+      ${e.flow?`<span class="k-tag" style="color:var(--k-flow)">☾ In&nbsp;Flow</span>`:''}
+    </div>
+    <div class="k-foot">
+      <div class="stack">${stackHTML(e)}</div>
+      <span class="count">${e.past ? `${e.going} came · ${e.talk} 💬` : e.orbit ? `${e.talk} notes` : `${e.going} going · ${e.talk} 💬`}</span>
+      ${e.past ? `<span class="k-tag" style="margin-left:auto;color:var(--k-flow)">◎ Ripples</span>`
+               : `<div class="rsvp"><button data-r="going">Going</button><button class="maybe" data-r="maybe">Maybe</button></div>`}
+    </div>`;
+  n.querySelectorAll('.rsvp button').forEach(b => b.addEventListener('click', ev => {
+    ev.stopPropagation();
+    const on = b.getAttribute('aria-pressed') === 'true';
+    n.querySelectorAll('.rsvp button').forEach(x => x.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed', on?'false':'true');
+  }));
+  n.addEventListener('click', () => openDrawer(e));
+  n.addEventListener('keydown', ev => { if(ev.key==='Enter') openDrawer(e); });
+  return n;
+}
+
+/* ── drawer ──────────────────────────────────────────────── */
+const drawer = document.getElementById('drawer'), scrim = document.getElementById('scrim');
+const NAMES = ['tal','mira','ren','ada','juno','sami','ben','iris'];
+function openDrawer(e){
+  const s = SRC[e.src], v = VIS[e.vis], dt = dayFrom(e.d);
+  document.getElementById('dHero').style.background = `linear-gradient(140deg,${s.c},var(--surface-sunken))`;
+  document.getElementById('dSrc').textContent = s.label;
+  document.getElementById('dTitle').textContent = e.title;
+  document.getElementById('dWhen').textContent =
+    dt.toLocaleDateString('en',{weekday:'long',day:'numeric',month:'long'}) +
+    (e.orbit?'':' · '+e.t) + ' · ' + moonName(dt).toLowerCase();
+  document.getElementById('dDesc').textContent = e.desc;
+  document.getElementById('dTalkN').textContent = e.talk;
+  document.getElementById('dRows').innerHTML = `
+    <div class="d-row"><span class="lab">Where</span><span>${e.place}</span></div>
+    <div class="d-row"><span class="lab">Host</span><span>@${e.host}</span></div>
+    ${e.group?`<div class="d-row"><span class="lab">Group</span><span>⬡ ${e.group} — only members see this event</span></div>`:''}
+    ${e.ticket?`<div class="d-row"><span class="lab">Tickets</span><span>${e.ticket} · <a href="#" style="color:var(--link)">Open in Market</a><br><small style="color:var(--text-muted)">Buying a ticket RSVPs you automatically.</small></span></div>`:''}
+    ${e.live?`<div class="d-row"><span class="lab">Room</span><span>Huddle is live — <a href="#" style="color:var(--link)">join now</a></span></div>`:''}
+    ${e.flow?`<div class="d-row"><span class="lab">In Flow</span><span>Anchored to the ${moonName(dt).toLowerCase()}. Moves with the sky if the date shifts.</span></div>`:''}
+    <div class="d-row"><span class="lab">Visible to</span><span style="display:flex;align-items:center;gap:8px">
+      <i style="width:10px;height:10px;border-radius:50%;background:${v.c};display:inline-block"></i>${v.label}</span></div>
+    <div class="d-row"><span class="lab">Reminders</span><span>1 day before · 1 hour before <small style="color:var(--text-muted)">(your default)</small></span></div>`;
+  document.getElementById('dThread').innerHTML = NAMES.slice(0,3).map((nm,i) => `
+    <div class="cmt"><img src="${AV(i+e.id)}" alt="">
+      <div><div class="who">@${nm}<span>${['2h','5h','yesterday'][i]}</span></div>
+      <div class="txt">${["Can I bring someone who isn't on Kronk yet?","Parking is easier on the north side.","I'll bring the second crock."][i]}</div></div></div>`).join('');
+  document.getElementById('dWho').innerHTML = NAMES.slice(0, Math.max(2, Math.min(6, e.going))).map((nm,i) => `
+    <div class="att"><img src="${AV(i*2+e.id)}" alt=""><div class="who">@${nm}</div>
+    <span class="via">${e.ticket&&i<2?'via ticket':e.group&&i<3?'via group':'RSVP'}</span></div>`).join('');
+  drawer.classList.add('on'); scrim.classList.add('on'); drawer.setAttribute('aria-hidden','false');
+}
+const closeDrawer = () => { drawer.classList.remove('on'); scrim.classList.remove('on'); drawer.setAttribute('aria-hidden','true'); };
+document.getElementById('dClose').onclick = closeDrawer;
+scrim.onclick = closeDrawer;
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ closeDrawer(); if(state.sheet==='full') setSheet('peek'); } });
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected','false'));
+  t.setAttribute('aria-selected','true');
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
+  document.getElementById('p-'+t.dataset.p).classList.add('on');
+});
+
+/* ── travel: wind, spin, keys ────────────────────────────── */
+const stage = document.getElementById('stage');
+const gear = () => state.turnDays / 14.765;
+
+function spinTo(n, openFull){
+  const dist = Math.abs(n - state.travel);
+  if(dist < 0.01){ setSheet(openFull ? 'full' : (state.sheet==='full'?'full':'peek')); return; }
+  state.spin = { from: state.travel, to: n, t0: performance.now(),
+                 dur: Math.min(1100, 260 + Math.sqrt(dist) * 130), openFull:!!openFull };
+  state.target = n;
+  setSheet('hidden'); state.userClosed = false;
+  setTimeout(() => {
+    if(openFull){
+      if(!state.spin && Math.round(state.travel) === n) setSheet('full');
+    } else scheduleSettle();
+  }, state.spin.dur);
+}
+
+stage.addEventListener('wheel', e => {
+  e.preventDefault();
+  state.spin = null;
+  state.target += e.deltaY * 0.022 * gear();
+  markInput();
+}, {passive:false});
+
+let drag = null;
+stage.addEventListener('pointerdown', e => {
+  drag = {y:e.clientY, x:e.clientX, t:state.target, moved:false};
+  stage.setPointerCapture(e.pointerId);
+});
+stage.addEventListener('pointermove', e => {
+  if(!drag) return;
+  const dy = drag.y - e.clientY;
+  if(Math.abs(dy) > 3) { drag.moved = true; state.spin = null; }
+  if(drag.moved){ state.target = drag.t + dy * 0.055 * gear(); markInput(); }
+});
+stage.addEventListener('pointerup', () => drag = null);
+stage.addEventListener('pointercancel', () => drag = null);
+
+stage.addEventListener('keydown', e => {
+  const k = e.key;
+  if(k==='ArrowDown'||k==='ArrowRight'){ e.preventDefault(); spinTo(Math.round(state.travel)+1); }
+  if(k==='ArrowUp'||k==='ArrowLeft'){ e.preventDefault(); spinTo(Math.round(state.travel)-1); }
+  if(k==='PageDown'){ e.preventDefault(); spinTo(Math.round(state.travel)+Math.round(state.turnDays)); }
+  if(k==='PageUp'){ e.preventDefault(); spinTo(Math.round(state.travel)-Math.round(state.turnDays)); }
+  if(k==='Home'){ e.preventDefault(); spinTo(0); }
+  if(k===' '){ e.preventDefault(); setSheet(state.sheet==='full'?'peek':'full'); }
+});
+
+/* ── Today card: a live mini-kard of today that doubles as the way home.
+      Today doesn't change during a session, so populate once. ── */
+const todayCard = document.getElementById('todayCard');
+(function fillToday(){
+  const dt = today;
+  document.getElementById('tcMoon').innerHTML = moonSVG(16, phase(dt));
+  document.getElementById('tcNum').textContent = dt.getDate();
+  document.getElementById('tcSub').textContent =
+    dt.toLocaleDateString('en',{weekday:'short'}) + ' · ' + dt.toLocaleDateString('en',{month:'long'});
+  const evs = EVENTS.filter(e => e.d === 0);
+  const foot = document.getElementById('tcFoot');
+  foot.textContent = evs.length
+    ? `${evs.length} ${evs.length===1?'gathering':'gatherings'} today`
+    : 'nothing held today';
+})();
+todayCard.onclick = () => spinTo(0);
+document.querySelectorAll('.chip').forEach(c => c.onclick = () => {
+  const on = c.getAttribute('aria-pressed') === 'true';
+  c.setAttribute('aria-pressed', on?'false':'true');
+  on ? state.filters.delete(c.dataset.f) : state.filters.add(c.dataset.f);
+  rebind(true); renderSheet(Math.round(state.travel));
+});
+
+/* ── sheet gestures ──────────────────────────────────────── */
+const sheetEl = document.getElementById('sheet');
+document.getElementById('sheetBack').addEventListener('click', () => {
+  setSheet('peek'); state.userClosed = false;
+});
+const grip = document.getElementById('grip');
+grip.addEventListener('click', () => {
+  setSheet(state.sheet === 'full' ? 'peek' : 'full');
+  state.userClosed = false;
+});
+let gdrag = null;
+grip.addEventListener('pointerdown', e => { gdrag = {y:e.clientY}; grip.setPointerCapture(e.pointerId); });
+grip.addEventListener('pointerup', e => {
+  if(!gdrag) return;
+  const dy = gdrag.y - e.clientY;
+  if(dy > 24) setSheet('full');
+  else if(dy < -24){ setSheet('hidden'); state.userClosed = true; }
+  gdrag = null;
+});
+sheetEl.addEventListener('wheel', e => {
+  const list = document.getElementById('sList');
+  if(state.sheet === 'peek' && e.deltaY > 0){ e.preventDefault(); setSheet('full'); return; }
+  if(state.sheet === 'full' && e.deltaY < 0 && list.scrollTop <= 0){ e.preventDefault(); setSheet('peek'); }
+}, {passive:false});
+
+/* starfield */
+(function(){
+  let h = '';
+  for(let i=0;i<100;i++){
+    const x = Math.random()*100, y = Math.random()*100;
+    h += Math.random() < .12
+      ? `<path d="M${x}% ${y}% m-3,0 h6 M${x}% ${y}% m0,-3 v6" stroke="#7241ff" stroke-width=".6" opacity="${(.12+Math.random()*.22).toFixed(2)}"/>`
+      : `<circle cx="${x}%" cy="${y}%" r="${Math.random()<.15?1.4:.8}" fill="#9c9cc9" opacity="${(.06+Math.random()*.2).toFixed(2)}"/>`;
+  }
+  document.getElementById('stars').innerHTML = h;
+})();
+
+rebind(true);
+renderSheet(0);
+requestAnimationFrame(layout);
+stage.focus();
+/* opens on the spiral alone, at today. The sheet arrives when you settle. */
+</script>
+</body>
+</html>
