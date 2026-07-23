@@ -118,11 +118,66 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canSubmit =
-    title.trim().length > 0 &&
-    body.trim().length > 0 &&
-    !submitting &&
-    !resolving;
+  // Korner Composer — the structured form when isNewKorner. Captures the
+  // manifest-shape fields (name, slug, glyph, icon suggestion, purpose)
+  // as first-class inputs. On submit these get composed into the
+  // proposal's title + summary + body so the generic Proposal model
+  // still stores them — we don't need a new model, just a shaped intake.
+  const [kornerName, setKornerName] = useState('');
+  const [kornerSlug, setKornerSlug] = useState('');
+  const [kornerGlyph, setKornerGlyph] = useState('');
+  const [kornerIcon, setKornerIcon] = useState('');
+  const [kornerPurpose, setKornerPurpose] = useState('');
+
+  const handleKornerNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setKornerName(e.target.value);
+    },
+    [],
+  );
+  const handleKornerSlugChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Normalise to the L1-legal shape (lowercase alphanumerics only) as
+      // the user types — a live cue rather than a submit-time surprise.
+      setKornerSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''));
+    },
+    [],
+  );
+  const handleKornerGlyphChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Glyph is a single visible character; trim to one grapheme.
+      setKornerGlyph(Array.from(e.target.value)[0] ?? '');
+    },
+    [],
+  );
+  const handleKornerIconChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setKornerIcon(e.target.value);
+    },
+    [],
+  );
+  const handleKornerPurposeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setKornerPurpose(e.target.value);
+    },
+    [],
+  );
+
+  // L1 requires a single lowercase word for the slug; also reject the
+  // handful of manifest-file-names already in use so the form catches
+  // the obvious collisions client-side.
+  const slugValid = kornerSlug.length > 0 && /^[a-z0-9]+$/.test(kornerSlug);
+  const kornerFormReady =
+    kornerName.trim().length > 0 &&
+    slugValid &&
+    kornerPurpose.trim().length > 0;
+
+  const canSubmit = isNewKorner
+    ? kornerFormReady && body.trim().length > 0 && !submitting && !resolving
+    : title.trim().length > 0 &&
+      body.trim().length > 0 &&
+      !submitting &&
+      !resolving;
 
   const handleStepChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -175,10 +230,44 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = () => {
       setSubmitting(true);
       setError(null);
       const cleanSteps = steps.map((s) => s.trim()).filter(Boolean);
+      // Korner Composer path — compose the structured fields into a
+      // proposal title + summary + body so a shipped proposal has all
+      // the manifest-shape hints the eventual `config/korners/<slug>.yaml`
+      // will need (name, slug, glyph, icon, purpose). Freeform proposals
+      // send whatever the user typed.
+      const payload = isNewKorner
+        ? (() => {
+            const nameTrimmed = kornerName.trim();
+            const slugTrimmed = kornerSlug.trim();
+            const iconTrimmed = kornerIcon.trim();
+            const glyphTrimmed = kornerGlyph.trim();
+            const purposeTrimmed = kornerPurpose.trim();
+            const structured = [
+              `**Name**: ${nameTrimmed}`,
+              `**Slug**: \`${slugTrimmed}\``,
+              glyphTrimmed ? `**Glyph**: ${glyphTrimmed}` : null,
+              iconTrimmed ? `**Icon**: \`${iconTrimmed}\`` : null,
+              `**Purpose**: ${purposeTrimmed}`,
+              '',
+              '---',
+              '',
+              body.trim(),
+            ]
+              .filter((line): line is string => line !== null)
+              .join('\n');
+            return {
+              title: `New Korner: ${nameTrimmed}`,
+              body: structured,
+              summary: purposeTrimmed,
+            };
+          })()
+        : {
+            title: title.trim(),
+            body: body.trim(),
+            ...(summary.trim() ? { summary: summary.trim() } : {}),
+          };
       apiCreateKommonsProposal({
-        title: title.trim(),
-        body: body.trim(),
-        ...(summary.trim() ? { summary: summary.trim() } : {}),
+        ...payload,
         // Anchor to the scoped node so it lands on that page's meta page and
         // the tree. Unscoped proposals carry no node.
         ...(targetNodeId ? { node_id: targetNodeId } : {}),
@@ -212,7 +301,22 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = () => {
           setSubmitting(false);
         });
     },
-    [canSubmit, title, body, summary, steps, docs, targetNodeId, history],
+    [
+      canSubmit,
+      title,
+      body,
+      summary,
+      steps,
+      docs,
+      targetNodeId,
+      history,
+      isNewKorner,
+      kornerName,
+      kornerSlug,
+      kornerGlyph,
+      kornerIcon,
+      kornerPurpose,
+    ],
   );
 
   return (
@@ -257,50 +361,198 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = () => {
           </p>
         </header>
 
-        <label className='propose-page__field'>
-          <span className='propose-page__label'>
-            <FormattedMessage id='propose.title_label' defaultMessage='Title' />
-          </span>
-          <input
-            type='text'
-            className='propose-page__input'
-            value={title}
-            onChange={handleTitleChange}
-            placeholder={intl.formatMessage(messages.titlePlaceholder)}
-            maxLength={240}
-          />
-        </label>
+        {isNewKorner ? (
+          // Korner Composer fields — manifest-shape hints captured as
+          // first-class inputs. Title / summary are composed from these
+          // at submit-time so a shipped proposal cleanly maps to a
+          // `config/korners/<slug>.yaml`.
+          <>
+            <label className='propose-page__field'>
+              <span className='propose-page__label'>
+                <FormattedMessage
+                  id='propose.korner_name_label'
+                  defaultMessage='Name'
+                />
+              </span>
+              <p className='propose-page__hint'>
+                <FormattedMessage
+                  id='propose.korner_name_hint'
+                  defaultMessage='The display name the space is known by, in Kronk vocabulary. E.g. Kalendar, Booth, Krews.'
+                />
+              </p>
+              <input
+                type='text'
+                className='propose-page__input'
+                value={kornerName}
+                onChange={handleKornerNameChange}
+                placeholder='Kitchen'
+                maxLength={40}
+                required
+              />
+            </label>
+
+            <label className='propose-page__field'>
+              <span className='propose-page__label'>
+                <FormattedMessage
+                  id='propose.korner_slug_label'
+                  defaultMessage='Slug'
+                />
+              </span>
+              <p className='propose-page__hint'>
+                <FormattedMessage
+                  id='propose.korner_slug_hint'
+                  defaultMessage='One lowercase word — a–z and 0–9 only. This becomes the URL mount at /hub/{slugName} and the manifest filename.'
+                  values={{ slugName: 'slug' }}
+                />
+              </p>
+              <input
+                type='text'
+                className='propose-page__input'
+                value={kornerSlug}
+                onChange={handleKornerSlugChange}
+                placeholder='kitchen'
+                maxLength={30}
+                aria-invalid={kornerSlug.length > 0 && !slugValid}
+                required
+              />
+            </label>
+
+            <label className='propose-page__field'>
+              <span className='propose-page__label'>
+                <FormattedMessage
+                  id='propose.korner_glyph_label'
+                  defaultMessage='Glyph (optional)'
+                />
+              </span>
+              <p className='propose-page__hint'>
+                <FormattedMessage
+                  id='propose.korner_glyph_hint'
+                  defaultMessage='A single hand-picked character that reads as the space (Ƙ, ◉, ✦). Skip if unsure — the community can pick one later.'
+                />
+              </p>
+              <input
+                type='text'
+                className='propose-page__input'
+                value={kornerGlyph}
+                onChange={handleKornerGlyphChange}
+                placeholder='Ķ'
+                maxLength={4}
+              />
+            </label>
+
+            <label className='propose-page__field'>
+              <span className='propose-page__label'>
+                <FormattedMessage
+                  id='propose.korner_icon_label'
+                  defaultMessage='Icon (optional)'
+                />
+              </span>
+              <p className='propose-page__hint'>
+                <FormattedMessage
+                  id='propose.korner_icon_hint'
+                  defaultMessage='A Material Icon name suggestion for the Hub tile — e.g. kitchen, event, favorite. See fonts.google.com/icons.'
+                />
+              </p>
+              <input
+                type='text'
+                className='propose-page__input'
+                value={kornerIcon}
+                onChange={handleKornerIconChange}
+                placeholder='kitchen'
+                maxLength={40}
+              />
+            </label>
+
+            <label className='propose-page__field'>
+              <span className='propose-page__label'>
+                <FormattedMessage
+                  id='propose.korner_purpose_label'
+                  defaultMessage='Purpose'
+                />
+              </span>
+              <p className='propose-page__hint'>
+                <FormattedMessage
+                  id='propose.korner_purpose_hint'
+                  defaultMessage='One line — what this space is for. Reads as the proposal’s summary and eventually as the manifest’s `purpose:` field.'
+                />
+              </p>
+              <input
+                type='text'
+                className='propose-page__input'
+                value={kornerPurpose}
+                onChange={handleKornerPurposeChange}
+                placeholder='To help kronkers share meals and cooking rhythms.'
+                maxLength={200}
+                required
+              />
+            </label>
+          </>
+        ) : (
+          <>
+            <label className='propose-page__field'>
+              <span className='propose-page__label'>
+                <FormattedMessage
+                  id='propose.title_label'
+                  defaultMessage='Title'
+                />
+              </span>
+              <input
+                type='text'
+                className='propose-page__input'
+                value={title}
+                onChange={handleTitleChange}
+                placeholder={intl.formatMessage(messages.titlePlaceholder)}
+                maxLength={240}
+              />
+            </label>
+
+            <label className='propose-page__field'>
+              <span className='propose-page__label'>
+                <FormattedMessage
+                  id='propose.summary_label'
+                  defaultMessage='Summary'
+                />
+              </span>
+              <p className='propose-page__hint'>
+                <FormattedMessage
+                  id='propose.summary_hint'
+                  defaultMessage='One line, shown on the proposal’s feed card. Optional.'
+                />
+              </p>
+              <input
+                type='text'
+                className='propose-page__input'
+                value={summary}
+                onChange={handleSummaryChange}
+                placeholder={intl.formatMessage(messages.summaryPlaceholder)}
+                maxLength={500}
+              />
+            </label>
+          </>
+        )}
 
         <label className='propose-page__field'>
           <span className='propose-page__label'>
-            <FormattedMessage
-              id='propose.summary_label'
-              defaultMessage='Summary'
-            />
+            {isNewKorner ? (
+              <FormattedMessage
+                id='propose.korner_narrative_label'
+                defaultMessage='What it enables'
+              />
+            ) : (
+              <FormattedMessage
+                id='propose.body_label'
+                defaultMessage='Description'
+              />
+            )}
           </span>
-          <p className='propose-page__hint'>
-            <FormattedMessage
-              id='propose.summary_hint'
-              defaultMessage='One line, shown on the proposal’s feed card. Optional.'
-            />
-          </p>
-          <input
-            type='text'
-            className='propose-page__input'
-            value={summary}
-            onChange={handleSummaryChange}
-            placeholder={intl.formatMessage(messages.summaryPlaceholder)}
-            maxLength={500}
-          />
-        </label>
-
-        <label className='propose-page__field'>
-          <span className='propose-page__label'>
-            <FormattedMessage
-              id='propose.body_label'
-              defaultMessage='Description'
-            />
-          </span>
+          {isNewKorner && (
+            <p className='propose-page__hint'>
+              <FormattedMessage
+                id='propose.korner_narrative_hint'
+                defaultMessage='Who does this space serve, what does it make possible that no existing space can, and what does using it feel like?'
+              />
+            </p>
+          )}
           <textarea
             className='propose-page__textarea'
             value={body}
