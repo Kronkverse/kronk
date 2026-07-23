@@ -41,9 +41,9 @@ nodes:
   # ── NUDGES ────────────────────────────────────────────────────────
   #
   # A top-level space, not a sub-tree of the feed and not a korner. It sits
-  # in the primary switcher alongside Me and Home (`hub_switcher.tsx`), and
-  # there is no `/hub/nudges` route — `config/korners/nudges.yaml` still
-  # carries `enforced: false` for exactly that reason.
+  # in the primary switcher alongside Me, Home, and Hub (`hub_switcher.tsx`),
+  # and there is no `/hub/nudges` route. `config/korners/nudges.yaml` is the
+  # pillar's own manifest — now `core: true` / `pillar: true` / `enforced: true`.
   #
   # `feed.nudges` kept its id: node ids are the anchor feedback attaches to,
   # so renaming one orphans its proposals. The id records history; the bucket
@@ -51,7 +51,9 @@ nodes:
   - id: feed.nudges
     bucket: nudges
     label: Nudges activity
-    url: /nudges/activity
+    # /nudges/activity was retired (it 301-redirects to /nudges); the
+    # activity surface merged into the Nudges landing.
+    url: /nudges
     lifecycle: live
     spa: true
 
@@ -65,7 +67,7 @@ nodes:
   - id: nudges.thread
     bucket: nudges
     label: Nudge thread
-    url: /nudges/:accountId
+    url: /nudges/:conversationId
     lifecycle: live
     spa: true
 
