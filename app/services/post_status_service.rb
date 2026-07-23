@@ -87,9 +87,39 @@ class PostStatusService < BaseService
     antispam.local_preflight_check!
 
     # The following transaction block is needed to wrap the UPDATEs to
-    # the media attachments when the status is created
+    # the media attachments when the status is created. Krew
+    # attachment lives here too, so `postprocess_status!` (which
+    # enqueues fan-out) sees the join rows — fan-out for
+    # visibility='krew' reads @status.krews and would otherwise race.
     ApplicationRecord.transaction do
       @status.save!
+      attach_status_to_krews!
+    end
+  end
+
+  # Attach the new Status to any Krews the caller targeted. Membership
+  # + archive checks silently drop krews the author can't post to; the
+  # status itself is already saved, so this is best-effort join.
+  #
+  # For visibility='krew' the presence of at least one attached krew is
+  # required — enforced at the controller so PostStatusService can
+  # stay krew-agnostic when called from other paths (scheduled
+  # statuses, etc.).
+  def attach_status_to_krews!
+    ids = Array(@options[:krew_ids]).map(&:to_i).reject(&:zero?).uniq
+    return if ids.empty?
+
+    krews = Krew.where(id: ids, archived: false).select { |k| k.member?(@status.account) }
+    return if krews.empty?
+
+    krews.each do |k|
+      k.statuses << @status unless k.statuses.exists?(id: @status.id)
+      Kronk::KornerEvents.publish(
+        'krew.post.created',
+        krew_id: k.id,
+        status_id: @status.id,
+        account_id: @status.account_id
+      )
     end
   end
 
@@ -154,7 +184,9 @@ class PostStatusService < BaseService
     Trends.tags.register(@status)
     LinkCrawlWorker.perform_async(@status.id)
     DistributionWorker.perform_async(@status.id) unless @status.kronk_answer?
-    ActivityPub::DistributionWorker.perform_async(@status.id) unless @status.kronk_answer?
+    # Krew-scoped statuses stay local. Federation semantics for
+    # audience-scoped posts are deferred (KRONK_KREWS §3).
+    ActivityPub::DistributionWorker.perform_async(@status.id) unless @status.kronk_answer? || @status.krew_visibility?
     PollExpirationNotifyWorker.perform_at(@status.poll.expires_at, @status.poll.id) if @status.poll
     ActivityPub::QuoteRequestWorker.perform_async(@status.quote.id) if @status.quote&.quoted_status.present? && !@status.quote&.quoted_status&.local?
   end

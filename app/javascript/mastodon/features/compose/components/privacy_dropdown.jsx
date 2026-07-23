@@ -23,6 +23,8 @@ export const messages = defineMessages({
   private_long: { id: 'privacy.private.long', defaultMessage: 'Only your followers' },
   direct_short: { id: 'privacy.direct.short', defaultMessage: 'Specific people' },
   direct_long: { id: 'privacy.direct.long', defaultMessage: 'Everyone mentioned in the post' },
+  krew_short: { id: 'privacy.krew.short', defaultMessage: 'Krew' },
+  krew_long: { id: 'privacy.krew.long', defaultMessage: 'Only members of the Krews you select' },
   change_privacy: { id: 'privacy.change', defaultMessage: 'Change post privacy' },
   unlisted_extra: { id: 'privacy.unlisted.additional', defaultMessage: 'This behaves exactly like public, except the post will not appear in live feeds or hashtags, explore, or Mastodon search, even if you are opted-in account-wide.' },
 });
