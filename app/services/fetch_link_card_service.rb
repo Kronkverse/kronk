@@ -35,10 +35,15 @@ class FetchLinkCardService < BaseService
   end
 
   MARKDOWN_LINK_RE = %r{\[([^\]]+)\]\((https?://[^)]+)\)}
-  # `/hub` covers every korner's canonical 2.0 mount (/hub/<slug>); the bare
-  # paths are the pre-2.0 mounts kept for links that predate the URL migration
-  # (they 301 to /hub/<slug>).
-  ALLOWED_LOCAL_PATHS = %w(/hub /kalendar /governance /huddle /home /booth).freeze
+  # Current core mounts:
+  #   /hub     — every korner's canonical 2.0 mount (/hub/<slug>)
+  #   /home    — Feed core space
+  #   /nudges  — Nudges core space
+  #   /kronk   — Org space
+  # Legacy paths (/kalendar, /governance, /huddle, /booth) retired 2026-07-23
+  # — they 301-redirect to /hub/<slug> anyway, and 2.x-only surfaces predate
+  # the redirect fallback so link cards would rewrite before this check ran.
+  ALLOWED_LOCAL_PATHS = %w(/hub /home /nudges /kronk).freeze
 
   private
 

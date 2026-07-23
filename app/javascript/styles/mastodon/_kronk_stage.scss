@@ -114,105 +114,14 @@ body:has(.kronk-stage) .korner-sub-bar {
   display: none;
 }
 
-// ── Reserved zone: KornerExit (top-left, floating) ──────────────────
-// Every Stage-based korner reserves this slot. One purpose: back out
-// of the space to the Hub. Content flows underneath.
-.korner-exit {
-  position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  z-index: 5;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.75rem 0.35rem 0.55rem;
-  background: color-mix(in srgb, var(--surface-elevated) 75%, transparent);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-round);
-  color: var(--text-secondary);
-  font: 500 0.85rem / 1 var(--font-body);
-  text-decoration: none;
-  backdrop-filter: blur(6px);
-  transition:
-    color var(--dur-fast) var(--ease-out),
-    background var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out);
-
-  &:hover {
-    color: var(--text-primary);
-    background: var(--surface-elevated);
-    border-color: var(--border-default);
-  }
-}
-
-.korner-exit__icon {
-  width: 16px;
-  height: 16px;
-}
-
-// ── Reserved zone: SpaceTabs (top-right, floating) ─────────────────
-// The per-korner sub-nav. Pill-segment group; korners that don't need
-// tabs can leave the slot empty. Content flows underneath.
-.space-tabs {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  z-index: 5;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.space-tabs__group {
-  display: inline-flex;
-  gap: 4px;
-  padding: 4px;
-  background: color-mix(in srgb, var(--surface-elevated) 75%, transparent);
-  border: 1px solid var(--border-subtle);
-  border-radius: 999px;
-  backdrop-filter: blur(6px);
-}
-
-.space-tabs__pill {
-  padding: 8px 16px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text-muted);
-  font: 500 13px / 1 var(--font-body);
-  cursor: pointer;
-  transition:
-    background var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
-
-  &:hover {
-    color: var(--text-secondary);
-  }
-
-  &[aria-selected='true'] {
-    background: var(--kronk-purple-bright);
-    color: var(--text-on-accent, #fff);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--kronk-purple-bright);
-    outline-offset: 2px;
-  }
-}
-
-// ── Reserved slot: space title + description (regular position) ────
-// The space's own name and one-line description. Sits in the normal
-// content flow at the top of every panel — not floating. Reusable
-// across korners.
-.space-title {
-  font-family: Georgia, var(--font-display);
-  font-size: 2.5rem;
-  line-height: 1.1;
-  text-align: center;
-  color: var(--kronk-purple-bright);
-  margin: 0 0 0.35rem;
-}
-
+// KornerExit / SpaceTabs / .space-title retired 2026-07-23. Replaced
+// by <SpaceBadge> + <AutoSpaceViewPicker> in KronkFrame.SpaceNav
+// (docs/kronk_frame.md § SpaceNav). Panel-level hero titles are also
+// retired per spec rule 5 — the space badge carries the space name
+// across all views.
+// .space-subtitle stays as inline tagline copy for panels (spec rule
+// 5 explicitly permits per-view tagline text — "inline panel copy on
+// the landing view only — not a reserved band").
 .space-subtitle {
   text-align: center;
   color: var(--text-muted);

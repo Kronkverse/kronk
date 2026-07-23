@@ -64,8 +64,10 @@ class UserSettings
   end
 
   namespace :interactions do
-    setting :must_be_follower, default: false
-    setting :must_be_following, default: false
+    # must_be_follower and must_be_following were retired 2026-07-23 —
+    # both settings were writeable but no code path read them, so the
+    # toggles did nothing. must_be_following_dm is the one live gate
+    # (backed by the /settings/privacy dm_followers_only surface).
     setting :must_be_following_dm, default: false
   end
 

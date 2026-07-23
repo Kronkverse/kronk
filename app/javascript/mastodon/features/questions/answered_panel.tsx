@@ -78,7 +78,6 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({ onGoDeck }) => {
   if (list === null) {
     return (
       <section className='kuestions-panel'>
-        <h1 className='space-title'>Answered</h1>
         <p className='space-subtitle'>{intl.formatMessage(messages.loading)}</p>
       </section>
     );
@@ -87,7 +86,6 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({ onGoDeck }) => {
   if (list.length === 0) {
     return (
       <section className='kuestions-panel'>
-        <h1 className='space-title'>Answered</h1>
         <p className='space-subtitle'>
           <FormattedMessage
             id='kuestions.answered.subtitle'
@@ -124,7 +122,6 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({ onGoDeck }) => {
 
   return (
     <section className='kuestions-panel'>
-      <h1 className='space-title'>Answered</h1>
       <p className='space-subtitle'>
         <FormattedMessage
           id='kuestions.answered.subtitle'

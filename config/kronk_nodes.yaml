@@ -209,19 +209,23 @@ nodes:
     url: /settings/notifications
     lifecycle: live
     spa: true
-  # Still the classic Mastodon monolith — surfaced as `soon` until rehomed.
+  # Still the classic Mastodon monolith — Devise + Doorkeeper for
+  # Account & Security (2FA, sessions, apps, migration, delete),
+  # Rails export/import for Data. `spa: false` so the client hands
+  # navigation to the browser (full page load into the classic Rails
+  # views) instead of the SPA router hitting a dead route.
   - id: settings.account
     bucket: settings
     label: Account & security
     url: /settings/account
     lifecycle: soon
-    spa: true
+    spa: false
   - id: settings.data
     bucket: settings
     label: Data
     url: /settings/data
     lifecycle: soon
-    spa: true
+    spa: false
 
   # ── HUB (landing only — per-korner nodes live in their manifests) ─
   - id: hub.landing

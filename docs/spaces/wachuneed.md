@@ -57,13 +57,14 @@ The three-way split is intentional — it foregrounds three fundamentally
 different modes of exchange (making, passing-on, doing-for), each with
 its own conventions and expectations.
 
-**No subcategory field** in the initial 2.0 UI. (The `subcategory` column on
-`Listing` still exists in the schema and is serialized — its removal is a
-follow-up; see the remaining-work backlog. Three top-level categories are
-enough for the UI.)
-Search + filtering leans on title/description tokens plus the top-
-level axis. If a subcategory taxonomy is warranted later, it comes
-in a follow-up.
+**Subcategory field is not surfaced in the 2.0 UI.** The `subcategory`
+column on `Listing` still exists in the schema and is serialized by
+`WachuneedListingSummarySerializer` (kept for forward-compat if a
+subcategory taxonomy is warranted later). No composer field is wired to
+it and no filter reads it. Three top-level categories are enough for
+the UI. Removing the column entirely is a follow-up tracked in the
+remaining-work backlog. Search + filtering leans on title/description
+tokens plus the top-level axis.
 
 ### State machine
 

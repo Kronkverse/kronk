@@ -20,6 +20,9 @@ class Api::V1::Settings::PrivacyController < Api::BaseController
   FIELDS = {
     'locked' => { target: :account, attr: :locked, kind: 'boolean' },
     'discoverable' => { target: :account, attr: :discoverable, kind: 'boolean' },
+    'indexable' => { target: :settings, key: 'indexable', kind: 'boolean' },
+    'hide_collections' => { target: :account, attr: :hide_collections, kind: 'boolean' },
+    'show_application' => { target: :settings, key: 'show_application', kind: 'boolean' },
     'dm_followers_only' => { target: :settings, key: 'interactions.must_be_following_dm', kind: 'boolean' },
   }.freeze
 
@@ -67,6 +70,9 @@ class Api::V1::Settings::PrivacyController < Api::BaseController
       values: {
         'locked' => current_account.locked,
         'discoverable' => current_account.discoverable,
+        'indexable' => current_user.settings['indexable'],
+        'hide_collections' => current_account.hide_collections,
+        'show_application' => current_user.settings['show_application'],
         'dm_followers_only' => current_user.settings['interactions.must_be_following_dm'],
       },
     }

@@ -70,6 +70,33 @@ const messages = defineMessages({
     id: 'privacy_settings.discoverable_hint',
     defaultMessage: 'Show up in the directory, search, and follow suggestions.',
   },
+  indexable: {
+    id: 'privacy_settings.indexable',
+    defaultMessage: 'Include posts in search engines',
+  },
+  indexableHint: {
+    id: 'privacy_settings.indexable_hint',
+    defaultMessage:
+      'Let external search engines (Google, etc.) index your public posts.',
+  },
+  hideCollections: {
+    id: 'privacy_settings.hide_collections',
+    defaultMessage: 'Hide followers and follows',
+  },
+  hideCollectionsHint: {
+    id: 'privacy_settings.hide_collections_hint',
+    defaultMessage:
+      'Keep your follower and following lists off your public profile.',
+  },
+  showApplication: {
+    id: 'privacy_settings.show_application',
+    defaultMessage: 'Show which app I used to post',
+  },
+  showApplicationHint: {
+    id: 'privacy_settings.show_application_hint',
+    defaultMessage:
+      'Reveal the client name (web, mobile app, third-party) alongside each post.',
+  },
   dmFollowersOnly: {
     id: 'privacy_settings.dm_followers_only',
     defaultMessage: 'Only people you follow can message you',
@@ -98,12 +125,18 @@ const messages = defineMessages({
 const LABELS: Record<string, MessageDescriptor> = {
   locked: messages.locked,
   discoverable: messages.discoverable,
+  indexable: messages.indexable,
+  hide_collections: messages.hideCollections,
+  show_application: messages.showApplication,
   dm_followers_only: messages.dmFollowersOnly,
 };
 
 const HINTS: Record<string, MessageDescriptor> = {
   locked: messages.lockedHint,
   discoverable: messages.discoverableHint,
+  indexable: messages.indexableHint,
+  hide_collections: messages.hideCollectionsHint,
+  show_application: messages.showApplicationHint,
 };
 
 interface PrivacyPayload {

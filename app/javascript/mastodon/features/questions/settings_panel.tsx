@@ -148,7 +148,6 @@ export const SettingsPanel: React.FC = () => {
   if (!values) {
     return (
       <section className='kuestions-panel'>
-        <h1 className='space-title'>Settings</h1>
         <p className='space-subtitle'>{intl.formatMessage(messages.loading)}</p>
       </section>
     );
@@ -164,7 +163,6 @@ export const SettingsPanel: React.FC = () => {
 
   return (
     <section className='kuestions-panel'>
-      <h1 className='space-title'>Settings</h1>
       <p className='space-subtitle'>{intl.formatMessage(messages.header)}</p>
 
       <div className='kuestions-settings'>
