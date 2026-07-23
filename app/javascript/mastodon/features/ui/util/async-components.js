@@ -319,10 +319,6 @@ export function KalendarSpiral () {
   return import("../../kalendar_spiral");
 }
 
-export function HubArrangeable () {
-  return import("../../hub_arrangeable");
-}
-
 export function BoothV2 () {
   return import("../../booth_v2");
 }

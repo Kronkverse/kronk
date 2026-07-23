@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
@@ -6,121 +6,69 @@ import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
-import { apiRequestPost, apiRequestDelete } from 'mastodon/api';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
+import { KornerGlyph } from 'mastodon/components/korner_glyph';
 import { Stage } from 'mastodon/components/stage';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
-// Hub landing page (spec §4). Grid of korner cards; every enforced,
-// non-hidden korner ships one. Ordered here alphabetically as a first
-// pass — the spec's tune-in-count ordering with per-user override is
-// wired in Phase 4 once the counts materialised view backfills.
+// Hub landing (/hub). Tile aesthetic from the prototype at
+// public/hub-arrangeable-preview.html (retired 2.0.0-alpha.204):
+// chunky aspect-ratio 1 tiles with a hand-drawn line-art glyph, a
+// hover-only settings gear top-right, a tuned-in dot bottom-left, and
+// an "off" treatment for coming-soon korners. Data + links are the
+// real registry — every tile routes to /hub/<slug>. Drag-to-arrange
+// (the prototype's other trick) is deferred until the ordering
+// endpoint (`PATCH /api/v1/kronk/hub/order`) ships.
 
 const messages = defineMessages({
   title: { id: 'hub.title', defaultMessage: 'Hub' },
 });
 
-const KornerCard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
-  const Icon = useKornerIcon(korner.slug);
+// The settings gear sits above the tile link (position: absolute), so
+// even without stopPropagation it never bubbles into the Link. The
+// no-op handler is here because eslint's jsx-no-bind trips on inline
+// arrows and we don't need one — but we keep the pattern lint-clean.
+const stopClick = (e: React.MouseEvent) => {
+  e.stopPropagation();
+};
+
+const KornerTile: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
+  const soon = korner.enforced === false;
+  const tunedIn = korner.tuned_in !== false;
   const teaser =
     (korner.hub_teaser?.static as string | undefined) ??
     (korner.launch?.blurb as string | undefined) ??
     '';
 
-  const [tunedIn, setTunedIn] = useState(korner.tuned_in !== false);
-  const [saving, setSaving] = useState(false);
-
-  // Coming-soon korners: manifest is declared (`enforced: false`) but
-  // the space isn't ready to be tuned into. Card still renders so the
-  // Hub reads as "here's every space Kronk grows toward"; tune-in +
-  // settings affordances retire until the korner ships.
-  const soon = korner.enforced === false;
-
-  const toggleTuneInInner = useCallback(
-    async (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (saving) return;
-      setSaving(true);
-      const next = !tunedIn;
-      setTunedIn(next);
-      try {
-        if (next) {
-          await apiRequestDelete(`v1/korners/${korner.slug}/tune_out`);
-        } else {
-          await apiRequestPost(`v1/korners/${korner.slug}/tune_out`, {});
-        }
-      } catch {
-        // Roll back on failure.
-        setTunedIn(!next);
-      } finally {
-        setSaving(false);
-      }
-    },
-    [korner.slug, saving, tunedIn],
-  );
-
-  const toggleTuneIn = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
-    (e) => {
-      void toggleTuneInInner(e);
-    },
-    [toggleTuneInInner],
-  );
-
-  const stopClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
+  const handleGearClick = useCallback(stopClick, []);
 
   return (
-    <div className={`hub-page__card ${soon ? 'hub-page__card--soon' : ''}`}>
-      {soon && (
-        <span className='hub-page__card-soon-badge'>
-          <FormattedMessage id='hub.soon' defaultMessage='Coming soon' />
-        </span>
-      )}
-      {/* Open-korner surface fills the top of the card without wrapping
-          the whole card; nesting a <Link> inside another <Link> collapses
-          the inner one, which was making the settings gear silently
-          route to the parent korner. */}
+    <div
+      className={`hub-page__tile ${soon ? 'hub-page__tile--off' : ''}`}
+      data-slug={korner.slug}
+    >
       <Link
         to={`/hub/${korner.slug}`}
-        className='hub-page__card-open'
-        aria-label={`Open ${korner.name}`}
+        className='hub-page__tile-link'
+        aria-label={korner.name}
       >
-        <span className='hub-page__card-icon' aria-hidden='true'>
-          <Icon />
-        </span>
-        <div className='hub-page__card-body'>
-          <h3 className='hub-page__card-name'>{korner.name}</h3>
-          {teaser && <p className='hub-page__card-teaser'>{teaser}</p>}
-        </div>
+        <KornerGlyph slug={korner.slug} className='hub-page__tile-glyph' />
+        <span className='hub-page__tile-name'>{korner.name}</span>
+        {teaser && <span className='hub-page__tile-tip'>{teaser}</span>}
+        {tunedIn && !soon && (
+          <span className='hub-page__tile-dot' aria-hidden='true' />
+        )}
       </Link>
       {!soon && (
-        <div className='hub-page__card-footer'>
-          <Link
-            to={`/hub/${korner.slug}/settings`}
-            className='hub-page__card-settings-link'
-            onClick={stopClick}
-            aria-label={`Settings for ${korner.name}`}
-            title={`${korner.name} settings`}
-          >
-            <SettingsIcon />
-          </Link>
-          <button
-            type='button'
-            onClick={toggleTuneIn}
-            className={`hub-page__card-tune ${tunedIn ? 'hub-page__card-tune--in' : 'hub-page__card-tune--out'}`}
-            aria-pressed={tunedIn}
-            title={tunedIn ? 'Tune out' : 'Tune in'}
-          >
-            {tunedIn ? (
-              <FormattedMessage id='hub.tuned_in' defaultMessage='Tuned in' />
-            ) : (
-              <FormattedMessage id='hub.tuned_out' defaultMessage='Tune in' />
-            )}
-          </button>
-        </div>
+        <Link
+          to={`/hub/${korner.slug}/settings`}
+          className='hub-page__tile-gear'
+          onClick={handleGearClick}
+          aria-label={`Settings for ${korner.name}`}
+          title={`${korner.name} settings`}
+        >
+          <SettingsIcon />
+        </Link>
       )}
     </div>
   );
@@ -130,11 +78,9 @@ const Hub: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const korners = useAllKorners();
 
-  // Spec §4.7.1: default Hub order is most-tuned-in first. Ties break
-  // alphabetically so the grid is stable when many korners share a
-  // count (fresh instance before anyone's tuned out of anything).
-  // Coming-soon (enforced: false) korners sort after live ones so the
-  // Hub reads as "here's what's ready, and here's what's coming."
+  // Default order: most-tuned-in first, ties broken alphabetically.
+  // Coming-soon tiles (enforced: false) fall to the end so the grid
+  // reads live-first, promised-next.
   const sorted = korners.slice().sort((a, b) => {
     const diff = (b.tune_in_count ?? 0) - (a.tune_in_count ?? 0);
     return diff !== 0 ? diff : a.name.localeCompare(b.name);
@@ -149,12 +95,12 @@ const Hub: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       <div className='hub-page'>
-        <header className='hub-page__intro'>
+        <p className='hub-page__lede'>
           <FormattedMessage
             id='hub.hero_intro'
             defaultMessage='Every korner on this instance. Drop into whichever fits what you feel like doing.'
           />
-        </header>
+        </p>
 
         {live.length === 0 && soon.length === 0 && (
           <p className='hub-page__empty'>
@@ -166,9 +112,9 @@ const Hub: React.FC<{ multiColumn?: boolean }> = () => {
         )}
 
         {live.length > 0 && (
-          <div className='hub-page__grid'>
+          <div className='hub-page__board'>
             {live.map((k) => (
-              <KornerCard key={k.slug} korner={k} />
+              <KornerTile key={k.slug} korner={k} />
             ))}
           </div>
         )}
@@ -181,9 +127,9 @@ const Hub: React.FC<{ multiColumn?: boolean }> = () => {
                 defaultMessage='Coming to Kronk'
               />
             </h2>
-            <div className='hub-page__grid hub-page__grid--soon'>
+            <div className='hub-page__board hub-page__board--soon'>
               {soon.map((k) => (
-                <KornerCard key={k.slug} korner={k} />
+                <KornerTile key={k.slug} korner={k} />
               ))}
             </div>
           </>

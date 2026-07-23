@@ -87,7 +87,7 @@ import {
   Live,
   EventDetail,
   KalendarSpiral,
-  HubArrangeable,
+  Hub,
   BoothV2,
   WachuneedV2,
   InflowV2,
@@ -282,7 +282,7 @@ class SwitchingColumnsArea extends PureComponent {
                 backend rename PR. */}
             {signedIn && <WrappedRoute path={["/hub/krew/:id", "/hub/groups/:id"]} component={GroupDetail} content={children} />}
             {signedIn && <WrappedRoute path={["/hub/krew", "/hub/groups"]} component={Groups} content={children} />}
-            <WrappedRoute path='/hub' exact component={HubArrangeable} content={children} />
+            <WrappedRoute path='/hub' exact component={Hub} content={children} />
             {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
             <WrappedRoute path='/hub/moments' component={MomentsStub} content={children} />

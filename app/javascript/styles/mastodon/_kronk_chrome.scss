@@ -455,9 +455,9 @@ body:has(.korner-sub-bar) {
   }
 
   // Settings gear at the right of the sub-bar. Matches the affordance
-  // on Hub-grid korner cards (`.hub-page__card-settings-link`) so
-  // "gear you can click for settings" reads identically from either
-  // entry point. Sweep 3 chrome consistency.
+  // on Hub-grid tiles (`.hub-page__tile-gear`) so "gear you can click
+  // for settings" reads identically from either entry point. Sweep 3
+  // chrome consistency.
   &__settings {
     display: inline-flex;
     align-items: center;
