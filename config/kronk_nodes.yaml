@@ -71,10 +71,10 @@ nodes:
 
   # Feed is the one continuous-scroll surface, and feed.home is it. The
   # local/federated/explore/tag timelines, the froths/bookmarks/lists
-  # collections, and the compose/status routes were removed as Skeleton nodes:
+  # collections, and the compose/status routes were removed as Directory nodes:
   # feed *scope* (Friends / FoF / Kommunity) is a setting on the one feed
   # (settings.feed), not a set of separate destinations — and a post permalink
-  # and the Post action are not places on the map. See docs/spaces/feed.md.
+  # and the Post action are not places in the Directory. See docs/spaces/feed.md.
 
   # ── PROFILE ───────────────────────────────────────────────────────
   - id: profile.view
@@ -95,7 +95,7 @@ nodes:
   # `profile_compose.header_stub` — "Cover image, avatar and display name —
   # editing lands in the next step." Display name, bio, avatar, header and
   # metadata fields are still only editable on the classic Rails page. A
-  # `live` node here told the settings nav, the Skeleton map and anyone
+  # `live` node here told the settings nav, the Directory and anyone
   # filing feedback that a working composer existed.
   - id: profile.edit
     bucket: profile
@@ -252,7 +252,7 @@ nodes:
   #
   # The org space is served by KronkController from markdown under
   # content/kronk/ (routes: `/kronk/:page`); the ӁЯѺƝ₭ wordmark links here.
-  # These nodes put its real pages on the Kommons map so members can see and
+  # These nodes put its real pages in the Kommons Directory so members can see and
   # plant proposals about how Kronk itself is run and built. `spa: true` skips
   # the route-name drift check — there is no per-page named Rails route (the
   # single `/kronk/:page` route serves them all), so there is nothing to bind.

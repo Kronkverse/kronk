@@ -1,18 +1,18 @@
-// Kommons Skeleton — three-bucket drilldown feedback surface.
-// Shared Kommons map (tree) styles — the Lattice view at /hub/kommons/lattice
+// Kommons Directory — Kronk's page tree, rendered as the Lattice.
+// Shared Directory styles — the Lattice view at /hub/kommons/lattice
 
 .kommons-tree {
   padding: 20px;
   max-width: 780px;
   margin: 0 auto;
 
-  // Explicit, because this is a flex item: the map's children are all
+  // Explicit, because this is a flex item: the Lattice's children are all
   // absolutely positioned, so there is no intrinsic width to hold the
   // container open and it collapses to the width of the breadcrumb text.
   width: 100%;
   box-sizing: border-box;
 
-  // The map is spatial and wants the room. The reading column is right for a
+  // The Lattice is spatial and wants the room. The reading column is right for a
   // node's proposals, wrong for a body you navigate.
   &--map {
     max-width: none;
@@ -269,7 +269,7 @@
 }
 
 // ── Node proposals list (a page → the proposals suggesting changes to it) ──
-// Shared by the Skeleton node detail and the Lattice leaf panel; each row deep
+// Shared by the Lattice leaf panel; each row deep
 // links to the routed proposal page (/hub/kommons/p/:id).
 .kommons-node-proposals {
   margin: 0;
@@ -595,7 +595,7 @@
   }
 }
 
-// Chrome row: the "⟵ Hub" exit sits above the map.
+// Chrome row: the "⟵ Hub" exit sits above the Lattice.
 .kommons-tree__chrome {
   display: flex;
   align-items: center;
@@ -606,7 +606,7 @@
 
 // A pinned, clearly-labeled exit from Kommons back to the Hub. Styled as an
 // outlined pill — deliberately unlike the plain-text in-map breadcrumb, so
-// "leave Kommons" never reads the same as "move within the skeleton".
+// "leave Kommons" never reads the same as "move within the Directory".
 .kommons-exit {
   display: inline-flex;
   align-items: center;

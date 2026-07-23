@@ -80,7 +80,7 @@ launch:
 
 enforced: false
 
-# ── Tree nodes (Kommons Skeleton) ──────────────────────────────────
+# ── Directory nodes ──────────────────────────────────────────────
 nodes:
   - id: albutts.index
     label: Albutts
