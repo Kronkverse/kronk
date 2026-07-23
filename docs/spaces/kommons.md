@@ -1,6 +1,6 @@
 # Kommons (`kommons` — rendered ₭ommons)
 
-**Manifest:** `config/korners/kommons.yaml` · **Mount:** `/hub/kommons` · **Status:** shipped-2.0 (Skeleton, backend, token ledger, lifecycle) — backing UI pending
+**Manifest:** `config/korners/kommons.yaml` · **Mount:** `/hub/kommons` · **Status:** shipped-2.0 (Directory, backend, token ledger, lifecycle, backing UI)
 
 > **Companion:** [`kommons_lattice.md`](./kommons_lattice.md) (the operable second
 > view of the map), [`kommons_tracker.md`](./kommons_tracker.md) (the plan to
@@ -13,11 +13,11 @@
 Kommons is **Kronk's transparency + participation space**. It's where
 users can:
 
-- **See how Kronk fits together** — the Kommons Skeleton maps every
+- **See how Kronk fits together** — the Kommons Directory maps every
   user-facing page, feature, and connection between korners. It makes
   the platform's structure legible.
 - **Participate in guiding Kronk's development** — proposals and
-  feedback land here, tagged to a specific Skeleton node so they attach
+  feedback land here, tagged to a specific Directory node so they attach
   to what they're about.
 - **Engage with others' contributions** — see what others have
   suggested, second what resonates, discuss, and shape direction
@@ -32,12 +32,17 @@ not through formal proposal machinery.
 
 ## Current shape (2.0 already shipped)
 
-Substantial 2.0 work has already landed in the Kommons Skeleton series
+Substantial 2.0 work has already landed in the Kommons Directory series
 (PRs #287, #292, #295, #297, #300):
 
-### Kommons Skeleton — the transparency layer
+### Kommons Directory — the transparency layer
 
-- **`Kronk::NodeRegistry`** at `lib/kronk/node_registry.rb`. Boots
+The transparency map is the **Directory**, rendered by the **Lattice**
+view. (The earlier "Skeleton" naming and its `/hub/kommons/skeleton`
+route are retired — that route now 301-redirects to
+`/hub/kommons/lattice`.)
+
+- **`Kronk::NodeRegistry`** at `app/lib/kronk/node_registry.rb`. Boots
   from two sources:
   1. `config/kronk_nodes.yaml` — cross-cutting nodes (Home timeline,
      Nudges activity, profiles, settings pages).
@@ -45,15 +50,16 @@ Substantial 2.0 work has already landed in the Kommons Skeleton series
 - **Every node has a stable `node_id`** independent of URL; feedback
   proposals key on `node_id` so they follow a page across URL changes.
 - **Three-bucket drilldown**: `feed`, `profile`, `hub` — organises
-  the Skeleton at the top level.
-- **Backend-derived connections** — the Skeleton shows cross-korner
+  the Directory at the top level.
+- **Backend-derived connections** — the Directory shows cross-korner
   links (which pages relate to which).
 - **`bin/tootctl korners doctor`** — anti-drift check ensures nodes
   declared in manifests match reality.
 - **Live composer** — replaces the old stub; users can compose a real
   Kommons proposal from any node.
-- **Frontend at `app/javascript/mastodon/features/kommons_skeleton/`**;
-  route `/hub/kommons/skeleton`.
+- **Frontend at `app/javascript/mastodon/features/kommons_lattice/`**;
+  route `/hub/kommons/lattice` (the legacy `/hub/kommons/skeleton`
+  redirects here).
 - **API**: `GET /api/v1/kommons/nodes` serves the tree JSON.
 
 ### Proposal model + governance UI
@@ -63,13 +69,14 @@ Substantial 2.0 work has already landed in the Kommons Skeleton series
   (hierarchy), optional discussion Status linkage (pre-2.0
   `discussion_status_id` dual-writes during transition).
 - Sibling models: **`ProposalVote`**, **`ProposalBacking`**,
-  **`ProposalAttachment`**, **`Task`**, **`BudgetItem`**,
-  **`ChallengeCondition`**, **`ChallengeResponse`**, **`TokenBalance`**,
-  **`TokenTransaction`**. (There is no `ProposalCompletionSuggestion` or
+  **`ProposalAttachment`**, **`ProposalComment`**, **`Task`**,
+  **`BudgetItem`**, **`ChallengeCondition`**, **`ChallengeResponse`**,
+  **`TokenBalance`**, **`TokenTransaction`**. (There is no
+  `ProposalCompletionSuggestion` or
   `ProposalChallengeCondition` model — challenge data lives in
   `ChallengeCondition`/`ChallengeResponse`.)
 - **Node-keyed proposals** — `Proposal.node_id` associates a proposal
-  with a Skeleton node.
+  with a Directory node.
 - **Searchable via `Kronk::Search`** — indexed as
   `kommons_proposals`.
 - **Governance UI** at `features/governance/` (legacy route
@@ -89,7 +96,7 @@ retirement in 2.1.0**. As of alpha.54 `Proposal.categories` column +
 validator are still present in `app/models/proposal.rb` — retirement
 lives in the 2.1.0 cleanup migration alongside other dual-write drops.
 
-Rationale for retirement: proposals key on `node_id`, so the Skeleton
+Rationale for retirement: proposals key on `node_id`, so the Directory
 itself locates a proposal; the parallel category taxonomy is
 redundant.
 
@@ -119,14 +126,14 @@ four states:
 ```
 open ──dev──> delivered ──proposer──> completed   refund + payout
  │
- ├──dev──> annulled                               refund, no payout
- └──archive (only while backing is zero)
+ └──dev──> annulled                               refund, no payout
 ```
 
-**Archiving is not a state.** It stays an `archived_at` timestamp, and is
-only permitted while total backing is zero. Once tokens are committed the
-proposal is committed too — it can only be completed or annulled, both of
-which return the stakes.
+There is no archive code path. `Kronk::ProposalStates`
+(`app/lib/kronk/proposal_states.rb`) exposes only `deliver!`,
+`complete!`, `annul!` and `backable?` — the `archived_at` column on the
+`proposals` table is vestigial and is not read or written by any
+transition.
 
 **There is no `delivered` → `annulled` edge.** Once delivered, the only
 way out is the proposer completing it. A problem found after delivery is
@@ -216,7 +223,7 @@ payout.
 
 On a proposal, backing is shown as:
 
-- **Total tokens + icon** (e.g., `247 ⭘`)
+- **Total tokens + icon** (e.g., `₭247`)
 - **Backer count + icon** (e.g., `18 👤`)
 - **Ranked position** — where this proposal sits relative to other
   open proposals (`#4 most-backed`)
@@ -246,21 +253,27 @@ per Standard L2.
   transition cannot pay twice.
 - **`Kronk::ProposalStates`** (`app/lib/`) — the transition machine.
 
-Still to build: the **backing UI**. Backing is currently only reachable
-from a console, so the loop cannot yet be dogfooded from the app. Token
-display (total + backer count with a glyph) is specified below but
-unbuilt.
+The **backing UI has shipped** — the loop is dogfoodable from the app.
+`ProposalBacking` (`features/governance/components/proposal_backing.tsx`)
+is the stake control, `KoinWallet`
+(`features/governance/components/koin_wallet.tsx`) shows a user's
+balance, and both post to `POST /api/v1/proposals/:id/back`
+(`Api::V1::ProposalsController#back`).
 
-`ProposalVote` is unchanged and still carries support / question /
-challenge as response counts — it was not superseded by tokens.
+`ProposalVote` still exists in code (`position` enum: agree / abstain /
+block), but it is **no longer the support signal** — token backing is.
+Its remaining live role is challenge data (block votes create
+`ChallengeCondition` rows); see below.
 
-### Voting / seconding UX polish
+### Voting / seconding — retired as a support mechanism
 
-The "second a proposal" interaction ships but is rough. Needs an
-aesthetic pass in line with 2.0 tokens: cleaner visualisation of
-support levels (how many seconds), a better animation moment when you
-second, mate/Krew affinity signals ("3 of your mates have seconded
-this").
+Voting/seconding is **no longer how a proposal gathers support** — that
+is now **token backing** (above). The old "second a proposal"
+interaction is legacy being removed, not a surface to polish. The
+`ProposalVote` machinery survives in code only for **challenge** data
+(a block vote still creates a `ChallengeCondition` via
+`ProposalsController#vote`); it is not a support signal and gets no
+aesthetic pass.
 
 ### Kommons feed projection
 
@@ -269,7 +282,7 @@ projection — but the _social triggers_ need shaping. Feed appearance
 scenarios to design:
 
 - Someone in your network raises a proposal
-- Someone in your network seconds a proposal
+- Someone in your network backs a proposal
 - A node you've interacted with gets a wave of feedback
 
 ### Reflection prompts on visited pages
@@ -292,7 +305,7 @@ noted here for direction.
 
 ### Aesthetic
 
-Rebuild the governance + Skeleton UI polish in line with current Kronk
+Rebuild the governance + Directory UI polish in line with current Kronk
 aesthetic tokens (post-planet-metaphor). Coordinating on visual
 mockups with Claude web.
 
@@ -316,6 +329,6 @@ tokens, backfilled by migration and granted on create. **Dev-signoff** —
 
 ## Related drafts
 
-- `docs/rebuild/implementation_plan.md` (no dedicated phase — Kommons Skeleton shipped in an early rebuild slice)
+- `docs/rebuild/implementation_plan.md` (no dedicated phase — the Kommons Directory shipped in an early rebuild slice)
 - `docs/kronk_korner_spec.md` §Kommons
-- Related korners: `docs/spaces/groups.md` (no Krew-scoped Kommons in 2.0); all korners' `nodes:` blocks feed the Skeleton.
+- Related korners: `docs/spaces/groups.md` (no Krew-scoped Kommons in 2.0); all korners' `nodes:` blocks feed the Directory.

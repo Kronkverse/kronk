@@ -348,15 +348,16 @@ Import the async component and wire it as a route:
 import { ..., Klot, ... } from './util/async-components';
 
 // in the render tree, inside <SignedIn>:
-{signedIn && <WrappedRoute path="/klot" component={Klot} content={children} />}
+{signedIn && <WrappedRoute path="/hub/klot" component={Klot} content={children} />}
 ```
 
 Klot's route is auth-gated with `{signedIn && ...}` because it shows personal
 health data. If your Korner is public, drop the guard.
 
-**[Spec drift]** Spec §4 mounts every Korner under `/hub/<slug>`. Nothing on
-Kronk uses `/hub/` yet — every existing Korner mounts at `/<slug>`. Match the
-existing pattern until the URL migration lands (Phase 2).
+**Every Korner mounts under `/hub/<slug>`.** This is live and universal — the
+URL migration (spec §4) shipped, every existing Korner is at `/hub/<slug>`,
+and legacy top-level `/<slug>` paths 301-redirect to `/hub/<slug>` in
+`config/routes.rb`. Do **not** mount at bare `/<slug>`.
 
 ---
 
@@ -364,16 +365,16 @@ existing pattern until the URL migration lands (Phase 2).
 
 **File:** `config/routes.rb`
 
-For the SPA shell (client-side routing takes over):
+For the SPA shell (client-side routing takes over) — mount under `/hub/`:
 
 ```ruby
-get '/klot', to: 'home#index'
-get '/klot/*path', to: 'home#index', format: false
+get '/hub/klot', to: 'home#index'
+get '/hub/klot/*path', to: 'home#index', format: false
 ```
 
 If you have server-rendered pages (share cards, embeds), add explicit routes
 **above** the wildcard so they take precedence — see how Booth handles
-`/booth/sets/:id/embed`.
+`/hub/booth/sets/:id/embed`.
 
 **File:** `config/routes/api.rb`
 
@@ -394,18 +395,27 @@ end
 
 **File:** `app/javascript/styles/mastodon/_<slug>.scss`
 
-Create the partial, prefix every selector with your Korner's namespace:
+Create the partial, prefix every selector with your Korner's namespace, and
+build against the shared design tokens — **no raw hex codes**:
 
 ```scss
 // app/javascript/styles/mastodon/_klot.scss
 @use 'variables' as *;
 
 .klot-page {
-  --klot-bg: #0d0a1f;
-  --klot-surface: #181336;
-  // ...
+  background: var(--surface);
+  border-color: var(--accent);
+  // ... derive shades with color-mix() on var(--accent) where needed
 }
 ```
+
+The token system has shipped: tokens are authored in
+`app/javascript/mastodon/tokens/tokens.yaml`, generated into
+`_tokens.scss` by `bin/generate-tokens`, and enforced. Korner-owned SCSS
+must not inline hex values — stylelint's `color-no-hex` rejects them, and
+`korners doctor` check L7 requires your SCSS file be added to the stylelint
+governance list (the `files:` array under the token-enforcing overrides in
+`stylelint.config.js`). Use `var(--accent)` and the other semantic tokens.
 
 **File:** `app/javascript/styles/application.scss`
 
@@ -417,11 +427,6 @@ Add a `@use` line — alphabetise:
 
 Don't touch `components.scss` or `basics.scss`. Your styles are yours; keep
 them in the partial.
-
-**[Spec drift]** Spec §6 aesthetic tokens — Klot inlines hex values as CSS
-custom properties on `.klot-page` and derives everything from them.
-No Korner uses design tokens from a shared file yet. Keep your palette
-local to your partial for now.
 
 ---
 
@@ -445,7 +450,7 @@ Add a `ColumnLink` for your Korner alongside the others:
 ```tsx
 <ColumnLink
   transparent
-  to='/klot'
+  to='/hub/klot'
   icon='moon'
   text={intl.formatMessage(messages.klot)}
 />
@@ -485,7 +490,7 @@ your shape:
 | Korner        | Best for                                                                                                                                                  | Reference files                                                                                                                                                                      |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Kommons**   | You have a first-class resource (proposal, decision) with a discussion attached                                                                           | `app/models/proposal.rb`, `app/controllers/api/v1/proposals_controller.rb`, `app/serializers/rest/proposal_summary_serializer.rb`                                                    |
-| **Kuestions** | Dedicated `Question`/`Answer` tables, but the feed card still discriminates on Status `post_type` (rendering from the model is pending — see backlog 8.3) | `app/models/question.rb`, `app/models/answer.rb`, `app/models/status.rb` (`enum :post_type`), `app/javascript/mastodon/components/status_question_card.tsx`                          |
+| **Kuestions** | Dedicated `Question`/`Answer` tables; its feed card is **not yet re-added** — the old Status-polymorphic `question_card` retired (Phase 3a) and a `Question`-model-backed `kuestions_card` is still to build, so there is currently no `KORNER_CARDS` entry for it | `app/models/question.rb`, `app/models/answer.rb`, `app/javascript/mastodon/components/korner_cards.tsx` (see the Kuestions comment)                          |
 | **Kalendar**  | You have a primary record (event, workshop) that gets shared on create                                                                                    | `app/controllers/api/v1/events_controller.rb#create` (post-race-fix — status creation is outside the transaction), `app/models/event.rb`, `app/serializers/rest/event_serializer.rb` |
 | **Booth**     | You have a primary record (audio set, upload) with an explicit share action                                                                               | `app/controllers/api/v1/booth_sets_controller.rb#share`, `app/models/booth_set.rb`, `app/serializers/rest/booth_set_summary_serializer.rb`                                           |
 
@@ -512,29 +517,30 @@ renders your Korner's data through the shared `StatusKornerCard` frame.
 Same anatomy for every Korner — see `status_wachuneed_card.tsx` and
 `status_booth_card.tsx` as templates.
 
-The rendering discriminator in `status.jsx` picks the right card based on
-which association is populated:
+The rendering discriminator is the **card registry** at
+`app/javascript/mastodon/components/korner_cards.tsx` — `KORNER_CARDS` is
+an array of `{ slug, matches, card }` entries, and `pickKornerCard` /
+`hasKornerCard` walk it. `status.jsx` imports those two helpers; it no
+longer carries a per-Korner `if/else` branch chain. To add a feed Korner,
+register one `KORNER_CARDS` entry:
 
-```jsx
-} else if (status.get('listing')) {
-  card = <StatusWachuneedCard listing={...} />;
-} else if (status.get('booth_set')) {
-  card = <StatusBoothCard set={...} />;
-}
+```tsx
+// app/javascript/mastodon/components/korner_cards.tsx
+{
+  slug: 'klot',
+  matches: (s) => s.get('klot_share') != null,
+  card: (s) => <StatusKlotCard share={dataFrom(s, 'klot_share')} />,
+},
 ```
 
-Also add the association name to the suppression list at `status.jsx:692` so
-the raw text body doesn't render underneath the card.
+`hasKornerCard(status)` also drives the suppression of the raw text body,
+so a registered card automatically hides the underlying post text — there
+is no separate suppression list to edit.
 
-**[Spec drift]** Spec §8 asks for a manifest-driven discriminator — the
-manifest declares which association triggers which card. Today the
-discriminator is a branch chain in `status.jsx`. Adding a Korner still means
-editing `status.jsx`. Keep the pattern; enforcement moves to Phase 3.
-
-**[Spec drift]** Booth's card doesn't fire in production yet — `booth_sets`
-has no `shared_status_id` column, so no `Status` has a `has_one :booth_set`
-that resolves. This is captured in `config/korners/booth.yaml` and is a
-prerequisite to Booth appearing in the timeline as a card.
+Booth's projection is now wired end-to-end: `booth_sets` carries both a
+`shared_status_id` and a `status_id` column, `Status has_one :booth_set`
+resolves, and `korner_cards.tsx` has a `booth` entry, so a shared set
+renders its card in the timeline.
 
 ---
 
@@ -542,10 +548,12 @@ prerequisite to Booth appearing in the timeline as a card.
 
 **File:** `config/korners/<slug>.yaml`
 
-Even though nothing enforces it at boot, land the manifest as part of your
-PR. It's the machine-readable record of the decisions you made in §0 and the
-drift you accepted along the way. Copy one of the existing manifests as a
-starting point — `klot.yaml` is the newest and cleanest.
+Land the manifest as part of your PR — `bin/tootctl korners doctor` reads it
+and gates conformance (see §0: L1/L3/L4/L5/L10 for `enforced` korners, plus
+the L7 SCSS-token check). It's also the machine-readable record of the
+decisions you made in §0 and the drift you accepted along the way. Copy one
+of the existing manifests as a starting point — `klot.yaml` is the newest
+and cleanest.
 
 Mark drift honestly:
 
@@ -554,9 +562,9 @@ Mark drift honestly:
 - `# TODO` — you know it needs doing before the Korner is spec-conformant
 - `# not-applicable` — the field doesn't apply to your Korner's shape
 
-The `bin/tootctl korners` command (coming in Phase 1) reads these manifests
-and reports drift back to you. Marking honestly costs nothing; marking
-optimistically costs the next dev's afternoon.
+`bin/tootctl korners doctor` reads these manifests and reports drift back to
+you. Marking honestly costs nothing; marking optimistically costs the next
+dev's afternoon.
 
 ---
 
@@ -569,7 +577,7 @@ bundle exec rails db:migrate
 yarn dev  # or just RAILS_ENV=development bundle exec rails s
 ```
 
-Hit `/<slug>` in a browser signed in as any account. Then:
+Hit `/hub/<slug>` in a browser signed in as any account. Then:
 
 - Load a post from your Korner into the home timeline — verify the shared
   card frame renders with the shared accent colour.
@@ -610,7 +618,7 @@ should touch approximately:
 | `app/serializers/rest/status_serializer.rb`                    | Timeline JSON exposure           |
 | `app/serializers/rest/<slug>_summary_serializer.rb`            | Card projection                  |
 | `app/javascript/mastodon/components/status_<slug>_card.tsx`    | Feed card                        |
-| `app/javascript/mastodon/components/status.jsx`                | Discriminator branch             |
+| `app/javascript/mastodon/components/korner_cards.tsx`          | `KORNER_CARDS` registry entry    |
 | `config/korners/<slug>.yaml`                                   | Manifest                         |
 
 That's ~18–22 files for a Korner with feed presence, ~14–16 for one without.
