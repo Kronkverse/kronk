@@ -10,7 +10,7 @@ import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
 import { WavingHandBadge } from 'mastodon/components/waving_hand_badge';
-import { useAllKorners } from 'mastodon/hooks/useKorner';
+import { useKorners } from 'mastodon/hooks/useKorner';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { selectUnreadKornerSlugs } from 'mastodon/selectors/notifications';
 import { useAppSelector } from 'mastodon/store';
@@ -60,7 +60,10 @@ const KornerTile: React.FC<{ korner: ApiKornerJSON; alert?: boolean }> = ({
       data-slug={korner.slug}
     >
       {alert && (
-        <WavingHandBadge className='hub-page__tile-alert' label='New activity' />
+        <WavingHandBadge
+          className='hub-page__tile-alert'
+          label='New activity'
+        />
       )}
       <Link
         to={`/hub/${korner.slug}`}
@@ -95,15 +98,10 @@ const KornerTile: React.FC<{ korner: ApiKornerJSON; alert?: boolean }> = ({
 
 const Hub: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
-  const allKorners = useAllKorners();
+  const korners = useKorners();
   // Korners with an unread korner/system notification get the waving-hand
   // alert on their tile (e.g. Kommons when a proposal is ready to finalise).
   const unreadKornerSlugs = useAppSelector(selectUnreadKornerSlugs);
-
-  // Core spaces (feed / profile / hub / nudges / settings) come back
-  // in the manifest registry so the top nav can resolve their icons,
-  // but they don't belong on the Hub grid — filter them here.
-  const korners = allKorners.filter((k) => k.core !== true);
 
   // Default order: most-tuned-in first, ties broken alphabetically.
   // Coming-soon tiles (enforced: false) fall to the end so the grid
