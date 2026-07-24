@@ -74,6 +74,10 @@ export function FollowRequests () {
   return import('../../follow_requests');
 }
 
+export function MateRequests () {
+  return import('../../mate_requests');
+}
+
 export function FavouritedStatuses () {
   return import('../../favourited_statuses');
 }
@@ -321,6 +325,10 @@ export function KrewNew () {
 
 export function Klot () {
   return import("../../klot").then(m => ({ default: m.Klot }));
+}
+
+export function KlotSettings () {
+  return import("../../klot/settings");
 }
 
 export function Hub () {
