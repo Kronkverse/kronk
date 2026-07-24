@@ -11,11 +11,7 @@ import {
   huddleMinimized,
   huddleExpanded,
 } from 'mastodon/actions/huddle';
-import { Column } from 'mastodon/components/column';
-import type { ColumnRef } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { useKorner } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { Stage } from 'mastodon/components/stage';
 import { me, getAccessToken } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
@@ -41,10 +37,14 @@ interface JitsiApi {
   _countInterval?: ReturnType<typeof setInterval>;
 }
 
-const scrollableStyle: React.CSSProperties = {
+// Fills the Stage below the Frame's auto-intro. Stage is a flex column
+// with its own scroll, so the body flexes to take the remaining height
+// (the Jitsi iframe + lobby need real height to fill).
+const bodyStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  height: '100%',
+  flex: 1,
+  minHeight: 0,
 };
 const lobbyContainerStyle: React.CSSProperties = {
   display: 'flex',
@@ -178,14 +178,9 @@ const jitsiContainerStyle: React.CSSProperties = {
   height: '100%',
 };
 
-const Live: React.FC<{
-  multiColumn: boolean;
-}> = ({ multiColumn }) => {
-  const korner = useKorner('huddle');
-  const kornerIcon = useKornerIcon('huddle');
+const Live: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
-  const columnRef = useRef<ColumnRef>(null);
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const jitsiApiRef = useRef<JitsiApi | null>(null);
 
@@ -442,10 +437,6 @@ const Live: React.FC<{
     api._countInterval = countInterval;
   }, [inRoom, apiLoaded, currentUsername, currentAvatar, leaveRoom, jwtToken]);
 
-  const handleHeaderClick = useCallback(() => {
-    columnRef.current?.scrollTop();
-  }, []);
-
   const handleJoinRoom = useCallback(() => {
     void joinRoom();
   }, [joinRoom]);
@@ -500,20 +491,8 @@ const Live: React.FC<{
   if (!me) return null;
 
   return (
-    <Column
-      bindToDocument={!multiColumn}
-      ref={columnRef}
-      label={intl.formatMessage(messages.heading)}
-    >
-      <ColumnHeader
-        title={korner?.name ?? 'Huddle'}
-        icon='venus'
-        iconComponent={kornerIcon}
-        onClick={handleHeaderClick}
-        multiColumn={multiColumn}
-      />
-
-      <div className='scrollable' style={scrollableStyle}>
+    <Stage label={intl.formatMessage(messages.heading)}>
+      <div style={bodyStyle}>
         {!inRoom ? (
           <div style={lobbyContainerStyle}>
             <div style={roomIconStyle}>
@@ -594,7 +573,7 @@ const Live: React.FC<{
         <title>{intl.formatMessage(messages.heading)}</title>
         <meta name='robots' content='noindex' />
       </Helmet>
-    </Column>
+    </Stage>
   );
 };
 
