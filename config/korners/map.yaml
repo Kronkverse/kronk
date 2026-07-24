@@ -46,6 +46,14 @@ settings:
 emits: []
 listens: []
 
+# Three lenses on the same surface. Frame-provided pill nav switches
+# between them via /hub/map, /hub/map/treks and /hub/map/logger; the
+# iframe listens for the change and swaps its lens without reloading.
+views:
+  - { key: mates, label: Mates }
+  - { key: treks, label: Treks }
+  - { key: logger, label: Logger }
+
 hub_teaser:
   static: "Who's around, if they choose to say."
 

@@ -20,9 +20,15 @@ exists on this branch:
 
 - **Manifest** — `config/korners/map.yaml`: `render_target: native`,
   `version: 0.0.0`, `enforced: true`.
-- **Route** — `/hub/map` mounts `MapV2` (`features/map_v2/`), which
-  iframes the hand-authored prototype at `public/map-preview.html`. The
-  surface is read-only until the backend lands.
+- **Route** — `/hub/map`, `/hub/map/treks`, `/hub/map/logger` all
+  mount `MapV2` (`features/map_v2/`), which iframes the hand-authored
+  prototype at `public/map-preview.html`. Frame chrome (space title,
+  tagline, SpaceViewPicker pill) is provided by the Frame; the URL
+  segment is forwarded into the iframe via `postMessage` so a tab
+  switch swaps the lens without reloading. The surface is read-only
+  until the backend lands.
+- **Views** — `mates` (default), `treks`, `logger`; declared under
+  `views:` in the manifest.
 - **No models yet** — planned primary resource `presence_states` under
   the `presence_` DB namespace (the manifest notes it _may become
   Redis-only_ depending on retention).
@@ -48,6 +54,16 @@ exists on this branch:
 ## Nodes
 
 - **`map.index`** — `/hub/map`, `lifecycle: soon`, SPA.
+
+## Views
+
+Declared under `views:` in the manifest; the Frame renders them as the
+SpaceViewPicker pill on `/hub/map`:
+
+- **`mates`** (default) — who's on the map right now (Leaflet canvas).
+- **`treks`** — the caller's own routes and mates' shared routes.
+- **`logger`** — the private capture surface (nothing shared until it
+  is explicitly turned into a Trek).
 
 ## Related
 
