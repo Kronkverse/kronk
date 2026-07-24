@@ -195,6 +195,23 @@ $tile-shadow-2: #17151f;
     opacity: 1;
   }
 
+  // Top-row tiles: an above-tip opens up behind the fixed top nav and gets
+  // clipped. Flip those to open BELOW the tile instead — the rest keep the
+  // upward tip (better for scanning down the grid). The board is a fixed
+  // column count (2 mobile / 4 desktop), so the first row is the first N
+  // board children.
+  &__board > &__tile:nth-child(-n + 2) &__tile-tip {
+    top: calc(100% + 8px);
+    bottom: auto;
+  }
+
+  @media (width >= 890px) {
+    &__board > &__tile:nth-child(-n + 4) &__tile-tip {
+      top: calc(100% + 8px);
+      bottom: auto;
+    }
+  }
+
   // Settings gear — hover-only, top-right. Sits above the tile's link
   // as a sibling so click handling stays out of the link's path.
   &__tile-gear {
