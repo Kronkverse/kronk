@@ -79,8 +79,10 @@ _(This layer is `docs/kronk_aesthetic_system.md` §6, restated as korner require
 
 ### L8 — Settings (§K)
 
-- ⚙︎ If the korner has user options: a `settings:` block **and** a `settings.<slug>` / per-korner node linked with `settings_for`, rendered at `/hub/<slug>/settings` via the settings widget kit.
-- ◇ Settings are schema-driven (a `FIELDS` controller map + widgets), not a bespoke page.
+- ⚙︎ **Every korner has a settings page at `/hub/<slug>/settings`**, regardless of whether the manifest carries a `settings:` block. Empty settings still get a page — the page is the surface a user reaches from the Settings Hub, from the Ӂ menu's contextual "Settings" item, and from any per-korner gear affordance. A missing mount here is a dead link from the hub grid.
+- ⚙︎ Manifest `settings:` block declares the user-facing options the framework will render for free. Every entry needs `name` + `kind` + `default`. Choice kinds (`enum`, `multi_enum`) add `options`; range kinds (`integer`, `number`, `duration`) add `min` / `max`.
+- ⚙︎ If the korner exposes options in the manifest, it also declares a `settings.<slug>` node in the tree with `settings_for: <slug>` — the doctor's L6 checks pin the two together.
+- ◇ **Schema-driven is the default, not the ceiling.** Simple korners render fine through the shared widgets (`SettingRow` / `NamedSettingRow` dispatch on `kind`). Korners with meaningful live state (Klot's current phase + share list; Kommons' token balance; Krew's memberships) may compose a bespoke page that renders their manifest settings alongside the state — this is the recommended shape once the korner's settings surface stops being trivial. Bespoke pages MUST still adhere to L12 (Frame chrome).
 
 ### L9 — Tests & docs
 
@@ -132,22 +134,63 @@ export const MyKorner: React.FC = () => (
 
 No `<h1>`, no `<nav>` tab row, no repeated tagline copy. Title / tagline / tabs come from the Frame, driven by `config/korners/mykorner.yaml`. The view keys MUST match the manifest's `views:` list (same keys, same order).
 
+### L12 — Settings adhere to the same Frame chrome
+
+_(Added after the alpha.251/.253 settings audit. The failure this closes: settings pages shipped as classic Mastodon `<Column>` surfaces — bespoke back buttons, big square column headers, no shared title typography — while every korner around them moved to the Frame. The result was that entering settings felt like leaving Kronk, and reaching one settings page from another required going all the way back out through the Ӂ menu.)_
+
+Settings pages are second-class korners: they carry no manifest and no `views:`, but they otherwise obey the same Frame contract as `/hub/<slug>` surfaces.
+
+- ⚙︎ **Settings pages render inside `<Stage>`**, not `<Column>`. This applies to every personal-settings leaf under `/settings/*` and every per-korner settings page at `/hub/<slug>/settings`, including bespoke redesigns.
+- ⚙︎ **The SettingsBadge takes the SpaceNav slot** (`<AutoSettingsBadge>` fires on `/settings/<leaf>` and `/hub/<slug>/settings`). Reads `← All settings`, links to `/settings`. A settings page MUST NOT render its own back pill — the badge above already does it, and doubling up muddies the "one back-target" contract.
+- ⚙︎ **In-content header uses the shared `.space-header` classes**, not a bespoke `__hero`. Structurally: `<header className='space-header' data-frame-header=''><h1 className='space-header__title'>...</h1><p className='space-header__tagline'>...</p></header>`. This matches the display-typography korners use and keeps the whole family visually coherent.
+- ⚙︎ **Every korner reaches its settings page from the Settings Hub.** `/settings` lists every non-core enforced korner as a card; the router mounts `/hub/<slug>/settings` before any specific korner route so the settings page isn't swallowed by the korner's default view. (Route ordering was the silent regression that made "Klot has no settings" look real — see alpha.254.)
+- ◇ **Save-status indicators** (for autosave leaves) live in a sibling row below the header, not nested inside it. Keeps the header slot a single job (title + tagline) rather than a mixed-concerns bar.
+
+**What a settings page looks like** — the pattern shared by every personal leaf + the framework's default `KornerSettings`:
+
+```tsx
+export const MySettings: React.FC = () => {
+  const intl = useIntl();
+  return (
+    <Stage label={intl.formatMessage(messages.title)}>
+      <Helmet>
+        <title>{intl.formatMessage(messages.title)}</title>
+      </Helmet>
+      <div className='scrollable mysettings'>
+        <header className='space-header' data-frame-header=''>
+          <h1 className='space-header__title'>
+            {intl.formatMessage(messages.title)}
+          </h1>
+          <p className='space-header__tagline'>
+            {intl.formatMessage(messages.intro)}
+          </p>
+        </header>
+        {/* fields / bespoke content */}
+      </div>
+    </Stage>
+  );
+};
+```
+
+The Frame provides the `← All settings` pill via `<AutoSettingsBadge>` in the SpaceNav slot — no import, no per-page wiring. Bespoke settings pages (Klot's cycle overview, Kommons' token dashboard, …) may render any content inside the scrollable div, but the wrapper + header pattern above is fixed.
+
 ## 3. Conformance matrix — the automated gate
 
 Everything marked ⚙︎ above is **machine-checkable**, and the extended `korners doctor` (item 7) **has shipped** — `lib/mastodon/cli/korners.rb#detect_conformance_issues` now gates L1, L3, L4, L5, L7 and L10, alongside the L6 node checks (`detect_node_issues` + orphan-listens) and the L2 drift check. The L3/L4/L5 gaps that once sailed through are now enforced. What each check catches:
 
-| Check                                                                                                                   | Layer | Catches                                                             |
-| ----------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------- |
-| slug is a word · == filename · unique                                                                                   | L1    | `in-flow`                                                           |
-| icon wired in `useKornerIcon`, matches manifest                                                                         | L1    | huddle/nudges cross-wiring                                          |
-| `db_namespace` prefix has matching tables · `Status` association exists                                                 | L2    | namespace/association drift                                         |
-| serializer exposes projection attr                                                                                      | L3    | Wachuneed/In Flow non-functional projection                         |
-| card component exists **and** is registered                                                                             | L4    | groups/in_flow phantom cards                                        |
-| `/hub/<slug>` resolves; **enforced ⇒ mount resolves**                                                                   | L5    | Wachuneed/Nudges dead tiles                                         |
-| node bucket/parent/lifecycle valid; route_name resolves or spa; no id collision; links resolve                          | L6    | `feed.nudges` route                                                 |
-| card partial is stylelint-governed (no raw hex)                                                                         | L7    | ungoverned card drift                                               |
-| every declared `notifications.types` entry is a registered type; `subject_type` resolves                                | L10   | Kommons' five declared, zero built                                  |
-| Frame parasites — `<h1>`, `role='tablist'` when manifest has `views:`, inlined tagline copy in the mounted feature file | L11   | Klot pre-alpha.225 doubled hero + tab row (**warning**, not gating) |
+| Check                                                                                                                                   | Layer | Catches                                                             |
+| --------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------- |
+| slug is a word · == filename · unique                                                                                                   | L1    | `in-flow`                                                           |
+| icon wired in `useKornerIcon`, matches manifest                                                                                         | L1    | huddle/nudges cross-wiring                                          |
+| `db_namespace` prefix has matching tables · `Status` association exists                                                                 | L2    | namespace/association drift                                         |
+| serializer exposes projection attr                                                                                                      | L3    | Wachuneed/In Flow non-functional projection                         |
+| card component exists **and** is registered                                                                                             | L4    | groups/in_flow phantom cards                                        |
+| `/hub/<slug>` resolves; **enforced ⇒ mount resolves**                                                                                   | L5    | Wachuneed/Nudges dead tiles                                         |
+| node bucket/parent/lifecycle valid; route_name resolves or spa; no id collision; links resolve                                          | L6    | `feed.nudges` route                                                 |
+| card partial is stylelint-governed (no raw hex)                                                                                         | L7    | ungoverned card drift                                               |
+| every declared `notifications.types` entry is a registered type; `subject_type` resolves                                                | L10   | Kommons' five declared, zero built                                  |
+| Frame parasites — `<h1>`, `role='tablist'` when manifest has `views:`, inlined tagline copy in the mounted feature file                 | L11   | Klot pre-alpha.225 doubled hero + tab row (**warning**, not gating) |
+| Settings page reaches Frame chrome — `/hub/<slug>/settings` mounted, renders `<Stage>` + `.space-header`, SettingsBadge covers back-nav | L12   | route-ordering swallowed `/hub/klot/settings` (fixed alpha.254)     |
 
 **L2 caveat — the gate is narrower than the layer.** `detect_drift` only checks that some table matches the manifest's `db_namespace` prefix and that any declared `Status` association exists. It does **not** verify a real model + table + `schema.rb` entry _per resource_ (the full L2 definition in §2). So a korner can declare three resources, ship one namespaced table, and pass L2. The per-resource model/table/schema checks remain human sign-off until the drift check is deepened.
 
