@@ -75,6 +75,13 @@ settings:
     label: Let approved shares see the current phase name
     description: Even when on, only accounts you've explicitly granted a KlotShare to can see it. Raw dates never leave your account.
 
+# SpaceNav view switcher (first entry = default, bare /hub/klot).
+# Drives the AutoSpaceViewPicker tabs; Mine reads /api/v1/klot/self,
+# Circle reads /api/v1/klot/circle.
+views:
+  - { key: mine, label: My cycle }
+  - { key: circle, label: Circle }
+
 launch:
   blurb: 'Klot — track your cycle. Share the phase, not the data.'
   cta: 'Tap in'

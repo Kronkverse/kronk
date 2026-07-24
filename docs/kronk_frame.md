@@ -17,14 +17,13 @@ Desktop (container ≥ 890px)
 ┌────────────────────────────────────────────────────────────────┐
 │                          TopBand                                │
 │              (wordmark + Membrane HubSwitcher)                  │
-├──────────┬─────────────────────────────────────────┬───────────┤
-│          │                                         │           │
-│ SpaceNav │                 Stage                   │ RightBand │
-│          │           (per-korner content)          │  (korner  │
-│  (space  │                                         │   tiles)  │
-│   nav)   │                                         │           │
-│          │                                         │           │
-└──────────┴─────────────────────────────────────────┴───────────┘
+├─────────────────────────────────────────────────────┬──────────┤
+│  [← Ƙ space]                        [Today ▾]      │          │
+│                                                     │RightBand │
+│              Stage (per-korner content)             │ (korner  │
+│                                                     │  tiles)  │
+│                                                     │          │
+└─────────────────────────────────────────────────────┴──────────┘
 
                     OVERLAY: Ӂ menu (position: fixed, draggable)
 
@@ -56,9 +55,12 @@ Mobile (container ≤ 889px)
 - **Owns:** its layout position. No background — it's a transparent
   cell. Pills float over Stage content via `pointer-events: none` on
   the container and `auto` on the pills.
-- **Desktop:** ~11rem left column, pills stacked vertically.
-- **Mobile:** flips to a horizontal row inside Stage's cell; badge
-  top-left, view picker top-right (`justify-content: space-between`).
+- **Layout (all widths):** a horizontal row spanning `nav-start` to
+  `stage-end` (the full Stage content width, stopping before the
+  right rail). Badge at the leading edge, view picker at the trailing
+  edge, both on the same horizontal line at the top of Stage
+  (`flex-direction: row; justify-content: space-between`). Pills stay
+  visible as Stage content scrolls below them.
 - **The space badge pattern:** one pill that carries three jobs — a
   back arrow (tap to exit to Hub), the space glyph (Ƙ, ◉, ✦, etc.),
   and the space name. Replaces the old separate "← Hub" affordance
@@ -133,13 +135,13 @@ the Frame's.
 Every Stage-based korner renders these classes so the shape stays
 consistent:
 
-| Slot         | Class                     | Owned by                                    |
-| ------------ | ------------------------- | ------------------------------------------- |
-| Space badge  | `.space-badge`            | shared `<SpaceBadge>` component             |
-| View picker  | `.space-view-picker`      | shared `<SpaceViewPicker>` component        |
-| Stage        | `.kronk-stage`            | shared `<Stage>` component (per-korner body) |
-| Sidebar tile | `.korner-sidebar__tile`   | `<KornerSidebar>` (Frame-owned)             |
-| Ӂ menu       | `.kronk-menu`             | `<KronkMenu>` (Frame-owned)                 |
+| Slot         | Class                   | Owned by                                     |
+| ------------ | ----------------------- | -------------------------------------------- |
+| Space badge  | `.space-badge`          | shared `<SpaceBadge>` component              |
+| View picker  | `.space-view-picker`    | shared `<SpaceViewPicker>` component         |
+| Stage        | `.kronk-stage`          | shared `<Stage>` component (per-korner body) |
+| Sidebar tile | `.korner-sidebar__tile` | `<KornerSidebar>` (Frame-owned)              |
+| Ӂ menu       | `.kronk-menu`           | `<KronkMenu>` (Frame-owned)                  |
 
 (The Frame grid cells themselves are `.kronk-frame__stage`,
 `.kronk-frame__space-nav`, `.kronk-frame__top-band`,
@@ -177,16 +179,22 @@ reimplement its own back-out pill or view tabs.
    space badge replaces it; the SubBand row from earlier iterations
    is retired.
 
-5. **Never render a hero title/subtitle inside Stage.** The space
-   name is carried by the space badge in SpaceNav. Tagline copy, if
-   any, is inline panel copy on the landing view only — not a
-   reserved band.
+5. **Space title and tagline are Frame-owned, not korner-owned.**
+   Two slots carry them: the top-left `<SpaceBadge>` pill (SpaceNav,
+   fixed chrome — the persistent back affordance), and the
+   `<SpaceHeader>` at the top of the Stage scroll region
+   (in-content — a proper `<h1>{name}</h1>` above the manifest
+   tagline, scrolls with the korner's content). A korner MUST NOT
+   emit its own `<h1>` or duplicate the tagline copy — the header
+   already renders both. Landing-view lede paragraphs and
+   getting-started copy that _aren't_ the tagline are fine; they're
+   content, not chrome.
 
 ## Current state (migration status)
 
 The Frame is a two-part rollout: the **scaffolding** (done) and the
 **per-page migration** (well underway). Read the rules above as the
-*target*; this section is the *current* reality (as of alpha.196).
+_target_; this section is the _current_ reality (as of alpha.196).
 
 **Landed (scaffolding):** the Frame and all five slots are mounted
 platform-wide in `ui/index.jsx`; the shared components exist and are
@@ -215,7 +223,7 @@ migrates:
   `<Column>` routes keep it — so rule 4 holds on every migrated route
   and only the unmigrated ones still show it;
 - `_kronk_stage.scss` uses a `:has(.kronk-stage) { container-type:
-  normal }` escape hatch so a Stage's fixed children anchor to the
+normal }` escape hatch so a Stage's fixed children anchor to the
   viewport rather than the classic columns-area containing block.
 
 The end state (fixed retired, `.columns-area` gone, SubBar gone) is
