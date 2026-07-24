@@ -9,6 +9,7 @@ import {
   apiJoinKrew,
   apiLeaveKrew,
   apiArchiveKrew,
+  apiRegenerateInvite,
 } from 'mastodon/api/krew';
 import type { ApiKrewJSON, KrewKornerSlug } from 'mastodon/api/krew';
 import { Stage } from 'mastodon/components/stage';
@@ -50,6 +51,15 @@ const messages = defineMessages({
   },
   copyLink: { id: 'krew.detail.invite_copy', defaultMessage: 'Copy link' },
   copied: { id: 'krew.detail.invite_copied', defaultMessage: 'Copied' },
+  regenerateLink: {
+    id: 'krew.detail.invite_regenerate',
+    defaultMessage: 'Regenerate',
+  },
+  regenerateConfirm: {
+    id: 'krew.detail.invite_regenerate_confirm',
+    defaultMessage:
+      'Regenerate the invite link? Any link you shared with the old token will stop working.',
+  },
   kornersHeading: {
     id: 'krew.detail.korners_heading',
     defaultMessage: 'Accreted Korners',
@@ -168,6 +178,25 @@ export const KrewDetail = () => {
   const inviteUrl = krew?.invite_token
     ? `${window.location.origin}/hub/krew/${krew.slug}?k=${encodeURIComponent(krew.invite_token)}`
     : null;
+
+  const doRegenerate = useCallback(async () => {
+    if (!id) return;
+    if (!window.confirm(intl.formatMessage(messages.regenerateConfirm))) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const data = await apiRegenerateInvite(id);
+      setKrew(data);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }, [id, intl]);
+
+  const handleRegenerate = useCallback(() => {
+    void doRegenerate();
+  }, [doRegenerate]);
 
   const handleCopyInvite = useCallback(() => {
     if (!inviteUrl) return;
@@ -319,6 +348,14 @@ export const KrewDetail = () => {
                     {copied
                       ? intl.formatMessage(messages.copied)
                       : intl.formatMessage(messages.copyLink)}
+                  </button>
+                  <button
+                    type='button'
+                    onClick={handleRegenerate}
+                    disabled={busy}
+                    className='group-detail__btn-secondary'
+                  >
+                    {intl.formatMessage(messages.regenerateLink)}
                   </button>
                 </div>
               </section>

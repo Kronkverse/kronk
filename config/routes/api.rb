@@ -251,6 +251,20 @@ namespace :api, format: false do
       member do
         post :join
         post :leave
+        # Korner attachments (KrewKorner). :attach creates by slug in
+        # the body; :detach removes by slug in the URL so DELETE is
+        # idempotent and doesn't need a body.
+        post   :attach
+        delete 'attach/:korner', action: :detach
+        # Invite token rotation (Phase 4c).
+        post :regenerate_invite
+      end
+
+      # KrewRequirement CRUD (Phase 4c). Scoped nested so the URL
+      # reads /api/v1/krews/:id/requirements[/:req_id].
+      member do
+        post   'requirements', action: :add_requirement
+        delete 'requirements/:requirement_id', action: :remove_requirement
       end
 
       scope module: :krews do

@@ -58,6 +58,13 @@ export const apiGetKrews = (
 export const apiGetKrew = (id: string) =>
   apiRequestGet<ApiKrewJSON>(`v1/krews/${id}`);
 
+export interface KrewRequirementInput {
+  kind: 'attending_event' | 'located_in' | 'vouched_by_member';
+  event_id?: string;
+  region?: string;
+  vouch_params?: Record<string, unknown>;
+}
+
 export const apiCreateKrew = (params: {
   slug: string;
   name: string;
@@ -66,7 +73,27 @@ export const apiCreateKrew = (params: {
   discoverable?: boolean;
   governance_framework?: string;
   governance_threshold?: number;
+  korner_attachments?: KrewKornerSlug[];
+  requirements?: KrewRequirementInput[];
 }) => apiRequestPost<ApiKrewJSON>('v1/krews', params);
+
+export const apiAttachKorner = (id: string, korner: KrewKornerSlug) =>
+  apiRequestPost<ApiKrewJSON>(`v1/krews/${id}/attach`, { korner });
+
+export const apiDetachKorner = (id: string, korner: KrewKornerSlug) =>
+  apiRequestDelete<ApiKrewJSON>(`v1/krews/${id}/attach/${korner}`);
+
+export const apiRegenerateInvite = (id: string) =>
+  apiRequestPost<ApiKrewJSON>(`v1/krews/${id}/regenerate_invite`, {});
+
+export const apiAddRequirement = (id: string, req: KrewRequirementInput) =>
+  apiRequestPost<ApiKrewJSON>(
+    `v1/krews/${id}/requirements`,
+    req as unknown as Record<string, unknown>,
+  );
+
+export const apiRemoveRequirement = (id: string, requirementId: string) =>
+  apiRequestDelete<ApiKrewJSON>(`v1/krews/${id}/requirements/${requirementId}`);
 
 export const apiUpdateKrew = (
   id: string,
