@@ -10,7 +10,7 @@ import {
 import { Link, useLocation } from 'react-router-dom';
 
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
-import { useAllKorners } from 'mastodon/hooks/useKorner';
+import { useKorners } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // Pervasive icon rail on the right. Most-recently-visited korner
@@ -82,7 +82,7 @@ const KornerRow: React.FC<KornerRowProps> = ({
 
 export const KornerSidebar = () => {
   const location = useLocation();
-  const korners = useAllKorners();
+  const korners = useKorners();
   const [recency, setRecency] = useState<Recency>(() => readRecency());
 
   // FLIP bookkeeping: last-seen top offset per slug.
