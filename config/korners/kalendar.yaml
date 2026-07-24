@@ -112,9 +112,9 @@ nodes:
     lifecycle: live
     spa: true
     links:
-      - to: wachuneed.index
+      - to: martketplace.index
         kind: creates
-        description: Events can list tickets on Wachuneed.
+        description: Events can list tickets on mARTketplace.
       - to: huddle.index
         kind: related
         description: Huddles are scheduled through Kalendar and emit calendar events.

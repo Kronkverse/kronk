@@ -20,6 +20,8 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { ConversationList } from './conversation_list';
 import { ConversationView } from './conversation_view';
 import { EmptyState } from './empty_state';
+import { KRONK_CONVERSATION_ID } from './kronk_system';
+import { KronkSystemView } from './kronk_system_view';
 
 // Nudges messenger shell — the Signal-shaped surface at /nudges.
 // Sidebar (conversation list) on the left, open conversation on the
@@ -74,7 +76,9 @@ const NudgesMessenger: React.FC<{ multiColumn?: boolean }> = ({
 
   // Load the active conversation whenever the URL param changes.
   useEffect(() => {
-    if (!conversationId) {
+    // The Kronk system conversation is synthetic — it has no
+    // Nudges::Conversation to fetch; its view reads the notification store.
+    if (!conversationId || conversationId === KRONK_CONVERSATION_ID) {
       setActiveDetail(null);
       return () => {
         /* nothing */
@@ -162,7 +166,9 @@ const NudgesMessenger: React.FC<{ multiColumn?: boolean }> = ({
         </aside>
 
         <section className='nudges-messenger__pane'>
-          {conversationId ? (
+          {conversationId === KRONK_CONVERSATION_ID ? (
+            <KronkSystemView />
+          ) : conversationId ? (
             <ConversationView
               conversationId={conversationId}
               detail={activeDetail}

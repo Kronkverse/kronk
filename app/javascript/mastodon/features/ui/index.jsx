@@ -20,6 +20,7 @@ import { AlertsController } from 'mastodon/components/alerts_controller';
 import { Hotkeys } from 'mastodon/components/hotkeys';
 import { HoverCardController } from 'mastodon/components/hover_card_controller';
 import { BoothPlaybackProvider } from 'mastodon/features/booth/booth_playback_context';
+import { NudgeArrivalToast } from 'mastodon/components/nudge_arrival_toast';
 import { BoothMiniPlayer } from 'mastodon/features/booth/components/booth_mini_player';
 import { HuddlePip } from 'mastodon/features/huddle_pip';
 import { PictureInPicture } from 'mastodon/features/picture_in_picture';
@@ -89,7 +90,8 @@ import {
   KalendarSpiral,
   Hub,
   Booth,
-  WachuneedV2,
+  Martketplace,
+  MartketplaceNew,
   InflowV2,
   MapV2,
   Nudges,
@@ -302,13 +304,19 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/albutts' component={AlbuttsStub} content={children} />
             <Redirect from='/hub/kompass' to='/hub/map' />
             <WrappedRoute path='/hub/map' component={MapV2} content={children} />
-            <WrappedRoute path='/hub/wachuneed' component={WachuneedV2} content={children} />
+            {/* /new must sit before the wildcard so the composer route
+                wins over the KornerShell's fallback-to-default view. */}
+            {signedIn && <WrappedRoute path='/hub/martketplace/new' exact component={MartketplaceNew} content={children} />}
+            <WrappedRoute path='/hub/martketplace' component={Martketplace} content={children} />
             <WrappedRoute path='/@:acct/connections' exact component={Connections} content={children} />
             {/* Phase 1b: the messenger shell handles both /nudges (empty pane)
                 and /nudges/:conversationId (open pane). Legacy account-scoped
                 thread route deprecated — existing NudgeMessage history stays
                 queryable via /nudges/legacy until Phase 14. */}
-            {signedIn && <WrappedRoute path="/nudges/:conversationId(\d+)" component={Nudges} content={children} />}
+            {/* Numeric ids are Mate conversations; `kronk` is the system
+                nudger sentinel (KRONK_CONVERSATION_ID) — both open the
+                messenger, which renders KronkSystemView for the sentinel. */}
+            {signedIn && <WrappedRoute path="/nudges/:conversationId(\d+|kronk)" component={Nudges} content={children} />}
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} exact />}
             {signedIn && <Redirect from="/hub/kommons/skeleton" to="/hub/kommons/lattice" />}
             {signedIn && <WrappedRoute path="/hub/kommons/lattice" component={KommonsLattice} content={children} />}
@@ -753,6 +761,7 @@ class UI extends PureComponent {
           {layout !== 'mobile' && <PictureInPicture />}
           <BoothMiniPlayer />
           <HuddlePip />
+          <NudgeArrivalToast />
           <AlertsController />
 
           <KornerSubBar />

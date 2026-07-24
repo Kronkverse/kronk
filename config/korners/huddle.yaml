@@ -76,7 +76,9 @@ launch:
   blurb: 'Huddle — live video, when it makes sense to be in the room together.'
   cta: 'Peek in'
 
-enforced: false # backfill from event_type='huddle' + controllers land in 2.x
+enforced: true # live surface at /hub/huddle (Phase 1). Session API +
+# the huddle_card feed adapter land in Phase 2; Status.has_one
+# :huddle_session and the huddle_ tables already exist.
 federates: false
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────

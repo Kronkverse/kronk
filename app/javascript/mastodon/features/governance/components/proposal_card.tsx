@@ -5,7 +5,10 @@ import { FormattedMessage } from 'react-intl';
 import DoneAllIcon from '@/material-icons/400-24px/done_all.svg?react';
 import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import { Icon } from 'mastodon/components/icon';
+import { WavingHandBadge } from 'mastodon/components/waving_hand_badge';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { selectUnreadProposalIds } from 'mastodon/selectors/notifications';
+import { useAppSelector } from 'mastodon/store';
 
 import type { Proposal } from '../types';
 
@@ -23,7 +26,7 @@ const SPACE_LABELS: Record<string, string> = {
   map: 'Map',
   huddle: 'Huddle',
   kalendar: 'Kalendar',
-  wachuneed: 'Wachuneed',
+  martketplace: 'mARTketplace',
   kuestions: 'Kuestions',
   inflow: 'InFlow',
   nudges: 'Nudges',
@@ -71,6 +74,10 @@ export const ProposalCard: React.FC<{
 
   const slug = spaceSlug(proposal.node_id);
   const spaceLabel = slug ? (SPACE_LABELS[slug] ?? slug) : null;
+
+  // Waving-hand alert when this proposal has an unread notification
+  // (e.g. its work was just marked complete).
+  const hasAlert = useAppSelector(selectUnreadProposalIds).has(proposal.id);
 
   return (
     <button
@@ -133,7 +140,15 @@ export const ProposalCard: React.FC<{
           )}
         </div>
 
-        <h3 className='kommons-proposal__title'>{proposal.title}</h3>
+        <h3 className='kommons-proposal__title'>
+          {hasAlert && (
+            <WavingHandBadge
+              className='kommons-proposal__alert'
+              label='New activity'
+            />
+          )}
+          {proposal.title}
+        </h3>
 
         <div className='kommons-proposal__meta'>
           <span className='kommons-proposal__seeder'>

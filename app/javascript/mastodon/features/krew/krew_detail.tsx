@@ -37,7 +37,7 @@ const messages = defineMessages({
   seederNote: {
     id: 'krew.detail.seeder_note',
     defaultMessage:
-      "The seeder plants the Krew and can't remove members. Membership is voluntary.",
+      "The seeder gathers the Krew and can't remove members. Membership is voluntary.",
   },
   inviteHeading: {
     id: 'krew.detail.invite_heading',

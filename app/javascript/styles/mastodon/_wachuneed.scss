@@ -1,4 +1,4 @@
-// /hub/wachuneed browse page (Korner Standard L5). Token-only.
+// /hub/martketplace browse page (Korner Standard L5). Token-only.
 // Slice: category filter tabs + card refresh. Filter tabs sit above the
 // listings list; each card exposes title/price on top and a meta row
 // with category chip + location beneath.
@@ -133,5 +133,154 @@
     color: var(--text-secondary);
     font-size: 0.9em;
     line-height: 1.4;
+  }
+
+  // Composer surface (/hub/martketplace/new). Same container as the
+  // browse view (`.scrollable .wachuneed`) with a `--compose` modifier
+  // so the field styles don't leak into listing rows.
+  &--compose {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding-bottom: 4rem;
+  }
+
+  &__compose-back {
+    display: inline-block;
+    margin-top: 1rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--kronk-purple-bright);
+    }
+  }
+
+  &__compose-intro {
+    margin: 1.25rem 0 1.75rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  &__compose-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+  }
+
+  &__compose-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    border: 0;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__compose-label {
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+  }
+
+  &__compose-input,
+  &__compose-textarea {
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.4;
+
+    &:focus {
+      outline: none;
+      border-color: var(--kronk-purple-bright);
+    }
+  }
+
+  &__compose-textarea {
+    resize: vertical;
+    min-height: 5.5rem;
+  }
+
+  &__compose-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__compose-radio {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--surface-elevated) 40%, transparent);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    input[type='radio'] {
+      accent-color: var(--kronk-purple-bright);
+    }
+
+    &:hover {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 10%,
+        var(--surface-elevated)
+      );
+      color: var(--text-primary);
+    }
+
+    &--active {
+      border-color: var(--kronk-purple-bright);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 14%,
+        var(--surface-elevated)
+      );
+      color: var(--text-primary);
+    }
+  }
+
+  &__compose-error {
+    margin: 0;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--warning-red, #d33);
+    border-radius: var(--radius-medium);
+    color: var(--warning-red, #d33);
+    font-size: 0.9rem;
+  }
+
+  &__compose-submit {
+    align-self: flex-start;
+    padding: 0.85rem 1.5rem;
+    border: none;
+    border-radius: var(--radius-medium);
+    background: var(--kronk-purple-accent);
+    color: var(--surface-primary);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out);
+
+    &:hover:not(:disabled) {
+      background: var(--kronk-purple-bright);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
   }
 }

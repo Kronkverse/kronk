@@ -5,7 +5,6 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useHistory, useLocation } from 'react-router-dom';
 
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import api from 'mastodon/api';
 import { Stage } from 'mastodon/components/stage';
 import { useIdentity } from 'mastodon/identity_context';
@@ -50,7 +49,6 @@ const messages = defineMessages({
     id: 'booth.empty',
     defaultMessage: 'No sets yet. Be the first to upload!',
   },
-  uploadSet: { id: 'booth.upload_set', defaultMessage: 'Upload set' },
   loading: { id: 'booth.loading', defaultMessage: 'Loading sets…' },
   soon: {
     id: 'booth.lens_soon',
@@ -137,6 +135,19 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
       });
   }, []);
 
+  // The Ӂ menu's Post button (booth.yaml compose → /hub/booth/new) is the
+  // single entry to the composer — there is no in-page create button. The
+  // upload overlay is open exactly when the URL is /hub/booth/new; closing
+  // it (cancel or success) returns to /hub/booth.
+  useEffect(() => {
+    const onNew = signedIn && location.pathname.startsWith('/hub/booth/new');
+    setShowUpload(onNew);
+    if (onNew) {
+      setEditingSet(null);
+      setSharingSet(null);
+    }
+  }, [location.pathname, signedIn]);
+
   const handleOpen = useCallback(
     (set: BoothSet) => {
       history.push(`/hub/booth/sets/${set.id}`);
@@ -206,19 +217,17 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
     }, 2500);
   }, []);
 
-  const handleUploadSuccess = useCallback((set: BoothSet) => {
-    setSets((prev) => [set, ...prev]);
-    setShowUpload(false);
-  }, []);
+  const handleUploadSuccess = useCallback(
+    (set: BoothSet) => {
+      setSets((prev) => [set, ...prev]);
+      history.push('/hub/booth');
+    },
+    [history],
+  );
 
-  const handleShowUpload = useCallback(() => {
-    setEditingSet(null);
-    setSharingSet(null);
-    setShowUpload(true);
-  }, []);
   const handleCancelUpload = useCallback(() => {
-    setShowUpload(false);
-  }, []);
+    history.push('/hub/booth');
+  }, [history]);
   const handleCancelEdit = useCallback(() => {
     setEditingSet(null);
   }, []);
@@ -405,17 +414,6 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
             </div>
           )}
       </div>
-
-      {signedIn && !overlayOpen && (
-        <button
-          type='button'
-          className='booth-fab'
-          onClick={handleShowUpload}
-          aria-label={intl.formatMessage(messages.uploadSet)}
-        >
-          <AddIcon />
-        </button>
-      )}
 
       <BoothDock />
     </Stage>

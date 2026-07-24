@@ -170,6 +170,7 @@ export default tseslint.config([
     'build/**/*',
     'coverage/**/*',
     'db/**/*',
+    'docs/**/*',
     'lib/**/*',
     'log/**/*',
     'node_modules/**/*',

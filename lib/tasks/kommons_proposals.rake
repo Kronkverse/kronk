@@ -111,5 +111,55 @@ namespace :kommons do
       File.write(File.join(dest, 'proposals.md'), md)
       puts "exported #{records.size} proposal(s) to #{dest}/proposals.{md,json}"
     end
+
+    # Korner/slug renames (groups -> krew, kompass -> map, wachuneed ->
+    # martketplace) and retired nodes
+    # leave some proposals pointing at a node_id that is no longer registered.
+    # Any write to such a proposal (deliver!, complete!) then fails the
+    # `node_id is a registered Kronk node` validation. This remaps the known
+    # stale ids to their current node. Idempotent — only stale ids with a
+    # registered target are touched; re-running is a no-op. Dry-run with
+    # DRY_RUN=1.
+    #
+    #   RAILS_ENV=production bundle exec rake kommons:proposals:remap_stale_nodes
+    #   RAILS_ENV=production DRY_RUN=1 bundle exec rake kommons:proposals:remap_stale_nodes
+    desc 'Remap proposals whose node_id points at a renamed/removed node to its current node. DRY_RUN=1 to preview.'
+    task remap_stale_nodes: :environment do
+      dry_run = ENV['DRY_RUN'] == '1'
+      log = ->(m) { puts "[kommons:proposals:remap_stale_nodes] #{m}" }
+
+      remap = {
+        'groups.index' => 'krew.index',
+        'groups.detail' => 'krew.detail',
+        'kompass.index' => 'map.index',
+        'kommons.skeleton' => 'kommons.new_korner',
+        'wachuneed.index' => 'martketplace.index',
+      }
+      registered = ->(nid) { nid.present? && !Kronk::NodeRegistry.find(nid).nil? }
+
+      changed = 0
+      unmapped = []
+      Proposal.where.not(node_id: nil).find_each do |proposal|
+        next if registered.call(proposal.node_id)
+
+        target = remap[proposal.node_id]
+        if target && registered.call(target)
+          line = "##{proposal.id}  #{proposal.node_id} -> #{target}"
+          line += ' (dry-run)' if dry_run
+          log.call(line)
+          proposal.update_column(:node_id, target) unless dry_run
+          changed += 1
+        else
+          unmapped << [proposal.id, proposal.node_id]
+        end
+      end
+
+      log.call("#{changed} proposal(s) #{dry_run ? 'to remap' : 'remapped'}.")
+
+      unless unmapped.empty?
+        log.call('Stale node_ids with no mapping (add them to `remap` in this task):')
+        unmapped.each { |id, nid| log.call("  ##{id}  #{nid}") }
+      end
+    end
   end
 end
