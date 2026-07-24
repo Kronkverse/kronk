@@ -88,7 +88,7 @@ import {
   EventDetail,
   KalendarSpiral,
   Hub,
-  BoothV2,
+  Booth,
   WachuneedV2,
   InflowV2,
   MapV2,
@@ -257,7 +257,10 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path="/orbit" component={Orbit} content={children} />
             {signedIn && <WrappedRoute path="/huddle" component={Live} content={children} />}
             <WrappedRoute path={["/booth/sets/:id", "/hub/booth/sets/:id"]} component={BoothSetPage} content={children} />
-            <WrappedRoute path={["/booth", "/hub/booth"]} component={BoothV2} content={children} />
+            {/* Native Booth. The non-exact /hub/booth match also catches the
+                lens sub-paths (/hub/booth/musik, /artists, …); the component
+                reads the lens from the URL. Set detail is matched above. */}
+            <WrappedRoute path={["/booth", "/hub/booth"]} component={Booth} content={children} />
             {signedIn && <WrappedRoute path='/settings' exact component={SettingsHub} content={children} />}
             {signedIn && <WrappedRoute path='/settings/you' exact component={SettingsYou} content={children} />}
             {signedIn && <WrappedRoute path='/settings/korners' exact component={SettingsKorners} content={children} />}

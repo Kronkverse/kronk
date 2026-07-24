@@ -73,6 +73,16 @@ compose:
   label: 'Upload a set'
   route: '/hub/booth/new'
 
+# SpaceNav view switcher (first entry = default, bare /hub/booth).
+# Musik is native; Artists/Events/Live/Me ship as coming-soon panels
+# until their surfaces are built (follow-up PRs).
+views:
+  - { key: musik, label: Musik }
+  - { key: artists, label: Artists }
+  - { key: events, label: Events }
+  - { key: live, label: Live }
+  - { key: me, label: Me }
+
 launch:
   blurb: 'The Booth — DJ sets and mixes at Kronk.'
   cta: 'Tap in'
