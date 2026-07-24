@@ -76,11 +76,12 @@ settings:
     description: Even when on, only accounts you've explicitly granted a KlotShare to can see it. Raw dates never leave your account.
 
 # SpaceNav view switcher (first entry = default, bare /hub/klot).
-# Drives the AutoSpaceViewPicker tabs; Mine reads /api/v1/klot/self,
-# Circle reads /api/v1/klot/circle.
+# Circle (inbound projection — mates + phase visualisation) is the
+# landing view; Mine (owner's own log + settings) is the second view.
+# Circle reads /api/v1/klot/circle, Mine reads /api/v1/klot/self.
 views:
-  - { key: mine, label: My cycle }
   - { key: circle, label: Circle }
+  - { key: mine, label: My cycle }
 
 launch:
   blurb: 'Klot — track your cycle. Share the phase, not the data.'
