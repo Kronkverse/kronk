@@ -307,6 +307,10 @@ export function Martketplace () {
   return import("../../martketplace");
 }
 
+export function MartketplaceNew () {
+  return import("../../martketplace/new_listing");
+}
+
 export function KrewDetail () {
   return import("../../krew/krew_detail").then(m => ({ default: m.KrewDetail }));
 }
