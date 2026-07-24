@@ -5,6 +5,7 @@
 slug: kommons
 name: Kommons # rendered as ₭ommons in nav (unicode Kra)
 purpose: "To let the community decide Kronk's structural moves together, in the open."
+tagline: 'Kronk is Kommunal, we build it together. What should we build next?'
 icon:
   material: construction
   text_glyph: '✦'

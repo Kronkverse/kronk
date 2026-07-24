@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { KornerGlyph } from 'mastodon/components/korner_glyph';
+import { SpaceIntro } from 'mastodon/components/space_intro';
 import { Stage } from 'mastodon/components/stage';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 
@@ -95,12 +96,7 @@ const Hub: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       <div className='hub-page'>
-        <p className='hub-page__lede'>
-          <FormattedMessage
-            id='hub.hero_intro'
-            defaultMessage='Every korner on this instance. Drop into whichever fits what you feel like doing.'
-          />
-        </p>
+        <SpaceIntro slug='hub' />
 
         {live.length === 0 && soon.length === 0 && (
           <p className='hub-page__empty'>

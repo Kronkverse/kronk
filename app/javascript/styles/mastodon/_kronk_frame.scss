@@ -23,16 +23,28 @@
   container-name: frame;
   position: relative;
   display: grid;
+
+  // Right-band track width matches the RightBand FADE strip (7.75rem,
+  // see .kronk-frame__right-band), not just the hard rail (rail 4.5rem +
+  // inset 0.75rem = 5.25rem). Stage content stops at `stage-end`, so
+  // aligning the reserved track to the fade's soft inner edge keeps the
+  // last card clear of the fading black — not just the opaque rail.
   grid-template-columns:
     [nav-start] 11rem
     [nav-end stage-start] 1fr
-    [stage-end right-start] 5.25rem
+    [stage-end right-start] 7.75rem
     [right-end];
   grid-template-rows: 4.25rem 1fr;
   min-height: 100vh;
 }
 
-@container frame (width <= 889px) {
+// Media query, NOT @container: this rule targets `.kronk-frame` itself,
+// and an element can't be queried by its own `container-type`, so a
+// `@container frame` rule here never matches. `.kronk-frame` spans the
+// viewport, so a viewport media query is the correct trigger. (The
+// descendant `@container frame` rules below stay — they query this
+// ancestor's container correctly.)
+@media (width <= 889px) {
   .kronk-frame {
     grid-template-columns: [nav-start stage-start] 1fr [nav-end stage-end];
 
@@ -148,15 +160,42 @@
   // offsets content below the TopBand strip. This retires the classic
   // `.columns-area { padding-top: 4.25rem }` hack in _kronk_chrome.scss
   // — the Frame owns the top offset now.
-  // Grid-column stays full-width so classic Mastodon content (which
-  // centres its own reading column and hides the right nav pane) keeps
-  // its viewport-centred visual placement.
+  // Grid-column stays full-width for classic Mastodon content (which
+  // centres its own reading column and hides the right nav pane) so it
+  // keeps its viewport-centred placement. Stage routes narrow it to the
+  // reserved tracks below.
   grid-column: 1 / -1;
   grid-row: 2 / -1;
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
+}
+
+// Stage routes: the grid OWNS the geometry. The Stage cell spans the
+// nav + stage tracks and stops at `stage-end`, so the right-band track
+// (`7.75rem`, matching the fade strip) is a genuinely reserved column
+// the korner sidebar + its fade live in — Stage content stops at the
+// fade's soft inner edge and can never run under the fading black.
+// The cell keeps its default stacking (no z-index): the fixed fade
+// bands (z-24) still frame the Stage edges, and only .kronk-stage
+// itself sits above them so the right-band fade's soft inner edge
+// doesn't dim content. Lifting the whole cell to z-25 made it a
+// stacking layer over the frame chrome, so it's left in flow.
+.kronk-frame:has(.kronk-stage) .kronk-frame__stage {
+  grid-column: nav-start / stage-end;
+  min-width: 0;
+  min-height: 0;
+}
+
+// Mobile: the sidebar is hidden and the grid collapses to one column,
+// so the Stage cell already spans full width. Keep it in row 2 only,
+// leaving the row-3 track for the fixed BottomBand tab-bar.
+@container frame (width <= 889px) {
+  .kronk-frame:has(.kronk-stage) .kronk-frame__stage {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
 }
 
 .kronk-frame__right-band {

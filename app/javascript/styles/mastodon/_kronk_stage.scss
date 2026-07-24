@@ -9,11 +9,11 @@
 //            bands (z-25 vs z-24) so Stage content isn't dimmed by
 //            the fade — the bands still show behind the sidebar
 //            tiles and above the wordmark, where they belong.
-//   right  = sidebar inner edge on ≥890px (`5.25rem` = sidebar width
-//            `4.5rem` + right inset `0.75rem`). Stage butts right up
-//            against the sidebar rail; nothing in between. Below the
-//            sidebar breakpoint the sidebar is hidden and Stage runs
-//            to the viewport edge (`right: 0`).
+//   right  = the reserved right-band grid track on ≥890px (`7.75rem`,
+//            matching the sidebar FADE strip, not just the hard rail),
+//            so Stage content stops at the fade's soft inner edge and
+//            clears the fading black. Below the sidebar breakpoint the
+//            sidebar is hidden and the Stage cell spans full width.
 //   bottom = viewport.
 //   left   = 0. There's no left rail to match; a mirrored left inset
 //            just opened a mysterious gutter down the left side that
@@ -26,16 +26,21 @@
 // gradients) attach to the space's root INSIDE Stage; the Stage
 // itself has no chrome of its own so nothing "boxes in" the content.
 .kronk-stage {
-  position: fixed;
-  top: 4.25rem;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  // Flow child that fills the Frame's Stage cell. The Frame grid now
+  // owns the geometry: on desktop the Stage cell spans the nav + stage
+  // tracks and STOPS before the reserved right-band track, so content
+  // reaches the left edge and butts the sidebar's inner edge — it can
+  // never run under the rail. No position:fixed rectangle, no hardcoded
+  // right:5.25rem inset (see .kronk-frame:has(.kronk-stage) in
+  // _kronk_frame.scss). The 4.25rem top offset comes from the grid's
+  // row-1 track, not a fixed `top`.
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 
-  // Above the classic `body::after` right fade band (z-24) so the band
-  // shows behind the sidebar tiles (its intended purpose) but doesn't
-  // dim Stage content. Same level as the top chrome (wordmark z-25,
-  // switcher z-25) — no overlap in position so tied z-index is fine.
+  // Lift above the right-band fade strip (z-24) so its soft inner edge
+  // never dims Stage content; matches the top chrome (z-25).
   z-index: 25;
 
   // Explicit two-axis overflow. Vertical `auto` keeps scroll available
@@ -49,12 +54,19 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+}
 
-  @media (width >= 890px) {
-    // Butt against the sidebar's inner edge. Sidebar: `right: 0.75rem;
-    // width: 4.5rem` → its inner edge sits at `viewport-right - 5.25rem`.
-    right: 5.25rem;
-  }
+// border-box for the whole Stage subtree — standardised, so no korner
+// can overflow the Stage the way the Hub did. Mastodon has NO global
+// `* { box-sizing: inherit }`, and the classic `.columns-area--mobile`
+// wrapper is content-box, so korner content defaults to content-box:
+// any padded, `width: 100%` container's bounding box becomes
+// `100% + padding` and spills past the Stage (clipping the right-hand
+// content). Forcing border-box on every element rendered into the
+// Stage makes side padding count inside `width: 100%` platform-wide.
+.kronk-stage,
+.kronk-stage * {
+  box-sizing: border-box;
 }
 
 // Classic Mastodon `body.layout-single-column { overflow-y: scroll }`
@@ -67,23 +79,40 @@ body:has(.kronk-stage) {
   overflow: hidden;
 }
 
-// KornerSubBar (breadcrumb) pushes the Stage down another notch when
-// present so the pill doesn't overlap the space header.
-body:has(.korner-sub-bar) .kronk-stage {
-  top: 6.75rem;
-}
+// Let the Stage cell's height flow down Mastodon's columns-area chain
+// so .kronk-stage can fill it and own its own scroll. Scoped to Stage
+// routes — classic <Column> routes keep their own layout.
+// `background: transparent` is essential: the classic chain paints
+// `var(--background-color)` (the timeline surface, darker than the
+// Frame's), which the old position:fixed Stage hid by never letting
+// the chain fill. Now that it fills the cell, that darker fill would
+// show as a straight-edged rectangle over the Frame background on
+// every korner. The Stage carries no chrome of its own, so the chain
+// stays transparent and the Frame background shows through uniformly.
+.kronk-frame:has(.kronk-stage) {
+  .columns-area,
+  .columns-area__panels,
+  .columns-area__panels__main {
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
 
-// Mobile: no side rail, no top chrome. Stage fills the viewport
-// completely — the HubSwitcher lives in the bottom tab-bar on this
-// breakpoint so no top inset is needed either.
-@media (width <= 629px) {
-  .kronk-stage {
-    top: 0;
-    right: 0;
-    left: 0;
+    // Fill the Stage cell at ALL widths. The classic `width: 100%` on
+    // __panels__main only applies ≥890px, so on mobile the chain was
+    // content-sized and grew wider than the viewport (clipping the
+    // intro copy + the right-hand cards). Force it to the cell width.
+    width: 100%;
 
-    // Room for the bottom tab-bar HubSwitcher.
-    bottom: 3.5rem;
+    // Neutralise Mastodon's classic reading-column box entirely: no
+    // max-width clamp, no auto-centering, no border, no background. On
+    // Stage routes the Frame grid + the Stage own the geometry — the
+    // columns-area chain must be a transparent, full-cell passthrough
+    // that dictates nothing. Each korner sets its own inner width
+    // inside the Stage (e.g. .hub-page's own max-width).
+    max-width: none;
+    margin: 0;
+    border: 0;
+    background: transparent;
   }
 }
 
@@ -119,6 +148,21 @@ body:has(.kronk-stage) .korner-sub-bar {
 // (docs/kronk_frame.md § SpaceNav). Panel-level hero titles are also
 // retired per spec rule 5 — the space badge carries the space name
 // across all views.
+// <SpaceIntro> — the standard one-line korner intro shown under the
+// space title, fed by the manifest `tagline` field. Canonical style
+// for every korner's intro; replaces the per-korner bespoke landing
+// intros (hub-page__lede, the Krew landing lede, you-portal__intro, and
+// the KornerStub blurb). Centered, muted, inline in the Stage flow — not a
+// reserved band (the floating SpaceNav pills carry the title).
+.space-intro {
+  max-width: 34rem;
+  margin: 0 auto 1.75rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
 // .space-subtitle stays as inline tagline copy for panels (spec rule
 // 5 explicitly permits per-view tagline text — "inline panel copy on
 // the landing view only — not a reserved band").

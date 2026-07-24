@@ -7,6 +7,7 @@
 slug: moments
 name: Moments
 purpose: 'To make space for the ephemeral — posts that are gone by morning.'
+tagline: "Moments make us who we are, and we're here to share the authentic us."
 icon:
   material: hourglass
 render_target: native

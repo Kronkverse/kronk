@@ -13,6 +13,7 @@
 slug: kompass
 name: Kompass
 purpose: "To let people signal presence on their own terms — who's around, only if they choose to say."
+tagline: 'Allow yourself to be found, know where your mates are & explore the world.'
 icon:
   material: travel_explore
   text_glyph: 'Ǩ'

@@ -12,19 +12,13 @@ $tile-shadow-1: #1e1c2e;
 $tile-shadow-2: #17151f;
 
 .hub-page {
+  // box-sizing: border-box comes from the shared `.kronk-stage *` rule
+  // (see _kronk_stage.scss) — so this page's side padding is included
+  // in width: 100% and never overflows the Stage.
   padding: 2.25rem 1.5rem 5rem;
   max-width: 62.5rem;
   margin: 0 auto;
   width: 100%;
-
-  &__lede {
-    max-width: 34rem;
-    margin: 0 auto 1.75rem;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    line-height: 1.5;
-    text-align: center;
-  }
 
   &__section-label {
     margin: 2.5rem 0 1rem;
@@ -45,8 +39,18 @@ $tile-shadow-2: #17151f;
 
   &__board {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(114px, 1fr));
+
+    // Fluid, fixed column counts that always fit the Stage. `minmax(0,
+    // 1fr)` lets columns shrink so a card is never clipped by the
+    // Stage's overflow — the old `minmax(114px, 1fr)` couldn't go below
+    // 114px and overflowed on narrow widths. 2 across on mobile, 4 on
+    // desktop (the size that reads best — 5 too small, 3 too large).
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
+
+    @media (width >= 890px) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
   }
 
   &__board--soon {

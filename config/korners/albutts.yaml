@@ -9,6 +9,7 @@
 slug: albutts
 name: Albutts
 purpose: "To share albums where every photo keeps its author's credit."
+tagline: 'Capturing moments because life is fleeting.'
 icon:
   material: photo_library
 render_target: native

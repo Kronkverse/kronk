@@ -11,6 +11,7 @@
 slug: krew
 name: Krews
 purpose: 'To let several people share selectively — a defined group of people you can post to, without a feed of its own.'
+tagline: 'Find your Krew, build your own. Family is chosen.'
 icon:
   material: groups
   text_glyph: 'Ҝ'

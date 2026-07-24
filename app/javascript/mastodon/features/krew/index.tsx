@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 
 import { apiGetKrews } from 'mastodon/api/krew';
 import type { ApiKrewJSON } from 'mastodon/api/krew';
+import { SpaceIntro } from 'mastodon/components/space_intro';
 import { Stage } from 'mastodon/components/stage';
 
 // Krews landing (/hub/krew). Two lenses per KRONK_KREWS §7.1:
@@ -19,11 +20,6 @@ import { Stage } from 'mastodon/components/stage';
 
 const messages = defineMessages({
   title: { id: 'krew.title', defaultMessage: 'Krews' },
-  lede: {
-    id: 'krew.lede',
-    defaultMessage:
-      'Defined groups of people you can share with selectively. Seed one, or discover one to join.',
-  },
   yours: { id: 'krew.lens.yours', defaultMessage: 'Yours' },
   discover: { id: 'krew.lens.discover', defaultMessage: 'Discover' },
   new: { id: 'krew.new', defaultMessage: 'Plant a new Krew' },
@@ -168,9 +164,7 @@ export const Krews = () => {
           <h1 className='krew-page__hero-title'>
             <FormattedMessage {...messages.title} />
           </h1>
-          <p className='krew-page__hero-lede'>
-            <FormattedMessage {...messages.lede} />
-          </p>
+          <SpaceIntro slug='krew' />
         </header>
 
         <div className='krew-page__toolbar'>
