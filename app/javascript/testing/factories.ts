@@ -93,6 +93,7 @@ export const relationshipsFactory: FactoryFunction<ApiRelationshipJSON> = ({
   id: id ?? '1',
   following: false,
   followed_by: false,
+  mate: false,
   blocking: false,
   blocked_by: false,
   languages: null,
