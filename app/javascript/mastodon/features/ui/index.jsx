@@ -260,6 +260,17 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/directory' component={Directory} content={children} />
             <WrappedRoute path='/explore' component={Explore} content={children} />
             <WrappedRoute path="/orbit" component={Orbit} content={children} />
+            {/* Per-korner settings MUST come before any specific
+                /hub/<slug> route — otherwise non-exact korner routes
+                (e.g. /hub/klot) swallow /hub/<slug>/settings and the
+                korner's default view renders instead of the settings
+                page. Standard L12 (docs/korners/korner_standard.md)
+                requires every korner reach its settings via this
+                route; placing it first here is what makes that
+                promise real. Regressed silently before this pass
+                because it originally sat after /hub/klot / /hub/krew
+                / /hub/huddle. */}
+            {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
             {/* Huddle is a korner surface at /hub/huddle; the legacy
                 /huddle path forwards to it. */}
             <Redirect from='/huddle' to='/hub/huddle' exact />
@@ -300,7 +311,6 @@ class SwitchingColumnsArea extends PureComponent {
                 because the client immediately hits /api/v1/klot/self. */}
             {signedIn && <WrappedRoute path='/hub/klot' component={Klot} content={children} />}
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
-            {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
             <WrappedRoute path='/hub/moments' component={MomentsStub} content={children} />
             <WrappedRoute path='/hub/albutts' component={AlbuttsStub} content={children} />
