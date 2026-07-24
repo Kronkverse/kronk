@@ -112,7 +112,8 @@ namespace :kommons do
       puts "exported #{records.size} proposal(s) to #{dest}/proposals.{md,json}"
     end
 
-    # Korner/slug renames (groups -> krew, kompass -> map) and retired nodes
+    # Korner/slug renames (groups -> krew, kompass -> map, wachuneed ->
+    # martketplace) and retired nodes
     # leave some proposals pointing at a node_id that is no longer registered.
     # Any write to such a proposal (deliver!, complete!) then fails the
     # `node_id is a registered Kronk node` validation. This remaps the known
@@ -132,6 +133,7 @@ namespace :kommons do
         'groups.detail' => 'krew.detail',
         'kompass.index' => 'map.index',
         'kommons.skeleton' => 'kommons.new_korner',
+        'wachuneed.index' => 'martketplace.index',
       }
       registered = ->(nid) { nid.present? && !Kronk::NodeRegistry.find(nid).nil? }
 
