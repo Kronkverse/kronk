@@ -29,6 +29,14 @@ import {
   FOLLOW_REQUESTS_EXPAND_FAIL,
   authorizeFollowRequestSuccess,
   rejectFollowRequestSuccess,
+  MATE_REQUESTS_FETCH_REQUEST,
+  MATE_REQUESTS_FETCH_SUCCESS,
+  MATE_REQUESTS_FETCH_FAIL,
+  MATE_REQUESTS_EXPAND_REQUEST,
+  MATE_REQUESTS_EXPAND_SUCCESS,
+  MATE_REQUESTS_EXPAND_FAIL,
+  acceptMateRequestSuccess,
+  rejectMateRequestSuccess,
   fetchEndorsedAccounts,
 } from '../actions/accounts';
 import {
@@ -75,6 +83,7 @@ const initialState = ImmutableMap({
   reblogged_by: initialListState,
   favourited_by: initialListState,
   follow_requests: initialListState,
+  mate_requests: initialListState,
   blocks: initialListState,
   mutes: initialListState,
   featured_tags: initialListState,
@@ -96,6 +105,15 @@ const appendToList = (state, path, accounts, next) => {
 
 const normalizeFollowRequest = (state, notification) => {
   return state.updateIn(['follow_requests', 'items'], list => {
+    return list.filterNot(item => item === notification.account.id).unshift(notification.account.id);
+  });
+};
+
+// Kronk — Mates. An incoming Mate request arrives as a `follow_request`
+// notification, so mirror it into the mate_requests list too (the Requests
+// view is the Mates-native surface for the same underlying request).
+const normalizeMateRequest = (state, notification) => {
+  return state.updateIn(['mate_requests', 'items'], list => {
     return list.filterNot(item => item === notification.account.id).unshift(notification.account.id);
   });
 };
@@ -156,7 +174,20 @@ export default function userLists(state = initialState, action) {
   case FAVOURITES_EXPAND_FAIL:
     return state.setIn(['favourited_by', action.id, 'isLoading'], false);
   case notificationsUpdate.type:
-    return action.payload.notification.type === 'follow_request' ? normalizeFollowRequest(state, action.payload.notification) : state;
+    return action.payload.notification.type === 'follow_request' ? normalizeMateRequest(normalizeFollowRequest(state, action.payload.notification), action.payload.notification) : state;
+  case MATE_REQUESTS_FETCH_SUCCESS:
+    return normalizeList(state, ['mate_requests'], action.accounts, action.next);
+  case MATE_REQUESTS_EXPAND_SUCCESS:
+    return appendToList(state, ['mate_requests'], action.accounts, action.next);
+  case MATE_REQUESTS_FETCH_REQUEST:
+  case MATE_REQUESTS_EXPAND_REQUEST:
+    return state.setIn(['mate_requests', 'isLoading'], true);
+  case MATE_REQUESTS_FETCH_FAIL:
+  case MATE_REQUESTS_EXPAND_FAIL:
+    return state.setIn(['mate_requests', 'isLoading'], false);
+  case acceptMateRequestSuccess.type:
+  case rejectMateRequestSuccess.type:
+    return state.updateIn(['mate_requests', 'items'], list => list.filterNot(item => item === action.payload.id));
   case FOLLOW_REQUESTS_FETCH_SUCCESS:
     return normalizeList(state, ['follow_requests'], action.accounts, action.next);
   case FOLLOW_REQUESTS_EXPAND_SUCCESS:

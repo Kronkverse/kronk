@@ -11,10 +11,8 @@ import type { MessageDescriptor } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
 
@@ -100,9 +98,9 @@ interface NotificationsPayload {
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-export const NotificationsSettings: React.FC<{ multiColumn?: boolean }> = ({
-  multiColumn,
-}) => {
+export const NotificationsSettings: React.FC<{
+  multiColumn?: boolean;
+}> = () => {
   const intl = useIntl();
   const [schema, setSchema] = useState<SettingDescriptor[]>([]);
   const [values, setValues] = useState<Record<string, unknown>>({});
@@ -167,39 +165,29 @@ export const NotificationsSettings: React.FC<{ multiColumn?: boolean }> = ({
           : '';
 
   return (
-    <Column>
-      <ColumnHeader
-        title={intl.formatMessage(messages.title)}
-        icon='notifications'
-        iconComponent={NotificationsIcon}
-        multiColumn={multiColumn}
-        showBackButton
-      />
-
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
       <div className='scrollable appearance-settings'>
-        <header className='appearance-settings__hero'>
-          <span className='appearance-settings__hero-glyph' aria-hidden='true'>
-            <NotificationsIcon />
-          </span>
-          <div>
-            <h1 className='appearance-settings__hero-title'>
-              {intl.formatMessage(messages.title)}
-            </h1>
-            <p className='appearance-settings__hero-intro'>
-              {intl.formatMessage(messages.intro)}
-            </p>
-          </div>
+        <header className='space-header' data-frame-header=''>
+          <h1 className='space-header__title'>
+            {intl.formatMessage(messages.title)}
+          </h1>
+          <p className='space-header__tagline'>
+            {intl.formatMessage(messages.intro)}
+          </p>
+        </header>
+
+        <div className='appearance-settings__status-row'>
           <span
             className={`appearance-settings__status appearance-settings__status--${status}`}
             role='status'
           >
             {statusLabel}
           </span>
-        </header>
+        </div>
 
         {loaded && (
           <div className='appearance-settings__fields'>
@@ -224,6 +212,6 @@ export const NotificationsSettings: React.FC<{ multiColumn?: boolean }> = ({
           </div>
         )}
       </div>
-    </Column>
+    </Stage>
   );
 };

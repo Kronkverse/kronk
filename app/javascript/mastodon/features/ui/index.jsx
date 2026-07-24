@@ -27,6 +27,7 @@ import { PictureInPicture } from 'mastodon/features/picture_in_picture';
 import { HubSwitcher } from './components/hub_switcher';
 import { KornerSubBar } from './components/korner_sub_bar';
 import { KornerSidebar } from './components/korner_sidebar';
+import { AutoSettingsBadge } from 'mastodon/components/auto_settings_badge';
 import { AutoSpaceBadge } from 'mastodon/components/auto_space_badge';
 import { AutoSpaceViewPicker } from 'mastodon/components/auto_space_view_picker';
 import { KronkFrame } from 'mastodon/components/kronk_frame';
@@ -67,6 +68,7 @@ import {
   NotificationRequests,
   NotificationRequest,
   FollowRequests,
+  MateRequests,
   FavouritedStatuses,
   BookmarkedStatuses,
   FollowedTags,
@@ -258,6 +260,17 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/directory' component={Directory} content={children} />
             <WrappedRoute path='/explore' component={Explore} content={children} />
             <WrappedRoute path="/orbit" component={Orbit} content={children} />
+            {/* Per-korner settings MUST come before any specific
+                /hub/<slug> route — otherwise non-exact korner routes
+                (e.g. /hub/klot) swallow /hub/<slug>/settings and the
+                korner's default view renders instead of the settings
+                page. Standard L12 (docs/korners/korner_standard.md)
+                requires every korner reach its settings via this
+                route; placing it first here is what makes that
+                promise real. Regressed silently before this pass
+                because it originally sat after /hub/klot / /hub/krew
+                / /hub/huddle. */}
+            {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
             {/* Huddle is a korner surface at /hub/huddle; the legacy
                 /huddle path forwards to it. */}
             <Redirect from='/huddle' to='/hub/huddle' exact />
@@ -298,7 +311,6 @@ class SwitchingColumnsArea extends PureComponent {
                 because the client immediately hits /api/v1/klot/self. */}
             {signedIn && <WrappedRoute path='/hub/klot' component={Klot} content={children} />}
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
-            {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
             <WrappedRoute path='/hub/moments' component={MomentsStub} content={children} />
             <WrappedRoute path='/hub/albutts' component={AlbuttsStub} content={children} />
@@ -358,6 +370,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/statuses/:statusId/favourites' component={Favourites} content={children} />
 
             <WrappedRoute path='/follow_requests' component={FollowRequests} content={children} />
+            <WrappedRoute path='/mate_requests' component={MateRequests} content={children} />
             <WrappedRoute path='/blocks' component={Blocks} content={children} />
             <WrappedRoute path='/domain_blocks' component={DomainBlocks} content={children} />
             <WrappedRoute path='/followed_tags' component={FollowedTags} content={children} />
@@ -743,6 +756,7 @@ class UI extends PureComponent {
                   views declared in the pickers' SLUG_TO_* maps) without
                   opting in. */}
               <AutoSpaceBadge />
+              <AutoSettingsBadge />
               <AutoSpaceViewPicker />
             </KronkFrame.SpaceNav>
             <KronkFrame.RightBand>
