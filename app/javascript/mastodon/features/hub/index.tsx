@@ -7,19 +7,25 @@ import { Link } from 'react-router-dom';
 
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
-import { KornerGlyph } from 'mastodon/components/korner_glyph';
+import { Icon } from 'mastodon/components/icon';
 import { SpaceIntro } from 'mastodon/components/space_intro';
 import { Stage } from 'mastodon/components/stage';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // Hub landing (/hub). Tile aesthetic from the prototype at
 // public/hub-arrangeable-preview.html (retired 2.0.0-alpha.204):
-// chunky aspect-ratio 1 tiles with a hand-drawn line-art glyph, a
-// hover-only settings gear top-right, a tuned-in dot bottom-left, and
-// an "off" treatment for coming-soon korners. Data + links are the
-// real registry — every tile routes to /hub/<slug>. Drag-to-arrange
-// (the prototype's other trick) is deferred until the ordering
-// endpoint (`PATCH /api/v1/kronk/hub/order`) ships.
+// chunky aspect-ratio 1 tiles with the korner's Material icon (from
+// the manifest's `icon.material`), a hover-only settings gear
+// top-right, a tuned-in dot bottom-left, and an "off" treatment for
+// coming-soon korners. Data + links are the real registry — every
+// tile routes to /hub/<slug>.
+//
+// The tile glyph reads from the manifest via `kornerIcon(slug)` so
+// changing `icon.material` in any manifest propagates here + to every
+// other icon site (column headers, dropdowns, kommons lattice) in one
+// place. Drag-to-arrange is deferred until the ordering endpoint
+// (`PATCH /api/v1/kronk/hub/order`) ships.
 
 const messages = defineMessages({
   title: { id: 'hub.title', defaultMessage: 'Hub' },
@@ -53,7 +59,11 @@ const KornerTile: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
         className='hub-page__tile-link'
         aria-label={korner.name}
       >
-        <KornerGlyph slug={korner.slug} className='hub-page__tile-glyph' />
+        <Icon
+          id={korner.icon?.material ?? korner.slug}
+          icon={kornerIcon(korner.slug, korner)}
+          className='hub-page__tile-glyph'
+        />
         <span className='hub-page__tile-name'>{korner.name}</span>
         {teaser && <span className='hub-page__tile-tip'>{teaser}</span>}
         {tunedIn && !soon && (

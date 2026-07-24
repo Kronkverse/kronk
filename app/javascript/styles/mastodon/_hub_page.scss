@@ -109,11 +109,17 @@ $tile-shadow-2: #17151f;
   &__tile-glyph {
     width: 48px;
     height: 48px;
-    stroke: $tile-glyph-on;
+
+    // Material Symbols paths inherit `fill: currentColor`, so we set
+    // the color here. Also set stroke so legacy line-art overrides
+    // via `icon.glyph_path` continue to render.
+    color: $tile-glyph-on;
+    fill: currentcolor;
+    stroke: currentcolor;
     filter: drop-shadow(0 0 10px rgb(140 125 255 / 40%))
       drop-shadow(0 2px 2px rgb(0 0 0 / 60%));
     transition:
-      stroke 0.16s,
+      color 0.16s,
       filter 0.2s;
     pointer-events: none;
   }
@@ -228,12 +234,12 @@ $tile-shadow-2: #17151f;
     }
 
     .hub-page__tile-glyph {
-      stroke: $tile-glyph-off;
+      color: $tile-glyph-off;
       filter: none;
     }
 
     &:hover .hub-page__tile-glyph {
-      stroke: #6d68a0;
+      color: #6d68a0;
       filter: none;
     }
 
