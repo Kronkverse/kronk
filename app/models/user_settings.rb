@@ -43,6 +43,11 @@ class UserSettings
     # client maps to font stacks / a UI scale factor. 'default' = inherit the
     # brand token (no override).
     setting :personal_accent, default: nil
+    # Purple hue slider — nil means "use the anchor palette"; otherwise
+    # an integer 260-310 rotates the whole --kronk-purple-* family
+    # around a shared L+C anchor (see docs/kronk_aesthetic_system.md).
+    # Range enforced by the appearance controller, not `in:`.
+    setting :personal_purple_hue, default: nil
     setting :personal_font_display, default: 'default', in: %w(default playfair fraunces cormorant lora merriweather garamond spectral)
     setting :personal_font_body, default: 'default', in: %w(default inter ibm-plex manrope work-sans dm-sans figtree system)
     setting :ui_scale, default: 'default', in: %w(small default large xl)

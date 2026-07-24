@@ -44,6 +44,53 @@ SCSS_TARGET = ROOT.join('app/javascript/styles/mastodon/_tokens.scss')
 # Total character width of a `// ── Label ──…` section header.
 HEADER_WIDTH = 68
 
+# OKLCH → sRGB hex conversion. Used to emit a hex fallback for older
+# browsers alongside the native oklch(...) form. The math is the
+# Björn Ottosson reference OKLab → linear sRGB matrix + the standard
+# sRGB gamma companding. Out-of-gamut values clamp to [0, 1] channel
+# by channel — the closest displayable neighbour rather than nothing.
+def oklch_to_hex(lightness, chroma, hue)
+  h_rad = hue * Math::PI / 180.0
+  a = chroma * Math.cos(h_rad)
+  b = chroma * Math.sin(h_rad)
+  l_norm = lightness / 100.0
+
+  # OKLab → linear LMS (Ottosson matrix)
+  l_lms = (l_norm + (0.3963377774 * a) + (0.2158037573 * b))**3
+  m_lms = (l_norm - (0.1055613458 * a) - (0.0638541728 * b))**3
+  s_lms = (l_norm - (0.0894841775 * a) - (1.2914855480 * b))**3
+
+  # Linear LMS → linear sRGB
+  r_lin = (4.0767416621 * l_lms) - (3.3077115913 * m_lms) + (0.2309699292 * s_lms)
+  g_lin = (-1.2684380046 * l_lms) + (2.6097574011 * m_lms) - (0.3413193965 * s_lms)
+  b_lin = (-0.0041960863 * l_lms) - (0.7034186147 * m_lms) + (1.7076147010 * s_lms)
+
+  # Linear → gamma sRGB, clamp, quantise to 8-bit
+  hex = [r_lin, g_lin, b_lin].map do |channel|
+    gamma = channel > 0.0031308 ? (1.055 * (channel**(1.0 / 2.4))) - 0.055 : 12.92 * channel
+    (gamma.clamp(0.0, 1.0) * 255).round.to_s(16).rjust(2, '0')
+  end.join
+
+  "##{hex}"
+end
+
+# Format a value out of tokens.yaml. Hex strings pass through; OKLCH
+# `{ l, c, h }` hashes become `oklch(<L>% <C> <H>)`.
+def format_color_value(value)
+  return value unless value.is_a?(Hash) && value.key?('l')
+
+  "oklch(#{value['l']}% #{value['c']} #{value['h']})"
+end
+
+# Hex-fallback form for the same value; used inside the base :root
+# block so browsers without OKLCH support still render *something*
+# close.
+def hex_fallback_value(value)
+  return value unless value.is_a?(Hash) && value.key?('l')
+
+  oklch_to_hex(value['l'], value['c'], value['h'])
+end
+
 # Emit plan for the :root (dark) block, in output order. The light block
 # re-emits only the themed groups, header-less.
 #
@@ -71,21 +118,19 @@ end
 # Guard against a tokens.yaml section that PLAN doesn't render — that
 # would silently drop the section from the output.
 def assert_plan_covers!(tokens)
-  covered = PLAN.map { |group| group[:section] }.uniq
+  covered = PLAN.map { |group| group[:section] }.uniq # rubocop:disable Rails/Pluck -- PLAN is a plain Array, no ActiveRecord relation
   missing = tokens.keys - covered
   return if missing.empty?
 
-  warn "tokens.yaml has sections with no PLAN entry: #{missing.join(', ')}. " \
-       'Add them to PLAN in bin/generate-tokens.'
+  warn "tokens.yaml has sections with no PLAN entry: #{missing.join(', ')}. Add them to PLAN in bin/generate-tokens."
   exit 1
 end
 
-def header(label)
-  base = "  // ── #{label} "
-  base + ('─' * (HEADER_WIDTH - base.length))
+def oklch_value?(value)
+  value.is_a?(Hash) && value.key?('l')
 end
 
-def emit_dark(tokens)
+def emit_dark(tokens, indent: '  ', color_formatter: :format_color_value)
   lines = []
   PLAN.each_with_index do |group, index|
     lines << '' unless index.zero? # blank separator before every group but the first
@@ -93,28 +138,67 @@ def emit_dark(tokens)
 
     case group[:kind]
     when :themed
-      lines << header(group[:label])
-      entries.each { |name, values| lines << "  --#{group[:prefix]}#{name}: #{values['dark']};" }
+      lines << "#{indent}// ── #{group[:label]} #{'─' * (HEADER_WIDTH - indent.length - 6 - group[:label].length)}"
+      entries.each do |name, values|
+        formatted = send(color_formatter, values['dark'])
+        lines << "#{indent}--#{group[:prefix]}#{name}: #{formatted};"
+      end
     when :plain
-      lines << header(group[:label])
-      entries.each { |name, value| lines << "  --#{group[:prefix]}#{name}: #{value};" }
+      lines << "#{indent}// ── #{group[:label]} #{'─' * (HEADER_WIDTH - indent.length - 6 - group[:label].length)}"
+      entries.each { |name, value| lines << "#{indent}--#{group[:prefix]}#{name}: #{value};" }
     when :aliases
-      lines << '  // Consumer aliases — SCSS uses the short names below directly.'
-      entries.each_key { |name| lines << "  --#{name}: var(--semantic-#{name});" }
+      lines << "#{indent}// Consumer aliases — SCSS uses the short names below directly."
+      entries.each_key { |name| lines << "#{indent}--#{name}: var(--semantic-#{name});" }
     end
   end
   lines
 end
 
-def emit_light(tokens)
+def emit_light(tokens, indent: '  ', color_formatter: :format_color_value)
   lines = []
   PLAN.select { |group| group[:kind] == :themed }.each_with_index do |group, index|
     lines << '' unless index.zero?
     tokens.fetch(group[:section]).each do |name, values|
-      lines << "  --#{group[:prefix]}#{name}: #{values['light']};"
+      formatted = send(color_formatter, values['light'])
+      lines << "#{indent}--#{group[:prefix]}#{name}: #{formatted};"
     end
   end
   lines
+end
+
+# Inside the @supports block, override only the tokens that actually
+# have OKLCH declarations. Hex-only tokens don't need the re-emit; the
+# base :root block already gives them their final value. Keeps the
+# generated SCSS scannable — the @supports block reads as "these are
+# the OKLCH overrides" rather than a full palette dump.
+def emit_oklch_overrides(tokens, theme, indent: '    ')
+  lines = []
+  PLAN.select { |group| group[:kind] == :themed }.each do |group|
+    tokens.fetch(group[:section]).each do |name, values|
+      value = values[theme]
+      next unless oklch_value?(value)
+
+      lines << "#{indent}--#{group[:prefix]}#{name}: #{format_color_value(value)};"
+    end
+  end
+  lines
+end
+
+# Palette + semantic entries may be declared as OKLCH triples. Native
+# oklch() renders correctly in every browser released since Chrome 111
+# (Mar 2023), Safari 15.4 (Mar 2022), Firefox 113 (May 2023) — >97%
+# global support at time of writing. But rather than let the tiny
+# unsupported tail render as an invalid custom-property value, we emit
+# the hex-computed nearest neighbour first in the base :root block, and
+# override with the native OKLCH form inside `@supports (color:
+# oklch(0% 0 0))`. Browsers without OKLCH keep the hex; browsers with
+# OKLCH use the perceptually-uniform native color.
+def oklch_values?(tokens)
+  PLAN.select { |g| g[:kind] == :themed }.any? do |group|
+    tokens.fetch(group[:section]).values.any? do |themed|
+      themed['dark'].is_a?(Hash) || themed['light'].is_a?(Hash)
+    end
+  end
 end
 
 def emit_scss(tokens)
@@ -123,12 +207,29 @@ def emit_scss(tokens)
   buf << '// Do not edit by hand — rerun the generator when tokens change.'
   buf << ''
   buf << ':root {'
-  buf.concat(emit_dark(tokens))
+  buf.concat(emit_dark(tokens, color_formatter: :hex_fallback_value))
   buf << '}'
   buf << ''
   buf << ":root[data-theme='light'] {"
-  buf.concat(emit_light(tokens))
+  buf.concat(emit_light(tokens, color_formatter: :hex_fallback_value))
   buf << '}'
+
+  if oklch_values?(tokens)
+    buf << ''
+    buf << '// Native OKLCH overrides — browsers without OKLCH support keep the'
+    buf << '// hex approximations above; browsers with OKLCH swap in the'
+    buf << '// perceptually-uniform values so palette shifts read consistently.'
+    buf << '@supports (color: oklch(0% 0 0)) {'
+    buf << '  :root {'
+    buf.concat(emit_oklch_overrides(tokens, 'dark'))
+    buf << '  }'
+    buf << ''
+    buf << "  :root[data-theme='light'] {"
+    buf.concat(emit_oklch_overrides(tokens, 'light'))
+    buf << '  }'
+    buf << '}'
+  end
+
   buf << ''
   buf.join("\n")
 end

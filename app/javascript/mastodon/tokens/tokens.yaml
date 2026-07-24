@@ -11,13 +11,39 @@
 # elevation presets, motion durations + easings. Sweep replaces
 # hardcoded font-family + inline fallback values across the SCSS.
 
-# ── Kronk palette (matches running production) ─────────────────────
+# ── Kronk palette ──────────────────────────────────────────────────
+# Palette entries can be raw hex strings OR OKLCH triples
+# `{ l, c, h }` where l = lightness 0-100, c = chroma 0-~0.4,
+# h = hue 0-360. OKLCH is perceptually uniform (unlike HSL), so a
+# palette derived at a shared hue + varying lightness levels reads as
+# coherent under any display filter, and edits like "warmer" or "one
+# shade darker" become one-number changes. See
+# docs/kronk_aesthetic_system.md for the anchor-hue rationale.
+#
+# Anchor hue: 285° (true violet — red + blue in balance, so the color
+# stays purple under night-mode/warm-shifted displays instead of
+# collapsing toward indigo or magenta). Anchor chroma: 0.20.
+#
+# The generator emits every OKLCH triple as an `oklch(...)` value
+# with a computed hex fallback under an `@supports` guard, so both
+# modern browsers (native OKLCH rendering) and older ones (hex)
+# see the closest available color.
 kronk:
-  purple-primary: { dark: '#32237c', light: '#3034a0' }
-  purple-bright: { dark: '#7241ff', light: '#6364ff' }
-  purple-deep: { dark: '#3a218b', light: '#36248c' }
-  purple-muted: { dark: '#413c8c', light: '#45455f' }
-  purple-accent: { dark: '#4414cc', light: '#6364ff' }
+  purple-primary:
+    dark: { l: 32, c: 0.14, h: 285 } # deep, understated (nav backgrounds)
+    light: { l: 40, c: 0.14, h: 285 }
+  purple-bright:
+    dark: { l: 68, c: 0.20, h: 285 } # highlight (hover, focus, active glyph)
+    light: { l: 62, c: 0.20, h: 285 }
+  purple-deep:
+    dark: { l: 30, c: 0.19, h: 285 } # deep + saturated (fixed chrome fills)
+    light: { l: 32, c: 0.19, h: 285 }
+  purple-muted:
+    dark: { l: 42, c: 0.06, h: 285 } # mid, low-chroma (borders, dividers)
+    light: { l: 55, c: 0.05, h: 285 }
+  purple-accent:
+    dark: { l: 50, c: 0.20, h: 285 } # the brand pick (CTAs, active pills)
+    light: { l: 55, c: 0.19, h: 285 }
 
 # ── Semantic surfaces + text ───────────────────────────────────────
 semantic:

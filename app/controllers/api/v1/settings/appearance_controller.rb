@@ -31,6 +31,12 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
     # Kronk Personal Appearance. personal_accent is a purple hex (validated by
     # hue below — kept out of `enum` because it's a continuous constraint).
     'personal_accent' => { key: 'web.personal_accent', kind: 'accent', options: -> {} },
+    # Kronk Personal Appearance — purple hue slider. Rotates the whole
+    # --kronk-purple-* family (primary/bright/deep/muted/accent) around
+    # a shared L+C anchor so the palette warms or cools as one. Range
+    # clamped to the purple band (260-310); anything outside drifts
+    # into pure blue or magenta.
+    'personal_purple_hue' => { key: 'web.personal_purple_hue', kind: 'hue', options: -> {} },
     'personal_font_display' => { key: 'web.personal_font_display', kind: 'enum', options: -> { %w(default playfair fraunces cormorant lora merriweather garamond spectral) } },
     'personal_font_body' => { key: 'web.personal_font_body', kind: 'enum', options: -> { %w(default inter ibm-plex manrope work-sans dm-sans figtree system) } },
     'ui_scale' => { key: 'web.ui_scale', kind: 'enum', options: -> { %w(small default large xl) } },
@@ -56,6 +62,11 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
         return render json: { error: "#{name} must be a purple hex colour" }, status: 422 unless purple_accent?(value)
       end
 
+      if cfg[:kind] == 'hue'
+        value = coerce_hue(params[name])
+        return render json: { error: "#{name} must be an integer 260-350 or null" }, status: 422 if value == :invalid
+      end
+
       if cfg[:key] == :locale
         new_locale = value
       else
@@ -78,6 +89,23 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
 
   def coerce(kind, raw)
     kind == 'boolean' ? ActiveModel::Type::Boolean.new.cast(raw) : raw.to_s
+  end
+
+  # Coerce a hue param: nil / blank clears the override; an integer in
+  # [260, 350] is stored as-is; anything else is a validation failure.
+  # Range window sits the anchor (285°) about a quarter from the cool
+  # end (blue-violet at 260°) with the bulk of travel going warm into
+  # magenta / plum territory (up to 350°). Above 350 drifts into red;
+  # below 260 into pure blue. Returns the coerced value or the
+  # sentinel :invalid so the caller can render 422 without a raise.
+  def coerce_hue(raw)
+    return nil if raw.nil? || raw.to_s.strip.empty?
+
+    n = Integer(raw.to_s, exception: false)
+    return :invalid if n.nil?
+    return :invalid unless n.between?(260, 350)
+
+    n
   end
 
   # Personal accent must stay in the purple family so the platform still reads
@@ -118,6 +146,13 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
         'reduce_motion' => current_user.settings['web.reduce_motion'],
         'auto_play_gif' => current_user.settings['web.auto_play'],
         'personal_accent' => current_user.settings['web.personal_accent'],
+        # UserSettings::Setting with a nil default type-casts stored
+        # values through ActiveModel::Type::String, so an integer
+        # written to the store comes back as `"285"`. Cast back to
+        # Integer here so the client always sees a number — otherwise
+        # the settings widget's numeric check fails and the slider
+        # snaps to the anchor on every save/reload.
+        'personal_purple_hue' => current_user.settings['web.personal_purple_hue'].then { |raw| raw.present? ? raw.to_i : nil },
         'personal_font_display' => current_user.settings['web.personal_font_display'],
         'personal_font_body' => current_user.settings['web.personal_font_body'],
         'ui_scale' => current_user.settings['web.ui_scale'],
