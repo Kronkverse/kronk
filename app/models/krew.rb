@@ -33,7 +33,7 @@ class Krew < ApplicationRecord
 
   INVITE_TOKEN_BYTES = 24
 
-  belongs_to :seeded_by, class_name: 'Account', optional: true
+  belongs_to :seeded_by, class_name: 'Account', foreign_key: 'seeded_by_account_id', inverse_of: false, optional: true
 
   has_many :krew_memberships, dependent: :destroy
   has_many :members, through: :krew_memberships, source: :account
