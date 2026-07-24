@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_23_160000) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_24_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -435,6 +435,24 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_23_160000) do
     t.bigint "parent_account_id"
     t.index ["parent_status_id"], name: "index_conversations_on_parent_status_id", unique: true, where: "(parent_status_id IS NOT NULL)"
     t.index ["uri"], name: "index_conversations_on_uri", unique: true, opclass: :text_pattern_ops, where: "(uri IS NOT NULL)"
+  end
+
+  create_table "cycle_logs", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.date "started_on", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "started_on"], name: "index_cycle_logs_on_account_and_started_on_desc", order: { started_on: :desc }
+    t.index ["account_id"], name: "index_cycle_logs_on_account_id"
+  end
+
+  create_table "cycle_profiles", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.integer "cycle_length", default: 28, null: false
+    t.integer "period_length", default: 5, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_cycle_profiles_on_account_id", unique: true
   end
 
   create_table "custom_emoji_categories", force: :cascade do |t|
@@ -1172,6 +1190,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_23_160000) do
     t.index ["poll_id"], name: "index_poll_votes_on_poll_id"
   end
 
+  create_table "phase_shares", force: :cascade do |t|
+    t.bigint "sharer_id", null: false
+    t.bigint "viewer_id", null: false
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["sharer_id", "viewer_id"], name: "index_phase_shares_on_sharer_id_and_viewer_id", unique: true
+    t.index ["viewer_id"], name: "index_phase_shares_on_viewer_id"
+  end
+
   create_table "polls", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "status_id", null: false
@@ -1907,6 +1933,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_23_160000) do
   add_foreign_key "challenge_responses", "challenge_conditions", on_delete: :cascade, validate: false
   add_foreign_key "conversation_mutes", "accounts", name: "fk_225b4212bb", on_delete: :cascade
   add_foreign_key "conversation_mutes", "conversations", on_delete: :cascade
+  add_foreign_key "cycle_logs", "accounts", on_delete: :cascade
+  add_foreign_key "cycle_profiles", "accounts", on_delete: :cascade
   add_foreign_key "custom_filter_keywords", "custom_filters", on_delete: :cascade
   add_foreign_key "custom_filter_statuses", "custom_filters", on_delete: :cascade
   add_foreign_key "custom_filter_statuses", "statuses", on_delete: :cascade
@@ -1994,6 +2022,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_23_160000) do
   add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id", name: "fk_f5fc4c1ee3", on_delete: :cascade
   add_foreign_key "oauth_access_tokens", "users", column: "resource_owner_id", name: "fk_e84df68546", on_delete: :cascade
   add_foreign_key "oauth_applications", "users", column: "owner_id", name: "fk_b0988c7c0a", on_delete: :cascade
+  add_foreign_key "phase_shares", "accounts", column: "sharer_id", on_delete: :cascade
+  add_foreign_key "phase_shares", "accounts", column: "viewer_id", on_delete: :cascade
   add_foreign_key "poll_votes", "accounts", on_delete: :cascade
   add_foreign_key "poll_votes", "polls", on_delete: :cascade
   add_foreign_key "polls", "accounts", on_delete: :cascade
