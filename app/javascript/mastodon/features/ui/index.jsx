@@ -309,7 +309,10 @@ class SwitchingColumnsArea extends PureComponent {
                 and /nudges/:conversationId (open pane). Legacy account-scoped
                 thread route deprecated — existing NudgeMessage history stays
                 queryable via /nudges/legacy until Phase 14. */}
-            {signedIn && <WrappedRoute path="/nudges/:conversationId(\d+)" component={Nudges} content={children} />}
+            {/* Numeric ids are Mate conversations; `kronk` is the system
+                nudger sentinel (KRONK_CONVERSATION_ID) — both open the
+                messenger, which renders KronkSystemView for the sentinel. */}
+            {signedIn && <WrappedRoute path="/nudges/:conversationId(\d+|kronk)" component={Nudges} content={children} />}
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} exact />}
             {signedIn && <Redirect from="/hub/kommons/skeleton" to="/hub/kommons/lattice" />}
             {signedIn && <WrappedRoute path="/hub/kommons/lattice" component={KommonsLattice} content={children} />}
