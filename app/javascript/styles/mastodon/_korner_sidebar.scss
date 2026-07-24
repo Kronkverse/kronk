@@ -192,37 +192,6 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
   &__label {
     display: none;
   }
-
-  // Hub button — pinned to the TOP of the rail (the home of the korner
-  // world). Separated from the korner list by a bottom border.
-  &__hub {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.7rem 0.4rem;
-    margin-bottom: 0.35rem;
-    border-bottom: 1px solid
-      color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 25%,
-        var(--surface-elevated)
-      );
-    color: var(--kronk-purple-accent);
-    text-decoration: none;
-    transition:
-      background var(--dur-fast) var(--ease-out),
-      color var(--dur-fast) var(--ease-out);
-
-    &:hover,
-    &--active {
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 14%,
-        transparent
-      );
-      color: #fff;
-    }
-  }
 }
 
 // Reserve the sidebar's width + a visible gutter on the LEFT at the

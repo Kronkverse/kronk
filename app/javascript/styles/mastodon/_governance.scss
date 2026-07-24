@@ -471,6 +471,12 @@
     margin: 4px 0 8px;
   }
 
+  // Waving-hand alert sitting inline before the proposal title.
+  &__alert {
+    vertical-align: -0.15em;
+    margin-right: 0.4rem;
+  }
+
   &__meta {
     display: flex;
     align-items: center;

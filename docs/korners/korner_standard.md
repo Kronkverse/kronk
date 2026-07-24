@@ -101,23 +101,55 @@ A korner that generates activity a user would want to know about declares it, an
 
 **On Nudges.** Notifications are becoming Nudges, and Nudges is not built. That does not block this layer. A korner declares its types in the manifest and the framework delivers them through `Notification` today; when Nudges lands it inherits the same declarations. The manifest contract is the stable surface — build against it, not against the current delivery mechanism.
 
+### L11 — Frame chrome (don't reimplement)
+
+_(Appended after L10 for the same reason. Frame adherence is build-time work, not a review-time catch: the failure this closes is Klot pre-alpha.225 — a korner rendered its own hero + tab row while the Frame was also rendering them, producing a doubled surface visible to any user who opened the space. The check itself is a `korners doctor` warning until every shipped korner is clean, then it promotes to an issue.)_
+
+The Kronk Frame provides three chrome slots for every `/hub/<slug>` route via shared `Auto*` components. Reimplementing any of them creates a doubled surface. **Read [`docs/kronk_frame.md`](../kronk_frame.md)** for the layout spec; this layer restates it as korner-side requirements.
+
+- ⚙︎ **No local hero title.** The `<AutoSpaceBadge>` renders the space name (with the manifest's `icon.text_glyph`) into the SpaceNav slot. A korner index MUST NOT render its own `<h1>`. _(Audit: Klot pre-alpha.225 shipped `<h1 className='klot__title'>Klot</h1>` above a Frame that was already rendering the badge.)_
+- ⚙︎ **No local view/tab row when the manifest declares `views:`.** The `<AutoSpaceViewPicker>` renders a pill/dropdown from the manifest's `views:` list and drives the URL (`/hub/<slug>` → default; `/hub/<slug>/<key>` → `key`). A korner with `views:` MUST NOT render `role="tablist"` or a bespoke tab class of its own — pick the current view from the URL (`useLocation`) and match the segment against `views:`. _(Audit: Klot pre-alpha.225 rendered a `__tab-row` above the Frame's picker.)_
+- ⚙︎ **No local hero title in the content.** The `<AutoSpaceHeader>` renders `<h1>{name}</h1>` above the tagline at the top of the Stage's scrollable region on the space landing (and on any declared-view sub-path). The header is the in-content title — a korner MUST NOT render its own `<h1>` in the content either.
+- ⚙︎ **No local tagline paragraph.** `<AutoSpaceHeader>` also renders the manifest's `tagline` under the title. A korner MUST NOT hardcode the same copy in its index. Keep the tagline in the manifest; the Frame renders it.
+- ◇ Landing-view copy that _isn't_ the tagline (a lede paragraph, a getting-started card, a signup teaser) is fine — it's the korner's content, not chrome. The rule is against duplicating what the Frame renders, not against writing prose.
+
+**What a Frame-adherent korner looks like.** See `docs/korners/template/` for the canonical shape. Every korner sits inside a `<KornerShell>` which owns the Stage + URL-to-view routing:
+
+```tsx
+export const MyKorner: React.FC = () => (
+  <KornerShell
+    slug='mykorner'
+    label='MyKorner'
+    className='mykorner'
+    defaultView='default'
+    views={{
+      default: () => <DefaultView />,
+      other: () => <OtherView />,
+    }}
+  />
+);
+```
+
+No `<h1>`, no `<nav>` tab row, no repeated tagline copy. Title / tagline / tabs come from the Frame, driven by `config/korners/mykorner.yaml`. The view keys MUST match the manifest's `views:` list (same keys, same order).
+
 ## 3. Conformance matrix — the automated gate
 
 Everything marked ⚙︎ above is **machine-checkable**, and the extended `korners doctor` (item 7) **has shipped** — `lib/mastodon/cli/korners.rb#detect_conformance_issues` now gates L1, L3, L4, L5, L7 and L10, alongside the L6 node checks (`detect_node_issues` + orphan-listens) and the L2 drift check. The L3/L4/L5 gaps that once sailed through are now enforced. What each check catches:
 
-| Check                                                                                          | Layer | Catches                                     |
-| ---------------------------------------------------------------------------------------------- | ----- | ------------------------------------------- |
-| slug is a word · == filename · unique                                                          | L1    | `in-flow`                                   |
-| icon wired in `useKornerIcon`, matches manifest                                                | L1    | huddle/nudges cross-wiring                  |
-| `db_namespace` prefix has matching tables · `Status` association exists         | L2    | namespace/association drift                  |
-| serializer exposes projection attr                                             | L3    | Wachuneed/In Flow non-functional projection |
-| card component exists **and** is registered                                                    | L4    | groups/in_flow phantom cards                |
-| `/hub/<slug>` resolves; **enforced ⇒ mount resolves**                                          | L5    | Wachuneed/Nudges dead tiles                 |
-| node bucket/parent/lifecycle valid; route_name resolves or spa; no id collision; links resolve | L6    | `feed.nudges` route                         |
-| card partial is stylelint-governed (no raw hex)                                                | L7    | ungoverned card drift                       |
-| every declared `notifications.types` entry is a registered type; `subject_type` resolves       | L10   | Kommons' five declared, zero built          |
+| Check                                                                                                                   | Layer | Catches                                                             |
+| ----------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------- |
+| slug is a word · == filename · unique                                                                                   | L1    | `in-flow`                                                           |
+| icon wired in `useKornerIcon`, matches manifest                                                                         | L1    | huddle/nudges cross-wiring                                          |
+| `db_namespace` prefix has matching tables · `Status` association exists                                                 | L2    | namespace/association drift                                         |
+| serializer exposes projection attr                                                                                      | L3    | Wachuneed/In Flow non-functional projection                         |
+| card component exists **and** is registered                                                                             | L4    | groups/in_flow phantom cards                                        |
+| `/hub/<slug>` resolves; **enforced ⇒ mount resolves**                                                                   | L5    | Wachuneed/Nudges dead tiles                                         |
+| node bucket/parent/lifecycle valid; route_name resolves or spa; no id collision; links resolve                          | L6    | `feed.nudges` route                                                 |
+| card partial is stylelint-governed (no raw hex)                                                                         | L7    | ungoverned card drift                                               |
+| every declared `notifications.types` entry is a registered type; `subject_type` resolves                                | L10   | Kommons' five declared, zero built                                  |
+| Frame parasites — `<h1>`, `role='tablist'` when manifest has `views:`, inlined tagline copy in the mounted feature file | L11   | Klot pre-alpha.225 doubled hero + tab row (**warning**, not gating) |
 
-**L2 caveat — the gate is narrower than the layer.** `detect_drift` only checks that some table matches the manifest's `db_namespace` prefix and that any declared `Status` association exists. It does **not** verify a real model + table + `schema.rb` entry *per resource* (the full L2 definition in §2). So a korner can declare three resources, ship one namespaced table, and pass L2. The per-resource model/table/schema checks remain human sign-off until the drift check is deepened.
+**L2 caveat — the gate is narrower than the layer.** `detect_drift` only checks that some table matches the manifest's `db_namespace` prefix and that any declared `Status` association exists. It does **not** verify a real model + table + `schema.rb` entry _per resource_ (the full L2 definition in §2). So a korner can declare three resources, ship one namespaced table, and pass L2. The per-resource model/table/schema checks remain human sign-off until the drift check is deepened.
 
 `◇` items stay human sign-off (aesthetic judgment, tests). Canonical manifest-shape conformance (nested `security:`) is `⚙︎` per L1.
 
