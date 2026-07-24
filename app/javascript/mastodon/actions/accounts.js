@@ -178,6 +178,40 @@ export function unfollowAccount(id) {
   };
 }
 
+// Kronk — Mates. Send a Mate request (mutual, consent-based; replaces the
+// one-way follow action). Reuses the follow request/success/fail creators so
+// the relationship (now carrying `mate`) is normalised the same way; `locked:
+// true` gives the correct optimistic `requested` state, since a Mate always
+// starts as a pending request.
+export function mateAccount(id) {
+  return (dispatch, getState) => {
+    const alreadyFollowing = getState().getIn(['relationships', id, 'following']);
+
+    dispatch(followAccountRequest({ id, locked: true }));
+
+    api().post(`/api/v1/accounts/${id}/mate`).then(response => {
+      dispatch(followAccountSuccess({ relationship: response.data, alreadyFollowing }));
+    }).catch(error => {
+      dispatch(followAccountFail({ id, error, locked: true }));
+    });
+  };
+}
+
+// Kronk — Mates. Withdraw a pending Mate request or remove an established
+// Mate. Reuses the unfollow creators (unmate tears down the follow graph the
+// same way, so status filtering applies identically).
+export function unmateAccount(id) {
+  return (dispatch, getState) => {
+    dispatch(unfollowAccountRequest(id));
+
+    api().post(`/api/v1/accounts/${id}/unmate`).then(response => {
+      dispatch(unfollowAccountSuccess({ relationship: response.data, statuses: getState().get('statuses') }));
+    }).catch(error => {
+      dispatch(unfollowAccountFail({ id, error }));
+    });
+  };
+}
+
 export function blockAccount(id) {
   return (dispatch, getState) => {
     dispatch(blockAccountRequest(id));
