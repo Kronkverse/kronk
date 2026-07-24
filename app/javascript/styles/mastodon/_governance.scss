@@ -471,6 +471,59 @@
     margin: 4px 0 8px;
   }
 
+  // Title sits on the left; the loud Mark Complete CTA sits across from it.
+  &__title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    .governance-detail__title {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
+  // The loud "Mark Complete" CTA — appears across from the title once a
+  // proposal is delivered (dev-finalised), urging the proposer to finalise.
+  &__mark-complete {
+    flex: 0 0 auto;
+    align-self: center;
+    padding: 0.7rem 1.6rem;
+    border: 0;
+    border-radius: var(--radius-medium);
+    background: linear-gradient(
+      135deg,
+      var(--accent, #8b63ff),
+      var(--kronk-purple-bright, #7241ff)
+    );
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 6px 18px
+      color-mix(in srgb, var(--kronk-purple-bright) 40%, transparent);
+    transition:
+      transform 0.15s var(--ease-out),
+      box-shadow 0.15s var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px
+        color-mix(in srgb, var(--kronk-purple-bright) 55%, transparent);
+      outline: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
   // Waving-hand alert sitting inline before the proposal title.
   &__alert {
     vertical-align: -0.15em;
