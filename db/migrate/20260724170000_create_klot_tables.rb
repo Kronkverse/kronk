@@ -43,7 +43,13 @@ class CreateKlotTables < ActiveRecord::Migration[8.0]
       t.index [:viewer_id]
     end
 
-    add_foreign_key :phase_shares, :accounts, column: :sharer_id, on_delete: :cascade
-    add_foreign_key :phase_shares, :accounts, column: :viewer_id, on_delete: :cascade
+    # strong_migrations flags a bare add_foreign_key on the large accounts
+    # table (it validates existing rows under a lock). phase_shares is a
+    # brand-new empty table here, so validation is trivial and safe —
+    # assert that, matching the Krew Phase 3a migration's pattern.
+    safety_assured do
+      add_foreign_key :phase_shares, :accounts, column: :sharer_id, on_delete: :cascade
+      add_foreign_key :phase_shares, :accounts, column: :viewer_id, on_delete: :cascade
+    end
   end
 end
