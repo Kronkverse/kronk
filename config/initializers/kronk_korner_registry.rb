@@ -48,6 +48,12 @@ module Kronk
       :listens,
       # Hub landing (§4.7)
       :hub_teaser,
+      # SpaceNav views (§4 SpaceNav) — the per-korner view switcher the
+      # Frame renders in the floating nav. Ordered array of
+      # { 'key' => String, 'label' => String }; the first is the default
+      # (bare `/hub/<slug>`), the rest map to `/hub/<slug>/<key>`. Empty
+      # when the korner has a single view (no picker rendered).
+      :views,
       # Launch card (§8.7)
       :launch,
       # Space page — the "why" and "who" a member sees when they open the
@@ -192,6 +198,7 @@ module Kronk
           emits: Array(yaml['emits']),
           listens: Array(yaml['listens']),
           hub_teaser: yaml['hub_teaser'].is_a?(Hash) ? yaml['hub_teaser'] : nil,
+          views: extract_views(yaml),
           launch: yaml['launch'].is_a?(Hash) ? yaml['launch'] : nil,
           purpose: yaml['purpose'].is_a?(String) ? yaml['purpose'] : nil,
           tagline: yaml['tagline'].is_a?(String) ? yaml['tagline'] : nil,
@@ -260,6 +267,26 @@ module Kronk
         return nil if label.empty? || route.empty?
 
         { 'label' => label, 'route' => route }
+      end
+
+      # SpaceNav views — an ordered array of `{ key, label }` hashes.
+      # Each entry needs a non-empty String key + label; malformed
+      # entries are dropped. Returns [] when absent so a korner with a
+      # single view renders no picker. Order is preserved: entry 0 is
+      # the default view (bare `/hub/<slug>`).
+      def extract_views(yaml)
+        raw = yaml['views']
+        return [] unless raw.is_a?(Array)
+
+        raw.filter_map do |entry|
+          next unless entry.is_a?(Hash)
+
+          key = entry['key'].to_s
+          label = entry['label'].to_s
+          next if key.empty? || label.empty?
+
+          { 'key' => key, 'label' => label }
+        end
       end
 
       # Notifications may arrive as either `notifications: [<type>, ...]`

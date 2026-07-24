@@ -3,6 +3,8 @@ import type { Ref } from 'react';
 
 import { scrollTop } from 'mastodon/scroll';
 
+import { AutoSpaceIntro } from './auto_space_intro';
+
 // Kronk zonal layout — the Stage.
 //
 // The Kronk chrome is split into three named layers:
@@ -55,6 +57,7 @@ export const Stage = forwardRef<StageRef, StageProps>(
 
     return (
       <div ref={nodeRef} role='region' aria-label={label} className='kronk-stage'>
+        <AutoSpaceIntro />
         {children}
       </div>
     );

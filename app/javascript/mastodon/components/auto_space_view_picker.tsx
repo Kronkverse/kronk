@@ -2,41 +2,24 @@ import { useCallback } from 'react';
 
 import { useHistory, useLocation } from 'react-router-dom';
 
-import type { SpaceView } from './space_view_picker';
+import { useKorner } from 'mastodon/hooks/useKorner';
+
 import { SpaceViewPicker } from './space_view_picker';
 
 // AutoSpaceViewPicker — renders <SpaceViewPicker> automatically for
-// korners that declare views in SLUG_TO_VIEWS. Current view is derived
-// from the URL; selecting a view navigates via history.push. This is
-// the Frame-provided per-space nav — every korner in the map picks it
-// up without wiring up its own switcher.
+// korners that declare a `views` list in their manifest. Current view
+// is derived from the URL; selecting a view navigates via
+// history.push. This is the Frame-provided per-space nav — every korner
+// picks it up from its manifest without wiring up its own switcher.
+//
+// Views come from the manifest (config/korners/<slug>.yaml → `views:`),
+// the same source as the space title and intro, so title + description
+// + navigation stay in sync. Ordered: the first entry is the default
+// (bare `/hub/<slug>`); the rest map to `/hub/<slug>/<key>`.
 //
 // Spec: docs/kronk_frame.md § SpaceNav.
 
 const HUB_ROUTE_RE = /^\/hub\/([a-z0-9-]+)(?:\/([a-z0-9-]+))?/;
-
-// Per-korner view lists. Views are ordered — the first one is the
-// default (rendered when the URL is bare `/hub/<slug>`). Selecting a
-// view navigates to `/hub/<slug>/<key>`; selecting the default clears
-// the sub-path back to `/hub/<slug>`.
-//
-// Add korners here as they gain a view switcher. Absent slugs render
-// no picker at all.
-const SLUG_TO_VIEWS: Record<string, SpaceView[]> = {
-  kuestions: [
-    { key: 'deck', label: 'Deck' },
-    { key: 'today', label: 'Today' },
-    { key: 'answered', label: 'Answered' },
-    { key: 'ask', label: 'Ask' },
-  ],
-  kommons: [
-    { key: 'proposals', label: 'Proposals' },
-    { key: 'lattice', label: 'Directory' },
-  ],
-  // Kalendar has only one view (Spiral, at /hub/kalendar) since the
-  // classic Events list retired in alpha.201. No picker needed until
-  // it grows a second view.
-};
 
 export const AutoSpaceViewPicker: React.FC = () => {
   const location = useLocation();
@@ -46,11 +29,12 @@ export const AutoSpaceViewPicker: React.FC = () => {
   const slug = match?.[1];
   const subPath = match?.[2];
 
-  const views = slug ? SLUG_TO_VIEWS[slug] : undefined;
+  const korner = useKorner(slug);
+  const views = korner?.views;
 
   const handleChange = useCallback(
     (key: string) => {
-      if (!slug || !views) return;
+      if (!slug || !views?.length) return;
       const defaultKey = views[0]?.key;
       if (key === defaultKey) {
         history.push(`/hub/${slug}`);
@@ -61,7 +45,7 @@ export const AutoSpaceViewPicker: React.FC = () => {
     [history, slug, views],
   );
 
-  if (!slug || !views) return null;
+  if (!slug || !views?.length) return null;
 
   const current = subPath ?? views[0]?.key;
   if (!current) return null;
