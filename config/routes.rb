@@ -279,10 +279,12 @@ Rails.application.routes.draw do
   get '/in-flow/*path', to: redirect('/hub/inflow/%{path}', status: 301)
   get '/hub/in-flow', to: redirect('/hub/inflow', status: 301)
   get '/hub/in-flow/*path', to: redirect('/hub/inflow/%{path}', status: 301)
-  get '/market', to: redirect('/hub/wachuneed', status: 301)
-  get '/market/*path', to: redirect('/hub/wachuneed/%{path}', status: 301)
-  get '/hub/marketplace', to: redirect('/hub/wachuneed', status: 301)
-  get '/hub/marketplace/*path', to: redirect('/hub/wachuneed/%{path}', status: 301)
+  get '/market', to: redirect('/hub/martketplace', status: 301)
+  get '/market/*path', to: redirect('/hub/martketplace/%{path}', status: 301)
+  get '/hub/marketplace', to: redirect('/hub/martketplace', status: 301)
+  get '/hub/marketplace/*path', to: redirect('/hub/martketplace/%{path}', status: 301)
+  get '/hub/wachuneed', to: redirect('/hub/martketplace', status: 301)
+  get '/hub/wachuneed/*path', to: redirect('/hub/martketplace/%{path}', status: 301)
 
   # Korner framework — every korner mounts under /hub/<slug> per
   # docs/kronk_korner_spec.md §4. Legacy top-level paths above 301 here.
@@ -300,8 +302,8 @@ Rails.application.routes.draw do
   get '/hub/booth/sets/:id', to: 'booth#show', constraints: { id: /\d+/ }
   get '/hub/booth', to: 'booth#index'
   get '/hub/booth/*path', to: 'booth#index', format: false
-  get '/hub/wachuneed', to: 'home#index'
-  get '/hub/wachuneed/*path', to: 'home#index', format: false
+  get '/hub/martketplace', to: 'home#index'
+  get '/hub/martketplace/*path', to: 'home#index', format: false
   get '/hub/inflow', to: 'home#index'
   get '/hub/inflow/*path', to: 'home#index', format: false
   # Krews — Phase 2 removes the legacy /hub/groups alias that Phase 1

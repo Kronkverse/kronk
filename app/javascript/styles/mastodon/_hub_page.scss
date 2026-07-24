@@ -78,6 +78,10 @@ $tile-shadow-2: #17151f;
       border-color 0.16s;
 
     &:hover {
+      // Lift the hovered tile above its neighbours so its hover tip — which
+      // can flip below the tile on the top row — paints over the adjacent
+      // tiles instead of being hidden behind the later-in-DOM row beneath.
+      z-index: 20;
       border-color: #4b4382;
       transform: translateY(3px);
       box-shadow:
@@ -160,6 +164,15 @@ $tile-shadow-2: #17151f;
     pointer-events: none;
   }
 
+  // Waving-hand alert — top-left, so it never collides with the
+  // hover-only settings gear (top-right) or the tuned-in dot (bottom-left).
+  &__tile-alert {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 3;
+  }
+
   // Hover tip — pops above the tile with the manifest's `hub_teaser`.
   &__tile-tip {
     position: absolute;
@@ -184,6 +197,23 @@ $tile-shadow-2: #17151f;
 
   &__tile:hover &__tile-tip {
     opacity: 1;
+  }
+
+  // Top-row tiles: an above-tip opens up behind the fixed top nav and gets
+  // clipped. Flip those to open BELOW the tile instead — the rest keep the
+  // upward tip (better for scanning down the grid). The board is a fixed
+  // column count (2 mobile / 4 desktop), so the first row is the first N
+  // board children.
+  &__board > &__tile:nth-child(-n + 2) &__tile-tip {
+    top: calc(100% + 8px);
+    bottom: auto;
+  }
+
+  @media (width >= 890px) {
+    &__board > &__tile:nth-child(-n + 4) &__tile-tip {
+      top: calc(100% + 8px);
+      bottom: auto;
+    }
   }
 
   // Settings gear — hover-only, top-right. Sits above the tile's link

@@ -79,7 +79,7 @@ export interface ApiKornerJSON {
   // Space page — the evolutionary purpose ("why this space exists") and the
   // handle of its steward. Both optional; declared in the manifest.
   purpose?: string | null;
-  // Display-voice intro line shown under the space title (`<SpaceIntro>`).
+  // Display-voice intro line shown under the space title (`<SpaceHeader>`).
   // Distinct from `purpose` (the mission "why") — this is user-facing copy.
   tagline?: string | null;
   steward?: string | null;
