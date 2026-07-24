@@ -131,6 +131,13 @@ class Proposal < ApplicationRecord
   }
   scope :with_category, ->(cat) { where('? = ANY(categories)', cat) }
 
+  # True once the proposal has tasks and every one of them is done — the
+  # signal that the work is complete and the proposer can finalise it. A
+  # proposal with no tasks is not "done".
+  def all_tasks_done?
+    tasks.exists? && tasks.where.not(status: :done).none?
+  end
+
   def participation_count
     proposal_votes.count
   end
