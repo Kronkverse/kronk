@@ -83,15 +83,26 @@ module Mastodon
         say "Korner framework doctor (Kronk v#{::Kronk::Version})"
         say ''
 
-        issues = collect_issues
+        issues, warnings = collect_issues_and_warnings
+
+        warnings.each { |line| say "warning: #{line}" }
+        say '' if warnings.any?
+
         if issues.empty?
-          say 'No drift detected.'
+          if warnings.any?
+            say "#{warnings.length} #{warnings.length == 1 ? 'warning' : 'warnings'}; no drift."
+          else
+            say 'No drift detected.'
+          end
           exit(0) # rubocop:disable Rails/Exit -- tootctl CLI exit code is the CI signal
         end
 
         issues.each { |line| say line }
         say ''
-        say "#{issues.length} #{issues.length == 1 ? 'issue' : 'issues'} found."
+        summary = "#{issues.length} #{issues.length == 1 ? 'issue' : 'issues'} found"
+        summary += ", #{warnings.length} #{warnings.length == 1 ? 'warning' : 'warnings'}" if warnings.any?
+        summary += '.'
+        say summary
         exit(1) # rubocop:disable Rails/Exit -- tootctl CLI exit code is the CI signal
       end
 
@@ -113,8 +124,9 @@ module Mastodon
         drift
       end
 
-      def collect_issues
+      def collect_issues_and_warnings
         issues = []
+        warnings = []
         manifests = ::Kronk::KornerRegistry.all
         reserved  = ::Kronk::KornerRegistry.reserved_slugs
 
@@ -130,6 +142,7 @@ module Mastodon
           issues << "#{manifest.slug}: slug is reserved for platform use" if reserved.include?(manifest.slug)
 
           detect_conformance_issues(manifest).each { |line| issues << "#{manifest.slug}: #{line}" }
+          detect_frame_parasites(manifest).each { |line| warnings << "#{manifest.slug}: #{line}" }
         end
 
         ::Kronk::KornerRegistry.enforced.each do |manifest|
@@ -139,7 +152,12 @@ module Mastodon
         detect_orphan_listens(manifests).each { |line| issues << line }
         detect_node_issues.each { |line| issues << line }
 
-        issues
+        [issues, warnings]
+      end
+
+      # Backwards-compatible view for callers that only want issues.
+      def collect_issues
+        collect_issues_and_warnings.first
       end
 
       # Korner Standard (docs/korners/korner_standard.md §3) conformance —
@@ -231,6 +249,92 @@ module Mastodon
         end
 
         issues
+      end
+
+      # L11 — Frame parasite check (warning, not gating). The Kronk Frame
+      # provides three chrome slots for every /hub/<slug> route via the
+      # shared Auto* components:
+      #
+      #   * AutoSpaceBadge — the space title (manifest `name` + `icon.text_glyph`)
+      #   * AutoSpaceHeader — the in-content title + tagline (manifest `name` + `tagline`)
+      #   * AutoSpaceViewPicker — the tab row (manifest `views:`)
+      #
+      # A korner that renders its own <h1>, tab UI, or inlines a paragraph
+      # of the manifest tagline builds a doubled surface — the exact bug
+      # that landed on Klot pre-alpha.225 and was easy to miss in review.
+      # This check greps the file mounted at `/hub/<slug>` for the
+      # tell-tale patterns and warns. It stays a warning until every
+      # shipped korner is clean; then it can be promoted to an issue.
+      #
+      # The mount resolves via ui/index.jsx (WrappedRoute path→component)
+      # → async-components.js (component name → import path) → the
+      # feature index file. Any hop that can't be resolved silently
+      # skips: the L5 mount check already covers total absence, and a
+      # false negative here is much cheaper than a false positive
+      # training people to ignore the doctor.
+      def detect_frame_parasites(manifest)
+        return [] if manifest.core?
+
+        file, rel_path = resolve_mount_source(manifest)
+        return [] unless file
+
+        frame_parasite_warnings(manifest, File.read(file), rel_path)
+      end
+
+      # The pattern-matching body of L11, separated from I/O so it can
+      # be exercised on synthetic source without staging fixture files.
+      def frame_parasite_warnings(manifest, raw_source, rel_path)
+        warnings = []
+        source = strip_jsx_comments(raw_source)
+
+        warnings << "L11 <h1> in #{rel_path} — Frame provides the space title via AutoSpaceBadge (retire the local hero)" if source.match?(/<h1[\s>]/)
+
+        if manifest.views.present? &&
+           (source.match?(/role\s*=\s*['"]tablist['"]/) ||
+            source.match?(/role\s*=\s*['"]tab['"]/))
+          warnings << "L11 tab UI in #{rel_path} — Frame provides the view picker via AutoSpaceViewPicker from manifest `views:` (retire the local tab row)"
+        end
+
+        if manifest.tagline.is_a?(String) && manifest.tagline.strip.length >= 20
+          snippet = manifest.tagline.strip[0, 40]
+          warnings << "L11 tagline literal in #{rel_path} — Frame provides the tagline via AutoSpaceHeader from manifest `tagline:` (retire the local intro paragraph)" if source.include?(snippet)
+        end
+
+        warnings
+      end
+
+      # Resolve the /hub/<slug> mount to the source file that renders it,
+      # walking ui/index.jsx → async-components.js → features/**. Returns
+      # [Pathname, relative_string] or [nil, nil] if any hop fails.
+      def resolve_mount_source(manifest)
+        mount = manifest.mount_path
+        mount_re = /path=['"]#{Regexp.escape(mount)}['"][^>]*component=\{([A-Z]\w+)\}/
+        component = korner_source('app/javascript/mastodon/features/ui/index.jsx').match(mount_re)&.captures&.first
+        return [nil, nil] unless component
+
+        async_re = /export function #{Regexp.escape(component)}\s*\([^)]*\)\s*\{[^{}]*?return import\(\s*['"]([^'"]+)['"]\s*\)/m
+        import_rel = korner_source('app/javascript/mastodon/features/ui/util/async-components.js').match(async_re)&.captures&.first
+        return [nil, nil] unless import_rel
+
+        base = Pathname.new('app/javascript/mastodon/features/ui/util')
+        target = (base + import_rel).cleanpath
+
+        candidates = [
+          Rails.root.join("#{target}.tsx"),
+          Rails.root.join("#{target}.jsx"),
+          Rails.root.join(target.to_s, 'index.tsx'),
+          Rails.root.join(target.to_s, 'index.jsx'),
+        ]
+        file = candidates.find(&:exist?)
+        return [nil, nil] unless file
+
+        [file, file.to_s.sub("#{Rails.root}/", '')] # rubocop:disable Rails/FilePath -- stripping Rails.root prefix, not building a path
+      end
+
+      # Strip `/* … */` blocks and line comments so commented `<h1>` notes
+      # (or the tagline quoted inside a comment) don't false-positive.
+      def strip_jsx_comments(src)
+        src.gsub(%r{/\*[\s\S]*?\*/}, '').gsub(%r{^\s*//[^\n]*$}, '')
       end
 
       # Read a repo source file once (memoised); '' if absent. Lets the

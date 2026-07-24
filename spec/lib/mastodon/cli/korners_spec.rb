@@ -141,4 +141,71 @@ RSpec.describe Mastodon::CLI::Korners do
       expect(cli.send(:detect_conformance_issues, manifest)).to all(satisfy { |line| line.exclude?('L10') })
     end
   end
+
+  # L11 (Korner Standard §3): the mounted feature file must not
+  # duplicate the Frame's chrome slots. These pin the pattern-matching
+  # behaviour of `frame_parasite_warnings` — the pure body of the
+  # check, decoupled from ui/index.jsx and async-components.js lookups.
+  describe 'L11 Frame parasite detection' do
+    subject(:cli) { described_class.new }
+
+    let(:manifest) do
+      Kronk::KornerRegistry::Manifest.new(
+        slug: 'testkorner',
+        tagline: 'Celebrating the cycle which brought us all to this world.',
+        views: [{ 'key' => 'mine', 'label' => 'Mine' }, { 'key' => 'circle', 'label' => 'Circle' }]
+      )
+    end
+
+    def warnings_for(source, manifest_override = manifest)
+      cli.send(:frame_parasite_warnings, manifest_override, source, 'features/testkorner/index.tsx')
+    end
+
+    it 'flags a top-level <h1> hero' do
+      source = "return (<Stage><h1 className='hero'>TestKorner</h1></Stage>);"
+      expect(warnings_for(source)).to include(a_string_matching(/L11 <h1>/))
+    end
+
+    it 'flags role="tablist" when the manifest declares views' do
+      source = "<div role='tablist'><button role='tab'>Mine</button></div>"
+      expect(warnings_for(source)).to include(a_string_matching(/L11 tab UI/))
+    end
+
+    it 'does not flag role="tablist" when the manifest has no views' do
+      no_views = Kronk::KornerRegistry::Manifest.new(slug: 'testkorner', views: [])
+      source = "<div role='tablist'></div>"
+      expect(warnings_for(source, no_views)).to all(satisfy { |line| line.exclude?('L11 tab UI') })
+    end
+
+    it 'flags the tagline literal being inlined in the source' do
+      source = '<p>Celebrating the cycle which brought us all to this world.</p>'
+      expect(warnings_for(source)).to include(a_string_matching(/L11 tagline literal/))
+    end
+
+    it 'ignores the tagline literal when it appears only inside a block comment' do
+      source = "/* Celebrating the cycle which brought us all to this world. */\n<div />"
+      expect(warnings_for(source)).to all(satisfy { |line| line.exclude?('L11 tagline literal') })
+    end
+
+    it 'ignores the tagline literal when it appears only inside a line comment' do
+      source = "// Celebrating the cycle which brought us all to this world.\n<div />"
+      expect(warnings_for(source)).to all(satisfy { |line| line.exclude?('L11 tagline literal') })
+    end
+
+    it 'returns nothing for a clean Frame-adherent source' do
+      source = <<~JSX
+        export const K: React.FC = () => (
+          <Stage label='TestKorner'><div className='testkorner'>content</div></Stage>
+        );
+      JSX
+      expect(warnings_for(source)).to be_empty
+    end
+
+    it 'skips core spaces entirely' do
+      core_manifest = Kronk::KornerRegistry::Manifest.new(
+        slug: 'testcore', core: true, tagline: 'ignored', views: []
+      )
+      expect(cli.send(:detect_frame_parasites, core_manifest)).to be_empty
+    end
+  end
 end

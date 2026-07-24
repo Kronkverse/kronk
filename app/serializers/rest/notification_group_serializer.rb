@@ -18,6 +18,7 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
   belongs_to :generated_annual_report, key: :annual_report, if: :annual_report_event?, serializer: REST::AnnualReportEventSerializer
 
   attribute :event_invitation, if: :event_invitation_type?
+  attribute :proposal, if: :proposal_status_changed_type?
   attribute :nudge_streak, if: :nudge_type?
   attribute :nudge_message, if: :nudge_type?
   attribute :nudge_reactions, if: :nudge_type?
@@ -52,6 +53,10 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
 
   def event_invitation_type?
     object.type == :event_invitation
+  end
+
+  def proposal_status_changed_type?
+    object.type == :proposal_status_changed
   end
 
   def nudge_type?
@@ -118,6 +123,19 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
       event_title: invitation.event.title,
       event_start_time: invitation.event.start_time,
       event_type: invitation.event.event_type,
+    }
+  end
+
+  # proposal_status_changed carries the Proposal as its polymorphic
+  # `activity`; expose the id + title so the client can render the
+  # "ready to finalise" line and link to the proposal.
+  def proposal
+    proposal = object.notification&.activity
+    return nil unless proposal.is_a?(Proposal)
+
+    {
+      proposal_id: proposal.id.to_s,
+      proposal_title: proposal.title,
     }
   end
 

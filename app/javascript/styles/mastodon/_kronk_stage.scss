@@ -148,24 +148,35 @@ body:has(.kronk-stage) .korner-sub-bar {
 // (docs/kronk_frame.md § SpaceNav). Panel-level hero titles are also
 // retired per spec rule 5 — the space badge carries the space name
 // across all views.
-// <SpaceIntro> — the standard one-line korner intro, fed by the
-// manifest `tagline` field. The Frame mounts it (via <AutoSpaceIntro>)
-// at the top of every korner's Stage, so title (badge), description
-// (this), and navigation (view picker) all read the manifest and stay
-// in sync. Canonical style for every korner's intro; replaces the
-// per-korner bespoke landing intros (hub-page__lede, the Krew landing
-// lede, you-portal__intro, and the KornerStub blurb). Centered, muted —
-// not a reserved band (the floating SpaceNav pills carry the title).
-// It sits at the top of the Stage scroll area, so it carries its own
-// top padding rather than relying on the page content's.
-.space-intro {
+// <SpaceHeader> — the in-content header every /hub/<slug> korner
+// starts with. Frame mounts it (via <AutoSpaceHeader>) at the top of
+// every korner's Stage, so title, description, and view picker all
+// stay manifest-driven and consistent. Unlike the top-left SpaceNav
+// pill (chrome), this header scrolls with the korner's content.
+// Owns its own top padding since it lives at the top of the Stage
+// scroll area.
+.space-header {
   max-width: 34rem;
   margin: 0 auto;
   padding: 1.75rem 1rem 0.5rem;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  line-height: 1.5;
   text-align: center;
+
+  &__title {
+    margin: 0 0 0.4rem;
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    font-size: 2.35rem;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+    font-weight: 400;
+  }
+
+  &__tagline {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
 }
 
 // .space-subtitle stays as inline tagline copy for panels (spec rule
