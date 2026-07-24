@@ -287,6 +287,10 @@ export function Questions () {
   return import("../../questions").then(m => ({ default: m.Questions }));
 }
 
+export function KuestionsSettings () {
+  return import("../../questions/settings");
+}
+
 export function Booth () {
   return import("../../booth");
 }
