@@ -9,9 +9,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
-import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
 import api, {
   apiRequestGet,
   apiRequestPost,
@@ -457,15 +456,11 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       <div className='scrollable korner-settings'>
+        {/* The old in-body "← Back to {name}" pill retired in favour of
+            the Frame's SettingsBadge in the SpaceNav slot, which routes
+            back to /settings ("All settings"). See
+            components/auto_settings_badge.tsx. */}
         <div className='korner-settings__topline'>
-          <Link to={`/hub/${slug}`} className='korner-settings__back'>
-            <ArrowBackIcon />
-            <FormattedMessage
-              id='korner_settings.back'
-              defaultMessage='Back to {name}'
-              values={{ name: korner?.name ?? slug }}
-            />
-          </Link>
           <span
             className={`korner-settings__save-indicator korner-settings__save-indicator--${status}`}
           >
