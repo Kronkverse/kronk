@@ -187,6 +187,10 @@
     border-left: 3px solid var(--klot-accent);
   }
 
+  &--danger {
+    border-left: 3px solid var(--warning-red, #d33);
+  }
+
   &__title {
     margin: 0 0 0.2rem;
     color: var(--text-primary);
@@ -257,8 +261,24 @@
     cursor: pointer;
     transition: background var(--dur-fast) var(--ease-out);
 
-    &:hover {
+    &:hover:not(:disabled) {
       background: var(--kronk-purple-bright);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    // Danger-variant CTA — used by the settings page's Clear-logs
+    // action. Same shape as the primary button but red-tinted so it
+    // reads as destructive on scan.
+    &--danger {
+      background: var(--warning-red, #d33);
+
+      &:hover:not(:disabled) {
+        background: color-mix(in oklab, var(--warning-red, #d33) 80%, #000);
+      }
     }
   }
 

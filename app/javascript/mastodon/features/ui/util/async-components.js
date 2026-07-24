@@ -327,6 +327,10 @@ export function Klot () {
   return import("../../klot").then(m => ({ default: m.Klot }));
 }
 
+export function KlotSettings () {
+  return import("../../klot/settings");
+}
+
 export function Hub () {
   return import("../../hub").then(m => ({ default: m.Hub }));
 }
