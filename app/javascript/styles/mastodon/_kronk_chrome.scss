@@ -106,13 +106,12 @@
 
   &__pillar {
     position: relative;
-    padding: 11px 16px 14px; // extra bottom pad seats the wire
+    padding: 9px 18px 12px; // extra bottom pad seats the wire
     color: var(--text-muted);
     text-decoration: none;
-    font-family: var(--font-body);
-    font-size: 15px;
-    font-weight: 500;
-    letter-spacing: 0.005em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     transition: color var(--dur-medium) var(--ease-out);
 
     &:hover {
@@ -128,6 +127,31 @@
     &--active {
       color: var(--text-primary);
     }
+  }
+
+  // Icon rendered inside each top-variant pillar. Fill tracks the
+  // pillar's `color` (muted → secondary → primary) so state reads
+  // uniformly across the Membrane.
+  &__pillar-icon {
+    width: 22px;
+    height: 22px;
+    fill: currentcolor;
+  }
+
+  // Visually-hidden label — keeps the pillar accessible without
+  // showing the text (icons carry the visual identity per §KRONK
+  // aesthetic). Screen readers still announce "Me / Home / Hub /
+  // Nudges" via the sr-only text + aria-label.
+  &__label--sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
   }
 
   &__wire {
