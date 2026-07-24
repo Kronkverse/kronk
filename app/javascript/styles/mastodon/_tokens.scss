@@ -25,6 +25,8 @@
   --semantic-decision-abstain: #94a3b8;
   --semantic-decision-block: #ef4444;
   --semantic-decision-pending: #f59e0b;
+  --semantic-tile-glyph-on: #8c7dff;
+  --semantic-tile-glyph-off: #4e4a72;
 
   // Consumer aliases — SCSS uses the short names below directly.
   --accent: var(--semantic-accent);
@@ -42,6 +44,8 @@
   --decision-abstain: var(--semantic-decision-abstain);
   --decision-block: var(--semantic-decision-block);
   --decision-pending: var(--semantic-decision-pending);
+  --tile-glyph-on: var(--semantic-tile-glyph-on);
+  --tile-glyph-off: var(--semantic-tile-glyph-off);
 
   // ── Fonts ──────────────────────────────────────────────────────
   --font-display: 'Liberation Serif', Georgia, serif;
@@ -91,4 +95,6 @@
   --semantic-decision-abstain: #64748b;
   --semantic-decision-block: #c53030;
   --semantic-decision-pending: #c2410c;
+  --semantic-tile-glyph-on: #6364ff;
+  --semantic-tile-glyph-off: #a89fc5;
 }
