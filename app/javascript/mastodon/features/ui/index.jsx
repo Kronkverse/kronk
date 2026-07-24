@@ -27,6 +27,7 @@ import { PictureInPicture } from 'mastodon/features/picture_in_picture';
 import { HubSwitcher } from './components/hub_switcher';
 import { KornerSubBar } from './components/korner_sub_bar';
 import { KornerSidebar } from './components/korner_sidebar';
+import { AutoSettingsBadge } from 'mastodon/components/auto_settings_badge';
 import { AutoSpaceBadge } from 'mastodon/components/auto_space_badge';
 import { AutoSpaceViewPicker } from 'mastodon/components/auto_space_view_picker';
 import { KronkFrame } from 'mastodon/components/kronk_frame';
@@ -743,6 +744,7 @@ class UI extends PureComponent {
                   views declared in the pickers' SLUG_TO_* maps) without
                   opting in. */}
               <AutoSpaceBadge />
+              <AutoSettingsBadge />
               <AutoSpaceViewPicker />
             </KronkFrame.SpaceNav>
             <KronkFrame.RightBand>
