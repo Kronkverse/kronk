@@ -6,6 +6,12 @@
 
 import { useCallback } from 'react';
 
+import {
+  DEFAULT_PURPLE_HUE,
+  MAX_PURPLE_HUE,
+  MIN_PURPLE_HUE,
+} from 'mastodon/utils/personal_appearance';
+
 export interface SettingDescriptor {
   name: string;
   kind: string;
@@ -233,6 +239,131 @@ export const AccentWidget: React.FC<{
   );
 };
 
+// Kronk Personal Appearance hue slider. Rotates the whole
+// --kronk-purple-* family (primary / bright / deep / muted / accent)
+// around a shared anchor lightness + chroma, so the palette warms or
+// cools as one — nothing drifts out of family. Range is clamped to
+// the purple band (260°–310°); the server enforces the same window.
+//
+// The swatch strip below the slider previews all five purples at the
+// live hue so a user can feel the whole family shift, not just the
+// accent chip.
+export const HueWidget: React.FC<{
+  // Accept string too: Mastodon's UserSettings::Setting with a nil
+  // default type-casts stored values through ActiveModel::Type::String,
+  // so a saved integer round-trips as `"285"` on the next payload
+  // read. Without this the slider snaps back to the anchor after
+  // every drag because a typeof === 'number' check falls through.
+  value: number | string | null | undefined;
+  onChange: (v: number | null) => void;
+}> = ({ value, onChange }) => {
+  const parsed =
+    typeof value === 'number'
+      ? value
+      : typeof value === 'string' && value.trim() !== ''
+        ? Number(value)
+        : null;
+  const current =
+    parsed !== null && Number.isFinite(parsed) ? parsed : DEFAULT_PURPLE_HUE;
+
+  const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => {
+      onChange(Number(e.target.value));
+    },
+    [onChange],
+  );
+
+  const handleReset = useCallback(() => {
+    onChange(null);
+  }, [onChange]);
+
+  const swatches = [
+    { name: 'muted', l: 42, c: 0.06 },
+    { name: 'primary', l: 32, c: 0.14 },
+    { name: 'deep', l: 30, c: 0.19 },
+    { name: 'accent', l: 50, c: 0.2 },
+    { name: 'bright', l: 68, c: 0.2 },
+  ];
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.5rem',
+        width: '100%',
+      }}
+    >
+      <input
+        type='range'
+        min={MIN_PURPLE_HUE}
+        max={MAX_PURPLE_HUE}
+        step={1}
+        value={current}
+        onChange={handleChange}
+        aria-label='Purple hue'
+        style={{
+          width: '100%',
+          accentColor: `oklch(50% 0.20 ${current})`,
+        }}
+      />
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '0.5rem',
+          color: 'var(--text-muted)',
+          fontSize: '0.8rem',
+        }}
+      >
+        <span>Cooler</span>
+        <span style={{ fontFamily: 'var(--font-mono)' }}>hue {current}°</span>
+        <span>Warmer</span>
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          gap: '4px',
+          height: '18px',
+          borderRadius: 'var(--radius-small)',
+          overflow: 'hidden',
+        }}
+      >
+        {swatches.map((s) => (
+          <span
+            key={s.name}
+            title={`purple-${s.name} @ ${current}°`}
+            style={{
+              flex: 1,
+              background: `oklch(${s.l}% ${s.c} ${current})`,
+              borderRadius: 'var(--radius-small)',
+            }}
+          />
+        ))}
+      </div>
+      {value != null && (
+        <button
+          type='button'
+          onClick={handleReset}
+          style={{
+            alignSelf: 'flex-start',
+            padding: '0.2rem 0.55rem',
+            background: 'transparent',
+            border: '1px solid var(--border-default)',
+            borderRadius: 'var(--radius-round)',
+            color: 'var(--text-muted)',
+            fontSize: '0.75rem',
+            cursor: 'pointer',
+          }}
+        >
+          Reset to default
+        </button>
+      )}
+    </div>
+  );
+};
+
 const StringInput: React.FC<{
   value: unknown;
   onChange: (v: unknown) => void;
@@ -315,6 +446,16 @@ export const SettingRow: React.FC<{
       {setting.kind === 'accent' && (
         <AccentWidget
           value={typeof value === 'string' ? value : ''}
+          onChange={onChange}
+        />
+      )}
+      {setting.kind === 'hue' && (
+        <HueWidget
+          value={
+            typeof value === 'number' || typeof value === 'string'
+              ? value
+              : null
+          }
           onChange={onChange}
         />
       )}

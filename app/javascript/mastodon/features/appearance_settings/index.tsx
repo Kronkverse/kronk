@@ -65,6 +65,15 @@ const messages = defineMessages({
     defaultMessage:
       'Your personal purple. Everyone picks their own shade — it always stays in the Kronk family.',
   },
+  personalPurpleHue: {
+    id: 'appearance_settings.personal_purple_hue',
+    defaultMessage: 'Purple hue',
+  },
+  personalPurpleHueHint: {
+    id: 'appearance_settings.personal_purple_hue_hint',
+    defaultMessage:
+      'Slide to warm or cool the whole purple family together. Everything (accents, borders, glyphs) rotates as one so nothing drifts out of the Kronk aesthetic.',
+  },
   personalFontDisplay: {
     id: 'appearance_settings.personal_font_display',
     defaultMessage: 'Display font',
@@ -89,6 +98,7 @@ const LABELS: Record<string, MessageDescriptor> = {
   reduce_motion: messages.reduceMotion,
   auto_play_gif: messages.autoPlayGif,
   personal_accent: messages.personalAccent,
+  personal_purple_hue: messages.personalPurpleHue,
   personal_font_display: messages.personalFontDisplay,
   personal_font_body: messages.personalFontBody,
   ui_scale: messages.uiScale,
@@ -97,13 +107,28 @@ const LABELS: Record<string, MessageDescriptor> = {
 const HINTS: Record<string, MessageDescriptor> = {
   reduce_motion: messages.reduceMotionHint,
   personal_accent: messages.personalAccentHint,
+  personal_purple_hue: messages.personalPurpleHueHint,
   ui_scale: messages.uiScaleHint,
 };
 
 // Apply the appearance-affecting subset of the settings map to the DOM live.
 const previewAppearance = (vals: Record<string, unknown>) => {
+  // personal_purple_hue may arrive as a number (fresh from the slider)
+  // or as a string (round-tripped through UserSettings — see the note
+  // in HueWidget). Coerce here so applyPurpleHue always sees a number
+  // or null.
+  const rawHue = vals.personal_purple_hue;
+  const purpleHue =
+    typeof rawHue === 'number' && Number.isFinite(rawHue)
+      ? rawHue
+      : typeof rawHue === 'string' && rawHue.trim() !== ''
+        ? Number(rawHue)
+        : null;
+
   applyPersonalAppearance({
     accent: (vals.personal_accent as string) || null,
+    purpleHue:
+      purpleHue !== null && Number.isFinite(purpleHue) ? purpleHue : null,
     fontDisplay: (vals.personal_font_display as string) || null,
     fontBody: (vals.personal_font_body as string) || null,
     uiScale: (vals.ui_scale as string) || null,

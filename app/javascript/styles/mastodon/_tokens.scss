@@ -2,14 +2,14 @@
 // Do not edit by hand — rerun the generator when tokens change.
 
 :root {
-  // ── Palette ────────────────────────────────────────────────────
-  --kronk-purple-primary: #32237c;
-  --kronk-purple-bright: #7241ff;
-  --kronk-purple-deep: #3a218b;
-  --kronk-purple-muted: #413c8c;
-  --kronk-purple-accent: #4414cc;
+  // ── Palette ─────────────────────────────────────────────────────
+  --kronk-purple-primary: #301e75;
+  --kronk-purple-bright: #8f7fff;
+  --kronk-purple-deep: #300086;
+  --kronk-purple-muted: #4a486d;
+  --kronk-purple-accent: #5e45cd;
 
-  // ── Semantic surfaces + text ───────────────────────────────────
+  // ── Semantic surfaces + text ────────────────────────────────────
   --semantic-accent: #4414cc;
   --semantic-text-on-accent: #ffffff;
   --semantic-surface-primary: #191b22;
@@ -47,24 +47,24 @@
   --tile-glyph-on: var(--semantic-tile-glyph-on);
   --tile-glyph-off: var(--semantic-tile-glyph-off);
 
-  // ── Fonts ──────────────────────────────────────────────────────
+  // ── Fonts ───────────────────────────────────────────────────────
   --font-display: 'Liberation Serif', Georgia, serif;
   --font-body: mastodon-font-sans-serif, sans-serif;
   --font-mono: 'Roboto Mono', 'Fira Mono', ui-monospace, monospace;
 
-  // ── Radius scale ───────────────────────────────────────────────
+  // ── Radius scale ────────────────────────────────────────────────
   --radius-small: 6px;
   --radius-medium: 10px;
   --radius-large: 16px;
   --radius-round: 999px;
 
-  // ── Elevation presets ──────────────────────────────────────────
+  // ── Elevation presets ───────────────────────────────────────────
   --elevation-subtle: 0 1px 2px rgb(0 0 0 / 12%);
   --elevation-card: 0 4px 12px -4px rgb(0 0 0 / 30%);
   --elevation-floating: 0 8px 24px -8px rgb(0 0 0 / 40%);
   --elevation-menu: 0 20px 48px -12px rgb(0 0 0 / 50%);
 
-  // ── Motion ─────────────────────────────────────────────────────
+  // ── Motion ──────────────────────────────────────────────────────
   --dur-fast: 120ms;
   --dur-medium: 200ms;
   --dur-slow: 400ms;
@@ -74,11 +74,11 @@
 }
 
 :root[data-theme='light'] {
-  --kronk-purple-primary: #3034a0;
-  --kronk-purple-bright: #6364ff;
-  --kronk-purple-deep: #36248c;
-  --kronk-purple-muted: #45455f;
-  --kronk-purple-accent: #6364ff;
+  --kronk-purple-primary: #43368e;
+  --kronk-purple-bright: #7e6cf7;
+  --kronk-purple-deep: #34008c;
+  --kronk-purple-muted: #6e6e8e;
+  --kronk-purple-accent: #6b58d9;
 
   --semantic-accent: #6364ff;
   --semantic-text-on-accent: #ffffff;
@@ -97,4 +97,25 @@
   --semantic-decision-pending: #c2410c;
   --semantic-tile-glyph-on: #6364ff;
   --semantic-tile-glyph-off: #a89fc5;
+}
+
+// Native OKLCH overrides — browsers without OKLCH support keep the
+// hex approximations above; browsers with OKLCH swap in the
+// perceptually-uniform values so palette shifts read consistently.
+@supports (color: oklch(0% 0 0)) {
+  :root {
+    --kronk-purple-primary: oklch(32% 0.14 285);
+    --kronk-purple-bright: oklch(68% 0.2 285);
+    --kronk-purple-deep: oklch(30% 0.19 285);
+    --kronk-purple-muted: oklch(42% 0.06 285);
+    --kronk-purple-accent: oklch(50% 0.2 285);
+  }
+
+  :root[data-theme='light'] {
+    --kronk-purple-primary: oklch(40% 0.14 285);
+    --kronk-purple-bright: oklch(62% 0.2 285);
+    --kronk-purple-deep: oklch(32% 0.19 285);
+    --kronk-purple-muted: oklch(55% 0.05 285);
+    --kronk-purple-accent: oklch(55% 0.19 285);
+  }
 }
