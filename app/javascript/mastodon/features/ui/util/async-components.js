@@ -335,8 +335,8 @@ export function InflowV2 () {
   return import("../../inflow_v2");
 }
 
-export function KompassV2 () {
-  return import("../../kompass_v2");
+export function MapV2 () {
+  return import("../../map_v2");
 }
 
 export function MomentsStub () {
@@ -347,8 +347,8 @@ export function AlbuttsStub () {
   return import("../../korner_stub").then(m => ({ default: m.AlbuttsStub }));
 }
 
-export function KompassStub () {
-  return import("../../korner_stub").then(m => ({ default: m.KompassStub }));
+export function MapStub () {
+  return import("../../korner_stub").then(m => ({ default: m.MapStub }));
 }
 
 export function KornerSettings () {

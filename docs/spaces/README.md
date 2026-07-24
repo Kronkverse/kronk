@@ -39,7 +39,7 @@ Slug matches `config/korners/<slug>.yaml`.
 | [`kalendar.md`](kalendar.md)   | `config/korners/kalendar.yaml`  | Enforced — rebuild spiral view pending                                                              |
 | [`klot.md`](klot.md)           | `config/korners/klot.yaml`      | Stub                                                                                                |
 | [`kommons.md`](kommons.md)     | `config/korners/kommons.yaml`   | Enforced — Directory, token ledger, lifecycle and backing UI shipped                                |
-| [`kompass.md`](kompass.md)     | `config/korners/kompass.yaml`   | Stub — physical map                                                                                 |
+| [`map.md`](map.md)     | `config/korners/map.yaml`   | Prototype — physical map / presence (renamed from Kompass)                                                                                 |
 | [`kuestions.md`](kuestions.md) | `config/korners/kuestions.yaml` | Enforced — v2 shipped (dedicated models, swipe deck, gated answers, daily prompt)                   |
 | [`wachuneed.md`](wachuneed.md) | `config/korners/wachuneed.yaml` | Enforced — directory shipped; detail/composer pending. Renamed from `marketplace` 2026-07-21.       |
 | [`moments.md`](moments.md)     | `config/korners/moments.yaml`   | Stub                                                                                                |

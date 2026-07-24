@@ -8,7 +8,7 @@
 #   attending_event   — `event_id` (a Kalendar event the joiner must
 #                       already RSVP for)
 #   located_in        — `region` (a coarse place identifier — no
-#                       precise coordinates; Kompass coarsening
+#                       precise coordinates; Map coarsening
 #                       applies)
 #   vouched_by_member — `vouch_params` (jsonb — provisional shape;
 #                       Anthemos-backed and feature-flagged until DIDs

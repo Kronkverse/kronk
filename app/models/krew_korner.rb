@@ -6,7 +6,7 @@
 # scope to "Krews that own this <event | huddle | ...>". The set of
 # accretable Korners is fixed at the model level.
 class KrewKorner < ApplicationRecord
-  KORNERS = %w(booth huddle kalendar kommons kompass albutts kuestions).freeze
+  KORNERS = %w(booth huddle kalendar kommons map albutts kuestions).freeze
 
   belongs_to :krew
 

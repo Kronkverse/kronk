@@ -60,6 +60,6 @@ export const MomentsStub: React.FC<{ multiColumn?: boolean }> = (props) => (
 export const AlbuttsStub: React.FC<{ multiColumn?: boolean }> = (props) => (
   <KornerStub {...props} slug='albutts' />
 );
-export const KompassStub: React.FC<{ multiColumn?: boolean }> = (props) => (
-  <KornerStub {...props} slug='kompass' />
+export const MapStub: React.FC<{ multiColumn?: boolean }> = (props) => (
+  <KornerStub {...props} slug='map' />
 );

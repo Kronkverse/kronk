@@ -314,11 +314,14 @@ Rails.application.routes.draw do
   get '/hub/huddle', to: 'huddle#index'
   get '/hub/huddle/*path', to: 'huddle#index', format: false
 
-  # 2.x korner stubs (Moments/Albutts/Kompass) — manifest-only, no
+  # 2.x korner stubs (Moments/Albutts/Map) — manifest-only, no
   # backend yet. Fall through to the SPA so KornerStub renders.
   get '/hub/moments', to: 'home#index'
   get '/hub/albutts', to: 'home#index'
-  get '/hub/kompass', to: 'home#index'
+  get '/hub/map', to: 'home#index'
+  # Kompass was renamed to Map (its original Kommons-proposal name);
+  # keep the old path working with a permanent redirect.
+  get '/hub/kompass', to: redirect('/hub/map')
 
   # /hub bare — the landing grid. Ships in 2.0.0 as the third HubSwitcher
   # tab (Feed / Profile / Hub).

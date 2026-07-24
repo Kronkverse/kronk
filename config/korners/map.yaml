@@ -1,17 +1,17 @@
-# Kompass — opt-in presence and location. Who's around, if they choose
+# Map — opt-in presence and location. Who's around, if they choose
 # to say. Every share is a deliberate act; nothing is broadcast unless
 # the user flips a toggle each session.
 #
-# Ships in 2.0.0 as a prototype-driven surface at /hub/kompass (Kommons
+# Ships in 2.0.0 as a prototype-driven surface at /hub/map (Kommons
 # proposal #116969555027300161 "New Korner: Map — To see where your
 # mates are and share activities"). The frontend view is the
-# hand-authored prototype iframed via features/kompass_v2/. Backend
+# hand-authored prototype iframed via features/map_v2/. Backend
 # (presence_states + real-time infra) still to build — this manifest
 # stays enforced so the tile lights up on the Hub, but the surface is
 # read-only until wiring lands.
 
-slug: kompass
-name: Kompass
+slug: map
+name: Map
 purpose: "To let people signal presence on their own terms — who's around, only if they choose to say."
 tagline: 'Allow yourself to be found, know where your mates are & explore the world.'
 icon: explore
@@ -24,7 +24,7 @@ resources:
 
 storage:
   db_namespace: presence_ # planned; may become Redis-only depending on retention
-  media_prefix: spaces/kompass/
+  media_prefix: spaces/map/
 
 feed_projection: # no feed projection — presence is not a feed item
   card: null
@@ -47,15 +47,15 @@ hub_teaser:
   static: "Who's around, if they choose to say."
 
 launch:
-  blurb: 'Kompass — opt-in presence. Nothing shared unless you choose to.'
+  blurb: 'Map — opt-in presence. Nothing shared unless you choose to.'
   cta: 'Peek in'
 
 enforced: true
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 nodes:
-  - id: kompass.index
-    label: Kompass
-    url: /hub/kompass
+  - id: map.index
+    label: Map
+    url: /hub/map
     lifecycle: soon
     spa: true

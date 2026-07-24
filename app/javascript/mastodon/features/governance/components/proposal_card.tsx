@@ -20,7 +20,7 @@ const SPACE_LABELS: Record<string, string> = {
   profile: 'Profile',
   feed: 'Feed',
   booth: 'The Booth',
-  kompass: 'Kompass',
+  map: 'Map',
   huddle: 'Huddle',
   kalendar: 'Kalendar',
   wachuneed: 'Wachuneed',

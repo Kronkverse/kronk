@@ -78,7 +78,7 @@ const KORNER_LABELS: Record<string, string> = {
   inflow: 'Inflow',
   groups: 'Krews', // Kronk vocab — slug stays `groups`; display label is Krews.
   huddle: 'Huddle',
-  kompass: 'Kompass',
+  map: 'Map',
   tree: 'Tree',
   moments: 'Moments',
   albutts: 'Albutts',

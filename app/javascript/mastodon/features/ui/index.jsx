@@ -91,7 +91,7 @@ import {
   BoothV2,
   WachuneedV2,
   InflowV2,
-  KompassV2,
+  MapV2,
   Nudges,
   Governance,
   KommonsProposal,
@@ -288,7 +288,8 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
             <WrappedRoute path='/hub/moments' component={MomentsStub} content={children} />
             <WrappedRoute path='/hub/albutts' component={AlbuttsStub} content={children} />
-            <WrappedRoute path='/hub/kompass' component={KompassV2} content={children} />
+            <Redirect from='/hub/kompass' to='/hub/map' />
+            <WrappedRoute path='/hub/map' component={MapV2} content={children} />
             <WrappedRoute path='/hub/wachuneed' component={WachuneedV2} content={children} />
             <WrappedRoute path='/@:acct/connections' exact component={Connections} content={children} />
             {/* Phase 1b: the messenger shell handles both /nudges (empty pane)

@@ -35,8 +35,7 @@ const PATHS: Record<string, string> = {
   feed: '<path d="M4 6h16M4 11h16M4 16h9"/>',
   huddle:
     '<rect x="3" y="6" width="12" height="12" rx="2"/><path d="M15 10.5 21 7v10l-6-3.5z"/>',
-  kompass:
-    '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5.5-5.5 2 2-5.5z"/>',
+  map: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5.5-5.5 2 2-5.5z"/>',
   moments:
     '<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/><circle cx="12" cy="12" r="3.6"/>',
   albutts:

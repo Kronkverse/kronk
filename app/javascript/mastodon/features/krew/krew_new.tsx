@@ -117,7 +117,7 @@ const KORNER_OPTIONS: KrewKornerSlug[] = [
   'huddle',
   'kalendar',
   'kommons',
-  'kompass',
+  'map',
   'albutts',
   'kuestions',
 ];
