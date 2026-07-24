@@ -65,6 +65,15 @@ const messages = defineMessages({
     defaultMessage:
       'Your personal purple. Everyone picks their own shade — it always stays in the Kronk family.',
   },
+  personalPurpleHue: {
+    id: 'appearance_settings.personal_purple_hue',
+    defaultMessage: 'Purple hue',
+  },
+  personalPurpleHueHint: {
+    id: 'appearance_settings.personal_purple_hue_hint',
+    defaultMessage:
+      'Slide to warm or cool the whole purple family together. Everything (accents, borders, glyphs) rotates as one so nothing drifts out of the Kronk aesthetic.',
+  },
   personalFontDisplay: {
     id: 'appearance_settings.personal_font_display',
     defaultMessage: 'Display font',
@@ -89,6 +98,7 @@ const LABELS: Record<string, MessageDescriptor> = {
   reduce_motion: messages.reduceMotion,
   auto_play_gif: messages.autoPlayGif,
   personal_accent: messages.personalAccent,
+  personal_purple_hue: messages.personalPurpleHue,
   personal_font_display: messages.personalFontDisplay,
   personal_font_body: messages.personalFontBody,
   ui_scale: messages.uiScale,
@@ -97,6 +107,7 @@ const LABELS: Record<string, MessageDescriptor> = {
 const HINTS: Record<string, MessageDescriptor> = {
   reduce_motion: messages.reduceMotionHint,
   personal_accent: messages.personalAccentHint,
+  personal_purple_hue: messages.personalPurpleHueHint,
   ui_scale: messages.uiScaleHint,
 };
 
@@ -104,6 +115,10 @@ const HINTS: Record<string, MessageDescriptor> = {
 const previewAppearance = (vals: Record<string, unknown>) => {
   applyPersonalAppearance({
     accent: (vals.personal_accent as string) || null,
+    purpleHue:
+      typeof vals.personal_purple_hue === 'number'
+        ? vals.personal_purple_hue
+        : null,
     fontDisplay: (vals.personal_font_display as string) || null,
     fontBody: (vals.personal_font_body as string) || null,
     uiScale: (vals.ui_scale as string) || null,

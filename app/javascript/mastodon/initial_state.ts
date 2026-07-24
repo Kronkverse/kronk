@@ -48,6 +48,7 @@ interface InitialStateMeta {
   terms_of_service_enabled: boolean;
   emoji_style?: string;
   personal_accent?: string | null;
+  personal_purple_hue?: number | null;
   personal_font_display?: string;
   personal_font_body?: string;
   ui_scale?: string;
@@ -133,6 +134,7 @@ export const statusPageUrl = getMeta('status_page_url');
 export const sso_redirect = getMeta('sso_redirect');
 export const termsOfServiceEnabled = getMeta('terms_of_service_enabled');
 export const personalAccent = getMeta('personal_accent');
+export const personalPurpleHue = initialState?.meta.personal_purple_hue ?? null;
 export const personalFontDisplay = getMeta('personal_font_display');
 export const personalFontBody = getMeta('personal_font_body');
 export const uiScale = getMeta('ui_scale');

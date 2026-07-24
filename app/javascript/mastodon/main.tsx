@@ -9,6 +9,7 @@ import {
   me,
   reduceMotion,
   personalAccent,
+  personalPurpleHue,
   personalFontDisplay,
   personalFontBody,
   uiScale,
@@ -40,6 +41,7 @@ function main() {
     // Kronk Personal Appearance — apply the user's per-user token overrides.
     applyPersonalAppearance({
       accent: personalAccent,
+      purpleHue: personalPurpleHue,
       fontDisplay: personalFontDisplay,
       fontBody: personalFontBody,
       uiScale,
