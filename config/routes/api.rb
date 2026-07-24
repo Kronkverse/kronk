@@ -145,6 +145,19 @@ namespace :api, format: false do
       resources :listings, only: [:index, :show, :create]
     end
 
+    # Klot — cycle tracker (KRONK_TIDES). Self is a singleton (one per
+    # account); logs and settings hang off it. Viewers is the caller's
+    # outbound allowlist; circle is the inbound projection with the
+    # strict phase-only contract.
+    namespace :klot do
+      get    'self',              to: 'self#show'
+      post   'self/logs',         to: 'self#create_log'
+      delete 'self/logs/:id',     to: 'self#destroy_log'
+      patch  'self/settings',     to: 'self#update_settings'
+      resources :viewers, only: [:index, :create, :destroy], param: :account_id
+      get 'circle', to: 'circle#index'
+    end
+
     resources :reports, only: [:create]
     resources :trends, only: [:index], controller: 'trends/tags'
     resources :filters, only: [:index, :create, :show, :update, :destroy]

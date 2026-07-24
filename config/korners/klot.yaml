@@ -24,16 +24,18 @@ security:
   federates: false # explicitly local-only, by the same sovereignty argument as the phase endpoint
 
 resources:
-  - name: periods # user-logged period start dates
+  - name: cycle_logs # the manual period log; newest row anchors the phase
     primary: true
-  - name: settings # per-account cycle_length + period_length
-  - name: shares # allowlist of viewer_account_ids who may see this account's phase
-  - name: phases # not a table — a synthesized read-only projection endpoint
+  - name: cycle_profiles # per-account cycle_length + period_length
+  - name: phase_shares # allowlist of viewer_account_ids who may see this account's phase
 
 storage:
-  db_namespace: klot_ # tables: klot_periods, klot_settings, klot_shares
-  media_prefix: # not-applicable — Klot deliberately holds no media; it stores only dates and settings
-  redis_prefix: # not-implemented — settings could plausibly cache, but per-account footprint is trivial
+  db_namespace: # not-applicable — Klot follows the brief's naming
+    # (CycleProfile/CycleLog/PhaseShare per KRONK_TIDES §Data model)
+    # rather than clustering under a `klot_` prefix. Same shape as
+    # Kalendar (uses `events`) or Booth (uses `booth_sets`).
+  media_prefix: # not-applicable — Klot deliberately holds no media
+  redis_prefix: # not-implemented
 
 emits: []
 listens: []
