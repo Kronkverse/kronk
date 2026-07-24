@@ -44,6 +44,22 @@ export const FollowersCounter = (
   />
 );
 
+// Kronk — Mates. Single mutual-connection count shown on the profile in
+// place of the separate Following/Followers counters.
+export const MatesCounter = (
+  displayNumber: React.ReactNode,
+  pluralReady: number,
+) => (
+  <FormattedMessage
+    id='account.mates_counter'
+    defaultMessage='{count, plural, one {{counter} Mate} other {{counter} Mates}}'
+    values={{
+      count: pluralReady,
+      counter: <strong>{displayNumber}</strong>,
+    }}
+  />
+);
+
 export const FollowersYouKnowCounter = (
   displayNumber: React.ReactNode,
   pluralReady: number,

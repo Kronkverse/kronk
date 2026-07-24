@@ -33,6 +33,7 @@ export const accountFactory: FactoryFunction<ApiAccountJSON> = ({
   fields: [],
   followers_count: 0,
   following_count: 0,
+  mates_count: 0,
   group: false,
   header: '/header.png',
   header_static: '/header_static.png',
