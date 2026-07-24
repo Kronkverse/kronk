@@ -23,6 +23,7 @@ class Api::V1::TasksController < Api::BaseController
   def update
     if @task.update(task_params)
       notify_assignee_if_changed
+      deliver_proposal_if_work_complete
       render json: @task, serializer: REST::TaskSerializer
     else
       render json: { error: @task.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -30,6 +31,27 @@ class Api::V1::TasksController < Api::BaseController
   end
 
   private
+
+  # When a dev marks the last open task done, hand the proposal back to the
+  # proposer: deliver! flips it open -> delivered (so the proposal page shows
+  # the "Mark Complete" CTA) AND notifies the proposer via the canonical
+  # ProposalStates path — one signal, not two. Fires only on the save that
+  # tipped the whole task list to done; the saved_change guard prevents
+  # re-firing on a no-op save, and the open? + all_tasks_done? guards ensure
+  # we only deliver an open proposal whose work is actually finished.
+  # Fire-and-forget: a delivery failure must never roll back the task update.
+  def deliver_proposal_if_work_complete
+    return unless @task.saved_change_to_status? && @task.status == 'done'
+
+    proposal = @task.proposal
+    return unless proposal && proposal.status == 'open' && proposal.all_tasks_done?
+
+    Kronk::ProposalStates.deliver!(proposal)
+  rescue Kronk::ProposalStates::InvalidTransition => e
+    Rails.logger.warn("[kronk:tasks] auto-deliver skipped for proposal #{proposal&.id}: #{e.message}")
+  rescue StandardError => e
+    Rails.logger.error("[kronk:tasks] auto-deliver failed for proposal #{proposal&.id}: #{e.class} #{e.message}")
+  end
 
   # Notify the assignee when a task is newly assigned or re-assigned to them.
   # Only fires when assigned_to_account_id actually changed in the last save,

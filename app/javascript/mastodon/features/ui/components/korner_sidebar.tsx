@@ -9,9 +9,8 @@ import {
 
 import { Link, useLocation } from 'react-router-dom';
 
-import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
-import { useAllKorners } from 'mastodon/hooks/useKorner';
+import { useKorners } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // Pervasive icon rail on the right. Most-recently-visited korner
@@ -83,7 +82,7 @@ const KornerRow: React.FC<KornerRowProps> = ({
 
 export const KornerSidebar = () => {
   const location = useLocation();
-  const korners = useAllKorners();
+  const korners = useKorners();
   const [recency, setRecency] = useState<Recency>(() => readRecency());
 
   // FLIP bookkeeping: last-seen top offset per slug.
@@ -94,8 +93,6 @@ export const KornerSidebar = () => {
     const m = SLUG_RE.exec(location.pathname);
     return m?.[1];
   }, [location.pathname]);
-
-  const onHub = location.pathname === '/hub';
 
   useEffect(() => {
     if (!activeSlug) return;
@@ -174,17 +171,6 @@ export const KornerSidebar = () => {
 
   return (
     <aside className='korner-sidebar' aria-label='Korners'>
-      <Link
-        to='/hub'
-        className={`korner-sidebar__hub ${onHub ? 'korner-sidebar__hub--active' : ''}`}
-        title='Hub'
-        aria-label='Hub'
-        data-name='Hub'
-      >
-        <span className='korner-sidebar__glyph' aria-hidden='true'>
-          <ExploreIcon />
-        </span>
-      </Link>
       <nav className='korner-sidebar__list'>
         {listed.map((k) => (
           <KornerRow

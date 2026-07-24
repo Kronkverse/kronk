@@ -6,6 +6,7 @@ import type {
   ApiNotificationGroupJSON,
   ApiNotificationJSON,
   ApiEventInvitationJSON,
+  ApiProposalCompleteJSON,
   NotificationType,
   NotificationWithStatusType,
 } from 'mastodon/api_types/notifications';
@@ -50,6 +51,12 @@ type EventInvitationData = ApiEventInvitationJSON;
 export interface NotificationGroupEventInvitation
   extends BaseNotification<'event_invitation'> {
   eventInvitation: EventInvitationData | null;
+}
+
+type ProposalCompleteData = ApiProposalCompleteJSON;
+export interface NotificationGroupProposalComplete
+  extends BaseNotification<'proposal_status_changed'> {
+  proposal: ProposalCompleteData | null;
 }
 
 export type NudgeReactionEmoji = '❤️' | '😂' | '🙌' | '🔥' | '😢';
@@ -135,7 +142,8 @@ export type NotificationGroup =
   | NotificationGroupAnnualReport
   | NotificationGroupEventInvitation
   | NotificationGroupNudge
-  | NotificationGroupMediaTag;
+  | NotificationGroupMediaTag
+  | NotificationGroupProposalComplete;
 
 function createReportFromJSON(reportJSON: ApiReportJSON): Report {
   const { target_account, ...report } = reportJSON;
@@ -228,6 +236,13 @@ export function createNotificationGroupFromJSON(
         ...group,
         partial: false,
         eventInvitation: group.event_invitation,
+        sampleAccountIds,
+      };
+    case 'proposal_status_changed':
+      return {
+        ...group,
+        partial: false,
+        proposal: group.proposal,
         sampleAccountIds,
       };
     case 'nudge':
@@ -323,6 +338,12 @@ export function createNotificationGroupFromNotificationJSON(
         ...group,
         type: notification.type,
         eventInvitation: notification.event_invitation,
+      };
+    case 'proposal_status_changed':
+      return {
+        ...group,
+        type: notification.type,
+        proposal: notification.proposal,
       };
     case 'nudge':
       return {
