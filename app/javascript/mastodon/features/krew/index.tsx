@@ -19,7 +19,6 @@ import { Stage } from 'mastodon/components/stage';
 
 const messages = defineMessages({
   title: { id: 'krew.title', defaultMessage: 'Krews' },
-  new: { id: 'krew.new', defaultMessage: 'Plant a new Krew' },
   members: {
     id: 'krew.members_count',
     defaultMessage: '{count, plural, one {# member} other {# members}}',
@@ -32,7 +31,7 @@ const messages = defineMessages({
   emptyYoursBody: {
     id: 'krew.empty.yours_body',
     defaultMessage:
-      'Plant one to share with a defined group — or switch to Discover to find one to join.',
+      'Gather one to share with a defined group — or switch to Discover to find one to join.',
   },
   emptyDiscoverTitle: {
     id: 'krew.empty.discover_title',
@@ -40,7 +39,7 @@ const messages = defineMessages({
   },
   emptyDiscoverBody: {
     id: 'krew.empty.discover_body',
-    defaultMessage: 'Be the first — plant one and others can join.',
+    defaultMessage: 'Be the first — gather one and others can join.',
   },
   inviteOnly: {
     id: 'krew.marker.invite_only',
@@ -156,15 +155,6 @@ export const Krews = () => {
   return (
     <Stage label={intl.formatMessage(messages.title)}>
       <div className='scrollable krew-page'>
-        <div className='krew-page__toolbar'>
-          <Link to='/hub/krew/new' className='krew-page__cta'>
-            <span className='krew-page__cta-plus' aria-hidden='true'>
-              +
-            </span>
-            <FormattedMessage {...messages.new} />
-          </Link>
-        </div>
-
         {error && <p className='krew-page__error'>{error}</p>}
 
         {loading && (
@@ -181,12 +171,6 @@ export const Krews = () => {
             <p className='krew-page__empty-body'>
               <FormattedMessage {...emptyMessages.body} />
             </p>
-            <Link to='/hub/krew/new' className='krew-page__cta'>
-              <span className='krew-page__cta-plus' aria-hidden='true'>
-                +
-              </span>
-              <FormattedMessage {...messages.new} />
-            </Link>
           </div>
         )}
 

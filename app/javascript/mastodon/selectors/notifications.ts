@@ -103,6 +103,111 @@ export const selectAnyPendingNotification = createSelector(
 export const selectUnreadNudgesCount = (state: RootState) =>
   state.notificationGroups.unreadNudgeCount;
 
+// ── Waving-hand alert signal ─────────────────────────────────────────
+// Korner/system notification types delivered by the Kronk system nudger.
+// Maps each to the korner it belongs to so a Hub tile can light up.
+// Extensible: add new korner-native notification types here.
+export const KORNER_SYSTEM_TYPE_TO_SLUG: Record<string, string> = {
+  proposal_status_changed: 'kommons',
+  proposal_challenged: 'kommons',
+  task_assigned: 'kommons',
+};
+
+const selectRawGroups = (s: RootState) => s.notificationGroups.groups;
+const selectRawPendingGroups = (s: RootState) =>
+  s.notificationGroups.pendingGroups;
+const selectReadMarkerId = (s: RootState) =>
+  s.notificationGroups.readMarkerId;
+
+const isGroupUnread = (
+  group: NotificationGroup | NotificationGap,
+  marker: string,
+): group is NotificationGroup =>
+  group.type !== 'gap' &&
+  !!group.page_max_id &&
+  compareId(group.page_max_id, marker) > 0;
+
+// Any unread Mate nudge OR any unread korner/system notification.
+export const selectHasUnreadNudges = createSelector(
+  [
+    selectUnreadNudgesCount,
+    selectReadMarkerId,
+    selectRawGroups,
+    selectRawPendingGroups,
+  ],
+  (nudgeCount, marker, groups, pendingGroups) => {
+    if (nudgeCount > 0) return true;
+    return [...groups, ...pendingGroups].some(
+      (group) =>
+        KORNER_SYSTEM_TYPE_TO_SLUG[group.type] !== undefined &&
+        isGroupUnread(group, marker),
+    );
+  },
+);
+
+// Korner slugs that have an unread korner/system notification (Hub tiles).
+export const selectUnreadKornerSlugs = createSelector(
+  [selectReadMarkerId, selectRawGroups, selectRawPendingGroups],
+  (marker, groups, pendingGroups) => {
+    const slugs = new Set<string>();
+    for (const group of [...groups, ...pendingGroups]) {
+      const slug = KORNER_SYSTEM_TYPE_TO_SLUG[group.type];
+      if (slug && isGroupUnread(group, marker)) slugs.add(slug);
+    }
+    return slugs;
+  },
+);
+
+// The newest nudge/korner-system notification, for the arrival toast.
+// `proposalTitle` is set for proposal notifications so the toast can name it.
+export interface LatestAlertNotification {
+  id: string;
+  proposalTitle: string | null;
+}
+
+export const selectLatestAlertNotification = createSelector(
+  [selectRawGroups, selectRawPendingGroups],
+  (groups, pendingGroups): LatestAlertNotification | null => {
+    let best: LatestAlertNotification | null = null;
+    let bestId: string | null = null;
+    for (const group of [...groups, ...pendingGroups]) {
+      if (group.type === 'gap') continue;
+      const relevant =
+        group.type === 'nudge' ||
+        KORNER_SYSTEM_TYPE_TO_SLUG[group.type] !== undefined;
+      if (!relevant) continue;
+      const id = group.page_max_id;
+      if (!id) continue;
+      if (bestId === null || compareId(id, bestId) > 0) {
+        bestId = id;
+        best = {
+          id,
+          proposalTitle:
+            group.type === 'proposal_status_changed'
+              ? (group.proposal?.proposal_title ?? null)
+              : null,
+        };
+      }
+    }
+    return best;
+  },
+);
+
+// Proposal ids carried by unread proposal notifications (Kommons cards).
+export const selectUnreadProposalIds = createSelector(
+  [selectReadMarkerId, selectRawGroups, selectRawPendingGroups],
+  (marker, groups, pendingGroups) => {
+    const ids = new Set<string>();
+    for (const group of [...groups, ...pendingGroups]) {
+      if (group.type !== 'proposal_status_changed') continue;
+      if (!isGroupUnread(group, marker)) continue;
+      const proposalId = group.proposal?.proposal_id;
+      if (proposalId) ids.add(proposalId);
+    }
+    return ids;
+  },
+);
+
 export const selectPendingNotificationGroupsCount = createSelector(
   [selectPendingNotificationGroups],
   (pendingGroups) =>

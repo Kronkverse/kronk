@@ -31,6 +31,26 @@ export const useKornerSlugs = (): string[] => {
   return useAppSelector((state) => Object.keys(state.korners));
 };
 
+// Every registered manifest, including core spaces (feed / profile /
+// hub / nudges / settings). Use this only when you specifically need
+// core spaces — settings surfaces that let a user configure them,
+// icon/name resolution for the top nav, etc. For the Hub grid,
+// KornerSidebar, and anywhere else that means "the korner spaces a
+// user opts into", use `useKorners()` instead.
 export const useAllKorners = (): ApiKornerJSON[] => {
   return useAppSelector((state) => Object.values(state.korners));
+};
+
+// The korner spaces — non-core manifests only. This is the semantic
+// definition of "a korner": a Hub-mounted, tune-in-able space (Klot,
+// Kommons, Krew, Kuestions, …). Core spaces (feed, hub, nudges,
+// profile, settings) are structurally different — they carry manifests
+// so the top nav can resolve their icons and names, but they don't
+// belong on the Hub grid or the KornerSidebar. Filtering here keeps
+// consumers from repeating the `core !== true` check ad hoc (which
+// the KornerSidebar was missing before this landed).
+export const useKorners = (): ApiKornerJSON[] => {
+  return useAppSelector((state) =>
+    Object.values(state.korners).filter((k) => k.core !== true),
+  );
 };

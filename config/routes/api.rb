@@ -141,7 +141,7 @@ namespace :api, format: false do
       resources :nodes, only: [:index]
     end
 
-    namespace :wachuneed do
+    namespace :martketplace do
       resources :listings, only: [:index, :show, :create]
     end
 

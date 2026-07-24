@@ -9,8 +9,11 @@ import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
-import { useAllKorners } from 'mastodon/hooks/useKorner';
+import { WavingHandBadge } from 'mastodon/components/waving_hand_badge';
+import { useKorners } from 'mastodon/hooks/useKorner';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { selectUnreadKornerSlugs } from 'mastodon/selectors/notifications';
+import { useAppSelector } from 'mastodon/store';
 
 // Hub landing (/hub). Tile aesthetic from the prototype at
 // public/hub-arrangeable-preview.html (retired 2.0.0-alpha.204):
@@ -38,10 +41,17 @@ const stopClick = (e: React.MouseEvent) => {
   e.stopPropagation();
 };
 
-const KornerTile: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
+const KornerTile: React.FC<{ korner: ApiKornerJSON; alert?: boolean }> = ({
+  korner,
+  alert,
+}) => {
   const soon = korner.enforced === false;
   const tunedIn = korner.tuned_in !== false;
+  // The hover tip uses the korner's authored `tagline` (the same copy
+  // shown by <SpaceIntro> inside the korner), so the Hub and the korner
+  // itself describe it identically. Falls back to the older teaser/blurb.
   const teaser =
+    korner.tagline ??
     (korner.hub_teaser?.static as string | undefined) ??
     (korner.launch?.blurb as string | undefined) ??
     '';
@@ -53,6 +63,12 @@ const KornerTile: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
       className={`hub-page__tile ${soon ? 'hub-page__tile--off' : ''}`}
       data-slug={korner.slug}
     >
+      {alert && (
+        <WavingHandBadge
+          className='hub-page__tile-alert'
+          label='New activity'
+        />
+      )}
       <Link
         to={`/hub/${korner.slug}`}
         className='hub-page__tile-link'
@@ -86,12 +102,10 @@ const KornerTile: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
 
 const Hub: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
-  const allKorners = useAllKorners();
-
-  // Core spaces (feed / profile / hub / nudges / settings) come back
-  // in the manifest registry so the top nav can resolve their icons,
-  // but they don't belong on the Hub grid — filter them here.
-  const korners = allKorners.filter((k) => k.core !== true);
+  const korners = useKorners();
+  // Korners with an unread korner/system notification get the waving-hand
+  // alert on their tile (e.g. Kommons when a proposal is ready to finalise).
+  const unreadKornerSlugs = useAppSelector(selectUnreadKornerSlugs);
 
   // Default order: most-tuned-in first, ties broken alphabetically.
   // Coming-soon tiles (enforced: false) fall to the end so the grid
@@ -122,7 +136,11 @@ const Hub: React.FC<{ multiColumn?: boolean }> = () => {
         {live.length > 0 && (
           <div className='hub-page__board'>
             {live.map((k) => (
-              <KornerTile key={k.slug} korner={k} />
+              <KornerTile
+                key={k.slug}
+                korner={k}
+                alert={unreadKornerSlugs.has(k.slug)}
+              />
             ))}
           </div>
         )}
@@ -137,7 +155,11 @@ const Hub: React.FC<{ multiColumn?: boolean }> = () => {
             </h2>
             <div className='hub-page__board hub-page__board--soon'>
               {soon.map((k) => (
-                <KornerTile key={k.slug} korner={k} />
+                <KornerTile
+                  key={k.slug}
+                  korner={k}
+                  alert={unreadKornerSlugs.has(k.slug)}
+                />
               ))}
             </div>
           </>

@@ -1,4 +1,4 @@
-// A Wachuneed listing, as served by /api/v1/wachuneed/listings and
+// A mARTketplace listing, as served by /api/v1/martketplace/listings and
 // embedded on statuses (REST::WachuneedListingSummarySerializer).
 export interface ApiListingJSON {
   id: string;

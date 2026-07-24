@@ -32,6 +32,11 @@
 # /hub/krew (Phase 1). /hub/groups continues to resolve for one
 # release; nothing else should be able to grab the slug.
 - groups
+# `wachuneed` — retired when mARTketplace flipped the URL to
+# /hub/martketplace (2026-07-24). /hub/wachuneed continues to
+# resolve for one release via a 301; nothing else should be able
+# to grab the slug.
+- wachuneed
 
 # Mastodon route stems (single-word top-level paths)
 - notifications
