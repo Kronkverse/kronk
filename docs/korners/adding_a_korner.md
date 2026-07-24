@@ -281,6 +281,44 @@ card. See how `REST::WachuneedListingSummarySerializer` handles this on
 
 ---
 
+## 3.5. Chrome the Frame provides — don't build these
+
+**Read [`docs/kronk_frame.md`](../kronk_frame.md) before writing any UI.** The Frame is the grid every korner renders inside, and it already draws three pieces of chrome for you off the manifest. If your feature file draws them again you'll get a doubled surface — this is exactly the bug Klot shipped in alpha.223 and had to fix in alpha.225 (`bin/tootctl korners doctor` catches it now, as a warning under Standard L11).
+
+| Slot           | Frame component         | Manifest field                           | You render this in your index?                              |
+| -------------- | ----------------------- | ---------------------------------------- | ----------------------------------------------------------- |
+| Space title    | `<AutoSpaceBadge>`      | `name` + `icon.text_glyph`               | **No.** Don't emit `<h1>`.                                  |
+| Space tagline  | `<AutoSpaceIntro>`      | `tagline`                                | **No.** Keep the copy in the manifest.                      |
+| View / tab row | `<AutoSpaceViewPicker>` | `views:` (ordered `[{ key, label }, …]`) | **No.** Don't emit `role="tablist"` or a bespoke tab class. |
+
+The view picker is URL-driven: bare `/hub/<slug>` is your first-listed view; `/hub/<slug>/<key>` is any other. Your component should read `useLocation()` and switch on the segment — never a `useState<Tab>` tab state.
+
+**A minimal Frame-adherent korner looks like:**
+
+```tsx
+// features/mykorner/index.tsx
+import { KornerShell } from 'mastodon/components/korner_shell';
+
+export const MyKorner: React.FC = () => (
+  <KornerShell
+    slug='mykorner'
+    label='MyKorner'
+    className='mykorner'
+    defaultView='default'
+    views={{
+      default: () => <DefaultView />,
+      other: () => <OtherView />,
+    }}
+  />
+);
+```
+
+That's it — no hero, no tab row, no tagline. `<KornerShell>` owns the `<Stage>` wrapper and the URL-to-view routing; the view keys line up with the manifest's `views:` list. Copy the shape from `docs/korners/template/` and delete the parts you don't need.
+
+Landing-view copy that _isn't_ the tagline (a lede paragraph, a getting-started card, a call-to-action) is fine — it's your content, not chrome. The rule is against duplicating what the Frame already renders. Standard L11 spells this out.
+
+---
+
 ## 4. Frontend feature module
 
 **Directory:** `app/javascript/mastodon/features/<slug>/`
@@ -487,12 +525,12 @@ three moving parts:
 Four Korners currently ship feed projection. Copy the closest match to
 your shape:
 
-| Korner        | Best for                                                                                                                                                  | Reference files                                                                                                                                                                      |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Kommons**   | You have a first-class resource (proposal, decision) with a discussion attached                                                                           | `app/models/proposal.rb`, `app/controllers/api/v1/proposals_controller.rb`, `app/serializers/rest/proposal_summary_serializer.rb`                                                    |
-| **Kuestions** | Dedicated `Question`/`Answer` tables; its feed card is **not yet re-added** — the old Status-polymorphic `question_card` retired (Phase 3a) and a `Question`-model-backed `kuestions_card` is still to build, so there is currently no `KORNER_CARDS` entry for it | `app/models/question.rb`, `app/models/answer.rb`, `app/javascript/mastodon/components/korner_cards.tsx` (see the Kuestions comment)                          |
-| **Kalendar**  | You have a primary record (event, workshop) that gets shared on create                                                                                    | `app/controllers/api/v1/events_controller.rb#create` (post-race-fix — status creation is outside the transaction), `app/models/event.rb`, `app/serializers/rest/event_serializer.rb` |
-| **Booth**     | You have a primary record (audio set, upload) with an explicit share action                                                                               | `app/controllers/api/v1/booth_sets_controller.rb#share`, `app/models/booth_set.rb`, `app/serializers/rest/booth_set_summary_serializer.rb`                                           |
+| Korner        | Best for                                                                                                                                                                                                                                                           | Reference files                                                                                                                                                                      |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Kommons**   | You have a first-class resource (proposal, decision) with a discussion attached                                                                                                                                                                                    | `app/models/proposal.rb`, `app/controllers/api/v1/proposals_controller.rb`, `app/serializers/rest/proposal_summary_serializer.rb`                                                    |
+| **Kuestions** | Dedicated `Question`/`Answer` tables; its feed card is **not yet re-added** — the old Status-polymorphic `question_card` retired (Phase 3a) and a `Question`-model-backed `kuestions_card` is still to build, so there is currently no `KORNER_CARDS` entry for it | `app/models/question.rb`, `app/models/answer.rb`, `app/javascript/mastodon/components/korner_cards.tsx` (see the Kuestions comment)                                                  |
+| **Kalendar**  | You have a primary record (event, workshop) that gets shared on create                                                                                                                                                                                             | `app/controllers/api/v1/events_controller.rb#create` (post-race-fix — status creation is outside the transaction), `app/models/event.rb`, `app/serializers/rest/event_serializer.rb` |
+| **Booth**     | You have a primary record (audio set, upload) with an explicit share action                                                                                                                                                                                        | `app/controllers/api/v1/booth_sets_controller.rb#share`, `app/models/booth_set.rb`, `app/serializers/rest/booth_set_summary_serializer.rb`                                           |
 
 ### 11a. Association on `Status`
 
