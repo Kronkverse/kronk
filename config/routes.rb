@@ -307,6 +307,11 @@ Rails.application.routes.draw do
   # kept alive for a release. The canonical route is /hub/krew.
   get '/hub/krew', to: 'home#index'
   get '/hub/krew/*path', to: 'home#index', format: false
+  # Klot (KRONK_TIDES) — SPA-only, no controller. Direct/deep-link
+  # loads land on home#index which boots the SPA; the client-side
+  # router resolves /hub/klot.
+  get '/hub/klot', to: 'home#index'
+  get '/hub/klot/*path', to: 'home#index', format: false
   # Framework surfaces reached from the Ӂ menu — SPA-only, no controller.
   # Without these, a direct load / hard-reload of the deep link 404s.
   get '/hub/search', to: 'home#index'
