@@ -23,6 +23,7 @@ class Api::V1::TasksController < Api::BaseController
   def update
     if @task.update(task_params)
       notify_assignee_if_changed
+      notify_proposer_if_work_complete
       render json: @task, serializer: REST::TaskSerializer
     else
       render json: { error: @task.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -30,6 +31,27 @@ class Api::V1::TasksController < Api::BaseController
   end
 
   private
+
+  # When a dev marks the last open task done, tell the proposer their
+  # proposal's work is complete and it's ready for them to finalise. Fires
+  # only on the save that tipped the whole task list to done — the
+  # saved_change guard prevents re-firing on a no-op save, and
+  # #all_tasks_done? confirms nothing is still outstanding. Reuses the
+  # proposal_status_changed type; KornerNotifier's self-notify guard means
+  # a proposer finishing their own tasks isn't pinged.
+  def notify_proposer_if_work_complete
+    return unless @task.saved_change_to_status? && @task.status == 'done'
+
+    proposal = @task.proposal
+    return unless proposal&.all_tasks_done?
+
+    Kronk::KornerNotifier.notify(
+      recipient_id: proposal.created_by_account_id,
+      from_account: current_account,
+      activity: proposal,
+      type: 'proposal_status_changed'
+    )
+  end
 
   # Notify the assignee when a task is newly assigned or re-assigned to them.
   # Only fires when assigned_to_account_id actually changed in the last save,

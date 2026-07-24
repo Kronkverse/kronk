@@ -25,6 +25,7 @@ export const allNotificationTypes: NotificationType[] = [
   'event_invitation',
   'nudge',
   'media_tag',
+  'proposal_status_changed',
 ];
 
 export type NotificationWithStatusType =
@@ -48,7 +49,8 @@ export type NotificationType =
   | 'annual_report'
   | 'event_invitation'
   | 'nudge'
-  | 'media_tag';
+  | 'media_tag'
+  | 'proposal_status_changed';
 
 export interface BaseNotificationJSON {
   id: string;
@@ -168,6 +170,22 @@ interface EventInvitationNotificationJSON extends BaseNotificationJSON {
   event_invitation: ApiEventInvitationJSON;
 }
 
+export interface ApiProposalCompleteJSON {
+  proposal_id: string;
+  proposal_title: string;
+}
+
+interface ProposalStatusChangedNotificationGroupJSON
+  extends BaseNotificationGroupJSON {
+  type: 'proposal_status_changed';
+  proposal: ApiProposalCompleteJSON;
+}
+
+interface ProposalStatusChangedNotificationJSON extends BaseNotificationJSON {
+  type: 'proposal_status_changed';
+  proposal: ApiProposalCompleteJSON;
+}
+
 export interface NudgeMessageJSON {
   body: string | null;
   media_url: string | null;
@@ -216,7 +234,8 @@ export type ApiNotificationJSON =
   | ModerationWarningNotificationJSON
   | EventInvitationNotificationJSON
   | NudgeNotificationJSON
-  | MediaTagNotificationJSON;
+  | MediaTagNotificationJSON
+  | ProposalStatusChangedNotificationJSON;
 
 export type ApiNotificationGroupJSON =
   | SimpleNotificationGroupJSON
@@ -227,7 +246,8 @@ export type ApiNotificationGroupJSON =
   | AnnualReportNotificationGroupJSON
   | EventInvitationNotificationGroupJSON
   | NudgeNotificationGroupJSON
-  | MediaTagNotificationGroupJSON;
+  | MediaTagNotificationGroupJSON
+  | ProposalStatusChangedNotificationGroupJSON;
 
 export interface ApiNotificationGroupsResultJSON {
   accounts: ApiAccountJSON[];
