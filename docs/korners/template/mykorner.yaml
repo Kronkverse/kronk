@@ -1,0 +1,64 @@
+# Template korner manifest. Copy to config/korners/<slug>.yaml and
+# rename every occurrence of `mykorner` to your slug. Read the field
+# reference in docs/kronk_korner_spec.md and the Standard in
+# docs/korners/korner_standard.md before shipping.
+
+slug: mykorner
+name: MyKorner
+tagline: 'A short display-voice line about what this korner is for.'
+purpose: 'One sentence for the manifest — what the korner enables that no other korner does.'
+icon:
+  material: extension # any Material Symbols name
+  text_glyph: 'M' # one hand-picked character, definitely NOT emoji
+render_target: native
+version: 0.1.0
+
+security:
+  permissions:
+    - read:statuses
+    - write:statuses
+  visibility_scopes: []
+  maintainers:
+    - moderator
+  federates: false
+
+resources: []
+
+storage:
+  db_namespace: # not-implemented — set once the korner owns tables
+  media_prefix: # not-applicable / not-implemented — set once media lands
+  redis_prefix: # not-implemented
+
+emits: []
+listens: []
+
+feed_projection:
+  card: # not-applicable — set the card component name if this korner projects
+  discriminator: # n/a
+
+subscription:
+  default: # not-implemented
+
+settings: []
+
+# SpaceNav view switcher (first entry = default, bare /hub/<slug>).
+# Drives the AutoSpaceViewPicker; your index.tsx reads the URL to
+# render the matching view. Delete this block entirely for a
+# single-view korner — the picker won't render.
+views:
+  - { key: default, label: Default }
+  - { key: other, label: Other }
+
+launch:
+  blurb: 'MyKorner — one-line elevator pitch.'
+  cta: 'Open it'
+
+feature_flag: # not-implemented
+enforced: false # flip to true only when every layer of the Standard passes
+
+nodes:
+  - id: mykorner.index
+    label: MyKorner
+    url: /hub/mykorner
+    lifecycle: soon # → 'live' once every Standard layer passes
+    spa: true
