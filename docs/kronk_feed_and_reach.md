@@ -16,19 +16,19 @@
 
 Three connected layers, built bottom-up (see §5):
 
-1. **Mates graph.** Kronk drops one-way *following* entirely. The only person-to-person
+1. **Mates graph.** Kronk drops one-way _following_ entirely. The only person-to-person
    relationship is **Mates** — symmetric, mutual, formed by **request → accept**. Because
-   Kronk ships as a *copyable platform* (federation is Kronk-to-Kronk, not fediverse interop),
+   Kronk ships as a _copyable platform_ (federation is Kronk-to-Kronk, not fediverse interop),
    Mates is **Mate-native**: we do not bend the model to ActivityPub's follow semantics.
-2. **Reach & scope.** A single distance scale **Mates → Orbit → Kronk** governs both *what a
-   user sees* (feed width) and *how far a post radiates* (reach). **Krew** is a **separate
-   axis** — a chosen group you post *into*, whose members see the post **whether or not they
+2. **Reach & scope.** A single distance scale **Mates → Orbit → Kronk** governs both _what a
+   user sees_ (feed width) and _how far a post radiates_ (reach). **Krew** is a **separate
+   axis** — a chosen group you post _into_, whose members see the post **whether or not they
    are Mates**.
 3. **Feed projection.** Korner content posts a **card** into the timeline **automatically on
    create**. The **manifest is the source of truth**: the frontend card registry is driven by
    each korner's `feed_projection`, not a hand-maintained list. A new **`source_korner`** field
-   on the status is the single discriminator that drives *which card*, *the tune-in gate*, and
-   *reach*. Cards share the `StatusKornerCard` frame (customisable), with one functional action
+   on the status is the single discriminator that drives _which card_, _the tune-in gate_, and
+   _reach_. Cards share the `StatusKornerCard` frame (customisable), with one functional action
    plus click-through. **Tune-in is enforced** as the per-korner feed gate.
 
 Everything below elaborates these.
@@ -47,12 +47,12 @@ Everything below elaborates these.
   tier (§2). How Orbit is computed (live traversal vs. maintained set) is an open item (§6).
 - **Federation is not a constraint.** Kronk is released as a copyable platform; "federation"
   means other Kronk instances federating with a Kronk instance, not interop with follow-based
-  Mastodon servers. So Mates can be first-class and *following can be genuinely removed* — we
+  Mastodon servers. So Mates can be first-class and _following can be genuinely removed_ — we
   are not preserving an ActivityPub follow graph underneath for interop's sake.
 
 > **Current state.** The codebase is follow-based (Mastodon `Follow`), and "Mates = mutual
 > follow" already exists as a derived notion (e.g. `Nudges::EventRouter` gates on mutual
-> follows). This spec promotes Mates to the *only* relationship and removes the one-way
+> follows). This spec promotes Mates to the _only_ relationship and removes the one-way
 > follow product surface. Migration of existing follows is an open item (§6).
 
 ---
@@ -63,21 +63,21 @@ Everything below elaborates these.
 
 One scale, widest to tightest:
 
-| Tier | Who | Notes |
-|---|---|---|
-| **Kronk** | The whole community on the instance | The broadest reach |
-| **Orbit** | Mates of Mates (one hop out) | The middle ring |
-| **Mates** | Your mutual connections | The tightest ring on the scale |
+| Tier      | Who                                 | Notes                          |
+| --------- | ----------------------------------- | ------------------------------ |
+| **Kronk** | The whole community on the instance | The broadest reach             |
+| **Orbit** | Mates of Mates (one hop out)        | The middle ring                |
+| **Mates** | Your mutual connections             | The tightest ring on the scale |
 
 The same scale is used for **two things**:
 
 - **Feed width (viewing).** In feed settings, a user chooses how wide a slice they want to
-  *see*: Mates / Orbit / Kronk.
-- **Reach (posting).** How far a post *radiates*: Mates / Orbit / Kronk.
+  _see_: Mates / Orbit / Kronk.
+- **Reach (posting).** How far a post _radiates_: Mates / Orbit / Kronk.
 
 ### 2.2 Krew — a separate axis
 
-**Krew is not on the distance scale.** It is a *group target*: you post **into** a chosen Krew,
+**Krew is not on the distance scale.** It is a _group target_: you post **into** a chosen Krew,
 and **its members see the post regardless of whether they are your Mates** (Krew membership is
 independent of the Mates graph). A post's audience is therefore either **a distance tier**
 (Mates/Orbit/Kronk) **or** **one or more Krews** (when the surface allows it — §2.4). Krew rides
@@ -88,11 +88,11 @@ the existing `statuses_krews` scoping primitive.
 Two controls live in **feed settings**:
 
 - **View width** — Mates / Orbit / Kronk (what the feed shows).
-- **Standard-post reach** — the default reach for the user's *ordinary* posts (Mates / Orbit /
+- **Standard-post reach** — the default reach for the user's _ordinary_ posts (Mates / Orbit /
   Kronk), overridable per post.
 
 > **Current state.** `UserSettings.kronk.feed_scope` (values `friends | friends_of_friends |
-> kommunity`, default `kommunity`) already persists a viewer scope but **does not filter the
+kommunity`, default `kommunity`) already persists a viewer scope but **does not filter the
 > timeline** (gated behind an unbuilt `Kronk::FeatureFlags.feed_scope_enforced`). This spec
 > renames the tiers to **Mates / Orbit / Kronk**, gives the setting a second job (default post
 > reach), and requires the timeline query to actually honour it.
@@ -116,8 +116,8 @@ Two controls live in **feed settings**:
 A korner posts to the feed by creating a real `Status` and linking it back to the korner record
 (the §5.5 `status_id` convention):
 
-1. Korner content is created → the korner **automatically** posts a card (Decision: *auto on
-   create*, not opt-in share).
+1. Korner content is created → the korner **automatically** posts a card (Decision: _auto on
+   create_, not opt-in share).
 2. `PostStatusService` makes the `Status` at the resolved **reach** (§2.4) — mapped onto
    visibility for Mates/Orbit/Kronk and onto `statuses_krews` for Krew targets.
 3. The korner record's `status_id` is set; **`Status.source_korner`** is stamped with the
@@ -219,7 +219,7 @@ timeline query. This makes real the promise the settings UI already states.
 Bottom-up — each layer depends on the one below:
 
 1. **Mates graph.** Request/accept, mutual-only, remove the following product surface, compute
-   **Orbit**, migrate existing follows (§6). *Everything else's reach semantics depend on this.*
+   **Orbit**, migrate existing follows (§6). _Everything else's reach semantics depend on this._
 2. **Reach & scope.** The Mates/Orbit/Kronk scale + Krew targeting; feed settings (view width +
    standard-post reach); enforce the timeline reach filter.
 3. **Feed projection.** `source_korner`; manifest-driven registry + boot validation;

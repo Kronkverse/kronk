@@ -243,6 +243,10 @@ export function Governance () {
   return import("../../governance").then(m => ({ default: m.Governance }));
 }
 
+export function KommonsSettings () {
+  return import("../../governance/settings");
+}
+
 export function KommonsProposal () {
   return import("../../governance/proposal_page").then(m => ({ default: m.ProposalPage }));
 }

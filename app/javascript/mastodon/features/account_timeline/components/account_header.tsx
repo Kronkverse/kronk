@@ -37,10 +37,7 @@ import { apiGetNudgeStreak } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { Badge, AutomatedBadge, GroupBadge } from 'mastodon/components/badge';
 import { CopyIconButton } from 'mastodon/components/copy_icon_button';
-import {
-  MatesCounter,
-  StatusesCounter,
-} from 'mastodon/components/counters';
+import { MatesCounter, StatusesCounter } from 'mastodon/components/counters';
 import { Dropdown } from 'mastodon/components/dropdown_menu';
 import { FollowButton } from 'mastodon/components/follow_button';
 import { FormattedDateWrapper } from 'mastodon/components/formatted_date';
