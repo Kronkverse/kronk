@@ -91,6 +91,7 @@ import {
   Hub,
   Booth,
   Martketplace,
+  MartketplaceNew,
   InflowV2,
   MapV2,
   Nudges,
@@ -303,6 +304,9 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/albutts' component={AlbuttsStub} content={children} />
             <Redirect from='/hub/kompass' to='/hub/map' />
             <WrappedRoute path='/hub/map' component={MapV2} content={children} />
+            {/* /new must sit before the wildcard so the composer route
+                wins over the KornerShell's fallback-to-default view. */}
+            {signedIn && <WrappedRoute path='/hub/martketplace/new' exact component={MartketplaceNew} content={children} />}
             <WrappedRoute path='/hub/martketplace' component={Martketplace} content={children} />
             <WrappedRoute path='/@:acct/connections' exact component={Connections} content={children} />
             {/* Phase 1b: the messenger shell handles both /nudges (empty pane)
