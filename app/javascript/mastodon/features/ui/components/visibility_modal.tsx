@@ -17,6 +17,7 @@ import { messages as privacyMessages } from '@/mastodon/features/compose/compone
 import { createAppSelector, useAppSelector } from '@/mastodon/store';
 import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import PublicIcon from '@/material-icons/400-24px/public.svg?react';
 import QuietTimeIcon from '@/material-icons/400-24px/quiet_time.svg?react';
@@ -127,7 +128,9 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
 
     const disableVisibility = !!statusId;
     const disableQuotePolicy =
-      visibility === 'private' || visibility === 'direct';
+      visibility === 'private' ||
+      visibility === 'direct' ||
+      visibility === 'krew';
     const disablePublicVisibilities = useAppSelector(
       selectDisablePublicVisibilities,
     );
@@ -170,6 +173,17 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
             iconComponent: QuietTimeIcon,
           },
         );
+        // Krew — mutually exclusive with the other modes per
+        // KRONK_KREWS §7.1. Selecting Krew here closes the modal;
+        // KrewTargets in the composer becomes the multi-select for
+        // picking which Krews carry the post.
+        items.push({
+          value: 'krew',
+          text: intl.formatMessage(privacyMessages.krew_short),
+          meta: intl.formatMessage(privacyMessages.krew_long),
+          icon: 'group',
+          iconComponent: GroupsIcon,
+        });
       }
 
       return items;

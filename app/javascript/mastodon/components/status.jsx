@@ -34,6 +34,7 @@ import { RelativeTimestamp } from './relative_timestamp';
 import StatusActionBar from './status_action_bar';
 import StatusContent from './status_content';
 import { hasKornerCard, pickKornerCard } from './korner_cards';
+import { StatusKrewBadge } from './status_krew_badge';
 import { StatusSpaceBar } from './status_space_bar';
 import { StatusThreadLabel } from './status_thread_label';
 import { VisibilityIcon } from './visibility_icon';
@@ -643,6 +644,7 @@ class Status extends ImmutablePureComponent {
                 {(status.get('post_type') === 'question' || status.get('post_type') === 'answer' || status.get('post_type') === 'proposal' || outerPostType === 'answer') && (
                   <StatusSpaceBar postType={outerPostType === 'answer' ? 'answer' : status.get('post_type')} inline />
                 )}
+                <StatusKrewBadge krews={status.get('krews')?.toJS?.() ?? status.get('krews')} />
               </div>
 
               {isQuotedPost && !!this.props.onQuoteCancel &&  (

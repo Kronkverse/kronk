@@ -13,15 +13,22 @@ import { List as ImmutableList } from 'immutable';
 import { changeComposeKrewTargets } from 'mastodon/actions/compose';
 import { apiRequestGet } from 'mastodon/api';
 import type { ApiKrewJSON } from 'mastodon/api/krew';
+import type { StatusVisibility } from 'mastodon/api_types/statuses';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
 // Compact multi-select for targeting a post at one or more Krews.
-// Renders a chip per selected krew + an "add" affordance that lists
-// krews the current user is a member of. Server-side, statuses can
-// be attached to N krews (see statuses_krews join).
+// KRONK_KREWS §7.1: Krew audience is mutually exclusive with public /
+// followers / direct — the picker only renders when the composer's
+// visibility is set to 'krew' (which the visibility modal writes).
+// Server-side, PostStatusService requires visibility='krew' to
+// carry at least one krew_id (Api::V1::StatusesController#create
+// returns 422 krew_visibility_requires_krew_ids otherwise).
 
 export const KrewTargets = () => {
   const dispatch = useAppDispatch();
+  const visibility = useAppSelector(
+    (state) => state.compose.get('privacy') as StatusVisibility,
+  );
   const selectedIds = useAppSelector(
     (state) =>
       (state.compose.get('krew_ids') ??
@@ -91,7 +98,11 @@ export const KrewTargets = () => {
     [toggleKrew],
   );
 
-  if (available.length === 0 && selectedIds.size === 0) return null;
+  // Mutual exclusion (§7.1): the picker only surfaces when the
+  // composer's visibility is 'krew'. When the user flips visibility
+  // to anything else, the picker vanishes; any pre-selected ids stay
+  // in redux so switching back preserves the selection.
+  if (visibility !== 'krew') return null;
 
   const byId = new Map(available.map((k) => [k.id, k] as const));
 
