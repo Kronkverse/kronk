@@ -231,8 +231,12 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
 // automatically clears the sidebar with breathing room. Fixed chrome
 // (top strip, sidebar itself, Ӂ menu) is positioned against the
 // viewport and is unaffected.
+// Stage routes are excluded: the Frame grid reserves the rail as a
+// real right-band track for them (see .kronk-frame:has(.kronk-stage)
+// in _kronk_frame.scss), so adding body padding too would double-count
+// and push Stage content off the rail.
 @media (min-width: $rail-breakpoint) {
-  body:has(.korner-sidebar) {
+  body:has(.korner-sidebar):not(:has(.kronk-stage)) {
     padding-right: calc($rail-width + $rail-gutter);
   }
 }
