@@ -12,47 +12,60 @@ import { Stage } from 'mastodon/components/stage';
 //   Yours     — the current account's memberships, ordered by
 //               last_activity_at desc.
 //   Discover  — listed Krews with the current account's join state.
-// Discover-side name search + live-reorder FLIP animation are
-// deferred to a follow-up so this PR lands the surface skeleton
-// first. CSS classes still say `groups-page__*` — the SCSS-only
-// classname sweep is queued.
+// Redesigned 2026-07-24 — centered column, real hero, chunky
+// segmented control + primary CTA, empty state as a proper card.
+// CSS classes moved to the `.krew-page__*` namespace so the
+// aesthetic reads coherently with Hub / Kalendar Spiral.
 
 const messages = defineMessages({
   title: { id: 'krew.title', defaultMessage: 'Krews' },
+  lede: {
+    id: 'krew.lede',
+    defaultMessage:
+      'Defined groups of people you can share with selectively. Seed one, or discover one to join.',
+  },
   yours: { id: 'krew.lens.yours', defaultMessage: 'Yours' },
   discover: { id: 'krew.lens.discover', defaultMessage: 'Discover' },
-  new: { id: 'krew.new', defaultMessage: '+ Plant a new krew' },
+  new: { id: 'krew.new', defaultMessage: 'Plant a new Krew' },
   members: {
     id: 'krew.members_count',
     defaultMessage: '{count, plural, one {# member} other {# members}}',
   },
   loading: { id: 'krew.loading', defaultMessage: 'Loading…' },
-  emptyYours: {
-    id: 'krew.empty.yours',
+  emptyYoursTitle: {
+    id: 'krew.empty.yours_title',
     defaultMessage: "You're not in any Krews yet.",
   },
-  emptyDiscover: {
-    id: 'krew.empty.discover',
+  emptyYoursBody: {
+    id: 'krew.empty.yours_body',
+    defaultMessage:
+      'Plant one to share with a defined group — or switch to Discover to find one to join.',
+  },
+  emptyDiscoverTitle: {
+    id: 'krew.empty.discover_title',
     defaultMessage: 'No Krews to discover just yet.',
+  },
+  emptyDiscoverBody: {
+    id: 'krew.empty.discover_body',
+    defaultMessage: 'Be the first — plant one and others can join.',
+  },
+  inviteOnly: {
+    id: 'krew.marker.invite_only',
+    defaultMessage: 'Invite-only',
   },
 });
 
 type Lens = 'yours' | 'discover';
 
 const initialSquircle = (name: string): string => {
-  const trimmed = name.trim();
-  const first = trimmed.charAt(0);
+  const first = name.trim().charAt(0);
   return first.length === 0 ? 'K' : first.toUpperCase();
 };
 
-// Relative-time helper — spec is "relative time" (§7.1) but we render
-// a plain readable format for now; a full FormattedRelativeTime pass
-// lands with the unread-badge wiring.
 const relativeTime = (iso: string | null): string => {
   if (!iso) return '';
   const then = new Date(iso).getTime();
-  const now = Date.now();
-  const seconds = Math.max(0, Math.round((now - then) / 1000));
+  const seconds = Math.max(0, Math.round((Date.now() - then) / 1000));
   if (seconds < 60) return 'just now';
   const minutes = Math.round(seconds / 60);
   if (minutes < 60) return `${minutes}m ago`;
@@ -60,45 +73,46 @@ const relativeTime = (iso: string | null): string => {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.round(hours / 24);
   if (days < 7) return `${days}d ago`;
-  const weeks = Math.round(days / 7);
-  return `${weeks}w ago`;
+  return `${Math.round(days / 7)}w ago`;
 };
 
 const KrewRow: React.FC<{ krew: ApiKrewJSON }> = ({ krew }) => {
   const intl = useIntl();
   return (
-    <li className='groups-page__row'>
-      <Link to={`/hub/krew/${krew.slug}`}>
-        <div className='groups-page__row-header'>
-          <span
-            className='groups-page__row-avatar'
-            aria-hidden='true'
-            data-initial={initialSquircle(krew.name)}
-          >
-            {initialSquircle(krew.name)}
-          </span>
-          <h3 className='groups-page__row-name'>
-            {krew.name}
+    <li className='krew-page__row'>
+      <Link to={`/hub/krew/${krew.slug}`} className='krew-page__row-link'>
+        <span
+          className='krew-page__row-avatar'
+          aria-hidden='true'
+          data-initial={initialSquircle(krew.name)}
+        >
+          {initialSquircle(krew.name)}
+        </span>
+        <div className='krew-page__row-body'>
+          <div className='krew-page__row-title'>
+            <h3 className='krew-page__row-name'>{krew.name}</h3>
             {krew.access === 'invite_only' && (
               <span
-                className='groups-page__row-marker'
-                aria-label='Invite-only'
+                className='krew-page__row-marker'
+                aria-label={intl.formatMessage(messages.inviteOnly)}
+                title={intl.formatMessage(messages.inviteOnly)}
               >
-                {' '}
                 ⚿
               </span>
             )}
-          </h3>
-          <small className='groups-page__row-meta'>
-            {intl.formatMessage(messages.members, { count: krew.member_count })}
+          </div>
+          {krew.description && (
+            <p className='krew-page__row-desc'>{krew.description}</p>
+          )}
+          <small className='krew-page__row-meta'>
+            {intl.formatMessage(messages.members, {
+              count: krew.member_count,
+            })}
             {krew.last_activity_at
               ? ` · ${relativeTime(krew.last_activity_at)}`
               : ''}
           </small>
         </div>
-        {krew.description && (
-          <p className='groups-page__row-desc'>{krew.description}</p>
-        )}
       </Link>
     </li>
   );
@@ -136,54 +150,95 @@ export const Krews = () => {
     setLens('discover');
   }, []);
 
-  const emptyMessage = useMemo(
-    () => (lens === 'yours' ? messages.emptyYours : messages.emptyDiscover),
+  const emptyMessages = useMemo(
+    () =>
+      lens === 'yours'
+        ? { title: messages.emptyYoursTitle, body: messages.emptyYoursBody }
+        : {
+            title: messages.emptyDiscoverTitle,
+            body: messages.emptyDiscoverBody,
+          },
     [lens],
   );
 
   return (
     <Stage label={intl.formatMessage(messages.title)}>
-      <div className='scrollable groups-page'>
-        <div className='groups-page__scope-tabs'>
-          <button
-            type='button'
-            onClick={handleYours}
-            className={`groups-page__scope-tab ${lens === 'yours' ? 'groups-page__scope-tab--active' : ''}`}
+      <div className='scrollable krew-page'>
+        <header className='krew-page__hero'>
+          <h1 className='krew-page__hero-title'>
+            <FormattedMessage {...messages.title} />
+          </h1>
+          <p className='krew-page__hero-lede'>
+            <FormattedMessage {...messages.lede} />
+          </p>
+        </header>
+
+        <div className='krew-page__toolbar'>
+          <div
+            className='krew-page__tabs'
+            role='tablist'
+            aria-label={intl.formatMessage(messages.title)}
           >
-            {intl.formatMessage(messages.yours)}
-          </button>
-          <button
-            type='button'
-            onClick={handleDiscover}
-            className={`groups-page__scope-tab ${lens === 'discover' ? 'groups-page__scope-tab--active' : ''}`}
-          >
-            {intl.formatMessage(messages.discover)}
-          </button>
+            <button
+              type='button'
+              role='tab'
+              aria-selected={lens === 'yours'}
+              onClick={handleYours}
+              className={`krew-page__tab ${lens === 'yours' ? 'krew-page__tab--active' : ''}`}
+            >
+              <FormattedMessage {...messages.yours} />
+            </button>
+            <button
+              type='button'
+              role='tab'
+              aria-selected={lens === 'discover'}
+              onClick={handleDiscover}
+              className={`krew-page__tab ${lens === 'discover' ? 'krew-page__tab--active' : ''}`}
+            >
+              <FormattedMessage {...messages.discover} />
+            </button>
+          </div>
+
+          <Link to='/hub/krew/new' className='krew-page__cta'>
+            <span className='krew-page__cta-plus' aria-hidden='true'>
+              +
+            </span>
+            <FormattedMessage {...messages.new} />
+          </Link>
         </div>
 
-        <Link to='/hub/krew/new' className='groups-page__new-btn'>
-          {intl.formatMessage(messages.new)}
-        </Link>
-
-        {error && <p className='groups-page__error'>{error}</p>}
+        {error && <p className='krew-page__error'>{error}</p>}
 
         {loading && (
-          <p className='groups-page__loading'>
-            {intl.formatMessage(messages.loading)}
+          <p className='krew-page__loading'>
+            <FormattedMessage {...messages.loading} />
           </p>
         )}
 
         {!loading && krews.length === 0 && (
-          <p className='groups-page__empty'>
-            <FormattedMessage {...emptyMessage} />
-          </p>
+          <div className='krew-page__empty'>
+            <h2 className='krew-page__empty-title'>
+              <FormattedMessage {...emptyMessages.title} />
+            </h2>
+            <p className='krew-page__empty-body'>
+              <FormattedMessage {...emptyMessages.body} />
+            </p>
+            <Link to='/hub/krew/new' className='krew-page__cta'>
+              <span className='krew-page__cta-plus' aria-hidden='true'>
+                +
+              </span>
+              <FormattedMessage {...messages.new} />
+            </Link>
+          </div>
         )}
 
-        <ul className='groups-page__list'>
-          {krews.map((krew) => (
-            <KrewRow key={krew.id} krew={krew} />
-          ))}
-        </ul>
+        {!loading && krews.length > 0 && (
+          <ul className='krew-page__list'>
+            {krews.map((krew) => (
+              <KrewRow key={krew.id} krew={krew} />
+            ))}
+          </ul>
+        )}
       </div>
     </Stage>
   );
