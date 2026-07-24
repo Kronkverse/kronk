@@ -78,6 +78,10 @@ $tile-shadow-2: #17151f;
       border-color 0.16s;
 
     &:hover {
+      // Lift the hovered tile above its neighbours so its hover tip — which
+      // can flip below the tile on the top row — paints over the adjacent
+      // tiles instead of being hidden behind the later-in-DOM row beneath.
+      z-index: 20;
       border-color: #4b4382;
       transform: translateY(3px);
       box-shadow:
