@@ -115,6 +115,7 @@ import {
   KrewDetail,
   KrewNew,
   Klot,
+  KlotSettings,
   MomentsStub,
   AlbuttsStub,
   KornerSettings,
@@ -270,6 +271,12 @@ class SwitchingColumnsArea extends PureComponent {
                 promise real. Regressed silently before this pass
                 because it originally sat after /hub/klot / /hub/krew
                 / /hub/huddle. */}
+            {/* Bespoke settings pages MUST sit before the generic
+                `/hub/:slug/settings` mount below so they win the
+                match for their slug. Standard §L8 (revised alpha.254)
+                permits bespoke pages when the korner has live state
+                to render alongside its options. */}
+            {signedIn && <WrappedRoute path='/hub/klot/settings' exact component={KlotSettings} content={children} />}
             {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
             {/* Huddle is a korner surface at /hub/huddle; the legacy
                 /huddle path forwards to it. */}
