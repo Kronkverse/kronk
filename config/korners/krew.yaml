@@ -72,7 +72,7 @@ emits:
 listens: []
 
 compose:
-  label: 'New krew'
+  label: 'Gather a Krew'
   route: '/hub/krew/new'
 
 hub_teaser:
