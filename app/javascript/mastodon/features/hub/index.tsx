@@ -47,7 +47,11 @@ const KornerTile: React.FC<{ korner: ApiKornerJSON; alert?: boolean }> = ({
 }) => {
   const soon = korner.enforced === false;
   const tunedIn = korner.tuned_in !== false;
+  // The hover tip uses the korner's authored `tagline` (the same copy
+  // shown by <SpaceIntro> inside the korner), so the Hub and the korner
+  // itself describe it identically. Falls back to the older teaser/blurb.
   const teaser =
+    korner.tagline ??
     (korner.hub_teaser?.static as string | undefined) ??
     (korner.launch?.blurb as string | undefined) ??
     '';
