@@ -297,24 +297,23 @@ The view picker is URL-driven: bare `/hub/<slug>` is your first-listed view; `/h
 
 ```tsx
 // features/mykorner/index.tsx
-import { useLocation } from 'react-router-dom';
-import { Stage } from 'mastodon/components/stage';
+import { KornerShell } from 'mastodon/components/korner_shell';
 
-export const MyKorner: React.FC = () => {
-  const { pathname } = useLocation();
-  const view = pathname.match(/^\/hub\/mykorner\/(\w+)$/)?.[1] ?? 'default';
-
-  return (
-    <Stage label='MyKorner'>
-      <div className='mykorner'>
-        {view === 'default' ? <DefaultView /> : <OtherView />}
-      </div>
-    </Stage>
-  );
-};
+export const MyKorner: React.FC = () => (
+  <KornerShell
+    slug='mykorner'
+    label='MyKorner'
+    className='mykorner'
+    defaultView='default'
+    views={{
+      default: () => <DefaultView />,
+      other: () => <OtherView />,
+    }}
+  />
+);
 ```
 
-That's it — no hero, no tab row, no tagline. Copy the shape from `docs/korners/template/` and delete the parts you don't need.
+That's it — no hero, no tab row, no tagline. `<KornerShell>` owns the `<Stage>` wrapper and the URL-to-view routing; the view keys line up with the manifest's `views:` list. Copy the shape from `docs/korners/template/` and delete the parts you don't need.
 
 Landing-view copy that _isn't_ the tagline (a lede paragraph, a getting-started card, a call-to-action) is fine — it's your content, not chrome. The rule is against duplicating what the Frame already renders. Standard L11 spells this out.
 

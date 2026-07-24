@@ -112,24 +112,24 @@ The Kronk Frame provides three chrome slots for every `/hub/<slug>` route via sh
 - ⚙︎ **No local tagline paragraph.** The `<AutoSpaceIntro>` renders the manifest's `tagline` under the badge on the space landing (and on any declared-view sub-path). A korner MUST NOT hardcode the same copy in its index. Keep the tagline in the manifest; the Frame renders it.
 - ◇ Landing-view copy that _isn't_ the tagline (a lede paragraph, a getting-started card, a signup teaser) is fine — it's the korner's content, not chrome. The rule is against duplicating what the Frame renders, not against writing prose.
 
-**What a Frame-adherent korner looks like.** See `docs/korners/template/` for the canonical shape. The short version:
+**What a Frame-adherent korner looks like.** See `docs/korners/template/` for the canonical shape. Every korner sits inside a `<KornerShell>` which owns the Stage + URL-to-view routing:
 
 ```tsx
-export const MyKorner: React.FC = () => {
-  const { pathname } = useLocation();
-  const view = pathname.match(/^\/hub\/mykorner\/(\w+)$/)?.[1] ?? 'default';
-
-  return (
-    <Stage label='MyKorner'>
-      <div className='mykorner'>
-        {view === 'default' ? <DefaultView /> : <OtherView />}
-      </div>
-    </Stage>
-  );
-};
+export const MyKorner: React.FC = () => (
+  <KornerShell
+    slug='mykorner'
+    label='MyKorner'
+    className='mykorner'
+    defaultView='default'
+    views={{
+      default: () => <DefaultView />,
+      other: () => <OtherView />,
+    }}
+  />
+);
 ```
 
-No `<h1>`, no `<nav>` tab row, no repeated tagline copy. Title / tagline / tabs come from the Frame, driven by `config/korners/mykorner.yaml`.
+No `<h1>`, no `<nav>` tab row, no repeated tagline copy. Title / tagline / tabs come from the Frame, driven by `config/korners/mykorner.yaml`. The view keys MUST match the manifest's `views:` list (same keys, same order).
 
 ## 3. Conformance matrix — the automated gate
 
