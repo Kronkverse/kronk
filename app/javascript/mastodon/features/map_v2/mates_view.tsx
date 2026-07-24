@@ -2,15 +2,13 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import * as maplibregl from 'maplibre-gl';
 import { layers, DARK } from '@protomaps/basemaps';
 import type { Feature, Polygon } from 'geojson';
+import * as maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import { Button } from 'mastodon/components/button';
-import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import {
   apiGetPresence,
   apiGetSelfPresence,
@@ -18,6 +16,8 @@ import {
   apiRemovePresence,
 } from 'mastodon/api/map';
 import type { ApiPresencePinJSON, MapPrecision } from 'mastodon/api/map';
+import { Button } from 'mastodon/components/button';
+import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 
 // Map — Mates lens. A native MapLibre GL map rendering opt-in, coarsened
 // presence pins (docs/spaces/map.md). The basemap is the self-hosted OSM
