@@ -62,7 +62,7 @@ export const KORNER_CARDS: KornerCardEntry[] = [
   // per §Feed projection (docs/spaces/kuestions.md §Phase 8.3) will
   // return here backed by the dedicated Question model.
   {
-    slug: 'wachuneed',
+    slug: 'martketplace',
     matches: (s) => s.get('listing') != null,
     card: (s) => <StatusWachuneedCard listing={dataFrom(s, 'listing')} />,
   },

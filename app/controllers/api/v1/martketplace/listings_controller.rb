@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
-# Wachuneed listings API (korner: wachuneed, renamed from `marketplace`
-# 2026-07-21). Reads the live listings for the /hub/wachuneed browse
-# page; creates a listing. Detail/browse render via
-# REST::WachuneedListingSummarySerializer (the same shape the feed card
-# embeds). Mirrors the Events/Proposals korner controllers.
-class Api::V1::Wachuneed::ListingsController < Api::BaseController
+# mARTketplace listings API (korner: martketplace, renamed from
+# wachuneed 2026-07-24, renamed from marketplace 2026-07-21). Reads the
+# live listings for the /hub/martketplace browse page; creates a listing.
+# Detail/browse render via REST::WachuneedListingSummarySerializer (the
+# same shape the feed card embeds). Mirrors the Events/Proposals korner
+# controllers.
+class Api::V1::Martketplace::ListingsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create]
   before_action :require_user!

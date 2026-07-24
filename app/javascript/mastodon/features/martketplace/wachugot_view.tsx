@@ -1,4 +1,4 @@
-import { apiGetWachugotListings } from 'mastodon/api/wachuneed';
+import { apiGetWachugotListings } from 'mastodon/api/martketplace';
 
 import { WachuneedListings } from './wachuneed_view';
 

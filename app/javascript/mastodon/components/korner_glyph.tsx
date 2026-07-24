@@ -25,7 +25,7 @@ const PATHS: Record<string, string> = {
     '<circle cx="12" cy="5" r="2.6"/><circle cx="5.5" cy="17" r="2.6"/><circle cx="18.5" cy="17" r="2.6"/><path d="M10.6 7.3 7 14M13.4 7.3 17 14M8.2 17.6h7.6"/>',
   kalendar:
     '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
-  wachuneed:
+  martketplace:
     '<rect x="3" y="7" width="18" height="13" rx="1.5"/><path d="M3 11h18"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/>',
   kommons:
     '<path d="M14 13l-7.5 7.5a2.1 2.1 0 0 1-3-3L11 10"/><path d="M9.5 6.5l8 8M13 3l8 8M17.5 2.5l4 4"/>',

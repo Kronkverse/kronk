@@ -26,7 +26,7 @@ const SPACE_LABELS: Record<string, string> = {
   map: 'Map',
   huddle: 'Huddle',
   kalendar: 'Kalendar',
-  wachuneed: 'Wachuneed',
+  martketplace: 'mARTketplace',
   kuestions: 'Kuestions',
   inflow: 'InFlow',
   nudges: 'Nudges',

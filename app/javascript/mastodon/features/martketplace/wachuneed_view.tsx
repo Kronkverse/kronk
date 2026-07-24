@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import type { apiGetWachuneedListings } from 'mastodon/api/wachuneed';
-import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
+import type { apiGetWachuneedListings } from 'mastodon/api/martketplace';
+import type { ApiListingJSON } from 'mastodon/api_types/martketplace';
 
 // Shared listing surface for both sub-views (Wachuneed / Wachugot).
 // Which endpoint to hit is passed in as `loader` so the client-side

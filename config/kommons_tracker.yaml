@@ -190,11 +190,11 @@ proposals:
       - 'Event <-> Krew bidirectional spawn'
       - 'Rename groups -> krew (vocab + /hub/krew URL)'
 
-  - key: wachuneed-ui
-    title: 'Wachuneed UI'
-    node: wachuneed.index
+  - key: martketplace-ui
+    title: 'mARTketplace UI'
+    node: martketplace.index
     type: large
-    categories: ['korner:wachuneed']
+    categories: ['korner:martketplace']
     summary: 'Discovery-only today; detail + composer + interaction modes are follow-ups.'
     body: |
       features/wachuneed is discovery-only per its own header.
