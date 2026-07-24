@@ -285,11 +285,11 @@ card. See how `REST::WachuneedListingSummarySerializer` handles this on
 
 **Read [`docs/kronk_frame.md`](../kronk_frame.md) before writing any UI.** The Frame is the grid every korner renders inside, and it already draws three pieces of chrome for you off the manifest. If your feature file draws them again you'll get a doubled surface — this is exactly the bug Klot shipped in alpha.223 and had to fix in alpha.225 (`bin/tootctl korners doctor` catches it now, as a warning under Standard L11).
 
-| Slot           | Frame component         | Manifest field                           | You render this in your index?                              |
-| -------------- | ----------------------- | ---------------------------------------- | ----------------------------------------------------------- |
-| Space title    | `<AutoSpaceBadge>`      | `name` + `icon.text_glyph`               | **No.** Don't emit `<h1>`.                                  |
-| Space tagline  | `<AutoSpaceIntro>`      | `tagline`                                | **No.** Keep the copy in the manifest.                      |
-| View / tab row | `<AutoSpaceViewPicker>` | `views:` (ordered `[{ key, label }, …]`) | **No.** Don't emit `role="tablist"` or a bespoke tab class. |
+| Slot                      | Frame component         | Manifest field                           | You render this in your index?                                                                                                                           |
+| ------------------------- | ----------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Space badge (chrome)      | `<AutoSpaceBadge>`      | `name` + `icon.text_glyph`               | **No.** The badge is the persistent top-left `[← Ł Klot]` pill that stays visible as content scrolls. It's the back affordance.                          |
+| Space header (in-content) | `<AutoSpaceHeader>`     | `name` + `tagline`                       | **No.** The header renders `<h1>{name}</h1>` above the tagline at the top of the Stage's scrollable region — it scrolls with content. Don't emit either. |
+| View / tab row            | `<AutoSpaceViewPicker>` | `views:` (ordered `[{ key, label }, …]`) | **No.** Don't emit `role="tablist"` or a bespoke tab class.                                                                                              |
 
 The view picker is URL-driven: bare `/hub/<slug>` is your first-listed view; `/hub/<slug>/<key>` is any other. Your component should read `useLocation()` and switch on the segment — never a `useState<Tab>` tab state.
 

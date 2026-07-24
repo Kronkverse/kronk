@@ -256,7 +256,7 @@ module Mastodon
       # shared Auto* components:
       #
       #   * AutoSpaceBadge — the space title (manifest `name` + `icon.text_glyph`)
-      #   * AutoSpaceIntro — the tagline (manifest `tagline`)
+      #   * AutoSpaceHeader — the in-content title + tagline (manifest `name` + `tagline`)
       #   * AutoSpaceViewPicker — the tab row (manifest `views:`)
       #
       # A korner that renders its own <h1>, tab UI, or inlines a paragraph
@@ -297,7 +297,7 @@ module Mastodon
 
         if manifest.tagline.is_a?(String) && manifest.tagline.strip.length >= 20
           snippet = manifest.tagline.strip[0, 40]
-          warnings << "L11 tagline literal in #{rel_path} — Frame provides the tagline via AutoSpaceIntro from manifest `tagline:` (retire the local intro paragraph)" if source.include?(snippet)
+          warnings << "L11 tagline literal in #{rel_path} — Frame provides the tagline via AutoSpaceHeader from manifest `tagline:` (retire the local intro paragraph)" if source.include?(snippet)
         end
 
         warnings

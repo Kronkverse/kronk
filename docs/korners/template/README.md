@@ -16,7 +16,7 @@ A canonical, Frame-adherent shape for a new korner. Copy the files here into you
 Read [`docs/kronk_frame.md`](../../kronk_frame.md) once. In short — every `/hub/<slug>` route inherits three chrome slots from the Frame, driven by your manifest:
 
 - `<AutoSpaceBadge>` renders the space title (`name` + `icon.text_glyph`) into the SpaceNav slot.
-- `<AutoSpaceIntro>` renders the `tagline` under the badge on the space landing / declared-view routes.
+- `<AutoSpaceHeader>` renders the korner name as an `<h1>` above the manifest `tagline`, at the top of the Stage's scrollable region (so it scrolls with content — the SpaceBadge pill is the persistent chrome affordance).
 - `<AutoSpaceViewPicker>` renders the tab/dropdown from your `views:` list and drives the URL.
 
 Your `index.tsx` renders **only content** — it reads the URL to pick which view to show, and drops it inside `<Stage>`. No `<h1>`, no `role="tablist"`, no tagline literal. `bin/tootctl korners doctor` warns on all three via Standard L11.
