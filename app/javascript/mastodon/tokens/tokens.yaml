@@ -37,6 +37,13 @@ semantic:
   decision-abstain: { dark: '#94a3b8', light: '#64748b' }
   decision-block: { dark: '#ef4444', light: '#c53030' }
   decision-pending: { dark: '#f59e0b', light: '#c2410c' }
+  # Hub tile glyphs — the Material icon rendered inside each korner
+  # card on /hub. `on` is the live-tile color (soft lavender with a
+  # purple drop-shadow glow); `off` is the dimmed value for
+  # coming-soon tiles. Kept in the semantic layer so future palette
+  # shifts flow through the alias.
+  tile-glyph-on: { dark: '#8c7dff', light: '#6364ff' }
+  tile-glyph-off: { dark: '#4e4a72', light: '#a89fc5' }
 
 # ── Fonts (theme-invariant) ────────────────────────────────────────
 font:

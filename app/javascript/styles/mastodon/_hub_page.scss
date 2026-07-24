@@ -5,8 +5,10 @@
 // line-art glyphs, hover-only settings gear + tip, tuned-in dot
 // bottom-left. Off state (coming-soon korners) reads as a dimmed twin.
 
-$tile-glyph-on: #8c7dff;
-$tile-glyph-off: #4e4a72;
+// Tile-shell hex — the chunky depth palette from the prototype. Not
+// tokenised because the tile is theme-invariant (dark aesthetic in
+// both light + dark themes). Glyph colors ARE tokenised — see
+// var(--tile-glyph-on/off) below.
 $tile-border: #34314f;
 $tile-shadow-1: #1e1c2e;
 $tile-shadow-2: #17151f;
@@ -113,10 +115,12 @@ $tile-shadow-2: #17151f;
     // Material Symbols paths inherit `fill: currentColor`, so we set
     // the color here. Also set stroke so legacy line-art overrides
     // via `icon.glyph_path` continue to render.
-    color: $tile-glyph-on;
+    color: var(--tile-glyph-on);
     fill: currentcolor;
     stroke: currentcolor;
-    filter: drop-shadow(0 0 10px rgb(140 125 255 / 40%))
+    filter: drop-shadow(
+        0 0 10px color-mix(in oklab, var(--tile-glyph-on) 40%, transparent)
+      )
       drop-shadow(0 2px 2px rgb(0 0 0 / 60%));
     transition:
       color 0.16s,
@@ -125,7 +129,9 @@ $tile-shadow-2: #17151f;
   }
 
   &__tile:hover &__tile-glyph {
-    filter: drop-shadow(0 0 16px rgb(140 125 255 / 65%))
+    filter: drop-shadow(
+        0 0 16px color-mix(in oklab, var(--tile-glyph-on) 65%, transparent)
+      )
       drop-shadow(0 2px 2px rgb(0 0 0 / 60%));
   }
 
@@ -148,8 +154,9 @@ $tile-shadow-2: #17151f;
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: $tile-glyph-on;
-    box-shadow: 0 0 6px rgb(140 125 255 / 80%);
+    background: var(--tile-glyph-on);
+    box-shadow: 0 0 6px
+      color-mix(in oklab, var(--tile-glyph-on) 80%, transparent);
     pointer-events: none;
   }
 
@@ -234,7 +241,7 @@ $tile-shadow-2: #17151f;
     }
 
     .hub-page__tile-glyph {
-      color: $tile-glyph-off;
+      color: var(--tile-glyph-off);
       filter: none;
     }
 
