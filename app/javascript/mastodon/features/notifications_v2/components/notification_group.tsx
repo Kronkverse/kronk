@@ -18,6 +18,7 @@ import { NotificationMention } from './notification_mention';
 import { NotificationModerationWarning } from './notification_moderation_warning';
 import { NotificationNudge } from './notification_nudge';
 import { NotificationPoll } from './notification_poll';
+import { NotificationProposalComplete } from './notification_proposal_complete';
 import { NotificationQuote } from './notification_quote';
 import { NotificationQuotedUpdate } from './notification_quoted_update';
 import { NotificationReblog } from './notification_reblog';
@@ -162,6 +163,14 @@ export const NotificationGroup: React.FC<{
     case 'event_invitation':
       content = (
         <NotificationEventInvitation
+          unread={unread}
+          notification={notificationGroup}
+        />
+      );
+      break;
+    case 'proposal_status_changed':
+      content = (
+        <NotificationProposalComplete
           unread={unread}
           notification={notificationGroup}
         />

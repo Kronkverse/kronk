@@ -13,8 +13,10 @@ import { NavLink, useLocation } from 'react-router-dom';
 
 import { Icon } from 'mastodon/components/icon';
 import type { IconProp } from 'mastodon/components/icon';
+import { WavingHandBadge } from 'mastodon/components/waving_hand_badge';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { selectHasUnreadNudges } from 'mastodon/selectors/notifications';
 import { useAppSelector } from 'mastodon/store';
 
 // Four-way switcher between Kronk's primary personal surfaces —
@@ -76,6 +78,9 @@ export const HubSwitcher = ({
   const unreadNudges = useAppSelector(
     (state) => state.notificationGroups.unreadNudgeCount,
   );
+  // Shows the waving-hand alert for Mate nudges OR korner/system
+  // notifications (proposal complete, etc.).
+  const hasUnread = useAppSelector(selectHasUnreadNudges);
 
   const profilePath = currentAccountUsername
     ? `/@${currentAccountUsername}`
@@ -139,6 +144,7 @@ export const HubSwitcher = ({
       pillars={pillars}
       activeKey={activeKey}
       unreadNudges={unreadNudges}
+      hasUnread={hasUnread}
       ariaLabel={ariaLabel}
       formatLabel={formatLabel}
     />
@@ -146,6 +152,7 @@ export const HubSwitcher = ({
     <BottomTabBar
       pillars={pillars}
       unreadNudges={unreadNudges}
+      hasUnread={hasUnread}
       ariaLabel={ariaLabel}
       formatLabel={formatLabel}
     />
@@ -158,6 +165,7 @@ interface MembraneTopProps {
   pillars: PillarConfig[];
   activeKey: PillarKey | null;
   unreadNudges: number;
+  hasUnread: boolean;
   ariaLabel: string;
   formatLabel: (m: (typeof messages)[keyof typeof messages]) => string;
 }
@@ -166,6 +174,7 @@ const MembraneTop = ({
   pillars,
   activeKey,
   unreadNudges,
+  hasUnread,
   ariaLabel,
   formatLabel,
 }: MembraneTopProps) => {
@@ -296,13 +305,15 @@ const MembraneTop = ({
               <span className='hub-switcher__label hub-switcher__label--sr'>
                 {label}
               </span>
-              {pillar.key === 'nudges' && unreadNudges > 0 && (
-                <span
+              {pillar.key === 'nudges' && hasUnread && (
+                <WavingHandBadge
                   className='hub-switcher__badge'
-                  aria-label={`${unreadNudges} unread`}
-                >
-                  {unreadNudges}
-                </span>
+                  label={
+                    unreadNudges > 0
+                      ? `${unreadNudges} unread`
+                      : 'New activity'
+                  }
+                />
               )}
             </NavLink>
           );
@@ -326,6 +337,7 @@ const MembraneTop = ({
 interface BottomTabBarProps {
   pillars: PillarConfig[];
   unreadNudges: number;
+  hasUnread: boolean;
   ariaLabel: string;
   formatLabel: (m: (typeof messages)[keyof typeof messages]) => string;
 }
@@ -333,6 +345,7 @@ interface BottomTabBarProps {
 const BottomTabBar = ({
   pillars,
   unreadNudges,
+  hasUnread,
   ariaLabel,
   formatLabel,
 }: BottomTabBarProps) => (
@@ -352,13 +365,11 @@ const BottomTabBar = ({
           <span className='hub-switcher__label'>
             {formatLabel(pillar.label)}
           </span>
-          {pillar.key === 'nudges' && unreadNudges > 0 && (
-            <span
+          {pillar.key === 'nudges' && hasUnread && (
+            <WavingHandBadge
               className='hub-switcher__badge'
-              aria-label={`${unreadNudges} unread`}
-            >
-              {unreadNudges}
-            </span>
+              label={unreadNudges > 0 ? `${unreadNudges} unread` : 'New activity'}
+            />
           )}
         </NavLink>
       );
