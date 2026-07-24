@@ -327,9 +327,6 @@ export function KalendarSpiral () {
   return import("../../kalendar_spiral");
 }
 
-export function WachuneedV2 () {
-  return import("../../wachuneed_v2");
-}
 
 export function InflowV2 () {
   return import("../../inflow_v2");

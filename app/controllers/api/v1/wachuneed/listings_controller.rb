@@ -12,7 +12,19 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
   before_action :set_listing, only: [:show]
 
   def index
-    @listings = Listing.live.includes(:account, :listing_photos).order(created_at: :desc).limit(40)
+    scope = Listing.includes(:account, :listing_photos).order(created_at: :desc)
+
+    # `?mine=true` — the wachugot view: the caller's own listings,
+    # across every state (live / reserved / closed) so the owner can
+    # see their whole shelf. Anon browse (`mine` absent) still only
+    # shows `live` so nothing half-closed leaks into discovery.
+    scope = if ActiveModel::Type::Boolean.new.cast(params[:mine])
+              scope.where(account: current_account)
+            else
+              scope.live
+            end
+
+    @listings = scope.limit(40)
     render json: @listings, each_serializer: REST::WachuneedListingSummarySerializer
   end
 
