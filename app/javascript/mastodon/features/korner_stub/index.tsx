@@ -38,7 +38,6 @@ export const KornerStub: React.FC<{ multiColumn?: boolean; slug?: string }> = ({
         <span className='korner-stub__glyph' aria-hidden='true'>
           <Icon />
         </span>
-        <h1 className='korner-stub__title'>{title}</h1>
         <p className='korner-stub__pending'>
           <FormattedMessage
             id='korner_stub.pending'

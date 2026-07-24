@@ -81,7 +81,6 @@ const YouPortal: React.FC<Props> = () => {
           <span className='you-portal__glyph' aria-hidden='true'>
             <Icon />
           </span>
-          <h1 className='you-portal__title'>{title}</h1>
           <p className='you-portal__subtitle'>
             {intl.formatMessage(messages.subtitle)}
           </p>

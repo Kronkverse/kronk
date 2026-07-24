@@ -277,10 +277,12 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/hub/inflow" component={InflowV2} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
             {/* Krews (§KRONK_KREWS). Route order matters: /hub/krew/new
-                must resolve before /hub/krew/:id or the create form gets
-                treated as a krew id lookup. Detail accepts either the
-                numeric id or the slug (controller#set_krew disambiguates). */}
+                and /hub/krew/discover (the Discover SpaceNav view) must
+                resolve before /hub/krew/:id or they get treated as a krew
+                id lookup. Detail accepts either the numeric id or the slug
+                (controller#set_krew disambiguates). */}
             {signedIn && <WrappedRoute path='/hub/krew/new' exact component={KrewNew} content={children} />}
+            {signedIn && <WrappedRoute path='/hub/krew/discover' exact component={Krews} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/:id' component={KrewDetail} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew' component={Krews} content={children} />}
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
