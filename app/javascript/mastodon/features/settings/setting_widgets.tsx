@@ -249,13 +249,22 @@ export const AccentWidget: React.FC<{
 // live hue so a user can feel the whole family shift, not just the
 // accent chip.
 export const HueWidget: React.FC<{
-  value: number | null | undefined;
+  // Accept string too: Mastodon's UserSettings::Setting with a nil
+  // default type-casts stored values through ActiveModel::Type::String,
+  // so a saved integer round-trips as `"285"` on the next payload
+  // read. Without this the slider snaps back to the anchor after
+  // every drag because a typeof === 'number' check falls through.
+  value: number | string | null | undefined;
   onChange: (v: number | null) => void;
 }> = ({ value, onChange }) => {
-  const current =
-    typeof value === 'number' && Number.isFinite(value)
+  const parsed =
+    typeof value === 'number'
       ? value
-      : DEFAULT_PURPLE_HUE;
+      : typeof value === 'string' && value.trim() !== ''
+        ? Number(value)
+        : null;
+  const current =
+    parsed !== null && Number.isFinite(parsed) ? parsed : DEFAULT_PURPLE_HUE;
 
   const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (e) => {
@@ -442,7 +451,11 @@ export const SettingRow: React.FC<{
       )}
       {setting.kind === 'hue' && (
         <HueWidget
-          value={typeof value === 'number' ? value : null}
+          value={
+            typeof value === 'number' || typeof value === 'string'
+              ? value
+              : null
+          }
           onChange={onChange}
         />
       )}

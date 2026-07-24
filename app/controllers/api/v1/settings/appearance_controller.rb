@@ -64,7 +64,7 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
 
       if cfg[:kind] == 'hue'
         value = coerce_hue(params[name])
-        return render json: { error: "#{name} must be an integer 260-310 or null" }, status: 422 if value == :invalid
+        return render json: { error: "#{name} must be an integer 260-350 or null" }, status: 422 if value == :invalid
       end
 
       if cfg[:key] == :locale
@@ -92,15 +92,18 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
   end
 
   # Coerce a hue param: nil / blank clears the override; an integer in
-  # [260, 310] is stored as-is; anything else is a validation failure.
-  # Returns the coerced value or the sentinel :invalid so the caller
-  # can render 422 without a raise.
+  # [260, 350] is stored as-is; anything else is a validation failure.
+  # Range window sits the anchor (285°) about a quarter from the cool
+  # end (blue-violet at 260°) with the bulk of travel going warm into
+  # magenta / plum territory (up to 350°). Above 350 drifts into red;
+  # below 260 into pure blue. Returns the coerced value or the
+  # sentinel :invalid so the caller can render 422 without a raise.
   def coerce_hue(raw)
     return nil if raw.nil? || raw.to_s.strip.empty?
 
     n = Integer(raw.to_s, exception: false)
     return :invalid if n.nil?
-    return :invalid unless n.between?(260, 310)
+    return :invalid unless n.between?(260, 350)
 
     n
   end
@@ -143,7 +146,13 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
         'reduce_motion' => current_user.settings['web.reduce_motion'],
         'auto_play_gif' => current_user.settings['web.auto_play'],
         'personal_accent' => current_user.settings['web.personal_accent'],
-        'personal_purple_hue' => current_user.settings['web.personal_purple_hue'],
+        # UserSettings::Setting with a nil default type-casts stored
+        # values through ActiveModel::Type::String, so an integer
+        # written to the store comes back as `"285"`. Cast back to
+        # Integer here so the client always sees a number — otherwise
+        # the settings widget's numeric check fails and the slider
+        # snaps to the anchor on every save/reload.
+        'personal_purple_hue' => current_user.settings['web.personal_purple_hue'].then { |raw| raw.present? ? raw.to_i : nil },
         'personal_font_display' => current_user.settings['web.personal_font_display'],
         'personal_font_body' => current_user.settings['web.personal_font_body'],
         'ui_scale' => current_user.settings['web.ui_scale'],

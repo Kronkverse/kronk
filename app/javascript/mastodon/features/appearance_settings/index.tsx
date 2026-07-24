@@ -113,12 +113,22 @@ const HINTS: Record<string, MessageDescriptor> = {
 
 // Apply the appearance-affecting subset of the settings map to the DOM live.
 const previewAppearance = (vals: Record<string, unknown>) => {
+  // personal_purple_hue may arrive as a number (fresh from the slider)
+  // or as a string (round-tripped through UserSettings — see the note
+  // in HueWidget). Coerce here so applyPurpleHue always sees a number
+  // or null.
+  const rawHue = vals.personal_purple_hue;
+  const purpleHue =
+    typeof rawHue === 'number' && Number.isFinite(rawHue)
+      ? rawHue
+      : typeof rawHue === 'string' && rawHue.trim() !== ''
+        ? Number(rawHue)
+        : null;
+
   applyPersonalAppearance({
     accent: (vals.personal_accent as string) || null,
     purpleHue:
-      typeof vals.personal_purple_hue === 'number'
-        ? vals.personal_purple_hue
-        : null,
+      purpleHue !== null && Number.isFinite(purpleHue) ? purpleHue : null,
     fontDisplay: (vals.personal_font_display as string) || null,
     fontBody: (vals.personal_font_body as string) || null,
     uiScale: (vals.ui_scale as string) || null,

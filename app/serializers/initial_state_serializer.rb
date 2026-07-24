@@ -33,7 +33,8 @@ class InitialStateSerializer < ActiveModel::Serializer
       store[:show_trends]       = Setting.trends && object_account_user.setting_trends
       store[:emoji_style]       = object_account_user.settings['web.emoji_style']
       store[:personal_accent]       = object_account_user.settings['web.personal_accent']
-      store[:personal_purple_hue]   = object_account_user.settings['web.personal_purple_hue']
+      # Cast back to Integer — see the matching note in the appearance controller.
+      store[:personal_purple_hue]   = object_account_user.settings['web.personal_purple_hue'].then { |raw| raw.present? ? raw.to_i : nil }
       store[:personal_font_display] = object_account_user.settings['web.personal_font_display']
       store[:personal_font_body]    = object_account_user.settings['web.personal_font_body']
       store[:ui_scale]              = object_account_user.settings['web.ui_scale']

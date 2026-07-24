@@ -63,10 +63,13 @@ const PURPLE_NAMES = Object.keys(PURPLE_FAMILY) as PurpleName[];
 // palette warmer or cooler as a family.
 export const DEFAULT_PURPLE_HUE = 285;
 // The slider's range clamps to what still reads as "purple" (violet /
-// indigo band). Below ~260 drifts into pure blue; above ~310 into
-// magenta. Server enforces the same bounds.
+// magenta band). Below ~260 drifts into pure blue; above ~350 into
+// hot pink / red. Range is intentionally asymmetric: the anchor
+// (285°) sits ~25 % from the cool end and ~75 % from the warm end,
+// so pushing warmer into the magenta/plum territory is where most of
+// the slider's travel lives. Server enforces the same bounds.
 export const MIN_PURPLE_HUE = 260;
-export const MAX_PURPLE_HUE = 310;
+export const MAX_PURPLE_HUE = 350;
 
 function activeTheme(root: HTMLElement): 'dark' | 'light' {
   return root.dataset.theme === 'light' ? 'light' : 'dark';
