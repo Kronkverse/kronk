@@ -283,46 +283,60 @@ export const KrewNew = () => {
 
   return (
     <Stage label={intl.formatMessage(messages.title)}>
-      <div className='scrollable groups-page'>
-        <Link to='/hub/krew' className='group-detail__back'>
+      <div className='scrollable krew-new'>
+        <Link to='/hub/krew' className='krew-detail__back'>
           {intl.formatMessage(messages.back)}
         </Link>
 
-        <h1 className='groups-page__form-title'>
-          <FormattedMessage {...messages.title} />
-        </h1>
-        <p className='groups-page__intro'>
-          {intl.formatMessage(messages.intro)}
-        </p>
+        <header className='krew-page__hero'>
+          <h1 className='krew-page__hero-title'>
+            <FormattedMessage {...messages.title} />
+          </h1>
+          <p className='krew-page__hero-lede'>
+            {intl.formatMessage(messages.intro)}
+          </p>
+        </header>
 
-        <form onSubmit={handleSubmit} className='groups-page__form'>
-          <fieldset>
-            <legend>{intl.formatMessage(messages.identity)}</legend>
+        <form onSubmit={handleSubmit} className='krew-new__form'>
+          <fieldset className='krew-new__fieldset'>
+            <legend className='krew-new__legend'>
+              {intl.formatMessage(messages.identity)}
+            </legend>
 
-            <label>
-              {intl.formatMessage(messages.name)}
+            <label className='krew-new__field'>
+              <span className='krew-new__field-label'>
+                {intl.formatMessage(messages.name)}
+              </span>
               <input
                 type='text'
                 value={name}
                 onChange={handleNameChange}
                 placeholder={intl.formatMessage(messages.namePlaceholder)}
                 required
+                className='krew-new__input'
               />
             </label>
 
-            <label>
-              {intl.formatMessage(messages.slug)}
+            <label className='krew-new__field'>
+              <span className='krew-new__field-label'>
+                {intl.formatMessage(messages.slug)}
+              </span>
               <input
                 type='text'
                 value={effectiveSlug}
                 onChange={handleSlugChange}
                 pattern='[a-z][a-z0-9-]*'
+                className='krew-new__input'
               />
-              <small>{intl.formatMessage(messages.slugHint)}</small>
+              <small className='krew-new__field-hint'>
+                {intl.formatMessage(messages.slugHint)}
+              </small>
             </label>
 
-            <label>
-              {intl.formatMessage(messages.description)}
+            <label className='krew-new__field'>
+              <span className='krew-new__field-label'>
+                {intl.formatMessage(messages.description)}
+              </span>
               <textarea
                 value={description}
                 onChange={handleDescriptionChange}
@@ -330,37 +344,43 @@ export const KrewNew = () => {
                   messages.descriptionPlaceholder,
                 )}
                 rows={3}
+                className='krew-new__input'
               />
             </label>
           </fieldset>
 
-          <fieldset>
-            <legend>{intl.formatMessage(messages.korners)}</legend>
-            <p className='groups-page__form-note'>
+          <fieldset className='krew-new__fieldset'>
+            <legend className='krew-new__legend'>
+              {intl.formatMessage(messages.korners)}
+            </legend>
+            <p className='krew-new__note'>
               {intl.formatMessage(messages.kornersHint)}
             </p>
-            <div className='groups-page__form-korners'>
+            <div className='krew-new__korner-grid'>
               {KORNER_OPTIONS.map((k) => (
                 <label
                   key={k}
-                  className={`groups-page__korner-checkbox ${korners.includes(k) ? 'groups-page__korner-checkbox--active' : ''}`}
+                  className={`krew-new__korner-chip ${korners.includes(k) ? 'krew-new__korner-chip--active' : ''}`}
                 >
                   <input
                     type='checkbox'
                     value={k}
                     checked={korners.includes(k)}
                     onChange={handleKornerToggle}
+                    className='krew-new__korner-chip-input'
                   />
-                  {k}
+                  <span className='krew-new__korner-chip-name'>{k}</span>
                 </label>
               ))}
             </div>
           </fieldset>
 
-          <fieldset>
-            <legend>{intl.formatMessage(messages.access)}</legend>
+          <fieldset className='krew-new__fieldset'>
+            <legend className='krew-new__legend'>
+              {intl.formatMessage(messages.access)}
+            </legend>
 
-            <label className='groups-page__form-radio'>
+            <label className='krew-new__radio'>
               <input
                 type='radio'
                 name='access'
@@ -368,10 +388,10 @@ export const KrewNew = () => {
                 checked={access === 'open'}
                 onChange={handleAccessChange}
               />
-              {intl.formatMessage(messages.accessOpen)}
+              <span>{intl.formatMessage(messages.accessOpen)}</span>
             </label>
 
-            <label className='groups-page__form-radio'>
+            <label className='krew-new__radio'>
               <input
                 type='radio'
                 name='access'
@@ -379,10 +399,10 @@ export const KrewNew = () => {
                 checked={access === 'invite_only'}
                 onChange={handleAccessChange}
               />
-              {intl.formatMessage(messages.accessInviteOnly)}
+              <span>{intl.formatMessage(messages.accessInviteOnly)}</span>
             </label>
 
-            <label className='groups-page__form-radio'>
+            <label className='krew-new__radio'>
               <input
                 type='radio'
                 name='access'
@@ -390,14 +410,16 @@ export const KrewNew = () => {
                 checked={access === 'requirement_gated'}
                 onChange={handleAccessChange}
               />
-              {intl.formatMessage(messages.accessGated)}
+              <span>{intl.formatMessage(messages.accessGated)}</span>
             </label>
           </fieldset>
 
           {access === 'requirement_gated' && (
-            <fieldset>
-              <legend>{intl.formatMessage(messages.requirements)}</legend>
-              <p className='groups-page__form-note'>
+            <fieldset className='krew-new__fieldset'>
+              <legend className='krew-new__legend'>
+                {intl.formatMessage(messages.requirements)}
+              </legend>
+              <p className='krew-new__note'>
                 {intl.formatMessage(messages.requirementsHint)}
               </p>
               {requirements.map((row) => (
@@ -412,19 +434,19 @@ export const KrewNew = () => {
               <button
                 type='button'
                 onClick={handleAddRequirement}
-                className='groups-page__form-add'
+                className='krew-new__add-req'
               >
                 {intl.formatMessage(messages.addRequirement)}
               </button>
             </fieldset>
           )}
 
-          {error && <p className='groups-page__error'>{error}</p>}
+          {error && <p className='krew-new__error'>{error}</p>}
 
           <button
             type='submit'
             disabled={!canSubmit}
-            className='groups-page__form-submit'
+            className='krew-page__cta krew-new__submit'
           >
             {busy
               ? intl.formatMessage(messages.creating)
@@ -475,10 +497,16 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
   );
 
   return (
-    <div className='groups-page__form-req-row'>
-      <label>
-        {intl.formatMessage(messages.reqKind)}
-        <select value={row.kind} onChange={handleKindChange}>
+    <div className='krew-new__req-row'>
+      <label className='krew-new__field'>
+        <span className='krew-new__field-label'>
+          {intl.formatMessage(messages.reqKind)}
+        </span>
+        <select
+          value={row.kind}
+          onChange={handleKindChange}
+          className='krew-new__input'
+        >
           <option value='attending_event'>
             {intl.formatMessage(messages.reqKindAttendingEvent)}
           </option>
@@ -492,38 +520,47 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
       </label>
 
       {row.kind === 'attending_event' && (
-        <label>
-          {intl.formatMessage(messages.reqEventId)}
+        <label className='krew-new__field'>
+          <span className='krew-new__field-label'>
+            {intl.formatMessage(messages.reqEventId)}
+          </span>
           <input
             type='text'
             data-field='event_id'
             value={row.event_id}
             onChange={handleFieldChange}
+            className='krew-new__input'
           />
         </label>
       )}
 
       {row.kind === 'located_in' && (
-        <label>
-          {intl.formatMessage(messages.reqRegion)}
+        <label className='krew-new__field'>
+          <span className='krew-new__field-label'>
+            {intl.formatMessage(messages.reqRegion)}
+          </span>
           <input
             type='text'
             data-field='region'
             value={row.region}
             onChange={handleFieldChange}
+            className='krew-new__input'
           />
         </label>
       )}
 
       {row.kind === 'vouched_by_member' && (
-        <label>
-          {intl.formatMessage(messages.reqVouchParams)}
+        <label className='krew-new__field'>
+          <span className='krew-new__field-label'>
+            {intl.formatMessage(messages.reqVouchParams)}
+          </span>
           <textarea
             data-field='vouch_params'
             value={row.vouch_params}
             onChange={handleFieldChange}
             rows={2}
             placeholder='{"min": 1}'
+            className='krew-new__input'
           />
         </label>
       )}
@@ -532,7 +569,7 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
         type='button'
         data-key={row.key}
         onClick={onRemove}
-        className='groups-page__form-req-remove'
+        className='krew-new__req-remove'
       >
         {intl.formatMessage(messages.removeRow)}
       </button>

@@ -14,11 +14,10 @@ import {
 import type { ApiKrewJSON, KrewKornerSlug } from 'mastodon/api/krew';
 import { Stage } from 'mastodon/components/stage';
 
-// Krew page (/hub/krew/:slug) — a metadata card, not a stream. Per
-// KRONK_KREWS §7.2: no post feed here; the conversation lives in
-// Nudges. This surface carries identity, membership actions, the
-// invite-link affordance (seeder only), Korner attachments, and a
-// pointer back to the Nudges thread once wired.
+// Krew page (/hub/krew/:slug) — a metadata card, not a stream (§7.2).
+// Redesigned 2026-07-24 alongside the landing so the two surfaces
+// read as one system. Classnames moved into the `.krew-detail__*`
+// namespace.
 
 const messages = defineMessages({
   title: { id: 'krew.detail.title', defaultMessage: 'Krew' },
@@ -49,7 +48,7 @@ const messages = defineMessages({
     defaultMessage:
       'Share this link to let people join. Regenerating invalidates the old link.',
   },
-  copyLink: { id: 'krew.detail.invite_copy', defaultMessage: 'Copy link' },
+  copyLink: { id: 'krew.detail.invite_copy', defaultMessage: 'Copy' },
   copied: { id: 'krew.detail.invite_copied', defaultMessage: 'Copied' },
   regenerateLink: {
     id: 'krew.detail.invite_regenerate',
@@ -66,7 +65,7 @@ const messages = defineMessages({
   },
   kornersEmpty: {
     id: 'krew.detail.korners_empty',
-    defaultMessage: 'This Krew hasn’t accreted any Korners yet.',
+    defaultMessage: "This Krew hasn't accreted any Korners yet.",
   },
   archived: { id: 'krew.detail.archived', defaultMessage: 'archived' },
   archiveConfirm: {
@@ -77,8 +76,14 @@ const messages = defineMessages({
   noFeedNote: {
     id: 'krew.detail.no_feed',
     defaultMessage:
-      'No feed here. Posts scoped to this Krew show up in your Home timeline; the conversation lives in Nudges.',
+      'No feed here. Posts scoped to this Krew appear in your Home timeline; the conversation lives in Nudges.',
   },
+  inviteOnly: {
+    id: 'krew.marker.invite_only',
+    defaultMessage: 'Invite-only',
+  },
+  metaAccess: { id: 'krew.detail.meta_access', defaultMessage: 'Access' },
+  metaRole: { id: 'krew.detail.meta_role', defaultMessage: 'Your role' },
 });
 
 const initial = (name: string): string => {
@@ -89,9 +94,9 @@ const initial = (name: string): string => {
 const KornerChips: React.FC<{ korners: KrewKornerSlug[] }> = ({ korners }) => {
   if (korners.length === 0) return null;
   return (
-    <ul className='groups-page__korner-chips'>
+    <ul className='krew-detail__korner-chips'>
       {korners.map((slug) => (
-        <li key={slug} className='groups-page__korner-chip'>
+        <li key={slug} className='krew-detail__korner-chip'>
           <Link to={`/hub/${slug}`}>{slug}</Link>
         </li>
       ))}
@@ -165,20 +170,6 @@ export const KrewDetail = () => {
     }
   }, [id, intl]);
 
-  const handleJoin = useCallback(() => {
-    void doJoin();
-  }, [doJoin]);
-  const handleLeave = useCallback(() => {
-    void doLeave();
-  }, [doLeave]);
-  const handleArchive = useCallback(() => {
-    void doArchive();
-  }, [doArchive]);
-
-  const inviteUrl = krew?.invite_token
-    ? `${window.location.origin}/hub/krew/${krew.slug}?k=${encodeURIComponent(krew.invite_token)}`
-    : null;
-
   const doRegenerate = useCallback(async () => {
     if (!id) return;
     if (!window.confirm(intl.formatMessage(messages.regenerateConfirm))) return;
@@ -194,9 +185,22 @@ export const KrewDetail = () => {
     }
   }, [id, intl]);
 
+  const handleJoin = useCallback(() => {
+    void doJoin();
+  }, [doJoin]);
+  const handleLeave = useCallback(() => {
+    void doLeave();
+  }, [doLeave]);
+  const handleArchive = useCallback(() => {
+    void doArchive();
+  }, [doArchive]);
   const handleRegenerate = useCallback(() => {
     void doRegenerate();
   }, [doRegenerate]);
+
+  const inviteUrl = krew?.invite_token
+    ? `${window.location.origin}/hub/krew/${krew.slug}?k=${encodeURIComponent(krew.invite_token)}`
+    : null;
 
   const handleCopyInvite = useCallback(() => {
     if (!inviteUrl) return;
@@ -210,97 +214,96 @@ export const KrewDetail = () => {
 
   return (
     <Stage label={krew?.name ?? intl.formatMessage(messages.title)}>
-      <div className='scrollable group-detail'>
-        <Link to='/hub/krew' className='group-detail__back'>
+      <div className='scrollable krew-detail'>
+        <Link to='/hub/krew' className='krew-detail__back'>
           {intl.formatMessage(messages.back)}
         </Link>
 
-        {error && <p className='group-detail__error'>{error}</p>}
+        {error && <p className='krew-detail__error'>{error}</p>}
 
         {!krew && !error && (
-          <p className='group-detail__loading'>
-            {intl.formatMessage(messages.loading)}
+          <p className='krew-detail__loading'>
+            <FormattedMessage {...messages.loading} />
           </p>
         )}
 
         {krew && (
           <>
-            <header className='group-detail__header'>
+            <header className='krew-detail__header'>
               <span
-                className='groups-page__row-avatar'
+                className='krew-detail__avatar'
                 aria-hidden='true'
                 data-initial={initial(krew.name)}
               >
                 {initial(krew.name)}
               </span>
-              <div>
-                <h1 className='group-detail__name'>
+              <div className='krew-detail__identity'>
+                <h1 className='krew-detail__name'>
                   {krew.name}
                   {krew.access === 'invite_only' && (
                     <span
-                      className='group-detail__marker'
-                      aria-label='Invite-only'
+                      className='krew-detail__marker'
+                      aria-label={intl.formatMessage(messages.inviteOnly)}
+                      title={intl.formatMessage(messages.inviteOnly)}
                     >
-                      {' '}
                       ⚿
                     </span>
                   )}
                 </h1>
-                <small className='group-detail__slug'>@{krew.slug}</small>
-                {krew.archived && (
-                  <span className='group-detail__archived-badge'>
-                    {intl.formatMessage(messages.archived)}
-                  </span>
-                )}
+                <div className='krew-detail__submeta'>
+                  <span className='krew-detail__slug'>@{krew.slug}</span>
+                  {krew.archived && (
+                    <span className='krew-detail__archived-badge'>
+                      <FormattedMessage {...messages.archived} />
+                    </span>
+                  )}
+                </div>
               </div>
             </header>
 
             {krew.description && (
-              <p className='group-detail__description'>{krew.description}</p>
+              <p className='krew-detail__description'>{krew.description}</p>
             )}
 
-            <dl className='group-detail__meta'>
-              <dt>
-                <FormattedMessage
-                  {...messages.members}
-                  values={{ count: krew.member_count }}
-                />
-              </dt>
-              <dd />
-              <dt>Access</dt>
-              <dd>{krew.access}</dd>
+            <dl className='krew-detail__meta'>
+              <div className='krew-detail__meta-item'>
+                <dt>
+                  <FormattedMessage
+                    {...messages.members}
+                    values={{ count: krew.member_count }}
+                  />
+                </dt>
+                <dd>{krew.member_count}</dd>
+              </div>
+              <div className='krew-detail__meta-item'>
+                <dt>
+                  <FormattedMessage {...messages.metaAccess} />
+                </dt>
+                <dd>{krew.access.replace('_', ' ')}</dd>
+              </div>
               {krew.seeded_by_account_id && (
-                <>
-                  <dt>Seeder</dt>
-                  <dd>
-                    <FormattedMessage
-                      {...messages.seededBy}
-                      values={{ accountId: krew.seeded_by_account_id }}
-                    />
-                  </dd>
-                </>
-              )}
-              {krew.viewer_role && (
-                <>
-                  <dt>Your role</dt>
-                  <dd>{krew.viewer_role}</dd>
-                </>
+                <div className='krew-detail__meta-item'>
+                  <dt>
+                    <FormattedMessage {...messages.metaRole} />
+                  </dt>
+                  <dd>{krew.viewer_role ?? '—'}</dd>
+                </div>
               )}
             </dl>
 
-            <p className='group-detail__seeder-note'>
-              {intl.formatMessage(messages.seederNote)}
+            <p className='krew-detail__seeder-note'>
+              <FormattedMessage {...messages.seederNote} />
             </p>
 
-            <div className='group-detail__actions'>
+            <div className='krew-detail__actions'>
               {!krew.archived && !krew.viewer_role && (
                 <button
                   type='button'
                   onClick={handleJoin}
                   disabled={busy}
-                  className='group-detail__btn-primary'
+                  className='krew-detail__btn krew-detail__btn--primary'
                 >
-                  {intl.formatMessage(messages.join)}
+                  <FormattedMessage {...messages.join} />
                 </button>
               )}
 
@@ -309,9 +312,9 @@ export const KrewDetail = () => {
                   type='button'
                   onClick={handleLeave}
                   disabled={busy}
-                  className='group-detail__btn-secondary'
+                  className='krew-detail__btn krew-detail__btn--secondary'
                 >
-                  {intl.formatMessage(messages.leave)}
+                  <FormattedMessage {...messages.leave} />
                 </button>
               )}
 
@@ -320,30 +323,33 @@ export const KrewDetail = () => {
                   type='button'
                   onClick={handleArchive}
                   disabled={busy}
-                  className='group-detail__btn-danger'
+                  className='krew-detail__btn krew-detail__btn--danger'
                 >
-                  {intl.formatMessage(messages.archive)}
+                  <FormattedMessage {...messages.archive} />
                 </button>
               )}
             </div>
 
             {inviteUrl && !krew.archived && (
-              <section className='group-detail__invite'>
-                <h3>{intl.formatMessage(messages.inviteHeading)}</h3>
-                <p className='group-detail__invite-hint'>
-                  {intl.formatMessage(messages.inviteHint)}
+              <section className='krew-detail__invite'>
+                <h3 className='krew-detail__section-heading'>
+                  <FormattedMessage {...messages.inviteHeading} />
+                </h3>
+                <p className='krew-detail__section-hint'>
+                  <FormattedMessage {...messages.inviteHint} />
                 </p>
-                <div className='group-detail__invite-row'>
+                <div className='krew-detail__invite-row'>
                   <input
                     type='text'
                     readOnly
                     value={inviteUrl}
-                    className='group-detail__invite-input'
+                    className='krew-detail__invite-input'
+                    aria-label={intl.formatMessage(messages.inviteHeading)}
                   />
                   <button
                     type='button'
                     onClick={handleCopyInvite}
-                    className='group-detail__btn-secondary'
+                    className='krew-detail__btn krew-detail__btn--secondary'
                   >
                     {copied
                       ? intl.formatMessage(messages.copied)
@@ -353,25 +359,29 @@ export const KrewDetail = () => {
                     type='button'
                     onClick={handleRegenerate}
                     disabled={busy}
-                    className='group-detail__btn-secondary'
+                    className='krew-detail__btn krew-detail__btn--ghost'
                   >
-                    {intl.formatMessage(messages.regenerateLink)}
+                    <FormattedMessage {...messages.regenerateLink} />
                   </button>
                 </div>
               </section>
             )}
 
-            <section className='group-detail__korners'>
-              <h3>{intl.formatMessage(messages.kornersHeading)}</h3>
+            <section className='krew-detail__korners'>
+              <h3 className='krew-detail__section-heading'>
+                <FormattedMessage {...messages.kornersHeading} />
+              </h3>
               {krew.korners.length === 0 ? (
-                <p>{intl.formatMessage(messages.kornersEmpty)}</p>
+                <p className='krew-detail__korners-empty'>
+                  <FormattedMessage {...messages.kornersEmpty} />
+                </p>
               ) : (
                 <KornerChips korners={krew.korners} />
               )}
             </section>
 
-            <p className='group-detail__note'>
-              {intl.formatMessage(messages.noFeedNote)}
+            <p className='krew-detail__no-feed'>
+              <FormattedMessage {...messages.noFeedNote} />
             </p>
           </>
         )}

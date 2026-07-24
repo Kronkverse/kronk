@@ -1,0 +1,842 @@
+// Krews — landing, page, and Start-a-Krew form. Redesigned
+// 2026-07-24 alongside the surfaces themselves. Reads with the same
+// centred-column-on-sunken-surface aesthetic that Hub and Kalendar
+// Spiral use: brand-serif hero title, chunky purple CTA, cards with
+// enough breathing room to justify the canvas.
+// The `.groups-page__*` / `.group-detail__*` classnames from the
+// pre-Krews layer are unused by these components; `_groups.scss`
+// stays as-is for the compose-form KrewTargets picker (which still
+// carries `.compose-form__group-*` names).
+
+// ── shared bits ────────────────────────────────────────────────────
+
+$krew-column-width: 720px;
+
+@mixin krew-column {
+  max-width: $krew-column-width;
+  margin: 0 auto;
+  padding: 2.25rem 1.5rem 5rem;
+  width: 100%;
+}
+
+@mixin krew-card {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-large);
+  background: var(--surface-elevated);
+}
+
+@mixin krew-button-base {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: var(--radius-round);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ── landing ────────────────────────────────────────────────────────
+
+.krew-page {
+  @include krew-column;
+
+  &__hero {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  &__hero-title {
+    margin: 0 0 0.5rem;
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+
+  &__hero-lede {
+    max-width: 32rem;
+    margin: 0 auto;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  // ── toolbar (tabs + CTA) ─────────────────────────────────────────
+
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__tabs {
+    display: inline-flex;
+    padding: 4px;
+    border-radius: var(--radius-round);
+    background: color-mix(in oklab, var(--surface-elevated) 80%, transparent);
+    border: 1px solid var(--border-default);
+  }
+
+  &__tab {
+    padding: 0.4rem 1rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: var(--radius-round);
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      color: var(--text-primary);
+    }
+
+    &--active {
+      background: var(--kronk-purple-accent);
+      color: var(--surface-primary);
+      cursor: default;
+      box-shadow: 0 4px 10px -4px
+        color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
+    }
+  }
+
+  &__cta {
+    @include krew-button-base;
+
+    background: var(--kronk-purple-accent);
+    color: var(--surface-primary);
+    box-shadow: 0 8px 20px -8px
+      color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
+
+    &:hover,
+    &:focus-visible {
+      background: var(--kronk-purple-bright);
+      transform: translateY(-1px);
+      text-decoration: none;
+      color: var(--surface-primary);
+    }
+  }
+
+  &__cta-plus {
+    font-size: 1.05rem;
+    line-height: 1;
+    font-weight: 700;
+  }
+
+  // ── list ─────────────────────────────────────────────────────────
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__row {
+    @include krew-card;
+
+    transition:
+      transform var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      transform: translateY(-2px);
+      border-color: var(--kronk-purple-accent);
+      box-shadow: 0 10px 24px -12px
+        color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent);
+    }
+  }
+
+  &__row-link {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    color: inherit;
+    text-decoration: none;
+
+    &:focus-visible {
+      outline: 2px solid var(--kronk-purple-accent);
+      outline-offset: 3px;
+      border-radius: var(--radius-large);
+    }
+  }
+
+  &__row-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 34%;
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 60%,
+      var(--surface-sunken)
+    );
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1;
+    flex: none;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%);
+  }
+
+  &__row-body {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__row-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  &__row-name {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+
+  &__row-marker {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  &__row-desc {
+    margin: 0.25rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__row-meta {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  // ── empty state ──────────────────────────────────────────────────
+
+  &__empty {
+    @include krew-card;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    background: color-mix(in oklab, var(--kronk-purple-accent) 4%, transparent);
+    border-style: dashed;
+  }
+
+  &__empty-title {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 600;
+  }
+
+  &__empty-body {
+    max-width: 28rem;
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  &__loading,
+  &__error {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 1.5rem 1rem;
+  }
+
+  &__error {
+    color: var(--semantic-danger, #d33);
+  }
+}
+
+// ── detail (Krew page) ─────────────────────────────────────────────
+
+.krew-detail {
+  @include krew-column;
+
+  &__back {
+    display: inline-block;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--kronk-purple-bright);
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  &__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 68px;
+    height: 68px;
+    border-radius: 34%;
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 60%,
+      var(--surface-sunken)
+    );
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.85rem;
+    font-weight: 600;
+    line-height: 1;
+    flex: none;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%);
+  }
+
+  &__identity {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  &__name {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.85rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  &__marker {
+    margin-left: 0.4rem;
+    color: var(--text-muted);
+    font-size: 0.9em;
+    font-weight: 400;
+  }
+
+  &__submeta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+  }
+
+  &__slug {
+    color: var(--text-muted);
+    font-family: var(--font-mono, monospace);
+    font-size: 0.85rem;
+  }
+
+  &__archived-badge {
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--radius-round);
+    background: color-mix(in oklab, var(--text-muted) 15%, transparent);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  &__description {
+    margin: 0.5rem 0 1rem;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  // ── meta strip ───────────────────────────────────────────────────
+
+  &__meta {
+    @include krew-card;
+
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0;
+    padding: 0;
+    margin: 1rem 0;
+    overflow: hidden;
+  }
+
+  &__meta-item {
+    padding: 0.85rem 1rem;
+    border-right: 1px solid var(--border-default);
+
+    &:last-child {
+      border-right: none;
+    }
+
+    dt {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin: 0 0 0.25rem;
+    }
+
+    dd {
+      margin: 0;
+      color: var(--text-primary);
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+  }
+
+  &__seeder-note {
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    border-left: 3px solid var(--kronk-purple-accent);
+    background: color-mix(in oklab, var(--kronk-purple-accent) 5%, transparent);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    border-radius: 0 var(--radius-medium) var(--radius-medium) 0;
+  }
+
+  // ── action row ───────────────────────────────────────────────────
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
+
+  &__btn {
+    @include krew-button-base;
+
+    &--primary {
+      background: var(--kronk-purple-accent);
+      color: var(--surface-primary);
+
+      &:hover {
+        background: var(--kronk-purple-bright);
+      }
+    }
+
+    &--secondary {
+      background: var(--surface-elevated);
+      border-color: var(--border-default);
+      color: var(--text-primary);
+
+      &:hover {
+        border-color: var(--kronk-purple-accent);
+      }
+    }
+
+    &--ghost {
+      background: transparent;
+      border-color: var(--border-default);
+      color: var(--text-secondary);
+
+      &:hover {
+        color: var(--text-primary);
+        border-color: var(--kronk-purple-accent);
+      }
+    }
+
+    &--danger {
+      background: transparent;
+      border-color: color-mix(
+        in oklab,
+        var(--semantic-danger, #d33) 40%,
+        transparent
+      );
+      color: var(--semantic-danger, #d33);
+
+      &:hover {
+        background: color-mix(
+          in oklab,
+          var(--semantic-danger, #d33) 12%,
+          transparent
+        );
+      }
+    }
+  }
+
+  // ── invite + korners sections ────────────────────────────────────
+
+  &__section-heading {
+    margin: 1.5rem 0 0.35rem;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  &__section-hint {
+    margin: 0 0 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__invite {
+    @include krew-card;
+
+    padding: 1rem 1.25rem;
+    background: color-mix(in oklab, var(--kronk-purple-accent) 5%, transparent);
+  }
+
+  &__invite-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  &__invite-input {
+    flex: 1 1 20rem;
+    min-width: 0;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    font-family: var(--font-mono, monospace);
+    font-size: 0.85rem;
+  }
+
+  &__korners {
+    margin-top: 1rem;
+  }
+
+  &__korner-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  &__korner-chip {
+    padding: 0.3rem 0.85rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: color-mix(in oklab, var(--kronk-purple-accent) 8%, transparent);
+    font-size: 0.85rem;
+
+    a {
+      color: var(--text-primary);
+      text-decoration: none;
+
+      &:hover {
+        color: var(--kronk-purple-bright);
+      }
+    }
+  }
+
+  &__korners-empty {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__no-feed {
+    margin-top: 2rem;
+    padding: 0.85rem 1rem;
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius-medium);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  &__error {
+    padding: 1rem;
+    border-radius: var(--radius-medium);
+    background: color-mix(
+      in oklab,
+      var(--semantic-danger, #d33) 12%,
+      transparent
+    );
+    color: var(--semantic-danger, #d33);
+    text-align: center;
+  }
+
+  &__loading {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem;
+  }
+}
+
+// ── new (Start a Krew form) ────────────────────────────────────────
+
+.krew-new {
+  @include krew-column;
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__fieldset {
+    @include krew-card;
+
+    padding: 1.25rem 1.25rem 1.5rem;
+    border: 1px solid var(--border-default);
+  }
+
+  &__legend {
+    padding: 0 0.4rem;
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-top: 0.85rem;
+
+    &:first-of-type {
+      margin-top: 0.5rem;
+    }
+  }
+
+  &__field-label {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  &__field-hint {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  &__input {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: border-color var(--dur-fast) var(--ease-out);
+
+    &:focus {
+      outline: none;
+      border-color: var(--kronk-purple-accent);
+      box-shadow: 0 0 0 3px
+        color-mix(in oklab, var(--kronk-purple-accent) 25%, transparent);
+    }
+  }
+
+  &__note {
+    margin: 0 0 0.75rem;
+    padding: 0.6rem 0.85rem;
+    border-left: 3px solid var(--kronk-purple-accent);
+    background: color-mix(in oklab, var(--kronk-purple-accent) 6%, transparent);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    border-radius: 0 var(--radius-medium) var(--radius-medium) 0;
+  }
+
+  &__korner-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  &__korner-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: var(--surface-elevated);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-transform: capitalize;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      border-color: var(--kronk-purple-accent);
+      color: var(--text-primary);
+    }
+
+    &--active {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      border-color: var(--kronk-purple-accent);
+      color: var(--kronk-purple-bright);
+    }
+  }
+
+  &__korner-chip-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+  }
+
+  &__korner-chip-name {
+    display: inline-block;
+  }
+
+  &__radio {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.75rem;
+    margin-top: 0.4rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-medium);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 6%,
+        transparent
+      );
+      color: var(--text-primary);
+    }
+
+    &:has(input:checked) {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        transparent
+      );
+      border-color: var(--kronk-purple-accent);
+      color: var(--text-primary);
+    }
+  }
+
+  &__req-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: 0.75rem;
+    align-items: start;
+    padding: 0.85rem;
+    margin-top: 0.5rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--surface-elevated) 60%, transparent);
+    position: relative;
+  }
+
+  &__req-remove {
+    grid-column: 1 / -1;
+    justify-self: end;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--semantic-danger, #d33);
+      border-color: var(--semantic-danger, #d33);
+    }
+  }
+
+  &__add-req {
+    align-self: flex-start;
+    margin-top: 0.75rem;
+    padding: 0.45rem 0.9rem;
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--kronk-purple-bright);
+      border-color: var(--kronk-purple-accent);
+    }
+  }
+
+  &__error {
+    padding: 0.85rem;
+    border-radius: var(--radius-medium);
+    background: color-mix(
+      in oklab,
+      var(--semantic-danger, #d33) 12%,
+      transparent
+    );
+    color: var(--semantic-danger, #d33);
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  &__submit {
+    align-self: flex-start;
+    margin-top: 0.75rem;
+  }
+}
