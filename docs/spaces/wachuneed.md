@@ -114,14 +114,14 @@ choose at creation which mode applies to their listing:
 (buy_or_bargain) produce structured offer records with amount +
 message; others (contact_to_discuss) just seed a Nudges thread.
 
-### Location — integrates with Kompass
+### Location — integrates with Map
 
 Location is **required** for most listings, and integrates with the
-**Kompass** korner (the map korner still in the pipeline). Rather
+**Map** korner (the map korner still in the pipeline). Rather
 than building a bespoke Wachuneed-only location model, Wachuneed
-listings surface on Kompass, and Kompass's location primitives
+listings surface on Map, and Map's location primitives
 (city/region/point) apply. Exact integration shape depends on
-Kompass's own scoping — see `kompass.md` when we work it up.
+Map's own scoping — see `map.md` when we work it up.
 
 For digital-delivery service listings (music production remotely,
 online coaching), location may be flagged as "remote/digital".
@@ -182,11 +182,11 @@ tokens. Coordinating on visual mockups with Claude web.
 
 ## Open decisions
 
-- **Kompass integration** — Wachuneed listings need location; the
-  Kompass map korner is still in the pipeline. Actual integration
-  contract (does Wachuneed embed Kompass? does Kompass list
-  Wachuneed pins?) waits for Kompass scoping. Flagged in
-  `kompass.md` too.
+- **Map integration** — Wachuneed listings need location; the
+  Map korner is still in the pipeline. Actual integration
+  contract (does Wachuneed embed Map? does Map list
+  Wachuneed pins?) waits for Map scoping. Flagged in
+  `map.md` too.
 - **Digital-delivery services** — how does location work for
   remote/digital service listings? A "remote/no location" flag?
 - **Interaction-mode migrations** — some listings may need to shift
@@ -207,5 +207,5 @@ tokens. Coordinating on visual mockups with Claude web.
 - `docs/korners/korner_standard.md` — L1/L3/L5/L6/L7 requirements the
   Wachuneed manifest satisfies.
 - Related korners: `nudges.md` (buyer↔seller contact via Nudges),
-  `groups.md` (potential Krew-scoped listings), `kompass.md`
+  `groups.md` (potential Krew-scoped listings), `map.md`
   (location primitives), `kalendar.md` (workshop/book_service tie-in).

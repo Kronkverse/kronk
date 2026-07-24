@@ -29,33 +29,33 @@ verify against code before relying on one.
 
 Slug matches `config/korners/<slug>.yaml`.
 
-| Doc                            | Manifest                        | Notes                                                                                               |
-| ------------------------------ | ------------------------------- | --------------------------------------------------------------------------------------------------- |
-| [`albutts.md`](albutts.md)     | `config/korners/albutts.yaml`   | Discovery landed 2026-07-20 (R1+R2) — enforced: false, models pending                               |
-| [`booth.md`](booth.md)         | `config/korners/booth.yaml`     | Enforced — audio sharing                                                                            |
-| [`groups.md`](groups.md)       | `config/korners/groups.yaml`    | Enforced (framework) — UI heads toward "Krew"; slug rename planned                                  |
-| [`huddle.md`](huddle.md)       | `config/korners/huddle.yaml`    | Models shipped; `/hub/huddle` mount pending                                                         |
-| [`inflow.md`](inflow.md)       | `config/korners/inflow.yaml`    | Models + projection shipped; UI reshape pending Tomas Round 2                                       |
-| [`kalendar.md`](kalendar.md)   | `config/korners/kalendar.yaml`  | Enforced — rebuild spiral view pending                                                              |
-| [`klot.md`](klot.md)           | `config/korners/klot.yaml`      | Stub                                                                                                |
-| [`kommons.md`](kommons.md)     | `config/korners/kommons.yaml`   | Enforced — Directory, token ledger, lifecycle and backing UI shipped                                |
-| [`kompass.md`](kompass.md)     | `config/korners/kompass.yaml`   | Stub — physical map                                                                                 |
-| [`kuestions.md`](kuestions.md) | `config/korners/kuestions.yaml` | Enforced — v2 shipped (dedicated models, swipe deck, gated answers, daily prompt)                   |
-| [`wachuneed.md`](wachuneed.md) | `config/korners/wachuneed.yaml` | Enforced — directory shipped; detail/composer pending. Renamed from `marketplace` 2026-07-21.       |
-| [`moments.md`](moments.md)     | `config/korners/moments.yaml`   | Stub                                                                                                |
+| Doc                            | Manifest                        | Notes                                                                                                             |
+| ------------------------------ | ------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [`albutts.md`](albutts.md)     | `config/korners/albutts.yaml`   | Discovery landed 2026-07-20 (R1+R2) — enforced: false, models pending                                             |
+| [`booth.md`](booth.md)         | `config/korners/booth.yaml`     | Enforced — audio sharing                                                                                          |
+| [`groups.md`](groups.md)       | `config/korners/groups.yaml`    | Enforced (framework) — UI heads toward "Krew"; slug rename planned                                                |
+| [`huddle.md`](huddle.md)       | `config/korners/huddle.yaml`    | Models shipped; `/hub/huddle` mount pending                                                                       |
+| [`inflow.md`](inflow.md)       | `config/korners/inflow.yaml`    | Models + projection shipped; UI reshape pending Tomas Round 2                                                     |
+| [`kalendar.md`](kalendar.md)   | `config/korners/kalendar.yaml`  | Enforced — rebuild spiral view pending                                                                            |
+| [`klot.md`](klot.md)           | `config/korners/klot.yaml`      | Stub                                                                                                              |
+| [`kommons.md`](kommons.md)     | `config/korners/kommons.yaml`   | Enforced — Directory, token ledger, lifecycle and backing UI shipped                                              |
+| [`map.md`](map.md)             | `config/korners/map.yaml`       | Prototype — physical map / presence (renamed from Kompass)                                                        |
+| [`kuestions.md`](kuestions.md) | `config/korners/kuestions.yaml` | Enforced — v2 shipped (dedicated models, swipe deck, gated answers, daily prompt)                                 |
+| [`wachuneed.md`](wachuneed.md) | `config/korners/wachuneed.yaml` | Enforced — directory shipped; detail/composer pending. Renamed from `marketplace` 2026-07-21.                     |
+| [`moments.md`](moments.md)     | `config/korners/moments.yaml`   | Stub                                                                                                              |
 | [`nudges.md`](nudges.md)       | `config/korners/nudges.yaml`    | Activity feed + unified messenger shipped; pillar move done (`core: true`, `pillar: true`, in `hub_switcher.tsx`) |
-| [`you.md`](you.md)             | `config/korners/you.yaml`       | Portal (link-out to Kashka's YOU PWA)                                                               |
+| [`you.md`](you.md)             | `config/korners/you.yaml`       | Portal (link-out to Kashka's YOU PWA)                                                                             |
 
 ### Cross-cutting spaces (not owned by a korner manifest)
 
 Nodes declared in `config/kronk_nodes.yaml`.
 
-| Doc                          | Node bucket          | Notes                                           |
-| ---------------------------- | -------------------- | ----------------------------------------------- |
-| [`feed.md`](feed.md)         | `feed`               | Home + Nudges activity feed                     |
-| [`profile.md`](profile.md)   | `profile`            | Sectioned profile + view/edit/media/connections |
+| Doc                          | Node bucket           | Notes                                           |
+| ---------------------------- | --------------------- | ----------------------------------------------- |
+| [`feed.md`](feed.md)         | `feed`                | Home + Nudges activity feed                     |
+| [`profile.md`](profile.md)   | `profile`             | Sectioned profile + view/edit/media/connections |
 | [`settings.md`](settings.md) | `settings` (see note) | Account/global settings (`/settings/*`)         |
-| [`hub.md`](hub.md)           | `hub.landing`        | The `/hub` landing grid itself                  |
+| [`hub.md`](hub.md)           | `hub.landing`         | The `/hub` landing grid itself                  |
 
 Note on settings: settings now owns its **own `settings` bucket** and a
 core-space manifest (`config/korners/settings.yaml`). Every personal/account
