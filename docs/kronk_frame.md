@@ -17,14 +17,13 @@ Desktop (container ≥ 890px)
 ┌────────────────────────────────────────────────────────────────┐
 │                          TopBand                                │
 │              (wordmark + Membrane HubSwitcher)                  │
-├──────────┬─────────────────────────────────────────┬───────────┤
-│          │                                         │           │
-│ SpaceNav │                 Stage                   │ RightBand │
-│          │           (per-korner content)          │  (korner  │
-│  (space  │                                         │   tiles)  │
-│   nav)   │                                         │           │
-│          │                                         │           │
-└──────────┴─────────────────────────────────────────┴───────────┘
+├─────────────────────────────────────────────────────┬──────────┤
+│  [← Ƙ space]                        [Today ▾]      │          │
+│                                                     │RightBand │
+│              Stage (per-korner content)             │ (korner  │
+│                                                     │  tiles)  │
+│                                                     │          │
+└─────────────────────────────────────────────────────┴──────────┘
 
                     OVERLAY: Ӂ menu (position: fixed, draggable)
 
@@ -56,9 +55,12 @@ Mobile (container ≤ 889px)
 - **Owns:** its layout position. No background — it's a transparent
   cell. Pills float over Stage content via `pointer-events: none` on
   the container and `auto` on the pills.
-- **Desktop:** ~11rem left column, pills stacked vertically.
-- **Mobile:** flips to a horizontal row inside Stage's cell; badge
-  top-left, view picker top-right (`justify-content: space-between`).
+- **Layout (all widths):** a horizontal row spanning `nav-start` to
+  `stage-end` (the full Stage content width, stopping before the
+  right rail). Badge at the leading edge, view picker at the trailing
+  edge, both on the same horizontal line at the top of Stage
+  (`flex-direction: row; justify-content: space-between`). Pills stay
+  visible as Stage content scrolls below them.
 - **The space badge pattern:** one pill that carries three jobs — a
   back arrow (tap to exit to Hub), the space glyph (Ƙ, ◉, ✦, etc.),
   and the space name. Replaces the old separate "← Hub" affordance
