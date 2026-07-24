@@ -3,7 +3,6 @@ import { FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
 
-import { SpaceIntro } from 'mastodon/components/space_intro';
 import { Stage } from 'mastodon/components/stage';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
@@ -40,7 +39,6 @@ export const KornerStub: React.FC<{ multiColumn?: boolean; slug?: string }> = ({
           <Icon />
         </span>
         <h1 className='korner-stub__title'>{title}</h1>
-        <SpaceIntro slug={slug} className='korner-stub__blurb' />
         <p className='korner-stub__pending'>
           <FormattedMessage
             id='korner_stub.pending'

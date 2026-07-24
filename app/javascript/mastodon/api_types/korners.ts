@@ -49,6 +49,11 @@ export interface ApiKornerIconJSON {
   text_glyph?: string; // Optional single-char breadcrumb glyph
 }
 
+export interface ApiKornerViewJSON {
+  key: string;
+  label: string;
+}
+
 export interface ApiKornerJSON {
   slug: string;
   name: string;
@@ -66,6 +71,10 @@ export interface ApiKornerJSON {
   emits?: string[];
   listens?: string[];
   hub_teaser?: Record<string, unknown> | null;
+  // SpaceNav view switcher — ordered; the first entry is the default
+  // view (bare `/hub/<slug>`), the rest map to `/hub/<slug>/<key>`.
+  // Drives both the nav picker and where the auto intro is shown.
+  views?: ApiKornerViewJSON[];
   launch?: Record<string, unknown> | null;
   // Space page — the evolutionary purpose ("why this space exists") and the
   // handle of its steward. Both optional; declared in the manifest.

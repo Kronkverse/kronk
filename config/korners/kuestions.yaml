@@ -97,6 +97,13 @@ compose:
   # which panel they were on last.
   route: '/hub/kuestions/ask'
 
+# SpaceNav view switcher (first entry = default, bare /hub/kuestions).
+views:
+  - { key: deck, label: Deck }
+  - { key: today, label: Today }
+  - { key: answered, label: Answered }
+  - { key: ask, label: Ask }
+
 launch:
   blurb: 'Kuestions — ask, answer, unlock.'
   cta: 'Tap in'

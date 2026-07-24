@@ -14,7 +14,6 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import { SpaceIntro } from 'mastodon/components/space_intro';
 import { Stage } from 'mastodon/components/stage';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
@@ -87,8 +86,6 @@ const YouPortal: React.FC<Props> = () => {
             {intl.formatMessage(messages.subtitle)}
           </p>
         </div>
-
-        <SpaceIntro slug='you' />
 
         <ul className='you-portal__bullets'>
           <li>{intl.formatMessage(messages.bulletValues)}</li>
