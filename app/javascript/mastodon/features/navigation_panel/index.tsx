@@ -35,7 +35,7 @@ import PublicIcon from '@/material-icons/400-24px/public.svg?react';
 import QuestionMarkActiveIcon from '@/material-icons/400-24px/question_mark-fill.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
-import { fetchFollowRequests } from 'mastodon/actions/accounts';
+import { fetchMateRequests } from 'mastodon/actions/accounts';
 import { openModal } from 'mastodon/actions/modal';
 import {
   openNavigation,
@@ -95,9 +95,9 @@ const messages = defineMessages({
     defaultMessage:
       'Posts, accounts, and other specific pages are opened by default in the classic web interface.',
   },
-  followRequests: {
-    id: 'navigation_bar.follow_requests',
-    defaultMessage: 'Follow requests',
+  mateRequests: {
+    id: 'navigation_bar.mate_requests',
+    defaultMessage: 'Mate requests',
   },
   logout: { id: 'navigation_bar.logout', defaultMessage: 'Logout' },
   compose: { id: 'tabs_bar.publish', defaultMessage: 'New Post' },
@@ -133,12 +133,14 @@ const NudgesLink: React.FC = () => {
   );
 };
 
-const FollowRequestsLink: React.FC = () => {
+// Kronk — Mates. Nav badge + link to the dedicated Requests view; hidden
+// when there are no incoming Mate requests.
+const MateRequestsLink: React.FC = () => {
   const intl = useIntl();
   const count = useAppSelector(
     (state) =>
       (
-        state.user_lists.getIn(['follow_requests', 'items']) as
+        state.user_lists.getIn(['mate_requests', 'items']) as
           | ImmutableMap<string, unknown>
           | undefined
       )?.size ?? 0,
@@ -146,7 +148,7 @@ const FollowRequestsLink: React.FC = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch(fetchFollowRequests());
+    dispatch(fetchMateRequests());
   }, [dispatch]);
 
   if (count === 0) {
@@ -156,7 +158,7 @@ const FollowRequestsLink: React.FC = () => {
   return (
     <ColumnLink
       transparent
-      to='/follow_requests'
+      to='/mate_requests'
       icon={
         <IconWithBadge
           id='user-plus'
@@ -173,7 +175,7 @@ const FollowRequestsLink: React.FC = () => {
           className='column-link__icon'
         />
       }
-      text={intl.formatMessage(messages.followRequests)}
+      text={intl.formatMessage(messages.mateRequests)}
     />
   );
 };
@@ -350,7 +352,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               tooltip='₭ommons'
             />
 
-            <FollowRequestsLink />
+            <MateRequestsLink />
 
             <ColumnLink
               transparent

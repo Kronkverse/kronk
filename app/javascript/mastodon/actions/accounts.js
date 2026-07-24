@@ -7,6 +7,7 @@ import { me } from '../initial_state';
 import {
   followAccountSuccess, unfollowAccountSuccess,
   authorizeFollowRequestSuccess, rejectFollowRequestSuccess,
+  acceptMateRequestSuccess, rejectMateRequestSuccess,
   followAccountRequest, followAccountFail,
   unfollowAccountRequest, unfollowAccountFail,
   muteAccountSuccess, unmuteAccountSuccess,
@@ -75,6 +76,22 @@ export const FOLLOW_REQUEST_AUTHORIZE_FAIL    = 'FOLLOW_REQUEST_AUTHORIZE_FAIL';
 
 export const FOLLOW_REQUEST_REJECT_REQUEST = 'FOLLOW_REQUEST_REJECT_REQUEST';
 export const FOLLOW_REQUEST_REJECT_FAIL    = 'FOLLOW_REQUEST_REJECT_FAIL';
+
+// Kronk — Mates. Incoming Mate requests (the Requests view). Mirrors the
+// follow-requests list actions; backed by /api/v1/mate_requests.
+export const MATE_REQUESTS_FETCH_REQUEST = 'MATE_REQUESTS_FETCH_REQUEST';
+export const MATE_REQUESTS_FETCH_SUCCESS = 'MATE_REQUESTS_FETCH_SUCCESS';
+export const MATE_REQUESTS_FETCH_FAIL    = 'MATE_REQUESTS_FETCH_FAIL';
+
+export const MATE_REQUESTS_EXPAND_REQUEST = 'MATE_REQUESTS_EXPAND_REQUEST';
+export const MATE_REQUESTS_EXPAND_SUCCESS = 'MATE_REQUESTS_EXPAND_SUCCESS';
+export const MATE_REQUESTS_EXPAND_FAIL    = 'MATE_REQUESTS_EXPAND_FAIL';
+
+export const MATE_REQUEST_ACCEPT_REQUEST = 'MATE_REQUEST_ACCEPT_REQUEST';
+export const MATE_REQUEST_ACCEPT_FAIL    = 'MATE_REQUEST_ACCEPT_FAIL';
+
+export const MATE_REQUEST_REJECT_REQUEST = 'MATE_REQUEST_REJECT_REQUEST';
+export const MATE_REQUEST_REJECT_FAIL    = 'MATE_REQUEST_REJECT_FAIL';
 
 export const ACCOUNT_REVEAL = 'ACCOUNT_REVEAL';
 
@@ -659,6 +676,138 @@ export function rejectFollowRequestRequest(id) {
 export function rejectFollowRequestFail(id, error) {
   return {
     type: FOLLOW_REQUEST_REJECT_FAIL,
+    id,
+    error,
+  };
+}
+
+// ── Kronk — Mates: incoming Mate requests (the Requests view) ──────────
+// Mirrors the follow-requests list actions; backed by /api/v1/mate_requests.
+
+export function fetchMateRequests() {
+  return (dispatch) => {
+    dispatch(fetchMateRequestsRequest());
+
+    api().get('/api/v1/mate_requests').then(response => {
+      const next = getLinks(response).refs.find(link => link.rel === 'next');
+      dispatch(importFetchedAccounts(response.data));
+      dispatch(fetchMateRequestsSuccess(response.data, next ? next.uri : null));
+    }).catch(error => dispatch(fetchMateRequestsFail(error)));
+  };
+}
+
+export function fetchMateRequestsRequest() {
+  return {
+    type: MATE_REQUESTS_FETCH_REQUEST,
+  };
+}
+
+export function fetchMateRequestsSuccess(accounts, next) {
+  return {
+    type: MATE_REQUESTS_FETCH_SUCCESS,
+    accounts,
+    next,
+  };
+}
+
+export function fetchMateRequestsFail(error) {
+  return {
+    type: MATE_REQUESTS_FETCH_FAIL,
+    error,
+  };
+}
+
+export function expandMateRequests() {
+  return (dispatch, getState) => {
+    const url = getState().getIn(['user_lists', 'mate_requests', 'next']);
+
+    if (url === null) {
+      return;
+    }
+
+    dispatch(expandMateRequestsRequest());
+
+    api().get(url).then(response => {
+      const next = getLinks(response).refs.find(link => link.rel === 'next');
+      dispatch(importFetchedAccounts(response.data));
+      dispatch(expandMateRequestsSuccess(response.data, next ? next.uri : null));
+    }).catch(error => dispatch(expandMateRequestsFail(error)));
+  };
+}
+
+export function expandMateRequestsRequest() {
+  return {
+    type: MATE_REQUESTS_EXPAND_REQUEST,
+  };
+}
+
+export function expandMateRequestsSuccess(accounts, next) {
+  return {
+    type: MATE_REQUESTS_EXPAND_SUCCESS,
+    accounts,
+    next,
+  };
+}
+
+export function expandMateRequestsFail(error) {
+  return {
+    type: MATE_REQUESTS_EXPAND_FAIL,
+    error,
+  };
+}
+
+export function acceptMateRequest(id) {
+  return (dispatch) => {
+    dispatch(acceptMateRequestRequest(id));
+
+    api()
+      .post(`/api/v1/mate_requests/${id}/accept`)
+      .then(response => {
+        // The endpoint returns the updated relationship (now a Mate), so
+        // fold it in as well as removing the row from the requests list.
+        dispatch(fetchRelationshipsSuccess({ relationships: [response.data] }));
+        dispatch(acceptMateRequestSuccess({ id }));
+      })
+      .catch(error => dispatch(acceptMateRequestFail(id, error)));
+  };
+}
+
+export function acceptMateRequestRequest(id) {
+  return {
+    type: MATE_REQUEST_ACCEPT_REQUEST,
+    id,
+  };
+}
+
+export function acceptMateRequestFail(id, error) {
+  return {
+    type: MATE_REQUEST_ACCEPT_FAIL,
+    id,
+    error,
+  };
+}
+
+export function rejectMateRequest(id) {
+  return (dispatch) => {
+    dispatch(rejectMateRequestRequest(id));
+
+    api()
+      .post(`/api/v1/mate_requests/${id}/reject`)
+      .then(() => dispatch(rejectMateRequestSuccess({ id })))
+      .catch(error => dispatch(rejectMateRequestFail(id, error)));
+  };
+}
+
+export function rejectMateRequestRequest(id) {
+  return {
+    type: MATE_REQUEST_REJECT_REQUEST,
+    id,
+  };
+}
+
+export function rejectMateRequestFail(id, error) {
+  return {
+    type: MATE_REQUEST_REJECT_FAIL,
     id,
     error,
   };

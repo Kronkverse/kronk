@@ -67,6 +67,7 @@ import {
   NotificationRequests,
   NotificationRequest,
   FollowRequests,
+  MateRequests,
   FavouritedStatuses,
   BookmarkedStatuses,
   FollowedTags,
@@ -358,6 +359,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/statuses/:statusId/favourites' component={Favourites} content={children} />
 
             <WrappedRoute path='/follow_requests' component={FollowRequests} content={children} />
+            <WrappedRoute path='/mate_requests' component={MateRequests} content={children} />
             <WrappedRoute path='/blocks' component={Blocks} content={children} />
             <WrappedRoute path='/domain_blocks' component={DomainBlocks} content={children} />
             <WrappedRoute path='/followed_tags' component={FollowedTags} content={children} />
