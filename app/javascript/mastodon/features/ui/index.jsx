@@ -20,6 +20,7 @@ import { AlertsController } from 'mastodon/components/alerts_controller';
 import { Hotkeys } from 'mastodon/components/hotkeys';
 import { HoverCardController } from 'mastodon/components/hover_card_controller';
 import { BoothPlaybackProvider } from 'mastodon/features/booth/booth_playback_context';
+import { NudgeArrivalToast } from 'mastodon/components/nudge_arrival_toast';
 import { BoothMiniPlayer } from 'mastodon/features/booth/components/booth_mini_player';
 import { HuddlePip } from 'mastodon/features/huddle_pip';
 import { PictureInPicture } from 'mastodon/features/picture_in_picture';
@@ -753,6 +754,7 @@ class UI extends PureComponent {
           {layout !== 'mobile' && <PictureInPicture />}
           <BoothMiniPlayer />
           <HuddlePip />
+          <NudgeArrivalToast />
           <AlertsController />
 
           <KornerSubBar />
