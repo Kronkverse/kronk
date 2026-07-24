@@ -9,6 +9,7 @@
 slug: wachuneed
 name: Wachuneed
 purpose: 'To let kronkers offer and find creations, goods, and services person-to-person.'
+tagline: 'Wachuneed? Wachugot?? Share your art, and see what people are creating.'
 icon: inventory_2
 render_target: native
 version: 2.0.0

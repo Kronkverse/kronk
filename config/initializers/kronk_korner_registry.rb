@@ -56,6 +56,10 @@ module Kronk
       # stewards it (optional — no korner->account link exists yet, so this is
       # a declared handle, not a derived one).
       :purpose,
+      # `tagline` is the short, display-voice intro line shown under the
+      # space title (the shared `<SpaceIntro>` renders it). Distinct from
+      # `purpose` (the mission "why"): tagline is user-facing copy.
+      :tagline,
       :steward,
       # Tree nodes (§Kronk 2.0 tree registry) — user-facing page-types
       # owned by this korner. Each entry follows the schema in
@@ -190,6 +194,7 @@ module Kronk
           hub_teaser: yaml['hub_teaser'].is_a?(Hash) ? yaml['hub_teaser'] : nil,
           launch: yaml['launch'].is_a?(Hash) ? yaml['launch'] : nil,
           purpose: yaml['purpose'].is_a?(String) ? yaml['purpose'] : nil,
+          tagline: yaml['tagline'].is_a?(String) ? yaml['tagline'] : nil,
           steward: yaml['steward'].is_a?(String) ? yaml['steward'] : nil,
           nodes: Array(yaml['nodes']),
           mount: yaml['mount'].is_a?(String) ? yaml['mount'] : nil,

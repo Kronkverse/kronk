@@ -14,6 +14,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
+import { SpaceIntro } from 'mastodon/components/space_intro';
 import { Stage } from 'mastodon/components/stage';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
@@ -27,11 +28,6 @@ const messages = defineMessages({
   subtitle: {
     id: 'you_portal.subtitle',
     defaultMessage: 'Your Own Universe',
-  },
-  intro: {
-    id: 'you_portal.intro',
-    defaultMessage:
-      'YOU is a self-facing companion to Kronk. Track your values, grow your Seed Being, log memories and moods, and follow your kosmic rhythms. Your YOU identity is yours — it lives in your pod, not on Kronk.',
   },
   cta: { id: 'you_portal.cta', defaultMessage: 'Open YOU' },
   ctaSubtext: {
@@ -92,9 +88,7 @@ const YouPortal: React.FC<Props> = () => {
           </p>
         </div>
 
-        <p className='you-portal__intro'>
-          {intl.formatMessage(messages.intro)}
-        </p>
+        <SpaceIntro slug='you' />
 
         <ul className='you-portal__bullets'>
           <li>{intl.formatMessage(messages.bulletValues)}</li>

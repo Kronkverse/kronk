@@ -7,6 +7,7 @@
 slug: huddle
 name: Huddle
 purpose: "To give Kronk a room to be in together — live video for when presence beats a thread."
+tagline: 'Huddle up!'
 icon: videocam
 render_target: native
 version: 2.0.0 # split from Kalendar in the rebuild
