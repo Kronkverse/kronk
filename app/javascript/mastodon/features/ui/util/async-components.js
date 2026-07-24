@@ -323,10 +323,6 @@ export function KalendarSpiral () {
   return import("../../kalendar_spiral");
 }
 
-export function BoothV2 () {
-  return import("../../booth_v2");
-}
-
 export function WachuneedV2 () {
   return import("../../wachuneed_v2");
 }
