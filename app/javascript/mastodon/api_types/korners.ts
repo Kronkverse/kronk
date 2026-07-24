@@ -88,6 +88,12 @@ export interface ApiKornerJSON {
   mount?: string | null;
   feature_flag?: string | null;
   enforced?: boolean;
+  // Core spaces (feed / profile / hub / nudges / settings) are part
+  // of the platform rather than korners — no Hub tile, no tune-out.
+  // /api/v1/korners still returns them so useKornerIcon /
+  // AutoSpaceBadge can resolve their identity; consumers that render
+  // the Hub grid filter `core === true` out.
+  core?: boolean;
   // Populated by /api/v1/korners for the current viewer. Anonymous
   // callers get `true`. Toggle via POST/DELETE /api/v1/korners/:slug/tune_out.
   tuned_in?: boolean;

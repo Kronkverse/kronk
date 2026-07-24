@@ -86,7 +86,12 @@ const KornerTile: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
 
 const Hub: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
-  const korners = useAllKorners();
+  const allKorners = useAllKorners();
+
+  // Core spaces (feed / profile / hub / nudges / settings) come back
+  // in the manifest registry so the top nav can resolve their icons,
+  // but they don't belong on the Hub grid — filter them here.
+  const korners = allKorners.filter((k) => k.core !== true);
 
   // Default order: most-tuned-in first, ties broken alphabetically.
   // Coming-soon tiles (enforced: false) fall to the end so the grid
