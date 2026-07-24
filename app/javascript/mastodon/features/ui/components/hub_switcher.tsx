@@ -11,10 +11,10 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { NavLink, useLocation } from 'react-router-dom';
 
-import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
-import HomeIcon from '@/material-icons/400-24px/home.svg?react';
-import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
-import PersonIcon from '@/material-icons/400-24px/person.svg?react';
+import { Icon } from 'mastodon/components/icon';
+import type { IconProp } from 'mastodon/components/icon';
+import { useKorner } from 'mastodon/hooks/useKorner';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useAppSelector } from 'mastodon/store';
 
 // Four-way switcher between Kronk's primary personal surfaces —
@@ -28,9 +28,14 @@ import { useAppSelector } from 'mastodon/store';
 //   Hub     → /hub
 //   Nudges  → /nudges (activity; carries the unread badge)
 //
-// Top variant renders the Membrane: flat labels + a 1px wire + a
-// gliding pool of light under the active pillar. Spec:
-// docs/aesthetic — Membrane Navigation (KRONK_MEMBRANE_NAV).
+// Top variant renders the Membrane: icon pillars + a 1px wire + a
+// gliding pool of light under the active pillar. Icons are read from
+// each pillar's corresponding manifest via `kornerIcon` — editing
+// `icon.material` in profile.yaml / feed.yaml / hub.yaml / nudges.yaml
+// updates the top nav in place. Text labels stay on the pillars as
+// visually-hidden sr-only text so the aria/announced names still
+// carry `Me / Home / Hub / Nudges`. Spec: docs/aesthetic — Membrane
+// Navigation (KRONK_MEMBRANE_NAV).
 
 interface HubSwitcherProps {
   variant?: 'top' | 'bottom';
@@ -51,7 +56,14 @@ interface PillarConfig {
   key: PillarKey;
   to: string;
   label: (typeof messages)[keyof typeof messages];
-  Icon: React.ComponentType;
+  // The pillar's Material icon component — resolved from the manifest
+  // of the space it points at. Used in both the top Membrane variant
+  // (icon-only, name hidden for a11y) and the bottom mobile tab-bar
+  // (icon + label).
+  Icon: IconProp;
+  // Manifest slug the icon comes from. Rendered as `icon-<slug>` on
+  // the Icon element so consumers can style per-korner if they want.
+  iconId: string;
   isActive: (pathname: string) => boolean;
 }
 
@@ -69,38 +81,47 @@ export const HubSwitcher = ({
     ? `/@${currentAccountUsername}`
     : '/getting-started';
 
+  const profileManifest = useKorner('profile');
+  const feedManifest = useKorner('feed');
+  const hubManifest = useKorner('hub');
+  const nudgesManifest = useKorner('nudges');
+
   const pillars: PillarConfig[] = useMemo(
     () => [
       {
         key: 'me',
         to: profilePath,
         label: messages.me,
-        Icon: PersonIcon,
+        Icon: kornerIcon('profile', profileManifest),
+        iconId: 'profile',
         isActive: (p) => p.startsWith('/@'),
       },
       {
         key: 'home',
         to: '/home',
         label: messages.home,
-        Icon: HomeIcon,
+        Icon: kornerIcon('feed', feedManifest),
+        iconId: 'feed',
         isActive: (p) => p === '/home' || p.startsWith('/home/'),
       },
       {
         key: 'hub',
         to: '/hub',
         label: messages.hub,
-        Icon: ExploreIcon,
+        Icon: kornerIcon('hub', hubManifest),
+        iconId: 'hub',
         isActive: (p) => p === '/hub' || p.startsWith('/hub/'),
       },
       {
         key: 'nudges',
         to: '/nudges',
         label: messages.nudges,
-        Icon: NotificationsIcon,
+        Icon: kornerIcon('nudges', nudgesManifest),
+        iconId: 'nudges',
         isActive: (p) => p === '/nudges' || p.startsWith('/nudges/'),
       },
     ],
-    [profilePath],
+    [profilePath, profileManifest, feedManifest, hubManifest, nudgesManifest],
   );
 
   const activeKey =
@@ -251,18 +272,29 @@ const MembraneTop = ({
       <div className='hub-switcher__row' role='tablist' ref={rowRef}>
         {pillars.map((pillar) => {
           const isActive = pillar.key === activeKey;
+          const label = formatLabel(pillar.label);
           return (
             <NavLink
               key={pillar.key}
               to={pillar.to}
               role='tab'
               aria-selected={isActive}
+              aria-label={label}
+              title={label}
               className='hub-switcher__pillar'
               activeClassName='hub-switcher__pillar--active'
               innerRef={registerPillar(pillar.key)}
             >
-              <span className='hub-switcher__label'>
-                {formatLabel(pillar.label)}
+              <Icon
+                id={pillar.iconId}
+                icon={pillar.Icon}
+                className='hub-switcher__pillar-icon'
+              />
+              {/* Label remains in the DOM as sr-only text so screen
+                  readers still announce Me / Home / Hub / Nudges even
+                  though the visible pillar carries the icon only. */}
+              <span className='hub-switcher__label hub-switcher__label--sr'>
+                {label}
               </span>
               {pillar.key === 'nudges' && unreadNudges > 0 && (
                 <span
