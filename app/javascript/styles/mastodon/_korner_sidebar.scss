@@ -161,12 +161,16 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
     width: 2.5rem;
     height: 2.5rem;
     border-radius: var(--radius-medium);
-    background: color-mix(
-      in oklab,
-      var(--kronk-purple-accent) 15%,
-      transparent
-    );
-    color: var(--kronk-purple-accent);
+
+    // Idle: a defined dark-purple chip with a near-white icon. The
+    // previous treatment (15% purple over transparent + purple-accent
+    // fill) read as dim on the black RightBand fade — the icon fill
+    // was around #4414cc on a mostly-black surface, low contrast.
+    // Now the chip is a solid dark-purple ground and the icon is
+    // near-white with a subtle purple tint, so shapes read at a
+    // glance without competing with the hover/active saturated fill.
+    background: color-mix(in oklab, var(--kronk-purple-deep) 55%, transparent);
+    color: color-mix(in oklab, #fff 82%, var(--kronk-purple-bright));
     transition:
       background var(--dur-fast) var(--ease-out),
       color var(--dur-fast) var(--ease-out);
