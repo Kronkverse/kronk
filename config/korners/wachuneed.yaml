@@ -1,15 +1,24 @@
-# Wachuneed — creations, goods, services traded person-to-person.
-# Greenfield reference korner: built to spec §5 from day one — canonical
-# status_id linkage, dedicated tables, no retrofitting.
+# mARTketplace — art, stuff, and offerings traded person-to-person.
+# Greenfield reference korner: built to spec §5 from day one —
+# canonical status_id linkage, dedicated tables, no retrofitting.
 #
-# Slug history: renamed from `marketplace` (2026-07-21). The three
-# top-level categories became creations / goods / services so the middle
-# category no longer collides with the old korner name.
+# Naming history:
+#   - marketplace  (initial)
+#   - wachuneed    (2026-07-21 rename — three top-level categories
+#                   became creations / goods / services so the middle
+#                   category didn't collide with the old korner name)
+#   - mARTketplace (2026-07-24 — display name only; the URL slug stays
+#                   `wachuneed` to preserve links in the wild. The two
+#                   sub-views `wachuneed` (browse others) and `wachugot`
+#                   (my own listings) reuse the earlier vocabulary).
+#
+# Display categories renamed for the mARTketplace surface:
+#   creation → Art, goods → Stuff, service → Offerings.
 
 slug: wachuneed
-name: Wachuneed
-purpose: 'To let kronkers offer and find creations, goods, and services person-to-person.'
-tagline: 'Wachuneed? Wachugot?? Share your art, and see what people are creating.'
+name: mARTketplace
+purpose: 'To let kronkers offer and find art, stuff, and offerings person-to-person.'
+tagline: 'Wachuneed? Wachugot?? Share your art, stuff, and offerings — and see what the community is making.'
 icon:
   material: kronk_coin
   text_glyph: '₭'
@@ -86,10 +95,20 @@ compose:
   route: '/hub/wachuneed/new'
 
 hub_teaser:
-  static: 'What you need — creations, goods, services from the community.'
+  static: 'Wachuneed — art, stuff, and offerings from the community.'
+
+# SpaceNav view switcher (first entry = default, bare /hub/wachuneed).
+# Drives AutoSpaceViewPicker + KornerShell URL routing.
+#
+#   /hub/wachuneed          → wachuneed (browse others' listings — the
+#                              default landing view)
+#   /hub/wachuneed/wachugot → wachugot  (the caller's own listings)
+views:
+  - { key: wachuneed, label: Wachuneed }
+  - { key: wachugot, label: Wachugot }
 
 launch:
-  blurb: 'Wachuneed — creations, goods, and services from the Kronk community.'
+  blurb: 'mARTketplace — art, stuff, and offerings from the Kronk community.'
   cta: 'Tap in'
 
 feature_flag: # not-implemented — Wachuneed ships enabled at 2.0.0
