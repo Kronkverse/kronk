@@ -1,7 +1,8 @@
-import { forwardRef, useRef, useImperativeHandle } from 'react';
+import { forwardRef, useRef, useImperativeHandle, useEffect } from 'react';
 import type { Ref } from 'react';
 
 import { scrollTop } from 'mastodon/scroll';
+import { isDevelopment } from 'mastodon/utils/environment';
 
 import { AutoSpaceIntro } from './auto_space_intro';
 
@@ -49,14 +50,50 @@ export const Stage = forwardRef<StageRef, StageProps>(
         // for callers that historically deferred to document scroll,
         // but almost every Stage consumer wants the Stage's own
         // overflow.
-        const scrollable = bindToDocument ? document.scrollingElement : nodeRef.current;
+        const scrollable = bindToDocument
+          ? document.scrollingElement
+          : nodeRef.current;
         if (!scrollable) return;
         scrollTop(scrollable);
       },
     }));
 
+    // Dev-only Frame-parasite warning. The static `korners doctor` L11
+    // check catches the same patterns at CI time; this catches them at
+    // runtime for anything the grep can't see (a subtree flipped in
+    // by conditional render, or content loaded from a fetch). One warn
+    // per mount, keyed on `label` so it doesn't spam on re-renders.
+    // See docs/korners/korner_standard.md L11 for the rationale.
+    useEffect(() => {
+      if (!isDevelopment()) return;
+      const node = nodeRef.current;
+      if (!node) return;
+
+      const parasites: string[] = [];
+      if (node.querySelector('h1')) {
+        parasites.push(
+          '<h1> — the space title is provided by <AutoSpaceBadge>',
+        );
+      }
+      if (node.querySelector('[role="tablist"], [role="tab"]')) {
+        parasites.push(
+          'role="tablist"/"tab" — the view tabs are provided by <AutoSpaceViewPicker>, driven by the manifest `views:` list',
+        );
+      }
+      if (parasites.length > 0) {
+        console.warn(
+          `[kronk-frame] Frame parasite in Stage (${label ?? 'unlabelled'}):\n  - ${parasites.join('\n  - ')}\n  See docs/korners/korner_standard.md L11 and docs/kronk_frame.md.`,
+        );
+      }
+    }, [label]);
+
     return (
-      <div ref={nodeRef} role='region' aria-label={label} className='kronk-stage'>
+      <div
+        ref={nodeRef}
+        role='region'
+        aria-label={label}
+        className='kronk-stage'
+      >
         <AutoSpaceIntro />
         {children}
       </div>
