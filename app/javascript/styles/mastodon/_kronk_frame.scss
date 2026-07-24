@@ -124,17 +124,24 @@
   }
 }
 
-// SpaceNav spans the full content width (nav-start to stage-end,
-// stopping before the right rail) and lays its two pills out
-// horizontally: SpaceBadge at the leading edge, SpaceViewPicker at
-// the trailing edge, both on the same horizontal line at the top of
-// Stage. The cell is `pointer-events: none` so clicks fall through
-// to the Stage content between the pills; the pills themselves stay
+// SpaceNav floats over the top of Stage — pinned to the viewport so
+// the two pills stay put as Stage content (including the SpaceHeader
+// title + tagline) scrolls beneath them. `position: fixed` rather
+// than a grid child, because Stage owns the scroll and grid cells
+// scroll with their siblings when the scroll host is an ancestor.
+// Insets: `top: 4.25rem` matches the grid's row-1 height (the
+// TopBand's visible chrome). `right: 7.75rem` matches the RightBand
+// fade strip width so the picker sits at the trailing edge of Stage
+// content, not under the sidebar fade. On mobile the right band
+// collapses and `right: 0` extends the row across the viewport.
+// The cell is `pointer-events: none` so clicks fall through to the
+// Stage content between the pills; the pills themselves stay
 // clickable via the `> *` reset.
 .kronk-frame__space-nav {
-  grid-column: nav-start / stage-end;
-  grid-row: 2;
-  position: relative;
+  position: fixed;
+  top: 4.25rem;
+  left: 0;
+  right: 7.75rem;
 
   // z-26 sits above the .kronk-stage layer (Kuestions Stage, z-25) so
   // the shared space badge is visible on Stage-based korners. Also
@@ -155,7 +162,7 @@
 
 @container frame (width <= 889px) {
   .kronk-frame__space-nav {
-    grid-column: 1 / -1;
+    right: 0;
     padding: 0.5rem 0.65rem;
   }
 }
