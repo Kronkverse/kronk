@@ -5,7 +5,7 @@ import { Stage } from './stage';
 // KornerShell — the canonical shell every /hub/<slug> korner sits in.
 //
 // The Kronk Frame already provides three chrome slots (AutoSpaceBadge,
-// AutoSpaceIntro, AutoSpaceViewPicker) via the manifest. This shell
+// AutoSpaceHeader, AutoSpaceViewPicker) via the manifest. This shell
 // completes the deal: it owns the Stage + the URL-to-view routing so
 // a korner only ever declares its views map + an outer wrapper. The
 // shape stays identical across every korner, and adherence to

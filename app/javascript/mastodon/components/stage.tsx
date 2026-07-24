@@ -4,7 +4,7 @@ import type { Ref } from 'react';
 import { scrollTop } from 'mastodon/scroll';
 import { isDevelopment } from 'mastodon/utils/environment';
 
-import { AutoSpaceIntro } from './auto_space_intro';
+import { AutoSpaceHeader } from './auto_space_header';
 
 // Kronk zonal layout — the Stage.
 //
@@ -70,9 +70,16 @@ export const Stage = forwardRef<StageRef, StageProps>(
       if (!node) return;
 
       const parasites: string[] = [];
-      if (node.querySelector('h1')) {
+      // The Frame-provided <AutoSpaceHeader> is a legitimate <h1>
+      // owner (marked `data-frame-header`). Any other <h1> in the
+      // subtree is a parasite — duplicating the same title the header
+      // already renders.
+      const foreignH1s = Array.from(node.querySelectorAll('h1')).filter(
+        (h) => !h.closest('[data-frame-header]'),
+      );
+      if (foreignH1s.length > 0) {
         parasites.push(
-          '<h1> — the space title is provided by <AutoSpaceBadge>',
+          '<h1> — the space title is provided by <AutoSpaceHeader>',
         );
       }
       if (node.querySelector('[role="tablist"], [role="tab"]')) {
@@ -94,7 +101,7 @@ export const Stage = forwardRef<StageRef, StageProps>(
         aria-label={label}
         className='kronk-stage'
       >
-        <AutoSpaceIntro />
+        <AutoSpaceHeader />
         {children}
       </div>
     );
