@@ -76,23 +76,23 @@ listens:
     cta_label: 'View event'
     cta_route: '/hub/kalendar/{event_id}'
   - event: wachuneed.offer.made
-    source_korner: wachuneed
+    source_korner: martketplace
     verb: offered
     source_type: Listing
     source_id_key: listing_id
     interaction: interactive
     cta_label: 'View offer'
-    cta_route: '/hub/wachuneed/listings/{listing_id}'
+    cta_route: '/hub/martketplace/listings/{listing_id}'
   - event: wachuneed.offer.accepted
-    source_korner: wachuneed
+    source_korner: martketplace
     verb: offer_accepted
     source_type: Listing
     source_id_key: listing_id
     interaction: interactive
     cta_label: 'View listing'
-    cta_route: '/hub/wachuneed/listings/{listing_id}'
+    cta_route: '/hub/martketplace/listings/{listing_id}'
   - event: wachuneed.offer.declined
-    source_korner: wachuneed
+    source_korner: martketplace
     verb: offer_declined
     source_type: Listing
     source_id_key: listing_id

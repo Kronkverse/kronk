@@ -303,8 +303,8 @@ export function Krews () {
   return import("../../krew").then(m => ({ default: m.Krews }));
 }
 
-export function Wachuneed () {
-  return import("../../wachuneed");
+export function Martketplace () {
+  return import("../../martketplace");
 }
 
 export function KrewDetail () {

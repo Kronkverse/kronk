@@ -1,5 +1,5 @@
 import { apiRequestGet } from 'mastodon/api';
-import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
+import type { ApiListingJSON } from 'mastodon/api_types/martketplace';
 
 // mARTketplace listings — split by scope so the two sub-views share a
 // client but hit the same server endpoint with different params.
@@ -8,7 +8,7 @@ import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
 //   wachugot  → the caller's own listings (all states).
 
 export const apiGetWachuneedListings = () =>
-  apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings');
+  apiRequestGet<ApiListingJSON[]>('v1/martketplace/listings');
 
 export const apiGetWachugotListings = () =>
-  apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings', { mine: 'true' });
+  apiRequestGet<ApiListingJSON[]>('v1/martketplace/listings', { mine: 'true' });
