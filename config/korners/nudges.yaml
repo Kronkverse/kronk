@@ -4,7 +4,9 @@
 slug: nudges
 name: Nudges
 purpose: 'To surface the activity that involves you — replies, reactions, prompts — as a living stream, not a bell.'
-icon: notifications
+icon:
+  material: raven
+  text_glyph: '◉'
 render_target: native
 version: 0.1.0
 

@@ -8,8 +8,9 @@
 
 slug: feed
 name: Home
-purpose: "To gather what the people and spaces you follow are sharing into one home timeline."
-icon: home
+purpose: 'To gather what the people and spaces you follow are sharing into one home timeline.'
+icon:
+  material: home
 render_target: native
 version: 0.1.0
 

@@ -4,8 +4,10 @@
 
 slug: klot
 name: Klot
-purpose: "To let kronkers share the phase of their cycle, not the data."
-icon: nights_stay
+purpose: 'To let kronkers share the phase of their cycle, not the data.'
+icon:
+  material: gynecology
+  text_glyph: 'Ł'
 render_target: native
 version: 0.1.0
 

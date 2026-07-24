@@ -4,7 +4,9 @@
 slug: kuestions
 name: Kuestions # rendered with Ƙ in nav
 purpose: 'To prompt kronkers to share by asking each other questions — turning curiosity into connection.'
-icon: question_mark
+icon:
+  material: question_mark
+  text_glyph: 'Ƙ'
 render_target: native
 version: 2.0.0 # rework: dedicated Question + Answer models + visibility gate
 

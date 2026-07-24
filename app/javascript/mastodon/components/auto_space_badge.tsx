@@ -16,28 +16,11 @@ import { SpaceBadge } from './space_badge';
 
 const HUB_ROUTE_RE = /^\/hub\/([a-z0-9-]+)/;
 
-// Per-slug display glyphs. Manifests carry `icon` (a Material Icons
-// name) but the display glyph is a distinct piece of identity — a
-// hand-picked character that reads as "this space" at a glance. Add
-// entries here as new korners take over Stage-based rendering. Any
-// slug not in the map falls back to the first letter of the space's
-// name.
-// Hand-picked text glyphs — deliberately NOT emoji, so a badge reads
-// as a Kronk letterform rather than colour-emoji chrome from the OS.
-// Add entries here as korners take over Stage-based rendering; a slug
-// without a mapping falls back to the first letter of the space name.
-const SLUG_TO_GLYPH: Record<string, string> = {
-  kuestions: 'Ƙ',
-  kommons: '✦',
-  nudges: '◉',
-  booth: 'Ƀ',
-  kalendar: 'Ķ',
-  kompass: 'Ǩ',
-  huddle: '◊',
-  inflow: '≈',
-  klot: 'Ł',
-  groups: 'ĸ', // Kronk vocab: slug stays `groups`, display label is "Krews".
-};
+// The badge glyph is now read from the manifest — each korner's
+// `icon.text_glyph` field carries a hand-picked character (definitely
+// NOT emoji, so the badge reads as a Kronk letterform rather than
+// colour-emoji chrome from the OS). Missing entries fall back to the
+// first letter of the space name so the layout doesn't collapse.
 
 export const AutoSpaceBadge: React.FC = () => {
   const location = useLocation();
@@ -50,6 +33,6 @@ export const AutoSpaceBadge: React.FC = () => {
   const korner = korners[slug];
   if (!korner) return null;
 
-  const glyph = SLUG_TO_GLYPH[slug] ?? korner.name.charAt(0).toUpperCase();
+  const glyph = korner.icon?.text_glyph ?? korner.name.charAt(0).toUpperCase();
   return <SpaceBadge glyph={glyph} name={korner.name} backTo='/hub' />;
 };

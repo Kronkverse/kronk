@@ -9,7 +9,9 @@
 slug: wachuneed
 name: Wachuneed
 purpose: 'To let kronkers offer and find creations, goods, and services person-to-person.'
-icon: inventory_2
+icon:
+  material: kronk_coin
+  text_glyph: '₭'
 render_target: native
 version: 2.0.0
 

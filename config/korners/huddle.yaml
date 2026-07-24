@@ -6,8 +6,10 @@
 
 slug: huddle
 name: Huddle
-purpose: "To give Kronk a room to be in together — live video for when presence beats a thread."
-icon: videocam
+purpose: 'To give Kronk a room to be in together — live video for when presence beats a thread.'
+icon:
+  material: diversity_2
+  text_glyph: '◊'
 render_target: native
 version: 2.0.0 # split from Kalendar in the rebuild
 

@@ -40,10 +40,19 @@ export interface ApiKornerComposeJSON {
   route: string;
 }
 
+// Manifest `icon:` is normalized server-side into an object shape.
+// Legacy string form is coerced into `{ material }` in
+// Kronk::KornerRegistry#normalize_icon.
+export interface ApiKornerIconJSON {
+  material?: string; // Material Symbols name (drives useKornerIcon)
+  glyph_path?: string; // Optional line-art SVG path (Hub tile)
+  text_glyph?: string; // Optional single-char breadcrumb glyph
+}
+
 export interface ApiKornerJSON {
   slug: string;
   name: string;
-  icon?: string;
+  icon?: ApiKornerIconJSON;
   render_target?: string;
   version?: string;
   resources?: ApiKornerResourceJSON[];

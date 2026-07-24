@@ -4,8 +4,10 @@
 
 slug: inflow
 name: Inflow
-purpose: "To offer a daily moment of Kosmic reflection — celestial navigation and a once-a-day dispatch."
-icon: diversity_2
+purpose: 'To offer a daily moment of Kosmic reflection — celestial navigation and a once-a-day dispatch.'
+icon:
+  material: cycle
+  text_glyph: '≈'
 render_target: native
 version: 2.0.0
 

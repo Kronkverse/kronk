@@ -5,12 +5,15 @@
 // useKornerIcon — the shadows and gradients only read as "chunky
 // tile" when the glyph inside is a line drawing, not a solid shape.
 //
-// Every currently-registered korner slug has a mapping here. When a
-// new manifest lands, add its path here (or fall back to the accent
-// dot). The paths are copied verbatim from the prototype so the
-// resulting Hub matches pixel-for-pixel.
+// Precedence: the manifest wins. If `manifest.icon.glyph_path` is
+// present, KornerGlyph renders that verbatim. Otherwise it falls
+// through to the built-in PATHS map keyed by slug (the prototype's
+// hand-drawn set). The manifest override is the escape hatch for
+// per-korner line-art evolutions without a code change.
 
 import type { FC, SVGProps } from 'react';
+
+import { useKorner } from 'mastodon/hooks/useKorner';
 
 // Each entry is the inner path/shape markup — the wrapping <svg> comes
 // from the KornerGlyph component so stroke settings stay uniform.
@@ -53,7 +56,8 @@ export const KornerGlyph: FC<{ slug: string } & SVGProps<SVGSVGElement>> = ({
   slug,
   ...svgProps
 }) => {
-  const inner = PATHS[slug] ?? FALLBACK_PATH;
+  const manifest = useKorner(slug);
+  const inner = manifest?.icon?.glyph_path ?? PATHS[slug] ?? FALLBACK_PATH;
   return (
     <svg
       viewBox='0 0 24 24'

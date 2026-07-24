@@ -7,7 +7,8 @@
 
 slug: hub
 name: Hub
-icon: apps
+icon:
+  material: hub
 render_target: native
 version: 0.1.0
 

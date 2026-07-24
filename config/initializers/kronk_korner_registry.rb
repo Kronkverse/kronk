@@ -174,7 +174,7 @@ module Kronk
         Manifest.new(
           slug: yaml['slug'],
           name: yaml['name'],
-          icon: yaml['icon'],
+          icon: normalize_icon(yaml['icon']),
           render_target: yaml['render_target'],
           version: yaml['version'],
           resources: Array(yaml['resources']),
@@ -200,6 +200,30 @@ module Kronk
       rescue => e
         Rails.logger.warn("[kronk:korner_registry] failed to parse #{path.basename}: #{e.message}")
         nil
+      end
+
+      # Normalise the manifest `icon:` field into a single shape the
+      # frontend can consume uniformly. Legacy manifests carry a bare
+      # Material name string; the new shape is a hash with:
+      #   material   — Material Symbols name (drives useKornerIcon)
+      #   glyph_path — inline SVG path data for the Hub tile line-art
+      #                (KornerGlyph)
+      #   text_glyph — single character for the AutoSpaceBadge
+      # Any of the sub-fields may be missing; consumers fall back
+      # (Material component missing → AccentCircle; glyph_path missing
+      # → KornerGlyph's built-in slug map or the FALLBACK stroke;
+      # text_glyph missing → derived from name initial).
+      def normalize_icon(raw)
+        case raw
+        when Hash
+          {
+            'material' => raw['material'].is_a?(String) ? raw['material'] : nil,
+            'glyph_path' => raw['glyph_path'].is_a?(String) ? raw['glyph_path'] : nil,
+            'text_glyph' => raw['text_glyph'].is_a?(String) ? raw['text_glyph'] : nil,
+          }.compact
+        when String
+          { 'material' => raw }
+        end
       end
 
       # 1.7.0 shape places security fields at top-level (permissions,
