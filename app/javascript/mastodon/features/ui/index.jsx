@@ -256,7 +256,10 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/directory' component={Directory} content={children} />
             <WrappedRoute path='/explore' component={Explore} content={children} />
             <WrappedRoute path="/orbit" component={Orbit} content={children} />
-            {signedIn && <WrappedRoute path="/huddle" component={Live} content={children} />}
+            {/* Huddle is a korner surface at /hub/huddle; the legacy
+                /huddle path forwards to it. */}
+            <Redirect from='/huddle' to='/hub/huddle' exact />
+            {signedIn && <WrappedRoute path='/hub/huddle' component={Live} content={children} />}
             <WrappedRoute path={["/booth/sets/:id", "/hub/booth/sets/:id"]} component={BoothSetPage} content={children} />
             {/* Native Booth. The non-exact /hub/booth match also catches the
                 lens sub-paths (/hub/booth/musik, /artists, …); the component
