@@ -14,8 +14,8 @@ import { klotMessages } from './phases';
 // The view keys below MUST agree with `views:` in config/korners/klot.yaml
 // — that's the same list AutoSpaceViewPicker uses to render tabs.
 //
-//   /hub/klot          → mine   (default view, first entry in views:)
-//   /hub/klot/circle   → circle (inbound projection)
+//   /hub/klot          → circle (default view — mates' phases visualised)
+//   /hub/klot/mine     → mine   (owner's own log + settings)
 
 export const Klot: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
@@ -25,10 +25,10 @@ export const Klot: React.FC<{ multiColumn?: boolean }> = () => {
       slug='klot'
       label={intl.formatMessage(klotMessages.title)}
       className='scrollable klot'
-      defaultView='mine'
+      defaultView='circle'
       views={{
-        mine: () => <KlotMineView />,
         circle: () => <KlotCircleView />,
+        mine: () => <KlotMineView />,
       }}
     >
       <p className='klot__sovereignty'>
