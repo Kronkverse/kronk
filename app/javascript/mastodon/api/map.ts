@@ -25,17 +25,6 @@ export interface ApiPresencePinJSON {
   self: boolean;
 }
 
-// A `type` (not `interface`) so it's assignable to the request helper's
-// Record<string, unknown> param type.
-export interface PlacePresenceParams {
-  lat: number;
-  lng: number;
-  precision: MapPrecision;
-  share_scope?: MapShareScope;
-  label?: string;
-  ttl_minutes?: number;
-}
-
 // Pins visible to me right now (Mates-gated projection).
 export const apiGetPresence = () =>
   apiRequestGet<ApiPresencePinJSON[]>('v1/map/presence');
@@ -47,8 +36,14 @@ export const apiGetSelfPresence = () =>
 // Place (or re-place) me. The raw coordinate is coarsened server-side before
 // it is stored — this sends the browser's reading, the server keeps only the
 // fuzzed point.
-export const apiPlacePresence = (params: PlacePresenceParams) =>
-  apiRequestPost<ApiPresencePinJSON>('v1/map/presence', params);
+export const apiPlacePresence = (params: {
+  lat: number;
+  lng: number;
+  precision: MapPrecision;
+  share_scope?: MapShareScope;
+  label?: string;
+  ttl_minutes?: number;
+}) => apiRequestPost<ApiPresencePinJSON>('v1/map/presence', params);
 
 // Remove me — hard delete, nothing retained.
 export const apiRemovePresence = () => apiRequestDelete('v1/map/presence');
