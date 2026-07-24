@@ -46,6 +46,35 @@ RSpec.describe Account do
         expect(subject.following?(bob)).to be false
       end
     end
+
+    describe '#mate?' do
+      it 'returns false when only one direction of the follow exists' do
+        subject.follow!(bob)
+        expect(subject.mate?(bob)).to be false
+      end
+
+      it 'returns true when the follow is mutual' do
+        subject.follow!(bob)
+        bob.follow!(subject)
+        expect(subject.mate?(bob)).to be true
+      end
+
+      it 'returns false when there is no relationship' do
+        expect(subject.mate?(bob)).to be false
+      end
+    end
+
+    describe '#mates' do
+      it 'includes accounts that mutually follow and excludes one-way follows' do
+        carol = Fabricate(:account, username: 'carol')
+        subject.follow!(bob)
+        bob.follow!(subject)
+        subject.follow!(carol) # one-way — not a Mate
+
+        expect(subject.mates).to include(bob)
+        expect(subject.mates).to_not include(carol)
+      end
+    end
   end
 
   describe '#local?' do

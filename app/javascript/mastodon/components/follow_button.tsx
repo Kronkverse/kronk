@@ -7,7 +7,8 @@ import classNames from 'classnames';
 import { useIdentity } from '@/mastodon/identity_context';
 import {
   fetchRelationships,
-  followAccount,
+  mateAccount,
+  unmateAccount,
   unmuteAccount,
 } from 'mastodon/actions/accounts';
 import { openModal } from 'mastodon/actions/modal';
@@ -18,38 +19,23 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { useBreakpoint } from '../features/ui/hooks/useBreakpoint';
 
+// Kronk — Mates. The connect button speaks the Mates vocabulary
+// (docs/kronk_feed_and_reach.md §1): Mate (send request) / Mating… (pending
+// outgoing request, tap to withdraw) / Unmate (remove an established, mutual
+// Mate) / Accept (the other side already asked you).
 const longMessages = defineMessages({
-  unfollow: { id: 'account.unfollow', defaultMessage: 'Unfollow' },
   unblock: { id: 'account.unblock_short', defaultMessage: 'Unblock' },
   unmute: { id: 'account.unmute_short', defaultMessage: 'Unmute' },
-  follow: { id: 'account.follow', defaultMessage: 'Follow' },
-  followBack: { id: 'account.follow_back', defaultMessage: 'Follow back' },
-  followRequest: {
-    id: 'account.follow_request',
-    defaultMessage: 'Request to follow',
-  },
-  followRequestCancel: {
-    id: 'account.follow_request_cancel',
-    defaultMessage: 'Cancel request',
-  },
+  mate: { id: 'account.mate', defaultMessage: 'Mate' },
+  mating: { id: 'account.mating', defaultMessage: 'Mating…' },
+  unmate: { id: 'account.unmate', defaultMessage: 'Unmate' },
+  mateAccept: { id: 'account.mate_accept', defaultMessage: 'Accept' },
   editProfile: { id: 'account.edit_profile', defaultMessage: 'Edit profile' },
 });
 
 const shortMessages = {
   ...longMessages, // Align type signature of shortMessages and longMessages
   ...defineMessages({
-    followBack: {
-      id: 'account.follow_back_short',
-      defaultMessage: 'Follow back',
-    },
-    followRequest: {
-      id: 'account.follow_request_short',
-      defaultMessage: 'Request',
-    },
-    followRequestCancel: {
-      id: 'account.follow_request_cancel_short',
-      defaultMessage: 'Cancel',
-    },
     editProfile: { id: 'account.edit_profile_short', defaultMessage: 'Edit' },
   }),
 };
@@ -69,7 +55,12 @@ export const FollowButton: React.FC<{
   const relationship = useAppSelector((state) =>
     accountId ? state.relationships.get(accountId) : undefined,
   );
-  const following = relationship?.following || relationship?.requested;
+  // A "connected" state (mutual Mate or an outgoing pending request) styles
+  // the button as secondary; an established Mate additionally reads as
+  // destructive, because the action is Unmate.
+  const isMate = relationship?.mate ?? false;
+  const isPending = relationship?.requested ?? false;
+  const connected = isMate || isPending;
 
   useEffect(() => {
     if (accountId && signedIn) {
@@ -96,17 +87,6 @@ export const FollowButton: React.FC<{
       return;
     } else if (relationship.muting) {
       dispatch(unmuteAccount(accountId));
-    } else if (account && relationship.following) {
-      dispatch(
-        openModal({ modalType: 'CONFIRM_UNFOLLOW', modalProps: { account } }),
-      );
-    } else if (account && relationship.requested) {
-      dispatch(
-        openModal({
-          modalType: 'CONFIRM_WITHDRAW_REQUEST',
-          modalProps: { account },
-        }),
-      );
     } else if (relationship.blocking) {
       dispatch(
         openModal({
@@ -114,8 +94,13 @@ export const FollowButton: React.FC<{
           modalProps: { account },
         }),
       );
+    } else if (relationship.mate || relationship.requested) {
+      // Unmate an established Mate, or withdraw a pending outgoing request.
+      dispatch(unmateAccount(accountId));
     } else {
-      dispatch(followAccount(accountId));
+      // Send a Mate request. If the other side already requested us,
+      // Mates::RequestService turns this into an immediate accept.
+      dispatch(mateAccount(accountId));
     }
   }, [dispatch, accountId, relationship, account, signedIn]);
 
@@ -124,16 +109,12 @@ export const FollowButton: React.FC<{
     labelLength === 'short' || (labelLength === 'auto' && isNarrow);
   const messages = useShortLabel ? shortMessages : longMessages;
 
-  const followMessage = account?.locked
-    ? messages.followRequest
-    : messages.follow;
-
   let label;
   let disabled =
     relationship?.blocked_by || account?.suspended || !!account?.moved;
 
   if (!signedIn) {
-    label = intl.formatMessage(followMessage);
+    label = intl.formatMessage(messages.mate);
   } else if (accountId === me) {
     label = intl.formatMessage(messages.editProfile);
   } else if (!relationship) {
@@ -141,19 +122,20 @@ export const FollowButton: React.FC<{
   } else if (relationship.muting) {
     label = intl.formatMessage(messages.unmute);
     disabled = false;
-  } else if (relationship.following) {
-    label = intl.formatMessage(messages.unfollow);
-    disabled = false;
   } else if (relationship.blocking) {
     label = intl.formatMessage(messages.unblock);
     disabled = false;
-  } else if (relationship.requested) {
-    label = intl.formatMessage(messages.followRequestCancel);
+  } else if (relationship.mate) {
+    label = intl.formatMessage(messages.unmate);
     disabled = false;
-  } else if (relationship.followed_by && !account?.locked) {
-    label = intl.formatMessage(messages.followBack);
+  } else if (relationship.requested) {
+    label = intl.formatMessage(messages.mating);
+    disabled = false;
+  } else if (relationship.requested_by) {
+    // They have asked to be your Mate — tapping accepts (auto-mutual).
+    label = intl.formatMessage(messages.mateAccept);
   } else {
-    label = intl.formatMessage(followMessage);
+    label = intl.formatMessage(messages.mate);
   }
 
   if (accountId === me) {
@@ -175,9 +157,9 @@ export const FollowButton: React.FC<{
     <Button
       onClick={handleClick}
       disabled={disabled}
-      secondary={following}
+      secondary={connected}
       compact={compact}
-      className={classNames(className, { 'button--destructive': following })}
+      className={classNames(className, { 'button--destructive': isMate })}
     >
       {label}
     </Button>

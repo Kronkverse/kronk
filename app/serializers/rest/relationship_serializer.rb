@@ -5,7 +5,7 @@ class REST::RelationshipSerializer < ActiveModel::Serializer
 
   attributes :id, :following, :showing_reblogs, :notifying, :languages, :followed_by,
              :blocking, :blocked_by, :muting, :muting_notifications,
-             :requested, :requested_by, :domain_blocking, :endorsed, :note
+             :requested, :requested_by, :domain_blocking, :endorsed, :note, :mate
 
   def id
     object.id.to_s
@@ -70,5 +70,12 @@ class REST::RelationshipSerializer < ActiveModel::Serializer
 
   def note
     (instance_options[:relationships].account_note[object.id] || {})[:comment] || ''
+  end
+
+  # Kronk — Mates. True when the follow graph is mutual in both directions.
+  # The canonical product-level relationship (see Account#mate?); the
+  # frontend consumes this instead of re-deriving `following && followed_by`.
+  def mate
+    following && followed_by ? true : false
   end
 end

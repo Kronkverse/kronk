@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition --
+ * `cancelled` mutates in the useEffect cleanup after the async fetch
+ * reads it. TS control-flow doesn't track the mutation across the
+ * closure so the checks look "always truthy/falsy", but the guards
+ * are load-bearing: without them setState fires after unmount. */
+
 import { useEffect, useState, useCallback } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
@@ -5,11 +11,9 @@ import type { MessageDescriptor } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import EditNoteIcon from '@/material-icons/400-24px/edit_note.svg?react';
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';
-import Column from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { SettingRow } from 'mastodon/features/settings/setting_widgets';
+import { Stage } from 'mastodon/components/stage';
+import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
 
 // Posting defaults section (settings rebuild §7; settings.posting). The
@@ -62,9 +66,7 @@ interface PostingPayload {
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-export const PostingSettings: React.FC<{ multiColumn?: boolean }> = ({
-  multiColumn,
-}) => {
+export const PostingSettings: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const [schema, setSchema] = useState<SettingDescriptor[]>([]);
   const [values, setValues] = useState<Record<string, unknown>>({});
@@ -109,6 +111,13 @@ export const PostingSettings: React.FC<{ multiColumn?: boolean }> = ({
     [values],
   );
 
+  const handleSet = useCallback(
+    (name: string, value: unknown) => {
+      void save(name, value);
+    },
+    [save],
+  );
+
   const statusLabel =
     status === 'saving'
       ? intl.formatMessage(messages.saving)
@@ -119,47 +128,37 @@ export const PostingSettings: React.FC<{ multiColumn?: boolean }> = ({
           : '';
 
   return (
-    <Column>
-      <ColumnHeader
-        title={intl.formatMessage(messages.title)}
-        icon='edit_note'
-        iconComponent={EditNoteIcon}
-        multiColumn={multiColumn}
-        showBackButton
-      />
-
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      <div className='scrollable appearance-settings'>
-        <header className='appearance-settings__hero'>
-          <span className='appearance-settings__hero-glyph' aria-hidden='true'>
-            <EditNoteIcon />
-          </span>
-          <div>
-            <h1 className='appearance-settings__hero-title'>
-              {intl.formatMessage(messages.title)}
-            </h1>
-            <p className='appearance-settings__hero-intro'>
-              {intl.formatMessage(messages.intro)}
-            </p>
-          </div>
+      <div className='scrollable posting-settings'>
+        <header className='space-header' data-frame-header=''>
+          <h1 className='space-header__title'>
+            {intl.formatMessage(messages.title)}
+          </h1>
+          <p className='space-header__tagline'>
+            {intl.formatMessage(messages.intro)}
+          </p>
+        </header>
+
+        <div className='posting-settings__status-row'>
           <span
-            className={`appearance-settings__status appearance-settings__status--${status}`}
+            className={`posting-settings__status posting-settings__status--${status}`}
             role='status'
           >
             {statusLabel}
           </span>
-        </header>
+        </div>
 
         {loaded && (
-          <div className='appearance-settings__fields'>
+          <div className='posting-settings__fields'>
             {schema.map((setting) => {
               const labelMsg = LABELS[setting.name];
               const hintMsg = HINTS[setting.name];
               return (
-                <SettingRow
+                <NamedSettingRow
                   key={setting.name}
                   setting={{
                     ...setting,
@@ -169,15 +168,16 @@ export const PostingSettings: React.FC<{ multiColumn?: boolean }> = ({
                       : undefined,
                   }}
                   value={values[setting.name]}
-                  onChange={(value) => void save(setting.name, value)}
+                  onSet={handleSet}
                 />
               );
             })}
           </div>
         )}
       </div>
-    </Column>
+    </Stage>
   );
 };
 
+// eslint-disable-next-line import/no-default-export
 export default PostingSettings;

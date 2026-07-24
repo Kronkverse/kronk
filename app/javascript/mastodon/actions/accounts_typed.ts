@@ -47,6 +47,16 @@ export const rejectFollowRequestSuccess = createAction<{ id: string }>(
   'accounts/followRequestReject/SUCCESS',
 );
 
+// Kronk — Mates. Terminal success for accepting/declining a Mate request;
+// the user_lists reducer removes the id from the mate_requests list.
+export const acceptMateRequestSuccess = createAction<{ id: string }>(
+  'accounts/mateRequestAccept/SUCCESS',
+);
+
+export const rejectMateRequestSuccess = createAction<{ id: string }>(
+  'accounts/mateRequestReject/SUCCESS',
+);
+
 export const followAccountRequest = createAction(
   'accounts/follow/REQUEST',
   actionWithSkipLoadingTrue<{ id: string; locked: boolean }>,
