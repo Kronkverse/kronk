@@ -1,22 +1,28 @@
-# Kompass (`kompass`)
+# Map (`map`)
 
-**Manifest:** `config/korners/kompass.yaml` · **Mount:** `/hub/kompass` · **Status:** stub (route ships a placeholder; no backend yet)
+**Manifest:** `config/korners/map.yaml` · **Mount:** `/hub/map` · **Status:** prototype (iframe surface; no backend yet)
+
+> Renamed from **Kompass** → **Map** (its original Kommons-proposal name,
+> #116969555027300161). The old `/hub/kompass` path 301-redirects to
+> `/hub/map`.
 
 ## Purpose
 
-Kompass lets people **signal presence on their own terms** — who's
+Map lets people **signal presence on their own terms** — who's
 around, only if they choose to say. Every share is a deliberate act:
 nothing is broadcast unless the user flips a toggle each session. The
 manifest `hub_teaser`: *"Who's around, if they choose to say."*
 
-## Current shape (1.7.x)
+## Current shape (2.0.0)
 
-Manifest-declared, backend not built. What exists on this branch:
+Manifest-declared with a prototype front end; backend not built. What
+exists on this branch:
 
-- **Manifest** — `config/korners/kompass.yaml`: `render_target: native`,
-  `version: 0.0.0`, `enforced: false`.
-- **Route** — `/hub/kompass` mounts `KompassStub`
-  (`features/ui/index.jsx`); a placeholder.
+- **Manifest** — `config/korners/map.yaml`: `render_target: native`,
+  `version: 0.0.0`, `enforced: true`.
+- **Route** — `/hub/map` mounts `MapV2` (`features/map_v2/`), which
+  iframes the hand-authored prototype at `public/map-preview.html`. The
+  surface is read-only until the backend lands.
 - **No models yet** — planned primary resource `presence_states` under
   the `presence_` DB namespace (the manifest notes it *may become
   Redis-only* depending on retention).
@@ -41,10 +47,10 @@ Manifest-declared, backend not built. What exists on this branch:
 
 ## Nodes
 
-- **`kompass.index`** — `/hub/kompass`, `lifecycle: soon`, SPA.
+- **`map.index`** — `/hub/map`, `lifecycle: soon`, SPA.
 
 ## Related
 
 - `../kronk_korner_spec.md` — the korner framework spec (§New korners).
-- `../rebuild/implementation_plan.md` — the rebuild plan (Kompass presence + real-time infra).
-- `config/korners/kompass.yaml` — the manifest this doc is drawn from.
+- `../rebuild/implementation_plan.md` — the rebuild plan (Map presence + real-time infra).
+- `config/korners/map.yaml` — the manifest this doc is drawn from.

@@ -18,7 +18,7 @@ const KORNERS = [
   'kalendar',
   'huddle',
   'market',
-  'kompass',
+  'map',
   'seeds',
   'moments',
   'kuestions',

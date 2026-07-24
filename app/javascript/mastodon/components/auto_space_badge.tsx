@@ -32,7 +32,6 @@ const SLUG_TO_GLYPH: Record<string, string> = {
   nudges: '◉',
   booth: 'Ƀ',
   kalendar: 'Ķ',
-  kompass: 'Ǩ',
   huddle: '◊',
   inflow: '≈',
   klot: 'Ł',

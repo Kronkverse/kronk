@@ -33,7 +33,7 @@ const SLUG_TO_ICON: Record<string, IconProp> = {
   nudges: NotificationsIcon, // bell — nudges
   moments: HourglassIcon, // hourglass — ephemeral
   albutts: PhotoLibraryIcon, // photo stack — albums
-  kompass: ExploreIcon, // compass — presence
+  map: ExploreIcon, // compass — presence
   groups: GroupsIcon, // group silhouettes
   klot: ArticleIcon, // journal page — private log (proxy for nights_stay)
   you: StarIcon, // four-point star — Your Own Universe (proxy for self_improvement)

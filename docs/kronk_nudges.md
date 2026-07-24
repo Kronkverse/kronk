@@ -145,7 +145,7 @@ Post-share cards render a shared Status as a proper card, not a raw link. Reacti
 
 - **Private-by-construction.** No conversation content is ever projected to a feed.
 - **No federation.** Nudges is local-only.
-- **No presence signals.** No online/last-seen/typing indicators anywhere. Last-seen is an inference leak of the same class already closed by omitting `updated_at` from the Kompass location API; the same discipline applies here. Any future liveness cue must be consent-gated and per-conversation, never ambient.
+- **No presence signals.** No online/last-seen/typing indicators anywhere. Last-seen is an inference leak of the same class already closed by omitting `updated_at` from the Map location API; the same discipline applies here. Any future liveness cue must be consent-gated and per-conversation, never ambient.
 - **Interactive-vs-passive split** is honoured on every nudge render: interactive → reply-able in-context; passive → deep-link only.
 - **Quiet hours** hold delivery in-window; **per-type push toggles** (owned by each korner) are respected.
 - **Reaction cap = 3** distinct per message, enforced server-side.

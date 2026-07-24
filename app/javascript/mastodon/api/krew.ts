@@ -12,7 +12,7 @@ export type KrewKornerSlug =
   | 'huddle'
   | 'kalendar'
   | 'kommons'
-  | 'kompass'
+  | 'map'
   | 'albutts'
   | 'kuestions';
 
