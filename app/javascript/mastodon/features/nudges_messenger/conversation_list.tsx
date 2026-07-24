@@ -7,6 +7,8 @@ import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import type { ApiNudgeConversationJSON } from 'mastodon/api_types/nudges_conversations';
 
 import { ConversationRow } from './conversation_row';
+import { KronkNudgerRow } from './kronk_nudger_row';
+import { KRONK_CONVERSATION_ID } from './kronk_system';
 import { MatePicker } from './mate_picker';
 
 const messages = defineMessages({
@@ -117,6 +119,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       )}
 
       <ul className='nudges-sidebar__list'>
+        {query.trim() === '' && (
+          <KronkNudgerRow
+            active={activeId === KRONK_CONVERSATION_ID}
+            onOpen={onOpen}
+          />
+        )}
         {filtered.map((conversation) => (
           <ConversationRow
             key={conversation.id}
