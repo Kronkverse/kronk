@@ -11,7 +11,7 @@
 Map lets people **signal presence on their own terms** — who's
 around, only if they choose to say. Every share is a deliberate act:
 nothing is broadcast unless the user flips a toggle each session. The
-manifest `hub_teaser`: *"Who's around, if they choose to say."*
+manifest `hub_teaser`: _"Who's around, if they choose to say."_
 
 ## Current shape (2.0.0)
 
@@ -24,8 +24,8 @@ exists on this branch:
   iframes the hand-authored prototype at `public/map-preview.html`. The
   surface is read-only until the backend lands.
 - **No models yet** — planned primary resource `presence_states` under
-  the `presence_` DB namespace (the manifest notes it *may become
-  Redis-only* depending on retention).
+  the `presence_` DB namespace (the manifest notes it _may become
+  Redis-only_ depending on retention).
 - **Infrastructure-heavy** — presence needs real-time transport
   (WebSocket or similar) that hasn't been built; the manifest flags this
   as one of the more infrastructure-heavy 2.x korners.

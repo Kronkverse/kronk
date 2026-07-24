@@ -11,8 +11,9 @@
 
 slug: settings
 name: Settings
-purpose: "To put the controls for your Kronk experience in one place, so the platform bends to you."
-icon: settings
+purpose: 'To put the controls for your Kronk experience in one place, so the platform bends to you.'
+icon:
+  material: settings
 render_target: native
 version: 0.1.0
 

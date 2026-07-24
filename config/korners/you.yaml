@@ -18,11 +18,8 @@
 slug: you
 name: YOU
 tagline: 'Your Own Universe, a place to peer into the mirror and see yourself.'
-icon: star # kosmic four-point star — matches "Your Own Universe" framing;
-# useKornerIcon.tsx wires slug 'you' → StarIcon accordingly. (The
-# original preference was `self_improvement`, which isn't in the
-# shipped material-icons set — substituted per the same pattern
-# huddle/klot/tree use for unshipped icons.)
+icon:
+  material: snowflake
 render_target: native
 version: 0.1.0
 enforced: false

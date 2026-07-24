@@ -5,7 +5,9 @@ slug: booth
 name: The Booth
 purpose: 'To give Kronk a stage for music — DJ sets and mixes shared as living sound.'
 tagline: 'Shared self expression through the magic of audial art.'
-icon: headphones
+icon:
+  material: headphones
+  text_glyph: 'Ƀ'
 render_target: native
 version: 0.1.0
 
