@@ -155,10 +155,11 @@ namespace :kommons do
       end
 
       log.call("#{changed} proposal(s) #{dry_run ? 'to remap' : 'remapped'}.")
-      return if unmapped.empty?
 
-      log.call('Stale node_ids with no mapping (add them to `remap` in this task):')
-      unmapped.each { |id, nid| log.call("  ##{id}  #{nid}") }
+      unless unmapped.empty?
+        log.call('Stale node_ids with no mapping (add them to `remap` in this task):')
+        unmapped.each { |id, nid| log.call("  ##{id}  #{nid}") }
+      end
     end
   end
 end
