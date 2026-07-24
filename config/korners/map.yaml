@@ -21,12 +21,22 @@ icon:
 render_target: native
 version: 0.0.0
 
+security:
+  permissions:
+    - read:accounts # presence read — the Mates-gated projection endpoint
+    - write:accounts # place / remove your own pin
+  visibility_scopes:
+    - map_presence_viewer # implicit; enforced per-row by the Mates gate + share_scope
+  maintainers:
+    - moderator # nominal; no cross-user moderation actions exist for presence
+  federates: false # location is local-only, never federated — by design
+
 resources:
   - name: presence_states
     primary: true
 
 storage:
-  db_namespace: presence_ # planned; may become Redis-only depending on retention
+  db_namespace: presence_ # presence_states (Postgres); ephemeral — bounded by expires_at, hard-deleted on remove
   media_prefix: spaces/map/
 
 feed_projection: # no feed projection — presence is not a feed item
