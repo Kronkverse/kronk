@@ -73,12 +73,11 @@ module Nudges
       @actor.id == @recipient.id
     end
 
-    # Mates = mutual follow. Both directions must exist. This is the
+    # Mates = mutual follow (canonical: Account#mate?). This is the
     # Mates-only privacy stance per amendment §Non-Mate nudges. A
     # follower-only relationship does not qualify.
     def mates?
-      Follow.exists?(account: @actor, target_account: @recipient) &&
-        Follow.exists?(account: @recipient, target_account: @actor)
+      @actor.mate?(@recipient)
     end
 
     def ensure_conversation

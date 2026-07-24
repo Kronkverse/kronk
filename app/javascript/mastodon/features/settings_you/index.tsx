@@ -2,9 +2,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import PersonIcon from '@/material-icons/400-24px/person.svg?react';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 import {
   useSettingsSections,
   SectionRow,
@@ -23,39 +21,24 @@ const messages = defineMessages({
   },
 });
 
-export const SettingsYou: React.FC<{ multiColumn?: boolean }> = ({
-  multiColumn,
-}) => {
+export const SettingsYou: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const sections = useSettingsSections();
 
   return (
-    <Column>
-      <ColumnHeader
-        title={intl.formatMessage(messages.title)}
-        icon='person'
-        iconComponent={PersonIcon}
-        multiColumn={multiColumn}
-        showBackButton
-      />
-
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
       <div className='scrollable settings-nav'>
-        <header className='settings-nav__hero'>
-          <span className='settings-nav__hero-glyph' aria-hidden='true'>
-            <PersonIcon />
-          </span>
-          <div>
-            <h1 className='settings-nav__hero-title'>
-              {intl.formatMessage(messages.title)}
-            </h1>
-            <p className='settings-nav__hero-intro'>
-              {intl.formatMessage(messages.intro)}
-            </p>
-          </div>
+        <header className='space-header' data-frame-header=''>
+          <h1 className='space-header__title'>
+            {intl.formatMessage(messages.title)}
+          </h1>
+          <p className='space-header__tagline'>
+            {intl.formatMessage(messages.intro)}
+          </p>
         </header>
 
         <div className='settings-nav__list'>
@@ -64,6 +47,6 @@ export const SettingsYou: React.FC<{ multiColumn?: boolean }> = ({
           ))}
         </div>
       </div>
-    </Column>
+    </Stage>
   );
 };

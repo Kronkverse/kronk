@@ -74,6 +74,10 @@ export function FollowRequests () {
   return import('../../follow_requests');
 }
 
+export function MateRequests () {
+  return import('../../mate_requests');
+}
+
 export function FavouritedStatuses () {
   return import('../../favourited_statuses');
 }
@@ -239,6 +243,10 @@ export function Governance () {
   return import("../../governance").then(m => ({ default: m.Governance }));
 }
 
+export function KommonsSettings () {
+  return import("../../governance/settings");
+}
+
 export function KommonsProposal () {
   return import("../../governance/proposal_page").then(m => ({ default: m.ProposalPage }));
 }
@@ -321,6 +329,10 @@ export function KrewNew () {
 
 export function Klot () {
   return import("../../klot").then(m => ({ default: m.Klot }));
+}
+
+export function KlotSettings () {
+  return import("../../klot/settings");
 }
 
 export function Hub () {

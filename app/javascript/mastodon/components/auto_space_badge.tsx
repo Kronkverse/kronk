@@ -15,6 +15,10 @@ import { SpaceBadge } from './space_badge';
 // promise real.
 
 const HUB_ROUTE_RE = /^\/hub\/([a-z0-9-]+)/;
+// On /hub/<slug>/settings, AutoSettingsBadge takes over the SpaceNav
+// slot (see components/auto_settings_badge.tsx). Skip here so the two
+// don't double up.
+const SETTINGS_SUBROUTE_RE = /^\/hub\/[a-z0-9-]+\/settings(?:\/|$)/;
 
 // The badge glyph is now read from the manifest — each korner's
 // `icon.text_glyph` field carries a hand-picked character (definitely
@@ -25,6 +29,8 @@ const HUB_ROUTE_RE = /^\/hub\/([a-z0-9-]+)/;
 export const AutoSpaceBadge: React.FC = () => {
   const location = useLocation();
   const korners = useAppSelector((state) => state.korners);
+
+  if (SETTINGS_SUBROUTE_RE.test(location.pathname)) return null;
 
   const match = HUB_ROUTE_RE.exec(location.pathname);
   const slug = match?.[1];

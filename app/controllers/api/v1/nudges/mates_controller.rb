@@ -14,11 +14,8 @@ class Api::V1::Nudges::MatesController < Api::BaseController
   def index
     limit = [params.fetch(:limit, DEFAULT_LIMIT).to_i, MAX_LIMIT].min
 
-    following_ids = current_account.active_relationships.pluck(:target_account_id)
-    follower_ids  = current_account.passive_relationships.pluck(:account_id)
-    mate_ids      = following_ids & follower_ids
-
-    accounts = Account.where(id: mate_ids).order(:username).limit(limit)
+    # Canonical Mates set (mutual follow) — see Account#mate?/#mates.
+    accounts = current_account.mates.order(:username).limit(limit)
     render json: accounts, each_serializer: REST::AccountSerializer
   end
 end
