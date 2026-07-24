@@ -44,7 +44,7 @@ class KrewsPhase3aAddShapeFields < ActiveRecord::Migration[8.0]
   def up
     safety_assured do
       # ── krews ────────────────────────────────────────────────────
-      add_reference :krews, :seeded_by, foreign_key: { to_table: :accounts, on_delete: :nullify }, null: true
+      add_reference :krews, :seeded_by_account, foreign_key: { to_table: :accounts, on_delete: :nullify }, null: true
       add_column    :krews, :access, :string, default: 'open', null: false
       add_column    :krews, :invite_token, :string, null: true
       add_column    :krews, :member_count, :integer, default: 0, null: false
