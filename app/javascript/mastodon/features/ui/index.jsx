@@ -110,6 +110,7 @@ import {
   Krews,
   KrewDetail,
   KrewNew,
+  Klot,
   MomentsStub,
   AlbuttsStub,
   KornerSettings,
@@ -288,6 +289,9 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/hub/krew/discover' exact component={Krews} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/:id' component={KrewDetail} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew' component={Krews} content={children} />}
+            {/* Klot — cycle tracker (KRONK_TIDES). Requires signed-in
+                because the client immediately hits /api/v1/klot/self. */}
+            {signedIn && <WrappedRoute path='/hub/klot' component={Klot} content={children} />}
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
             {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
