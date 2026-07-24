@@ -124,19 +124,44 @@
   }
 }
 
+// SpaceNav floats over the top of Stage — pinned to the viewport so
+// the two pills stay put as Stage content (including the SpaceHeader
+// title + tagline) scrolls beneath them. `position: fixed` rather
+// than a grid child, because Stage owns the scroll and grid cells
+// scroll with their siblings when the scroll host is an ancestor.
+// Insets: `top: 4.25rem` matches the grid's row-1 height (the
+// TopBand's visible chrome). `right: 7.75rem` matches the RightBand
+// fade strip width so the picker sits at the trailing edge of Stage
+// content, not under the sidebar fade. On mobile the right band
+// collapses and `right: 0` extends the row across the viewport.
+// The cell is `pointer-events: none` so clicks fall through to the
+// Stage content between the pills; the pills themselves stay
+// clickable via the `> *` reset.
 .kronk-frame__space-nav {
-  grid-column: nav-start / nav-end;
-  grid-row: 2;
-  position: relative;
+  position: fixed;
+
+  // Vertical: sit at the height of the SpaceHeader's <h1>, not at
+  // the very top of Stage. Stage top = 4.25rem (grid row-1);
+  // SpaceHeader adds 1.75rem of its own top padding, so the h1 sits
+  // at ~6rem viewport top. Match that so the pills read as chrome
+  // aligned with the title, not floating above it.
+  top: 5.25rem;
+
+  // Horizontal: inset from both edges so the pills breathe. `left`
+  // clears the outer edge of the nav column; `right` clears the
+  // RightBand fade strip (7.75rem) with the same breathing room.
+  left: 1.5rem;
+  right: 9.25rem;
 
   // z-26 sits above the .kronk-stage layer (Kuestions Stage, z-25) so
   // the shared space badge is visible on Stage-based korners. Also
   // above the TopBand/RightBand fade strips (z-24).
   z-index: 26;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 0.35rem;
-  padding: 1rem 0.65rem;
   pointer-events: none;
 
   > * {
@@ -146,12 +171,11 @@
 
 @container frame (width <= 889px) {
   .kronk-frame__space-nav {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 0.5rem 0.65rem;
+    // Mobile: right band collapses (no 7.75rem to skip), and the
+    // TopBand shrinks so the pills tuck closer to the top edge.
+    top: 3.5rem;
+    left: 0.85rem;
+    right: 0.85rem;
   }
 }
 
@@ -324,21 +348,17 @@
 // Only the current view pill is visible by default. Tap reveals the
 // other views underneath. Selecting one closes the dropdown and swaps
 // the trigger label. Prototype: v11.
-// Rendered as a flow child of .kronk-frame__space-nav — sits below
-// the space badge on desktop (SpaceNav flex column), opposite end of
-// the row on mobile (SpaceNav flex row + justify-content:
-// space-between).
+// Rendered as a flow child of .kronk-frame__space-nav — SpaceNav lays
+// out its two pills horizontally with `justify-content: space-between`,
+// so the badge lands at the leading edge and the view picker at the
+// trailing edge on the same horizontal line. `align-items: flex-end`
+// anchors the picker's dropdown to the right so it grows down-and-left
+// from the trigger pill.
 .space-view-picker {
-  align-self: flex-start;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  align-items: flex-start;
-
-  @container frame (width <= 889px) {
-    align-self: flex-end;
-    align-items: flex-end;
-  }
+  align-items: flex-end;
 
   &__trigger {
     display: inline-flex;
