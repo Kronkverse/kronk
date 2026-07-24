@@ -320,6 +320,14 @@ namespace :api, format: false do
       end
     end
 
+    # Kronk — Mates: incoming Mate requests + accept/decline (Requests view).
+    resources :mate_requests, only: [:index] do
+      member do
+        post :accept
+        post :reject
+      end
+    end
+
     namespace :notifications do
       resources :requests, only: [:index, :show] do
         collection do
@@ -391,6 +399,8 @@ namespace :api, format: false do
       member do
         post :follow
         post :unfollow
+        post :mate
+        post :unmate
         post :remove_from_followers
         post :block
         post :unblock
