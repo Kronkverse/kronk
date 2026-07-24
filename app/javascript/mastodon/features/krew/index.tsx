@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 import { apiGetKrews } from 'mastodon/api/krew';
 import type { ApiKrewJSON } from 'mastodon/api/krew';
@@ -19,8 +19,6 @@ import { Stage } from 'mastodon/components/stage';
 
 const messages = defineMessages({
   title: { id: 'krew.title', defaultMessage: 'Krews' },
-  yours: { id: 'krew.lens.yours', defaultMessage: 'Yours' },
-  discover: { id: 'krew.lens.discover', defaultMessage: 'Discover' },
   new: { id: 'krew.new', defaultMessage: 'Plant a new Krew' },
   members: {
     id: 'krew.members_count',
@@ -115,7 +113,13 @@ const KrewRow: React.FC<{ krew: ApiKrewJSON }> = ({ krew }) => {
 
 export const Krews = () => {
   const intl = useIntl();
-  const [lens, setLens] = useState<Lens>('yours');
+  // The lens is the SpaceNav view — derived from the URL so the shared
+  // AutoSpaceViewPicker drives it. `/hub/krew` = Yours (default),
+  // `/hub/krew/discover` = Discover. No in-page tab state.
+  const location = useLocation();
+  const lens: Lens = location.pathname.endsWith('/discover')
+    ? 'discover'
+    : 'yours';
   const [krews, setKrews] = useState<ApiKrewJSON[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -138,13 +142,6 @@ export const Krews = () => {
     void refetch(lens);
   }, [lens, refetch]);
 
-  const handleYours = useCallback(() => {
-    setLens('yours');
-  }, []);
-  const handleDiscover = useCallback(() => {
-    setLens('discover');
-  }, []);
-
   const emptyMessages = useMemo(
     () =>
       lens === 'yours'
@@ -159,38 +156,7 @@ export const Krews = () => {
   return (
     <Stage label={intl.formatMessage(messages.title)}>
       <div className='scrollable krew-page'>
-        <header className='krew-page__hero'>
-          <h1 className='krew-page__hero-title'>
-            <FormattedMessage {...messages.title} />
-          </h1>
-        </header>
-
         <div className='krew-page__toolbar'>
-          <div
-            className='krew-page__tabs'
-            role='tablist'
-            aria-label={intl.formatMessage(messages.title)}
-          >
-            <button
-              type='button'
-              role='tab'
-              aria-selected={lens === 'yours'}
-              onClick={handleYours}
-              className={`krew-page__tab ${lens === 'yours' ? 'krew-page__tab--active' : ''}`}
-            >
-              <FormattedMessage {...messages.yours} />
-            </button>
-            <button
-              type='button'
-              role='tab'
-              aria-selected={lens === 'discover'}
-              onClick={handleDiscover}
-              className={`krew-page__tab ${lens === 'discover' ? 'krew-page__tab--active' : ''}`}
-            >
-              <FormattedMessage {...messages.discover} />
-            </button>
-          </div>
-
           <Link to='/hub/krew/new' className='krew-page__cta'>
             <span className='krew-page__cta-plus' aria-hidden='true'>
               +

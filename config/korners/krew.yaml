@@ -78,6 +78,11 @@ compose:
 hub_teaser:
   static: 'Shareable, multi-poster spaces.'
 
+# SpaceNav view switcher (first entry = default, bare /hub/krew).
+views:
+  - { key: yours, label: Yours }
+  - { key: discover, label: Discover }
+
 launch:
   blurb: 'Krews — a defined group of people you can share to, without a feed of its own.'
   cta: 'Start a krew'
