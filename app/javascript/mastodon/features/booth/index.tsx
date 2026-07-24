@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -10,6 +10,12 @@ import api from 'mastodon/api';
 import { Stage } from 'mastodon/components/stage';
 import { useIdentity } from 'mastodon/identity_context';
 
+import {
+  BoothArtistChip,
+  artistInitial,
+  artistStatLabel,
+} from './components/booth_artist_chip';
+import type { BoothArtist } from './components/booth_artist_chip';
 import { BoothDock } from './components/booth_dock';
 import { BoothGridCard } from './components/booth_grid_card';
 import { EditForm } from './components/edit_form';
@@ -50,12 +56,58 @@ const messages = defineMessages({
     id: 'booth.lens_soon',
     defaultMessage: 'Coming soon — this lens lands in a follow-up.',
   },
+  artistsEmpty: {
+    id: 'booth.artists_empty',
+    defaultMessage: 'No artists yet — publish a set to appear here.',
+  },
+  backToArtists: {
+    id: 'booth.back_to_artists',
+    defaultMessage: 'All artists',
+  },
 });
 
 function lensFromPath(pathname: string): Lens {
   const match = /^\/hub\/booth\/([a-z]+)/.exec(pathname);
   const seg = match?.[1];
   return seg && LENS_KEYS.includes(seg) ? (seg as Lens) : 'musik';
+}
+
+// The artist detail path is `/hub/booth/artists/<encoded-name>`; the
+// roster is bare `/hub/booth/artists`. Returns the decoded artist name,
+// or null on the roster / other lenses.
+function artistFromPath(pathname: string): string | null {
+  const match = /^\/hub\/booth\/artists\/(.+)$/.exec(pathname);
+  if (!match?.[1]) return null;
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
+}
+
+// Group the loaded sets into an artist roster: one entry per distinct
+// `artist_name`, with set count + summed play count. Sorted by set count
+// then plays, both descending. Krates are omitted (no backend).
+function deriveArtists(sets: BoothSet[]): BoothArtist[] {
+  const byName = new Map<string, BoothArtist>();
+  for (const set of sets) {
+    const name = set.artist_name.trim();
+    if (!name) continue;
+    const existing = byName.get(name);
+    if (existing) {
+      existing.setCount += 1;
+      existing.totalPlays += set.play_count;
+    } else {
+      byName.set(name, {
+        name,
+        setCount: 1,
+        totalPlays: set.play_count,
+      });
+    }
+  }
+  return [...byName.values()].sort(
+    (a, b) => b.setCount - a.setCount || b.totalPlays - a.totalPlays,
+  );
 }
 
 const Booth: React.FC<{ multiColumn?: boolean }> = () => {
@@ -91,6 +143,39 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
     },
     [history],
   );
+
+  // Artists lens — roster derived from the loaded sets; detail is the
+  // set of one artist, keyed off the URL tail.
+  const activeArtist = artistFromPath(location.pathname);
+  const artists = useMemo(() => deriveArtists(sets), [sets]);
+  const artistSets = useMemo(
+    () =>
+      activeArtist
+        ? sets.filter((s) => s.artist_name.trim() === activeArtist)
+        : [],
+    [sets, activeArtist],
+  );
+  const activeArtistStat = useMemo<BoothArtist | null>(
+    () =>
+      activeArtist
+        ? {
+            name: activeArtist,
+            setCount: artistSets.length,
+            totalPlays: artistSets.reduce((n, s) => n + s.play_count, 0),
+          }
+        : null,
+    [activeArtist, artistSets],
+  );
+
+  const handleOpenArtist = useCallback(
+    (name: string) => {
+      history.push(`/hub/booth/artists/${encodeURIComponent(name)}`);
+    },
+    [history],
+  );
+  const handleBackToArtists = useCallback(() => {
+    history.push('/hub/booth/artists');
+  }, [history]);
 
   const handleEdit = useCallback((set: BoothSet) => {
     setSharingSet(null);
@@ -235,11 +320,90 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
           </>
         )}
 
-        {!overlayOpen && lens !== 'musik' && (
-          <div className='booth-native__soon'>
-            {intl.formatMessage(messages.soon)}
+        {/* Artists — roster (bare /hub/booth/artists) or one artist's sets */}
+        {!overlayOpen && lens === 'artists' && !activeArtist && loading && (
+          <div className='booth-native__status'>
+            {intl.formatMessage(messages.loading)}
           </div>
         )}
+        {!overlayOpen &&
+          lens === 'artists' &&
+          !activeArtist &&
+          !loading &&
+          artists.length === 0 && (
+            <div className='booth-native__status'>
+              {intl.formatMessage(messages.artistsEmpty)}
+            </div>
+          )}
+        {!overlayOpen &&
+          lens === 'artists' &&
+          !activeArtist &&
+          !loading &&
+          artists.length > 0 && (
+            <div className='booth-roster'>
+              {artists.map((a) => (
+                <BoothArtistChip
+                  key={a.name}
+                  artist={a}
+                  onOpen={handleOpenArtist}
+                />
+              ))}
+            </div>
+          )}
+
+        {!overlayOpen && lens === 'artists' && activeArtist && (
+          <div className='booth-artist-detail'>
+            <button
+              type='button'
+              className='booth-artist-detail__back'
+              onClick={handleBackToArtists}
+            >
+              {`← ${intl.formatMessage(messages.backToArtists)}`}
+            </button>
+            <div className='booth-artist-detail__hero'>
+              <span
+                className='booth-artist-detail__avatar'
+                aria-hidden='true'
+              >
+                {artistInitial(activeArtist)}
+              </span>
+              <div className='booth-artist-detail__id'>
+                <h2 className='booth-artist-detail__name'>{activeArtist}</h2>
+                {activeArtistStat && (
+                  <div className='booth-artist-detail__stat'>
+                    {artistStatLabel(activeArtistStat)}
+                  </div>
+                )}
+              </div>
+            </div>
+            {artistSets.length > 0 ? (
+              <div className='booth-gallery' data-size='standard'>
+                {artistSets.map((set) => (
+                  <BoothGridCard
+                    key={set.id}
+                    set={set}
+                    onOpen={handleOpen}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onShare={handleShare}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className='booth-native__status'>
+                {intl.formatMessage(messages.artistsEmpty)}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Events / Live / Me — still coming soon (later PRs) */}
+        {!overlayOpen &&
+          (lens === 'events' || lens === 'live' || lens === 'me') && (
+            <div className='booth-native__soon'>
+              {intl.formatMessage(messages.soon)}
+            </div>
+          )}
       </div>
 
       {signedIn && !overlayOpen && (

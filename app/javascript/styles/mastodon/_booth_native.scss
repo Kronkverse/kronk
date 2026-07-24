@@ -349,6 +349,134 @@
   }
 }
 
+// ── artists lens ────────────────────────────────────────────────────
+.booth-roster {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.booth-artist-chip {
+  appearance: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-align: left;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-large);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  transition:
+    transform var(--dur-medium) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-2px);
+    border-color: var(--border-default);
+    outline: none;
+  }
+
+  &__avatar {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-round);
+    background: var(--kronk-purple-deep);
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  &__name {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__stat {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.booth-artist-detail {
+  &__back {
+    appearance: none;
+    border: 0;
+    cursor: pointer;
+    background: transparent;
+    padding: 0.25rem 0;
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+  }
+
+  &__hero {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+  }
+
+  &__avatar {
+    width: 4rem;
+    height: 4rem;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-round);
+    background: var(--kronk-purple-deep);
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+  }
+
+  &__id {
+    min-width: 0;
+  }
+
+  &__name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--text-primary);
+  }
+
+  &__stat {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
 // ── FAB ─────────────────────────────────────────────────────────────
 .booth-fab {
   position: fixed;
