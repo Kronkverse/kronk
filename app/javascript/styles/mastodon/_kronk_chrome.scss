@@ -106,7 +106,7 @@
 
   &__pillar {
     position: relative;
-    padding: 9px 18px 12px; // extra bottom pad seats the wire
+    padding: 10px 26px 13px; // extra bottom pad seats the wire; wider H-pad spaces the icons out
     color: var(--text-muted);
     text-decoration: none;
     display: inline-flex;
@@ -133,8 +133,8 @@
   // pillar's `color` (muted → secondary → primary) so state reads
   // uniformly across the Membrane.
   &__pillar-icon {
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
     fill: currentcolor;
   }
 
