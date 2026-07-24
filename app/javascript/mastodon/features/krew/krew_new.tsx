@@ -20,7 +20,7 @@ import { Stage } from 'mastodon/components/stage';
 // rather than a pending-membership row).
 
 const messages = defineMessages({
-  title: { id: 'krew.new.title', defaultMessage: 'Start a Krew' },
+  title: { id: 'krew.new.title', defaultMessage: 'Gather a Krew' },
   back: { id: 'krew.new.back', defaultMessage: '← Cancel' },
   intro: {
     id: 'krew.new.intro',
@@ -99,8 +99,8 @@ const messages = defineMessages({
     id: 'krew.new.req_vouch_params',
     defaultMessage: 'Vouch parameters (JSON, provisional)',
   },
-  create: { id: 'krew.new.create', defaultMessage: 'Plant it' },
-  creating: { id: 'krew.new.creating', defaultMessage: 'Planting…' },
+  create: { id: 'krew.new.create', defaultMessage: 'Gather it' },
+  creating: { id: 'krew.new.creating', defaultMessage: 'Gathering…' },
 });
 
 const slugify = (raw: string): string =>
