@@ -5,6 +5,7 @@
 slug: klot
 name: Klot
 purpose: "To let kronkers share the phase of their cycle, not the data."
+tagline: 'Celebrating the cycle which brought us all to this world.'
 icon: nights_stay
 render_target: native
 version: 0.1.0

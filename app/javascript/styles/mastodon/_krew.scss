@@ -68,6 +68,9 @@ $krew-column-width: 720px;
     letter-spacing: -0.01em;
   }
 
+  // Kept for the Krew create form (krew_new.tsx) which still renders a
+  // form-specific lede here. The korner landing intro moved to
+  // <SpaceIntro>/.space-intro.
   &__hero-lede {
     max-width: 32rem;
     margin: 0 auto;
