@@ -109,6 +109,7 @@ import {
   NudgesLegacyArchive,
   Krews,
   KrewDetail,
+  KrewNew,
   MomentsStub,
   AlbuttsStub,
   KornerSettings,
@@ -275,9 +276,11 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={KalendarSpiral} content={children} />}
             {signedIn && <WrappedRoute path="/hub/inflow" component={InflowV2} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
-            {/* Krews — Phase 2 finalizes the surface: /hub/krew is the only
-                route; the legacy /hub/groups alias retires with the backend
-                rename. `Krews` and `KrewDetail` load from features/krew. */}
+            {/* Krews (§KRONK_KREWS). Route order matters: /hub/krew/new
+                must resolve before /hub/krew/:id or the create form gets
+                treated as a krew id lookup. Detail accepts either the
+                numeric id or the slug (controller#set_krew disambiguates). */}
+            {signedIn && <WrappedRoute path='/hub/krew/new' exact component={KrewNew} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/:id' component={KrewDetail} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew' component={Krews} content={children} />}
             <WrappedRoute path='/hub' exact component={Hub} content={children} />

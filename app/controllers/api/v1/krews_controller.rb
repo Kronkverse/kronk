@@ -120,8 +120,11 @@ class Api::V1::KrewsController < Api::BaseController
 
   private
 
+  # Accept either the numeric ID or the Krew's slug. Krew#SLUG_PATTERN
+  # requires a leading letter, so a slug can never be confused with a
+  # numeric id — the disjunction is disjoint at the format level.
   def set_krew
-    @krew = Krew.find(params[:id])
+    @krew = Krew.find_by(slug: params[:id]) || Krew.find(params[:id])
   end
 
   def create_params
