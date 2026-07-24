@@ -74,6 +74,10 @@ export function FollowRequests () {
   return import('../../follow_requests');
 }
 
+export function MateRequests () {
+  return import('../../mate_requests');
+}
+
 export function FavouritedStatuses () {
   return import('../../favourited_statuses');
 }

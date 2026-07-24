@@ -20,6 +20,10 @@ import { SpaceViewPicker } from './space_view_picker';
 // Spec: docs/kronk_frame.md § SpaceNav.
 
 const HUB_ROUTE_RE = /^\/hub\/([a-z0-9-]+)(?:\/([a-z0-9-]+))?/;
+// The `/settings` sub-page belongs to the settings surface, not the
+// korner surface — SettingsBadge takes over the SpaceNav slot there,
+// and the view picker's tab labels wouldn't apply anyway.
+const SETTINGS_SUBROUTE_RE = /^\/hub\/[a-z0-9-]+\/settings(?:\/|$)/;
 
 export const AutoSpaceViewPicker: React.FC = () => {
   const location = useLocation();
@@ -28,6 +32,7 @@ export const AutoSpaceViewPicker: React.FC = () => {
   const match = HUB_ROUTE_RE.exec(location.pathname);
   const slug = match?.[1];
   const subPath = match?.[2];
+  const onSettings = SETTINGS_SUBROUTE_RE.test(location.pathname);
 
   const korner = useKorner(slug);
   const views = korner?.views;
@@ -45,7 +50,7 @@ export const AutoSpaceViewPicker: React.FC = () => {
     [history, slug, views],
   );
 
-  if (!slug || !views?.length) return null;
+  if (onSettings || !slug || !views?.length) return null;
 
   const current = subPath ?? views[0]?.key;
   if (!current) return null;

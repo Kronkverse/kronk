@@ -138,6 +138,22 @@ module Account::Interactions
     other_account.following?(self)
   end
 
+  # Kronk — Mates. A Mate is a *mutual* connection: both directions of the
+  # follow graph exist. This is the canonical definition; every "are these
+  # two Mates?" check must route through here rather than re-deriving it
+  # (see docs/kronk_feed_and_reach.md §1). The follow graph is the storage
+  # substrate; Mates is the product-level relationship built on top of it.
+  def mate?(other_account)
+    following?(other_account) && followed_by?(other_account)
+  end
+
+  # Accounts that are Mates with this account: those it follows who also
+  # follow it back. Returns an Account relation (chainable/orderable).
+  def mates
+    Account.where(id: active_relationships.select(:target_account_id))
+           .where(id: passive_relationships.select(:account_id))
+  end
+
   def blocking?(other_account)
     block_relationships.exists?(target_account: other_account)
   end
