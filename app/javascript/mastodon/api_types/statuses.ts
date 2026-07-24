@@ -126,10 +126,11 @@ export interface ApiStatusJSON {
   quote?: ApiQuoteJSON;
   quote_approval?: ApiQuotePolicyJSON;
 
-  // Krew IDs this status is scoped to. Populated for
-  // visibility='krew' posts (and any status the author explicitly
-  // attached to Krews via the composer). Empty array otherwise.
-  krew_ids?: string[];
+  // Krews this status is scoped to. Populated for visibility='krew'
+  // posts (and any status the author explicitly attached to Krews
+  // via the composer). Rich references so the timeline badge can
+  // render the Krew name inline. Empty array otherwise.
+  krews?: { id: string; slug: string; name: string }[];
 
   post_type?: 'normal' | 'question' | 'answer' | 'proposal';
   question?: ApiStatusJSON;

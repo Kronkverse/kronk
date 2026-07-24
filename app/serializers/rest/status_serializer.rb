@@ -9,7 +9,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
              :sensitive, :spoiler_text, :visibility, :language,
              :uri, :url, :replies_count, :reblogs_count,
              :favourites_count, :quotes_count, :edited_at,
-             :post_type, :krew_ids
+             :post_type, :krews
 
   attribute :favourited, if: :current_user?
   attribute :reblogged, if: :current_user?
@@ -61,11 +61,14 @@ class REST::StatusSerializer < ActiveModel::Serializer
     object.in_reply_to_account_id&.to_s
   end
 
-  # IDs of the Krews this status is scoped to (via `statuses_krews`).
-  # Populated for `visibility='krew'` posts and any status the author
-  # explicitly attached to Krews. Empty array otherwise.
-  def krew_ids
-    object.krews.pluck(:id).map(&:to_s)
+  # Krews this status is scoped to (via `statuses_krews`). Rich
+  # references so consumers can render the named badge without a
+  # second round-trip. Empty array for non-krew posts. Ordered by id
+  # so repeated renders are stable.
+  def krews
+    object.krews.reorder(:id).pluck(:id, :slug, :name).map do |id, slug, name|
+      { id: id.to_s, slug: slug, name: name }
+    end
   end
 
   def current_user?
