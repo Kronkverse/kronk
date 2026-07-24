@@ -34,28 +34,19 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
 
   &__list {
     flex: 1 1 auto;
+
+    // The rail is a reference — all korners at a glance. A scrollbar
+    // defeats the "at a glance" part, so hide it. `overflow-y: auto`
+    // stays as a safety net (wheel/touchpad still works on very
+    // short viewports or if the korner count grows past what fits),
+    // just visually silent: no gutter, no thumb.
     overflow-y: auto;
     overflow-x: visible;
     padding: 0.75rem 0.4rem;
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 40%,
-        transparent
-      )
-      transparent;
+    scrollbar-width: none;
 
     &::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 40%,
-        transparent
-      );
-      border-radius: var(--radius-round);
+      display: none;
     }
   }
 
@@ -191,37 +182,6 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
   // handles the name on hover.
   &__label {
     display: none;
-  }
-
-  // Hub button — pinned to the TOP of the rail (the home of the korner
-  // world). Separated from the korner list by a bottom border.
-  &__hub {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.7rem 0.4rem;
-    margin-bottom: 0.35rem;
-    border-bottom: 1px solid
-      color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 25%,
-        var(--surface-elevated)
-      );
-    color: var(--kronk-purple-accent);
-    text-decoration: none;
-    transition:
-      background var(--dur-fast) var(--ease-out),
-      color var(--dur-fast) var(--ease-out);
-
-    &:hover,
-    &--active {
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 14%,
-        transparent
-      );
-      color: #fff;
-    }
   }
 }
 

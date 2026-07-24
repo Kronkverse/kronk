@@ -310,7 +310,21 @@ export const ProposalDetail: React.FC<{
                   />
                 </span>
               </div>
-              <h1 className='governance-detail__title'>{proposal.title}</h1>
+              <div className='governance-detail__title-row'>
+                <h1 className='governance-detail__title'>{proposal.title}</h1>
+                {isSeeder && proposal.status === 'delivered' && (
+                  <button
+                    type='button'
+                    className='governance-detail__mark-complete'
+                    onClick={handleDeliverOpen}
+                  >
+                    <FormattedMessage
+                      id='governance.action.mark_complete'
+                      defaultMessage='Mark Complete'
+                    />
+                  </button>
+                )}
+              </div>
               {proposal.summary && (
                 <p className='governance-detail__summary'>{proposal.summary}</p>
               )}
@@ -351,21 +365,9 @@ export const ProposalDetail: React.FC<{
                     </button>
                   )}
                   {/* Completion is the proposer confirming an already-delivered
-                      proposal (delivery itself is a dev action via `tootctl
-                      kommons deliver`). POSTing /complete on an open proposal
-                      422s, so this only shows once status is `delivered`. */}
-                  {proposal.status === 'delivered' && (
-                    <button
-                      type='button'
-                      className='governance-detail__action-btn governance-detail__action-btn--deliver'
-                      onClick={handleDeliverOpen}
-                    >
-                      <FormattedMessage
-                        id='governance.action.deliver'
-                        defaultMessage='Confirm completion'
-                      />
-                    </button>
-                  )}
+                      proposal. Once delivered, that CTA is the loud
+                      "Mark Complete" button up across from the title (above) —
+                      not a small meta action here. */}
                 </div>
               )}
             </div>

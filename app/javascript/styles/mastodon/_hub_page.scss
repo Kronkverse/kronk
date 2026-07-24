@@ -160,6 +160,15 @@ $tile-shadow-2: #17151f;
     pointer-events: none;
   }
 
+  // Waving-hand alert — top-left, so it never collides with the
+  // hover-only settings gear (top-right) or the tuned-in dot (bottom-left).
+  &__tile-alert {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 3;
+  }
+
   // Hover tip — pops above the tile with the manifest's `hub_teaser`.
   &__tile-tip {
     position: absolute;
