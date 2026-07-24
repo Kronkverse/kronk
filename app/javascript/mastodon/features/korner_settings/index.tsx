@@ -22,7 +22,6 @@ import type {
 } from 'mastodon/api_types/korners';
 import { Stage } from 'mastodon/components/stage';
 import { useKorner } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // Per-korner settings space (spec §K). Autosave-driven, widget kinds
 // from §K.4, one push toggle per manifest notification type (§K.3.2).
@@ -328,7 +327,6 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const { slug } = useParams<{ slug: string }>();
   const korner = useKorner(slug);
-  const Icon = useKornerIcon(slug);
 
   const [state, setState] = useState<ServerSettings | null>(null);
   const [status, setStatus] = useState<SaveStatus>('idle');
@@ -470,18 +468,16 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
           </span>
         </div>
 
-        <header className='korner-settings__header'>
-          <span className='korner-settings__glyph' aria-hidden='true'>
-            <Icon />
-          </span>
-          <div>
-            <h1 className='korner-settings__title'>{korner?.name ?? slug}</h1>
-            {typeof korner?.hub_teaser?.static === 'string' && (
-              <p className='korner-settings__subtitle'>
-                {korner.hub_teaser.static}
-              </p>
-            )}
-          </div>
+        {/* Frame-adherent header (Standard §L12) — shared `.space-header`
+            classes, matches the display-typography every korner + every
+            personal settings leaf uses. The manifest icon retires with
+            the local `.korner-settings__glyph`; the SpaceBadge above
+            covers the identity affordance. */}
+        <header className='space-header' data-frame-header=''>
+          <h1 className='space-header__title'>{korner?.name ?? slug}</h1>
+          {typeof korner?.hub_teaser?.static === 'string' && (
+            <p className='space-header__tagline'>{korner.hub_teaser.static}</p>
+          )}
         </header>
 
         {error && <p className='korner-settings__error'>{error}</p>}
