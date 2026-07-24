@@ -25,14 +25,16 @@ export interface ApiPresencePinJSON {
   self: boolean;
 }
 
-export interface PlacePresenceParams {
+// A `type` (not `interface`) so it's assignable to the request helper's
+// Record<string, unknown> param type.
+export type PlacePresenceParams = {
   lat: number;
   lng: number;
   precision: MapPrecision;
   share_scope?: MapShareScope;
   label?: string;
   ttl_minutes?: number;
-}
+};
 
 // Pins visible to me right now (Mates-gated projection).
 export const apiGetPresence = () =>

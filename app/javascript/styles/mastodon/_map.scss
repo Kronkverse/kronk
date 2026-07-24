@@ -1,0 +1,92 @@
+// Map — Mates lens (native MapLibre GL). Fills the Stage content area like
+// the korner iframe; the canvas is absolutely positioned so MapLibre has a
+// concrete size, with the controls panel overlaid at the bottom.
+
+.map-mates {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+
+  &__canvas {
+    position: absolute;
+    inset: 0;
+  }
+
+  &__panel {
+    position: absolute;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: calc(100% - 24px);
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border-default);
+    background: rgb(20 20 30 / 82%);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
+  }
+
+  &__prompt,
+  &__status,
+  &__error {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  &__error {
+    color: var(--error-text, #e0698a);
+  }
+}
+
+// Presence pins (MapLibre markers rendered from a custom element).
+.map-pin {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: #7c5cff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 50%);
+  cursor: pointer;
+
+  &--self {
+    background: var(--kronk-purple-bright, #b39dff);
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 2px solid rgb(124 92 255 / 50%);
+      animation: map-pin-pulse 2s ease-out infinite;
+    }
+  }
+}
+
+@keyframes map-pin-pulse {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.6);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-pin--self::after {
+    animation: none;
+  }
+}
