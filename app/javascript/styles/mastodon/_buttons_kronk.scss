@@ -55,9 +55,18 @@
   }
 }
 
-// Solid active pill (dropdown-button.active) — was solid blue app-wide.
-.dropdown-button.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--text-on-accent);
+// Dropdown pills (visibility "Mates", etc.) — standardise on the Kronk pill:
+// full stadium radius + violet outline, matching the buttons and the frame
+// pills (was a 6px rounded rect with blurple text/border). The .warning and
+// [disabled] variants keep their own treatment (higher specificity wins).
+.dropdown-button {
+  border-radius: var(--radius-round);
+  color: var(--kronk-purple-bright);
+  border-color: var(--kronk-purple-bright);
+
+  &.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--text-on-accent);
+  }
 }
