@@ -12,7 +12,11 @@ import {
   apiUnpublishTrek,
   apiDeleteTrek,
 } from 'mastodon/api/map_treks';
-import type { ApiTrekJSON, TrekActivity } from 'mastodon/api/map_treks';
+import type {
+  ApiTrekJSON,
+  TrekActivity,
+  TrekReach,
+} from 'mastodon/api/map_treks';
 import { Button } from 'mastodon/components/button';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 
@@ -31,10 +35,23 @@ const messages = defineMessages({
   mates: { id: 'map.treks.mates', defaultMessage: 'Mates' },
   empty: { id: 'map.treks.empty', defaultMessage: 'No treks yet.' },
   back: { id: 'map.treks.back', defaultMessage: 'Back' },
-  publish: { id: 'map.treks.publish', defaultMessage: 'Publish to Mates' },
+  publish: { id: 'map.treks.publish', defaultMessage: 'Publish' },
   unpublish: { id: 'map.treks.unpublish', defaultMessage: 'Make private' },
   remove: { id: 'map.treks.delete', defaultMessage: 'Delete' },
+  shareWith: { id: 'map.treks.share_with', defaultMessage: 'Share with' },
+  shared: { id: 'map.treks.shared', defaultMessage: 'Shared to your timeline.' },
+  reachPublic: { id: 'map.treks.reach.public', defaultMessage: 'Public' },
+  reachOrbit: { id: 'map.treks.reach.orbit', defaultMessage: 'Orbit' },
+  reachMates: { id: 'map.treks.reach.mates', defaultMessage: 'Mates' },
+  reachSelf: { id: 'map.treks.reach.self', defaultMessage: 'Just me' },
 });
+
+const REACH_OPTIONS: { value: TrekReach; label: keyof typeof messages }[] = [
+  { value: 'public', label: 'reachPublic' },
+  { value: 'orbit', label: 'reachOrbit' },
+  { value: 'mates', label: 'reachMates' },
+  { value: 'self_only', label: 'reachSelf' },
+];
 
 const ACTIVITY_GLYPH: Record<TrekActivity, string> = {
   run: '🏃',
@@ -148,10 +165,16 @@ const TrekDetail: React.FC<{
 }> = ({ trek, onBack, onChange }) => {
   const intl = useIntl();
 
-  const togglePublish = useCallback(() => {
-    const call = trek.state === 'published' ? apiUnpublishTrek : apiPublishTrek;
-    void call(trek.id).then(onChange);
-  }, [trek.id, trek.state, onChange]);
+  const [reach, setReach] = useState<TrekReach>('mates');
+  const onReach = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setReach(e.currentTarget.value as TrekReach);
+  }, []);
+  const publish = useCallback(() => {
+    void apiPublishTrek(trek.id, reach).then(onChange);
+  }, [trek.id, reach, onChange]);
+  const unpublish = useCallback(() => {
+    void apiUnpublishTrek(trek.id).then(onChange);
+  }, [trek.id, onChange]);
 
   const remove = useCallback(() => {
     void apiDeleteTrek(trek.id).then(() => {
@@ -223,15 +246,36 @@ const TrekDetail: React.FC<{
         </p>
       )}
 
-      {trek.self && (
+      {trek.self && trek.state === 'published' && (
+        <>
+          <p className='trek-detail__shared'>
+            {intl.formatMessage(messages.shared)}
+          </p>
+          <div className='trek-detail__actions'>
+            <Button secondary onClick={unpublish}>
+              {intl.formatMessage(messages.unpublish)}
+            </Button>
+            <Button className='button--destructive' onClick={remove}>
+              {intl.formatMessage(messages.remove)}
+            </Button>
+          </div>
+        </>
+      )}
+
+      {trek.self && trek.state !== 'published' && (
         <div className='trek-detail__actions'>
-          <Button
-            secondary={trek.state === 'published'}
-            onClick={togglePublish}
-          >
-            {intl.formatMessage(
-              trek.state === 'published' ? messages.unpublish : messages.publish,
-            )}
+          <label className='trek-detail__reach'>
+            <span>{intl.formatMessage(messages.shareWith)}</span>
+            <select value={reach} onChange={onReach}>
+              {REACH_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {intl.formatMessage(messages[opt.label])}
+                </option>
+              ))}
+            </select>
+          </label>
+          <Button onClick={publish}>
+            {intl.formatMessage(messages.publish)}
           </Button>
           <Button className='button--destructive' onClick={remove}>
             {intl.formatMessage(messages.remove)}

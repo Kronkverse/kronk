@@ -124,6 +124,7 @@ class Status < ApplicationRecord
   has_one :huddle_session, dependent: :nullify, inverse_of: :status
   has_one :kosmic_update, dependent: :nullify, inverse_of: :status
   has_one :listing, dependent: :nullify, inverse_of: :status
+  has_one :trek, dependent: :nullify, inverse_of: :status
 
   # `post_type`'s column is added by a 2026 migration (add_post_type_to_statuses),
   # but old migrations that instantiate Status (e.g. AddInReplyToAccountIdToStatuses,
