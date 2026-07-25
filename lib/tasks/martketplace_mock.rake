@@ -36,20 +36,20 @@ namespace :kronk do
       # the first-listed account gets set A, the second set B, etc.
       per_account_sets = [
         [
-          { category: 'creation', title: 'Handwoven wall hanging — wool + linen', description: 'Naturally dyed, roughly 60×90cm. One-off; message if interested.', price_cents: 12_000, price_currency: 'GBP', location: 'Brighton, UK' },
-          { category: 'creation', title: 'Small-batch zine — 24 pages, riso print',   description: 'Field notes from a month of morning walks. Limited run of 40.',      price_cents: 800,    price_currency: 'GBP', location: 'By post, UK' },
+          { category: 'creation', title: 'Handwoven wall hanging — wool + linen', description: 'Naturally dyed, roughly 60×90cm. One-off; message if interested.', price_cents: 12_000, price_currency: 'AUD', location: 'Brighton, UK' },
+          { category: 'creation', title: 'Small-batch zine — 24 pages, riso print',   description: 'Field notes from a month of morning walks. Limited run of 40.',      price_cents: 800,    price_currency: 'AUD', location: 'By post, UK' },
           { category: 'goods',    title: 'Sourdough starter (Bristol, active)',       description: 'Rye + wheat, bakes at 3-day cadence. Free — bring a jar.',           price_cents: nil,    price_currency: nil,   location: 'Bristol, UK' },
-          { category: 'goods',    title: 'IKEA MALM 3-drawer, oak veneer',             description: 'Moving in a month. Well-loved. £30 or a trade.',                    price_cents: 3_000,  price_currency: 'GBP', location: 'Manchester, UK' },
-          { category: 'service',  title: 'Guitar lessons — beginner-friendly',         description: 'Weekly, one hour. In person or online. First lesson free.', price_cents: 2_500, price_currency: 'GBP', location: 'London, UK' },
-          { category: 'service',  title: 'Garden day — planting + light landscaping',  description: 'One full day, tools included. Ideal for spring beds.',              price_cents: 8_000,  price_currency: 'GBP', location: 'Devon, UK' },
+          { category: 'goods',    title: 'IKEA MALM 3-drawer, oak veneer',             description: 'Moving in a month. Well-loved. £30 or a trade.',                    price_cents: 3_000,  price_currency: 'AUD', location: 'Manchester, UK' },
+          { category: 'service',  title: 'Guitar lessons — beginner-friendly',         description: 'Weekly, one hour. In person or online. First lesson free.', price_cents: 2_500, price_currency: 'AUD', location: 'London, UK' },
+          { category: 'service',  title: 'Garden day — planting + light landscaping',  description: 'One full day, tools included. Ideal for spring beds.',              price_cents: 8_000,  price_currency: 'AUD', location: 'Devon, UK' },
         ],
         [
-          { category: 'creation', title: 'Ceramic mug set — four pieces, thrown by hand', description: 'Speckled stone glaze, dishwasher-safe. Selling as a set.',       price_cents: 6_500,  price_currency: 'GBP', location: 'Sheffield, UK' },
-          { category: 'creation', title: 'Screen-printed tote (natural cotton)',          description: 'Two-colour print, edition of 25. Message for design preview.', price_cents: 1_800, price_currency: 'GBP', location: 'By post, UK' },
+          { category: 'creation', title: 'Ceramic mug set — four pieces, thrown by hand', description: 'Speckled stone glaze, dishwasher-safe. Selling as a set.',       price_cents: 6_500,  price_currency: 'AUD', location: 'Sheffield, UK' },
+          { category: 'creation', title: 'Screen-printed tote (natural cotton)',          description: 'Two-colour print, edition of 25. Message for design preview.', price_cents: 1_800, price_currency: 'AUD', location: 'By post, UK' },
           { category: 'goods',    title: 'Cast-iron skillet — well-seasoned',             description: 'Been with me a decade. Passing it on. Free to a good kitchen.', price_cents: nil, price_currency: nil, location: 'Edinburgh, UK' },
-          { category: 'goods',    title: 'Bike trailer, single-child',                    description: 'Kids outgrew it. Folds flat. £45 or best trade.', price_cents: 4_500, price_currency: 'GBP', location: 'Cambridge, UK' },
-          { category: 'service',  title: 'Website audit — accessibility + SEO',           description: 'Two-hour deep dive + a written report. Small businesses only.', price_cents: 12_000, price_currency: 'GBP', location: 'Remote' },
-          { category: 'service',  title: 'Bread-baking workshop (afternoon, 3 hrs)',      description: 'Cover a full sourdough loaf plus focaccia. Ingredients inc.',   price_cents: 4_500,  price_currency: 'GBP', location: 'Bristol, UK' },
+          { category: 'goods',    title: 'Bike trailer, single-child',                    description: 'Kids outgrew it. Folds flat. £45 or best trade.', price_cents: 4_500, price_currency: 'AUD', location: 'Cambridge, UK' },
+          { category: 'service',  title: 'Website audit — accessibility + SEO',           description: 'Two-hour deep dive + a written report. Small businesses only.', price_cents: 12_000, price_currency: 'AUD', location: 'Remote' },
+          { category: 'service',  title: 'Bread-baking workshop (afternoon, 3 hrs)',      description: 'Cover a full sourdough loaf plus focaccia. Ingredients inc.',   price_cents: 4_500,  price_currency: 'AUD', location: 'Bristol, UK' },
         ],
       ]
 
