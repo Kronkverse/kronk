@@ -32,29 +32,23 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   background: var(--surface-primary);
   border-bottom: 1px solid var(--border-subtle);
 }
 
-.nudges-sidebar__search-icon {
-  width: 18px;
-  height: 18px;
-  color: var(--text-muted);
-  flex: 0 0 auto;
-}
-
+// The magnifying-glass icon and the New Chat pencil were retired from
+// the sidebar (2026-07-25): the search input speaks for itself, and
+// starting a new chat lives on the floating Kronk menu where every
+// other create-action lives. The search input is a plain compact pill.
 .nudges-sidebar__search-input {
-  flex: 1 1 auto;
-  padding: 0.4rem 0.6rem;
+  width: 100%;
+  padding: 0.3rem 0.6rem;
   background: var(--surface-elevated);
   color: var(--text-primary);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-round);
-  font: inherit;
+  font-size: 0.85rem;
 
   &::placeholder {
     color: var(--text-muted);
@@ -63,34 +57,6 @@
   &:focus-visible {
     outline: 2px solid var(--kronk-purple-bright);
     outline-offset: 0;
-  }
-}
-
-.nudges-sidebar__new-chat {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-round);
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition:
-    color var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out);
-
-  svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  &:hover {
-    color: var(--kronk-purple-bright);
-    border-color: var(--kronk-purple-bright);
   }
 }
 
