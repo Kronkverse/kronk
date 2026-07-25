@@ -228,6 +228,13 @@ const privacyPreference = (a, b) => {
   return order[Math.max(order.indexOf(a), order.indexOf(b), 0)];
 };
 
+// A saved draft (or an old status) may carry the retired follower-model
+// visibilities. Map them onto the reach ladder (docs/kronk_feed_and_reach.md
+// §2) so a restored draft opens at a real reach, not the retired "Followers"/
+// "Quiet public". Unknown/undefined values pass through unchanged.
+const REACH_MAP = { private: 'mates', unlisted: 'public' };
+const mapReach = (visibility) => REACH_MAP[visibility] || visibility;
+
 const hydrate = (state, hydratedState) => {
   state = clearAll(state.merge(hydratedState));
 
@@ -600,7 +607,7 @@ export const composeReducer = (state = initialState, action) => {
       map.set('id', null);
       map.set('text', params.text || '');
       map.set('in_reply_to', params.in_reply_to_id || null);
-      map.set('privacy', params.visibility || map.get('default_privacy'));
+      map.set('privacy', mapReach(params.visibility) || map.get('default_privacy'));
       map.set('media_attachments', fromJS(action.draft.media_attachments || []).map((media) => media.set('unattached', true)));
       map.set('focusDate', new Date());
       map.set('caretPosition', null);
