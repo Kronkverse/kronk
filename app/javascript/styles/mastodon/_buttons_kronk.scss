@@ -1,0 +1,58 @@
+// Kronk palette — app-wide button recolour.
+// The stock button family (components.scss) paints the Mastodon blurple
+// ($ui-button-background-color #6364ff for solid buttons, $highlight-text-color
+// ~#9092ff for secondary/plain), which reads blue in dark mode where Kronk's
+// --accent is a deeper violet (#4414cc). Point the buttons at the Kronk violet
+// so every primary CTA / outline button across the app matches the palette.
+// Loaded after components.scss (see application.scss) so these win at equal
+// specificity. Error / destructive / disabled buttons keep their stock
+// treatment (their higher-specificity rules override these anyway). var(--accent)
+// follows the theme where the tokens are wired; --kronk-purple-* is the violet
+// ramp used for hover + outline text. White label reads on the violet fill in
+// both themes.
+
+.button {
+  // Primary (solid) buttons.
+  background-color: var(--accent);
+  color: var(--text-on-accent);
+
+  &:active,
+  &:focus,
+  &:hover {
+    background-color: var(--kronk-purple-deep);
+  }
+
+  // Outline / secondary buttons — violet text + border on a transparent fill.
+  // (Their own .button.button-secondary rule keeps the transparent background;
+  // we only recolour the blurple text/border.)
+  &.button-secondary {
+    color: var(--kronk-purple-bright);
+    border-color: var(--kronk-purple-bright);
+
+    &:active,
+    &:focus,
+    &:hover {
+      color: var(--kronk-purple-bright);
+      border-color: var(--kronk-purple-bright);
+      background-color: transparent;
+    }
+  }
+
+  // Text-only / plain buttons.
+  &.button--plain {
+    color: var(--kronk-purple-bright);
+
+    &:active,
+    &:focus,
+    &:hover {
+      color: var(--kronk-purple-bright);
+    }
+  }
+}
+
+// Solid active pill (dropdown-button.active) — was solid blue app-wide.
+.dropdown-button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-on-accent);
+}
