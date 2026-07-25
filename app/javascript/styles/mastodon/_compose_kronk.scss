@@ -170,36 +170,69 @@
   }
 }
 
-// ── Kronk palette alignment ─────────────────────────────────────────────
-// The composer chrome is stock Mastodon (components.scss) and paints the
-// Mastodon blurple ($ui-highlight-color #6364ff) for the Post button, the
-// solid active states and the focus ring — which reads blue in dark mode,
-// where Kronk's --accent is a deeper violet (#4414cc). Retokenise only those
-// accent/ring surfaces onto the Kronk violet. We deliberately do NOT touch the
-// card/textarea/text colours here: the Kronk semantic surface/text tokens are
-// pinned to their dark values under the stock light *skin* (they switch on
-// data-theme, which the skin doesn't set), so overriding them would darken the
-// light-theme composer. A violet/white accent, by contrast, reads correctly on
-// both the dark and light surfaces. Scoped under .compose-form; loaded after
+// ── Kronk composer treatment ────────────────────────────────────────────
+// Two jobs: (1) retokenise the stock blurple accents onto the Kronk violet
+// (Post button, active states, focus ring, over-limit counter); (2) give the
+// box a Kronk "lift" — softer radius, a violet-tinted elevation off the Stage,
+// a faint violet wash and a glowing focus ring — so it reads as a considered
+// Kronk surface rather than a flat stock card.
+// Deliberately NOT changed: the card / textarea / text *fill* colours. The
+// Kronk semantic surface/text tokens never activate under the stock light skin
+// — nothing sets data-theme='light', so :root[data-theme='light'] never
+// matches — so overriding the fills would darken the light composer. The
+// violet accents, the low-alpha wash and the shadow all read correctly on both
+// surfaces. Wiring data-theme to the active theme is the follow-up that unlocks
+// a full surface retokenise. Scoped under .compose-form; loaded after
 // components.scss. See docs/kronk_aesthetic_system.md.
 .compose-form {
-  // The card's focus ring (was a blurple border).
-  &__highlightable.active {
-    border-color: var(--kronk-purple-accent);
-    box-shadow: 0 0 0 1px var(--kronk-purple-accent);
+  // The card — softer radius, a violet-tinted lift off the Stage, and a faint
+  // violet wash laid over the stock (theme-following) fill (background-image
+  // clips to the radius, so the underlying background-color is untouched).
+  &__highlightable {
+    border-radius: var(--radius-large);
+    background-image: linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--kronk-purple-accent) 8%, transparent) 0%,
+      transparent 55%
+    );
+    box-shadow:
+      0 12px 34px -16px color-mix(in oklab, var(--kronk-purple-accent) 50%, transparent),
+      var(--elevation-card);
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-medium) var(--ease-out);
+
+    // Focus — a soft violet glow ring + a stronger lift.
+    &.active {
+      border-color: var(--kronk-purple-accent);
+      box-shadow:
+        0 0 0 2px color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent),
+        0 16px 40px -14px color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
+    }
   }
 
-  // Solid active pill (visibility/language) — was solid blue.
+  // Solid active pill (visibility) — was solid blue.
   .dropdown-button.active {
     background: var(--accent);
     border-color: var(--accent);
     color: var(--text-on-accent);
   }
 
-  // Toggled action icon (e.g. content-warning on) — was solid blue.
-  &__actions .icon-button.active {
-    background: var(--accent);
-    color: var(--text-on-accent);
+  // Action icons — violet on hover/focus; default keeps the stock
+  // theme-following tone so it still reads on the light skin. Toggled-on
+  // (content-warning) gets the solid violet.
+  &__actions .icon-button {
+    transition: color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus {
+      color: var(--kronk-purple-bright);
+    }
+
+    &.active {
+      background: var(--accent);
+      color: var(--text-on-accent);
+    }
   }
 
   // Over-limit character counter → the Kronk error red.
@@ -207,9 +240,7 @@
     color: var(--warning-red);
   }
 
-  // The Post button — the biggest offender (stock blurple). Kronk violet,
-  // pill-rounded per the CTA convention; white text reads on the violet in
-  // both themes. :disabled keeps the stock muted treatment.
+  // The Post button — Kronk violet pill; :disabled keeps the stock muted look.
   &__submit .button:not(:disabled) {
     background: var(--accent);
     color: var(--text-on-accent);
