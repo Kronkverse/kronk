@@ -1,0 +1,212 @@
+// /hub/huddle landing page — the "always open" campfire.
+// Prototype: docs/proposal-files/…/huddle_hub_landing_wide_v1.html.
+// Two blocks: the Main Huddle hero tile + the "Your Krews" list of
+// Krew Huddles.
+
+.huddle-landing {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 0 1rem 4rem;
+}
+
+// ── Main Huddle hero tile ──────────────────────────────────────────
+.huddle-hero {
+  padding: 3.25rem 2.5rem 2.75rem;
+  border-radius: var(--radius-xl, 2rem);
+  border: 0.5px solid
+    color-mix(in oklab, var(--kronk-purple-bright) 30%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--kronk-purple-primary) 12%, transparent) 0%,
+    color-mix(in oklab, var(--kronk-purple-primary) 0%, transparent) 100%
+  );
+  text-align: center;
+
+  &__here-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.85rem;
+    margin-bottom: 1.5rem;
+    border-radius: var(--radius-round);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-bright) 14%,
+      transparent
+    );
+    border: 0.5px solid
+      color-mix(in oklab, var(--kronk-purple-bright) 40%, transparent);
+  }
+
+  &__pulse {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--kronk-purple-bright);
+    animation: huddle-pulse 2s ease-in-out infinite;
+  }
+
+  &__here-label {
+    font-size: 0.8rem;
+    color: color-mix(in oklab, var(--kronk-purple-bright) 85%, #fff);
+    letter-spacing: 0.04em;
+  }
+
+  &__mark {
+    margin-bottom: 1rem;
+    font-family: 'Liberation Serif', Georgia, serif;
+    font-size: 6.75rem;
+    line-height: 1;
+    color: var(--kronk-purple-primary);
+  }
+
+  &__title {
+    margin: 0 0 2rem;
+    font-size: 2.4rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+  }
+
+  &__cta {
+    display: inline-block;
+    min-width: 16rem;
+    padding: 0.95rem 2.5rem;
+    border-radius: 0.9rem;
+    background: var(--kronk-purple-primary);
+    color: var(--text-on-accent, #fff);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      background: var(--kronk-purple-bright);
+      text-decoration: none;
+    }
+  }
+}
+
+@keyframes huddle-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.45;
+    transform: scale(1.5);
+  }
+}
+
+// ── Your Krews block ──────────────────────────────────────────────
+.huddle-krews {
+  margin-top: 3rem;
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 0.5rem 1.1rem;
+  }
+
+  &__label {
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  &__count {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    opacity: 0.7;
+  }
+
+  &__empty {
+    padding: 1.25rem 1rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    border: 0.5px solid var(--border-subtle);
+    border-radius: 1.25rem;
+    margin: 0;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    border: 0.5px solid var(--border-subtle);
+  }
+}
+
+.huddle-krew-row {
+  & + & .huddle-krew-row__link {
+    border-top: 0.5px solid var(--border-subtle);
+  }
+
+  &__link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.25rem;
+    color: inherit;
+    text-decoration: none;
+    transition: background var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-bright) 6%,
+        transparent
+      );
+      text-decoration: none;
+    }
+  }
+
+  &__avatar {
+    flex: 0 0 auto;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Liberation Serif', Georgia, serif;
+    font-size: 1.25rem;
+    color: #0c0a18;
+  }
+
+  &__body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  &__name {
+    font-size: 1rem;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__state {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  &__chevron {
+    flex: 0 0 auto;
+    padding-right: 0.25rem;
+    font-size: 1.35rem;
+    color: color-mix(in oklab, var(--text-muted) 60%, transparent);
+  }
+}
