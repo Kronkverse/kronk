@@ -15,6 +15,15 @@ class StatusPolicy < ApplicationPolicy
       # author + members of any targeted Krew. Not federated; not
       # visible outside that membership set.
       owned? || viewer_in_targeted_krew?
+    elsif self_scoped?
+      # Reach: self_only — the author's own timeline, no one else.
+      owned?
+    elsif mates_scoped?
+      # Reach: mates — the author + their mutual connections.
+      owned? || author_mate?
+    elsif orbit_scoped?
+      # Reach: orbit — mates + mates-of-mates (one hop out).
+      owned? || author_mate? || in_author_orbit?
     elsif requires_mention?
       owned? || mention_exists?
     elsif private?
@@ -29,7 +38,7 @@ class StatusPolicy < ApplicationPolicy
   end
 
   def reblog?
-    !requires_mention? && !krew_scoped? && (!private? || owned?) && show? && !blocking_author?
+    !requires_mention? && !restricted_scope? && (!private? || owned?) && show? && !blocking_author?
   end
 
   def favourite?
@@ -62,6 +71,36 @@ class StatusPolicy < ApplicationPolicy
 
   def krew_scoped?
     record.krew_visibility?
+  end
+
+  def self_scoped?
+    record.self_only_visibility?
+  end
+
+  def mates_scoped?
+    record.mates_visibility?
+  end
+
+  def orbit_scoped?
+    record.orbit_visibility?
+  end
+
+  # Local-only reach scopes that must never be reblogged into a wider
+  # audience (mirrors the krew guard).
+  def restricted_scope?
+    krew_scoped? || self_scoped? || mates_scoped? || orbit_scoped?
+  end
+
+  def author_mate?
+    return false if current_account.nil?
+
+    author.mate?(current_account)
+  end
+
+  def in_author_orbit?
+    return false if current_account.nil?
+
+    author.orbit_of?(current_account)
   end
 
   def viewer_in_targeted_krew?

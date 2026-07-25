@@ -49,7 +49,7 @@ class AccountStatusesFilter
   def filtered_scope
     scope = account.statuses.left_outer_joins(:mentions)
 
-    scope.merge!(scope.where(visibility: follower? ? %i(public unlisted private) : %i(public unlisted)).or(scope.where(mentions: { account_id: current_account.id })).group(Status.arel_table[:id]))
+    scope.merge!(scope.where(visibility: permitted_visibilities).or(scope.where(mentions: { account_id: current_account.id })).group(Status.arel_table[:id]))
     scope.merge!(filtered_reblogs_scope) if reblogs_may_occur?
 
     scope
@@ -79,7 +79,7 @@ class AccountStatusesFilter
     if anonymous?
       own = own.distributable_visibility
     elsif !author?
-      own = own.where(visibility: follower? ? %i(public unlisted private) : %i(public unlisted))
+      own = own.where(visibility: permitted_visibilities)
     end
     own = own.joins(:media_attachments).where(media_attachments: { account_id: account.id })
 
@@ -129,6 +129,31 @@ class AccountStatusesFilter
 
   def follower?
     current_account.following?(account)
+  end
+
+  # Kronk reach ladder (docs/kronk_feed_and_reach.md §2) — is the viewer a
+  # Mate of the profile owner, or in their Orbit (mate of a mate)?
+  def mate?
+    account.mate?(current_account)
+  end
+
+  def in_orbit?
+    account.orbit_of?(current_account)
+  end
+
+  # Visibilities a non-author viewer is allowed to see on this profile.
+  # Reach scopes (mates/orbit) surface here so a Mate/Orbit viewer sees
+  # them on the profile, not only via home fan-out. self_only never lists
+  # here — only the author (handled in #initial_scope) sees it.
+  def permitted_visibilities
+    visibilities = %i(public unlisted)
+    visibilities << :private if follower?
+    if mate?
+      visibilities.push(:mates, :orbit)
+    elsif in_orbit?
+      visibilities << :orbit
+    end
+    visibilities
   end
 
   def reblogs_may_occur?

@@ -83,6 +83,61 @@ RSpec.describe StatusPolicy, type: :model do
 
         expect(subject).to_not permit(viewer, status)
       end
+
+      # Kronk reach ladder (docs/kronk_feed_and_reach.md §2).
+      def mate!(one, two)
+        one.follow!(two)
+        two.follow!(one)
+      end
+
+      it 'grants self_only access to the owner only' do
+        status.visibility = :self_only
+
+        expect(subject).to permit(alice, status)
+      end
+
+      it 'denies self_only access to anyone else' do
+        status.visibility = :self_only
+
+        expect(subject).to_not permit(bob, status)
+      end
+
+      it 'grants mates access to a mutual connection' do
+        mate!(alice, bob)
+        status.visibility = :mates
+
+        expect(subject).to permit(bob, status)
+      end
+
+      it 'denies mates access to a one-way follower' do
+        bob.follow!(alice) # one-way, not mutual
+        status.visibility = :mates
+
+        expect(subject).to_not permit(bob, status)
+      end
+
+      it 'grants orbit access to a mate of a mate' do
+        carol = Fabricate(:account, username: 'carol')
+        mate!(alice, bob)
+        mate!(bob, carol) # carol shares mate bob with alice
+        status.visibility = :orbit
+
+        expect(subject).to permit(carol, status)
+      end
+
+      it 'grants orbit access to a direct mate too' do
+        mate!(alice, bob)
+        status.visibility = :orbit
+
+        expect(subject).to permit(bob, status)
+      end
+
+      it 'denies orbit access to a stranger with no shared mate' do
+        stranger = Fabricate(:account, username: 'stranger')
+        status.visibility = :orbit
+
+        expect(subject).to_not permit(stranger, status)
+      end
     end
   end
 

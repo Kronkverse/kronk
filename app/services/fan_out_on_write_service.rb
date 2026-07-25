@@ -51,6 +51,16 @@ class FanOutOnWriteService < BaseService
     when :public, :unlisted, :private
       deliver_to_all_followers!
       deliver_to_lists!
+    when :mates, :orbit
+      # Kronk reach ladder (docs/kronk_feed_and_reach.md §2) — push to the
+      # author's Mates' home feeds. `orbit` also *reads* out to mates-of-
+      # mates (StatusPolicy#in_author_orbit?), but the proactive FoF home
+      # push is deferred (§6 flags its cost); FoF see orbit posts on read.
+      deliver_to_mates!
+    when :self_only
+      # Reach: self_only — deliver_to_self! (above) already put it on the
+      # author's own home; radiates to no one else.
+      nil
     when :limited
       deliver_to_mentioned_followers!
     when :krew
@@ -117,6 +127,17 @@ class FanOutOnWriteService < BaseService
     @account.followers_for_local_distribution.select(:id).reorder(nil).find_in_batches do |followers|
       FeedInsertWorker.push_bulk(followers) do |follower|
         [@status.id, follower.id, 'home', { 'update' => update? }]
+      end
+    end
+  end
+
+  # Kronk reach — pushes to the Home feed of every local Mate (mutual
+  # connection). Excludes the author (deliver_to_self! handled them) and
+  # remote accounts (these scopes are local-only, like krew).
+  def deliver_to_mates!
+    @account.mates.merge(Account.local).where.not(id: @account.id).select(:id).reorder(nil).find_in_batches do |mates|
+      FeedInsertWorker.push_bulk(mates) do |mate|
+        [@status.id, mate.id, 'home', { 'update' => update? }]
       end
     end
   end
