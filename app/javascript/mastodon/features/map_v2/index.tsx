@@ -22,6 +22,10 @@ const messages = defineMessages({
   title: { id: 'map.title', defaultMessage: 'Map' },
 });
 
+// mates/treks are the browse lenses in the Frame's view picker (manifest
+// `views:`). `logger` is NOT a picker view — it's the korner's compose
+// action (manifest `compose.route`), opened from the Ӂ menu bubble — but it
+// still resolves here so /hub/map/logger renders the Logger.
 const VIEWS = ['mates', 'treks', 'logger'] as const;
 type MapView = (typeof VIEWS)[number];
 const DEFAULT_VIEW: MapView = 'mates';

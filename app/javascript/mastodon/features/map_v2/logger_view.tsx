@@ -56,6 +56,7 @@ export const LoggerView: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedTitle, setSavedTitle] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   const onActivity = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setActivity(e.currentTarget.value as TrekActivity);
@@ -70,8 +71,7 @@ export const LoggerView: React.FC = () => {
     setTimeMin(e.currentTarget.value);
   }, []);
 
-  const onFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.currentTarget.files?.[0];
+  const handleFile = useCallback((file: File | undefined) => {
     setError(null);
     if (!file) {
       setParsed(null);
@@ -93,6 +93,30 @@ export const LoggerView: React.FC = () => {
         setError(err instanceof Error ? err.message : 'Could not read that file.');
       });
   }, []);
+
+  const onFile = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      handleFile(e.currentTarget.files?.[0]);
+    },
+    [handleFile],
+  );
+
+  const onDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(true);
+  }, []);
+  const onDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+  }, []);
+  const onDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragging(false);
+      handleFile(e.dataTransfer.files[0]);
+    },
+    [handleFile],
+  );
 
   const clearFile = useCallback(() => {
     setParsed(null);
@@ -187,12 +211,20 @@ export const LoggerView: React.FC = () => {
           />
         </label>
 
-        <div className='map-logger__import'>
+        <div
+          className={`map-logger__import${dragging ? ' is-dragging' : ''}`}
+          onDragOver={onDragOver}
+          onDragEnter={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+        >
           <label className='map-logger__file'>
-            <FormattedMessage
-              id='map.logger.import'
-              defaultMessage='Import a GPS file (GPX or TCX)'
-            />
+            <span className='map-logger__file-cta'>
+              <FormattedMessage
+                id='map.logger.import'
+                defaultMessage='Drag a GPS file here, or choose one (GPX or TCX)'
+              />
+            </span>
             <input type='file' accept='.gpx,.tcx,application/gpx+xml' onChange={onFile} />
           </label>
           <p className='map-logger__hint'>
