@@ -512,11 +512,16 @@
   color: var(--text-muted);
 }
 
+// Signal-style: column-reverse means the scroll container starts
+// pinned to the bottom (newest message visible + composer just below),
+// and DOM order is newest-first. Scrolling up reveals older items —
+// no manual scroll-to-bottom useEffect required, and new arrivals
+// prepended in DOM appear at the visual bottom without a jump.
 .nudges-conversation__stream {
   flex: 1 1 auto;
   overflow-y: auto;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   gap: 0.4rem;
   padding: 1rem;
 }

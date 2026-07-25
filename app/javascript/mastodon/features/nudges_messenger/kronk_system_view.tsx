@@ -174,8 +174,12 @@ export const KronkSystemView: React.FC = () => {
     });
   }, []);
 
+  // Newest first — the stream container below uses column-reverse
+  // (Signal-style), so DOM order [newest, ..., oldest] renders as
+  // [oldest at top, newest at bottom] visually, and the scroll sits
+  // pinned to the bottom on mount without any manual scrollIntoView.
   const sorted = [...groups].sort((a, b) =>
-    a.latest_page_notification_at.localeCompare(b.latest_page_notification_at),
+    b.latest_page_notification_at.localeCompare(a.latest_page_notification_at),
   );
 
   return (
@@ -215,7 +219,7 @@ export const KronkSystemView: React.FC = () => {
           minHeight: 0,
           overflowY: 'auto',
           display: 'flex',
-          flexDirection: 'column',
+          flexDirection: 'column-reverse',
           gap: '1.25rem',
           padding: '1.25rem 1rem',
         }}
