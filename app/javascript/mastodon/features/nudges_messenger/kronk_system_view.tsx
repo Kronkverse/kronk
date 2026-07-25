@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   defineMessages,
@@ -192,12 +186,45 @@ export const KronkSystemView: React.FC = () => {
     a.latest_page_notification_at.localeCompare(b.latest_page_notification_at),
   );
 
-  // Pin the scroll to the newest card on mount + whenever a new
-  // system message arrives. scrollTop = scrollHeight is the most
-  // reliable primitive across browsers.
-  useLayoutEffect(() => {
+  // Pin the scroll to the newest card. Simple useLayoutEffect wasn't
+  // enough — the cards contain SVG icons whose layout stabilises
+  // AFTER the first paint, so an early scrollTop write got clobbered
+  // when the container's scrollHeight grew again. Wire a
+  // ResizeObserver on the container so any subsequent grow event
+  // re-pins to bottom, and use a double-rAF for the initial mount so
+  // we run after the browser has committed layout.
+  useEffect(() => {
     const el = streamRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+    const pin = () => {
+      el.scrollTop = el.scrollHeight;
+    };
+    const rafIds: number[] = [];
+    rafIds.push(
+      requestAnimationFrame(() => {
+        rafIds.push(requestAnimationFrame(pin));
+      }),
+    );
+
+    // Ongoing: any time the container's scrollable area grows (SVG
+    // reflow, images loading, new items appended) — re-pin to bottom
+    // unless the user has scrolled up on purpose (>200px from bottom).
+    const ro = new ResizeObserver(() => {
+      const distanceFromBottom =
+        el.scrollHeight - el.scrollTop - el.clientHeight;
+      if (distanceFromBottom < 200) pin();
+    });
+    ro.observe(el);
+    for (const child of Array.from(el.children)) {
+      ro.observe(child);
+    }
+
+    return () => {
+      rafIds.forEach((id) => {
+        cancelAnimationFrame(id);
+      });
+      ro.disconnect();
+    };
   }, [sorted.length]);
 
   return (

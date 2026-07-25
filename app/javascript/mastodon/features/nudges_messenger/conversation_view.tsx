@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useCallback,
-  useState,
-} from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -213,12 +207,37 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   // Pin scroll to the newest message on open + on new arrivals. Direct
   // scrollTop write is more reliable across engines than scrollIntoView
   // or column-reverse — both of which left the stream landing at the
-  // top on shadow. useLayoutEffect fires pre-paint so no flash of the
-  // head. Keyed on conversationId (fresh open) + stream length (new
-  // message arrived).
-  useLayoutEffect(() => {
+  // top on shadow. Wrap in double-rAF for initial mount (cards contain
+  // SVG icons whose layout stabilises after first paint), plus a
+  // ResizeObserver to re-pin whenever content grows (media loads,
+  // late reflows). Skips re-pin if the user has scrolled up past 200px.
+  useEffect(() => {
     const el = streamRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+    const pin = () => {
+      el.scrollTop = el.scrollHeight;
+    };
+    const rafIds: number[] = [];
+    rafIds.push(
+      requestAnimationFrame(() => {
+        rafIds.push(requestAnimationFrame(pin));
+      }),
+    );
+    const ro = new ResizeObserver(() => {
+      const distanceFromBottom =
+        el.scrollHeight - el.scrollTop - el.clientHeight;
+      if (distanceFromBottom < 200) pin();
+    });
+    ro.observe(el);
+    for (const child of Array.from(el.children)) {
+      ro.observe(child);
+    }
+    return () => {
+      rafIds.forEach((id) => {
+        cancelAnimationFrame(id);
+      });
+      ro.disconnect();
+    };
   }, [conversationId, detail?.stream.length]);
 
   // Real-time streaming — subscribe to nudges:conversation events for
