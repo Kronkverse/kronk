@@ -218,6 +218,10 @@ export function Live () {
   return import("../../live");
 }
 
+export function Huddle () {
+  return import("../../huddle").then(m => ({ default: m.Huddle }));
+}
+
 export function Events () {
   return import("../../events").then(m => ({ default: m.Events }));
 }
