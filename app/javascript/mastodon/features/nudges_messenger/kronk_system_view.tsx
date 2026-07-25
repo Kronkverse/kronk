@@ -1,15 +1,35 @@
-import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+import { useCallback, useEffect, useState } from 'react';
+
+import {
+  defineMessages,
+  FormattedDate,
+  FormattedMessage,
+  FormattedTime,
+  useIntl,
+} from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
 import DoneAllIcon from '@/material-icons/400-24px/done_all.svg?react';
 import KronkCoinIcon from '@/material-icons/400-24px/kronk_coin.svg?react';
+import { markNotificationsAsRead } from 'mastodon/actions/notification_groups';
 import { Icon } from 'mastodon/components/icon';
-import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import type { NotificationGroupProposalComplete } from 'mastodon/models/notification_group';
-import { useAppSelector } from 'mastodon/store';
+import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { isKronkSystemType } from './kronk_system';
+
+// Cards the user has clicked into stay flagged as "visited" locally
+// so unresolved notifications remain visually distinct from ones the
+// user has already followed up on. Kept client-side (no server round
+// trip) since the concept is UI hygiene, not authoritative state — the
+// canonical Delivered → Complete lifecycle still lives on the proposal.
+const VISITED_KEY = 'kronk.nudges.system.visited';
+
+// AEST is the operator's timezone — the entire team + shadow deploys
+// are anchored to Sydney, so an absolute time is more useful than a
+// relative one for triaging what still needs a response.
+const TIMEZONE = 'Australia/Sydney';
 
 const messages = defineMessages({
   name: { id: 'nudges.kronk.name', defaultMessage: 'Kronk' },
@@ -23,10 +43,44 @@ const messages = defineMessages({
   },
 });
 
-const ProposalCompleteMessage: React.FC<{
+const readVisited = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem(VISITED_KEY);
+    if (!raw) return new Set();
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? new Set(parsed.filter((v): v is string => typeof v === 'string'))
+      : new Set();
+  } catch {
+    return new Set();
+  }
+};
+
+const writeVisited = (set: Set<string>): void => {
+  try {
+    localStorage.setItem(VISITED_KEY, JSON.stringify([...set]));
+  } catch {
+    // localStorage can be blocked; a silent failure just means the
+    // visited state doesn't persist — the click still opens the card.
+  }
+};
+
+interface ProposalCompleteMessageProps {
   group: NotificationGroupProposalComplete;
-}> = ({ group }) => {
+  visited: boolean;
+  onVisit: (proposalId: string) => void;
+}
+
+const ProposalCompleteMessage: React.FC<ProposalCompleteMessageProps> = ({
+  group,
+  visited,
+  onVisit,
+}) => {
   const proposal = group.proposal;
+  const handleClick = useCallback(() => {
+    if (proposal) onVisit(proposal.proposal_id);
+  }, [proposal, onVisit]);
+
   if (!proposal) return null;
 
   return (
@@ -38,16 +92,10 @@ const ProposalCompleteMessage: React.FC<{
         maxWidth: '32rem',
       }}
     >
-      <p style={{ margin: 0, color: 'var(--text-primary)', lineHeight: 1.5 }}>
-        <FormattedMessage
-          id='nudges.kronk.proposal_complete'
-          defaultMessage='The work on your proposal “{title}” is complete — ready to finalise.'
-          values={{ title: proposal.proposal_title }}
-        />
-      </p>
       <Link
         to={`/hub/kommons/p/${proposal.proposal_id}`}
-        className='notification-event-card'
+        className={`notification-event-card${visited ? ' notification-event-card--visited' : ''}`}
+        onClick={handleClick}
       >
         <div className='notification-event-card__info'>
           <div className='notification-event-card__title'>
@@ -55,16 +103,36 @@ const ProposalCompleteMessage: React.FC<{
             {proposal.proposal_title}
           </div>
           <div className='notification-event-card__meta'>
-            <FormattedMessage
-              id='notification.proposal_complete.ready'
-              defaultMessage='Ready to finalise'
-            />
+            {visited ? (
+              <FormattedMessage
+                id='notification.proposal_complete.followed_up'
+                defaultMessage='Followed up'
+              />
+            ) : (
+              <FormattedMessage
+                id='notification.proposal_complete.ready'
+                defaultMessage='Ready to finalise'
+              />
+            )}
           </div>
         </div>
       </Link>
       {group.latest_page_notification_at && (
         <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-          <RelativeTimestamp timestamp={group.latest_page_notification_at} />
+          <FormattedTime
+            value={group.latest_page_notification_at}
+            timeZone={TIMEZONE}
+            hour='2-digit'
+            minute='2-digit'
+          />
+          {' · '}
+          <FormattedDate
+            value={group.latest_page_notification_at}
+            timeZone={TIMEZONE}
+            day='numeric'
+            month='short'
+          />
+          {' AEST'}
         </span>
       )}
     </div>
@@ -76,6 +144,7 @@ const ProposalCompleteMessage: React.FC<{
 // already in the store and lays them out as a simple message stream.
 export const KronkSystemView: React.FC = () => {
   const intl = useIntl();
+  const dispatch = useAppDispatch();
 
   const groups = useAppSelector((state) =>
     [
@@ -85,6 +154,25 @@ export const KronkSystemView: React.FC = () => {
       isKronkSystemType(g.type),
     ),
   );
+
+  // Opening the Kronk system pane is the "I've read this" signal for
+  // korner/system notifications — advance the read marker so the raven
+  // pillar drops its waving-hand alert.
+  useEffect(() => {
+    dispatch(markNotificationsAsRead());
+  }, [dispatch]);
+
+  const [visited, setVisited] = useState<Set<string>>(() => readVisited());
+
+  const handleVisit = useCallback((proposalId: string) => {
+    setVisited((prev) => {
+      if (prev.has(proposalId)) return prev;
+      const next = new Set(prev);
+      next.add(proposalId);
+      writeVisited(next);
+      return next;
+    });
+  }, []);
 
   const sorted = [...groups].sort((a, b) =>
     a.latest_page_notification_at.localeCompare(b.latest_page_notification_at),
@@ -138,7 +226,14 @@ export const KronkSystemView: React.FC = () => {
           </p>
         )}
         {sorted.map((group) => (
-          <ProposalCompleteMessage key={group.group_key} group={group} />
+          <ProposalCompleteMessage
+            key={group.group_key}
+            group={group}
+            visited={
+              group.proposal ? visited.has(group.proposal.proposal_id) : false
+            }
+            onVisit={handleVisit}
+          />
         ))}
       </div>
     </div>

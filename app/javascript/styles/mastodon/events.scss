@@ -1634,6 +1634,29 @@ $ev-interested-color: #b8945f;
     color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     margin-top: 1px;
   }
+
+  // Card the user has clicked into — used by the Kronk system nudger to
+  // distinguish followed-up notifications from ones still waiting for
+  // attention. Purple-filled instead of tinted so scanning a stack tells
+  // the story at a glance.
+  &--visited {
+    background: color-mix(in srgb, var(--accent) 32%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+
+    &:hover {
+      background: color-mix(in srgb, var(--accent) 40%, transparent);
+      border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+    }
+
+    .notification-event-card__title,
+    .notification-event-card__meta {
+      color: var(--text-on-accent, #fff);
+    }
+
+    .notification-event-card__title .icon {
+      color: var(--text-on-accent, #fff);
+    }
+  }
 }
 
 // Invite Followers Panel

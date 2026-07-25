@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useCallback, useState } from 'react';
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useCallback,
+  useState,
+} from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -204,12 +210,16 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     setLoadingOlder(false);
   }, [conversationId]);
 
-  // Scroll to bottom on load / message.
-  useEffect(() => {
+  // Scroll to bottom on load / message. Keyed on both conversationId
+  // and stream length so opening a different chat also jumps to the
+  // most recent message, not wherever the previous chat was parked.
+  // useLayoutEffect fires pre-paint so the user never sees the head
+  // of the stream flash first.
+  useLayoutEffect(() => {
     if (streamEndRef.current) {
       streamEndRef.current.scrollIntoView({ block: 'end' });
     }
-  }, [detail?.stream.length]);
+  }, [conversationId, detail?.stream.length]);
 
   // Real-time streaming — subscribe to nudges:conversation events for
   // the open conversation and fold updates into the local detail. The
