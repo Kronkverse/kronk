@@ -5,16 +5,16 @@ import { useLocation } from 'react-router-dom';
 
 import { Stage } from 'mastodon/components/stage';
 
+import { LoggerView } from './logger_view';
 import { MatesView } from './mates_view';
 import { TreksView } from './treks_view';
 
 // Map — three-lens surface (Mates / Treks / Logger). The Frame provides the
 // space title, tagline and the SpaceViewPicker pill from the manifest.
 //
-// Mates and Treks are native MapLibre GL surfaces backed by their own APIs
-// (features/map_v2/mates_view, treks_view). The Logger lens still renders the
-// hand-authored prototype (public/map-preview.html) via an iframe until its
-// backend lands (Phase 4).
+// All three lenses are native now: Mates and Treks are MapLibre GL surfaces
+// backed by their own APIs; Logger records a trek by hand or by importing a
+// GPS file (parsed in the browser). The prototype iframe is retired.
 //
 // Kommons proposal #116969555027300161.
 
@@ -49,14 +49,7 @@ const MapV2: React.FC<{ multiColumn?: boolean }> = () => {
 
       {view === 'mates' && <MatesView />}
       {view === 'treks' && <TreksView />}
-      {view === 'logger' && (
-        <iframe
-          key={view}
-          title={intl.formatMessage(messages.title)}
-          src={`/map-preview.html?view=${view}`}
-          className='korner-iframe'
-        />
-      )}
+      {view === 'logger' && <LoggerView />}
     </Stage>
   );
 };
