@@ -169,3 +169,56 @@
     font-size: 0.7rem;
   }
 }
+
+// ── Kronk palette alignment ─────────────────────────────────────────────
+// The composer chrome is stock Mastodon (components.scss) and paints the
+// Mastodon blurple ($ui-highlight-color #6364ff) for the Post button, the
+// solid active states and the focus ring — which reads blue in dark mode,
+// where Kronk's --accent is a deeper violet (#4414cc). Retokenise only those
+// accent/ring surfaces onto the Kronk violet. We deliberately do NOT touch the
+// card/textarea/text colours here: the Kronk semantic surface/text tokens are
+// pinned to their dark values under the stock light *skin* (they switch on
+// data-theme, which the skin doesn't set), so overriding them would darken the
+// light-theme composer. A violet/white accent, by contrast, reads correctly on
+// both the dark and light surfaces. Scoped under .compose-form; loaded after
+// components.scss. See docs/kronk_aesthetic_system.md.
+.compose-form {
+  // The card's focus ring (was a blurple border).
+  &__highlightable.active {
+    border-color: var(--kronk-purple-accent);
+    box-shadow: 0 0 0 1px var(--kronk-purple-accent);
+  }
+
+  // Solid active pill (visibility/language) — was solid blue.
+  .dropdown-button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--text-on-accent);
+  }
+
+  // Toggled action icon (e.g. content-warning on) — was solid blue.
+  &__actions .icon-button.active {
+    background: var(--accent);
+    color: var(--text-on-accent);
+  }
+
+  // Over-limit character counter → the Kronk error red.
+  .character-counter--over {
+    color: var(--warning-red);
+  }
+
+  // The Post button — the biggest offender (stock blurple). Kronk violet,
+  // pill-rounded per the CTA convention; white text reads on the violet in
+  // both themes. :disabled keeps the stock muted treatment.
+  &__submit .button:not(:disabled) {
+    background: var(--accent);
+    color: var(--text-on-accent);
+    border-radius: var(--radius-round);
+
+    &:hover,
+    &:focus,
+    &:active {
+      background: var(--kronk-purple-deep);
+    }
+  }
+}
