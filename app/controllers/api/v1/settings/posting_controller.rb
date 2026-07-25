@@ -15,7 +15,9 @@ class Api::V1::Settings::PostingController < Api::BaseController
   before_action :require_user!
 
   FIELDS = {
-    'default_privacy' => { key: 'default_privacy', kind: 'enum', options: -> { %w(public unlisted private) } },
+    # The reach ladder (docs/kronk_feed_and_reach.md §2) — the follower-model
+    # scopes (unlisted/private) are retired from the picker.
+    'default_privacy' => { key: 'default_privacy', kind: 'enum', options: -> { %w(public orbit mates self_only) } },
     'default_quote_policy' => { key: 'default_quote_policy', kind: 'enum', options: -> { %w(public followers nobody) } },
     'default_language' => { key: 'default_language', kind: 'enum', options: -> { [''] + LanguagesHelper::SUPPORTED_LOCALES.keys.map(&:to_s) } },
     'default_sensitive' => { key: 'default_sensitive', kind: 'boolean', options: -> {} },
@@ -54,6 +56,16 @@ class Api::V1::Settings::PostingController < Api::BaseController
     kind == 'boolean' ? ActiveModel::Type::Boolean.new.cast(raw) : raw.to_s
   end
 
+  # Map a legacy follower-model default onto the nearest reach tier so the
+  # widget shows an in-range option (see the reach ladder above).
+  def reach_default_privacy
+    case current_user.settings['default_privacy']
+    when 'private' then 'mates'
+    when 'unlisted' then 'public'
+    else current_user.settings['default_privacy']
+    end
+  end
+
   def payload
     {
       settings_schema: FIELDS.map do |name, cfg|
@@ -63,7 +75,7 @@ class Api::V1::Settings::PostingController < Api::BaseController
         schema
       end,
       values: {
-        'default_privacy' => current_user.settings['default_privacy'],
+        'default_privacy' => reach_default_privacy,
         'default_quote_policy' => current_user.settings['default_quote_policy'],
         'default_language' => current_user.settings['default_language'],
         'default_sensitive' => current_user.settings['default_sensitive'],

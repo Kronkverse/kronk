@@ -58,7 +58,7 @@ class InitialStateSerializer < ActiveModel::Serializer
 
     if object.current_account
       store[:me]                = object.current_account.id.to_s
-      store[:default_privacy]   = object.visibility || object_account_user.setting_default_privacy
+      store[:default_privacy]   = compose_default_privacy
       store[:default_sensitive] = object_account_user.setting_default_sensitive
       store[:default_language]  = object_account_user.preferred_posting_language
       store[:default_quote_policy] = object_account_user.setting_default_quote_policy
@@ -132,6 +132,18 @@ class InitialStateSerializer < ActiveModel::Serializer
 
   def object_account_user
     object.current_account.user
+  end
+
+  # The follower-model scopes are retired from the composer (reach model,
+  # docs/kronk_feed_and_reach.md §2). Map a retired default to the nearest
+  # reach tier so a new post never opens as "Followers"/"Quiet public".
+  def compose_default_privacy
+    raw = object.visibility || object_account_user.setting_default_privacy
+    case raw
+    when 'private' then 'mates'
+    when 'unlisted' then 'public'
+    else raw
+    end
   end
 
   def serialized_account(account)
