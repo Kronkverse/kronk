@@ -281,10 +281,12 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/hub/kuestions/settings' exact component={KuestionsSettings} content={children} />}
             {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
             {/* Huddle korner:
-                  /hub/huddle       → landing (Main Huddle hero + Krew Huddles list)
-                  /hub/huddle/live  → the actual Jitsi room ("huddle up" flow)
+                  /hub/huddle                    → landing (Main Huddle hero + Krew Huddles list)
+                  /hub/huddle/live               → the Main Huddle room (fixed `huddle` Jitsi room)
+                  /hub/huddle/krew/:krewSlug     → per-Krew room (`huddle-krew-<slug>` Jitsi room)
                 Legacy /huddle forwards to the landing. */}
             <Redirect from='/huddle' to='/hub/huddle' exact />
+            {signedIn && <WrappedRoute path='/hub/huddle/krew/:krewSlug' exact component={Live} content={children} />}
             {signedIn && <WrappedRoute path='/hub/huddle/live' exact component={Live} content={children} />}
             {signedIn && <WrappedRoute path='/hub/huddle' exact component={Huddle} content={children} />}
             <WrappedRoute path={["/booth/sets/:id", "/hub/booth/sets/:id"]} component={BoothSetPage} content={children} />
