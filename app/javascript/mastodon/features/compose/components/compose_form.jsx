@@ -23,7 +23,6 @@ import { countableText } from '../util/counter';
 
 import { CharacterCounter } from './character_counter';
 import { EditIndicator } from './edit_indicator';
-import { LanguageDropdown } from './language_dropdown';
 import { KrewTargets } from './krew_targets';
 import { KategoryPicker } from './kategory_picker';
 import { NavigationBar } from './navigation_bar';
@@ -265,7 +264,11 @@ class ComposeForm extends ImmutablePureComponent {
 
           <div className='compose-form__dropdowns'>
             <VisibilityButton disabled={this.props.isEditing} />
-            <LanguageDropdown />
+            {/* Language picker hidden from the composer: the post's language is
+                still auto-tagged from the user's posting-language default (set
+                in compose state via clearAll and sent on submit), which is what
+                translation, language feed-filtering and screen readers consume.
+                Multilingual users change their default in Settings → Posting. */}
           </div>
 
           <KrewTargets />
