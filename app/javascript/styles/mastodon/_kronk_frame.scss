@@ -298,6 +298,16 @@
   }
 }
 
+// KornerName emphasis mark — used to underline an in-word run of caps
+// (e.g. the "art" in "mARTketplace") without shouting it. Kept subtle;
+// the goal is a semantic mark, not a decoration.
+.korner-name__emphasis {
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.14em;
+  text-decoration-color: currentcolor;
+}
+
 // ── SpaceViewPicker — the collapsible per-view dropdown ────────────
 // Only the current view pill is visible by default. Tap reveals the
 // other views underneath. Selecting one closes the dropdown and swaps

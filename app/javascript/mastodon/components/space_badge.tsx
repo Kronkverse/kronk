@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 
+import { KornerName } from './korner_name';
+
 // SpaceBadge — the "you are in Kuestions, tap to go back" pill.
 //
 // Merges what used to be two separate affordances (KornerExit's
@@ -42,6 +44,8 @@ export const SpaceBadge: React.FC<SpaceBadgeProps> = ({
       />
     </svg>
     <span className='space-badge__glyph'>{glyph}</span>
-    <span className='space-badge__name'>{name}</span>
+    <span className='space-badge__name'>
+      <KornerName name={name} />
+    </span>
   </Link>
 );

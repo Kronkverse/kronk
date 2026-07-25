@@ -2,6 +2,8 @@ import classNames from 'classnames';
 
 import { useKorner } from 'mastodon/hooks/useKorner';
 
+import { KornerName } from './korner_name';
+
 // SpaceHeader — the shared, in-content header every /hub/<slug> korner
 // starts with. Reads the manifest for `slug` and renders the space
 // name as a proper display-typography title above the tagline
@@ -45,7 +47,9 @@ export const SpaceHeader: React.FC<Props> = ({ slug, className }) => {
       className={classNames('space-header', className)}
       data-frame-header=''
     >
-      <h1 className='space-header__title'>{korner.name}</h1>
+      <h1 className='space-header__title'>
+        <KornerName name={korner.name} />
+      </h1>
       {tagline && <p className='space-header__tagline'>{tagline}</p>}
     </header>
   );
