@@ -63,11 +63,21 @@ Everything below elaborates these.
 
 One scale, widest to tightest:
 
-| Tier      | Who                                 | Notes                          |
-| --------- | ----------------------------------- | ------------------------------ |
-| **Kronk** | The whole community on the instance | The broadest reach             |
-| **Orbit** | Mates of Mates (one hop out)        | The middle ring                |
-| **Mates** | Your mutual connections             | The tightest ring on the scale |
+| Tier        | Who                                 | Notes                                    |
+| ----------- | ----------------------------------- | ---------------------------------------- |
+| **Kronk**   | The whole community on the instance | The broadest reach                       |
+| **Orbit**   | Mates of Mates (one hop out)        | The middle ring                          |
+| **Mates**   | Your mutual connections             | The tightest social ring on the scale    |
+| **Just me** | The author alone (own timeline)     | Below Mates; radiates to no one (2026-07-25) |
+
+> **Implemented (2026-07-25).** The reach tiers are Status visibility values:
+> `mates` (6), `orbit` (7), `self_only` (8) — added alongside `krew` (5) in
+> `Status::Visibility`, all local-only. `Kronk` maps to the existing `public`
+> visibility. Read enforcement lives in `StatusPolicy#show?` and
+> `AccountStatusesFilter#permitted_visibilities`; write fan-out in
+> `FanOutOnWriteService` (`mates`/`orbit` → Mates' home feeds; `self_only` → the
+> author's home only). `Just me` was added to the ladder in the 2026-07-25
+> workshop; the proactive Orbit→FoF home push remains deferred (§6).
 
 The same scale is used for **two things**:
 

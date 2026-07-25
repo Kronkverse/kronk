@@ -154,6 +154,18 @@ module Account::Interactions
            .where(id: passive_relationships.select(:account_id))
   end
 
+  # Orbit = mates of mates, one hop out (docs/kronk_feed_and_reach.md §2).
+  # `orbit_of?` asks whether `other_account` sits in this account's orbit:
+  # true when they share at least one Mate. A direct Mate is *not* in the
+  # orbit by this test (callers check `mate?` first). A single EXISTS with
+  # nested subqueries — fine at API scale; a maintained set is an open item
+  # (§6). Never counts self.
+  def orbit_of?(other_account)
+    return false if other_account.nil? || id == other_account.id
+
+    mates.exists?(id: other_account.mates.select(:id))
+  end
+
   def blocking?(other_account)
     block_relationships.exists?(target_account: other_account)
   end
