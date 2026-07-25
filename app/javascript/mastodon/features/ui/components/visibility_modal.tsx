@@ -17,10 +17,11 @@ import { messages as privacyMessages } from '@/mastodon/features/compose/compone
 import { createAppSelector, useAppSelector } from '@/mastodon/store';
 import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
+import OrbitIcon from '@/material-icons/400-24px/orbit.svg?react';
 import PublicIcon from '@/material-icons/400-24px/public.svg?react';
-import QuietTimeIcon from '@/material-icons/400-24px/quiet_time.svg?react';
 
 import type { BaseConfirmationModalProps } from './confirmation_modals/confirmation_modal';
 
@@ -72,8 +73,15 @@ const selectStatusPolicy = createAppSelector(
       (status.getIn(['quote_approval', 'automatic', 0]) as string) || 'nobody';
     const visibility = status.get('visibility') as StatusVisibility;
 
-    // If the status is private or direct, it cannot be quoted by anyone.
-    if (visibility === 'private' || visibility === 'direct') {
+    // If the status is private/direct or a restricted reach scope, it
+    // cannot be quoted by anyone.
+    if (
+      visibility === 'private' ||
+      visibility === 'direct' ||
+      visibility === 'mates' ||
+      visibility === 'orbit' ||
+      visibility === 'self_only'
+    ) {
       return 'nobody';
     }
 
@@ -130,7 +138,10 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
     const disableQuotePolicy =
       visibility === 'private' ||
       visibility === 'direct' ||
-      visibility === 'krew';
+      visibility === 'krew' ||
+      visibility === 'mates' ||
+      visibility === 'orbit' ||
+      visibility === 'self_only';
     const disablePublicVisibilities = useAppSelector(
       selectDisablePublicVisibilities,
     );
@@ -139,25 +150,15 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
     );
 
     const visibilityItems = useMemo<SelectItem<StatusVisibility>[]>(() => {
-      const items: SelectItem<StatusVisibility>[] = [
-        {
-          value: 'private',
-          text: intl.formatMessage(privacyMessages.private_short),
-          meta: intl.formatMessage(privacyMessages.private_long),
-          icon: 'lock',
-          iconComponent: LockIcon,
-        },
-        {
-          value: 'direct',
-          text: intl.formatMessage(privacyMessages.direct_short),
-          meta: intl.formatMessage(privacyMessages.direct_long),
-          icon: 'at',
-          iconComponent: AlternateEmailIcon,
-        },
-      ];
+      // The Kronk reach ladder (docs/kronk_feed_and_reach.md §2), widest to
+      // tightest, then Krew (a separate group-target axis) and Specific
+      // people (DMs). The Mastodon "Followers" (private) and "Quiet public"
+      // (unlisted) options are retired from the picker — existing posts
+      // with those visibilities still render.
+      const items: SelectItem<StatusVisibility>[] = [];
 
       if (!disablePublicVisibilities) {
-        items.unshift(
+        items.push(
           {
             value: 'public',
             text: intl.formatMessage(privacyMessages.public_short),
@@ -166,17 +167,35 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
             iconComponent: PublicIcon,
           },
           {
-            value: 'unlisted',
-            text: intl.formatMessage(privacyMessages.unlisted_short),
-            meta: intl.formatMessage(privacyMessages.unlisted_long),
-            icon: 'unlock',
-            iconComponent: QuietTimeIcon,
+            value: 'orbit',
+            text: intl.formatMessage(privacyMessages.orbit_short),
+            meta: intl.formatMessage(privacyMessages.orbit_long),
+            icon: 'orbit',
+            iconComponent: OrbitIcon,
+          },
+          {
+            value: 'mates',
+            text: intl.formatMessage(privacyMessages.mates_short),
+            meta: intl.formatMessage(privacyMessages.mates_long),
+            icon: 'group',
+            iconComponent: Diversity2Icon,
           },
         );
-        // Krew — mutually exclusive with the other modes per
-        // KRONK_KREWS §7.1. Selecting Krew here closes the modal;
-        // KrewTargets in the composer becomes the multi-select for
-        // picking which Krews carry the post.
+      }
+
+      // Just me — the author's own timeline only. Always available.
+      items.push({
+        value: 'self_only',
+        text: intl.formatMessage(privacyMessages.self_only_short),
+        meta: intl.formatMessage(privacyMessages.self_only_long),
+        icon: 'lock',
+        iconComponent: LockIcon,
+      });
+
+      if (!disablePublicVisibilities) {
+        // Krew — a separate group-target axis. Selecting it makes
+        // KrewTargets in the composer the multi-select for which Krews
+        // carry the post.
         items.push({
           value: 'krew',
           text: intl.formatMessage(privacyMessages.krew_short),
@@ -185,6 +204,15 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
           iconComponent: GroupsIcon,
         });
       }
+
+      // Specific people — direct mentions (DMs). Always available.
+      items.push({
+        value: 'direct',
+        text: intl.formatMessage(privacyMessages.direct_short),
+        meta: intl.formatMessage(privacyMessages.direct_long),
+        icon: 'at',
+        iconComponent: AlternateEmailIcon,
+      });
 
       return items;
     }, [intl, disablePublicVisibilities]);

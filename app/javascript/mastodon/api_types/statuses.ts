@@ -15,7 +15,14 @@ export type StatusVisibility =
   | 'direct'
   // Kronk krew-scoped audience — the union of members across the
   // targeted Krews. Local-only; no federation. Requires krew_ids.
-  | 'krew';
+  | 'krew'
+  // Kronk reach ladder (docs/kronk_feed_and_reach.md §2) — local-only:
+  //   mates     — the author's mutual connections
+  //   orbit     — mates of mates (one hop out)
+  //   self_only — the author's own timeline; radiates to no one
+  | 'mates'
+  | 'orbit'
+  | 'self_only';
 
 export interface ApiStatusApplicationJSON {
   name: string;
@@ -185,7 +192,14 @@ export interface ApiStatusSourceJSON {
 export function isStatusVisibility(
   visibility: string,
 ): visibility is StatusVisibility {
-  return ['public', 'unlisted', 'private', 'direct', 'krew'].includes(
-    visibility,
-  );
+  return [
+    'public',
+    'unlisted',
+    'private',
+    'direct',
+    'krew',
+    'mates',
+    'orbit',
+    'self_only',
+  ].includes(visibility);
 }

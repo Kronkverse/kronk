@@ -876,7 +876,7 @@
   "privacy.direct.short": "Private mention",
   "privacy.private.long": "Only your followers",
   "privacy.private.short": "Followers",
-  "privacy.public.long": "Anyone on and off Mastodon",
+  "privacy.public.long": "Everyone on Kronk",
   "privacy.public.short": "Public",
   "privacy.quote.anyone": "{visibility}, anyone can quote",
   "privacy.quote.disabled": "{visibility}, quotes disabled",

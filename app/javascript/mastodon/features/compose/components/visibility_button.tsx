@@ -15,8 +15,10 @@ import type { StatusVisibility } from '@/mastodon/api_types/statuses';
 import { Icon } from '@/mastodon/components/icon';
 import { useAppSelector, useAppDispatch } from '@/mastodon/store';
 import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
+import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
+import OrbitIcon from '@/material-icons/400-24px/orbit.svg?react';
 import PublicIcon from '@/material-icons/400-24px/public.svg?react';
 import QuietTimeIcon from '@/material-icons/400-24px/quiet_time.svg?react';
 
@@ -78,6 +80,25 @@ const visibilityOptions = {
     value: 'krew',
     text: privacyMessages.krew_short,
   },
+  // Kronk reach ladder (docs/kronk_feed_and_reach.md §2).
+  orbit: {
+    icon: 'orbit',
+    iconComponent: OrbitIcon,
+    value: 'orbit',
+    text: privacyMessages.orbit_short,
+  },
+  mates: {
+    icon: 'group',
+    iconComponent: Diversity2Icon,
+    value: 'mates',
+    text: privacyMessages.mates_short,
+  },
+  self_only: {
+    icon: 'lock',
+    iconComponent: LockIcon,
+    value: 'self_only',
+    text: privacyMessages.self_only_short,
+  },
 };
 
 const PrivacyModalButton: FC<PrivacyDropdownProps> = ({ disabled = false }) => {
@@ -101,7 +122,10 @@ const PrivacyModalButton: FC<PrivacyDropdownProps> = ({ disabled = false }) => {
     if (
       visibility === 'private' ||
       visibility === 'direct' ||
-      visibility === 'krew'
+      visibility === 'krew' ||
+      visibility === 'mates' ||
+      visibility === 'orbit' ||
+      visibility === 'self_only'
     ) {
       return visibilityText;
     }

@@ -1,8 +1,10 @@
 import { defineMessages, useIntl } from 'react-intl';
 
 import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
+import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
+import OrbitIcon from '@/material-icons/400-24px/orbit.svg?react';
 import PublicIcon from '@/material-icons/400-24px/public.svg?react';
 import QuietTimeIcon from '@/material-icons/400-24px/quiet_time.svg?react';
 import type { StatusVisibility } from 'mastodon/models/status';
@@ -26,6 +28,18 @@ const messages = defineMessages({
   krew_short: {
     id: 'privacy.krew.short',
     defaultMessage: 'Krew',
+  },
+  orbit_short: {
+    id: 'privacy.orbit.short',
+    defaultMessage: 'Orbit',
+  },
+  mates_short: {
+    id: 'privacy.mates.short',
+    defaultMessage: 'Mates',
+  },
+  self_only_short: {
+    id: 'privacy.self_only.short',
+    defaultMessage: 'Just me',
   },
 });
 
@@ -59,6 +73,21 @@ export const VisibilityIcon: React.FC<{ visibility: StatusVisibility }> = ({
       icon: 'group',
       iconComponent: GroupsIcon,
       text: intl.formatMessage(messages.krew_short),
+    },
+    orbit: {
+      icon: 'orbit',
+      iconComponent: OrbitIcon,
+      text: intl.formatMessage(messages.orbit_short),
+    },
+    mates: {
+      icon: 'group',
+      iconComponent: Diversity2Icon,
+      text: intl.formatMessage(messages.mates_short),
+    },
+    self_only: {
+      icon: 'lock',
+      iconComponent: LockIcon,
+      text: intl.formatMessage(messages.self_only_short),
     },
   };
 
