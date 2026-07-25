@@ -4,7 +4,10 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Link, useHistory } from 'react-router-dom';
 
-import { apiCreateMartketplaceListing } from 'mastodon/api/martketplace';
+import {
+  apiCreateMartketplaceListing,
+  apiUploadListingMedia,
+} from 'mastodon/api/martketplace';
 import type { CreateListingParams } from 'mastodon/api/martketplace';
 import { Stage } from 'mastodon/components/stage';
 
@@ -59,7 +62,31 @@ const messages = defineMessages({
   },
   labelPrice: {
     id: 'martketplace.new.field.price',
-    defaultMessage: 'Price (in GBP)',
+    defaultMessage: 'Price (in AUD)',
+  },
+  labelPhoto: {
+    id: 'martketplace.new.field.photo',
+    defaultMessage: 'Photo',
+  },
+  photoChoose: {
+    id: 'martketplace.new.field.photo_choose',
+    defaultMessage: 'Choose an image',
+  },
+  photoReplace: {
+    id: 'martketplace.new.field.photo_replace',
+    defaultMessage: 'Replace image',
+  },
+  photoRemove: {
+    id: 'martketplace.new.field.photo_remove',
+    defaultMessage: 'Remove',
+  },
+  photoUploading: {
+    id: 'martketplace.new.field.photo_uploading',
+    defaultMessage: 'Uploading…',
+  },
+  photoErrorGeneric: {
+    id: 'martketplace.new.field.photo_error',
+    defaultMessage: "Couldn't upload that image — try another?",
   },
   placeholderPrice: {
     id: 'martketplace.new.field.price_placeholder',
@@ -104,11 +131,57 @@ const MartketplaceNew: React.FC<{ multiColumn?: boolean }> = () => {
   const [location, setLocation] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // One photo, one attachment id — the listing schema supports many
+  // but the composer only surfaces one slot for now to keep the flow
+  // simple. Ordering / additional photos are a follow-up.
+  const [photoId, setPhotoId] = useState<string | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
 
   const canSubmit = useMemo(
-    () => title.trim().length > 0 && !submitting,
-    [title, submitting],
+    () => title.trim().length > 0 && !submitting && !photoUploading,
+    [title, submitting, photoUploading],
   );
+
+  const handlePhotoChange = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >(
+    (e) => {
+      const file = e.currentTarget.files?.[0];
+      // Reset the input so re-selecting the same file re-triggers change.
+      e.currentTarget.value = '';
+      if (!file) return;
+
+      // Show an immediate local preview via object-URL; swap to the
+      // server-authoritative preview_url once the upload settles.
+      const localPreview = URL.createObjectURL(file);
+      setPhotoPreview(localPreview);
+      setPhotoUploading(true);
+      setPhotoError(null);
+
+      void (async () => {
+        try {
+          const uploaded = await apiUploadListingMedia(file);
+          setPhotoId(uploaded.id);
+          if (uploaded.preview_url) setPhotoPreview(uploaded.preview_url);
+        } catch {
+          setPhotoId(null);
+          setPhotoPreview(null);
+          setPhotoError(intl.formatMessage(messages.photoErrorGeneric));
+        } finally {
+          setPhotoUploading(false);
+        }
+      })();
+    },
+    [intl],
+  );
+
+  const handlePhotoRemove = useCallback(() => {
+    setPhotoId(null);
+    setPhotoPreview(null);
+    setPhotoError(null);
+  }, []);
 
   const handleTitleChange = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
@@ -159,8 +232,9 @@ const MartketplaceNew: React.FC<{ multiColumn?: boolean }> = () => {
         location: location.trim() || undefined,
         state: 'live',
         ...(priceCents !== null && Number.isFinite(priceCents)
-          ? { price_cents: priceCents, price_currency: 'GBP' }
+          ? { price_cents: priceCents, price_currency: 'AUD' }
           : { price_cents: null }),
+        ...(photoId ? { media_attachment_ids: [photoId] } : {}),
       };
 
       void (async () => {
@@ -178,7 +252,17 @@ const MartketplaceNew: React.FC<{ multiColumn?: boolean }> = () => {
         }
       })();
     },
-    [canSubmit, title, description, category, price, location, history, intl],
+    [
+      canSubmit,
+      title,
+      description,
+      category,
+      price,
+      location,
+      photoId,
+      history,
+      intl,
+    ],
   );
 
   return (
@@ -271,6 +355,50 @@ const MartketplaceNew: React.FC<{ multiColumn?: boolean }> = () => {
               placeholder={intl.formatMessage(messages.placeholderLocation)}
             />
           </label>
+
+          <div className='wachuneed__compose-field'>
+            <span className='wachuneed__compose-label'>
+              <FormattedMessage {...messages.labelPhoto} />
+            </span>
+            <div className='wachuneed__compose-photo'>
+              {photoPreview && (
+                <img
+                  src={photoPreview}
+                  alt=''
+                  className='wachuneed__compose-photo-preview'
+                />
+              )}
+              <label className='wachuneed__compose-photo-pick'>
+                <input
+                  type='file'
+                  accept='image/*'
+                  onChange={handlePhotoChange}
+                  className='wachuneed__compose-photo-input'
+                />
+                <span>
+                  {photoUploading ? (
+                    <FormattedMessage {...messages.photoUploading} />
+                  ) : photoPreview ? (
+                    <FormattedMessage {...messages.photoReplace} />
+                  ) : (
+                    <FormattedMessage {...messages.photoChoose} />
+                  )}
+                </span>
+              </label>
+              {photoPreview && !photoUploading && (
+                <button
+                  type='button'
+                  className='wachuneed__compose-photo-remove'
+                  onClick={handlePhotoRemove}
+                >
+                  <FormattedMessage {...messages.photoRemove} />
+                </button>
+              )}
+            </div>
+            {photoError && (
+              <p className='wachuneed__compose-error'>{photoError}</p>
+            )}
+          </div>
 
           {error && <p className='wachuneed__compose-error'>{error}</p>}
 
