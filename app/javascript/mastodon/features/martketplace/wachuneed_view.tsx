@@ -168,12 +168,26 @@ export const WachuneedListings: React.FC<Props> = ({ loader, scope }) => {
       <ul className='wachuneed__list'>
         {visible.map((listing) => (
           <li key={listing.id} className='wachuneed__item'>
-            {listing.photo_url && (
+            {listing.photo_url ? (
               <img
                 src={listing.photo_url}
                 alt=''
                 className='wachuneed__item-photo'
               />
+            ) : (
+              // Photo-less tile keeps a square placeholder so every
+              // tile in the grid has the same header height. Emoji
+              // matches the category to hint at what the listing is.
+              <div
+                className='wachuneed__item-photo wachuneed__item-photo--placeholder'
+                aria-hidden
+              >
+                {listing.category === 'creation'
+                  ? '🎨'
+                  : listing.category === 'goods'
+                    ? '📦'
+                    : '🤝'}
+              </div>
             )}
             <div className='wachuneed__item-body'>
               <div className='wachuneed__item-head'>
