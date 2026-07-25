@@ -34,6 +34,7 @@ security:
 resources:
   - name: presence_states
     primary: true
+  - name: treks # recorded activities (draft, or published to Mates)
 
 storage:
   db_namespace: presence_ # presence_states (Postgres); ephemeral — bounded by expires_at, hard-deleted on remove
