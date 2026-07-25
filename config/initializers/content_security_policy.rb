@@ -17,7 +17,10 @@ media_hosts = policy.media_hosts
 # tile host for connect-src (the range fetches) and img-src (any raster
 # sprites). Overridable via env if the basemap moves (e.g. behind
 # osm.kronk.info). No third-party map provider is contacted.
-map_tile_host = ENV.fetch('MAP_TILE_HOST', 'https://kronk-osm.syd1.cdn.digitaloceanspaces.com')
+# Origin (non-CDN) endpoint: it serves clean HTTP 206 range responses, whereas
+# the CDN endpoint returns the full object on a cold-cache range, which breaks
+# pmtiles ("content-length exceeding request"). CDN can be revisited later.
+map_tile_host = ENV.fetch('MAP_TILE_HOST', 'https://kronk-osm.syd1.digitaloceanspaces.com')
 
 Rails.application.config.content_security_policy do |p|
   p.base_uri        :none
