@@ -512,16 +512,17 @@
   color: var(--text-muted);
 }
 
-// Signal-style: column-reverse means the scroll container starts
-// pinned to the bottom (newest message visible + composer just below),
-// and DOM order is newest-first. Scrolling up reveals older items —
-// no manual scroll-to-bottom useEffect required, and new arrivals
-// prepended in DOM appear at the visual bottom without a jump.
+// Normal column layout, oldest-first in DOM. Scroll-to-bottom on
+// open + on new messages is driven by `scrollTop = scrollHeight` in
+// conversation_view.tsx (column-reverse behaved inconsistently across
+// engines and left the stream landing at the top). The composer sits
+// just below in the parent flex column, so a mount pinned to the
+// bottom leaves the newest message directly above the input.
 .nudges-conversation__stream {
   flex: 1 1 auto;
   overflow-y: auto;
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   gap: 0.4rem;
   padding: 1rem;
 }
