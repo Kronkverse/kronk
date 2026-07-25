@@ -150,26 +150,32 @@ body:has(.kronk-stage) .korner-sub-bar {
 // across all views.
 // <SpaceHeaderRow> — brackets the title with the two SpaceNav pills
 // (badge on the left, view picker / settings badge on the right) and
-// scrolls with the rest of Stage. Was previously two systems: an
-// in-content <SpaceHeader> plus a fixed overlay for the pills. That
-// overlay felt like unrelated chrome; consolidating everything here
-// means title + pills read as one block.
-// Grid columns: [left auto] [center 1fr, capped] [right auto].
+// scrolls with the rest of Stage. Positioning:
+//   * The row is a relatively-positioned band with a centered title
+//     in normal flow — that keeps the h1 dead-center in the reading
+//     column regardless of how wide the pills are.
+//   * The two pills are `position: absolute`, pulled to `left/right:
+//     1.5rem` from the row's edges. The 1.5rem inset keeps the right
+//     pill visibly clear of the RightBand fade (Stage ends at
+//     `stage-end` which is 7.75rem inside the viewport, but a pill
+//     hugging that boundary reads as clipped — the inset moves it
+//     inward and gives the row breathing room).
+//   * `padding-inline: max(6rem, 3vw)` reserves horizontal room inside
+//     the flow so a long title never runs under the absolute pills.
+//     Below the mobile breakpoint the pills switch back to normal
+//     flow and stack above the title.
 .space-header-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: 1rem;
-  padding: 1.5rem 1rem 0.5rem;
-  max-width: 60rem;
-  margin: 0 auto;
+  position: relative;
+  padding: 1.5rem max(6rem, 3vw) 0.5rem;
+  text-align: center;
 
   &__left {
-    justify-self: end;
+    position: absolute;
+    left: 1.5rem;
+    top: 1.75rem;
     display: flex;
     align-items: center;
     gap: 0.35rem;
-    min-width: 0;
   }
 
   &__center {
@@ -183,26 +189,28 @@ body:has(.kronk-stage) .korner-sub-bar {
   }
 
   &__right {
-    justify-self: start;
+    position: absolute;
+    right: 1.5rem;
+    top: 1.75rem;
     display: flex;
     align-items: center;
     gap: 0.35rem;
-    min-width: 0;
   }
 }
 
-// Mobile: pills stack above the title so the middle column stays
-// readable and the segmented picker doesn't shrink its labels.
+// Mobile: pills stack above the title so a long segmented picker
+// doesn't shrink its labels or overlap the h1.
 @container frame (width <= 889px) {
   .space-header-row {
-    grid-template-columns: 1fr;
-    padding-inline: 0.75rem;
+    padding: 0.75rem 0.75rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: 0.5rem;
-    text-align: center;
 
     &__left,
     &__right {
-      justify-self: center;
+      position: static;
     }
   }
 }
