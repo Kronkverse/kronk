@@ -16,7 +16,13 @@ import { Icon }  from 'mastodon/components/icon';
 
 export const messages = defineMessages({
   public_short: { id: 'privacy.public.short', defaultMessage: 'Public' },
-  public_long: { id: 'privacy.public.long', defaultMessage: 'Anyone on and off Mastodon' },
+  public_long: { id: 'privacy.public.long', defaultMessage: 'Everyone on Kronk' },
+  orbit_short: { id: 'privacy.orbit.short', defaultMessage: 'Orbit' },
+  orbit_long: { id: 'privacy.orbit.long', defaultMessage: 'Your Mates and their Mates' },
+  mates_short: { id: 'privacy.mates.short', defaultMessage: 'Mates' },
+  mates_long: { id: 'privacy.mates.long', defaultMessage: 'Only your Mates (mutual connections)' },
+  self_only_short: { id: 'privacy.self_only.short', defaultMessage: 'Just me' },
+  self_only_long: { id: 'privacy.self_only.long', defaultMessage: 'On your own timeline only — no one else sees it' },
   unlisted_short: { id: 'privacy.unlisted.short', defaultMessage: 'Quiet public' },
   unlisted_long: { id: 'privacy.unlisted.long', defaultMessage: 'Hidden from Mastodon search results, trending, and public timelines' },
   private_short: { id: 'privacy.private.short', defaultMessage: 'Followers' },
