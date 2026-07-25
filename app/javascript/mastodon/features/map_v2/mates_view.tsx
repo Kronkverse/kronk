@@ -39,7 +39,7 @@ const messages = defineMessages({
 });
 
 const BASEMAP_URL =
-  'pmtiles://https://kronk-osm.syd1.cdn.digitaloceanspaces.com/planet.pmtiles';
+  'pmtiles://https://kronk-osm.syd1.digitaloceanspaces.com/planet.pmtiles';
 const POLL_MS = 30_000;
 
 // Register the pmtiles protocol with MapLibre exactly once per page.
