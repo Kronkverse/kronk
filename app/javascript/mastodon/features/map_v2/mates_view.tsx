@@ -84,10 +84,11 @@ export const MatesView: React.FC = () => {
   // ── Map init ──────────────────────────────────────────────────────
   useEffect(() => {
     ensurePmtilesProtocol();
-    if (!containerRef.current || mapRef.current) return;
+    const container = containerRef.current;
+    if (!container || mapRef.current) return;
 
     const map = new maplibregl.Map({
-      container: containerRef.current,
+      container,
       center: [10, 25],
       zoom: 1.4,
       attributionControl: { compact: true },
@@ -130,7 +131,16 @@ export const MatesView: React.FC = () => {
     });
     mapRef.current = map;
 
+    // The Stage resolves the container height via flex *after* this effect
+    // runs, so the map would otherwise stay at MapLibre's 300px fallback and
+    // render nothing. Observe the container and resize the map to fill it.
+    const resizeObserver = new ResizeObserver(() => {
+      map.resize();
+    });
+    resizeObserver.observe(container);
+
     return () => {
+      resizeObserver.disconnect();
       map.remove();
       mapRef.current = null;
       setReady(false);
