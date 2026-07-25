@@ -6,14 +6,15 @@ import { useLocation } from 'react-router-dom';
 import { Stage } from 'mastodon/components/stage';
 
 import { MatesView } from './mates_view';
+import { TreksView } from './treks_view';
 
 // Map — three-lens surface (Mates / Treks / Logger). The Frame provides the
 // space title, tagline and the SpaceViewPicker pill from the manifest.
 //
-// The Mates lens is now a native MapLibre GL surface backed by the presence
-// API (features/map_v2/mates_view). Treks and Logger still render the
-// hand-authored prototype (public/map-preview.html) via an iframe until their
-// own backends land (Phase 3 / 4).
+// Mates and Treks are native MapLibre GL surfaces backed by their own APIs
+// (features/map_v2/mates_view, treks_view). The Logger lens still renders the
+// hand-authored prototype (public/map-preview.html) via an iframe until its
+// backend lands (Phase 4).
 //
 // Kommons proposal #116969555027300161.
 
@@ -46,9 +47,9 @@ const MapV2: React.FC<{ multiColumn?: boolean }> = () => {
         <meta name='robots' content='noindex' />
       </Helmet>
 
-      {view === 'mates' ? (
-        <MatesView />
-      ) : (
+      {view === 'mates' && <MatesView />}
+      {view === 'treks' && <TreksView />}
+      {view === 'logger' && (
         <iframe
           key={view}
           title={intl.formatMessage(messages.title)}
