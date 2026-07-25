@@ -157,6 +157,14 @@ namespace :api, format: false do
       get    'presence/self', to: 'presence#show'
       post   'presence',      to: 'presence#create'
       delete 'presence',      to: 'presence#destroy'
+
+      # Treks — recorded activities; feed is mine + Mates' published.
+      resources :treks, only: [:index, :show, :create, :destroy] do
+        member do
+          post :publish
+          post :unpublish
+        end
+      end
     end
 
     namespace :klot do
