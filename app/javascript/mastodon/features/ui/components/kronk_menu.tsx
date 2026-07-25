@@ -24,6 +24,7 @@ import { useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({
   post: { id: 'kronk_menu.post', defaultMessage: 'Post' },
+  new_chat: { id: 'kronk_menu.new_chat', defaultMessage: 'New chat' },
   search: { id: 'kronk_menu.search', defaultMessage: 'Search' },
   settings: { id: 'kronk_menu.settings', defaultMessage: 'Settings' },
   settings_korner: {
@@ -43,6 +44,7 @@ const messages = defineMessages({
 const KORNER_RE = /^\/hub\/([a-z0-9-]+)(?:\/|$)/;
 const PROFILE_RE = /^\/@([^/]+)(?:\/|$)/;
 const FEED_RE = /^\/home(?:\/|$)/;
+const NUDGES_RE = /^\/nudges(?:\/|$)/;
 // A Kommons Space page (/hub/kommons/space/:slug) — used to scope the propose
 // action to the space you're looking at.
 const SPACE_RE = /^\/hub\/kommons\/space\/([a-z0-9-]+)/;
@@ -109,6 +111,16 @@ const usePostTarget = (): PostTarget | null => {
     }
     if (PROFILE_RE.exec(location.pathname) || FEED_RE.exec(location.pathname)) {
       return { href: '/publish', label: intl.formatMessage(messages.post) };
+    }
+    // On the Nudges messenger the "post" verb is "start a new chat".
+    // Handing it off to the KronkMenu here is the whole reason we
+    // stripped the pencil button from the sidebar — create-actions
+    // belong on the floating menu, not scattered per-surface.
+    if (NUDGES_RE.exec(location.pathname)) {
+      return {
+        href: '/nudges?compose=1',
+        label: intl.formatMessage(messages.new_chat),
+      };
     }
     return null;
   }, [kornerSlug, korner, location.pathname, intl]);

@@ -2,8 +2,8 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import EditIcon from '@/material-icons/400-24px/edit_square-fill.svg?react';
-import SearchIcon from '@/material-icons/400-24px/search.svg?react';
+import { useHistory, useLocation } from 'react-router-dom';
+
 import type { ApiNudgeConversationJSON } from 'mastodon/api_types/nudges_conversations';
 
 import { ConversationRow } from './conversation_row';
@@ -25,11 +25,14 @@ const messages = defineMessages({
     id: 'nudges.no_search_results',
     defaultMessage: 'No match',
   },
-  newChat: {
-    id: 'nudges.new_chat',
-    defaultMessage: 'New chat',
-  },
 });
+
+// URL-driven picker: the Kronk menu's "New chat" action navigates to
+// `/nudges?compose=1`, we surface the mate picker and strip the flag
+// on close. Keeps the sidebar chrome minimal (search input only) while
+// leaving the compose affordance where every other create-action
+// lives — the floating Kronk menu.
+const COMPOSE_FLAG = 'compose';
 
 interface ConversationListProps {
   conversations: ApiNudgeConversationJSON[];
@@ -47,8 +50,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   onNewConversation,
 }) => {
   const intl = useIntl();
+  const history = useHistory();
+  const location = useLocation();
   const [query, setQuery] = useState('');
-  const [picking, setPicking] = useState(false);
+  const picking = useMemo(
+    () => new URLSearchParams(location.search).get(COMPOSE_FLAG) === '1',
+    [location.search],
+  );
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,21 +65,22 @@ export const ConversationList: React.FC<ConversationListProps> = ({
     [],
   );
 
-  const handleOpenPicker = useCallback(() => {
-    setPicking(true);
-  }, []);
-
   const handleClosePicker = useCallback(() => {
-    setPicking(false);
-  }, []);
+    const params = new URLSearchParams(location.search);
+    params.delete(COMPOSE_FLAG);
+    const suffix = params.toString();
+    history.replace(
+      `${location.pathname}${suffix ? `?${suffix}` : ''}${location.hash}`,
+    );
+  }, [history, location.pathname, location.search, location.hash]);
 
   const handlePickerOpen = useCallback(
     (conversation: ApiNudgeConversationJSON) => {
-      setPicking(false);
+      handleClosePicker();
       onNewConversation(conversation);
       onOpen(conversation.id);
     },
-    [onNewConversation, onOpen],
+    [handleClosePicker, onNewConversation, onOpen],
   );
 
   const filtered = useMemo(() => {
@@ -87,7 +96,6 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   return (
     <div className='nudges-sidebar'>
       <div className='nudges-sidebar__search'>
-        <SearchIcon className='nudges-sidebar__search-icon' />
         <input
           type='search'
           className='nudges-sidebar__search-input'
@@ -95,15 +103,6 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           value={query}
           onChange={handleSearchChange}
         />
-        <button
-          type='button'
-          className='nudges-sidebar__new-chat'
-          onClick={handleOpenPicker}
-          aria-label={intl.formatMessage(messages.newChat)}
-          title={intl.formatMessage(messages.newChat)}
-        >
-          <EditIcon />
-        </button>
       </div>
 
       {loading && (
