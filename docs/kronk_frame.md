@@ -51,33 +51,39 @@ Mobile (container ≤ 889px)
 
 ### SpaceNav
 
-- **Contents:** the space badge/back pill, the view picker dropdown.
-- **Owns:** its layout position. No background — it's a transparent
-  cell. Pills float over Stage content via `pointer-events: none` on
-  the container and `auto` on the pills.
-- **Layout (all widths):** a horizontal row spanning `nav-start` to
-  `stage-end` (the full Stage content width, stopping before the
-  right rail). Badge at the leading edge, view picker at the trailing
-  edge, both on the same horizontal line at the top of Stage
-  (`flex-direction: row; justify-content: space-between`). Pills stay
-  visible as Stage content scrolls below them.
+- **Contents:** the space badge/back pill and the view picker, both
+  rendered inline via `<SpaceHeaderRow>` at the top of Stage. The
+  `KronkFrame.SpaceNav` grid slot is retained in the layout for
+  backwards compat but renders empty — the pills now live in the
+  Stage's scroll flow, not as a fixed overlay.
+- **Layout (all widths):** `<SpaceHeaderRow>` is a CSS grid
+  `[left auto] [center 1fr, capped] [right auto]` — badge on the
+  left, title + tagline in the centered column, view picker on the
+  right. The whole row scrolls with the Stage content.
 - **The space badge pattern:** one pill that carries three jobs — a
   back arrow (tap to exit to Hub), the space glyph (Ƙ, ◉, ✦, etc.),
   and the space name. Replaces the old separate "← Hub" affordance
   and the old large centred serif hero title.
-- **The view picker:** current view visible as a pill; tap to reveal
-  other views as a dropdown. Auto-closes on outside-click or Escape.
+- **The view picker:** a segmented switch-pill — every declared
+  manifest view is a button, the active one is `aria-pressed` and
+  gets the purple fill. One-tap switching, no dropdown. Modelled on
+  the Booth "Compact / Standard / Large" segmented control. Populates
+  automatically for every korner from the manifest's `views:` list
+  (via `<AutoSpaceViewPicker>`), so a new korner picks it up without
+  wiring anything.
+- **Mobile:** the row collapses to a single column so the pills
+  stack above the title.
 
 ### Stage
 
 - **Contents:** everything the korner itself renders. Panels, cards,
   feeds, composers, calendars, wide 3-column layouts.
 - **Owns:** its scrollbar. `overflow-y: auto`, `overflow-x: hidden`.
-- **Desktop:** spans SpaceNav's column and its own, so content reaches
-  the left edge of the viewport (inside the right rail). Pills from
-  SpaceNav float over the top-left corner.
-- **Mobile:** spans the full width; pills float over the top-left and
-  top-right corners.
+- **Desktop:** spans the full width inside the RightBand. The
+  in-content `<SpaceHeaderRow>` (badge + title + view picker) is
+  Stage's first child; it scrolls with everything else.
+- **Mobile:** spans the full width; the SpaceHeaderRow collapses to
+  a single column and the pills stack above the title.
 - **Wide screens (≥ 1400px, opt-in per korner):** may render as a
   horizontal deck of columns (multiple views side by side). This is a
   **Stage-layer decision**, not a Frame one — Kuestions can opt in,
@@ -125,7 +131,7 @@ retires (see Current state).
 The one breakpoint the Frame owns:
 
 - **≤ 889px** — mobile shape (BottomBand appears, RightBand hides,
-  SpaceNav flips to the horizontal top-corners pattern).
+  the `<SpaceHeaderRow>` collapses to a single-column stack).
 
 Wider breakpoints (deck mode, etc.) are the korner's business, not
 the Frame's.

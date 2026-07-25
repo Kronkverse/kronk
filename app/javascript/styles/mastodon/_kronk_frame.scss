@@ -124,64 +124,13 @@
   }
 }
 
-// SpaceNav floats over the top of Stage — pinned to the viewport so
-// the two pills stay put as Stage content (including the SpaceHeader
-// title + tagline) scrolls beneath them. `position: fixed` rather
-// than a grid child, because Stage owns the scroll and grid cells
-// scroll with their siblings when the scroll host is an ancestor.
-// Insets: `top: 4.25rem` matches the grid's row-1 height (the
-// TopBand's visible chrome). `right: 7.75rem` matches the RightBand
-// fade strip width so the picker sits at the trailing edge of Stage
-// content, not under the sidebar fade. On mobile the right band
-// collapses and `right: 0` extends the row across the viewport.
-// The cell is `pointer-events: none` so clicks fall through to the
-// Stage content between the pills; the pills themselves stay
-// clickable via the `> *` reset.
+// The SpaceNav grid slot is intentionally empty — the pills moved
+// into the in-content <SpaceHeaderRow> so they scroll with the rest
+// of the page. Kept in the grid template for backwards-compat with
+// KronkFrame.SpaceNav consumers; renders no content of its own.
+// See docs/kronk_frame.md § SpaceNav for the layout rationale.
 .kronk-frame__space-nav {
-  position: fixed;
-
-  // Vertical: sit at the h1's height, not above it. Stage top =
-  // 4.25rem (grid row-1) + SpaceHeader's 1.75rem top padding = h1
-  // top at 6rem viewport. h1 vertical center at ~7.25rem. Pill top
-  // at 6.5rem lands the pill center roughly on the h1 baseline.
-  top: 6.5rem;
-
-  // Horizontal: mirror the SpaceHeader's centered column so the
-  // pills land at the headline's edges rather than the viewport's.
-  // `left: 0; right: 7.75rem` sets the containing area to Stage's
-  // grid cell (viewport minus the RightBand fade); `max-width` +
-  // `margin-inline: auto` centers a 36rem-wide bar inside it,
-  // matching the header's `max-width: 34rem` + its 1rem side
-  // padding. Padding-inline on the bar itself keeps the pills off
-  // the very edge of that column.
-  left: 0;
-  right: 7.75rem;
-  max-width: 36rem;
-  margin-inline: auto;
-  padding-inline: 1rem;
-
-  // z-26 sits above the .kronk-stage layer (Kuestions Stage, z-25) so
-  // the shared space badge is visible on Stage-based korners. Also
-  // above the TopBand/RightBand fade strips (z-24).
-  z-index: 26;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.35rem;
-  pointer-events: none;
-
-  > * {
-    pointer-events: auto;
-  }
-}
-
-@container frame (width <= 889px) {
-  .kronk-frame__space-nav {
-    // Mobile: no right band, tighter offset from the top.
-    top: 4.5rem;
-    right: 0;
-  }
+  display: none;
 }
 
 .kronk-frame__stage {
@@ -357,90 +306,40 @@
 // out its two pills horizontally with `justify-content: space-between`,
 // so the badge lands at the leading edge and the view picker at the
 // trailing edge on the same horizontal line. `align-items: flex-end`
-// anchors the picker's dropdown to the right so it grows down-and-left
-// from the trigger pill.
+// Segmented switch-pill — Booth-style Compact/Standard/Large. Every
+// declared manifest view is a button; the active one is aria-pressed
+// and gets the purple fill. One-tap switching, no dropdown.
 .space-view-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  align-items: flex-end;
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-round);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
 
-  &__trigger {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.4rem 0.75rem 0.4rem 0.85rem;
-    border-radius: 999px;
-    border: 1px solid var(--kronk-purple-bright);
-    background: var(--kronk-purple-accent);
-    color: var(--text-on-accent, white);
-    font-size: 0.85rem;
-    font-weight: 500;
-    white-space: nowrap;
+  &__btn {
+    appearance: none;
+    border: 0;
     cursor: pointer;
-    backdrop-filter: blur(8px);
-    box-shadow:
-      0 2px 12px -2px
-        color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent),
-      0 0 0 1px color-mix(in oklab, var(--kronk-purple-bright) 30%, transparent);
-  }
-
-  &__caret {
-    width: 0.65rem;
-    height: 0.65rem;
-    transition: transform var(--dur-fast) var(--ease-out);
-  }
-
-  &[data-open='true'] &__caret {
-    transform: rotate(180deg);
-  }
-
-  &__options {
-    display: none;
-    flex-direction: column;
-    gap: 0.35rem;
-    align-items: inherit;
-  }
-
-  &[data-open='true'] &__options {
-    display: flex;
-    animation: space-view-picker-in 140ms var(--ease-out);
-  }
-
-  &__option {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.4rem 0.85rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, black 65%, transparent);
-    color: var(--text-secondary);
+    padding: 0.3rem 0.85rem;
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-display, inherit);
     font-size: 0.85rem;
-    font-weight: 500;
     white-space: nowrap;
-    cursor: pointer;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 2px 8px -2px rgb(0 0 0 / 45%);
-    border: 1px solid var(--border-subtle);
     transition:
       color var(--dur-fast) var(--ease-out),
       background var(--dur-fast) var(--ease-out);
 
-    &:hover {
+    &[aria-pressed='true'] {
+      background: var(--kronk-purple-accent);
       color: var(--text-primary);
-      background: color-mix(in srgb, #16102a 85%, transparent);
     }
-  }
-}
 
-@keyframes space-view-picker-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
+    &:hover:not([aria-pressed='true']) {
+      color: var(--text-secondary);
+    }
   }
 }
 

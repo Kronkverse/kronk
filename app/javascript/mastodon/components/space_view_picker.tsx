@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback } from 'react';
 
-// SpaceViewPicker — the per-space view selector. Only the current view
-// is visible as a pill (e.g. "Today ▾"). Tap opens a dropdown of the
-// other views. Selecting one closes the dropdown and swaps the trigger
-// label. Click-outside and Escape also close.
+// SpaceViewPicker — the per-space view selector. Renders as a
+// segmented switch-pill (Booth-style Compact/Standard/Large) so all
+// views are always visible and switching is one tap. Manifest-driven
+// via AutoSpaceViewPicker; every /hub/<slug> that declares `views:`
+// picks it up automatically.
 //
-// Prototype: docs/kronk_frame_prototype_v11.html.
 // Spec: docs/kronk_frame.md § SpaceNav.
 
 export interface SpaceView {
@@ -16,12 +16,14 @@ export interface SpaceView {
 interface SpaceViewOptionProps {
   viewKey: string;
   label: string;
+  pressed: boolean;
   onSelect: (key: string) => void;
 }
 
 const SpaceViewOption: React.FC<SpaceViewOptionProps> = ({
   viewKey,
   label,
+  pressed,
   onSelect,
 }) => {
   const handleClick = useCallback(() => {
@@ -30,7 +32,8 @@ const SpaceViewOption: React.FC<SpaceViewOptionProps> = ({
   return (
     <button
       type='button'
-      className='space-view-picker__option'
+      className='space-view-picker__btn'
+      aria-pressed={pressed}
       onClick={handleClick}
     >
       {label}
@@ -49,85 +52,18 @@ export const SpaceViewPicker: React.FC<SpaceViewPickerProps> = ({
   current,
   onChange,
 }) => {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement | null>(null);
-
-  const activeView = views.find((v) => v.key === current) ?? views[0];
-  const otherViews = views.filter((v) => v.key !== activeView?.key);
-
-  const handleToggle = useCallback(() => {
-    setOpen((v) => !v);
-  }, []);
-
-  const handleSelect = useCallback(
-    (key: string) => {
-      onChange(key);
-      setOpen(false);
-    },
-    [onChange],
-  );
-
-  useEffect(() => {
-    if (!open) return;
-    const onDocumentClick = (e: MouseEvent) => {
-      if (
-        rootRef.current &&
-        e.target instanceof Node &&
-        !rootRef.current.contains(e.target)
-      ) {
-        setOpen(false);
-      }
-    };
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('click', onDocumentClick);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('click', onDocumentClick);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open]);
-
-  if (!activeView) return null;
-  // Local child so React can memoize the click handler per option
-  // without violating eslint's react/jsx-no-bind on inline arrows.
-
+  if (views.length === 0) return null;
   return (
-    <div
-      ref={rootRef}
-      className='space-view-picker'
-      data-open={open ? 'true' : 'false'}
-    >
-      <button
-        type='button'
-        className='space-view-picker__trigger'
-        aria-haspopup='listbox'
-        aria-expanded={open}
-        onClick={handleToggle}
-      >
-        <span className='space-view-picker__label'>{activeView.label}</span>
-        <svg
-          className='space-view-picker__caret'
-          viewBox='0 0 12 12'
-          fill='none'
-          stroke='currentColor'
-          strokeWidth='1.8'
-          aria-hidden='true'
-        >
-          <path d='M2.5 4.5 L6 8 L9.5 4.5' strokeLinecap='round' />
-        </svg>
-      </button>
-      <div className='space-view-picker__options' role='listbox'>
-        {otherViews.map((view) => (
-          <SpaceViewOption
-            key={view.key}
-            viewKey={view.key}
-            label={view.label}
-            onSelect={handleSelect}
-          />
-        ))}
-      </div>
+    <div className='space-view-picker' role='group' aria-label='Views'>
+      {views.map((view) => (
+        <SpaceViewOption
+          key={view.key}
+          viewKey={view.key}
+          label={view.label}
+          pressed={view.key === current}
+          onSelect={onChange}
+        />
+      ))}
     </div>
   );
 };

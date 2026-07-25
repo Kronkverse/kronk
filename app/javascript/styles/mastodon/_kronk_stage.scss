@@ -148,13 +148,69 @@ body:has(.kronk-stage) .korner-sub-bar {
 // (docs/kronk_frame.md § SpaceNav). Panel-level hero titles are also
 // retired per spec rule 5 — the space badge carries the space name
 // across all views.
+// <SpaceHeaderRow> — brackets the title with the two SpaceNav pills
+// (badge on the left, view picker / settings badge on the right) and
+// scrolls with the rest of Stage. Was previously two systems: an
+// in-content <SpaceHeader> plus a fixed overlay for the pills. That
+// overlay felt like unrelated chrome; consolidating everything here
+// means title + pills read as one block.
+// Grid columns: [left auto] [center 1fr, capped] [right auto].
+.space-header-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 1rem 0.5rem;
+  max-width: 60rem;
+  margin: 0 auto;
+
+  &__left {
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  &__center {
+    min-width: 0;
+
+    // Neutralise the header's own top padding since the row already
+    // owns the vertical rhythm.
+    .space-header {
+      padding-top: 0;
+    }
+  }
+
+  &__right {
+    justify-self: start;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+}
+
+// Mobile: pills stack above the title so the middle column stays
+// readable and the segmented picker doesn't shrink its labels.
+@container frame (width <= 889px) {
+  .space-header-row {
+    grid-template-columns: 1fr;
+    padding-inline: 0.75rem;
+    gap: 0.5rem;
+    text-align: center;
+
+    &__left,
+    &__right {
+      justify-self: center;
+    }
+  }
+}
+
 // <SpaceHeader> — the in-content header every /hub/<slug> korner
-// starts with. Frame mounts it (via <AutoSpaceHeader>) at the top of
-// every korner's Stage, so title, description, and view picker all
-// stay manifest-driven and consistent. Unlike the top-left SpaceNav
-// pill (chrome), this header scrolls with the korner's content.
-// Owns its own top padding since it lives at the top of the Stage
-// scroll area.
+// starts with. Frame mounts it (via <AutoSpaceHeader> inside
+// <SpaceHeaderRow>) at the top of every korner's Stage, so title,
+// description, and pills all stay manifest-driven and consistent.
 .space-header {
   max-width: 34rem;
   margin: 0 auto;

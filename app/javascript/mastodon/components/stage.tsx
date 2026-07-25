@@ -4,7 +4,7 @@ import type { Ref } from 'react';
 import { scrollTop } from 'mastodon/scroll';
 import { isDevelopment } from 'mastodon/utils/environment';
 
-import { AutoSpaceHeader } from './auto_space_header';
+import { SpaceHeaderRow } from './space_header_row';
 
 // Kronk zonal layout — the Stage.
 //
@@ -101,7 +101,7 @@ export const Stage = forwardRef<StageRef, StageProps>(
         aria-label={label}
         className='kronk-stage'
       >
-        <AutoSpaceHeader />
+        <SpaceHeaderRow />
         {children}
       </div>
     );

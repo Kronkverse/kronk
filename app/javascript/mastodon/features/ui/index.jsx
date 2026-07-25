@@ -27,9 +27,6 @@ import { PictureInPicture } from 'mastodon/features/picture_in_picture';
 import { HubSwitcher } from './components/hub_switcher';
 import { KornerSubBar } from './components/korner_sub_bar';
 import { KornerSidebar } from './components/korner_sidebar';
-import { AutoSettingsBadge } from 'mastodon/components/auto_settings_badge';
-import { AutoSpaceBadge } from 'mastodon/components/auto_space_badge';
-import { AutoSpaceViewPicker } from 'mastodon/components/auto_space_view_picker';
 import { KronkFrame } from 'mastodon/components/kronk_frame';
 import { KronkMenu } from './components/kronk_menu';
 import { KronkWordmark } from './components/kronk_wordmark';
@@ -761,15 +758,13 @@ class UI extends PureComponent {
               <KronkWordmark />
               {layout !== 'mobile' && <HubSwitcher variant='top' currentAccountUsername={this.props.username} />}
             </KronkFrame.TopBand>
-            <KronkFrame.SpaceNav>
-              {/* Frame-provided per-space nav — every korner renders the
-                  same badge (back to Hub) and view picker (per-korner
-                  views declared in the pickers' SLUG_TO_* maps) without
-                  opting in. */}
-              <AutoSpaceBadge />
-              <AutoSettingsBadge />
-              <AutoSpaceViewPicker />
-            </KronkFrame.SpaceNav>
+            {/* Frame-provided per-space nav lives inline via
+                <SpaceHeaderRow> inside Stage now (see
+                docs/kronk_frame.md § SpaceNav). The old fixed pills
+                overlay is retired so the pills scroll with the rest
+                of the page. The SpaceNav grid slot stays emitted for
+                backwards compat but renders empty. */}
+            <KronkFrame.SpaceNav />
             <KronkFrame.RightBand>
               {this.props.identity.signedIn && <KornerSidebar />}
             </KronkFrame.RightBand>
