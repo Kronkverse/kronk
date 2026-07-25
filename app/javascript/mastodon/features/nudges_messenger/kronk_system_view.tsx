@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   defineMessages,
@@ -40,6 +46,11 @@ const messages = defineMessages({
   empty: {
     id: 'nudges.kronk.empty',
     defaultMessage: 'Nothing from Kronk yet.',
+  },
+  systemNoReply: {
+    id: 'nudges.kronk.no_reply',
+    defaultMessage:
+      'System messages — pick a card above to follow up on Kommons.',
   },
 });
 
@@ -145,6 +156,7 @@ const ProposalCompleteMessage: React.FC<ProposalCompleteMessageProps> = ({
 export const KronkSystemView: React.FC = () => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
+  const streamRef = useRef<HTMLDivElement>(null);
 
   const groups = useAppSelector((state) =>
     [
@@ -174,13 +186,19 @@ export const KronkSystemView: React.FC = () => {
     });
   }, []);
 
-  // Newest first — the stream container below uses column-reverse
-  // (Signal-style), so DOM order [newest, ..., oldest] renders as
-  // [oldest at top, newest at bottom] visually, and the scroll sits
-  // pinned to the bottom on mount without any manual scrollIntoView.
+  // Oldest first in DOM order, so the newest card lands at the bottom
+  // of the flow — same convention as a chat stream.
   const sorted = [...groups].sort((a, b) =>
-    b.latest_page_notification_at.localeCompare(a.latest_page_notification_at),
+    a.latest_page_notification_at.localeCompare(b.latest_page_notification_at),
   );
+
+  // Pin the scroll to the newest card on mount + whenever a new
+  // system message arrives. scrollTop = scrollHeight is the most
+  // reliable primitive across browsers.
+  useLayoutEffect(() => {
+    const el = streamRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [sorted.length]);
 
   return (
     <div
@@ -214,12 +232,13 @@ export const KronkSystemView: React.FC = () => {
       </header>
 
       <div
+        ref={streamRef}
         style={{
           flex: '1 1 auto',
           minHeight: 0,
           overflowY: 'auto',
           display: 'flex',
-          flexDirection: 'column-reverse',
+          flexDirection: 'column',
           gap: '1.25rem',
           padding: '1.25rem 1rem',
         }}
@@ -239,6 +258,26 @@ export const KronkSystemView: React.FC = () => {
             onVisit={handleVisit}
           />
         ))}
+      </div>
+
+      {/*
+        System pane has no reply composer — nothing consumes what you'd
+        type back to Kronk. The band matches the composer's chrome so
+        the layout doesn't feel truncated: everywhere else in the
+        messenger there's a bar under the stream.
+      */}
+      <div
+        style={{
+          flex: '0 0 auto',
+          padding: '0.75rem 1rem',
+          borderTop: '1px solid var(--border-subtle)',
+          background: 'var(--surface-primary)',
+          color: 'var(--text-muted)',
+          fontSize: '0.85rem',
+          textAlign: 'center',
+        }}
+      >
+        {intl.formatMessage(messages.systemNoReply)}
       </div>
     </div>
   );
