@@ -18,9 +18,9 @@ import { KornerShell } from 'mastodon/components/korner_shell';
 //      component, which joins the shared `huddle` Jitsi room).
 //
 //   2. Your Krews — every Krew the current user is in that has the
-//      `huddle` korner attached. Each row is a link into that Krew
-//      (a per-Krew Huddle room is Phase 3 of the rebuild; the row
-//      currently deep-links to the Krew page).
+//      `huddle` korner attached. Each row deep-links into the Krew's
+//      own Jitsi room at /hub/huddle/krew/<slug> (which mounts the
+//      Live component; the room name is derived from the slug).
 //
 // Participant counts are intentionally not wired in this pass. The
 // hero shows "Always open. Drop in, hang out." rather than a live
@@ -137,7 +137,7 @@ const HuddleLanding: React.FC = () => {
             {krews.map((krew, index) => (
               <li key={krew.id} className='huddle-krew-row'>
                 <Link
-                  to={`/hub/krew/${krew.slug}`}
+                  to={`/hub/huddle/krew/${krew.slug}`}
                   className='huddle-krew-row__link'
                 >
                   <span
