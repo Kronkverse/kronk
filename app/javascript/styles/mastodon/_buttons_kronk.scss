@@ -12,6 +12,11 @@
 // both themes.
 
 .button {
+  // Standardise every button on the Kronk pill shape (matches the composer
+  // Post button and the frame's pills). --radius-round is a full stadium, so
+  // wide and compact buttons both read as pills.
+  border-radius: var(--radius-round);
+
   // Primary (solid) buttons.
   background-color: var(--accent);
   color: var(--text-on-accent);
