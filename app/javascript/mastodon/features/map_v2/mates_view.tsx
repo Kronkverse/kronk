@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { layers, DARK } from '@protomaps/basemaps';
+import { layers, LIGHT } from '@protomaps/basemaps';
 import type { Feature, Polygon } from 'geojson';
 import * as maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
@@ -41,6 +41,52 @@ const messages = defineMessages({
 const BASEMAP_URL =
   'pmtiles://https://kronk-osm.syd1.digitaloceanspaces.com/planet.pmtiles';
 const POLL_MS = 30_000;
+
+// Default view — open on Australia.
+const HOME_CENTER: [number, number] = [134, -25.5];
+const HOME_ZOOM = 3.7;
+
+// Kronk basemap flavor: a lightened, purple palette so the map reads as a
+// Kronk surface rather than a stock dark basemap. Built on the Protomaps
+// LIGHT flavor with the visible fields shifted to lavender/purple. The
+// natural `landcover` layer (hardcoded greens) is dropped at render time so
+// the land stays lavender.
+const KRONK_FLAVOR = {
+  ...LIGHT,
+  background: '#d6cbef', // sea
+  earth: '#f3eefb', // land
+  water: '#b8a8e6',
+  park_a: '#e8e1f4',
+  park_b: '#e4ddf1',
+  wood_a: '#e6def2',
+  wood_b: '#e1d9ee',
+  scrub_a: '#ece6f5',
+  scrub_b: '#e7e0f3',
+  glacier: '#f6f2fc',
+  sand: '#efe8dd',
+  beach: '#f0e9de',
+  hospital: '#efe6f2',
+  industrial: '#e9e3f2',
+  school: '#ece5f3',
+  pedestrian: '#ece6f4',
+  zoo: '#e8e2f2',
+  military: '#e6e0f0',
+  aerodrome: '#e9e4f2',
+  buildings: '#d9ccef',
+  boundaries: '#8f7bc8',
+  railway: '#b3a4dd',
+  major: '#ffffff',
+  minor_a: '#ffffff',
+  minor_b: '#f7f3fd',
+  highway: '#efe7fc',
+  major_casing_early: '#ccbde9',
+  major_casing_late: '#ccbde9',
+  highway_casing_early: '#c1b1e4',
+  highway_casing_late: '#c1b1e4',
+  other: '#efe9f6',
+  minor_service: '#f7f3fd',
+  link: '#f2ecfb',
+};
 
 // Register the pmtiles protocol with MapLibre exactly once per page.
 let pmtilesRegistered = false;
@@ -89,8 +135,8 @@ export const MatesView: React.FC = () => {
 
     const map = new maplibregl.Map({
       container,
-      center: [10, 25],
-      zoom: 1.4,
+      center: HOME_CENTER,
+      zoom: HOME_ZOOM,
       attributionControl: { compact: true },
       style: {
         version: 8,
@@ -101,10 +147,14 @@ export const MatesView: React.FC = () => {
             attribution: '© OpenStreetMap',
           },
         },
-        // Drop symbol (label) layers — they need externally-hosted glyphs;
-        // keep the geometry so the map is fully self-hosted for now.
-        layers: layers('protomaps', DARK, { lang: 'en' }).filter(
-          (layer) => layer.type !== 'symbol',
+        // Drop symbol (label) layers — they need externally-hosted glyphs —
+        // and the `landcover` layer, whose hardcoded greens fight the purple
+        // palette (the land then shows the lavender `earth` colour).
+        layers: layers('protomaps', KRONK_FLAVOR, { lang: 'en' }).filter(
+          (layer) =>
+            layer.type !== 'symbol' &&
+            ('source-layer' in layer ? layer['source-layer'] : undefined) !==
+              'landcover',
         ),
       },
     });
