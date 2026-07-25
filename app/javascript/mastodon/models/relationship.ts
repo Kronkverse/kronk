@@ -15,6 +15,7 @@ const RelationshipFactory = Record<RelationshipShape>({
   following: false,
   id: '',
   languages: null,
+  mate: false,
   muting_notifications: false,
   muting: false,
   note: '',

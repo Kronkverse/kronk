@@ -37,11 +37,7 @@ import { apiGetNudgeStreak } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { Badge, AutomatedBadge, GroupBadge } from 'mastodon/components/badge';
 import { CopyIconButton } from 'mastodon/components/copy_icon_button';
-import {
-  FollowersCounter,
-  FollowingCounter,
-  StatusesCounter,
-} from 'mastodon/components/counters';
+import { MatesCounter, StatusesCounter } from 'mastodon/components/counters';
 import { Dropdown } from 'mastodon/components/dropdown_menu';
 import { FollowButton } from 'mastodon/components/follow_button';
 import { FormattedDateWrapper } from 'mastodon/components/formatted_date';
@@ -661,16 +657,10 @@ export const AccountHeader: React.FC<{
   const info: React.ReactNode[] = [];
 
   if (me !== account.id && relationship) {
-    if (
-      relationship.followed_by &&
-      (relationship.following || relationship.requested)
-    ) {
+    if (relationship.mate) {
       info.push(
         <span key='mutual' className='relationship-tag'>
-          <FormattedMessage
-            id='account.mutual'
-            defaultMessage='You follow each other'
-          />
+          <FormattedMessage id='account.mutual' defaultMessage="You're Mates" />
         </span>,
       );
     } else if (relationship.followed_by) {
@@ -963,25 +953,17 @@ export const AccountHeader: React.FC<{
                   />
                 </NavLink>
 
-                <NavLink
-                  exact
-                  to={`/@${account.acct}/following`}
-                  title={intl.formatNumber(account.following_count)}
-                >
-                  <ShortNumber
-                    value={account.following_count}
-                    renderer={FollowingCounter}
-                  />
-                </NavLink>
-
+                {/* Kronk — Mates. One mutual-connection count replaces the
+                    separate Following/Followers counters. Links to the
+                    followers list (the mutual graph) for now. */}
                 <NavLink
                   exact
                   to={`/@${account.acct}/followers`}
-                  title={intl.formatNumber(account.followers_count)}
+                  title={intl.formatNumber(account.mates_count)}
                 >
                   <ShortNumber
-                    value={account.followers_count}
-                    renderer={FollowersCounter}
+                    value={account.mates_count}
+                    renderer={MatesCounter}
                   />
                 </NavLink>
               </div>

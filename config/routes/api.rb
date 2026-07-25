@@ -149,6 +149,16 @@ namespace :api, format: false do
     # account); logs and settings hang off it. Viewers is the caller's
     # outbound allowlist; circle is the inbound projection with the
     # strict phase-only contract.
+    # Map — opt-in presence. Presence is one-per-account; place/remove act on
+    # the caller's own pin, index returns pins visible to the caller (Mates-
+    # gated). See docs/spaces/map.md.
+    namespace :map do
+      get    'presence',      to: 'presence#index'
+      get    'presence/self', to: 'presence#show'
+      post   'presence',      to: 'presence#create'
+      delete 'presence',      to: 'presence#destroy'
+    end
+
     namespace :klot do
       get    'self',              to: 'self#show'
       post   'self/logs',         to: 'self#create_log'
@@ -320,6 +330,14 @@ namespace :api, format: false do
       end
     end
 
+    # Kronk — Mates: incoming Mate requests + accept/decline (Requests view).
+    resources :mate_requests, only: [:index] do
+      member do
+        post :accept
+        post :reject
+      end
+    end
+
     namespace :notifications do
       resources :requests, only: [:index, :show] do
         collection do
@@ -391,6 +409,8 @@ namespace :api, format: false do
       member do
         post :follow
         post :unfollow
+        post :mate
+        post :unmate
         post :remove_from_followers
         post :block
         post :unblock
