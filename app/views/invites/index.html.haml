@@ -1,6 +1,24 @@
 - content_for :page_title do
   = t('invites.title')
 
+- if @evergreen
+  - evergreen_url = public_invite_url(invite_code: @evergreen.code)
+  .invite-standard
+    .invite-standard__body
+      %h3.invite-standard__heading= t('invites.standard.heading')
+      %p.invite-standard__hint= t('invites.standard.hint')
+      .input-copy
+        .input-copy__wrapper
+          = copyable_input value: evergreen_url
+        %button.button{ type: :button }= t('generic.copy')
+      %p.invite-standard__stats
+        = material_symbol 'person'
+        = t('invites.standard.uses', count: @evergreen.uses)
+    .invite-standard__qr{ 'aria-hidden' => true }
+      = invite_qr_svg(evergreen_url)
+
+  %hr.spacer/
+
 - if policy(:invite).create?
   %p= t('invites.prompt')
 

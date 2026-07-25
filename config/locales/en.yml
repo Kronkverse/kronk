@@ -1597,6 +1597,12 @@ en:
       other: "%{count} uses"
     max_uses_prompt: No limit
     prompt: Generate and share links with others to grant access to this server
+    standard:
+      heading: Your standard invite
+      hint: One permanent link — share the URL or the QR. Every accepted signup shows up in your stats.
+      uses:
+        one: 1 signup so far
+        other: "%{count} signups so far"
     table:
       expires_at: Expires
       uses: Uses

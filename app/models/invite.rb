@@ -29,12 +29,24 @@ class Invite < ApplicationRecord
 
   scope :available, -> { where(expires_at: nil).or(where(expires_at: Time.now.utc..)) }
 
+  # The single evergreen invite per user — unlimited uses + never
+  # expires — surfaced at the top of /invites as "your standard link".
+  # Kronk pins this so there's one shareable URL + QR that any
+  # signed-in user can hand around without generating a fresh code
+  # every time. `uses` and `users.invite_id` still give us the full
+  # audit trail per accepted signup.
+  scope :evergreen, -> { where(max_uses: nil, expires_at: nil) }
+
   validates :comment, length: { maximum: COMMENT_SIZE_LIMIT }
 
   before_validation :set_code, on: :create
 
   def valid_for_use?
     (max_uses.nil? || uses < max_uses) && !expired? && user&.functional?
+  end
+
+  def self.evergreen_for(user)
+    user.invites.evergreen.first || user.invites.create!(max_uses: nil)
   end
 
   private
