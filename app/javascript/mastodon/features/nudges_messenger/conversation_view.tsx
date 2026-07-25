@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useCallback,
-  useState,
-} from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -192,7 +186,6 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
 }) => {
   const intl = useIntl();
   const history = useHistory();
-  const streamEndRef = useRef<HTMLDivElement>(null);
   // A ref keeps the latest detail visible to stream handlers without
   // re-subscribing every re-render.
   const detailRef = useRef<ApiNudgeConversationDetail | null>(detail);
@@ -210,16 +203,10 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     setLoadingOlder(false);
   }, [conversationId]);
 
-  // Scroll to bottom on load / message. Keyed on both conversationId
-  // and stream length so opening a different chat also jumps to the
-  // most recent message, not wherever the previous chat was parked.
-  // useLayoutEffect fires pre-paint so the user never sees the head
-  // of the stream flash first.
-  useLayoutEffect(() => {
-    if (streamEndRef.current) {
-      streamEndRef.current.scrollIntoView({ block: 'end' });
-    }
-  }, [conversationId, detail?.stream.length]);
+  // No manual scroll-to-bottom effect: the stream container uses
+  // flex-direction: column-reverse (Signal-style), so the scroll
+  // position sits at the newest message on mount and new arrivals
+  // prepended in DOM appear at the visual bottom without a jump.
 
   // Real-time streaming — subscribe to nudges:conversation events for
   // the open conversation and fold updates into the local detail. The
@@ -519,14 +506,12 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   const otherName = other?.display_name ?? other?.username ?? 'Conversation';
   const krewName = detail.conversation.krew?.name ?? 'Krew';
 
-  // Stream is delivered most-recent-first; render oldest-first so a
-  // new message appears at the bottom. Then run through
-  // `aggregateStream` to collapse consecutive passive nudges per
-  // brief §Open decisions (resolved 2026-07-22).
-  const oldestFirst = aggregateStream(
-    [...detail.stream].reverse(),
-    detail.conversation.kind,
-  );
+  // Stream is delivered newest-first; keep that order — column-reverse
+  // on `.nudges-conversation__stream` flips it visually so the newest
+  // sits at the bottom. Then run through `aggregateStream` to collapse
+  // consecutive passive nudges per brief §Open decisions (resolved
+  // 2026-07-22).
+  const newestFirst = aggregateStream(detail.stream, detail.conversation.kind);
 
   return (
     <div className='nudges-conversation'>
@@ -581,33 +566,19 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
       </header>
 
       <div className='nudges-conversation__stream'>
-        {hasMore && detail.stream.length > 0 && (
-          <button
-            type='button'
-            className='nudges-conversation__load-older'
-            onClick={handleLoadOlder}
-            disabled={loadingOlder}
-          >
-            {loadingOlder ? (
-              <FormattedMessage
-                id='nudges.loading_older'
-                defaultMessage='Loading…'
-              />
-            ) : (
-              <FormattedMessage
-                id='nudges.load_older'
-                defaultMessage='Load older messages'
-              />
-            )}
-          </button>
-        )}
-        {oldestFirst.map((item, index) => {
-          const previous = index > 0 ? oldestFirst[index - 1] : null;
-          const showDay =
-            !previous || !sameDay(previous.created_at, item.created_at);
+        {newestFirst.map((item, index) => {
+          // With column-reverse, iterating newest-first, the item that
+          // appears immediately BELOW this one visually is `next` in
+          // the array (i.e. the older neighbour). A day separator sits
+          // between an older-day item and the first item of a newer
+          // day; because column-reverse renders DOM-order bottom→top
+          // visually, we place the separator AFTER the newer item so
+          // it lands visually above the newer block.
+          const next =
+            index < newestFirst.length - 1 ? newestFirst[index + 1] : null;
+          const showDay = !next || !sameDay(next.created_at, item.created_at);
           return (
             <React.Fragment key={`${item.kind}-${item.id}`}>
-              {showDay && <DaySeparator timestamp={item.created_at} />}
               {item.kind === 'aggregate' ? (
                 <AggregatedEventItem
                   item={item}
@@ -629,10 +600,30 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
                   onDismissFailed={handleDismissFailed}
                 />
               )}
+              {showDay && <DaySeparator timestamp={item.created_at} />}
             </React.Fragment>
           );
         })}
-        <div ref={streamEndRef} />
+        {hasMore && detail.stream.length > 0 && (
+          <button
+            type='button'
+            className='nudges-conversation__load-older'
+            onClick={handleLoadOlder}
+            disabled={loadingOlder}
+          >
+            {loadingOlder ? (
+              <FormattedMessage
+                id='nudges.loading_older'
+                defaultMessage='Loading…'
+              />
+            ) : (
+              <FormattedMessage
+                id='nudges.load_older'
+                defaultMessage='Load older messages'
+              />
+            )}
+          </button>
+        )}
       </div>
 
       <Composer onSend={handleSend} conversationId={conversationId} />
