@@ -51,29 +51,35 @@ const HOME_ZOOM = 3.7;
 // LIGHT flavor with the visible fields shifted to lavender/purple. The
 // natural `landcover` layer (hardcoded greens) is dropped at render time so
 // the land stays lavender.
+// "Midnight Violet" — a dark-violet land under white roads, a cornflower
+// water that reads clearly against them, and a Kronk-violet bushland. Landuse
+// patches blend into the land; the natural landcover overlay is recoloured to
+// the bushland tone at render time (see BUSHLAND_COLOR / basemapLayers).
+const LAND = '#5f4a96';
+const BUSHLAND_COLOR = '#6f5ab2';
 const KRONK_FLAVOR = {
   ...LIGHT,
-  background: '#d6cbef', // sea
-  earth: '#f3eefb', // land
-  water: '#b8a8e6',
-  park_a: '#e8e1f4',
-  park_b: '#e4ddf1',
-  wood_a: '#e6def2',
-  wood_b: '#e1d9ee',
-  scrub_a: '#ece6f5',
-  scrub_b: '#e7e0f3',
-  glacier: '#f6f2fc',
-  sand: '#efe8dd',
-  beach: '#f0e9de',
-  hospital: '#efe6f2',
-  industrial: '#e9e3f2',
-  school: '#ece5f3',
-  pedestrian: '#ece6f4',
-  zoo: '#e8e2f2',
-  military: '#e6e0f0',
-  aerodrome: '#e9e4f2',
+  background: '#8f7bc8', // sea
+  earth: LAND, // land
+  water: '#6b82d4', // cornflower
+  park_a: BUSHLAND_COLOR,
+  park_b: BUSHLAND_COLOR,
+  wood_a: BUSHLAND_COLOR,
+  wood_b: BUSHLAND_COLOR,
+  scrub_a: BUSHLAND_COLOR,
+  scrub_b: BUSHLAND_COLOR,
+  pedestrian: BUSHLAND_COLOR,
+  zoo: BUSHLAND_COLOR,
+  glacier: LAND,
+  sand: LAND,
+  beach: LAND,
+  hospital: LAND,
+  industrial: LAND,
+  school: LAND,
+  military: LAND,
+  aerodrome: LAND,
   buildings: '#d9ccef',
-  boundaries: '#8f7bc8',
+  boundaries: '#d8cbf0',
   railway: '#b3a4dd',
   major: '#ffffff',
   minor_a: '#ffffff',
@@ -86,6 +92,24 @@ const KRONK_FLAVOR = {
   other: '#efe9f6',
   minor_service: '#f7f3fd',
   link: '#f2ecfb',
+};
+
+// The Protomaps layer set with symbol (label) layers dropped and the natural
+// landcover overlay recoloured to the Kronk bushland tone.
+const basemapLayers = () => {
+  const built = layers('protomaps', KRONK_FLAVOR, { lang: 'en' }).filter(
+    (layer) => layer.type !== 'symbol',
+  );
+  built.forEach((layer) => {
+    if (layer.type === 'fill' && layer['source-layer'] === 'landcover') {
+      layer.paint = {
+        ...layer.paint,
+        'fill-color': BUSHLAND_COLOR,
+        'fill-opacity': 0.5,
+      };
+    }
+  });
+  return built;
 };
 
 // Register the pmtiles protocol with MapLibre exactly once per page.
@@ -147,15 +171,7 @@ export const MatesView: React.FC = () => {
             attribution: '© OpenStreetMap',
           },
         },
-        // Drop symbol (label) layers — they need externally-hosted glyphs —
-        // and the `landcover` layer, whose hardcoded greens fight the purple
-        // palette (the land then shows the lavender `earth` colour).
-        layers: layers('protomaps', KRONK_FLAVOR, { lang: 'en' }).filter(
-          (layer) =>
-            layer.type !== 'symbol' &&
-            ('source-layer' in layer ? layer['source-layer'] : undefined) !==
-              'landcover',
-        ),
+        layers: basemapLayers(),
       },
     });
 
