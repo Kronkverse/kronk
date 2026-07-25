@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
+import { useParams } from 'react-router-dom';
 
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
 import {
@@ -27,7 +28,15 @@ const messages = defineMessages({
 });
 
 const JITSI_DOMAIN = 'meet.talitamoss.info';
-const ROOM_NAME = 'huddle';
+// Fallback / Main Huddle room. Krew Huddles derive their room from
+// the Krew slug (see `useRoomName` below) so each Krew has its own
+// isolated Jitsi conference.
+const MAIN_ROOM_NAME = 'huddle';
+
+// Sanitise the Krew slug so it lands as a Prosody-safe room name.
+// Slugs are already `[a-z0-9-]` in the Krew model, but belt-and-braces.
+const roomNameForKrew = (slug: string) =>
+  `huddle-krew-${slug.replace(/[^a-z0-9-]/gi, '').toLowerCase()}`;
 
 interface JitsiApi {
   dispose: () => void;
@@ -181,6 +190,11 @@ const jitsiContainerStyle: React.CSSProperties = {
 const Live: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
+  // Route param: `/hub/huddle/krew/:krewSlug` → per-Krew room; bare
+  // `/hub/huddle/live` → the Main Huddle. `useParams` returns `{}` on
+  // routes without the segment.
+  const { krewSlug } = useParams<{ krewSlug?: string }>();
+  const roomName = krewSlug ? roomNameForKrew(krewSlug) : MAIN_ROOM_NAME;
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const jitsiApiRef = useRef<JitsiApi | null>(null);
 
@@ -279,7 +293,7 @@ const Live: React.FC<{ multiColumn?: boolean }> = () => {
           'https://' +
           JITSI_DOMAIN +
           '/room?room=' +
-          ROOM_NAME +
+          roomName +
           '&domain=meet.jitsi';
         const response = await fetch(roomUrl);
         if (!response.ok) {
@@ -307,7 +321,7 @@ const Live: React.FC<{ multiColumn?: boolean }> = () => {
       clearInterval(pollInterval);
       setLobbyParticipants([]);
     };
-  }, [inRoom]);
+  }, [inRoom, roomName]);
 
   const [jwtToken, setJwtToken] = useState<string | null>(null);
 
@@ -360,7 +374,7 @@ const Live: React.FC<{ multiColumn?: boolean }> = () => {
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const api = new JitsiMeetExternalAPI(JITSI_DOMAIN, {
-      roomName: ROOM_NAME,
+      roomName: roomName,
       jwt: jwtToken ?? undefined,
       parentNode: jitsiContainerRef.current,
       width: '100%',
@@ -435,7 +449,15 @@ const Live: React.FC<{ multiColumn?: boolean }> = () => {
       }
     }, 5000);
     api._countInterval = countInterval;
-  }, [inRoom, apiLoaded, currentUsername, currentAvatar, leaveRoom, jwtToken]);
+  }, [
+    inRoom,
+    apiLoaded,
+    currentUsername,
+    currentAvatar,
+    leaveRoom,
+    jwtToken,
+    roomName,
+  ]);
 
   const handleJoinRoom = useCallback(() => {
     void joinRoom();
