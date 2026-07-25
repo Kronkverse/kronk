@@ -11,14 +11,6 @@ import { KRONK_CONVERSATION_ID, isKronkSystemType } from './kronk_system';
 
 const messages = defineMessages({
   name: { id: 'nudges.kronk.name', defaultMessage: 'Kronk' },
-  proposalReady: {
-    id: 'nudges.kronk.preview.proposal_ready',
-    defaultMessage: '{title} is ready to finalise',
-  },
-  activity: {
-    id: 'nudges.kronk.preview.activity',
-    defaultMessage: 'System activity',
-  },
 });
 
 interface Props {
@@ -51,15 +43,10 @@ export const KronkNudgerRow: React.FC<Props> = ({ active, onOpen }) => {
     b.latest_page_notification_at.localeCompare(a.latest_page_notification_at),
   )[0];
 
-  const preview =
-    latest?.proposal != null
-      ? intl.formatMessage(messages.proposalReady, {
-          title: latest.proposal.proposal_title,
-        })
-      : intl.formatMessage(messages.activity);
-
   return (
-    <li className={`nudges-row nudges-row--kronk ${active ? 'nudges-row--active' : ''}`}>
+    <li
+      className={`nudges-row nudges-row--kronk ${active ? 'nudges-row--active' : ''}`}
+    >
       <button
         type='button'
         className='nudges-row__button'
@@ -88,7 +75,6 @@ export const KronkNudgerRow: React.FC<Props> = ({ active, onOpen }) => {
               </span>
             )}
           </span>
-          <span className='nudges-row__preview'>{preview}</span>
         </span>
       </button>
     </li>
