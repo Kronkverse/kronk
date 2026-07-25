@@ -168,31 +168,40 @@ export const WachuneedListings: React.FC<Props> = ({ loader, scope }) => {
       <ul className='wachuneed__list'>
         {visible.map((listing) => (
           <li key={listing.id} className='wachuneed__item'>
-            <div className='wachuneed__item-head'>
-              <span className='wachuneed__item-title'>{listing.title}</span>
-              {listing.price_display && (
-                <span className='wachuneed__item-price'>
-                  {listing.price_display}
-                </span>
-              )}
-            </div>
-
-            <div className='wachuneed__item-meta'>
-              <span
-                className={`wachuneed__item-category wachuneed__item-category--${listing.category}`}
-              >
-                {intl.formatMessage(labelForCategory(listing.category))}
-              </span>
-              {listing.location && (
-                <span className='wachuneed__item-location'>
-                  {listing.location}
-                </span>
-              )}
-            </div>
-
-            {listing.description && (
-              <p className='wachuneed__item-desc'>{listing.description}</p>
+            {listing.photo_url && (
+              <img
+                src={listing.photo_url}
+                alt=''
+                className='wachuneed__item-photo'
+              />
             )}
+            <div className='wachuneed__item-body'>
+              <div className='wachuneed__item-head'>
+                <span className='wachuneed__item-title'>{listing.title}</span>
+                {listing.price_display && (
+                  <span className='wachuneed__item-price'>
+                    {listing.price_display}
+                  </span>
+                )}
+              </div>
+
+              <div className='wachuneed__item-meta'>
+                <span
+                  className={`wachuneed__item-category wachuneed__item-category--${listing.category}`}
+                >
+                  {intl.formatMessage(labelForCategory(listing.category))}
+                </span>
+                {listing.location && (
+                  <span className='wachuneed__item-location'>
+                    {listing.location}
+                  </span>
+                )}
+              </div>
+
+              {listing.description && (
+                <p className='wachuneed__item-desc'>{listing.description}</p>
+              )}
+            </div>
           </li>
         ))}
       </ul>

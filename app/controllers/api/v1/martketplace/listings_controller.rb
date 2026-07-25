@@ -36,7 +36,11 @@ class Api::V1::Martketplace::ListingsController < Api::BaseController
   def create
     @listing = Listing.new(listing_params)
     @listing.account = current_account
-    @listing.save!
+
+    ApplicationRecord.transaction do
+      @listing.save!
+      attach_media!(@listing, media_attachment_ids_param)
+    end
 
     render json: @listing, serializer: REST::WachuneedListingSummarySerializer
   end
@@ -49,5 +53,30 @@ class Api::V1::Martketplace::ListingsController < Api::BaseController
 
   def listing_params
     params.permit(:title, :description, :category, :subcategory, :price_cents, :price_currency, :location, :state)
+  end
+
+  # Accept a homogeneous array of media_attachment_ids under either
+  # `media_attachment_ids[]` (form encoding) or `media_attachment_ids`
+  # (JSON body). Anything else is dropped.
+  def media_attachment_ids_param
+    ids = params[:media_attachment_ids]
+    return [] if ids.blank?
+
+    Array(ids).filter_map { |id| Integer(id.to_s, exception: false) }
+  end
+
+  # Bind each media attachment (owned by the caller, not yet attached
+  # to another parent) to the listing via ListingPhoto. Preserves the
+  # incoming order as the row's `position`. Silently skips ids that
+  # don't resolve to the caller's own free attachments — the composer
+  # never sends stale ids in practice.
+  def attach_media!(listing, ids)
+    return if ids.empty?
+
+    scope = MediaAttachment.where(id: ids, account: current_account, status_id: nil)
+    ordered = ids.filter_map { |id| scope.find { |m| m.id == id } }
+    ordered.each_with_index do |media, index|
+      ListingPhoto.create!(listing: listing, media_attachment: media, position: index)
+    end
   end
 end
