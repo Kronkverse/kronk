@@ -12,6 +12,15 @@
 # The projection never emits anything beyond the already privacy-trimmed
 # `route`; the raw start/end is not stored, so there is nothing to leak.
 class Api::V1::Map::TreksController < Api::BaseController
+  # Reaches a trek may be published at (docs/kronk_feed_and_reach.md §2).
+  # Defaults to Mates (the personal-korner default, §2.4).
+  TREK_REACHES = %w(public orbit mates self_only).freeze
+
+  ACTIVITY_GLYPHS = {
+    'run' => '🏃', 'walk' => '🚶', 'hike' => '🥾',
+    'swim' => '🏊', 'ride' => '🚴', 'paddle' => '🛶'
+  }.freeze
+
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, except: [:index, :show]
   before_action :require_user!
@@ -49,18 +58,45 @@ class Api::V1::Map::TreksController < Api::BaseController
     render json: { error: e.message }, status: 422
   end
 
+  # Publishing a trek posts a timeline Status at the author-chosen reach
+  # (docs/kronk_feed_and_reach.md §2) and links it via status_id — froth is a
+  # Favourite on that Status, comments are replies. Default reach is Mates
+  # (the personal-korner default, §2.4).
   def publish
-    @trek.update!(state: :published)
+    reach = trek_reach(params[:visibility])
+    return render json: { error: 'invalid_visibility' }, status: 422 if reach.nil?
+
+    ApplicationRecord.transaction do
+      if @trek.status_id.blank?
+        status = PostStatusService.new.call(
+          current_account,
+          text: trek_status_body(@trek),
+          visibility: reach,
+          application: doorkeeper_token&.application
+        )
+        @trek.status = status
+      end
+      @trek.update!(state: :published)
+    end
     render json: project(@trek)
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: e.message }, status: 422
   end
 
+  # Unpublishing removes the timeline Status (back to a private draft).
   def unpublish
-    @trek.update!(state: :draft)
+    ApplicationRecord.transaction do
+      status = @trek.status
+      @trek.update!(status: nil, state: :draft)
+      RemoveStatusService.new.call(status) if status
+    end
     render json: project(@trek)
   end
 
   def destroy
+    status = @trek.status
     @trek.destroy!
+    RemoveStatusService.new.call(status) if status
     head 204
   end
 
@@ -73,6 +109,19 @@ class Api::V1::Map::TreksController < Api::BaseController
 
   def limit
     [params.fetch(:limit, 40).to_i.abs, 80].min
+  end
+
+  def trek_reach(value)
+    reach = value.presence || 'mates'
+    TREK_REACHES.include?(reach) ? reach : nil
+  end
+
+  def trek_status_body(trek)
+    glyph = ACTIVITY_GLYPHS[trek.activity_type]
+    heading = [glyph, trek.title.presence || trek.activity_type.capitalize].compact.join(' ')
+    stat = "#{(trek.distance_m / 1000.0).round(1)} km"
+    stat += " · #{trek.moving_sec / 60}m" if trek.moving_sec.to_i.positive?
+    "#{heading}\n#{stat}"
   end
 
   def project(trek)
@@ -99,6 +148,7 @@ class Api::V1::Map::TreksController < Api::BaseController
       # someone allowed to see the trek.
       route: trek.visible_to?(current_account) ? trek.route : nil,
       state: trek.state,
+      status_id: trek.status_id&.to_s,
       self: mine,
     }
   end

@@ -11,6 +11,8 @@ import {
 
 export type TrekActivity = 'run' | 'walk' | 'hike' | 'swim' | 'ride' | 'paddle';
 export type TrekState = 'draft' | 'published';
+// The reach a trek can be published at (docs/kronk_feed_and_reach.md §2).
+export type TrekReach = 'public' | 'orbit' | 'mates' | 'self_only';
 
 export interface ApiTrekJSON {
   id: string;
@@ -30,6 +32,7 @@ export interface ApiTrekJSON {
   has_route: boolean;
   route: [number, number][] | null; // [lng, lat]
   state: TrekState;
+  status_id: string | null; // the linked timeline Status, when published
   self: boolean;
 }
 
@@ -51,8 +54,11 @@ export const apiCreateTrek = (params: {
   elevation_gain?: number;
 }) => apiRequestPost<ApiTrekJSON>('v1/map/treks', params);
 
-export const apiPublishTrek = (id: string) =>
-  apiRequestPost<ApiTrekJSON>(`v1/map/treks/${id}/publish`);
+export const apiPublishTrek = (id: string, visibility?: TrekReach) =>
+  apiRequestPost<ApiTrekJSON>(
+    `v1/map/treks/${id}/publish`,
+    visibility ? { visibility } : undefined,
+  );
 
 export const apiUnpublishTrek = (id: string) =>
   apiRequestPost<ApiTrekJSON>(`v1/map/treks/${id}/unpublish`);

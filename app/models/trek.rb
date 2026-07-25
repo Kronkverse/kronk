@@ -5,7 +5,9 @@
 # the privacy-trimmed slice — the raw start/end is never persisted.
 class Trek < ApplicationRecord
   belongs_to :account
-  belongs_to :status, optional: true
+  # The published timeline Status (froth = Favourite, comments = replies).
+  # Null while a draft; set when the owner publishes to a reach (§ publish).
+  belongs_to :status, optional: true, inverse_of: :trek
 
   # run/walk/hike/swim are pace activities; ride/paddle are speed activities.
   enum :activity_type, { run: 0, walk: 1, hike: 2, swim: 3, ride: 4, paddle: 5 }, prefix: :activity
