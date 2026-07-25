@@ -322,11 +322,15 @@ Rails.application.routes.draw do
   get '/hub/huddle', to: 'huddle#index'
   get '/hub/huddle/*path', to: 'huddle#index', format: false
 
-  # 2.x korner stubs (Moments/Albutts/Map) — manifest-only, no
-  # backend yet. Fall through to the SPA so KornerStub renders.
+  # 2.x korner stubs (Moments/Albutts) — manifest-only, no backend
+  # yet. Fall through to the SPA so KornerStub renders.
   get '/hub/moments', to: 'home#index'
   get '/hub/albutts', to: 'home#index'
+  # Map has real lenses now (mates/treks/logger); the /*path wildcard
+  # lets a direct load or hard-reload of /hub/map/<lens> boot the SPA
+  # instead of 404ing (the client router then resolves the lens).
   get '/hub/map', to: 'home#index'
+  get '/hub/map/*path', to: 'home#index', format: false
   # Kompass was renamed to Map (its original Kommons-proposal name);
   # keep the old path working with a permanent redirect.
   get '/hub/kompass', to: redirect('/hub/map')

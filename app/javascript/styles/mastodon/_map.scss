@@ -97,3 +97,181 @@
     animation: none;
   }
 }
+
+// Map — Treks lens. A list of the caller's own treks + their Mates' published
+// treks, and a detail view that draws the privacy-trimmed route on the shared
+// Kronk basemap.
+.trek-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  padding: 12px;
+  gap: 12px;
+
+  &--loading {
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__filter {
+    display: flex;
+    gap: 8px;
+
+    button {
+      flex: 0 0 auto;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border-default);
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+
+      &.is-active {
+        background: var(--kronk-purple, #7c5cff);
+        border-color: transparent;
+        color: #fff;
+      }
+    }
+  }
+
+  &__empty {
+    color: var(--text-secondary);
+    font-size: 14px;
+    text-align: center;
+    padding: 24px 0;
+  }
+
+  &__items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.trek-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-default);
+  background: var(--surface-variant-background-color, rgb(255 255 255 / 3%));
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--kronk-purple, #7c5cff);
+  }
+
+  &__glyph {
+    font-size: 24px;
+    line-height: 1;
+    flex: 0 0 auto;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__title {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__meta {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+}
+
+.trek-detail {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+  gap: 16px;
+
+  &__back {
+    align-self: flex-start;
+    padding: 4px 0;
+    background: transparent;
+    border: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 20px;
+    color: var(--text-primary);
+  }
+
+  &__map {
+    width: 100%;
+    height: 280px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  &__noroute {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-style: italic;
+  }
+
+  &__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin: 0;
+
+    div {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    dt {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+    }
+
+    dd {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  &__privacy {
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border-default);
+    background: rgb(124 92 255 / 8%);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 10px;
+  }
+}
