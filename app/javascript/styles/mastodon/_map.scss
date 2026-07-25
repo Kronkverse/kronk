@@ -4,13 +4,20 @@
 
 .map-mates {
   position: relative;
+  display: flex;
+  flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
 
+  // The canvas fills the height as an in-flow flex child. It must NOT use
+  // absolute positioning: MapLibre adds its own `.maplibregl-map` class to
+  // this element, and maplibre-gl.css sets `.maplibregl-map { position:
+  // relative }`, which overrides `position: absolute` — leaving `inset: 0`
+  // inert and collapsing the container to 0px (the map then never renders).
   &__canvas {
-    position: absolute;
-    inset: 0;
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   &__panel {
