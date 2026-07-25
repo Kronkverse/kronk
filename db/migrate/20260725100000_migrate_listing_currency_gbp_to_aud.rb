@@ -12,20 +12,28 @@ class MigrateListingCurrencyGbpToAud < ActiveRecord::Migration[8.0]
   def up
     return unless table_exists?(:listings)
 
-    execute <<~SQL.squish
-      UPDATE listings
-      SET    price_currency = 'AUD'
-      WHERE  price_currency = 'GBP'
-    SQL
+    # strong_migrations can't inspect raw `execute`; this is an in-place
+    # display-currency swap on a table with at most a few dozen rows
+    # (shadow's small user base + a handful of seed mocks). No schema
+    # change, no locking risk — wrap in safety_assured explicitly.
+    safety_assured do
+      execute <<~SQL.squish
+        UPDATE listings
+        SET    price_currency = 'AUD'
+        WHERE  price_currency = 'GBP'
+      SQL
+    end
   end
 
   def down
     return unless table_exists?(:listings)
 
-    execute <<~SQL.squish
-      UPDATE listings
-      SET    price_currency = 'GBP'
-      WHERE  price_currency = 'AUD'
-    SQL
+    safety_assured do
+      execute <<~SQL.squish
+        UPDATE listings
+        SET    price_currency = 'GBP'
+        WHERE  price_currency = 'AUD'
+      SQL
+    end
   end
 end
