@@ -75,6 +75,7 @@ class Api::V1::Map::TreksController < Api::BaseController
           application: doorkeeper_token&.application
         )
         @trek.status = status
+        status.update_column(:source_korner, 'map') # feed projection discriminator (§3.2)
       end
       @trek.update!(state: :published)
     end

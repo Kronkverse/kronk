@@ -66,6 +66,7 @@ class Api::V1::BoothSetsController < Api::BaseController
     # points the association at the newest status; older shares stay in the
     # timeline as plain text.
     @booth_set.update!(status_id: status.id)
+    status.update_column(:source_korner, 'booth') # feed projection discriminator (§3.2)
 
     render json: status, serializer: REST::StatusSerializer
   end

@@ -172,6 +172,7 @@ class Api::V1::ProposalsController < Api::BaseController
       post_type: :proposal
     )
     proposal.update_columns(status_id: feed_status.id, discussion_status_id: feed_status.id)
+    feed_status.update_column(:source_korner, 'kommons') # feed projection discriminator (§3.2)
   rescue => e
     Rails.logger.error("Failed to create feed status for proposal #{proposal.id}: #{e.message}")
   end
