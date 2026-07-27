@@ -17,7 +17,7 @@
 
 Kronk 1.7.0 shipped the first-pass "Korner framework": a manifest-driven system that lets thematically-scoped feature spaces (Kommons, Kuestions, Kalendar, Booth, InFlow, Nudges, etc.) register themselves via `config/korners/*.yaml`. Every existing korner has a retroactive manifest; a boot-time drift check warns without wedging production; a CLI (`bin/tootctl korners list`) surfaces drift.
 
-Between 1.7.0 shipping and today (2026-07-10), Tal has workshopped a **rebuild spec** covering ~20 sections: manifest v2 (§1), language (§2), aesthetic tokens (§6), URL grammar (§4), storage discipline (§5), security (§7), feed projection (§8), platforms (§9), operations (§10), notifications-as-Nudges (§N), settings space (§K), org space (§O), profile rebuild, Kategories, Groups, Search, and new korners (Moments, Albutts, Kompass). One large paradigm pivot: **the planet metaphor is retired** — no more per-korner colour identity, shared Kronk-purple palette instead.
+Between 1.7.0 shipping and today (2026-07-10), Tal has workshopped a **rebuild spec** covering ~20 sections: manifest v2 (§1), language (§2), aesthetic tokens (§6), URL grammar (§4), storage discipline (§5), security (§7), feed projection (§8), platforms (§9), operations (§10), notifications-as-Nudges (§N), settings space (§K), org space (§O), profile rebuild, Kategories, Groups, Search, and new korners (Moments, Albutts, Map). One large paradigm pivot: **the planet metaphor is retired** — no more per-korner colour identity, shared Kronk-purple palette instead.
 
 The rebuild ships as **Kronk 2.0.0**. Reason: the 2.x semver line was already reserved for it; every meaningful piece of the platform's foundation is touched; the surface break (URL grammar, notifications flip, planet metaphor drop) is too large for a minor bump. `main` stays on the 1.7.x line throughout; rebuild work targets a long-lived integration branch `rebuild/2.0.0`. Shadow env (`shadow.kronk.info`) is the dogfooding surface.
 
@@ -40,7 +40,7 @@ Intended outcome: a 2.0.0 release that (a) formalises the Korner framework to sp
 | 10  | InFlow kosmic + Wachuneed greenfield + Skeleton WIP                        | 5   | 1.5 weeks      | Phase 1                   |
 | 11  | Org space `/kronk/*` + Profile rebuild `/@user`                            | 4   | 1 week         | Phase 3                   |
 | 12  | Nav-chrome redesign (Ӂ menu, three-way switcher, wordmark, mobile tab-bar) | 3   | 1 week         | Phases 3, 11              |
-| 13  | 2.x new korner manifests (Moments, Albutts, Kompass) — `enforced: false`   | 3   | 3 days         | Phase 1                   |
+| 13  | 2.x new korner manifests (Moments, Albutts, Map) — `enforced: false`       | 3   | 3 days         | Phase 1                   |
 | 14  | Release hardening + main PR                                                | 3   | 1 week         | all above                 |
 
 **Total:** ~65 PRs, ~15 calendar weeks with parallelisation. Serial critical path ~10 weeks.
@@ -202,7 +202,7 @@ Tiny PRs; each ships a manifest with `enforced: false` and a "coming soon" card.
 
 - **13.1** `config/korners/moments.yaml` — ephemeral, 24h expiry noted in `settings`.
 - **13.2** `config/korners/albutts.yaml` — shared albums.
-- **13.3** `config/korners/kompass.yaml` — opt-in presence.
+- **13.3** `config/korners/map.yaml` — opt-in presence.
 
 ### Phase 14 — Release hardening + main PR
 
@@ -291,4 +291,4 @@ Coordinated separately from this plan — Tal owns the disposition.
 - 2.0.0 tagged; `mastodon.kronk.info` DNS flipped to `kronk.info`.
 - Legacy tab (`/hub/nudges?tab=legacy`) monitored for 30 days.
 - `bin/tootctl korners doctor` runs on cron; drift alerts to instance admins.
-- 2.1.0 milestone opens for follow-up work (Kompass presence, Moments/Albutts backends, `discussion_status_id` column removal).
+- 2.1.0 milestone opens for follow-up work (Map presence, Moments/Albutts backends, `discussion_status_id` column removal).
