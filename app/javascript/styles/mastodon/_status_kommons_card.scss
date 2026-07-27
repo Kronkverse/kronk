@@ -5,16 +5,16 @@
 // _status_korner_card.scss. Only Kommons-unique visuals remain here.
 
 .status-kommons-card {
-  background-color: #13162a;
-  border-color: #2a2d45;
+  background-color: var(--surface-primary);
+  border-color: var(--border-subtle);
 
   // Kommons-specific title / summary colour palette
   .status-korner-card__title {
-    color: #e8e6f5;
+    color: var(--text-primary);
   }
 
   .status-korner-card__summary {
-    color: #9a95b8;
+    color: var(--text-secondary);
   }
 
   &__status {
@@ -27,7 +27,7 @@
 
     &--open {
       background: color-mix(in srgb, var(--accent) 25%, transparent);
-      color: color-mix(in srgb, var(--accent) 50%, #e5d9f5 50%);
+      color: color-mix(in srgb, var(--accent) 55%, var(--text-on-accent) 45%);
     }
 
     &--in_progress {
@@ -48,10 +48,10 @@
 
   &__vote {
     font-size: 12px;
-    color: #9a95b8;
+    color: var(--text-secondary);
 
     &--support {
-      color: color-mix(in srgb, var(--accent) 50%, #e5d9f5 50%);
+      color: color-mix(in srgb, var(--accent) 55%, var(--text-on-accent) 45%);
       font-weight: 500;
     }
 

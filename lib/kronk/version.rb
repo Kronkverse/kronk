@@ -33,7 +33,7 @@ module Kronk
     module_function
 
     def to_s
-      '2.0.0-alpha.289'
+      '2.0.0-alpha.290'
     end
 
     def to_a
