@@ -171,30 +171,27 @@
 }
 
 // ── Kronk composer treatment ────────────────────────────────────────────
-// Two jobs: (1) retokenise the stock blurple accents onto the Kronk violet
-// (Post button, active states, focus ring, over-limit counter); (2) give the
-// box a Kronk "lift" — softer radius, a violet-tinted elevation off the Stage,
-// a faint violet wash and a glowing focus ring — so it reads as a considered
-// Kronk surface rather than a flat stock card.
-// Deliberately NOT changed: the card / textarea / text *fill* colours. The
-// Kronk semantic surface/text tokens never activate under the stock light skin
-// — nothing sets data-theme='light', so :root[data-theme='light'] never
-// matches — so overriding the fills would darken the light composer. The
-// violet accents, the low-alpha wash and the shadow all read correctly on both
-// surfaces. Wiring data-theme to the active theme is the follow-up that unlocks
-// a full surface retokenise. Scoped under .compose-form; loaded after
-// components.scss. See docs/kronk_aesthetic_system.md.
+// The composer as a full Kronk surface: the card + inputs sit on the semantic
+// --surface-elevated fill with a faint violet wash, --border-default border,
+// --radius-large corners, a violet-tinted elevation off the Stage and a glowing
+// focus ring; text uses the --text-* hierarchy; accents (Post button, active
+// states, over-limit counter) are the Kronk violet. All via the semantic
+// tokens, which now switch per theme (data-theme is stamped on <html> —
+// utils/theme_variant.ts), so this reads correctly in both dark and light.
+// Scoped under .compose-form; loaded after components.scss.
+// See docs/kronk_aesthetic_system.md.
 .compose-form {
-  // The card — softer radius, a violet-tinted lift off the Stage, and a faint
-  // violet wash laid over the stock (theme-following) fill (background-image
-  // clips to the radius, so the underlying background-color is untouched).
+  // The card — Kronk surface fill + border, softer radius, a violet-tinted lift
+  // off the Stage, and a faint violet wash over the fill.
   &__highlightable {
-    border-radius: var(--radius-large);
+    background-color: var(--surface-elevated);
     background-image: linear-gradient(
       155deg,
       color-mix(in srgb, var(--kronk-purple-accent) 8%, transparent) 0%,
       transparent 55%
     );
+    border-color: var(--border-default);
+    border-radius: var(--radius-large);
     box-shadow:
       0 12px 34px -16px color-mix(in oklab, var(--kronk-purple-accent) 50%, transparent),
       var(--elevation-card);
@@ -211,6 +208,18 @@
     }
   }
 
+  // Text + content-warning inputs — sit on the same Kronk surface, with the
+  // primary text tone and a muted placeholder.
+  .autosuggest-textarea__textarea,
+  .spoiler-input__input {
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+  }
+
   // Solid active pill (visibility) — was solid blue.
   .dropdown-button.active {
     background: var(--accent);
@@ -218,10 +227,10 @@
     color: var(--text-on-accent);
   }
 
-  // Action icons — violet on hover/focus; default keeps the stock
-  // theme-following tone so it still reads on the light skin. Toggled-on
+  // Action icons — muted by default, violet on hover/focus; toggled-on
   // (content-warning) gets the solid violet.
   &__actions .icon-button {
+    color: var(--text-secondary);
     transition: color var(--dur-fast) var(--ease-out);
 
     &:hover,
@@ -235,9 +244,13 @@
     }
   }
 
-  // Over-limit character counter → the Kronk error red.
-  .character-counter--over {
-    color: var(--warning-red);
+  // Character counter — muted, Kronk error red when over the limit.
+  .character-counter {
+    color: var(--text-secondary);
+
+    &--over {
+      color: var(--warning-red);
+    }
   }
 
   // The Post button — Kronk violet pill; :disabled keeps the stock muted look.
