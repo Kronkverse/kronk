@@ -116,7 +116,7 @@ export const TabKontribute: React.FC<{ proposalId: string }> = ({
 
   if (loading) {
     return (
-      <div className='governance-tab-kontribute__loading'>
+      <div className='kommons-tab-kontribute__loading'>
         <FormattedMessage
           id='governance.kontribute.loading'
           defaultMessage='Loading…'
@@ -140,10 +140,10 @@ export const TabKontribute: React.FC<{ proposalId: string }> = ({
   const currency = budgetItems[0]?.currency ?? 'NZD';
 
   return (
-    <div className='governance-tab-kontribute'>
-      <section className='governance-tab-kontribute__tasks'>
-        <div className='governance-tab-kontribute__section-header'>
-          <h4 className='governance-tab-kontribute__section-heading'>
+    <div className='kommons-tab-kontribute'>
+      <section className='kommons-tab-kontribute__tasks'>
+        <div className='kommons-tab-kontribute__section-header'>
+          <h4 className='kommons-tab-kontribute__section-heading'>
             <FormattedMessage
               id='governance.kontribute.tasks'
               defaultMessage='Tasks'
@@ -152,7 +152,7 @@ export const TabKontribute: React.FC<{ proposalId: string }> = ({
           {!showNewTaskForm && (
             <button
               type='button'
-              className='governance-tab-kontribute__new-btn'
+              className='kommons-tab-kontribute__new-btn'
               onClick={handleShowNewTask}
             >
               <Icon id='add' icon={AddIcon} />
@@ -173,7 +173,7 @@ export const TabKontribute: React.FC<{ proposalId: string }> = ({
         )}
 
         {tasks.length === 0 && !showNewTaskForm && (
-          <p className='governance-tab-kontribute__empty'>
+          <p className='kommons-tab-kontribute__empty'>
             <FormattedMessage
               id='governance.kontribute.no_tasks'
               defaultMessage='No tasks defined yet.'
@@ -184,9 +184,9 @@ export const TabKontribute: React.FC<{ proposalId: string }> = ({
         {STATUS_ORDER.map((status) => {
           const statusTasks = tasksByStatus[status] ?? [];
           return statusTasks.length > 0 ? (
-            <div key={status} className='governance-tab-kontribute__task-group'>
+            <div key={status} className='kommons-tab-kontribute__task-group'>
               <h5
-                className={`governance-tab-kontribute__status-label governance-tab-kontribute__status-label--${status}`}
+                className={`kommons-tab-kontribute__status-label kommons-tab-kontribute__status-label--${status}`}
               >
                 {status === 'open' && (
                   <FormattedMessage
@@ -221,14 +221,14 @@ export const TabKontribute: React.FC<{ proposalId: string }> = ({
       </section>
 
       {budgetItems.length > 0 && (
-        <section className='governance-tab-kontribute__budget'>
-          <h4 className='governance-tab-kontribute__section-heading'>
+        <section className='kommons-tab-kontribute__budget'>
+          <h4 className='kommons-tab-kontribute__section-heading'>
             <FormattedMessage
               id='governance.kontribute.budget'
               defaultMessage='Budget'
             />
           </h4>
-          <table className='governance-budget-table'>
+          <table className='kommons-budget-table'>
             <thead>
               <tr>
                 <th>
@@ -257,7 +257,7 @@ export const TabKontribute: React.FC<{ proposalId: string }> = ({
               ))}
             </tbody>
             <tfoot>
-              <tr className='governance-budget-table__total'>
+              <tr className='kommons-budget-table__total'>
                 <td>
                   <FormattedMessage
                     id='governance.budget.total'

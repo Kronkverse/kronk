@@ -17,37 +17,37 @@ export const TaskCard: React.FC<Props> = ({ task, onClaim, claiming }) => {
 
   return (
     <div
-      className={`governance-task-card governance-task-card--${task.status}`}
+      className={`kommons-task-card kommons-task-card--${task.status}`}
     >
-      <div className='governance-task-card__header'>
-        <span className='governance-task-card__title'>{task.title}</span>
+      <div className='kommons-task-card__header'>
+        <span className='kommons-task-card__title'>{task.title}</span>
         {task.skill_tag && (
           <span
-            className={`governance-skill-badge governance-skill-badge--${task.skill_tag}`}
+            className={`kommons-skill-badge kommons-skill-badge--${task.skill_tag}`}
           >
             {task.skill_tag}
           </span>
         )}
         {task.effort_estimate != null && (
-          <span className='governance-task-card__effort'>
+          <span className='kommons-task-card__effort'>
             {task.effort_estimate}h
           </span>
         )}
       </div>
 
       {task.description && (
-        <p className='governance-task-card__description'>{task.description}</p>
+        <p className='kommons-task-card__description'>{task.description}</p>
       )}
 
       {task.assigned_to_account && (
-        <div className='governance-task-card__assignee'>
+        <div className='kommons-task-card__assignee'>
           <img
             src={task.assigned_to_account.avatar}
             alt={
               task.assigned_to_account.display_name ||
               task.assigned_to_account.username
             }
-            className='governance-task-card__assignee-avatar'
+            className='kommons-task-card__assignee-avatar'
           />
           <span>
             {task.assigned_to_account.display_name ||
@@ -58,7 +58,7 @@ export const TaskCard: React.FC<Props> = ({ task, onClaim, claiming }) => {
 
       {onClaim && (
         <button
-          className='governance-task-card__claim-btn'
+          className='kommons-task-card__claim-btn'
           onClick={handleClaimClick}
           disabled={claiming}
         >

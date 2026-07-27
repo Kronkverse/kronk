@@ -497,7 +497,7 @@ body:has(.korner-sub-bar) {
 }
 
 // Shared "← back" chrome for in-korner surfaces. Retires the
-// Kommons-specific `.governance-plant__back` class as part of Sweep 3
+// Kommons-specific `.kommons-plant__back` class as part of Sweep 3
 // (the old class definition still lives in `_governance.scss` for
 // portal-me's Sweep 2 to sweep alongside the colour-token migration).
 .chrome-back-link {

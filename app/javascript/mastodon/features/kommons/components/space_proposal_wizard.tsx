@@ -483,17 +483,17 @@ export const SpaceProposalWizard: React.FC<Props> = ({
       {/* Refine form */}
       {showRefineForm && (
         <div className='wizard-form'>
-          {error && <p className='governance-form__error'>{error}</p>}
+          {error && <p className='kommons-form__error'>{error}</p>}
 
-          <label className='governance-form__label'>
-            <span className='governance-form__label-text'>
+          <label className='kommons-form__label'>
+            <span className='kommons-form__label-text'>
               <FormattedMessage
                 id='governance.wizard.field.name'
                 defaultMessage='Name'
               />
             </span>
             <input
-              className='governance-form__input'
+              className='kommons-form__input'
               type='text'
               required
               maxLength={240}
@@ -503,15 +503,15 @@ export const SpaceProposalWizard: React.FC<Props> = ({
             />
           </label>
 
-          <label className='governance-form__label'>
-            <span className='governance-form__label-text'>
+          <label className='kommons-form__label'>
+            <span className='kommons-form__label-text'>
               <FormattedMessage
                 id='governance.wizard.field.description'
                 defaultMessage='Description'
               />
             </span>
             <textarea
-              className='governance-form__textarea'
+              className='kommons-form__textarea'
               required
               value={refineDescription}
               onChange={handleRefineDescChange}
@@ -520,9 +520,9 @@ export const SpaceProposalWizard: React.FC<Props> = ({
             />
           </label>
 
-          <div className='governance-form__actions'>
+          <div className='kommons-form__actions'>
             <button
-              className='governance-form__cancel-btn'
+              className='kommons-form__cancel-btn'
               onClick={onCancel}
               disabled={submitting}
             >
@@ -532,7 +532,7 @@ export const SpaceProposalWizard: React.FC<Props> = ({
               />
             </button>
             <button
-              className='governance-form__submit-btn'
+              className='kommons-form__submit-btn'
               onClick={handleSubmitRefine}
               disabled={
                 submitting || !refineName.trim() || !refineDescription.trim()
@@ -550,17 +550,17 @@ export const SpaceProposalWizard: React.FC<Props> = ({
       {/* Bug form */}
       {showBugForm && (
         <div className='wizard-form'>
-          {error && <p className='governance-form__error'>{error}</p>}
+          {error && <p className='kommons-form__error'>{error}</p>}
 
-          <label className='governance-form__label'>
-            <span className='governance-form__label-text'>
+          <label className='kommons-form__label'>
+            <span className='kommons-form__label-text'>
               <FormattedMessage
                 id='governance.wizard.field.name'
                 defaultMessage='Name'
               />
             </span>
             <input
-              className='governance-form__input'
+              className='kommons-form__input'
               type='text'
               required
               maxLength={240}
@@ -570,15 +570,15 @@ export const SpaceProposalWizard: React.FC<Props> = ({
             />
           </label>
 
-          <label className='governance-form__label'>
-            <span className='governance-form__label-text'>
+          <label className='kommons-form__label'>
+            <span className='kommons-form__label-text'>
               <FormattedMessage
                 id='governance.wizard.field.description'
                 defaultMessage='Description'
               />
             </span>
             <textarea
-              className='governance-form__textarea'
+              className='kommons-form__textarea'
               required
               value={bugDescription}
               onChange={handleBugDescChange}
@@ -607,9 +607,9 @@ export const SpaceProposalWizard: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className='governance-form__actions'>
+          <div className='kommons-form__actions'>
             <button
-              className='governance-form__cancel-btn'
+              className='kommons-form__cancel-btn'
               onClick={onCancel}
               disabled={submitting}
             >
@@ -619,7 +619,7 @@ export const SpaceProposalWizard: React.FC<Props> = ({
               />
             </button>
             <button
-              className='governance-form__submit-btn'
+              className='kommons-form__submit-btn'
               onClick={handleSubmitBug}
               disabled={submitting || !bugName.trim() || !bugDescription.trim()}
             >
@@ -635,17 +635,17 @@ export const SpaceProposalWizard: React.FC<Props> = ({
       {/* Feature form */}
       {showFeatureForm && (
         <div className='wizard-form'>
-          {error && <p className='governance-form__error'>{error}</p>}
+          {error && <p className='kommons-form__error'>{error}</p>}
 
-          <label className='governance-form__label'>
-            <span className='governance-form__label-text'>
+          <label className='kommons-form__label'>
+            <span className='kommons-form__label-text'>
               <FormattedMessage
                 id='governance.wizard.field.name'
                 defaultMessage='Name'
               />
             </span>
             <input
-              className='governance-form__input'
+              className='kommons-form__input'
               type='text'
               required
               maxLength={240}
@@ -655,15 +655,15 @@ export const SpaceProposalWizard: React.FC<Props> = ({
             />
           </label>
 
-          <label className='governance-form__label'>
-            <span className='governance-form__label-text'>
+          <label className='kommons-form__label'>
+            <span className='kommons-form__label-text'>
               <FormattedMessage
                 id='governance.wizard.field.description'
                 defaultMessage='Description'
               />
             </span>
             <textarea
-              className='governance-form__textarea'
+              className='kommons-form__textarea'
               required
               value={featureDescription}
               onChange={handleFeatureDescChange}
@@ -672,9 +672,9 @@ export const SpaceProposalWizard: React.FC<Props> = ({
             />
           </label>
 
-          <div className='governance-form__actions'>
+          <div className='kommons-form__actions'>
             <button
-              className='governance-form__cancel-btn'
+              className='kommons-form__cancel-btn'
               onClick={onCancel}
               disabled={submitting}
             >
@@ -684,7 +684,7 @@ export const SpaceProposalWizard: React.FC<Props> = ({
               />
             </button>
             <button
-              className='governance-form__submit-btn'
+              className='kommons-form__submit-btn'
               onClick={handleSubmitFeature}
               disabled={
                 submitting || !featureName.trim() || !featureDescription.trim()
@@ -702,17 +702,17 @@ export const SpaceProposalWizard: React.FC<Props> = ({
       {/* New space form */}
       {showNewSpaceForm && (
         <div className='wizard-form'>
-          {error && <p className='governance-form__error'>{error}</p>}
+          {error && <p className='kommons-form__error'>{error}</p>}
 
-          <label className='governance-form__label'>
-            <span className='governance-form__label-text'>
+          <label className='kommons-form__label'>
+            <span className='kommons-form__label-text'>
               <FormattedMessage
                 id='governance.wizard.field.name'
                 defaultMessage='Name'
               />
             </span>
             <input
-              className='governance-form__input'
+              className='kommons-form__input'
               type='text'
               required
               maxLength={240}
@@ -722,15 +722,15 @@ export const SpaceProposalWizard: React.FC<Props> = ({
             />
           </label>
 
-          <label className='governance-form__label'>
-            <span className='governance-form__label-text'>
+          <label className='kommons-form__label'>
+            <span className='kommons-form__label-text'>
               <FormattedMessage
                 id='governance.wizard.field.proposal'
                 defaultMessage='Proposal'
               />
             </span>
             <textarea
-              className='governance-form__textarea'
+              className='kommons-form__textarea'
               required
               value={spaceProposal}
               onChange={handleSpaceProposalChange}
@@ -739,9 +739,9 @@ export const SpaceProposalWizard: React.FC<Props> = ({
             />
           </label>
 
-          <div className='governance-form__actions'>
+          <div className='kommons-form__actions'>
             <button
-              className='governance-form__cancel-btn'
+              className='kommons-form__cancel-btn'
               onClick={onCancel}
               disabled={submitting}
             >
@@ -751,7 +751,7 @@ export const SpaceProposalWizard: React.FC<Props> = ({
               />
             </button>
             <button
-              className='governance-form__submit-btn'
+              className='kommons-form__submit-btn'
               onClick={handleSubmitNewSpace}
               disabled={
                 submitting || !spaceName.trim() || !spaceProposal.trim()

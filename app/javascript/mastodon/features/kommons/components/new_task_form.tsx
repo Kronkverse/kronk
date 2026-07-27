@@ -63,23 +63,23 @@ export const NewTaskForm: React.FC<{
 
   return (
     <form
-      className='governance-form governance-form--inline'
+      className='kommons-form kommons-form--inline'
       onSubmit={handleFormSubmit}
     >
-      {error && <p className='governance-form__error'>{error}</p>}
+      {error && <p className='kommons-form__error'>{error}</p>}
 
-      <label className='governance-form__label'>
-        <span className='governance-form__label-text'>
+      <label className='kommons-form__label'>
+        <span className='kommons-form__label-text'>
           <FormattedMessage
             id='governance.task_form.title'
             defaultMessage='Title'
           />
-          <span className='governance-form__required' aria-hidden='true'>
+          <span className='kommons-form__required' aria-hidden='true'>
             *
           </span>
         </span>
         <input
-          className='governance-form__input'
+          className='kommons-form__input'
           type='text'
           value={title}
           onChange={handleTitleChange}
@@ -88,25 +88,25 @@ export const NewTaskForm: React.FC<{
         />
       </label>
 
-      <label className='governance-form__label'>
-        <span className='governance-form__label-text'>
+      <label className='kommons-form__label'>
+        <span className='kommons-form__label-text'>
           <FormattedMessage
             id='governance.task_form.description'
             defaultMessage='Description'
           />
         </span>
         <textarea
-          className='governance-form__textarea'
+          className='kommons-form__textarea'
           value={description}
           onChange={handleDescriptionChange}
           rows={3}
         />
       </label>
 
-      <div className='governance-form__actions'>
+      <div className='kommons-form__actions'>
         <button
           type='button'
-          className='governance-form__cancel-btn'
+          className='kommons-form__cancel-btn'
           onClick={onCancel}
           disabled={submitting}
         >
@@ -117,7 +117,7 @@ export const NewTaskForm: React.FC<{
         </button>
         <button
           type='submit'
-          className='governance-form__submit-btn'
+          className='kommons-form__submit-btn'
           disabled={submitting || !title.trim()}
         >
           {submitting ? (

@@ -239,32 +239,32 @@ export function EventDetail () {
 }
 
 
-export function Governance () {
-  return import("../../governance").then(m => ({ default: m.Governance }));
+export function Kommons () {
+  return import("../../kommons").then(m => ({ default: m.Kommons }));
 }
 
 export function KommonsSettings () {
-  return import("../../governance/settings");
+  return import("../../kommons/settings");
 }
 
 export function KommonsProposal () {
-  return import("../../governance/proposal_page").then(m => ({ default: m.ProposalPage }));
+  return import("../../kommons/proposal_page").then(m => ({ default: m.ProposalPage }));
 }
 
 export function KommonsSpace () {
-  return import("../../governance/space_page").then(m => ({ default: m.SpacePage }));
+  return import("../../kommons/space_page").then(m => ({ default: m.SpacePage }));
 }
 
 export function KommonsNodeMeta () {
-  return import("../../governance/node_meta_page").then(m => ({ default: m.NodeMetaPage }));
+  return import("../../kommons/node_meta_page").then(m => ({ default: m.NodeMetaPage }));
 }
 
 export function KommonsPropose () {
-  return import("../../governance/propose_page").then(m => ({ default: m.ProposePage }));
+  return import("../../kommons/propose_page").then(m => ({ default: m.ProposePage }));
 }
 
 export function KommonsProposePicker () {
-  return import("../../governance/propose_picker").then(m => ({ default: m.ProposePicker }));
+  return import("../../kommons/propose_picker").then(m => ({ default: m.ProposePicker }));
 }
 
 

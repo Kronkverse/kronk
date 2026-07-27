@@ -132,73 +132,73 @@ export const CreateProposalForm: React.FC<{
   );
 
   return (
-    <form className='governance-form' onSubmit={handleFormSubmit}>
-      <h3 className='governance-form__heading'>
+    <form className='kommons-form' onSubmit={handleFormSubmit}>
+      <h3 className='kommons-form__heading'>
         <FormattedMessage
           id='governance.new_proposal'
           defaultMessage='Plant a seed'
         />
       </h3>
 
-      {error && <p className='governance-form__error'>{error}</p>}
+      {error && <p className='kommons-form__error'>{error}</p>}
 
-      <section className='governance-form__section'>
-        <h4 className='governance-form__section-heading'>
+      <section className='kommons-form__section'>
+        <h4 className='kommons-form__section-heading'>
           <FormattedMessage
             id='governance.form.proposal'
             defaultMessage='Seed'
           />
         </h4>
 
-        <label className='governance-form__label'>
-          <span className='governance-form__label-text'>
+        <label className='kommons-form__label'>
+          <span className='kommons-form__label-text'>
             <FormattedMessage
               id='governance.form.title'
               defaultMessage='Title'
             />
-            <span className='governance-form__required' aria-hidden='true'>
+            <span className='kommons-form__required' aria-hidden='true'>
               *
             </span>
           </span>
           <input
-            className='governance-form__input'
+            className='kommons-form__input'
             type='text'
             value={title}
             onChange={handleTitleChange}
             maxLength={TITLE_MAX}
             required
           />
-          <span className='governance-form__hint-row'>
-            <small className='governance-form__hint'>
+          <span className='kommons-form__hint-row'>
+            <small className='kommons-form__hint'>
               <FormattedMessage
                 id='governance.form.title_hint'
                 defaultMessage='A short, descriptive name.'
               />
             </small>
-            <small className='governance-form__counter'>
+            <small className='kommons-form__counter'>
               {title.length} / {TITLE_MAX}
             </small>
           </span>
         </label>
 
-        <label className='governance-form__label'>
-          <span className='governance-form__label-text'>
+        <label className='kommons-form__label'>
+          <span className='kommons-form__label-text'>
             <FormattedMessage
               id='governance.form.body'
               defaultMessage='Description'
             />
-            <span className='governance-form__required' aria-hidden='true'>
+            <span className='kommons-form__required' aria-hidden='true'>
               *
             </span>
           </span>
           <textarea
-            className='governance-form__textarea'
+            className='kommons-form__textarea'
             value={body}
             onChange={handleBodyChange}
             rows={6}
             required
           />
-          <small className='governance-form__hint'>
+          <small className='kommons-form__hint'>
             <FormattedMessage
               id='governance.form.body_hint'
               defaultMessage='Describe the seed, the rationale, and expected impact.'
@@ -207,14 +207,14 @@ export const CreateProposalForm: React.FC<{
         </label>
       </section>
 
-      <section className='governance-form__section'>
-        <h4 className='governance-form__section-heading'>
+      <section className='kommons-form__section'>
+        <h4 className='kommons-form__section-heading'>
           <FormattedMessage
             id='governance.form.tasks'
             defaultMessage='Implementation tasks'
           />
         </h4>
-        <small className='governance-form__hint'>
+        <small className='kommons-form__hint'>
           <FormattedMessage
             id='governance.form.tasks_hint'
             defaultMessage='Optional. Break the seed into work units.'
@@ -224,11 +224,11 @@ export const CreateProposalForm: React.FC<{
         {taskRows.map((row, i) => (
           <div
             key={i}
-            className='governance-form__task-row governance-form__task-row--stacked'
+            className='kommons-form__task-row kommons-form__task-row--stacked'
           >
-            <div className='governance-form__task-row-main'>
+            <div className='kommons-form__task-row-main'>
               <input
-                className='governance-form__input'
+                className='kommons-form__input'
                 type='text'
                 placeholder='Task title'
                 value={row.title}
@@ -237,7 +237,7 @@ export const CreateProposalForm: React.FC<{
               />
               <button
                 type='button'
-                className='governance-form__remove-btn'
+                className='kommons-form__remove-btn'
                 data-idx={i}
                 onClick={handleTaskRemove}
                 aria-label='Remove task'
@@ -246,7 +246,7 @@ export const CreateProposalForm: React.FC<{
               </button>
             </div>
             <textarea
-              className='governance-form__textarea governance-form__textarea--task'
+              className='kommons-form__textarea kommons-form__textarea--task'
               placeholder='Task description (optional)'
               value={row.description}
               data-idx={i}
@@ -258,7 +258,7 @@ export const CreateProposalForm: React.FC<{
 
         <button
           type='button'
-          className='governance-form__add-btn'
+          className='kommons-form__add-btn'
           onClick={handleAddTask}
         >
           <Icon id='add' icon={AddIcon} />
@@ -269,10 +269,10 @@ export const CreateProposalForm: React.FC<{
         </button>
       </section>
 
-      <div className='governance-form__actions'>
+      <div className='kommons-form__actions'>
         <button
           type='button'
-          className='governance-form__cancel-btn'
+          className='kommons-form__cancel-btn'
           onClick={onCancel}
           disabled={submitting}
         >
@@ -283,7 +283,7 @@ export const CreateProposalForm: React.FC<{
         </button>
         <button
           type='submit'
-          className='governance-form__submit-btn'
+          className='kommons-form__submit-btn'
           disabled={submitting}
         >
           {step === 'proposal' && (

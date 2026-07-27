@@ -46,7 +46,7 @@
   }
 
   &:disabled {
-    color: var(--text-primary, #fff);
+    color: var(--text-primary);
     cursor: default;
   }
 }
@@ -86,7 +86,7 @@
   background: var(--surface-primary, rgba(255, 255, 255, 4%));
   border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
   border-radius: var(--radius-md, 8px);
-  color: var(--text-primary, #fff);
+  color: var(--text-primary);
   cursor: pointer;
   text-align: left;
   transition:
@@ -145,7 +145,7 @@
   background: var(--surface-primary, rgba(255, 255, 255, 3%));
   border: 1px solid var(--surface-border, rgba(255, 255, 255, 6%));
   border-radius: var(--radius-sm, 6px);
-  color: var(--text-primary, #fff);
+  color: var(--text-primary);
   cursor: pointer;
   text-align: left;
   width: 100%;
@@ -189,17 +189,17 @@
   border: 1px solid transparent;
 
   &--live {
-    color: var(--decision-agree, #22c55e);
+    color: var(--decision-agree);
     border-color: currentcolor;
   }
 
   &--soon {
-    color: var(--decision-pending, #f59e0b);
+    color: var(--decision-pending);
     border-color: currentcolor;
   }
 
   &--deprecated {
-    color: var(--decision-block, #ef4444);
+    color: var(--decision-block);
     border-color: currentcolor;
   }
 
@@ -218,7 +218,7 @@
   font-size: 24px;
   font-weight: 600;
   margin: 0 0 20px;
-  color: var(--text-primary, #fff);
+  color: var(--text-primary);
 }
 
 .kommons-tree__detail-meta {
@@ -244,13 +244,13 @@
 
   dd {
     margin: 0;
-    color: var(--text-primary, #fff);
+    color: var(--text-primary);
   }
 
   code {
     font-family: var(--font-mono, monospace);
     font-size: 13px;
-    color: var(--text-primary, #fff);
+    color: var(--text-primary);
     background: var(--surface-hover, rgba(255, 255, 255, 5%));
     padding: 2px 6px;
     border-radius: 3px;
@@ -290,7 +290,7 @@
   padding: 10px 12px;
   border-radius: var(--radius-sm, 6px);
   background: var(--surface-elevated, rgba(255, 255, 255, 4%));
-  color: var(--text-default, #fff);
+  color: var(--text-default);
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
@@ -298,7 +298,7 @@
 
   &:hover,
   &:focus-visible {
-    background: var(--accent, #7241ff);
+    background: var(--accent);
     color: var(--text-on-accent);
   }
 }
@@ -336,7 +336,7 @@
   padding: 10px 14px;
   background: transparent;
   border: 0;
-  color: var(--text-primary, #fff);
+  color: var(--text-primary);
   cursor: pointer;
   text-align: left;
   font-size: 13px;
@@ -354,7 +354,7 @@
 }
 
 .kommons-tree__connections-count {
-  color: var(--text-primary, #fff);
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -406,11 +406,11 @@
 }
 
 .kommons-tree__connection-kind--creates {
-  color: var(--decision-agree, #22c55e);
+  color: var(--decision-agree);
 }
 
 .kommons-tree__connection-kind--listed_on {
-  color: var(--decision-pending, #f59e0b);
+  color: var(--decision-pending);
 }
 
 .kommons-tree__connection-kind--projects_to {
@@ -462,7 +462,7 @@
 }
 
 .kommons-tree__error {
-  color: var(--decision-block, #ef4444);
+  color: var(--decision-block);
 }
 
 // ── Composer (functional form; replaces the stub) ───────────────────
@@ -478,7 +478,7 @@
   margin: 0 0 8px;
   font-size: 18px;
   font-weight: 600;
-  color: var(--text-primary, #fff);
+  color: var(--text-primary);
 }
 
 .kommons-tree__composer-hint {
@@ -507,7 +507,7 @@
 
   dd {
     margin: 0;
-    color: var(--text-primary, #fff);
+    color: var(--text-primary);
   }
 
   code {
@@ -535,7 +535,7 @@
     background: var(--surface-hover, rgba(255, 255, 255, 3%));
     border: 1px solid var(--surface-border, rgba(255, 255, 255, 10%));
     border-radius: var(--radius-sm, 4px);
-    color: var(--text-primary, #fff);
+    color: var(--text-primary);
     font-family: inherit;
     font-size: 14px;
     resize: vertical;
@@ -550,7 +550,7 @@
 .kommons-tree__composer-error {
   margin: 0 0 12px;
   padding: 8px 12px;
-  color: var(--decision-block, #ef4444);
+  color: var(--decision-block);
   background: color-mix(in srgb, var(--decision-block) 8%, transparent);
   border-radius: var(--radius-sm, 4px);
   font-size: 13px;
@@ -572,7 +572,7 @@
 // secondary action alongside "Plant a seed". Housed here instead of
 // _governance.scss to stay out of portal-me's Sweep 2 territory.
 
-.governance-page__tree-link {
+.kommons-page__tree-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
