@@ -96,8 +96,8 @@ export const ProposalAttachments: React.FC<{ proposalId: string }> = ({
   );
 
   return (
-    <section className='governance-attachments'>
-      <h4 className='governance-attachments__heading'>
+    <section className='kommons-attachments'>
+      <h4 className='kommons-attachments__heading'>
         <FormattedMessage
           id='governance.attachments.heading'
           defaultMessage='For whoever builds this'
@@ -105,15 +105,15 @@ export const ProposalAttachments: React.FC<{ proposalId: string }> = ({
       </h4>
 
       {items.length > 0 && (
-        <ul className='governance-attachments__list'>
+        <ul className='kommons-attachments__list'>
           {items.map((a) => (
-            <li key={a.id} className='governance-attachments__item'>
-              <span className='governance-attachments__kind'>{a.kind}</span>
-              <a href={a.download_url} className='governance-attachments__name'>
+            <li key={a.id} className='kommons-attachments__item'>
+              <span className='kommons-attachments__kind'>{a.kind}</span>
+              <a href={a.download_url} className='kommons-attachments__name'>
                 {a.filename}
               </a>
               {a.description && (
-                <span className='governance-attachments__desc'>
+                <span className='kommons-attachments__desc'>
                   {a.description}
                 </span>
               )}
@@ -122,11 +122,11 @@ export const ProposalAttachments: React.FC<{ proposalId: string }> = ({
         </ul>
       )}
 
-      <div className='governance-attachments__upload'>
+      <div className='kommons-attachments__upload'>
         <select
           value={kind}
           onChange={handleKind}
-          className='governance-attachments__select'
+          className='kommons-attachments__select'
           aria-label='Attachment kind'
         >
           {KINDS.map((k) => (
@@ -140,17 +140,17 @@ export const ProposalAttachments: React.FC<{ proposalId: string }> = ({
           value={description}
           onChange={handleDescription}
           placeholder='What is this, and what is it for?'
-          className='governance-attachments__description'
+          className='kommons-attachments__description'
         />
         <input
           type='file'
           onChange={handleFile}
           disabled={busy}
-          className='governance-attachments__file'
+          className='kommons-attachments__file'
         />
       </div>
 
-      {error && <p className='governance-attachments__error'>{error}</p>}
+      {error && <p className='kommons-attachments__error'>{error}</p>}
     </section>
   );
 };

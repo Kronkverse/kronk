@@ -94,7 +94,7 @@ import {
   InflowV2,
   MapV2,
   Nudges,
-  Governance,
+  Kommons,
   KommonsProposal,
   KommonsSpace,
   KommonsNodeMeta,
@@ -346,7 +346,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/hub/kommons/pick" component={KommonsProposePicker} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/propose" component={KommonsPropose} content={children} />}
             {signedIn && <Redirect from="/governance" to="/hub/kommons" exact />}
-            {signedIn && <WrappedRoute path="/hub/kommons" component={Governance} content={children} />}
+            {signedIn && <WrappedRoute path="/hub/kommons" component={Kommons} content={children} />}
             {signedIn && <WrappedRoute path={["/questions/:id", "/hub/kuestions/:id", "/questions", "/hub/kuestions"]} component={Questions} content={children} />}
             <WrappedRoute path='/hub/search' component={KronkSearch} content={children} />
             <WrappedRoute path='/hub/you' component={YouPortal} content={children} />

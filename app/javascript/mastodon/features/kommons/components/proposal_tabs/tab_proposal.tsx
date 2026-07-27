@@ -43,16 +43,16 @@ const ChallengeResponseRow: React.FC<{
     (new Date(response.created_at).getTime() - Date.now()) / 1000,
   );
   return (
-    <div className='governance-challenge-response'>
-      <div className='governance-challenge-response__avatar'>
+    <div className='kommons-challenge-response'>
+      <div className='kommons-challenge-response__avatar'>
         {response.account.avatar ? (
           <img src={response.account.avatar} alt='' aria-hidden='true' />
         ) : (
           response.account.username.charAt(0).toUpperCase()
         )}
       </div>
-      <div className='governance-challenge-response__body'>
-        <div className='governance-challenge-response__meta'>
+      <div className='kommons-challenge-response__body'>
+        <div className='kommons-challenge-response__meta'>
           <strong>@{response.account.username}</strong>
           <span>·</span>
           <FormattedRelativeTime
@@ -61,7 +61,7 @@ const ChallengeResponseRow: React.FC<{
             updateIntervalInSeconds={60}
           />
         </div>
-        <p className='governance-challenge-response__text'>{response.body}</p>
+        <p className='kommons-challenge-response__text'>{response.body}</p>
       </div>
     </div>
   );
@@ -123,9 +123,9 @@ const ConditionBlock: React.FC<{
 
   return (
     <div
-      className={`governance-condition ${condition.met ? 'governance-condition--met' : ''}`}
+      className={`kommons-condition ${condition.met ? 'kommons-condition--met' : ''}`}
     >
-      <label className='governance-condition__header'>
+      <label className='kommons-condition__header'>
         <input
           type='checkbox'
           checked={condition.met}
@@ -133,20 +133,20 @@ const ConditionBlock: React.FC<{
           disabled={!canToggle}
           aria-label='Mark condition as addressed'
         />
-        <span className='governance-condition__text'>{condition.text}</span>
+        <span className='kommons-condition__text'>{condition.text}</span>
       </label>
 
       {condition.responses.length > 0 && (
-        <div className='governance-condition__responses'>
+        <div className='kommons-condition__responses'>
           {condition.responses.map((r) => (
             <ChallengeResponseRow key={r.id} response={r} />
           ))}
         </div>
       )}
 
-      <div className='governance-condition__reply'>
+      <div className='kommons-condition__reply'>
         <textarea
-          className='governance-condition__reply-area'
+          className='kommons-condition__reply-area'
           placeholder='Respond to this condition…'
           value={replyText}
           onChange={handleReplyChange}
@@ -154,7 +154,7 @@ const ConditionBlock: React.FC<{
         />
         <button
           type='button'
-          className='governance-condition__reply-btn'
+          className='kommons-condition__reply-btn'
           disabled={submitting || !replyText.trim()}
           onClick={handleReplyClick}
         >
@@ -184,19 +184,19 @@ const ResponseCard: React.FC<{
 
   return (
     <div
-      className={`governance-response-card governance-response-card--${response.type}${isMine ? ' governance-response-card--mine' : ''}`}
+      className={`kommons-response-card kommons-response-card--${response.type}${isMine ? ' kommons-response-card--mine' : ''}`}
     >
-      <div className='governance-response-card__header'>
+      <div className='kommons-response-card__header'>
         <span
-          className={`governance-response-card__type governance-response-card__type--${response.type}`}
+          className={`kommons-response-card__type kommons-response-card__type--${response.type}`}
         >
           {TYPE_LABEL[response.type]}
         </span>
-        <div className='governance-response-card__who'>
-          <span className='governance-response-card__author'>
+        <div className='kommons-response-card__who'>
+          <span className='kommons-response-card__author'>
             @{response.account.username}
           </span>
-          <span className='governance-response-card__sep'>·</span>
+          <span className='kommons-response-card__sep'>·</span>
           <FormattedRelativeTime
             value={ageSeconds}
             numeric='auto'
@@ -206,18 +206,18 @@ const ResponseCard: React.FC<{
       </div>
 
       {response.title && (
-        <h4 className='governance-response-card__title'>{response.title}</h4>
+        <h4 className='kommons-response-card__title'>{response.title}</h4>
       )}
 
       {response.description && (
-        <p className='governance-response-card__body'>{response.description}</p>
+        <p className='kommons-response-card__body'>{response.description}</p>
       )}
 
       {response.type === 'challenge' &&
         response.conditions &&
         response.conditions.length > 0 && (
-          <div className='governance-response-card__conditions'>
-            <div className='governance-response-card__conditions-label'>
+          <div className='kommons-response-card__conditions'>
+            <div className='kommons-response-card__conditions-label'>
               <FormattedMessage
                 id='governance.challenge.conditions_heading'
                 defaultMessage='Conditions for withdrawal'
@@ -235,10 +235,10 @@ const ResponseCard: React.FC<{
         )}
 
       {isMine && (
-        <div className='governance-response-card__actions'>
+        <div className='kommons-response-card__actions'>
           <button
             type='button'
-            className='governance-response-card__edit-btn'
+            className='kommons-response-card__edit-btn'
             onClick={onEdit}
             disabled={busy}
           >
@@ -249,7 +249,7 @@ const ResponseCard: React.FC<{
           </button>
           <button
             type='button'
-            className='governance-response-card__delete-btn'
+            className='kommons-response-card__delete-btn'
             onClick={onDelete}
             disabled={busy}
           >
@@ -542,11 +542,11 @@ export const TabProposal: React.FC<{
   const { agree, abstain, block } = proposal.vote_summary;
 
   return (
-    <div className='governance-tab-proposal'>
-      <p className='governance-tab-proposal__body'>{proposal.body}</p>
+    <div className='kommons-tab-proposal'>
+      <p className='kommons-tab-proposal__body'>{proposal.body}</p>
 
       {proposal.vote_summary.block > 0 && proposal.status === 'open' && (
-        <div className='governance-tab-proposal__banner governance-tab-proposal__banner--challenged'>
+        <div className='kommons-tab-proposal__banner kommons-tab-proposal__banner--challenged'>
           <strong>
             <FormattedMessage
               id='governance.banner.challenged'
@@ -563,7 +563,7 @@ export const TabProposal: React.FC<{
       )}
 
       {proposal.status === 'delivered' && (
-        <div className='governance-tab-proposal__banner governance-tab-proposal__banner--delivered'>
+        <div className='kommons-tab-proposal__banner kommons-tab-proposal__banner--delivered'>
           <strong>
             <FormattedMessage
               id='governance.banner.delivered'
@@ -574,8 +574,8 @@ export const TabProposal: React.FC<{
         </div>
       )}
 
-      <div className='governance-tab-proposal__respond'>
-        <p className='governance-tab-proposal__support-line'>
+      <div className='kommons-tab-proposal__respond'>
+        <p className='kommons-tab-proposal__support-line'>
           <strong>{agree}</strong> support
           {' · '}
           <strong>{abstain}</strong> {abstain === 1 ? 'question' : 'questions'}
@@ -583,8 +583,8 @@ export const TabProposal: React.FC<{
           <strong>{block}</strong> {block === 1 ? 'challenge' : 'challenges'}
         </p>
 
-        <div className='governance-tab-proposal__backing'>
-          <p className='governance-tab-proposal__backing-summary'>
+        <div className='kommons-tab-proposal__backing'>
+          <p className='kommons-tab-proposal__backing-summary'>
             <strong>{proposal.backing.total}</strong>{' '}
             {proposal.backing.total === 1 ? 'token' : 'tokens'} backed
             {' · '}
@@ -603,14 +603,14 @@ export const TabProposal: React.FC<{
           </p>
           {proposal.backing.open && proposal.backing.my_balance !== null && (
             <form
-              className='governance-tab-proposal__back-form'
+              className='kommons-tab-proposal__back-form'
               onSubmit={handleBackSubmitClick}
             >
               <input
                 type='number'
                 min='1'
                 max={proposal.backing.my_balance}
-                className='governance-tab-proposal__back-input'
+                className='kommons-tab-proposal__back-input'
                 value={backAmount}
                 onChange={handleBackAmountChange}
                 placeholder='Tokens'
@@ -618,18 +618,18 @@ export const TabProposal: React.FC<{
               />
               <button
                 type='submit'
-                className='governance-tab-proposal__back-btn'
+                className='kommons-tab-proposal__back-btn'
                 disabled={backingPending || proposal.backing.my_balance === 0}
               >
                 {backingPending ? 'Backing…' : 'Back'}
               </button>
-              <span className='governance-tab-proposal__back-balance'>
+              <span className='kommons-tab-proposal__back-balance'>
                 {proposal.backing.my_balance} available
               </span>
             </form>
           )}
           {backError && (
-            <p className='governance-tab-proposal__back-error'>{backError}</p>
+            <p className='kommons-tab-proposal__back-error'>{backError}</p>
           )}
         </div>
 
@@ -645,11 +645,11 @@ export const TabProposal: React.FC<{
         )}
 
         {canVote && composerOpen && (
-          <form className='governance-composer' onSubmit={handleSubmit}>
-            <div className='governance-composer__type-selector'>
+          <form className='kommons-composer' onSubmit={handleSubmit}>
+            <div className='kommons-composer__type-selector'>
               <button
                 type='button'
-                className={`governance-composer__type governance-composer__type--support ${composerType === 'support' ? 'active' : ''}`}
+                className={`kommons-composer__type kommons-composer__type--support ${composerType === 'support' ? 'active' : ''}`}
                 onClick={handleSupportType}
                 disabled={submitting}
               >
@@ -657,7 +657,7 @@ export const TabProposal: React.FC<{
               </button>
               <button
                 type='button'
-                className={`governance-composer__type governance-composer__type--question ${composerType === 'question' ? 'active' : ''}`}
+                className={`kommons-composer__type kommons-composer__type--question ${composerType === 'question' ? 'active' : ''}`}
                 onClick={handleQuestionType}
                 disabled={submitting}
               >
@@ -665,7 +665,7 @@ export const TabProposal: React.FC<{
               </button>
               <button
                 type='button'
-                className={`governance-composer__type governance-composer__type--challenge ${composerType === 'challenge' ? 'active' : ''}`}
+                className={`kommons-composer__type kommons-composer__type--challenge ${composerType === 'challenge' ? 'active' : ''}`}
                 onClick={handleChallengeType}
                 disabled={submitting}
               >
@@ -673,15 +673,15 @@ export const TabProposal: React.FC<{
               </button>
             </div>
 
-            <label className='governance-composer__field'>
-              <span className='governance-composer__label'>
+            <label className='kommons-composer__field'>
+              <span className='kommons-composer__label'>
                 <FormattedMessage
                   id='governance.composer.title'
                   defaultMessage='Title'
                 />
               </span>
               <input
-                className='governance-composer__input'
+                className='kommons-composer__input'
                 type='text'
                 value={title}
                 onChange={handleTitleChange}
@@ -689,25 +689,25 @@ export const TabProposal: React.FC<{
                 placeholder='One-line summary'
                 required
               />
-              <span className='governance-composer__counter'>
+              <span className='kommons-composer__counter'>
                 {title.length} / {TITLE_MAX}
               </span>
             </label>
 
-            <label className='governance-composer__field'>
-              <span className='governance-composer__label'>
+            <label className='kommons-composer__field'>
+              <span className='kommons-composer__label'>
                 <FormattedMessage
                   id='governance.composer.description'
                   defaultMessage='Description'
                 />
                 {composerType !== 'challenge' && (
-                  <span className='governance-composer__optional'>
+                  <span className='kommons-composer__optional'>
                     (optional)
                   </span>
                 )}
               </span>
               <textarea
-                className='governance-composer__textarea'
+                className='kommons-composer__textarea'
                 value={description}
                 onChange={handleDescriptionChange}
                 rows={4}
@@ -722,17 +722,17 @@ export const TabProposal: React.FC<{
             </label>
 
             {composerType === 'challenge' && (
-              <div className='governance-composer__conditions'>
-                <span className='governance-composer__label'>
+              <div className='kommons-composer__conditions'>
+                <span className='kommons-composer__label'>
                   <FormattedMessage
                     id='governance.composer.conditions_label'
                     defaultMessage='Conditions for withdrawal'
                   />
                 </span>
                 {conditions.map((c, i) => (
-                  <div key={i} className='governance-composer__condition-row'>
+                  <div key={i} className='kommons-composer__condition-row'>
                     <input
-                      className='governance-composer__condition-input'
+                      className='kommons-composer__condition-input'
                       type='text'
                       placeholder={`Condition ${i + 1}`}
                       value={c}
@@ -742,7 +742,7 @@ export const TabProposal: React.FC<{
                     {conditions.length > 1 && (
                       <button
                         type='button'
-                        className='governance-composer__condition-remove'
+                        className='kommons-composer__condition-remove'
                         data-idx={i}
                         onClick={handleConditionRemove}
                         aria-label='Remove condition'
@@ -754,7 +754,7 @@ export const TabProposal: React.FC<{
                 ))}
                 <button
                   type='button'
-                  className='governance-composer__condition-add'
+                  className='kommons-composer__condition-add'
                   onClick={handleConditionAdd}
                 >
                   +{' '}
@@ -766,13 +766,13 @@ export const TabProposal: React.FC<{
               </div>
             )}
 
-            {error && <p className='governance-composer__error'>{error}</p>}
+            {error && <p className='kommons-composer__error'>{error}</p>}
 
-            <div className='governance-composer__actions'>
+            <div className='kommons-composer__actions'>
               {editing && (
                 <button
                   type='button'
-                  className='governance-composer__cancel'
+                  className='kommons-composer__cancel'
                   onClick={closeEdit}
                   disabled={submitting}
                 >
@@ -784,7 +784,7 @@ export const TabProposal: React.FC<{
               )}
               <button
                 type='submit'
-                className='governance-composer__submit'
+                className='kommons-composer__submit'
                 disabled={submitting}
               >
                 {editing ? (
@@ -805,14 +805,14 @@ export const TabProposal: React.FC<{
       </div>
 
       {otherResponses.length > 0 && (
-        <div className='governance-tab-proposal__subsection'>
-          <h3 className='governance-tab-proposal__subsection-title'>
+        <div className='kommons-tab-proposal__subsection'>
+          <h3 className='kommons-tab-proposal__subsection-title'>
             <FormattedMessage
               id='governance.responses_heading'
               defaultMessage='Discussion'
             />
           </h3>
-          <div className='governance-response-list'>
+          <div className='kommons-response-list'>
             {otherResponses.map((r) => (
               <ResponseCard
                 key={r.id}

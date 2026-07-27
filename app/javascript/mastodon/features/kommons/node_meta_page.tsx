@@ -87,7 +87,7 @@ const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
         </Link>
 
         {loaded && !node && (
-          <div className='governance-page__empty'>
+          <div className='kommons-page__empty'>
             {intl.formatMessage(messages.notFound)}
           </div>
         )}

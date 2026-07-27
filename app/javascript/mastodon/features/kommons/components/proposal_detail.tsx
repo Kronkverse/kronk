@@ -146,52 +146,52 @@ export const ProposalDetail: React.FC<{
   );
 
   return (
-    <div className='governance-detail'>
-      <div className='governance-detail__page'>
-        <button className='governance-detail__back' onClick={onBack}>
+    <div className='kommons-detail'>
+      <div className='kommons-detail__page'>
+        <button className='kommons-detail__back' onClick={onBack}>
           <Icon id='arrow-back' icon={ArrowBackIcon} />
           <FormattedMessage id='governance.back' defaultMessage='All seeds' />
         </button>
 
         {delivering ? (
           <form
-            className='governance-form governance-form--inline'
+            className='kommons-form kommons-form--inline'
             onSubmit={handleDeliverSubmitClick}
           >
-            <h3 className='governance-form__heading'>
+            <h3 className='kommons-form__heading'>
               <FormattedMessage
                 id='governance.deliver.heading'
                 defaultMessage='Confirm completion'
               />
             </h3>
-            <p className='governance-form__hint'>
+            <p className='kommons-form__hint'>
               <FormattedMessage
                 id='governance.deliver.hint'
                 defaultMessage='Confirm this delivered proposal is done. Backers’ stakes are returned and the author is paid. Optionally add outcome notes.'
               />
             </p>
             {deliverError && (
-              <p className='governance-form__error'>{deliverError}</p>
+              <p className='kommons-form__error'>{deliverError}</p>
             )}
-            <label className='governance-form__label'>
-              <span className='governance-form__label-text'>
+            <label className='kommons-form__label'>
+              <span className='kommons-form__label-text'>
                 <FormattedMessage
                   id='governance.deliver.notes_label'
                   defaultMessage='Outcome notes (optional)'
                 />
               </span>
               <textarea
-                className='governance-form__textarea'
+                className='kommons-form__textarea'
                 value={deliverNotes}
                 onChange={handleDeliverNotesChange}
                 rows={4}
                 placeholder='Describe the outcome…'
               />
             </label>
-            <div className='governance-form__actions'>
+            <div className='kommons-form__actions'>
               <button
                 type='button'
-                className='governance-form__cancel-btn'
+                className='kommons-form__cancel-btn'
                 onClick={handleDeliverCancel}
                 disabled={deliverPending}
               >
@@ -202,7 +202,7 @@ export const ProposalDetail: React.FC<{
               </button>
               <button
                 type='submit'
-                className='governance-form__submit-btn governance-form__submit-btn--deliver'
+                className='kommons-form__submit-btn kommons-form__submit-btn--deliver'
                 disabled={deliverPending}
               >
                 {deliverPending ? (
@@ -221,25 +221,25 @@ export const ProposalDetail: React.FC<{
           </form>
         ) : editing ? (
           <form
-            className='governance-form governance-form--inline'
+            className='kommons-form kommons-form--inline'
             onSubmit={handleEditSaveSubmit}
           >
-            <h3 className='governance-form__heading'>
+            <h3 className='kommons-form__heading'>
               <FormattedMessage
                 id='governance.edit_seed'
                 defaultMessage='Edit seed'
               />
             </h3>
-            {editError && <p className='governance-form__error'>{editError}</p>}
-            <label className='governance-form__label'>
-              <span className='governance-form__label-text'>
+            {editError && <p className='kommons-form__error'>{editError}</p>}
+            <label className='kommons-form__label'>
+              <span className='kommons-form__label-text'>
                 <FormattedMessage
                   id='governance.form.title'
                   defaultMessage='Title'
                 />
               </span>
               <input
-                className='governance-form__input'
+                className='kommons-form__input'
                 type='text'
                 value={editTitle}
                 onChange={handleEditTitleChange}
@@ -247,25 +247,25 @@ export const ProposalDetail: React.FC<{
                 required
               />
             </label>
-            <label className='governance-form__label'>
-              <span className='governance-form__label-text'>
+            <label className='kommons-form__label'>
+              <span className='kommons-form__label-text'>
                 <FormattedMessage
                   id='governance.form.body'
                   defaultMessage='Description'
                 />
               </span>
               <textarea
-                className='governance-form__textarea'
+                className='kommons-form__textarea'
                 value={editBody}
                 onChange={handleEditBodyChange}
                 rows={6}
                 required
               />
             </label>
-            <div className='governance-form__actions'>
+            <div className='kommons-form__actions'>
               <button
                 type='button'
-                className='governance-form__cancel-btn'
+                className='kommons-form__cancel-btn'
                 onClick={handleEditCancel}
                 disabled={saving}
               >
@@ -276,7 +276,7 @@ export const ProposalDetail: React.FC<{
               </button>
               <button
                 type='submit'
-                className='governance-form__submit-btn'
+                className='kommons-form__submit-btn'
                 disabled={saving}
               >
                 {saving ? (
@@ -295,14 +295,14 @@ export const ProposalDetail: React.FC<{
           </form>
         ) : (
           <>
-            <div className='governance-detail__topbar'>
-              <div className='governance-detail__status-row'>
+            <div className='kommons-detail__topbar'>
+              <div className='kommons-detail__status-row'>
                 <span
-                  className={`governance-detail__status governance-detail__status--${proposal.status}`}
+                  className={`kommons-detail__status kommons-detail__status--${proposal.status}`}
                 >
                   {statusLabels[proposal.status]}
                 </span>
-                <span className='governance-detail__kind'>
+                <span className='kommons-detail__kind'>
                   <span aria-hidden='true'>⚖</span>
                   <FormattedMessage
                     id='governance.detail.kind'
@@ -310,12 +310,12 @@ export const ProposalDetail: React.FC<{
                   />
                 </span>
               </div>
-              <div className='governance-detail__title-row'>
-                <h1 className='governance-detail__title'>{proposal.title}</h1>
+              <div className='kommons-detail__title-row'>
+                <h1 className='kommons-detail__title'>{proposal.title}</h1>
                 {isSeeder && proposal.status === 'delivered' && (
                   <button
                     type='button'
-                    className='governance-detail__mark-complete'
+                    className='kommons-detail__mark-complete'
                     onClick={handleDeliverOpen}
                   >
                     <FormattedMessage
@@ -326,9 +326,9 @@ export const ProposalDetail: React.FC<{
                 )}
               </div>
               {proposal.summary && (
-                <p className='governance-detail__summary'>{proposal.summary}</p>
+                <p className='kommons-detail__summary'>{proposal.summary}</p>
               )}
-              <p className='governance-detail__meta'>
+              <p className='kommons-detail__meta'>
                 <FormattedMessage
                   id='governance.detail.seeded_by'
                   defaultMessage='seeded by @{name}'
@@ -344,18 +344,18 @@ export const ProposalDetail: React.FC<{
                 {proposal.node_id && (
                   <Link
                     to={`/hub/kommons/node/${proposal.node_id}`}
-                    className='governance-detail__node-chip'
+                    className='kommons-detail__node-chip'
                   >
                     ◇ {proposal.node_id}
                   </Link>
                 )}
               </p>
               {isSeeder && (
-                <div className='governance-detail__seeder-actions'>
+                <div className='kommons-detail__seeder-actions'>
                   {proposal.status !== 'delivered' && (
                     <button
                       type='button'
-                      className='governance-detail__action-btn governance-detail__action-btn--edit'
+                      className='kommons-detail__action-btn kommons-detail__action-btn--edit'
                       onClick={handleEditOpen}
                     >
                       <FormattedMessage
@@ -381,15 +381,15 @@ export const ProposalDetail: React.FC<{
 
             <ProposalSteps proposalId={proposal.id} />
 
-            <div className='governance-detail__content'>
-              <section className='governance-detail__description'>
-                <h2 className='governance-detail__section-heading'>
+            <div className='kommons-detail__content'>
+              <section className='kommons-detail__description'>
+                <h2 className='kommons-detail__section-heading'>
                   <FormattedMessage
                     id='governance.detail.description'
                     defaultMessage='Description'
                   />
                 </h2>
-                <div className='governance-detail__body'>{proposal.body}</div>
+                <div className='kommons-detail__body'>{proposal.body}</div>
               </section>
               <ProposalAttachments proposalId={proposal.id} />
               <ProposalComments proposalId={proposal.id} />

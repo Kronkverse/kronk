@@ -59,7 +59,7 @@ const sortMessages = defineMessages({
 // and the Proposals ⇄ Directory view picker are Frame-provided via
 // AutoSpaceBadge / AutoSpaceViewPicker in ui/index.jsx — this page renders
 // neither. See docs/kronk_frame.md.
-const Governance: React.FC<{ multiColumn?: boolean }> = () => {
+const Kommons: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [wallet, setWallet] = useState<Wallet | null>(null);
@@ -151,7 +151,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = () => {
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      <div className='governance-page'>
+      <div className='kommons-page'>
         {selectedId && selected ? (
           <ProposalDetail
             proposal={selected}
@@ -182,13 +182,13 @@ const Governance: React.FC<{ multiColumn?: boolean }> = () => {
               </div>
             )}
 
-            <div className='governance-page__head'>
-              <div className='governance-page__head-text'>
-                <h1 className='governance-page__head-title'>
+            <div className='kommons-page__head'>
+              <div className='kommons-page__head-text'>
+                <h1 className='kommons-page__head-title'>
                   {intl.formatMessage(headingMessages[filter])}
                 </h1>
                 {!loading && (
-                  <span className='governance-page__head-count'>
+                  <span className='kommons-page__head-count'>
                     {intl.formatMessage(messages.count, {
                       count: shown.length,
                     })}
@@ -197,8 +197,8 @@ const Governance: React.FC<{ multiColumn?: boolean }> = () => {
               </div>
             </div>
 
-            <div className='governance-page__strip'>
-              <div className='governance-page__filters' role='tablist'>
+            <div className='kommons-page__strip'>
+              <div className='kommons-page__filters' role='tablist'>
                 {FILTER_ORDER.map((key) => (
                   <button
                     key={key}
@@ -206,16 +206,16 @@ const Governance: React.FC<{ multiColumn?: boolean }> = () => {
                     role='tab'
                     aria-selected={filter === key}
                     data-filter={key}
-                    className={`governance-page__filter-btn${filter === key ? ' active' : ''}`}
+                    className={`kommons-page__filter-btn${filter === key ? ' active' : ''}`}
                     onClick={handleFilterClick}
                   >
                     {intl.formatMessage(filterMessages[key])}
                   </button>
                 ))}
               </div>
-              <span className='governance-page__strip-grow' />
+              <span className='kommons-page__strip-grow' />
               <select
-                className='governance-page__sort'
+                className='kommons-page__sort'
                 value={sort}
                 onChange={handleSortChange}
                 aria-label={intl.formatMessage(sortMessages.most_backed)}
@@ -229,7 +229,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = () => {
             </div>
 
             {loading && proposals.length === 0 && (
-              <div className='governance-page__empty'>
+              <div className='kommons-page__empty'>
                 <FormattedMessage
                   id='governance.loading'
                   defaultMessage='Loading proposals…'
@@ -238,7 +238,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = () => {
             )}
 
             {!loading && shown.length === 0 && (
-              <div className='governance-page__empty'>
+              <div className='kommons-page__empty'>
                 {lens === 'mine' ? (
                   <FormattedMessage
                     id='governance.empty_backed'
@@ -258,7 +258,7 @@ const Governance: React.FC<{ multiColumn?: boolean }> = () => {
               </div>
             )}
 
-            <div className='governance-page__list'>
+            <div className='kommons-page__list'>
               {shown.map((proposal) => (
                 <ProposalCard
                   key={proposal.id}
@@ -275,4 +275,4 @@ const Governance: React.FC<{ multiColumn?: boolean }> = () => {
   );
 };
 
-export { Governance };
+export { Kommons };
