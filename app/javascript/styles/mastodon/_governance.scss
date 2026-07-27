@@ -70,7 +70,7 @@
     font-size: 30px;
     font-weight: 600;
     line-height: 1;
-    color: #fff;
+    color: var(--text-on-accent);
     text-shadow: 0 1px 2px color-mix(in srgb, #000 40%, transparent);
   }
 
@@ -90,13 +90,13 @@
     font-family: var(--font-display, Georgia, serif);
     font-size: 36px;
     line-height: 0.9;
-    color: var(--text-primary, #ece9f5);
+    color: var(--text-primary);
     font-variant-numeric: tabular-nums;
   }
 
   &__of {
     font-size: 15px;
-    color: var(--text-secondary, #9c9cc9);
+    color: var(--text-secondary);
     padding-bottom: 4px;
   }
 
@@ -157,7 +157,7 @@
     font-family: var(--font-display, Georgia, serif);
     font-size: 36px;
     line-height: 0.9;
-    color: var(--text-primary, #ece9f5);
+    color: var(--text-primary);
     font-variant-numeric: tabular-nums;
   }
 
@@ -166,7 +166,7 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-weight: 600;
-    color: var(--text-secondary, #9c9cc9);
+    color: var(--text-secondary);
   }
 }
 
@@ -205,14 +205,14 @@
   font-family: var(--font-display);
   font-size: 28px;
   font-weight: 500;
-  color: $primary-text-color;
+  color: var(--text-primary);
   margin: 0;
   line-height: 1.1;
 }
 
 .governance-page__head-count {
   font-size: 13px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
 }
 
 // ─── Filter / sort strip ────────────────────────────────────────────────────
@@ -245,17 +245,17 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   transition:
     color 0.15s,
     background 0.15s;
 
   &:hover {
-    color: $primary-text-color;
+    color: var(--text-primary);
   }
 
   &.active {
-    color: #fff;
+    color: var(--text-on-accent);
     background: var(--accent);
     font-weight: 600;
   }
@@ -263,7 +263,7 @@
 
 .governance-page__sort {
   font-size: 13px;
-  color: $primary-text-color;
+  color: var(--text-primary);
   padding: 6px 12px;
   border-radius: var(--radius-round);
   border: 1px solid var(--border-default);
@@ -274,7 +274,7 @@
 .governance-page__result-count {
   margin: 0 0 12px;
   font-size: 12px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-weight: 600;
@@ -284,7 +284,7 @@
 .governance-page__empty {
   padding: 32px;
   text-align: center;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
@@ -307,13 +307,13 @@
   border: none;
   padding: 0;
   font-size: 14px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   cursor: pointer;
   text-align: left;
   align-self: flex-start;
 
   &:hover {
-    color: $primary-text-color;
+    color: var(--text-primary);
   }
 }
 
@@ -455,7 +455,7 @@
     font-weight: 600;
     padding: 2px 8px;
     border-radius: var(--radius-round);
-    color: #fff;
+    color: var(--text-on-accent);
 
     &--completed {
       background: var(--decision-agree);
@@ -506,7 +506,7 @@
       var(--accent, #8b63ff),
       var(--kronk-purple-bright, #7241ff)
     );
-    color: #fff;
+    color: var(--text-on-accent);
     font-family: var(--font-display);
     font-weight: 600;
     font-size: 15px;
@@ -602,7 +602,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: #fff;
+  color: var(--text-on-accent);
 
   &--open {
     background: var(--accent);
@@ -637,7 +637,7 @@
 
   p {
     margin: 0;
-    color: $secondary-text-color;
+    color: var(--text-secondary);
   }
 
   &--challenged {
@@ -664,7 +664,7 @@
 .governance-delivery {
   margin-top: 18px;
   padding: 14px 16px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-default);
   border-left: 3px solid var(--decision-agree);
   border-radius: 6px;
   background: color-mix(in srgb, var(--decision-agree) 4%, transparent);
@@ -681,19 +681,19 @@
 
 .governance-delivery__hint {
   font-size: 12px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   margin: 0 0 8px;
 }
 
 .governance-delivery__notes {
   width: 100%;
   box-sizing: border-box;
-  background: var(--background-color);
-  border: 1px solid var(--border-color);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
   padding: 8px 10px;
   font-size: 13px;
-  color: $primary-text-color;
+  color: var(--text-primary);
   resize: vertical;
   margin-bottom: 8px;
 
@@ -707,7 +707,7 @@
 
 .governance-delivery__btn {
   background: color-mix(in srgb, var(--decision-agree) 94%, black);
-  color: #fff;
+  color: var(--text-on-accent);
   border: none;
   border-radius: 6px;
   padding: 8px 18px;
@@ -733,11 +733,11 @@
   height: 6px;
   border-radius: 3px;
   overflow: hidden;
-  background: var(--border-color);
+  background: var(--border-default);
   margin: 8px 0;
 
   &--empty {
-    background: var(--border-color);
+    background: var(--border-default);
   }
 }
 
@@ -764,8 +764,8 @@
 // in both light and dark Kronk themes.
 
 .governance-detail {
-  background: var(--background-color);
-  color: $primary-text-color;
+  background: var(--surface-primary);
+  color: var(--text-primary);
   min-height: 100%;
   overflow-y: auto;
 }
@@ -781,7 +781,7 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #{$secondary-text-color};
+  color: #{var(--text-secondary)};
   background: transparent;
   border: none;
   cursor: pointer;
@@ -835,19 +835,19 @@
 
 .governance-detail__action-btn {
   background: transparent;
-  border: 1px solid var(--background-border-color);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
   padding: 5px 14px;
   font-size: 13px;
   cursor: pointer;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   transition:
     color 0.15s,
     border-color 0.15s;
 
   &:hover {
-    color: $primary-text-color;
-    border-color: $primary-text-color;
+    color: var(--text-primary);
+    border-color: var(--text-primary);
   }
 
   &--archive {
@@ -880,7 +880,7 @@
   font-size: 34px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #{$primary-text-color};
+  color: #{var(--text-primary)};
   line-height: 1.12;
   margin: 0;
   text-align: left;
@@ -910,7 +910,7 @@
   > .governance-attachments {
     background: var(--surface-primary, rgba(255, 255, 255, 3%));
     border: 1px solid var(--border-default, rgba(139, 99, 255, 24%));
-    border-radius: var(--radius-md, 16px);
+    border-radius: var(--radius-large);
     padding: 20px;
   }
 }
@@ -927,18 +927,18 @@
 
   &--open {
     background: var(--accent);
-    color: #fff;
+    color: var(--text-on-accent);
   }
 
   &--annulled {
     background: var(--decision-block);
-    color: #fff;
+    color: var(--text-on-accent);
   }
 
   &--delivered,
   &--completed {
     background: var(--decision-agree);
-    color: #fff;
+    color: var(--text-on-accent);
   }
 }
 
@@ -948,7 +948,7 @@
   gap: 6px 10px;
   flex-wrap: wrap;
   font-size: 13px;
-  color: #{$secondary-text-color};
+  color: #{var(--text-secondary)};
   margin: 0;
   text-align: left;
 }
@@ -975,7 +975,7 @@
 .governance-detail__tabs {
   display: flex;
   justify-content: center;
-  border-bottom: 0.5px solid var(--background-border-color);
+  border-bottom: 0.5px solid var(--border-default);
   margin: 24px 0;
   gap: 0;
 }
@@ -986,7 +986,7 @@
   cursor: pointer;
   border: none;
   border-bottom: 2px solid transparent;
-  color: #{$secondary-text-color};
+  color: #{var(--text-secondary)};
   background: none;
   font-family: inherit;
   transition:
@@ -999,13 +999,13 @@
   }
 
   &:hover:not(.active) {
-    color: $primary-text-color;
+    color: var(--text-primary);
   }
 }
 
 .governance-detail__divider {
   border: none;
-  border-top: 0.5px solid var(--background-border-color);
+  border-top: 0.5px solid var(--border-default);
   margin: 24px 0;
 }
 
@@ -1014,13 +1014,13 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #{$dark-text-color};
+  color: #{var(--text-muted)};
   margin-bottom: 14px;
 }
 
 .governance-detail__placeholder {
   padding: 20px 4px 4px;
-  color: #{$secondary-text-color};
+  color: #{var(--text-secondary)};
   font-size: 13px;
   line-height: 1.5;
   margin: 0;
@@ -1052,8 +1052,8 @@
     position: relative;
     width: 100%;
     max-width: 480px;
-    background: var(--background-color);
-    border: 1px solid var(--background-border-color);
+    background: var(--surface-primary);
+    border: 1px solid var(--border-default);
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 30%);
@@ -1063,13 +1063,13 @@
     font-family: Georgia, var(--font-display);
     font-size: 20px;
     font-weight: 600;
-    color: $primary-text-color;
+    color: var(--text-primary);
     margin: 0 0 10px;
   }
 
   &__hint {
     font-size: 13px;
-    color: $secondary-text-color;
+    color: var(--text-secondary);
     line-height: 1.5;
     margin: 0 0 14px;
   }
@@ -1077,10 +1077,10 @@
   &__textarea {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid var(--background-border-color);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
-    background: var(--background-color);
-    color: $primary-text-color;
+    background: var(--surface-primary);
+    color: var(--text-primary);
     font-size: 14px;
     font-family: inherit;
     resize: vertical;
@@ -1099,7 +1099,7 @@
 
   &__counter {
     font-size: 11px;
-    color: $secondary-text-color;
+    color: var(--text-secondary);
     text-align: right;
     margin-top: 6px;
     font-variant-numeric: tabular-nums;
@@ -1111,15 +1111,15 @@
     gap: 8px;
     margin-top: 16px;
     padding-top: 16px;
-    border-top: 1px solid var(--background-border-color);
+    border-top: 1px solid var(--border-default);
   }
 
   &__cancel {
     padding: 9px 20px;
-    border: 1px solid var(--background-border-color);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     background: transparent;
-    color: $secondary-text-color;
+    color: var(--text-secondary);
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
@@ -1188,7 +1188,7 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   padding: 3px 12px;
   border-radius: 999px;
   margin: 18px 0 6px;
@@ -1204,10 +1204,10 @@
 .governance-challenge-modal__condition-input {
   flex: 1;
   padding: 8px 10px;
-  border: 1px solid var(--background-border-color);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
-  background: var(--background-color);
-  color: $primary-text-color;
+  background: var(--surface-primary);
+  color: var(--text-primary);
   font-size: 13px;
   font-family: inherit;
   box-sizing: border-box;
@@ -1222,7 +1222,7 @@
 .governance-challenge-modal__remove-cond {
   background: transparent;
   border: none;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
@@ -1246,7 +1246,7 @@
   margin-top: 4px;
   font-size: 12px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-on-accent);
   cursor: pointer;
   transition: opacity 0.15s;
 
@@ -1264,7 +1264,7 @@
 }
 
 .governance-challenge {
-  border: 1px solid var(--background-border-color);
+  border: 1px solid var(--border-default);
   border-left: 3px solid var(--decision-block);
   border-radius: 8px;
   padding: 14px 16px;
@@ -1301,17 +1301,17 @@
 
 .governance-challenge__who {
   font-size: 13px;
-  color: $primary-text-color;
+  color: var(--text-primary);
 
   span {
-    color: $secondary-text-color;
+    color: var(--text-secondary);
   }
 }
 
 .governance-challenge__statement {
   font-size: 14px;
   font-style: italic;
-  color: $primary-text-color;
+  color: var(--text-primary);
   margin: 0 0 12px;
   padding: 0 0 0 8px;
   border-left: 2px solid
@@ -1323,7 +1323,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   margin: 10px 0 8px;
 }
 
@@ -1337,10 +1337,10 @@
 // ── Single condition block
 
 .governance-condition {
-  border: 1px solid var(--background-border-color);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   padding: 12px;
-  background: var(--background-color);
+  background: var(--surface-primary);
   transition:
     opacity 0.15s,
     border-color 0.15s;
@@ -1372,13 +1372,13 @@
 
 .governance-condition__text {
   font-size: 14px;
-  color: $primary-text-color;
+  color: var(--text-primary);
   flex: 1;
   line-height: 1.4;
 
   .governance-condition--met & {
     text-decoration: line-through;
-    color: $secondary-text-color;
+    color: var(--text-secondary);
   }
 }
 
@@ -1388,7 +1388,7 @@
   gap: 8px;
   margin: 10px 0 10px 26px;
   padding-left: 10px;
-  border-left: 2px solid var(--background-border-color);
+  border-left: 2px solid var(--border-default);
 }
 
 .governance-challenge-response {
@@ -1428,17 +1428,17 @@
   gap: 6px;
   align-items: baseline;
   font-size: 11px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
 
   strong {
-    color: $primary-text-color;
+    color: var(--text-primary);
     font-weight: 600;
   }
 }
 
 .governance-challenge-response__text {
   font-size: 13px;
-  color: $primary-text-color;
+  color: var(--text-primary);
   margin: 2px 0 0;
   line-height: 1.45;
 }
@@ -1455,10 +1455,10 @@
 .governance-condition__reply-area {
   flex: 1;
   padding: 6px 10px;
-  border: 1px solid var(--background-border-color);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
-  background: var(--background-color);
-  color: $primary-text-color;
+  background: var(--surface-primary);
+  color: var(--text-primary);
   font-size: 13px;
   font-family: inherit;
   resize: vertical;
@@ -1477,7 +1477,7 @@
   border: none;
   border-radius: 999px;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -1501,7 +1501,7 @@
   gap: 10px;
   margin-top: 8px;
   padding-top: 10px;
-  border-top: 1px solid var(--background-border-color);
+  border-top: 1px solid var(--border-default);
   flex-wrap: wrap;
 }
 
@@ -1542,7 +1542,7 @@
 
 .governance-tab-proposal__body {
   font-size: 15px;
-  color: #{$primary-text-color};
+  color: #{var(--text-primary)};
   line-height: 1.75;
   margin: 0 0 32px;
   white-space: pre-wrap;
@@ -1555,18 +1555,18 @@
   gap: 14px;
   padding: 20px 0;
   margin: 0 0 32px;
-  border-top: 1px solid var(--background-border-color);
-  border-bottom: 1px solid var(--background-border-color);
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .governance-tab-proposal__support-line {
   font-size: 14px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   text-align: center;
   margin: 0;
 
   strong {
-    color: $primary-text-color;
+    color: var(--text-primary);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
@@ -1579,11 +1579,11 @@
 
 .governance-tab-proposal__backing-summary {
   font-size: 14px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   margin: 0 0 8px;
 
   strong {
-    color: $primary-text-color;
+    color: var(--text-primary);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
@@ -1600,9 +1600,9 @@
   inline-size: 84px;
   padding: 6px 8px;
   font-size: 14px;
-  color: $primary-text-color;
+  color: var(--text-primary);
   background: var(--surface-elevated);
-  border: 1px solid var(--background-border-color);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-small);
 }
 
@@ -1624,7 +1624,7 @@
 
 .governance-tab-proposal__back-balance {
   font-size: 13px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
 }
 
 .governance-tab-proposal__back-error {
@@ -1641,7 +1641,7 @@
   font-family: Georgia, var(--font-display);
   font-size: 15px;
   font-weight: 600;
-  color: $primary-text-color;
+  color: var(--text-primary);
   margin: 0 0 14px;
   text-align: center;
 }
@@ -1658,7 +1658,7 @@
   }
 
   &--abstain {
-    background: $secondary-text-color;
+    background: var(--text-secondary);
   }
 
   &--block {
@@ -1676,8 +1676,8 @@
   max-width: 520px;
   margin: 0 auto;
   padding: 18px;
-  background: var(--background-color);
-  border: 1px solid var(--background-border-color);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
 }
 
@@ -1692,9 +1692,9 @@
   flex: 1;
   padding: 8px 14px;
   border-radius: 999px;
-  border: 1px solid var(--background-border-color);
+  border: 1px solid var(--border-default);
   background: transparent;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -1721,19 +1721,19 @@
   &--support.active {
     background: var(--decision-agree);
     border-color: var(--decision-agree);
-    color: #fff;
+    color: var(--text-on-accent);
   }
 
   &--question.active {
     background: var(--decision-pending);
     border-color: var(--decision-pending);
-    color: #fff;
+    color: var(--text-on-accent);
   }
 
   &--challenge.active {
     background: var(--decision-block);
     border-color: var(--decision-block);
-    color: #fff;
+    color: var(--text-on-accent);
   }
 
   &:disabled {
@@ -1752,11 +1752,11 @@
 .governance-composer__label {
   font-size: 12px;
   font-weight: 600;
-  color: $primary-text-color;
+  color: var(--text-primary);
 }
 
 .governance-composer__optional {
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   font-weight: 400;
   margin-left: 4px;
 }
@@ -1765,12 +1765,12 @@
 .governance-composer__textarea {
   width: 100%;
   padding: 9px 12px;
-  background: var(--input-background-color, var(--background-color));
-  border: 1px solid var(--background-border-color);
+  background: var(--input-background-color, var(--surface-primary));
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   font-family: inherit;
   font-size: 14px;
-  color: $primary-text-color;
+  color: var(--text-primary);
   box-sizing: border-box;
   transition: border-color 0.15s;
 
@@ -1790,7 +1790,7 @@
   right: 10px;
   bottom: -18px;
   font-size: 11px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1809,10 +1809,10 @@
 .governance-composer__condition-input {
   flex: 1;
   padding: 8px 10px;
-  border: 1px solid var(--background-border-color);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
-  background: var(--background-color);
-  color: $primary-text-color;
+  background: var(--surface-primary);
+  color: var(--text-primary);
   font-size: 13px;
   font-family: inherit;
 
@@ -1825,7 +1825,7 @@
 .governance-composer__condition-remove {
   background: transparent;
   border: none;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
@@ -1841,7 +1841,7 @@
 .governance-composer__condition-add {
   align-self: flex-start;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   border: none;
   border-radius: 999px;
   padding: 5px 14px;
@@ -1873,10 +1873,10 @@
 
 .governance-composer__cancel {
   padding: 8px 16px;
-  border: 1px solid var(--background-border-color);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   background: transparent;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -1897,7 +1897,7 @@
   border: none;
   border-radius: 8px;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -1922,8 +1922,8 @@
 }
 
 .governance-response-card {
-  background: var(--background-color);
-  border: 1px solid var(--background-border-color);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
   border-left: 3px solid transparent;
   border-radius: 10px;
   padding: 14px 16px;
@@ -1934,7 +1934,7 @@
   }
 
   &--question {
-    border-left-color: $secondary-text-color;
+    border-left-color: var(--text-secondary);
   }
 
   &--challenge {
@@ -1962,7 +1962,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #fff;
+  color: var(--text-on-accent);
   flex-shrink: 0;
 
   &--support {
@@ -1970,7 +1970,7 @@
   }
 
   &--question {
-    background: $secondary-text-color;
+    background: var(--text-secondary);
   }
 
   &--challenge {
@@ -1980,14 +1980,14 @@
 
 .governance-response-card__who {
   font-size: 12px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   display: flex;
   gap: 4px;
   align-items: center;
 }
 
 .governance-response-card__author {
-  color: $primary-text-color;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -1999,14 +1999,14 @@
   font-family: Georgia, var(--font-display);
   font-size: 16px;
   font-weight: 600;
-  color: $primary-text-color;
+  color: var(--text-primary);
   margin: 0 0 6px;
   line-height: 1.3;
 }
 
 .governance-response-card__body {
   font-size: 13.5px;
-  color: $primary-text-color;
+  color: var(--text-primary);
   line-height: 1.55;
   margin: 0 0 8px;
   white-space: pre-wrap;
@@ -2015,7 +2015,7 @@
 .governance-response-card__conditions {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid var(--background-border-color);
+  border-top: 1px solid var(--border-default);
 }
 
 .governance-response-card__conditions-label {
@@ -2023,7 +2023,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   margin-bottom: 8px;
 }
 
@@ -2033,19 +2033,19 @@
   gap: 6px;
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid var(--background-border-color);
+  border-top: 1px solid var(--border-default);
 }
 
 .governance-response-card__edit-btn,
 .governance-response-card__delete-btn {
   padding: 4px 12px;
-  border: 1px solid var(--background-border-color);
+  border: 1px solid var(--border-default);
   border-radius: 999px;
   background: transparent;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
 
   &:hover:not(:disabled) {
     border-color: var(--accent);
@@ -2069,7 +2069,7 @@
   margin: 28px 0 0;
   text-align: center;
   font-size: 12px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
 }
 
 .governance-tab-proposal__banner {
@@ -2086,7 +2086,7 @@
 
   p {
     margin: 0;
-    color: #{$primary-text-color};
+    color: #{var(--text-primary)};
   }
 
   &--challenged {
@@ -2132,7 +2132,7 @@
   }
 
   &--abstain {
-    background: #{$dark-text-color};
+    background: #{var(--text-muted)};
   }
 
   &--block {
@@ -2144,7 +2144,7 @@
   display: flex;
   gap: 16px;
   font-size: 12px;
-  color: #{$secondary-text-color};
+  color: #{var(--text-secondary)};
   flex-wrap: wrap;
   align-items: center;
 }
@@ -2167,7 +2167,7 @@
   }
 
   &--abstain {
-    background: #{$dark-text-color};
+    background: #{var(--text-muted)};
   }
 
   &--block {
@@ -2178,12 +2178,12 @@
 .governance-vote-total {
   margin-left: auto;
   font-size: 11px;
-  color: #{$dark-text-color};
+  color: #{var(--text-muted)};
 }
 
 .governance-vote-current {
   font-size: 12px;
-  color: #{$secondary-text-color};
+  color: #{var(--text-secondary)};
   margin: 0 0 16px;
 
   strong {
@@ -2233,9 +2233,9 @@
   }
 
   &--abstain {
-    border-color: var(--background-border-color);
-    color: $secondary-text-color;
-    background: var(--background-color);
+    border-color: var(--border-default);
+    color: var(--text-secondary);
+    background: var(--surface-primary);
   }
 
   &--block {
@@ -2258,13 +2258,13 @@
 
 .governance-statement-area {
   width: 100%;
-  border: 0.5px solid var(--background-border-color);
+  border: 0.5px solid var(--border-default);
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 13px;
   font-family: inherit;
-  color: $primary-text-color;
-  background: var(--background-color);
+  color: var(--text-primary);
+  background: var(--surface-primary);
   resize: none;
   line-height: 1.5;
   transition: border-color 0.15s;
@@ -2279,7 +2279,7 @@
 
 .governance-statement-hint {
   font-size: 11px;
-  color: #{$dark-text-color};
+  color: #{var(--text-muted)};
   margin: 6px 0 0;
 }
 
@@ -2320,13 +2320,13 @@
 
 .governance-voter-name {
   font-size: 13px;
-  color: #{$primary-text-color};
+  color: #{var(--text-primary)};
   flex: 1;
 }
 
 .governance-voter-statement {
   font-size: 12px;
-  color: #{$secondary-text-color};
+  color: #{var(--text-secondary)};
   font-style: italic;
   flex: 2;
   text-align: right;
@@ -2348,8 +2348,8 @@
   }
 
   &--abstain {
-    background: var(--background-border-color);
-    color: $secondary-text-color;
+    background: var(--border-default);
+    color: var(--text-secondary);
   }
 
   &--block {
@@ -2378,7 +2378,7 @@
   font-family: var(--font-display);
   font-size: 15px;
   font-weight: 700;
-  color: $primary-text-color;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -2388,7 +2388,7 @@
   gap: 4px;
   background: var(--accent);
   border: none;
-  color: #fff;
+  color: var(--text-on-accent);
   border-radius: 999px;
   padding: 5px 14px;
   font-size: 12px;
@@ -2410,7 +2410,7 @@
 .governance-form--inline {
   margin: 0 0 12px;
   padding: 14px;
-  border: 1px solid var(--background-border-color);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   background: color-mix(in srgb, var(--accent) 3%, transparent);
 }
@@ -2437,8 +2437,8 @@
   padding: 3px 10px;
   border-radius: 999px;
   margin: 0 0 8px;
-  background: $secondary-text-color;
-  color: #fff;
+  background: var(--text-secondary);
+  color: var(--text-on-accent);
 
   &--open {
     background: var(--accent);
@@ -2454,15 +2454,15 @@
 }
 
 .governance-tab-kontribute__empty {
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   font-size: 13px;
 }
 
 // ─── Task card ──────────────────────────────────────────────────────────────
 
 .governance-task-card {
-  background: var(--background-color);
-  border: 1px solid var(--border-color);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
   padding: 10px 12px;
   margin-bottom: 6px;
@@ -2482,19 +2482,19 @@
 .governance-task-card__title {
   font-size: 13px;
   font-weight: 600;
-  color: $primary-text-color;
+  color: var(--text-primary);
   flex: 1;
 }
 
 .governance-task-card__description {
   font-size: 12px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   margin: 4px 0 0;
 }
 
 .governance-task-card__effort {
   font-size: 11px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
 }
 
 .governance-task-card__assignee {
@@ -2503,7 +2503,7 @@
   gap: 4px;
   margin-top: 6px;
   font-size: 12px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
 }
 
 .governance-task-card__assignee-avatar {
@@ -2536,21 +2536,21 @@
     text-align: left;
     padding: 6px 8px;
     font-weight: 600;
-    border-bottom: 2px solid var(--border-color);
-    color: $primary-text-color;
+    border-bottom: 2px solid var(--border-default);
+    color: var(--text-primary);
   }
 
   td {
     padding: 6px 8px;
-    border-bottom: 1px solid var(--border-color);
-    color: $primary-text-color;
+    border-bottom: 1px solid var(--border-default);
+    color: var(--text-primary);
   }
 }
 
 .governance-budget-table__total {
   td {
     font-weight: 700;
-    border-top: 2px solid var(--border-color);
+    border-top: 2px solid var(--border-default);
     border-bottom: none;
   }
 }
@@ -2563,9 +2563,9 @@
   font-weight: 600;
 
   &--unfunded {
-    background: var(--background-color);
-    border: 1px solid var(--border-color);
-    color: $secondary-text-color;
+    background: var(--surface-primary);
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
   }
 
   &--funded {
@@ -2582,7 +2582,7 @@
 .governance-task-card__claim-btn {
   margin-top: 8px;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   border: none;
   border-radius: 6px;
   padding: 6px 14px;
@@ -2610,8 +2610,8 @@
 
 .governance-form {
   padding: 24px;
-  background: var(--background-color);
-  border: 1px solid var(--background-border-color);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
   border-radius: 14px;
   margin-bottom: 20px;
   position: relative;
@@ -2639,7 +2639,7 @@
 .governance-form__heading {
   font-size: 17px;
   font-weight: 600;
-  color: $primary-text-color;
+  color: var(--text-primary);
   margin: 0;
   padding: 4px 0 0;
   border-bottom: none;
@@ -2673,7 +2673,7 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   padding: 3px 12px;
   border-radius: 999px;
   margin: 8px 0 4px;
@@ -2685,7 +2685,7 @@
   flex-direction: column;
   gap: 5px;
   font-size: 14px;
-  color: $primary-text-color;
+  color: var(--text-primary);
   margin-bottom: 0;
 }
 
@@ -2697,7 +2697,7 @@
   font-size: 11px;
   font-weight: 600;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   padding: 3px 12px;
@@ -2711,7 +2711,7 @@
 
 .governance-form__hint {
   font-size: 12px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   line-height: 1.4;
 }
 
@@ -2724,7 +2724,7 @@
 
 .governance-form__counter {
   font-size: 12px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -2738,12 +2738,12 @@
 .governance-form__category-chip {
   appearance: none;
   background: transparent;
-  border: 1px solid var(--background-border-color);
+  border: 1px solid var(--border-default);
   border-radius: 10px;
   padding: 8px 14px;
   font-size: 13px;
   font-weight: 500;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
 
@@ -2755,7 +2755,7 @@
   &.active {
     background: var(--accent);
     border-color: var(--accent);
-    color: #fff;
+    color: var(--text-on-accent);
     font-weight: 600;
   }
 }
@@ -2765,10 +2765,10 @@
 .governance-form__select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--background-border-color);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
-  background: var(--input-background-color, var(--background-color));
-  color: $primary-text-color;
+  background: var(--input-background-color, var(--surface-primary));
+  color: var(--text-primary);
   font-size: 14px;
   font-family: inherit;
   box-sizing: border-box;
@@ -2777,7 +2777,7 @@
     box-shadow 0.2s ease;
 
   &::placeholder {
-    color: $secondary-text-color;
+    color: var(--text-secondary);
     opacity: 0.5;
   }
 
@@ -2818,9 +2818,9 @@
   flex-direction: column;
   gap: 8px;
   padding: 14px;
-  border: 1px solid var(--background-border-color);
+  border: 1px solid var(--border-default);
   border-radius: 10px;
-  background: var(--background-color);
+  background: var(--surface-primary);
 }
 
 .governance-form__task-row-main {
@@ -2840,7 +2840,7 @@
   border: 1px solid transparent;
   border-radius: 8px;
   padding: 6px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -2868,7 +2868,7 @@
   padding: 8px 18px;
   font-size: 13px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-on-accent);
   cursor: pointer;
   transition: opacity 0.15s;
   align-self: flex-start;
@@ -2889,15 +2889,15 @@
   gap: 8px;
   margin-top: 12px;
   padding-top: 16px;
-  border-top: 1px solid var(--background-border-color);
+  border-top: 1px solid var(--border-default);
 }
 
 .governance-form__cancel-btn {
   padding: 9px 20px;
-  border: 1px solid var(--background-border-color);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   background: transparent;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
@@ -2919,7 +2919,7 @@
   border: none;
   border-radius: 8px;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
@@ -2969,7 +2969,7 @@
   border-radius: 12px;
   padding: 16px;
   cursor: pointer;
-  color: $primary-text-color;
+  color: var(--text-primary);
   transition:
     border-color 0.15s,
     background 0.15s;
@@ -2982,12 +2982,12 @@
 
   span {
     font-size: 12px;
-    color: $secondary-text-color;
+    color: var(--text-secondary);
   }
 
   &:hover {
     border-color: var(--accent);
-    background: rgba(86, 58, 204, 7%);
+    background: color-mix(in srgb, var(--accent) 7%, transparent);
 
     span {
       color: var(--accent);
@@ -2996,8 +2996,8 @@
 
   &--new {
     border-style: dashed;
-    border-color: $secondary-text-color;
-    color: $secondary-text-color;
+    border-color: var(--text-secondary);
+    color: var(--text-secondary);
 
     &:hover {
       border-color: var(--accent);
@@ -3006,7 +3006,7 @@
 
   &--selected {
     border-color: var(--accent);
-    background: rgba(86, 58, 204, 7%);
+    background: color-mix(in srgb, var(--accent) 7%, transparent);
 
     span {
       color: var(--accent);
@@ -3020,7 +3020,7 @@
   justify-content: center;
   padding: 24px 0;
   margin-top: 8px;
-  border-top: 1px solid $ui-base-color;
+  border-top: 1px solid var(--border-default);
 }
 
 .wizard-type-btn {
@@ -3029,11 +3029,11 @@
   align-items: center;
   gap: 10px;
   background: transparent;
-  border: 2px solid $ui-base-color;
+  border: 2px solid var(--border-default);
   border-radius: 12px;
   padding: 28px 32px;
   cursor: pointer;
-  color: $primary-text-color;
+  color: var(--text-primary);
   font-size: 15px;
   font-weight: 600;
   min-width: 120px;
@@ -3048,32 +3048,32 @@
 
   &:hover {
     border-color: var(--accent);
-    background: rgba(86, 58, 204, 7%);
+    background: color-mix(in srgb, var(--accent) 7%, transparent);
   }
 
   &--selected {
     border-color: var(--accent);
-    background: rgba(86, 58, 204, 7%);
+    background: color-mix(in srgb, var(--accent) 7%, transparent);
   }
 }
 
 .wizard-form {
   margin-top: 8px;
   padding-top: 20px;
-  border-top: 1px solid $ui-base-color;
+  border-top: 1px solid var(--border-default);
 }
 
 .wizard-back-btn {
   display: block;
   background: none;
   border: none;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   font-size: 13px;
   cursor: pointer;
   padding: 0 0 16px;
 
   &:hover {
-    color: $primary-text-color;
+    color: var(--text-primary);
   }
 }
 
@@ -3081,13 +3081,13 @@
   font-family: Georgia, var(--font-display);
   font-size: 20px;
   font-weight: 500;
-  color: $primary-text-color;
+  color: var(--text-primary);
   margin: 0 0 20px;
 }
 
 .wizard-subheading {
   font-size: 13px;
-  color: $secondary-text-color;
+  color: var(--text-secondary);
   margin: 0 0 20px;
 }
 
@@ -3097,7 +3097,7 @@
   &__label {
     display: block;
     font-size: 14px;
-    color: $secondary-text-color;
+    color: var(--text-secondary);
     margin-bottom: 12px;
   }
 
@@ -3529,7 +3529,7 @@
   padding: 20px;
   background: var(--surface-primary, rgba(255, 255, 255, 3%));
   border: 1px solid var(--border-default, rgba(139, 99, 255, 24%));
-  border-radius: var(--radius-md, 16px);
+  border-radius: var(--radius-large);
 
   &__heading {
     display: flex;
@@ -3566,7 +3566,7 @@
       background: linear-gradient(
         90deg,
         var(--accent, #6364ff),
-        var(--purple-bright, #7241ff)
+        var(--kronk-purple-bright)
       );
       transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -3717,7 +3717,7 @@
     margin: 8px 0 0;
     padding: 6px;
     border: 1px solid var(--border-default, rgba(255, 255, 255, 12%));
-    border-radius: var(--radius-md, 12px);
+    border-radius: var(--radius-large);
     background: var(--surface-primary, rgba(255, 255, 255, 4%));
     display: flex;
     flex-direction: column;
@@ -3769,7 +3769,7 @@
     display: flex;
     flex-direction: column;
     border: 1px solid var(--border-default, rgba(255, 255, 255, 12%));
-    border-radius: var(--radius-md, 12px);
+    border-radius: var(--radius-large);
     overflow: hidden;
   }
 }
@@ -3778,7 +3778,7 @@
 .governance-detail__description {
   background: var(--surface-primary, rgba(255, 255, 255, 3%));
   border: 1px solid var(--border-default, rgba(139, 99, 255, 24%));
-  border-radius: var(--radius-md, 16px);
+  border-radius: var(--radius-large);
   padding: 20px;
 }
 
@@ -3804,7 +3804,7 @@
   margin: 16px 0 20px;
   padding: 20px;
   border: 1px solid var(--accent, #6364ff);
-  border-radius: var(--radius-md, 16px);
+  border-radius: var(--radius-large);
   background: color-mix(in srgb, var(--accent, #6364ff) 7%, transparent);
 
   &__head {
@@ -3940,7 +3940,7 @@
 .proposal-comments {
   background: var(--surface-primary, rgba(255, 255, 255, 3%));
   border: 1px solid var(--border-default, rgba(139, 99, 255, 24%));
-  border-radius: var(--radius-md, 16px);
+  border-radius: var(--radius-large);
   padding: 20px;
 
   &__heading {

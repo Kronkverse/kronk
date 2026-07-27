@@ -299,7 +299,7 @@
   &:hover,
   &:focus-visible {
     background: var(--accent, #7241ff);
-    color: #fff;
+    color: var(--text-on-accent);
   }
 }
 
@@ -551,7 +551,7 @@
   margin: 0 0 12px;
   padding: 8px 12px;
   color: var(--decision-block, #ef4444);
-  background: rgba(239, 68, 68, 8%);
+  background: color-mix(in srgb, var(--decision-block) 8%, transparent);
   border-radius: var(--radius-sm, 4px);
   font-size: 13px;
 }
@@ -591,6 +591,6 @@
 
   &:hover {
     background: var(--accent);
-    color: #fff;
+    color: var(--text-on-accent);
   }
 }
