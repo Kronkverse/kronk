@@ -9,7 +9,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
              :sensitive, :spoiler_text, :visibility, :language,
              :uri, :url, :replies_count, :reblogs_count,
              :favourites_count, :quotes_count, :edited_at,
-             :post_type, :krews
+             :post_type, :krews, :source_korner
 
   attribute :favourited, if: :current_user?
   attribute :reblogged, if: :current_user?

@@ -140,6 +140,9 @@ export interface ApiStatusJSON {
   krews?: { id: string; slug: string; name: string }[];
 
   post_type?: 'normal' | 'question' | 'answer' | 'proposal';
+  // Feed projection discriminator (docs/kronk_feed_and_reach.md §3.2): the
+  // korner slug this Status projects a card for; null for an ordinary post.
+  source_korner?: string | null;
   question?: ApiStatusJSON;
   answers_count?: number;
   answerers?: { id: string; username: string; acct: string; avatar: string }[];

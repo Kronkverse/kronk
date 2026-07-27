@@ -150,6 +150,7 @@ class Api::V1::EventsController < Api::BaseController
     )
 
     event.update!(status: @status)
+    @status.update_column(:source_korner, 'kalendar') # feed projection discriminator (§3.2)
     @status.touch
   end
 end
