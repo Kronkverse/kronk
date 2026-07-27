@@ -8,32 +8,44 @@ import { apiGetKrews } from 'mastodon/api/krew';
 import type { ApiKrewJSON } from 'mastodon/api/krew';
 import { KornerShell } from 'mastodon/components/korner_shell';
 
+import { useRoomPresence } from './use_room_presence';
+
 // /hub/huddle — Huddle landing page.
 //
 // Two sections per the proposal design (huddle_hub_landing_wide_v1.html):
 //
 //   1. The Main Huddle hero tile — the perpetual singleton room.
-//      Big Ѻ mark, "The Huddle", tagline, "Huddle up" button that
-//      navigates to /hub/huddle/live (mounts the existing Live
-//      component, which joins the shared `huddle` Jitsi room).
+//      "N here now" chip, big Ѻ mark, "The Huddle", tagline,
+//      "Huddle up" button that navigates to /hub/huddle/live.
 //
 //   2. Your Krews — every Krew the current user is in that has the
 //      `huddle` korner attached. Each row deep-links into the Krew's
-//      own Jitsi room at /hub/huddle/krew/<slug> (which mounts the
-//      Live component; the room name is derived from the slug).
+//      own Jitsi room at /hub/huddle/krew/<slug>. Rows show "N here"
+//      when the room is populated and "quiet" otherwise.
 //
-// Participant counts are intentionally not wired in this pass. The
-// hero shows "Always open. Drop in, hang out." rather than a live
-// count; Krew rows read "quiet". A follow-up pass will pipe the
-// Jitsi participant count through so the pulse-dot chip becomes real.
+// Presence counts come from the Jitsi Prosody room-info endpoint via
+// useRoomPresence(). Same source the Live component's lobby uses —
+// polled every 15s, CORS-open, best-effort (a 404 or fetch failure
+// degrades to 0).
 //
 // Spec: docs/spaces/huddle.md.
 
+const MAIN_ROOM_NAME = 'huddle';
+
 const messages = defineMessages({
   title: { id: 'huddle.title', defaultMessage: 'Huddle' },
-  hereNow: {
+  tagline: {
     id: 'huddle.hero.tagline',
     defaultMessage: 'Always open. Drop in, hang out.',
+  },
+  hereNow: {
+    id: 'huddle.chip.here_now',
+    defaultMessage:
+      '{count, plural, =0 {no one here yet} one {# here now} other {# here now}}',
+  },
+  hereShort: {
+    id: 'huddle.krew.here_short',
+    defaultMessage: '{count, plural, one {# here} other {# here}}',
   },
   huddleUp: {
     id: 'huddle.hero.cta',
@@ -66,8 +78,53 @@ const avatarColor = (index: number) =>
 const avatarGlyph = (krew: ApiKrewJSON): string =>
   (krew.name.trim()[0] ?? krew.slug[0] ?? '?').toUpperCase();
 
+interface KrewRowProps {
+  krew: ApiKrewJSON;
+  index: number;
+}
+
+const KrewRow: React.FC<KrewRowProps> = ({ krew, index }) => {
+  const intl = useIntl();
+  const count = useRoomPresence(`huddle-krew-${krew.slug}`);
+  const populated = count !== null && count > 0;
+
+  return (
+    <li className='huddle-krew-row'>
+      <Link
+        to={`/hub/huddle/krew/${krew.slug}`}
+        className='huddle-krew-row__link'
+      >
+        <span
+          className='huddle-krew-row__avatar'
+          style={{ background: avatarColor(index) }}
+          aria-hidden
+        >
+          {avatarGlyph(krew)}
+        </span>
+        <span className='huddle-krew-row__body'>
+          <span className='huddle-krew-row__name'>{krew.name}</span>
+          <span
+            className={`huddle-krew-row__state ${populated ? 'huddle-krew-row__state--live' : ''}`}
+          >
+            {populated && (
+              <span className='huddle-krew-row__pulse' aria-hidden />
+            )}
+            {populated
+              ? intl.formatMessage(messages.hereShort, { count })
+              : intl.formatMessage(messages.quiet)}
+          </span>
+        </span>
+        <span className='huddle-krew-row__chevron' aria-hidden>
+          ›
+        </span>
+      </Link>
+    </li>
+  );
+};
+
 const HuddleLanding: React.FC = () => {
   const intl = useIntl();
+  const mainCount = useRoomPresence(MAIN_ROOM_NAME);
   const [krews, setKrews] = useState<ApiKrewJSON[]>([]);
   const [loading, setLoading] = useState(true);
   // Ref rather than a local `let` so eslint's flow analysis doesn't
@@ -93,13 +150,19 @@ const HuddleLanding: React.FC = () => {
     };
   }, []);
 
+  const mainPopulated = mainCount !== null && mainCount > 0;
+
   return (
     <div className='huddle-landing'>
       <section className='huddle-hero'>
-        <div className='huddle-hero__here-chip'>
-          <span className='huddle-hero__pulse' aria-hidden />
+        <div
+          className={`huddle-hero__here-chip ${mainPopulated ? 'huddle-hero__here-chip--live' : ''}`}
+        >
+          {mainPopulated && <span className='huddle-hero__pulse' aria-hidden />}
           <span className='huddle-hero__here-label'>
-            {intl.formatMessage(messages.hereNow)}
+            {mainCount === null
+              ? intl.formatMessage(messages.tagline)
+              : intl.formatMessage(messages.hereNow, { count: mainCount })}
           </span>
         </div>
         <div className='huddle-hero__mark' aria-hidden>
@@ -111,6 +174,9 @@ const HuddleLanding: React.FC = () => {
             defaultMessage='The Huddle'
           />
         </h2>
+        <p className='huddle-hero__tagline'>
+          <FormattedMessage {...messages.tagline} />
+        </p>
         <Link to='/hub/huddle/live' className='huddle-hero__cta'>
           <FormattedMessage {...messages.huddleUp} />
         </Link>
@@ -135,29 +201,7 @@ const HuddleLanding: React.FC = () => {
         {krews.length > 0 && (
           <ul className='huddle-krews__list'>
             {krews.map((krew, index) => (
-              <li key={krew.id} className='huddle-krew-row'>
-                <Link
-                  to={`/hub/huddle/krew/${krew.slug}`}
-                  className='huddle-krew-row__link'
-                >
-                  <span
-                    className='huddle-krew-row__avatar'
-                    style={{ background: avatarColor(index) }}
-                    aria-hidden
-                  >
-                    {avatarGlyph(krew)}
-                  </span>
-                  <span className='huddle-krew-row__body'>
-                    <span className='huddle-krew-row__name'>{krew.name}</span>
-                    <span className='huddle-krew-row__state'>
-                      <FormattedMessage {...messages.quiet} />
-                    </span>
-                  </span>
-                  <span className='huddle-krew-row__chevron' aria-hidden>
-                    ›
-                  </span>
-                </Link>
-              </li>
+              <KrewRow key={krew.id} krew={krew} index={index} />
             ))}
           </ul>
         )}

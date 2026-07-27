@@ -29,13 +29,25 @@
     padding: 0.35rem 0.85rem;
     margin-bottom: 1.5rem;
     border-radius: var(--radius-round);
-    background: color-mix(
-      in oklab,
-      var(--kronk-purple-bright) 14%,
-      transparent
-    );
+    background: color-mix(in oklab, var(--kronk-purple-bright) 8%, transparent);
     border: 0.5px solid
-      color-mix(in oklab, var(--kronk-purple-bright) 40%, transparent);
+      color-mix(in oklab, var(--kronk-purple-bright) 20%, transparent);
+
+    // When Prosody reports at least one participant, the chip fills
+    // slightly and the pulse dot shows — makes the difference between
+    // "someone's in there" and "quiet" legible from a glance.
+    &--live {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-bright) 14%,
+        transparent
+      );
+      border-color: color-mix(
+        in oklab,
+        var(--kronk-purple-bright) 40%,
+        transparent
+      );
+    }
   }
 
   &__pulse {
@@ -61,12 +73,20 @@
   }
 
   &__title {
-    margin: 0 0 2rem;
+    margin: 0 0 0.85rem;
     font-size: 2.4rem;
     font-weight: 500;
     color: var(--text-primary);
     letter-spacing: -0.015em;
     line-height: 1.1;
+  }
+
+  &__tagline {
+    max-width: 24rem;
+    margin: 0 auto 2rem;
+    color: color-mix(in oklab, var(--text-primary) 55%, transparent);
+    font-size: 0.95rem;
+    line-height: 1.5;
   }
 
   &__cta {
@@ -199,8 +219,25 @@
   }
 
   &__state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     font-size: 0.75rem;
     color: var(--text-muted);
+
+    // Populated room: label lifts to the accent so a scan of the
+    // list reads "who's active" without counting.
+    &--live {
+      color: color-mix(in oklab, var(--kronk-purple-bright) 85%, #fff);
+    }
+  }
+
+  &__pulse {
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 50%;
+    background: var(--kronk-purple-bright);
+    animation: huddle-pulse 2s ease-in-out infinite;
   }
 
   &__chevron {
