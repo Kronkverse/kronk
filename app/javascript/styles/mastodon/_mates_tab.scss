@@ -1,0 +1,40 @@
+// Mates tab — /@user/mates. Placeholder shell until the timeline view
+// lands (Kommons proposal "Mates", timeline brief). Kronk-tokens only;
+// no bespoke chrome; back button + column come from Column + ColumnBackButton.
+
+.mates-tab {
+  padding: 24px 20px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.mates-tab__card {
+  padding: 24px 22px;
+  border-radius: var(--radius-large);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-primary);
+}
+
+.mates-tab__title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--text-primary);
+  margin: 0 0 12px;
+}
+
+.mates-tab__lede {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin: 0 0 14px;
+}
+
+.mates-tab__note {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+  margin: 0;
+}

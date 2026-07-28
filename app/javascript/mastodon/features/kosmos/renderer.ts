@@ -1,23 +1,33 @@
-// Pure geometry + per-frame paint logic for the Kosmos ambient layer.
-// No React, no DOM references beyond the passed 2D context. Split out
-// from the mount component so the canvas math is testable in
-// isolation and the mount stays a thin lifecycle shell.
+// Per-frame paint logic for the Kosmos ambient layer. Geometry (sockets,
+// chord curves, colour ramp) lives in orb_geometry.ts and is shared
+// with the Kommunity Orb view — a mismatch would drift the background
+// sky from the foreground orb, which must not happen.
 //
 // Design source of truth: docs/kronk_frame.md (Kosmos block) and
-// KRONK_ORB_DATA_BRIEF.md — the ambient projection sweeps a horizontal
-// plane through a 150-socket Fibonacci sphere of accounts, painting
-// each chord crossing as a faint star coloured by the chord's local
-// gradient. Cycle time is ~10 minutes crown→floor→crown (imperceptible
-// by design). If the layer reads as a visualisation, it is too bright.
+// KRONK_ORB_BACKGROUND_BRIEF.md — the ambient projection sweeps a
+// horizontal plane through the shared 150-socket Fibonacci sphere,
+// painting each chord crossing as a faint star coloured by the chord's
+// local gradient. Cycle time is ~10 minutes crown→floor→crown
+// (imperceptible by design). If the layer reads as a visualisation,
+// it is too bright.
 
+import {
+  CHORD_SEGMENTS,
+  SPHERE_RADIUS,
+  buildOrbLayout,
+  readOrbPalette,
+} from './orb_geometry';
+import type { OrbLayout, OrbPalette } from './orb_geometry';
 import type { OrbData } from './use_mates_orb';
 
-// ── Constants shared with the Orb view ─────────────────────────────
-export const SPHERE_RADIUS = 100;
-export const SOCKET_COUNT = 150;
-export const CHORD_SEGMENTS = 20;
-const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
-const CHORD_CTRL_TOWARD_CENTRE = 0.26; // (A+B) * 0.26 ≡ midpoint × 0.52 — brief matches mockup
+// Re-export what the mount component pulls from renderer today so the
+// existing kronk_kosmos.tsx doesn't need to change import paths in
+// this refactor.
+export const readPalette = readOrbPalette;
+export type KosmosPalette = OrbPalette;
+export type Geometry = OrbLayout;
+export const buildGeometry = (orb: OrbData, palette: KosmosPalette): Geometry =>
+  buildOrbLayout(orb, palette);
 
 // ── Aesthetic constants (matched to the Kosmos brief) ──────────────
 const FADE_FRACTION = 0.24; // per-star breathe envelope width (chord-span fraction)
@@ -32,23 +42,6 @@ const VIGNETTE_OUTER = 0.7; // fraction of max(W,H)
 const VIGNETTE_ALPHA = 0.6;
 export const HALF_CYCLE_MS = 300_000; // 300s crown→floor; full breath ~10 min
 
-// ── Types ──────────────────────────────────────────────────────────
-type Vec3 = readonly [number, number, number];
-type RGB = readonly [number, number, number];
-
-interface ChordCurve {
-  readonly pts: readonly (readonly [number, number, number, number])[]; // x, y, z, t
-  readonly ylo: number;
-  readonly yhi: number;
-  readonly cA: RGB;
-  readonly cB: RGB;
-  readonly seed: number;
-}
-
-export interface Geometry {
-  readonly chords: readonly ChordCurve[];
-}
-
 interface Star {
   sx: number;
   sy: number;
@@ -58,126 +51,9 @@ interface Star {
   a: number;
 }
 
-// ── Helpers ────────────────────────────────────────────────────────
 const smoothstep = (edge0: number, edge1: number, x: number): number => {
   const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
   return t * t * (3 - 2 * t);
-};
-
-const hexToRgb = (hex: string): RGB => {
-  const h = hex.trim().replace(/^#/, '');
-  return [
-    parseInt(h.slice(0, 2), 16),
-    parseInt(h.slice(2, 4), 16),
-    parseInt(h.slice(4, 6), 16),
-  ];
-};
-
-// Read the 10-stop colour ramp + surface tokens from CSS custom
-// properties at build time. Reading through getComputedStyle keeps
-// tokens.yaml as the single source of truth — a palette shift in the
-// tokens file re-tints the sky without a code change.
-export interface KosmosPalette {
-  readonly ramp: readonly RGB[];
-  readonly void: RGB;
-  readonly horizon: RGB;
-  readonly thread: RGB;
-}
-
-export const readPalette = (): KosmosPalette => {
-  const cs = getComputedStyle(document.documentElement);
-  const read = (name: string): string => cs.getPropertyValue(name).trim();
-  const ramp: RGB[] = [];
-  for (let i = 0; i < 10; i++) {
-    ramp.push(hexToRgb(read(`--kosmos-ramp-${i}`) || '#38b2a3'));
-  }
-  return {
-    ramp,
-    void: hexToRgb(read('--kosmos-void') || '#0b0c11'),
-    horizon: hexToRgb(read('--kosmos-horizon') || '#7241ff'),
-    thread: hexToRgb(read('--kosmos-thread') || '#8c7cdc'),
-  };
-};
-
-// ── One-time geometry build ────────────────────────────────────────
-export const buildGeometry = (
-  orb: OrbData,
-  palette: KosmosPalette,
-): Geometry => {
-  // 1. Fibonacci sockets on the unit sphere, scaled by R.
-  const sockets: Vec3[] = [];
-  for (let i = 0; i < SOCKET_COUNT; i++) {
-    const y = 1 - (i / (SOCKET_COUNT - 1)) * 2;
-    const r = Math.sqrt(Math.max(0, 1 - y * y));
-    const t = GOLDEN_ANGLE * i;
-    sockets.push([
-      Math.cos(t) * r * SPHERE_RADIUS,
-      y * SPHERE_RADIUS,
-      Math.sin(t) * r * SPHERE_RADIUS,
-    ]);
-  }
-
-  // 2. Place accounts across the sphere in rank order with an even
-  //    stride so occupied sockets never bunch on one side. Persisted
-  //    per-account socket_index is a future upgrade (Orb brief §Open).
-  const accounts = orb.accounts.slice(0, SOCKET_COUNT);
-  const maxConnections = accounts.reduce(
-    (m, a) => (a.connections > m ? a.connections : m),
-    1,
-  );
-  const stride = SOCKET_COUNT / accounts.length;
-  const used = new Set<number>();
-  const pos = new Map<string, Vec3>();
-  const col = new Map<string, RGB>();
-  accounts.forEach((acc, i) => {
-    let s = Math.round(i * stride) % SOCKET_COUNT;
-    while (used.has(s)) s = (s + 1) % SOCKET_COUNT;
-    used.add(s);
-    const socket = sockets[s];
-    if (!socket) return;
-    pos.set(acc.id, socket);
-    const rampIdx = Math.min(
-      9,
-      Math.round(
-        (Math.log(1 + acc.connections) / Math.log(1 + maxConnections)) * 9,
-      ),
-    );
-    const colour = palette.ramp[rampIdx];
-    if (colour) col.set(acc.id, colour);
-  });
-
-  // 3. Quadratic bezier per follow, control point pulled toward the
-  //    sphere's core so every chord bows through the interior.
-  const chords: ChordCurve[] = [];
-  orb.follows.forEach(([src, dst], idx) => {
-    const A = pos.get(src);
-    const B = pos.get(dst);
-    if (!A || !B) return;
-    const cA = col.get(src);
-    const cB = col.get(dst);
-    if (!cA || !cB) return;
-    const ctrl: Vec3 = [
-      (A[0] + B[0]) * CHORD_CTRL_TOWARD_CENTRE,
-      (A[1] + B[1]) * CHORD_CTRL_TOWARD_CENTRE,
-      (A[2] + B[2]) * CHORD_CTRL_TOWARD_CENTRE,
-    ];
-    const pts: [number, number, number, number][] = [];
-    let ylo = Infinity;
-    let yhi = -Infinity;
-    for (let k = 0; k <= CHORD_SEGMENTS; k++) {
-      const t = k / CHORD_SEGMENTS;
-      const mt = 1 - t;
-      const x = mt * mt * A[0] + 2 * mt * t * ctrl[0] + t * t * B[0];
-      const y = mt * mt * A[1] + 2 * mt * t * ctrl[1] + t * t * B[1];
-      const z = mt * mt * A[2] + 2 * mt * t * ctrl[2] + t * t * B[2];
-      pts.push([x, y, z, t]);
-      if (y < ylo) ylo = y;
-      if (y > yhi) yhi = y;
-    }
-    chords.push({ pts, ylo, yhi, cA, cB, seed: idx * 12.9898 });
-  });
-
-  return { chords };
 };
 
 // ── Frame parameters (external to the renderer; the mount owns them) ──

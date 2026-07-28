@@ -1,0 +1,80 @@
+// Kommunity korner — the 3D orb view. The stage takes the whole Stage
+// cell of the Frame; the three.js canvas mounts inside the stage div
+// and fills it. Everything else on this partial is chrome that floats
+// over the orb (tooltip, hint) without competing with Frame slots.
+
+.kommunity {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 60vh;
+}
+
+.kronk-orb {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 60vh;
+}
+
+.kronk-orb__stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+
+  // Give the canvas a solid backdrop of --kosmos-void; the Kosmos
+  // ambient layer is behind the Frame at z-0 so it shows through
+  // slightly through the transparent WebGL clear. Painting the void
+  // here keeps depth reads correct without letting the underlying
+  // sky influence the orb's contrast.
+  background: var(--kosmos-void);
+}
+
+.kronk-orb__tooltip {
+  position: fixed;
+  z-index: 30;
+  padding: 8px 12px;
+  border-radius: var(--radius-medium);
+  background: rgb(0 0 0 / 78%);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  pointer-events: none;
+  max-width: 240px;
+  box-shadow: var(--elevation-floating);
+}
+
+.kronk-orb__tooltip-rank {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.kronk-orb__tooltip-line {
+  color: var(--text-secondary);
+}
+
+.kronk-orb__hint {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: var(--radius-round);
+  background: rgb(0 0 0 / 40%);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+
+  @media (prefers-reduced-motion: reduce) {
+    display: none;
+  }
+}

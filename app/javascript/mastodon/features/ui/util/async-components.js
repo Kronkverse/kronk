@@ -46,6 +46,10 @@ export function AccountNudges () {
   return import('../../account_nudges');
 }
 
+export function MatesTab () {
+  return import('../../mates_tab');
+}
+
 export function AccountFeatured() {
   return import('../../account_featured');
 }
@@ -333,6 +337,10 @@ export function KrewNew () {
 
 export function Klot () {
   return import("../../klot").then(m => ({ default: m.Klot }));
+}
+
+export function Kommunity () {
+  return import("../../kommunity").then(m => ({ default: m.Kommunity }));
 }
 
 export function KlotSettings () {

@@ -1,0 +1,77 @@
+# Kommunity — the whole-Kronk follow graph, rendered as a 3D orb the
+# user can spin, zoom, and explore. Every member is a node on a
+# 150-socket Fibonacci sphere; every follow is a chord bowing through
+# the interior. Sky is the graph, seen from outside.
+#
+# Ships in 2.0.0 alongside the ambient KronkKosmos background layer
+# (`features/kosmos/`). Both views build on the same shared geometry
+# (`features/kosmos/orb_geometry.ts`); Kommunity is the direct 3D
+# view and Kosmos is its slow cross-section painted behind chrome.
+#
+# Data source: same `{ accounts, follows }` payload consumed by
+# `useMatesOrb()`. Currently a bundled synthesised edge assignment
+# against real production degrees from 2026-07-19; swaps to the live
+# `/api/v1/kronk/kommunity/orb` endpoint when the Mates proposal
+# (Kommons #116990859270976043) lands. See KRONK_ORB_DATA_BRIEF.md.
+
+slug: kommunity
+name: Kommunity
+purpose: 'To let people see Kronk as a whole — a living topology of who is connected to whom, drawn from the follow graph.'
+tagline: 'The community, seen from inside.'
+icon:
+  # Preferred was `diversity_3` (Material Symbols) but that SVG isn't
+  # shipped in the repo and external asset ingestion is blocked. Using
+  # `globe` (already imported for the public-visibility icon and a
+  # strong semantic match for the whole-community orb) as a stand-in.
+  # Swap to diversity_3 once the SVG lands in app/javascript/material-icons/.
+  material: globe
+  text_glyph: 'Ķ'
+render_target: native
+version: 2.0.0
+
+security:
+  permissions:
+    - read:statuses
+  visibility_scopes: []
+  maintainers:
+    - moderator
+  federates: false # Kronk-local only — remote/federated accounts out of scope by design (Orb brief §Data)
+
+resources: [] # No korner-owned models; reads accounts + follows
+
+storage:
+  db_namespace: # not-applicable — no korner tables
+  media_prefix: # not-applicable
+  redis_prefix: # not-implemented
+
+emits: []
+listens: []
+
+feed_projection:
+  card: # not-applicable — Kommunity is a topology view, not a poster
+  discriminator: # n/a
+
+subscription:
+  default: # not-applicable — Kommunity is a browsing surface, not a broadcast source
+
+hub_teaser:
+  static: 'Kronk, from the inside.'
+
+launch:
+  blurb: 'Kommunity — a 3D orb of every member and every connection. Spin it, look inside.'
+  cta: 'See the orb'
+
+# The orb renders against a bundled synthesised edge assignment for
+# now (real degrees, invented specific edges). Density and rhythm are
+# already true to the community; specific chord identities become
+# exact once the Mates endpoint lands. Marking `enforced: true` so
+# the tile lights up on the Hub — the surface works end-to-end today.
+enforced: true
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: kommunity.index
+    label: Kommunity
+    url: /hub/kommunity
+    lifecycle: live
+    spa: true

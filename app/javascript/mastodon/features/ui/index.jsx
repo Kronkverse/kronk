@@ -57,6 +57,7 @@ import {
   AccountTimeline,
   AccountGallery,
   AccountNudges,
+  MatesTab,
   HomeTimeline,
   Followers,
   Following,
@@ -114,6 +115,7 @@ import {
   KrewNew,
   Klot,
   KlotSettings,
+  Kommunity,
   KommonsSettings,
   KuestionsSettings,
   MomentsStub,
@@ -319,6 +321,10 @@ class SwitchingColumnsArea extends PureComponent {
             {/* Klot — cycle tracker (KRONK_TIDES). Requires signed-in
                 because the client immediately hits /api/v1/klot/self. */}
             {signedIn && <WrappedRoute path='/hub/klot' component={Klot} content={children} />}
+            {/* Kommunity — whole-graph 3D orb view (KRONK_ORB_DATA_BRIEF).
+                Reads the same Mates data the Kosmos background layer uses;
+                bundled synthesised edges until the Mates endpoint lands. */}
+            <WrappedRoute path='/hub/kommunity' component={Kommunity} content={children} />
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
             <WrappedRoute path='/hub/moments' component={MomentsStub} content={children} />
@@ -367,6 +373,11 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path={['/accounts/:id/following', '/users/:acct/following', '/@:acct/following']} component={Following} content={children} />
             <WrappedRoute path={['/@:acct/media', '/accounts/:id/media']} component={AccountGallery} content={children} />
             {signedIn && <WrappedRoute path='/@:acct/nudges' component={AccountNudges} content={children} />}
+            {/* Mates tab — per-member timeline view (Kommons "Mates" proposal).
+                Stub until the timeline unresolveds are settled. Must sit
+                before the /@:acct/:statusId wildcard so `mates` isn't
+                treated as a status id. */}
+            <WrappedRoute path='/@:acct/mates' component={MatesTab} content={children} />
             <WrappedRoute path='/@:acct/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/@:acct/:statusId/reblogs' component={Reblogs} content={children} />
             <WrappedRoute path='/@:acct/:statusId/favourites' component={Favourites} content={children} />
