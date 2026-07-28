@@ -1,0 +1,58 @@
+// Map — Trek feed card. Extends the shared Korner frame
+// (_status_korner_card.scss) with a lightweight route glimpse — an SVG
+// polyline of the privacy-trimmed route, not a full basemap per card — and a
+// stat grid (distance / time / pace or speed / climb).
+
+.status-trek-card {
+  &__glimpse {
+    background: linear-gradient(
+      color-mix(in srgb, var(--accent) 14%, var(--surface-elevated)),
+      color-mix(in srgb, var(--accent) 6%, var(--surface-elevated))
+    );
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    polyline {
+      stroke: var(--accent);
+      stroke-width: 3.5;
+      // Round joins are set inline; a soft shadow lifts the line off the tint.
+      filter: drop-shadow(
+        0 1px 1px color-mix(in srgb, var(--accent) 40%, transparent)
+      );
+    }
+  }
+
+  &__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin: 10px 0 0;
+
+    div {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    dt {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    dd {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-primary);
+    }
+  }
+}

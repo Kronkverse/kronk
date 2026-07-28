@@ -2,12 +2,15 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
+import { useHistory, useLocation } from 'react-router-dom';
+
 import * as maplibregl from 'maplibre-gl';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import {
   apiGetTreks,
+  apiGetTrek,
   apiPublishTrek,
   apiUnpublishTrek,
   apiDeleteTrek,
@@ -286,11 +289,19 @@ const TrekDetail: React.FC<{
   );
 };
 
+// The selected trek's id lives in the URL (/hub/map/treks/:id) so the feed
+// card can deep-link straight to a trek's detail in the Map space.
+const TREK_ID_RE = /^\/hub\/map\/treks\/([^/]+)/;
+
 export const TreksView: React.FC = () => {
   const intl = useIntl();
+  const history = useHistory();
+  const location = useLocation();
   const [treks, setTreks] = useState<ApiTrekJSON[] | null>(null);
   const [filterMine, setFilterMine] = useState(true);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<ApiTrekJSON | null>(null);
+
+  const selectedId = TREK_ID_RE.exec(location.pathname)?.[1] ?? null;
 
   const refresh = useCallback(() => {
     void apiGetTreks()
@@ -304,6 +315,32 @@ export const TreksView: React.FC = () => {
     refresh();
   }, [refresh]);
 
+  // Resolve the URL-selected trek independently of the list, so a deep link
+  // to a trek not on the caller's current feed page still opens (server-side
+  // Mates gate still applies — a non-visible trek 404s and clears the detail).
+  useEffect(() => {
+    if (!selectedId) {
+      setDetail(null);
+      return;
+    }
+    const fromList = treks?.find((t) => t.id === selectedId);
+    if (fromList) {
+      setDetail(fromList);
+      return;
+    }
+    let live = true;
+    void apiGetTrek(selectedId)
+      .then((t) => {
+        if (live) setDetail(t);
+      })
+      .catch(() => {
+        if (live) setDetail(null);
+      });
+    return () => {
+      live = false;
+    };
+  }, [selectedId, treks]);
+
   const showMine = useCallback(() => {
     setFilterMine(true);
   }, []);
@@ -311,21 +348,32 @@ export const TreksView: React.FC = () => {
     setFilterMine(false);
   }, []);
   const back = useCallback(() => {
-    setSelectedId(null);
-  }, []);
-  const select = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    setSelectedId(e.currentTarget.dataset.id ?? null);
-  }, []);
+    history.push('/hub/map/treks');
+  }, [history]);
+  const select = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const id = e.currentTarget.dataset.id;
+      if (id) history.push(`/hub/map/treks/${id}`);
+    },
+    [history],
+  );
 
   const onDetailChange = useCallback(
     (t: ApiTrekJSON | null) => {
-      if (t === null) setSelectedId(null);
+      if (t === null) history.push('/hub/map/treks');
       refresh();
     },
-    [refresh],
+    [history, refresh],
   );
 
-  if (treks === null) {
+  // A selected trek renders its detail as soon as it resolves — even before
+  // the list load completes.
+  if (selectedId) {
+    if (detail) {
+      return (
+        <TrekDetail trek={detail} onBack={back} onChange={onDetailChange} />
+      );
+    }
     return (
       <div className='trek-list trek-list--loading'>
         <LoadingIndicator />
@@ -333,12 +381,11 @@ export const TreksView: React.FC = () => {
     );
   }
 
-  const selected = selectedId
-    ? treks.find((t) => t.id === selectedId)
-    : undefined;
-  if (selected) {
+  if (treks === null) {
     return (
-      <TrekDetail trek={selected} onBack={back} onChange={onDetailChange} />
+      <div className='trek-list trek-list--loading'>
+        <LoadingIndicator />
+      </div>
     );
   }
 

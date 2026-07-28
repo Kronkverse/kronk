@@ -39,6 +39,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
   has_one :proposal, serializer: REST::ProposalSummarySerializer
   has_one :booth_set, serializer: REST::BoothSetSummarySerializer
   has_one :listing, serializer: REST::WachuneedListingSummarySerializer
+  has_one :trek, serializer: REST::TrekSummarySerializer
   has_one :quote_approval
 
   def quote
