@@ -130,7 +130,8 @@ class FeedManager
 
     timeline_key = key(:home, into_account.id)
     aggregate    = into_account.user&.aggregates_reblogs?
-    query        = from_account.statuses.list_eligible_visibility.includes(reblog: :account).limit(FeedManager::MAX_ITEMS / 4)
+    visibilities = follow_eligible_visibilities(into_account.mate?(from_account))
+    query        = from_account.statuses.where(visibility: visibilities).includes(reblog: :account).limit(FeedManager::MAX_ITEMS / 4)
 
     if redis.zcard(timeline_key) >= FeedManager::MAX_ITEMS / 4
       oldest_home_score = redis.zrange(timeline_key, 0, 0, with_scores: true).first.last.to_i
@@ -158,7 +159,8 @@ class FeedManager
 
     timeline_key = key(:list, list.id)
     aggregate    = list.account.user&.aggregates_reblogs?
-    query        = from_account.statuses.list_eligible_visibility.includes(reblog: :account).limit(FeedManager::MAX_ITEMS / 4)
+    visibilities = follow_eligible_visibilities(list.account.mate?(from_account))
+    query        = from_account.statuses.where(visibility: visibilities).includes(reblog: :account).limit(FeedManager::MAX_ITEMS / 4)
 
     if redis.zcard(timeline_key) >= FeedManager::MAX_ITEMS / 4
       oldest_home_score = redis.zrange(timeline_key, 0, 0, with_scores: true).first.last.to_i
@@ -289,8 +291,11 @@ class FeedManager
       add_to_feed(:home, account.id, status, aggregate_reblogs: aggregate)
     end
 
+    mate_ids = account.mates.pluck(:id).to_set
+
     account.following.includes(:account_stat).reorder(nil).find_each do |target_account|
-      query = target_account.statuses.list_eligible_visibility.includes(reblog: :account).limit(limit)
+      visibilities = follow_eligible_visibilities(mate_ids.include?(target_account.id))
+      query = target_account.statuses.where(visibility: visibilities).includes(reblog: :account).limit(limit)
 
       over_limit ||= redis.zcard(timeline_key) >= limit
       if over_limit
@@ -330,8 +335,11 @@ class FeedManager
     timeline_key = key(:list, list.id)
     over_limit = false
 
+    mate_ids = list.account.mates.pluck(:id).to_set
+
     list.active_accounts.includes(:account_stat).reorder(nil).find_each do |target_account|
-      query = target_account.statuses.list_eligible_visibility.includes(reblog: :account).limit(limit)
+      visibilities = follow_eligible_visibilities(mate_ids.include?(target_account.id))
+      query = target_account.statuses.where(visibility: visibilities).includes(reblog: :account).limit(limit)
 
       over_limit ||= redis.zcard(timeline_key) >= limit
       if over_limit
@@ -447,6 +455,22 @@ class FeedManager
   # @param [Integer] receiver_id
   # @param [Hash] crutches
   # @return [void|Symbol] nil, :skip_home, or :filter
+  # Visibilities of a source account's statuses that a follow-based feed
+  # (home/list) is entitled to backfill from the DB during regeneration.
+  # A follower always sees public/unlisted/private (followers-only); a Mate
+  # (mutual follow) additionally sees the reach-ladder posts delivered to Mates
+  # at write time — `mates` and `orbit` (docs/kronk_feed_and_reach.md §2). The
+  # blanket `Status.list_eligible_visibility` scope predates the reach ladder
+  # and drops those on regeneration, silently un-distributing a Mate's Mates
+  # posts. `self_only` (radiates to no one) and `krew` (member-based, not
+  # follow-delivered) are never backfilled here. `is_mate` is precomputed by
+  # the caller to avoid a per-account query in the populate loops.
+  def follow_eligible_visibilities(is_mate)
+    visibilities = %i(public unlisted private)
+    visibilities += %i(mates orbit) if is_mate
+    visibilities
+  end
+
   def filter_from_home(status, receiver_id, crutches, timeline_type = :home)
     return :filter    if status.reply?
     return            if receiver_id == status.account_id
