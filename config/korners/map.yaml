@@ -40,8 +40,13 @@ storage:
   db_namespace: presence_ # presence_states (Postgres); ephemeral — bounded by expires_at, hard-deleted on remove
   media_prefix: spaces/map/
 
-feed_projection: # no feed projection — presence is not a feed item
-  card: null
+feed_projection:
+  card: trek_card # StatusTrekCard on StatusKornerCard
+  status_association: trek # Status.has_one :trek (inverse of Trek.status_id)
+  title_from: title
+  links_to: /hub/map/treks/<id> # tap-through to the trek's detail in the Map space
+  default_visibility: mates # a published trek defaults to Mates (§2.4)
+  discriminator: status.source_korner == 'map' # §3.2 source_korner discriminator
 
 settings:
   - name: default_share_scope

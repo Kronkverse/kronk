@@ -20,6 +20,7 @@ import type { Map as ImmutableMap } from 'immutable';
 import { StatusBoothCard } from './status_booth_card';
 import { StatusEventCard } from './status_event_card';
 import { StatusKommonsCard } from './status_kommons_card';
+import { StatusTrekCard } from './status_trek_card';
 import { StatusWachuneedCard } from './status_wachuneed_card';
 
 type StatusLike = ImmutableMap<string, unknown>;
@@ -71,6 +72,11 @@ export const KORNER_CARDS: KornerCardEntry[] = [
     slug: 'booth',
     assocField: 'booth_set',
     card: (s) => <StatusBoothCard set={dataFrom(s, 'booth_set')} />,
+  },
+  {
+    slug: 'map',
+    assocField: 'trek',
+    card: (s) => <StatusTrekCard trek={dataFrom(s, 'trek')} />,
   },
 ];
 

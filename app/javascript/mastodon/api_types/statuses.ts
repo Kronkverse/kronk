@@ -179,6 +179,24 @@ export interface ApiStatusJSON {
     rsvp?: string | null;
     is_owner?: boolean;
   };
+
+  // Map — a published Trek projected onto its timeline Status (feed projection,
+  // docs/kronk_feed_and_reach.md §3.2). `route` is the already privacy-trimmed
+  // slice ([lng, lat] pairs) for the card's glimpse; null when the trek has no
+  // route. See REST::TrekSummarySerializer.
+  trek?: {
+    id: string;
+    activity_type: 'run' | 'walk' | 'hike' | 'swim' | 'ride' | 'paddle';
+    title: string;
+    distance_m: number;
+    moving_sec: number;
+    pace_seconds: number | null;
+    speed_kmh: number | null;
+    elevation_gain: number | null;
+    recorded_at: string;
+    has_route: boolean;
+    route: [number, number][] | null;
+  };
 }
 
 export interface ApiContextJSON {
