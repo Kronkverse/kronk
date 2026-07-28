@@ -30,7 +30,9 @@ export interface CardContext {
 
 interface KornerCardEntry {
   slug: string;
-  matches: (status: StatusLike) => boolean;
+  // The Status association carrying this card's data. Also the fallback
+  // discriminator for statuses not yet stamped with `source_korner`.
+  assocField: string;
   card: (status: StatusLike, ctx: CardContext) => ReactElement;
 }
 
@@ -48,13 +50,12 @@ const dataFrom = (s: StatusLike, key: string): any =>
 export const KORNER_CARDS: KornerCardEntry[] = [
   {
     slug: 'kalendar',
-    matches: (s) => s.get('event') != null,
+    assocField: 'event',
     card: (s) => <StatusEventCard event={dataFrom(s, 'event')} />,
   },
   {
     slug: 'kommons',
-    matches: (s) =>
-      s.get('post_type') === 'proposal' && s.get('proposal') != null,
+    assocField: 'proposal',
     card: (s) => <StatusKommonsCard proposal={dataFrom(s, 'proposal')} />,
   },
   // Kuestions feed projection is out of scope for the rebuild — the
@@ -63,12 +64,12 @@ export const KORNER_CARDS: KornerCardEntry[] = [
   // return here backed by the dedicated Question model.
   {
     slug: 'martketplace',
-    matches: (s) => s.get('listing') != null,
+    assocField: 'listing',
     card: (s) => <StatusWachuneedCard listing={dataFrom(s, 'listing')} />,
   },
   {
     slug: 'booth',
-    matches: (s) => s.get('booth_set') != null,
+    assocField: 'booth_set',
     card: (s) => <StatusBoothCard set={dataFrom(s, 'booth_set')} />,
   },
 ];
@@ -77,9 +78,20 @@ export const KORNER_CARDS: KornerCardEntry[] = [
                  @typescript-eslint/no-explicit-any */
 
 export function pickKornerCard(status: StatusLike): KornerCardEntry | null {
+  // Dispatch on the `source_korner` discriminator (docs/kronk_feed_and_reach.md
+  // §3.2), replacing the old per-association / post_type predicates. Fall back
+  // to association presence for any status not yet stamped (transitional). The
+  // card's association data must be present either way to render.
+  const korner = status.get('source_korner') as string | null | undefined;
+
   for (const entry of KORNER_CARDS) {
-    if (entry.matches(status)) return entry;
+    const bySlug = korner === entry.slug;
+    const byAssoc = korner == null && status.get(entry.assocField) != null;
+    if ((bySlug || byAssoc) && status.get(entry.assocField) != null) {
+      return entry;
+    }
   }
+
   return null;
 }
 
