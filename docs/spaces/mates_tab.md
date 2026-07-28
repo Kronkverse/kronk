@@ -1,6 +1,6 @@
 # Mates tab (`/@user/mates`)
 
-**Location:** profile sub-route · **Status:** MVP live (bundled data) — endpoint + branches pending
+**Location:** profile sub-route · **Status:** live (bundled data) — endpoint + polish pending
 
 > The subject's community drawn as a chronological line rather than an
 > alphabetical list. Their own membership runs from join date to today
@@ -18,13 +18,21 @@ korner (which is the whole-graph orb). See
 
 ## What this pass ships
 
-- Main **line + two rows + inviter head** — the core of the brief:
-  track from subject.joined_at → today with rounded caps, head tile at
-  the leftmost cap, mate tiles above at bond dates, invitee tiles
-  below at their own join dates, inviter tile linked to the head via a
-  cubic curve.
-- **Subject switching** — clicking any tile makes that member the
-  subject; the view rebuilds around their line.
+- Main **line + two rows + inviter head** — track from subject.joined_at
+  → today with rounded caps, head tile at the leftmost cap, mate tiles
+  above at bond dates, invitee tiles below at their own join dates,
+  inviter tile linked to the head via a cubic curve.
+- **Branches** — every base-row tile carries a **pip** (small circle
+  on the outer edge) with a glyph that hints at what opens: **`↑`**
+  above the line opens the mate's/inviter's full invite chain in one
+  action; a **number** below the line opens one generation of that
+  invitee's own invitees (each of those can then be opened in turn).
+  Cascade-close on the downward side. Merging: shared ancestors
+  render once with a link arriving from each descendant; layer position
+  is longest-path-from-base per the brief.
+- **Subject switching** — clicking any tile (not its pip) makes that
+  member the subject; the view rebuilds and every opened branch
+  closes.
 - **Hover tooltip** on tiles — display name, handle, bond/join date,
   click-hint.
 - **Viewer reference marker** — a dashed vertical line at the viewer's
@@ -40,13 +48,8 @@ korner (which is the whole-graph orb). See
 
 ## What this pass does not ship (deferred to a follow-up)
 
-Called out in the brief but out of scope for the MVP:
+Called out in the brief but out of scope:
 
-- **Branches** — the upward invite chain (opening a mate reveals their
-  ancestry) and the downward invite line (opening an invitee reveals
-  the people they invited). Each opens with different grammar and
-  layer packing per the brief. This is the largest single deferred
-  piece.
 - **Lineage trace** — hover-highlighting every node + link on the
   paths through the hovered member, with everything else dropped
   back.
@@ -55,8 +58,13 @@ Called out in the brief but out of scope for the MVP:
   into sub-lanes; MVP accepts the overlap.
 - **Search + trail** — instance-wide search on the rail, and the
   breadcrumb trail of visited subjects.
-- **Merging** — deduplicating shared ancestors across branches (only
-  relevant once branches ship).
+- **Pitch compression** — the brief specifies layer pitch of 42px
+  compressing to 26–34px as layers accumulate. MVP keeps a fixed
+  42px; the SVG viewBox grows vertically to fit rather than
+  compressing layers.
+- **Show-labels toggle** — labels on opened-branch tiles appear only
+  at close zoom per the brief. MVP hides them by default; a zoom
+  control that reveals them lands in a follow-up.
 
 ## Data
 
@@ -81,14 +89,19 @@ date, day-precision), `inviter_id` (nullable for root), `connections`,
 
 ## Interaction
 
-- **Click a tile** — switch subject.
+- **Click a tile** — switch subject. Every opened branch closes.
+- **Click a pip** — toggle the branch: `↑` on a mate/inviter opens
+  the full invite chain upward; a numeric pip below on an invitee
+  opens their direct invitees (one generation). Click again to
+  close. Downward close cascades to descendants.
 - **Hover a tile** — tooltip.
 - **Return-to-my-line** button in the subject bar — jumps back to the
   viewer's own line.
 - **Rail filters** — Both / Mates / Invited toggles the rail list.
 - **Rail row click** — same as clicking the corresponding tile.
 - **Horizontal scroll** — the SVG is fixed at 1.2 px/day for MVP; on
-  narrow viewports the canvas scrolls horizontally.
+  narrow viewports the canvas scrolls horizontally. Vertical space
+  auto-adjusts as branches open (viewBox grows top and bottom).
 
 ## Frame adherence
 
