@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
 
@@ -110,10 +110,27 @@ const routePoints = (route: [number, number][]): string | null => {
 
 export const StatusTrekCard: React.FC<{ trek: Trek }> = ({ trek }) => {
   const intl = useIntl();
+  const history = useHistory();
 
-  const handleLinkClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
+  // The whole card is the tap target — anywhere on it opens the trek's detail
+  // in the Map space. stopPropagation keeps the click off the surrounding
+  // Status (which would otherwise open the post thread).
+  const goToTrek = useCallback(
+    (e: React.MouseEvent | React.KeyboardEvent) => {
+      e.stopPropagation();
+      history.push(trekPath(trek.id));
+    },
+    [history, trek.id],
+  );
+  const handleCardKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        goToTrek(e);
+      }
+    },
+    [goToTrek],
+  );
 
   const isPace = PACE_ACTIVITIES.has(trek.activity_type);
   const points = trek.has_route && trek.route ? routePoints(trek.route) : null;
@@ -124,6 +141,10 @@ export const StatusTrekCard: React.FC<{ trek: Trek }> = ({ trek }) => {
       korner='Map'
       variant='trek'
       className='status-trek-card'
+      onClick={goToTrek}
+      onKeyDown={handleCardKeyDown}
+      role='link'
+      tabIndex={0}
       badge={{
         icon: ExploreIcon,
         iconId: 'explore',
@@ -185,15 +206,12 @@ export const StatusTrekCard: React.FC<{ trek: Trek }> = ({ trek }) => {
         </dl>
       </div>
 
+      {/* The whole card navigates; this is a visual affordance, not a
+          separate control (no nested interactive element inside the link). */}
       <div className='status-korner-card__footer'>
-        <div className='status-korner-card__meta' />
-        <Link
-          to={trekPath(trek.id)}
-          className='status-korner-card__action'
-          onClick={handleLinkClick}
-        >
+        <span className='status-korner-card__action status-trek-card__cue'>
           {intl.formatMessage(messages.view)}
-        </Link>
+        </span>
       </div>
     </StatusKornerCard>
   );
