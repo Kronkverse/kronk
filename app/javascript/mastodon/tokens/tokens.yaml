@@ -116,3 +116,37 @@ motion:
   ease-out: 'cubic-bezier(0.16, 1, 0.3, 1)'
   ease-in-out: 'cubic-bezier(0.65, 0, 0.35, 1)'
   ease-spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+
+# ── Kosmos (Frame-root background layer) ───────────────────────────
+# Colours consumed by the KronkKosmos canvas — the ambient projection
+# of the Mates orb cross-section that sits behind all Kronk chrome.
+# Theme-invariant by design: the layer is deliberately dark under both
+# themes (a threshold-of-perception night sky; if it reads as a
+# visualisation, it is too bright).
+#
+# `void` is the canvas fill colour and the vignette anchor. `horizon`
+# is the barely-visible circle traced at the sweep-plane's projected
+# radius (the section horizon), applied at very low alpha in JS.
+# `thread` is the whisper-faint line drawn between two very-close
+# stars — never structural, always subordinate.
+#
+# `ramp-0` (cool teal, Pluto) → `ramp-9` (warm gold, Sun) is the
+# 10-stop node-colour ramp indexed by connection-count log-scale.
+# It agrees with the shared Orb geometry (see docs/spaces/mates.md
+# once shipped, and KRONK_ORB_DATA_BRIEF.md). The ramp encodes graph
+# degree, so it stays fixed across theme + palette-hue shifts — do
+# not repoint at var(--kronk-purple-*).
+kosmos:
+  void: '#0b0c11'
+  horizon: '#7241ff'
+  thread: '#8c7cdc'
+  ramp-0: '#38b2a3'
+  ramp-1: '#3f9aab'
+  ramp-2: '#4f85ab'
+  ramp-3: '#6a72a8'
+  ramp-4: '#8a6b9c'
+  ramp-5: '#a97088'
+  ramp-6: '#c17a76'
+  ramp-7: '#d18a68'
+  ramp-8: '#dd9a5f'
+  ramp-9: '#e6a857'

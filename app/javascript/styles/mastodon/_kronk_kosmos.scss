@@ -1,0 +1,23 @@
+// KronkKosmos — the ambient background layer. Everything visual lives
+// in the canvas itself (see features/kosmos/renderer.ts); this partial
+// only nails the element to the viewport and pushes it behind
+// everything else. The one deliberate exception to the "Frame-root
+// chrome only" rule (Standard L11) is here — the layer must span the
+// full viewport regardless of how the Frame grid is laid out, so it
+// sits fixed at inset:0 with z-index below every Frame slot.
+// Palette + vignette + peak-alpha ceilings all read from tokens.yaml
+// (--kosmos-*) inside the renderer via getComputedStyle — this file
+// carries no colour of its own.
+
+.kronk-kosmos-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+
+  // Fallback tint until the first canvas paint lands, so the page
+  // never flashes to the default surface between mount and the first
+  // rAF frame.
+  background: var(--kosmos-void);
+}
