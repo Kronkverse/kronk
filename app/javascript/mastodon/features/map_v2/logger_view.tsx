@@ -4,8 +4,8 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
-import { apiCreateTrek } from 'mastodon/api/map_treks';
-import type { TrekActivity } from 'mastodon/api/map_treks';
+import { apiCreateTrek, apiPublishTrek } from 'mastodon/api/map_treks';
+import type { TrekActivity, TrekReach } from 'mastodon/api/map_treks';
 import { Button } from 'mastodon/components/button';
 
 import { parseTrackFile } from './gpx';
@@ -14,8 +14,15 @@ import type { ParsedTrack } from './gpx';
 // Map — Logger lens. Records a trek by hand (activity + numbers) or by
 // importing a GPS file (GPX/TCX). The file is parsed in the browser and only
 // [lng,lat] points plus the derived distance/time/climb are sent — any
-// heart-rate / cadence / power / device fields are never read. The new trek
-// starts as a private draft; it's published to Mates from the Treks lens.
+// heart-rate / cadence / power / device fields are never read.
+//
+// "Log it" posts the trek to the feed at the chosen reach (Mates by default),
+// like composing a post; choosing "Private draft" keeps it unshared (publish
+// later from the Treks lens). Either way the route's start/finish are trimmed
+// before saving.
+
+// A share target: one of the reach ladder values, or 'draft' (unshared).
+type ShareTarget = TrekReach | 'draft';
 
 const ACTIVITIES: TrekActivity[] = [
   'run',
@@ -37,6 +44,14 @@ const messages = defineMessages({
   time: { id: 'map.logger.time', defaultMessage: 'Time (minutes)' },
   save: { id: 'map.logger.save', defaultMessage: 'Log it' },
   saving: { id: 'map.logger.saving', defaultMessage: 'Logging…' },
+  post: { id: 'map.logger.post', defaultMessage: 'Post it' },
+  saveDraft: { id: 'map.logger.save_draft', defaultMessage: 'Save draft' },
+  shareLabel: { id: 'map.logger.share', defaultMessage: 'Post to' },
+  reachMates: { id: 'map.treks.reach.mates', defaultMessage: 'Mates' },
+  reachPublic: { id: 'map.treks.reach.public', defaultMessage: 'Public' },
+  reachOrbit: { id: 'map.treks.reach.orbit', defaultMessage: 'Orbit' },
+  reachSelf: { id: 'map.treks.reach.self', defaultMessage: 'Just me' },
+  draft: { id: 'map.logger.draft', defaultMessage: 'Private draft' },
   run: { id: 'map.activity.run', defaultMessage: 'Run' },
   walk: { id: 'map.activity.walk', defaultMessage: 'Walk' },
   hike: { id: 'map.activity.hike', defaultMessage: 'Hike' },
@@ -44,6 +59,19 @@ const messages = defineMessages({
   ride: { id: 'map.activity.ride', defaultMessage: 'Ride' },
   paddle: { id: 'map.activity.paddle', defaultMessage: 'Paddle' },
 });
+
+// Where "Log it" sends the trek. Mates is the default reach (§2.4); 'draft'
+// keeps it unshared. `label` keys into `messages` (React Intl static ids).
+const SHARE_OPTIONS: { value: ShareTarget; label: keyof typeof messages }[] = [
+  { value: 'mates', label: 'reachMates' },
+  { value: 'public', label: 'reachPublic' },
+  { value: 'orbit', label: 'reachOrbit' },
+  { value: 'self_only', label: 'reachSelf' },
+  { value: 'draft', label: 'draft' },
+];
+
+const shareLabelKey = (value: ShareTarget): keyof typeof messages =>
+  SHARE_OPTIONS.find((o) => o.value === value)?.label ?? 'reachMates';
 
 export const LoggerView: React.FC = () => {
   const intl = useIntl();
@@ -54,12 +82,17 @@ export const LoggerView: React.FC = () => {
   const [parsed, setParsed] = useState<ParsedTrack | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [share, setShare] = useState<ShareTarget>('mates');
   const [saving, setSaving] = useState(false);
   const [savedTitle, setSavedTitle] = useState<string | null>(null);
+  const [savedShare, setSavedShare] = useState<ShareTarget>('mates');
   const [dragging, setDragging] = useState(false);
 
   const onActivity = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setActivity(e.currentTarget.value as TrekActivity);
+  }, []);
+  const onShare = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setShare(e.currentTarget.value as ShareTarget);
   }, []);
   const onTitle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.currentTarget.value);
@@ -152,13 +185,21 @@ export const LoggerView: React.FC = () => {
         elevation_gain: parsed?.elevation_gain ?? undefined,
       })
         .then((trek) => {
-          setSavedTitle(trek.title);
-          setActivity('run');
-          setTitle('');
-          setDistanceKm('');
-          setTimeMin('');
-          setParsed(null);
-          setFileName(null);
+          // 'draft' keeps it unshared; any reach publishes it to the feed.
+          const published =
+            share === 'draft'
+              ? Promise.resolve()
+              : apiPublishTrek(trek.id, share);
+          return published.then(() => {
+            setSavedShare(share);
+            setSavedTitle(trek.title);
+            setActivity('run');
+            setTitle('');
+            setDistanceKm('');
+            setTimeMin('');
+            setParsed(null);
+            setFileName(null);
+          });
         })
         .catch(() => {
           setError('Could not log that trek. Try again.');
@@ -167,18 +208,29 @@ export const LoggerView: React.FC = () => {
           setSaving(false);
         });
     },
-    [activity, title, distanceKm, timeMin, parsed],
+    [activity, title, distanceKm, timeMin, parsed, share],
   );
 
   return (
     <div className='map-logger'>
       {savedTitle && (
         <div className='map-logger__saved' role='status'>
-          <FormattedMessage
-            id='map.logger.saved'
-            defaultMessage='Logged “{title}” as a private draft.'
-            values={{ title: savedTitle }}
-          />{' '}
+          {savedShare === 'draft' ? (
+            <FormattedMessage
+              id='map.logger.saved'
+              defaultMessage='Logged “{title}” as a private draft.'
+              values={{ title: savedTitle }}
+            />
+          ) : (
+            <FormattedMessage
+              id='map.logger.posted'
+              defaultMessage='Posted “{title}” to your feed · {reach}.'
+              values={{
+                title: savedTitle,
+                reach: intl.formatMessage(messages[shareLabelKey(savedShare)]),
+              }}
+            />
+          )}{' '}
           <Link to='/hub/map/treks'>
             <FormattedMessage
               id='map.logger.view_treks'
@@ -276,10 +328,27 @@ export const LoggerView: React.FC = () => {
           </label>
         </div>
 
+        <label className='map-logger__field'>
+          <span>{intl.formatMessage(messages.shareLabel)}</span>
+          <select value={share} onChange={onShare}>
+            {SHARE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {intl.formatMessage(messages[o.label])}
+              </option>
+            ))}
+          </select>
+        </label>
+
         {error && <p className='map-logger__error'>{error}</p>}
 
         <Button type='submit' disabled={saving}>
-          {intl.formatMessage(saving ? messages.saving : messages.save)}
+          {intl.formatMessage(
+            saving
+              ? messages.saving
+              : share === 'draft'
+                ? messages.saveDraft
+                : messages.post,
+          )}
         </Button>
       </form>
     </div>
