@@ -28,6 +28,10 @@ class Api::V2::KuestionsController < Api::BaseController
               Question.active
                       .where(id: Answer.where(account_id: current_account.id).select(:question_id))
                       .order(id: :desc)
+            when 'mine'
+              Question.active
+                      .where(created_by_account_id: current_account.id)
+                      .order(id: :desc)
             else
               Question.deck_for(current_account)
             end
@@ -52,7 +56,8 @@ class Api::V2::KuestionsController < Api::BaseController
     )
 
     if question.save
-      render json: question, serializer: REST::Kuestions::QuestionSerializer, scope: current_account, status: 201
+      Kuestions::PublishQuestion.new(question).call
+      render json: question.reload, serializer: REST::Kuestions::QuestionSerializer, scope: current_account, status: 201
     else
       render json: { error: question.errors.full_messages.to_sentence }, status: :unprocessable_entity
     end

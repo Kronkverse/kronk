@@ -29,13 +29,15 @@ class Question < ApplicationRecord
   scope :archived, -> { where.not(archived_at: nil) }
   scope :locked_only, -> { where(locked: true) }
 
-  # Deck: active Kuestions minus (a) the account's own asks, (b) any
-  # they've already answered, (c) any they've skipped. Newest first.
+  # Deck: active Kuestions minus (a) any the account has already
+  # answered, (b) any they've skipped. Newest first. The asker's own
+  # asks are NOT excluded — they surface in the caller's deck until the
+  # caller either answers or skips them, so the asker can weigh in on
+  # their own kuestion (their answer counts toward the aggregate).
   scope :deck_for, lambda { |account|
     return active.order(id: :desc) if account.nil?
 
     active
-      .where.not(created_by_account_id: account.id)
       .where.not(id: Answer.where(account_id: account.id).select(:question_id))
       .where.not(id: QuestionSkip.where(account_id: account.id).select(:question_id))
       .order(id: :desc)

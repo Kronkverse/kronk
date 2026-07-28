@@ -35,6 +35,7 @@ module Kuestions
     def can_view_answers?(question, viewer)
       return false if question.nil?
       return true unless question.locked?
+      return true if asker?(question, viewer)
 
       question.answered_by?(viewer)
     end
@@ -61,11 +62,22 @@ module Kuestions
     def gated_answers(question, viewer)
       if viewer.nil?
         question.locked? ? question.answers.none : question.answers
-      elsif question.locked? && !question.answered_by?(viewer)
+      elsif question.locked? && !question.answered_by?(viewer) && !asker?(question, viewer)
         question.answers.where(account_id: viewer.id)
       else
         question.answers
       end
+    end
+
+    # The asker is exempt from the answer-before-view gate — they own
+    # the ask and are the intended audience for the responses (per
+    # docs/spaces/kuestions.md §Notifications: "the asker gets a Nudge
+    # on every answer"). They can also add their own answer; it counts
+    # toward the aggregate.
+    def asker?(question, viewer)
+      return false if viewer.nil? || question.nil?
+
+      viewer.id == question.created_by_account_id
     end
 
     # Mates = mutual follow, matching Nudges::EventRouter's Mate

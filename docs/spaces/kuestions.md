@@ -62,17 +62,24 @@ addition to the Kuestion text and asker:
 - Small profile thumbnails of **friends** who have already answered
   (encouragement signal)
 
-**Feed projection (still to build):** One card per **ask**, not one per
-answer (a busy swipe session would otherwise flood the feed of anyone
-tuned into Kuestions). A dedicated `kuestions_card` — backed by the
-`Question` model, **not** the retired Status-polymorphic
-`question_card` — needs to be re-added; it should show the Kuestion,
-the running answer count, and friend thumbnails, so feed and swipe
-queue stay visually consistent.
+**Feed projection (shipped 2026-07-28, alpha.299):** One card per
+**ask**, not one per answer — the deck's swipe activity does not flood
+the feed. The dedicated `kuestions_card`
+(`app/javascript/mastodon/components/status_kuestions_card.tsx`) is
+backed by the `Question` model (not the retired Status-polymorphic
+`question_card`); posting a Kuestion via Ask writes a companion Status
+with `source_korner='kuestions'` via
+`Kuestions::PublishQuestion`. The card shows title, prompt, running
+answer count, up to five recent-answerer avatars, and a CTA to
+`/hub/kuestions/<id>`.
 
 **Swipe queue:** Purely chronological, latest first. No personalisation
 weighting, no Kategory filtering at the queue level. The swipe UI
-carries the discovery weight on its own; simpler backend contract.
+carries the discovery weight on its own; simpler backend contract. The
+asker's own kuestions **are** included in their deck (until answered
+or skipped) so the asker can weigh in on their own ask; the "answered
+by me" and "skipped by me" filters already exclude own asks the caller
+is done with.
 
 **Post-gate view (format-aware):** Once you've answered, the answer
 view adapts to the Kuestion's format:
@@ -81,6 +88,13 @@ view adapts to the Kuestion's format:
   friend avatars grouped under the option they picked. _(Still to
   build — the aggregate chart is not yet shipped.)_
 - **Free text** — chronological feed of others' answers, paginated.
+
+**Asker exemption:** the asker is exempt from the answer-before-view
+gate — they see every answer to their own kuestion without having to
+lock one in first (their kuestion, their answers). If they _do_ answer
+their own kuestion, that answer counts toward the aggregate like any
+other. Enforced in `Kuestions::VisibilityGate.can_view_answers?` and
+`.gated_answers` via the `asker?` helper.
 
 **Lifetime:** Kuestions never close. The count keeps ticking
 indefinitely; there is no "result" moment, no timer, no age-out. A

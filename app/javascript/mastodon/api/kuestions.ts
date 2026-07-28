@@ -12,6 +12,9 @@ export const apiListKuestions = () =>
 export const apiListAnsweredKuestions = () =>
   apiRequestGet<ApiKuestionJSON[]>('v2/kuestions', { filter: 'answered' });
 
+export const apiListMyKuestions = () =>
+  apiRequestGet<ApiKuestionJSON[]>('v2/kuestions', { filter: 'mine' });
+
 export const apiGetKuestion = (id: string) =>
   apiRequestGet<ApiKuestionJSON>(`v2/kuestions/${id}`);
 
