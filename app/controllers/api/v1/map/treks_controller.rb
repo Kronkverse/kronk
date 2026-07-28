@@ -66,19 +66,26 @@ class Api::V1::Map::TreksController < Api::BaseController
     reach = trek_reach(params[:visibility])
     return render json: { error: 'invalid_visibility' }, status: 422 if reach.nil?
 
-    ApplicationRecord.transaction do
-      if @trek.status_id.blank?
-        status = PostStatusService.new.call(
-          current_account,
-          text: trek_status_body(@trek),
-          visibility: reach,
-          application: doorkeeper_token&.application
-        )
-        @trek.status = status
-        status.update_column(:source_korner, 'map') # feed projection discriminator (§3.2)
-      end
+    # Create the status OUTSIDE any transaction. PostStatusService enqueues
+    # DistributionWorker via Sidekiq.perform_async, which starts running
+    # immediately — before an enclosing transaction would commit. The worker
+    # silently swallows ActiveRecord::RecordNotFound, so the fanout to home
+    # feeds never runs and the trek is orphaned from every timeline (visible
+    # only on the author profile / direct URL). Mirrors the same fix in
+    # Api::V1::EventsController#create_status_for_event!.
+    if @trek.status_id.blank?
+      status = PostStatusService.new.call(
+        current_account,
+        text: trek_status_body(@trek),
+        visibility: reach,
+        application: doorkeeper_token&.application
+      )
+      status.update_column(:source_korner, 'map') # feed projection discriminator (§3.2)
+      @trek.update!(status: status, state: :published)
+    else
       @trek.update!(state: :published)
     end
+
     render json: project(@trek)
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.message }, status: 422
