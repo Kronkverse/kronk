@@ -4,6 +4,28 @@
 // stat grid (distance / time / pace or speed / climb).
 
 .status-trek-card {
+  // The whole card is a link to the trek's detail (role="link").
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--accent);
+    box-shadow:
+      0 0 0 1px var(--accent),
+      var(--elevation-card);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  // The footer cue reacts to hover/focus on the card as a whole.
+  &:hover .status-trek-card__cue,
+  &:focus-visible .status-trek-card__cue {
+    text-decoration: underline;
+  }
+
   &__glimpse {
     background: linear-gradient(
       color-mix(in srgb, var(--accent) 14%, var(--surface-elevated)),
