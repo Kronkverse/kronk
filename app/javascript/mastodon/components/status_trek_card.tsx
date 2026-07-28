@@ -1,8 +1,4 @@
-import { useCallback } from 'react';
-
 import { defineMessages, useIntl } from 'react-intl';
-
-import { useHistory } from 'react-router-dom';
 
 import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
 
@@ -110,27 +106,6 @@ const routePoints = (route: [number, number][]): string | null => {
 
 export const StatusTrekCard: React.FC<{ trek: Trek }> = ({ trek }) => {
   const intl = useIntl();
-  const history = useHistory();
-
-  // The whole card is the tap target — anywhere on it opens the trek's detail
-  // in the Map space. stopPropagation keeps the click off the surrounding
-  // Status (which would otherwise open the post thread).
-  const goToTrek = useCallback(
-    (e: React.MouseEvent | React.KeyboardEvent) => {
-      e.stopPropagation();
-      history.push(trekPath(trek.id));
-    },
-    [history, trek.id],
-  );
-  const handleCardKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        goToTrek(e);
-      }
-    },
-    [goToTrek],
-  );
 
   const isPace = PACE_ACTIVITIES.has(trek.activity_type);
   const points = trek.has_route && trek.route ? routePoints(trek.route) : null;
@@ -141,10 +116,7 @@ export const StatusTrekCard: React.FC<{ trek: Trek }> = ({ trek }) => {
       korner='Map'
       variant='trek'
       className='status-trek-card'
-      onClick={goToTrek}
-      onKeyDown={handleCardKeyDown}
-      role='link'
-      tabIndex={0}
+      to={trekPath(trek.id)}
       badge={{
         icon: ExploreIcon,
         iconId: 'explore',
@@ -209,7 +181,7 @@ export const StatusTrekCard: React.FC<{ trek: Trek }> = ({ trek }) => {
       {/* The whole card navigates; this is a visual affordance, not a
           separate control (no nested interactive element inside the link). */}
       <div className='status-korner-card__footer'>
-        <span className='status-korner-card__action status-trek-card__cue'>
+        <span className='status-korner-card__action'>
           {intl.formatMessage(messages.view)}
         </span>
       </div>

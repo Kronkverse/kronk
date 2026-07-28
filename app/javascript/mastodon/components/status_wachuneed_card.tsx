@@ -1,8 +1,4 @@
-import { useCallback } from 'react';
-
 import { defineMessages, useIntl } from 'react-intl';
-
-import { Link } from 'react-router-dom';
 
 import InventoryIcon from '@/material-icons/400-24px/inventory_2.svg?react';
 
@@ -45,15 +41,12 @@ export const StatusWachuneedCard: React.FC<{ listing: Listing }> = ({
 }) => {
   const intl = useIntl();
 
-  const handleLinkClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
-
   return (
     <StatusKornerCard
       korner='mARTketplace'
       variant='listing'
       className='status-wachuneed-card'
+      to={listingPath(listing.id)}
       badge={{
         icon: InventoryIcon,
         iconId: 'inventory_2',
@@ -88,13 +81,9 @@ export const StatusWachuneedCard: React.FC<{ listing: Listing }> = ({
             </span>
           )}
         </div>
-        <Link
-          to={listingPath(listing.id)}
-          className='status-korner-card__action'
-          onClick={handleLinkClick}
-        >
+        <span className='status-korner-card__action'>
           {intl.formatMessage(messages.view)}
-        </Link>
+        </span>
       </div>
     </StatusKornerCard>
   );

@@ -22,6 +22,33 @@
     text-decoration: none;
   }
 
+  // Whole-card link/button (StatusKornerCard `to`, or a card wiring its own
+  // onClick). Anywhere on the card is the tap target; inner controls opt out
+  // via stopPropagation.
+  &[role='link'],
+  &[role='button'] {
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+      box-shadow:
+        0 0 0 1px var(--accent),
+        var(--elevation-card);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    // The footer action reads as a cue for the whole-card link.
+    &:hover .status-korner-card__action,
+    &:focus-visible .status-korner-card__action {
+      text-decoration: underline;
+    }
+  }
+
   &__badge {
     display: flex;
     align-items: center;

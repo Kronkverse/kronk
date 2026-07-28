@@ -1,8 +1,4 @@
-import { useCallback } from 'react';
-
 import { defineMessages, useIntl } from 'react-intl';
-
-import { Link } from 'react-router-dom';
 
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 
@@ -42,10 +38,6 @@ const formatDuration = (seconds: number): string => {
 export const StatusBoothCard: React.FC<{ set: BoothSet }> = ({ set }) => {
   const intl = useIntl();
 
-  const handleLinkClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
-
   const durationLabel = set.duration_seconds
     ? formatDuration(set.duration_seconds)
     : null;
@@ -60,6 +52,7 @@ export const StatusBoothCard: React.FC<{ set: BoothSet }> = ({ set }) => {
       korner='Booth'
       variant='set'
       className='status-booth-card'
+      to={`/booth/sets/${set.id}`}
       badge={{
         icon: HeadphonesIcon,
         iconId: 'headphones',
@@ -85,13 +78,9 @@ export const StatusBoothCard: React.FC<{ set: BoothSet }> = ({ set }) => {
             <span className='status-booth-card__duration'>{durationLabel}</span>
           )}
         </div>
-        <Link
-          to={`/booth/sets/${set.id}`}
-          className='status-korner-card__action'
-          onClick={handleLinkClick}
-        >
+        <span className='status-korner-card__action'>
           {intl.formatMessage(messages.view)}
-        </Link>
+        </span>
       </div>
     </StatusKornerCard>
   );
