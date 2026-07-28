@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 
 import classNames from 'classnames';
-
 import { useHistory } from 'react-router-dom';
 
 import type { IconProp } from 'mastodon/components/icon';
