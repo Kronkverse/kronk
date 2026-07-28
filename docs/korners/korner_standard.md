@@ -54,8 +54,9 @@ A korner's `lifecycle` (in its node) and its manifest `enforced` flag are **prom
 
 - ⚙︎ `feed_projection.card` names a component.
 - ⚙︎ That **card component exists** (`components/status_<korner>_card` or via the shared `StatusKornerCard` frame).
-- ⚙︎ The card is **registered** in the card registry (`components/korner_cards.tsx` → `KORNER_CARDS`). _(Audit: groups/in_flow/huddle/albutts/moments declare cards with no registry entry.)_
+- ⚙︎ The card is **registered** in the card registry (`components/korner_cards.tsx` → `KORNER_CARDS`).
 - ⚙︎ The serializer (L3) **populates the field** the card reads — projection is only real when all three (declare → serialise → render) line up.
+- ⚙︎ **Built or planned.** The doctor checks L3/L4 for **every** korner that declares a card — enforced or not — so a stub can't promise a phantom card. A card that isn't built yet must be declared `feed_projection.planned: true`, which the doctor tracks as a **warning** rather than a hard failure. Any card declared _without_ `planned` **must** be built (registered + serialised) or the boot validator fails. _(Currently planned: huddle, albutts, moments. Retired/removed → `card: null`: kuestions, inflow.)_
 
 ### L5 — Mount & routing
 
@@ -176,7 +177,7 @@ The Frame provides the `← All settings` pill via `<AutoSettingsBadge>` in the 
 
 ## 3. Conformance matrix — the automated gate
 
-Everything marked ⚙︎ above is **machine-checkable**, and the extended `korners doctor` (item 7) **has shipped** — `lib/mastodon/cli/korners.rb#detect_conformance_issues` now gates L1, L3, L4, L5, L7 and L10, alongside the L6 node checks (`detect_node_issues` + orphan-listens) and the L2 drift check. The L3/L4/L5 gaps that once sailed through are now enforced. What each check catches:
+Everything marked ⚙︎ above is **machine-checkable**, and the extended `korners doctor` (item 7) **has shipped** — `lib/mastodon/cli/korners.rb#detect_conformance_issues` now gates L1, L5, L7 and L10 (with L3/L4 feed-card conformance in `#detect_feed_card_issues`, run for every korner and honouring `feed_projection.planned`), alongside the L6 node checks (`detect_node_issues` + orphan-listens) and the L2 drift check. The L3/L4/L5 gaps that once sailed through are now enforced. What each check catches:
 
 | Check                                                                                                                                   | Layer | Catches                                                             |
 | --------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------- |
