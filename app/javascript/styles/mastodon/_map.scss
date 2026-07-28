@@ -431,3 +431,124 @@
     font-size: 14px;
   }
 }
+
+// Comments on a published trek (its Status's replies).
+.trek-comments {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-default);
+
+  &__heading {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__compose {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+
+    textarea {
+      width: 100%;
+      min-height: 44px;
+      resize: vertical;
+      padding: 10px 12px;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-medium, 10px);
+      background: var(--surface-background-color, rgb(0 0 0 / 20%));
+      color: var(--text-primary);
+      font: inherit;
+
+      &::placeholder {
+        color: var(--text-secondary);
+      }
+
+      &:focus {
+        border-color: var(--kronk-purple-bright, #b39dff);
+        outline: none;
+      }
+    }
+
+    .button {
+      align-self: flex-end;
+    }
+  }
+
+  &__empty {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
+
+.trek-comment {
+  display: flex;
+  gap: 10px;
+
+  &__avatar {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-medium, 10px);
+    object-fit: cover;
+  }
+
+  &__body {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 2px;
+
+    time {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+  }
+
+  &__name {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__handle {
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  &__content {
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: break-word;
+
+    p {
+      margin: 0 0 6px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    a {
+      color: var(--kronk-purple-bright, #b39dff);
+    }
+  }
+}

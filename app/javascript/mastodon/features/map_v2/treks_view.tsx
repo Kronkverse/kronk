@@ -28,6 +28,7 @@ import {
   basemapLayers,
   ensurePmtilesProtocol,
 } from './basemap';
+import { TrekComments } from './trek_comments';
 
 // Map — Treks lens. Lists the caller's own treks and their Mates' published
 // treks (Mates-gated server-side), with a detail view drawing the privacy-
@@ -284,6 +285,12 @@ const TrekDetail: React.FC<{
             {intl.formatMessage(messages.remove)}
           </Button>
         </div>
+      )}
+
+      {/* Comments live on the published trek's Status (froth = Favourite,
+          comments = replies). Shown to anyone who can see the trek. */}
+      {trek.state === 'published' && trek.status_id && (
+        <TrekComments statusId={trek.status_id} />
       )}
     </div>
   );
