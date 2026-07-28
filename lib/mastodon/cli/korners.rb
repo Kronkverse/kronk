@@ -143,6 +143,10 @@ module Mastodon
 
           detect_conformance_issues(manifest).each { |line| issues << "#{manifest.slug}: #{line}" }
           detect_frame_parasites(manifest).each { |line| warnings << "#{manifest.slug}: #{line}" }
+
+          card_issues, card_warnings = detect_feed_card_issues(manifest)
+          card_issues.each { |line| issues << "#{manifest.slug}: #{line}" }
+          card_warnings.each { |line| warnings << "#{manifest.slug}: #{line}" }
         end
 
         ::Kronk::KornerRegistry.enforced.each do |manifest|
@@ -158,6 +162,38 @@ module Mastodon
       # Backwards-compatible view for callers that only want issues.
       def collect_issues
         collect_issues_and_warnings.first
+      end
+
+      # Feed-projection card conformance (Korner Standard L3+L4), checked for
+      # EVERY korner that declares a card — enforced or not — so a stub can't
+      # promise a phantom card the framework never renders. A card declared
+      # `feed_projection.planned: true` is a tracked TODO (warning), not a hard
+      # failure; any other declared card MUST be built: its adapter registered
+      # in korner_cards.tsx (L4) and, when a `status_association` is named, that
+      # association actually serialised by REST::StatusSerializer (L3). Returns
+      # [issues, warnings].
+      def detect_feed_card_issues(manifest)
+        issues = []
+        warnings = []
+        projection = manifest.feed_projection
+        card = projection&.dig('card')
+        return [issues, warnings] if card.blank?
+
+        if projection['planned']
+          warnings << "L4 feed card '#{card}' declared planned — projection not yet built (L3/L4 not enforced)"
+          return [issues, warnings]
+        end
+
+        slug = manifest.slug
+
+        unless korner_source('app/javascript/mastodon/components/korner_cards.tsx').match?(/slug:\s*['"]#{Regexp.escape(slug)}['"]/)
+          issues << "L4 feed card '#{card}' not registered in korner_cards.tsx (no slug: '#{slug}' entry) — declare `feed_projection.planned: true` if the projection is not built yet"
+        end
+
+        assoc = manifest.status_association
+        issues << "L3 REST::StatusSerializer does not expose ':#{assoc}' (projection never reaches the client)" if assoc && status_serializer_attributes.exclude?(assoc)
+
+        [issues, warnings]
       end
 
       # Korner Standard (docs/korners/korner_standard.md §3) conformance —
@@ -200,13 +236,9 @@ module Mastodon
         mount = manifest.mount_path
         issues << "L5 no #{mount} mount in features/ui/index.jsx (#{manifest.core? ? 'core space' : 'enforced korner, dead Hub tile'})" unless korner_source('app/javascript/mastodon/features/ui/index.jsx').include?(mount)
 
-        # L3 — projection is actually serialised.
-        assoc = manifest.status_association
-        issues << "L3 REST::StatusSerializer does not expose ':#{assoc}' (projection never reaches the client)" if assoc && status_serializer_attributes.exclude?(assoc)
-
-        # L4 — the feed card is registered.
-        card = manifest.feed_projection&.dig('card')
-        issues << "L4 feed card '#{card}' not registered in korner_cards.tsx (no slug: '#{slug}' entry)" if card.present? && !korner_source('app/javascript/mastodon/components/korner_cards.tsx').match?(/slug:\s*['"]#{Regexp.escape(slug)}['"]/)
+        # L3/L4 — the feed card. Checked for every korner (enforced or not) in
+        # detect_feed_card_issues, so a stub can't declare a phantom card; see
+        # there.
 
         # L7 — every korner-owned SCSS file is in the stylelint governance
         # list. The governance list applies `color-no-hex` +

@@ -37,6 +37,7 @@ visibility_scopes:
 
 feed_projection:
   card: albutts_card
+  planned: true # WIP korner — no backend yet
   title_from: title
   summary_from: contributor_count
   status_association: album
