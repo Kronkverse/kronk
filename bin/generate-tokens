@@ -109,6 +109,7 @@ PLAN = [
   { kind: :plain,   section: 'radius',    label: 'Radius scale',             prefix: 'radius-' },
   { kind: :plain,   section: 'elevation', label: 'Elevation presets',        prefix: 'elevation-' },
   { kind: :plain,   section: 'motion',    label: 'Motion',                   prefix: '' },
+  { kind: :plain,   section: 'kosmos',    label: 'Kosmos (background)',      prefix: 'kosmos-' },
 ].freeze
 
 def load_tokens

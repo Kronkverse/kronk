@@ -28,6 +28,7 @@ import { HubSwitcher } from './components/hub_switcher';
 import { KornerSubBar } from './components/korner_sub_bar';
 import { KornerSidebar } from './components/korner_sidebar';
 import { KronkFrame } from 'mastodon/components/kronk_frame';
+import { KronkKosmos } from 'mastodon/features/kosmos/kronk_kosmos';
 import { KronkMenu } from './components/kronk_menu';
 import { KronkWordmark } from './components/kronk_wordmark';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
@@ -746,6 +747,12 @@ class UI extends PureComponent {
       <Hotkeys global handlers={handlers}>
         <BoothPlaybackProvider>
         <div className={classNames('ui', { 'is-composing': isComposing })} ref={this.setRef}>
+          {/* KronkKosmos — ambient background layer (docs/kronk_frame.md
+              § Kosmos). Full-viewport canvas at z-0, deliberately outside
+              the Frame grid so it spans regardless of slot geometry. The
+              one Frame-parasite exception the Standard L11 doctor
+              allow-lists by class name. */}
+          <KronkKosmos />
           {/* KronkFrame — foundational page layout (docs/kronk_frame.md).
               Chrome components render inside their named slots as flow
               children instead of self-anchoring with position: fixed.

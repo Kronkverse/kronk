@@ -135,6 +135,8 @@ export const MyKorner: React.FC = () => (
 
 No `<h1>`, no `<nav>` tab row, no repeated tagline copy. Title / tagline / tabs come from the Frame, driven by `config/korners/mykorner.yaml`. The view keys MUST match the manifest's `views:` list (same keys, same order).
 
+**One deliberate exception: `<KronkKosmos>` (the ambient background layer).** It fixes-position at inset:0 outside every Frame slot by design — the Mates orb cross-section has to span the whole viewport regardless of grid geometry. This is not a Frame parasite: nothing about it competes with a Frame slot; the layer sits at z-0 with `pointer-events: none` and a self-contained vignette so chrome always wins over it. The doctor already ignores it because L11 only inspects `/hub/<slug>` mounts (`detect_frame_parasites` early-returns for core spaces, and `KronkKosmos` isn't a korner mount at all). See `docs/kronk_frame.md` § Kosmos.
+
 ### L12 — Settings adhere to the same Frame chrome
 
 _(Added after the alpha.251/.253 settings audit. The failure this closes: settings pages shipped as classic Mastodon `<Column>` surfaces — bespoke back buttons, big square column headers, no shared title typography — while every korner around them moved to the Frame. The result was that entering settings felt like leaving Kronk, and reaching one settings page from another required going all the way back out through the Ӂ menu.)_

@@ -114,6 +114,39 @@ Mobile (container ≤ 889px)
   to any single layout cell. Anything else that needs to float
   independently of the grid (modals, dropdowns, snackbars) goes here.
 
+### Kosmos (background canvas)
+
+- **Contents:** `<KronkKosmos>` — the ambient projection of the Mates
+  orb's cross-section, painted as a threshold-of-perception night sky
+  behind every Kronk chrome. Each visible star is a real chord
+  crossing between two community members at the current sweep depth;
+  the sky is the graph, seen from inside. A full crown→floor→crown
+  breath takes ~10 minutes; the naked eye should not catch it moving.
+- **Position:** a single full-viewport canvas fixed at `inset: 0`,
+  `z-index: 0`, `pointer-events: none`. Sits behind every Frame slot
+  and the Overlay layer.
+- **Why outside the grid:** the sky belongs to the viewport, not to
+  any single layout cell — the whole app rides on it. This is the one
+  deliberate Frame-external chrome layer (Standard L11 documents the
+  exception). The layer never competes with content: a self-contained
+  vignette keeps the corners dark so text always wins.
+- **Data source:** the same account + follow payload the future Orb
+  view consumes (Kommons proposal "Mates", `KRONK_ORB_DATA_BRIEF.md`).
+  Ships with a bundled synthesised edge assignment against the real
+  degree sequence from production 2026-07-19; swaps to a live
+  endpoint (`useMatesOrb()` hook) when the Mates endpoint lands.
+- **Reveal knob:** exports a scalar via `features/kosmos/brightness`.
+  Ambient default is 0. The Inflow veil (later) tweens it during the
+  daily moment to lift the alpha ceiling — one canvas, one knob, no
+  second render pass.
+- **Reduced motion:** freezes on the core frame (middle of the orb,
+  fully lit) — an anchored, still, readable sky rather than an
+  arbitrary phase-at-load-time slice.
+- **Files:** `features/kosmos/kronk_kosmos.tsx` (mount + lifecycle),
+  `features/kosmos/renderer.ts` (pure geometry + per-frame paint),
+  `styles/mastodon/_kronk_kosmos.scss` (positioning only), tokens
+  under the `kosmos-*` prefix in `tokens.yaml`.
+
 ## Responsive strategy
 
 **The Frame prefers container queries over media queries.**
