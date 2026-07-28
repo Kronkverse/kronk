@@ -205,11 +205,64 @@
   stroke-width: 1.5;
 }
 
+.mates-tab__tile--branch-up .mates-tab__tile-shape,
+.mates-tab__tile--branch-down .mates-tab__tile-shape {
+  fill: var(--kronk-purple-muted);
+  stroke: var(--surface-primary);
+  stroke-width: 1.5;
+  opacity: 0.85;
+}
+
+.mates-tab__tile--open .mates-tab__tile-shape {
+  stroke: var(--kronk-purple-bright);
+  stroke-width: 2;
+}
+
 .mates-tab__tile-label {
   fill: var(--text-secondary);
   font-family: var(--font-mono);
   font-size: 10px;
   pointer-events: none;
+}
+
+// ── Pip (branch-open affordance) ───────────────────────────────────
+.mates-tab__pip {
+  fill: var(--surface-primary);
+  stroke: var(--border-default);
+  stroke-width: 1;
+  cursor: pointer;
+  transition:
+    fill 0.14s,
+    stroke 0.14s;
+
+  &:hover {
+    fill: var(--kronk-purple-deep);
+    stroke: var(--kronk-purple-bright);
+  }
+
+  &--open {
+    fill: var(--kronk-purple-deep);
+    stroke: var(--kronk-purple-bright);
+  }
+}
+
+.mates-tab__pip-glyph {
+  fill: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  user-select: none;
+}
+
+// Lighter link for opened branches — cubic bezier, no stroke opacity
+// bump; the ambient link class already carries the right muted tone.
+.mates-tab__branch-link {
+  fill: none;
+  stroke: var(--border-default);
+  stroke-width: 1;
+  opacity: 0.5;
 }
 
 // ── Tooltip ────────────────────────────────────────────────────────
