@@ -79,9 +79,11 @@ const VB_H = 120;
 const PAD = 10;
 
 const routePoints = (route: [number, number][]): string | null => {
-  if (route.length < 2) return null;
+  const first = route[0];
+  const last = route[route.length - 1];
+  if (!first || !last) return null;
 
-  const midLat = ((route[0][1] + route[route.length - 1][1]) / 2) * (Math.PI / 180);
+  const midLat = ((first[1] + last[1]) / 2) * (Math.PI / 180);
   const kx = Math.cos(midLat) || 1;
 
   const xs = route.map(([lng]) => lng * kx);

@@ -20,6 +20,7 @@
     polyline {
       stroke: var(--accent);
       stroke-width: 3.5;
+
       // Round joins are set inline; a soft shadow lifts the line off the tint.
       filter: drop-shadow(
         0 1px 1px color-mix(in srgb, var(--accent) 40%, transparent)
