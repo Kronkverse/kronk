@@ -41,10 +41,11 @@ emits:
 listens: []
 
 feed_projection:
-  card: null # Retired 2026-07-22 (Phase 3a) — StatusQuestionCard gone. A
-  # dedicated `kuestions_card` (docs/spaces/kuestions.md §Feed projection,
-  # Phase 8.3) backed by the Question model will re-declare a card here — add
-  # it with `planned: true` until the adapter is built.
+  card: kuestions_card # Question-backed feed projection (Phase 8.3 shipped
+  # 2026-07-28): posting a Kuestion via Ask writes a companion Status with
+  # source_korner='kuestions', which renders as <StatusKuestionsCard>
+  # (title, prompt, running answer count, recent-answerer avatars, CTA to
+  # /hub/kuestions/<id>).
   title_from: title
   summary_from: prompt
   links_to: /hub/kuestions/<id>

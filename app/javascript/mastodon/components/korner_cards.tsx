@@ -20,6 +20,7 @@ import type { Map as ImmutableMap } from 'immutable';
 import { StatusBoothCard } from './status_booth_card';
 import { StatusEventCard } from './status_event_card';
 import { StatusKommonsCard } from './status_kommons_card';
+import { StatusKuestionsCard } from './status_kuestions_card';
 import { StatusTrekCard } from './status_trek_card';
 import { StatusWachuneedCard } from './status_wachuneed_card';
 
@@ -59,10 +60,11 @@ export const KORNER_CARDS: KornerCardEntry[] = [
     assocField: 'proposal',
     card: (s) => <StatusKommonsCard proposal={dataFrom(s, 'proposal')} />,
   },
-  // Kuestions feed projection is out of scope for the rebuild — the
-  // Status-polymorphic path retired in Phase 3a. The kuestions_card
-  // per §Feed projection (docs/spaces/kuestions.md §Phase 8.3) will
-  // return here backed by the dedicated Question model.
+  {
+    slug: 'kuestions',
+    assocField: 'question',
+    card: (s) => <StatusKuestionsCard question={dataFrom(s, 'question')} />,
+  },
   {
     slug: 'martketplace',
     assocField: 'listing',
