@@ -1,8 +1,4 @@
-import { useCallback } from 'react';
-
 import { defineMessages, useIntl } from 'react-intl';
-
-import { Link } from 'react-router-dom';
 
 import ToysFanIcon from '@/material-icons/400-24px/toys_fan.svg?react';
 
@@ -51,15 +47,12 @@ export const StatusKommonsCard: React.FC<{ proposal: ProposalSummary }> = ({
 }) => {
   const intl = useIntl();
 
-  const handleLinkClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
-
   return (
     <StatusKornerCard
       korner='Kommons'
       variant='proposal'
       className='status-kommons-card'
+      to={`/hub/kommons/p/${proposal.id}`}
       badge={{
         icon: ToysFanIcon,
         iconId: 'toys_fan',
@@ -93,13 +86,9 @@ export const StatusKommonsCard: React.FC<{ proposal: ProposalSummary }> = ({
             </span>
           )}
         </div>
-        <Link
-          to='/hub/kommons'
-          className='status-korner-card__action'
-          onClick={handleLinkClick}
-        >
+        <span className='status-korner-card__action'>
           {intl.formatMessage(messages.viewSeed)}
-        </Link>
+        </span>
       </div>
     </StatusKornerCard>
   );
