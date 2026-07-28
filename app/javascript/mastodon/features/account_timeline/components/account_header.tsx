@@ -1000,6 +1000,9 @@ export const AccountHeader: React.FC<{
               <FormattedMessage id='account.nudges' defaultMessage='Nudges' />
             </NavLink>
           )}
+          <NavLink exact to={`/@${account.acct}/mates`}>
+            <FormattedMessage id='account.mates' defaultMessage='Mates' />
+          </NavLink>
         </div>
       )}
 

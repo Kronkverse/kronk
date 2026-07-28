@@ -8,7 +8,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { useParams, useLocation, useHistory } from 'react-router-dom';
+import { useParams, useLocation, useHistory, NavLink } from 'react-router-dom';
 
 import { List as ImmutableList } from 'immutable';
 
@@ -473,6 +473,24 @@ export const SectionedProfile = () => {
                     />
                   </TabButton>
                 )}
+                {/* Mates lives at /@user/mates as its own route (Kommons
+                    proposal "Mates"). Renders as a tab-styled NavLink
+                    so it navigates instead of switching a panel — the
+                    mixed pattern is intentional: the sectioned panels
+                    are one story, the timeline view is another that
+                    deserves its own route. */}
+                <NavLink
+                  to={`/@${account.acct}/mates`}
+                  className='sectioned-profile__tab sectioned-profile__tab--external'
+                >
+                  <span className='sectioned-profile__tab-icon' aria-hidden>
+                    ✧
+                  </span>
+                  <FormattedMessage
+                    id='sectioned_profile.tab.mates'
+                    defaultMessage='Mates'
+                  />
+                </NavLink>
               </div>
 
               <section
@@ -777,8 +795,8 @@ const EmptyMeCard: React.FC<{
       className={`sectioned-profile__card${card.note ? ' sectioned-profile__card--note' : ''}`}
     >
       <CardHeading cardType={card.cardType}>
-          {intl.formatMessage(card.title)}
-        </CardHeading>
+        {intl.formatMessage(card.title)}
+      </CardHeading>
       <p className='sectioned-profile__card-desc'>
         {intl.formatMessage(card.desc)}
       </p>
@@ -952,8 +970,8 @@ const HighlightsCard: React.FC<{
   return (
     <div className='sectioned-profile__card'>
       <CardHeading cardType={card.cardType}>
-          {intl.formatMessage(card.title)}
-        </CardHeading>
+        {intl.formatMessage(card.title)}
+      </CardHeading>
       <div className='sectioned-profile__highlights'>
         {pinned.map((status) => (
           <HighlightTile key={status.id} status={status} />
@@ -1072,8 +1090,8 @@ const MomentsCard: React.FC<{
   return (
     <div className='sectioned-profile__card'>
       <CardHeading cardType={card.cardType}>
-          {intl.formatMessage(card.title)}
-        </CardHeading>
+        {intl.formatMessage(card.title)}
+      </CardHeading>
       <div className='sectioned-profile__gallery'>
         {thumbs.map((t) => (
           <a
