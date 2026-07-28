@@ -25,6 +25,7 @@ storage:
 
 feed_projection:
   card: huddle_card
+  planned: true # backend unbuilt — no session create/projection path yet
   title_from: title
   summary_from: description
   status_association: huddle_session # framework: Status.has_one :huddle_session via status_id

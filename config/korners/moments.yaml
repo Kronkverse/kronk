@@ -22,7 +22,8 @@ storage:
   media_prefix: spaces/moments/ # planned — DO Spaces path root
 
 feed_projection:
-  card: moments_card # to be built
+  card: moments_card
+  planned: true # WIP korner — no backend yet
   title_from: caption
   status_association: moment
   links_to: /hub/moments/<id>

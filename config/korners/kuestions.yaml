@@ -41,10 +41,10 @@ emits:
 listens: []
 
 feed_projection:
-  card: question_card # Retired 2026-07-22 (Phase 3a) — StatusQuestionCard gone.
-  # A dedicated `kuestions_card` per docs/spaces/kuestions.md §Feed
-  # projection returns here backed by the Question model (Phase 8.3),
-  # not the legacy Status-polymorphic path.
+  card: null # Retired 2026-07-22 (Phase 3a) — StatusQuestionCard gone. A
+  # dedicated `kuestions_card` (docs/spaces/kuestions.md §Feed projection,
+  # Phase 8.3) backed by the Question model will re-declare a card here — add
+  # it with `planned: true` until the adapter is built.
   title_from: title
   summary_from: prompt
   links_to: /hub/kuestions/<id>

@@ -35,7 +35,7 @@ emits:
 listens: []
 
 feed_projection:
-  card: kosmic_daily_card
+  card: null # Kosmic daily projection removed 2026-07-28.
   title_from: on_date # rendered as the date badge
   summary_from: body
   status_association: kosmic_update # framework: Status.has_one :kosmic_update via status_id (§5.5)
