@@ -119,7 +119,7 @@ import {
   KommonsSettings,
   KuestionsSettings,
   Moments,
-  AlbuttsStub,
+  Albutts,
   KornerSettings,
   ProfileCompose,
   FeedSettings,
@@ -328,7 +328,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
             <WrappedRoute path='/hub/moments' component={Moments} content={children} />
-            <WrappedRoute path='/hub/albutts' component={AlbuttsStub} content={children} />
+            <WrappedRoute path='/hub/albutts' component={Albutts} content={children} />
             <Redirect from='/hub/kompass' to='/hub/map' />
             <WrappedRoute path='/hub/map' component={MapV2} content={children} />
             {/* /new must sit before the wildcard so the composer route

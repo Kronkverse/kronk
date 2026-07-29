@@ -372,8 +372,8 @@ export function Moments () {
   return import("../../moments").then(m => ({ default: m.Moments }));
 }
 
-export function AlbuttsStub () {
-  return import("../../korner_stub").then(m => ({ default: m.AlbuttsStub }));
+export function Albutts () {
+  return import("../../albutts");
 }
 
 export function MapStub () {

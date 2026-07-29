@@ -42,6 +42,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
   has_one :trek, serializer: REST::TrekSummarySerializer
   has_one :moment, serializer: REST::MomentSummarySerializer
   has_one :question, serializer: REST::QuestionSummarySerializer
+  has_one :album, serializer: REST::AlbumSummarySerializer
   has_one :quote_approval
 
   def quote

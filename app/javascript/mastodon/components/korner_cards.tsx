@@ -17,6 +17,7 @@ import type { ReactElement, MouseEvent } from 'react';
 
 import type { Map as ImmutableMap } from 'immutable';
 
+import { StatusAlbuttsCard } from './status_albutts_card';
 import { StatusBoothCard } from './status_booth_card';
 import { StatusEventCard } from './status_event_card';
 import { StatusKommonsCard } from './status_kommons_card';
@@ -85,6 +86,11 @@ export const KORNER_CARDS: KornerCardEntry[] = [
     slug: 'moments',
     assocField: 'moment',
     card: (s) => <StatusMomentCard moment={dataFrom(s, 'moment')} />,
+  },
+  {
+    slug: 'albutts',
+    assocField: 'album',
+    card: (s) => <StatusAlbuttsCard album={dataFrom(s, 'album')} />,
   },
 ];
 
