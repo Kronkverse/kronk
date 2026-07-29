@@ -22,6 +22,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
+import type { RGB } from 'mastodon/features/kosmos/orb_geometry';
+import {
+  RAMP_STOPS,
+  readOrbPalette,
+} from 'mastodon/features/kosmos/orb_geometry';
+
 import { ContactsRail } from './contacts_rail';
 import { DetailPanel } from './detail_panel';
 import type {
@@ -32,9 +38,9 @@ import type {
 import { useMatesTimeline } from './use_mates_timeline';
 
 // ── Geometry (per brief) ───────────────────────────────────────────
-const HEAD_TILE = 34;
-const BASE_TILE = 28;
-const BRANCH_TILE = 20; // opened-branch tiles are smaller (brief § Geometry)
+const HEAD_TILE = 44; // slightly bigger than brief's 34 to fit legible initials
+const BASE_TILE = 36; // slightly bigger than brief's 28 to fit legible initials
+const BRANCH_TILE = 22; // opened-branch tiles
 const TRACK_HEIGHT = 56;
 const LINE_TO_ROW = 54;
 const BRANCH_PITCH = 42; // brief default (compresses to 26-34px as layers accumulate)
@@ -96,6 +102,34 @@ const formatShort = (iso: string): string => {
     day: 'numeric',
   });
 };
+
+// Two-character initials for a member. Prefers display_name split by
+// whitespace (Firstname Lastname → FL); falls back to first two of the
+// handle. Uppercased.
+const initialsFor = (m: TimelineMember): string => {
+  const parts = m.display_name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    const p0 = parts[0];
+    const p1 = parts[1];
+    if (p0 && p1) return (p0.charAt(0) + p1.charAt(0)).toUpperCase();
+  }
+  const single = parts[0] ?? m.handle;
+  return single.slice(0, 2).toUpperCase();
+};
+
+// Map connection count → 0..9 ramp index (same log-scale the Kosmos
+// layer uses, so a member's colour identity is consistent across the
+// orb, the sky, and the timeline).
+const rampIndexFor = (connections: number, maxConnections: number): number =>
+  Math.min(
+    RAMP_STOPS - 1,
+    Math.round(
+      (Math.log(1 + connections) / Math.log(1 + maxConnections)) *
+        (RAMP_STOPS - 1),
+    ),
+  );
+
+const rgbCss = ([r, g, b]: RGB): string => `rgb(${r}, ${g}, ${b})`;
 
 interface TileInfo {
   member: TimelineMember;
@@ -167,6 +201,25 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
   // invitees (downward). Cleared on subject switch so the new subject
   // starts with only their two base rows.
   const [openedKeys, setOpenedKeys] = useState<Set<string>>(new Set());
+
+  // Palette + max-connections cached so we can colour every tile by
+  // its member's connection count using the shared teal→gold ramp.
+  // Reads --kosmos-ramp-* CSS custom properties once on mount.
+  const palette = useMemo(() => readOrbPalette(), []);
+  const maxConnections = useMemo(
+    () =>
+      data.members.reduce((m, a) => (a.connections > m ? a.connections : m), 1),
+    [data.members],
+  );
+  const memberFillFor = useCallback(
+    (member: TimelineMember): string => {
+      const idx = rampIndexFor(member.connections, maxConnections);
+      const rgb = palette.ramp[idx];
+      if (!rgb) return 'currentColor';
+      return rgbCss(rgb);
+    },
+    [palette, maxConnections],
+  );
 
   const {
     xForDay,
@@ -665,14 +718,19 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
   // trivially "contain" themselves so they light in isolation.
   const hoveredId = hoveredMember?.member.id ?? null;
 
-  // Auto-scroll the timeline to today whenever the subject changes,
-  // so the most recent (rightmost) portion is visible by default and
-  // older history is one scroll-back away rather than being what the
-  // viewer lands on. Runs after paint so scrollWidth is settled.
+  // Auto-scroll the timeline to today whenever the subject changes.
+  // Deferred to a rAF so the SVG's new width is laid out before we
+  // read scrollWidth — without the rAF the read races the commit and
+  // the browser lands on scrollLeft = 0 (the leftmost, oldest date).
   useEffect(() => {
     const s = scrollerRef.current;
-    if (!s) return;
-    s.scrollLeft = s.scrollWidth;
+    if (!s) return undefined;
+    const raf = requestAnimationFrame(() => {
+      s.scrollLeft = s.scrollWidth;
+    });
+    return () => {
+      cancelAnimationFrame(raf);
+    };
   }, [subjectId]);
 
   // On tooltip mount (hoveredMember flip null → set), place the
@@ -841,6 +899,12 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
             </span>
           </nav>
         )}
+        <div className='mates-tab__explainer'>
+          <FormattedMessage
+            id='mates_tab.explainer'
+            defaultMessage='Your community as a timeline. Mates sit above the line at the date you became mates; the people you invited sit below at their join date.'
+          />
+        </div>
         <div className='mates-tab__subject-bar'>
           <span className='mates-tab__subject-eyebrow'>
             <FormattedMessage id='mates_tab.subject' defaultMessage='Subject' />
@@ -935,6 +999,55 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
               className='mates-tab__track'
             />
 
+            {/* Row labels — rendered near both ends of the track so
+                whichever direction the user scrolls, at least one is
+                visible. Purely orientation copy; they don't participate
+                in the lineage trace. */}
+            {[LEFT_MARGIN + 12, trackEndX - 96].map((labelX) => (
+              <g key={`labels-${labelX}`} className='mates-tab__row-labels'>
+                <text
+                  x={labelX}
+                  y={matesRowY - BASE_TILE / 2 - 8}
+                  className='mates-tab__row-label mates-tab__row-label--mates'
+                >
+                  <FormattedMessage
+                    id='mates_tab.row_label.mates'
+                    defaultMessage='↑ MATES'
+                  />
+                </text>
+                <text
+                  x={labelX}
+                  y={inviteesRowY + BASE_TILE / 2 + 22}
+                  className='mates-tab__row-label mates-tab__row-label--invited'
+                >
+                  <FormattedMessage
+                    id='mates_tab.row_label.invited'
+                    defaultMessage='↓ INVITED'
+                  />
+                </text>
+              </g>
+            ))}
+
+            {/* Today marker — a subtle vertical rule at the right end
+                of the track so the viewer immediately reads "here's
+                now". Sits behind everything else via draw order. */}
+            <g className='mates-tab__today'>
+              <line
+                x1={trackEndX}
+                x2={trackEndX}
+                y1={lineY - TRACK_HEIGHT / 2 - 20}
+                y2={lineY + TRACK_HEIGHT / 2 + 20}
+                className='mates-tab__today-line'
+              />
+              <text
+                x={trackEndX + 6}
+                y={lineY - TRACK_HEIGHT / 2 - 6}
+                className='mates-tab__today-label'
+              >
+                <FormattedMessage id='mates_tab.today' defaultMessage='NOW' />
+              </text>
+            </g>
+
             {/* Dots on the line at every mate bond date (the branch points) */}
             {matesTiles.map((tile) => (
               <circle
@@ -987,6 +1100,8 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                 onHoverEnter={onTileHoverEnter}
                 onHoverMove={onTileHoverMove}
                 variant='inviter'
+                fill={memberFillFor(inviter)}
+                initials={initialsFor(inviter)}
                 lit={isLit(inviter.id)}
                 pip={
                   canOpenMate(inviter.id)
@@ -1023,6 +1138,8 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                   onHoverEnter={onTileHoverEnter}
                   onHoverMove={onTileHoverMove}
                   variant='mate'
+                  fill={memberFillFor(tile.member)}
+                  initials={initialsFor(tile.member)}
                   lit={isLit(tile.member.id)}
                   pip={
                     canOpenMate(tile.member.id)
@@ -1062,6 +1179,8 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                     onHoverEnter={onTileHoverEnter}
                     onHoverMove={onTileHoverMove}
                     variant='invitee'
+                    fill={memberFillFor(tile.member)}
+                    initials={initialsFor(tile.member)}
                     lit={isLit(tile.member.id)}
                     pip={
                       count > 0
@@ -1123,6 +1242,8 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                     onHoverEnter={onTileHoverEnter}
                     onHoverMove={onTileHoverMove}
                     variant='branch-up'
+                    fill={memberFillFor(member)}
+                    initials={initialsFor(member)}
                     showLabel={false}
                     lit={isLit(node.id)}
                   />
@@ -1172,6 +1293,8 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                     onHoverEnter={onTileHoverEnter}
                     onHoverMove={onTileHoverMove}
                     variant='branch-down'
+                    fill={memberFillFor(member)}
+                    initials={initialsFor(member)}
                     showLabel={false}
                     lit={isLit(node.id)}
                     pip={
@@ -1295,6 +1418,8 @@ interface TimelineTileProps {
   onHoverEnter: (info: HoverMember | null) => void;
   onHoverMove: (clientX: number, clientY: number) => void;
   showLabel?: boolean;
+  fill?: string; // per-member colour from the Kosmos ramp
+  initials?: string; // 2-char stand-in until real avatars land
   lit?: boolean; // true when this tile is part of the lineage trace path
   pip?: {
     key: string;
@@ -1317,6 +1442,8 @@ const TimelineTile: React.FC<TimelineTileProps> = ({
   onHoverEnter,
   onHoverMove,
   showLabel = true,
+  fill,
+  initials,
   lit,
   pip,
 }) => {
@@ -1383,7 +1510,22 @@ const TimelineTile: React.FC<TimelineTileProps> = ({
       role='button'
       aria-label={`${member.display_name} (@${member.handle})`}
     >
-      <circle r={size / 2} className='mates-tab__tile-shape' />
+      <circle
+        r={size / 2}
+        className='mates-tab__tile-shape'
+        style={fill ? { fill } : undefined}
+      />
+      {initials && size >= 24 && (
+        <text
+          y={0}
+          textAnchor='middle'
+          dominantBaseline='central'
+          className='mates-tab__tile-initials'
+          style={{ fontSize: `${Math.round(size * 0.42)}px` }}
+        >
+          {initials}
+        </text>
+      )}
       {showLabel && (
         <text
           y={size / 2 + 14}

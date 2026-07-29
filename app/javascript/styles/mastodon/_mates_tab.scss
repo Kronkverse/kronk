@@ -89,6 +89,57 @@
   margin-bottom: 12px;
 }
 
+// Explainer strip — one sentence that tells the viewer what the view
+// is. Reads once at load and gets ignored after, but stops the "wait,
+// what am I looking at?" moment on first entry.
+.mates-tab__explainer {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  padding: 8px 4px 10px;
+  max-width: 720px;
+}
+
+// Row labels rendered near both ends of the SVG so the viewer sees
+// one wherever they scroll. Small caps, muted purple.
+.mates-tab__row-labels {
+  pointer-events: none;
+}
+
+.mates-tab__row-label {
+  fill: var(--kronk-purple-bright);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  opacity: 0.65;
+
+  &--mates {
+    dominant-baseline: alphabetic;
+  }
+
+  &--invited {
+    dominant-baseline: alphabetic;
+  }
+}
+
+// Today marker — a subtle vertical rule + "NOW" label at the right
+// end of the subject's track.
+.mates-tab__today-line {
+  stroke: var(--kronk-purple-bright);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  opacity: 0.55;
+}
+
+.mates-tab__today-label {
+  fill: var(--kronk-purple-bright);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  opacity: 0.85;
+}
+
 .mates-tab__subject-eyebrow {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -279,6 +330,28 @@
   font-family: var(--font-mono);
   font-size: 10px;
   pointer-events: none;
+}
+
+// Initials rendered inside the tile circle — 2 uppercase chars that
+// stand in for the profile picture until real avatars land. Font-size
+// is set inline per-tile (proportional to tile size).
+.mates-tab__tile-initials {
+  fill: #0d0a1c; // very dark for maximum contrast against the ramp colours
+  font-family: var(--font-display);
+  font-weight: 600;
+  pointer-events: none;
+  letter-spacing: -0.02em;
+}
+
+// The 'inviter' variant renders on darker fill because it stays in
+// --kronk-purple-primary; force lighter initials there.
+.mates-tab__tile--inviter .mates-tab__tile-initials {
+  fill: var(--text-primary);
+}
+
+.mates-tab__tile--branch-up .mates-tab__tile-initials,
+.mates-tab__tile--branch-down .mates-tab__tile-initials {
+  fill: var(--text-primary);
 }
 
 // ── Pip (branch-open affordance) ───────────────────────────────────
