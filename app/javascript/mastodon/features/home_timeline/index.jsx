@@ -19,6 +19,7 @@ import { NotSignedInIndicator } from 'mastodon/components/not_signed_in_indicato
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { criticalUpdatesPending } from 'mastodon/initial_state';
 import { withBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
+import { MomentsStrip } from 'mastodon/features/moments/home_strip';
 
 import { addColumn, removeColumn, moveColumn } from '../../actions/columns';
 import { expandFriendsActivity } from '../../actions/friends_activity';
@@ -231,6 +232,12 @@ class HomeTimeline extends PureComponent {
       </>
     );
 
+    // Moments Home strip — signed-in only. Sits above the daily
+    // Kosmic card + LiveBanner per docs/spaces/moments.md § Where you
+    // see Moments.
+    if (signedIn) {
+      banners.push(<MomentsStrip key='moments-strip' />);
+    }
     banners.push(<DailyKosmicCard key='daily-kosmic-card' />);
     banners.push(<LiveBanner key='live-banner' />);
     if (criticalUpdatesPending) {
