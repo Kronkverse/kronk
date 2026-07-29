@@ -38,11 +38,19 @@ const messages = defineMessages({
   },
   visibilityPublic: {
     id: 'albutts.detail.visibility_public',
-    defaultMessage: 'Public',
+    defaultMessage: 'Kronk',
+  },
+  visibilityOrbit: {
+    id: 'albutts.detail.visibility_orbit',
+    defaultMessage: 'Orbit',
   },
   visibilityMates: {
     id: 'albutts.detail.visibility_mates',
-    defaultMessage: 'Mates only',
+    defaultMessage: 'Mates',
+  },
+  visibilitySelfOnly: {
+    id: 'albutts.detail.visibility_self_only',
+    defaultMessage: 'Just me',
   },
   visibilityKrew: {
     id: 'albutts.detail.visibility_krew',
@@ -52,7 +60,9 @@ const messages = defineMessages({
 
 const VISIBILITY_LABEL = {
   public: messages.visibilityPublic,
+  orbit: messages.visibilityOrbit,
   mates: messages.visibilityMates,
+  self_only: messages.visibilitySelfOnly,
   krew: messages.visibilityKrew,
 } as const;
 

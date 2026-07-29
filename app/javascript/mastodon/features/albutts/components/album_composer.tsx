@@ -28,11 +28,35 @@ const messages = defineMessages({
   },
   visibilityPublic: {
     id: 'albutts.composer.visibility_public',
-    defaultMessage: 'Anyone',
+    defaultMessage: 'Kronk',
+  },
+  visibilityPublicHelp: {
+    id: 'albutts.composer.visibility_public_help',
+    defaultMessage: 'Everyone on Kronk',
+  },
+  visibilityOrbit: {
+    id: 'albutts.composer.visibility_orbit',
+    defaultMessage: 'Orbit',
+  },
+  visibilityOrbitHelp: {
+    id: 'albutts.composer.visibility_orbit_help',
+    defaultMessage: 'Your mates and their mates',
   },
   visibilityMates: {
     id: 'albutts.composer.visibility_mates',
-    defaultMessage: 'Mates only',
+    defaultMessage: 'Mates',
+  },
+  visibilityMatesHelp: {
+    id: 'albutts.composer.visibility_mates_help',
+    defaultMessage: 'Your mutual connections only',
+  },
+  visibilitySelfOnly: {
+    id: 'albutts.composer.visibility_self_only',
+    defaultMessage: 'Just me',
+  },
+  visibilitySelfOnlyHelp: {
+    id: 'albutts.composer.visibility_self_only_help',
+    defaultMessage: 'On your profile only — not in anyone else’s feed',
   },
   visibilityKrew: {
     id: 'albutts.composer.visibility_krew',
@@ -41,7 +65,7 @@ const messages = defineMessages({
   krewNote: {
     id: 'albutts.composer.krew_note',
     defaultMessage:
-      'Krew-scoped albums land in Slice 3 — pick a different scope for now.',
+      'Krew-scoped albums are landing in a follow-up — pick a different scope for now.',
   },
   cancel: {
     id: 'albutts.composer.cancel',
@@ -93,8 +117,14 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const handlePublic = useCallback(() => {
     setVisibility('public');
   }, []);
+  const handleOrbit = useCallback(() => {
+    setVisibility('orbit');
+  }, []);
   const handleMates = useCallback(() => {
     setVisibility('mates');
+  }, []);
+  const handleSelfOnly = useCallback(() => {
+    setVisibility('self_only');
   }, []);
   const handleKrew = useCallback(() => {
     setVisibility('krew');
@@ -163,12 +193,26 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           <VisibilityOption
             active={visibility === 'public'}
             label={intl.formatMessage(messages.visibilityPublic)}
+            help={intl.formatMessage(messages.visibilityPublicHelp)}
             onSelect={handlePublic}
+          />
+          <VisibilityOption
+            active={visibility === 'orbit'}
+            label={intl.formatMessage(messages.visibilityOrbit)}
+            help={intl.formatMessage(messages.visibilityOrbitHelp)}
+            onSelect={handleOrbit}
           />
           <VisibilityOption
             active={visibility === 'mates'}
             label={intl.formatMessage(messages.visibilityMates)}
+            help={intl.formatMessage(messages.visibilityMatesHelp)}
             onSelect={handleMates}
+          />
+          <VisibilityOption
+            active={visibility === 'self_only'}
+            label={intl.formatMessage(messages.visibilitySelfOnly)}
+            help={intl.formatMessage(messages.visibilitySelfOnlyHelp)}
+            onSelect={handleSelfOnly}
           />
           <VisibilityOption
             active={visibility === 'krew'}
@@ -214,18 +258,21 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
 interface VisibilityOptionProps {
   active: boolean;
   label: string;
+  help?: string;
   onSelect: () => void;
 }
 
 const VisibilityOption: React.FC<VisibilityOptionProps> = ({
   active,
   label,
+  help,
   onSelect,
 }) => (
   <button
     type='button'
     className={`albutts-composer__visibility-opt ${active ? 'albutts-composer__visibility-opt--active' : ''}`}
     aria-pressed={active}
+    aria-label={help ? `${label} — ${help}` : label}
     onClick={onSelect}
   >
     {label}
