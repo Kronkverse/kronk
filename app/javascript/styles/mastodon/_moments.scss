@@ -579,34 +579,13 @@
   }
 }
 
+// The Moments visibility strip is now the shared
+// `.korner-visibility-picker` component; the standalone
+// `.moments-composer__visibility` selector is passed as a className
+// hook if a composer wants to add spacing but no longer carries the
+// mono/uppercase per-button style. See _korner_visibility_picker.scss.
 .moments-composer__visibility {
-  display: flex;
-  gap: 6px;
-}
-
-.moments-composer__vis-btn {
-  flex: 1;
-  padding: 8px 12px;
-  border-radius: var(--radius-round);
-  border: 1px solid var(--border-subtle);
-  background: transparent;
-  color: var(--text-secondary);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
-
-  &:hover {
-    color: var(--text-primary);
-    border-color: var(--accent);
-  }
-
-  &--active {
-    background: var(--accent);
-    color: var(--text-on-accent);
-    border-color: var(--accent);
-  }
+  margin-top: 4px;
 }
 
 .moments-composer__error {

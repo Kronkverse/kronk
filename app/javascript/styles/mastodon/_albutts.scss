@@ -378,27 +378,9 @@
     opacity: 0.75;
   }
 
-  &__visibility {
-    display: flex;
-    gap: 8px;
-    margin-top: 4px;
-  }
-
-  &__visibility-opt {
-    flex: 1;
-    background: transparent;
-    color: inherit;
-    border: 1px solid var(--accent);
-    border-radius: 999px;
-    padding: 7px 12px;
-    font-size: 13px;
-    cursor: pointer;
-
-    &--active {
-      background: var(--accent);
-      color: #fff;
-    }
-  }
+  // The visibility button strip is now the shared
+  // `.korner-visibility-picker` component; it lives in
+  // _korner_visibility_picker.scss.
 
   &__hint {
     margin-top: 6px;

@@ -16,11 +16,19 @@ import { FormattedMessage } from 'react-intl';
 import axios from 'axios';
 
 import api, { apiRequestPost } from 'mastodon/api';
+import { KornerVisibilityPicker } from 'mastodon/components/korner_visibility_picker';
 
 // Full four-tier ladder + krew (docs/kronk_feed_and_reach.md §2).
-// `krew` remains out of reach in the composer until the krew picker
-// lands; the button is present for parity but disabled.
+// `krew` stays disabled in the composer until the Moments krew picker
+// lands; the shared visibility picker reads `visibility_scopes` from
+// the moments manifest so the strip always mirrors what the manifest
+// declares.
 type Visibility = 'public' | 'orbit' | 'mates' | 'self_only' | 'krew';
+
+// Krew stays a placeholder here until the Moments krew picker lands
+// (the manifest declares it, so the picker still renders a disabled
+// button for parity with Album).
+const MOMENTS_KREW_DISABLED = ['krew'] as const;
 
 interface MediaResponse {
   id: string;
@@ -56,17 +64,8 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     [],
   );
 
-  const onVisibilityPublic = useCallback(() => {
-    setVisibility('public');
-  }, []);
-  const onVisibilityOrbit = useCallback(() => {
-    setVisibility('orbit');
-  }, []);
-  const onVisibilityMates = useCallback(() => {
-    setVisibility('mates');
-  }, []);
-  const onVisibilitySelfOnly = useCallback(() => {
-    setVisibility('self_only');
+  const onVisibilityChange = useCallback((next: string) => {
+    setVisibility(next as Visibility);
   }, []);
 
   const submitAsync = useCallback(async () => {
@@ -193,52 +192,13 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
               defaultMessage='Who sees it'
             />
           </span>
-          <div className='moments-composer__visibility'>
-            <button
-              type='button'
-              onClick={onVisibilityPublic}
-              className={`moments-composer__vis-btn${visibility === 'public' ? ' moments-composer__vis-btn--active' : ''}`}
-              aria-label='Kronk — everyone on Kronk'
-            >
-              <FormattedMessage
-                id='moments.composer.public'
-                defaultMessage='Kronk'
-              />
-            </button>
-            <button
-              type='button'
-              onClick={onVisibilityOrbit}
-              className={`moments-composer__vis-btn${visibility === 'orbit' ? ' moments-composer__vis-btn--active' : ''}`}
-              aria-label='Orbit — your mates and their mates'
-            >
-              <FormattedMessage
-                id='moments.composer.orbit'
-                defaultMessage='Orbit'
-              />
-            </button>
-            <button
-              type='button'
-              onClick={onVisibilityMates}
-              className={`moments-composer__vis-btn${visibility === 'mates' ? ' moments-composer__vis-btn--active' : ''}`}
-              aria-label='Mates — your mutual connections only'
-            >
-              <FormattedMessage
-                id='moments.composer.mates'
-                defaultMessage='Mates'
-              />
-            </button>
-            <button
-              type='button'
-              onClick={onVisibilitySelfOnly}
-              className={`moments-composer__vis-btn${visibility === 'self_only' ? ' moments-composer__vis-btn--active' : ''}`}
-              aria-label='Just me — on your profile only, not in anyone else’s feed'
-            >
-              <FormattedMessage
-                id='moments.composer.self_only'
-                defaultMessage='Just me'
-              />
-            </button>
-          </div>
+          <KornerVisibilityPicker
+            slug='moments'
+            value={visibility}
+            onChange={onVisibilityChange}
+            disabledScopes={MOMENTS_KREW_DISABLED}
+            className='moments-composer__visibility'
+          />
         </section>
 
         {error && <div className='moments-composer__error'>{error}</div>}

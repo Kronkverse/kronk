@@ -5,6 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import api from 'mastodon/api';
 import { apiContributePhoto, apiCreateAlbum } from 'mastodon/api/albutts';
 import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
+import { KornerVisibilityPicker } from 'mastodon/components/korner_visibility_picker';
 
 const messages = defineMessages({
   heading: {
@@ -26,42 +27,6 @@ const messages = defineMessages({
   visibilityLabel: {
     id: 'albutts.composer.visibility_label',
     defaultMessage: 'Who can see it?',
-  },
-  visibilityPublic: {
-    id: 'albutts.composer.visibility_public',
-    defaultMessage: 'Kronk',
-  },
-  visibilityPublicHelp: {
-    id: 'albutts.composer.visibility_public_help',
-    defaultMessage: 'Everyone on Kronk',
-  },
-  visibilityOrbit: {
-    id: 'albutts.composer.visibility_orbit',
-    defaultMessage: 'Orbit',
-  },
-  visibilityOrbitHelp: {
-    id: 'albutts.composer.visibility_orbit_help',
-    defaultMessage: 'Your mates and their mates',
-  },
-  visibilityMates: {
-    id: 'albutts.composer.visibility_mates',
-    defaultMessage: 'Mates',
-  },
-  visibilityMatesHelp: {
-    id: 'albutts.composer.visibility_mates_help',
-    defaultMessage: 'Your mutual connections only',
-  },
-  visibilitySelfOnly: {
-    id: 'albutts.composer.visibility_self_only',
-    defaultMessage: 'Just me',
-  },
-  visibilitySelfOnlyHelp: {
-    id: 'albutts.composer.visibility_self_only_help',
-    defaultMessage: 'On your profile only — not in anyone else’s feed',
-  },
-  visibilityKrew: {
-    id: 'albutts.composer.visibility_krew',
-    defaultMessage: 'A krew',
   },
   krewNote: {
     id: 'albutts.composer.krew_note',
@@ -136,6 +101,9 @@ const messages = defineMessages({
 
 const TITLE_MAX = 240;
 const DESCRIPTION_MAX = 4000;
+// Krew stays a placeholder in the picker until the krew picker lands
+// (Slice 3-and-a-half of the Albutts build).
+const KREW_DISABLED = ['krew'] as const;
 // Concurrency cap on the upload pool. Four keeps browser socket count
 // reasonable (major browsers cap ~6 per host) and matches the load
 // Mastodon media processing can absorb without queue backup.
@@ -201,20 +169,8 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     [],
   );
 
-  const handlePublic = useCallback(() => {
-    setVisibility('public');
-  }, []);
-  const handleOrbit = useCallback(() => {
-    setVisibility('orbit');
-  }, []);
-  const handleMates = useCallback(() => {
-    setVisibility('mates');
-  }, []);
-  const handleSelfOnly = useCallback(() => {
-    setVisibility('self_only');
-  }, []);
-  const handleKrew = useCallback(() => {
-    setVisibility('krew');
+  const handleVisibilityChange = useCallback((next: string) => {
+    setVisibility(next as AlbumVisibility);
   }, []);
 
   const handlePhotosChange = useCallback(
@@ -411,42 +367,13 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         <div className='albutts-composer__label'>
           {intl.formatMessage(messages.visibilityLabel)}
         </div>
-        <div className='albutts-composer__visibility'>
-          <VisibilityOption
-            active={visibility === 'public'}
-            label={intl.formatMessage(messages.visibilityPublic)}
-            help={intl.formatMessage(messages.visibilityPublicHelp)}
-            onSelect={handlePublic}
-            disabled={!!createdAlbum}
-          />
-          <VisibilityOption
-            active={visibility === 'orbit'}
-            label={intl.formatMessage(messages.visibilityOrbit)}
-            help={intl.formatMessage(messages.visibilityOrbitHelp)}
-            onSelect={handleOrbit}
-            disabled={!!createdAlbum}
-          />
-          <VisibilityOption
-            active={visibility === 'mates'}
-            label={intl.formatMessage(messages.visibilityMates)}
-            help={intl.formatMessage(messages.visibilityMatesHelp)}
-            onSelect={handleMates}
-            disabled={!!createdAlbum}
-          />
-          <VisibilityOption
-            active={visibility === 'self_only'}
-            label={intl.formatMessage(messages.visibilitySelfOnly)}
-            help={intl.formatMessage(messages.visibilitySelfOnlyHelp)}
-            onSelect={handleSelfOnly}
-            disabled={!!createdAlbum}
-          />
-          <VisibilityOption
-            active={visibility === 'krew'}
-            label={intl.formatMessage(messages.visibilityKrew)}
-            onSelect={handleKrew}
-            disabled={!!createdAlbum}
-          />
-        </div>
+        <KornerVisibilityPicker
+          slug='albutts'
+          value={visibility}
+          onChange={handleVisibilityChange}
+          disabled={!!createdAlbum}
+          disabledScopes={KREW_DISABLED}
+        />
         {visibility === 'krew' && !createdAlbum && (
           <p className='albutts-composer__hint'>
             {intl.formatMessage(messages.krewNote)}
@@ -608,30 +535,3 @@ function chipMessage(
       return m.chipQueued;
   }
 }
-
-interface VisibilityOptionProps {
-  active: boolean;
-  label: string;
-  help?: string;
-  disabled?: boolean;
-  onSelect: () => void;
-}
-
-const VisibilityOption: React.FC<VisibilityOptionProps> = ({
-  active,
-  label,
-  help,
-  disabled,
-  onSelect,
-}) => (
-  <button
-    type='button'
-    className={`albutts-composer__visibility-opt ${active ? 'albutts-composer__visibility-opt--active' : ''}`}
-    aria-pressed={active}
-    aria-label={help ? `${label} — ${help}` : label}
-    onClick={onSelect}
-    disabled={disabled}
-  >
-    {label}
-  </button>
-);

@@ -30,17 +30,20 @@ storage:
     # revocation is one-sided (a contributor un-shares → album's
     # render of that photo goes dark).
 
-visibility_scopes:
+security:
   # Full four-tier reach ladder + krew as the orthogonal axis
   # (docs/kronk_feed_and_reach.md §2). Album offers every tier:
   # people build private-to-me albums as journals, mates-only for
   # close events, orbit for wider social reach, public for the
-  # community, and krew for group-scoped albums.
-  - public # anyone on Kronk can view
-  - orbit # the owner's mates and their mates (one hop out)
-  - mates # visible only to the owner's mates (mutual follows)
-  - self_only # owner only; on their profile, not in any feed
-  - krew # scoped to one or more Krews
+  # community, and krew for group-scoped albums. Nested under
+  # security to match the §1.1 manifest schema (Kuestions and
+  # Moments already use this shape).
+  visibility_scopes:
+    - public # anyone on Kronk can view
+    - orbit # the owner's mates and their mates (one hop out)
+    - mates # visible only to the owner's mates (mutual follows)
+    - self_only # owner only; on their profile, not in any feed
+    - krew # scoped to one or more Krews
 
 feed_projection:
   card: albutts_card # Question-backed feed projection shipped in
