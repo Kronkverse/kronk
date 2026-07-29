@@ -47,6 +47,7 @@ interface Event {
   event_type: string;
   huddle_url: string | null;
   rsvp_enabled: boolean;
+  spawn_album: boolean;
   max_attendees: number | null;
   recurrence_rule: string | null;
   going_count: number;

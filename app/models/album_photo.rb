@@ -31,6 +31,8 @@ class AlbumPhoto < ApplicationRecord
   scope :chronological, -> { order(created_at: :asc) }
   scope :newest, -> { order(created_at: :desc) }
 
+  after_commit :publish_new_photo_event, on: :create
+
   # The URL clients render. Prefers the Mastodon attachment's public
   # URL; falls back to the raw external URL. Nil if both sources are
   # missing (shouldn't happen — the check constraint prevents it — but
@@ -43,6 +45,19 @@ class AlbumPhoto < ApplicationRecord
   end
 
   private
+
+  # albutts.album.new_photo — a new contribution has landed. The
+  # `initializers/nudges_event_bus.rb` fan-out subscriber picks this
+  # up and delivers a nudge to every fellow contributor via the
+  # Mate-gated router (docs/spaces/albutts.md §Notifications).
+  def publish_new_photo_event
+    Kronk::KornerEvents.publish(
+      'albutts.album.new_photo',
+      actor_account_id: contributor_id,
+      album_id: album_id,
+      photo_id: id
+    )
+  end
 
   def exactly_one_media_source
     has_attachment = media_attachment_id.present?

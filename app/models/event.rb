@@ -51,15 +51,17 @@ class Event < ApplicationRecord
   after_create_commit :publish_kalendar_event_created
 
   # kalendar.event.created — declared under Kalendar's `emits:` in the
-  # manifest; consumed by Huddle to attach event metadata to sessions.
-  # Payload deliberately narrow: just IDs, so subscribers reload as
-  # needed (avoids stale-payload issues on multi-step edits).
+  # manifest; consumed by Huddle to attach event metadata to sessions,
+  # and by Albutts to spawn a companion album when `spawn_album` is
+  # set. Payload deliberately narrow: just IDs, so subscribers reload
+  # as needed (avoids stale-payload issues on multi-step edits).
   def publish_kalendar_event_created
     Kronk::KornerEvents.publish(
       'kalendar.event.created',
       event_id: id,
       account_id: account_id,
       event_type: event_type,
+      spawn_album: spawn_album,
       huddle_session_id: try(:huddle_session_id)
     )
   end
