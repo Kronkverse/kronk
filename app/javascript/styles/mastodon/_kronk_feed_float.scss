@@ -8,9 +8,8 @@
 // untouched. Prototype — tune spacing / surface with Tal.
 
 .columns-area__panels__main {
-  // The feed surface no longer hides the Kosmos.
   .scrollable {
-    padding-inline: 10px; // breathing room from the column edges
+    padding-inline: 10px;
     border: 0;
     background: transparent;
   }
