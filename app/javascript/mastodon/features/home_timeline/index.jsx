@@ -243,14 +243,6 @@ class HomeTimeline extends PureComponent {
       banners.push(<CriticalUpdateBanner key='critical-update-banner' />);
     }
 
-    // The InFlow veil, embedded as a scroll gap in the feed itself (not a
-    // tappable card): scroll down and the surface parts to the Kosmos void —
-    // tonight's moon + reading — then closes over into your posts. The scene
-    // anchors to whatever scrolls around it (the document here), so the same
-    // component powers the standalone /hub/inflow page.
-    if (signedIn) {
-      banners.push(<VeilScene key='inflow-veil' />);
-    }
 
     const statusTabConfig = {
       friends: {
@@ -317,6 +309,8 @@ class HomeTimeline extends PureComponent {
             <StatusListContainer
               prepend={activeTab === 'friends' ? banners : []}
               alwaysPrepend={activeTab === 'friends'}
+              insertAfter={activeTab === 'friends' ? 2 : undefined}
+              insertNode={activeTab === 'friends' ? <VeilScene key='inflow-veil' /> : undefined}
               trackScroll={!pinned}
               scrollKey={`home_timeline-${activeTab}-${columnId}`}
               onLoadMore={statusTabConfig[activeTab].onLoadMore}
