@@ -754,3 +754,22 @@ body:has(.korner-sub-bar) {
     transform: translateY(0) scale(1);
   }
 }
+
+// Home inline status box — hosts the Mastodon ComposeForm on the
+// Home column, between the Moments strip and the first post. Slim
+// framing (no separate panel chrome — the compose form draws its own
+// borders); the wrapper only adds vertical rhythm above the feed.
+.home-status-box {
+  border-bottom: 1px solid var(--border-default);
+  background: var(--surface-primary);
+  padding: 0.5rem 0.65rem 0.35rem;
+
+  // Compose form injects margin from the /publish column; strip it
+  // so the box sits flush inside the wrapper's own padding.
+  .compose-form {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+}
