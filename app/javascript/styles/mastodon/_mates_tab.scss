@@ -263,6 +263,81 @@
   stroke: var(--border-default);
   stroke-width: 1;
   opacity: 0.5;
+  transition:
+    opacity 0.12s,
+    stroke 0.12s;
+}
+
+// ── Lineage trace ──────────────────────────────────────────────────
+// When any tile is hovered, the SVG carries `--hovered` and every
+// element not marked `--lit` fades back. Lit tiles keep their normal
+// appearance; lit links warm slightly to bright purple so the traced
+// path reads as a continuous thread. Everything transitions in
+// ~120ms so the effect feels responsive but not jumpy.
+.mates-tab__svg--hovered {
+  .mates-tab__tile:not(.mates-tab__tile--lit) {
+    opacity: 0.28;
+  }
+
+  .mates-tab__link:not(.mates-tab__link--lit) {
+    opacity: 0.14;
+  }
+
+  .mates-tab__branch-link:not(.mates-tab__branch-link--lit) {
+    opacity: 0.1;
+  }
+
+  .mates-tab__branch-dot:not(.mates-tab__branch-dot--lit) {
+    opacity: 0.16;
+  }
+
+  .mates-tab__inviter-link:not(.mates-tab__inviter-link--lit) {
+    opacity: 0.2;
+  }
+
+  .mates-tab__link--lit {
+    stroke: var(--kronk-purple-bright);
+    opacity: 0.85;
+  }
+
+  .mates-tab__branch-link--lit {
+    stroke: var(--kronk-purple-bright);
+    opacity: 0.9;
+  }
+
+  .mates-tab__inviter-link--lit {
+    stroke: var(--kronk-purple-bright);
+    opacity: 0.85;
+  }
+
+  .mates-tab__branch-dot--lit {
+    fill: var(--kronk-purple-bright);
+    opacity: 1;
+  }
+}
+
+.mates-tab__tile {
+  transition:
+    transform 0.16s,
+    opacity 0.12s;
+}
+
+.mates-tab__link {
+  transition:
+    opacity 0.12s,
+    stroke 0.12s;
+}
+
+.mates-tab__inviter-link {
+  transition:
+    opacity 0.12s,
+    stroke 0.12s;
+}
+
+.mates-tab__branch-dot {
+  transition:
+    opacity 0.12s,
+    fill 0.12s;
 }
 
 // ── Tooltip ────────────────────────────────────────────────────────

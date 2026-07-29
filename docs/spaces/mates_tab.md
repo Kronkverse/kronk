@@ -36,6 +36,13 @@ korner (which is the whole-graph orb). See
   invitees row, and every non-base branch layer. Branch layers stack
   above/below the max base-row sub-lane so a fully-packed base row
   and a deep branch never share pixels.
+- **Lineage trace** — hover any tile → every node + link on the paths
+  through that member lights up, everything else fades back. Above
+  the line the trace covers every open chain that contains the
+  hovered member; below the line it covers the path back to the
+  subject plus every visible descendant. Base tiles that aren't part
+  of any open chain still trivially "contain" themselves so they light
+  in isolation.
 - **Subject switching** — clicking any tile (not its pip) makes that
   member the subject; the view rebuilds and every opened branch
   closes.
@@ -56,9 +63,6 @@ korner (which is the whole-graph orb). See
 
 Called out in the brief but out of scope:
 
-- **Lineage trace** — hover-highlighting every node + link on the
-  paths through the hovered member, with everything else dropped
-  back.
 - **Search + trail** — instance-wide search on the rail, and the
   breadcrumb trail of visited subjects.
 - **Pitch compression** — the brief specifies layer pitch of 42px

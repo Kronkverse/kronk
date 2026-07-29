@@ -597,6 +597,112 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
     [data.members],
   );
 
+  // ── Lineage trace ──────────────────────────────────────────────
+  // Hover any tile → every node + link on the paths through that
+  // member lights up, everything else drops back. Above the line the
+  // trace covers every chain containing the hovered member; below,
+  // it covers the path back to the subject plus everything visible
+  // beneath. Base tiles that aren't part of any open chain still
+  // trivially "contain" themselves so they light in isolation.
+  const hoveredId = hover?.member.id ?? null;
+
+  const litIds = useMemo((): Set<string> | null => {
+    if (!hoveredId || !subject) return null;
+
+    const upVisible = new Set<string>(upwardBranches.nodes.keys());
+    matesTiles.forEach((tile) => upVisible.add(tile.member.id));
+    if (inviter) upVisible.add(inviter.id);
+
+    const downVisible = new Set<string>(downwardBranches.nodes.keys());
+
+    const isMatesSide = upVisible.has(hoveredId);
+    const lit = new Set<string>([hoveredId]);
+
+    if (isMatesSide) {
+      // Walk up: each ancestor of hoveredId that is currently visible
+      // stays in the lit set. Terminate at the first not-in-view.
+      let cursor: TimelineMember | undefined = membersById.get(hoveredId);
+      while (cursor?.inviter_id && upVisible.has(cursor.inviter_id)) {
+        lit.add(cursor.inviter_id);
+        cursor = membersById.get(cursor.inviter_id);
+      }
+      // Walk down: any visible member whose inviter chain passes
+      // through hoveredId (BFS via reverse-inviter, staying inside
+      // upVisible). Handles the "shared ancestor lights every mate
+      // that descends from them" case in the brief.
+      const stack: string[] = [hoveredId];
+      while (stack.length > 0) {
+        const cur = stack.pop();
+        if (!cur) break;
+        data.members.forEach((m) => {
+          if (m.inviter_id !== cur) return;
+          if (!upVisible.has(m.id)) return;
+          if (lit.has(m.id)) return;
+          lit.add(m.id);
+          stack.push(m.id);
+        });
+      }
+    } else if (downVisible.has(hoveredId)) {
+      // Path back to the subject always lights.
+      lit.add(subject.id);
+      let cursor: TimelineMember | undefined = membersById.get(hoveredId);
+      while (cursor?.inviter_id) {
+        const pid = cursor.inviter_id;
+        if (pid === subject.id) break;
+        if (!downVisible.has(pid)) break;
+        lit.add(pid);
+        cursor = membersById.get(pid);
+      }
+      // Everything visible beneath (down via reverse-inviter, staying
+      // in downVisible).
+      const stack: string[] = [hoveredId];
+      while (stack.length > 0) {
+        const cur = stack.pop();
+        if (!cur) break;
+        data.members.forEach((m) => {
+          if (m.inviter_id !== cur) return;
+          if (!downVisible.has(m.id)) return;
+          if (lit.has(m.id)) return;
+          lit.add(m.id);
+          stack.push(m.id);
+        });
+      }
+    }
+    return lit;
+  }, [
+    hoveredId,
+    subject,
+    upwardBranches.nodes,
+    downwardBranches.nodes,
+    matesTiles,
+    inviter,
+    membersById,
+    data.members,
+  ]);
+
+  const isLit = useCallback(
+    (id: string): boolean => {
+      if (!litIds) return true;
+      return litIds.has(id);
+    },
+    [litIds],
+  );
+
+  const isLinkLit = useCallback(
+    (childId: string, parentId: string): boolean => {
+      if (!litIds) return true;
+      return litIds.has(childId) && litIds.has(parentId);
+    },
+    [litIds],
+  );
+
+  // Also light the subject-to-inviter link when either endpoint is lit.
+  const isSubjectInviterLinkLit = useCallback((): boolean => {
+    if (!litIds) return true;
+    if (!subject || !inviter) return false;
+    return litIds.has(subject.id) || litIds.has(inviter.id);
+  }, [litIds, subject, inviter]);
+
   if (!subject) {
     return (
       <div className='mates-tab__empty'>
@@ -639,7 +745,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
 
         <div className='mates-tab__scroller'>
           <svg
-            className='mates-tab__svg'
+            className={`mates-tab__svg${litIds ? ' mates-tab__svg--hovered' : ''}`}
             width={svgWidth}
             height={svgHeight + topPad + bottomPad}
             viewBox={`0 ${-topPad} ${svgWidth} ${svgHeight + topPad + bottomPad}`}
@@ -703,7 +809,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
             {inviter && inviterJoinX !== null && (
               <path
                 d={`M ${subjectJoinX} ${lineY - TRACK_HEIGHT / 2} C ${subjectJoinX} ${(matesTileY(inviter.id) + lineY) / 2}, ${inviterJoinX} ${(matesTileY(inviter.id) + lineY) / 2}, ${inviterJoinX} ${matesTileY(inviter.id) + BASE_TILE / 2}`}
-                className='mates-tab__inviter-link'
+                className={`mates-tab__inviter-link${isSubjectInviterLinkLit() ? ' mates-tab__inviter-link--lit' : ''}`}
               />
             )}
 
@@ -725,7 +831,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                 cx={tile.x}
                 cy={lineY}
                 r={4}
-                className='mates-tab__branch-dot'
+                className={`mates-tab__branch-dot${isLit(tile.member.id) ? ' mates-tab__branch-dot--lit' : ''}`}
               />
             ))}
             {inviteesTiles.map((tile) => (
@@ -734,7 +840,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                 cx={tile.x}
                 cy={lineY}
                 r={4}
-                className='mates-tab__branch-dot'
+                className={`mates-tab__branch-dot${isLit(tile.member.id) ? ' mates-tab__branch-dot--lit' : ''}`}
               />
             ))}
 
@@ -769,6 +875,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                 onClick={onTileClick}
                 onHover={onTileHover}
                 variant='inviter'
+                lit={isLit(inviter.id)}
                 pip={
                   canOpenMate(inviter.id)
                     ? {
@@ -791,7 +898,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                   x2={tile.x}
                   y1={lineY - TRACK_HEIGHT / 2}
                   y2={matesTileY(tile.member.id) + BASE_TILE / 2}
-                  className='mates-tab__link'
+                  className={`mates-tab__link${isLit(tile.member.id) ? ' mates-tab__link--lit' : ''}`}
                 />
                 <TimelineTile
                   x={tile.x}
@@ -803,6 +910,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                   onClick={onTileClick}
                   onHover={onTileHover}
                   variant='mate'
+                  lit={isLit(tile.member.id)}
                   pip={
                     canOpenMate(tile.member.id)
                       ? {
@@ -828,7 +936,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                     x2={tile.x}
                     y1={lineY + TRACK_HEIGHT / 2}
                     y2={inviteesTileY(tile.member.id) - BASE_TILE / 2}
-                    className='mates-tab__link'
+                    className={`mates-tab__link${isLit(tile.member.id) ? ' mates-tab__link--lit' : ''}`}
                   />
                   <TimelineTile
                     x={tile.x}
@@ -840,6 +948,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                     onClick={onTileClick}
                     onHover={onTileHover}
                     variant='invitee'
+                    lit={isLit(tile.member.id)}
                     pip={
                       count > 0
                         ? {
@@ -875,7 +984,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                 <path
                   key={`up-link-${edge.childId}-${edge.parentId}`}
                   d={`M ${cx} ${cy} C ${cx} ${midY}, ${px} ${midY}, ${px} ${py}`}
-                  className='mates-tab__branch-link'
+                  className={`mates-tab__branch-link${isLinkLit(edge.childId, edge.parentId) ? ' mates-tab__branch-link--lit' : ''}`}
                 />
               );
             })}
@@ -900,6 +1009,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                     onHover={onTileHover}
                     variant='branch-up'
                     showLabel={false}
+                    lit={isLit(node.id)}
                   />
                 );
               })}
@@ -922,7 +1032,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                 <path
                   key={`down-link-${edge.childId}-${edge.parentId}`}
                   d={`M ${px} ${py} C ${px} ${midY}, ${cx} ${midY}, ${cx} ${cy}`}
-                  className='mates-tab__branch-link'
+                  className={`mates-tab__branch-link${isLinkLit(edge.childId, edge.parentId) ? ' mates-tab__branch-link--lit' : ''}`}
                 />
               );
             })}
@@ -947,6 +1057,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                     onHover={onTileHover}
                     variant='branch-down'
                     showLabel={false}
+                    lit={isLit(node.id)}
                     pip={
                       count > 0
                         ? {
@@ -1040,6 +1151,7 @@ interface TimelineTileProps {
   onClick: (id: string) => void;
   onHover: (info: HoverInfo | null) => void;
   showLabel?: boolean;
+  lit?: boolean; // true when this tile is part of the lineage trace path
   pip?: {
     key: string;
     side: 'up' | 'down';
@@ -1060,6 +1172,7 @@ const TimelineTile: React.FC<TimelineTileProps> = ({
   onClick,
   onHover,
   showLabel = true,
+  lit,
   pip,
 }) => {
   const handleClick = useCallback(
@@ -1111,7 +1224,7 @@ const TimelineTile: React.FC<TimelineTileProps> = ({
 
   return (
     <g
-      className={`mates-tab__tile mates-tab__tile--${variant}${pip?.open ? ' mates-tab__tile--open' : ''}`}
+      className={`mates-tab__tile mates-tab__tile--${variant}${pip?.open ? ' mates-tab__tile--open' : ''}${lit ? ' mates-tab__tile--lit' : ''}`}
       transform={`translate(${x}, ${y})`}
       onClick={handleClick}
       onMouseEnter={handleEnter}
