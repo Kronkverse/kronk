@@ -42,7 +42,7 @@ Slug matches `config/korners/<slug>.yaml`.
 | [`map.md`](map.md)             | `config/korners/map.yaml`       | Prototype — physical map / presence (renamed from Kompass)                                                        |
 | [`kuestions.md`](kuestions.md) | `config/korners/kuestions.yaml` | Enforced — v2 shipped (dedicated models, swipe deck, gated answers, daily prompt)                                 |
 | [`wachuneed.md`](wachuneed.md) | `config/korners/wachuneed.yaml` | Enforced — directory shipped; detail/composer pending. Renamed from `marketplace` 2026-07-21.                     |
-| [`moments.md`](moments.md)     | `config/korners/moments.yaml`   | Stub                                                                                                              |
+| [`moments.md`](moments.md)     | `config/korners/moments.yaml`   | Discovery locked 2026-07-29 — models + composer pending                                                           |
 | [`nudges.md`](nudges.md)       | `config/korners/nudges.yaml`    | Activity feed + unified messenger shipped; pillar move done (`core: true`, `pillar: true`, in `hub_switcher.tsx`) |
 | [`you.md`](you.md)             | `config/korners/you.yaml`       | Portal (link-out to Kashka's YOU PWA)                                                                             |
 
