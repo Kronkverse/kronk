@@ -118,7 +118,8 @@ class Api::V1::EventsController < Api::BaseController
     params.permit(
       :title, :description, :start_time, :end_time,
       :location_name, :location_url, :event_type,
-      :rsvp_enabled, :max_attendees, :recurrence_rule
+      :rsvp_enabled, :max_attendees, :recurrence_rule,
+      :spawn_album
     )
   end
 

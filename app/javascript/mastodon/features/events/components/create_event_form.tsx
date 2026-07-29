@@ -28,6 +28,7 @@ interface Event {
   event_type: string;
   huddle_url: string | null;
   rsvp_enabled: boolean;
+  spawn_album: boolean;
   max_attendees: number | null;
   recurrence_rule: string | null;
   going_count: number;
@@ -135,6 +136,7 @@ export const CreateEventForm: React.FC<Props> = ({
   const [rsvpEnabled, setRsvpEnabled] = useState(
     editEvent?.rsvp_enabled ?? true,
   );
+  const [spawnAlbum, setSpawnAlbum] = useState(editEvent?.spawn_album ?? false);
   const [recurrenceRule, setRecurrenceRule] = useState(
     editEvent?.recurrence_rule ?? '',
   );
@@ -240,6 +242,13 @@ export const CreateEventForm: React.FC<Props> = ({
     [],
   );
 
+  const handleSpawnAlbumChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSpawnAlbum(e.target.checked);
+    },
+    [],
+  );
+
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -281,6 +290,7 @@ export const CreateEventForm: React.FC<Props> = ({
           event_type: eventType,
           rsvp_enabled: rsvpEnabled,
           recurrence_rule: recurrenceRule || null,
+          spawn_album: spawnAlbum,
         };
 
         if (!editing) {
@@ -322,6 +332,7 @@ export const CreateEventForm: React.FC<Props> = ({
       eventType,
       visibility,
       rsvpEnabled,
+      spawnAlbum,
       recurrenceRule,
       imageFile,
       removeImage,
@@ -347,6 +358,7 @@ export const CreateEventForm: React.FC<Props> = ({
   const visibilityInputId = 'event-form-visibility';
   const repeatInputId = 'event-form-repeat';
   const rsvpInputId = 'event-form-rsvp';
+  const spawnAlbumInputId = 'event-form-spawn-album';
   const startLabelId = 'event-form-start';
   const endLabelId = 'event-form-end';
   const coverLabelId = 'event-form-cover';
@@ -602,6 +614,22 @@ export const CreateEventForm: React.FC<Props> = ({
           onChange={handleRsvpChange}
         />
         <FormattedMessage id='events.form.rsvp' defaultMessage='Enable RSVPs' />
+      </label>
+
+      <label
+        htmlFor={spawnAlbumInputId}
+        className='create-event-form__checkbox'
+      >
+        <input
+          id={spawnAlbumInputId}
+          type='checkbox'
+          checked={spawnAlbum}
+          onChange={handleSpawnAlbumChange}
+        />
+        <FormattedMessage
+          id='events.form.spawn_album'
+          defaultMessage='Spawn an album for this event'
+        />
       </label>
 
       <div className='create-event-form__actions'>
