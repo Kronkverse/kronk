@@ -1,8 +1,4 @@
-import { useCallback } from 'react';
-
 import { defineMessages, useIntl } from 'react-intl';
-
-import { Link } from 'react-router-dom';
 
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 
@@ -48,10 +44,6 @@ export const StatusKuestionsCard: React.FC<{ question: QuestionSummary }> = ({
 }) => {
   const intl = useIntl();
 
-  const handleLinkClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
-
   const ctaMessage = question.has_answered ? messages.answer : messages.unlock;
 
   return (
@@ -59,6 +51,7 @@ export const StatusKuestionsCard: React.FC<{ question: QuestionSummary }> = ({
       korner='Kuestions'
       variant='question'
       className='status-kuestions-card'
+      to={`/hub/kuestions/${question.id}`}
       badge={{
         icon: QuestionMarkIcon,
         iconId: 'question_mark',
@@ -92,13 +85,9 @@ export const StatusKuestionsCard: React.FC<{ question: QuestionSummary }> = ({
             </div>
           )}
         </div>
-        <Link
-          to={`/hub/kuestions/${question.id}`}
-          className='status-korner-card__action'
-          onClick={handleLinkClick}
-        >
+        <span className='status-korner-card__action'>
           {intl.formatMessage(ctaMessage)}
-        </Link>
+        </span>
       </div>
     </StatusKornerCard>
   );
