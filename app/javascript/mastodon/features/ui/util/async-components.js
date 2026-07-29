@@ -360,6 +360,10 @@ export function InflowV2 () {
   return import("../../inflow_v2");
 }
 
+export function InflowVeil () {
+  return import("../../inflow/veil");
+}
+
 export function MapV2 () {
   return import("../../map_v2");
 }
