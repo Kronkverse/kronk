@@ -17,14 +17,12 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
 
   def index
     scope = Album.visible_to(current_account).recent.limit(clamp_limit)
-    render json: scope, each_serializer: REST::AlbumSerializer, scope: current_account
-  end
+    render json: scope, each_serializer: REST::AlbumSerializer  end
 
   def show
     raise Mastodon::NotPermittedError unless @album.visible_to?(current_account)
 
-    render json: @album, serializer: REST::AlbumSerializer, scope: current_account
-  end
+    render json: @album, serializer: REST::AlbumSerializer  end
 
   def create
     @album = current_account.owned_albums.new(album_params_for_create)
@@ -43,8 +41,7 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
 
     if @album.update(album_params_for_update)
       attach_krews! if params.key?(:krew_ids)
-      render json: @album, serializer: REST::AlbumSerializer, scope: current_account
-    else
+      render json: @album, serializer: REST::AlbumSerializer    else
       render json: { error: @album.errors.full_messages.to_sentence }, status: :unprocessable_entity
     end
   end
