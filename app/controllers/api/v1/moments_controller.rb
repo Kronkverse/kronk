@@ -55,9 +55,9 @@ class Api::V1::MomentsController < Api::BaseController
   end
 
   def moment_params
-    permitted = params.permit(:media_attachment_id, :caption, :visibility, :group_id)
+    permitted = params.permit(:media_attachment_id, :caption, :visibility, :krew_id)
     permitted[:visibility] = permitted[:visibility].presence || 'mates'
-    permitted[:group_id] = nil unless permitted[:visibility] == 'krew'
+    permitted[:krew_id] = nil unless permitted[:visibility] == 'krew'
     permitted
   end
 
@@ -65,7 +65,7 @@ class Api::V1::MomentsController < Api::BaseController
     status_text = moment.caption.presence || ''
     # 'mates' and 'krew' both fold to Mastodon's `private` (followers-
     # only) at the Status level; the fine-grained scoping lives on the
-    # Moment row itself (visibility + group_id). Only 'public_reach'
+    # Moment row itself (visibility + krew_id). Only 'public_reach'
     # widens the Status.
     status_visibility = moment.visible_to_public_reach? ? 'public' : 'private'
 

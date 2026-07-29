@@ -10,7 +10,7 @@ class Moment < ApplicationRecord
 
   belongs_to :account
   belongs_to :media_attachment
-  belongs_to :group, optional: true # aka Krew when visibility == :krew
+  belongs_to :krew, optional: true # only present when visibility == :krew
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :moment
 
   has_many :moment_froths, dependent: :destroy, inverse_of: :moment
@@ -20,6 +20,10 @@ class Moment < ApplicationRecord
   validates :expires_at, presence: true
   validates :caption, length: { maximum: 500 }, allow_blank: true
   validate  :krew_only_when_krew_visibility
+
+  # Convenience alias for the historical `group_id` name used in
+  # cross-korner payloads and older comments. The column is `krew_id`
+  # (renamed from group_id in 20260723150000).
 
   before_validation :set_default_expiry, on: :create
 
@@ -49,12 +53,12 @@ class Moment < ApplicationRecord
   end
 
   def krew_only_when_krew_visibility
-    return if visible_to_krew? == group_id.present?
+    return if visible_to_krew? == krew_id.present?
 
-    if visible_to_krew? && group_id.blank?
-      errors.add(:group_id, 'must be present when visibility is krew')
-    elsif !visible_to_krew? && group_id.present?
-      errors.add(:group_id, 'must be blank unless visibility is krew')
+    if visible_to_krew? && krew_id.blank?
+      errors.add(:krew_id, 'must be present when visibility is krew')
+    elsif !visible_to_krew? && krew_id.present?
+      errors.add(:krew_id, 'must be blank unless visibility is krew')
     end
   end
 end

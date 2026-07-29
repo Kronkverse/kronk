@@ -9,7 +9,7 @@ class REST::MomentSerializer < ActiveModel::Serializer
 
   belongs_to :account, serializer: REST::AccountSerializer
   belongs_to :media_attachment, serializer: REST::MediaAttachmentSerializer
-  belongs_to :group, serializer: REST::GroupSerializer
+  belongs_to :krew, serializer: REST::KrewSerializer
 
   def id
     object.id.to_s
