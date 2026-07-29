@@ -54,22 +54,22 @@ Ordered by how much is lost.
 
 ## Feed — what reaches you
 
-| Setting                                        | Today                                                                                                                              | Status                                |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| Feed reach (Mates / Orbit / Kommunity / Krew)  | `kronk.feed_scope`; `/api/v1/kronk_settings`; classic `/settings/preferences/feed`; **inline chip row on Home column** (alpha.330) | Both + Home                           |
-| Per-korner tune-in/out                         | `KornerTuneOut`; classic feed page + `/home/settings` + `/hub/:slug/settings`                                                      | Both (three surfaces)                 |
-| Group boosts                                   | `aggregate_reblogs`                                                                                                                | Both                                  |
-| Slow mode (load new posts manually)            | `web.use_pending_items`                                                                                                            | Both — classic files under Appearance |
-| Media display                                  | `web.display_media`                                                                                                                | Both — also Appearance                |
-| Blur media                                     | `web.use_blurhash`                                                                                                                 | Both — also Appearance                |
-| Always expand CWs                              | `web.expand_content_warnings`                                                                                                      | Both — also Appearance                |
-| Show trends                                    | `web.trends`                                                                                                                       | Both — also Appearance                |
-| Languages in public timelines                  | `chosen_languages`                                                                                                                 | Classic — no API                      |
-| Keyword filters                                | `/filters`                                                                                                                         | Classic                               |
-| Muted / blocked accounts, blocked domains      | `/mutes`, `/blocks`, `/domain_blocks`                                                                                              | SPA                                   |
-| Home column: replies/boosts/quotes, body regex | Redux `settings.home.*` → `/api/web/settings`                                                                                      | SPA (column header, not the hub)      |
-| Firehose only-media, per-timeline regex        | Redux `settings.firehose.*`                                                                                                        | SPA (column header)                   |
-| Notification-source gating                     | `NotificationPolicy`                                                                                                               | SPA — also Nudges                     |
+| Setting                                        | Today                                                                                                    | Status                                |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Feed reach (Mates / Orbit / Kommunity)         | `kronk.feed_scope`; `/api/v1/kronk_settings`; classic `/settings/preferences/feed`; SPA `/home/settings` | Both                                  |
+| Per-korner tune-in/out                         | `KornerTuneOut`; classic feed page + `/home/settings` + `/hub/:slug/settings`                            | Both (three surfaces)                 |
+| Group boosts                                   | `aggregate_reblogs`                                                                                      | Both                                  |
+| Slow mode (load new posts manually)            | `web.use_pending_items`                                                                                  | Both — classic files under Appearance |
+| Media display                                  | `web.display_media`                                                                                      | Both — also Appearance                |
+| Blur media                                     | `web.use_blurhash`                                                                                       | Both — also Appearance                |
+| Always expand CWs                              | `web.expand_content_warnings`                                                                            | Both — also Appearance                |
+| Show trends                                    | `web.trends`                                                                                             | Both — also Appearance                |
+| Languages in public timelines                  | `chosen_languages`                                                                                       | Classic — no API                      |
+| Keyword filters                                | `/filters`                                                                                               | Classic                               |
+| Muted / blocked accounts, blocked domains      | `/mutes`, `/blocks`, `/domain_blocks`                                                                    | SPA                                   |
+| Home column: replies/boosts/quotes, body regex | Redux `settings.home.*` → `/api/web/settings`                                                            | SPA (column header, not the hub)      |
+| Firehose only-media, per-timeline regex        | Redux `settings.firehose.*`                                                                              | SPA (column header)                   |
+| Notification-source gating                     | `NotificationPolicy`                                                                                     | SPA — also Nudges                     |
 
 ## Profile — identity and how you appear
 

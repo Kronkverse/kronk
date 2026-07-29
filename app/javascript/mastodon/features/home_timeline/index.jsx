@@ -23,7 +23,7 @@ import { identityContextPropShape, withIdentity } from 'mastodon/identity_contex
 import { criticalUpdatesPending } from 'mastodon/initial_state';
 
 import { addColumn, removeColumn, moveColumn } from '../../actions/columns';
-import { expandHomeTimeline, expandCommunityTimeline, expandKrewTimeline } from '../../actions/timelines';
+import { expandHomeTimeline, expandCommunityTimeline } from '../../actions/timelines';
 import Column from '../../components/column';
 import ColumnHeader from '../../components/column_header';
 import StatusListContainer from '../ui/containers/status_list_container';
@@ -32,7 +32,6 @@ import { Announcements } from './components/announcements';
 import { ColumnSettings } from './components/column_settings';
 import { CriticalUpdateBanner } from './components/critical_update_banner';
 import { LiveBanner } from './components/live_banner';
-import { ReachChips } from './components/reach_chips';
 
 const messages = defineMessages({
   title: { id: 'column.home', defaultMessage: 'Home' },
@@ -64,21 +63,41 @@ class HomeTimeline extends PureComponent {
     matchesBreakpoint: PropTypes.bool,
   };
 
-  // The Home column shows one status feed at a time. The reach chip
-  // row (Mates / Orbit / Kommunity / [Krew ▾]) drives which timeline
-  // is mounted. `reach` persists via /api/v1/kronk_settings; `krew`
-  // is session-only and overrides `reach` when set. See
-  // docs/kronk_feed_and_reach.md §2 for the tier semantics.
-  //
-  // Under the current build the reach picker is display-only for
-  // Mates vs Orbit — both render the mastodon home timeline. Kommunity
-  // renders the local timeline; Krew renders that Krew's statuses.
-  // The Mates/Orbit split lands with Kronk::FeatureFlags.feed_scope_enforced.
+  // The Home column shows one status feed at a time, driven by the
+  // user's persisted kronk.feed_scope setting (Mates / Orbit /
+  // Kommunity). The picker lives on /home/settings; the column reads
+  // the setting once on mount. Mates and Orbit both drive the
+  // mastodon home timeline for now — the split lands with
+  // Kronk::FeatureFlags.feed_scope_enforced. Kommunity drives the
+  // local timeline.
   state = {
     reach: 'orbit',
-    activeKrew: null,
     kommunityInitialized: false,
-    krewInitialized: null,
+  };
+
+  loadPersistedFeedScope = async () => {
+    try {
+      const res = await fetch('/api/v1/kronk_settings', {
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const scope = data?.feed_scope;
+      if (scope === 'mates' || scope === 'orbit' || scope === 'kommunity') {
+        this.setState(prev => {
+          if (prev.reach === scope) return null;
+          const next = { reach: scope };
+          if (scope === 'kommunity' && !prev.kommunityInitialized) {
+            this.props.dispatch(expandCommunityTimeline({}));
+            next.kommunityInitialized = true;
+          }
+          return next;
+        });
+      }
+    } catch {
+      // Silent — default reach stays.
+    }
   };
 
   handlePin = () => {
@@ -104,22 +123,6 @@ class HomeTimeline extends PureComponent {
     this.column = c;
   };
 
-  handleReachChange = ({ reach, krew }) => {
-    const { dispatch } = this.props;
-    this.setState(prev => {
-      const next = { reach, activeKrew: krew };
-      if (!krew && reach === 'kommunity' && !prev.kommunityInitialized) {
-        dispatch(expandCommunityTimeline({}));
-        next.kommunityInitialized = true;
-      }
-      if (krew && prev.krewInitialized !== krew.id) {
-        dispatch(expandKrewTimeline(krew.id, {}));
-        next.krewInitialized = krew.id;
-      }
-      return next;
-    });
-  };
-
   handleLoadMoreHome = maxId => {
     this.props.dispatch(expandHomeTimeline({ maxId }));
   };
@@ -128,15 +131,10 @@ class HomeTimeline extends PureComponent {
     this.props.dispatch(expandCommunityTimeline({ maxId }));
   };
 
-  handleLoadMoreKrew = maxId => {
-    const { activeKrew } = this.state;
-    if (!activeKrew) return;
-    this.props.dispatch(expandKrewTimeline(activeKrew.id, { maxId }));
-  };
-
   componentDidMount () {
     setTimeout(() => this.props.dispatch(fetchAnnouncements()), 700);
     this._checkIfReloadNeeded(false, this.props.isPartial);
+    void this.loadPersistedFeedScope();
   }
 
   componentDidUpdate (prevProps) {
@@ -175,7 +173,7 @@ class HomeTimeline extends PureComponent {
 
   render () {
     const { intl, hasUnread, columnId, multiColumn, hasAnnouncements, unreadAnnouncements, showAnnouncements, matchesBreakpoint } = this.props;
-    const { reach, activeKrew } = this.state;
+    const { reach } = this.state;
     const pinned = !!columnId;
     const { signedIn } = this.props.identity;
     const banners = [];
@@ -214,25 +212,13 @@ class HomeTimeline extends PureComponent {
       </>
     );
 
-    // Moments Home strip is rendered directly in the JSX below (see
-    // after ColumnHeader), NOT inside the banners array — the strip
-    // belongs at column-header level so it shows regardless of which
-    // reach drives the feed content.
     banners.push(<LiveBanner key='live-banner' />);
     if (criticalUpdatesPending) {
       banners.push(<CriticalUpdateBanner key='critical-update-banner' />);
     }
 
     let feedConfig;
-    if (activeKrew) {
-      feedConfig = {
-        timelineId: `krew:${activeKrew.id}`,
-        onLoadMore: this.handleLoadMoreKrew,
-        emptyMessage: <FormattedMessage id='empty_column.krew' defaultMessage='No posts in {name} yet.' values={{ name: activeKrew.name }} />,
-        prepend: [],
-        insertNode: undefined,
-      };
-    } else if (reach === 'kommunity') {
+    if (reach === 'kommunity') {
       feedConfig = {
         timelineId: 'community',
         onLoadMore: this.handleLoadMoreKommunity,
@@ -241,8 +227,6 @@ class HomeTimeline extends PureComponent {
         insertNode: undefined,
       };
     } else {
-      // Mates and Orbit both drive the Mastodon home timeline for now —
-      // the Mates-vs-Orbit split lands with feed_scope_enforced.
       feedConfig = {
         timelineId: 'home',
         onLoadMore: this.handleLoadMoreHome,
@@ -271,16 +255,8 @@ class HomeTimeline extends PureComponent {
         </ColumnHeader>
 
         {/* Moments Home strip — sits directly under the column header,
-            above the reach chip row + feed. Signed-in only. */}
+            above the feed. Signed-in only. */}
         {signedIn && <MomentsStrip />}
-
-        {signedIn && (
-          <ReachChips
-            reach={reach}
-            activeKrew={activeKrew}
-            onChange={this.handleReachChange}
-          />
-        )}
 
         {signedIn ? (
           <StatusListContainer

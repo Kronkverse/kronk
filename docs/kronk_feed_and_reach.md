@@ -101,16 +101,17 @@ Two controls live in **feed settings**:
 - **Standard-post reach** — the default reach for the user's _ordinary_ posts (Mates / Orbit /
   Kronk), overridable per post.
 
-> **Current state (2026-07-29).** `UserSettings.kronk.feed_scope` now uses the new
+> **Current state (2026-07-29).** `UserSettings.kronk.feed_scope` uses the new
 > tier names `mates | orbit | kommunity`, default `orbit` (alpha.330). The API accepts
 > the legacy `friends | friends_of_friends` names on write and normalises them so any
-> stored values migrate on next write. The Home column exposes the tiers as an inline
-> chip row (Mates / Orbit / Kommunity / [Krew ▾]) directly beneath the column header;
-> the settings-page picker retains the same three tiers for the deep-settings surface.
-> The picker is still **display-only** for Mates vs Orbit — both drive the mastodon
-> home timeline — until `Kronk::FeatureFlags.feed_scope_enforced` lands; Kommunity
-> drives the local timeline; Krew swaps in that Krew's status timeline for the session.
-> Standard-post-reach as a second job on this setting remains open.
+> stored values migrate on next write. The picker lives on `/home/settings`; the Home
+> column reads the setting once on mount and renders one feed accordingly (alpha.332
+> retreated the inline chip row from the Home column — it lived under the ColumnHeader
+> briefly in alpha.330–.331 and was rolled back). The picker is still **display-only**
+> for Mates vs Orbit — both drive the mastodon home timeline — until
+> `Kronk::FeatureFlags.feed_scope_enforced` lands; Kommunity drives the local timeline.
+> Krew as a feed target on the Home column is not currently wired. Standard-post-reach
+> as a second job on this setting remains open.
 
 ### 2.4 Korner-card reach
 
