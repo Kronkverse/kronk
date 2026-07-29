@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 
 import { FormattedMessage, FormattedRelativeTime } from 'react-intl';
 
+import { Link } from 'react-router-dom';
+
 import { apiRequestGet } from 'mastodon/api';
 
 interface MediaAttachment {
@@ -96,7 +98,7 @@ const MomentTile = ({ moment }: { moment: MomentJSON }) => {
     (new Date(moment.expires_at).getTime() - Date.now()) / 1000,
   );
   return (
-    <a href={`/hub/moments/${moment.id}`} className='moments__tile'>
+    <Link to={`/hub/moments/${moment.id}`} className='moments__tile'>
       <div className='moments__tile-media'>
         {moment.media_attachment.type === 'video' ? (
           <video
@@ -137,6 +139,6 @@ const MomentTile = ({ moment }: { moment: MomentJSON }) => {
           <span className='moments__tile-froths'>♥ {moment.froth_count}</span>
         )}
       </div>
-    </a>
+    </Link>
   );
 };

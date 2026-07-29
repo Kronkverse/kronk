@@ -1,5 +1,272 @@
-// Moments — /hub/moments korner + Home top strip. See
-// docs/spaces/moments.md. Full-screen viewer + attach flows follow.
+// Moments — /hub/moments korner + Home top strip + deep-link viewer
+// at /hub/moments/:id. See docs/spaces/moments.md. Attach flows +
+// expiry reaper + notifications still to come.
+
+// ── Deep-link viewer (fullscreen modal) ────────────────────────────
+.moments-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+
+  &--loading,
+  &--error {
+    background: rgb(0 0 0 / 88%);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+}
+
+.moments-viewer__error-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+}
+
+.moments-viewer__error-close {
+  padding: 8px 18px;
+  border-radius: var(--radius-round);
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.moments-viewer__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 88%);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.moments-viewer__stage {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 3 / 4;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-large);
+  overflow: hidden;
+  background: var(--kosmos-void);
+  box-shadow: var(--elevation-menu);
+}
+
+// Progress bar — one segment per Moment in the owner's stack.
+.moments-viewer__progress {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  gap: 3px;
+  z-index: 3;
+}
+
+.moments-viewer__progress-seg {
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 24%);
+  overflow: hidden;
+
+  &--done {
+    background: rgb(255 255 255 / 90%);
+  }
+}
+
+.moments-viewer__progress-fill {
+  display: block;
+  height: 100%;
+  background: rgb(255 255 255 / 90%);
+  transition: width 30s linear;
+}
+
+.moments-viewer__header {
+  position: absolute;
+  top: 18px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 3;
+  color: var(--text-primary);
+  padding-top: 4px;
+}
+
+.moments-viewer__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 34%;
+  object-fit: cover;
+  border: 2px solid var(--surface-primary);
+}
+
+.moments-viewer__identity {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.moments-viewer__display-name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.moments-viewer__ago {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgb(255 255 255 / 70%);
+  letter-spacing: 0.03em;
+}
+
+.moments-viewer__close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 0;
+  background: rgb(0 0 0 / 40%);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+
+  &:hover {
+    background: rgb(0 0 0 / 60%);
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.moments-viewer__media-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  background: var(--kosmos-void);
+}
+
+.moments-viewer__image,
+.moments-viewer__video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.moments-viewer__tap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+  z-index: 2;
+
+  &--left {
+    left: 0;
+    width: 33%;
+  }
+
+  &--centre {
+    left: 33%;
+    width: 34%;
+  }
+
+  &--right {
+    left: 67%;
+    width: 33%;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -4px;
+  }
+}
+
+.moments-viewer__caption {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 72px;
+  padding: 8px 12px;
+  border-radius: var(--radius-medium);
+  background: rgb(0 0 0 / 42%);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.45;
+  z-index: 3;
+}
+
+.moments-viewer__actions {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  z-index: 3;
+}
+
+.moments-viewer__action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-round);
+  border: 0;
+  background: rgb(0 0 0 / 50%);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition:
+    background 0.14s,
+    transform 0.14s;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: currentcolor;
+  }
+
+  &:hover:not(:disabled) {
+    background: rgb(0 0 0 / 70%);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--frothed {
+    color: var(--decision-pending);
+  }
+}
+
+.moments-viewer__action-count {
+  font-variant-numeric: tabular-nums;
+}
 
 // ── Home top strip ─────────────────────────────────────────────────
 .moments-strip {

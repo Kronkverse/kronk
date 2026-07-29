@@ -131,10 +131,7 @@ export const MomentsStrip = () => {
 
   const openViewer = useCallback(
     (moment: MomentJSON) => {
-      // Deep-link viewer not built yet — jump to the korner grid for
-      // now. Follow-up PR wires /hub/moments/:id.
-      history.push(`/hub/moments`);
-      void moment; // unused until deep link exists
+      history.push(`/hub/moments/${moment.id}`);
     },
     [history],
   );

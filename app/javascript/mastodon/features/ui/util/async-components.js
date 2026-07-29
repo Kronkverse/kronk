@@ -372,6 +372,10 @@ export function Moments () {
   return import("../../moments").then(m => ({ default: m.Moments }));
 }
 
+export function MomentViewer () {
+  return import("../../moments/viewer");
+}
+
 export function Albutts () {
   return import("../../albutts");
 }
