@@ -35,20 +35,16 @@ emits:
 listens: []
 
 feed_projection:
-  card: null # Kosmic daily projection removed 2026-07-28.
-  title_from: on_date # rendered as the date badge
-  summary_from: body
-  status_association: kosmic_update # framework: Status.has_one :kosmic_update via status_id (§5.5)
-  links_to: /hub/inflow/kosmic/<on_date>
-  default_visibility: public
+  # In Flow opts out of feed projection — the veil is the view (like Groups).
+  # There's no projected Status card; the entry into the veil is the
+  # DailyKosmicCard in the home feed, which links to /hub/inflow.
+  card: null
 
 notifications:
-  types:
-    - name: inflow_daily_posted
-      subject_type: kosmic_update
-      default_push: false # off by default — daily cadence is loud enough
-      aggregation: none
-      interactive: false # notice
+  # No notifications yet: the daily dispatch is a scheduled surface, not a
+  # per-user notice. `inflow_daily_posted` returns here (registered + fired)
+  # if/when the KosmicUpdate → Status projection ships.
+  types: []
 
 settings:
   - name: daily_delivery_time
@@ -69,7 +65,9 @@ launch:
   cta: 'Tap in'
 
 feature_flag: # not-implemented — In Flow is unconditionally mounted on main
-enforced: false # Path A: not conformant (serializer/card/slug) — building
+enforced: true # live: the native veil view renders at /hub/inflow (no feed
+# projection by design — the veil is the surface, so card: null / L3-L4 N/A,
+# like Groups). Graduated out of the Hub "coming soon" section 2026-07-29.
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 nodes:
