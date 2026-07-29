@@ -20,6 +20,7 @@ import { identityContextPropShape, withIdentity } from 'mastodon/identity_contex
 import { criticalUpdatesPending } from 'mastodon/initial_state';
 import { withBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
 import { MomentsStrip } from 'mastodon/features/moments/home_strip';
+import { VeilScene } from 'mastodon/features/inflow/veil_scene';
 
 import { addColumn, removeColumn, moveColumn } from '../../actions/columns';
 import { expandFriendsActivity } from '../../actions/friends_activity';
@@ -32,7 +33,6 @@ import StatusListContainer from '../ui/containers/status_list_container';
 
 import { ColumnSettings } from './components/column_settings';
 import { CriticalUpdateBanner } from './components/critical_update_banner';
-import { DailyKosmicCard } from './components/daily_kosmic_card';
 import { LiveBanner } from './components/live_banner';
 import { Announcements } from './components/announcements';
 
@@ -238,10 +238,18 @@ class HomeTimeline extends PureComponent {
     if (signedIn) {
       banners.push(<MomentsStrip key='moments-strip' />);
     }
-    banners.push(<DailyKosmicCard key='daily-kosmic-card' />);
     banners.push(<LiveBanner key='live-banner' />);
     if (criticalUpdatesPending) {
       banners.push(<CriticalUpdateBanner key='critical-update-banner' />);
+    }
+
+    // The InFlow veil, embedded as a scroll gap in the feed itself (not a
+    // tappable card): scroll down and the surface parts to the Kosmos void —
+    // tonight's moon + reading — then closes over into your posts. The scene
+    // anchors to whatever scrolls around it (the document here), so the same
+    // component powers the standalone /hub/inflow page.
+    if (signedIn) {
+      banners.push(<VeilScene key='inflow-veil' />);
     }
 
     const statusTabConfig = {

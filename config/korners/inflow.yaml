@@ -36,8 +36,9 @@ listens: []
 
 feed_projection:
   # In Flow opts out of feed projection — the veil is the view (like Groups).
-  # There's no projected Status card; the entry into the veil is the
-  # DailyKosmicCard in the home feed, which links to /hub/inflow.
+  # There's no projected Status card. The veil is embedded directly in the home
+  # feed as a scroll gap (the surface parts to the Kosmos void, then closes over
+  # into your posts); the same scene renders standalone at /hub/inflow.
   card: null
 
 notifications:
