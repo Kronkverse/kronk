@@ -145,6 +145,15 @@ namespace :api, format: false do
       resources :listings, only: [:index, :show, :create]
     end
 
+    # Albutts — shared albums. Photos are nested under an album; each
+    # row is one contribution. See docs/spaces/albutts.md.
+    namespace :albutts do
+      resources :albums, only: [:index, :show, :create, :update, :destroy] do
+        resources :photos, only: [:create], controller: 'photos'
+      end
+      resources :album_photos, only: [:destroy], path: 'photos', controller: 'photos'
+    end
+
     # Klot — cycle tracker (KRONK_TIDES). Self is a singleton (one per
     # account); logs and settings hang off it. Viewers is the caller's
     # outbound allowlist; circle is the inbound projection with the
