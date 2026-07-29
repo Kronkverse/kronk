@@ -21,8 +21,10 @@ interface Props {
 export const Inflow: React.FC<Props> = () => (
   <Stage label='Inflow'>
     <div className='in-flow scrollable'>
+      {/* The Frame provides the "Inflow" title + short tagline; the local
+          header carries only what the Frame doesn't — the location and the
+          fuller philosophy. */}
       <header className='in-flow__header'>
-        <h1 className='in-flow__title'>Inflow</h1>
         <p className='in-flow__subtitle'>{LOCATION_LABEL}</p>
         <p className='in-flow__tagline'>
           In Flow is a way to attune to the Kosmos occurring around us, as it
