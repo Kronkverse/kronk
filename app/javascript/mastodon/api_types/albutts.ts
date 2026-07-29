@@ -1,6 +1,11 @@
 import type { ApiAccountJSON } from './accounts';
 
-export type AlbumVisibility = 'public' | 'mates' | 'krew';
+export type AlbumVisibility =
+  | 'public'
+  | 'orbit'
+  | 'mates'
+  | 'self_only'
+  | 'krew';
 
 export interface ApiAlbumPhotoJSON {
   id: string;
