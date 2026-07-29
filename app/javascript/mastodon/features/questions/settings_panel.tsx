@@ -7,23 +7,22 @@ import type { KuestionVisibilityScope } from 'mastodon/api_types/kuestions';
 
 import { VisibilityDial } from './visibility_dial';
 
-// Kuestions manifest visibility field only takes public|unlisted|followers
-// today. The prototype dial has five stops (everyone/kronk_members/
-// connections/vouched/only_me); we map the local slugs Kronk uses to
-// the manifest set for storage until the manifest catches up.
-const SCOPE_TO_MANIFEST: Record<KuestionVisibilityScope, string> = {
-  everyone: 'public',
-  kronk_members: 'unlisted',
-  connections: 'followers',
-  vouched: 'followers', // no vouching yet — sticks near connections
-  only_me: 'followers', // no per-user-only yet — cautious fallback
+// Kuestions Answer scope + the manifest setting both use the platform
+// reach ladder (docs/kronk_feed_and_reach.md §2) after slice 4 of the
+// visibility standardisation. The migration walks stored user_settings
+// off the legacy Mastodon triple (public/unlisted/followers), but keep
+// a defensive read map here for any settings that slip through.
+const LEGACY_MANIFEST_TO_SCOPE: Record<string, KuestionVisibilityScope> = {
+  unlisted: 'public',
+  followers: 'mates',
 };
 
-const MANIFEST_TO_SCOPE: Record<string, KuestionVisibilityScope> = {
-  public: 'everyone',
-  unlisted: 'kronk_members',
-  followers: 'connections',
-};
+const KNOWN_SCOPES: readonly KuestionVisibilityScope[] = [
+  'public',
+  'orbit',
+  'mates',
+  'self_only',
+];
 
 const messages = defineMessages({
   header: {
@@ -140,7 +139,7 @@ export const SettingsPanel: React.FC = () => {
   );
   const handleScope = useCallback(
     (next: KuestionVisibilityScope) => {
-      patch('default_answer_visibility', SCOPE_TO_MANIFEST[next]);
+      patch('default_answer_visibility', next);
     },
     [patch],
   );
@@ -154,9 +153,12 @@ export const SettingsPanel: React.FC = () => {
   }
 
   const rawScope = values.default_answer_visibility;
-  const scopeManifest = typeof rawScope === 'string' ? rawScope : 'followers';
-  const scope: KuestionVisibilityScope =
-    MANIFEST_TO_SCOPE[scopeManifest] ?? 'connections';
+  const scopeString = typeof rawScope === 'string' ? rawScope : '';
+  const scope: KuestionVisibilityScope = KNOWN_SCOPES.includes(
+    scopeString as KuestionVisibilityScope,
+  )
+    ? (scopeString as KuestionVisibilityScope)
+    : (LEGACY_MANIFEST_TO_SCOPE[scopeString] ?? 'mates');
   const hideAnswered = Boolean(values.hide_answered_questions ?? false);
   const confirm = Boolean(values.unlock_confirmation ?? true);
   const dailyPrompt = Boolean(values.daily_prompt_in_post_box ?? true);

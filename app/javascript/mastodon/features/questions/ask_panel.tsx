@@ -587,7 +587,7 @@ const MyAsksList: React.FC<MyAsksListProps> = ({ refreshKey }) => {
       {answering && (
         <AnswerSheet
           kuestion={answering}
-          defaultScope='connections'
+          defaultScope='mates'
           onCancel={closeAnswer}
           onSubmitted={handleAnswered}
         />

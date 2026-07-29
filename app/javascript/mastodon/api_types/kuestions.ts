@@ -5,12 +5,16 @@ import type { ApiAccountJSON } from './accounts';
 
 export type KuestionAnswerFormat = 'text' | 'mc' | 'yn';
 
+// Four-tier reach ladder (docs/kronk_feed_and_reach.md §2). Matches
+// Album/Moment/Status. The pre-2026-07-29 vocabulary
+// (everyone/kronk_members/connections/vouched/only_me) retired in
+// slice 4 of the visibility standardisation; the migration remaps
+// stored values.
 export type KuestionVisibilityScope =
-  | 'everyone'
-  | 'kronk_members'
-  | 'connections'
-  | 'vouched'
-  | 'only_me';
+  | 'public'
+  | 'orbit'
+  | 'mates'
+  | 'self_only';
 
 export interface ApiKuestionMcOption {
   label: string;

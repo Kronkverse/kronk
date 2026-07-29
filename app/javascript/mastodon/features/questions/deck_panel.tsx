@@ -276,7 +276,7 @@ export const DeckPanel: React.FC = () => {
       {answering && (
         <AnswerSheet
           kuestion={answering}
-          defaultScope='connections'
+          defaultScope='mates'
           onCancel={closeAnswerSheet}
           onSubmitted={handleAnswered}
         />

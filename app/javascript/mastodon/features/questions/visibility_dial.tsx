@@ -4,50 +4,47 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import type { KuestionVisibilityScope } from 'mastodon/api_types/kuestions';
 
-// 5-position visibility dial matching the prototype. Order matters —
-// left → right widens from most-private to most-public in reverse,
-// following the prototype's dial arrangement.
+// Four-position visibility dial aligned with the platform reach
+// ladder (docs/kronk_feed_and_reach.md §2). Order matters — the
+// track reads left → right as widest → tightest.
 export const SCOPE_ORDER: KuestionVisibilityScope[] = [
-  'everyone',
-  'kronk_members',
-  'connections',
-  'vouched',
-  'only_me',
+  'public',
+  'orbit',
+  'mates',
+  'self_only',
 ];
 
 const messages = defineMessages({
-  everyone: {
-    id: 'kuestions.scope.everyone',
-    defaultMessage: 'Everyone',
+  public: {
+    id: 'kuestions.scope.public',
+    defaultMessage: 'Kronk',
   },
-  everyoneNote: {
-    id: 'kuestions.scope.everyone_note',
-    defaultMessage: 'Federated. Anyone on the fediverse can see and answer.',
+  publicNote: {
+    id: 'kuestions.scope.public_note',
+    defaultMessage: 'Everyone on Kronk can see this answer.',
   },
-  kronkMembers: {
-    id: 'kuestions.scope.kronk_members',
-    defaultMessage: 'Kronk members',
+  orbit: {
+    id: 'kuestions.scope.orbit',
+    defaultMessage: 'Orbit',
   },
-  kronkMembersNote: {
-    id: 'kuestions.scope.kronk_members_note',
-    defaultMessage: 'Anyone with a Kronk account can see and answer.',
+  orbitNote: {
+    id: 'kuestions.scope.orbit_note',
+    defaultMessage: 'Your mates and their mates can see this answer.',
   },
-  connections: {
-    id: 'kuestions.scope.connections',
-    defaultMessage: 'Connections',
+  mates: {
+    id: 'kuestions.scope.mates',
+    defaultMessage: 'Mates',
   },
-  connectionsNote: {
-    id: 'kuestions.scope.connections_note',
-    defaultMessage: "People you're connected with can see this.",
+  matesNote: {
+    id: 'kuestions.scope.mates_note',
+    defaultMessage: 'Only your mutual connections can see this answer.',
   },
-  vouched: { id: 'kuestions.scope.vouched', defaultMessage: 'Vouched' },
-  vouchedNote: {
-    id: 'kuestions.scope.vouched_note',
-    defaultMessage: 'Only people vouched for by someone you trust.',
+  selfOnly: {
+    id: 'kuestions.scope.self_only',
+    defaultMessage: 'Just me',
   },
-  onlyMe: { id: 'kuestions.scope.only_me', defaultMessage: 'Only me' },
-  onlyMeNote: {
-    id: 'kuestions.scope.only_me_note',
+  selfOnlyNote: {
+    id: 'kuestions.scope.self_only_note',
     defaultMessage: 'Private. A note to yourself.',
   },
   visibleTo: {
@@ -58,16 +55,12 @@ const messages = defineMessages({
 
 const LABEL: Record<
   KuestionVisibilityScope,
-  { label: typeof messages.everyone; note: typeof messages.everyoneNote }
+  { label: typeof messages.public; note: typeof messages.publicNote }
 > = {
-  everyone: { label: messages.everyone, note: messages.everyoneNote },
-  kronk_members: {
-    label: messages.kronkMembers,
-    note: messages.kronkMembersNote,
-  },
-  connections: { label: messages.connections, note: messages.connectionsNote },
-  vouched: { label: messages.vouched, note: messages.vouchedNote },
-  only_me: { label: messages.onlyMe, note: messages.onlyMeNote },
+  public: { label: messages.public, note: messages.publicNote },
+  orbit: { label: messages.orbit, note: messages.orbitNote },
+  mates: { label: messages.mates, note: messages.matesNote },
+  self_only: { label: messages.selfOnly, note: messages.selfOnlyNote },
 };
 
 interface VisibilityDialProps {
@@ -75,8 +68,7 @@ interface VisibilityDialProps {
   onChange: (next: KuestionVisibilityScope) => void;
   // Whether to render the human-readable note under the pills. The
   // dial is used in two places: on the answer sheet (with note) and
-  // (later) on settings (with note). Kept optional for future compact
-  // usages.
+  // on settings (with note). Kept optional for future compact usages.
   withNote?: boolean;
 }
 
