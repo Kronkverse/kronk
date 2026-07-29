@@ -175,9 +175,6 @@ export const VeilScene: React.FC = () => {
     if (!root || !before || !after) return;
 
     const { target, isDoc } = findScroller(root);
-    // Both a scroll element and the window are EventTargets; narrow to the
-    // shared base so the listener overload resolves cleanly across the union.
-    const scrollTarget: EventTarget = target;
 
     // The reveal is measured against the visible height and the top edge of the
     // scroll viewport. For the document that's the window; for an element (the
@@ -208,9 +205,7 @@ export const VeilScene: React.FC = () => {
       return c * c * (3 - 2 * c);
     };
 
-    let ticking = false;
     const frame = () => {
-      ticking = false;
       const top = topEdge();
       const view = visibleHeight();
       const beforeBottom = before.getBoundingClientRect().bottom - top;
@@ -237,23 +232,54 @@ export const VeilScene: React.FC = () => {
       }
     };
 
-    const onScroll = () => {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(frame);
+    // Sample the choreography every frame while the veil is on (or near) the
+    // screen, rather than only on scroll. Async layout shifts above the veil —
+    // the friend-recommendation banner popping in, images loading — would
+    // otherwise leave the parallax stale until the next scroll event, which
+    // reads as a glitch. This rAF loop re-measures against the live layout on
+    // every frame and is gated by an IntersectionObserver so it costs nothing
+    // while the veil is off-screen.
+    let rafId = 0;
+    let running = false;
+    const loop = () => {
+      frame();
+      if (running) rafId = requestAnimationFrame(loop);
+    };
+    const start = () => {
+      if (!running) {
+        running = true;
+        rafId = requestAnimationFrame(loop);
       }
     };
-    const onResize = () => {
-      setUnit();
-      onScroll();
+    const stop = () => {
+      running = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = 0;
+      frame(); // settle on the final resting transform
     };
 
-    scrollTarget.addEventListener('scroll', onScroll, { passive: true });
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          start();
+        } else {
+          stop();
+        }
+      },
+      { rootMargin: '250px 0px' },
+    );
+    io.observe(root);
+
+    const onResize = () => {
+      setUnit();
+      frame();
+    };
     window.addEventListener('resize', onResize);
     frame();
 
     return () => {
-      scrollTarget.removeEventListener('scroll', onScroll);
+      io.disconnect();
+      if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener('resize', onResize);
     };
   }, []);
