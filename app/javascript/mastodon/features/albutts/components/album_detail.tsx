@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { apiGetAlbum } from 'mastodon/api/albutts';
 import type {
@@ -76,18 +76,7 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
   onChange,
 }) => {
   const intl = useIntl();
-  const location = useLocation();
-  const shouldPromptFirstPhoto =
-    new URLSearchParams(location.search).get('add_photo') === '1' &&
-    album.photo_count === 0 &&
-    album.can_contribute;
-  const [contributeOpen, setContributeOpen] = useState(shouldPromptFirstPhoto);
-
-  // Reflect state changes if the URL flag flips (e.g., we navigated
-  // between two albums without unmounting).
-  useEffect(() => {
-    if (shouldPromptFirstPhoto) setContributeOpen(true);
-  }, [shouldPromptFirstPhoto]);
+  const [contributeOpen, setContributeOpen] = useState(false);
 
   const openContribute = useCallback(() => {
     setContributeOpen(true);
