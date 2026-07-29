@@ -31,7 +31,8 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
     attach_krews! if krew_ids_param.any?
 
     if @album.save
-      render json: @album, serializer: REST::AlbumSerializer, scope: current_account, status: 201
+      Albutts::PublishAlbum.new(@album).call
+      render json: @album.reload, serializer: REST::AlbumSerializer, scope: current_account, status: 201
     else
       render json: { error: @album.errors.full_messages.to_sentence }, status: :unprocessable_entity
     end

@@ -36,8 +36,14 @@ visibility_scopes:
   - krew # scoped to one or more Krews
 
 feed_projection:
-  card: albutts_card
-  planned: true # WIP korner — no backend yet
+  card: albutts_card # Question-backed feed projection shipped in
+  # Slice 2 (2026-07-29): posting a new album via /hub/albutts writes
+  # a companion Status stamped source_korner='albutts', which renders
+  # via <StatusAlbuttsCard> (cover, title, running photo + contributor
+  # counts, contributor-avatar strip, CTA to
+  # /hub/albutts/albums/<id>). One card per album lifetime — later
+  # photo contributions do not spawn additional cards (§Feed
+  # projection).
   title_from: title
   summary_from: contributor_count
   status_association: album

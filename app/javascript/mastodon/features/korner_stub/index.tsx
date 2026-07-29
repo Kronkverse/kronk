@@ -51,11 +51,9 @@ export const KornerStub: React.FC<{ multiColumn?: boolean; slug?: string }> = ({
 
 // Individual bindings so each korner slug lands on its own bundle
 // route and can be swapped for a real feature component when ready.
+// Albutts retired its stub in alpha.316 (Slice 2 of the build).
 export const MomentsStub: React.FC<{ multiColumn?: boolean }> = (props) => (
   <KornerStub {...props} slug='moments' />
-);
-export const AlbuttsStub: React.FC<{ multiColumn?: boolean }> = (props) => (
-  <KornerStub {...props} slug='albutts' />
 );
 export const MapStub: React.FC<{ multiColumn?: boolean }> = (props) => (
   <KornerStub {...props} slug='map' />

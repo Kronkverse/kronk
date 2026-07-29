@@ -1,0 +1,321 @@
+// Albutts — shared-album korner. Slice 2 lands the working directory
+// + detail + composers; visual polish comes in a follow-up pass.
+
+.albutts-btn {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+
+  &--primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.albutts-directory {
+  padding: 16px 20px 40px;
+
+  &__toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 18px;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__cell {
+    display: block;
+  }
+}
+
+.albutts-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface-variant-background-color);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 120ms ease-out;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  &__cover {
+    aspect-ratio: 4 / 3;
+    background-size: cover;
+    background-position: center;
+    background-color: color-mix(in oklab, var(--accent), transparent 80%);
+
+    &--empty {
+      background-image: none;
+    }
+  }
+
+  &__body {
+    padding: 12px 14px 14px;
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  &__meta {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+}
+
+.albutts-detail {
+  padding: 16px 20px 40px;
+
+  &__crumbs {
+    margin-bottom: 12px;
+  }
+
+  &__crumb {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 13px;
+  }
+
+  &__header {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+  }
+
+  &__cover {
+    flex: 0 0 160px;
+    aspect-ratio: 4 / 3;
+    background-size: cover;
+    background-position: center;
+    border-radius: 10px;
+    background-color: color-mix(in oklab, var(--accent), transparent 80%);
+  }
+
+  &__header-body {
+    flex: 1;
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 8px;
+  }
+
+  &__description {
+    font-size: 14px;
+    opacity: 0.85;
+    margin: 0 0 10px;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 12px;
+    opacity: 0.7;
+    align-items: center;
+  }
+
+  &__owner {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 14px;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+.albutts-photo {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-variant-background-color);
+  border-radius: 10px;
+  overflow: hidden;
+
+  &__img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    display: block;
+
+    &--missing {
+      background: color-mix(in oklab, var(--accent), transparent 90%);
+    }
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px 4px;
+    font-size: 12px;
+  }
+
+  &__credit {
+    font-weight: 600;
+  }
+
+  &__caption {
+    padding: 0 10px 10px;
+    font-size: 12px;
+    opacity: 0.85;
+  }
+}
+
+.albutts-composer {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 55%);
+  padding: 20px;
+
+  &__panel {
+    background: var(--surface-background-color);
+    border-radius: 14px;
+    padding: 22px;
+    width: 100%;
+    max-width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  &__heading {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 14px;
+  }
+
+  &__label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.7;
+    display: block;
+    margin-bottom: 6px;
+    margin-top: 12px;
+  }
+
+  &__input,
+  &__textarea {
+    width: 100%;
+    background: var(--surface-variant-background-color);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: inherit;
+
+    &:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+  }
+
+  &__textarea {
+    min-height: 76px;
+    resize: vertical;
+  }
+
+  &__file {
+    display: block;
+    padding: 8px 0;
+  }
+
+  &__visibility {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  &__visibility-opt {
+    flex: 1;
+    background: transparent;
+    color: inherit;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 13px;
+    cursor: pointer;
+
+    &--active {
+      background: var(--accent);
+      color: #fff;
+    }
+  }
+
+  &__hint {
+    margin-top: 6px;
+    font-size: 12px;
+    opacity: 0.7;
+  }
+
+  &__error {
+    margin-top: 10px;
+    color: #e0567a;
+    font-size: 13px;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 18px;
+  }
+}
