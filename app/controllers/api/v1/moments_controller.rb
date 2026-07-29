@@ -74,13 +74,21 @@ class Api::V1::MomentsController < Api::BaseController
     permitted
   end
 
+  # Maps Moment visibility → Status visibility. Same tier names on
+  # both sides now (Status enum widened at alpha.275 for the Reach
+  # work). Krew-scoped moments also stamp the Status's `statuses_krews`
+  # join so the feed gate lands in that krew's timeline.
+  MOMENT_TO_STATUS_VISIBILITY = {
+    'public' => 'public',
+    'orbit' => 'orbit',
+    'mates' => 'mates',
+    'self_only' => 'self_only',
+    'krew' => 'krew',
+  }.freeze
+
   def create_status_for_moment!(moment)
     status_text = moment.caption.presence || ''
-    # 'mates' and 'krew' both fold to Mastodon's `private` (followers-
-    # only) at the Status level; the fine-grained scoping lives on the
-    # Moment row itself (visibility + krew_id). Only 'public_reach'
-    # widens the Status.
-    status_visibility = moment.visible_to_public_reach? ? 'public' : 'private'
+    status_visibility = MOMENT_TO_STATUS_VISIBILITY.fetch(moment.visibility, 'public')
 
     status = PostStatusService.new.call(
       current_account,
@@ -89,6 +97,8 @@ class Api::V1::MomentsController < Api::BaseController
       application: doorkeeper_token.application,
       media_ids: [moment.media_attachment_id]
     )
+
+    status.krews << moment.krew if moment.visible_to_krew? && moment.krew
 
     moment.update!(status: status)
     status.update_column(:source_korner, 'moments') # feed projection discriminator (§3.2)

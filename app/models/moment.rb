@@ -15,7 +15,13 @@ class Moment < ApplicationRecord
 
   has_many :moment_froths, dependent: :destroy, inverse_of: :moment
 
-  enum :visibility, { public_reach: 0, mates: 1, krew: 2 }, prefix: :visible_to
+  # Full four-tier reach ladder (docs/kronk_feed_and_reach.md §2) +
+  # krew as the orthogonal axis. Integer 0 was `public_reach` under
+  # the pre-Reach naming; kept at 0 as `public` so existing rows
+  # round-trip without a data migration.
+  enum :visibility,
+       { public: 0, mates: 1, krew: 2, orbit: 3, self_only: 4 },
+       prefix: :visible_to
 
   validates :expires_at, presence: true
   validates :caption, length: { maximum: 500 }, allow_blank: true
