@@ -15,7 +15,10 @@ security:
   permissions:
     - read:questions
     - write:questions
-  visibility_scopes: [] # uses Mastodon visibility as-is
+  # Answers pick per-response scope on the platform reach ladder
+  # (docs/kronk_feed_and_reach.md §2). Questions themselves are always
+  # public — the ask is community-facing by design.
+  visibility_scopes: [public, orbit, mates, self_only]
   maintainers:
     - moderator
   federates: false
@@ -67,8 +70,8 @@ notifications:
 settings:
   - name: default_answer_visibility
     kind: enum
-    options: [public, unlisted, followers]
-    default: public
+    options: [public, orbit, mates, self_only]
+    default: mates
     scope: user
     label: Default visibility for my answers
   - name: hide_answered_questions
