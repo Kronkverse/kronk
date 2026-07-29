@@ -18,7 +18,7 @@ class CreateMoments < ActiveRecord::Migration[8.0]
       t.references :media_attachment,  null: false, foreign_key: true
       t.text       :caption
       t.integer    :visibility,        default: 1, null: false # 0=public, 1=mates, 2=krew
-      t.references :group,             foreign_key: true # krew_id when visibility=krew (nullable otherwise)
+      t.references :krew,              foreign_key: true # krew_id when visibility=krew (nullable otherwise). Table renamed groups→krews in 20260723150000.
       t.datetime   :expires_at,        null: false
       t.bigint     :status_id # canonical linkage to the projected Status (§5.5)
 
