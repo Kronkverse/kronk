@@ -64,6 +64,14 @@ function melbourneDateParts(now: Date): {
   return { year: read('year'), month: read('month'), day: read('day') };
 }
 
+// getMoonPhaseName returns a snake_case key (e.g. "full_moon").
+function fmtPhase(name: string): string {
+  return name
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
 function fmtTime(d: Date | null): string {
   if (!d) return '—';
   return d.toLocaleTimeString('en-AU', {
@@ -177,10 +185,14 @@ export const InflowVeil: React.FC<{ multiColumn?: boolean }> = () => {
     const after = afterRef.current;
     if (!root || !scroller || !before || !after) return;
 
-    // The Stage is shorter than the viewport (top nav), so the reveal scope is
-    // measured from the Stage's own height, not 100vh.
+    // The Stage's own box can be far taller than the viewport (it grows with
+    // content), so we measure the *visible* height — the viewport minus the
+    // Stage's top offset (the nav) — for both the CSS scope unit and the
+    // reveal math. That keeps the moon centred in what you can actually see.
+    const visibleHeight = () =>
+      Math.max(320, window.innerHeight - scroller.getBoundingClientRect().top);
     const setUnit = () => {
-      root.style.setProperty('--veil-vh', `${scroller.clientHeight}px`);
+      root.style.setProperty('--veil-vh', `${visibleHeight()}px`);
     };
     setUnit();
 
@@ -201,8 +213,8 @@ export const InflowVeil: React.FC<{ multiColumn?: boolean }> = () => {
     let ticking = false;
     const frame = () => {
       ticking = false;
-      const view = scroller.clientHeight;
       const top = scroller.getBoundingClientRect().top;
+      const view = visibleHeight();
       // Positions of the two curtains relative to the scroller's top edge.
       const beforeBottom = before.getBoundingClientRect().bottom - top;
       const afterTop = after.getBoundingClientRect().top - top;
@@ -330,7 +342,7 @@ export const InflowVeil: React.FC<{ multiColumn?: boolean }> = () => {
                 </div>
                 <h2 className='inflow-veil__read-title'>Beyond the veil</h2>
                 <div className='inflow-veil__phase'>
-                  {sky.phase} · {lit}% lit
+                  {fmtPhase(sky.phase)} · {lit}% lit
                 </div>
                 <p className='inflow-veil__reflection'>{sky.reflection}</p>
                 <div className='inflow-veil__almanac'>
