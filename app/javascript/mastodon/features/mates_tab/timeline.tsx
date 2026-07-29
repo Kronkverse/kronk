@@ -45,6 +45,37 @@ const RIGHT_MARGIN = 40;
 const ROW_HEIGHT = 96; // room for tile + label
 const AXIS_MARK_INTERVAL_DAYS = 90; // ~quarterly ticks
 const MAX_LAYOUT_PASSES = 26;
+const SUBLANE_GAP = 4; // px between stacked sub-lanes
+
+// Greedy sub-lane packing: sort tiles by x, place each in the lowest
+// lane whose most-recent tile is at least (tileSize + SUBLANE_GAP) to
+// the left. Returns id → lane index (0 = base lane, higher = pushed
+// out from the line). Sub-lanes are a packing artefact, not a
+// semantic layer (per brief § Rows pack into sub-lanes).
+const packSubLanes = (
+  tiles: readonly { id: string; x: number }[],
+  tileSize: number,
+): Map<string, number> => {
+  const minSeparation = tileSize + SUBLANE_GAP;
+  const sorted = [...tiles].sort((a, b) => a.x - b.x);
+  const laneLastX: number[] = [];
+  const laneByTile = new Map<string, number>();
+  sorted.forEach((tile) => {
+    let lane = 0;
+    while (lane < laneLastX.length) {
+      const last = laneLastX[lane];
+      if (last === undefined || tile.x - last >= minSeparation) break;
+      lane += 1;
+    }
+    laneLastX[lane] = tile.x;
+    laneByTile.set(tile.id, lane);
+  });
+  return laneByTile;
+};
+
+// How much vertical space is consumed by a stack of N sub-lanes.
+const laneOffset = (lane: number, tileSize: number): number =>
+  lane * (tileSize + SUBLANE_GAP);
 
 const dayIndex = (iso: string, anchorIso: string): number => {
   const anchor = new Date(anchorIso).getTime();
@@ -184,6 +215,31 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
     return membersById.get(subject.inviter_id) ?? null;
   }, [subject, membersById]);
 
+  // Sub-lane packing for the base mates row. The inviter tile also
+  // lives on this row (at its own join date), so it joins the pack
+  // to avoid colliding with the leftmost mate.
+  const matesRowLanes = useMemo(() => {
+    const tiles: { id: string; x: number }[] = matesTiles.map((tile) => ({
+      id: tile.member.id,
+      x: tile.x,
+    }));
+    if (inviter) {
+      tiles.push({
+        id: inviter.id,
+        x: xForDay(dayIndex(inviter.joined_at, data.anchor_date)),
+      });
+    }
+    return packSubLanes(tiles, BASE_TILE);
+  }, [matesTiles, inviter, xForDay, data.anchor_date]);
+
+  const inviteesRowLanes = useMemo(() => {
+    const tiles = inviteesTiles.map((tile) => ({
+      id: tile.member.id,
+      x: tile.x,
+    }));
+    return packSubLanes(tiles, BASE_TILE);
+  }, [inviteesTiles]);
+
   const onTileClick = useCallback((id: string) => {
     setSubjectId(id);
     setHover(null);
@@ -245,6 +301,8 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
         nodes: new Map<string, UpNode>(),
         links: [] as UpLink[],
         layer: new Map<string, number>(),
+        laneByTile: new Map<string, number>(),
+        maxLaneByLayer: new Map<number, number>(),
       };
 
     // Base = mates + inviter. Both live in the base row (layer 0). We
@@ -313,8 +371,35 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
       });
       if (!changedRef.changed) break;
     }
-    return { nodes, links, layer };
-  }, [subject, openedKeys, matesTiles, inviter, membersById, data.anchor_date]);
+    // Sub-lane packing per non-base layer.
+    const laneByTile = new Map<string, number>();
+    const maxLaneByLayer = new Map<number, number>();
+    const byLayer = new Map<number, { id: string; x: number }[]>();
+    nodes.forEach((n) => {
+      if (n.base) return;
+      const l = layer.get(n.id) ?? 0;
+      if (!byLayer.has(l)) byLayer.set(l, []);
+      byLayer.get(l)?.push({ id: n.id, x: xForDay(n.day) });
+    });
+    byLayer.forEach((tiles, l) => {
+      const lanes = packSubLanes(tiles, BRANCH_TILE);
+      let max = 0;
+      lanes.forEach((lane, id) => {
+        laneByTile.set(id, lane);
+        if (lane > max) max = lane;
+      });
+      maxLaneByLayer.set(l, max);
+    });
+    return { nodes, links, layer, laneByTile, maxLaneByLayer };
+  }, [
+    subject,
+    openedKeys,
+    matesTiles,
+    inviter,
+    membersById,
+    data.anchor_date,
+    xForDay,
+  ]);
 
   // ── Downward branch layout (invite line) ───────────────────────
   const downwardBranches = useMemo(() => {
@@ -334,6 +419,8 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
       return {
         nodes: new Map<string, DownNode>(),
         links: [] as DownLink[],
+        laneByTile: new Map<string, number>(),
+        maxLaneByDepth: new Map<number, number>(),
       };
 
     const nodes = new Map<string, DownNode>();
@@ -372,11 +459,37 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
         queue.push(m.id);
       });
     }
-    return { nodes, links };
-  }, [subject, openedKeys, inviteesTiles, data.members, data.anchor_date]);
+    // Sub-lane packing per non-base depth.
+    const laneByTile = new Map<string, number>();
+    const maxLaneByDepth = new Map<number, number>();
+    const byDepth = new Map<number, { id: string; x: number }[]>();
+    nodes.forEach((n) => {
+      if (n.base) return;
+      if (!byDepth.has(n.depth)) byDepth.set(n.depth, []);
+      byDepth.get(n.depth)?.push({ id: n.id, x: xForDay(n.day) });
+    });
+    byDepth.forEach((tiles, d) => {
+      const lanes = packSubLanes(tiles, BRANCH_TILE);
+      let max = 0;
+      lanes.forEach((lane, id) => {
+        laneByTile.set(id, lane);
+        if (lane > max) max = lane;
+      });
+      maxLaneByDepth.set(d, max);
+    });
+    return { nodes, links, laneByTile, maxLaneByDepth };
+  }, [
+    subject,
+    openedKeys,
+    inviteesTiles,
+    data.members,
+    data.anchor_date,
+    xForDay,
+  ]);
 
   // How far the opened branches extend above/below the base rows —
-  // used to pad the SVG viewBox so tiles never clip.
+  // used to pad the SVG viewBox so tiles never clip. Includes the
+  // effect of accumulated sub-lanes at each layer.
   const branchExtents = useMemo(() => {
     let maxUpLayer = 0;
     upwardBranches.layer.forEach((v) => {
@@ -386,21 +499,96 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
     downwardBranches.nodes.forEach((n) => {
       if (n.depth > maxDownDepth) maxDownDepth = n.depth;
     });
-    return { maxUpLayer, maxDownDepth };
-  }, [upwardBranches, downwardBranches]);
+    // Sub-lane maxes on the base rows (mates + invitees) — they push
+    // the branch layers further out from the line.
+    let maxMatesLane = 0;
+    matesRowLanes.forEach((v) => {
+      if (v > maxMatesLane) maxMatesLane = v;
+    });
+    let maxInviteesLane = 0;
+    inviteesRowLanes.forEach((v) => {
+      if (v > maxInviteesLane) maxInviteesLane = v;
+    });
+    // Sub-lane maxes on the top-most upward layer and the bottom-most
+    // downward depth so tiles at the extremes don't clip.
+    const topLaneExtra = upwardBranches.maxLaneByLayer.get(maxUpLayer) ?? 0;
+    const bottomLaneMax =
+      downwardBranches.maxLaneByDepth.get(maxDownDepth) ?? 0;
+    return {
+      maxUpLayer,
+      maxDownDepth,
+      maxMatesLane,
+      maxInviteesLane,
+      topLaneExtra,
+      bottomLaneMax,
+    };
+  }, [upwardBranches, downwardBranches, matesRowLanes, inviteesRowLanes]);
 
   const topPad =
-    branchExtents.maxUpLayer > 0
-      ? branchExtents.maxUpLayer * BRANCH_PITCH + BRANCH_TILE
-      : 0;
+    (branchExtents.maxMatesLane > 0
+      ? laneOffset(branchExtents.maxMatesLane, BASE_TILE)
+      : 0) +
+    (branchExtents.maxUpLayer > 0
+      ? branchExtents.maxUpLayer * BRANCH_PITCH +
+        BRANCH_TILE +
+        laneOffset(branchExtents.topLaneExtra, BRANCH_TILE)
+      : 0);
   const bottomPad =
-    branchExtents.maxDownDepth > 0
-      ? branchExtents.maxDownDepth * BRANCH_PITCH + BRANCH_TILE + 16
-      : 0;
+    (branchExtents.maxInviteesLane > 0
+      ? laneOffset(branchExtents.maxInviteesLane, BASE_TILE)
+      : 0) +
+    (branchExtents.maxDownDepth > 0
+      ? branchExtents.maxDownDepth * BRANCH_PITCH +
+        BRANCH_TILE +
+        laneOffset(branchExtents.bottomLaneMax, BRANCH_TILE) +
+        16
+      : 0);
+
+  // Y-position helpers that fold in sub-lane offsets. Base rows push
+  // their sub-lanes away from the line; branch layers stack beyond the
+  // base row's max lane so a fully-packed base row and a deep branch
+  // never share pixels.
+  const matesTileY = useCallback(
+    (memberId: string): number =>
+      matesRowY - laneOffset(matesRowLanes.get(memberId) ?? 0, BASE_TILE),
+    [matesRowY, matesRowLanes],
+  );
+  const inviteesTileY = useCallback(
+    (memberId: string): number =>
+      inviteesRowY + laneOffset(inviteesRowLanes.get(memberId) ?? 0, BASE_TILE),
+    [inviteesRowY, inviteesRowLanes],
+  );
 
   const canOpenMate = useCallback(
     (memberId: string) => membersById.get(memberId)?.inviter_id != null,
     [membersById],
+  );
+
+  // Branch tile Y helpers. `matesBaseCeiling` = the highest (smallest y)
+  // point any base-row mate tile reaches given its sub-lane. Branch
+  // layers stack above that ceiling so they never overlap base tiles.
+  const matesBaseCeiling = useMemo(
+    () => matesRowY - laneOffset(branchExtents.maxMatesLane, BASE_TILE),
+    [matesRowY, branchExtents.maxMatesLane],
+  );
+  const inviteesBaseFloor = useMemo(
+    () => inviteesRowY + laneOffset(branchExtents.maxInviteesLane, BASE_TILE),
+    [inviteesRowY, branchExtents.maxInviteesLane],
+  );
+
+  const upBranchTileY = useCallback(
+    (memberId: string, layer: number): number =>
+      matesBaseCeiling -
+      layer * BRANCH_PITCH -
+      laneOffset(upwardBranches.laneByTile.get(memberId) ?? 0, BRANCH_TILE),
+    [matesBaseCeiling, upwardBranches.laneByTile],
+  );
+  const downBranchTileY = useCallback(
+    (memberId: string, depth: number): number =>
+      inviteesBaseFloor +
+      depth * BRANCH_PITCH +
+      laneOffset(downwardBranches.laneByTile.get(memberId) ?? 0, BRANCH_TILE),
+    [inviteesBaseFloor, downwardBranches.laneByTile],
   );
 
   const invitedCountFor = useCallback(
@@ -514,7 +702,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                 linked to the head of the subject's line. */}
             {inviter && inviterJoinX !== null && (
               <path
-                d={`M ${subjectJoinX} ${lineY - TRACK_HEIGHT / 2} C ${subjectJoinX} ${(matesRowY + lineY) / 2}, ${inviterJoinX} ${(matesRowY + lineY) / 2}, ${inviterJoinX} ${matesRowY + BASE_TILE / 2}`}
+                d={`M ${subjectJoinX} ${lineY - TRACK_HEIGHT / 2} C ${subjectJoinX} ${(matesTileY(inviter.id) + lineY) / 2}, ${inviterJoinX} ${(matesTileY(inviter.id) + lineY) / 2}, ${inviterJoinX} ${matesTileY(inviter.id) + BASE_TILE / 2}`}
                 className='mates-tab__inviter-link'
               />
             )}
@@ -573,7 +761,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
               <TimelineTile
                 key={`inviter-${inviter.id}`}
                 x={inviterJoinX}
-                y={matesRowY}
+                y={matesTileY(inviter.id)}
                 size={BASE_TILE}
                 member={inviter}
                 label={inviter.handle}
@@ -602,12 +790,12 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                   x1={tile.x}
                   x2={tile.x}
                   y1={lineY - TRACK_HEIGHT / 2}
-                  y2={matesRowY + BASE_TILE / 2}
+                  y2={matesTileY(tile.member.id) + BASE_TILE / 2}
                   className='mates-tab__link'
                 />
                 <TimelineTile
                   x={tile.x}
-                  y={matesRowY}
+                  y={matesTileY(tile.member.id)}
                   size={BASE_TILE}
                   member={tile.member}
                   label={tile.label}
@@ -639,12 +827,12 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                     x1={tile.x}
                     x2={tile.x}
                     y1={lineY + TRACK_HEIGHT / 2}
-                    y2={inviteesRowY - BASE_TILE / 2}
+                    y2={inviteesTileY(tile.member.id) - BASE_TILE / 2}
                     className='mates-tab__link'
                   />
                   <TimelineTile
                     x={tile.x}
-                    y={inviteesRowY}
+                    y={inviteesTileY(tile.member.id)}
                     size={BASE_TILE}
                     member={tile.member}
                     label={tile.label}
@@ -676,9 +864,12 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
               const childLayer = upwardBranches.layer.get(edge.childId) ?? 0;
               const parentLayer = upwardBranches.layer.get(edge.parentId) ?? 0;
               const cx = xForDay(child.day);
-              const cy = matesRowY - childLayer * BRANCH_PITCH;
+              const cy = child.base
+                ? matesTileY(edge.childId) - BASE_TILE / 2
+                : upBranchTileY(edge.childId, childLayer) + BRANCH_TILE / 2;
               const px = xForDay(parent.day);
-              const py = matesRowY - parentLayer * BRANCH_PITCH;
+              const py =
+                upBranchTileY(edge.parentId, parentLayer) + BRANCH_TILE / 2;
               const midY = (cy + py) / 2;
               return (
                 <path
@@ -700,7 +891,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                   <TimelineTile
                     key={`up-node-${node.id}`}
                     x={xForDay(node.day)}
-                    y={matesRowY - layer * BRANCH_PITCH}
+                    y={upBranchTileY(node.id, layer)}
                     size={BRANCH_TILE}
                     member={member}
                     label={member.handle}
@@ -719,9 +910,13 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
               const parent = downwardBranches.nodes.get(edge.parentId);
               if (!child || !parent) return null;
               const cx = xForDay(child.day);
-              const cy = inviteesRowY + child.depth * BRANCH_PITCH;
+              const cy =
+                downBranchTileY(edge.childId, child.depth) - BRANCH_TILE / 2;
               const px = xForDay(parent.day);
-              const py = inviteesRowY + parent.depth * BRANCH_PITCH;
+              const py = parent.base
+                ? inviteesTileY(edge.parentId) + BASE_TILE / 2
+                : downBranchTileY(edge.parentId, parent.depth) -
+                  BRANCH_TILE / 2;
               const midY = (cy + py) / 2;
               return (
                 <path
@@ -743,7 +938,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                   <TimelineTile
                     key={`down-node-${node.id}`}
                     x={xForDay(node.day)}
-                    y={inviteesRowY + node.depth * BRANCH_PITCH}
+                    y={downBranchTileY(node.id, node.depth)}
                     size={BRANCH_TILE}
                     member={member}
                     label={member.handle}
