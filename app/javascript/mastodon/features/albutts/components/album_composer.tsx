@@ -109,7 +109,11 @@ const messages = defineMessages({
   photoErrorPartial: {
     id: 'albutts.composer.photo_error_partial',
     defaultMessage:
-      "The album is created, but {failed, plural, one {# photo} other {# photos}} didn't upload. You can retry from the album page.",
+      "The album is created, but {failed, plural, one {# photo} other {# photos}} didn't upload. Open the browser console to see why, or retry from the album page.",
+  },
+  continueToAlbum: {
+    id: 'albutts.composer.continue_to_album',
+    defaultMessage: 'Continue to album',
   },
 });
 
@@ -212,6 +216,8 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     setPhotos([]);
   }, []);
 
+  const [createdAlbum, setCreatedAlbum] = useState<ApiAlbumJSON | null>(null);
+
   const submit = useCallback(() => {
     if (!canSubmit) return;
     setPending(true);
@@ -229,7 +235,8 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           description: description.trim() || undefined,
           visibility,
         });
-      } catch {
+      } catch (e) {
+        console.error('[albutts] create album failed', e);
         setError('create_failed');
         setPending(false);
         setProgress(null);
@@ -246,17 +253,38 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           form.append('file', draft.file);
           const media = await api().post<MediaResponse>('/api/v1/media', form);
           await apiContributePhoto(album.id, { media_id: media.data.id });
-        } catch {
+        } catch (e) {
+          console.error(
+            '[albutts] photo upload failed',
+            {
+              name: draft.file.name,
+              size: draft.file.size,
+              type: draft.file.type,
+            },
+            e,
+          );
           failed += 1;
         }
       }
 
       setPending(false);
       setProgress(null);
-      if (failed > 0) setFailedCount(failed);
-      onCreated(album);
+      setCreatedAlbum(album);
+
+      if (failed > 0) {
+        // Keep the composer open so the user actually sees the error
+        // and can decide what to do. The "Continue to album" affordance
+        // dismisses on their terms.
+        setFailedCount(failed);
+      } else {
+        onCreated(album);
+      }
     })();
   }, [canSubmit, description, onCreated, photos, trimmed, visibility]);
+
+  const handleContinue = useCallback(() => {
+    if (createdAlbum) onCreated(createdAlbum);
+  }, [createdAlbum, onCreated]);
 
   const submitLabel =
     photos.length === 0
@@ -405,22 +433,34 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         )}
 
         <div className='albutts-composer__actions'>
-          <button
-            type='button'
-            className='albutts-btn albutts-btn--ghost'
-            onClick={onCancel}
-            disabled={pending}
-          >
-            {intl.formatMessage(messages.cancel)}
-          </button>
-          <button
-            type='button'
-            className='albutts-btn albutts-btn--primary'
-            onClick={submit}
-            disabled={!canSubmit}
-          >
-            {submitLabel}
-          </button>
+          {createdAlbum && failedCount > 0 ? (
+            <button
+              type='button'
+              className='albutts-btn albutts-btn--primary'
+              onClick={handleContinue}
+            >
+              {intl.formatMessage(messages.continueToAlbum)}
+            </button>
+          ) : (
+            <>
+              <button
+                type='button'
+                className='albutts-btn albutts-btn--ghost'
+                onClick={onCancel}
+                disabled={pending}
+              >
+                {intl.formatMessage(messages.cancel)}
+              </button>
+              <button
+                type='button'
+                className='albutts-btn albutts-btn--primary'
+                onClick={submit}
+                disabled={!canSubmit}
+              >
+                {submitLabel}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
