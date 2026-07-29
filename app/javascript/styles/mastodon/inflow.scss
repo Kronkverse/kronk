@@ -619,19 +619,31 @@
 
 // ── Daily kosmic card (home timeline banner) ──────────────────────────────────
 
+// The daily InFlow dispatch floats in the feed like a post (feed-float), with a
+// subtle violet wash marking it as the Kosmic daily. Taps through to /hub/inflow.
 .daily-kosmic-card {
   display: block;
   width: 100%;
+  margin-block: 12px;
+  padding: 16px 18px;
   text-align: start;
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  border: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
-  padding: 16px 20px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border-default));
+  border-radius: var(--radius-large, 16px);
+  background: linear-gradient(
+    color-mix(in srgb, var(--accent) 12%, var(--surface-elevated)),
+    var(--surface-elevated)
+  );
+  box-shadow: var(--elevation-card);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 
   &:hover {
-    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    border-color: var(--accent);
+    box-shadow:
+      0 0 0 1px var(--accent),
+      var(--elevation-card);
   }
 }
 
