@@ -28,7 +28,10 @@ security:
   permissions:
     - read:statuses
     - write:statuses
-  visibility_scopes: [mates, krew, public]
+  # Full four-tier reach ladder + krew (docs/kronk_feed_and_reach.md
+  # §2). Moments can be broadcast (public), spread through mate-of-mate
+  # (orbit), close (mates), private (self_only), or krew-scoped.
+  visibility_scopes: [public, orbit, mates, self_only, krew]
   maintainers:
     - moderator
   federates: false # Kronk-local only in v1; federated Moments deferred
