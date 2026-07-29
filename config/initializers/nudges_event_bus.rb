@@ -95,4 +95,38 @@ Rails.application.config.after_initialize do
 
     convo.memberships.where(account_id: payload[:actor_account_id]).destroy_all
   end
+
+  # ── Hand-wired: albutts.album.new_photo ──────────────────────────
+  # Multi-recipient fan-out: every fellow contributor gets a nudge
+  # (docs/spaces/albutts.md §Notifications). The Mate gate still
+  # applies per recipient; a contribution burst reaching non-mates
+  # silently drops those legs. Aggregation (`window: 15m,
+  # key: album_id`) declared in the manifest is not yet enforced by
+  # the router — comes in a follow-up.
+  Kronk::KornerEvents.subscribe('albutts.album.new_photo') do |payload|
+    album = Album.find_by(id: payload[:album_id])
+    actor = Account.find_by(id: payload[:actor_account_id])
+    next unless album && actor
+
+    fellow_ids = album.photos.where.not(contributor_id: actor.id)
+                      .distinct.pluck(:contributor_id)
+    fellow_ids |= [album.owner_id] unless album.owner_id == actor.id
+
+    fellow_ids.each do |recipient_id|
+      recipient = Account.find_by(id: recipient_id)
+      next unless recipient
+
+      Nudges::EventRouter.deliver(
+        actor: actor,
+        recipient: recipient,
+        source_korner_slug: 'albutts',
+        verb: 'added_photo',
+        source_type: 'Album',
+        source_id: album.id,
+        interaction: 'interactive',
+        cta_label: 'View album',
+        cta_route: "/hub/albutts/albums/#{album.id}"
+      )
+    end
+  end
 end

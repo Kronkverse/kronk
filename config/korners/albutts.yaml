@@ -2,9 +2,9 @@
 # with per-photo author credit; distinct from "attach 4 photos to a
 # toot" because contributors are peers, not one poster's silent guests.
 #
-# WIP manifest — no backend yet. `enforced: false`.
-# See docs/spaces/albutts.md for the full space doc (discovery output
-# from docs/korners/proposing_a_korner.md, 2026-07-20).
+# Shipped 2026-07-29 across four slices (albums + photos + krew join,
+# directory + detail + composers + feed card, notifications +
+# kalendar spawn, enforce). See docs/spaces/albutts.md.
 
 slug: albutts
 name: Albutts
@@ -93,7 +93,7 @@ launch:
   blurb: "Albutts — shared albums where every photo carries its author's credit."
   cta: 'Start an album'
 
-enforced: false
+enforced: true # boot validator gates L1-L11 for albutts (2026-07-29)
 
 # ── Directory nodes ──────────────────────────────────────────────
 nodes:
