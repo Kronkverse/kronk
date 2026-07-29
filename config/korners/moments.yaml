@@ -1,55 +1,145 @@
 # Moments — ephemeral posts, gone by morning.
 #
-# WIP manifest — no backend yet. `enforced: false` keeps the boot
-# validator quiet while the models + composer land during 2.x.
-# See docs/kronk_korner_spec.md §New korners.
+# Discovery locked 2026-07-29 (Kommons proposal "New Korner: Moments"
+# #116969974437738188). See docs/spaces/moments.md for the shape:
+# a single photo or ≤ 60s video with an optional caption, fixed 24h
+# expiry, Mates-by-default reach, Froth + reply-via-Nudge interaction,
+# untagged (no Kategory), two surfaces (grid + Home strip), full-form
+# composer with optional attachments to Kalendar / Krew / Map / Klot /
+# mARTketplace.
+#
+# `enforced: false` + `lifecycle: soon` per Korner Standard §L1 golden
+# rule until the models + composer land (adding_a_korner.md picks up
+# from here). Boot validator stays quiet; the Hub tile treats this as
+# a "coming soon" tile.
 
 slug: moments
 name: Moments
 purpose: 'To make space for the ephemeral — posts that are gone by morning.'
-tagline: "Moments make us who we are, and we're here to share the authentic us."
+tagline: 'Moments make us who we are, and we come here to share the authentic us.'
 icon:
   material: hourglass
+  # No text_glyph — Moments isn't K-branded; the badge falls back to
+  # the first letter of the name ('M').
 render_target: native
-version: 0.0.0
+version: 0.0.1 # bumped from 0.0.0 on discovery lock
+
+security:
+  permissions:
+    - read:statuses
+    - write:statuses
+  visibility_scopes: [mates, krew, public]
+  maintainers:
+    - moderator
+  federates: false # Kronk-local only in v1; federated Moments deferred
 
 resources:
-  - name: moments
+  - name: moments # primary
     primary: true
+  - name: moment_views # per-viewer read state (Home-strip bright/dim)
+  - name: moment_froths # ephemeral favourites, expire with the parent
 
 storage:
-  db_namespace: moment_ # planned: moments, moment_views
-  media_prefix: spaces/moments/ # planned — DO Spaces path root
+  db_namespace: moment_
+  media_prefix: spaces/moments/ # DO Spaces path root
+
+emits:
+  - name: moments.published
+    payload:
+      - moment_id
+      - account_id
+      - expires_at
+  - name: moments.reply_started
+    payload:
+      - moment_id
+      - from_account_id
+  - name: moments.froth
+    payload:
+      - moment_id
+      - from_account_id
+  # Attach events — emitted only when the poster attaches an optional
+  # sidecar to the Moment. Each touched korner may listen to update
+  # its own surface (e.g. Kalendar shows the Moment on the event page).
+  - name: moments.attach.kalendar
+    payload:
+      - moment_id
+      - event_id
+  - name: moments.attach.map
+    payload:
+      - moment_id
+      - location_lat
+      - location_lng
+  - name: moments.attach.klot
+    payload:
+      - moment_id
+      - klot_phase
+  - name: moments.attach.martketplace
+    payload:
+      - moment_id
+      - listing_id
+
+listens: [] # broadcast surface, not reactive
 
 feed_projection:
   card: moments_card
-  planned: true # WIP korner — no backend yet
+  planned: true # WIP korner — card not built yet
   title_from: caption
+  summary_from: caption
   status_association: moment
   links_to: /hub/moments/<id>
-  default_visibility: followers
+  default_visibility: mates # was `followers` in the stub; tightened per discovery
+
+notifications:
+  types:
+    - name: moments.froth
+      subject_type: moment
+      default_push: false # ambient signal
+      aggregation: per_moment # N froths → one notification
+      interactive: false
+    - name: moments.reply_started
+      subject_type: moment
+      default_push: true
+      aggregation: none
+      interactive: true # opens the Nudges thread
+    - name: moments.mention
+      subject_type: moment
+      default_push: true
+      aggregation: none
+      interactive: true
 
 settings:
-  - name: auto_expire_hours
-    kind: integer
-    default: 24
-    scope: user
+  # `auto_expire_hours` was in the stub — retired at discovery: expiry
+  # is fixed at 24h (the mechanic IS the identity).
   - name: notify_on_view
     kind: boolean
     default: false
     scope: user
-
-emits: []
-listens: []
+  - name: notify_on_froth_push
+    kind: boolean
+    default: false
+    scope: user
+  - name: notify_on_reply_push
+    kind: boolean
+    default: true
+    scope: user
+  - name: notify_on_mention_push
+    kind: boolean
+    default: true
+    scope: user
+  - name: strip_on_home
+    kind: boolean
+    default: true
+    scope: user
 
 hub_teaser:
   static: 'Gone by morning.'
 
 launch:
-  blurb: "Moments — post something ephemeral. It's gone in 24 hours."
-  cta: 'Try it'
+  blurb: 'Moments — a photo or short video, up to a day.'
+  cta: 'Share a Moment'
 
-enforced: false # boot validator silent until models land
+feature_flag: # not-implemented
+enforced: false # discovery only; models + composer not built
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 nodes:
@@ -58,3 +148,16 @@ nodes:
     url: /hub/moments
     lifecycle: soon
     spa: true
+
+  - id: moments.detail
+    label: Moment detail
+    url: /hub/moments/:id
+    lifecycle: soon
+    spa: true
+
+  - id: settings.moments
+    label: Moments settings
+    url: /hub/moments/settings
+    lifecycle: soon
+    spa: true
+    bucket: moments
