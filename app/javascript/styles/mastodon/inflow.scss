@@ -673,3 +673,23 @@
   color: color-mix(in srgb, var(--accent) 80%, #fff 20%);
   font-weight: 500;
 }
+
+// ── Unified strands (single scroll — replaces the tab switcher) ──────────────
+
+.in-flow__strand {
+  padding: 28px 24px;
+
+  & + & {
+    border-top: 1px solid color-mix(in srgb, var(--accent) 15%, transparent);
+  }
+}
+
+.in-flow__strand-heading {
+  margin: 0 0 18px;
+  font-family: Georgia, var(--font-display);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 65%, #fff 35%);
+}
