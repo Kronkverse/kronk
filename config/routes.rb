@@ -328,9 +328,13 @@ Rails.application.routes.draw do
   get '/hub/huddle', to: 'huddle#index'
   get '/hub/huddle/*path', to: 'huddle#index', format: false
 
-  # 2.x korner stubs (Moments/Albutts) — manifest-only, no backend
-  # yet. Fall through to the SPA so KornerStub renders.
+  # Moments (KRONK moments discovery locked in alpha.313) — the models
+  # + composer landed in alpha.31X. Wildcard for deep links to
+  # /hub/moments/:id (viewer).
   get '/hub/moments', to: 'home#index'
+  get '/hub/moments/*path', to: 'home#index', format: false
+  # 2.x korner stubs (Albutts) — manifest-only, no backend yet.
+  # Fall through to the SPA so KornerStub renders.
   get '/hub/albutts', to: 'home#index'
   # Map has real lenses now (mates/treks/logger); the /*path wildcard
   # lets a direct load or hard-reload of /hub/map/<lens> boot the SPA

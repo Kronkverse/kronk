@@ -1,0 +1,60 @@
+# frozen_string_literal: true
+
+# Moment — an ephemeral photo/video post with a fixed 24h expiry.
+# Discovery locked in alpha.313 (see docs/spaces/moments.md +
+# config/korners/moments.yaml). A Moment is a first-class row that
+# projects to a Status for feed presence, mirroring the pattern used
+# by Event (kalendar) and KosmicUpdate (inflow).
+class Moment < ApplicationRecord
+  DEFAULT_LIFETIME = 24.hours
+
+  belongs_to :account
+  belongs_to :media_attachment
+  belongs_to :group, optional: true # aka Krew when visibility == :krew
+  belongs_to :status, class_name: 'Status', optional: true, inverse_of: :moment
+
+  has_many :moment_froths, dependent: :destroy, inverse_of: :moment
+
+  enum :visibility, { public_reach: 0, mates: 1, krew: 2 }, prefix: :visible_to
+
+  validates :expires_at, presence: true
+  validates :caption, length: { maximum: 500 }, allow_blank: true
+  validate  :krew_only_when_krew_visibility
+
+  before_validation :set_default_expiry, on: :create
+
+  scope :active,  -> { where('expires_at > ?', Time.current) }
+  scope :expired, -> { where(expires_at: ..Time.current) }
+  scope :for_account, ->(account) { where(account: account) }
+  scope :recent, -> { order(created_at: :desc) }
+
+  def active?
+    expires_at.future?
+  end
+
+  def froth_count
+    moment_froths.count
+  end
+
+  def frothed_by?(other_account)
+    return false unless other_account
+
+    moment_froths.exists?(account: other_account)
+  end
+
+  private
+
+  def set_default_expiry
+    self.expires_at ||= created_at.presence&.+(DEFAULT_LIFETIME) || (Time.current + DEFAULT_LIFETIME)
+  end
+
+  def krew_only_when_krew_visibility
+    return if visible_to_krew? == group_id.present?
+
+    if visible_to_krew? && group_id.blank?
+      errors.add(:group_id, 'must be present when visibility is krew')
+    elsif !visible_to_krew? && group_id.present?
+      errors.add(:group_id, 'must be blank unless visibility is krew')
+    end
+  end
+end
