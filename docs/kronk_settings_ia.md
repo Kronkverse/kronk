@@ -41,7 +41,7 @@ Settings nodes live **in the bucket of the space they configure** (`settings.fee
 
 What reaches you, and what you filter out.
 
-- **Feed scope** — mates / orbit / kommunity (`kronk.feed_scope`, default `orbit`) · **built** · exposed as an inline chip row on the Home column (Mates / Orbit / Kommunity / [Krew ▾]); the settings surface retains the three-tier picker for accessibility parity.
+- **Feed scope** — mates / orbit / kommunity (`kronk.feed_scope`, default `orbit`) · **built** · picker lives on `/home/settings`. An inline chip row was mounted on the Home column in alpha.330–.331 then retreated in alpha.332 — the setting is the sole surface for now.
 - Timeline display — group boosts, slow-mode (pending items), media display, autoplay, blurhash, expand content warnings, show trends, deck/advanced layout · _(Mastodon feed prefs)_
 - **Keyword filters** — what's hidden (`/filters`) · classic
 - **Mutes · Blocks · Domain blocks** — silencing incoming · classic (`Mutes`/`Blocks`/`DomainBlocks` exist)

@@ -6,18 +6,20 @@ import {
   getMoonRiseSet,
   getDaylightInfo,
 } from 'mastodon/features/events/components/celestial_calendar';
+import { setKosmosBrightness } from 'mastodon/features/kosmos/brightness';
 
 import { buildDailyIntegrationText } from './components/daily_integration';
 import { LOCATION_LAT, LOCATION_LON, LOCATION_TZ } from './constants';
 
-// The InFlow veil — the feed parts to open onto the night sky.
+// The InFlow veil — the feed parts to open onto the standard background.
 //
-// As you scroll to it, the neighbouring posts pin to the top and bottom edges
-// and separate, framing an opening that reveals a brighter field of the same
-// purple-star motif used platform-wide, with tonight's moon and reading
-// floating in it — then they close back over. The same scene drives the
-// standalone /hub/inflow page (where there are no neighbours to part, so it's
-// just the reveal). All data is live for tonight's sky.
+// There are no curtains and no veil-drawn stars: the opening is transparent, so
+// the shared KronkKosmos starfield (the ambient layer behind every space)
+// shows through. As the opening centres on scroll, we ramp that shared layer's
+// brightness up via setKosmosBrightness — the sky itself intensifies — with
+// tonight's moon and reading floating in it, then ramp back down as it closes.
+// The same scene drives the standalone /hub/inflow page. All data is live for
+// tonight's sky.
 
 function melbourneDateParts(now: Date): {
   year: number;
@@ -120,7 +122,6 @@ const VeilMoon: React.FC<{ illumination: number; waning: boolean }> = ({
 export const VeilScene: React.FC = () => {
   const rootRef = useRef<HTMLDivElement>(null);
   const gapRef = useRef<HTMLDivElement>(null);
-  const skyRef = useRef<HTMLDivElement>(null);
   const moonRef = useRef<HTMLDivElement>(null);
   const haloRef = useRef<HTMLDivElement>(null);
   const readRef = useRef<HTMLDivElement>(null);
@@ -148,6 +149,8 @@ export const VeilScene: React.FC = () => {
 
     const { target, isDoc } = findScroller(root);
 
+    // Measured against the visible viewport: for the document that's the
+    // window; for an element scroller (the Stage) it's the element's own box.
     const topEdge = () =>
       isDoc ? 0 : (target as HTMLElement).getBoundingClientRect().top;
     const visibleHeight = () =>
@@ -171,27 +174,11 @@ export const VeilScene: React.FC = () => {
       return c * c * (3 - 2 * c);
     };
 
-    // The neighbouring feed posts (this veil's item wrapper's siblings). We pin
-    // them to the viewport edges during the reveal so the feed visibly parts;
-    // track them so we can release their transforms cleanly.
-    let pinnedPrev: HTMLElement | null = null;
-    let pinnedNext: HTMLElement | null = null;
-    let prevTy = 0;
-    let nextTy = 0;
-    const releasePins = () => {
-      if (pinnedPrev) pinnedPrev.style.transform = '';
-      if (pinnedNext) pinnedNext.style.transform = '';
-      pinnedPrev = null;
-      pinnedNext = null;
-      prevTy = 0;
-      nextTy = 0;
-    };
-
     if (window.matchMedia('(prefers-reduced-motion:reduce)').matches) {
       window.addEventListener('resize', setUnit);
       return () => {
         window.removeEventListener('resize', setUnit);
-        releasePins();
+        setKosmosBrightness(0);
       };
     }
 
@@ -201,14 +188,16 @@ export const VeilScene: React.FC = () => {
       const gapRect = gap.getBoundingClientRect();
       const gapTop = gapRect.top - top;
 
-      // Progress across the pinned range (0 as the opening engages, 1 as it
-      // releases). `open` ramps up over the first third, holds, then eases back
-      // down — a symmetric reveal.
+      // Progress across the pinned range (0 as the opening engages the top of
+      // the viewport, 1 as it releases). `open` ramps up over the first third,
+      // holds, then eases back down — a symmetric reveal.
       const denom = Math.max(1, gapRect.height - view);
       const p = clamp(-gapTop / denom, 0, 1);
-      const open = Math.min(smooth(p / 0.32), smooth((1 - p) / 0.32));
+      const open = Math.min(smooth(p / 0.35), smooth((1 - p) / 0.35));
 
-      if (skyRef.current) skyRef.current.style.opacity = open.toFixed(3);
+      // Drive the shared background: ambient (0) → full sky (1) → ambient.
+      setKosmosBrightness(open);
+
       if (moonRef.current)
         moonRef.current.style.transform = `translateY(${((0.5 - p) * 40).toFixed(2)}px) scale(${(0.9 + open * 0.1).toFixed(3)})`;
       if (haloRef.current)
@@ -217,40 +206,12 @@ export const VeilScene: React.FC = () => {
         readRef.current.style.opacity = open.toFixed(3);
         readRef.current.style.transform = `translateY(${((1 - open) * 18).toFixed(2)}px)`;
       }
-
-      // Part the feed: pin the post above near the top edge and the post below
-      // near the bottom edge while open, so they frame the sky and separate.
-      const item = root.parentElement;
-      const prevItem = (item?.previousElementSibling ?? null) as HTMLElement | null;
-      const nextItem = (item?.nextElementSibling ?? null) as HTMLElement | null;
-
-      if (prevItem !== pinnedPrev) {
-        if (pinnedPrev) pinnedPrev.style.transform = '';
-        pinnedPrev = prevItem;
-        prevTy = 0;
-      }
-      if (prevItem) {
-        const naturalBottom = prevItem.getBoundingClientRect().bottom - prevTy;
-        prevTy = (view * 0.14 - naturalBottom) * open;
-        prevItem.style.transform = `translateY(${prevTy.toFixed(1)}px)`;
-      }
-
-      if (nextItem !== pinnedNext) {
-        if (pinnedNext) pinnedNext.style.transform = '';
-        pinnedNext = nextItem;
-        nextTy = 0;
-      }
-      if (nextItem) {
-        const naturalTop = nextItem.getBoundingClientRect().top - nextTy;
-        nextTy = (view * 0.86 - naturalTop) * open;
-        nextItem.style.transform = `translateY(${nextTy.toFixed(1)}px)`;
-      }
     };
 
     // Sample every frame while the opening is on (or near) screen, so async
     // reflows above it — the friend-recommendation banner popping in, images
-    // loading — never leave the reveal or the pinned posts stale. Gated by an
-    // IntersectionObserver so it's idle everywhere else.
+    // loading — never leave the reveal (or the background brightness) stale.
+    // Gated by an IntersectionObserver so it's idle everywhere else.
     let rafId = 0;
     let running = false;
     const loop = () => {
@@ -267,7 +228,7 @@ export const VeilScene: React.FC = () => {
       running = false;
       if (rafId) cancelAnimationFrame(rafId);
       rafId = 0;
-      releasePins(); // hand the neighbouring posts back to the feed on leave
+      setKosmosBrightness(0); // hand the sky back to ambient when we leave
     };
 
     const io = new IntersectionObserver(
@@ -293,7 +254,7 @@ export const VeilScene: React.FC = () => {
       io.disconnect();
       if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener('resize', onResize);
-      releasePins();
+      setKosmosBrightness(0);
     };
   }, []);
 
@@ -303,8 +264,6 @@ export const VeilScene: React.FC = () => {
     <div className='inflow-veil' ref={rootRef}>
       <div className='inflow-veil__gap' ref={gapRef}>
         <div className='inflow-veil__stage'>
-          <div className='inflow-veil__sky' ref={skyRef} aria-hidden='true' />
-
           <div className='inflow-veil__moonwrap' ref={moonRef}>
             <div className='inflow-veil__halo' ref={haloRef} />
             <VeilMoon illumination={sky.illum} waning={sky.waning} />

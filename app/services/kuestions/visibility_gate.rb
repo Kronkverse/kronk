@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 # Kuestions::VisibilityGate — enforces the "answer-before-view" rule
-# AND the per-answer visibility scope introduced by Phase 1b.
+# AND the per-answer visibility scope, now aligned with the platform-
+# wide reach ladder (docs/kronk_feed_and_reach.md §2).
 #
 # Layer 1 (gate): When Question#locked? is true, a viewer who has not
 # posted their own answer sees only their own answer (which may be
@@ -9,16 +10,18 @@
 # visible.
 #
 # Layer 2 (per-answer scope): Once the gate opens, each other answer
-# is filtered through its own `visibility_scope`:
+# is filtered through its own `visibility_scope`, matching the four
+# tiers Status/Album/Moment use:
 #
-# - `everyone` — any viewer (including anonymous) can see.
-# - `kronk_members` — any locally-signed-in account can see.
-# - `connections` — Mates (mutual follow) of the answerer can see.
-# - `vouched` — awaits the vouching model; currently equivalent to
-#   `connections` so answers posted under this scope stay private.
-# - `only_me` — nobody but the answerer.
+# - `public`    — any viewer can see.
+# - `orbit`     — mates-of-mates of the answerer (one hop out).
+# - `mates`     — mutual connections of the answerer.
+# - `self_only` — nobody but the answerer.
 #
-# See docs/kronk_korner_spec.md §Kuestions and delta rollup I1.
+# The pre-2026-07-29 vocabulary (`everyone / kronk_members /
+# connections / vouched / only_me`) was retired in slice 4 of the
+# visibility standardisation; the accompanying migration walks
+# existing rows onto the new set.
 module Kuestions
   module VisibilityGate
     module_function
@@ -48,13 +51,17 @@ module Kuestions
       return true  if viewer && viewer.id == answer.account_id
 
       case answer.visibility_scope
-      when 'everyone'
+      when 'public'
         true
-      when 'kronk_members'
-        viewer.present? && viewer.local?
-      when 'connections', 'vouched'
-        viewer.present? && mates?(answer.account, viewer)
-      else # only_me and any unknown scope
+      when 'orbit'
+        return false if viewer.nil?
+
+        viewer.mate?(answer.account) || viewer.orbit_of?(answer.account)
+      when 'mates'
+        return false if viewer.nil?
+
+        viewer.mate?(answer.account)
+      else # self_only or an unknown scope
         false
       end
     end
@@ -78,15 +85,6 @@ module Kuestions
       return false if viewer.nil? || question.nil?
 
       viewer.id == question.created_by_account_id
-    end
-
-    # Mates = mutual follow, matching Nudges::EventRouter's Mate
-    # gate. Kept local so this file stays self-contained.
-    def mates?(one, two)
-      return false unless one && two
-
-      Follow.exists?(account: one, target_account: two) &&
-        Follow.exists?(account: two, target_account: one)
     end
   end
 end

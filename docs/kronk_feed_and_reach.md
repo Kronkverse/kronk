@@ -63,21 +63,27 @@ Everything below elaborates these.
 
 One scale, widest to tightest:
 
-| Tier        | Who                                 | Notes                                        |
-| ----------- | ----------------------------------- | -------------------------------------------- |
-| **Kronk**   | The whole community on the instance | The broadest reach                           |
-| **Orbit**   | Mates of Mates (one hop out)        | The middle ring                              |
-| **Mates**   | Your mutual connections             | The tightest social ring on the scale        |
-| **Just me** | The author alone (own timeline)     | Below Mates; radiates to no one (2026-07-25) |
+| Tier        | Who                                 | Notes                                                 |
+| ----------- | ----------------------------------- | ----------------------------------------------------- |
+| **Kronk**   | The whole community on the instance | The broadest reach                                    |
+| **Orbit**   | Mates of Mates (one hop out)        | The middle ring                                       |
+| **Mates**   | Your mutual connections             | The tightest social ring on the scale                 |
+| **Just me** | The author alone (profile timeline) | Below Mates; no fan-out at all (tightened 2026-07-29) |
 
-> **Implemented (2026-07-25).** The reach tiers are Status visibility values:
-> `mates` (6), `orbit` (7), `self_only` (8) — added alongside `krew` (5) in
-> `Status::Visibility`, all local-only. `Kronk` maps to the existing `public`
-> visibility. Read enforcement lives in `StatusPolicy#show?` and
-> `AccountStatusesFilter#permitted_visibilities`; write fan-out in
-> `FanOutOnWriteService` (`mates`/`orbit` → Mates' home feeds; `self_only` → the
-> author's home only). `Just me` was added to the ladder in the 2026-07-25
-> workshop; the proactive Orbit→FoF home push remains deferred (§6).
+> **Implemented (2026-07-25; Just-me semantics tightened 2026-07-29).**
+> The reach tiers are Status visibility values: `mates` (6),
+> `orbit` (7), `self_only` (8) — added alongside `krew` (5) in
+> `Status::Visibility`, all local-only. `Kronk` maps to the existing
+> `public` visibility. Read enforcement lives in `StatusPolicy#show?`
+> and `AccountStatusesFilter#permitted_visibilities`; write fan-out
+> in `FanOutOnWriteService` (`mates`/`orbit` → Mates' home feeds;
+> `self_only` → **no feeds at all — not even the author's own home**,
+> only the profile timeline). Mention + quote notifications are also
+> suppressed for `self_only` (the recipient can't see the Status and
+> would 403 on click-through). `Just me` was added to the ladder in
+> the 2026-07-25 workshop and hardened on 2026-07-29 so it means
+> "on my profile only, not in anyone's feed"; the proactive Orbit→FoF
+> home push remains deferred (§6).
 
 The same scale is used for **two things**:
 
@@ -101,16 +107,17 @@ Two controls live in **feed settings**:
 - **Standard-post reach** — the default reach for the user's _ordinary_ posts (Mates / Orbit /
   Kronk), overridable per post.
 
-> **Current state (2026-07-29).** `UserSettings.kronk.feed_scope` now uses the new
+> **Current state (2026-07-29).** `UserSettings.kronk.feed_scope` uses the new
 > tier names `mates | orbit | kommunity`, default `orbit` (alpha.330). The API accepts
 > the legacy `friends | friends_of_friends` names on write and normalises them so any
-> stored values migrate on next write. The Home column exposes the tiers as an inline
-> chip row (Mates / Orbit / Kommunity / [Krew ▾]) directly beneath the column header;
-> the settings-page picker retains the same three tiers for the deep-settings surface.
-> The picker is still **display-only** for Mates vs Orbit — both drive the mastodon
-> home timeline — until `Kronk::FeatureFlags.feed_scope_enforced` lands; Kommunity
-> drives the local timeline; Krew swaps in that Krew's status timeline for the session.
-> Standard-post-reach as a second job on this setting remains open.
+> stored values migrate on next write. The picker lives on `/home/settings`; the Home
+> column reads the setting once on mount and renders one feed accordingly (alpha.332
+> retreated the inline chip row from the Home column — it lived under the ColumnHeader
+> briefly in alpha.330–.331 and was rolled back). The picker is still **display-only**
+> for Mates vs Orbit — both drive the mastodon home timeline — until
+> `Kronk::FeatureFlags.feed_scope_enforced` lands; Kommunity drives the local timeline.
+> Krew as a feed target on the Home column is not currently wired. Standard-post-reach
+> as a second job on this setting remains open.
 
 ### 2.4 Korner-card reach
 

@@ -1,12 +1,11 @@
-// InFlow veil — the feed parts to open onto the night sky.
+// InFlow veil — the feed parts to open onto the standard background.
 //
-// veil_scene.tsx pins the neighbouring posts to the top/bottom edges as you
-// scroll, so the feed visibly parts, and fades in the sky + moon + reading in
-// the opening between them, then closes back over. The sky is a brighter field
-// of the same purple-star motif used platform-wide (_stars.scss); here we give
-// it, the moon and the reading a place to float and a soft scrim so the text
-// stays legible. The `--veil-vh` unit (the visible height) is set from
-// veil_scene.tsx; opacities/transforms are driven per-frame there.
+// No curtains, no veil-drawn stars: the opening is transparent, so the shared
+// KronkKosmos starfield (the ambient layer behind every space) shows through.
+// veil_scene.tsx ramps that shared layer's brightness up as the opening centres
+// and back down as it closes; here we just give the moon + reading a place to
+// float and a soft scrim so the text stays legible over the stars. The
+// `--veil-vh` unit (the visible height) is set from veil_scene.tsx.
 
 .inflow-veil {
   --veil-vh: 100vh;
@@ -15,12 +14,14 @@
   font-family: var(--font-display, Georgia, serif);
 }
 
-// The scroll runway for the reveal.
+// The scroll runway. Transparent — the shared background shows straight
+// through, and the posts above and below frame the opening.
 .inflow-veil__gap {
-  height: calc(var(--veil-vh) * 1.6);
+  height: calc(var(--veil-vh) * 2);
 }
 
-// Pins to the viewport while the gap scrolls past, holding the opening centred.
+// Pins to the viewport while the gap scrolls past, holding the moon + reading
+// centred in the opening.
 .inflow-veil__stage {
   position: sticky;
   top: 0;
@@ -30,45 +31,19 @@
   justify-content: center;
   height: var(--veil-vh);
   padding: 0 26px;
-  overflow: hidden;
   text-align: center;
 
-  // The opened sky is ambient, not a control surface.
+  // The opened sky is ambient, not a control surface — let feed interactions
+  // (and the background) pass through.
   pointer-events: none;
-}
-
-// A brighter field of the platform's purple-star motif, revealed in the
-// opening (opacity driven from 0 → 1 → 0 by veil_scene.tsx).
-.inflow-veil__sky {
-  position: absolute;
-  inset: -12% -20%;
-  opacity: 0;
-  background-repeat: no-repeat;
-  background-image:
-    radial-gradient(2px 2px at 20% 30%, #cdbfff 40%, transparent),
-    radial-gradient(2px 2px at 68% 18%, #b7a6ff 40%, transparent),
-    radial-gradient(1.5px 1.5px at 82% 62%, #e6dcff 40%, transparent),
-    radial-gradient(2.5px 2.5px at 38% 72%, #a892ff 40%, transparent),
-    radial-gradient(1.5px 1.5px at 12% 80%, #cdbfff 40%, transparent),
-    radial-gradient(2px 2px at 55% 44%, #d9ccff 40%, transparent),
-    radial-gradient(1.5px 1.5px at 90% 35%, #b7a6ff 40%, transparent),
-    radial-gradient(2px 2px at 47% 12%, #e6dcff 40%, transparent),
-    radial-gradient(1.5px 1.5px at 30% 52%, #a892ff 40%, transparent),
-    radial-gradient(2px 2px at 75% 85%, #cdbfff 40%, transparent),
-    radial-gradient(1.5px 1.5px at 6% 45%, #d9ccff 40%, transparent),
-    radial-gradient(2px 2px at 62% 68%, #b7a6ff 40%, transparent),
-    radial-gradient(1.5px 1.5px at 42% 90%, #cdbfff 40%, transparent),
-    radial-gradient(2px 2px at 88% 78%, #d9ccff 40%, transparent),
-    radial-gradient(1.5px 1.5px at 16% 16%, #b7a6ff 40%, transparent);
 }
 
 .inflow-veil__moonwrap {
   position: relative;
-  z-index: 1;
   display: grid;
   place-items: center;
-  width: 176px;
-  height: 176px;
+  width: 186px;
+  height: 186px;
   will-change: transform;
 }
 
@@ -88,18 +63,17 @@
 
 .inflow-veil__moon {
   position: relative;
-  width: 140px;
-  height: 140px;
+  width: 148px;
+  height: 148px;
 }
 
 .inflow-veil__read {
   position: relative;
-  z-index: 1;
   max-width: 400px;
-  margin-top: 22px;
+  margin-top: 24px;
   will-change: transform, opacity;
 
-  // A soft scrim so the reading stays legible over the stars — a gentle
+  // A soft scrim so the reading stays legible over the starfield — a gentle
   // darkening that fades out well before its edges, never a hard panel.
   &::before {
     content: '';
@@ -157,10 +131,6 @@
   .inflow-veil__read {
     transform: none !important;
     opacity: 1 !important;
-  }
-
-  .inflow-veil__sky {
-    opacity: 0.85 !important;
   }
 
   .inflow-veil__halo {

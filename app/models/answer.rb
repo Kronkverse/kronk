@@ -14,7 +14,11 @@ class Answer < ApplicationRecord
   belongs_to :account
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :answer
 
-  VISIBILITY_SCOPES = %w(everyone kronk_members connections vouched only_me).freeze
+  # Four-tier reach ladder (docs/kronk_feed_and_reach.md §2). The
+  # answer picks its own scope per response; the tier names match the
+  # Status/Album/Moment enums so a single vocabulary carries through
+  # the whole platform.
+  VISIBILITY_SCOPES = %w(public orbit mates self_only).freeze
 
   validates :body, presence: true
   validates :account_id, uniqueness: { scope: :question_id }
