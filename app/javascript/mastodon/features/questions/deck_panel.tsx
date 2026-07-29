@@ -129,8 +129,10 @@ export const DeckPanel: React.FC = () => {
     setRevealing(null);
   }, []);
 
-  // Keyboard: ← skip, → answer. Bail on typing surfaces so the deck
-  // doesn't hijack keys the user meant for a textbox.
+  // Keyboard: ← skip, → answer. Tap / click / Enter on a focused card
+  // is the primary "answer" path (see deck_card.tsx); the right-arrow
+  // shortcut stays for muscle memory. Bail on typing surfaces so the
+  // deck doesn't hijack keys the user meant for a textbox.
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;

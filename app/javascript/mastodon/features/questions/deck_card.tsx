@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -19,8 +19,11 @@ const messages = defineMessages({
     id: 'kuestions.format.yn',
     defaultMessage: 'Yes / No',
   },
-  answerStamp: { id: 'kuestions.stamp.answer', defaultMessage: 'Answer' },
   skipStamp: { id: 'kuestions.stamp.skip', defaultMessage: 'Skip' },
+  tapToAnswer: {
+    id: 'kuestions.stamp.tap_to_answer',
+    defaultMessage: 'Tap to answer, swipe left to skip',
+  },
   lockedCount: {
     id: 'kuestions.deck.count',
     defaultMessage:
@@ -34,10 +37,14 @@ const FORMAT_LABEL = {
   yn: messages.formatYn,
 } as const;
 
-// Swipe thresholds — dx > +ANSWER_THRESHOLD flings right → answer;
-// dx < -SKIP_THRESHOLD flings left → skip.
-const ANSWER_THRESHOLD = 95;
+// Interaction thresholds:
+//   dx < -SKIP_THRESHOLD  → left-swipe skip
+//   |dx| < TAP_THRESHOLD  → treat as a tap → open the answer sheet
+//   anything in between   → snap back (no action)
+// Right-swipe was retired: tapping is faster and matches the
+// "just start typing" invariant the answer sheet promises.
 const SKIP_THRESHOLD = 95;
+const TAP_THRESHOLD = 8;
 
 interface DeckCardProps {
   kuestion: ApiKuestionJSON;
@@ -57,8 +64,10 @@ export const DeckCard: React.FC<DeckCardProps> = ({
 }) => {
   const intl = useIntl();
   const cardRef = useRef<HTMLDivElement>(null);
-  const answerStampRef = useRef<HTMLDivElement>(null);
   const skipStampRef = useRef<HTMLDivElement>(null);
+  // Note: `<article>` gave way to `<div role='button'>` for the outer
+  // shell — the card is a tap target, not a content article, and
+  // jsx-a11y flags role=button on <article>.
 
   useEffect(() => {
     // Non-top cards don't listen. The layout transform is set on the
@@ -81,7 +90,6 @@ export const DeckCard: React.FC<DeckCardProps> = ({
     if (depth !== 0) return undefined;
     const el = cardRef.current;
     if (!el) return undefined;
-    const sA = answerStampRef.current;
     const sS = skipStampRef.current;
 
     let sx = 0;
@@ -97,11 +105,10 @@ export const DeckCard: React.FC<DeckCardProps> = ({
     };
     const move = (e: MouseEvent | TouchEvent) => {
       if (!down) return;
-      const p = 'touches' in e ? e.touches[0] : (e);
+      const p = 'touches' in e ? e.touches[0] : e;
       if (!p) return;
       dx = p.clientX - sx;
       el.style.transform = `translate(${dx}px, ${Math.abs(dx) * 0.06}px) rotate(${dx * 0.045}deg)`;
-      if (sA) sA.style.opacity = String(Math.min(1, Math.max(0, dx / 90)));
       if (sS) sS.style.opacity = String(Math.min(1, Math.max(0, -dx / 90)));
       if (e.cancelable) e.preventDefault();
     };
@@ -109,17 +116,17 @@ export const DeckCard: React.FC<DeckCardProps> = ({
       if (!down) return;
       down = false;
       el.style.transition = '';
-      if (dx > ANSWER_THRESHOLD) {
-        el.classList.add('kuestions-deck__card--gone');
-        el.style.transform = `translate(${window.innerWidth}px,-40px) rotate(22deg)`;
-        onAnswer();
-      } else if (dx < -SKIP_THRESHOLD) {
+      if (dx < -SKIP_THRESHOLD) {
         el.classList.add('kuestions-deck__card--gone');
         el.style.transform = `translate(${-window.innerWidth}px,-40px) rotate(-22deg)`;
         onSkip();
-      } else {
+      } else if (Math.abs(dx) < TAP_THRESHOLD) {
+        // Tap / click — no meaningful drag. Open the answer sheet.
         el.style.transform = 'translateY(0) scale(1)';
-        if (sA) sA.style.opacity = '0';
+        onAnswer();
+      } else {
+        // Partial drag that didn't clear the skip threshold. Snap back.
+        el.style.transform = 'translateY(0) scale(1)';
         if (sS) sS.style.opacity = '0';
       }
       dx = 0;
@@ -141,6 +148,20 @@ export const DeckCard: React.FC<DeckCardProps> = ({
     };
   }, [depth, onAnswer, onSkip]);
 
+  // Keyboard entry point matching the pointer tap: Enter / Space on
+  // the focused card opens the answer sheet. Skip stays on ← via the
+  // window-level shortcut in deck_panel.
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLElement>) => {
+      if (depth !== 0) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onAnswer();
+      }
+    },
+    [depth, onAnswer],
+  );
+
   const askerAccount = createAccountFromServerJSON(kuestion.asker);
   const askerName = askerAccount.display_name || askerAccount.username;
   const handle = `@${kuestion.asker.acct}`;
@@ -148,13 +169,14 @@ export const DeckCard: React.FC<DeckCardProps> = ({
   const isLong = kuestion.title.length > 58;
 
   return (
-    <article ref={cardRef} className='kuestions-deck__card'>
-      <div
-        ref={answerStampRef}
-        className='kuestions-deck__stamp kuestions-deck__stamp--answer'
-      >
-        {intl.formatMessage(messages.answerStamp)}
-      </div>
+    <div
+      ref={cardRef}
+      className='kuestions-deck__card'
+      role='button'
+      tabIndex={depth === 0 ? 0 : -1}
+      aria-label={intl.formatMessage(messages.tapToAnswer)}
+      onKeyDown={handleKeyDown}
+    >
       <div
         ref={skipStampRef}
         className='kuestions-deck__stamp kuestions-deck__stamp--skip'
@@ -197,6 +219,6 @@ export const DeckCard: React.FC<DeckCardProps> = ({
           {intl.formatMessage(messages.lockedCount, { count })}
         </div>
       </div>
-    </article>
+    </div>
   );
 };
