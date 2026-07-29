@@ -552,3 +552,46 @@
     }
   }
 }
+
+// Froth (Favourite) on a published trek — same interaction as the feed's froth.
+.trek-froth {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 8px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round, 999px);
+  background: var(--surface-background-color, rgb(0 0 0 / 20%));
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--kronk-purple-bright, #b39dff);
+  }
+
+  &__icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  &--active {
+    color: var(--kronk-purple-bright, #b39dff);
+    border-color: currentColor;
+  }
+
+  &__count {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.85;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+}

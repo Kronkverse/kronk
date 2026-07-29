@@ -29,6 +29,7 @@ import {
   ensurePmtilesProtocol,
 } from './basemap';
 import { TrekComments } from './trek_comments';
+import { TrekFroth } from './trek_froth';
 
 // Map — Treks lens. Lists the caller's own treks and their Mates' published
 // treks (Mates-gated server-side), with a detail view drawing the privacy-
@@ -287,10 +288,14 @@ const TrekDetail: React.FC<{
         </div>
       )}
 
-      {/* Comments live on the published trek's Status (froth = Favourite,
-          comments = replies). Shown to anyone who can see the trek. */}
+      {/* Engagement on the published trek's Status: froth = Favourite,
+          comments = replies. The same interactions as the feed, so they stay
+          in sync both ways. Shown to anyone who can see the trek. */}
       {trek.state === 'published' && trek.status_id && (
-        <TrekComments statusId={trek.status_id} visibility={trek.visibility} />
+        <>
+          <TrekFroth statusId={trek.status_id} />
+          <TrekComments statusId={trek.status_id} visibility={trek.visibility} />
+        </>
       )}
     </div>
   );
