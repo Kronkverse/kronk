@@ -36,29 +36,29 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 const messages = defineMessages({
   title: { id: 'feed_settings.title', defaultMessage: 'Feed settings' },
   loading: { id: 'feed_settings.loading', defaultMessage: 'Loading…' },
-  scopeFriends: {
-    id: 'feed_settings.scope.friends',
-    defaultMessage: 'Friends',
+  scopeMates: {
+    id: 'feed_settings.scope.mates',
+    defaultMessage: 'Mates',
   },
-  scopeFof: {
-    id: 'feed_settings.scope.fof',
-    defaultMessage: 'Friends of friends',
+  scopeOrbit: {
+    id: 'feed_settings.scope.orbit',
+    defaultMessage: 'Orbit',
   },
   scopeKommunity: {
     id: 'feed_settings.scope.kommunity',
     defaultMessage: 'Kommunity',
   },
-  scopeFriendsDesc: {
-    id: 'feed_settings.scope.friends_desc',
-    defaultMessage: 'Only accounts you follow.',
+  scopeMatesDesc: {
+    id: 'feed_settings.scope.mates_desc',
+    defaultMessage: 'Only your Mates.',
   },
-  scopeFofDesc: {
-    id: 'feed_settings.scope.fof_desc',
-    defaultMessage: 'Your follows, plus who they follow.',
+  scopeOrbitDesc: {
+    id: 'feed_settings.scope.orbit_desc',
+    defaultMessage: 'Your Mates plus their Mates.',
   },
   scopeKommunityDesc: {
     id: 'feed_settings.scope.kommunity_desc',
-    defaultMessage: 'Everyone tuned in to your korners.',
+    defaultMessage: 'Everyone on this Kronk.',
   },
 
   groupBoosts: {
@@ -96,15 +96,15 @@ const DISPLAY_LABELS: Record<string, MessageDescriptor | undefined> = {
   show_trends: messages.showTrends,
 };
 
-type Scope = 'friends' | 'friends_of_friends' | 'kommunity';
+type Scope = 'mates' | 'orbit' | 'kommunity';
 
 const SCOPE_OPTIONS: {
   value: Scope;
   label: keyof typeof messages;
   desc: keyof typeof messages;
 }[] = [
-  { value: 'friends', label: 'scopeFriends', desc: 'scopeFriendsDesc' },
-  { value: 'friends_of_friends', label: 'scopeFof', desc: 'scopeFofDesc' },
+  { value: 'mates', label: 'scopeMates', desc: 'scopeMatesDesc' },
+  { value: 'orbit', label: 'scopeOrbit', desc: 'scopeOrbitDesc' },
   { value: 'kommunity', label: 'scopeKommunity', desc: 'scopeKommunityDesc' },
 ];
 
@@ -194,7 +194,7 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
   const intl = useIntl();
   const korners = useAllKorners();
 
-  const [scope, setScope] = useState<Scope>('kommunity');
+  const [scope, setScope] = useState<Scope>('orbit');
   const [tuneStates, setTuneStates] = useState<Record<string, boolean>>({});
   const [loaded, setLoaded] = useState(false);
   const [savingScope, setSavingScope] = useState(false);
