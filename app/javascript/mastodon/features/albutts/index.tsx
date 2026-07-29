@@ -100,10 +100,7 @@ const Directory: React.FC = () => {
     (created: ApiAlbumJSON) => {
       setComposerOpen(false);
       setAlbums((prev) => (prev ? [created, ...prev] : [created]));
-      // `?add_photo=1` opens the contribute-photo composer immediately
-      // on the detail page — a freshly-created album is empty and the
-      // natural next action is adding the first photo.
-      history.push(`/hub/albutts/albums/${created.id}?add_photo=1`);
+      history.push(`/hub/albutts/albums/${created.id}`);
     },
     [history],
   );

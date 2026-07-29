@@ -1,8 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { apiCreateAlbum } from 'mastodon/api/albutts';
+import api from 'mastodon/api';
+import { apiContributePhoto, apiCreateAlbum } from 'mastodon/api/albutts';
 import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
 
 const messages = defineMessages({
@@ -67,6 +68,23 @@ const messages = defineMessages({
     defaultMessage:
       'Krew-scoped albums are landing in a follow-up — pick a different scope for now.',
   },
+  photosLabel: {
+    id: 'albutts.composer.photos_label',
+    defaultMessage: 'Photos',
+  },
+  photosHint: {
+    id: 'albutts.composer.photos_hint',
+    defaultMessage:
+      'Pick one or more — they’re optional at this step; you can always add more later.',
+  },
+  photosPickMore: {
+    id: 'albutts.composer.photos_pick_more',
+    defaultMessage: 'Add more',
+  },
+  photosClear: {
+    id: 'albutts.composer.photos_clear',
+    defaultMessage: 'Clear',
+  },
   cancel: {
     id: 'albutts.composer.cancel',
     defaultMessage: 'Cancel',
@@ -75,18 +93,42 @@ const messages = defineMessages({
     id: 'albutts.composer.create',
     defaultMessage: 'Create album',
   },
+  createWithPhotos: {
+    id: 'albutts.composer.create_with_photos',
+    defaultMessage:
+      'Create album & add {count, plural, one {# photo} other {# photos}}',
+  },
+  uploading: {
+    id: 'albutts.composer.uploading',
+    defaultMessage: 'Uploading photo {current} of {total}…',
+  },
   error: {
     id: 'albutts.composer.error',
     defaultMessage: "Couldn't create — try again.",
+  },
+  photoErrorPartial: {
+    id: 'albutts.composer.photo_error_partial',
+    defaultMessage:
+      "The album is created, but {failed, plural, one {# photo} other {# photos}} didn't upload. You can retry from the album page.",
   },
 });
 
 const TITLE_MAX = 240;
 const DESCRIPTION_MAX = 4000;
 
+interface MediaResponse {
+  id: string;
+}
+
 interface AlbumComposerProps {
   onCancel: () => void;
   onCreated: (album: ApiAlbumJSON) => void;
+}
+
+interface PhotoDraft {
+  file: File;
+  previewUrl: string;
+  key: string; // stable React key for re-orderable list rendering
 }
 
 export const AlbumComposer: React.FC<AlbumComposerProps> = ({
@@ -97,8 +139,25 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [visibility, setVisibility] = useState<AlbumVisibility>('public');
+  const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   const [pending, setPending] = useState(false);
+  const [progress, setProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
+  const [failedCount, setFailedCount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+
+  // Revoke blob URLs on unmount / list churn so the browser doesn't
+  // hold onto the underlying Blobs after the composer closes.
+  useEffect(() => {
+    const urls = photos.map((p) => p.previewUrl);
+    return () => {
+      urls.forEach((u) => {
+        URL.revokeObjectURL(u);
+      });
+    };
+  }, [photos]);
 
   const trimmed = title.trim();
   const canSubmit = trimmed !== '' && !pending && visibility !== 'krew';
@@ -130,24 +189,79 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     setVisibility('krew');
   }, []);
 
+  const handlePhotosChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files ? Array.from(e.target.files) : [];
+      if (files.length === 0) return;
+      setPhotos((prev) => [
+        ...prev,
+        ...files.map((file, idx) => ({
+          file,
+          previewUrl: URL.createObjectURL(file),
+          key: `${Date.now()}-${idx}-${file.name}`,
+        })),
+      ]);
+      // Reset the input so re-picking the same file counts as a new
+      // change event.
+      e.target.value = '';
+    },
+    [],
+  );
+
+  const handleClearPhotos = useCallback(() => {
+    setPhotos([]);
+  }, []);
+
   const submit = useCallback(() => {
     if (!canSubmit) return;
     setPending(true);
     setError(null);
+    setFailedCount(0);
+    setProgress(
+      photos.length > 0 ? { current: 0, total: photos.length } : null,
+    );
+
     void (async () => {
+      let album: ApiAlbumJSON;
       try {
-        const album = await apiCreateAlbum({
+        album = await apiCreateAlbum({
           title: trimmed,
           description: description.trim() || undefined,
           visibility,
         });
-        onCreated(album);
       } catch {
         setError('create_failed');
         setPending(false);
+        setProgress(null);
+        return;
       }
+
+      let failed = 0;
+      for (let i = 0; i < photos.length; i += 1) {
+        const draft = photos[i];
+        if (!draft) continue;
+        setProgress({ current: i + 1, total: photos.length });
+        try {
+          const form = new FormData();
+          form.append('file', draft.file);
+          const media = await api().post<MediaResponse>('/api/v1/media', form);
+          await apiContributePhoto(album.id, { media_id: media.data.id });
+        } catch {
+          failed += 1;
+        }
+      }
+
+      setPending(false);
+      setProgress(null);
+      if (failed > 0) setFailedCount(failed);
+      onCreated(album);
     })();
-  }, [canSubmit, description, onCreated, trimmed, visibility]);
+  }, [canSubmit, description, onCreated, photos, trimmed, visibility]);
+
+  const submitLabel =
+    photos.length === 0
+      ? intl.formatMessage(messages.create)
+      : intl.formatMessage(messages.createWithPhotos, { count: photos.length });
 
   return (
     <div className='albutts-composer' role='dialog' aria-modal='true'>
@@ -226,9 +340,67 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           </p>
         )}
 
+        <label
+          className='albutts-composer__label'
+          htmlFor='albutts-composer-photos'
+        >
+          {intl.formatMessage(messages.photosLabel)}
+        </label>
+        <p className='albutts-composer__hint'>
+          {intl.formatMessage(messages.photosHint)}
+        </p>
+        <input
+          id='albutts-composer-photos'
+          type='file'
+          multiple
+          accept='image/*,video/*'
+          className='albutts-composer__file'
+          onChange={handlePhotosChange}
+          disabled={pending}
+        />
+        {photos.length > 0 && (
+          <>
+            <ul className='albutts-composer__thumbs'>
+              {photos.map((p) => (
+                <li key={p.key} className='albutts-composer__thumb'>
+                  <img
+                    className='albutts-composer__thumb-img'
+                    src={p.previewUrl}
+                    alt={p.file.name}
+                  />
+                </li>
+              ))}
+            </ul>
+            <button
+              type='button'
+              className='albutts-composer__clear'
+              onClick={handleClearPhotos}
+              disabled={pending}
+            >
+              {intl.formatMessage(messages.photosClear)}
+            </button>
+          </>
+        )}
+
+        {progress && (
+          <p className='albutts-composer__progress' aria-live='polite'>
+            {intl.formatMessage(messages.uploading, {
+              current: progress.current,
+              total: progress.total,
+            })}
+          </p>
+        )}
+
         {error && (
           <p className='albutts-composer__error' role='alert'>
             {intl.formatMessage(messages.error)}
+          </p>
+        )}
+        {failedCount > 0 && !error && (
+          <p className='albutts-composer__error' role='alert'>
+            {intl.formatMessage(messages.photoErrorPartial, {
+              failed: failedCount,
+            })}
           </p>
         )}
 
@@ -247,7 +419,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
             onClick={submit}
             disabled={!canSubmit}
           >
-            {intl.formatMessage(messages.create)}
+            {submitLabel}
           </button>
         </div>
       </div>
