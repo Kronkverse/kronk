@@ -33,6 +33,8 @@ export interface ApiTrekJSON {
   route: [number, number][] | null; // [lng, lat]
   state: TrekState;
   status_id: string | null; // the linked timeline Status, when published
+  // The published post's reach; comments mirror it. Null while a draft.
+  visibility: TrekReach | null;
   self: boolean;
 }
 

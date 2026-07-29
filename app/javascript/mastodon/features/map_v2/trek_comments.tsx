@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { apiRequestPost } from 'mastodon/api';
+import type { TrekReach } from 'mastodon/api/map_treks';
 import { apiGetContext } from 'mastodon/api/statuses';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 import { Button } from 'mastodon/components/button';
@@ -32,7 +33,12 @@ const messages = defineMessages({
 const authorName = (account: ApiStatusJSON['account']): string =>
   account.display_name.length > 0 ? account.display_name : account.username;
 
-export const TrekComments: React.FC<{ statusId: string }> = ({ statusId }) => {
+export const TrekComments: React.FC<{
+  statusId: string;
+  // The trek's reach — a comment is posted at the same visibility so a reply
+  // never travels wider than the trek it's on (docs/kronk_feed_and_reach.md).
+  visibility?: TrekReach | null;
+}> = ({ statusId, visibility }) => {
   const intl = useIntl();
   const [comments, setComments] = useState<ApiStatusJSON[] | null>(null);
   const [text, setText] = useState('');
@@ -66,6 +72,8 @@ export const TrekComments: React.FC<{ statusId: string }> = ({ statusId }) => {
       void apiRequestPost<ApiStatusJSON>('v1/statuses', {
         status: body,
         in_reply_to_id: statusId,
+        // Mirror the trek's reach so the comment stays within its audience.
+        ...(visibility ? { visibility } : {}),
       })
         .then(() => {
           setText('');
@@ -75,7 +83,7 @@ export const TrekComments: React.FC<{ statusId: string }> = ({ statusId }) => {
           setPosting(false);
         });
     },
-    [text, statusId, refresh],
+    [text, statusId, visibility, refresh],
   );
 
   return (

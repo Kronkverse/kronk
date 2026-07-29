@@ -290,7 +290,7 @@ const TrekDetail: React.FC<{
       {/* Comments live on the published trek's Status (froth = Favourite,
           comments = replies). Shown to anyone who can see the trek. */}
       {trek.state === 'published' && trek.status_id && (
-        <TrekComments statusId={trek.status_id} />
+        <TrekComments statusId={trek.status_id} visibility={trek.visibility} />
       )}
     </div>
   );

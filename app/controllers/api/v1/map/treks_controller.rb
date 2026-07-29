@@ -27,7 +27,7 @@ class Api::V1::Map::TreksController < Api::BaseController
   before_action :set_trek, only: [:show, :publish, :unpublish, :destroy]
 
   def index
-    treks = Trek.feed_for(current_account).includes(:account).limit(limit)
+    treks = Trek.feed_for(current_account).includes(:account, :status).limit(limit)
     render json: treks.map { |t| project(t) }
   end
 
@@ -157,6 +157,9 @@ class Api::V1::Map::TreksController < Api::BaseController
       route: trek.visible_to?(current_account) ? trek.route : nil,
       state: trek.state,
       status_id: trek.status_id&.to_s,
+      # The published post's reach (§2) — comments mirror it so a reply never
+      # travels wider than the trek. Null while a draft.
+      visibility: trek.status&.visibility,
       self: mine,
     }
   end
