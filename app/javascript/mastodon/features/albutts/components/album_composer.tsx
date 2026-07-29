@@ -75,11 +75,7 @@ const messages = defineMessages({
   photosHint: {
     id: 'albutts.composer.photos_hint',
     defaultMessage:
-      'Pick one or more — they’re optional at this step; you can always add more later.',
-  },
-  photosPickMore: {
-    id: 'albutts.composer.photos_pick_more',
-    defaultMessage: 'Add more',
+      'Pick one or more — image or video. You can always add more later.',
   },
   photosClear: {
     id: 'albutts.composer.photos_clear',
@@ -98,27 +94,52 @@ const messages = defineMessages({
     defaultMessage:
       'Create album & add {count, plural, one {# photo} other {# photos}}',
   },
-  uploading: {
-    id: 'albutts.composer.uploading',
-    defaultMessage: 'Uploading photo {current} of {total}…',
+  progressLine: {
+    id: 'albutts.composer.progress_line',
+    defaultMessage:
+      '{done} of {total} uploaded{failed, plural, =0 {} one { · # failed} other { · # failed}}',
+  },
+  retryFailed: {
+    id: 'albutts.composer.retry_failed',
+    defaultMessage: 'Retry {count} failed',
   },
   error: {
     id: 'albutts.composer.error',
-    defaultMessage: "Couldn't create — try again.",
+    defaultMessage: "Couldn't create the album — try again.",
   },
   photoErrorPartial: {
     id: 'albutts.composer.photo_error_partial',
     defaultMessage:
-      "The album is created, but {failed, plural, one {# photo} other {# photos}} didn't upload. Open the browser console to see why, or retry from the album page.",
+      "The album is created, but {failed, plural, one {# photo} other {# photos}} didn't upload. Retry them below or continue and add later.",
   },
   continueToAlbum: {
     id: 'albutts.composer.continue_to_album',
     defaultMessage: 'Continue to album',
   },
+  chipQueued: {
+    id: 'albutts.composer.chip_queued',
+    defaultMessage: 'Queued',
+  },
+  chipUploading: {
+    id: 'albutts.composer.chip_uploading',
+    defaultMessage: 'Uploading…',
+  },
+  chipDone: {
+    id: 'albutts.composer.chip_done',
+    defaultMessage: 'Uploaded',
+  },
+  chipFailed: {
+    id: 'albutts.composer.chip_failed',
+    defaultMessage: 'Failed',
+  },
 });
 
 const TITLE_MAX = 240;
 const DESCRIPTION_MAX = 4000;
+// Concurrency cap on the upload pool. Four keeps browser socket count
+// reasonable (major browsers cap ~6 per host) and matches the load
+// Mastodon media processing can absorb without queue backup.
+const UPLOAD_CONCURRENCY = 4;
 
 interface MediaResponse {
   id: string;
@@ -129,10 +150,13 @@ interface AlbumComposerProps {
   onCreated: (album: ApiAlbumJSON) => void;
 }
 
+type PhotoStatus = 'queued' | 'uploading' | 'done' | 'failed';
+
 interface PhotoDraft {
   file: File;
   previewUrl: string;
-  key: string; // stable React key for re-orderable list rendering
+  key: string;
+  status: PhotoStatus;
 }
 
 export const AlbumComposer: React.FC<AlbumComposerProps> = ({
@@ -145,12 +169,8 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const [visibility, setVisibility] = useState<AlbumVisibility>('public');
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   const [pending, setPending] = useState(false);
-  const [progress, setProgress] = useState<{
-    current: number;
-    total: number;
-  } | null>(null);
-  const [failedCount, setFailedCount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+  const [createdAlbum, setCreatedAlbum] = useState<ApiAlbumJSON | null>(null);
 
   // Revoke blob URLs on unmount / list churn so the browser doesn't
   // hold onto the underlying Blobs after the composer closes.
@@ -165,6 +185,10 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
 
   const trimmed = title.trim();
   const canSubmit = trimmed !== '' && !pending && visibility !== 'krew';
+
+  const doneCount = photos.filter((p) => p.status === 'done').length;
+  const failedCount = photos.filter((p) => p.status === 'failed').length;
+  const inflightCount = photos.filter((p) => p.status === 'uploading').length;
 
   const handleTitle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value.slice(0, TITLE_MAX));
@@ -203,11 +227,10 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           file,
           previewUrl: URL.createObjectURL(file),
           key: `${Date.now()}-${idx}-${file.name}`,
+          status: 'queued' as PhotoStatus,
         })),
       ]);
-      // Reset the input so re-picking the same file counts as a new
-      // change event.
-      e.target.value = '';
+      e.target.value = ''; // allow re-picking the same file
     },
     [],
   );
@@ -216,18 +239,69 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     setPhotos([]);
   }, []);
 
-  const [createdAlbum, setCreatedAlbum] = useState<ApiAlbumJSON | null>(null);
+  // Move a photo through the status machine. Reads by key so
+  // concurrent workers don't stomp on each other's indices.
+  const setPhotoStatus = useCallback((key: string, status: PhotoStatus) => {
+    setPhotos((prev) =>
+      prev.map((p) => (p.key === key ? { ...p, status } : p)),
+    );
+  }, []);
+
+  // Concurrency-limited upload pool. Spawns N workers that pull off a
+  // shared queue until it's drained. Each worker runs the two-step
+  // upload (POST /api/v1/media → POST /api/v1/albutts/albums/:id/photos)
+  // and reports back per-photo status.
+  const runUploadPool = useCallback(
+    async (albumId: string, drafts: PhotoDraft[]) => {
+      const queue: PhotoDraft[] = [...drafts];
+
+      const worker = async () => {
+        while (queue.length > 0) {
+          const draft = queue.shift();
+          if (!draft) return;
+          setPhotoStatus(draft.key, 'uploading');
+          try {
+            const form = new FormData();
+            form.append('file', draft.file);
+            const media = await api().post<MediaResponse>(
+              '/api/v1/media',
+              form,
+            );
+            await apiContributePhoto(albumId, { media_id: media.data.id });
+            setPhotoStatus(draft.key, 'done');
+          } catch (e) {
+            console.error(
+              '[albutts] photo upload failed',
+              {
+                name: draft.file.name,
+                size: draft.file.size,
+                type: draft.file.type,
+              },
+              e,
+            );
+            setPhotoStatus(draft.key, 'failed');
+          }
+        }
+      };
+
+      const workers = Array.from(
+        { length: Math.min(UPLOAD_CONCURRENCY, drafts.length) },
+        () => worker(),
+      );
+      await Promise.all(workers);
+    },
+    [setPhotoStatus],
+  );
 
   const submit = useCallback(() => {
     if (!canSubmit) return;
     setPending(true);
     setError(null);
-    setFailedCount(0);
-    setProgress(
-      photos.length > 0 ? { current: 0, total: photos.length } : null,
-    );
 
     void (async () => {
+      // Reset any prior status (e.g. after a failed run + more picks).
+      setPhotos((prev) => prev.map((p) => ({ ...p, status: 'queued' })));
+
       let album: ApiAlbumJSON;
       try {
         album = await apiCreateAlbum({
@@ -239,52 +313,56 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         console.error('[albutts] create album failed', e);
         setError('create_failed');
         setPending(false);
-        setProgress(null);
         return;
       }
 
-      let failed = 0;
-      for (let i = 0; i < photos.length; i += 1) {
-        const draft = photos[i];
-        if (!draft) continue;
-        setProgress({ current: i + 1, total: photos.length });
-        try {
-          const form = new FormData();
-          form.append('file', draft.file);
-          const media = await api().post<MediaResponse>('/api/v1/media', form);
-          await apiContributePhoto(album.id, { media_id: media.data.id });
-        } catch (e) {
-          console.error(
-            '[albutts] photo upload failed',
-            {
-              name: draft.file.name,
-              size: draft.file.size,
-              type: draft.file.type,
-            },
-            e,
-          );
-          failed += 1;
-        }
-      }
-
-      setPending(false);
-      setProgress(null);
       setCreatedAlbum(album);
 
-      if (failed > 0) {
-        // Keep the composer open so the user actually sees the error
-        // and can decide what to do. The "Continue to album" affordance
-        // dismisses on their terms.
-        setFailedCount(failed);
-      } else {
-        onCreated(album);
-      }
+      const drafts = photos.map((p) => ({
+        ...p,
+        status: 'queued' as PhotoStatus,
+      }));
+      await runUploadPool(album.id, drafts);
+
+      setPending(false);
     })();
-  }, [canSubmit, description, onCreated, photos, trimmed, visibility]);
+  }, [canSubmit, description, photos, runUploadPool, trimmed, visibility]);
+
+  // Retry only the photos currently in `failed` status.
+  const handleRetryFailed = useCallback(() => {
+    if (!createdAlbum) return;
+    setPending(true);
+    void (async () => {
+      const drafts = photos.filter((p) => p.status === 'failed');
+      // Optimistically reset the failed set to queued so the UI reflects
+      // the in-flight retry.
+      setPhotos((prev) =>
+        prev.map((p) =>
+          p.status === 'failed' ? { ...p, status: 'queued' } : p,
+        ),
+      );
+      await runUploadPool(createdAlbum.id, drafts);
+      setPending(false);
+    })();
+  }, [createdAlbum, photos, runUploadPool]);
 
   const handleContinue = useCallback(() => {
     if (createdAlbum) onCreated(createdAlbum);
   }, [createdAlbum, onCreated]);
+
+  // Auto-close the composer when a submit finished successfully with
+  // zero failures. If any failed, we stay open so the user can retry
+  // or continue on their own terms.
+  useEffect(() => {
+    if (!createdAlbum) return;
+    if (pending) return;
+    if (
+      failedCount === 0 &&
+      (photos.length === 0 || doneCount === photos.length)
+    ) {
+      onCreated(createdAlbum);
+    }
+  }, [createdAlbum, doneCount, failedCount, onCreated, pending, photos.length]);
 
   const submitLabel =
     photos.length === 0
@@ -312,6 +390,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           onChange={handleTitle}
           maxLength={TITLE_MAX}
           placeholder={intl.formatMessage(messages.titlePlaceholder)}
+          disabled={!!createdAlbum}
         />
 
         <label
@@ -326,6 +405,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           value={description}
           onChange={handleDescription}
           maxLength={DESCRIPTION_MAX}
+          disabled={!!createdAlbum}
         />
 
         <div className='albutts-composer__label'>
@@ -337,32 +417,37 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
             label={intl.formatMessage(messages.visibilityPublic)}
             help={intl.formatMessage(messages.visibilityPublicHelp)}
             onSelect={handlePublic}
+            disabled={!!createdAlbum}
           />
           <VisibilityOption
             active={visibility === 'orbit'}
             label={intl.formatMessage(messages.visibilityOrbit)}
             help={intl.formatMessage(messages.visibilityOrbitHelp)}
             onSelect={handleOrbit}
+            disabled={!!createdAlbum}
           />
           <VisibilityOption
             active={visibility === 'mates'}
             label={intl.formatMessage(messages.visibilityMates)}
             help={intl.formatMessage(messages.visibilityMatesHelp)}
             onSelect={handleMates}
+            disabled={!!createdAlbum}
           />
           <VisibilityOption
             active={visibility === 'self_only'}
             label={intl.formatMessage(messages.visibilitySelfOnly)}
             help={intl.formatMessage(messages.visibilitySelfOnlyHelp)}
             onSelect={handleSelfOnly}
+            disabled={!!createdAlbum}
           />
           <VisibilityOption
             active={visibility === 'krew'}
             label={intl.formatMessage(messages.visibilityKrew)}
             onSelect={handleKrew}
+            disabled={!!createdAlbum}
           />
         </div>
-        {visibility === 'krew' && (
+        {visibility === 'krew' && !createdAlbum && (
           <p className='albutts-composer__hint'>
             {intl.formatMessage(messages.krewNote)}
           </p>
@@ -390,32 +475,46 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           <>
             <ul className='albutts-composer__thumbs'>
               {photos.map((p) => (
-                <li key={p.key} className='albutts-composer__thumb'>
+                <li
+                  key={p.key}
+                  className={`albutts-composer__thumb albutts-composer__thumb--${p.status}`}
+                  title={intl.formatMessage(chipMessage(p.status, messages))}
+                >
                   <img
                     className='albutts-composer__thumb-img'
                     src={p.previewUrl}
                     alt={p.file.name}
                   />
+                  <span
+                    className={`albutts-composer__chip albutts-composer__chip--${p.status}`}
+                    aria-hidden
+                  >
+                    {chipGlyph(p.status)}
+                  </span>
                 </li>
               ))}
             </ul>
-            <button
-              type='button'
-              className='albutts-composer__clear'
-              onClick={handleClearPhotos}
-              disabled={pending}
-            >
-              {intl.formatMessage(messages.photosClear)}
-            </button>
+            {!createdAlbum && (
+              <button
+                type='button'
+                className='albutts-composer__clear'
+                onClick={handleClearPhotos}
+                disabled={pending}
+              >
+                {intl.formatMessage(messages.photosClear)}
+              </button>
+            )}
           </>
         )}
 
-        {progress && (
+        {createdAlbum && photos.length > 0 && (
           <p className='albutts-composer__progress' aria-live='polite'>
-            {intl.formatMessage(messages.uploading, {
-              current: progress.current,
-              total: progress.total,
+            {intl.formatMessage(messages.progressLine, {
+              done: doneCount,
+              total: photos.length,
+              failed: failedCount,
             })}
+            {inflightCount > 0 && ' · uploading'}
           </p>
         )}
 
@@ -424,7 +523,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
             {intl.formatMessage(messages.error)}
           </p>
         )}
-        {failedCount > 0 && !error && (
+        {createdAlbum && failedCount > 0 && !pending && (
           <p className='albutts-composer__error' role='alert'>
             {intl.formatMessage(messages.photoErrorPartial, {
               failed: failedCount,
@@ -433,14 +532,28 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         )}
 
         <div className='albutts-composer__actions'>
-          {createdAlbum && failedCount > 0 ? (
-            <button
-              type='button'
-              className='albutts-btn albutts-btn--primary'
-              onClick={handleContinue}
-            >
-              {intl.formatMessage(messages.continueToAlbum)}
-            </button>
+          {createdAlbum ? (
+            <>
+              {failedCount > 0 && !pending && (
+                <button
+                  type='button'
+                  className='albutts-btn albutts-btn--ghost'
+                  onClick={handleRetryFailed}
+                >
+                  {intl.formatMessage(messages.retryFailed, {
+                    count: failedCount,
+                  })}
+                </button>
+              )}
+              <button
+                type='button'
+                className='albutts-btn albutts-btn--primary'
+                onClick={handleContinue}
+                disabled={pending}
+              >
+                {intl.formatMessage(messages.continueToAlbum)}
+              </button>
+            </>
           ) : (
             <>
               <button
@@ -467,10 +580,40 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   );
 };
 
+function chipGlyph(status: PhotoStatus): string {
+  switch (status) {
+    case 'done':
+      return '✓';
+    case 'failed':
+      return '!';
+    case 'uploading':
+      return '…';
+    default:
+      return '';
+  }
+}
+
+function chipMessage(
+  status: PhotoStatus,
+  m: typeof messages,
+): (typeof messages)[keyof typeof messages] {
+  switch (status) {
+    case 'done':
+      return m.chipDone;
+    case 'failed':
+      return m.chipFailed;
+    case 'uploading':
+      return m.chipUploading;
+    default:
+      return m.chipQueued;
+  }
+}
+
 interface VisibilityOptionProps {
   active: boolean;
   label: string;
   help?: string;
+  disabled?: boolean;
   onSelect: () => void;
 }
 
@@ -478,6 +621,7 @@ const VisibilityOption: React.FC<VisibilityOptionProps> = ({
   active,
   label,
   help,
+  disabled,
   onSelect,
 }) => (
   <button
@@ -486,6 +630,7 @@ const VisibilityOption: React.FC<VisibilityOptionProps> = ({
     aria-pressed={active}
     aria-label={help ? `${label} — ${help}` : label}
     onClick={onSelect}
+    disabled={disabled}
   >
     {label}
   </button>
