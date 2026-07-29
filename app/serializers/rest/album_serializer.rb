@@ -1,0 +1,54 @@
+# frozen_string_literal: true
+
+# Full Albutts album envelope — the shape returned by
+# `/api/v1/albutts/albums` (index/show/create/update). Trimmed shape
+# for feed embedding lives in REST::AlbumSummarySerializer.
+class REST::AlbumSerializer < ActiveModel::Serializer
+  attributes :id, :title, :description, :visibility,
+             :contributor_count, :photo_count, :created_at
+
+  attribute :cover_url
+  attribute :is_owner
+  attribute :can_contribute
+
+  belongs_to :owner, serializer: REST::AccountSerializer
+  has_many   :photos, serializer: REST::AlbumPhotoSerializer
+  has_many   :krews, serializer: REST::KrewSerializer, if: :krew_scoped?
+
+  def id
+    object.id.to_s
+  end
+
+  def cover_url
+    object.cover_media_attachment&.file&.url(:small).presence ||
+      object.photos.chronological.first&.rendered_url
+  end
+
+  def contributor_count
+    @contributor_count ||= object.photos.distinct.count(:contributor_id)
+  end
+
+  def photo_count
+    @photo_count ||= object.photos.count
+  end
+
+  def is_owner
+    return false unless current_user&.account_id
+
+    object.owner_id == current_user.account_id
+  end
+
+  def can_contribute
+    return false unless current_user&.account
+
+    object.contributable_by?(current_user.account)
+  end
+
+  def created_at
+    object.created_at.iso8601
+  end
+
+  def krew_scoped?
+    object.krew_scope?
+  end
+end

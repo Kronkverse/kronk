@@ -67,7 +67,13 @@ settings:
     default: true
     scope: user
 
-emits: []
+emits:
+  # A new album has been created — feeds card projection uses this
+  # (Slice 2 wires the publisher); Nudges may route to mates.
+  - albutts.album.created
+  # A new photo has been added to an existing album — fellow
+  # contributors get notified (`album_new_photo`, aggregated).
+  - albutts.album.new_photo
 listens:
   # When a Kalendar event with `spawn_album: true` is created, an
   # Albutt is auto-created + linked. RSVP grants contribution rights.

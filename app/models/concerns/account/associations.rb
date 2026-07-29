@@ -97,6 +97,12 @@ module Account::Associations
     has_many :listings, inverse_of: :account, dependent: :destroy
     has_many :listing_offers, foreign_key: :offerer_id, inverse_of: :offerer, dependent: :destroy
 
+    # Albutts — albums this account owns + individual photo
+    # contributions they've made. Both cascade destroy: an owned album
+    # goes with the account, and their contributions go with them.
+    has_many :owned_albums, class_name: 'Album', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
+    has_many :album_photo_contributions, class_name: 'AlbumPhoto', foreign_key: :contributor_id, inverse_of: :contributor, dependent: :destroy
+
     # Sectioned profile ordering (§Profile) — every account has a
     # baseline `timeline` section on signup.
     has_many :profile_sections, inverse_of: :account, dependent: :destroy

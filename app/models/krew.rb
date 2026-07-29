@@ -42,6 +42,11 @@ class Krew < ApplicationRecord
   has_many :krew_korners, dependent: :destroy
   has_many :krew_requirements, dependent: :destroy
 
+  # Krew-scoped albums (Albutts korner). Krew deletion cascades → the
+  # join rows evaporate; the album itself survives but loses this scope.
+  has_many :album_krews, dependent: :destroy
+  has_many :albums, through: :album_krews
+
   validates :slug, presence: true, uniqueness: true, format: { with: SLUG_PATTERN }
   validates :name, presence: true
   validates :access, inclusion: { in: ACCESS_LEVELS }
