@@ -1,6 +1,105 @@
-// Moments — /hub/moments korner. v1 slice: grid of viewer's active
-// Moments + inline composer overlay. See docs/spaces/moments.md.
-// Home strip + full-screen viewer + attach flows are follow-ups.
+// Moments — /hub/moments korner + Home top strip. See
+// docs/spaces/moments.md. Full-screen viewer + attach flows follow.
+
+// ── Home top strip ─────────────────────────────────────────────────
+.moments-strip {
+  padding: 10px 12px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-primary);
+}
+
+.moments-strip__scroller {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.moments-strip__ring {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 2px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  max-width: 72px;
+  transition: transform 0.14s;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.moments-strip__ring-avatar {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  padding: 2.5px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(
+    135deg,
+    var(--kronk-purple-bright),
+    var(--kronk-purple-accent)
+  );
+
+  img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--surface-primary);
+    border: 2px solid var(--surface-primary);
+  }
+}
+
+// Ring dims when the owner has no active Moment (add-a-moment prompt).
+.moments-strip__ring--owner:not(.moments-strip__ring--has-moment)
+  .moments-strip__ring-avatar {
+  background: none;
+  border: 2px dashed var(--border-default);
+  padding: 2px;
+}
+
+.moments-strip__ring-add {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--surface-primary);
+}
+
+.moments-strip__ring-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  max-width: 68px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ── Moments korner (/hub/moments) v1 grid + composer overlay ─────
 
 .moments {
   padding: 20px 24px 60px;

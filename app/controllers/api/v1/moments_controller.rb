@@ -15,9 +15,22 @@ class Api::V1::MomentsController < Api::BaseController
   # Standard pagination for a subject's active Moments — newest first.
   # If no `account` is passed, defaults to the current viewer's own
   # active Moments (useful for the composer / Home strip owner tile).
+  # `scope=mates` (Home strip) returns the union of the viewer's own
+  # active moments + all active moments from accounts the viewer
+  # follows. Otherwise returns a single account's moments (defaults
+  # to the viewer).
   def index
-    account = params[:account_id].present? ? Account.find(params[:account_id]) : current_account
-    @moments = Moment.for_account(account).active.recent.includes(:account, :media_attachment).limit(40)
+    @moments =
+      if params[:scope] == 'mates'
+        follow_ids = current_account.following.pluck(:id)
+        subject_ids = follow_ids + [current_account.id]
+        Moment.where(account_id: subject_ids)
+      else
+        account = params[:account_id].present? ? Account.find(params[:account_id]) : current_account
+        Moment.for_account(account)
+      end
+
+    @moments = @moments.active.recent.includes(:account, :media_attachment).limit(60)
     render json: @moments, each_serializer: REST::MomentSerializer
   end
 
