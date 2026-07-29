@@ -1,0 +1,233 @@
+// InFlow veil — the behind-the-scenes reveal. The surface (curtains) parts on
+// scroll to a pinned Kosmos void: moon, halo, drifting stars, and tonight's
+// reading, then closes over again. Choreography follows the Kommons "Inflow
+// View" prototype; palette, type and surfaces are Kronk tokens. Motion + the
+// `--veil-vh` unit (the Stage's height) are driven from veil.tsx.
+
+.inflow-veil {
+  --veil-vh: 100vh; // replaced at runtime with the Stage's own height
+  --veil-fringe: 150px;
+
+  position: relative;
+  font-family: var(--font-display, Georgia, serif);
+}
+
+// ── the surface (curtains) ──────────────────────────────────────────────────
+
+.inflow-veil__deck {
+  position: relative;
+  z-index: 2;
+}
+
+.inflow-veil__deck--before {
+  padding: 14vh 0 var(--veil-fringe);
+  background: linear-gradient(
+    180deg,
+    var(--kosmos-void) 0,
+    var(--kosmos-void) calc(100% - var(--veil-fringe)),
+    transparent 100%
+  );
+}
+
+.inflow-veil__deck--after {
+  margin-top: calc(var(--veil-vh) * -1);
+  padding: var(--veil-fringe) 0 30vh;
+  background: linear-gradient(
+    0deg,
+    var(--kosmos-void) 0,
+    var(--kosmos-void) calc(100% - var(--veil-fringe)),
+    transparent 100%
+  );
+}
+
+.inflow-veil__intro {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.inflow-veil__eyebrow {
+  margin-bottom: 14px;
+  color: var(--kronk-purple-bright, #b39dff);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.inflow-veil__lede {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.inflow-veil__hint {
+  margin-top: 22px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+// ── the pinned void ─────────────────────────────────────────────────────────
+
+.inflow-veil__scope {
+  position: relative;
+  z-index: 0;
+  height: calc(var(--veil-vh) * 3.4);
+  margin-top: calc(var(--veil-vh) * -1);
+}
+
+.inflow-veil__veil {
+  position: sticky;
+  top: 0;
+  height: var(--veil-vh);
+  overflow: hidden;
+}
+
+.inflow-veil__void {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    125% 85% at 50% 44%,
+    color-mix(in srgb, var(--accent) 14%, var(--kosmos-void)) 0%,
+    var(--kosmos-void) 56%,
+    #020106 100%
+  );
+}
+
+.inflow-veil__layer {
+  position: absolute;
+  inset: -14% -6%;
+  will-change: transform;
+}
+
+.inflow-veil__star {
+  position: absolute;
+}
+
+.inflow-veil__star--dot {
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--kronk-purple-bright, #b39dff) 78%, #fff);
+}
+
+.inflow-veil__star--spark {
+  color: var(--accent);
+  font-size: 10px;
+  line-height: 1;
+}
+
+.inflow-veil__scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 70px 26px 0;
+  text-align: center;
+}
+
+.inflow-veil__moonwrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 186px;
+  height: 186px;
+  will-change: transform;
+}
+
+.inflow-veil__halo {
+  position: absolute;
+  inset: -42%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgb(198 186 255 / 50%) 0%,
+    color-mix(in srgb, var(--accent) 16%, transparent) 42%,
+    transparent 70%
+  );
+  filter: blur(4px);
+  will-change: opacity;
+}
+
+.inflow-veil__moon {
+  position: relative;
+  width: 148px;
+  height: 148px;
+}
+
+.inflow-veil__read {
+  max-width: 400px;
+  margin-top: 24px;
+  will-change: transform, opacity;
+}
+
+.inflow-veil__read-eye {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  color: var(--kronk-purple-bright, #b39dff);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.inflow-veil__read-title {
+  margin: 0 0 4px;
+  color: var(--text-primary);
+  font-family: var(--font-display, Georgia, serif);
+  font-weight: 400;
+  font-size: 27px;
+}
+
+.inflow-veil__phase {
+  margin-bottom: 14px;
+  color: color-mix(in srgb, var(--kronk-purple-bright, #b39dff) 68%, #fff);
+  font-size: 15px;
+}
+
+.inflow-veil__reflection {
+  margin: 0 auto 16px;
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.62;
+  opacity: 0.94;
+}
+
+.inflow-veil__almanac {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+
+  b {
+    color: color-mix(in srgb, var(--kronk-purple-bright, #b39dff) 70%, #fff);
+    font-weight: 600;
+  }
+}
+
+.inflow-veil__close {
+  margin-top: 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inflow-veil__layer,
+  .inflow-veil__moonwrap,
+  .inflow-veil__read {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .inflow-veil__halo {
+    opacity: 0.9 !important;
+  }
+}

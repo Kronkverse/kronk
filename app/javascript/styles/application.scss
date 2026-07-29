@@ -56,6 +56,7 @@
 @use 'mastodon/pwa_install_prompt';
 @use 'mastodon/events';
 @use 'mastodon/inflow';
+@use 'mastodon/inflow_veil';
 @use 'mastodon/kommons';
 @use 'mastodon/kommons_tree';
 @use 'mastodon/kommons_lattice';
