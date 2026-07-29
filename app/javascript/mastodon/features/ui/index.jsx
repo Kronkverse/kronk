@@ -118,7 +118,7 @@ import {
   Kommunity,
   KommonsSettings,
   KuestionsSettings,
-  MomentsStub,
+  Moments,
   AlbuttsStub,
   KornerSettings,
   ProfileCompose,
@@ -327,7 +327,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/kommunity' component={Kommunity} content={children} />
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
-            <WrappedRoute path='/hub/moments' component={MomentsStub} content={children} />
+            <WrappedRoute path='/hub/moments' component={Moments} content={children} />
             <WrappedRoute path='/hub/albutts' component={AlbuttsStub} content={children} />
             <Redirect from='/hub/kompass' to='/hub/map' />
             <WrappedRoute path='/hub/map' component={MapV2} content={children} />

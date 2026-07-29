@@ -1,6 +1,6 @@
 # Moments (`moments`)
 
-**Manifest:** `config/korners/moments.yaml` · **Mount:** `/hub/moments` · **Status:** discovery locked (2026-07-29) — backend not yet built
+**Manifest:** `config/korners/moments.yaml` · **Mount:** `/hub/moments` · **Status:** v1 shipped alpha.315 — grid + composer + feed card. Deep-link viewer, Home strip, attach flows all follow.
 
 ## Purpose
 
