@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom';
 
 import DoneAllIcon from '@/material-icons/400-24px/done_all.svg?react';
 import KronkCoinIcon from '@/material-icons/400-24px/kronk_coin.svg?react';
+import { submitMarkers } from 'mastodon/actions/markers';
 import { markNotificationsAsRead } from 'mastodon/actions/notification_groups';
 import { Icon } from 'mastodon/components/icon';
 import type { NotificationGroupProposalComplete } from 'mastodon/models/notification_group';
@@ -163,9 +164,15 @@ export const KronkSystemView: React.FC = () => {
 
   // Opening the Kronk system pane is the "I've read this" signal for
   // korner/system notifications — advance the read marker so the raven
-  // pillar drops its waving-hand alert.
+  // pillar drops its waving-hand alert. `markNotificationsAsRead` only
+  // moves the client-side `readMarkerId`; without an immediate
+  // `submitMarkers` the server never learns, and a page reload before
+  // the window next regains focus (the only other flush trigger, in
+  // features/ui/index.jsx:444) resurrects the badge from the stale
+  // server marker.
   useEffect(() => {
     dispatch(markNotificationsAsRead());
+    void dispatch(submitMarkers({ immediate: true }));
   }, [dispatch]);
 
   const [visited, setVisited] = useState<Set<string>>(() => readVisited());
