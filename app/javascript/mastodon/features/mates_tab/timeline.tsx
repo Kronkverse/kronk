@@ -18,7 +18,7 @@
 // until the Mates endpoint lands. `useMatesTimeline` is the swap
 // point.
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -39,7 +39,12 @@ const TRACK_HEIGHT = 56;
 const LINE_TO_ROW = 54;
 const BRANCH_PITCH = 42; // brief default (compresses to 26-34px as layers accumulate)
 const PIP_RADIUS = 7;
-const PX_PER_DAY = 1.2;
+// Spread ratio — brief zoom range is 0.35–6 px/day (all-time to
+// week-view). Anchoring to ~4 keeps handles legible and gives close
+// mate-bond dates room to breathe without piling into sub-lanes. Old
+// history is still accessible via horizontal scroll (the SVG is
+// auto-scrolled to today on mount).
+const PX_PER_DAY = 4;
 const LEFT_MARGIN = 40;
 const RIGHT_MARGIN = 40;
 const ROW_HEIGHT = 96; // room for tile + label
@@ -99,9 +104,12 @@ interface TileInfo {
   detail?: string; // e.g. "mate since <date>"
 }
 
-interface HoverInfo {
-  x: number;
-  y: number;
+// Hover state split into two: `hoveredMember` (rarely changes — only
+// on tile enter/leave) drives the lineage trace and tooltip content;
+// tooltip *position* is updated per-mousemove via a ref on the
+// tooltip div (no re-render). Before this split, onMouseMove churned
+// setState 60Hz → whole SVG re-render → visible flicker on hover.
+interface HoverMember {
   member: TimelineMember;
   detail?: string;
 }
@@ -146,7 +154,13 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
     viewerMember?.id ?? data.members[0]?.id ?? '',
   );
   const subject = membersById.get(subjectId);
-  const [hover, setHover] = useState<HoverInfo | null>(null);
+  const [hoveredMember, setHoveredMember] = useState<HoverMember | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  // Cache last mouse position outside React state so mouse-move
+  // updates never re-render. useLayoutEffect below reads this to
+  // place the tooltip immediately after it mounts on hover-enter.
+  const lastMousePos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   // Opened branch keys — `a/id` opens the mate/inviter's full invite
   // chain (upward), `b/id` opens one generation of an invitee's own
@@ -242,12 +256,21 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
 
   const onTileClick = useCallback((id: string) => {
     setSubjectId(id);
-    setHover(null);
+    setHoveredMember(null);
     setOpenedKeys(new Set()); // subject switch closes every opened branch
   }, []);
 
-  const onTileHover = useCallback((info: HoverInfo | null) => {
-    setHover(info);
+  const onTileHoverEnter = useCallback((info: HoverMember | null) => {
+    setHoveredMember(info);
+  }, []);
+
+  // Position updates go through the ref — no state, no re-render.
+  const onTileHoverMove = useCallback((clientX: number, clientY: number) => {
+    lastMousePos.current = { x: clientX, y: clientY };
+    const el = tooltipRef.current;
+    if (!el) return;
+    el.style.left = `${clientX + 14}px`;
+    el.style.top = `${clientY + 16}px`;
   }, []);
 
   const togglePip = useCallback(
@@ -604,7 +627,29 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
   // it covers the path back to the subject plus everything visible
   // beneath. Base tiles that aren't part of any open chain still
   // trivially "contain" themselves so they light in isolation.
-  const hoveredId = hover?.member.id ?? null;
+  const hoveredId = hoveredMember?.member.id ?? null;
+
+  // Auto-scroll the timeline to today whenever the subject changes,
+  // so the most recent (rightmost) portion is visible by default and
+  // older history is one scroll-back away rather than being what the
+  // viewer lands on. Runs after paint so scrollWidth is settled.
+  useEffect(() => {
+    const s = scrollerRef.current;
+    if (!s) return;
+    s.scrollLeft = s.scrollWidth;
+  }, [subjectId]);
+
+  // On tooltip mount (hoveredMember flip null → set), place the
+  // tooltip at the last known mouse position before paint so it
+  // never flashes at (0,0). Subsequent mousemoves keep it tracking
+  // via the ref.
+  useEffect(() => {
+    if (!hoveredMember) return;
+    const el = tooltipRef.current;
+    if (!el) return;
+    el.style.left = `${lastMousePos.current.x + 14}px`;
+    el.style.top = `${lastMousePos.current.y + 16}px`;
+  }, [hoveredMember]);
 
   const litIds = useMemo((): Set<string> | null => {
     if (!hoveredId || !subject) return null;
@@ -743,7 +788,7 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
           )}
         </div>
 
-        <div className='mates-tab__scroller'>
+        <div className='mates-tab__scroller' ref={scrollerRef}>
           <svg
             className={`mates-tab__svg${litIds ? ' mates-tab__svg--hovered' : ''}`}
             width={svgWidth}
@@ -873,7 +918,8 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                 label={inviter.handle}
                 detail={`invited ${subject.display_name} · joined ${formatShort(inviter.joined_at)}`}
                 onClick={onTileClick}
-                onHover={onTileHover}
+                onHoverEnter={onTileHoverEnter}
+                onHoverMove={onTileHoverMove}
                 variant='inviter'
                 lit={isLit(inviter.id)}
                 pip={
@@ -908,7 +954,8 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                   label={tile.label}
                   detail={tile.detail}
                   onClick={onTileClick}
-                  onHover={onTileHover}
+                  onHoverEnter={onTileHoverEnter}
+                  onHoverMove={onTileHoverMove}
                   variant='mate'
                   lit={isLit(tile.member.id)}
                   pip={
@@ -946,7 +993,8 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                     label={tile.label}
                     detail={tile.detail}
                     onClick={onTileClick}
-                    onHover={onTileHover}
+                    onHoverEnter={onTileHoverEnter}
+                    onHoverMove={onTileHoverMove}
                     variant='invitee'
                     lit={isLit(tile.member.id)}
                     pip={
@@ -1006,7 +1054,8 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                     label={member.handle}
                     detail={`joined ${formatShort(member.joined_at)}`}
                     onClick={onTileClick}
-                    onHover={onTileHover}
+                    onHoverEnter={onTileHoverEnter}
+                    onHoverMove={onTileHoverMove}
                     variant='branch-up'
                     showLabel={false}
                     lit={isLit(node.id)}
@@ -1054,7 +1103,8 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
                     label={member.handle}
                     detail={`joined ${formatShort(member.joined_at)}`}
                     onClick={onTileClick}
-                    onHover={onTileHover}
+                    onHoverEnter={onTileHoverEnter}
+                    onHoverMove={onTileHoverMove}
                     variant='branch-down'
                     showLabel={false}
                     lit={isLit(node.id)}
@@ -1075,20 +1125,18 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
           </svg>
         </div>
 
-        {hover && (
-          <div
-            className='mates-tab__tooltip'
-            style={{ left: hover.x + 14, top: hover.y + 16 }}
-            role='tooltip'
-          >
+        {hoveredMember && (
+          <div className='mates-tab__tooltip' ref={tooltipRef} role='tooltip'>
             <div className='mates-tab__tooltip-name'>
-              {hover.member.display_name}
+              {hoveredMember.member.display_name}
               <span className='mates-tab__tooltip-handle'>
-                @{hover.member.handle}
+                @{hoveredMember.member.handle}
               </span>
             </div>
-            {hover.detail && (
-              <div className='mates-tab__tooltip-detail'>{hover.detail}</div>
+            {hoveredMember.detail && (
+              <div className='mates-tab__tooltip-detail'>
+                {hoveredMember.detail}
+              </div>
             )}
             <div className='mates-tab__tooltip-hint'>
               <FormattedMessage
@@ -1149,7 +1197,8 @@ interface TimelineTileProps {
   detail?: string;
   variant: 'mate' | 'invitee' | 'inviter' | 'branch-up' | 'branch-down';
   onClick: (id: string) => void;
-  onHover: (info: HoverInfo | null) => void;
+  onHoverEnter: (info: HoverMember | null) => void;
+  onHoverMove: (clientX: number, clientY: number) => void;
   showLabel?: boolean;
   lit?: boolean; // true when this tile is part of the lineage trace path
   pip?: {
@@ -1170,7 +1219,8 @@ const TimelineTile: React.FC<TimelineTileProps> = ({
   detail,
   variant,
   onClick,
-  onHover,
+  onHoverEnter,
+  onHoverMove,
   showLabel = true,
   lit,
   pip,
@@ -1190,21 +1240,25 @@ const TimelineTile: React.FC<TimelineTileProps> = ({
 
   const handleEnter = useCallback(
     (event: React.MouseEvent<SVGGElement>) => {
-      onHover({ x: event.clientX, y: event.clientY, member, detail });
+      onHoverEnter({ member, detail });
+      onHoverMove(event.clientX, event.clientY);
     },
-    [detail, member, onHover],
+    [detail, member, onHoverEnter, onHoverMove],
   );
 
   const handleMove = useCallback(
     (event: React.MouseEvent<SVGGElement>) => {
-      onHover({ x: event.clientX, y: event.clientY, member, detail });
+      // No state update — tooltip position is written directly to
+      // the tooltip DOM via a ref by the parent. This keeps mouse
+      // moves from re-rendering the whole SVG.
+      onHoverMove(event.clientX, event.clientY);
     },
-    [detail, member, onHover],
+    [onHoverMove],
   );
 
   const handleLeave = useCallback(() => {
-    onHover(null);
-  }, [onHover]);
+    onHoverEnter(null);
+  }, [onHoverEnter]);
 
   const handlePipClick = useCallback(
     (event: React.MouseEvent<SVGCircleElement | SVGTextElement>) => {
