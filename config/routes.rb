@@ -156,6 +156,7 @@ Rails.application.routes.draw do
       get '/@:username/media', as: :short_account_media
 
       get '/@:username/nudges', as: :short_account_nudges
+      get '/@:username/mates', as: :short_account_mates
       get '/@:username/tagged/:tag', as: :short_account_tag
     end
   end
@@ -294,6 +295,11 @@ Rails.application.routes.draw do
   get '/hub/kommons/tree', to: redirect('/hub/kommons/lattice', status: 301)
   get '/hub/kommons', to: 'home#index'
   get '/hub/kommons/*path', to: 'home#index', format: false
+  # Kommunity — the whole-graph 3D orb view (KRONK_ORB_DATA_BRIEF).
+  # SPA-only, no controller. Direct/deep-link loads land on home#index
+  # which boots the SPA; features/kommunity/index.tsx handles the rest.
+  get '/hub/kommunity', to: 'home#index'
+  get '/hub/kommunity/*path', to: 'home#index', format: false
   get '/hub/kuestions', to: 'home#index'
   get '/hub/kuestions/*path', to: 'home#index', format: false
   get '/hub/kalendar', to: 'kalendar#index'
