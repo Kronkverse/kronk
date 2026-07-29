@@ -10,11 +10,12 @@ import ImmutablePureComponent from 'react-immutable-pure-component';
 
 import { length } from 'stringz';
 
-import { missingAltTextModal } from 'mastodon/initial_state';
 
 import AutosuggestInput from 'mastodon/components/autosuggest_input';
 import AutosuggestTextarea from 'mastodon/components/autosuggest_textarea';
 import { Button } from 'mastodon/components/button';
+import { missingAltTextModal } from 'mastodon/initial_state';
+
 import EmojiPickerDropdown from '../containers/emoji_picker_dropdown_container';
 import PollButtonContainer from '../containers/poll_button_container';
 import SpoilerButtonContainer from '../containers/spoiler_button_container';
@@ -23,15 +24,15 @@ import { countableText } from '../util/counter';
 
 import { CharacterCounter } from './character_counter';
 import { EditIndicator } from './edit_indicator';
-import { KrewTargets } from './krew_targets';
 import { KategoryPicker } from './kategory_picker';
+import { KrewTargets } from './krew_targets';
 import { NavigationBar } from './navigation_bar';
 import { PollForm } from "./poll_form";
+import { ComposeQuotedStatus } from './quoted_post';
 import { ReplyIndicator } from './reply_indicator';
 import { UploadForm } from './upload_form';
-import { Warning } from './warning';
-import { ComposeQuotedStatus } from './quoted_post';
 import { VisibilityButton } from './visibility_button';
+import { Warning } from './warning';
 
 const allowedAroundShortCode = '><\u0085\u0020\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\u2028\u2029\u0009\u000a\u000b\u000c\u000d';
 
@@ -75,6 +76,11 @@ class ComposeForm extends ImmutablePureComponent {
     lang: PropTypes.string,
     maxChars: PropTypes.number,
     redirectOnSuccess: PropTypes.bool,
+    // Kronk overrides for surfaces that reuse the compose reducer with
+    // different framing (e.g. the inline Home status box uses the day's
+    // Kuestion as placeholder and "Kronk it" as the submit label).
+    placeholderText: PropTypes.string,
+    publishLabel: PropTypes.string,
   };
 
   static defaultProps = {
@@ -303,7 +309,7 @@ class ComposeForm extends ImmutablePureComponent {
 
           <AutosuggestTextarea
             ref={this.textareaRef}
-            placeholder={intl.formatMessage(messages.placeholder)}
+            placeholder={this.props.placeholderText ?? intl.formatMessage(messages.placeholder)}
             disabled={isSubmitting}
             value={this.props.text}
             onChange={this.handleChange}
@@ -340,11 +346,13 @@ class ComposeForm extends ImmutablePureComponent {
                   disabled={!this.canSubmit()}
                   loading={isSubmitting}
                 >
-                  {intl.formatMessage(
-                    this.props.isEditing ?
-                      messages.saveChanges :
-                      (this.props.isInReply ? messages.reply : messages.publish)
-                  )}
+                  {this.props.isEditing || this.props.isInReply || !this.props.publishLabel
+                    ? intl.formatMessage(
+                        this.props.isEditing
+                          ? messages.saveChanges
+                          : (this.props.isInReply ? messages.reply : messages.publish)
+                      )
+                    : this.props.publishLabel}
                 </Button>
               </div>
             </div>

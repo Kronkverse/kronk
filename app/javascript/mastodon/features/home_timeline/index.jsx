@@ -31,6 +31,7 @@ import StatusListContainer from '../ui/containers/status_list_container';
 import { Announcements } from './components/announcements';
 import { ColumnSettings } from './components/column_settings';
 import { CriticalUpdateBanner } from './components/critical_update_banner';
+import { HomeStatusBox } from './components/home_status_box';
 import { LiveBanner } from './components/live_banner';
 
 const messages = defineMessages({
@@ -257,6 +258,10 @@ class HomeTimeline extends PureComponent {
         {/* Moments Home strip — sits directly under the column header,
             above the feed. Signed-in only. */}
         {signedIn && <MomentsStrip />}
+
+        {/* Inline status composer — reuses the global compose reducer;
+            placeholder is the day's Kuestion prompt. Signed-in only. */}
+        {signedIn && <HomeStatusBox />}
 
         {signedIn ? (
           <StatusListContainer
