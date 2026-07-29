@@ -1,6 +1,6 @@
 # Albutts (`albutts`)
 
-**Manifest:** `config/korners/albutts.yaml` · **Mount:** `/hub/albutts` · **Status:** stub (Round 1 + Round 2 discovery landed 2026-07-20; models not started)
+**Manifest:** `config/korners/albutts.yaml` · **Mount:** `/hub/albutts` · **Status:** shipped-2.0 (2026-07-29 — enforced; four-slice build landed as alpha.315 → alpha.320)
 
 ## Purpose
 
@@ -11,8 +11,8 @@ poster's silent guests. The album is a group artefact; the individual
 photos remain attributable to the contributor who added them.
 
 Distinct from "attach 4 photos to a toot": that's one poster
-publishing four assets under their own name. Albutts is *many people
-contributing to one shared container*, with attribution woven through.
+publishing four assets under their own name. Albutts is _many people
+contributing to one shared container_, with attribution woven through.
 
 ## Content model
 
@@ -32,7 +32,8 @@ of it. Both surfaces exist:
 (and videos) live in their own storage — the album is a metadata
 container that references contributor-hosted files. This aligns with
 the Anthemos pod philosophy: data lives with the user, Kronk routes
-+ presents it.
+
+- presents it.
 
 Consequence: revocation is one-sided. If a contributor deletes or
 un-shares their media, the album's rendering of that photo goes dark;
@@ -78,7 +79,7 @@ Two triggers fire (drilldown from Round 2):
   are notified when other contributors add to a shared album. Keeps
   co-authors in the loop.
 
-Deliberately *not* included in the initial notification set:
+Deliberately _not_ included in the initial notification set:
 album-owner-per-contribution (too noisy for busy albums), mate-
 published-new-album (feed card already handles broadcast).
 
@@ -110,8 +111,8 @@ handle the same idea.
 ## Cross-korner connections
 
 - **Kalendar → Albutts.** Event creator opts in via checkbox at event
-  creation (mirror of the Krew-spawn pattern): *"Spawn an album for
-  this event?"* If checked, an album is created + linked to the event.
+  creation (mirror of the Krew-spawn pattern): _"Spawn an album for
+  this event?"_ If checked, an album is created + linked to the event.
   Attendees who RSVP get contribution rights to the album.
 - **Krew → Albutts.** A Krew can own an album — visibility set to
   Krew-scoped. Krew members are the album's contributors + viewers.
@@ -145,7 +146,50 @@ on Albutts as a fresh new-korner suggestion (Tal, 2026-07-20). Round
 1 covered the 9 canonical topics; Round 2 drilldowns settled composer
 shape, notification triggers, feed-card behaviour, and the
 Kalendar-spawn mechanic. Content committed to this doc reflects
-answers locked in that session. Model + UI work is still pending.
+answers locked in that session.
+
+## Build history
+
+Four-slice implementation (2026-07-29):
+
+- **Slice 1 (alpha.315, #873)** — Backend: `Album`, `AlbumPhoto`,
+  `AlbumKrew` models + migration; visibility scope (`public` /
+  `mates` / `krew`); `Api::V1::Albutts::AlbumsController` +
+  `PhotosController`; `AlbumSerializer` + `AlbumSummarySerializer`
+  - `AlbumPhotoSerializer`; routes under `namespace :albutts`.
+- **Slice 2 (alpha.318, #878)** — Frontend: retired `AlbuttsStub`;
+  built directory grid + album detail + create-album composer +
+  contribute-a-photo composer (uploads via `POST /api/v1/media` then
+  references the returned `media_id`). Feed card
+  `StatusAlbuttsCard` + registration in `korner_cards.tsx` +
+  `Albutts::PublishAlbum` (Album → Status projection).
+- **Slice 3 (alpha.319, #882)** — Notifications: fan-out subscriber
+  in `nudges_event_bus.rb` delivers a Mate-gated nudge per fellow
+  contributor when a photo lands. Kalendar spawn: `events.spawn_album`
+  boolean + composer checkbox + `albutts_event_bus.rb` subscriber
+  that creates a companion Album on `kalendar.event.created`.
+- **Slice 4 (alpha.320, this PR)** — Manifest `enforced: true`; docs
+  sync; boot validator gates L1-L11 for albutts.
+
+## Follow-ups (out of scope for the initial build)
+
+- **Aggregation window** — the manifest declares
+  `album_new_photo` should aggregate `window: 15m, key: album_id`.
+  The Nudges router doesn't yet enforce that; a contribution burst
+  currently produces one nudge per photo per contributor. Router
+  patch is pending.
+- **`contribution_rights_granted` producer** — the second declared
+  notification type. Fires when contribution rights change (e.g., a
+  krew member joins a krew that owns an album). Wire the producer
+  when Krew-scoped albums are exercised end-to-end.
+- **External-URL contribution flow** — `album_photos.external_url`
+  is schema-ready; the composer only exercises the media-attachment
+  path. Wire the URL path when Anthemos-pod-hosted media lands.
+- **Video length cap** (spec §Open decisions).
+- **Ownership transfer flow** when an album owner leaves a krew that
+  owns the album (spec §Open decisions).
+- **Event → Album lifecycle** after the event ends: stay open,
+  grace-period close, or lock (spec §Open decisions).
 
 ## Related
 
