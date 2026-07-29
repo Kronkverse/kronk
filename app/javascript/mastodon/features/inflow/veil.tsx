@@ -4,13 +4,13 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
+import { Stage } from 'mastodon/components/stage';
 import {
   getMoonIllumination,
   getMoonPhaseName,
   getMoonRiseSet,
   getDaylightInfo,
 } from 'mastodon/features/events/components/celestial_calendar';
-import { Stage } from 'mastodon/components/stage';
 
 import { buildDailyIntegrationText } from './components/daily_integration';
 import { LOCATION_LAT, LOCATION_LON, LOCATION_TZ } from './constants';
