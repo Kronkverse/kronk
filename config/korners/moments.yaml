@@ -139,20 +139,20 @@ launch:
   cta: 'Share a Moment'
 
 feature_flag: # not-implemented
-enforced: false # discovery only; models + composer not built
+enforced: true # v1 landed: models + composer + grid + feed card (alpha.315)
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 nodes:
   - id: moments.index
     label: Moments
     url: /hub/moments
-    lifecycle: soon
+    lifecycle: live # v1 shipped alpha.315
     spa: true
 
   - id: moments.detail
     label: Moment detail
     url: /hub/moments/:id
-    lifecycle: soon
+    lifecycle: building # deep-link viewer not wired in v1
     spa: true
 
   - id: settings.moments

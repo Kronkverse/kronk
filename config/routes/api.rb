@@ -122,6 +122,17 @@ namespace :api, format: false do
         get :my_invitees
       end
     end
+    # Moments — ephemeral posts, gone by morning (docs/spaces/moments.md).
+    # POST/DELETE :froth is nested via the moment_froths controller
+    # (member action rather than nested resource — a Moment has at most
+    # one Froth per viewer, so REST's collection/member split is more
+    # awkward than a single toggle route).
+    resources :moments, only: [:index, :show, :create, :destroy] do
+      member do
+        post   :froth, to: 'moment_froths#create'
+        delete :froth, to: 'moment_froths#destroy'
+      end
+    end
     resources :proposals, only: [:index, :show, :create, :update] do
       resources :attachments, only: [:index, :create, :show, :destroy], module: :proposals
       resources :comments, only: [:index, :create, :destroy], module: :proposals
@@ -143,6 +154,15 @@ namespace :api, format: false do
 
     namespace :martketplace do
       resources :listings, only: [:index, :show, :create]
+    end
+
+    # Albutts — shared albums. Photos are nested under an album; each
+    # row is one contribution. See docs/spaces/albutts.md.
+    namespace :albutts do
+      resources :albums, only: [:index, :show, :create, :update, :destroy] do
+        resources :photos, only: [:create], controller: 'photos'
+      end
+      resources :album_photos, only: [:destroy], path: 'photos', controller: 'photos'
     end
 
     # Klot — cycle tracker (KRONK_TIDES). Self is a singleton (one per

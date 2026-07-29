@@ -368,8 +368,8 @@ export function MapV2 () {
   return import("../../map_v2");
 }
 
-export function MomentsStub () {
-  return import("../../korner_stub").then(m => ({ default: m.MomentsStub }));
+export function Moments () {
+  return import("../../moments").then(m => ({ default: m.Moments }));
 }
 
 export function AlbuttsStub () {
