@@ -1,98 +1,63 @@
-import { useCallback, useState } from 'react';
-
 import { Stage } from 'mastodon/components/stage';
 
+import { DailyIntegration } from './components/daily_integration';
 import { DarkStrand } from './components/dark_strand';
 import { EarthStrand } from './components/earth_strand';
 import { FestivalStrand } from './components/festival_strand';
 import { LightStrand } from './components/light_strand';
 import { LOCATION_LABEL } from './constants';
 
+// InFlow — the native feed view. A unified single scroll (the four strands
+// woven together rather than tabbed, per docs/spaces/inflow.md): today's
+// synthesis up top, then Light, Dark, Soil and Season in one flow. All
+// client-computed from the celestial engine except the daily ecological note
+// (EarthStrand fetches /api/v1/inflow/observation). Replaces the iframe
+// prototype that /hub/inflow used to show.
+
 interface Props {
   multiColumn?: boolean;
 }
 
-type StrandTab = 'light' | 'dark' | 'soil' | 'season';
+export const Inflow: React.FC<Props> = () => (
+  <Stage label='Inflow'>
+    <div className='in-flow scrollable'>
+      {/* The Frame provides the "Inflow" title + short tagline; the local
+          header carries only what the Frame doesn't — the location and the
+          fuller philosophy. */}
+      <header className='in-flow__header'>
+        <p className='in-flow__subtitle'>{LOCATION_LABEL}</p>
+        <p className='in-flow__tagline'>
+          In Flow is a way to attune to the Kosmos occurring around us, as it
+          occurs within us. This relationship is ancient. The more we align with
+          the cycles of light, dark, soil and season, the more we are{' '}
+          <em>In Flow</em> — with ourselves, with each other, and with the
+          greater fractal of Life.
+        </p>
+      </header>
 
-const STRAND_TABS: StrandTab[] = ['light', 'dark', 'soil', 'season'];
+      <DailyIntegration />
 
-interface StrandTabButtonProps {
-  tab: StrandTab;
-  active: boolean;
-  onSelect: (tab: StrandTab) => void;
-}
+      <div className='in-flow__strands'>
+        <section className='in-flow__strand' aria-label='Light'>
+          <h2 className='in-flow__strand-heading'>Light</h2>
+          <LightStrand />
+        </section>
 
-const StrandTabButton: React.FC<StrandTabButtonProps> = ({
-  tab,
-  active,
-  onSelect,
-}) => {
-  const handleClick = useCallback(() => {
-    onSelect(tab);
-  }, [tab, onSelect]);
-  return (
-    <button
-      type='button'
-      className={`in-flow__strand-tab ${active ? 'in-flow__strand-tab--active' : ''}`}
-      onClick={handleClick}
-    >
-      {tab.charAt(0).toUpperCase() + tab.slice(1)}
-    </button>
-  );
-};
+        <section className='in-flow__strand' aria-label='Dark'>
+          <h2 className='in-flow__strand-heading'>Dark</h2>
+          <DarkStrand />
+        </section>
 
-export const Inflow: React.FC<Props> = () => {
-  const [activeTab, setActiveTab] = useState<StrandTab>('light');
+        <section className='in-flow__strand' aria-label='Soil'>
+          <h2 className='in-flow__strand-heading'>Soil</h2>
+          <EarthStrand />
+        </section>
 
-  return (
-    <Stage label='Inflow'>
-      <div className='in-flow scrollable'>
-        <header className='in-flow__header'>
-          <h1 className='in-flow__title'>Inflow</h1>
-          <p className='in-flow__subtitle'>{LOCATION_LABEL}</p>
-          <p className='in-flow__tagline'>
-            In Flow is a way to attune to the Kosmos occurring around us, as it
-            occurs within us. This relationship is ancient. The more we align
-            with the cycles of light, dark, soil and season, the more we are{' '}
-            <em>In Flow</em> - with ourselves, with each other, and with the
-            greater fractal of Life.
-          </p>
-        </header>
-
-        <div className='in-flow__strand-tabs'>
-          {STRAND_TABS.map((tab) => (
-            <StrandTabButton
-              key={tab}
-              tab={tab}
-              active={activeTab === tab}
-              onSelect={setActiveTab}
-            />
-          ))}
-        </div>
-
-        <div className='in-flow__strand-content'>
-          {activeTab === 'light' && (
-            <div className='in-flow__strand-panel' key='light'>
-              <LightStrand />
-            </div>
-          )}
-          {activeTab === 'dark' && (
-            <div className='in-flow__strand-panel' key='dark'>
-              <DarkStrand />
-            </div>
-          )}
-          {activeTab === 'soil' && (
-            <div className='in-flow__strand-panel' key='soil'>
-              <EarthStrand />
-            </div>
-          )}
-          {activeTab === 'season' && (
-            <div className='in-flow__strand-panel' key='season'>
-              <FestivalStrand />
-            </div>
-          )}
-        </div>
+        <section className='in-flow__strand' aria-label='Season'>
+          <h2 className='in-flow__strand-heading'>Season</h2>
+          <FestivalStrand />
+        </section>
       </div>
-    </Stage>
-  );
-};
+    </div>
+  </Stage>
+);
