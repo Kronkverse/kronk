@@ -1,0 +1,39 @@
+// Feed float — each post floats as its own card over the ambient Kosmos, with
+// gaps between them so the starfield (the fixed .kronk-kosmos-layer at z0)
+// shows through the feed. The classic column surface paints an opaque
+// var(--background-color) rectangle over the Kosmos; here the feed panel goes
+// transparent and each post becomes a discrete floating card.
+// Scoped to the main feed panel so side columns, modals and the composer are
+// untouched. Prototype — tune spacing / surface with Tal.
+
+.columns-area__panels__main {
+  .scrollable {
+    padding-inline: 10px;
+    border: 0;
+    background: transparent;
+  }
+
+  // Each post floats as its own card; the gap between cards reveals the
+  // Kosmos behind.
+  .status__wrapper {
+    margin-block: 12px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-large, 16px);
+    background: var(--surface-elevated);
+    box-shadow: var(--elevation-card);
+    overflow: hidden;
+
+    // The card provides the separation; drop the between-posts hairline.
+    .status {
+      border-bottom: 0;
+    }
+  }
+
+  // Load-more and gap controls sit in the gaps, not on a card.
+  .load-more,
+  .load-gap,
+  .timeline-hint {
+    border: 0;
+    background: transparent;
+  }
+}
