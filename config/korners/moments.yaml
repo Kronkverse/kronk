@@ -152,7 +152,7 @@ nodes:
   - id: moments.detail
     label: Moment detail
     url: /hub/moments/:id
-    lifecycle: building # deep-link viewer not wired in v1
+    lifecycle: live # deep-link viewer shipped alpha.327
     spa: true
 
   - id: settings.moments

@@ -1,6 +1,6 @@
 # Moments (`moments`)
 
-**Manifest:** `config/korners/moments.yaml` · **Mount:** `/hub/moments` · **Status:** v1 shipped alpha.315 — grid + composer + feed card. Deep-link viewer, Home strip, attach flows all follow.
+**Manifest:** `config/korners/moments.yaml` · **Mount:** `/hub/moments` · **Status:** live — grid + composer + feed card (alpha.315) + Home strip (alpha.321) + deep-link viewer (alpha.327). Attach flows, notifications, and expiry reaper still to come.
 
 ## Purpose
 

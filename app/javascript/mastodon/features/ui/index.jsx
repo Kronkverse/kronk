@@ -119,6 +119,7 @@ import {
   KommonsSettings,
   KuestionsSettings,
   Moments,
+  MomentViewer,
   Albutts,
   KornerSettings,
   ProfileCompose,
@@ -327,7 +328,10 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/kommunity' component={Kommunity} content={children} />
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
-            <WrappedRoute path='/hub/moments' component={Moments} content={children} />
+            {/* Order matters: /:id must precede the bare /hub/moments
+                so the viewer takes precedence over the grid. */}
+            <WrappedRoute path='/hub/moments/:id' component={MomentViewer} content={children} />
+            <WrappedRoute path='/hub/moments' exact component={Moments} content={children} />
             <WrappedRoute path='/hub/albutts' component={Albutts} content={children} />
             <Redirect from='/hub/kompass' to='/hub/map' />
             <WrappedRoute path='/hub/map' component={MapV2} content={children} />
