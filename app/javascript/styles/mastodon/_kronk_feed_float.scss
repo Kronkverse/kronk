@@ -10,10 +10,9 @@
 .columns-area__panels__main {
   // The feed surface no longer hides the Kosmos.
   .scrollable {
-    background: transparent;
+    padding-inline: 10px; // breathing room from the column edges
     border: 0;
-    // Breathing room so floating cards don't touch the column edges.
-    padding-inline: 10px;
+    background: transparent;
   }
 
   // Each post floats as its own card; the gap between cards reveals the
@@ -26,8 +25,7 @@
     box-shadow: var(--elevation-card);
     overflow: hidden;
 
-    // The card provides the separation now, so drop the contiguous
-    // between-posts hairline.
+    // The card provides the separation; drop the between-posts hairline.
     .status {
       border-bottom: 0;
     }
@@ -37,7 +35,7 @@
   .load-more,
   .load-gap,
   .timeline-hint {
-    background: transparent;
     border: 0;
+    background: transparent;
   }
 }
