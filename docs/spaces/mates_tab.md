@@ -30,6 +30,12 @@ korner (which is the whole-graph orb). See
   Cascade-close on the downward side. Merging: shared ancestors
   render once with a link arriving from each descendant; layer position
   is longest-path-from-base per the brief.
+- **Sub-lane packing** — when two tiles on the same row/layer would
+  collide horizontally, the later one drops into the next sub-lane
+  (offset outward from the line). Applied to base mates row, base
+  invitees row, and every non-base branch layer. Branch layers stack
+  above/below the max base-row sub-lane so a fully-packed base row
+  and a deep branch never share pixels.
 - **Subject switching** — clicking any tile (not its pip) makes that
   member the subject; the view rebuilds and every opened branch
   closes.
@@ -53,9 +59,6 @@ Called out in the brief but out of scope:
 - **Lineage trace** — hover-highlighting every node + link on the
   paths through the hovered member, with everything else dropped
   back.
-- **Sub-lane packing** — currently tiles may overlap when two dates
-  are close together on the same row. The brief calls for auto-pack
-  into sub-lanes; MVP accepts the overlap.
 - **Search + trail** — instance-wide search on the rail, and the
   breadcrumb trail of visited subjects.
 - **Pitch compression** — the brief specifies layer pitch of 42px
