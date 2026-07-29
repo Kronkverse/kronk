@@ -24,6 +24,62 @@
   position: relative;
 }
 
+// ── Trail (subject path breadcrumbs) ───────────────────────────────
+.mates-tab__trail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 8px 4px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 6px;
+}
+
+.mates-tab__trail-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.mates-tab__trail-entry {
+  padding: 4px 10px;
+  border-radius: var(--radius-round);
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition:
+    color 0.14s,
+    border-color 0.14s,
+    background 0.14s;
+
+  &:hover:not(:disabled) {
+    color: var(--text-primary);
+    border-color: var(--accent);
+  }
+
+  &--current {
+    color: var(--text-on-accent);
+    background: var(--accent);
+    border-color: var(--accent);
+    cursor: default;
+  }
+}
+
+.mates-tab__trail-hint {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
 .mates-tab__subject-bar {
   display: flex;
   align-items: baseline;
@@ -527,6 +583,74 @@
   font-size: 16px;
   color: var(--text-primary);
   margin-bottom: 10px;
+}
+
+// ── Search input in the rail ──────────────────────────────────────
+.mates-tab__rail-search {
+  position: relative;
+  margin: 0 0 10px;
+}
+
+.mates-tab__rail-search-input {
+  width: 100%;
+  padding: 7px 30px 7px 12px;
+  border-radius: var(--radius-round);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 12px;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--surface-primary);
+  }
+}
+
+.mates-tab__rail-search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+
+  &:hover {
+    background: var(--accent);
+    color: var(--text-on-accent);
+  }
+}
+
+// Section headings within the rail list (only appear during search).
+.mates-tab__rail-heading {
+  padding: 12px 10px 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+
+  &--elsewhere {
+    color: var(--kronk-purple-bright);
+    margin-top: 8px;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 14px;
+  }
 }
 
 .mates-tab__rail-filters {

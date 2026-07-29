@@ -43,6 +43,16 @@ korner (which is the whole-graph orb). See
   subject plus every visible descendant. Base tiles that aren't part
   of any open chain still trivially "contain" themselves so they light
   in isolation.
+- **Trail navigation** — a breadcrumb bar across the top of the canvas
+  records every subject visited. Click any entry to jump back (trail
+  truncates at that entry so further clicks continue from there).
+  Pressing Escape at any time returns to the viewer's own line and
+  resets the trail.
+- **Search** — a search input in the rail is instance-wide (all
+  members, not just the subject's contacts). Matches inside the
+  subject's rail filter the list in place; matches elsewhere appear
+  under a separate "Elsewhere on Kronk" heading and switch subject to
+  that member on select. Capped at 20 results for UI density.
 - **Subject switching** — clicking any tile (not its pip) makes that
   member the subject; the view rebuilds and every opened branch
   closes.
@@ -63,8 +73,6 @@ korner (which is the whole-graph orb). See
 
 Called out in the brief but out of scope:
 
-- **Search + trail** — instance-wide search on the rail, and the
-  breadcrumb trail of visited subjects.
 - **Pitch compression** — the brief specifies layer pitch of 42px
   compressing to 26–34px as layers accumulate. MVP keeps a fixed
   42px; the SVG viewBox grows vertically to fit rather than
