@@ -17,7 +17,10 @@ import axios from 'axios';
 
 import api, { apiRequestPost } from 'mastodon/api';
 
-type Visibility = 'mates' | 'public_reach';
+// Full four-tier ladder + krew (docs/kronk_feed_and_reach.md §2).
+// `krew` remains out of reach in the composer until the krew picker
+// lands; the button is present for parity but disabled.
+type Visibility = 'public' | 'orbit' | 'mates' | 'self_only' | 'krew';
 
 interface MediaResponse {
   id: string;
@@ -53,11 +56,17 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     [],
   );
 
+  const onVisibilityPublic = useCallback(() => {
+    setVisibility('public');
+  }, []);
+  const onVisibilityOrbit = useCallback(() => {
+    setVisibility('orbit');
+  }, []);
   const onVisibilityMates = useCallback(() => {
     setVisibility('mates');
   }, []);
-  const onVisibilityPublic = useCallback(() => {
-    setVisibility('public_reach');
+  const onVisibilitySelfOnly = useCallback(() => {
+    setVisibility('self_only');
   }, []);
 
   const submitAsync = useCallback(async () => {
@@ -187,8 +196,31 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
           <div className='moments-composer__visibility'>
             <button
               type='button'
+              onClick={onVisibilityPublic}
+              className={`moments-composer__vis-btn${visibility === 'public' ? ' moments-composer__vis-btn--active' : ''}`}
+              aria-label='Kronk — everyone on Kronk'
+            >
+              <FormattedMessage
+                id='moments.composer.public'
+                defaultMessage='Kronk'
+              />
+            </button>
+            <button
+              type='button'
+              onClick={onVisibilityOrbit}
+              className={`moments-composer__vis-btn${visibility === 'orbit' ? ' moments-composer__vis-btn--active' : ''}`}
+              aria-label='Orbit — your mates and their mates'
+            >
+              <FormattedMessage
+                id='moments.composer.orbit'
+                defaultMessage='Orbit'
+              />
+            </button>
+            <button
+              type='button'
               onClick={onVisibilityMates}
               className={`moments-composer__vis-btn${visibility === 'mates' ? ' moments-composer__vis-btn--active' : ''}`}
+              aria-label='Mates — your mutual connections only'
             >
               <FormattedMessage
                 id='moments.composer.mates'
@@ -197,12 +229,13 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
             </button>
             <button
               type='button'
-              onClick={onVisibilityPublic}
-              className={`moments-composer__vis-btn${visibility === 'public_reach' ? ' moments-composer__vis-btn--active' : ''}`}
+              onClick={onVisibilitySelfOnly}
+              className={`moments-composer__vis-btn${visibility === 'self_only' ? ' moments-composer__vis-btn--active' : ''}`}
+              aria-label='Just me — on your profile only, not in anyone else’s feed'
             >
               <FormattedMessage
-                id='moments.composer.public'
-                defaultMessage='Public'
+                id='moments.composer.self_only'
+                defaultMessage='Just me'
               />
             </button>
           </div>
