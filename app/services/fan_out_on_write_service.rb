@@ -39,9 +39,17 @@ class FanOutOnWriteService < BaseService
   end
 
   def fan_out_to_local_recipients!
-    deliver_to_self!
+    # `self_only` is the strictest tier on the reach ladder
+    # (docs/kronk_feed_and_reach.md §2, tightened 2026-07-29): the
+    # Status lives on the author's own profile timeline (via the
+    # AccountStatusesFilter's `author?` branch), but it does NOT
+    # enter ANY feed — not the author's home, not any mate's home,
+    # not any hashtag or public stream. It also does not fire mention
+    # or quote notifications, because the target audience is one
+    # account (the author), and the recipient would 403 on click.
+    deliver_to_self! unless @status.self_only_visibility?
 
-    unless @options[:skip_notifications]
+    unless @options[:skip_notifications] || @status.self_only_visibility?
       notify_quoted_account!
       notify_mentioned_accounts!
       notify_about_update! if update?
@@ -58,8 +66,7 @@ class FanOutOnWriteService < BaseService
       # push is deferred (§6 flags its cost); FoF see orbit posts on read.
       deliver_to_mates!
     when :self_only
-      # Reach: self_only — deliver_to_self! (above) already put it on the
-      # author's own home; radiates to no one else.
+      # No fan-out. See the comment on `deliver_to_self!` above.
       nil
     when :limited
       deliver_to_mentioned_followers!
