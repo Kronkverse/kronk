@@ -44,17 +44,27 @@ class MigrateAnswerVisibilityScopes < ActiveRecord::Migration[8.0]
         SQL
       end
 
-      # UserSetting stores JSON-encoded values; the string is
-      # `"public"` / `"unlisted"` / `"followers"` (with quotes). Migrate
-      # both the string-quoted and bare forms defensively.
-      SETTING_REMAP.each do |old, fresh|
-        %W["#{old}" #{old}].each do |value|
-          execute(<<~SQL.squish)
-            UPDATE user_settings
-            SET    value = '"#{fresh}"'
-            WHERE  var = 'kuestions.default_answer_visibility'
-              AND  value = '#{value.gsub("'", "''")}'
-          SQL
+      # The Kuestions default_answer_visibility setting is NOT stored in a
+      # `user_settings` table — there is none. Mastodon keeps user settings in
+      # the YAML-serialised `users.settings` text column, so this UPDATE
+      # targeted a relation that has never existed and aborted every migration
+      # run (PG::UndefinedTable), taking the answers remap above down with it.
+      #
+      # Guard it so the answers remap lands and deploys unblock. The setting-
+      # value remap still needs doing, but against the real store (a YAML text
+      # column, not addressable by plain SQL) — tracked as a follow-up; readers
+      # already fall back for the legacy value (settings_panel.tsx), so nothing
+      # is user-visibly broken in the interim.
+      if connection.table_exists?(:user_settings)
+        SETTING_REMAP.each do |old, fresh|
+          %W["#{old}" #{old}].each do |value|
+            execute(<<~SQL.squish)
+              UPDATE user_settings
+              SET    value = '"#{fresh}"'
+              WHERE  var = 'kuestions.default_answer_visibility'
+                AND  value = '#{value.gsub("'", "''")}'
+            SQL
+          end
         end
       end
     end
