@@ -20,6 +20,16 @@
 }
 
 .inflow-veil__deck--before {
+  box-sizing: border-box;
+  // A full viewport of curtain. The scope below is pulled up a full viewport
+  // (`margin-top: -100vh`) to hide the void behind this curtain until you
+  // scroll; if the curtain is shorter than that, the void gets pulled up past
+  // it and bleeds over the feed post sitting above the veil. Sizing the curtain
+  // to a full viewport keeps that overlap contained to the veil's own space.
+  min-height: var(--veil-vh);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 14vh 0 var(--veil-fringe);
   background: linear-gradient(
     180deg,
@@ -30,6 +40,14 @@
 }
 
 .inflow-veil__deck--after {
+  box-sizing: border-box;
+  // Same reasoning as the opening curtain: a full viewport so the closing
+  // curtain covers the void cleanly and hands back to the feed below without
+  // the next post showing through.
+  min-height: var(--veil-vh);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-top: calc(var(--veil-vh) * -1);
   padding: var(--veil-fringe) 0 30vh;
   background: linear-gradient(
