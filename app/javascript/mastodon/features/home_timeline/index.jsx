@@ -232,12 +232,11 @@ class HomeTimeline extends PureComponent {
       </>
     );
 
-    // Moments Home strip — signed-in only. Sits above the daily
-    // Kosmic card + LiveBanner per docs/spaces/moments.md § Where you
-    // see Moments.
-    if (signedIn) {
-      banners.push(<MomentsStrip key='moments-strip' />);
-    }
+    // Moments Home strip is rendered directly in the JSX below (see
+    // after ColumnHeader), NOT inside the banners array — banners
+    // only prepend on the friends tab, which would hide the strip
+    // on fof/kommunity. The strip belongs at column-header level
+    // so it shows regardless of which tab drives the feed content.
     banners.push(<LiveBanner key='live-banner' />);
     if (criticalUpdatesPending) {
       banners.push(<CriticalUpdateBanner key='critical-update-banner' />);
@@ -276,6 +275,12 @@ class HomeTimeline extends PureComponent {
         >
           <ColumnSettings />
         </ColumnHeader>
+
+        {/* Moments Home strip — sits directly under the column header,
+            above the tab picker + feed. Signed-in only. Always renders
+            regardless of which tab (friends/fof/kommunity) is active
+            per docs/spaces/moments.md § Where you see Moments. */}
+        {signedIn && <MomentsStrip />}
 
         {/* Feed scope tabs retired. The friends / friends-of-friends /
             kommunity picker now lives at /home/settings; the home column
