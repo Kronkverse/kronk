@@ -150,9 +150,9 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
     [data.members, viewerHandle],
   );
 
-  const [subjectId, setSubjectId] = useState<string>(
-    viewerMember?.id ?? data.members[0]?.id ?? '',
-  );
+  const initialSubjectId = viewerMember?.id ?? data.members[0]?.id ?? '';
+  const [subjectId, setSubjectId] = useState<string>(initialSubjectId);
+  const [trail, setTrail] = useState<string[]>([initialSubjectId]);
   const subject = membersById.get(subjectId);
   const [hoveredMember, setHoveredMember] = useState<HoverMember | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -256,9 +256,45 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
 
   const onTileClick = useCallback((id: string) => {
     setSubjectId(id);
+    setTrail((prev) => {
+      // Don't duplicate the current tail (no-op clicks) or re-push on
+      // trail-entry clicks (those handle truncation themselves).
+      if (prev[prev.length - 1] === id) return prev;
+      return [...prev, id];
+    });
     setHoveredMember(null);
     setOpenedKeys(new Set()); // subject switch closes every opened branch
   }, []);
+
+  // Click a trail entry → jump back to that member; truncate the trail
+  // to end at that entry so further clicks continue building from there.
+  const onTrailClick = useCallback((idx: number) => {
+    setTrail((prev) => {
+      const next = prev.slice(0, idx + 1);
+      const target = next[next.length - 1];
+      if (target) setSubjectId(target);
+      return next;
+    });
+    setHoveredMember(null);
+    setOpenedKeys(new Set());
+  }, []);
+
+  // Escape returns to the viewer's own line — the panic-button
+  // convention from the brief. No-op if the viewer isn't in the data.
+  useEffect(() => {
+    if (!viewerMember) return undefined;
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setSubjectId(viewerMember.id);
+      setTrail([viewerMember.id]);
+      setHoveredMember(null);
+      setOpenedKeys(new Set());
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+    };
+  }, [viewerMember]);
 
   const onTileHoverEnter = useCallback((info: HoverMember | null) => {
     setHoveredMember(info);
@@ -775,6 +811,36 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
   return (
     <div className='mates-tab__layout'>
       <div className='mates-tab__canvas'>
+        {trail.length > 1 && (
+          <nav className='mates-tab__trail' aria-label='Subject trail'>
+            <span className='mates-tab__trail-label'>
+              <FormattedMessage
+                id='mates_tab.trail.label'
+                defaultMessage='Path'
+              />
+            </span>
+            {trail.map((id, idx) => {
+              const member = membersById.get(id);
+              if (!member) return null;
+              const isCurrent = idx === trail.length - 1;
+              return (
+                <TrailEntry
+                  key={`trail-${idx.toString()}-${id}`}
+                  idx={idx}
+                  handle={member.handle}
+                  isCurrent={isCurrent}
+                  onSelect={onTrailClick}
+                />
+              );
+            })}
+            <span className='mates-tab__trail-hint'>
+              <FormattedMessage
+                id='mates_tab.trail.escape_hint'
+                defaultMessage='esc → my line'
+              />
+            </span>
+          </nav>
+        )}
         <div className='mates-tab__subject-bar'>
           <span className='mates-tab__subject-eyebrow'>
             <FormattedMessage id='mates_tab.subject' defaultMessage='Subject' />
@@ -1160,9 +1226,38 @@ export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
         subject={subject}
         mates={matesTiles}
         invitees={inviteesTiles}
+        allMembers={data.members}
         onSelect={onTileClick}
       />
     </div>
+  );
+};
+
+// ── Trail entry ────────────────────────────────────────────────────
+const TrailEntry = ({
+  idx,
+  handle,
+  isCurrent,
+  onSelect,
+}: {
+  idx: number;
+  handle: string;
+  isCurrent: boolean;
+  onSelect: (idx: number) => void;
+}) => {
+  const handleClick = useCallback(() => {
+    if (!isCurrent) onSelect(idx);
+  }, [idx, isCurrent, onSelect]);
+  return (
+    <button
+      type='button'
+      className={`mates-tab__trail-entry${isCurrent ? ' mates-tab__trail-entry--current' : ''}`}
+      onClick={handleClick}
+      disabled={isCurrent}
+      aria-current={isCurrent ? 'true' : undefined}
+    >
+      @{handle}
+    </button>
   );
 };
 
