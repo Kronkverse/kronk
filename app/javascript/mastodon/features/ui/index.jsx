@@ -93,7 +93,7 @@ import {
   Booth,
   Martketplace,
   MartketplaceNew,
-  Inflow,
+  InflowV2,
   MapV2,
   Nudges,
   Kommons,
@@ -307,7 +307,7 @@ class SwitchingColumnsArea extends PureComponent {
                 pages until the Spiral wires day-picking into them). */}
             {signedIn && <WrappedRoute path={["/kalendar/:id", "/hub/kalendar/:id"]} component={EventDetail} content={children} />}
             {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={KalendarSpiral} content={children} />}
-            {signedIn && <WrappedRoute path="/hub/inflow" component={Inflow} content={children} />}
+            {signedIn && <WrappedRoute path="/hub/inflow" component={InflowV2} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
             {/* Krews (§KRONK_KREWS). Route order matters: /hub/krew/new
                 and /hub/krew/discover (the Discover SpaceNav view) must
