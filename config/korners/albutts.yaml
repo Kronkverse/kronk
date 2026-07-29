@@ -31,8 +31,15 @@ storage:
     # render of that photo goes dark).
 
 visibility_scopes:
-  - public # anyone can view, listed in the Albutts directory
-  - mates # visible only to the owner's mates
+  # Full four-tier reach ladder + krew as the orthogonal axis
+  # (docs/kronk_feed_and_reach.md §2). Album offers every tier:
+  # people build private-to-me albums as journals, mates-only for
+  # close events, orbit for wider social reach, public for the
+  # community, and krew for group-scoped albums.
+  - public # anyone on Kronk can view
+  - orbit # the owner's mates and their mates (one hop out)
+  - mates # visible only to the owner's mates (mutual follows)
+  - self_only # owner only; on their profile, not in any feed
   - krew # scoped to one or more Krews
 
 feed_projection:
