@@ -21,6 +21,8 @@ export default class StatusList extends ImmutablePureComponent {
     scrollKey: PropTypes.string.isRequired,
     statusIds: ImmutablePropTypes.list.isRequired,
     featuredStatusIds: ImmutablePropTypes.list,
+    insertNode: PropTypes.node,
+    insertAfter: PropTypes.number,
     onLoadMore: PropTypes.func,
     onScrollToTop: PropTypes.func,
     onScroll: PropTypes.func,
@@ -51,7 +53,7 @@ export default class StatusList extends ImmutablePureComponent {
   };
 
   render () {
-    const { statusIds, featuredStatusIds, onLoadMore, timelineId, ...other }  = this.props;
+    const { statusIds, featuredStatusIds, onLoadMore, timelineId, insertNode, insertAfter, ...other }  = this.props;
     const { isLoading, isPartial } = other;
 
     if (isPartial) {
@@ -102,6 +104,28 @@ export default class StatusList extends ImmutablePureComponent {
           withCounters={this.props.withCounters}
         />
       )).concat(scrollableContent);
+    }
+
+    // Inject an arbitrary node (e.g. the InFlow veil) after `insertAfter` real
+    // posts, so it sits a couple of posts down the feed rather than pinned to
+    // the top. Gaps and follow-suggestions don't count as posts.
+    if (scrollableContent && insertNode && typeof insertAfter === 'number') {
+      const featuredCount = featuredStatusIds ? featuredStatusIds.size : 0;
+      let seen = 0;
+      let statusPos = statusIds.size;
+      statusIds.forEach((id, i) => {
+        if (id !== TIMELINE_GAP && id !== TIMELINE_SUGGESTIONS) {
+          seen += 1;
+          if (seen >= insertAfter) {
+            statusPos = i + 1;
+            return false;
+          }
+        }
+        return true;
+      });
+      const items = scrollableContent.toArray();
+      items.splice(featuredCount + statusPos, 0, insertNode);
+      scrollableContent = items;
     }
 
     return (
