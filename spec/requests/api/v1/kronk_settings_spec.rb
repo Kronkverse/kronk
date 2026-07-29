@@ -13,16 +13,16 @@ RSpec.describe 'KronkSettings' do
       get api_v1_kronk_settings_path, headers: headers
 
       expect(response).to have_http_status(200)
-      expect(response.parsed_body).to include('feed_scope' => 'kommunity')
+      expect(response.parsed_body).to include('feed_scope' => 'orbit')
     end
 
     it 'returns the persisted feed_scope after an update' do
-      user.settings.update('kronk.feed_scope' => 'friends')
+      user.settings.update('kronk.feed_scope' => 'mates')
       user.save!
 
       get api_v1_kronk_settings_path, headers: headers
 
-      expect(response.parsed_body).to include('feed_scope' => 'friends')
+      expect(response.parsed_body).to include('feed_scope' => 'mates')
     end
   end
 
@@ -31,11 +31,19 @@ RSpec.describe 'KronkSettings' do
     let(:headers) { { 'Authorization' => "Bearer #{token.token}" } }
 
     it 'persists a valid feed_scope value' do
+      put api_v1_kronk_settings_path, params: { feed_scope: 'orbit' }, headers: headers
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body).to include('feed_scope' => 'orbit')
+      expect(user.reload.settings['kronk.feed_scope']).to eq('orbit')
+    end
+
+    it 'normalises legacy scope names on write' do
       put api_v1_kronk_settings_path, params: { feed_scope: 'friends_of_friends' }, headers: headers
 
       expect(response).to have_http_status(200)
-      expect(response.parsed_body).to include('feed_scope' => 'friends_of_friends')
-      expect(user.reload.settings['kronk.feed_scope']).to eq('friends_of_friends')
+      expect(response.parsed_body).to include('feed_scope' => 'orbit')
+      expect(user.reload.settings['kronk.feed_scope']).to eq('orbit')
     end
 
     it 'rejects a value outside the allowed set' do
@@ -45,7 +53,7 @@ RSpec.describe 'KronkSettings' do
     end
 
     it 'requires authentication' do
-      put api_v1_kronk_settings_path, params: { feed_scope: 'friends' }
+      put api_v1_kronk_settings_path, params: { feed_scope: 'mates' }
 
       expect(response).to have_http_status(401).or have_http_status(403)
     end

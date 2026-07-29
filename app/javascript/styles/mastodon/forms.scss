@@ -1517,3 +1517,20 @@ code {
     }
   }
 }
+
+// Korner tune-in checkbox list on the classic feed preferences page.
+// The SPA `/home/settings` is the primary surface; this is the
+// accessibility-parity fallback.
+.korner-tune-row {
+  display: block;
+  padding: 0.35rem 0;
+
+  &__name {
+    margin-left: 0.5rem;
+  }
+
+  &__teaser {
+    color: var(--text-muted);
+    margin-left: 0.5rem;
+  }
+}

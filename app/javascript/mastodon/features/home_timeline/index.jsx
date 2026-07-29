@@ -5,45 +5,40 @@ import { defineMessages, injectIntl, FormattedMessage } from 'react-intl';
 
 import classNames from 'classnames';
 import { Helmet } from 'react-helmet';
+import { Link } from 'react-router-dom';
 
 import { connect } from 'react-redux';
-import { Link } from 'react-router-dom';
 
 import CampaignIcon from '@/material-icons/400-24px/campaign.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
-import { SymbolLogo } from 'mastodon/components/logo';
 import { fetchAnnouncements, toggleShowAnnouncements } from 'mastodon/actions/announcements';
 import { IconWithBadge } from 'mastodon/components/icon_with_badge';
+import { SymbolLogo } from 'mastodon/components/logo';
 import { NotSignedInIndicator } from 'mastodon/components/not_signed_in_indicator';
+import { VeilScene } from 'mastodon/features/inflow/veil_scene';
+import { MomentsStrip } from 'mastodon/features/moments/home_strip';
+import { withBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { criticalUpdatesPending } from 'mastodon/initial_state';
-import { withBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
-import { MomentsStrip } from 'mastodon/features/moments/home_strip';
-import { VeilScene } from 'mastodon/features/inflow/veil_scene';
 
 import { addColumn, removeColumn, moveColumn } from '../../actions/columns';
-import { expandFriendsActivity } from '../../actions/friends_activity';
-import { expandHomeTimeline, expandCommunityTimeline } from '../../actions/timelines';
+import { expandHomeTimeline, expandCommunityTimeline, expandKrewTimeline } from '../../actions/timelines';
 import Column from '../../components/column';
 import ColumnHeader from '../../components/column_header';
-import ScrollableList from '../../components/scrollable_list';
-import ActivityItem from '../activity/components/activity_item';
 import StatusListContainer from '../ui/containers/status_list_container';
 
+import { Announcements } from './components/announcements';
 import { ColumnSettings } from './components/column_settings';
 import { CriticalUpdateBanner } from './components/critical_update_banner';
 import { LiveBanner } from './components/live_banner';
-import { Announcements } from './components/announcements';
+import { ReachChips } from './components/reach_chips';
 
 const messages = defineMessages({
   title: { id: 'column.home', defaultMessage: 'Home' },
   show_announcements: { id: 'home.show_announcements', defaultMessage: 'Show announcements' },
   hide_announcements: { id: 'home.hide_announcements', defaultMessage: 'Hide announcements' },
   feedSettings: { id: 'home.feed_settings', defaultMessage: 'Feed settings' },
-  tab_friends: { id: 'home.tab.friends', defaultMessage: 'Friends' },
-  tab_fof: { id: 'home.tab.fof', defaultMessage: 'Friends of Friends' },
-  tab_kommunity: { id: 'home.tab.kommunity', defaultMessage: '₭ommunity' },
 });
 
 const mapStateToProps = state => ({
@@ -52,9 +47,6 @@ const mapStateToProps = state => ({
   hasAnnouncements: !state.getIn(['announcements', 'items']).isEmpty(),
   unreadAnnouncements: state.getIn(['announcements', 'items']).count(item => !item.get('read')),
   showAnnouncements: state.getIn(['announcements', 'show']),
-  fofItems: state.friends_activity.get('items'),
-  fofIsLoading: state.friends_activity.get('isLoading'),
-  fofHasMore: state.friends_activity.get('hasMore'),
 });
 
 class HomeTimeline extends PureComponent {
@@ -70,34 +62,23 @@ class HomeTimeline extends PureComponent {
     unreadAnnouncements: PropTypes.number,
     showAnnouncements: PropTypes.bool,
     matchesBreakpoint: PropTypes.bool,
-    fofItems: PropTypes.object,
-    fofIsLoading: PropTypes.bool,
-    fofHasMore: PropTypes.bool,
   };
 
-  // Which slice of the network the home feed renders. Driven by the
-  // user's kronk.feed_scope setting (Friends / FoF / Kommunity),
-  // fetched once on mount and cached in state. The old in-header tab
-  // picker was retired — this setting is the single source of truth.
+  // The Home column shows one status feed at a time. The reach chip
+  // row (Mates / Orbit / Kommunity / [Krew ▾]) drives which timeline
+  // is mounted. `reach` persists via /api/v1/kronk_settings; `krew`
+  // is session-only and overrides `reach` when set. See
+  // docs/kronk_feed_and_reach.md §2 for the tier semantics.
+  //
+  // Under the current build the reach picker is display-only for
+  // Mates vs Orbit — both render the mastodon home timeline. Kommunity
+  // renders the local timeline; Krew renders that Krew's statuses.
+  // The Mates/Orbit split lands with Kronk::FeatureFlags.feed_scope_enforced.
   state = {
-    activeTab: 'friends',
-    initializedTabs: { friends: true, fof: false, kommunity: false },
-  };
-
-  loadPersistedFeedScope = async () => {
-    try {
-      const res = await fetch('/api/v1/kronk_settings', {
-        credentials: 'same-origin',
-        headers: { 'Accept': 'application/json' },
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      const scope = data?.feed_scope;
-      const tab = scope === 'friends_of_friends' ? 'fof' : scope === 'kommunity' ? 'kommunity' : 'friends';
-      if (tab !== this.state.activeTab) this.handleTabChange(tab);
-    } catch {
-      // Silent — default tab stays.
-    }
+    reach: 'orbit',
+    activeKrew: null,
+    kommunityInitialized: false,
+    krewInitialized: null,
   };
 
   handlePin = () => {
@@ -123,38 +104,39 @@ class HomeTimeline extends PureComponent {
     this.column = c;
   };
 
-  handleTabChange = (tab) => {
+  handleReachChange = ({ reach, krew }) => {
     const { dispatch } = this.props;
     this.setState(prev => {
-      if (!prev.initializedTabs[tab]) {
-        if (tab === 'fof') dispatch(expandFriendsActivity({}));
-        if (tab === 'kommunity') dispatch(expandCommunityTimeline({}));
-        return { activeTab: tab, initializedTabs: { ...prev.initializedTabs, [tab]: true } };
+      const next = { reach, activeKrew: krew };
+      if (!krew && reach === 'kommunity' && !prev.kommunityInitialized) {
+        dispatch(expandCommunityTimeline({}));
+        next.kommunityInitialized = true;
       }
-      return { activeTab: tab };
+      if (krew && prev.krewInitialized !== krew.id) {
+        dispatch(expandKrewTimeline(krew.id, {}));
+        next.krewInitialized = krew.id;
+      }
+      return next;
     });
   };
 
-  handleLoadMoreFriends = maxId => {
+  handleLoadMoreHome = maxId => {
     this.props.dispatch(expandHomeTimeline({ maxId }));
-  };
-
-  handleLoadMoreFof = () => {
-    const { fofItems, dispatch } = this.props;
-    if (!fofItems || fofItems.size === 0) return;
-    const lastItem = fofItems.last();
-    if (!lastItem) return;
-    dispatch(expandFriendsActivity({ maxId: lastItem.get('statusId') }));
   };
 
   handleLoadMoreKommunity = maxId => {
     this.props.dispatch(expandCommunityTimeline({ maxId }));
   };
 
+  handleLoadMoreKrew = maxId => {
+    const { activeKrew } = this.state;
+    if (!activeKrew) return;
+    this.props.dispatch(expandKrewTimeline(activeKrew.id, { maxId }));
+  };
+
   componentDidMount () {
     setTimeout(() => this.props.dispatch(fetchAnnouncements()), 700);
     this._checkIfReloadNeeded(false, this.props.isPartial);
-    void this.loadPersistedFeedScope();
   }
 
   componentDidUpdate (prevProps) {
@@ -192,8 +174,8 @@ class HomeTimeline extends PureComponent {
   };
 
   render () {
-    const { intl, hasUnread, columnId, multiColumn, hasAnnouncements, unreadAnnouncements, showAnnouncements, matchesBreakpoint, fofItems, fofIsLoading, fofHasMore } = this.props;
-    const { activeTab } = this.state;
+    const { intl, hasUnread, columnId, multiColumn, hasAnnouncements, unreadAnnouncements, showAnnouncements, matchesBreakpoint } = this.props;
+    const { reach, activeKrew } = this.state;
     const pinned = !!columnId;
     const { signedIn } = this.props.identity;
     const banners = [];
@@ -233,30 +215,42 @@ class HomeTimeline extends PureComponent {
     );
 
     // Moments Home strip is rendered directly in the JSX below (see
-    // after ColumnHeader), NOT inside the banners array — banners
-    // only prepend on the friends tab, which would hide the strip
-    // on fof/kommunity. The strip belongs at column-header level
-    // so it shows regardless of which tab drives the feed content.
+    // after ColumnHeader), NOT inside the banners array — the strip
+    // belongs at column-header level so it shows regardless of which
+    // reach drives the feed content.
     banners.push(<LiveBanner key='live-banner' />);
     if (criticalUpdatesPending) {
       banners.push(<CriticalUpdateBanner key='critical-update-banner' />);
     }
 
-
-    const statusTabConfig = {
-      friends: {
-        timelineId: 'home',
-        onLoadMore: this.handleLoadMoreFriends,
-        emptyMessage: <FormattedMessage id='empty_column.home' defaultMessage='Your home timeline is empty! Follow more people to fill it up.' />,
-      },
-      kommunity: {
+    let feedConfig;
+    if (activeKrew) {
+      feedConfig = {
+        timelineId: `krew:${activeKrew.id}`,
+        onLoadMore: this.handleLoadMoreKrew,
+        emptyMessage: <FormattedMessage id='empty_column.krew' defaultMessage='No posts in {name} yet.' values={{ name: activeKrew.name }} />,
+        prepend: [],
+        insertNode: undefined,
+      };
+    } else if (reach === 'kommunity') {
+      feedConfig = {
         timelineId: 'community',
         onLoadMore: this.handleLoadMoreKommunity,
         emptyMessage: <FormattedMessage id='empty_column.community' defaultMessage='The local timeline is empty. Write something publicly to get the ball rolling!' />,
-      },
-    };
-
-    const fofEmptyMessage = <FormattedMessage id='orbit.empty' defaultMessage="Nothing in your orbit yet. When people you follow interact with posts, they'll show up here." />;
+        prepend: [],
+        insertNode: undefined,
+      };
+    } else {
+      // Mates and Orbit both drive the Mastodon home timeline for now —
+      // the Mates-vs-Orbit split lands with feed_scope_enforced.
+      feedConfig = {
+        timelineId: 'home',
+        onLoadMore: this.handleLoadMoreHome,
+        emptyMessage: <FormattedMessage id='empty_column.home' defaultMessage='Your home timeline is empty! Follow more people to fill it up.' />,
+        prepend: banners,
+        insertNode: <VeilScene key='inflow-veil' />,
+      };
+    }
 
     return (
       <Column bindToDocument={!multiColumn} ref={this.setRef} label={intl.formatMessage(messages.title)}>
@@ -277,53 +271,30 @@ class HomeTimeline extends PureComponent {
         </ColumnHeader>
 
         {/* Moments Home strip — sits directly under the column header,
-            above the tab picker + feed. Signed-in only. Always renders
-            regardless of which tab (friends/fof/kommunity) is active
-            per docs/spaces/moments.md § Where you see Moments. */}
+            above the reach chip row + feed. Signed-in only. */}
         {signedIn && <MomentsStrip />}
 
-        {/* Feed scope tabs retired. The friends / friends-of-friends /
-            kommunity picker now lives at /home/settings; the home column
-            shows one feed driven by that setting. Reachable via the
-            settings gear beside Announcements. */}
+        {signedIn && (
+          <ReachChips
+            reach={reach}
+            activeKrew={activeKrew}
+            onChange={this.handleReachChange}
+          />
+        )}
 
         {signedIn ? (
-          activeTab === 'fof' ? (
-            <ScrollableList
-              trackScroll={!pinned}
-              scrollKey={`home_timeline-fof-${columnId}`}
-              hasMore={fofHasMore}
-              isLoading={fofIsLoading}
-              onLoadMore={this.handleLoadMoreFof}
-              emptyMessage={fofEmptyMessage}
-              bindToDocument={!multiColumn}
-            >
-              {fofItems && fofItems.map((item) => {
-                const statusId = item.get('statusId');
-                const interactions = item.get('interactions');
-                return (
-                  <ActivityItem
-                    key={statusId}
-                    statusId={statusId}
-                    interactions={interactions}
-                  />
-                );
-              })}
-            </ScrollableList>
-          ) : (
-            <StatusListContainer
-              prepend={activeTab === 'friends' ? banners : []}
-              alwaysPrepend={activeTab === 'friends'}
-              insertAfter={activeTab === 'friends' ? 2 : undefined}
-              insertNode={activeTab === 'friends' ? <VeilScene key='inflow-veil' /> : undefined}
-              trackScroll={!pinned}
-              scrollKey={`home_timeline-${activeTab}-${columnId}`}
-              onLoadMore={statusTabConfig[activeTab].onLoadMore}
-              timelineId={statusTabConfig[activeTab].timelineId}
-              emptyMessage={statusTabConfig[activeTab].emptyMessage}
-              bindToDocument={!multiColumn}
-            />
-          )
+          <StatusListContainer
+            prepend={feedConfig.prepend}
+            alwaysPrepend={feedConfig.prepend.length > 0}
+            insertAfter={feedConfig.insertNode ? 2 : undefined}
+            insertNode={feedConfig.insertNode}
+            trackScroll={!pinned}
+            scrollKey={`home_timeline-${feedConfig.timelineId}-${columnId}`}
+            onLoadMore={feedConfig.onLoadMore}
+            timelineId={feedConfig.timelineId}
+            emptyMessage={feedConfig.emptyMessage}
+            bindToDocument={!multiColumn}
+          />
         ) : <NotSignedInIndicator />}
 
         <Helmet>

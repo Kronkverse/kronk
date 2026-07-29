@@ -63,11 +63,11 @@ Everything below elaborates these.
 
 One scale, widest to tightest:
 
-| Tier        | Who                                 | Notes                                    |
-| ----------- | ----------------------------------- | ---------------------------------------- |
-| **Kronk**   | The whole community on the instance | The broadest reach                       |
-| **Orbit**   | Mates of Mates (one hop out)        | The middle ring                          |
-| **Mates**   | Your mutual connections             | The tightest social ring on the scale    |
+| Tier        | Who                                 | Notes                                        |
+| ----------- | ----------------------------------- | -------------------------------------------- |
+| **Kronk**   | The whole community on the instance | The broadest reach                           |
+| **Orbit**   | Mates of Mates (one hop out)        | The middle ring                              |
+| **Mates**   | Your mutual connections             | The tightest social ring on the scale        |
 | **Just me** | The author alone (own timeline)     | Below Mates; radiates to no one (2026-07-25) |
 
 > **Implemented (2026-07-25).** The reach tiers are Status visibility values:
@@ -101,11 +101,16 @@ Two controls live in **feed settings**:
 - **Standard-post reach** — the default reach for the user's _ordinary_ posts (Mates / Orbit /
   Kronk), overridable per post.
 
-> **Current state.** `UserSettings.kronk.feed_scope` (values `friends | friends_of_friends |
-kommunity`, default `kommunity`) already persists a viewer scope but **does not filter the
-> timeline** (gated behind an unbuilt `Kronk::FeatureFlags.feed_scope_enforced`). This spec
-> renames the tiers to **Mates / Orbit / Kronk**, gives the setting a second job (default post
-> reach), and requires the timeline query to actually honour it.
+> **Current state (2026-07-29).** `UserSettings.kronk.feed_scope` now uses the new
+> tier names `mates | orbit | kommunity`, default `orbit` (alpha.330). The API accepts
+> the legacy `friends | friends_of_friends` names on write and normalises them so any
+> stored values migrate on next write. The Home column exposes the tiers as an inline
+> chip row (Mates / Orbit / Kommunity / [Krew ▾]) directly beneath the column header;
+> the settings-page picker retains the same three tiers for the deep-settings surface.
+> The picker is still **display-only** for Mates vs Orbit — both drive the mastodon
+> home timeline — until `Kronk::FeatureFlags.feed_scope_enforced` lands; Kommunity
+> drives the local timeline; Krew swaps in that Krew's status timeline for the session.
+> Standard-post-reach as a second job on this setting remains open.
 
 ### 2.4 Korner-card reach
 

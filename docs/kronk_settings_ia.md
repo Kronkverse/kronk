@@ -4,7 +4,7 @@
 > This doc's central thesis — "exactly three surfaces, no new bucket,
 > account/app settings fold into Profile" — was **reversed**. Settings now
 > owns a **dedicated `settings` bucket** (`Kronk::NodeRegistry::BUCKETS =
-> feed profile hub nudges settings kronk`, in `app/lib/kronk/node_registry.rb`)
+feed profile hub nudges settings kronk`, in `app/lib/kronk/node_registry.rb`)
 > and a core-space manifest (`config/korners/settings.yaml`). Personal/account
 > section pages sit **flat** at `/settings/{profile,sections,appearance,posting,privacy,notifications,account,data,you}`
 > (`config/kronk_nodes.yaml`, routes in `features/ui/index.jsx`), **not** as
@@ -24,10 +24,10 @@
 Settings mirror **the shape of Kronk itself**, not a flat preferences dump. There are exactly **three surfaces — the three Kommons Directory buckets** — and every setting belongs to one:
 
 | Surface     | Test                                                                  | Skeleton bucket |
-| ----------- | --------------------------------------------------------------------- | ----------- |
-| **Feed**    | _Incoming_ — what reaches you / what you consume                      | `feed`      |
-| **Profile** | _Self-management_ — your identity, what you publish, and your account | `profile`   |
-| **Hub**     | A _space_ — the korners and how you arrange them                      | `hub`       |
+| ----------- | --------------------------------------------------------------------- | --------------- |
+| **Feed**    | _Incoming_ — what reaches you / what you consume                      | `feed`          |
+| **Profile** | _Self-management_ — your identity, what you publish, and your account | `profile`       |
+| **Hub**     | A _space_ — the korners and how you arrange them                      | `hub`           |
 
 There is **no separate "You"/account surface** — the account/app settings (Account & Security, Appearance, Data) **fold into Profile** as sections, because Profile is the self-management side of your identity. This matches the convention the Skeleton already uses (its `settings.profile` / `.sections` / `.prefs` nodes all live in the `profile` bucket).
 
@@ -41,7 +41,7 @@ Settings nodes live **in the bucket of the space they configure** (`settings.fee
 
 What reaches you, and what you filter out.
 
-- **Feed scope** — friends / friends-of-friends / kommunity (`kronk.feed_scope`) · **built**
+- **Feed scope** — mates / orbit / kommunity (`kronk.feed_scope`, default `orbit`) · **built** · exposed as an inline chip row on the Home column (Mates / Orbit / Kommunity / [Krew ▾]); the settings surface retains the three-tier picker for accessibility parity.
 - Timeline display — group boosts, slow-mode (pending items), media display, autoplay, blurhash, expand content warnings, show trends, deck/advanced layout · _(Mastodon feed prefs)_
 - **Keyword filters** — what's hidden (`/filters`) · classic
 - **Mutes · Blocks · Domain blocks** — silencing incoming · classic (`Mutes`/`Blocks`/`DomainBlocks` exist)
