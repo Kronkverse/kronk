@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
+
+import classNames from 'classnames';
 import type { MessageDescriptor } from 'react-intl';
 
 import { Link } from 'react-router-dom';
@@ -13,11 +15,14 @@ import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react
 import PersonIcon from '@/material-icons/400-24px/person.svg?react';
 import TuneIcon from '@/material-icons/400-24px/tune.svg?react';
 import VisibilityIcon from '@/material-icons/400-24px/visibility.svg?react';
+import { setKornerTunedIn } from 'mastodon/actions/korners';
+import { apiRequestPost, apiRequestDelete } from 'mastodon/api';
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { me } from 'mastodon/initial_state';
+import { useAppDispatch } from 'mastodon/store';
 import { useAppSelector } from 'mastodon/store';
 
 // Shared navigation pieces for the settings surfaces (settings rebuild §4).
@@ -236,21 +241,100 @@ export const SectionRow: React.FC<{ section: SectionDef }> = ({ section }) => {
   );
 };
 
-export const KornerRow: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
-  const Icon = useKornerIcon(korner.slug);
+const pillMessages = defineMessages({
+  tuneIn: { id: 'settings_korners.tune_in', defaultMessage: 'Tune in to {name}' },
+  tuneOut: {
+    id: 'settings_korners.tune_out',
+    defaultMessage: 'Tune out of {name}',
+  },
+});
+
+// A bare toggle switch to tune in/out of a korner without leaving the Hub
+// settings list. Optimistic: dispatches the new state (so every surface reading
+// state.korners updates at once), fires the server call, and re-dispatches the
+// old value on failure. It's a sibling of the row's Link (not nested in the
+// anchor) and stops the click from also navigating into the korner's settings.
+const TuneToggle: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
+  const intl = useIntl();
+  const dispatch = useAppDispatch();
+  const tunedIn = korner.tuned_in !== false;
+  const [busy, setBusy] = useState(false);
+
+  const handleToggle = useCallback(
+    (event: React.MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (busy) return;
+      const next = !tunedIn;
+      setBusy(true);
+      dispatch(setKornerTunedIn({ slug: korner.slug, tunedIn: next }));
+      const request = next
+        ? apiRequestDelete(`v1/korners/${korner.slug}/tune_out`)
+        : apiRequestPost(`v1/korners/${korner.slug}/tune_out`, {});
+      request
+        .catch(() => {
+          dispatch(setKornerTunedIn({ slug: korner.slug, tunedIn }));
+        })
+        .finally(() => {
+          setBusy(false);
+        });
+    },
+    [busy, tunedIn, korner.slug, dispatch],
+  );
+
+  const label = intl.formatMessage(
+    tunedIn ? pillMessages.tuneOut : pillMessages.tuneIn,
+    { name: korner.name },
+  );
 
   return (
-    <Link to={`/hub/${korner.slug}/settings`} className='settings-nav__row'>
-      <span className='settings-nav__row-glyph' aria-hidden='true'>
-        <Icon />
+    <button
+      type='button'
+      className={classNames('settings-nav__toggle', {
+        'settings-nav__toggle--on': tunedIn,
+      })}
+      onClick={handleToggle}
+      aria-pressed={tunedIn}
+      aria-label={label}
+      title={label}
+    >
+      <span className='settings-nav__toggle-track' aria-hidden='true'>
+        <span className='settings-nav__toggle-thumb' />
       </span>
-      <span className='settings-nav__row-body'>
-        <span className='settings-nav__row-name'>{korner.name}</span>
-      </span>
-      <ChevronRightIcon
-        className='settings-nav__row-chevron'
-        aria-hidden='true'
-      />
-    </Link>
+    </button>
+  );
+};
+
+export const KornerRow: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
+  const Icon = useKornerIcon(korner.slug);
+  const live = korner.enforced !== false;
+  const tunedIn = korner.tuned_in !== false;
+
+  return (
+    <div
+      className={classNames('settings-nav__row settings-nav__row--korner', {
+        // Tuned-out korners grey right down; not-yet-live ones read as "soon".
+        'settings-nav__row--muted': live && !tunedIn,
+        'settings-nav__row--soon': !live,
+      })}
+    >
+      <Link
+        to={`/hub/${korner.slug}/settings`}
+        className='settings-nav__row-link'
+      >
+        <span className='settings-nav__row-glyph' aria-hidden='true'>
+          <Icon />
+        </span>
+        <span className='settings-nav__row-body'>
+          <span className='settings-nav__row-name'>{korner.name}</span>
+        </span>
+        <ChevronRightIcon
+          className='settings-nav__row-chevron'
+          aria-hidden='true'
+        />
+      </Link>
+      {/* Coming-soon korners can't be tuned into yet — no toggle. */}
+      {live && <TuneToggle korner={korner} />}
+    </div>
   );
 };

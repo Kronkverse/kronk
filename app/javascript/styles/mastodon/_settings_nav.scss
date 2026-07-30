@@ -169,6 +169,15 @@
         opacity: 0.55;
       }
     }
+
+    // Tuned out: the whole korner greys down (icon + name), while the toggle
+    // stays lit so you can tune back in.
+    &--muted {
+      .settings-nav__row-glyph,
+      .settings-nav__row-name {
+        opacity: 0.4;
+      }
+    }
   }
 
   &__row-glyph {
@@ -182,7 +191,76 @@
     svg {
       width: 22px;
       height: 22px;
+      // SVG fill defaults to black, not currentColor — tie it to the glyph's
+      // accent colour so the material icons read purple like the fallback.
+      fill: currentColor;
     }
+  }
+
+  // The navigating part of a korner row (glyph + name + chevron). Sits beside
+  // the tune-in pill, which is a separate button so it isn't nested in the link.
+  &__row-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1 1 auto;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  // Tune-in toggle switch on a korner row (the switch alone — no label).
+  &__toggle {
+    flex: 0 0 auto;
+    display: inline-flex;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  &__toggle-track {
+    position: relative;
+    display: block;
+    width: 38px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--border-default);
+    transition: background var(--dur-fast) var(--ease-out);
+
+    .settings-nav__toggle--on & {
+      background: var(--accent);
+    }
+
+    .settings-nav__toggle:focus-visible & {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+
+  &__toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform var(--dur-fast) var(--ease-out);
+
+    .settings-nav__toggle--on & {
+      transform: translateX(16px);
+    }
+  }
+
+  // Subheading above the Tuned-out / Coming-soon groups.
+  &__section-heading {
+    margin: 22px 0 2px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
   }
 
   &__row-body {
