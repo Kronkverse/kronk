@@ -41,22 +41,15 @@ body {
 
 // Kronk-fy the classic Mastodon settings/admin shell so it visually
 // matches the SPA (top-band + Kosmos backdrop + single-column content),
-// which is what Home / Hub / Nudges wear.
-// Hide the built-in Mastodon sidebar (Mastodon logo + primary
-// admin/settings nav) — it's redundant with the Kronk static chrome
-// that the application layout already renders above (wordmark +
-// hub-switcher). The Mastodon-branded logo directly competes with the
-// Kronk wordmark, and the sidebar's dark grey backdrop clashes with
-// the Kosmos void. Settings-section navigation moves to the horizontal
-// `.kronk-settings-nav` pill row rendered at the top of the content-
-// wrapper (see _kronk_settings_nav.html.haml).
+// which is what Home / Hub / Nudges wear. Settings-section navigation
+// lives in the horizontal `.kronk-settings-nav` pill row rendered at
+// the top of the content-wrapper (see _kronk_settings_nav.html.haml).
+// The classic Mastodon `.sidebar-wrapper` block was retired from
+// admin.html.haml in the alpha.352-ish sweep — no HAML renders it now,
+// so no CSS scoping needed.
 body.admin {
   .admin-wrapper {
     display: block;
-  }
-
-  .sidebar-wrapper {
-    display: none;
   }
 
   .content-wrapper {
