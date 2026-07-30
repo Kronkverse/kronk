@@ -582,6 +582,46 @@ renders its card in the timeline.
 
 ---
 
+## 11.5. Compose action — declare `compose:` and let the Ӂ bubble host it
+
+**Never build a per-page "Add" / "New X" / "Create" button.** Every korner's
+compose action belongs in the floating Ӂ menu (`features/ui/components/
+kronk_menu.tsx`), which reads two fields from your manifest and renders the
+button for you:
+
+```yaml
+compose:
+  label: 'New album' # or 'Ask a Kuestion', 'Open a Proposal', etc.
+  route: '/hub/<slug>/<action>' # the SPA route the bubble navigates to
+```
+
+While the viewer is anywhere under `/hub/<slug>`, the bubble's Post action
+picks up `label` + `route` via `useKorner()` and the button Just Works —
+across every korner, in one place, with one look. Skip the block and your
+korner silently has no Post affordance from the bubble.
+
+**Wire the route.** Add the compose route to `features/ui/index.jsx`
+alongside your korner's other routes. The most idiomatic pattern is for
+the compose route to mount your korner's shell component with a
+"composer open" prop (e.g. Albutts's `/hub/albutts/new` mounts the
+directory with `autoOpenComposer`, Kuestions's `/hub/kuestions/ask`
+dispatches to the Ask panel). Kommons goes a step further — the Ӂ
+menu appends a `?space=<slug>` query param when the viewer is on a
+Kommons space page, so the proposer opens scoped to that space (see
+`kronk_menu.tsx` `usePostTarget` for the pattern).
+
+**No per-page button.** If you added a "New X" button somewhere on your
+directory / landing / detail page while prototyping, retire it before the
+korner ships. The empty-state copy should point the user at the Ӂ menu
+instead of a click target, e.g. _"No albums yet — start one via the Ӂ
+menu."_ This keeps compose ergonomics uniform across every korner.
+
+Currently in-compliance: Album, Booth, Kalendar, Kommons, Krew, Kuestions,
+mARTketplace, Map, Moment. Only Albutts had slipped through the crack
+(fixed 2026-07-30 in the same PR that landed this doc section).
+
+---
+
 ## 12. Write the manifest
 
 **File:** `config/korners/<slug>.yaml`
