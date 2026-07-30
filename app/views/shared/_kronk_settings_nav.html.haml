@@ -1,0 +1,3 @@
+-# Kronk-styled settings nav — replaces the Mastodon left sidebar that #971 hid. Renders the same top-level nav items from config/navigation.rb as a horizontal pill row above the settings content, so users can still move between Profile / Preferences / Filters / etc.
+%nav.kronk-settings-nav{ 'aria-label' => 'Settings sections' }
+  = render_navigation renderer: :links, level: 1
