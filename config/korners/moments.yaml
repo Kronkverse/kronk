@@ -84,13 +84,11 @@ emits:
 listens: [] # broadcast surface, not reactive
 
 feed_projection:
-  card: moments_card
-  planned: true # WIP korner — card not built yet
-  title_from: caption
-  summary_from: caption
-  status_association: moment
-  links_to: /hub/moments/<id>
-  default_visibility: mates # was `followers` in the stub; tightened per discovery
+  card: # not-applicable — Moments deliberately never post a feed card. A
+        # Moment lives only in the top-of-Home strip and the Moments korner
+        # (24h in the active section, then permanently in the korner log).
+        # It has no backing Status, so there is nothing to project.
+  discriminator: # n/a
 
 notifications:
   types:

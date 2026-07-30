@@ -22,7 +22,6 @@ import { StatusBoothCard } from './status_booth_card';
 import { StatusEventCard } from './status_event_card';
 import { StatusKommonsCard } from './status_kommons_card';
 import { StatusKuestionsCard } from './status_kuestions_card';
-import { StatusMomentCard } from './status_moment_card';
 import { StatusTrekCard } from './status_trek_card';
 import { StatusWachuneedCard } from './status_wachuneed_card';
 
@@ -81,11 +80,6 @@ export const KORNER_CARDS: KornerCardEntry[] = [
     slug: 'map',
     assocField: 'trek',
     card: (s) => <StatusTrekCard trek={dataFrom(s, 'trek')} />,
-  },
-  {
-    slug: 'moments',
-    assocField: 'moment',
-    card: (s) => <StatusMomentCard moment={dataFrom(s, 'moment')} />,
   },
   {
     slug: 'albutts',

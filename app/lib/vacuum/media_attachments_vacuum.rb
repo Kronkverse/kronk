@@ -41,11 +41,17 @@ class Vacuum::MediaAttachmentsVacuum
   def orphaned_media_attachments
     booth_audio_ids = BoothSet.where.not(audio_attachment_id: nil).select(:audio_attachment_id)
     booth_cover_ids = BoothSet.where.not(cover_attachment_id: nil).select(:cover_attachment_id)
+    # Moments own their media directly (no backing Status since the feed
+    # card was retired), so the attachment is `unattached` and would be
+    # reaped after TTL — which must not happen: Moments are kept forever
+    # in the korner log. Exclude them, same as BoothSet media above.
+    moment_ids = Moment.where.not(media_attachment_id: nil).select(:media_attachment_id)
 
     MediaAttachment
       .unattached
       .where.not(id: booth_audio_ids)
       .where.not(id: booth_cover_ids)
+      .where.not(id: moment_ids)
       .created_before(TTL.ago)
   end
 
