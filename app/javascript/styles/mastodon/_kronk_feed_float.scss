@@ -67,6 +67,24 @@
     border-bottom: 0;
   }
 
+  // Drop the classic thread-connector line — a 2px grey vertical rule
+  // (`.status__line`) rendered inside statuses that reply to another
+  // status. On single-column feeds it reads as a continuous outline
+  // running down the page (interrupted only by the InFlow veil, which
+  // is a separate article between threaded posts). Bubbles carry
+  // the visual separation on their own; the connector is redundant
+  // and clashes with the floating-card aesthetic.
+  .status__line {
+    display: none;
+  }
+
+  // Same rationale: kill the status-replies top hairline that draws
+  // above the quick-reply input, so the bubble reads as one continuous
+  // rounded surface rather than two segments joined by a hairline.
+  .status-replies {
+    border-top: 0;
+  }
+
   // Load-more and gap controls sit in the gaps, not on a card.
   .load-more,
   .load-gap,
