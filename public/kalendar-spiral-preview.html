@@ -6,7 +6,11 @@
 <title>₭ALENDAR</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Load fonts non-render-blocking: media="print" keeps the stylesheet
+     off the critical path (it otherwise blocks BOTH first paint AND the
+     inline build script), so the spiral paints immediately with the
+     fallbacks below and the webfonts swap in when they arrive. -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
 :root{
   --accent:#4414cc;
