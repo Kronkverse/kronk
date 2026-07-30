@@ -78,3 +78,31 @@ export interface Proposal {
     }[];
   }[];
 }
+
+// Moved here from the deleted proposal_tabs/tab_kontribute component (which was
+// dead apart from these types). Kontribute tasks + budget items.
+export interface Task {
+  id: string;
+  proposal_id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  skill_tag: string | null;
+  effort_estimate: number | null;
+  created_at: string;
+  assigned_to_account?: {
+    id: string;
+    username: string;
+    display_name: string;
+    avatar: string;
+  };
+}
+
+export interface BudgetItem {
+  id: string;
+  proposal_id: string;
+  description: string;
+  cost_estimate: number;
+  currency: string;
+  status: string;
+}

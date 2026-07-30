@@ -148,18 +148,7 @@ export interface ApiStatusJSON {
   answerers?: { id: string; username: string; acct: string; avatar: string }[];
   has_answered?: boolean;
 
-  proposal?: {
-    id: string;
-    title: string;
-    summary: string | null;
-    status: 'open' | 'delivered' | 'completed' | 'annulled';
-    proposal_type: 'small' | 'medium' | 'large';
-    support_count: number;
-    veto_count: number;
-    participation_count: number;
-    categories: string[];
-    created_at: string;
-  };
+  proposal?: ApiProposalSummaryJSON;
 
   event?: {
     id: string;
@@ -223,4 +212,20 @@ export function isStatusVisibility(
     'orbit',
     'self_only',
   ].includes(visibility);
+}
+
+// The Kommons proposal summary projected onto a Status (feed card + detail).
+// Note: the backend serialiser emits `challenge_count` (not `veto_count` — that
+// was the retired veto vocabulary), so the field name here must match.
+export interface ApiProposalSummaryJSON {
+  id: string;
+  title: string;
+  summary: string | null;
+  status: 'open' | 'delivered' | 'completed' | 'annulled';
+  proposal_type: 'small' | 'medium' | 'large';
+  support_count: number;
+  challenge_count: number;
+  participation_count: number;
+  categories: string[];
+  created_at: string;
 }

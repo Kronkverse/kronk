@@ -39,7 +39,7 @@ emits:
 listens: []
 
 feed_projection:
-  card: kommons_card # StatusKommonsCard, now wrapping StatusKornerCard (feature/korner-cards)
+  card: kommons_card # StatusKommonsCard, wraps the shared StatusKornerCard
   title_from: title
   summary_from: summary
   links_to: /governance # implicit — routed via Rails, not derived from a hub-prefixed slug
