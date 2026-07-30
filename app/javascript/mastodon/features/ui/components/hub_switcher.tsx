@@ -309,9 +309,7 @@ const MembraneTop = ({
                 <WavingHandBadge
                   className='hub-switcher__badge'
                   label={
-                    unreadNudges > 0
-                      ? `${unreadNudges} unread`
-                      : 'New activity'
+                    unreadNudges > 0 ? `${unreadNudges} unread` : 'New activity'
                   }
                 />
               )}
@@ -368,7 +366,9 @@ const BottomTabBar = ({
           {pillar.key === 'nudges' && hasUnread && (
             <WavingHandBadge
               className='hub-switcher__badge'
-              label={unreadNudges > 0 ? `${unreadNudges} unread` : 'New activity'}
+              label={
+                unreadNudges > 0 ? `${unreadNudges} unread` : 'New activity'
+              }
             />
           )}
         </NavLink>

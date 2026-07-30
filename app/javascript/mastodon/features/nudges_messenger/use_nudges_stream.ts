@@ -7,7 +7,6 @@ import type {
 import { useAppDispatch } from 'mastodon/store';
 import { connectStream } from 'mastodon/stream';
 
-
 // Streaming event names emitted by `Nudges::StreamPublisher`. Kept in
 // sync with `app/lib/nudges/stream_publisher.rb`.
 type StreamEvent =

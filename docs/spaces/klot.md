@@ -5,7 +5,7 @@
 ## Purpose
 
 Klot is a **private menstrual-cycle tracker** with **phase-only
-sharing**: kronkers share the *phase* of their cycle, not the data. The
+sharing**: kronkers share the _phase_ of their cycle, not the data. The
 sovereignty contract is the whole point — raw dates never leave the
 owner's account; at most a phase name + moon glyph reaches an explicitly
 authorized viewer.
@@ -33,7 +33,7 @@ authorized viewer.
   lands. `federates: false` — explicitly local-only.
 - **No feed projection** — `feed_projection.card` is deliberately null;
   Klot is a body-data korner and refuses to project. Framework
-  conformance here is *refusing* the projection.
+  conformance here is _refusing_ the projection.
 - **No subscription** — the `subscription` primitive is n/a; the
   per-viewer, revocable, owner-controlled `KlotShare` table is the
   correct primitive instead.

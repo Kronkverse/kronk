@@ -14,7 +14,7 @@ primary switcher: `hub_switcher.tsx` ships `Me · Home · Hub · Nudges`
 (`/@me` · `/home` · `/hub` · `/nudges`). Every korner in the platform
 is reachable from it.
 
-> Corrected 2026-07-23. An earlier note claimed Hub was *not* in the
+> Corrected 2026-07-23. An earlier note claimed Hub was _not_ in the
 > switcher (`Me · Home · Nudges`); the shipped `hub_switcher.tsx`
 > renders four pillars including Hub, so that correction was itself
 > wrong and has been reverted.
@@ -46,4 +46,4 @@ space doc in this folder.
 Hub landing shipped. Card visuals + tune-in ordering are live.
 Kronk-purple aesthetic locked in; grid layout responsive.
 
-*This is a stub. Contributions welcome.*
+_This is a stub. Contributions welcome._

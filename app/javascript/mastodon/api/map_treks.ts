@@ -1,8 +1,4 @@
-import {
-  apiRequestGet,
-  apiRequestPost,
-  apiRequestDelete,
-} from 'mastodon/api';
+import { apiRequestGet, apiRequestPost, apiRequestDelete } from 'mastodon/api';
 
 // Map — Treks API client. Mirrors app/controllers/api/v1/map/treks_controller.rb.
 // A trek's `route` is the already privacy-trimmed slice (or null); `distance_m`

@@ -43,7 +43,9 @@ export const BoothArtistChip: React.FC<Props> = ({ artist, onOpen }) => {
       </span>
       <span className='booth-artist-chip__body'>
         <span className='booth-artist-chip__name'>{artist.name}</span>
-        <span className='booth-artist-chip__stat'>{artistStatLabel(artist)}</span>
+        <span className='booth-artist-chip__stat'>
+          {artistStatLabel(artist)}
+        </span>
       </span>
     </button>
   );

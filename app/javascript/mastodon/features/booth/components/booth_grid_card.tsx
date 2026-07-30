@@ -14,7 +14,8 @@ import type { BoothSet } from '../types';
 // dock. Owner/moderator actions live behind a compact "…" menu so the
 // edit/share/delete flows stay reachable from the grid.
 
-const initial = (s: string): string => (s.trim().charAt(0) || 'B').toUpperCase();
+const initial = (s: string): string =>
+  (s.trim().charAt(0) || 'B').toUpperCase();
 
 function formatDuration(seconds: number | null): string {
   if (!seconds || seconds <= 0) return '';

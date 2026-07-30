@@ -15,7 +15,10 @@ import { PhotoReactionsPanel } from './photo_reactions_panel';
 
 const messages = defineMessages({
   close: { id: 'albutts.lightbox.close', defaultMessage: 'Close' },
-  previous: { id: 'albutts.lightbox.previous', defaultMessage: 'Previous photo' },
+  previous: {
+    id: 'albutts.lightbox.previous',
+    defaultMessage: 'Previous photo',
+  },
   next: { id: 'albutts.lightbox.next', defaultMessage: 'Next photo' },
 });
 

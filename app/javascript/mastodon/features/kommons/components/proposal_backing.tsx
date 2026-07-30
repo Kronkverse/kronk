@@ -28,12 +28,9 @@ export const ProposalBacking: React.FC<{
   const [error, setError] = useState<string | null>(null);
   const { backing } = proposal;
 
-  const handleAmount = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setAmount(e.target.value);
-    },
-    [],
-  );
+  const handleAmount = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setAmount(e.target.value);
+  }, []);
 
   const submit = useCallback(
     (e: React.FormEvent) => {

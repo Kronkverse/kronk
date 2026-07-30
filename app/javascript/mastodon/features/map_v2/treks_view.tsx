@@ -23,11 +23,7 @@ import type {
 import { Button } from 'mastodon/components/button';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 
-import {
-  BASEMAP_URL,
-  basemapLayers,
-  ensurePmtilesProtocol,
-} from './basemap';
+import { BASEMAP_URL, basemapLayers, ensurePmtilesProtocol } from './basemap';
 import { TrekComments } from './trek_comments';
 import { TrekFroth } from './trek_froth';
 
@@ -44,7 +40,10 @@ const messages = defineMessages({
   unpublish: { id: 'map.treks.unpublish', defaultMessage: 'Make private' },
   remove: { id: 'map.treks.delete', defaultMessage: 'Delete' },
   shareWith: { id: 'map.treks.share_with', defaultMessage: 'Share with' },
-  shared: { id: 'map.treks.shared', defaultMessage: 'Shared to your timeline.' },
+  shared: {
+    id: 'map.treks.shared',
+    defaultMessage: 'Shared to your timeline.',
+  },
   reachPublic: { id: 'map.treks.reach.public', defaultMessage: 'Public' },
   reachOrbit: { id: 'map.treks.reach.orbit', defaultMessage: 'Orbit' },
   reachMates: { id: 'map.treks.reach.mates', defaultMessage: 'Mates' },
@@ -213,7 +212,10 @@ const TrekDetail: React.FC<{
       <dl className='trek-detail__stats'>
         <div>
           <dt>
-            <FormattedMessage id='map.treks.distance' defaultMessage='Distance' />
+            <FormattedMessage
+              id='map.treks.distance'
+              defaultMessage='Distance'
+            />
           </dt>
           <dd>{km(trek.distance_m)} km</dd>
         </div>
@@ -294,7 +296,10 @@ const TrekDetail: React.FC<{
       {trek.state === 'published' && trek.status_id && (
         <>
           <TrekFroth statusId={trek.status_id} />
-          <TrekComments statusId={trek.status_id} visibility={trek.visibility} />
+          <TrekComments
+            statusId={trek.status_id}
+            visibility={trek.visibility}
+          />
         </>
       )}
     </div>

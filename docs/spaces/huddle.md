@@ -40,7 +40,7 @@ of the page. This is the "campfire" of Kronk — walk up any time,
 someone might be there.
 
 **Krew Huddles — one per Krew (Group).** When a user creates a Krew
-they see a checkbox: *"Add a Huddle space for this Krew?"* If checked,
+they see a checkbox: _"Add a Huddle space for this Krew?"_ If checked,
 the Krew gets its own Huddle attached at creation. If unchecked, any
 member of the Krew can instantiate one later from the Krew's page.
 
@@ -91,12 +91,13 @@ therefore to that Krew's Huddle. The vision wants no direct
 Event→Huddle link (Events belong to Krews, Krews own Huddles, so the
 chain is Event → Krew → Krew Huddle) — but note this is **unresolved
 against the code**: `events.huddle_session_id` still exists as a column
-+ index in `db/schema.rb`, so the "drop the FK" step has not landed.
-The Data-model section above (which keeps the FK as optional) and this
-one disagree; treat the removal as an open decision, not a done fact.
-(Precise semantics of "attending an event introduces you to the Krew"
-— permanent vs event-scoped access — is also open, see decisions below
-and will be refined in `kalendar.md` and `groups.md`.)
+
+- index in `db/schema.rb`, so the "drop the FK" step has not landed.
+  The Data-model section above (which keeps the FK as optional) and this
+  one disagree; treat the removal as an open decision, not a done fact.
+  (Precise semantics of "attending an event introduces you to the Krew"
+  — permanent vs event-scoped access — is also open, see decisions below
+  and will be refined in `kalendar.md` and `groups.md`.)
 
 ### URL move (Phase 9.4)
 
@@ -106,8 +107,8 @@ Huddle UI moves to `/hub/huddle`. Legacy routes 301-redirect.
 
 When a Huddle empties or ends, **nothing survives**. No transcript,
 no recording, no feed card, no "Alice was in the Krew Huddle" residue.
-The Main Huddle's room *identity* persists (it's always there), and
-Krew Huddles' *rooms* persist as long as the Krew does — but the
+The Main Huddle's room _identity_ persists (it's always there), and
+Krew Huddles' _rooms_ persist as long as the Krew does — but the
 content of every session vanishes with the participants. Huddles are
 the moment, not the artefact.
 
@@ -155,7 +156,7 @@ mockups with Claude web.
   immediately, or persist as read-only-empty for some window?
 - **Krews without a Huddle** — Krew creation offers an opt-in checkbox
   and any member can instantiate later; what's the reverse — can a
-  Krew *remove* its Huddle if it goes unused, and does that need
+  Krew _remove_ its Huddle if it goes unused, and does that need
   governance?
 
 ## Related drafts

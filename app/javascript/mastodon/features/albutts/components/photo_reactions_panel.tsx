@@ -56,9 +56,7 @@ const messages = defineMessages({
   },
 });
 
-const authorName = (
-  account: ApiAlbumPhotoCommentJSON['account'],
-): string =>
+const authorName = (account: ApiAlbumPhotoCommentJSON['account']): string =>
   account.display_name.length > 0 ? account.display_name : account.username;
 
 interface PhotoReactionsPanelProps {
@@ -133,11 +131,7 @@ export const PhotoReactionsPanel: React.FC<PhotoReactionsPanelProps> = ({
   );
 
   const handleCommentDeleted = useCallback(
-    (
-      commentId: string,
-      parentId: string | null,
-      removedReplies: number,
-    ) => {
+    (commentId: string, parentId: string | null, removedReplies: number) => {
       setComments((prev) => {
         if (!prev) return prev;
         if (parentId) {
@@ -259,11 +253,7 @@ const CommentRow: React.FC<CommentRowProps> = ({
   const handleDelete = useCallback(() => {
     void apiDeletePhotoComment(photoId, comment.id)
       .then(() => {
-        onDeleted(
-          comment.id,
-          comment.parent_id,
-          comment.replies?.length ?? 0,
-        );
+        onDeleted(comment.id, comment.parent_id, comment.replies?.length ?? 0);
       })
       .catch(() => undefined);
   }, [comment.id, comment.parent_id, comment.replies, onDeleted, photoId]);
@@ -278,11 +268,7 @@ const CommentRow: React.FC<CommentRowProps> = ({
 
   return (
     <li className='albutts-comment'>
-      <img
-        className='albutts-comment__avatar'
-        src={account.avatar}
-        alt=''
-      />
+      <img className='albutts-comment__avatar' src={account.avatar} alt='' />
       <div className='albutts-comment__body'>
         <div className='albutts-comment__meta'>
           <span className='albutts-comment__name'>

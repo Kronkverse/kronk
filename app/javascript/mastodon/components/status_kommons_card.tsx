@@ -33,9 +33,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export const StatusKommonsCard: React.FC<{
   proposal: ApiProposalSummaryJSON;
-}> = ({
-  proposal,
-}) => {
+}> = ({ proposal }) => {
   const intl = useIntl();
 
   return (

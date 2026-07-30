@@ -1,7 +1,7 @@
 # Kommons Lattice
 
 The Kommons map (`/hub/kommons/lattice`) — an operable, orthogonal dendrogram,
-branded the **Directory** in the UI. It is *the* map: the old radial Skeleton
+branded the **Directory** in the UI. It is _the_ map: the old radial Skeleton
 view has been retired, and `/hub/kommons/skeleton` now 301-redirects to
 `/hub/kommons/lattice`. There is no longer a two-view toggle; the Frame's
 Proposals ⇄ Directory picker switches between the proposals list and this map,
@@ -10,7 +10,7 @@ not between two rival maps.
 Implemented against the spec below (from the Kommons Rebuild proposal filed
 through Kommons itself). Shipped: the tidy-tree layout with its invariants, one
 branch open per level with recursive prune, the sprout choreography (wires draw,
-rows stagger, existing rows reflow), the leaf panel with *Plant feedback here*
+rows stagger, existing rows reflow), the leaf panel with _Plant feedback here_
 wired to the composer, zoom (scale-not-camera, fit, anchored ctrl+wheel,
 detail-shedding), drag-to-pan, scroll-into-view on open, and the reduced-motion
 pass. **The composer/picker also shipped** (previously deferred): the Directory
@@ -25,7 +25,7 @@ Directory carries a "+ Propose a new Korner" affordance
 - **Manifest names + icons consolidation** — the Directory still hardcodes some
   limb labels; its Hub icon and a couple of korners fall back until the manifest
   `name`/`icon` become the single source it reads.
-- **Leaf panel** — the cross-branch *wired to* list (§7).
+- **Leaf panel** — the cross-branch _wired to_ list (§7).
 - **Pan momentum** (§6c) and **keyboard navigation** (open question 4: ↑↓ within
   a column, → to open, ← to fold).
 - General visual tidy-up once the feel settles on shadow.
@@ -43,7 +43,7 @@ Companion to `kronk_kommons_lattice.html` and its screenshots.
 Sibling document to `KRONK_KOMMONS_MOTION.md` (the Skeleton view).
 
 **Read this first.** Screenshots of the Lattice look like an org chart. They are not wrong, they are
-just missing the entire design, which lives in *how branches arrive and leave*. A static render of
+just missing the entire design, which lives in _how branches arrive and leave_. A static render of
 this view is a picture of a filing cabinet. The built version should feel like watching something
 grow on command.
 
@@ -76,19 +76,19 @@ Recomputed on every open/fold. Cheap; do not try to cache it.
 
 ### Constants
 
-| | value |
-|---|---|
-| row height | 40 |
-| row gap | 16 |
-| **row pitch** | **56** |
-| column width | 214 |
-| column gap | 76 |
+|                  | value   |
+| ---------------- | ------- |
+| row height       | 40      |
+| row gap          | 16      |
+| **row pitch**    | **56**  |
+| column width     | 214     |
+| column gap       | 76      |
 | **column pitch** | **290** |
-| plane padding | 40 × 40 |
+| plane padding    | 40 × 40 |
 
 ### Algorithm
 
-Classic tidy-tree over the *visible* subtree, where a node's visible children are
+Classic tidy-tree over the _visible_ subtree, where a node's visible children are
 `open.has(id) ? node.kids : []`:
 
 ```
@@ -109,6 +109,7 @@ produces the characteristic look — Kronk centred on its three limbs, Hub centr
 korners.
 
 **Invariants to test.** Both hold in the prototype at every expansion state:
+
 - no two rows in the same column are within `ROWH` of each other (zero collisions)
 - every parent's `y` equals the midpoint of its visible children's `y` range
 
@@ -145,10 +146,10 @@ as wobble.
 
 ### States
 
-| state | stroke | width |
-|---|---|---|
-| default | `text-muted @ 34%` | 1.5 |
-| `on` (on the active path) | **`kronk-purple-bright`** | 2 |
+| state                     | stroke                    | width |
+| ------------------------- | ------------------------- | ----- |
+| default                   | `text-muted @ 34%`        | 1.5   |
+| `on` (on the active path) | **`kronk-purple-bright`** | 2     |
 
 Colour transitions at `--dur-medium` `--ease-out`.
 
@@ -158,7 +159,7 @@ Colour transitions at `--dur-medium` `--ease-out`.
 
 This is the thing the screenshots cannot show. When a branch opens:
 
-**Step 1 — the wire draws itself.** For each *newly appearing* child, measure the path with
+**Step 1 — the wire draws itself.** For each _newly appearing_ child, measure the path with
 `getTotalLength()`, set `stroke-dasharray` and `stroke-dashoffset` to that length, then on the next
 animation frame add the `.draw` class and set `stroke-dashoffset: 0`.
 
@@ -180,7 +181,7 @@ The delay cap at 340ms keeps a 14-child fan (Hub) from taking a full second to p
 inline `transition-delay` after 600ms so it doesn't poison later reflows.
 
 **Only genuinely new nodes animate.** Track the previous frame's id set; nodes that already existed
-must *reflow*, not re-enter (see §4). Getting this wrong makes the whole lattice flicker on every
+must _reflow_, not re-enter (see §4). Getting this wrong makes the whole lattice flicker on every
 click, which is the most likely bug in a rebuild.
 
 **Folding** is plain: rows fade to `opacity: 0` and are removed after 260ms. No reverse-draw on the
@@ -223,7 +224,7 @@ scrollTo({
 })
 ```
 
-The `COLPITCH * 0.35` nudge biases the viewport toward the *newly grown* column rather than centring
+The `COLPITCH * 0.35` nudge biases the viewport toward the _newly grown_ column rather than centring
 the node you clicked — you want to see what appeared, not what you pressed. **Multiply all scroll
 targets by the current zoom** (see below); forgetting this is why scroll-to lands in the wrong place
 when zoomed.
@@ -279,7 +280,7 @@ Dragging the canvas is an alternative to the scrollbars, not a camera — it set
 ### Detail shedding
 
 Below `Z = 0.62` the plane gains a `tiny` class that fades row **labels** out and dims counts and
-chevrons, leaving icons centred in their rows. Zoomed out, the lattice should read as *shape* — the
+chevrons, leaving icons centred in their rows. Zoomed out, the lattice should read as _shape_ — the
 silhouette of which branches are open and how deep they run — not as unreadable four-pixel type.
 This is the Lattice's equivalent of the Skeleton's distance-based presence model.
 
@@ -291,13 +292,13 @@ Fixed 214 × 40, `--radius-medium`. Contents left to right: icon (22px, `kronk-p
 (`--font-display`, `--font-size-sm`, ellipsised), open-proposal count pill if non-zero, and a
 chevron if the node has children.
 
-| state | treatment |
-|---|---|
-| default | `surface-elevated @ 62%`, `border-subtle` |
-| hover | `surface-elevated @ 92%`, `border-strong`, icon `scale(1.1)` |
-| `open` | `surface-elevated @ 96%`, `border-strong`, **chevron rotates 90°** (`--dur-medium`) |
-| `sel` (leaf selected) | `purple-bright @ 16%` fill, `purple-bright` border + 1px ring |
-| `core` (Ӂ) | `purple-bright @ 22%` fill, `purple-bright @ 46%` border, centred content |
+| state                 | treatment                                                                           |
+| --------------------- | ----------------------------------------------------------------------------------- |
+| default               | `surface-elevated @ 62%`, `border-subtle`                                           |
+| hover                 | `surface-elevated @ 92%`, `border-strong`, icon `scale(1.1)`                        |
+| `open`                | `surface-elevated @ 96%`, `border-strong`, **chevron rotates 90°** (`--dur-medium`) |
+| `sel` (leaf selected) | `purple-bright @ 16%` fill, `purple-bright` border + 1px ring                       |
+| `core` (Ӂ)            | `purple-bright @ 22%` fill, `purple-bright @ 46%` border, centred content           |
 
 The rotating chevron is the affordance that tells you a row is a branch rather than a destination.
 Keep it.
@@ -315,22 +316,22 @@ attached by its own lit wire — so content sits in the lattice rather than in a
 - enters by fading in; **follows the leaf's row when the lattice reflows** (same 380ms transform)
 
 Contents: title, URL chip, lifecycle badge, description, an Open / Agreeing / Blocked stat row, a
-*Plant feedback here* button, proposals sorted by agreement, and a *Wired to* list of cross-branch
+_Plant feedback here_ button, proposals sorted by agreement, and a _Wired to_ list of cross-branch
 connections. Clicking a connection re-opens the lattice along that node's path and selects it.
 
 ---
 
 ## 8. Interactions
 
-| action | result |
-|---|---|
-| drag empty canvas | pans the viewport, with momentum on release |
-| click row **with children**, closed | opens it; siblings at that level fold; wires draw; rows stagger in |
-| click row **with children**, open | folds it and its entire subtree |
-| click row **with a URL** | selects it; panel opens in the next column |
-| click selected leaf again | deselects; panel closes |
-| click a **Wired to** entry | opens the lattice along that node's path, selects it, scrolls to it |
-| click **Ӂ** | the core row; folds everything back to the three limbs |
+| action                              | result                                                              |
+| ----------------------------------- | ------------------------------------------------------------------- |
+| drag empty canvas                   | pans the viewport, with momentum on release                         |
+| click row **with children**, closed | opens it; siblings at that level fold; wires draw; rows stagger in  |
+| click row **with children**, open   | folds it and its entire subtree                                     |
+| click row **with a URL**            | selects it; panel opens in the next column                          |
+| click selected leaf again           | deselects; panel closes                                             |
+| click a **Wired to** entry          | opens the lattice along that node's path, selects it, scrolls to it |
+| click **Ӂ**                         | the core row; folds everything back to the three limbs              |
 
 Folding must **prune recursively** — closing Hub has to remove Booth and Booth's pages from the open
 set, and clear the selection if the selected leaf lived inside. Leaving orphans in the open set
@@ -341,7 +342,7 @@ causes branches to reappear unexpectedly later.
 ## 9. Deliberately absent
 
 - **No camera.** Zoom (§5) is a scale on a scrolling plane — layout never changes and there is no
-  auto-framing. If you find yourself computing a transform *to frame a node*, you are rebuilding the
+  auto-framing. If you find yourself computing a transform _to frame a node_, you are rebuilding the
   Skeleton. That view already exists.
 - **No auto-framing.** Drag, scroll and zoom are all user-driven. The view must never decide on its
   own where to look — the one exception is the gentle scroll-into-view after an open/fold (§5), which
@@ -359,14 +360,14 @@ causes branches to reappear unexpectedly later.
 The two views are **the same data, the same tokens, and the same node ids** — deliberately. They
 differ only in spatial model and motion language:
 
-| | Skeleton | Lattice |
-|---|---|---|
-| space | radial, organic, laid out once | orthogonal grid, recomputed per state |
-| movement | camera pans and zooms, auto-framed | content reflows; user drags, scrolls, zooms |
-| connectors | tapered filled bones, curved | uniform strokes, right angles |
-| everything else | always present, dimmed by distance | folded away unless open |
-| signature timing | 720ms camera glide | 340ms wire draw |
-| feels like | being inside something | operating something |
+|                  | Skeleton                           | Lattice                                     |
+| ---------------- | ---------------------------------- | ------------------------------------------- |
+| space            | radial, organic, laid out once     | orthogonal grid, recomputed per state       |
+| movement         | camera pans and zooms, auto-framed | content reflows; user drags, scrolls, zooms |
+| connectors       | tapered filled bones, curved       | uniform strokes, right angles               |
+| everything else  | always present, dimmed by distance | folded away unless open                     |
+| signature timing | 720ms camera glide                 | 340ms wire draw                             |
+| feels like       | being inside something             | operating something                         |
 
 **Build them against one shared source of truth** — the same route-table/manifest-derived tree, the
 same node ids, the same proposal store. A user should be able to switch views mid-task and land on
@@ -384,7 +385,7 @@ page quickly and filing something against it.
    that level. Zoom mitigates this (fit drops to ~0.53× on a fully expanded lattice, which shows
    everything at once), but does not solve it at 100%. Options if it still grates: group korners into
    sub-limbs, paginate, or accept the scroll.
-2. **Composer.** The panel's *Plant feedback here* button is currently inert — the composer was left
+2. **Composer.** The panel's _Plant feedback here_ button is currently inert — the composer was left
    out of this prototype to keep it focused on the view model. Wire it to the same composer the
    Skeleton view uses; do not build a second one.
 3. **Deep-linking.** Open/selected state should be URL-addressable
@@ -408,10 +409,10 @@ page quickly and filing something against it.
 5. Sprout choreography (§3) — wire draw, then staggered row entry, with correct new-vs-existing
    detection.
 6. Leaf panel, cross-branch jumps, scroll easing.
-6b. Zoom: plane scale, honest scroll box, anchored wheel zoom, fit, and the `tiny` detail-shedding
+   6b. Zoom: plane scale, honest scroll box, anchored wheel zoom, fit, and the `tiny` detail-shedding
    threshold. Verify scroll-to still lands correctly at 0.5× and 1.5×.
-6c. Drag-to-pan with threshold, trailing-click suppression, and momentum. Test that dragging *from*
-   a row does nothing and that a drag ending *on* a row does not expand it.
+   6c. Drag-to-pan with threshold, trailing-click suppression, and momentum. Test that dragging _from_
+   a row does nothing and that a drag ending _on_ a row does not expand it.
 7. Reduced-motion pass: all durations to 0.01ms; the state model must still be correct with every
    animation removed.
 

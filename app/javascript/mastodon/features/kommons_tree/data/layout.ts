@@ -81,7 +81,13 @@ export const buildTree = (nodes: KommonsNode[]): Tree => {
   // flat under the limb. (hub is the general case of this: korners hold pages.)
   // Two passes — create every node, then wire each under its parent, falling
   // back to the limb when the parent isn't a node in this bucket.
-  for (const limb of ['feed', 'profile', 'nudges', 'settings', 'kronk'] as const) {
+  for (const limb of [
+    'feed',
+    'profile',
+    'nudges',
+    'settings',
+    'kronk',
+  ] as const) {
     const inBucket = bucketNodes(nodes, limb);
     for (const n of inBucket) {
       add({

@@ -38,7 +38,7 @@ that are part of Kronk itself rather than a feature plugged into it:
 **Kommons** is where the community builds Kronk together. Anyone can
 plant a **proposal** — a suggested change to a specific part of the
 platform. A proposal is not a place; it is a piece of feedback that
-sits *within* the surface it concerns. The **Skeleton** and **Lattice**
+sits _within_ the surface it concerns. The **Skeleton** and **Lattice**
 are two views of the same map: every real page in Kronk is a node, and
 the proposals about that page gather on it.
 

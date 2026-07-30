@@ -23,7 +23,7 @@ infrastructure (self-hosted, capability-tokened, schema-neutral) — see
 `../kronk_korner_spec.md` §7 (Security & access control), which frames
 the membrane as the optional future layer; YOU is one app on top of it
 defining
-personal-growth schemas. Kronk is a social-fabric *consumer* of the
+personal-growth schemas. Kronk is a social-fabric _consumer_ of the
 pod via the membrane. Multiple apps (habit tracker, reading log, etc.)
 may later sit alongside YOU inside the same pod.
 

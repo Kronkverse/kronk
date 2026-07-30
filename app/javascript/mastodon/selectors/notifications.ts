@@ -116,8 +116,7 @@ export const KORNER_SYSTEM_TYPE_TO_SLUG: Record<string, string> = {
 const selectRawGroups = (s: RootState) => s.notificationGroups.groups;
 const selectRawPendingGroups = (s: RootState) =>
   s.notificationGroups.pendingGroups;
-const selectReadMarkerId = (s: RootState) =>
-  s.notificationGroups.readMarkerId;
+const selectReadMarkerId = (s: RootState) => s.notificationGroups.readMarkerId;
 
 const isGroupUnread = (
   group: NotificationGroup | NotificationGap,

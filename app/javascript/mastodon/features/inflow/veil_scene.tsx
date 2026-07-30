@@ -79,7 +79,13 @@ const VeilMoon: React.FC<{ illumination: number; waning: boolean }> = ({
           <stop offset='55%' stopColor='#dad7ec' />
           <stop offset='100%' stopColor='#b3afce' />
         </radialGradient>
-        <filter id='veil-moon-soft' x='-30%' y='-30%' width='160%' height='160%'>
+        <filter
+          id='veil-moon-soft'
+          x='-30%'
+          y='-30%'
+          width='160%'
+          height='160%'
+        >
           <feGaussianBlur stdDeviation='6' />
         </filter>
       </defs>

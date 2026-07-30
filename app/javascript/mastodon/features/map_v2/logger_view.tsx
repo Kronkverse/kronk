@@ -123,7 +123,9 @@ export const LoggerView: React.FC = () => {
       .catch((err: unknown) => {
         setParsed(null);
         setFileName(null);
-        setError(err instanceof Error ? err.message : 'Could not read that file.');
+        setError(
+          err instanceof Error ? err.message : 'Could not read that file.',
+        );
       });
   }, []);
 
@@ -277,7 +279,11 @@ export const LoggerView: React.FC = () => {
                 defaultMessage='Drag a GPS file here, or choose one (GPX or TCX)'
               />
             </span>
-            <input type='file' accept='.gpx,.tcx,application/gpx+xml' onChange={onFile} />
+            <input
+              type='file'
+              accept='.gpx,.tcx,application/gpx+xml'
+              onChange={onFile}
+            />
           </label>
           <p className='map-logger__hint'>
             <FormattedMessage
@@ -297,7 +303,10 @@ export const LoggerView: React.FC = () => {
                 }}
               />{' '}
               <button type='button' onClick={clearFile}>
-                <FormattedMessage id='map.logger.clear' defaultMessage='clear' />
+                <FormattedMessage
+                  id='map.logger.clear'
+                  defaultMessage='clear'
+                />
               </button>
             </p>
           )}

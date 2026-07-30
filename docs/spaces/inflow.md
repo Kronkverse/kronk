@@ -7,8 +7,8 @@
 > (`inflow.kosmic_update.published`), notification type
 > (`inflow_daily_posted`), and settings (`daily_delivery_time`,
 > `strands_of_interest: [light, dark, soil, season]`) all ship in the
-> manifest. Design decisions with Tomas below are for the *next-slice
-> reshape*, not the initial code — the plumbing is live regardless.
+> manifest. Design decisions with Tomas below are for the _next-slice
+> reshape_, not the initial code — the plumbing is live regardless.
 > One tension worth flagging: the manifest still has all four strands
 > as settings options, but Tomas's Round 1 wants the four-strand tab
 > structure retired in favour of a unified dashboard. Waiting on his
@@ -108,7 +108,7 @@ The daily update evolves from static-templated toward:
 
 - **Dynamic content synthesis** — takes the key points of that moment
   in time (celestial, seasonal, ecological, whatever is genuinely
-  interesting *right now*) and synthesises into a single update.
+  interesting _right now_) and synthesises into a single update.
   **Not always about the moon** if nothing interesting is going on
   with the moon.
 - **Subscribable** — users toggle Kosmic updates on/off.

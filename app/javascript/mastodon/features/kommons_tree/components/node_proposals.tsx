@@ -87,7 +87,10 @@ export const NodeProposals: React.FC<{ nodeId?: string; korner?: string }> = ({
             <span className='kommons-node-proposals__title'>
               {proposal.title}
             </span>
-            <span className='kommons-node-proposals__chevron' aria-hidden='true'>
+            <span
+              className='kommons-node-proposals__chevron'
+              aria-hidden='true'
+            >
               {'›'}
             </span>
           </Link>

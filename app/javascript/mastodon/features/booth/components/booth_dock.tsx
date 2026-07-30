@@ -14,7 +14,8 @@ import { Waveform } from './waveform';
 // elapsed/total, and a close. There is no queue yet, so the side buttons
 // seek ±15s rather than change track.
 
-const initial = (s: string): string => (s.trim().charAt(0) || 'B').toUpperCase();
+const initial = (s: string): string =>
+  (s.trim().charAt(0) || 'B').toUpperCase();
 
 function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
@@ -26,8 +27,16 @@ function formatTime(seconds: number): string {
 }
 
 export const BoothDock: React.FC = () => {
-  const { activeSet, playing, currentTime, duration, toggle, seekPct, skip, clear } =
-    useBoothPlayback();
+  const {
+    activeSet,
+    playing,
+    currentTime,
+    duration,
+    toggle,
+    seekPct,
+    skip,
+    clear,
+  } = useBoothPlayback();
 
   const handleBack = useCallback(() => {
     skip(-15);

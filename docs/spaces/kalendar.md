@@ -65,7 +65,7 @@ Events have an **individual host** (an Account), not a Krew. The
 current `Event.account_id` FK stays.
 
 At event creation the host sees a checkbox:
-*"Spawn a Krew for attendees?"* If checked:
+_"Spawn a Krew for attendees?"_ If checked:
 
 - A Krew is created **at event creation** (not deferred to first
   RSVP). Only the host is a member initially.
@@ -110,7 +110,7 @@ scopes for posts and birthdays.
 Three states, with Kronk-native labels that play on the old
 "be there or be square" line:
 
-- **"I'll be there"** — attending. Shown to others as *"X will be there"*.
+- **"I'll be there"** — attending. Shown to others as _"X will be there"_.
 - **"I'm a round"** — maybe (pun: "I'm around" + geometric shape).
 - **"I'll be square"** — not attending, declined.
 
