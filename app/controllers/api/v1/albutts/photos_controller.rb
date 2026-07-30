@@ -13,8 +13,10 @@ class Api::V1::Albutts::PhotosController < Api::BaseController
   def create
     raise Mastodon::NotPermittedError unless @album.contributable_by?(current_account)
 
-    @photo = @album.photos.new(photo_params.merge(contributor: current_account))
-    attach_media! if params[:media_id].present?
+    permitted = photo_params
+    media_id = permitted.delete(:media_id)
+    @photo = @album.photos.new(permitted.to_h.merge(contributor: current_account))
+    attach_media!(media_id) if media_id.present?
 
     if @photo.save
       render json: @photo, serializer: REST::AlbumPhotoSerializer, status: 201
@@ -45,12 +47,18 @@ class Api::V1::Albutts::PhotosController < Api::BaseController
   # (via Mastodon's `POST /api/v1/media`). The attachment must belong
   # to the caller; the model's validation enforces that at write time,
   # and this controller step just resolves the id.
-  def attach_media!
-    ma = MediaAttachment.find(params[:media_id])
+  def attach_media!(media_id)
+    ma = MediaAttachment.find(media_id)
     @photo.media_attachment = ma
   end
 
+  # `media_id` sits inside the `photo` hash so `params.expect` sees at
+  # least one whitelisted key even when neither `caption` nor
+  # `external_url` was provided. Rails 8's `.expect` runs
+  # `permit(filters).require(keys)` — an empty permitted hash after
+  # `require(:photo)` raises ParameterMissing (400), and dropping
+  # `:media_id` outside the allowlist did exactly that.
   def photo_params
-    params.expect(photo: [:caption, :external_url])
+    params.expect(photo: [:caption, :external_url, :media_id])
   end
 end
