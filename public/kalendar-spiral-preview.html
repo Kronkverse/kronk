@@ -6,7 +6,11 @@
 <title>₭ALENDAR</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Load fonts non-render-blocking: media="print" keeps the stylesheet
+     off the critical path (it otherwise blocks BOTH first paint AND the
+     inline build script), so the spiral paints immediately with the
+     fallbacks below and the webfonts swap in when they arrive. -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
 :root{
   --accent:#4414cc;
@@ -1114,13 +1118,31 @@ sheetEl.addEventListener('wheel', e => {
 rebind(true);
 renderSheet(0);
 requestAnimationFrame(layout);
-// Start the spiral-in animation on the first frame, after layout() has
-// placed the cells — this frame's paint is the animation's opening
-// state, so it winds in on visible content instead of popping.
-requestAnimationFrame(() => {
+// Start the spiral-in only once #spiralwrap is actually painted and on
+// screen. A plain rAF fires before first paint, so the animation's clock
+// starts while the main thread is still building the spiral — by the time
+// it paints, the clock has advanced (or finished) and it looks like it
+// popped. IntersectionObserver fires post-layout/paint, so the wind-in
+// begins from a visible frame. (Same trigger pattern as the InFlow veil.)
+(function(){
   const sw = document.getElementById('spiralwrap');
-  if (sw) sw.classList.add('enter');
-});
+  if (!sw) return;
+  let started = false;
+  const start = () => {
+    if (started) return;
+    started = true;
+    requestAnimationFrame(() => sw.classList.add('enter'));
+  };
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries, obs) => {
+      if (entries.some(e => e.isIntersecting)) { obs.disconnect(); start(); }
+    });
+    io.observe(sw);
+  }
+  // Safety net: if IO never fires (no support, zero-size, iframe quirk),
+  // start anyway — content is certainly visible by now.
+  setTimeout(start, 1200);
+})();
 stage.focus();
 /* opens on the spiral alone, at today. The sheet arrives when you settle. */
 </script>
