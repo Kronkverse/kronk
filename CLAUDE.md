@@ -51,9 +51,9 @@ A deploy usually **succeeded** even when it looks like it didn't:
 
 ### 3. Open a PR, land it via the merge queue
 
-Open a PR from your feature branch to the **active integration branch** (`rebuild/2.0.0` during the rebuild; `main` for production). **Contributors never merge to `main` — the maintainer does.** `rebuild/2.0.0` PRs land through the **GitHub merge queue** (enabled 2026-07-30): after review, hit "Add to merge queue" instead of "Merge". The queue serialises merges, rebases each PR against the tip, re-runs the required checks, then merges — no more version.rb collisions from two open PRs both bumping to the same `alpha.N`. Trust the queue: don't force-merge past it.
+Open a PR from your feature branch to the **active integration branch** (`rebuild/2.0.0` during the rebuild; `main` for production). **Contributors never merge to `main` — the maintainer does.** `rebuild/2.0.0` PRs land through the **GitHub merge queue** (enabled 2026-07-30): after review, hit "Add to merge queue" instead of "Merge". The queue serialises merges, rebases each PR against the tip, re-runs the required checks, then merges. (PRs no longer bump a version number — see **Body** — so there's nothing left to collide on.) Trust the queue: don't force-merge past it.
 
-**Title:** minimal — the version this PR bumps to (`2.0.0-alpha.N` on the rebuild; semver on `main`).
+**Title:** a short, descriptive summary of the change. (The rebuild version is no longer a per-PR number — see **Body** below — so the title describes the work, not a version.)
 
 **Body must include:**
 
@@ -61,7 +61,7 @@ Open a PR from your feature branch to the **active integration branch** (`rebuil
 - **Why** — the problem being solved
 - **How to test** — concrete steps on shadow
 - **Dependencies** — migrations, other PRs, or deploy steps required
-- **Version bump** — every PR updates `lib/kronk/version.rb`. Patch for fixes/refactors, minor for features, major for breaking changes; the rebuild uses `2.0.0-alpha.N`. Include the bump in the PR itself.
+- **No version bump** — `lib/kronk/version.rb` is a static milestone (`2.0.0-alpha`) that PRs do **not** touch. This removed the constant collisions on the version line between concurrent PRs. A build is identified by its git ref / commit (appended from `SOURCE_COMMIT`), not a hand-bumped number. Bump `MILESTONE` only at a real milestone (e.g. when `2.0.0` ships).
 
 ### 4. Clean up
 
