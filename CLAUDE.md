@@ -12,15 +12,17 @@ Kronk is a custom Mastodon instance at **mastodon.kronk.info**. This repo is a f
 
 ## Branch Strategy
 
-| Branch          | Purpose                                                                    | Deploy target          |
-| --------------- | -------------------------------------------------------------------------- | ---------------------- |
-| `main`          | Production (protected — PRs only, merged by the maintainer)                | mastodon.kronk.info    |
-| `rebuild/2.0.0` | **Active 2.x integration branch — base your work here during the rebuild** | shadow (via `staging`) |
-| `staging`       | Transient deploy branch for shadow — push to it to show work; disposable   | shadow.kronk.info      |
+| Branch          | Purpose                                                                                                | Deploy target                    |
+| --------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------- |
+| `main`          | Production (protected — PRs only, merged by the maintainer)                                            | mastodon.kronk.info              |
+| `rebuild/2.0.0` | **Active 2.x integration branch — base your work here during the rebuild.** Auto-deploys to shadow.   | shadow.kronk.info                |
+| `staging`       | Retired auto-deploy branch. Manual override only via the `Auto-Deploy Staging` workflow_dispatch.      | shadow.kronk.info (manual)       |
 
 **Never commit directly to `main`, `rebuild/2.0.0`, or `staging`.** Always work on a branch and open a PR.
 
 While the 2.0.0 rebuild is in progress, `rebuild/2.0.0` is the integration branch: base feature branches on it and open PRs against it. Once 2.0.0 ships, `main` resumes that role.
+
+**Shadow reflects `rebuild/2.0.0` continuously** (2026-07-30). Every PR that merges into rebuild auto-deploys to https://shadow.kronk.info within ~2 minutes — you and every other contributor see the same integrated state. `staging` no longer auto-deploys on push; pre-merge previews are handled by the merge queue running your PR against the current tip.
 
 ## Contributor Workflow
 
@@ -35,15 +37,9 @@ git checkout -b feature/my-change origin/rebuild/2.0.0
 
 Use `feature/`, `fix/`, or `docs/` prefixes. Keep branches small — one feature or fix per branch. You are a **collaborator** on `Kronkverse/kronk` — push directly, no personal fork needed. (On the mainframe dev server, push/fetch auth is handled for you — see the infra runbook; you do not need a personal token.)
 
-### 2. Show work on shadow
+### 2. See work on shadow
 
-Push to the **`staging`** branch to make work visible at https://shadow.kronk.info — this triggers an auto-deploy:
-
-```bash
-git push origin HEAD:staging      # or push the integration tip: origin/rebuild/2.0.0:staging
-```
-
-`staging` is a **transient, disposable** deploy branch (force-pushing it is fine). Shadow auto-deploys within a few minutes. Shadow may be down; if so, ask the maintainer to start it.
+You don't push to `staging` any more. Merged PRs land on shadow automatically because `rebuild/2.0.0` auto-deploys. To preview a PR before it merges, open the PR against `rebuild/2.0.0` and let the merge queue (see §3) run it against the current tip; the queue's status checks give you the same "does it build / does it pass tests" signal that a shadow deploy used to. If a specific PR really needs to be seen live on shadow before it merges (rare — e.g. visual regressions the CI can't catch), a maintainer can trigger the `Auto-Deploy Staging` workflow manually from the GitHub Actions tab after pushing the branch to `staging`. Shadow will revert to the rebuild tip on the next merge.
 
 #### Shadow gotchas (read before debugging a "failed" deploy)
 
@@ -51,11 +47,11 @@ A deploy usually **succeeded** even when it looks like it didn't:
 
 - **Don't trust the version string as a deploy signal.** `https://shadow.kronk.info/api/v1/instance` reports `version` from an env var (`MASTODON_VERSION_PRERELEASE`) and is cached — not from the deployed code. Verify a deploy by the **actual route/feature** (does your new page render?) or the deployed git ref, never the version endpoint. (The deploy now re-stamps this and clears the cache, so it should track the code going forward.)
 - **The DB is a symlink between two databases.** Shadow has a classic DB and an isolated rebuild DB; the active one is chosen by a symlink that is now **persistent across deploys**. If you "can't log in," the DB is likely pointed at the wrong one — see the infra runbook.
-- **Pushing to `main` resets shadow.** A push to `main` redeploys the production line onto shadow, reverting it off the rebuild. After any `main` merge, re-push the rebuild to `staging`.
+- **Pushing to `main` resets shadow.** A push to `main` redeploys the production line onto shadow, reverting it off the rebuild. After any `main` merge, the next merge into `rebuild/2.0.0` restores it.
 
-### 3. Open a PR
+### 3. Open a PR, land it via the merge queue
 
-Open a PR from your feature branch to the **active integration branch** (`rebuild/2.0.0` during the rebuild; `main` for production). **Contributors never merge to `main` — the maintainer does.** `rebuild/2.0.0` PRs are merged per the team's rebuild policy (see the infra runbook).
+Open a PR from your feature branch to the **active integration branch** (`rebuild/2.0.0` during the rebuild; `main` for production). **Contributors never merge to `main` — the maintainer does.** `rebuild/2.0.0` PRs land through the **GitHub merge queue** (enabled 2026-07-30): after review, hit "Add to merge queue" instead of "Merge". The queue serialises merges, rebases each PR against the tip, re-runs the required checks, then merges — no more version.rb collisions from two open PRs both bumping to the same `alpha.N`. Trust the queue: don't force-merge past it.
 
 **Title:** minimal — the version this PR bumps to (`2.0.0-alpha.N` on the rebuild; semver on `main`).
 
