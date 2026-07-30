@@ -15,12 +15,13 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import { Stage } from 'mastodon/components/stage';
+import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
-// Where the YOU PWA is deployed. Kept as a module constant for now;
-// once we have proper env-driven kronk config for external korner
-// destinations, this moves there.
-const YOU_PORTAL_URL = 'https://you.kronk.info';
+// Fallback for the YOU external URL when the manifest hasn't loaded
+// yet (e.g. first paint before /api/v1/korners lands). Canonical
+// source is `config/korners/you.yaml`'s `portal.url`.
+const YOU_PORTAL_URL_FALLBACK = 'https://you.kronk.info';
 
 const messages = defineMessages({
   title: { id: 'you_portal.title', defaultMessage: 'YOU' },
@@ -68,6 +69,8 @@ interface Props {
 const YouPortal: React.FC<Props> = () => {
   const intl = useIntl();
   const Icon = useKornerIcon('you');
+  const korner = useKorner('you');
+  const targetUrl = korner?.portal?.url ?? YOU_PORTAL_URL_FALLBACK;
   const title = intl.formatMessage(messages.title);
 
   return (
@@ -95,7 +98,7 @@ const YouPortal: React.FC<Props> = () => {
 
         <a
           className='you-portal__cta'
-          href={YOU_PORTAL_URL}
+          href={targetUrl}
           target='_blank'
           rel='noopener noreferrer'
         >

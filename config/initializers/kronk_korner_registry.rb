@@ -81,6 +81,13 @@ module Kronk
       # out of. It is otherwise an ordinary manifest — this flag and `mount`
       # are the whole of the difference, which is the point.
       :core,
+      # A portal korner is a live Kronk-native landing surface (its /hub/<slug>
+      # route renders a real component) that links out to an external app.
+      # Portals are `enforced: false` because they own no Kronk-side models,
+      # feed projections, or notification subsystems — the Standard requires
+      # nothing to declare. Shape: { 'url' => String }. Optional; absent means
+      # the korner is not a portal. See `you.yaml` for the reference case.
+      :portal,
       # Deployment
       :feature_flag,
       :enforced,
@@ -97,6 +104,16 @@ module Kronk
       # one vocabulary instead of scattering slug checks.
       def core?
         core == true
+      end
+
+      # Portal korners (see `:portal`) are Hub-live: a real /hub/<slug>
+      # component renders, and clicking it either follows the link or
+      # opens the external app. They ship at `enforced: false` because
+      # they own none of the resources the Standard gates enforced
+      # korners on — this predicate is the Hub-side signal to promote
+      # them out of the "Coming soon" bucket regardless.
+      def portal?
+        portal.is_a?(Hash) && portal['url'].is_a?(String) && !portal['url'].empty?
       end
 
       def db_namespace
@@ -206,6 +223,7 @@ module Kronk
           nodes: Array(yaml['nodes']),
           mount: yaml['mount'].is_a?(String) ? yaml['mount'] : nil,
           core: yaml['core'] == true,
+          portal: yaml['portal'].is_a?(Hash) ? yaml['portal'] : nil,
           feature_flag: yaml['feature_flag'],
           enforced: yaml['enforced'] == true
         )
