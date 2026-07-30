@@ -193,13 +193,7 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
       ) : (
         <ul className='albutts-detail__grid'>
           {album.photos.map((p) => (
-            <PhotoTile
-              key={p.id}
-              photo={p}
-              onOpen={() => {
-                openLightbox(p.id);
-              }}
-            />
+            <PhotoTile key={p.id} photo={p} onOpen={openLightbox} />
           ))}
         </ul>
       )}
@@ -217,17 +211,20 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
 
 const PhotoTile: React.FC<{
   photo: ApiAlbumPhotoJSON;
-  onOpen: () => void;
+  onOpen: (photoId: string) => void;
 }> = ({ photo, onOpen }) => {
   const contributor = createAccountFromServerJSON(photo.contributor);
   const name = contributor.display_name || contributor.username;
+  const handleClick = useCallback(() => {
+    onOpen(photo.id);
+  }, [onOpen, photo.id]);
 
   return (
     <li className='albutts-photo'>
       <button
         type='button'
         className='albutts-photo__trigger'
-        onClick={onOpen}
+        onClick={handleClick}
         aria-label={photo.caption ?? name}
       >
         {photo.url ? (
