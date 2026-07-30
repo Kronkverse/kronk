@@ -271,8 +271,7 @@
 // ── Home top strip ─────────────────────────────────────────────────
 .moments-strip {
   padding: 10px 12px 12px;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-primary);
+  background: transparent;
 }
 
 .moments-strip__scroller {

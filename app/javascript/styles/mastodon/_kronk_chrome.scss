@@ -760,8 +760,7 @@ body:has(.korner-sub-bar) {
 // framing (no separate panel chrome — the compose form draws its own
 // borders); the wrapper only adds vertical rhythm above the feed.
 .home-status-box {
-  border-bottom: 1px solid var(--border-default);
-  background: var(--surface-primary);
+  background: transparent;
   padding: 0.5rem 0.65rem 0.35rem;
 
   // Compose form injects margin from the /publish column; strip it
