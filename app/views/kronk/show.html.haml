@@ -1,14 +1,14 @@
 - content_for :header_tags do
-  %title= "#{@title} — Kronk"
+  %title #{@title} — Kronk
 
 .kronk-org-page
   %nav.kronk-org-page__nav{ 'aria-label': 'Kronk pages' }
-    %a.kronk-org-page__wordmark{ href: '/kronk' } ӁЯѺƝ₭
+    -# Wordmark lives in the fixed top-band via the shared static chrome — no duplicate here.
     %ul.kronk-org-page__nav-list
       - @nav_pages.each do |key|
         %li
-          %a{ href: "/kronk/#{key}",
-              class: ['kronk-org-page__nav-link', ('kronk-org-page__nav-link--active' if key == @page_key)] }
+          - link_class = ['kronk-org-page__nav-link', ('kronk-org-page__nav-link--active' if key == @page_key)]
+          %a{ href: "/kronk/#{key}", class: link_class }
             = key.humanize
     - if user_signed_in?
       %a.kronk-org-page__back-to-app{ href: '/home' }
