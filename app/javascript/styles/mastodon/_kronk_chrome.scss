@@ -773,3 +773,65 @@ body:has(.korner-sub-bar) {
     box-shadow: none;
   }
 }
+
+// ── Visibility popup (privacy dropdown) — Kronk aesthetic override ──
+// The Mastodon compose visibility picker uses `.privacy-dropdown__*`
+// classes originally styled against generic dropdown tokens (dark grey
+// surface, blue focus, 4px radius). Retarget the popup + its options
+// to Kronk semantic tokens — surface-elevated background, purple-tinted
+// border, kronk-purple-accent for the active row, and named radius
+// tokens (10px for the panel, 6px for the row). Only touches the
+// visibility popup selector so other dropdowns (emoji, language) keep
+// their existing look.
+.privacy-dropdown__dropdown {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  padding: 6px;
+  box-shadow:
+    0 12px 32px rgb(0 0 0 / 30%),
+    0 4px 12px rgb(0 0 0 / 20%);
+}
+
+.privacy-dropdown__option {
+  border-radius: var(--radius-small);
+  padding: 10px 12px;
+  color: var(--text-primary);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:active {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-bright) 15%,
+      transparent
+    );
+    color: var(--text-primary);
+  }
+
+  &:focus,
+  &.active {
+    background: var(--kronk-purple-accent);
+    color: #fff;
+
+    .privacy-dropdown__option__content,
+    .privacy-dropdown__option__content strong,
+    .privacy-dropdown__option__additional {
+      color: #fff;
+    }
+  }
+
+  &__content {
+    color: var(--text-secondary);
+
+    strong {
+      color: var(--text-primary);
+    }
+  }
+
+  &__additional {
+    color: var(--text-muted);
+  }
+}
