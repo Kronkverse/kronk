@@ -30,6 +30,7 @@ import {
   apiRequestPut,
   apiRequestDelete,
 } from 'mastodon/api';
+import { KornerKrewPicker } from 'mastodon/components/korner_krew_picker';
 import { KornerVisibilityPicker } from 'mastodon/components/korner_visibility_picker';
 import { me } from 'mastodon/initial_state';
 
@@ -56,10 +57,6 @@ const audienceLabel = (visibility: string): MessageDescriptor => {
   }
 };
 
-// Moments can't be re-scoped INTO krew yet (no krew picker here, same as
-// the composer); moving OUT of krew is fine and clears krew_id server-side.
-const CANNOT_SET: readonly string[] = ['krew'];
-
 interface AccountJSON {
   id: string;
   acct: string;
@@ -85,6 +82,7 @@ interface MomentJSON {
   froth_count: number;
   frothed_by_viewer: boolean;
   account: AccountJSON;
+  krew: { id: string; name: string } | null;
   media_attachment: MediaJSON;
 }
 
@@ -246,8 +244,8 @@ const MomentViewer = () => {
   // Re-scope one's own Moment after the fact (Stage 3). Optimistic; the
   // stack entry's visibility updates immediately, rolls back on error.
   const changeVisibilityAsync = useCallback(
-    async (next: string) => {
-      if (!moment || visibilityPending || next === moment.visibility) return;
+    async (next: string, krewId: string | null) => {
+      if (!moment || visibilityPending) return;
       setVisibilityPending(true);
       const previous = moment.visibility;
       setStack((prev) => {
@@ -257,7 +255,10 @@ const MomentViewer = () => {
         return copy;
       });
       try {
-        await apiRequestPut(`v1/moments/${moment.id}`, { visibility: next });
+        await apiRequestPut(`v1/moments/${moment.id}`, {
+          visibility: next,
+          krew_id: krewId,
+        });
       } catch {
         setStack((prev) => {
           const copy = [...prev];
@@ -273,8 +274,8 @@ const MomentViewer = () => {
   );
 
   const changeVisibility = useCallback(
-    (next: string) => {
-      void changeVisibilityAsync(next);
+    (next: string, krewId: string | null) => {
+      void changeVisibilityAsync(next, krewId);
     },
     [changeVisibilityAsync],
   );
@@ -404,7 +405,7 @@ interface ViewerBodyProps {
   onFroth: () => void;
   onReply: () => void;
   isOwner: boolean;
-  onChangeVisibility: (next: string) => void;
+  onChangeVisibility: (next: string, krewId: string | null) => void;
   visibilityPending: boolean;
   intl: ReturnType<typeof useIntl>;
 }
@@ -431,15 +432,35 @@ const ViewerBody = ({
 }: ViewerBodyProps) => {
   const isVideo = moment.media_attachment.type === 'video';
   const [editingVisibility, setEditingVisibility] = useState(false);
+  const [choosingKrew, setChoosingKrew] = useState(false);
 
   const toggleEditingVisibility = useCallback(() => {
     setEditingVisibility((v) => !v);
-  }, []);
+    // Opening a krew Moment goes straight to the krew list (to change it);
+    // any other scope shows just the scope picker until krew is chosen.
+    setChoosingKrew(moment.visibility === 'krew');
+  }, [moment.visibility]);
 
-  const pickVisibility = useCallback(
+  // Non-krew scopes commit immediately; picking `krew` reveals the krew
+  // sub-picker and waits for a krew before committing.
+  const pickScope = useCallback(
     (next: string) => {
-      onChangeVisibility(next);
+      if (next === 'krew') {
+        setChoosingKrew(true);
+      } else {
+        onChangeVisibility(next, null);
+        setEditingVisibility(false);
+        setChoosingKrew(false);
+      }
+    },
+    [onChangeVisibility],
+  );
+
+  const pickKrew = useCallback(
+    (krewId: string) => {
+      onChangeVisibility('krew', krewId);
       setEditingVisibility(false);
+      setChoosingKrew(false);
     },
     [onChangeVisibility],
   );
@@ -566,10 +587,16 @@ const ViewerBody = ({
             <KornerVisibilityPicker
               slug='moments'
               value={moment.visibility}
-              onChange={pickVisibility}
-              disabledScopes={CANNOT_SET}
+              onChange={pickScope}
               disabled={visibilityPending}
             />
+            {choosingKrew && (
+              <KornerKrewPicker
+                value={moment.krew?.id ?? null}
+                onChange={pickKrew}
+                disabled={visibilityPending}
+              />
+            )}
           </div>
         )}
 
