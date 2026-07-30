@@ -1,7 +1,8 @@
-// Moments — the /hub/moments korner. First-pass v1: viewer's own
-// active moments (subject filter is a next-slice concern) + a compose
-// entry point that opens the inline composer. Full-screen viewer,
-// Home strip, and cross-korner attach flows all follow.
+// Moments — the /hub/moments korner. Two sections over the same
+// reach-ladder-gated collection: "Now" (active, still inside the 24h
+// window — mirrors the top-of-Home strip) and "Log" (the permanent
+// archive of Moments that have since expired). A compose entry point
+// opens the inline composer.
 //
 // Sits inside KornerShell so AutoSpaceBadge + AutoSpaceHeader do the
 // chrome (Standard L11).
@@ -44,7 +45,33 @@ const YoursView = () => {
           />
         </button>
       </div>
-      <MomentsGrid refreshTick={refreshTick} />
+
+      <section className='moments__section'>
+        <h2 className='moments__section-heading'>
+          <FormattedMessage id='moments.section.now' defaultMessage='Now' />
+          <span className='moments__section-sub'>
+            <FormattedMessage
+              id='moments.section.now_sub'
+              defaultMessage='Live for 24 hours'
+            />
+          </span>
+        </h2>
+        <MomentsGrid refreshTick={refreshTick} filter='active' />
+      </section>
+
+      <section className='moments__section moments__section--log'>
+        <h2 className='moments__section-heading'>
+          <FormattedMessage id='moments.section.log' defaultMessage='Log' />
+          <span className='moments__section-sub'>
+            <FormattedMessage
+              id='moments.section.log_sub'
+              defaultMessage='Past Moments, kept for keeps'
+            />
+          </span>
+        </h2>
+        <MomentsGrid refreshTick={refreshTick} filter='log' />
+      </section>
+
       {showComposer && (
         <MomentsComposer onClose={closeComposer} onPosted={onPosted} />
       )}

@@ -1,5 +1,7 @@
-// Grid of the viewer's active moments — v1 layout. A future slice
-// swaps this for the mates-scoped grid the brief describes.
+// A grid of Moments the viewer is allowed to see (reach-ladder gated,
+// server-side). `filter='active'` is the 24h window (the korner's top
+// section); `filter='log'` is the permanent archive. Since the grid now
+// spans many authors, each tile shows whose Moment it is.
 
 import { useEffect, useState } from 'react';
 
@@ -15,16 +17,32 @@ interface MediaAttachment {
   type: string;
 }
 
+interface AccountJSON {
+  id: string;
+  acct: string;
+  display_name: string;
+  avatar: string;
+}
+
 interface MomentJSON {
   id: string;
   caption: string | null;
   expires_at: string;
   active: boolean;
   froth_count: number;
+  account: AccountJSON;
   media_attachment: MediaAttachment;
 }
 
-export const MomentsGrid = ({ refreshTick }: { refreshTick: number }) => {
+type Filter = 'active' | 'log';
+
+export const MomentsGrid = ({
+  refreshTick,
+  filter = 'active',
+}: {
+  refreshTick: number;
+  filter?: Filter;
+}) => {
   const [moments, setMoments] = useState<MomentJSON[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +52,7 @@ export const MomentsGrid = ({ refreshTick }: { refreshTick: number }) => {
     setLoading(true);
     setError(null);
 
-    apiRequestGet<MomentJSON[]>('v1/moments')
+    apiRequestGet<MomentJSON[]>('v1/moments', { filter })
       .then((data) => {
         if (cancelled) return;
         setMoments(data);
@@ -49,7 +67,7 @@ export const MomentsGrid = ({ refreshTick }: { refreshTick: number }) => {
     return () => {
       cancelled = true;
     };
-  }, [refreshTick]);
+  }, [refreshTick, filter]);
 
   if (loading) {
     return (
@@ -67,7 +85,7 @@ export const MomentsGrid = ({ refreshTick }: { refreshTick: number }) => {
       <div className='moments__error'>
         <FormattedMessage
           id='moments.grid.error'
-          defaultMessage="Couldn't load your Moments."
+          defaultMessage="Couldn't load Moments."
         />
       </div>
     );
@@ -76,10 +94,17 @@ export const MomentsGrid = ({ refreshTick }: { refreshTick: number }) => {
   if (moments.length === 0) {
     return (
       <div className='moments__empty'>
-        <FormattedMessage
-          id='moments.grid.empty'
-          defaultMessage='No active Moments. Share one — it will be gone by morning.'
-        />
+        {filter === 'log' ? (
+          <FormattedMessage
+            id='moments.grid.empty_log'
+            defaultMessage='Nothing in the log yet. Moments land here once their 24 hours are up.'
+          />
+        ) : (
+          <FormattedMessage
+            id='moments.grid.empty'
+            defaultMessage='No active Moments. Share one — it will be gone by morning.'
+          />
+        )}
       </div>
     );
   }
@@ -87,13 +112,19 @@ export const MomentsGrid = ({ refreshTick }: { refreshTick: number }) => {
   return (
     <div className='moments__grid'>
       {moments.map((moment) => (
-        <MomentTile key={moment.id} moment={moment} />
+        <MomentTile key={moment.id} moment={moment} filter={filter} />
       ))}
     </div>
   );
 };
 
-const MomentTile = ({ moment }: { moment: MomentJSON }) => {
+const MomentTile = ({
+  moment,
+  filter,
+}: {
+  moment: MomentJSON;
+  filter: Filter;
+}) => {
   const secondsUntilExpiry = Math.round(
     (new Date(moment.expires_at).getTime() - Date.now()) / 1000,
   );
@@ -115,25 +146,52 @@ const MomentTile = ({ moment }: { moment: MomentJSON }) => {
             alt={moment.caption ?? ''}
           />
         )}
+        <span className='moments__tile-author'>
+          <img
+            className='moments__tile-avatar'
+            src={moment.account.avatar}
+            alt=''
+            aria-hidden
+          />
+          <span className='moments__tile-author-name'>
+            {moment.account.display_name || `@${moment.account.acct}`}
+          </span>
+        </span>
       </div>
       <div className='moments__tile-meta'>
         {moment.caption && (
           <span className='moments__tile-caption'>{moment.caption}</span>
         )}
         <span className='moments__tile-expiry'>
-          <FormattedMessage
-            id='moments.tile.gone'
-            defaultMessage='Gone {when}'
-            values={{
-              when: (
-                <FormattedRelativeTime
-                  value={secondsUntilExpiry}
-                  numeric='auto'
-                  updateIntervalInSeconds={60}
-                />
-              ),
-            }}
-          />
+          {filter === 'log' ? (
+            <FormattedMessage
+              id='moments.tile.was_gone'
+              defaultMessage='Gone {when}'
+              values={{
+                when: (
+                  <FormattedRelativeTime
+                    value={secondsUntilExpiry}
+                    numeric='auto'
+                    updateIntervalInSeconds={undefined}
+                  />
+                ),
+              }}
+            />
+          ) : (
+            <FormattedMessage
+              id='moments.tile.gone'
+              defaultMessage='Gone {when}'
+              values={{
+                when: (
+                  <FormattedRelativeTime
+                    value={secondsUntilExpiry}
+                    numeric='auto'
+                    updateIntervalInSeconds={60}
+                  />
+                ),
+              }}
+            />
+          )}
         </span>
         {moment.froth_count > 0 && (
           <span className='moments__tile-froths'>♥ {moment.froth_count}</span>

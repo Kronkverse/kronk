@@ -19,22 +19,26 @@ class Api::V1::MomentsController < Api::BaseController
   # active moments + all active moments from accounts the viewer
   # follows. Otherwise returns a single account's moments (defaults
   # to the viewer).
+  # Every Moment the viewer is allowed to see, per each Moment's own
+  # visibility (reach ladder + krew) — this is the whole collection, gated
+  # per-moment, not a fixed audience. Powers the top-of-Home strip and the
+  # Moments korner (both its active "top" section and its permanent log).
+  #
+  #   filter=log → the permanent archive (expired moments, kept forever)
+  #   default    → active (still inside the 24h window)
+  #   account_id → narrow to one author (the deep-link viewer's stack)
   def index
-    @moments =
-      if params[:scope] == 'mates'
-        follow_ids = current_account.following.pluck(:id)
-        subject_ids = follow_ids + [current_account.id]
-        Moment.where(account_id: subject_ids)
-      else
-        account = params[:account_id].present? ? Account.find(params[:account_id]) : current_account
-        Moment.for_account(account)
-      end
+    scope = Moment.visible_to(current_account)
+    scope = scope.for_account(Account.find(params[:account_id])) if params[:account_id].present?
+    scope = params[:filter] == 'log' ? scope.expired : scope.active
 
-    @moments = @moments.active.recent.includes(:account, :media_attachment).limit(60)
+    @moments = scope.recent.includes(:account, :media_attachment).limit(60)
     render json: @moments, each_serializer: REST::MomentSerializer
   end
 
   def show
+    raise ActiveRecord::RecordNotFound unless @moment.visible_to?(current_account)
+
     render json: @moment, serializer: REST::MomentSerializer
   end
 
