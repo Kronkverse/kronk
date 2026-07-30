@@ -26,18 +26,39 @@
 #          org space, sectioned profile, tune-in gate.
 #
 # The rebuild ships from the long-lived `rebuild/2.0.0` integration
-# branch. Interim tips are marked `2.0.0-alpha.N`; `main` stays on the
-# 1.7.x line until the final PR flips the version and merges.
+# branch. It carries the static `2.0.0-alpha` milestone below; `main`
+# stays on the 1.7.x line until the final PR flips the milestone.
+#
+# Decoupled from PRs (2026-07-30): this used to carry a hand-bumped
+# `alpha.N` that every PR incremented, which collided constantly between
+# concurrent PRs on the shared branch. It no longer does. A specific
+# build is identified by its commit — appended from ENV below (the same
+# `SOURCE_COMMIT` var Mastodon reads), and by the deployed git ref — not
+# by a number anyone has to bump. So: PRs do NOT touch this file; only
+# bump MILESTONE at a real milestone (e.g. when 2.0.0 ships).
 module Kronk
   module Version
     module_function
 
+    MILESTONE = '2.0.0-alpha'
+
     def to_s
-      '2.0.0-alpha.357'
+      commit = build_commit
+      commit ? "#{MILESTONE}+#{commit}" : MILESTONE
     end
 
     def to_a
-      to_s.split(/[.-]/).map { |part| Integer(part, exception: false) || part }
+      to_s.split(/[.+-]/).map { |part| Integer(part, exception: false) || part }
+    end
+
+    # Short commit of the deployed tree, from the env the deploy stamps
+    # (`SOURCE_COMMIT`, which Mastodon already uses; `KRONK_BUILD` as an
+    # alias). Nil in local dev / CI where neither is set — a bare
+    # milestone is fine there.
+    def build_commit
+      commit = ENV['SOURCE_COMMIT'] || ENV['KRONK_BUILD']
+      commit = nil if commit.nil? || commit.empty?
+      commit && commit[0, 8]
     end
   end
 end
