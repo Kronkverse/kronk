@@ -21,7 +21,7 @@ Kronk** — appearance, posting defaults, privacy, notifications,
 data. It is both a hub and a contextual entry: `/settings` aggregates the
 account/global controls, while each korner owns its own settings sub-page
 under `/hub/<slug>/settings` and each core space configures itself in its own
-limb (`settings.feed` → `/home/settings`, `settings.hub` → `/settings/korners`).
+limb (`settings.feed` → `/home/settings`, `settings.hub` → `/hub/settings`).
 
 ## Nodes in the Skeleton
 

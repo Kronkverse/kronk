@@ -50,7 +50,7 @@ export const AutoSpaceViewPicker: React.FC = () => {
     [history, slug, views],
   );
 
-  if (onSettings || !slug || !views?.length) return null;
+  if (onSettings || korner?.core || !slug || !views?.length) return null;
 
   const current = subPath ?? views[0]?.key;
   if (!current) return null;

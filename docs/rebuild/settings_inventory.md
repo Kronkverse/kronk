@@ -135,7 +135,7 @@ relationships · moderation strikes and appeals.
 
 Tune-in/out · per-korner push · manifest-declared preferences rendered by the
 widget engine (`GET/PATCH /api/v1/korners/:slug/settings`) · korner list
-ordering (`/settings/korners`).
+ordering (`/hub/settings`).
 
 ---
 

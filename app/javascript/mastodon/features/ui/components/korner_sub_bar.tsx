@@ -28,8 +28,9 @@ export const KornerSubBar = () => {
   const Icon = useKornerIcon(slug);
 
   // The bare Hub landing (/hub) already has its own hero — no need
-  // for a breadcrumb pointing back to itself.
-  if (!slug) return null;
+  // for a breadcrumb pointing back to itself. Core spaces (e.g. settings at
+  // /hub/settings) aren't korners and get no korner breadcrumb.
+  if (!slug || korner?.core) return null;
 
   return (
     <div className='korner-sub-bar' aria-label='Korner breadcrumb'>

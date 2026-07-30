@@ -294,7 +294,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path={["/booth", "/hub/booth"]} component={Booth} content={children} />
             {signedIn && <WrappedRoute path='/settings' exact component={SettingsHub} content={children} />}
             {signedIn && <WrappedRoute path='/settings/you' exact component={SettingsYou} content={children} />}
-            {signedIn && <WrappedRoute path='/settings/korners' exact component={SettingsKorners} content={children} />}
+            {signedIn && <WrappedRoute path='/hub/settings' exact component={SettingsKorners} content={children} />}
             {signedIn && <WrappedRoute path='/settings/appearance' exact component={AppearanceSettings} content={children} />}
             {signedIn && <WrappedRoute path='/settings/posting' exact component={PostingSettings} content={children} />}
             {signedIn && <WrappedRoute path='/settings/notifications' exact component={NotificationsSettings} content={children} />}
