@@ -519,8 +519,7 @@
     &:focus-visible {
       background: var(--kronk-purple-deep);
       outline: none;
-      box-shadow: 0 0 0 3px
-        color-mix(in srgb, var(--accent) 35%, transparent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
     }
 
     @media (prefers-reduced-motion: reduce) {
