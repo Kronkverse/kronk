@@ -53,6 +53,17 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   background:radial-gradient(ellipse at 50% 44%, transparent 24%, rgba(6,6,12,.92) 96%)}
 #field{position:absolute;left:50%;top:44%;transform-origin:center;will-change:transform}
 #thread{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);pointer-events:none;overflow:visible}
+/* Entry: the spiral winds into the page — a one-shot rotate + scale-down
+   that settles to rest. Wraps the thread + day cells (grouped so the star
+   backdrop and the read-head indicators stay still). #field is never
+   JS-transformed, so animating the group is safe. */
+#spiralwrap{position:absolute;inset:0;transform-origin:50% 44%;
+  animation:kalendar-spiral-in 1400ms cubic-bezier(.22,.61,.36,1) both}
+@keyframes kalendar-spiral-in{
+  from{opacity:0;transform:rotate(230deg) scale(1.7)}
+  40%{opacity:1}
+  to{opacity:1;transform:none}
+}
 
 /* ═══ month wall — a circle centred on the eye is a single moment in time ═══ */
 .wall{pointer-events:none;overflow:visible;will-change:opacity}
@@ -280,6 +291,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 }
 @media (prefers-reduced-motion:reduce){
   #sheet{transition:none}
+  #spiralwrap{animation:none}
 }
 </style>
 </head>
@@ -287,8 +299,10 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 
 <div id="stage" tabindex="0" role="application" aria-label="Spiral calendar. Scroll to travel through time, click a day to spin to it.">
   <svg id="stars" aria-hidden="true"></svg>
-  <svg id="thread" width="2600" height="2600" viewBox="0 0 2600 2600" aria-hidden="true"></svg>
-  <div id="field"></div>
+  <div id="spiralwrap">
+    <svg id="thread" width="2600" height="2600" viewBox="0 0 2600 2600" aria-hidden="true"></svg>
+    <div id="field"></div>
+  </div>
   <div id="headline"></div>
   <div id="headring"></div>
   <div class="vignette"></div>
