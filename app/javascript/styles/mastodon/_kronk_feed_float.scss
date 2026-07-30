@@ -13,6 +13,18 @@
     background: transparent;
   }
 
+  // The Home column's grey outline (left / right / bottom of the
+  // scrollable + top-and-sides of the column-header) framed the whole
+  // feed as a rectangle, which read as a stock-Mastodon column even
+  // once the individual posts became floating cards. Strip the column
+  // header's borders too so the floating bubbles sit directly on the
+  // page background (Kosmos / --surface-primary), broken only by the
+  // InFlow veil.
+  .column-header {
+    border: 0;
+    background: transparent;
+  }
+
   // Each post floats as its own card; the gap between cards reveals the
   // Kosmos behind.
   .status__wrapper {
