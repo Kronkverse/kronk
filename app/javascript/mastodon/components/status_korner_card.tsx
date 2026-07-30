@@ -10,6 +10,14 @@ import { Icon } from 'mastodon/components/icon';
 // Wachuneed, Booth, Events…) uses when its post_type or attached record
 // warrants a distinguished feed presentation.
 //
+// STANDARD: a korner feed card is a WHOLE-CARD LINK — pass `to` (or a
+// navigating `onClick`, as the Event card does) so clicking anywhere on the
+// card opens its record. Render any call-to-action as a plain
+// `<span className='status-korner-card__action'>…</span>` visual affordance,
+// NOT a nested `<Link>` (no interactive element inside the card link). Inner
+// controls that need their own action (RSVP, external links) opt out via
+// stopPropagation.
+//
 // The wrapper owns:
 //   - the outer container (border, box-shadow)
 //   - the badge row (icon + label + optional tag)
