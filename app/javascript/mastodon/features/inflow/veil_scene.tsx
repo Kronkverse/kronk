@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+import { createPortal } from 'react-dom';
 
 import {
   getMoonIllumination,
@@ -6,20 +8,20 @@ import {
   getMoonRiseSet,
   getDaylightInfo,
 } from 'mastodon/features/events/components/celestial_calendar';
-import { setKosmosBrightness } from 'mastodon/features/kosmos/brightness';
 
 import { buildDailyIntegrationText } from './components/daily_integration';
 import { LOCATION_LAT, LOCATION_LON, LOCATION_TZ } from './constants';
 
-// The InFlow veil — the feed parts to open onto the standard background.
+// The InFlow veil — the feed parts to reveal a night sky that was always there.
 //
-// There are no curtains and no veil-drawn stars: the opening is transparent, so
-// the shared KronkKosmos starfield (the ambient layer behind every space)
-// shows through. As the opening centres on scroll, we ramp that shared layer's
-// brightness up via setKosmosBrightness — the sky itself intensifies — with
-// tonight's moon and reading floating in it, then ramp back down as it closes.
-// The same scene drives the standalone /hub/inflow page. All data is live for
-// tonight's sky.
+// The night sky (moon + stars + reading) is a *fixed* backdrop: it does not
+// scroll. There is an opening (aperture) in the feed, and the fixed sky is
+// clipped to whatever slice of that opening is on screen — so as the post above
+// scrolls up its lower edge uncovers the stationary moon (it emerges from
+// underneath), you gaze at it while you read, and the post below then slides up
+// and covers it over again. The sky is rendered through a portal to <body> so
+// it escapes the feed's `contain`/overflow and can truly pin to the viewport.
+// All data is live for tonight's sky.
 
 function melbourneDateParts(now: Date): {
   year: number;
@@ -54,26 +56,6 @@ function fmtTime(d: Date | null): string {
     minute: '2-digit',
     hour12: false,
   });
-}
-
-// The nearest scrolling ancestor — the Stage on /hub/inflow, the document in
-// the (single-column) home feed. Falls back to the window.
-function findScroller(el: HTMLElement): {
-  target: HTMLElement | Window;
-  isDoc: boolean;
-} {
-  let node = el.parentElement;
-  while (node) {
-    const oy = getComputedStyle(node).overflowY;
-    if (
-      (oy === 'auto' || oy === 'scroll') &&
-      node.scrollHeight > node.clientHeight
-    ) {
-      return { target: node, isDoc: false };
-    }
-    node = node.parentElement;
-  }
-  return { target: window, isDoc: true };
 }
 
 // A phase-accurate moon: the terminator shadow slides across the disc by the
@@ -120,11 +102,14 @@ const VeilMoon: React.FC<{ illumination: number; waning: boolean }> = ({
 };
 
 export const VeilScene: React.FC = () => {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const gapRef = useRef<HTMLDivElement>(null);
-  const moonRef = useRef<HTMLDivElement>(null);
-  const haloRef = useRef<HTMLDivElement>(null);
-  const readRef = useRef<HTMLDivElement>(null);
+  const apertureRef = useRef<HTMLDivElement>(null);
+  const nightskyRef = useRef<HTMLDivElement>(null);
+
+  // A body-level host for the fixed night sky, so it escapes the feed's
+  // overflow/contain and pins to the viewport.
+  const [host] = useState<HTMLElement | null>(() =>
+    typeof document === 'undefined' ? null : document.createElement('div'),
+  );
 
   const sky = useMemo(() => {
     const now = new Date();
@@ -143,75 +128,35 @@ export const VeilScene: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const root = rootRef.current;
-    const gap = gapRef.current;
-    if (!root || !gap) return;
+    if (!host) return;
+    host.className = 'inflow-veil__host';
+    document.body.appendChild(host);
+    return () => {
+      host.remove();
+    };
+  }, [host]);
 
-    const { target, isDoc } = findScroller(root);
-
-    // Measured against the visible viewport: for the document that's the
-    // window; for an element scroller (the Stage) it's the element's own box.
-    const topEdge = () =>
-      isDoc ? 0 : (target as HTMLElement).getBoundingClientRect().top;
-    const visibleHeight = () =>
-      isDoc
-        ? window.innerHeight
-        : Math.max(
-            320,
-            window.innerHeight -
-              (target as HTMLElement).getBoundingClientRect().top,
-          );
+  useEffect(() => {
+    const aperture = apertureRef.current;
+    const nightsky = nightskyRef.current;
+    if (!aperture || !nightsky) return;
 
     const setUnit = () => {
-      root.style.setProperty('--veil-vh', `${visibleHeight()}px`);
+      aperture.style.setProperty('--veil-vh', `${window.innerHeight}px`);
     };
     setUnit();
 
-    const clamp = (v: number, a: number, b: number) =>
-      Math.max(a, Math.min(b, v));
-    const smooth = (t: number) => {
-      const c = clamp(t, 0, 1);
-      return c * c * (3 - 2 * c);
-    };
-
-    if (window.matchMedia('(prefers-reduced-motion:reduce)').matches) {
-      window.addEventListener('resize', setUnit);
-      return () => {
-        window.removeEventListener('resize', setUnit);
-        setKosmosBrightness(0);
-      };
-    }
-
+    // Clip the fixed night sky to the on-screen slice of the aperture. The sky
+    // itself never moves; the clip edges are the edges of the posts above and
+    // below, so scrolling uncovers and re-covers the stationary moon.
     const frame = () => {
-      const top = topEdge();
-      const view = visibleHeight();
-      const gapRect = gap.getBoundingClientRect();
-      const gapTop = gapRect.top - top;
-
-      // Progress across the pinned range (0 as the opening engages the top of
-      // the viewport, 1 as it releases). `open` ramps up over the first third,
-      // holds, then eases back down — a symmetric reveal.
-      const denom = Math.max(1, gapRect.height - view);
-      const p = clamp(-gapTop / denom, 0, 1);
-      const open = Math.min(smooth(p / 0.35), smooth((1 - p) / 0.35));
-
-      // Drive the shared background: ambient (0) → full sky (1) → ambient.
-      setKosmosBrightness(open);
-
-      if (moonRef.current)
-        moonRef.current.style.transform = `translateY(${((0.5 - p) * 40).toFixed(2)}px) scale(${(0.9 + open * 0.1).toFixed(3)})`;
-      if (haloRef.current)
-        haloRef.current.style.opacity = (0.06 + open * 0.82).toFixed(3);
-      if (readRef.current) {
-        readRef.current.style.opacity = open.toFixed(3);
-        readRef.current.style.transform = `translateY(${((1 - open) * 18).toFixed(2)}px)`;
-      }
+      const r = aperture.getBoundingClientRect();
+      const v = window.innerHeight;
+      const top = Math.min(v, Math.max(0, r.top));
+      const bot = Math.min(v, Math.max(0, r.bottom));
+      nightsky.style.clipPath = `inset(${top.toFixed(1)}px 0 ${(v - bot).toFixed(1)}px 0)`;
     };
 
-    // Sample every frame while the opening is on (or near) screen, so async
-    // reflows above it — the friend-recommendation banner popping in, images
-    // loading — never leave the reveal (or the background brightness) stale.
-    // Gated by an IntersectionObserver so it's idle everywhere else.
     let rafId = 0;
     let running = false;
     const loop = () => {
@@ -221,6 +166,7 @@ export const VeilScene: React.FC = () => {
     const start = () => {
       if (!running) {
         running = true;
+        nightsky.classList.add('is-open');
         rafId = requestAnimationFrame(loop);
       }
     };
@@ -228,20 +174,18 @@ export const VeilScene: React.FC = () => {
       running = false;
       if (rafId) cancelAnimationFrame(rafId);
       rafId = 0;
-      setKosmosBrightness(0); // hand the sky back to ambient when we leave
+      nightsky.classList.remove('is-open');
     };
 
+    // Reveal the sky only while the opening is on (or near) screen.
     const io = new IntersectionObserver(
       (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          start();
-        } else {
-          stop();
-        }
+        if (entries.some((e) => e.isIntersecting)) start();
+        else stop();
       },
-      { rootMargin: '250px 0px' },
+      { rootMargin: '200px 0px' },
     );
-    io.observe(root);
+    io.observe(aperture);
 
     const onResize = () => {
       setUnit();
@@ -254,44 +198,48 @@ export const VeilScene: React.FC = () => {
       io.disconnect();
       if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener('resize', onResize);
-      setKosmosBrightness(0);
     };
-  }, []);
+  }, [host]);
 
   const lit = Math.round(sky.illum * 100);
 
-  return (
-    <div className='inflow-veil' ref={rootRef}>
-      <div className='inflow-veil__gap' ref={gapRef}>
-        <div className='inflow-veil__stage'>
-          <div className='inflow-veil__moonwrap' ref={moonRef}>
-            <div className='inflow-veil__halo' ref={haloRef} />
-            <VeilMoon illumination={sky.illum} waning={sky.waning} />
+  const nightsky = (
+    <div className='inflow-veil__nightsky' ref={nightskyRef} aria-hidden='true'>
+      <div className='inflow-veil__sky' />
+      <div className='inflow-veil__scene'>
+        <div className='inflow-veil__moonwrap'>
+          <div className='inflow-veil__halo' />
+          <VeilMoon illumination={sky.illum} waning={sky.waning} />
+        </div>
+        <div className='inflow-veil__read'>
+          <h2 className='inflow-veil__read-title'>Beyond the veil</h2>
+          <div className='inflow-veil__phase'>
+            {fmtPhase(sky.phase)} · {lit}% lit
           </div>
-
-          <div className='inflow-veil__read' ref={readRef}>
-            <h2 className='inflow-veil__read-title'>Beyond the veil</h2>
-            <div className='inflow-veil__phase'>
-              {fmtPhase(sky.phase)} · {lit}% lit
-            </div>
-            <p className='inflow-veil__reflection'>{sky.reflection}</p>
-            <div className='inflow-veil__almanac'>
-              <span>
-                Moonrise <b>{fmtTime(sky.moon.rise)}</b>
-              </span>
-              <span>
-                Moonset <b>{fmtTime(sky.moon.set)}</b>
-              </span>
-              <span>
-                Sunrise <b>{fmtTime(sky.daylight.rise)}</b>
-              </span>
-              <span>
-                Sunset <b>{fmtTime(sky.daylight.set)}</b>
-              </span>
-            </div>
+          <p className='inflow-veil__reflection'>{sky.reflection}</p>
+          <div className='inflow-veil__almanac'>
+            <span>
+              Moonrise <b>{fmtTime(sky.moon.rise)}</b>
+            </span>
+            <span>
+              Moonset <b>{fmtTime(sky.moon.set)}</b>
+            </span>
+            <span>
+              Sunrise <b>{fmtTime(sky.daylight.rise)}</b>
+            </span>
+            <span>
+              Sunset <b>{fmtTime(sky.daylight.set)}</b>
+            </span>
           </div>
         </div>
       </div>
+    </div>
+  );
+
+  return (
+    <div className='inflow-veil'>
+      <div className='inflow-veil__aperture' ref={apertureRef} />
+      {host ? createPortal(nightsky, host) : null}
     </div>
   );
 };
