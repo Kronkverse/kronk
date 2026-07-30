@@ -50,6 +50,12 @@
           %span.hub-switcher__label.hub-switcher__label--sr Nudges
     .hub-switcher__wire{ 'aria-hidden' => 'true' }
 
+  - if user_signed_in?
+    -# Invite button — top-band grid column 3, matching what <InviteButton> renders on SPA routes. Rails pages can't open the JS modal, so this links to the classic /invites page.
+    %a.kronk-invite-button{ href: invites_path, 'aria-label': 'Invite someone to Kronk', title: 'Invite someone to Kronk' }
+      %span.kronk-invite-button__icon{ 'aria-hidden' => 'true' }
+        = material_symbol('person_add-fill')
+
 - if user_signed_in?
   %aside.kronk-frame__right-band
     %nav.korner-sidebar{ 'aria-label' => 'Korners' }
