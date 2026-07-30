@@ -252,6 +252,39 @@ $tile-shadow-2: #17151f;
     background: rgb(0 0 0 / 50%);
   }
 
+  // ── "+" propose-a-korner tile ───────────────────────────────────
+  // Sits at the end of the live board. Dashed border + flat surface
+  // so it reads as an affordance ("add something") rather than a
+  // korner tile in its own right. Lifts on hover like the others.
+  &__tile--propose {
+    background: transparent;
+    border: 1.5px dashed color-mix(in oklab, var(--accent), #fff 8%);
+    box-shadow: none;
+    opacity: 0.85;
+
+    &:hover {
+      opacity: 1;
+      border-color: var(--accent);
+      transform: translateY(2px);
+      box-shadow: none;
+    }
+
+    .hub-page__tile-glyph {
+      color: color-mix(in oklab, var(--accent), #fff 12%);
+      filter: none;
+    }
+
+    &:hover .hub-page__tile-glyph {
+      color: var(--accent);
+      filter: none;
+    }
+
+    .hub-page__tile-name {
+      color: color-mix(in oklab, var(--accent), #fff 4%);
+      font-weight: 500;
+    }
+  }
+
   // ── off state (coming-soon) ─────────────────────────────────────
   &__tile--off {
     background: linear-gradient(160deg, #26253a, #1f1e2d);

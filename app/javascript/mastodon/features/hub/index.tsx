@@ -5,6 +5,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { Icon } from 'mastodon/components/icon';
@@ -31,7 +32,20 @@ import { useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({
   title: { id: 'hub.title', defaultMessage: 'Hub' },
+  proposeKorner: {
+    id: 'hub.propose_korner',
+    defaultMessage: 'Propose a new korner',
+  },
+  proposeKornerTip: {
+    id: 'hub.propose_korner_tip',
+    defaultMessage: 'Missing something? Draft it via Kommons.',
+  },
 });
+
+// Route to the Kommons propose page pre-scoped to the "new korner" node.
+// The propose page reads `node=kommons.new_korner` and swaps into its
+// tailored korner-composer copy (title = korner name, structured fields).
+const PROPOSE_KORNER_HREF = '/hub/kommons/propose?node=kommons.new_korner';
 
 // The settings gear sits above the tile link (position: absolute), so
 // even without stopPropagation it never bubbles into the Link. The
@@ -100,6 +114,32 @@ const KornerTile: React.FC<{ korner: ApiKornerJSON; alert?: boolean }> = ({
   );
 };
 
+// "+" tile — always the last tile in the live board. Missing a
+// korner? Draft one via Kommons. Same shell as `KornerTile` so it sits
+// inside the same grid rhythm, minus the gear + activity affordances.
+const ProposeKornerTile: React.FC = () => {
+  const intl = useIntl();
+  const label = intl.formatMessage(messages.proposeKorner);
+  const tip = intl.formatMessage(messages.proposeKornerTip);
+
+  return (
+    <div
+      className='hub-page__tile hub-page__tile--propose'
+      data-slug='__propose__'
+    >
+      <Link
+        to={PROPOSE_KORNER_HREF}
+        className='hub-page__tile-link'
+        aria-label={label}
+      >
+        <Icon id='add' icon={AddIcon} className='hub-page__tile-glyph' />
+        <span className='hub-page__tile-name'>{label}</span>
+        <span className='hub-page__tile-tip'>{tip}</span>
+      </Link>
+    </div>
+  );
+};
+
 const Hub: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const korners = useKorners();
@@ -142,6 +182,7 @@ const Hub: React.FC<{ multiColumn?: boolean }> = () => {
                 alert={unreadKornerSlugs.has(k.slug)}
               />
             ))}
+            <ProposeKornerTile />
           </div>
         )}
 
