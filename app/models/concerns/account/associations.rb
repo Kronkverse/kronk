@@ -103,6 +103,11 @@ module Account::Associations
     has_many :owned_albums, class_name: 'Album', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
     has_many :album_photo_contributions, class_name: 'AlbumPhoto', foreign_key: :contributor_id, inverse_of: :contributor, dependent: :destroy
 
+    # Moments — ephemeral photo/video posts this account has shared
+    # (MomentsController#create builds through `current_account.moments`).
+    # Cascade destroy: a Moment goes with its author.
+    has_many :moments, inverse_of: :account, dependent: :destroy
+
     # Sectioned profile ordering (§Profile) — every account has a
     # baseline `timeline` section on signup.
     has_many :profile_sections, inverse_of: :account, dependent: :destroy
