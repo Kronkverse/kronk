@@ -774,17 +774,75 @@ body:has(.korner-sub-bar) {
   }
 }
 
-// ── Visibility popup — Kronk drop-down menu style ────────────────────
-// Restyled to feel like the Ӂ (KronkMenu) drop-down rather than a
-// generic OS-style popup: layered purple-tinted elevation, backdrop
-// blur, --radius-large corners, spring entry, and row hover matching
-// kronk-menu items (color-mix purple wash + gentle translateX).
-// Simplified rows too — the description text (`meta`) collapses to a
-// muted single-line hint under the label so the menu reads as a menu,
-// not a densely captioned overlay.
-// Scoped to `.privacy-dropdown__dropdown` and its options, so the
+// ── Visibility picker — Kronk aesthetic override ─────────────────────
+// The compose visibility control opens a modal (`.visibility-modal`)
+// containing a Dropdown with `classPrefix='visibility-dropdown'`. Both
+// the trigger button and its popup were stock Mastodon chrome (grey
+// input surface, sharp 4px corners, blue focus). Retarget them plus
+// the older `.privacy-dropdown__*` classes (still used by other
+// consumers of the same shared DropdownSelector) to Kronk semantic
+// tokens with the KronkMenu (Ӂ) menu-language: layered purple-tinted
+// elevation, backdrop blur, --radius-large corners, spring entry, and
+// row hover with translateX + purple wash.
+// Scoped to `.privacy-dropdown__*` + `.visibility-dropdown__*` — the
 // emoji picker and language dropdown keep their existing look.
-.privacy-dropdown__dropdown {
+
+// The trigger button inside the visibility modal.
+.visibility-dropdown__button {
+  background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  color: var(--text-primary);
+  height: auto;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.95rem;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 40%,
+      var(--border-default)
+    );
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 6%,
+      var(--surface-elevated)
+    );
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--kronk-purple-accent);
+    outline-offset: 2px;
+  }
+
+  &.active {
+    border-color: var(--kronk-purple-accent);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 10%,
+      var(--surface-elevated)
+    );
+  }
+}
+
+.visibility-dropdown__label {
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.5rem;
+}
+
+.visibility-dropdown__helper {
+  color: var(--text-muted);
+  margin-top: 0.4rem;
+}
+
+.privacy-dropdown__dropdown,
+.visibility-dropdown__dropdown {
   background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
   border: 1px solid
     color-mix(in oklab, var(--kronk-purple-accent) 20%, var(--border-default));
@@ -807,7 +865,8 @@ body:has(.korner-sub-bar) {
   }
 }
 
-.privacy-dropdown__option {
+.privacy-dropdown__option,
+.visibility-dropdown__option {
   --dropdown-text-color: var(--text-primary);
 
   border-radius: var(--radius-medium);
@@ -840,12 +899,17 @@ body:has(.korner-sub-bar) {
 
     .privacy-dropdown__option__content,
     .privacy-dropdown__option__content strong,
-    .privacy-dropdown__option__additional {
+    .privacy-dropdown__option__additional,
+    .visibility-dropdown__option__content,
+    .visibility-dropdown__option__content strong,
+    .visibility-dropdown__option__additional {
       color: var(--surface-primary);
     }
 
-    .privacy-dropdown__option__icon {
+    .privacy-dropdown__option__icon,
+    .visibility-dropdown__option__icon {
       color: var(--surface-primary);
+      background: color-mix(in oklab, var(--surface-primary) 15%, transparent);
     }
   }
 
