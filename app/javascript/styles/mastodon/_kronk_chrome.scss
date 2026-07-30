@@ -772,6 +772,90 @@ body:has(.korner-sub-bar) {
     background: transparent;
     box-shadow: none;
   }
+
+  // Collapsed variant — single-line pill + Ӂ sigil button. Click either
+  // half → expands into the full compose form. Matches the aesthetic of
+  // the KronkMenu (Ӂ) so it reads as a peer surface, not a form.
+  &--collapsed {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.65rem;
+  }
+
+  &__collapsed-input {
+    flex: 1 1 auto;
+    padding: 0.65rem 0.9rem;
+    background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    color: var(--text-muted);
+    text-align: start;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    cursor: text;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      border-color: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 40%,
+        var(--border-default)
+      );
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 6%,
+        var(--surface-elevated)
+      );
+      outline: none;
+    }
+  }
+
+  &__collapsed-text {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  &__sigil {
+    flex: 0 0 auto;
+    width: 2.35rem;
+    height: 2.35rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-round);
+    background: var(--kronk-purple-accent);
+    color: var(--surface-primary);
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px -2px
+      color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: var(--kronk-purple-bright);
+      transform: scale(1.05);
+      outline: none;
+      box-shadow: 0 4px 14px -2px
+        color-mix(in oklab, var(--kronk-purple-bright) 75%, transparent);
+    }
+  }
 }
 
 // ── Visibility picker — Kronk aesthetic override ─────────────────────
