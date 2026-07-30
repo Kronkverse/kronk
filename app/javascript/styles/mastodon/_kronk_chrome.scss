@@ -153,6 +153,68 @@ body.admin {
   }
 }
 
+// ── Invite button — top-band, right slot ───────────────────────────
+// A vivid Kronk-purple pill in the TopBand's grid column 3 (right).
+// Opens the InviteModal (QR + shareable link). Standout affordance —
+// solid brand-purple with a glow — because "invite people you know"
+// is one of the actions Kronk deliberately makes discoverable.
+.kronk-invite-button {
+  grid-column: 3;
+  justify-self: end;
+  align-self: center;
+  z-index: 25;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-round);
+  color: #fff;
+  background: linear-gradient(
+    135deg,
+    var(--kronk-purple-accent),
+    var(--kronk-purple-bright)
+  );
+  cursor: pointer;
+  box-shadow:
+    0 4px 14px -2px color-mix(in oklab, var(--kronk-purple-accent) 65%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--kronk-purple-bright) 40%, transparent);
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    filter var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    transform: scale(1.06);
+    filter: brightness(1.1);
+    box-shadow:
+      0 6px 20px -2px color-mix(in oklab, var(--kronk-purple-bright) 80%, transparent),
+      0 0 0 2px color-mix(in oklab, var(--kronk-purple-bright) 60%, transparent);
+    outline: none;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &__icon {
+    display: inline-flex;
+
+    svg {
+      width: 1.25rem;
+      height: 1.25rem;
+      fill: currentcolor;
+    }
+  }
+
+  // On mobile the whole TopBand hides (see .kronk-frame__top-band
+  // media query), so no override is needed here — the button rides
+  // that visibility.
+}
+
 // ── Hub switcher — the Membrane nav ────────────────────────────────
 // Spec: KRONK_MEMBRANE_NAV. A row of flat text pillars (Me / Home /
 // Hub / Nudges) with a 1px wire along the bottom edge and a pool of
