@@ -774,60 +774,108 @@ body:has(.korner-sub-bar) {
   }
 }
 
-// ── Visibility popup (privacy dropdown) — Kronk aesthetic override ──
-// The Mastodon compose visibility picker uses `.privacy-dropdown__*`
-// classes originally styled against generic dropdown tokens (dark grey
-// surface, blue focus, 4px radius). Retarget the popup + its options
-// to Kronk semantic tokens — surface-elevated background, purple-tinted
-// border, kronk-purple-accent for the active row, and named radius
-// tokens (10px for the panel, 6px for the row). Only touches the
-// visibility popup selector so other dropdowns (emoji, language) keep
-// their existing look.
+// ── Visibility popup — Kronk drop-down menu style ────────────────────
+// Restyled to feel like the Ӂ (KronkMenu) drop-down rather than a
+// generic OS-style popup: layered purple-tinted elevation, backdrop
+// blur, --radius-large corners, spring entry, and row hover matching
+// kronk-menu items (color-mix purple wash + gentle translateX).
+// Simplified rows too — the description text (`meta`) collapses to a
+// muted single-line hint under the label so the menu reads as a menu,
+// not a densely captioned overlay.
+// Scoped to `.privacy-dropdown__dropdown` and its options, so the
+// emoji picker and language dropdown keep their existing look.
 .privacy-dropdown__dropdown {
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-medium);
+  background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
+  border: 1px solid
+    color-mix(in oklab, var(--kronk-purple-accent) 20%, var(--border-default));
+  border-radius: var(--radius-large);
   padding: 6px;
+  min-width: 12rem;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   box-shadow:
-    0 12px 32px rgb(0 0 0 / 30%),
-    0 4px 12px rgb(0 0 0 / 20%);
+    0 18px 40px -10px rgb(0 0 0 / 45%),
+    0 4px 14px -4px
+      color-mix(in oklab, var(--kronk-purple-accent) 28%, transparent),
+    inset 0 1px 0
+      color-mix(in oklab, var(--kronk-purple-accent) 6%, transparent);
+  animation: kronk-menu-in var(--dur-medium) var(--ease-spring);
+  transform-origin: top left;
+
+  &.top {
+    transform-origin: bottom left;
+  }
 }
 
 .privacy-dropdown__option {
-  border-radius: var(--radius-small);
-  padding: 10px 12px;
+  --dropdown-text-color: var(--text-primary);
+
+  border-radius: var(--radius-medium);
+  padding: 0.65rem 0.75rem;
+  gap: 0.75rem;
   color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.25;
   transition:
     background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out),
     color var(--dur-fast) var(--ease-out);
 
   &:hover,
   &:active {
     background: color-mix(
       in oklab,
-      var(--kronk-purple-bright) 15%,
+      var(--kronk-purple-accent) 15%,
       transparent
     );
     color: var(--text-primary);
+    transform: translateX(2px);
   }
 
   &:focus,
   &.active {
     background: var(--kronk-purple-accent);
-    color: #fff;
+    color: var(--surface-primary);
+    outline: 0;
 
     .privacy-dropdown__option__content,
     .privacy-dropdown__option__content strong,
     .privacy-dropdown__option__additional {
-      color: #fff;
+      color: var(--surface-primary);
+    }
+
+    .privacy-dropdown__option__icon {
+      color: var(--surface-primary);
     }
   }
 
+  &__icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: var(--radius-small);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 12%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+  }
+
   &__content {
-    color: var(--text-secondary);
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    line-height: 1.3;
 
     strong {
       color: var(--text-primary);
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 1px;
     }
   }
 
