@@ -6,7 +6,7 @@
 # under `profile`. It now owns the `settings` bucket and this manifest. The
 # space is a hub AND a contextual entry: /settings aggregates the personal and
 # account-level controls, while each korner and core space declares its own
-# settings surface (feed → /home/settings, hub → /settings/korners, each korner
+# settings surface (feed → /home/settings, hub → /hub/settings, each korner
 # → /hub/<slug>/settings). See docs/spaces/settings.md.
 
 slug: settings

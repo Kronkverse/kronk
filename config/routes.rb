@@ -187,7 +187,7 @@ Rails.application.routes.draw do
   # settings module. Add here as new ones ship.
   get '/settings/profile_sections', to: 'home#index'
   get '/settings/you', to: 'home#index'
-  get '/settings/korners', to: 'home#index'
+  get '/hub/settings', to: 'home#index'
   get '/settings/appearance', to: 'home#index'
   get '/settings/posting', to: 'home#index'
   get '/settings/notifications', to: 'home#index'

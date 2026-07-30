@@ -32,7 +32,9 @@ export const AutoSpaceHeader: React.FC = () => {
 
   const korner = useKorner(slug);
 
-  if (!slug || !korner) return null;
+  // Core spaces (e.g. settings at /hub/settings) render their own header, not
+  // a korner landing header.
+  if (!slug || !korner || korner.core) return null;
 
   // A path segment that isn't one of the korner's declared views is a
   // detail sub-page (an id, `settings`, `new`, …) — no landing header

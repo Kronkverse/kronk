@@ -250,7 +250,7 @@ nodes:
   - id: settings.hub
     bucket: hub
     label: Hub settings
-    url: /settings/korners
+    url: /hub/settings
     lifecycle: live
     spa: true
 

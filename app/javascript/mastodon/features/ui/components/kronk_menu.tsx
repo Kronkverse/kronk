@@ -39,9 +39,16 @@ const messages = defineMessages({
     id: 'kronk_menu.settings_profile',
     defaultMessage: 'Profile settings',
   },
+  settings_hub: {
+    id: 'kronk_menu.settings_hub',
+    defaultMessage: 'Hub settings',
+  },
 });
 
 const KORNER_RE = /^\/hub\/([a-z0-9-]+)(?:\/|$)/;
+// The Hub's own settings limb — matches the hub landing (/hub) and /hub/settings.
+// "settings" is a reserved slug, so this never shadows a real korner.
+const HUB_SETTINGS_RE = /^\/hub(?:\/settings)?\/?$/;
 const PROFILE_RE = /^\/@([^/]+)(?:\/|$)/;
 const FEED_RE = /^\/home(?:\/|$)/;
 const NUDGES_RE = /^\/nudges(?:\/|$)/;
@@ -145,6 +152,17 @@ const useSettingsTarget = (): SettingsTarget => {
   const myAcct = myAccount?.get('acct');
 
   return useMemo(() => {
+    // The Hub configures itself in its own limb (/hub/settings), symmetric with
+    // feed → /home/settings. Must precede the korner branch: KORNER_RE would
+    // otherwise treat "settings" as a korner slug and send you to
+    // /hub/settings/settings.
+    if (HUB_SETTINGS_RE.test(location.pathname)) {
+      return {
+        href: '/hub/settings',
+        label: intl.formatMessage(messages.settings_hub),
+        external: false,
+      };
+    }
     if (kornerSlug) {
       return {
         href: `/hub/${kornerSlug}/settings`,

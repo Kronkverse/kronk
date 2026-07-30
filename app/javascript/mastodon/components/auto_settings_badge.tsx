@@ -6,6 +6,7 @@ import { SettingsBadge } from './settings_badge';
 // Frame's SpaceNav slot whenever the caller is on a settings LEAF:
 //
 //   * /settings/<section>        → personal settings sub-page
+//   * /hub/settings              → the Hub's own settings (korners list)
 //   * /hub/<slug>/settings       → per-korner settings page
 //
 // Skips the Settings Hub itself (bare /settings) — the hub IS the
@@ -15,7 +16,7 @@ import { SettingsBadge } from './settings_badge';
 // suffix) can stay mounted alongside without doubling up.
 
 const SETTINGS_LEAF_RE =
-  /^\/(?:settings\/[^/]+|hub\/[a-z0-9-]+\/settings(?:\/|$))/;
+  /^\/(?:settings\/[^/]+|hub\/(?:[a-z0-9-]+\/)?settings(?:\/|$))/;
 
 export const AutoSettingsBadge: React.FC = () => {
   const { pathname } = useLocation();

@@ -37,7 +37,9 @@ export const AutoSpaceBadge: React.FC = () => {
   if (!slug) return null;
 
   const korner = korners[slug];
-  if (!korner) return null;
+  // Core spaces (e.g. settings at /hub/settings) are not korners and get no
+  // korner badge — their own chrome (SettingsBadge) takes the slot instead.
+  if (!korner || korner.core) return null;
 
   const glyph = korner.icon?.text_glyph ?? korner.name.charAt(0).toUpperCase();
   return <SpaceBadge glyph={glyph} name={korner.name} backTo='/hub' />;
