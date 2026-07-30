@@ -780,7 +780,6 @@ class UI extends PureComponent {
             <KronkFrame.TopBand>
               <KronkWordmark />
               {layout !== 'mobile' && <HubSwitcher variant='top' currentAccountUsername={this.props.username} />}
-              {this.props.identity.signedIn && <InviteButton />}
             </KronkFrame.TopBand>
             {/* Frame-provided per-space nav lives inline via
                 <SpaceHeaderRow> inside Stage now (see
@@ -809,6 +808,7 @@ class UI extends PureComponent {
           <AlertsController />
 
           <KornerSubBar />
+          {this.props.identity.signedIn && <InviteButton />}
           {this.props.identity.signedIn && <KronkMenu />}
           {!disableHoverCards && <HoverCardController />}
           <HashtagMenuController />

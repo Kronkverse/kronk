@@ -153,16 +153,25 @@ body.admin {
   }
 }
 
-// ── Invite button — top-band, right slot ───────────────────────────
-// A vivid Kronk-purple pill in the TopBand's grid column 3 (right).
-// Opens the InviteModal (QR + shareable link). Standout affordance —
-// solid brand-purple with a glow — because "invite people you know"
-// is one of the actions Kronk deliberately makes discoverable.
+// ── Invite button — floating FAB, top-right corner ─────────────────
+// Standalone `position: fixed` element, mounted outside the KronkFrame
+// grid (see ui/index.jsx — same tier as KronkMenu). Reasons this is a
+// FAB rather than a TopBand grid child:
+//   * TopBand hides entirely on mobile (≤629px), so a grid-slotted
+//     button would be invisible where people invite most.
+//   * TopBand's right column sits inside the RightBand's 7.75rem fixed
+//     strip on desktop, and RightBand's opaque gradient kept covering
+//     it at every z-index tier we tried.
+// A fixed FAB steers clear of both problems: top-right corner on every
+// viewport, z-index above every band and every stage surface. Standout
+// affordance — solid brand-purple pill with a glow — because
+// "invite people you know" is one of the actions Kronk deliberately
+// makes discoverable.
 .kronk-invite-button {
-  grid-column: 3;
-  justify-self: end;
-  align-self: center;
-  z-index: 25;
+  position: fixed;
+  top: 0.85rem;
+  right: 0.85rem;
+  z-index: 40;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -210,9 +219,12 @@ body.admin {
     }
   }
 
-  // On mobile the whole TopBand hides (see .kronk-frame__top-band
-  // media query), so no override is needed here — the button rides
-  // that visibility.
+  // Mobile: the top-band collapses to zero, but the FAB stays visible.
+  // Nudge inside a bit and clear any safe-area inset.
+  @media (width <= 629px) {
+    top: max(0.75rem, env(safe-area-inset-top));
+    right: 0.75rem;
+  }
 }
 
 // ── Hub switcher — the Membrane nav ────────────────────────────────

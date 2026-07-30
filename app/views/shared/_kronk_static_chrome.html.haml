@@ -50,12 +50,6 @@
           %span.hub-switcher__label.hub-switcher__label--sr Nudges
     .hub-switcher__wire{ 'aria-hidden' => 'true' }
 
-  - if user_signed_in?
-    -# Invite button — top-band grid column 3, matching what <InviteButton> renders on SPA routes. Rails pages can't open the JS modal directly, so this deep-links into /home?invite=1; the SPA's InviteButton detects the query param on mount, dispatches openModal('INVITE'), and cleans the URL. Result: same button, same modal (QR + copy-link) whether the user starts from an SPA route or a Rails-served /kronk/* page.
-    %a.kronk-invite-button{ href: '/home?invite=1', 'aria-label': 'Invite someone to Kronk', title: 'Invite someone to Kronk' }
-      %span.kronk-invite-button__icon{ 'aria-hidden' => 'true' }
-        = material_symbol('person_add-fill')
-
 - if user_signed_in?
   %aside.kronk-frame__right-band
     %nav.korner-sidebar{ 'aria-label' => 'Korners' }
@@ -70,6 +64,17 @@
                 = k.name.first.upcase
             %span.korner-sidebar__label= k.name
       %a.korner-sidebar__all{ href: '/hub', title: 'All korners', 'data-name': 'All korners' } ⋯
+
+  -# Invite button — standalone fixed FAB (top-right), matching what
+  -# <InviteButton> renders on SPA routes. Rails pages can't open the
+  -# JS modal directly, so this deep-links into /home?invite=1; the
+  -# SPA's InviteButton detects the query param on mount, dispatches
+  -# openModal('INVITE'), and cleans the URL. Same button, same modal
+  -# (QR + copy-link), whether the user starts on an SPA route or a
+  -# Rails-served /kronk/* page.
+  %a.kronk-invite-button{ href: '/home?invite=1', 'aria-label': 'Invite someone to Kronk', title: 'Invite someone to Kronk' }
+    %span.kronk-invite-button__icon{ 'aria-hidden' => 'true' }
+      = material_symbol('person_add-fill')
 
   .kronk-menu
     %a.kronk-menu__trigger{ href: '/publish', 'aria-label': 'Post', title: 'Post' }
