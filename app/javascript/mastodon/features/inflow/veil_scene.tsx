@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import { Icon } from 'mastodon/components/icon';
 import {
   getMoonIllumination,
   getMoonPhaseName,
@@ -38,6 +39,40 @@ function melbourneDateParts(now: Date): {
   const read = (type: string): number =>
     parseInt(parts.find((p) => p.type === type)?.value ?? '0', 10);
   return { year: read('year'), month: read('month'), day: read('day') };
+}
+
+// Melbourne-local YYYY-MM-DD — the "day" key the veil collapses against.
+// Anchoring to Melbourne (LOCATION_TZ) keeps the veil's daily reopen tied
+// to the same day-boundary as the sky data (moonrise/set, daylight),
+// rather than the user's local midnight which would drift.
+function melbourneDayKey(now: Date = new Date()): string {
+  const { year, month, day } = melbourneDateParts(now);
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+// Persistence key for "veil was collapsed by the user on this day". If
+// the stored value matches today's Melbourne day key, the veil starts
+// collapsed; otherwise it starts expanded — so a new day intentionally
+// reopens the veil for everyone.
+const COLLAPSE_STORAGE_KEY = 'kronk.inflow_veil.collapsed_on';
+
+function readCollapsedOn(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(COLLAPSE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeCollapsedOn(dayKey: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(COLLAPSE_STORAGE_KEY, dayKey);
+  } catch {
+    // Silent — persistence is best-effort. If storage is unavailable
+    // (private mode, quota, etc.), the veil just re-expands next mount.
+  }
 }
 
 // getMoonPhaseName returns a snake_case key (e.g. "full_moon").
@@ -111,6 +146,25 @@ export const VeilScene: React.FC = () => {
   const apertureRef = useRef<HTMLDivElement>(null);
   const nightskyRef = useRef<HTMLDivElement>(null);
 
+  // Start collapsed if the user collapsed the veil earlier today
+  // (Melbourne day). A fresh day always starts expanded — that's the
+  // "daily reopen" behaviour.
+  const [expanded, setExpanded] = useState<boolean>(() => {
+    return readCollapsedOn() !== melbourneDayKey();
+  });
+
+  const handleCollapse = useCallback(() => {
+    writeCollapsedOn(melbourneDayKey());
+    setExpanded(false);
+  }, []);
+
+  // Reopen is session-only: it flips the local state back to expanded
+  // but does NOT clear the stored day key. If the user closes again,
+  // the veil stays collapsed for the rest of the day.
+  const handleExpand = useCallback(() => {
+    setExpanded(true);
+  }, []);
+
   // A body-level host for the fixed night sky, so it escapes the feed's
   // overflow/contain and pins to the viewport.
   const [host] = useState<HTMLElement | null>(() =>
@@ -143,6 +197,7 @@ export const VeilScene: React.FC = () => {
   }, [host]);
 
   useEffect(() => {
+    if (!expanded) return;
     const aperture = apertureRef.current;
     const nightsky = nightskyRef.current;
     if (!aperture || !nightsky) return;
@@ -205,15 +260,24 @@ export const VeilScene: React.FC = () => {
       if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener('resize', onResize);
     };
-  }, [host]);
+  }, [host, expanded]);
 
   const lit = Math.round(sky.illum * 100);
 
   const nightsky = (
-    <div className='inflow-veil__nightsky' ref={nightskyRef} aria-hidden='true'>
-      <div className='inflow-veil__sky' />
+    <div className='inflow-veil__nightsky' ref={nightskyRef}>
+      <div className='inflow-veil__sky' aria-hidden='true' />
       <div className='inflow-veil__scene'>
-        <div className='inflow-veil__moonwrap'>
+        <button
+          type='button'
+          className='inflow-veil__close'
+          onClick={handleCollapse}
+          aria-label='Close the InFlow veil'
+          title='Close the InFlow veil'
+        >
+          <Icon id='times' icon={CloseIcon} />
+        </button>
+        <div className='inflow-veil__moonwrap' aria-hidden='true'>
           <div className='inflow-veil__halo' />
           <VeilMoon illumination={sky.illum} waning={sky.waning} />
         </div>
@@ -241,6 +305,31 @@ export const VeilScene: React.FC = () => {
       </div>
     </div>
   );
+
+  if (!expanded) {
+    // Sits in the same feed slot as the expanded veil, just a compact
+    // pill instead of a viewport-wide aperture. Clicking reopens the
+    // veil for the rest of the session (does not clear the day key —
+    // if the user closes again, it stays collapsed).
+    return (
+      <button
+        type='button'
+        className='inflow-veil-collapsed'
+        onClick={handleExpand}
+        aria-label='Reopen the InFlow veil'
+      >
+        <span className='inflow-veil-collapsed__moon' aria-hidden='true'>
+          <VeilMoon illumination={sky.illum} waning={sky.waning} />
+        </span>
+        <span className='inflow-veil-collapsed__body'>
+          <span className='inflow-veil-collapsed__title'>Beyond the veil</span>
+          <span className='inflow-veil-collapsed__meta'>
+            {fmtPhase(sky.phase)} · {lit}% lit · tap to reopen
+          </span>
+        </span>
+      </button>
+    );
+  }
 
   return (
     <div className='inflow-veil'>
