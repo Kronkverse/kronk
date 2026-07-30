@@ -1,0 +1,43 @@
+# frozen_string_literal: true
+# Kronk locale overrides for English strings.
+#
+# Rails merges `config/locales/*.yml` in load order and later files
+# overwrite earlier ones for the same key path. This file loads AFTER
+# `en.yml` (alphabetically 'k' > 'e'), so the keys below replace
+# the upstream Mastodon copy without touching the base file — that
+# keeps upstream syncs low-friction (upstream `en.yml` diffs cleanly;
+# our overrides live entirely in this file).
+#
+# Scope: **user-facing strings only** — landing page, sign-up flow,
+# email confirmation, noscript fallback, unsubscribe pages, author
+# attribution. Admin dashboard / operator-facing strings are left
+# upstream (they read "Mastodon" because that IS the software the
+# operator manages; touching them adds i18n merge cost with little
+# user-visible gain).
+#
+# Sweep #2 of the legacy Mastodon-code retirement — see the PR body
+# and #974 for sweep #1 (chrome).
+
+en:
+  about:
+    about_mastodon_html: 'Kronk — a social network built for the ephemeral, the meaningful, and the shared. No ads, no surveillance. Own your data.'
+    hosted_on: Kronk hosted on %{domain}
+  auth:
+    description:
+      prefix_invited_by_user: "@%{name} invites you to join this Kronk!"
+      prefix_sign_up: Sign up on Kronk today!
+      suffix: With an account, you will be able to make Mates, share Moments, join Krews, and take part in the whole Kronk platform.
+    setup:
+      email_settings_hint_html: Click the link we sent to %{email} to begin using Kronk. We'll wait right here.
+    sign_up:
+      preamble: With an account on this Kronk you'll be able to make Mates, join Krews, and take part in every korner of the platform.
+  author_attribution:
+    hint_html: Are you writing news or blog articles outside of Kronk? Control how you get credited when they are shared on Kronk.
+  errors:
+    noscript_html: To use Kronk, please enable JavaScript.
+  mail_subscriptions:
+    unsubscribe:
+      confirmation_html: Are you sure you want to unsubscribe from receiving %{type} for Kronk on %{domain} to your email at %{email}? You can always re-subscribe from your <a href="%{settings_path}">email notification settings</a>.
+      success_html: You'll no longer receive %{type} for Kronk on %{domain} to your email at %{email}.
+  privacy:
+    hint_html: "<strong>Customize how you want your profile and your posts to be found.</strong> A variety of features in Kronk can help you reach a wider audience when enabled. Take a moment to review these settings to make sure they fit your use case."
