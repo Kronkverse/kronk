@@ -57,8 +57,12 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
    that settles to rest. Wraps the thread + day cells (grouped so the star
    backdrop and the read-head indicators stay still). #field is never
    JS-transformed, so animating the group is safe. */
-#spiralwrap{position:absolute;inset:0;transform-origin:50% 44%;
-  animation:kalendar-spiral-in 1400ms cubic-bezier(.22,.61,.36,1) both}
+#spiralwrap{position:absolute;inset:0;transform-origin:50% 44%}
+/* Triggered by JS (adds .enter) on the first render frame, AFTER the
+   spiral is built — otherwise the animation auto-runs at parse, on an
+   empty #field, and finishes during the black load before the cells
+   exist, so it just pops in. */
+#spiralwrap.enter{animation:kalendar-spiral-in 1400ms cubic-bezier(.22,.61,.36,1) both}
 @keyframes kalendar-spiral-in{
   from{opacity:0;transform:rotate(230deg) scale(1.7)}
   40%{opacity:1}
@@ -291,7 +295,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 }
 @media (prefers-reduced-motion:reduce){
   #sheet{transition:none}
-  #spiralwrap{animation:none}
+  #spiralwrap.enter{animation:none}
 }
 </style>
 </head>
@@ -1110,6 +1114,13 @@ sheetEl.addEventListener('wheel', e => {
 rebind(true);
 renderSheet(0);
 requestAnimationFrame(layout);
+// Start the spiral-in animation on the first frame, after layout() has
+// placed the cells — this frame's paint is the animation's opening
+// state, so it winds in on visible content instead of popping.
+requestAnimationFrame(() => {
+  const sw = document.getElementById('spiralwrap');
+  if (sw) sw.classList.add('enter');
+});
 stage.focus();
 /* opens on the spiral alone, at today. The sheet arrives when you settle. */
 </script>
