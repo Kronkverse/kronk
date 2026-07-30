@@ -1,10 +1,13 @@
 @use 'variables' as *;
 
+// Annual report ramp — retinted from Mastodon's blurple ladder to
+// Kronk purple (OKLCH hue 285°). The names keep --indigo-* for
+// upstream compatibility, but the values now sit on the Kronk hue.
 :root {
-  --indigo-1: #17063b;
-  --indigo-2: #2f0c7a;
-  --indigo-3: #562cfc;
-  --indigo-5: #858afa;
+  --indigo-1: #17063b; // deepest — already close to Kronk purple-deep
+  --indigo-2: #2f0c7a; // Kronk purple-deep
+  --indigo-3: #4414cc; // Kronk purple-accent (was Mastodon #562cfc)
+  --indigo-5: #8869e5; // Kronk purple-bright (was Mastodon #858afa)
   --indigo-6: #cccfff;
   --lime: #baff3b;
   --goldenrod-2: #ffc954;

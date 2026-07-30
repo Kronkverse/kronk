@@ -12043,8 +12043,8 @@ noscript {
   margin-bottom: 5px;
   padding: 12px 16px;
   border-radius: 8px;
-  border: 1px solid #6364ff;
-  background: rgba(99, 100, 255, 12%);
+  border: 1px solid $ui-highlight-color;
+  background: rgba(68, 20, 204, 12%);
   cursor: pointer;
   transition:
     background 0.2s ease,
@@ -12055,7 +12055,7 @@ noscript {
   font: inherit;
 
   &:hover {
-    background: rgba(99, 100, 255, 20%);
+    background: rgba(68, 20, 204, 20%);
     transform: translateY(-1px);
   }
 
@@ -12086,7 +12086,7 @@ noscript {
     font-weight: 800;
     letter-spacing: 0.08em;
     color: #fff;
-    background: #6364ff;
+    background: $ui-highlight-color;
     padding: 2px 8px;
     border-radius: 4px;
     flex-shrink: 0;
@@ -12096,7 +12096,7 @@ noscript {
   &__icon {
     width: 24px;
     height: 24px;
-    fill: #6364ff;
+    fill: $ui-highlight-color;
     flex-shrink: 0;
   }
 
@@ -12129,15 +12129,15 @@ noscript {
     font-size: 13px;
     font-weight: 700;
     color: #fff;
-    background: #6364ff;
+    background: $ui-highlight-color;
     flex-shrink: 0;
     padding: 4px 12px;
     border-radius: 6px;
-    border: 1px solid rgba(99, 100, 255, 30%);
+    border: 1px solid rgba(68, 20, 204, 30%);
     transition: background 0.15s ease;
 
     .live-banner:hover & {
-      background: #5253e0;
+      background: $ui-button-focus-background-color;
     }
   }
 }
