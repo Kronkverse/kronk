@@ -13,6 +13,27 @@
   display: none !important;
 }
 
+// Rails-served pages (`/kronk/*`, `/settings/profile`, `/@user/edit`,
+// etc.) don't mount the SPA / KronkKosmos, so the body's default
+// `--background-color` (a subtle grey) shows straight through — while
+// SPA pages get the darker kosmos-void behind everything. Match the
+// two so all pages sit on the same backdrop; the SPA still paints
+// KronkKosmos on top via its own layer.
+body {
+  background: var(--kosmos-void);
+}
+
+// Rails-served pages need to clear the fixed `.kronk-frame__top-band`
+// strip (see _kronk_frame.scss — 4.25rem row + 9rem visible fade
+// gradient). On the SPA the KronkFrame grid reserves row 1 for the
+// TopBand, which naturally offsets the Stage below. Rails pages don't
+// have that grid, so page content would render underneath the fixed
+// top-band without extra padding. Only apply on non-app-body — the
+// SPA (with `.app-body`) already has its own compensation.
+body:not(.app-body) {
+  padding-top: 4.25rem;
+}
+
 // Fade bands migrated to KronkFrame slots in alpha.178 —
 // see .kronk-frame__top-band and .kronk-frame__right-band in
 // _kronk_frame.scss. body::before / body::after are retired.
