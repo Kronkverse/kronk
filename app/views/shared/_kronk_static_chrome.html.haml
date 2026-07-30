@@ -51,8 +51,8 @@
     .hub-switcher__wire{ 'aria-hidden' => 'true' }
 
   - if user_signed_in?
-    -# Invite button — top-band grid column 3, matching what <InviteButton> renders on SPA routes. Rails pages can't open the JS modal, so this links to the classic /invites page.
-    %a.kronk-invite-button{ href: invites_path, 'aria-label': 'Invite someone to Kronk', title: 'Invite someone to Kronk' }
+    -# Invite button — top-band grid column 3, matching what <InviteButton> renders on SPA routes. Rails pages can't open the JS modal directly, so this deep-links into /home?invite=1; the SPA's InviteButton detects the query param on mount, dispatches openModal('INVITE'), and cleans the URL. Result: same button, same modal (QR + copy-link) whether the user starts from an SPA route or a Rails-served /kronk/* page.
+    %a.kronk-invite-button{ href: '/home?invite=1', 'aria-label': 'Invite someone to Kronk', title: 'Invite someone to Kronk' }
       %span.kronk-invite-button__icon{ 'aria-hidden' => 'true' }
         = material_symbol('person_add-fill')
 
