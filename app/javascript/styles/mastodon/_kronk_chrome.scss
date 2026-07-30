@@ -28,10 +28,45 @@ body {
 // gradient). On the SPA the KronkFrame grid reserves row 1 for the
 // TopBand, which naturally offsets the Stage below. Rails pages don't
 // have that grid, so page content would render underneath the fixed
-// top-band without extra padding. Only apply on non-app-body — the
-// SPA (with `.app-body`) already has its own compensation.
-body:not(.app-body) {
+// top-band without extra padding.
+// Applied to the two Rails-page-wrapper shapes we care about — the
+// Kronk-org pages (`/kronk/*`) and the classic Mastodon admin/settings
+// shell (which uses `.admin-wrapper` and picks up `body.admin`).
+// Targeting the specific wrappers rather than `body:not(.app-body)`
+// avoids double-padding on unrelated Rails routes (auth, embeds, etc.)
+// that have their own top-of-page geometry.
+.kronk-org-page {
   padding-top: 4.25rem;
+}
+
+// Kronk-fy the classic Mastodon settings/admin shell so it visually
+// matches the SPA (top-band + Kosmos backdrop + single-column content),
+// which is what Home / Hub / Nudges wear.
+// Hide the built-in Mastodon sidebar (Mastodon logo + primary
+// admin/settings nav) — it's redundant with the Kronk static chrome
+// that the application layout already renders above (wordmark +
+// hub-switcher). The Mastodon-branded logo directly competes with the
+// Kronk wordmark, and the sidebar's dark grey backdrop clashes with
+// the Kosmos void. This is a temporary reduction: settings-section
+// navigation (Profile / Notifications / Filters / etc.) will need a
+// Kronk-native replacement, but for now the in-page tabs
+// (`.content__heading__tabs`) still cover switching between profile-
+// scoped subpages, and the top-band's hub-switcher covers primary
+// space navigation.
+body.admin {
+  .admin-wrapper {
+    display: block;
+  }
+
+  .sidebar-wrapper {
+    display: none;
+  }
+
+  .content-wrapper {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 4.25rem 1.5rem 3rem;
+  }
 }
 
 // Fade bands migrated to KronkFrame slots in alpha.178 —
