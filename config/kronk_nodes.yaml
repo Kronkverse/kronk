@@ -298,3 +298,27 @@ nodes:
     url: /kronk/privacy
     lifecycle: live
     spa: true
+  - id: kronk.terms
+    bucket: kronk
+    label: Terms of service
+    url: /kronk/terms
+    lifecycle: live
+    spa: true
+  - id: kronk.rules
+    bucket: kronk
+    label: Rules
+    url: /kronk/rules
+    lifecycle: live
+    spa: true
+  - id: kronk.announcements
+    bucket: kronk
+    label: Announcements
+    url: /kronk/announcements
+    lifecycle: live
+    spa: true
+  - id: kronk.contact
+    bucket: kronk
+    label: Contact
+    url: /kronk/contact
+    lifecycle: live
+    spa: true
