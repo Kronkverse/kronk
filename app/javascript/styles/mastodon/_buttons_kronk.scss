@@ -1,9 +1,10 @@
 // Kronk palette — app-wide button recolour.
-// The stock button family (components.scss) paints the Mastodon blurple
-// ($ui-button-background-color #6364ff for solid buttons, $highlight-text-color
-// ~#9092ff for secondary/plain), which reads blue in dark mode where Kronk's
-// --accent is a deeper violet (#4414cc). Point the buttons at the Kronk violet
-// so every primary CTA / outline button across the app matches the palette.
+// The `$blurple-*` variables in _variables.scss now point at Kronk purple
+// (see the retarget in that file), so `$ui-button-background-color` is
+// already Kronk-hued at the SCSS layer. This partial layers the shared
+// CSS-variable pass on top — every primary CTA / outline button across
+// the app resolves to `var(--accent)` / `var(--kronk-purple-*)` when the
+// tokens are loaded, and drops back to the retargeted blurple otherwise.
 // Loaded after components.scss (see application.scss) so these win at equal
 // specificity. Error / destructive / disabled buttons keep their stock
 // treatment (their higher-specificity rules override these anyway). var(--accent)

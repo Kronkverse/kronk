@@ -8,12 +8,12 @@
   --kc-canvas: var(--background-color, #0a0812);
   --kc-surface: var(--surface-variant-background-color, #141020);
   --kc-surface-2: var(--surface-background-color, #191430);
-  --kc-line: rgba(132, 138, 250, 12%);
-  --kc-line-2: rgba(132, 138, 250, 22%);
+  --kc-line: rgba(136, 105, 229, 12%);
+  --kc-line-2: rgba(136, 105, 229, 22%);
   --kc-text: var(--text-primary, #ece9f5);
   --kc-dim: var(--text-secondary-color, #9a95c4);
   --kc-faint: var(--text-tertiary-color, #6f6a95);
-  --kc-accent: var(--accent, #8c8dff);
+  --kc-accent: var(--accent, #4414cc); // Kronk purple-accent as fallback (hue 285°), not the legacy Mastodon indigo #8c8dff
   --kc-serif: var(--font-display, 'Liberation Serif', Georgia, serif);
 
   // Positive stacking above the starfield.
@@ -307,7 +307,7 @@
   --vis-everyone: #c9a0ff;
   --vis-kronk: #a274ff;
   --vis-connections: #7b5cff;
-  --vis-vouched: #563acc;
+  --vis-vouched: #5828e0; // Kronk purple hue 285° — sits between connections + only-me on the OKLCH ramp
   --vis-only-me: #4b4590;
 }
 
