@@ -1,5 +1,3 @@
-import { useMemo } from 'react';
-
 import {
   getDaylightInfo,
   getMoonPhaseName,
@@ -13,13 +11,6 @@ import {
 
 import { LOCATION_TZ, LOCATION_LAT, LOCATION_LON } from '../constants';
 
-import {
-  SunIcon,
-  MoonPhaseIcon,
-  LeafIcon,
-  SnowflakeIcon,
-  BlossomIcon,
-} from './celestial_icons';
 import { getEarthMonth } from './earth_calendar';
 
 function nowInLocation(): {
@@ -84,17 +75,6 @@ const MOON_PHASE_PROSE: Record<string, string> = {
   last_quarter: 'last quarter moon',
   waning_crescent: 'waning crescent',
 };
-
-function pickSeasonIcon(label: string) {
-  const l = label.toLowerCase();
-  if (l.includes('winter') || l.includes('imbolc'))
-    return <SnowflakeIcon size={14} className='in-flow__daily-tile-icon' />;
-  if (l.includes('spring') || l.includes('beltane'))
-    return <BlossomIcon size={14} className='in-flow__daily-tile-icon' />;
-  if (l.includes('summer') || l.includes('lammas'))
-    return <SunIcon size={14} className='in-flow__daily-tile-icon' />;
-  return <LeafIcon size={14} className='in-flow__daily-tile-icon' />;
-}
 
 function buildIntegration(
   deltaMinutes: number,
@@ -319,72 +299,6 @@ function buildDailyData(
     sentence,
   };
 }
-
-export const DailyIntegration: React.FC = () => {
-  const { year, month, day, now } = useMemo(nowInLocation, []);
-  const data = useMemo(
-    () => buildDailyData(year, month, day, now),
-    [year, month, day, now],
-  );
-
-  const {
-    lightValue,
-    darkValue,
-    soilValue,
-    seasonValue,
-    seasonLabel,
-    phase,
-    sentence,
-  } = data;
-
-  return (
-    <div className='in-flow__daily'>
-      <p className='in-flow__daily-sentence'>{sentence}</p>
-      <div className='in-flow__daily-grid'>
-        {/* Light card */}
-        <div className='in-flow__daily-tile in-flow__daily-tile--light'>
-          <div className='in-flow__daily-tile-header'>
-            <SunIcon size={14} className='in-flow__daily-tile-icon' />
-            <span className='in-flow__daily-tile-label'>Light</span>
-          </div>
-          <span className='in-flow__daily-tile-value'>{lightValue}</span>
-        </div>
-
-        {/* Dark card */}
-        <div className='in-flow__daily-tile in-flow__daily-tile--dark'>
-          <div className='in-flow__daily-tile-header'>
-            <MoonPhaseIcon
-              phase={phase as Parameters<typeof MoonPhaseIcon>[0]['phase']}
-              size={14}
-            />
-            <span className='in-flow__daily-tile-label'>Dark</span>
-          </div>
-          <span className='in-flow__daily-tile-value'>{darkValue}</span>
-        </div>
-
-        {/* Soil card */}
-        <div className='in-flow__daily-tile in-flow__daily-tile--soil'>
-          <div className='in-flow__daily-tile-header'>
-            <LeafIcon size={14} className='in-flow__daily-tile-icon' />
-            <span className='in-flow__daily-tile-label'>Soil</span>
-          </div>
-          <span className='in-flow__daily-tile-value'>{soilValue}</span>
-        </div>
-
-        {/* Season card - only when ≤7 days away */}
-        {seasonValue && seasonLabel && (
-          <div className='in-flow__daily-tile in-flow__daily-tile--season'>
-            <div className='in-flow__daily-tile-header'>
-              {pickSeasonIcon(seasonLabel)}
-              <span className='in-flow__daily-tile-label'>Season</span>
-            </div>
-            <span className='in-flow__daily-tile-value'>{seasonValue}</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
 
 // Used by the InFlow veil — returns just the synthesizing sentence.
 export function buildDailyIntegrationText(): string {
