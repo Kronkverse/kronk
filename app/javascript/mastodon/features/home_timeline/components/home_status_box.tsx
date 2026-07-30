@@ -39,13 +39,19 @@ const messages = defineMessages({
     id: 'home.status_box.expand',
     defaultMessage: 'Open the composer',
   },
+  tabToAnswer: {
+    id: 'home.status_box.tab_to_answer',
+    defaultMessage: '(tab to answer)',
+  },
 });
 
 export const HomeStatusBox: React.FC = () => {
   const intl = useIntl();
-  const [placeholder, setPlaceholder] = useState<string>(
-    intl.formatMessage(messages.fallbackPlaceholder),
-  );
+  const fallback = intl.formatMessage(messages.fallbackPlaceholder);
+  // `prompt` is null when the day's Kuestion hasn't been fetched or the
+  // request failed — the collapsed pill and composer both fall back to
+  // the generic placeholder in that case, and Tab is a no-op.
+  const [prompt, setPrompt] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
@@ -54,10 +60,10 @@ export const HomeStatusBox: React.FC = () => {
       try {
         const data = await apiGetKuestionsDailyPrompt();
         if (!cancelled && data.prompt) {
-          setPlaceholder(data.prompt);
+          setPrompt(data.prompt);
         }
       } catch {
-        // Silent — fallback placeholder stays.
+        // Silent — fallback stays.
       }
     })();
     return () => {
@@ -69,6 +75,9 @@ export const HomeStatusBox: React.FC = () => {
     setExpanded(true);
   }, []);
 
+  const placeholder = prompt ?? fallback;
+  const tabHint = intl.formatMessage(messages.tabToAnswer);
+
   if (!expanded) {
     return (
       <div className='home-status-box home-status-box--collapsed'>
@@ -78,7 +87,12 @@ export const HomeStatusBox: React.FC = () => {
           onClick={handleExpand}
           aria-label={intl.formatMessage(messages.expandLabel)}
         >
-          <span className='home-status-box__collapsed-text'>{placeholder}</span>
+          <span className='home-status-box__collapsed-text'>
+            {placeholder}
+            {prompt && (
+              <span className='home-status-box__tab-hint'> {tabHint}</span>
+            )}
+          </span>
         </button>
         <button
           type='button'
@@ -101,8 +115,9 @@ export const HomeStatusBox: React.FC = () => {
          * focusing the textarea is exactly what they intend. Not applied
          * on initial render, only after an intentional expand action. */
         autoFocus
-        placeholderText={placeholder}
+        placeholderText={prompt ? `${placeholder} ${tabHint}` : placeholder}
         publishLabel={intl.formatMessage(messages.publishLabel)}
+        insertOnTab={prompt ?? undefined}
       />
     </div>
   );

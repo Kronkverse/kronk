@@ -822,6 +822,16 @@ body:has(.korner-sub-bar) {
     vertical-align: middle;
   }
 
+  // The (tab to answer) suffix on the day's Kuestion prompt. Dimmer so
+  // the prompt itself remains the focus; italic so it reads as a hint,
+  // not a continuation of the question.
+  &__tab-hint {
+    opacity: 0.6;
+    font-style: italic;
+    font-size: 0.85em;
+    margin-inline-start: 0.25rem;
+  }
+
   &__sigil {
     flex: 0 0 auto;
     width: 2.35rem;
