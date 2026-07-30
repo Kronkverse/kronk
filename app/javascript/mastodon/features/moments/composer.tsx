@@ -10,6 +10,7 @@
 
 import type { ChangeEvent } from 'react';
 import { useCallback, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -107,7 +108,13 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     inputRef.current?.click();
   }, []);
 
-  return (
+  // Portal to <body> so the fixed overlay escapes the feed column's
+  // containing block. On classic feed routes (Home) the ancestor
+  // `.columns-area__panels__main` sets `contain: paint layout style`,
+  // which makes it the containing block for `position: fixed` — so an
+  // inline overlay's backdrop only darkens the column and its panel is
+  // clipped out of view (see _kronk_stage.scss § containment escape).
+  return createPortal(
     <div className='moments-composer'>
       <button
         type='button'
@@ -235,6 +242,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
           </button>
         </footer>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
