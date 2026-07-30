@@ -72,6 +72,11 @@ launch:                                # one-time announcement when the space op
   blurb:          "Market is open — buy, sell, and trade within Kronk."
   cta:            "Tap in"             # inline tune-in action shown on the launch card
 
+compose:                               # the Ӂ floating-bubble Post action for this space
+  label:          "New listing"        # user-facing verb; short enough to fit the menu item
+  route:          "/hub/market/new"    # SPA route the bubble navigates to; wire it in features/ui/index.jsx
+                                       # (features/ui/components/kronk_menu.tsx reads this via useKorner)
+
 feature_flag:    market_enabled        # merge-dark switch (see §10)
 ```
 

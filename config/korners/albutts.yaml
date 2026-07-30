@@ -103,6 +103,14 @@ launch:
   blurb: "Albutts — shared albums where every photo carries its author's credit."
   cta: 'Start an album'
 
+# The Ӂ menu (floating bubble) picks this up automatically: while the
+# viewer is anywhere under /hub/albutts, the bubble's Post action reads
+# `label` + `route` here and navigates to /hub/albutts/new. See
+# features/ui/components/kronk_menu.tsx (usePostTarget).
+compose:
+  label: 'New album'
+  route: '/hub/albutts/new'
+
 enforced: true # boot validator gates L1-L11 for albutts (2026-07-29)
 
 # ── Directory nodes ──────────────────────────────────────────────

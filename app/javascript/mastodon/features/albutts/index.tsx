@@ -27,11 +27,7 @@ const messages = defineMessages({
   loading: { id: 'albutts.loading', defaultMessage: 'Loading…' },
   empty: {
     id: 'albutts.empty',
-    defaultMessage: 'No albums yet — start one below.',
-  },
-  newAlbum: {
-    id: 'albutts.new_album',
-    defaultMessage: 'New album',
+    defaultMessage: 'No albums yet — start one via the Ӂ menu.',
   },
   photos: {
     id: 'albutts.photos',
@@ -59,6 +55,13 @@ const Albutts: React.FC<{ multiColumn?: boolean }> = () => {
         <Route path='/hub/albutts/albums/:id' exact>
           <AlbumDetailRoute />
         </Route>
+        <Route path='/hub/albutts/new' exact>
+          {/* The Ӂ menu (features/ui/components/kronk_menu.tsx) reads
+              albutts.yaml's `compose.route` and lands here. Directory
+              renders with the composer pre-opened so the manifest-
+              driven Post action Just Works. */}
+          <Directory autoOpenComposer />
+        </Route>
         <Route path='/hub/albutts' exact>
           <Directory />
         </Route>
@@ -70,11 +73,18 @@ const Albutts: React.FC<{ multiColumn?: boolean }> = () => {
 // eslint-disable-next-line import/no-default-export
 export default Albutts;
 
-const Directory: React.FC = () => {
+interface DirectoryProps {
+  // When true (the `/hub/albutts/new` route), the composer opens
+  // automatically on mount. The Ӂ floating bubble sends the user
+  // there via the manifest's `compose.route`.
+  autoOpenComposer?: boolean;
+}
+
+const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
   const intl = useIntl();
   const history = useHistory();
   const [albums, setAlbums] = useState<ApiAlbumJSON[] | null>(null);
-  const [composerOpen, setComposerOpen] = useState(false);
+  const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
 
   const load = useCallback(async () => {
     setAlbums(null);
@@ -89,12 +99,12 @@ const Directory: React.FC = () => {
     void load();
   }, [load]);
 
-  const openComposer = useCallback(() => {
-    setComposerOpen(true);
-  }, []);
   const closeComposer = useCallback(() => {
     setComposerOpen(false);
-  }, []);
+    // If we arrived via `/hub/albutts/new`, drop back to the plain
+    // directory URL so the composer doesn't reopen on refresh.
+    if (autoOpenComposer) history.replace('/hub/albutts');
+  }, [autoOpenComposer, history]);
 
   const handleCreated = useCallback(
     (created: ApiAlbumJSON) => {
@@ -107,16 +117,6 @@ const Directory: React.FC = () => {
 
   return (
     <div className='albutts-directory'>
-      <div className='albutts-directory__toolbar'>
-        <button
-          type='button'
-          className='albutts-btn albutts-btn--primary'
-          onClick={openComposer}
-        >
-          {intl.formatMessage(messages.newAlbum)}
-        </button>
-      </div>
-
       {albums === null ? (
         <p className='space-subtitle'>{intl.formatMessage(messages.loading)}</p>
       ) : albums.length === 0 ? (
