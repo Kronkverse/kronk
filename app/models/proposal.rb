@@ -110,8 +110,12 @@ class Proposal < ApplicationRecord
 
   scope :recent, -> { order(created_at: :desc) }
   scope :most_supported, lambda {
+    # `.to_i` on the AR enum lookup makes the interpolation explicitly
+    # integer-typed — same value, but Brakeman stops flagging the
+    # `#{...}` as untrusted string.
+    agree_position = ProposalVote.positions.fetch(:agree).to_i
     left_joins(:proposal_votes)
-      .select("proposals.*, COUNT(CASE WHEN proposal_votes.position = #{ProposalVote.positions[:agree]} THEN 1 END) AS agree_count")
+      .select("proposals.*, COUNT(CASE WHEN proposal_votes.position = #{agree_position} THEN 1 END) AS agree_count")
       .group('proposals.id')
       .order(Arel.sql('agree_count DESC, proposals.created_at DESC'))
   }

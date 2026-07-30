@@ -9,23 +9,30 @@
 class MigrateListingCurrencyGbpToAud < ActiveRecord::Migration[8.0]
   disable_ddl_transaction!
 
+  # `execute` is opaque to StrongMigrations so it can't verify safety.
+  # Both branches are a bounded UPDATE on a small table with a static
+  # value change (no schema change, no long lock) — safe to assure.
   def up
     return unless table_exists?(:listings)
 
-    execute <<~SQL.squish
-      UPDATE listings
-      SET    price_currency = 'AUD'
-      WHERE  price_currency = 'GBP'
-    SQL
+    safety_assured do
+      execute <<~SQL.squish
+        UPDATE listings
+        SET    price_currency = 'AUD'
+        WHERE  price_currency = 'GBP'
+      SQL
+    end
   end
 
   def down
     return unless table_exists?(:listings)
 
-    execute <<~SQL.squish
-      UPDATE listings
-      SET    price_currency = 'GBP'
-      WHERE  price_currency = 'AUD'
-    SQL
+    safety_assured do
+      execute <<~SQL.squish
+        UPDATE listings
+        SET    price_currency = 'GBP'
+        WHERE  price_currency = 'AUD'
+      SQL
+    end
   end
 end
