@@ -247,16 +247,14 @@ const pillMessages = defineMessages({
     id: 'settings_korners.tune_out',
     defaultMessage: 'Tune out of {name}',
   },
-  tunedIn: { id: 'settings_korners.tuned_in', defaultMessage: 'Tuned in' },
-  tunedOut: { id: 'settings_korners.tuned_out', defaultMessage: 'Tuned out' },
 });
 
-// A pill switch to tune in/out of a korner without leaving the Hub settings
-// list. Optimistic: dispatches the new state (so every surface reading
+// A bare toggle switch to tune in/out of a korner without leaving the Hub
+// settings list. Optimistic: dispatches the new state (so every surface reading
 // state.korners updates at once), fires the server call, and re-dispatches the
-// old value on failure. Sits inside the row's Link, so it stops the click from
-// also navigating into the korner's settings.
-const TuneInPill: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
+// old value on failure. It's a sibling of the row's Link (not nested in the
+// anchor) and stops the click from also navigating into the korner's settings.
+const TuneToggle: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const tunedIn = korner.tuned_in !== false;
@@ -284,28 +282,24 @@ const TuneInPill: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
     [busy, tunedIn, korner.slug, dispatch],
   );
 
-  const label = intl.formatMessage(tunedIn ? pillMessages.tuneOut : pillMessages.tuneIn, {
-    name: korner.name,
-  });
+  const label = intl.formatMessage(
+    tunedIn ? pillMessages.tuneOut : pillMessages.tuneIn,
+    { name: korner.name },
+  );
 
   return (
     <button
       type='button'
-      className={classNames('settings-nav__pill', {
-        'settings-nav__pill--on': tunedIn,
+      className={classNames('settings-nav__toggle', {
+        'settings-nav__toggle--on': tunedIn,
       })}
       onClick={handleToggle}
       aria-pressed={tunedIn}
       aria-label={label}
       title={label}
     >
-      <span className='settings-nav__pill-track' aria-hidden='true'>
-        <span className='settings-nav__pill-thumb' />
-      </span>
-      <span className='settings-nav__pill-label'>
-        {intl.formatMessage(
-          tunedIn ? pillMessages.tunedIn : pillMessages.tunedOut,
-        )}
+      <span className='settings-nav__toggle-track' aria-hidden='true'>
+        <span className='settings-nav__toggle-thumb' />
       </span>
     </button>
   );
@@ -313,9 +307,17 @@ const TuneInPill: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
 
 export const KornerRow: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
   const Icon = useKornerIcon(korner.slug);
+  const live = korner.enforced !== false;
+  const tunedIn = korner.tuned_in !== false;
 
   return (
-    <div className='settings-nav__row settings-nav__row--korner'>
+    <div
+      className={classNames('settings-nav__row settings-nav__row--korner', {
+        // Tuned-out korners grey right down; not-yet-live ones read as "soon".
+        'settings-nav__row--muted': live && !tunedIn,
+        'settings-nav__row--soon': !live,
+      })}
+    >
       <Link
         to={`/hub/${korner.slug}/settings`}
         className='settings-nav__row-link'
@@ -331,7 +333,8 @@ export const KornerRow: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
           aria-hidden='true'
         />
       </Link>
-      <TuneInPill korner={korner} />
+      {/* Coming-soon korners can't be tuned into yet — no toggle. */}
+      {live && <TuneToggle korner={korner} />}
     </div>
   );
 };
