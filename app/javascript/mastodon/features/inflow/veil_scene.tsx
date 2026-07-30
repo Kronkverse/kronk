@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import CloseIcon from '@/material-icons/400-24px/close.svg?react';
-import { Icon } from 'mastodon/components/icon';
 import {
   getMoonIllumination,
   getMoonPhaseName,
@@ -153,14 +151,10 @@ export const VeilScene: React.FC = () => {
     return readCollapsedOn() !== melbourneDayKey();
   });
 
-  const handleCollapse = useCallback(() => {
-    writeCollapsedOn(melbourneDayKey());
-    setExpanded(false);
-  }, []);
-
   // Reopen is session-only: it flips the local state back to expanded
-  // but does NOT clear the stored day key. If the user closes again,
-  // the veil stays collapsed for the rest of the day.
+  // but does NOT clear the stored day key. If the user drops out of
+  // view again, dwell tracking below could re-persist the day key —
+  // fine; the day key is idempotent.
   const handleExpand = useCallback(() => {
     setExpanded(true);
   }, []);
@@ -262,22 +256,83 @@ export const VeilScene: React.FC = () => {
     };
   }, [host, expanded]);
 
+  // Dwell tracker — auto-collapse once the user has spent enough time
+  // reading the veil. We only start counting when the veil's reading
+  // area is genuinely on-screen (≥60% of it visible), and we accumulate
+  // continuously across multiple visits within the same session. Once
+  // the threshold trips, we persist today's Melbourne day key AND flip
+  // the local state, so the veil folds down to its pill in-place — same
+  // behaviour the × button used to give, but automatic.
+  //
+  // Threshold ~7s: long enough to comfortably read the reflection +
+  // glance at the almanac (~40 words + 4 short lines); short enough to
+  // fire before someone scrolls into the album card below and starts
+  // engaging with it.
+  useEffect(() => {
+    if (!expanded) return;
+    const aperture = apertureRef.current;
+    if (!aperture) return;
+
+    const DWELL_THRESHOLD_MS = 7000;
+    let dwellStart: number | null = null;
+    let dwellTotal = 0;
+    let fired = false;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (fired) return;
+        const entry = entries[0];
+        if (!entry) return;
+
+        if (entry.isIntersecting) {
+          dwellStart = performance.now();
+          // If already past threshold when the veil comes back into
+          // view (unlikely — we'd have already fired — but guards a
+          // race), fire immediately.
+          if (dwellTotal >= DWELL_THRESHOLD_MS) {
+            fired = true;
+            writeCollapsedOn(melbourneDayKey());
+            setExpanded(false);
+          }
+        } else if (dwellStart !== null) {
+          dwellTotal += performance.now() - dwellStart;
+          dwellStart = null;
+          if (dwellTotal >= DWELL_THRESHOLD_MS) {
+            fired = true;
+            writeCollapsedOn(melbourneDayKey());
+            setExpanded(false);
+          }
+        }
+      },
+      { threshold: 0.6 },
+    );
+    io.observe(aperture);
+
+    // Poll while the veil is in view so we can trip mid-dwell (rather
+    // than only on scroll-past). Cheap — one interval, cleared on unmount.
+    const poll = window.setInterval(() => {
+      if (fired || dwellStart === null) return;
+      const elapsed = performance.now() - dwellStart;
+      if (dwellTotal + elapsed >= DWELL_THRESHOLD_MS) {
+        fired = true;
+        writeCollapsedOn(melbourneDayKey());
+        setExpanded(false);
+      }
+    }, 1000);
+
+    return () => {
+      io.disconnect();
+      window.clearInterval(poll);
+    };
+  }, [expanded]);
+
   const lit = Math.round(sky.illum * 100);
 
   const nightsky = (
-    <div className='inflow-veil__nightsky' ref={nightskyRef}>
-      <div className='inflow-veil__sky' aria-hidden='true' />
+    <div className='inflow-veil__nightsky' ref={nightskyRef} aria-hidden='true'>
+      <div className='inflow-veil__sky' />
       <div className='inflow-veil__scene'>
-        <button
-          type='button'
-          className='inflow-veil__close'
-          onClick={handleCollapse}
-          aria-label='Close the InFlow veil'
-          title='Close the InFlow veil'
-        >
-          <Icon id='times' icon={CloseIcon} />
-        </button>
-        <div className='inflow-veil__moonwrap' aria-hidden='true'>
+        <div className='inflow-veil__moonwrap'>
           <div className='inflow-veil__halo' />
           <VeilMoon illumination={sky.illum} waning={sky.waning} />
         </div>
