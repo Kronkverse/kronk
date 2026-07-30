@@ -68,7 +68,9 @@ const KornerTile: React.FC<{ korner: ApiKornerJSON; alert?: boolean }> = ({
   korner,
   alert,
 }) => {
-  const soon = korner.enforced === false;
+  // A tile reads as "coming soon" only when it's neither enforced nor
+  // a portal — a portal is functionally live even at enforced:false.
+  const soon = korner.enforced === false && !korner.portal?.url;
   const tunedIn = korner.tuned_in !== false;
   // The hover tip uses the korner's authored `tagline` (the same copy
   // shown by <SpaceIntro> inside the korner), so the Hub and the korner
@@ -157,14 +159,19 @@ const Hub: React.FC<{ multiColumn?: boolean }> = () => {
   const unreadKornerSlugs = useAppSelector(selectUnreadKornerSlugs);
 
   // Default order: most-tuned-in first, ties broken alphabetically.
-  // Coming-soon tiles (enforced: false) fall to the end so the grid
-  // reads live-first, promised-next.
+  // Coming-soon tiles (enforced: false + no portal) fall to the end so
+  // the grid reads live-first, promised-next.
   const sorted = korners.slice().sort((a, b) => {
     const diff = (b.tune_in_count ?? 0) - (a.tune_in_count ?? 0);
     return diff !== 0 ? diff : a.name.localeCompare(b.name);
   });
-  const live = sorted.filter((k) => k.enforced !== false);
-  const soon = sorted.filter((k) => k.enforced === false);
+  // Portal korners (e.g. YOU) ship at `enforced: false` because they
+  // own no Kronk-side resources — but they have a real landing page and
+  // are functionally live. Promote them out of the "Coming soon" bucket.
+  const isLive = (k: ApiKornerJSON) =>
+    k.enforced !== false || Boolean(k.portal?.url);
+  const live = sorted.filter(isLive);
+  const soon = sorted.filter((k) => !isLive(k));
 
   return (
     <Stage label={intl.formatMessage(messages.title)}>

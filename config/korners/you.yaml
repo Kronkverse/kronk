@@ -13,7 +13,9 @@
 # projection, no data), it stays at lifecycle `soon` / `enforced:
 # false` under `docs/korners/korner_standard.md` §1 permanently — a
 # link-out doesn't own the resources an enforced korner is required
-# to declare.
+# to declare. The `portal:` block below is what tells the Hub it is
+# nonetheless a live, functional destination — the tile promotes out
+# of the "Coming soon" bucket into the live grid.
 
 slug: you
 name: YOU
@@ -23,6 +25,13 @@ icon:
 render_target: native
 version: 0.1.0
 enforced: false
+
+# Portal korner: the Kronk-side /hub/you route renders a real landing
+# card (see features/you_portal), and the CTA opens this URL in a new
+# tab. YouPortal reads `portal.url` from the manifest via useKorner so
+# the destination stays declarative — swap the URL here, no code edit.
+portal:
+  url: https://you.kronk.info
 
 # No local resources — YOU owns its own data (currently in Supabase;
 # eventually in an Anthemos pod). Kronk stores nothing on YOU's behalf.

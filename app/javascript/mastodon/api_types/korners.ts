@@ -88,6 +88,11 @@ export interface ApiKornerJSON {
   mount?: string | null;
   feature_flag?: string | null;
   enforced?: boolean;
+  // Present when the korner is a portal — a Kronk-native landing that
+  // links out to an external app (e.g. YOU at you.kronk.info). The Hub
+  // treats portal korners as live regardless of `enforced` (portals
+  // ship at enforced:false because they own no Kronk-side resources).
+  portal?: { url: string } | null;
   // Core spaces (feed / profile / hub / nudges / settings) are part
   // of the platform rather than korners — no Hub tile, no tune-out.
   // /api/v1/korners still returns them so useKornerIcon /

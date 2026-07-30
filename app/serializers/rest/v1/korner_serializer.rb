@@ -17,6 +17,7 @@ class REST::V1::KornerSerializer < ActiveModel::Serializer
              :listens,
              :hub_teaser,
              :launch,
+             :portal,
              :feature_flag,
              :enforced
 end
