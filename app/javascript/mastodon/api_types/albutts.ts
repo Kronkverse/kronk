@@ -13,6 +13,20 @@ export interface ApiAlbumPhotoJSON {
   url: string | null;
   created_at: string;
   contributor: ApiAccountJSON;
+  froths_count: number;
+  comments_count: number;
+  frothed: boolean;
+}
+
+export interface ApiAlbumPhotoCommentJSON {
+  id: string;
+  album_photo_id: string;
+  parent_id: string | null;
+  body: string;
+  created_at: string;
+  account: ApiAccountJSON;
+  // Only present on root comments (one-level threading).
+  replies?: ApiAlbumPhotoCommentJSON[];
 }
 
 export interface ApiAlbumJSON {

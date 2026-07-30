@@ -184,6 +184,15 @@
   border-radius: 10px;
   overflow: hidden;
 
+  &__trigger {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: zoom-in;
+    display: block;
+    width: 100%;
+  }
+
   &__img {
     width: 100%;
     aspect-ratio: 1 / 1;
@@ -207,10 +216,276 @@
     font-weight: 600;
   }
 
+  &__reactions {
+    margin-left: auto;
+    display: inline-flex;
+    gap: 8px;
+    opacity: 0.8;
+    font-size: 11px;
+  }
+
+  &__reactions-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
   &__caption {
     padding: 0 10px 10px;
     font-size: 12px;
     opacity: 0.85;
+  }
+}
+
+.albutts-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: rgb(0 0 0 / 92%);
+  color: #fff;
+
+  &__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    gap: 16px;
+
+    .icon-button {
+      color: #fff;
+    }
+  }
+
+  &__title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  &__album {
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__counter {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+
+  &__stage {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 8px;
+  }
+
+  &__frame {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: min(1200px, 100%);
+    max-height: 100%;
+    gap: 8px;
+  }
+
+  &__img {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    display: block;
+
+    &--missing {
+      width: 300px;
+      height: 300px;
+      background: color-mix(in oklab, var(--accent), transparent 80%);
+    }
+  }
+
+  &__caption {
+    font-size: 13px;
+    opacity: 0.85;
+    text-align: center;
+    max-width: 720px;
+  }
+
+  &__nav {
+    background: rgb(255 255 255 / 8%);
+    color: #fff;
+    border: 0;
+    border-radius: 999px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin: 0 8px;
+
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    &:hover {
+      background: rgb(255 255 255 / 16%);
+    }
+  }
+}
+
+.albutts-reactions {
+  border-top: 1px solid rgb(255 255 255 / 12%);
+  padding: 12px 20px 20px;
+  max-height: 35vh;
+  overflow-y: auto;
+
+  &__froth-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  &__froth {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 999px;
+    color: #fff;
+    padding: 4px 12px;
+    cursor: pointer;
+    font-size: 13px;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    &.is-frothed {
+      color: #e0567a;
+      border-color: #e0567a;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__count {
+    font-size: 12px;
+    opacity: 0.75;
+  }
+
+  &__comments {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__placeholder {
+    opacity: 0.7;
+    font-size: 13px;
+    margin: 6px 0;
+  }
+}
+
+.albutts-comment {
+  &__row {
+    display: flex;
+    gap: 10px;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12px;
+    opacity: 0.85;
+  }
+
+  &__author {
+    font-weight: 600;
+    opacity: 1;
+  }
+
+  &__text {
+    margin: 2px 0 4px;
+    font-size: 14px;
+    line-height: 1.35;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+  }
+
+  &__action {
+    background: transparent;
+    border: 0;
+    color: rgb(255 255 255 / 75%);
+    padding: 0;
+    cursor: pointer;
+
+    &:hover {
+      color: #fff;
+    }
+  }
+
+  &__replies {
+    margin: 8px 0 0 42px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__reply-composer {
+    margin: 8px 0 0 42px;
+  }
+}
+
+.albutts-comment-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &__textarea {
+    width: 100%;
+    resize: vertical;
+    background: rgb(255 255 255 / 6%);
+    color: #fff;
+    border: 1px solid rgb(255 255 255 / 15%);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
   }
 }
 

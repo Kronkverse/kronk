@@ -68,9 +68,31 @@ Two compose surfaces:
   credit + optional caption. Available to anyone within the album's
   visibility scope.
 
+## Lightbox + per-photo reactions
+
+Clicking a photo tile in an album detail opens the **album lightbox** —
+a full-screen overlay showing the current photo, with arrow-key /
+click navigation left/right through the album and `Escape` to close.
+Deep links land on a photo via `?photo=:id` on the album URL (used by
+Nudges CTAs for photo comments/froths).
+
+Inside the lightbox, each photo has its own reactions rail:
+
+- **Froth** — one-per-viewer heart on a specific photo. Toggle
+  via `POST/DELETE /api/v1/albutts/photos/:photo_id/froth`. Idempotent
+  (DB unique index catches double-clicks).
+- **Comments** — one level of threading (`parent_id` on
+  `album_photo_comments`). GET/POST/DELETE
+  `/api/v1/albutts/photos/:photo_id/comments`. Only the comment author
+  or the album owner can delete a comment.
+
+Both reactions are gated by album visibility: if you can view the
+album you can Froth and comment on any photo inside it, matching
+Albutts's open-audience-within-scope contract.
+
 ## Notifications
 
-Two triggers fire (drilldown from Round 2):
+Four triggers fire:
 
 - **You were added as a contributor** — when a user's contribution
   rights change (e.g., they joined a Krew that owns an album), they
@@ -78,13 +100,17 @@ Two triggers fire (drilldown from Round 2):
 - **An album you contribute to got new photos** — fellow contributors
   are notified when other contributors add to a shared album. Keeps
   co-authors in the loop.
+- **Your photo was frothed** — the photo's contributor is nudged
+  when another viewer Froths their photo in the lightbox. Aggregates
+  per photo over 15m so a burst of Froths reads as one line.
+- **Someone commented on your photo** — the contributor is nudged
+  on a root comment; on a reply, the parent comment's author is
+  nudged instead (deduped against the contributor). Interactive:
+  the CTA opens the lightbox at the commented photo via
+  `?photo=:id` on the album detail URL.
 
-Deliberately _not_ included in the initial notification set:
-album-owner-per-contribution (too noisy for busy albums), mate-
-published-new-album (feed card already handles broadcast).
-
-Aggregation, `default_push`, `interactive` flags — to be sharpened
-when the notifications block is written into the manifest.
+Aggregation, `default_push`, `interactive` flags declared in
+`config/korners/albutts.yaml` under `notifications.types`.
 
 ## Feed projection
 
