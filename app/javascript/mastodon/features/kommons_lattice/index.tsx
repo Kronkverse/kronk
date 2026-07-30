@@ -31,7 +31,8 @@ const messages = defineMessages({
   },
   loadError: {
     id: 'kommons_lattice.load_error',
-    defaultMessage: 'Could not load the Kommons Directory. Refresh to try again.',
+    defaultMessage:
+      'Could not load the Kommons Directory. Refresh to try again.',
   },
 });
 

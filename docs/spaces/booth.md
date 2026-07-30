@@ -114,8 +114,8 @@ A Booth set carries the **standard Kronk engagement affordances**:
 - **Save / library / bookmark** — a user can save a set to their
   personal Booth library for later listening. Distinct from having
   played it.
-- **Live listener count** — the set page shows *"N listening right
-  now"* as an ambient co-presence signal. Listings (`/hub/booth`,
+- **Live listener count** — the set page shows _"N listening right
+  now"_ as an ambient co-presence signal. Listings (`/hub/booth`,
   feed cards, series pages) do NOT show the live count — only play
   count aggregates. Keeps the live signal from feeling
   surveillance-y while preserving it as a moment-of-attention hint

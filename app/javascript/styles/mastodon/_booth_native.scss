@@ -269,7 +269,11 @@
     font-size: 0.72rem;
 
     &--night {
-      border-color: color-mix(in srgb, var(--kronk-purple-accent) 55%, transparent);
+      border-color: color-mix(
+        in srgb,
+        var(--kronk-purple-accent) 55%,
+        transparent
+      );
       color: var(--kronk-purple-bright);
     }
   }

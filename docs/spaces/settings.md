@@ -63,4 +63,4 @@ Registry-driven settings nav shipped (#326). Feed + You sections
 rendering (#325 + #326). Further per-korner settings surfaces
 scheduled per the implementation plan.
 
-*This is a stub. Contributions welcome.*
+_This is a stub. Contributions welcome._

@@ -1,8 +1,4 @@
-import {
-  apiRequestGet,
-  apiRequestPost,
-  apiRequestDelete,
-} from 'mastodon/api';
+import { apiRequestGet, apiRequestPost, apiRequestDelete } from 'mastodon/api';
 
 // Map — presence API client. Mirrors app/controllers/api/v1/map/presence_controller.rb.
 // The server stores only *coarsened* coordinates, so a pin's (lat, lng) is

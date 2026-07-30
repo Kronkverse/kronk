@@ -15,6 +15,7 @@ export const fetchKorners = createDataLoadingThunk(
 // anywhere (e.g. the Hub settings pills) is reflected immediately across every
 // surface that reads state.korners. The server call is fire-and-forget by the
 // caller, which re-dispatches with the old value on failure.
-export const setKornerTunedIn = createAction<{ slug: string; tunedIn: boolean }>(
-  'korners/setTunedIn',
-);
+export const setKornerTunedIn = createAction<{
+  slug: string;
+  tunedIn: boolean;
+}>('korners/setTunedIn');

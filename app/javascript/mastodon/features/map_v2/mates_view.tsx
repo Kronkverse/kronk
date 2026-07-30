@@ -40,7 +40,8 @@ const messages = defineMessages({
   locating: { id: 'map.locating', defaultMessage: 'Finding you…' },
   geoError: {
     id: 'map.geo_error',
-    defaultMessage: "Couldn't get your location — check the browser permission.",
+    defaultMessage:
+      "Couldn't get your location — check the browser permission.",
   },
 });
 
@@ -55,7 +56,10 @@ const circleFeature = (pin: ApiPresencePinJSON): Feature<Polygon> => {
   const lngR = pin.radius / (111_320 * Math.cos((pin.lat * Math.PI) / 180));
   for (let i = 0; i <= points; i++) {
     const theta = (i / points) * 2 * Math.PI;
-    coords.push([pin.lng + lngR * Math.cos(theta), pin.lat + latR * Math.sin(theta)]);
+    coords.push([
+      pin.lng + lngR * Math.cos(theta),
+      pin.lat + latR * Math.sin(theta),
+    ]);
   }
   return {
     type: 'Feature',
@@ -100,7 +104,10 @@ export const MatesView: React.FC = () => {
       },
     });
 
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    map.addControl(
+      new maplibregl.NavigationControl({ showCompass: false }),
+      'top-right',
+    );
     map.on('load', () => {
       map.addSource('fuzz', {
         type: 'geojson',
@@ -116,7 +123,11 @@ export const MatesView: React.FC = () => {
         id: 'fuzz-line',
         type: 'line',
         source: 'fuzz',
-        paint: { 'line-color': '#7c5cff', 'line-opacity': 0.4, 'line-width': 1 },
+        paint: {
+          'line-color': '#7c5cff',
+          'line-opacity': 0.4,
+          'line-width': 1,
+        },
       });
       setReady(true);
     });
@@ -140,8 +151,12 @@ export const MatesView: React.FC = () => {
 
   // ── Fetch + poll presence ─────────────────────────────────────────
   const refresh = useCallback(() => {
-    void apiGetPresence().then(setPins).catch(() => undefined);
-    void apiGetSelfPresence().then(setSelfPin).catch(() => undefined);
+    void apiGetPresence()
+      .then(setPins)
+      .catch(() => undefined);
+    void apiGetSelfPresence()
+      .then(setSelfPin)
+      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -167,9 +182,10 @@ export const MatesView: React.FC = () => {
     markersRef.current = all.map((pin) => {
       const el = document.createElement('div');
       el.className = `map-pin ${pin.self ? 'map-pin--self' : ''}`;
-      const popup = new maplibregl.Popup({ offset: 16, closeButton: false }).setText(
-        pin.label ? `${pin.name} · ${pin.label}` : pin.name,
-      );
+      const popup = new maplibregl.Popup({
+        offset: 16,
+        closeButton: false,
+      }).setText(pin.label ? `${pin.name} · ${pin.label}` : pin.name);
       return new maplibregl.Marker({ element: el })
         .setLngLat([pin.lng, pin.lat])
         .setPopup(popup)
@@ -258,7 +274,10 @@ export const MatesView: React.FC = () => {
         ) : placing ? (
           <>
             <span className='map-mates__prompt'>
-              <FormattedMessage id='map.pick_precision' defaultMessage='Show me at:' />
+              <FormattedMessage
+                id='map.pick_precision'
+                defaultMessage='Show me at:'
+              />
             </span>
             <Button secondary onClick={placeHood}>
               {intl.formatMessage(messages.hood)}

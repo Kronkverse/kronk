@@ -12,11 +12,11 @@ Kronk is a custom Mastodon instance at **mastodon.kronk.info**. This repo is a f
 
 ## Branch Strategy
 
-| Branch          | Purpose                                                                                                | Deploy target                    |
-| --------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------- |
-| `main`          | Production (protected — PRs only, merged by the maintainer)                                            | mastodon.kronk.info              |
-| `rebuild/2.0.0` | **Active 2.x integration branch — base your work here during the rebuild.** Auto-deploys to shadow.   | shadow.kronk.info                |
-| `staging`       | Retired auto-deploy branch. Manual override only via the `Auto-Deploy Staging` workflow_dispatch.      | shadow.kronk.info (manual)       |
+| Branch          | Purpose                                                                                             | Deploy target              |
+| --------------- | --------------------------------------------------------------------------------------------------- | -------------------------- |
+| `main`          | Production (protected — PRs only, merged by the maintainer)                                         | mastodon.kronk.info        |
+| `rebuild/2.0.0` | **Active 2.x integration branch — base your work here during the rebuild.** Auto-deploys to shadow. | shadow.kronk.info          |
+| `staging`       | Retired auto-deploy branch. Manual override only via the `Auto-Deploy Staging` workflow_dispatch.   | shadow.kronk.info (manual) |
 
 **Never commit directly to `main`, `rebuild/2.0.0`, or `staging`.** Always work on a branch and open a PR.
 

@@ -370,10 +370,7 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
               {`← ${intl.formatMessage(messages.backToArtists)}`}
             </button>
             <div className='booth-artist-detail__hero'>
-              <span
-                className='booth-artist-detail__avatar'
-                aria-hidden='true'
-              >
+              <span className='booth-artist-detail__avatar' aria-hidden='true'>
                 {artistInitial(activeArtist)}
               </span>
               <div className='booth-artist-detail__id'>

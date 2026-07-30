@@ -81,12 +81,9 @@ export const ProposalAttachments: React.FC<{ proposalId: string }> = ({
     [upload],
   );
 
-  const handleKind = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setKind(e.target.value);
-    },
-    [],
-  );
+  const handleKind = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setKind(e.target.value);
+  }, []);
 
   const handleDescription = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

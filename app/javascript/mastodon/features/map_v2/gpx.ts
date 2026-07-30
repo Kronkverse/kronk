@@ -41,7 +41,7 @@ const num = (v: string | null | undefined): number | null => {
 
 const childText = (el: Element, tag: string): string | null => {
   const found = el.getElementsByTagName(tag);
-  return found.length > 0 ? found[0]?.textContent ?? null : null;
+  return found.length > 0 ? (found[0]?.textContent ?? null) : null;
 };
 
 const parseGpx = (doc: Document): RawPoint[] =>
@@ -78,7 +78,8 @@ export const parseTrackFile = (text: string, filename: string): ParsedTrack => {
   }
 
   const isTcx =
-    /\.tcx$/i.test(filename) || doc.getElementsByTagName('Trackpoint').length > 0;
+    /\.tcx$/i.test(filename) ||
+    doc.getElementsByTagName('Trackpoint').length > 0;
   const raw = (isTcx ? parseTcx(doc) : parseGpx(doc)).filter(
     (p) => Number.isFinite(p.lat) && Number.isFinite(p.lng),
   );
@@ -107,7 +108,8 @@ export const parseTrackFile = (text: string, filename: string): ParsedTrack => {
 
   const first = raw[0]?.time ?? null;
   const last = raw[raw.length - 1]?.time ?? null;
-  const moving = first !== null && last !== null ? Math.max(0, last - first) : 0;
+  const moving =
+    first !== null && last !== null ? Math.max(0, last - first) : 0;
 
   return {
     points,

@@ -193,7 +193,8 @@
     border-color: var(--border-default);
     border-radius: var(--radius-large);
     box-shadow:
-      0 12px 34px -16px color-mix(in oklab, var(--kronk-purple-accent) 50%, transparent),
+      0 12px 34px -16px
+        color-mix(in oklab, var(--kronk-purple-accent) 50%, transparent),
       var(--elevation-card);
     transition:
       border-color var(--dur-fast) var(--ease-out),
@@ -203,8 +204,10 @@
     &.active {
       border-color: var(--kronk-purple-accent);
       box-shadow:
-        0 0 0 2px color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent),
-        0 16px 40px -14px color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
+        0 0 0 2px
+          color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent),
+        0 16px 40px -14px
+          color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
     }
   }
 

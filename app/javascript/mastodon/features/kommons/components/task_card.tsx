@@ -16,9 +16,7 @@ export const TaskCard: React.FC<Props> = ({ task, onClaim, claiming }) => {
   }, [onClaim, task.id]);
 
   return (
-    <div
-      className={`kommons-task-card kommons-task-card--${task.status}`}
-    >
+    <div className={`kommons-task-card kommons-task-card--${task.status}`}>
       <div className='kommons-task-card__header'>
         <span className='kommons-task-card__title'>{task.title}</span>
         {task.skill_tag && (

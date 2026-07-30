@@ -48,7 +48,7 @@ export const InlineStatusCard: React.FC<{ statusId: string }> = ({
   }
 
   const account = status.get('account') as Account | undefined;
-  const acct = (account?.get('acct')) ?? '';
+  const acct = account?.get('acct') ?? '';
   const rawDisplayName = account?.get('display_name');
   const rawUsername = account?.get('username');
   const displayName =

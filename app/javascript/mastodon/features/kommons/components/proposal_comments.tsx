@@ -34,10 +34,16 @@ interface CommentJSON {
 const messages = defineMessages({
   heading: { id: 'comments.heading', defaultMessage: 'Comments' },
   placeholder: { id: 'comments.placeholder', defaultMessage: 'Add a comment…' },
-  replyPlaceholder: { id: 'comments.reply_placeholder', defaultMessage: 'Reply…' },
+  replyPlaceholder: {
+    id: 'comments.reply_placeholder',
+    defaultMessage: 'Reply…',
+  },
   post: { id: 'comments.post', defaultMessage: 'Comment' },
   reply: { id: 'comments.reply', defaultMessage: 'Reply' },
-  empty: { id: 'comments.empty', defaultMessage: 'No comments yet. Start the discussion.' },
+  empty: {
+    id: 'comments.empty',
+    defaultMessage: 'No comments yet. Start the discussion.',
+  },
 });
 
 const CommentRow: React.FC<{

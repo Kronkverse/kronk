@@ -16,7 +16,6 @@ import { ProposalBacking } from './proposal_backing';
 import { ProposalComments } from './proposal_comments';
 import { ProposalSteps } from './proposal_steps';
 
-
 const statusLabels: Record<Proposal['status'], string> = {
   open: 'Open',
   completed: 'Completed',

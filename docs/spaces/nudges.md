@@ -36,7 +36,7 @@ Core Phase 5 has landed:
 - **Notification preferences → Nudges (planned, not done).** Per
   [`../kronk_settings_ia.md`](../kronk_settings_ia.md) §3 and
   `../rebuild/decisions.md`, notification prefs (`notification_emails.*`,
-  `software_updates`, push, per-activity toggles) are *intended* to fold in
+  `software_updates`, push, per-activity toggles) are _intended_ to fold in
   here — but a standalone Notifications settings page is **still live** at
   `/settings/notifications` (`settings.notifications`, `lifecycle: live` in
   `config/kronk_nodes.yaml`; `NotificationsSettings` route in

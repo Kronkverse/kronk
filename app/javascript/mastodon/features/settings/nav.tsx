@@ -242,7 +242,10 @@ export const SectionRow: React.FC<{ section: SectionDef }> = ({ section }) => {
 };
 
 const pillMessages = defineMessages({
-  tuneIn: { id: 'settings_korners.tune_in', defaultMessage: 'Tune in to {name}' },
+  tuneIn: {
+    id: 'settings_korners.tune_in',
+    defaultMessage: 'Tune in to {name}',
+  },
   tuneOut: {
     id: 'settings_korners.tune_out',
     defaultMessage: 'Tune out of {name}',

@@ -63,19 +63,19 @@ both lag reality. Confirmed shipped on `rebuild/2.0.0` (tip alpha.189):
 
 ### Framework + korners — still genuine gaps
 
-| Item                                                                                                                                                     | State | Effort                    |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------- |
-| Nudges Phase 5 cutover — retire the classic notifications bell UI _for real_ (currently CSS-hidden)                                                      | work  | M                         |
-| Huddle Phase 9.5 — event bus wiring (Phase 9.1–9.2 models shipped; 9.3–9.5 pending)                                                                      | work  | M                         |
-| Nudges hasn't absorbed notification-email prefs (`notification_emails.*`, `always_send_emails`, `software_updates`)                                      | todo  | M                         |
-| **moments / albutts / kompass** — manifests set `enforced: false`; no models. Phase 13 stubs (each a "coming soon" card).                                | todo  | S each × 3                |
-| **klot** — manifest-only; runtime lives on `dev/tbone` (not merged)                                                                                      | todo  | L (out-of-scope for 2.0?) |
-| CLAUDE.md must-read line for the Standard before editing `config/korners/*.yaml`                                                                         | todo  | S                         |
+| Item                                                                                                                                                                                      | State | Effort                    |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------- |
+| Nudges Phase 5 cutover — retire the classic notifications bell UI _for real_ (currently CSS-hidden)                                                                                       | work  | M                         |
+| Huddle Phase 9.5 — event bus wiring (Phase 9.1–9.2 models shipped; 9.3–9.5 pending)                                                                                                       | work  | M                         |
+| Nudges hasn't absorbed notification-email prefs (`notification_emails.*`, `always_send_emails`, `software_updates`)                                                                       | todo  | M                         |
+| **moments / albutts / kompass** — manifests set `enforced: false`; no models. Phase 13 stubs (each a "coming soon" card).                                                                 | todo  | S each × 3                |
+| **klot** — manifest-only; runtime lives on `dev/tbone` (not merged)                                                                                                                       | todo  | L (out-of-scope for 2.0?) |
+| CLAUDE.md must-read line for the Standard before editing `config/korners/*.yaml`                                                                                                          | todo  | S                         |
 | ~~L7 stylelint-governance doctor check~~ — **DONE** (alpha.196): `korners.rb` now implements the L7 check + `stylelint_governance_list` helper, so the doctor gates L1/L3/L4/L5/L6/L7/L10 | done  | —                         |
-| ~~Core-space manifests for Feed/Profile/Hub~~ — **DONE**: `config/korners/{feed,hub,profile,settings}.yaml` all present; doctor distinguishes core via `manifest.core?`                                  | done  | —                         |
-| Launch card (§8.7) declared in 10 manifests, parsed, but no producer/service — the one-time launch announcement never projects                           | todo  | M                         |
-| Korner tombstones / 410 Gone (§5.6) — only AP Statuses tombstone; Listing etc. have no `deleted_at`/410 resolution                                       | todo  | M                         |
-| `render_target` inert (§9.1) — every manifest sets it; nothing consumes it (also open decision §13.2)                                                    | todo  | L / defer                 |
+| ~~Core-space manifests for Feed/Profile/Hub~~ — **DONE**: `config/korners/{feed,hub,profile,settings}.yaml` all present; doctor distinguishes core via `manifest.core?`                   | done  | —                         |
+| Launch card (§8.7) declared in 10 manifests, parsed, but no producer/service — the one-time launch announcement never projects                                                            | todo  | M                         |
+| Korner tombstones / 410 Gone (§5.6) — only AP Statuses tombstone; Listing etc. have no `deleted_at`/410 resolution                                                                        | todo  | M                         |
+| `render_target` inert (§9.1) — every manifest sets it; nothing consumes it (also open decision §13.2)                                                                                     | todo  | L / defer                 |
 
 ### Settings retirement — blocks retiring classic /settings
 
@@ -90,15 +90,15 @@ both lag reality. Confirmed shipped on `rebuild/2.0.0` (tip alpha.189):
 
 Copied from `remaining_work_2026-07-20.md`; none moved off the list:
 
-| Item                                                                                                                                                | Effort |
-| --------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `settings.account` + `settings.data` nav nodes lead nowhere (declared with URLs but no route/component)                                             | S      |
-| Verify SPA `/settings/privacy` covers `indexable`/`noindex`, `hide_collections`, `show_application`                                                 | S      |
-| ~~`default_quote_policy` absent from posting settings API~~ — **DONE**: now in `PostingController::FIELDS` + serialized (the private→`nobody` coupling is still not reproduced in the API)          | —      |
-| Wachuneed `subcategory` column doc says "retires" but persists + is serialized                                                                      | S      |
-| `fetch_link_card` `ALLOWED_LOCAL_PATHS` lists legacy korner paths, not `/hub/<slug>`                                                                | S      |
-| Dead `interactions.must_be_follower`/`must_be_following` settings keys (writeable, wired to nothing)                                                | S      |
-| Dead code from Frame migration — `<KornerExit>`, `<SpaceTabs>`, per-panel `.space-title` heroes in Kuestions (retired by spec rule 5 but not swept) | S      |
+| Item                                                                                                                                                                                       | Effort |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| `settings.account` + `settings.data` nav nodes lead nowhere (declared with URLs but no route/component)                                                                                    | S      |
+| Verify SPA `/settings/privacy` covers `indexable`/`noindex`, `hide_collections`, `show_application`                                                                                        | S      |
+| ~~`default_quote_policy` absent from posting settings API~~ — **DONE**: now in `PostingController::FIELDS` + serialized (the private→`nobody` coupling is still not reproduced in the API) | —      |
+| Wachuneed `subcategory` column doc says "retires" but persists + is serialized                                                                                                             | S      |
+| `fetch_link_card` `ALLOWED_LOCAL_PATHS` lists legacy korner paths, not `/hub/<slug>`                                                                                                       | S      |
+| Dead `interactions.must_be_follower`/`must_be_following` settings keys (writeable, wired to nothing)                                                                                       | S      |
+| Dead code from Frame migration — `<KornerExit>`, `<SpaceTabs>`, per-panel `.space-title` heroes in Kuestions (retired by spec rule 5 but not swept)                                        | S      |
 
 ### Per-space UI vision (design-heavy — mostly post-2.0 unless promoted)
 
