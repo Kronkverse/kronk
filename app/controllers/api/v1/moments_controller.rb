@@ -46,7 +46,6 @@ class Api::V1::MomentsController < Api::BaseController
     @moment.expires_at = Time.current + Moment::DEFAULT_LIFETIME
 
     @moment.save!
-    create_status_for_moment!(@moment)
 
     render json: @moment, serializer: REST::MomentSerializer
   end
@@ -72,36 +71,5 @@ class Api::V1::MomentsController < Api::BaseController
     permitted[:visibility] = permitted[:visibility].presence || 'mates'
     permitted[:krew_id] = nil unless permitted[:visibility] == 'krew'
     permitted
-  end
-
-  # Maps Moment visibility → Status visibility. Same tier names on
-  # both sides now (Status enum widened at alpha.275 for the Reach
-  # work). Krew-scoped moments also stamp the Status's `statuses_krews`
-  # join so the feed gate lands in that krew's timeline.
-  MOMENT_TO_STATUS_VISIBILITY = {
-    'public' => 'public',
-    'orbit' => 'orbit',
-    'mates' => 'mates',
-    'self_only' => 'self_only',
-    'krew' => 'krew',
-  }.freeze
-
-  def create_status_for_moment!(moment)
-    status_text = moment.caption.presence || ''
-    status_visibility = MOMENT_TO_STATUS_VISIBILITY.fetch(moment.visibility, 'public')
-
-    status = PostStatusService.new.call(
-      current_account,
-      text: status_text,
-      visibility: status_visibility,
-      application: doorkeeper_token.application,
-      media_ids: [moment.media_attachment_id]
-    )
-
-    status.krews << moment.krew if moment.visible_to_krew? && moment.krew
-
-    moment.update!(status: status)
-    status.update_column(:source_korner, 'moments') # feed projection discriminator (§3.2)
-    status.touch
   end
 end

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 # Full Moment shape. Used by /api/v1/moments (create/show/index) and
-# by the composer / grid views. The feed-card version is
-# REST::MomentSummarySerializer.
+# by the composer / grid / strip views. Moments have no feed card, so
+# this is the only Moment serializer.
 class REST::MomentSerializer < ActiveModel::Serializer
   attributes :id, :caption, :visibility, :expires_at, :active,
              :froth_count, :frothed_by_viewer, :created_at
