@@ -1,8 +1,4 @@
-import { useCallback } from 'react';
-
 import { defineMessages, useIntl } from 'react-intl';
-
-import { Link } from 'react-router-dom';
 
 import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library.svg?react';
 
@@ -49,15 +45,12 @@ export const StatusAlbuttsCard: React.FC<{ album: AlbumSummary }> = ({
 }) => {
   const intl = useIntl();
 
-  const handleLinkClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
-
   return (
     <StatusKornerCard
       korner='Albutts'
       variant='album'
       className='status-albutts-card'
+      to={`/hub/albutts/albums/${album.id}`}
       badge={{
         icon: PhotoLibraryIcon,
         iconId: 'photo_library',
@@ -96,13 +89,11 @@ export const StatusAlbuttsCard: React.FC<{ album: AlbumSummary }> = ({
             ))}
           </div>
         )}
-        <Link
-          to={`/hub/albutts/albums/${album.id}`}
-          className='status-korner-card__action'
-          onClick={handleLinkClick}
-        >
+        {/* The whole card navigates (see StatusKornerCard `to`); this is a
+            visual affordance, not a nested link. */}
+        <span className='status-korner-card__action'>
           {intl.formatMessage(messages.view)}
-        </Link>
+        </span>
       </div>
     </StatusKornerCard>
   );
