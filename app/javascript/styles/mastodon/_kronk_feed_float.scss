@@ -17,10 +17,21 @@
   // scrollable + top-and-sides of the column-header) framed the whole
   // feed as a rectangle, which read as a stock-Mastodon column even
   // once the individual posts became floating cards. Strip the column
-  // header's borders too so the floating bubbles sit directly on the
-  // page background (Kosmos / --surface-primary), broken only by the
-  // InFlow veil.
-  .column-header {
+  // header's + column's borders too so the floating bubbles sit
+  // directly on the page background (Kosmos / --surface-primary),
+  // broken only by the InFlow veil.
+  // Belt-and-braces coverage: the classic `.column > .scrollable` rule
+  // in components.scss is (0,2,0) with a child combinator, same
+  // specificity as my `.columns-area__panels__main .scrollable`
+  // descendant selector. Cascade order should still favour mine (this
+  // file loads last in application.scss), but list `.column` and its
+  // child variants explicitly so nothing about compile order or Vite
+  // chunking can un-strip them.
+  .column,
+  .column > .scrollable,
+  .column-header,
+  .column-header__wrapper,
+  .column-back-button {
     border: 0;
     background: transparent;
   }
@@ -39,6 +50,21 @@
     .status {
       border-bottom: 0;
     }
+  }
+
+  // Kill every child hairline in the feed. `.status` carries a
+  // 1px border-bottom by default (components.scss:1520) so consecutive
+  // posts inside the same wrapper (threads / boosted) show a line
+  // through the bubble. Notifications and follow-suggestions carry the
+  // same pattern. Cover them all inside the feed.
+  .item-list > *,
+  .status,
+  .notification,
+  .notification-group,
+  .notification-ungrouped,
+  .follow-suggestion,
+  .conversation {
+    border-bottom: 0;
   }
 
   // Load-more and gap controls sit in the gaps, not on a card.
