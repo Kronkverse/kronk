@@ -76,7 +76,11 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     try {
       const form = new FormData();
       form.append('file', file);
-      const mediaResp = await api().post<MediaResponse>('v1/media', form, {
+      // `api()` has no baseURL, so the raw axios instance needs the
+      // absolute `/api/…` path (unlike the apiRequest* helpers, which
+      // prepend it). A bare `v1/media` posts relative to the current
+      // page → 404. Matches the other korner composers' upload path.
+      const mediaResp = await api().post<MediaResponse>('/api/v2/media', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const mediaId = mediaResp.data.id;
