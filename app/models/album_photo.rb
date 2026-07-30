@@ -24,6 +24,9 @@ class AlbumPhoto < ApplicationRecord
   belongs_to :contributor, class_name: 'Account'
   belongs_to :media_attachment, optional: true
 
+  has_many :froths,   class_name: 'AlbumPhotoFroth',   dependent: :destroy, inverse_of: :album_photo
+  has_many :comments, class_name: 'AlbumPhotoComment', dependent: :destroy, inverse_of: :album_photo
+
   validates :caption, length: { maximum: 500 }, allow_blank: true
   validate  :exactly_one_media_source
   validate  :media_attachment_belongs_to_contributor

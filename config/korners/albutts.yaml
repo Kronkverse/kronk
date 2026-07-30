@@ -72,6 +72,16 @@ notifications:
       default_push: false # bursty on events; off by default
       aggregation: { window: 15m, key: album_id }
       interactive: false # notice
+    - name: photo_frothed
+      subject_type: album_photo
+      default_push: false
+      aggregation: { window: 15m, key: photo_id }
+      interactive: false # notice
+    - name: photo_commented
+      subject_type: album_photo
+      default_push: false
+      aggregation: none
+      interactive: true # opens the lightbox at the commented photo
 
 settings:
   # Contributor set follows the album's visibility scope (open roster
@@ -90,6 +100,12 @@ emits:
   # A new photo has been added to an existing album — fellow
   # contributors get notified (`album_new_photo`, aggregated).
   - albutts.album.new_photo
+  # A photo has been frothed — the photo's contributor is nudged
+  # (per-photo reactions, 2026-07-30).
+  - albutts.photo.frothed
+  # A photo has been commented on — the photo's contributor is
+  # nudged; a reply also nudges the parent comment's author.
+  - albutts.photo.commented
 listens:
   # When a Kalendar event with `spawn_album: true` is created, an
   # Albutt is auto-created + linked. RSVP grants contribution rights.
