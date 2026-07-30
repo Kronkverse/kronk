@@ -256,18 +256,21 @@ export const VeilScene: React.FC = () => {
     };
   }, [host, expanded]);
 
-  // Dwell tracker — auto-collapse once the user has spent enough time
-  // reading the veil. We only start counting when the veil's reading
-  // area is genuinely on-screen (≥60% of it visible), and we accumulate
-  // continuously across multiple visits within the same session. Once
-  // the threshold trips, we persist today's Melbourne day key AND flip
-  // the local state, so the veil folds down to its pill in-place — same
-  // behaviour the × button used to give, but automatic.
+  // Dwell tracker — mark the veil as seen once the user has spent
+  // enough time on it, but defer the actual collapse until they've
+  // scrolled away. Two separate signals:
+  //
+  // (1) dwellReached — the user has been on the veil ≥ threshold.
+  //     Persist today's Melbourne day key at this moment (idempotent).
+  //     Does NOT flip local state — user is still looking at the veil,
+  //     collapsing under them would be jarring.
+  //
+  // (2) aperture leaves the viewport AFTER dwellReached — safe to
+  //     collapse now. The user sees nothing (they're already past it);
+  //     if they scroll back up, they get the pill instead of the veil.
   //
   // Threshold ~7s: long enough to comfortably read the reflection +
-  // glance at the almanac (~40 words + 4 short lines); short enough to
-  // fire before someone scrolls into the album card below and starts
-  // engaging with it.
+  // glance at the almanac (~40 words + 4 short lines).
   useEffect(() => {
     if (!expanded) return;
     const aperture = apertureRef.current;
@@ -276,30 +279,34 @@ export const VeilScene: React.FC = () => {
     const DWELL_THRESHOLD_MS = 7000;
     let dwellStart: number | null = null;
     let dwellTotal = 0;
-    let fired = false;
+    let dwellReached = false;
+
+    const persistIfReady = () => {
+      if (!dwellReached && dwellTotal >= DWELL_THRESHOLD_MS) {
+        dwellReached = true;
+        writeCollapsedOn(melbourneDayKey());
+      }
+    };
 
     const io = new IntersectionObserver(
       (entries) => {
-        if (fired) return;
         const entry = entries[0];
         if (!entry) return;
 
         if (entry.isIntersecting) {
+          // Coming into view (or first paint) — start/resume the timer.
           dwellStart = performance.now();
-          // If already past threshold when the veil comes back into
-          // view (unlikely — we'd have already fired — but guards a
-          // race), fire immediately.
-          if (dwellTotal >= DWELL_THRESHOLD_MS) {
-            fired = true;
-            writeCollapsedOn(melbourneDayKey());
-            setExpanded(false);
+        } else {
+          // Leaving the viewport. Accumulate elapsed and, if the user
+          // dwelled enough at some point, collapse now that they're
+          // looking elsewhere. If they scroll back, the pill shows in
+          // place of the veil — they never see the transition itself.
+          if (dwellStart !== null) {
+            dwellTotal += performance.now() - dwellStart;
+            dwellStart = null;
           }
-        } else if (dwellStart !== null) {
-          dwellTotal += performance.now() - dwellStart;
-          dwellStart = null;
-          if (dwellTotal >= DWELL_THRESHOLD_MS) {
-            fired = true;
-            writeCollapsedOn(melbourneDayKey());
+          persistIfReady();
+          if (dwellReached) {
             setExpanded(false);
           }
         }
@@ -308,15 +315,16 @@ export const VeilScene: React.FC = () => {
     );
     io.observe(aperture);
 
-    // Poll while the veil is in view so we can trip mid-dwell (rather
-    // than only on scroll-past). Cheap — one interval, cleared on unmount.
+    // Poll while in view so persistIfReady() fires as soon as the
+    // threshold is crossed (rather than waiting for the scroll-away).
+    // Silent — no visual change while the veil is on screen. The
+    // scroll-away branch above is what does the actual collapse.
     const poll = window.setInterval(() => {
-      if (fired || dwellStart === null) return;
+      if (dwellReached || dwellStart === null) return;
       const elapsed = performance.now() - dwellStart;
       if (dwellTotal + elapsed >= DWELL_THRESHOLD_MS) {
-        fired = true;
+        dwellReached = true;
         writeCollapsedOn(melbourneDayKey());
-        setExpanded(false);
       }
     }, 1000);
 
