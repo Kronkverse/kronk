@@ -494,17 +494,15 @@
 
   // The loud "Mark Complete" CTA — appears across from the title once a
   // proposal is delivered (dev-finalised), urging the proposer to finalise.
+  // Canonical Kronk primary CTA (see _buttons_kronk.scss): flat --accent fill,
+  // full stadium pill, flat darken on hover — no gradient, no glow, no lift.
   &__mark-complete {
     flex: 0 0 auto;
     align-self: center;
-    padding: 0.7rem 1.6rem;
+    padding: 0.6rem 1.5rem;
     border: 0;
-    border-radius: var(--radius-medium);
-    background: linear-gradient(
-      135deg,
-      var(--accent),
-      var(--kronk-purple-bright)
-    );
+    border-radius: var(--radius-round);
+    background: var(--accent);
     color: var(--text-on-accent);
     font-family: var(--font-display);
     font-weight: 600;
@@ -512,18 +510,17 @@
     letter-spacing: 0.01em;
     white-space: nowrap;
     cursor: pointer;
-    box-shadow: 0 6px 18px
-      color-mix(in srgb, var(--kronk-purple-bright) 40%, transparent);
-    transition:
-      transform 0.15s var(--ease-out),
-      box-shadow 0.15s var(--ease-out);
+    transition: background-color 0.15s var(--ease-out);
 
-    &:hover,
+    &:hover {
+      background: var(--kronk-purple-deep);
+    }
+
     &:focus-visible {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 22px
-        color-mix(in srgb, var(--kronk-purple-bright) 55%, transparent);
+      background: var(--kronk-purple-deep);
       outline: none;
+      box-shadow: 0 0 0 3px
+        color-mix(in srgb, var(--accent) 35%, transparent);
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -2894,13 +2891,15 @@
 .kommons-form__cancel-btn {
   padding: 9px 20px;
   border: 1px solid var(--border-default);
-  border-radius: 8px;
+  border-radius: var(--radius-round);
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
-  transition: all 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 
   &:hover:not(:disabled) {
     border-color: var(--accent);
@@ -2916,33 +2915,31 @@
 .kommons-form__submit-btn {
   padding: 9px 24px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-round);
   background: var(--accent);
   color: var(--text-on-accent);
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  transition: all 0.2s ease;
+  transition: background-color 0.15s var(--ease-out);
 
   &:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--accent) 94%, black 6%);
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 25%, transparent);
+    background: var(--kronk-purple-deep);
   }
 
   &:disabled {
     opacity: 0.4;
     cursor: not-allowed;
-    box-shadow: none;
   }
 
+  // Confirm-completion is the positive terminal action — keep the agree-green
+  // semantic, but as a flat fill matching the primary pill (no glow).
   &--deliver {
     background: var(--decision-agree);
 
     &:hover:not(:disabled) {
-      background: color-mix(in srgb, var(--decision-agree) 94%, black);
-      box-shadow: 0 2px 8px
-        color-mix(in srgb, var(--decision-agree) 25%, transparent);
+      background: color-mix(in srgb, var(--decision-agree) 88%, black);
     }
   }
 }
