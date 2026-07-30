@@ -947,3 +947,97 @@ body:has(.korner-sub-bar) {
     color: var(--text-muted);
   }
 }
+
+// Krew multi-select embedded in the visibility modal. Shown when the
+// user picks Krew visibility so they can select one or more Krews in
+// the same flow, no need to leave the modal.
+.krew-picker {
+  &__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    max-height: 15rem;
+    overflow-y: auto;
+  }
+
+  &__row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.55rem 0.7rem;
+    background: color-mix(in oklab, var(--surface-elevated) 60%, transparent);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      border-color: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 40%,
+        var(--border-default)
+      );
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 8%,
+        var(--surface-elevated)
+      );
+    }
+
+    &--active {
+      border-color: var(--kronk-purple-accent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 15%,
+        var(--surface-elevated)
+      );
+    }
+  }
+
+  &__check {
+    flex: 0 0 auto;
+    width: 1.05rem;
+    height: 1.05rem;
+    border-radius: var(--radius-small);
+    border: 1.5px solid var(--border-default);
+    background: transparent;
+    position: relative;
+
+    &--on {
+      background: var(--kronk-purple-accent);
+      border-color: var(--kronk-purple-accent);
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 1px;
+        width: 4px;
+        height: 8px;
+        border: solid var(--surface-primary);
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+    }
+  }
+
+  &__name {
+    flex: 1 1 auto;
+    font-weight: 500;
+  }
+
+  &__meta {
+    flex: 0 0 auto;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+}

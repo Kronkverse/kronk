@@ -1,10 +1,28 @@
-import { forwardRef, useCallback, useId, useMemo, useState } from 'react';
+/* eslint-disable @typescript-eslint/no-unnecessary-condition --
+ * `cancelled` in the KrewPicker useEffect cleanup mutates after the
+ * async fetch reads it; TS control-flow doesn't track mutation across
+ * the closure so `!cancelled` reads as always-truthy — but the guard
+ * is load-bearing to prevent a setState after unmount. */
+
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useState,
+} from 'react';
 import type { FC } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import classNames from 'classnames';
 
+import { List as ImmutableList } from 'immutable';
+
+import { changeComposeKrewTargets } from '@/mastodon/actions/compose';
+import { apiRequestGet } from '@/mastodon/api';
+import type { ApiKrewJSON } from '@/mastodon/api/krew';
 import type { ApiQuotePolicy } from '@/mastodon/api_types/quotes';
 import { isQuotePolicy } from '@/mastodon/api_types/quotes';
 import { isStatusVisibility } from '@/mastodon/api_types/statuses';
@@ -14,7 +32,11 @@ import { Dropdown } from '@/mastodon/components/dropdown';
 import type { SelectItem } from '@/mastodon/components/dropdown_selector';
 import { IconButton } from '@/mastodon/components/icon_button';
 import { messages as privacyMessages } from '@/mastodon/features/compose/components/privacy_dropdown';
-import { createAppSelector, useAppSelector } from '@/mastodon/store';
+import {
+  createAppSelector,
+  useAppDispatch,
+  useAppSelector,
+} from '@/mastodon/store';
 import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
@@ -42,6 +64,23 @@ const messages = defineMessages({
   quoteNobody: {
     id: 'visibility_modal.quote_nobody',
     defaultMessage: 'Just me',
+  },
+  krewPickerLabel: {
+    id: 'visibility_modal.krew_picker_label',
+    defaultMessage: 'Which Krews',
+  },
+  krewPickerLoading: {
+    id: 'visibility_modal.krew_picker_loading',
+    defaultMessage: 'Loading your Krews…',
+  },
+  krewPickerEmpty: {
+    id: 'visibility_modal.krew_picker_empty',
+    defaultMessage: "You aren't in any Krews yet.",
+  },
+  krewPickerHelper: {
+    id: 'visibility_modal.krew_picker_helper',
+    defaultMessage:
+      'Pick one or more Krews. Members of any picked Krew will see the post.',
   },
 });
 
@@ -331,6 +370,8 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
               )}
             </div>
 
+            {visibility === 'krew' && !statusId && <KrewPicker />}
+
             <div
               className={classNames('visibility-dropdown', {
                 disabled: disableQuotePolicy,
@@ -437,4 +478,124 @@ const QuotePolicyHelper: FC<
   }
 
   return <p {...otherProps}>{hintText}</p>;
+};
+
+// Inline Krew picker — appears in the visibility modal when the user
+// selects 'krew'. Reads and writes the compose reducer's krew_ids
+// directly so the selection is picked up by the compose form on Save.
+// KRONK_KREWS §7.1: a Krew-scoped post carries at least one krew_id;
+// PostStatusService rejects visibility='krew' with an empty list.
+const KrewPicker: FC = () => {
+  const intl = useIntl();
+  const dispatch = useAppDispatch();
+  const selectedIds = useAppSelector(
+    (state) =>
+      (state.compose.get('krew_ids') ??
+        ImmutableList()) as ImmutableList<string>,
+  );
+
+  const [available, setAvailable] = useState<ApiKrewJSON[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const krews = await apiRequestGet<ApiKrewJSON[]>('v1/krews', {
+          limit: 100,
+        });
+        if (!cancelled) {
+          setAvailable(
+            krews.filter((k) => k.viewer_role !== null && !k.archived),
+          );
+        }
+      } catch {
+        // Best-effort — the empty state renders if this fails.
+      } finally {
+        if (!cancelled) setLoaded(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const toggle = useCallback(
+    (id: string) => {
+      const next = selectedIds.includes(id)
+        ? selectedIds.filter((x) => x !== id)
+        : selectedIds.push(id);
+      dispatch(changeComposeKrewTargets(next.toArray()));
+    },
+    [dispatch, selectedIds],
+  );
+
+  const handleToggleClick = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >(
+    (e) => {
+      const id = e.currentTarget.dataset.id;
+      if (id) toggle(id);
+    },
+    [toggle],
+  );
+
+  return (
+    <div className='visibility-dropdown krew-picker'>
+      <p className='visibility-dropdown__label'>
+        {intl.formatMessage(messages.krewPickerLabel)}
+      </p>
+
+      {!loaded && (
+        <p className='visibility-dropdown__helper'>
+          {intl.formatMessage(messages.krewPickerLoading)}
+        </p>
+      )}
+
+      {loaded && available.length === 0 && (
+        <p className='visibility-dropdown__helper'>
+          {intl.formatMessage(messages.krewPickerEmpty)}
+        </p>
+      )}
+
+      {loaded && available.length > 0 && (
+        <>
+          <ul className='krew-picker__list' role='group'>
+            {available.map((k) => {
+              const selected = selectedIds.includes(k.id);
+              return (
+                <li key={k.id}>
+                  <button
+                    type='button'
+                    role='checkbox'
+                    aria-checked={selected}
+                    data-id={k.id}
+                    onClick={handleToggleClick}
+                    className={classNames('krew-picker__row', {
+                      'krew-picker__row--active': selected,
+                    })}
+                  >
+                    <span
+                      className={classNames('krew-picker__check', {
+                        'krew-picker__check--on': selected,
+                      })}
+                      aria-hidden='true'
+                    />
+                    <span className='krew-picker__name'>{k.name}</span>
+                    <span className='krew-picker__meta'>
+                      {k.member_count}{' '}
+                      {k.member_count === 1 ? 'member' : 'members'}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          <p className='visibility-dropdown__helper'>
+            {intl.formatMessage(messages.krewPickerHelper)}
+          </p>
+        </>
+      )}
+    </div>
+  );
 };
