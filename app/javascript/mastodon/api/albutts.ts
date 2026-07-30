@@ -53,7 +53,6 @@ export const apiContributePhoto = (
 ) =>
   apiRequestPost<ApiAlbumPhotoJSON>(`v1/albutts/albums/${albumId}/photos`, {
     photo: params,
-    media_id: params.media_id,
   });
 
 export const apiDeletePhoto = (photoId: string) =>
