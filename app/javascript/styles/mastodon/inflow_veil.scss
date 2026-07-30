@@ -1,5 +1,4 @@
 // InFlow veil — the feed parts to reveal a night sky that was always there.
-//
 // The night sky is a fixed, viewport-pinned backdrop (rendered through a portal
 // to <body> so it escapes the feed's overflow/contain). veil_scene.tsx clips it
 // to the on-screen slice of the aperture — the opening in the feed — so the
@@ -40,6 +39,7 @@
   position: absolute;
   inset: 0;
   background-repeat: no-repeat;
+
   // A brighter field of the platform's purple-star motif.
   background-image:
     radial-gradient(2px 2px at 20% 22%, #cdbfff 40%, transparent),
@@ -164,5 +164,142 @@
 @media (prefers-reduced-motion: reduce) {
   .inflow-veil__nightsky {
     transition: none;
+  }
+}
+
+// Close (×) button inside the expanded veil scene. Sits in the
+// top-right of the reading area so it doesn't compete with the moon
+// or the almanac. Clicking stores the current Melbourne day key and
+// collapses the veil until the next day rolls over.
+.inflow-veil__close {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid
+    color-mix(in oklab, var(--kronk-purple-bright, #b39dff) 30%, transparent);
+  border-radius: var(--radius-round);
+  background: color-mix(in oklab, var(--kosmos-void) 65%, transparent);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 22%,
+      var(--kosmos-void)
+    );
+    border-color: color-mix(
+      in oklab,
+      var(--kronk-purple-bright, #b39dff) 55%,
+      transparent
+    );
+    transform: scale(1.05);
+    outline: none;
+  }
+
+  .icon {
+    width: 1.05rem;
+    height: 1.05rem;
+    fill: currentcolor;
+  }
+}
+
+// Collapsed veil — a compact pill that sits in the same feed slot
+// as the expanded aperture. Shows the moon phase + a hint to
+// reopen. Clicking reopens the veil for the rest of the session
+// (day key stays set until midnight in Melbourne time).
+.inflow-veil-collapsed {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-block: 12px;
+  border: 1px solid
+    color-mix(
+      in oklab,
+      var(--kronk-purple-bright, #b39dff) 22%,
+      var(--border-default)
+    );
+  border-radius: var(--radius-large);
+  background: color-mix(
+    in oklab,
+    var(--kosmos-void) 78%,
+    var(--surface-elevated)
+  );
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: start;
+  font-family: var(--font-display, Georgia, serif);
+  box-shadow:
+    0 6px 20px -8px rgb(0 0 0 / 45%),
+    inset 0 1px 0
+      color-mix(in oklab, var(--kronk-purple-bright, #b39dff) 10%, transparent);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 8%,
+      var(--kosmos-void)
+    );
+    border-color: color-mix(
+      in oklab,
+      var(--kronk-purple-bright, #b39dff) 45%,
+      var(--border-default)
+    );
+    transform: translateY(-1px);
+    outline: none;
+  }
+
+  &__moon {
+    flex: 0 0 auto;
+    width: 2.6rem;
+    height: 2.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    // The <VeilMoon> SVG uses its own 200×200 viewBox — constrain it
+    // to the pill's slot without stretching the geometry.
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.25;
+  }
+
+  &__title {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  &__meta {
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
   }
 }
