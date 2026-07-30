@@ -7,6 +7,21 @@
 // untouched. Prototype — tune spacing / surface with Tal.
 
 .columns-area__panels__main {
+  // The body carries `--background-color: hsl(240, 16%, 11%)` (a
+  // subtle grey), while the Kosmos layer paints `--kosmos-void` behind
+  // everything at z-index 0. Because `.columns-area__panels__main`
+  // declares `contain: paint layout style`, it creates a new stacking
+  // context that isolates its interior from the Kosmos layer — so on
+  // classic <Column> routes the body's grey shows through inside the
+  // column while the darker Kosmos void shows outside. That's the
+  // "vague grey rectangle" behind the feed.
+  // Match the Kosmos void inside the column so the two blend
+  // seamlessly. The parallel Stage-route override in _kronk_stage.scss
+  // (`.kronk-frame:has(.kronk-stage) .columns-area__panels__main`)
+  // sets `background: transparent` at higher specificity, so this
+  // doesn't affect Stage routes.
+  background: var(--kosmos-void);
+
   .scrollable {
     padding-inline: 10px;
     border: 0;
