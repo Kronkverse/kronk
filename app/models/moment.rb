@@ -38,6 +38,28 @@ class Moment < ApplicationRecord
   scope :for_account, ->(account) { where(account: account) }
   scope :recent, -> { order(created_at: :desc) }
 
+  # Moments visible to `viewer`, per the reach ladder + krew axis
+  # (docs/kronk_feed_and_reach.md §2). Mirrors Album.visible_to:
+  #   public → everyone; mates → owner's mutuals; orbit → mates-of-mates;
+  #   krew → viewer is in the moment's krew; self_only → owner only.
+  # The owner always sees their own. Compose with .active / .expired.
+  scope :visible_to, lambda { |viewer|
+    return visible_to_public if viewer.nil?
+
+    mate_ids       = viewer.mates.select(:id)
+    krew_ids       = viewer.krews.select(:id)
+    mates_of_mates = Account.where(id: Follow.where(account_id: mate_ids).select(:target_account_id))
+                            .where(id: Follow.where(target_account_id: mate_ids).select(:account_id))
+                            .where.not(id: viewer.id)
+                            .select(:id)
+
+    where(account_id: viewer.id)
+      .or(visible_to_public)
+      .or(visible_to_mates.where(account_id: mate_ids))
+      .or(visible_to_orbit.where(account_id: mates_of_mates))
+      .or(visible_to_krew.where(krew_id: krew_ids))
+  }
+
   def active?
     expires_at.future?
   end
@@ -52,7 +74,39 @@ class Moment < ApplicationRecord
     moment_froths.exists?(account: other_account)
   end
 
+  # Single-record counterpart to the `visible_to` scope — used to gate
+  # #show so a hidden Moment can't be fetched directly by id.
+  def visible_to?(viewer)
+    return true if viewer && viewer.id == account_id
+    return false if visible_to_self_only?
+    return true  if visible_to_public?
+    return mates_visible_to?(viewer) if visible_to_mates?
+    return orbit_visible_to?(viewer) if visible_to_orbit?
+    return krew_visible_to?(viewer) if visible_to_krew?
+
+    false
+  end
+
   private
+
+  def mates_visible_to?(viewer)
+    return false if viewer.nil?
+
+    viewer.mates.exists?(id: account_id)
+  end
+
+  def orbit_visible_to?(viewer)
+    return false if viewer.nil?
+    return true  if viewer.mates.exists?(id: account_id) # mates see orbit too
+
+    viewer.orbit_of?(account)
+  end
+
+  def krew_visible_to?(viewer)
+    return false if viewer.nil? || krew_id.nil?
+
+    viewer.krews.exists?(id: krew_id)
+  end
 
   def set_default_expiry
     self.expires_at ||= created_at.presence&.+(DEFAULT_LIFETIME) || (Time.current + DEFAULT_LIFETIME)

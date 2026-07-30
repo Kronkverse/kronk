@@ -437,9 +437,42 @@
 }
 
 .moments__tile-media {
+  position: relative;
   aspect-ratio: 3 / 4;
   overflow: hidden;
   background: var(--kosmos-void);
+}
+
+// Whose Moment this is — the grid spans many authors now, so each tile
+// carries a small attribution chip over the bottom of the media.
+.moments__tile-author {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 10px 8px;
+  background: linear-gradient(to top, rgb(0 0 0 / 62%), transparent);
+  color: #fff;
+  pointer-events: none;
+}
+
+.moments__tile-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-round);
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+.moments__tile-author-name {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .moments__tile-image,
@@ -471,6 +504,39 @@
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-muted);
+}
+
+// ── Korner sections: "Now" (active) then "Log" (archive) ───────────
+.moments__section {
+  margin-top: 20px;
+
+  & + .moments__section {
+    margin-top: 32px;
+  }
+}
+
+.moments__section-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.moments__section-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+// The log is history, not the live surface — sit it back a touch.
+.moments__section--log {
+  padding-top: 24px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 // ── Composer overlay ───────────────────────────────────────────────

@@ -103,7 +103,7 @@ export const MomentsStrip = () => {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    apiRequestGet<MomentJSON[]>('v1/moments', { scope: 'mates' })
+    apiRequestGet<MomentJSON[]>('v1/moments', { filter: 'active' })
       .then((data) => {
         if (cancelled) return;
         setMoments(data);
