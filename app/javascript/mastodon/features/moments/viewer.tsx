@@ -10,7 +10,13 @@
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { FormattedMessage, FormattedRelativeTime, useIntl } from 'react-intl';
+import type { MessageDescriptor } from 'react-intl';
+import {
+  FormattedMessage,
+  FormattedRelativeTime,
+  defineMessages,
+  useIntl,
+} from 'react-intl';
 
 import { useHistory, useParams } from 'react-router-dom';
 
@@ -18,7 +24,41 @@ import ReplyIcon from '@/material-icons/400-24px/chat_bubble.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import FrothIcon from '@/material-icons/400-24px/star-fill.svg?react';
 import FrothOutlineIcon from '@/material-icons/400-24px/star.svg?react';
-import { apiRequestGet, apiRequestPost, apiRequestDelete } from 'mastodon/api';
+import {
+  apiRequestGet,
+  apiRequestPost,
+  apiRequestPut,
+  apiRequestDelete,
+} from 'mastodon/api';
+import { KornerVisibilityPicker } from 'mastodon/components/korner_visibility_picker';
+import { me } from 'mastodon/initial_state';
+
+const audienceLabels = defineMessages({
+  public: { id: 'moments.audience.public', defaultMessage: 'Anyone' },
+  orbit: { id: 'moments.audience.orbit', defaultMessage: 'Orbit' },
+  mates: { id: 'moments.audience.mates', defaultMessage: 'Mates' },
+  self_only: { id: 'moments.audience.self_only', defaultMessage: 'Only me' },
+  krew: { id: 'moments.audience.krew', defaultMessage: 'Krew' },
+});
+
+const audienceLabel = (visibility: string): MessageDescriptor => {
+  switch (visibility) {
+    case 'public':
+      return audienceLabels.public;
+    case 'orbit':
+      return audienceLabels.orbit;
+    case 'self_only':
+      return audienceLabels.self_only;
+    case 'krew':
+      return audienceLabels.krew;
+    default:
+      return audienceLabels.mates;
+  }
+};
+
+// Moments can't be re-scoped INTO krew yet (no krew picker here, same as
+// the composer); moving OUT of krew is fine and clears krew_id server-side.
+const CANNOT_SET: readonly string[] = ['krew'];
 
 interface AccountJSON {
   id: string;
@@ -61,6 +101,7 @@ const MomentViewer = () => {
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(() => Date.now());
   const [frothPending, setFrothPending] = useState(false);
+  const [visibilityPending, setVisibilityPending] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Fetch the requested Moment first, then load the owner's whole
@@ -202,6 +243,42 @@ const MomentViewer = () => {
     void toggleFrothAsync();
   }, [toggleFrothAsync]);
 
+  // Re-scope one's own Moment after the fact (Stage 3). Optimistic; the
+  // stack entry's visibility updates immediately, rolls back on error.
+  const changeVisibilityAsync = useCallback(
+    async (next: string) => {
+      if (!moment || visibilityPending || next === moment.visibility) return;
+      setVisibilityPending(true);
+      const previous = moment.visibility;
+      setStack((prev) => {
+        const copy = [...prev];
+        const found = copy[index];
+        if (found) copy[index] = { ...found, visibility: next };
+        return copy;
+      });
+      try {
+        await apiRequestPut(`v1/moments/${moment.id}`, { visibility: next });
+      } catch {
+        setStack((prev) => {
+          const copy = [...prev];
+          const found = copy[index];
+          if (found) copy[index] = { ...found, visibility: previous };
+          return copy;
+        });
+      } finally {
+        setVisibilityPending(false);
+      }
+    },
+    [moment, visibilityPending, index],
+  );
+
+  const changeVisibility = useCallback(
+    (next: string) => {
+      void changeVisibilityAsync(next);
+    },
+    [changeVisibilityAsync],
+  );
+
   const reply = useCallback(() => {
     if (!moment) return;
     // v1: send the viewer to a Nudges thread with the poster. The
@@ -303,6 +380,9 @@ const MomentViewer = () => {
       onRightTap={onRightTap}
       onFroth={toggleFroth}
       onReply={reply}
+      isOwner={moment.account.id === me}
+      onChangeVisibility={changeVisibility}
+      visibilityPending={visibilityPending}
       intl={intl}
     />
   );
@@ -323,6 +403,9 @@ interface ViewerBodyProps {
   onRightTap: (e: MouseEvent) => void;
   onFroth: () => void;
   onReply: () => void;
+  isOwner: boolean;
+  onChangeVisibility: (next: string) => void;
+  visibilityPending: boolean;
   intl: ReturnType<typeof useIntl>;
 }
 
@@ -341,9 +424,25 @@ const ViewerBody = ({
   onRightTap,
   onFroth,
   onReply,
+  isOwner,
+  onChangeVisibility,
+  visibilityPending,
   intl,
 }: ViewerBodyProps) => {
   const isVideo = moment.media_attachment.type === 'video';
+  const [editingVisibility, setEditingVisibility] = useState(false);
+
+  const toggleEditingVisibility = useCallback(() => {
+    setEditingVisibility((v) => !v);
+  }, []);
+
+  const pickVisibility = useCallback(
+    (next: string) => {
+      onChangeVisibility(next);
+      setEditingVisibility(false);
+    },
+    [onChangeVisibility],
+  );
 
   // Progress: 0 at post time → 1 at expiry (24h). Clamped.
   const progress = useMemo(() => {
@@ -433,6 +532,18 @@ const ViewerBody = ({
                 </>
               )}
             </span>
+            {isOwner && (
+              <button
+                type='button'
+                className='moments-viewer__visibility'
+                onClick={toggleEditingVisibility}
+                disabled={visibilityPending}
+                aria-expanded={editingVisibility}
+              >
+                {intl.formatMessage(audienceLabel(moment.visibility))}
+                <span aria-hidden> ▾</span>
+              </button>
+            )}
           </div>
           <button
             type='button'
@@ -443,6 +554,24 @@ const ViewerBody = ({
             <CloseIcon />
           </button>
         </header>
+
+        {isOwner && editingVisibility && (
+          <div className='moments-viewer__visibility-panel'>
+            <span className='moments-viewer__visibility-panel-label'>
+              <FormattedMessage
+                id='moments.viewer.who_sees'
+                defaultMessage='Who can see this'
+              />
+            </span>
+            <KornerVisibilityPicker
+              slug='moments'
+              value={moment.visibility}
+              onChange={pickVisibility}
+              disabledScopes={CANNOT_SET}
+              disabled={visibilityPending}
+            />
+          </div>
+        )}
 
         <div className='moments-viewer__media-wrap'>
           {isVideo ? (

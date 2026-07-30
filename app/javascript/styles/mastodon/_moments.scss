@@ -136,6 +136,51 @@
   letter-spacing: 0.03em;
 }
 
+// Owner-only "who sees this" chip + the picker panel it toggles. The
+// viewer sits over dark media, so these are translucent-on-dark.
+.moments-viewer__visibility {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 2px 10px;
+  border-radius: var(--radius-round);
+  border: 1px solid rgb(255 255 255 / 35%);
+  background: rgb(255 255 255 / 12%);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: rgb(255 255 255 / 22%);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.moments-viewer__visibility-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 16px 8px;
+  padding: 12px;
+  border-radius: var(--radius-medium);
+  background: rgb(0 0 0 / 55%);
+  border: 1px solid rgb(255 255 255 / 15%);
+}
+
+.moments-viewer__visibility-panel-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 70%);
+}
+
 .moments-viewer__close {
   width: 32px;
   height: 32px;
