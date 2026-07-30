@@ -16,7 +16,7 @@ import IntersectionObserverArticleContainer from '../containers/intersection_obs
 import { attachFullscreenListener, detachFullscreenListener, isFullscreen } from '../features/ui/util/fullscreen';
 import IntersectionObserverWrapper from '../features/ui/util/intersection_observer_wrapper';
 
-import { LoadMore } from './load_more';
+import { LoadMoreSentinel } from './load_more_sentinel';
 import { LoadPending } from './load_pending';
 import { LoadingIndicator } from './loading_indicator';
 
@@ -308,11 +308,6 @@ class ScrollableList extends PureComponent {
     this.node = c;
   };
 
-  handleLoadMore = e => {
-    e.preventDefault();
-    this.props.onLoadMore();
-  };
-
   handleLoadPending = e => {
     e.preventDefault();
     this.props.onLoadPending();
@@ -330,7 +325,12 @@ class ScrollableList extends PureComponent {
     const { fullscreen } = this.state;
     const childrenCount = Children.count(children);
 
-    const loadMore     = (hasMore && onLoadMore) ? <LoadMore visible={!isLoading} onClick={this.handleLoadMore} /> : null;
+    // Silent auto-load: an invisible sentinel below the last card triggers
+    // `onLoadMore` via IntersectionObserver when it scrolls near the
+    // viewport. Replaces the classic <LoadMore> button — infinite scroll
+    // should be silent, not a click. The proximity-based `handleScroll`
+    // above is still wired as a fallback.
+    const loadMore     = (hasMore && onLoadMore) ? <LoadMoreSentinel disabled={isLoading} onLoadMore={this.props.onLoadMore} /> : null;
     const loadPending  = (numPending > 0) ? <LoadPending count={numPending} onClick={this.handleLoadPending} /> : null;
     let scrollableArea = null;
 
