@@ -177,4 +177,5 @@ export const AlbumLightboxModalWrapper: React.FC<{
   );
 };
 
+// eslint-disable-next-line import/no-default-export
 export default AlbumLightboxModalWrapper;

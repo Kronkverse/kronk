@@ -268,6 +268,14 @@ const CommentRow: React.FC<CommentRowProps> = ({
       .catch(() => undefined);
   }, [comment.id, comment.parent_id, comment.replies, onDeleted, photoId]);
 
+  const handleReplyToggle = useCallback(() => {
+    onReplyToggle(isReplying ? null : comment.id);
+  }, [comment.id, isReplying, onReplyToggle]);
+
+  const handleReplyCancel = useCallback(() => {
+    onReplyToggle(null);
+  }, [onReplyToggle]);
+
   return (
     <li className='albutts-comment'>
       <img
@@ -291,9 +299,7 @@ const CommentRow: React.FC<CommentRowProps> = ({
             <button
               type='button'
               className='albutts-comment__action'
-              onClick={() => {
-                onReplyToggle(isReplying ? null : comment.id);
-              }}
+              onClick={handleReplyToggle}
             >
               {intl.formatMessage(messages.reply)}
             </button>
@@ -318,9 +324,7 @@ const CommentRow: React.FC<CommentRowProps> = ({
               submitLabel={intl.formatMessage(messages.reply)}
               pendingLabel={intl.formatMessage(messages.posting)}
               onPosted={onPosted}
-              onCancel={() => {
-                onReplyToggle(null);
-              }}
+              onCancel={handleReplyCancel}
             />
           </div>
         )}
@@ -367,6 +371,13 @@ const CommentComposer: React.FC<CommentComposerProps> = ({
   const [text, setText] = useState('');
   const [posting, setPosting] = useState(false);
 
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setText(e.currentTarget.value);
+    },
+    [],
+  );
+
   const submit = useCallback(
     (e: FormEvent) => {
       e.preventDefault();
@@ -394,9 +405,7 @@ const CommentComposer: React.FC<CommentComposerProps> = ({
       <textarea
         className='albutts-comment-composer__textarea'
         value={text}
-        onChange={(e) => {
-          setText(e.currentTarget.value);
-        }}
+        onChange={handleChange}
         placeholder={placeholder}
         maxLength={2000}
         rows={2}

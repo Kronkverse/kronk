@@ -245,6 +245,7 @@
   grid-template-rows: auto 1fr auto;
   background: rgb(0 0 0 / 92%);
   color: #fff;
+
   // `.modal-root__container` (the wrapping element) sets
   // `pointer-events: none` and `user-select: none` to let clicks fall
   // through to the overlay-close area outside content. Reactivate both
@@ -474,7 +475,7 @@
     font-size: 14px;
     line-height: 1.4;
     white-space: pre-wrap;
-    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 
   &__actions {
