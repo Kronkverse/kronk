@@ -12,6 +12,7 @@ import { FormattedMessage } from 'react-intl';
 import { useHistory } from 'react-router-dom';
 
 import { apiRequestGet } from 'mastodon/api';
+import { useKorner } from 'mastodon/hooks/useKorner';
 import { me } from 'mastodon/initial_state';
 
 import { MomentsComposer } from './composer';
@@ -99,6 +100,8 @@ export const MomentsStrip = () => {
   const [refreshTick, setRefreshTick] = useState(0);
   const [showComposer, setShowComposer] = useState(false);
   const history = useHistory();
+  const momentsKorner = useKorner('moments');
+  const tunedOut = momentsKorner?.tuned_in === false;
 
   useEffect(() => {
     let cancelled = false;
@@ -136,6 +139,8 @@ export const MomentsStrip = () => {
     [history],
   );
 
+  // Tuned out of Moments → no strip on Home (the korner tune-in gate).
+  if (tunedOut) return null;
   if (loading && moments.length === 0) return null; // avoid a flash for one-frame render
 
   // Split viewer's own moment (if any) from mates' moments so the
