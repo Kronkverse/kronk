@@ -8,9 +8,9 @@
 # DistributionWorker can find the row).
 class Api::V1::MomentsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :destroy]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy]
   before_action :require_user!
-  before_action :set_moment, only: [:show, :destroy]
+  before_action :set_moment, only: [:show, :update, :destroy]
 
   # Standard pagination for a subject's active Moments — newest first.
   # If no `account` is passed, defaults to the current viewer's own
@@ -54,6 +54,15 @@ class Api::V1::MomentsController < Api::BaseController
     render json: @moment, serializer: REST::MomentSerializer
   end
 
+  # Change a Moment's audience after it's posted — "visibility can be
+  # changed at any time" (Stage 3). Owner only. The model's
+  # krew_only_when_krew_visibility validation keeps krew_id consistent.
+  def update
+    authorize_moment_owner!
+    @moment.update!(update_params)
+    render json: @moment, serializer: REST::MomentSerializer
+  end
+
   def destroy
     authorize_moment_owner!
     @moment.destroy!
@@ -74,6 +83,14 @@ class Api::V1::MomentsController < Api::BaseController
     permitted = params.permit(:media_attachment_id, :caption, :visibility, :krew_id)
     permitted[:visibility] = permitted[:visibility].presence || 'mates'
     permitted[:krew_id] = nil unless permitted[:visibility] == 'krew'
+    permitted
+  end
+
+  # Update only touches the audience — media/caption are fixed once
+  # posted. krew_id is cleared when moving to a non-krew visibility.
+  def update_params
+    permitted = params.permit(:visibility, :krew_id)
+    permitted[:krew_id] = nil if permitted[:visibility].present? && permitted[:visibility] != 'krew'
     permitted
   end
 end

@@ -127,7 +127,7 @@ namespace :api, format: false do
     # (member action rather than nested resource — a Moment has at most
     # one Froth per viewer, so REST's collection/member split is more
     # awkward than a single toggle route).
-    resources :moments, only: [:index, :show, :create, :destroy] do
+    resources :moments, only: [:index, :show, :create, :update, :destroy] do
       member do
         post   :froth, to: 'moment_froths#create'
         delete :froth, to: 'moment_froths#destroy'
