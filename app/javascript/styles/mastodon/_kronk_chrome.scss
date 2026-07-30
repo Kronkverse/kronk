@@ -23,22 +23,6 @@ body {
   background: var(--kosmos-void);
 }
 
-// Rails-served pages need to clear the fixed `.kronk-frame__top-band`
-// strip (see _kronk_frame.scss — 4.25rem row + 9rem visible fade
-// gradient). On the SPA the KronkFrame grid reserves row 1 for the
-// TopBand, which naturally offsets the Stage below. Rails pages don't
-// have that grid, so page content would render underneath the fixed
-// top-band without extra padding.
-// Applied to the two Rails-page-wrapper shapes we care about — the
-// Kronk-org pages (`/kronk/*`) and the classic Mastodon admin/settings
-// shell (which uses `.admin-wrapper` and picks up `body.admin`).
-// Targeting the specific wrappers rather than `body:not(.app-body)`
-// avoids double-padding on unrelated Rails routes (auth, embeds, etc.)
-// that have their own top-of-page geometry.
-.kronk-org-page {
-  padding-top: 4.25rem;
-}
-
 // Kronk-fy the classic Mastodon settings/admin shell so it visually
 // matches the SPA (top-band + Kosmos backdrop + single-column content),
 // which is what Home / Hub / Nudges wear. Settings-section navigation
