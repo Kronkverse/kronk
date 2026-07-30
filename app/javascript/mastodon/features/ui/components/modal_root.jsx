@@ -93,6 +93,7 @@ export const MODAL_COMPONENTS = {
   'NUDGE_COMPOSE': () => Promise.resolve({ default: NudgeComposeModal }),
   'TAG_PEOPLE': () => Promise.resolve({ default: TagPeopleModal }),
   'SELF_TAG': () => Promise.resolve({ default: SelfTagModal }),
+  'ALBUM_LIGHTBOX': () => import('mastodon/features/albutts/components/album_lightbox_modal'),
 };
 
 export default class ModalRoot extends PureComponent {

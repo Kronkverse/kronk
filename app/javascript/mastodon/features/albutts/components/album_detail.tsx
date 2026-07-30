@@ -1,9 +1,10 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
+import { openModal } from 'mastodon/actions/modal';
 import { apiGetAlbum } from 'mastodon/api/albutts';
 import type {
   ApiAlbumJSON,
@@ -11,6 +12,7 @@ import type {
 } from 'mastodon/api_types/albutts';
 import { Avatar } from 'mastodon/components/avatar';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
+import { useAppDispatch } from 'mastodon/store';
 
 import { ContributeComposer } from './contribute_composer';
 
@@ -76,7 +78,34 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
   onChange,
 }) => {
   const intl = useIntl();
+  const dispatch = useAppDispatch();
+  const location = useLocation();
   const [contributeOpen, setContributeOpen] = useState(false);
+
+  const openLightbox = useCallback(
+    (photoId: string) => {
+      dispatch(
+        openModal({
+          modalType: 'ALBUM_LIGHTBOX',
+          modalProps: { album, initialPhotoId: photoId },
+        }),
+      );
+    },
+    [album, dispatch],
+  );
+
+  // Deep-link support — Nudges CTAs land on
+  // `/hub/albutts/albums/:id?photo=:photoId`. Open the lightbox
+  // on that photo once the album has loaded.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const photoId = params.get('photo');
+    if (!photoId) return;
+    if (!album.photos.some((p) => p.id === photoId)) return;
+    openLightbox(photoId);
+    // Only fire once per query-string change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search, album.id]);
 
   const openContribute = useCallback(() => {
     setContributeOpen(true);
@@ -164,7 +193,13 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
       ) : (
         <ul className='albutts-detail__grid'>
           {album.photos.map((p) => (
-            <PhotoTile key={p.id} photo={p} />
+            <PhotoTile
+              key={p.id}
+              photo={p}
+              onOpen={() => {
+                openLightbox(p.id);
+              }}
+            />
           ))}
         </ul>
       )}
@@ -180,24 +215,48 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
   );
 };
 
-const PhotoTile: React.FC<{ photo: ApiAlbumPhotoJSON }> = ({ photo }) => {
+const PhotoTile: React.FC<{
+  photo: ApiAlbumPhotoJSON;
+  onOpen: () => void;
+}> = ({ photo, onOpen }) => {
   const contributor = createAccountFromServerJSON(photo.contributor);
   const name = contributor.display_name || contributor.username;
 
   return (
     <li className='albutts-photo'>
-      {photo.url ? (
-        <img
-          className='albutts-photo__img'
-          src={photo.url}
-          alt={photo.caption ?? name}
-        />
-      ) : (
-        <div className='albutts-photo__img albutts-photo__img--missing' />
-      )}
+      <button
+        type='button'
+        className='albutts-photo__trigger'
+        onClick={onOpen}
+        aria-label={photo.caption ?? name}
+      >
+        {photo.url ? (
+          <img
+            className='albutts-photo__img'
+            src={photo.url}
+            alt={photo.caption ?? name}
+          />
+        ) : (
+          <div className='albutts-photo__img albutts-photo__img--missing' />
+        )}
+      </button>
       <div className='albutts-photo__meta'>
         <Avatar account={contributor} size={22} />
         <span className='albutts-photo__credit'>{name}</span>
+        {(photo.froths_count > 0 || photo.comments_count > 0) && (
+          <span className='albutts-photo__reactions'>
+            {photo.froths_count > 0 && (
+              <span className='albutts-photo__reactions-item'>
+                ♥ {photo.froths_count}
+              </span>
+            )}
+            {photo.comments_count > 0 && (
+              <span className='albutts-photo__reactions-item'>
+                💬 {photo.comments_count}
+              </span>
+            )}
+          </span>
+        )}
       </div>
       {photo.caption && (
         <div className='albutts-photo__caption'>{photo.caption}</div>

@@ -157,12 +157,19 @@ namespace :api, format: false do
     end
 
     # Albutts — shared albums. Photos are nested under an album; each
-    # row is one contribution. See docs/spaces/albutts.md.
+    # row is one contribution. See docs/spaces/albutts.md. Per-photo
+    # reactions (froth + comments) hang off the photo id — the lightbox
+    # opens on a single photo and drives both endpoints from there.
     namespace :albutts do
       resources :albums, only: [:index, :show, :create, :update, :destroy] do
         resources :photos, only: [:create], controller: 'photos'
       end
       resources :album_photos, only: [:destroy], path: 'photos', controller: 'photos'
+      scope path: 'photos/:photo_id', module: :photos do
+        post   'froth',    to: 'froths#create'
+        delete 'froth',    to: 'froths#destroy'
+        resources :comments, only: [:index, :create, :destroy]
+      end
     end
 
     # Klot — cycle tracker (KRONK_TIDES). Self is a singleton (one per
