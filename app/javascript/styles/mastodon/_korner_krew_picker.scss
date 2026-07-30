@@ -1,0 +1,61 @@
+// Single-select krew picker (KornerKrewPicker) — a scrollable list of
+// the viewer's krews, shown beneath a visibility picker when the chosen
+// scope is `krew`. Base styling assumes a surface background (composer);
+// the Moments viewer overrides for its dark overlay in _moments.scss.
+
+.korner-krew-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.korner-krew-picker__status {
+  padding: 6px 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.korner-krew-picker__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: start;
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
+
+  &--active {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.korner-krew-picker__name {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.korner-krew-picker__count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}

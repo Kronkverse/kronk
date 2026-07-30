@@ -181,6 +181,27 @@
   color: rgb(255 255 255 / 70%);
 }
 
+// The shared krew picker's base styling is for a surface bg; recolour it
+// for the viewer's dark overlay.
+.moments-viewer__visibility-panel .korner-krew-picker__option {
+  color: #fff;
+  border-color: rgb(255 255 255 / 25%);
+
+  &:hover:not(:disabled) {
+    border-color: rgb(255 255 255 / 55%);
+  }
+
+  &.korner-krew-picker__option--active {
+    border-color: #fff;
+    background: rgb(255 255 255 / 14%);
+  }
+}
+
+.moments-viewer__visibility-panel .korner-krew-picker__count,
+.moments-viewer__visibility-panel .korner-krew-picker__status {
+  color: rgb(255 255 255 / 70%);
+}
+
 .moments-viewer__close {
   width: 32px;
   height: 32px;

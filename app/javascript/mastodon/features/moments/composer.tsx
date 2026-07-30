@@ -17,19 +17,13 @@ import { FormattedMessage } from 'react-intl';
 import axios from 'axios';
 
 import api, { apiRequestPost } from 'mastodon/api';
+import { KornerKrewPicker } from 'mastodon/components/korner_krew_picker';
 import { KornerVisibilityPicker } from 'mastodon/components/korner_visibility_picker';
 
-// Full four-tier ladder + krew (docs/kronk_feed_and_reach.md §2).
-// `krew` stays disabled in the composer until the Moments krew picker
-// lands; the shared visibility picker reads `visibility_scopes` from
-// the moments manifest so the strip always mirrors what the manifest
-// declares.
+// Full four-tier ladder + krew (docs/kronk_feed_and_reach.md §2). The
+// shared visibility picker reads `visibility_scopes` from the moments
+// manifest; picking `krew` reveals the krew sub-picker below.
 type Visibility = 'public' | 'orbit' | 'mates' | 'self_only' | 'krew';
-
-// Krew stays a placeholder here until the Moments krew picker lands
-// (the manifest declares it, so the picker still renders a disabled
-// button for parity with Album).
-const MOMENTS_KREW_DISABLED = ['krew'] as const;
 
 interface MediaResponse {
   id: string;
@@ -50,6 +44,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
   const [file, setFile] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
   const [visibility, setVisibility] = useState<Visibility>('mates');
+  const [krewId, setKrewId] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -88,6 +83,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
         media_attachment_id: mediaId,
         caption: caption.trim(),
         visibility,
+        krew_id: visibility === 'krew' ? krewId : null,
       });
       onPosted();
     } catch (err) {
@@ -100,7 +96,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
       }
       setPosting(false);
     }
-  }, [file, caption, visibility, posting, onPosted]);
+  }, [file, caption, visibility, krewId, posting, onPosted]);
 
   // ESLint no-misused-promises wants a void-returning handler; wrap
   // the async so the promise is dropped intentionally.
@@ -207,9 +203,16 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
             slug='moments'
             value={visibility}
             onChange={onVisibilityChange}
-            disabledScopes={MOMENTS_KREW_DISABLED}
             className='moments-composer__visibility'
           />
+          {visibility === 'krew' && (
+            <KornerKrewPicker
+              value={krewId}
+              onChange={setKrewId}
+              disabled={posting}
+              className='moments-composer__krew'
+            />
+          )}
         </section>
 
         {error && <div className='moments-composer__error'>{error}</div>}
@@ -230,7 +233,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
             type='button'
             className='moments-composer__post'
             onClick={submit}
-            disabled={!file || posting}
+            disabled={!file || posting || (visibility === 'krew' && !krewId)}
           >
             {posting ? (
               <FormattedMessage
