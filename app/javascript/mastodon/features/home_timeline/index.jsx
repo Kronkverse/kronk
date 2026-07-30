@@ -47,6 +47,9 @@ const mapStateToProps = state => ({
   hasAnnouncements: !state.getIn(['announcements', 'items']).isEmpty(),
   unreadAnnouncements: state.getIn(['announcements', 'items']).count(item => !item.get('read')),
   showAnnouncements: state.getIn(['announcements', 'show']),
+  // Tuned out of InFlow → the veil is not inserted into the feed (the
+  // korner tune-in gate). The /hub/inflow page itself stays reachable.
+  inflowTunedOut: state.korners?.inflow?.tuned_in === false,
 });
 
 class HomeTimeline extends PureComponent {
@@ -61,6 +64,7 @@ class HomeTimeline extends PureComponent {
     hasAnnouncements: PropTypes.bool,
     unreadAnnouncements: PropTypes.number,
     showAnnouncements: PropTypes.bool,
+    inflowTunedOut: PropTypes.bool,
     matchesBreakpoint: PropTypes.bool,
   };
 
@@ -233,7 +237,7 @@ class HomeTimeline extends PureComponent {
         onLoadMore: this.handleLoadMoreHome,
         emptyMessage: <FormattedMessage id='empty_column.home' defaultMessage='Your home timeline is empty! Follow more people to fill it up.' />,
         prepend: banners,
-        insertNode: <VeilScene key='inflow-veil' />,
+        insertNode: this.props.inflowTunedOut ? undefined : <VeilScene key='inflow-veil' />,
       };
     }
 
