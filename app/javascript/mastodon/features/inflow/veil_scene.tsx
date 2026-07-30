@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import { Icon } from 'mastodon/components/icon';
 import {
   getMoonIllumination,
   getMoonPhaseName,
@@ -151,12 +153,28 @@ export const VeilScene: React.FC = () => {
     return readCollapsedOn() !== melbourneDayKey();
   });
 
+  // Tracks whether the current expanded view is the result of a
+  // deliberate reopen (user tapped the pill) as opposed to the
+  // initial expanded-because-fresh-day state. A close (×) button
+  // only surfaces after a manual reopen — the first-of-the-day view
+  // still relies on scroll-past + dwell to fold itself away.
+  const [openedManually, setOpenedManually] = useState(false);
+
   // Reopen is session-only: it flips the local state back to expanded
   // but does NOT clear the stored day key. If the user drops out of
   // view again, dwell tracking below could re-persist the day key —
   // fine; the day key is idempotent.
   const handleExpand = useCallback(() => {
+    setOpenedManually(true);
     setExpanded(true);
+  }, []);
+
+  // Explicit close — only wired to the × button that appears after
+  // a manual reopen. Writes today's day key (in case the user
+  // reopened before dwell had fired) and collapses.
+  const handleClose = useCallback(() => {
+    writeCollapsedOn(melbourneDayKey());
+    setExpanded(false);
   }, []);
 
   // A body-level host for the fixed night sky, so it escapes the feed's
@@ -337,10 +355,21 @@ export const VeilScene: React.FC = () => {
   const lit = Math.round(sky.illum * 100);
 
   const nightsky = (
-    <div className='inflow-veil__nightsky' ref={nightskyRef} aria-hidden='true'>
-      <div className='inflow-veil__sky' />
+    <div className='inflow-veil__nightsky' ref={nightskyRef}>
+      <div className='inflow-veil__sky' aria-hidden='true' />
       <div className='inflow-veil__scene'>
-        <div className='inflow-veil__moonwrap'>
+        {openedManually && (
+          <button
+            type='button'
+            className='inflow-veil__close'
+            onClick={handleClose}
+            aria-label='Close the InFlow veil'
+            title='Close the InFlow veil'
+          >
+            <Icon id='times' icon={CloseIcon} />
+          </button>
+        )}
+        <div className='inflow-veil__moonwrap' aria-hidden='true'>
           <div className='inflow-veil__halo' />
           <VeilMoon illumination={sky.illum} waning={sky.waning} />
         </div>
