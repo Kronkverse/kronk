@@ -1,61 +1,95 @@
 # Moments (`moments`)
 
-**Manifest:** `config/korners/moments.yaml` · **Mount:** `/hub/moments` · **Status:** live — grid + composer + feed card (alpha.315) + Home strip (alpha.321) + deep-link viewer (alpha.327). Attach flows, notifications, and expiry reaper still to come.
+**Manifest:** `config/korners/moments.yaml` · **Mount:** `/hub/moments` · **Status:** live — composer, Home strip, the Moments korner (active **"Now"** + permanent **"Log"**), deep-link viewer, and per-Moment visibility (the reach ladder + krew) that is **editable after posting**. **No feed card** — Moments deliberately never project into the timeline. Cross-korner attach flows and notifications are still to come; there is deliberately **no expiry reaper** (a Moment leaves the live surfaces after 24h but is kept forever in the Log — see § Expiry & the log).
 
 ## Purpose
 
 Moments make space for the **ephemeral** — a single photo or short
-video (up to 60 seconds) with an optional caption, gone by morning.
-The point is to **lower the bar to sharing**: a Moment doesn't need
-to be interesting enough to survive the timeline, because it isn't
-going to. Twenty-four hours in, it's gone.
+video (up to 60 seconds) with an optional caption. The point is to
+**lower the bar to sharing**: a Moment never enters the timeline (there
+is no feed card) and stops demanding attention after a day, so it
+doesn't need to be interesting enough to survive a feed.
 
-`hub_teaser` sums it up: _"Gone by morning."_
+A Moment is **live for 24 hours** — it sits in the top-of-Home strip
+and the korner's **"Now"** section — then it leaves those live surfaces
+and settles into the korner's permanent **Log**. So _"gone by morning"_
+is about **prominence, not deletion**: after a day it's out of
+everyone's way, but it's kept (the author can always find it, and it
+stays visible to whoever its visibility allowed). `hub_teaser` still
+sums up the feeling: _"Gone by morning."_
 
-## What a Moment is (locked 2026-07-29)
+## What a Moment is (locked 2026-07-29 · reconciled with the shipped model 2026-07-30)
 
 - **Content** — one photo, or one video (≤ 60 s), with an optional
   caption. No multi-image posts. No text-only Moments. The visual is
   the primary object; caption is subordinate.
-- **Expiry** — **fixed 24 hours** from post time. Not user-adjustable,
-  not per-Moment overridable. The mechanic is the identity.
-- **Default reach** — **Mates only**. Poster may switch to a specific
-  Krew, or Public. No "Close Mates" subset primitive.
-- **Reactions** — **Froth + Reply**. Froth is an ephemeral favourite
-  (disappears with the Moment). Reply opens a Nudges thread with the
-  Moment quoted; conversation lives in Nudges, not on the Moment.
+- **Expiry & the log** — **fixed 24 hours** of live prominence from post
+  time (not user-adjustable; the mechanic is the identity). At 24h a
+  Moment leaves the strip and the korner's "Now" section but is **not
+  deleted** — it is kept forever in the korner's **Log**, and its media
+  is retained (Moment media is excluded from the unattached-media
+  reaper). There is deliberately no expiry reaper.
+- **Reach** — the full reach ladder + krew: `public` / `orbit` /
+  `mates` (**default**) / `self_only` / `krew`. Enforced per-Moment
+  against the viewer by a `visible_to` gate (the same reach-ladder
+  scope Albums use), so the strip and the korner only ever show what
+  your relationship + the Moment's own visibility permit. A Moment is
+  **re-scopeable at any time** from the viewer (owner only).
+- **Reactions** — **Froth + Reply**. Froth is a favourite that persists
+  with the Moment (including once it has settled into the Log). Reply
+  opens a Nudges thread with the poster; conversation lives in Nudges,
+  not on the Moment.
 - **Kategory** — **not taggable**. Curation runs against the
   ephemeral premise. A Moment is a passing thing.
 
 ## Where you see Moments
 
-Two surfaces on the same data source:
+**Never in the feed** — a Moment does not project a timeline card (the
+manifest declares no `feed_projection.card`, and a Moment has no backing
+Status). Its surfaces are:
 
-1. **`/hub/moments` grid** — the Moments korner. Everyone's currently
-   active Moments (subject to visibility). Tunable in / out via the
-   standard korner tune-in gate.
-2. **Home strip** — a horizontal row of ring-avatars at the top of
-   Home feed, newest-first among your Mates. **Empty state**: a
-   compose CTA ("Share a Moment"). Owner tile on the left. Full-screen
-   viewer opens on tap and cycles through active Moments.
+1. **Home strip** — a horizontal row of ring-avatars at the top of the
+   Home feed showing the currently **active** Moments you're permitted
+   to see. **Empty state**: a compose CTA ("Share a Moment"); the owner
+   tile sits on the left. The full-screen viewer opens on tap and cycles
+   through the stack.
+2. **`/hub/moments` korner** — two sections over the same
+   visibility-gated collection:
+   - **Now** — active Moments (still inside the 24h window), each tile
+     attributed to its author.
+   - **Log** — the permanent archive: every Moment you can see that has
+     since expired, kept for good.
 
-Deep-links: `/hub/moments/<id>` opens a single Moment in the viewer.
+   Tunable in / out via the standard korner tune-in gate.
+
+Both surfaces read the same endpoint (`GET /api/v1/moments`,
+`filter=active` | `filter=log`), gated per-viewer by each Moment's
+visibility. Deep-links: `/hub/moments/<id>` opens a single Moment in the
+viewer (and `show` 404s a Moment you aren't allowed to see).
 
 ## Composer
 
 **Full expanding form** (not chip-based) — the compose surface has
-sections rather than optional badges. Landing v1:
+sections rather than optional badges.
 
-1. **Media pick** — camera-capture or upload. Photo or video (≤ 60 s).
+**Shipped:**
+
+1. **Media pick** — upload a photo or video (≤ 60 s).
 2. **Caption** — one line, optional.
-3. **Visibility** — Mates (default) / a specific Krew / Public.
-4. **Optional attachments** (each collapsible section):
-   - **Nudges** — automatic, not a section: reply-flow always wired.
-   - **Kalendar** — attach to a live/upcoming event you're on.
-   - **Map** — attach a location (see § Open decisions on precision).
-   - **Klot** — tag your current Klot phase (semantic in § Open).
-   - **mARTketplace** — attach one of your listings (semantic in § Open).
-5. **Post** — button.
+3. **Visibility** — the reach ladder: Public / Orbit / Mates
+   (**default**) / Only me / Krew. Choosing **Krew** reveals a
+   single-select picker of your own krews (the shared
+   `KornerKrewPicker`); Post stays disabled until a krew is chosen.
+4. **Post** — button.
+
+**Deferred — cross-korner attachments** (each a future collapsible
+section; none shipped in v1):
+
+- **Nudges** — reply-flow is always wired (automatic, not a section).
+- **Kalendar** — attach to a live/upcoming event you're on.
+- **Map** — attach a location (see § Open decisions on precision).
+- **Klot** — tag your current Klot phase (semantic in § Open).
+- **mARTketplace** — attach one of your listings (semantic in § Open).
 
 **Entry points**:
 
@@ -65,9 +99,9 @@ sections rather than optional badges. Landing v1:
 - Home strip → the empty-state CTA and the owner tile double as
   compose entry.
 
-## Notifications
+## Notifications (planned — not yet wired)
 
-Three types emitted:
+Three types to emit:
 
 | type                    | subject_type | default_push | aggregation               |
 | ----------------------- | ------------ | ------------ | ------------------------- |
@@ -78,9 +112,12 @@ Three types emitted:
 No expiring-soon reminder. Froths are ambient; replies + mentions are
 conversation-worthy.
 
-## Cross-korner connections
+## Cross-korner connections (planned)
 
-Moments emits + listens across five other korners:
+The emits below are the intended design; only the Nudges reply-route is
+wired today (the viewer routes to a Nudges thread with the poster — the
+quoted-Moment opener is the follow-up). Moments will emit + listen across
+five other korners:
 
 **Emits:**
 
@@ -98,19 +135,30 @@ Moments emits + listens across five other korners:
 **Listens:** none. Moments does not react to other korners' events;
 it's a broadcast surface, not a reactive one.
 
-## Data (planned)
+## Data
 
-- `moments` table — the primary row. Fields: `id`, `account_id`,
-  `media_attachment_id`, `caption`, `visibility`, `krew_id` (nullable),
-  `expires_at`, `created_at`. `visibility` is a small enum: `mates`,
-  `krew`, `public`.
-- `moment_views` table — one row per (moment_id, viewer_account_id).
-  Powers the read/unread state on the Home strip.
-- `moment_froths` — one row per (moment_id, from_account_id). Ephemeral
-  with the Moment.
-- Optional attach tables (one per attach type — nullable-FK on the
-  `moments` row is enough for v1): `location_lat`, `location_lng`,
-  `attached_event_id`, `attached_klot_phase`, `attached_listing_id`.
+- `moments` table (shipped) — the primary row. Fields: `id`,
+  `account_id`, `media_attachment_id`, `caption`, `visibility`,
+  `krew_id` (nullable), `status_id` (nullable — **legacy**; a Moment no
+  longer creates a backing Status), `expires_at`, `created_at`.
+  `visibility` is the reach-ladder enum: `public` (0) / `mates` (1) /
+  `krew` (2) / `orbit` (3) / `self_only` (4), with a
+  `krew_only_when_krew_visibility` validation keeping `krew_id`
+  consistent with the scope.
+- `moment_froths` (shipped) — one row per (moment_id, from_account_id).
+  Persists with the Moment (kept, not reaped, since the Moment itself
+  is kept).
+- **Media retention** — a Moment owns its media directly with no backing
+  Status, so the attachment is "unattached". `moments`' media is
+  therefore **excluded from `Vacuum::MediaAttachmentsVacuum`** (the same
+  exclusion BoothSet uses), so the Log's media survives indefinitely.
+- `moment_views` (**not yet shipped**) — one row per (moment_id,
+  viewer_account_id), to power read/unread state on the strip; see
+  § Open decisions.
+- Optional attach tables (**not yet shipped**, one per attach type — a
+  nullable FK on the `moments` row is enough): `location_lat`,
+  `location_lng`, `attached_event_id`, `attached_klot_phase`,
+  `attached_listing_id`.
 
 Storage: `spaces/moments/` in DO Spaces (media_prefix per manifest).
 
@@ -165,8 +213,8 @@ which can land without any attach flow.
 
 ## Related
 
-- [`../korners/korner_standard.md`](../korners/korner_standard.md) — Standard §L1 identity, §L4 feed projection, §L11 Frame adherence.
-- [`../kronk_korner_spec.md`](../kronk_korner_spec.md) — §New korners; §8 feed projection.
+- [`../korners/korner_standard.md`](../korners/korner_standard.md) — Standard §L1 identity, §L11 Frame adherence. (Moments declare **no feed card** — the §L4 feed-projection card is deliberately empty.)
+- [`../kronk_korner_spec.md`](../kronk_korner_spec.md) — §New korners.
 - [`../korners/adding_a_korner.md`](../korners/adding_a_korner.md) — the build walkthrough (picks up from the manifest skeleton this discovery produced).
 - [`../korners/proposing_a_korner.md`](../korners/proposing_a_korner.md) — the discovery flow this doc came out of.
 - [`../spaces/nudges.md`](nudges.md) — the reply-flow surface.
