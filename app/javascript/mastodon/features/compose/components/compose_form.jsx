@@ -81,6 +81,10 @@ class ComposeForm extends ImmutablePureComponent {
     // Kuestion as placeholder and "Kronk it" as the submit label).
     placeholderText: PropTypes.string,
     publishLabel: PropTypes.string,
+    // Optional string that Tab injects into the compose text (used by
+    // the Home inline box: press Tab on the daily Kuestion prompt to
+    // pull it into the post). Only fires when set.
+    insertOnTab: PropTypes.string,
   };
 
   static defaultProps = {
@@ -110,6 +114,20 @@ class ComposeForm extends ImmutablePureComponent {
     if (e.key.toLowerCase() === 'enter' && (e.ctrlKey || e.metaKey)) {
         this.handleSubmit();
         e.preventDefault();
+    }
+    if (e.key === 'Tab' && this.props.insertOnTab && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      // Insert the prompt at the current caret. Keeps the composer as the
+      // user's live editor — they can keep typing, delete it, whatever.
+      // Shift+Tab / any modifier still yields to native focus movement.
+      const target = e.target;
+      const start = target.selectionStart ?? this.props.text.length;
+      const end = target.selectionEnd ?? start;
+      const before = this.props.text.slice(0, start);
+      const after = this.props.text.slice(end);
+      const needsSpaceBefore = before.length > 0 && !before.endsWith(' ');
+      const injected = `${needsSpaceBefore ? ' ' : ''}${this.props.insertOnTab} `;
+      this.props.onChange(`${before}${injected}${after}`);
+      e.preventDefault();
     }
     this.blurOnEscape(e);
   };
