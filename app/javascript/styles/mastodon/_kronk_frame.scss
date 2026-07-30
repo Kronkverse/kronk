@@ -64,14 +64,22 @@
 .kronk-frame__top-band {
   // Fade strip still viewport-anchored (position: fixed) so it stays
   // put during scroll. Its children — KronkWordmark on the left,
-  // HubSwitcher--top in the centre — sit inside via CSS grid instead
-  // of self-anchoring with their own position: fixed. Each component
-  // retires its own position: fixed in _kronk_chrome.scss to become a
-  // flow child here.
+  // HubSwitcher--top in the centre, InviteButton on the right — sit
+  // inside via CSS grid instead of self-anchoring with their own
+  // position: fixed. Each component retires its own position: fixed
+  // in _kronk_chrome.scss to become a flow child here.
   position: fixed;
   inset: 0 0 auto;
   height: 9rem;
-  z-index: 24;
+
+  // One notch above `.kronk-frame__right-band` (z-index: 24) so the
+  // TopBand paints over the RightBand's fade in the top-right corner
+  // — visually intended (the corner is a single merged curved chrome
+  // painted by TopBand's radial gradient), and load-bearing because
+  // InviteButton's grid slot (column 3, right) sits INSIDE the
+  // RightBand's 7.75rem width. Without this, RightBand's opaque
+  // gradient covered the button.
+  z-index: 25;
 
   // Two layered backgrounds: a large ellipse at the outer top-right
   // corner + a linear top-fade extending across the full width.
