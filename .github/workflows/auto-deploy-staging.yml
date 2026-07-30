@@ -1,9 +1,13 @@
 name: Auto-Deploy Staging
 
+# Retired 2026-07-30. Shadow now auto-deploys `rebuild/2.0.0` via
+# `auto-deploy-rebuild.yml` — pushes to `staging` no longer trigger a
+# deploy, so parallel WIP branches don't fight for the single shadow
+# environment. Kept as a `workflow_dispatch` shim for the rare case where
+# a maintainer needs to override shadow to a specific branch by pushing
+# to `staging` and then triggering this workflow manually.
 on:
-  push:
-    branches:
-      - staging
+  workflow_dispatch:
 
 jobs:
   deploy:

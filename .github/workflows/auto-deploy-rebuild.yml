@@ -1,0 +1,27 @@
+name: Auto-Deploy Rebuild
+
+# Shadow's canonical branch is `rebuild/2.0.0` — the 2.x integration line.
+# Every merge to rebuild lands on https://shadow.kronk.info automatically,
+# so contributors see the integrated state as PRs come through the merge
+# queue. Pre-merge previews still exist as `staging-deploy.yml`
+# (workflow_dispatch, admin-only) if a specific PR needs isolation.
+on:
+  push:
+    branches:
+      - 'rebuild/2.0.0'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Deploy rebuild branch
+        env:
+          DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/key
+          chmod 600 ~/.ssh/key
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "deploy rebuild/2.0.0"
+          rm -f ~/.ssh/key
