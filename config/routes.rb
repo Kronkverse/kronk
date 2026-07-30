@@ -333,9 +333,12 @@ Rails.application.routes.draw do
   # /hub/moments/:id (viewer).
   get '/hub/moments', to: 'home#index'
   get '/hub/moments/*path', to: 'home#index', format: false
-  # 2.x korner stubs (Albutts) — manifest-only, no backend yet.
-  # Fall through to the SPA so KornerStub renders.
+  # Albutts — shipped 2026-07-29 with a real SPA (directory + detail).
+  # The wildcard lets a direct load or hard-reload of e.g.
+  # /hub/albutts/albums/:id (or /hub/albutts/new) boot the SPA instead
+  # of 404ing; the client router then resolves the sub-path.
   get '/hub/albutts', to: 'home#index'
+  get '/hub/albutts/*path', to: 'home#index', format: false
   # Map has real lenses now (mates/treks/logger); the /*path wildcard
   # lets a direct load or hard-reload of /hub/map/<lens> boot the SPA
   # instead of 404ing (the client router then resolves the lens).
