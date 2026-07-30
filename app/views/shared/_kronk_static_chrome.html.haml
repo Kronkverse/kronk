@@ -1,4 +1,4 @@
--# Static chrome for Rails-served pages. Mirrors what the React KronkFrame renders on SPA routes. The wordmark + hub-switcher are wrapped in `.kronk-frame__top-band` — they use `grid-column: 1/2` so they need that grid parent. See _kronk_chrome.scss + _kronk_frame.scss.
+-# Static chrome for Rails-served pages. Mirrors what the React KronkFrame renders on SPA routes: top-band grid (wordmark + hub-switcher), fixed right-band (korner sidebar), fixed Ӂ menu. Icons resolve from `config/korners/<slug>.yaml → icon.material` — same source the SPA reads.
 
 :ruby
   korners =
@@ -6,6 +6,16 @@
       Kronk::KornerRegistry.all.select(&:enforced)
     rescue
       []
+    end
+  hub_switcher_icons =
+    begin
+      %w(profile feed hub nudges).each_with_object({}) do |slug, memo|
+        manifest = Kronk::KornerRegistry.find(slug)
+        material = manifest&.icon&.dig('material')
+        memo[slug] = material if material.present?
+      end
+    rescue
+      {}
     end
   current_slug = params[:slug] || request.path[%r{^/hub/([a-z0-9-]+)}, 1]
   path = request.path
@@ -17,15 +27,27 @@
   %nav.hub-switcher.hub-switcher--top{ 'aria-label' => 'Primary surfaces' }
     .hub-switcher__row{ role: 'tablist' }
       - if user_signed_in?
-        %a.hub-switcher__pillar{ href: "/@#{current_user.account.username}", role: 'tab', 'aria-selected': path.start_with?('/@').to_s, class: ('hub-switcher__pillar--active' if path.start_with?('/@')) }
-          %span.hub-switcher__label Me
-      %a.hub-switcher__pillar{ href: '/home', role: 'tab', 'aria-selected': (path == '/home' || path.start_with?('/home/')).to_s, class: ('hub-switcher__pillar--active' if path == '/home' || path.start_with?('/home/')) }
-        %span.hub-switcher__label Home
-      %a.hub-switcher__pillar{ href: '/hub', role: 'tab', 'aria-selected': path.start_with?('/hub').to_s, class: ('hub-switcher__pillar--active' if path.start_with?('/hub')) }
-        %span.hub-switcher__label Hub
+        - me_active = path.start_with?('/@')
+        %a.hub-switcher__pillar{ href: "/@#{current_user.account.username}", role: 'tab', 'aria-selected': me_active.to_s, class: ('hub-switcher__pillar--active' if me_active) }
+          - if hub_switcher_icons['profile']
+            = material_symbol(hub_switcher_icons['profile'], class: 'hub-switcher__pillar-icon')
+          %span.hub-switcher__label.hub-switcher__label--sr Me
+      - home_active = path == '/home' || path.start_with?('/home/')
+      %a.hub-switcher__pillar{ href: '/home', role: 'tab', 'aria-selected': home_active.to_s, class: ('hub-switcher__pillar--active' if home_active) }
+        - if hub_switcher_icons['feed']
+          = material_symbol(hub_switcher_icons['feed'], class: 'hub-switcher__pillar-icon')
+        %span.hub-switcher__label.hub-switcher__label--sr Home
+      - hub_active = path.start_with?('/hub')
+      %a.hub-switcher__pillar{ href: '/hub', role: 'tab', 'aria-selected': hub_active.to_s, class: ('hub-switcher__pillar--active' if hub_active) }
+        - if hub_switcher_icons['hub']
+          = material_symbol(hub_switcher_icons['hub'], class: 'hub-switcher__pillar-icon')
+        %span.hub-switcher__label.hub-switcher__label--sr Hub
       - if user_signed_in?
-        %a.hub-switcher__pillar{ href: '/nudges', role: 'tab', 'aria-selected': path.start_with?('/nudges').to_s, class: ('hub-switcher__pillar--active' if path.start_with?('/nudges')) }
-          %span.hub-switcher__label Nudges
+        - nudges_active = path.start_with?('/nudges')
+        %a.hub-switcher__pillar{ href: '/nudges', role: 'tab', 'aria-selected': nudges_active.to_s, class: ('hub-switcher__pillar--active' if nudges_active) }
+          - if hub_switcher_icons['nudges']
+            = material_symbol(hub_switcher_icons['nudges'], class: 'hub-switcher__pillar-icon')
+          %span.hub-switcher__label.hub-switcher__label--sr Nudges
     .hub-switcher__wire{ 'aria-hidden' => 'true' }
 
 - if user_signed_in?
@@ -33,9 +55,13 @@
     %nav.korner-sidebar{ 'aria-label' => 'Korners' }
       %nav.korner-sidebar__list
         - korners.each do |k|
+          - material = k.icon && k.icon['material']
           %a.korner-sidebar__row{ href: "/hub/#{k.slug}", class: ('korner-sidebar__row--active' if current_slug == k.slug), 'data-name': k.name, 'aria-label': k.name, title: k.name }
             %span.korner-sidebar__glyph{ 'aria-hidden' => 'true' }
-              = k.name.first.upcase
+              - if material
+                = material_symbol(material)
+              - else
+                = k.name.first.upcase
             %span.korner-sidebar__label= k.name
       %a.korner-sidebar__all{ href: '/hub', title: 'All korners', 'data-name': 'All korners' } ⋯
 
