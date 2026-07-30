@@ -182,7 +182,87 @@
     svg {
       width: 22px;
       height: 22px;
+      // SVG fill defaults to black, not currentColor — tie it to the glyph's
+      // accent colour so the material icons read purple like the fallback.
+      fill: currentColor;
     }
+  }
+
+  // The navigating part of a korner row (glyph + name + chevron). Sits beside
+  // the tune-in pill, which is a separate button so it isn't nested in the link.
+  &__row-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1 1 auto;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  // Tune-in pill switch on a korner row.
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+    padding: 4px 11px 4px 5px;
+    border: 1px solid var(--border-default);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+    }
+
+    &--on {
+      color: var(--accent);
+      border-color: color-mix(in srgb, var(--accent) 45%, var(--border-default));
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+    }
+  }
+
+  &__pill-track {
+    position: relative;
+    flex: 0 0 auto;
+    width: 30px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--border-default);
+    transition: background var(--dur-fast) var(--ease-out);
+
+    .settings-nav__pill--on & {
+      background: var(--accent);
+    }
+  }
+
+  &__pill-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform var(--dur-fast) var(--ease-out);
+
+    .settings-nav__pill--on & {
+      transform: translateX(12px);
+    }
+  }
+
+  &__pill-label {
+    white-space: nowrap;
   }
 
   &__row-body {
