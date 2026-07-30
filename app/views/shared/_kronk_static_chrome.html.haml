@@ -29,14 +29,15 @@
     .hub-switcher__wire{ 'aria-hidden' => 'true' }
 
 - if user_signed_in?
-  %aside.korner-sidebar{ 'aria-label' => 'Korners' }
-    %nav.korner-sidebar__list
-      - korners.each do |k|
-        %a.korner-sidebar__row{ href: "/hub/#{k.slug}", class: ('korner-sidebar__row--active' if current_slug == k.slug), 'data-name': k.name, 'aria-label': k.name, title: k.name }
-          %span.korner-sidebar__glyph{ 'aria-hidden' => 'true' }
-            = k.name.first.upcase
-          %span.korner-sidebar__label= k.name
-    %a.korner-sidebar__all{ href: '/hub', title: 'All korners', 'data-name': 'All korners' } ⋯
+  %aside.kronk-frame__right-band
+    %nav.korner-sidebar{ 'aria-label' => 'Korners' }
+      %nav.korner-sidebar__list
+        - korners.each do |k|
+          %a.korner-sidebar__row{ href: "/hub/#{k.slug}", class: ('korner-sidebar__row--active' if current_slug == k.slug), 'data-name': k.name, 'aria-label': k.name, title: k.name }
+            %span.korner-sidebar__glyph{ 'aria-hidden' => 'true' }
+              = k.name.first.upcase
+            %span.korner-sidebar__label= k.name
+      %a.korner-sidebar__all{ href: '/hub', title: 'All korners', 'data-name': 'All korners' } ⋯
 
   .kronk-menu
     %a.kronk-menu__trigger{ href: '/publish', 'aria-label': 'Post', title: 'Post' }
