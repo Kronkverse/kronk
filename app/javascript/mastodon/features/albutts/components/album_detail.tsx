@@ -21,7 +21,7 @@ const messages = defineMessages({
   },
   addPhoto: {
     id: 'albutts.detail.add_photo',
-    defaultMessage: 'Add a photo',
+    defaultMessage: 'Add photos',
   },
   emptyPhotos: {
     id: 'albutts.detail.empty_photos',
