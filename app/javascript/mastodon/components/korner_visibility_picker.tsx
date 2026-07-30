@@ -24,11 +24,11 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 const messages = defineMessages({
   public: {
     id: 'korner.visibility.public.label',
-    defaultMessage: 'Kronk',
+    defaultMessage: 'Kronkverse',
   },
   publicHelp: {
     id: 'korner.visibility.public.help',
-    defaultMessage: 'Everyone on Kronk',
+    defaultMessage: 'Anyone on and off kronk',
   },
   orbit: {
     id: 'korner.visibility.orbit.label',

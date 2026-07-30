@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 
 import { useIntl, defineMessages } from 'react-intl';
 
+import { apiGetKuestionsDailyPrompt } from 'mastodon/api/kuestions';
 import ComposeFormContainer from 'mastodon/features/compose/containers/compose_form_container';
 
 // Inline status composer on the Home column. Sits below the Moments
@@ -32,11 +33,6 @@ const messages = defineMessages({
   },
 });
 
-interface DailyPromptResponse {
-  date: string;
-  prompt: string | null;
-}
-
 export const HomeStatusBox: React.FC = () => {
   const intl = useIntl();
   const [placeholder, setPlaceholder] = useState<string>(
@@ -47,12 +43,7 @@ export const HomeStatusBox: React.FC = () => {
     let cancelled = false;
     void (async () => {
       try {
-        const res = await fetch('/api/v2/kuestions/prompt/today', {
-          credentials: 'same-origin',
-          headers: { Accept: 'application/json' },
-        });
-        if (!res.ok) return;
-        const data = (await res.json()) as DailyPromptResponse;
+        const data = await apiGetKuestionsDailyPrompt();
         if (!cancelled && data.prompt) {
           setPlaceholder(data.prompt);
         }
