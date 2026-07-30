@@ -1,6 +1,7 @@
 import { defineMessages, useIntl } from 'react-intl';
 
 import ToysFanIcon from '@/material-icons/400-24px/toys_fan.svg?react';
+import type { ApiProposalSummaryJSON } from 'mastodon/api_types/statuses';
 
 import { StatusKornerCard } from './status_korner_card';
 
@@ -30,19 +31,9 @@ const STATUS_LABELS: Record<string, string> = {
   annulled: 'Annulled',
 };
 
-interface ProposalSummary {
-  id: string;
-  title: string;
-  summary?: string | null;
-  status: string;
-  proposal_type: string;
-  support_count: number;
-  veto_count: number;
-  participation_count: number;
-  categories: string[];
-}
-
-export const StatusKommonsCard: React.FC<{ proposal: ProposalSummary }> = ({
+export const StatusKommonsCard: React.FC<{
+  proposal: ApiProposalSummaryJSON;
+}> = ({
   proposal,
 }) => {
   const intl = useIntl();
@@ -78,10 +69,10 @@ export const StatusKommonsCard: React.FC<{ proposal: ProposalSummary }> = ({
               count: proposal.support_count,
             })}
           </span>
-          {proposal.veto_count > 0 && (
+          {proposal.challenge_count > 0 && (
             <span className='status-kommons-card__vote status-kommons-card__vote--challenge'>
               {intl.formatMessage(messages.challenges, {
-                count: proposal.veto_count,
+                count: proposal.challenge_count,
               })}
             </span>
           )}

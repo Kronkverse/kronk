@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
-import type { Task } from './proposal_tabs/tab_kontribute';
+import type { Task } from '../types';
 
 interface Props {
   task: Task;

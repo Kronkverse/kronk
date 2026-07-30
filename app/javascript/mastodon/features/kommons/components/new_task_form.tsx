@@ -4,7 +4,7 @@ import { FormattedMessage } from 'react-intl';
 
 import api from 'mastodon/api';
 
-import type { Task } from './proposal_tabs/tab_kontribute';
+import type { Task } from '../types';
 
 export const NewTaskForm: React.FC<{
   proposalId: string;

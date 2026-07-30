@@ -1,4 +1,4 @@
-import type { BudgetItem } from './proposal_tabs/tab_kontribute';
+import type { BudgetItem } from '../types';
 
 export const BudgetItemRow: React.FC<{ item: BudgetItem }> = ({ item }) => (
   <tr className={`kommons-budget-row kommons-budget-row--${item.status}`}>

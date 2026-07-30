@@ -33,10 +33,8 @@ class Api::V1::ProposalsController < Api::BaseController
     end
 
     scope = case params[:sort]
-            when 'newest'         then scope.recent
-            when 'most_discussed' then scope.most_discussed
-            when 'most_supported' then scope.most_supported
-            else                       scope.most_backed
+            when 'newest' then scope.recent
+            else               scope.most_backed
             end
 
     active = scope.limit(40).to_a

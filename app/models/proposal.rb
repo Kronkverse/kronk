@@ -109,22 +109,6 @@ class Proposal < ApplicationRecord
   scope :for_node, ->(node_id) { where(node_id: node_id) }
 
   scope :recent, -> { order(created_at: :desc) }
-  scope :most_supported, lambda {
-    # `.to_i` on the AR enum lookup makes the interpolation explicitly
-    # integer-typed — same value, but Brakeman stops flagging the
-    # `#{...}` as untrusted string.
-    agree_position = ProposalVote.positions.fetch(:agree).to_i
-    left_joins(:proposal_votes)
-      .select("proposals.*, COUNT(CASE WHEN proposal_votes.position = #{agree_position} THEN 1 END) AS agree_count")
-      .group('proposals.id')
-      .order(Arel.sql('agree_count DESC, proposals.created_at DESC'))
-  }
-  scope :most_discussed, lambda {
-    left_joins(:proposal_votes)
-      .select('proposals.*, COUNT(proposal_votes.id) AS total_votes')
-      .group('proposals.id')
-      .order(Arel.sql('total_votes DESC, proposals.created_at DESC'))
-  }
   # Support is token backing (votes retired) — rank the board by staked total
   # so strongly-backed proposals surface without an explicit threshold.
   scope :most_backed, lambda {
