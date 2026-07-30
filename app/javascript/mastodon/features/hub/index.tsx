@@ -45,7 +45,16 @@ const messages = defineMessages({
 // Route to the Kommons propose page pre-scoped to the "new korner" node.
 // The propose page reads `node=kommons.new_korner` and swaps into its
 // tailored korner-composer copy (title = korner name, structured fields).
-const PROPOSE_KORNER_HREF = '/hub/kommons/propose?node=kommons.new_korner';
+//
+// Must be a Location object — Kronk's history wrapper mangles a raw
+// `pathname?query` string into the pathname (see components/router.tsx),
+// which sends the link to /hub/kommons/… without the query and drops the
+// user on the proposals list. ProposePicker hit the same rake — see
+// propose_picker.tsx:64.
+const PROPOSE_KORNER_TARGET = {
+  pathname: '/hub/kommons/propose',
+  search: '?node=kommons.new_korner',
+};
 
 // The settings gear sits above the tile link (position: absolute), so
 // even without stopPropagation it never bubbles into the Link. The
@@ -128,7 +137,7 @@ const ProposeKornerTile: React.FC = () => {
       data-slug='__propose__'
     >
       <Link
-        to={PROPOSE_KORNER_HREF}
+        to={PROPOSE_KORNER_TARGET}
         className='hub-page__tile-link'
         aria-label={label}
       >
