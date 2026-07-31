@@ -51,7 +51,13 @@ export function updateTimeline(timeline, status, { accept = undefined, bogusQuot
       type: TIMELINE_UPDATE,
       timeline,
       status,
-      usePendingItems: preferPendingItems,
+      // Kronk feed: new posts stream straight into the home timeline rather
+      // than queueing behind a "N new items" bar. ScrollableList's scroll
+      // anchoring (getSnapshotBeforeUpdate/componentDidUpdate) then extends
+      // the feed upward — the reading position holds and new posts accrue
+      // above it — instead of jumping the feed down. Other timelines keep the
+      // classic pending-items gate driven by the user's use_pending_items pref.
+      usePendingItems: timeline === 'home' ? false : preferPendingItems,
     });
 
     if (timeline === 'home') {
@@ -111,7 +117,10 @@ export function expandTimeline(timelineId, path, params = {}) {
       const next = getLinks(response).refs.find(link => link.rel === 'next');
 
       dispatch(importFetchedStatuses(response.data));
-      dispatch(expandTimelineSuccess(timelineId, response.data, next ? next.uri : null, response.status === 206, isLoadingRecent, isLoadingMore, isLoadingRecent && preferPendingItems));
+      // Home streams items in directly (no pending-items bar) — see the note
+      // in updateTimeline above — so recent-load never routes home posts into
+      // the pending queue either.
+      dispatch(expandTimelineSuccess(timelineId, response.data, next ? next.uri : null, response.status === 206, isLoadingRecent, isLoadingMore, isLoadingRecent && preferPendingItems && timelineId !== 'home'));
 
       if (timelineId === 'home' && !isLoadingMore && !isLoadingRecent) {
         const now = new Date();
