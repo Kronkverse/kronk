@@ -1,6 +1,9 @@
 // InFlow veil — the feed parts to reveal a night sky that was always there.
-// The night sky is a fixed, viewport-pinned backdrop (rendered through a portal
-// to <body> so it escapes the feed's overflow/contain). veil_scene.tsx clips it
+// That sky is the shared KronkKosmos ambient layer: the veil swells its
+// brightness as the opening comes on screen (veil_scene.tsx) rather than
+// painting its own stars. This backdrop is a fixed, viewport-pinned, and
+// transparent portal element (rendered to <body> so it escapes the feed's
+// overflow/contain) carrying only the moon + reading. veil_scene.tsx clips it
 // to the on-screen slice of the aperture — the opening in the feed — so the
 // stationary moon is uncovered as the post above scrolls up and re-covered as
 // the post below scrolls in. The moon never moves; the feed does.
@@ -15,6 +18,11 @@
 
 // The fixed night sky. Full viewport, pinned; clip-path (set per-frame) is what
 // makes it appear only through the aperture. Hidden until the opening nears.
+// The backdrop is intentionally transparent: the stars are the *shared*
+// KronkKosmos canvas (the ambient layer painted everywhere else, z-index 0),
+// which the veil reveals by swelling its brightness scalar as the opening comes
+// on screen (see veil_scene.tsx). This element only carries the moon + reading,
+// which therefore sit on top of that same Kosmos — no bespoke starfield.
 .inflow-veil__nightsky {
   position: fixed;
   inset: 0;
@@ -22,44 +30,11 @@
   opacity: 0;
   pointer-events: none;
   font-family: var(--font-display, Georgia, serif);
-  background: radial-gradient(
-    125% 82% at 50% 42%,
-    color-mix(in srgb, var(--accent) 12%, var(--kosmos-void)) 0%,
-    var(--kosmos-void) 58%,
-    #050409 100%
-  );
   transition: opacity 0.35s ease;
 
   &.is-open {
     opacity: 1;
   }
-}
-
-.inflow-veil__sky {
-  position: absolute;
-  inset: 0;
-  background-repeat: no-repeat;
-
-  // A brighter field of the platform's purple-star motif.
-  background-image:
-    radial-gradient(2px 2px at 20% 22%, #cdbfff 40%, transparent),
-    radial-gradient(2px 2px at 68% 16%, #b7a6ff 40%, transparent),
-    radial-gradient(1.5px 1.5px at 82% 30%, #e6dcff 40%, transparent),
-    radial-gradient(2.5px 2.5px at 30% 30%, #a892ff 40%, transparent),
-    radial-gradient(1.5px 1.5px at 12% 38%, #cdbfff 40%, transparent),
-    radial-gradient(2px 2px at 56% 24%, #d9ccff 40%, transparent),
-    radial-gradient(1.5px 1.5px at 90% 22%, #b7a6ff 40%, transparent),
-    radial-gradient(2px 2px at 46% 12%, #e6dcff 40%, transparent),
-    radial-gradient(2px 2px at 75% 40%, #cdbfff 40%, transparent),
-    radial-gradient(1.5px 1.5px at 8% 26%, #d9ccff 40%, transparent),
-    radial-gradient(2px 2px at 62% 36%, #b7a6ff 40%, transparent),
-    radial-gradient(2px 2px at 26% 15%, #cdbfff 40%, transparent),
-    radial-gradient(1.5px 1.5px at 86% 44%, #d9ccff 40%, transparent),
-    radial-gradient(2px 2px at 50% 46%, #b7a6ff 40%, transparent),
-    radial-gradient(1.5px 1.5px at 38% 54%, #cdbfff 40%, transparent),
-    radial-gradient(2px 2px at 70% 56%, #b7a6ff 40%, transparent),
-    radial-gradient(1.5px 1.5px at 18% 60%, #d9ccff 40%, transparent),
-    radial-gradient(2px 2px at 82% 66%, #cdbfff 40%, transparent);
 }
 
 // The moon + reading, centred in the viewport (so they sit where the aperture
