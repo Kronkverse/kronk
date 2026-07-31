@@ -191,6 +191,7 @@
     svg {
       width: 22px;
       height: 22px;
+
       // SVG fill defaults to black, not currentColor — tie it to the glyph's
       // accent colour so the material icons read purple like the fallback.
       fill: currentColor;
