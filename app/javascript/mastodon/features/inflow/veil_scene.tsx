@@ -9,6 +9,7 @@ import {
   getMoonRiseSet,
   getDaylightInfo,
 } from 'mastodon/features/events/components/celestial_calendar';
+import { setKosmosBrightness } from 'mastodon/features/kosmos/brightness';
 
 import { buildDailyIntegrationText } from './components/daily_integration';
 import { LOCATION_LAT, LOCATION_LON, LOCATION_TZ } from './constants';
@@ -236,6 +237,13 @@ export const VeilScene: React.FC = () => {
       const top = Math.min(v, Math.max(0, r.top));
       const bot = Math.min(v, Math.max(0, r.bottom));
       nightsky.style.clipPath = `inset(${top.toFixed(1)}px 0 ${(v - bot).toFixed(1)}px 0)`;
+      // Reveal the *shared* KronkKosmos rather than a bespoke starfield: drive
+      // its global brightness scalar from how much of the opening is on screen.
+      // The ambient sky (0) swells toward its full reveal ceiling (1) as the
+      // aperture fills the viewport, then falls back as it scrolls away — so the
+      // moon and reading (this scene) sit over the same stars seen everywhere.
+      const reveal = v > 0 ? Math.min(1, Math.max(0, bot - top) / v) : 0;
+      setKosmosBrightness(reveal);
     };
 
     let rafId = 0;
@@ -248,6 +256,11 @@ export const VeilScene: React.FC = () => {
       if (!running) {
         running = true;
         nightsky.classList.add('is-open');
+        // The home feed paints an opaque var(--kosmos-void) over the shared
+        // KronkKosmos canvas (see _kronk_feed_float.scss); dropping it to
+        // transparent while the veil is open lets that real canvas show
+        // through the aperture — the same reveal the Stage routes already get.
+        document.body.classList.add('inflow-veil-revealing');
         rafId = requestAnimationFrame(loop);
       }
     };
@@ -256,6 +269,10 @@ export const VeilScene: React.FC = () => {
       if (rafId) cancelAnimationFrame(rafId);
       rafId = 0;
       nightsky.classList.remove('is-open');
+      document.body.classList.remove('inflow-veil-revealing');
+      // Return the shared sky to its ambient (threshold-of-perception) level
+      // once the opening is off screen.
+      setKosmosBrightness(0);
     };
 
     // Reveal the sky only while the opening is on (or near) screen.
@@ -279,6 +296,10 @@ export const VeilScene: React.FC = () => {
       io.disconnect();
       if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener('resize', onResize);
+      // Never leave the shared sky stuck bright, or the feed stuck transparent,
+      // if we unmount mid-reveal.
+      document.body.classList.remove('inflow-veil-revealing');
+      setKosmosBrightness(0);
     };
   }, [host, expanded]);
 
@@ -364,7 +385,6 @@ export const VeilScene: React.FC = () => {
 
   const nightsky = (
     <div className='inflow-veil__nightsky' ref={nightskyRef}>
-      <div className='inflow-veil__sky' aria-hidden='true' />
       <div className='inflow-veil__scene'>
         {openedManually && (
           <button
