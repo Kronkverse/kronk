@@ -779,7 +779,13 @@ class UI extends PureComponent {
           <KronkFrame>
             <KronkFrame.TopBand>
               <KronkWordmark />
-              {layout !== 'mobile' && <HubSwitcher variant='top' currentAccountUsername={this.props.username} />}
+              {/* HubSwitcher pillars (Me / Home / Hub / Nudges) are
+                  useless for a signed-out visitor — Me/Nudges are
+                  auth-only, Home/Hub bounce to /about or the login
+                  page. Hide the whole thing when signed out. The
+                  top-band SCSS uses `:has(.hub-switcher)` to recentre
+                  the wordmark when the switcher isn't rendered. */}
+              {this.props.identity.signedIn && layout !== 'mobile' && <HubSwitcher variant='top' currentAccountUsername={this.props.username} />}
             </KronkFrame.TopBand>
             {/* Frame-provided per-space nav lives inline via
                 <SpaceHeaderRow> inside Stage now (see

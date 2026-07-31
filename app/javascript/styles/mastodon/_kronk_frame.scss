@@ -122,6 +122,17 @@
   @media (width <= 629px) {
     display: none;
   }
+
+  // Signed-out visitors: no HubSwitcher renders inside the top-band
+  // (both static HAML chrome and SPA gate the switcher on signed-in).
+  // With the centre pillar-row gone the wordmark shouldn't sit
+  // top-left with an empty stretch beside it — let it span the whole
+  // grid and centre itself. `:has()` is the CSS-only swap; supported
+  // in every browser Kronk targets.
+  &:not(:has(.hub-switcher--top)) .kronk-wordmark {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
 }
 
 // ── Slots ──────────────────────────────────────────────────────────

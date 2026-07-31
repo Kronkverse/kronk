@@ -3,14 +3,11 @@
 
 - content_for :content do
   .container-alt
-    .logo-container
-      %h1
-        - if within_authorization_flow?
-          = logo_as_symbol(:wordmark)
-        - else
-          = link_to root_path do
-            = logo_as_symbol(:wordmark)
-
+    -# Wordmark comes from the static Kronk chrome top-band
+    -# (shared/_kronk_static_chrome.html.haml), rendered by the
+    -# application layout wrapper below. Rendering another one here
+    -# doubled the logo on every auth page — one at the top of the
+    -# chrome, one above the form. Retired 2026-07-31.
     .form-container
       = render 'flashes'
 
