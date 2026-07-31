@@ -21,6 +21,9 @@ export const HOME_ZOOM = 3.7;
 // bushland tone at render time (see basemapLayers).
 const LAND = '#5f4a96';
 const BUSHLAND_COLOR = '#6f5ab2';
+// Dark-violet used for admin borders — well below the land value so the dashed
+// boundary lines stand out against both the land and the near-white roads.
+const BORDER_COLOR = '#241a42';
 
 export const KRONK_FLAVOR = {
   ...LIGHT,
@@ -44,7 +47,9 @@ export const KRONK_FLAVOR = {
   military: LAND,
   aerodrome: LAND,
   buildings: '#d9ccef',
-  boundaries: '#d8cbf0',
+  // Admin borders are recoloured + dashed in basemapLayers() so they read as
+  // borders, not another road; this base tone is the dark-violet they use.
+  boundaries: BORDER_COLOR,
   railway: '#b3a4dd',
   major: '#ffffff',
   minor_a: '#ffffff',
@@ -71,6 +76,29 @@ export const basemapLayers = () => {
         ...layer.paint,
         'fill-color': BUSHLAND_COLOR,
         'fill-opacity': 0.5,
+      };
+    }
+
+    // Make administrative borders obvious and distinct from the (white) roads:
+    // a dark-violet DASHED line, widened with zoom. The dash is the cartographic
+    // "this is a border" signal — roads stay solid white, borders read as borders.
+    if (layer.type === 'line' && layer['source-layer'] === 'boundaries') {
+      layer.paint = {
+        ...layer.paint,
+        'line-color': BORDER_COLOR,
+        'line-opacity': 0.95,
+        'line-dasharray': [2, 1.5],
+        'line-width': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          3,
+          1.4,
+          8,
+          2.4,
+          14,
+          3.2,
+        ],
       };
     }
   });
