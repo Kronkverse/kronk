@@ -74,7 +74,12 @@ class Auth::RegistrationsController < Devise::RegistrationsController
   end
 
   def after_sign_up_path_for(_resource)
-    auth_setup_path
+    # Email confirmation was retired as a gate (see User#functional_or_moved?
+    # — the `confirmed?` clause is gone). A fresh signup lands straight in
+    # the SPA; the Kronk system nudger surfaces "confirm your email" as a
+    # persistent reminder rather than a wall. `/auth/setup` still exists as
+    # a resend / change-email surface the reminder can deep-link to.
+    root_path
   end
 
   def after_sign_in_path_for(_resource)
