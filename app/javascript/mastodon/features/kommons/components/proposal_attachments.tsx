@@ -139,12 +139,20 @@ export const ProposalAttachments: React.FC<{ proposalId: string }> = ({
           placeholder='What is this, and what is it for?'
           className='kommons-attachments__description'
         />
-        <input
-          type='file'
-          onChange={handleFile}
-          disabled={busy}
-          className='kommons-attachments__file'
-        />
+        <label className='kommons-attachments__file-picker'>
+          <input
+            type='file'
+            onChange={handleFile}
+            disabled={busy}
+            className='kommons-attachments__file'
+          />
+          <span className='kommons-attachments__file-picker-label'>
+            <FormattedMessage
+              id='kommons.attachments.pick'
+              defaultMessage='Choose file'
+            />
+          </span>
+        </label>
       </div>
 
       {error && <p className='kommons-attachments__error'>{error}</p>}

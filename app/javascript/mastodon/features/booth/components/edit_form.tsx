@@ -35,6 +35,14 @@ const messages = defineMessages({
     defaultMessage: 'Remove cover',
   },
   heading: { id: 'booth.edit.heading', defaultMessage: 'Edit set' },
+  pickCover: {
+    id: 'booth.upload.pick_cover',
+    defaultMessage: 'Choose cover image',
+  },
+  replaceFile: {
+    id: 'booth.upload.replace_file',
+    defaultMessage: 'Replace',
+  },
 });
 
 interface Props {
@@ -291,12 +299,19 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
           </button>
         )}
 
-        <input
-          type='file'
-          accept='image/*'
-          onChange={handleCoverFileChange}
-          disabled={saving}
-        />
+        <label className='booth-upload-form__file-picker'>
+          <input
+            type='file'
+            accept='image/*'
+            onChange={handleCoverFileChange}
+            disabled={saving}
+          />
+          <span className='booth-upload-form__file-picker-label'>
+            {coverPreviewUrl
+              ? intl.formatMessage(messages.replaceFile)
+              : intl.formatMessage(messages.pickCover)}
+          </span>
+        </label>
         {coverError && (
           <span className='booth-upload-form__file-error'>{coverError}</span>
         )}
