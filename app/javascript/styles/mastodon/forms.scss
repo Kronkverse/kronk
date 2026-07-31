@@ -219,32 +219,57 @@ code {
       text-align: center;
     }
 
+    // The three-point intro: numbered via CSS counter so the digit
+    // above each bullet is Kronk-purple + serif + big, matching the
+    // display-font aesthetic of the title. Numbers are decorative
+    // ordering; the <ol>/<li> keeps semantic order.
     .welcome-form__bullets {
+      counter-reset: welcome-bullet;
+      list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 1.75rem;
+      gap: 2.25rem;
       margin: 0 auto 2rem;
+      padding: 0;
       max-width: 36rem;
     }
 
     .welcome-form__bullet {
+      counter-increment: welcome-bullet;
       text-align: center;
+      padding-top: 0.75rem;
+    }
+
+    // The big display digit sitting above each bullet. `::before`
+    // renders `counter(welcome-bullet)` — 1, 2, 3 — as a large
+    // serif digit tinted Kronk purple. Sits centred above the
+    // title, with margin below to separate the digit from the
+    // words.
+    .welcome-form__bullet::before {
+      content: counter(welcome-bullet);
+      display: block;
+      margin: 0 auto 0.75rem;
+      font-family: $font-display, serif;
+      font-size: 2.25rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--kronk-purple-accent);
     }
 
     .welcome-form__bullet-title {
-      margin: 0 0 0.35rem;
+      margin: 0 0 0.5rem;
       font-family: $font-display, sans-serif;
-      font-size: 1.05rem;
+      font-size: 1.15rem;
       line-height: 1.35;
       color: $primary-text-color;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .welcome-form__bullet-body {
       margin: 0;
       color: $secondary-text-color;
       font-size: 0.95rem;
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
     .stacked-actions {
