@@ -114,7 +114,12 @@ body.admin {
   // Un-fixed in alpha.179 — now a flow child of .kronk-frame__top-band
   // (grid column 1). The band's grid layout positions it; the wordmark
   // itself no longer self-anchors. z-index kept because it sits in the
-  // TopBand's stacking context.
+  // TopBand's stacking context. When the top-band has no HubSwitcher
+  // (signed-out visitors — the switcher is auth-only), the wordmark
+  // spans the whole grid and centres itself. `:has()` swap is on the
+  // parent — see the
+  // `.kronk-frame__top-band:not(:has(.hub-switcher--top))` block in
+  // _kronk_frame.scss.
   grid-column: 1;
   justify-self: start;
   z-index: 25;

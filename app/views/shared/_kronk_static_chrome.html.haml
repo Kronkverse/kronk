@@ -20,35 +20,41 @@
   current_slug = params[:slug] || request.path[%r{^/hub/([a-z0-9-]+)}, 1]
   path = request.path
 
+-# Signed-out visitors get a clean top-band: just the wordmark,
+-# centered. The HubSwitcher is Kronk's primary nav for signed-in
+-# members — Home/Hub have no useful behaviour for a stranger (they
+-# either bounce to /about or the login page), and Me/Nudges are
+-# signed-in-only. Rather than render dead pillars, hide the whole
+-# switcher. CSS in `_kronk_frame.scss` uses `:has(.hub-switcher)`
+-# to swap the top-band grid to center-align the wordmark.
 %header.kronk-frame__top-band
   %a.kronk-wordmark{ href: '/kronk' }
     %span{ 'aria-hidden' => 'true' } ӁЯѺƝ₭
 
-  %nav.hub-switcher.hub-switcher--top{ 'aria-label' => 'Primary surfaces' }
-    .hub-switcher__row{ role: 'tablist' }
-      - if user_signed_in?
+  - if user_signed_in?
+    %nav.hub-switcher.hub-switcher--top{ 'aria-label' => 'Primary surfaces' }
+      .hub-switcher__row{ role: 'tablist' }
         - me_active = path.start_with?('/@')
         %a.hub-switcher__pillar{ href: "/@#{current_user.account.username}", role: 'tab', 'aria-selected': me_active.to_s, class: ('hub-switcher__pillar--active' if me_active) }
           - if hub_switcher_icons['profile']
             = material_symbol(hub_switcher_icons['profile'], class: 'hub-switcher__pillar-icon')
           %span.hub-switcher__label.hub-switcher__label--sr Me
-      - home_active = path == '/home' || path.start_with?('/home/')
-      %a.hub-switcher__pillar{ href: '/home', role: 'tab', 'aria-selected': home_active.to_s, class: ('hub-switcher__pillar--active' if home_active) }
-        - if hub_switcher_icons['feed']
-          = material_symbol(hub_switcher_icons['feed'], class: 'hub-switcher__pillar-icon')
-        %span.hub-switcher__label.hub-switcher__label--sr Home
-      - hub_active = path.start_with?('/hub')
-      %a.hub-switcher__pillar{ href: '/hub', role: 'tab', 'aria-selected': hub_active.to_s, class: ('hub-switcher__pillar--active' if hub_active) }
-        - if hub_switcher_icons['hub']
-          = material_symbol(hub_switcher_icons['hub'], class: 'hub-switcher__pillar-icon')
-        %span.hub-switcher__label.hub-switcher__label--sr Hub
-      - if user_signed_in?
+        - home_active = path == '/home' || path.start_with?('/home/')
+        %a.hub-switcher__pillar{ href: '/home', role: 'tab', 'aria-selected': home_active.to_s, class: ('hub-switcher__pillar--active' if home_active) }
+          - if hub_switcher_icons['feed']
+            = material_symbol(hub_switcher_icons['feed'], class: 'hub-switcher__pillar-icon')
+          %span.hub-switcher__label.hub-switcher__label--sr Home
+        - hub_active = path.start_with?('/hub')
+        %a.hub-switcher__pillar{ href: '/hub', role: 'tab', 'aria-selected': hub_active.to_s, class: ('hub-switcher__pillar--active' if hub_active) }
+          - if hub_switcher_icons['hub']
+            = material_symbol(hub_switcher_icons['hub'], class: 'hub-switcher__pillar-icon')
+          %span.hub-switcher__label.hub-switcher__label--sr Hub
         - nudges_active = path.start_with?('/nudges')
         %a.hub-switcher__pillar{ href: '/nudges', role: 'tab', 'aria-selected': nudges_active.to_s, class: ('hub-switcher__pillar--active' if nudges_active) }
           - if hub_switcher_icons['nudges']
             = material_symbol(hub_switcher_icons['nudges'], class: 'hub-switcher__pillar-icon')
           %span.hub-switcher__label.hub-switcher__label--sr Nudges
-    .hub-switcher__wire{ 'aria-hidden' => 'true' }
+      .hub-switcher__wire{ 'aria-hidden' => 'true' }
 
 - if user_signed_in?
   %aside.kronk-frame__right-band
