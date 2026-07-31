@@ -22,6 +22,15 @@ const messages = defineMessages({
     id: 'albutts.contribute.photos_clear',
     defaultMessage: 'Clear',
   },
+  photosPick: {
+    id: 'albutts.contribute.photos_pick',
+    defaultMessage: 'Choose photos or videos',
+  },
+  photosPickMore: {
+    id: 'albutts.contribute.photos_pick_more',
+    defaultMessage:
+      '{count, plural, one {# selected · add more} other {# selected · add more}}',
+  },
   cancel: {
     id: 'albutts.contribute.cancel',
     defaultMessage: 'Cancel',
@@ -257,6 +266,18 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
           onChange={handleFileChange}
           disabled={pending}
         />
+        {!hasSubmitted && (
+          <label
+            htmlFor='albutts-contribute-file'
+            className={`albutts-composer__file-picker${pending ? ' albutts-composer__file-picker--disabled' : ''}`}
+          >
+            {photos.length > 0
+              ? intl.formatMessage(messages.photosPickMore, {
+                  count: photos.length,
+                })
+              : intl.formatMessage(messages.photosPick)}
+          </label>
+        )}
 
         {photos.length > 0 && (
           <>

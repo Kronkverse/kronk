@@ -393,9 +393,10 @@
     color: var(--text-primary);
     cursor: pointer;
 
+    // The wrapping label is the click surface; hide the raw input so the
+    // browser's default "Choose file" button doesn't show through.
     input {
-      font-size: 13px;
-      color: var(--text-secondary);
+      display: none;
     }
   }
 

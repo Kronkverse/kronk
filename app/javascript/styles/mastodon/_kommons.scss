@@ -3181,6 +3181,37 @@
     min-width: 200px;
   }
 
+  // Hide the raw file input; the sibling label is the visible trigger.
+  &__file {
+    display: none;
+  }
+
+  &__file-picker {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: var(--radius-medium);
+    border: 1px dashed var(--border-default);
+    background: var(--surface-elevated);
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      color 120ms ease-out,
+      border-color 120ms ease-out;
+
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--accent);
+      border-style: solid;
+    }
+  }
+
+  &__file-picker-label {
+    pointer-events: none;
+  }
+
   &__error {
     margin: 8px 0 0;
     color: var(--decision-block);
