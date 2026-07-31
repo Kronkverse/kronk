@@ -76,19 +76,23 @@ click navigation left/right through the album and `Escape` to close.
 Deep links land on a photo via `?photo=:id` on the album URL (used by
 Nudges CTAs for photo comments/froths).
 
-Inside the lightbox, each photo has its own reactions rail:
+Each photo is backed by a `Status` (see `Albutts::PublishPhoto`).
+Inside the lightbox its
+reactions rail talks to the standard status endpoints instead of
+albutts-specific ones:
 
-- **Froth** — one-per-viewer heart on a specific photo. Toggle
-  via `POST/DELETE /api/v1/albutts/photos/:photo_id/froth`. Idempotent
-  (DB unique index catches double-clicks).
-- **Comments** — one level of threading (`parent_id` on
-  `album_photo_comments`). GET/POST/DELETE
-  `/api/v1/albutts/photos/:photo_id/comments`. Only the comment author
-  or the album owner can delete a comment.
+- **Froth** — a favourite on the backing status. Toggle via
+  `POST/DELETE /api/v1/statuses/:id/favourite`. Same idempotency as
+  every other Mastodon favourite.
+- **Replies** — thread through the backing status's standard
+  `in_reply_to_id` chain. The lightbox links out to the status
+  permalink for the full thread; from there, the standard compose /
+  delete rules apply.
 
-Both reactions are gated by album visibility: if you can view the
-album you can Froth and comment on any photo inside it, matching
-Albutts's open-audience-within-scope contract.
+Both are gated by the backing status's visibility, which is derived
+from the album's scope at contribute time (`Albutts::PublishPhoto`).
+Anyone who can see the album can favourite + reply to any photo in
+it, matching Albutts's open-audience-within-scope contract.
 
 ## Notifications
 

@@ -7,7 +7,6 @@ import {
 import type {
   ApiAlbumJSON,
   ApiAlbumPhotoJSON,
-  ApiAlbumPhotoCommentJSON,
   AlbumVisibility,
 } from 'mastodon/api_types/albutts';
 
@@ -28,9 +27,8 @@ interface UpdateAlbumParams {
 }
 
 interface ContributePhotoParams {
-  media_id?: string;
+  media_id: string;
   caption?: string;
-  external_url?: string;
 }
 
 export const apiListAlbums = () =>
@@ -63,28 +61,3 @@ export const apiUpdatePhoto = (photoId: string, params: { caption: string }) =>
 
 export const apiDeletePhoto = (photoId: string) =>
   apiRequestDelete<Record<string, never>>(`v1/albutts/photos/${photoId}`);
-
-export const apiFrothPhoto = (photoId: string) =>
-  apiRequestPost<ApiAlbumPhotoJSON>(`v1/albutts/photos/${photoId}/froth`);
-
-export const apiUnfrothPhoto = (photoId: string) =>
-  apiRequestDelete<ApiAlbumPhotoJSON>(`v1/albutts/photos/${photoId}/froth`);
-
-export const apiListPhotoComments = (photoId: string) =>
-  apiRequestGet<ApiAlbumPhotoCommentJSON[]>(
-    `v1/albutts/photos/${photoId}/comments`,
-  );
-
-export const apiCreatePhotoComment = (
-  photoId: string,
-  params: { body: string; parent_id?: string },
-) =>
-  apiRequestPost<ApiAlbumPhotoCommentJSON>(
-    `v1/albutts/photos/${photoId}/comments`,
-    { comment: params },
-  );
-
-export const apiDeletePhotoComment = (photoId: string, commentId: string) =>
-  apiRequestDelete<Record<string, never>>(
-    `v1/albutts/photos/${photoId}/comments/${commentId}`,
-  );

@@ -165,11 +165,10 @@ namespace :api, format: false do
         resources :photos, only: [:create], controller: 'photos'
       end
       resources :album_photos, only: [:update, :destroy], path: 'photos', controller: 'photos'
-      scope path: 'photos/:photo_id', module: :photos do
-        post   'froth',    to: 'froths#create'
-        delete 'froth',    to: 'froths#destroy'
-        resources :comments, only: [:index, :create, :destroy]
-      end
+      # Froth + comment endpoints retired 2026-07-31: an AlbumPhoto is
+      # now Status-backed, so favourites go to
+      # /api/v1/statuses/:id/favourite and replies use the standard
+      # thread endpoints. See docs/spaces/albutts.md §Reactions.
     end
 
     # Klot — cycle tracker (KRONK_TIDES). Self is a singleton (one per

@@ -1,4 +1,5 @@
 import type { ApiAccountJSON } from './accounts';
+import type { ApiStatusJSON } from './statuses';
 
 export type AlbumVisibility =
   | 'public'
@@ -7,26 +8,17 @@ export type AlbumVisibility =
   | 'self_only'
   | 'krew';
 
+// Since 2026-07-31 an AlbumPhoto is a thin join to a Status. The
+// Status carries the caption (text), media, favourites (froths), and
+// reply thread. `caption` + `url` are kept as top-level convenience
+// fields — they mirror the linked Status.
 export interface ApiAlbumPhotoJSON {
   id: string;
   caption: string | null;
   url: string | null;
   created_at: string;
   contributor: ApiAccountJSON;
-  froths_count: number;
-  comments_count: number;
-  frothed: boolean;
-}
-
-export interface ApiAlbumPhotoCommentJSON {
-  id: string;
-  album_photo_id: string;
-  parent_id: string | null;
-  body: string;
-  created_at: string;
-  account: ApiAccountJSON;
-  // Only present on root comments (one-level threading).
-  replies?: ApiAlbumPhotoCommentJSON[];
+  status: ApiStatusJSON;
 }
 
 export interface ApiAlbumJSON {

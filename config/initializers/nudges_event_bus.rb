@@ -130,59 +130,9 @@ Rails.application.config.after_initialize do
     end
   end
 
-  # ── Hand-wired: albutts.photo.frothed ────────────────────────────
-  # Per-photo Froth reaction. Nudge the photo's contributor unless
-  # the actor is the contributor (self-froth). Mate gate applies.
-  Kronk::KornerEvents.subscribe('albutts.photo.frothed') do |payload|
-    actor       = Account.find_by(id: payload[:actor_account_id])
-    contributor = Account.find_by(id: payload[:contributor_account_id])
-    next unless actor && contributor
-    next if actor.id == contributor.id
-
-    Nudges::EventRouter.deliver(
-      actor: actor,
-      recipient: contributor,
-      source_korner_slug: 'albutts',
-      verb: 'frothed_photo',
-      source_type: 'AlbumPhoto',
-      source_id: payload[:photo_id],
-      interaction: 'interactive',
-      cta_label: 'View photo',
-      cta_route: "/hub/albutts/albums/#{payload[:album_id]}?photo=#{payload[:photo_id]}"
-    )
-  end
-
-  # ── Hand-wired: albutts.photo.commented ──────────────────────────
-  # Per-photo comment. Two recipients:
-  #   * the photo contributor (unless the actor is the contributor)
-  #   * the parent comment's author on a reply (unless it's the same
-  #     as the contributor — dedupe — or the actor)
-  Kronk::KornerEvents.subscribe('albutts.photo.commented') do |payload|
-    actor = Account.find_by(id: payload[:actor_account_id])
-    next unless actor
-
-    recipient_ids = []
-    contributor_id = payload[:contributor_account_id]
-    recipient_ids << contributor_id if contributor_id && contributor_id != actor.id
-
-    parent_author_id = payload[:parent_author_account_id]
-    recipient_ids << parent_author_id if parent_author_id && parent_author_id != actor.id && parent_author_id != contributor_id
-
-    recipient_ids.uniq.each do |recipient_id|
-      recipient = Account.find_by(id: recipient_id)
-      next unless recipient
-
-      Nudges::EventRouter.deliver(
-        actor: actor,
-        recipient: recipient,
-        source_korner_slug: 'albutts',
-        verb: recipient_id == parent_author_id ? 'replied_to_comment' : 'commented_on_photo',
-        source_type: 'AlbumPhoto',
-        source_id: payload[:photo_id],
-        interaction: 'interactive',
-        cta_label: 'View photo',
-        cta_route: "/hub/albutts/albums/#{payload[:album_id]}?photo=#{payload[:photo_id]}"
-      )
-    end
-  end
+  # `albutts.photo.frothed` and `albutts.photo.commented` retired
+  # 2026-07-31 with the Status-backed refactor. Per-photo favourites
+  # and replies now flow through the standard Status notification
+  # pipeline (Favourite / Notification records), so no bespoke
+  # subscribe is needed here.
 end

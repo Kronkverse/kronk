@@ -241,16 +241,17 @@ const PhotoTile: React.FC<{
       <div className='albutts-photo__meta'>
         <Avatar account={contributor} size={22} />
         <span className='albutts-photo__credit'>{name}</span>
-        {(photo.froths_count > 0 || photo.comments_count > 0) && (
+        {(photo.status.favorites_count > 0 ||
+          photo.status.replies_count > 0) && (
           <span className='albutts-photo__reactions'>
-            {photo.froths_count > 0 && (
+            {photo.status.favorites_count > 0 && (
               <span className='albutts-photo__reactions-item'>
-                ♥ {photo.froths_count}
+                ♥ {photo.status.favorites_count}
               </span>
             )}
-            {photo.comments_count > 0 && (
+            {photo.status.replies_count > 0 && (
               <span className='albutts-photo__reactions-item'>
-                💬 {photo.comments_count}
+                💬 {photo.status.replies_count}
               </span>
             )}
           </span>

@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
-# Albutts — contributions to an album. One row per photo. Anyone who
-# can view the album can also contribute (open-roster within scope;
-# see docs/spaces/albutts.md §Visibility scopes). Deleting a photo is
-# limited to the contributor themselves or the album's owner.
+# Albutts — contributions to an album. One row per photo, and each row
+# is a thin join between the album and a `Status` that carries the
+# caption, media, favourites, and reply thread. Deleting a photo is
+# limited to the contributor themselves or the album's owner; the same
+# rule guards a caption edit.
 class Api::V1::Albutts::PhotosController < Api::BaseController
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }
   before_action :require_user!
@@ -14,28 +15,40 @@ class Api::V1::Albutts::PhotosController < Api::BaseController
     raise Mastodon::NotPermittedError unless @album.contributable_by?(current_account)
 
     permitted = photo_params
-    media_id = permitted.delete(:media_id)
-    @photo = @album.photos.new(permitted.to_h.merge(contributor: current_account))
-    attach_media!(media_id) if media_id.present?
+    media_id = permitted[:media_id]
+    raise Mastodon::UnprocessableEntityError, 'media_id is required' if media_id.blank?
 
-    if @photo.save
-      render json: @photo, serializer: REST::AlbumPhotoSerializer, status: 201
-    else
-      render json: { error: @photo.errors.full_messages.to_sentence }, status: :unprocessable_entity
-    end
+    media = MediaAttachment.find(media_id)
+    raise Mastodon::UnprocessableEntityError, 'media must belong to the contributor' unless media.account_id == current_account.id
+
+    status = Albutts::PublishPhoto.new(
+      album: @album,
+      contributor: current_account,
+      media_attachment: media,
+      caption: permitted[:caption]
+    ).call
+
+    @photo = @album.photos.create!(
+      contributor: current_account,
+      status: status
+    )
+
+    render json: @photo, serializer: REST::AlbumPhotoSerializer, status: 201
   end
 
   # Caption edit — same authorization rule as `destroy` (contributor or
-  # album owner). Only `:caption` is mutable post-upload; the media
-  # source and external URL are fixed on create.
+  # album owner). The write hits the backing Status so hashtag /
+  # mention parsing and edit history run through the standard path.
   def update
     raise Mastodon::NotPermittedError unless editable_by_current_account?
 
-    if @photo.update(update_params)
-      render json: @photo, serializer: REST::AlbumPhotoSerializer
-    else
-      render json: { error: @photo.errors.full_messages.to_sentence }, status: :unprocessable_entity
-    end
+    UpdateStatusService.new.call(
+      @photo.status,
+      current_account.id,
+      text: update_params[:caption].to_s
+    )
+
+    render json: @photo.reload, serializer: REST::AlbumPhotoSerializer
   end
 
   def destroy
@@ -55,23 +68,8 @@ class Api::V1::Albutts::PhotosController < Api::BaseController
     @photo = AlbumPhoto.find(params[:id])
   end
 
-  # `media_id` — a MediaAttachment the contributor already uploaded
-  # (via Mastodon's `POST /api/v1/media`). The attachment must belong
-  # to the caller; the model's validation enforces that at write time,
-  # and this controller step just resolves the id.
-  def attach_media!(media_id)
-    ma = MediaAttachment.find(media_id)
-    @photo.media_attachment = ma
-  end
-
-  # `media_id` sits inside the `photo` hash so `params.expect` sees at
-  # least one whitelisted key even when neither `caption` nor
-  # `external_url` was provided. Rails 8's `.expect` runs
-  # `permit(filters).require(keys)` — an empty permitted hash after
-  # `require(:photo)` raises ParameterMissing (400), and dropping
-  # `:media_id` outside the allowlist did exactly that.
   def photo_params
-    params.expect(photo: [:caption, :external_url, :media_id])
+    params.expect(photo: [:caption, :media_id])
   end
 
   def update_params
