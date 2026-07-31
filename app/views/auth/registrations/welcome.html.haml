@@ -4,25 +4,25 @@
 - content_for :header_tags do
   = render partial: 'shared/og', locals: { description: description_for_sign_up(@invite) }
 
-.simple_form
+.simple_form.welcome-form
   = render 'auth/shared/progress', stage: 'welcome'
 
   %h1.title= t('auth.welcome.title')
   %p.lead= t('auth.welcome.preamble')
 
-  %ol.rules-list
-    %li
-      %button{ type: 'button', aria: { expanded: 'false' } }
-        .rules-list__text= t('auth.welcome.bullet_shape_title')
-        .rules-list__hint= t('auth.welcome.bullet_shape_body')
-    %li
-      %button{ type: 'button', aria: { expanded: 'false' } }
-        .rules-list__text= t('auth.welcome.bullet_shape_koc_title')
-        .rules-list__hint= t('auth.welcome.bullet_shape_koc_body')
-    %li
-      %button{ type: 'button', aria: { expanded: 'false' } }
-        .rules-list__text= t('auth.welcome.bullet_yours_title')
-        .rules-list__hint= t('auth.welcome.bullet_yours_body')
+  -# Bullets are plain block elements (not the rules-list <button>
+  -# affordance) — nothing to expand/collapse here, just three
+  -# paragraphs to read. Centred via .welcome-form scoping in SCSS.
+  .welcome-form__bullets
+    .welcome-form__bullet
+      %h2.welcome-form__bullet-title= t('auth.welcome.bullet_shape_title')
+      %p.welcome-form__bullet-body= t('auth.welcome.bullet_shape_body')
+    .welcome-form__bullet
+      %h2.welcome-form__bullet-title= t('auth.welcome.bullet_shape_koc_title')
+      %p.welcome-form__bullet-body= t('auth.welcome.bullet_shape_koc_body')
+    .welcome-form__bullet
+      %h2.welcome-form__bullet-title= t('auth.welcome.bullet_yours_title')
+      %p.welcome-form__bullet-body= t('auth.welcome.bullet_yours_body')
 
   .stacked-actions
     - next_path = @invite_code.present? ? public_invite_url(invite_code: @invite_code, welcomed: @welcome_token) : new_user_registration_path(welcomed: @welcome_token)
