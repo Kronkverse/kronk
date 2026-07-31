@@ -87,3 +87,10 @@
 
   .actions
     = f.button :button, @invite.present? ? t('auth.register') : sign_up_message, type: :submit
+
+  -# Back → clears the sticky `privacy_accepted` flag so the privacy
+  -# step re-renders. Uses the same `handle_rewind!` gate the other
+  -# steps' Back buttons hit.
+  - back_path = @invite.present? ? public_invite_url(invite_code: @invite.code, rewind: 'privacy') : new_user_registration_path(rewind: 'privacy')
+  .stacked-actions
+    = link_to t('auth.rules.back'), back_path, class: 'button button-tertiary'

@@ -16,6 +16,12 @@ class Auth::RegistrationsController < Devise::RegistrationsController
   # Four-step signup — the gates render their step in order. Whichever
   # returns first short-circuits the chain, so a visitor walks:
   # welcome → rules → privacy → details. See app/views/auth/registrations.
+  #
+  # `handle_rewind!` runs FIRST so a Back link like
+  # `?rewind=<step>` can clear the sticky session flags before the
+  # gates check them — otherwise the gate chain would advance right
+  # past the step the user is trying to revisit.
+  before_action :handle_rewind!, only: :new
   before_action :require_welcome_seen!, only: :new
   before_action :require_rules_acceptance!, only: :new
   before_action :require_privacy_acceptance!, only: :new
@@ -144,6 +150,33 @@ class Auth::RegistrationsController < Devise::RegistrationsController
 
   def set_rules
     @rules = Rule.ordered.includes(:translations)
+  end
+
+  # Back-navigation for the four-step signup. Each step's Back link
+  # points at `/auth/sign_up?rewind=<step>`. This action clears the
+  # sticky session flag for that step AND every downstream flag —
+  # you're re-considering, so we make you walk forward through the
+  # subsequent steps again. Without this, the gate chain would race
+  # past the step the user is trying to revisit (sticky flags always
+  # win, which is exactly what makes Back-nav within the flow work).
+  def handle_rewind!
+    case params[:rewind]
+    when 'welcome'
+      session.delete(:welcome_seen)
+      session.delete(:welcome_token)
+      session.delete(:rules_accepted)
+      session.delete(:accept_token)
+      session.delete(:privacy_accepted)
+      session.delete(:privacy_token)
+    when 'rules'
+      session.delete(:rules_accepted)
+      session.delete(:accept_token)
+      session.delete(:privacy_accepted)
+      session.delete(:privacy_token)
+    when 'privacy'
+      session.delete(:privacy_accepted)
+      session.delete(:privacy_token)
+    end
   end
 
   # Step 1: welcome. Explains what Kronk is before we ask for anything.
