@@ -31,5 +31,7 @@
   .stacked-actions
     - next_path = @invite_code.present? ? public_invite_url(invite_code: @invite_code, privacy_accepted: @privacy_token) : new_user_registration_path(privacy_accepted: @privacy_token)
     = link_to t('auth.privacy.cta_next'), next_path, class: 'button'
-    - back_path = @invite_code.present? ? public_invite_url(invite_code: @invite_code) : new_user_registration_path
+    -# Back → clears the sticky `rules_accepted` flag so
+    -# `require_rules_acceptance!` re-renders the rules step.
+    - back_path = @invite_code.present? ? public_invite_url(invite_code: @invite_code, rewind: 'rules') : new_user_registration_path(rewind: 'rules')
     = link_to t('auth.privacy.cta_back'), back_path, class: 'button button-tertiary'
