@@ -33,7 +33,7 @@ module Kronk
         activity: activity,
         type: type
       )
-    rescue StandardError => e
+    rescue => e
       Rails.logger.error("[kronk:notify:#{type}] failed for recipient #{recipient_id}: #{e.class} #{e.message}")
       nil
     end

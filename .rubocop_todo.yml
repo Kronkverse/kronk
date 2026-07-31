@@ -16,3 +16,36 @@ Style/FetchEnvVar:
 # Configuration parameters: MinBodyLength, AllowConsecutiveConditionals.
 Style/GuardClause:
   Enabled: false
+
+# --- Kronk 2026-07-31: offenses that reached the tip via --no-verify commits.
+# --- Autocorrectable ones were fixed in the same PR; these remain and are
+# --- grandfathered so `lint` can become a required check. Remove entries as
+# --- the code is cleaned up. NOTE: event_invitation's uniqueness validation
+# --- genuinely wants a unique DB index (a migration) — real follow-up, not
+# --- just style.
+
+# Wants a unique index backing the uniqueness validation (needs a migration).
+Rails/UniqueValidationWithoutIndex:
+  Exclude:
+    - 'app/models/event_invitation.rb'
+
+# `is_owner` / `has_answered` are the serialized JSON attribute names (API
+# contract) so the reader methods keep the is_/has_ prefix.
+Naming/PredicatePrefix:
+  Exclude:
+    - 'app/serializers/rest/album_serializer.rb'
+    - 'app/serializers/rest/question_summary_serializer.rb'
+
+# `exit` in a CLI command is intentional.
+Rails/Exit:
+  Exclude:
+    - 'lib/mastodon/cli/kommons.rb'
+
+# Existing spec shape — not worth reshaping for the lint gate.
+RSpec/MultipleDescribes:
+  Exclude:
+    - 'spec/lib/kronk/search/adapter_spec.rb'
+RSpec/MessageSpies:
+  Exclude:
+    - 'spec/lib/kronk/search/adapter_spec.rb'
+    - 'spec/models/concerns/searchable_spec.rb'

@@ -166,9 +166,7 @@ Rails.application.config.after_initialize do
     recipient_ids << contributor_id if contributor_id && contributor_id != actor.id
 
     parent_author_id = payload[:parent_author_account_id]
-    if parent_author_id && parent_author_id != actor.id && parent_author_id != contributor_id
-      recipient_ids << parent_author_id
-    end
+    recipient_ids << parent_author_id if parent_author_id && parent_author_id != actor.id && parent_author_id != contributor_id
 
     recipient_ids.uniq.each do |recipient_id|
       recipient = Account.find_by(id: recipient_id)

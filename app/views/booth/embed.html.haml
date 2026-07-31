@@ -209,10 +209,10 @@
               %path{ d: 'M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6zm-2 16a2 2 0 1 1 0-4 2 2 0 0 1 0 4z', fill: 'white' }/
 
       .player__meta
-        %div.player__title= @booth_set.title
-        %div.player__artist= @booth_set.artist_name
+        .player__title= @booth_set.title
+        .player__artist= @booth_set.artist_name
         - if @booth_set.event_name.present?
-          %div.player__event= "#{@booth_set.event_name}#{@booth_set.event_date ? ' · ' + @booth_set.event_date.strftime('%b %-d, %Y') : ''}"
+          .player__event= "#{@booth_set.event_name}#{" · #{@booth_set.event_date.strftime('%b %-d, %Y')}" if @booth_set.event_date}"
 
       .player__progress-wrap
         .player__progress#progress
@@ -222,18 +222,18 @@
           %span#time-total= @booth_set.duration_seconds ? format_duration(@booth_set.duration_seconds) : '—'
 
       .player__controls
-        %button.player__btn#btn-back{ type: 'button', 'aria-label' => 'Back 30 seconds' }
+        %button.player__btn#btn-back{ :type => 'button', 'aria-label' => 'Back 30 seconds' }
           %svg{ viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' }
             %path{ d: 'M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z', fill: 'currentColor' }/
           %span.player__skip-label 30s
 
-        %button.player__btn.player__btn--play#btn-play{ type: 'button', 'aria-label' => 'Play' }
+        %button.player__btn.player__btn--play#btn-play{ :type => 'button', 'aria-label' => 'Play' }
           %svg#icon-play{ viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg', style: 'display:block' }
             %path{ d: 'M8 5v14l11-7z', fill: 'currentColor' }/
           %svg#icon-pause{ viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg', style: 'display:none' }
             %path{ d: 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', fill: 'currentColor' }/
 
-        %button.player__btn#btn-fwd{ type: 'button', 'aria-label' => 'Forward 30 seconds' }
+        %button.player__btn#btn-fwd{ :type => 'button', 'aria-label' => 'Forward 30 seconds' }
           %svg{ viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' }
             %path{ d: 'M18 13c0 3.31-2.69 6-6 6s-6-2.69-6-6 2.69-6 6-6v4l5-5-5-5v4c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8h-2z', fill: 'currentColor' }/
           %span.player__skip-label 30s

@@ -21,7 +21,7 @@ class BackfillKuestionsFeedProjection < ActiveRecord::Migration[8.0]
   def up
     Question.where(status_id: nil).find_each do |question|
       Kuestions::PublishQuestion.new(question).call
-    rescue StandardError => e
+    rescue => e
       Rails.logger.error("Kuestions feed backfill failed for question #{question.id}: #{e.message}")
     end
 

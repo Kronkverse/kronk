@@ -1,0 +1,29 @@
+{
+  "brakeman_version": "7.1.1",
+  "ignored_warnings": [
+    {
+      "check_name": "SQL",
+      "code": "ActiveRecord::Base.connection.select_all(\"SELECT * FROM (\\n  (#{\"SELECT reblog_of_id AS target_status_id, account_id, 'boost' AS activity_type, id AS activity_id, created_at\\nFROM statuses\\nWHERE account_id IN (#{followed_ids.map(&:to_i).join(\",\")})\\n  AND deleted_at IS NULL\\n  AND reblog_of_id IS NOT NULL\\n  AND account_id != #{current_account.id.to_i}\\n\".squish}) UNION ALL (#{\"SELECT status_id AS target_status_id, account_id, 'favourite' AS activity_type, id AS activity_id, created_at\\nFROM favourites\\nWHERE account_id IN (#{followed_ids.map(&:to_i).join(\",\")})\\n  AND account_id != #{current_account.id.to_i}\\n\".squish}) UNION ALL (#{\"SELECT in_reply_to_id AS target_status_id, account_id, 'reply' AS activity_type, id AS activity_id, created_at\\nFROM statuses\\nWHERE account_id IN (#{followed_ids.map(&:to_i).join(\",\")})\\n  AND deleted_at IS NULL\\n  AND in_reply_to_id IS NOT NULL\\n  AND account_id != #{current_account.id.to_i}\\n\".squish})\\n) AS activities\\nORDER BY created_at DESC\\n\".squish)",
+      "confidence": "Medium",
+      "cwe_id": [
+        89
+      ],
+      "file": "app/controllers/api/v1/timelines/friends_activity_controller.rb",
+      "fingerprint": "88c16f595f74eb1e8c763de0011f539be10a658e2d6c49ab19999c9a2cfab2e3",
+      "line": 66,
+      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "location": {
+        "class": "Api::V1::Timelines::FriendsActivityController",
+        "method": "fetch_raw_activities",
+        "type": "method"
+      },
+      "message": "Possible SQL injection",
+      "note": "Reviewed false positive: every interpolated value is integer-coerced (ids_list = followed_ids.map(&:to_i).join(','), current_id = current_account.id.to_i), so no SQL injection is possible.",
+      "render_path": null,
+      "user_input": "followed_ids.map(&:to_i).join(\",\")",
+      "warning_code": 0,
+      "warning_type": "SQL Injection"
+    }
+  ],
+  "updated": "2026-07-31"
+}

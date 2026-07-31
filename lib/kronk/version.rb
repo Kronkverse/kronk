@@ -56,8 +56,8 @@ module Kronk
     # alias). Nil in local dev / CI where neither is set — a bare
     # milestone is fine there.
     def build_commit
-      commit = ENV['SOURCE_COMMIT'] || ENV['KRONK_BUILD']
-      commit = nil if commit.nil? || commit.empty?
+      commit = ENV['SOURCE_COMMIT'] || ENV.fetch('KRONK_BUILD', nil)
+      commit = nil if commit.blank?
       commit && commit[0, 8]
     end
   end

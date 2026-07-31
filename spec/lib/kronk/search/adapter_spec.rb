@@ -47,13 +47,13 @@ RSpec.describe Kronk::Search::Adapter::Null do
 
   describe '#index' do
     it 'does not raise' do
-      expect { adapter.index(:statuses, record) }.not_to raise_error
+      expect { adapter.index(:statuses, record) }.to_not raise_error
     end
   end
 
   describe '#remove' do
     it 'does not raise' do
-      expect { adapter.remove(:statuses, record) }.not_to raise_error
+      expect { adapter.remove(:statuses, record) }.to_not raise_error
     end
   end
 
@@ -69,7 +69,7 @@ RSpec.describe Kronk::Search::Adapter::Null do
 
   describe '#reindex_all' do
     it 'does not raise' do
-      expect { adapter.reindex_all(:statuses) }.not_to raise_error
+      expect { adapter.reindex_all(:statuses) }.to_not raise_error
     end
   end
 end
@@ -88,7 +88,7 @@ RSpec.describe Kronk::Search::Adapter::Meilisearch do
     adapter = described_class.new(client: fake_client)
 
     expect(Rails.logger).to receive(:warn).with(/index.*failed.*meili unreachable/)
-    expect { adapter.index(:statuses, record) }.not_to raise_error
+    expect { adapter.index(:statuses, record) }.to_not raise_error
   end
 
   it 'swallows read-path errors and returns an empty array' do

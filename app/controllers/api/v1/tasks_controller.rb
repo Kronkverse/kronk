@@ -49,7 +49,7 @@ class Api::V1::TasksController < Api::BaseController
     Kronk::ProposalStates.deliver!(proposal)
   rescue Kronk::ProposalStates::InvalidTransition => e
     Rails.logger.warn("[kronk:tasks] auto-deliver skipped for proposal #{proposal&.id}: #{e.message}")
-  rescue StandardError => e
+  rescue => e
     Rails.logger.error("[kronk:tasks] auto-deliver failed for proposal #{proposal&.id}: #{e.class} #{e.message}")
   end
 

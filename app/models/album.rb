@@ -99,7 +99,7 @@ class Album < ApplicationRecord
   def krew_visible_to?(viewer)
     return false if viewer.nil?
 
-    album_krews.where(krew_id: viewer.krews.select(:id)).exists?
+    album_krews.exists?(krew_id: viewer.krews.select(:id))
   end
 
   def krew_scope_has_at_least_one_krew

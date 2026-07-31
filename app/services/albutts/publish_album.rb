@@ -22,11 +22,11 @@ module Albutts
     # both enums; the mapping is explicit so a future rename on either
     # side is caught by a spec instead of drifting silently.
     ALBUM_TO_STATUS_VISIBILITY = {
-      'public'    => 'public',
-      'mates'     => 'mates',
-      'orbit'     => 'orbit',
+      'public' => 'public',
+      'mates' => 'mates',
+      'orbit' => 'orbit',
       'self_only' => 'self_only',
-      'krew'      => 'krew',
+      'krew' => 'krew',
     }.freeze
 
     def initialize(album)

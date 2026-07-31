@@ -12,14 +12,20 @@ class Api::V1::Albutts::Photos::FrothsController < Api::BaseController
 
   def create
     @photo.froths.find_or_create_by!(account: current_account)
-    render json: @photo, serializer: REST::AlbumPhotoSerializer  rescue ActiveRecord::RecordNotUnique
+    begin
+      render json: @photo, serializer: REST::AlbumPhotoSerializer
+    rescue
+      ActiveRecord::RecordNotUnique
+    end
     # Race between two clicks — the row exists; treat as success.
-    render json: @photo, serializer: REST::AlbumPhotoSerializer  end
+    render json: @photo, serializer: REST::AlbumPhotoSerializer
+  end
 
   def destroy
     froth = @photo.froths.find_by(account: current_account)
     froth&.destroy!
-    render json: @photo, serializer: REST::AlbumPhotoSerializer  end
+    render json: @photo, serializer: REST::AlbumPhotoSerializer
+  end
 
   private
 

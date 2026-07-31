@@ -15,6 +15,10 @@ class Api::V1::Proposals::AttachmentsController < Api::BaseController
            each_serializer: REST::ProposalAttachmentSerializer
   end
 
+  def show
+    send_file_contents(@attachment)
+  end
+
   def create
     attachment = @proposal.proposal_attachments.new(
       account: current_account,
@@ -30,12 +34,8 @@ class Api::V1::Proposals::AttachmentsController < Api::BaseController
     end
   end
 
-  def show
-    send_file_contents(@attachment)
-  end
-
   def destroy
-    return render json: { error: 'Only the uploader can remove an attachment.' }, status: :forbidden unless @attachment.account_id == current_account.id
+    return render json: { error: 'Only the uploader can remove an attachment.' }, status: 403 unless @attachment.account_id == current_account.id # rubocop:disable I18n/RailsI18n/DecorateString
 
     @attachment.destroy!
     render_empty
@@ -63,8 +63,8 @@ class Api::V1::Proposals::AttachmentsController < Api::BaseController
                 type: 'application/octet-stream',
                 disposition: 'attachment'
     end
-  rescue StandardError => e
+  rescue => e
     Rails.logger.error("Failed to stream attachment #{attachment.id}: #{e.class} #{e.message}")
-    render json: { error: 'Attachment could not be read.' }, status: :internal_server_error
+    render json: { error: 'Attachment could not be read.' }, status: 500 # rubocop:disable I18n/RailsI18n/DecorateString
   end
 end
