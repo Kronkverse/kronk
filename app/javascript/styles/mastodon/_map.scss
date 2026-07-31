@@ -10,6 +10,10 @@
   min-height: 0;
   width: 100%;
 
+  // A small buffer so the map sits inside the Stage rather than butting against
+  // the browser edge. Dropped to full-bleed on phones below.
+  padding: 12px;
+
   // The canvas fills the height as an in-flow flex child. It must NOT use
   // absolute positioning: MapLibre adds its own `.maplibregl-map` class to
   // this element, and maplibre-gl.css sets `.maplibregl-map { position:
@@ -18,6 +22,22 @@
   &__canvas {
     flex: 1 1 auto;
     min-height: 0;
+
+    // Frame the map as a contained panel so the buffer reads as intentional.
+    // overflow: hidden clips MapLibre's canvas to the rounded corners.
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-large, 16px);
+    overflow: hidden;
+  }
+
+  // Phone: full-bleed fit — no buffer or frame, the map fills the viewport.
+  @media (width <= 629px) {
+    padding: 0;
+
+    .map-mates__canvas {
+      border: 0;
+      border-radius: 0;
+    }
   }
 
   &__panel {
