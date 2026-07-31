@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import api from 'mastodon/api';
 import { apiContributePhoto } from 'mastodon/api/albutts';
+import { Icon } from 'mastodon/components/icon';
 
 const messages = defineMessages({
   heading: {
@@ -307,13 +309,20 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
               htmlFor='albutts-contribute-file'
               className='albutts-composer__drop-zone-label'
             >
-              {dragging
-                ? intl.formatMessage(messages.photosDropCue)
-                : photos.length > 0
-                  ? intl.formatMessage(messages.photosPickMore, {
-                      count: photos.length,
-                    })
-                  : intl.formatMessage(messages.photosPick)}
+              <Icon
+                id='add_photo_alternate'
+                icon={AddPhotoAlternateIcon}
+                className='albutts-composer__drop-zone-icon'
+              />
+              <span className='albutts-composer__drop-zone-text'>
+                {dragging
+                  ? intl.formatMessage(messages.photosDropCue)
+                  : photos.length > 0
+                    ? intl.formatMessage(messages.photosPickMore, {
+                        count: photos.length,
+                      })
+                    : intl.formatMessage(messages.photosPick)}
+              </span>
             </label>
           </div>
         )}
