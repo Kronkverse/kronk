@@ -28,7 +28,7 @@ class CreateTokenLedger < ActiveRecord::Migration[8.0]
       t.bigint  :account_id,  null: false
       t.integer :amount,      null: false # signed: negative spends, positive credits
       t.integer :kind,        null: false
-      t.bigint  :proposal_id             # null for grants not tied to a proposal
+      t.bigint  :proposal_id # null for grants not tied to a proposal
       t.datetime :created_at, null: false
     end
 

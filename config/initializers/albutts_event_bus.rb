@@ -24,7 +24,7 @@ Rails.application.config.after_initialize do
 
     # Fire the album's own feed projection.
     Albutts::PublishAlbum.new(album).call
-  rescue StandardError => e
+  rescue => e
     Rails.logger.error("[albutts] failed to spawn album for event #{payload[:event_id]}: #{e.class} #{e.message}")
   end
 end

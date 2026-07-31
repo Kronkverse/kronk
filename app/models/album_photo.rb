@@ -41,7 +41,7 @@ class AlbumPhoto < ApplicationRecord
   # missing (shouldn't happen — the check constraint prevents it — but
   # a defensive nil beats a crash).
   def rendered_url
-    return media_attachment.file.url(:original) if media_attachment&.file&.present?
+    return media_attachment.file.url(:original) if media_attachment&.file.present?
     return media_attachment.remote_url if media_attachment && media_attachment.remote_url.present?
 
     external_url.presence

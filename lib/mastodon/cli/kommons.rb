@@ -102,7 +102,7 @@ module Mastodon::CLI
         dest = File.join(dir, "#{a.id}-#{a.filename}")
         a.file.copy_to_local_file(:original, dest)
         say("  wrote #{dest}", :green)
-      rescue StandardError => e
+      rescue => e
         say("  failed #{a.filename}: #{e.class} #{e.message}", :red)
       end
     end

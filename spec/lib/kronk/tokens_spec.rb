@@ -71,7 +71,7 @@ RSpec.describe Kronk::Tokens do
     it 'is idempotent — a second call pays nothing further' do
       described_class.refund_all!(proposal)
       expect { described_class.refund_all!(proposal) }
-        .to_not change { described_class.balance_of(backer) }
+        .to_not(change { described_class.balance_of(backer) })
 
       expect(described_class.balance_of(backer)).to eq(10)
     end

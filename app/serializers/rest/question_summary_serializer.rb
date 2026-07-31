@@ -42,5 +42,4 @@ class REST::QuestionSummarySerializer < ActiveModel::Serializer
       }
     end
   end
-
 end

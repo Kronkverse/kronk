@@ -93,7 +93,7 @@ module Kronk
         activity: proposal,
         type: 'proposal_status_changed'
       )
-    rescue StandardError => e
+    rescue => e
       Rails.logger.error("Failed to notify proposer of proposal #{proposal.id}: #{e.class} #{e.message}")
     end
   end

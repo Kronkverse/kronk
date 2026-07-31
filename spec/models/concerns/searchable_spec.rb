@@ -4,11 +4,6 @@ require 'rails_helper'
 
 RSpec.describe Searchable do
   let(:adapter) { instance_double(Kronk::Search::Adapter::Null, index: nil, remove: nil) }
-
-  before do
-    allow(Kronk::Search).to receive(:adapter).and_return(adapter)
-  end
-
   # Anonymous test class — an in-memory AR-backed shape isn't needed;
   # the concern's contract is against the adapter, not the DB.
   let(:test_class) do
@@ -24,12 +19,17 @@ RSpec.describe Searchable do
       # `after_*_commit` is an AR API. For unit coverage we call the public
       # sync/remove methods directly, which is what the callbacks would.
       include Searchable
+
       searchable_as :fake
 
       def initialize(id, *)
         @id = id
       end
     end
+  end
+
+  before do
+    allow(Kronk::Search).to receive(:adapter).and_return(adapter)
   end
 
   it 'declares the search index type via class attribute' do
@@ -66,6 +66,7 @@ RSpec.describe Searchable do
 
         include ActiveModel::Model
         include Searchable
+
         searchable_as :fake_conditional, if: :flag_on?
 
         def initialize(id:, flag:)
@@ -87,7 +88,7 @@ RSpec.describe Searchable do
 
     it 'skips the write when the condition fails' do
       record = conditional_class.new(id: 2, flag: false)
-      expect(adapter).not_to receive(:index)
+      expect(adapter).to_not receive(:index)
       record.sync_to_search_index
     end
   end

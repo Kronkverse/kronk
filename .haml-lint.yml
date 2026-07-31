@@ -13,3 +13,26 @@ linters:
     max: 300
   ViewLength:
     max: 200 # Override default value of 100 inherited from rubocop
+    exclude:
+      - 'app/views/booth/embed.html.haml' # self-contained embed player
+  # Low-value stylistic linter; several layout/chrome partials carry
+  # intentional multi-line comment headers.
+  ConsecutiveComments:
+    enabled: false
+  # Inline styles are required in emails (clients strip <style>) and pragmatic
+  # in the standalone Booth embed player (isolated, JS-toggled SVG icons).
+  InlineStyles:
+    exclude:
+      - 'app/views/user_mailer/**/*'
+      - 'app/views/booth/embed.html.haml'
+  UnnecessaryStringOutput:
+    exclude:
+      - 'app/views/booth/embed.html.haml'
+  # These view templates carry intentional html_safe / untranslated copy that
+  # the RuboCop-in-Haml integration flags; the .rb-side instances are tracked
+  # in .rubocop_todo.yml.
+  RuboCop:
+    exclude:
+      - 'app/views/booth/index.html.haml'
+      - 'app/views/huddle/index.html.haml'
+      - 'app/views/layouts/application.html.haml'
