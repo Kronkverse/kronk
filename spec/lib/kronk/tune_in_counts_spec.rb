@@ -38,6 +38,9 @@ RSpec.describe Kronk::TuneInCounts do
   describe '.for_korner' do
     it 'returns the count for a single korner' do
       Fabricate.times(2, :account, domain: nil)
+      # for_korner reads the cache; the before-hook refresh! ran before these
+      # accounts existed, so recompute the cache now that they do.
+      described_class.refresh!
       expect(described_class.for_korner(:kommons)).to eq(2)
     end
 
