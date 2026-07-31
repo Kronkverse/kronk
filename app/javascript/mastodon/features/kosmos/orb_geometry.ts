@@ -132,8 +132,17 @@ export const buildOrbLayout = (
   const col = new Map<string, RGB>();
   const placements: AccountPlacement[] = [];
 
+  // Offset placement so the highest-connection account (accounts are
+  // ordered by rank; account 0 is the hub) lands at the equator socket
+  // (SOCKET_COUNT / 2 → Y = 0) rather than socket 0 (Y = +R, the top
+  // pole). Kosmos anchors its section plane at the hub's Y; a hub at
+  // the pole produces a tangent slice that catches no chords, so the
+  // starfield went empty. Equator placement gives the richest slice
+  // AND keeps "cross-section of the hub" as the anchor.
+  const equatorOffset = Math.floor(SOCKET_COUNT / 2);
+
   accounts.forEach((acc, i) => {
-    let s = Math.round(i * stride) % SOCKET_COUNT;
+    let s = (Math.round(i * stride) + equatorOffset) % SOCKET_COUNT;
     while (used.has(s)) s = (s + 1) % SOCKET_COUNT;
     used.add(s);
     const socket = sockets[s];
