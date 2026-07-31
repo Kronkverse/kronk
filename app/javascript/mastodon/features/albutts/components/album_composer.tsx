@@ -48,12 +48,16 @@ const messages = defineMessages({
   },
   photosPick: {
     id: 'albutts.composer.photos_pick',
-    defaultMessage: 'Choose photos or videos',
+    defaultMessage: 'Drag photos or videos here, or click to choose',
   },
   photosPickMore: {
     id: 'albutts.composer.photos_pick_more',
     defaultMessage:
-      '{count, plural, one {# selected · add more} other {# selected · add more}}',
+      '{count, plural, one {# selected · drop or click to add more} other {# selected · drop or click to add more}}',
+  },
+  photosDropCue: {
+    id: 'albutts.composer.photos_drop_cue',
+    defaultMessage: 'Drop to add',
   },
   cancel: {
     id: 'albutts.composer.cancel',
@@ -148,6 +152,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdAlbum, setCreatedAlbum] = useState<ApiAlbumJSON | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   // Revoke blob URLs on unmount / list churn so the browser doesn't
   // hold onto the underlying Blobs after the composer closes.
@@ -182,22 +187,49 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     setVisibility(next as AlbumVisibility);
   }, []);
 
+  // Accept only images and videos. Drag-and-drop hands us the entire
+  // OS clipboard including e.g. text/uri-list, so filter to media types
+  // before enqueueing.
+  const addPhotoFiles = useCallback((files: File[]) => {
+    const accepted = files.filter(
+      (f) => f.type.startsWith('image/') || f.type.startsWith('video/'),
+    );
+    if (accepted.length === 0) return;
+    setPhotos((prev) => [
+      ...prev,
+      ...accepted.map((file, idx) => ({
+        file,
+        previewUrl: URL.createObjectURL(file),
+        key: `${Date.now()}-${idx}-${file.name}`,
+        status: 'queued' as PhotoStatus,
+      })),
+    ]);
+  }, []);
+
   const handlePhotosChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files ? Array.from(e.target.files) : [];
-      if (files.length === 0) return;
-      setPhotos((prev) => [
-        ...prev,
-        ...files.map((file, idx) => ({
-          file,
-          previewUrl: URL.createObjectURL(file),
-          key: `${Date.now()}-${idx}-${file.name}`,
-          status: 'queued' as PhotoStatus,
-        })),
-      ]);
+      addPhotoFiles(files);
       e.target.value = ''; // allow re-picking the same file
     },
-    [],
+    [addPhotoFiles],
+  );
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(true);
+  }, []);
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+  }, []);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragging(false);
+      addPhotoFiles(Array.from(e.dataTransfer.files));
+    },
+    [addPhotoFiles],
   );
 
   const handleClearPhotos = useCallback(() => {
@@ -398,26 +430,36 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         <p className='albutts-composer__hint'>
           {intl.formatMessage(messages.photosHint)}
         </p>
-        <input
-          id='albutts-composer-photos'
-          type='file'
-          multiple
-          accept='image/*,video/*'
-          className='albutts-composer__file'
-          onChange={handlePhotosChange}
-          disabled={pending}
-        />
         {!createdAlbum && (
-          <label
-            htmlFor='albutts-composer-photos'
-            className={`albutts-composer__file-picker${pending ? ' albutts-composer__file-picker--disabled' : ''}`}
+          <div
+            className={`albutts-composer__drop-zone${dragging ? ' albutts-composer__drop-zone--dragging' : ''}${pending ? ' albutts-composer__drop-zone--disabled' : ''}`}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
           >
-            {photos.length > 0
-              ? intl.formatMessage(messages.photosPickMore, {
-                  count: photos.length,
-                })
-              : intl.formatMessage(messages.photosPick)}
-          </label>
+            <input
+              id='albutts-composer-photos'
+              type='file'
+              multiple
+              accept='image/*,video/*'
+              className='albutts-composer__file'
+              onChange={handlePhotosChange}
+              disabled={pending}
+            />
+            <label
+              htmlFor='albutts-composer-photos'
+              className='albutts-composer__drop-zone-label'
+            >
+              {dragging
+                ? intl.formatMessage(messages.photosDropCue)
+                : photos.length > 0
+                  ? intl.formatMessage(messages.photosPickMore, {
+                      count: photos.length,
+                    })
+                  : intl.formatMessage(messages.photosPick)}
+            </label>
+          </div>
         )}
         {photos.length > 0 && (
           <>

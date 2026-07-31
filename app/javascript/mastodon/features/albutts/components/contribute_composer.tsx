@@ -24,12 +24,16 @@ const messages = defineMessages({
   },
   photosPick: {
     id: 'albutts.contribute.photos_pick',
-    defaultMessage: 'Choose photos or videos',
+    defaultMessage: 'Drag photos or videos here, or click to choose',
   },
   photosPickMore: {
     id: 'albutts.contribute.photos_pick_more',
     defaultMessage:
-      '{count, plural, one {# selected · add more} other {# selected · add more}}',
+      '{count, plural, one {# selected · drop or click to add more} other {# selected · drop or click to add more}}',
+  },
+  photosDropCue: {
+    id: 'albutts.contribute.photos_drop_cue',
+    defaultMessage: 'Drop to add',
   },
   cancel: {
     id: 'albutts.contribute.cancel',
@@ -103,6 +107,7 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   const [pending, setPending] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [dragging, setDragging] = useState(false);
 
   const doneCount = photos.filter((p) => p.status === 'done').length;
   const failedCount = photos.filter((p) => p.status === 'failed').length;
@@ -119,22 +124,46 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
     };
   }, [photos]);
 
+  const addPhotoFiles = useCallback((files: File[]) => {
+    const accepted = files.filter(
+      (f) => f.type.startsWith('image/') || f.type.startsWith('video/'),
+    );
+    if (accepted.length === 0) return;
+    setPhotos((prev) => [
+      ...prev,
+      ...accepted.map((file, idx) => ({
+        file,
+        previewUrl: URL.createObjectURL(file),
+        key: `${Date.now()}-${idx}-${file.name}`,
+        status: 'queued' as PhotoStatus,
+      })),
+    ]);
+  }, []);
+
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files ? Array.from(e.target.files) : [];
-      if (files.length === 0) return;
-      setPhotos((prev) => [
-        ...prev,
-        ...files.map((file, idx) => ({
-          file,
-          previewUrl: URL.createObjectURL(file),
-          key: `${Date.now()}-${idx}-${file.name}`,
-          status: 'queued' as PhotoStatus,
-        })),
-      ]);
+      addPhotoFiles(files);
       e.target.value = ''; // allow re-picking the same file
     },
-    [],
+    [addPhotoFiles],
+  );
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(true);
+  }, []);
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+  }, []);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragging(false);
+      addPhotoFiles(Array.from(e.dataTransfer.files));
+    },
+    [addPhotoFiles],
   );
 
   const handleClear = useCallback(() => {
@@ -257,26 +286,36 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
         <p className='albutts-composer__hint'>
           {intl.formatMessage(messages.fileHint)}
         </p>
-        <input
-          id='albutts-contribute-file'
-          type='file'
-          multiple
-          accept='image/*,video/*'
-          className='albutts-composer__file'
-          onChange={handleFileChange}
-          disabled={pending}
-        />
         {!hasSubmitted && (
-          <label
-            htmlFor='albutts-contribute-file'
-            className={`albutts-composer__file-picker${pending ? ' albutts-composer__file-picker--disabled' : ''}`}
+          <div
+            className={`albutts-composer__drop-zone${dragging ? ' albutts-composer__drop-zone--dragging' : ''}${pending ? ' albutts-composer__drop-zone--disabled' : ''}`}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
           >
-            {photos.length > 0
-              ? intl.formatMessage(messages.photosPickMore, {
-                  count: photos.length,
-                })
-              : intl.formatMessage(messages.photosPick)}
-          </label>
+            <input
+              id='albutts-contribute-file'
+              type='file'
+              multiple
+              accept='image/*,video/*'
+              className='albutts-composer__file'
+              onChange={handleFileChange}
+              disabled={pending}
+            />
+            <label
+              htmlFor='albutts-contribute-file'
+              className='albutts-composer__drop-zone-label'
+            >
+              {dragging
+                ? intl.formatMessage(messages.photosDropCue)
+                : photos.length > 0
+                  ? intl.formatMessage(messages.photosPickMore, {
+                      count: photos.length,
+                    })
+                  : intl.formatMessage(messages.photosPick)}
+            </label>
+          </div>
         )}
 
         {photos.length > 0 && (
