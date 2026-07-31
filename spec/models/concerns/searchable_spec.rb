@@ -12,12 +12,18 @@ RSpec.describe Searchable do
         'FakeIndexed'
       end
 
+      # `searchable_as` registers `after_*_commit` callbacks, which are an
+      # ActiveRecord API. This double is deliberately not AR-backed (the
+      # concern's contract under test is the adapter, and we invoke the public
+      # sync/remove methods directly), so stub the callback registrations as
+      # no-ops to let `searchable_as` run.
+      def self.after_create_commit(*); end
+      def self.after_update_commit(*); end
+      def self.after_destroy_commit(*); end
+
       attr_accessor :id
 
       include ActiveModel::Model
-      # ActiveSupport::Concern's callback DSL relies on ActiveSupport::Callbacks;
-      # `after_*_commit` is an AR API. For unit coverage we call the public
-      # sync/remove methods directly, which is what the callbacks would.
       include Searchable
 
       searchable_as :fake
