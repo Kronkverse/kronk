@@ -95,7 +95,10 @@ function fmtTime(d: Date | null): string {
 
 // A phase-accurate moon: the terminator shadow slides across the disc by the
 // live illumination (waning → shadow on the right). Silver face is physical,
-// the shadow is the Kosmos void.
+// the shadow is the Kosmos void. The shadow disc is clipped to the moon disc
+// via <clipPath>, so the terminator only exists inside the moon — never
+// as a half-disc leaking past the moon's edge (the filter blur was extending
+// the shadow's visible footprint outside the disc; see 2026-07-31 screenshot).
 const VeilMoon: React.FC<{ illumination: number; waning: boolean }> = ({
   illumination,
   waning,
@@ -123,6 +126,9 @@ const VeilMoon: React.FC<{ illumination: number; waning: boolean }> = ({
         >
           <feGaussianBlur stdDeviation='6' />
         </filter>
+        <clipPath id='veil-moon-disc'>
+          <circle cx={cx} cy={cy} r={R} />
+        </clipPath>
       </defs>
       <circle cx={cx} cy={cy} r={R} fill='url(#veil-moon-face)' />
       <circle cx='78' cy='76' r='9' fill='#c4c1da' opacity='0.5' />
@@ -130,13 +136,15 @@ const VeilMoon: React.FC<{ illumination: number; waning: boolean }> = ({
       <circle cx='92' cy='120' r='5' fill='#c4c1da' opacity='0.4' />
       <circle cx='66' cy='108' r='4' fill='#c4c1da' opacity='0.35' />
       {illumination < 0.985 && (
-        <circle
-          cx={shadowCx}
-          cy={cy}
-          r={R}
-          fill='var(--kosmos-void, #040309)'
-          filter='url(#veil-moon-soft)'
-        />
+        <g clipPath='url(#veil-moon-disc)'>
+          <circle
+            cx={shadowCx}
+            cy={cy}
+            r={R}
+            fill='var(--kosmos-void, #040309)'
+            filter='url(#veil-moon-soft)'
+          />
+        </g>
       )}
     </svg>
   );
