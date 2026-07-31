@@ -256,6 +256,11 @@ export const VeilScene: React.FC = () => {
       if (!running) {
         running = true;
         nightsky.classList.add('is-open');
+        // The home feed paints an opaque var(--kosmos-void) over the shared
+        // KronkKosmos canvas (see _kronk_feed_float.scss); dropping it to
+        // transparent while the veil is open lets that real canvas show
+        // through the aperture — the same reveal the Stage routes already get.
+        document.body.classList.add('inflow-veil-revealing');
         rafId = requestAnimationFrame(loop);
       }
     };
@@ -264,6 +269,7 @@ export const VeilScene: React.FC = () => {
       if (rafId) cancelAnimationFrame(rafId);
       rafId = 0;
       nightsky.classList.remove('is-open');
+      document.body.classList.remove('inflow-veil-revealing');
       // Return the shared sky to its ambient (threshold-of-perception) level
       // once the opening is off screen.
       setKosmosBrightness(0);
@@ -290,7 +296,9 @@ export const VeilScene: React.FC = () => {
       io.disconnect();
       if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener('resize', onResize);
-      // Never leave the shared sky stuck bright if we unmount mid-reveal.
+      // Never leave the shared sky stuck bright, or the feed stuck transparent,
+      // if we unmount mid-reveal.
+      document.body.classList.remove('inflow-veil-revealing');
       setKosmosBrightness(0);
     };
   }, [host, expanded]);

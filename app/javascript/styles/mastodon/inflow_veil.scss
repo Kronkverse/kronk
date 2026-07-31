@@ -16,6 +16,18 @@
   height: calc(var(--veil-vh) * 1.5);
 }
 
+// While the veil is open (class toggled by veil_scene.tsx), drop the home
+// feed's opaque var(--kosmos-void) surface — set in _kronk_feed_float.scss to
+// avoid the contain: paint grey rectangle — so the shared KronkKosmos canvas
+// behind it shows through the aperture. The moon + reading then sit on that
+// same sky. Reverts when the opening scrolls away. Stage routes (e.g.
+// /hub/inflow) already run this panel transparent, so this is a no-op there.
+// Higher specificity (0,2,0) than the feed-float default (0,1,0) so it wins.
+body.inflow-veil-revealing .columns-area__panels__main {
+  background: transparent;
+  transition: background var(--dur-medium, 0.4s) var(--ease-out, ease);
+}
+
 // The fixed night sky. Full viewport, pinned; clip-path (set per-frame) is what
 // makes it appear only through the aperture. Hidden until the opening nears.
 // The backdrop is intentionally transparent: the stars are the *shared*
