@@ -10,9 +10,14 @@
 # the column is populated for content already in the timeline. New projections
 # stamp it in their writers.
 #
-# Runs transactionally (regular index) so add-column + index + backfill are
-# atomic; the guards make it idempotent if re-run.
+# The index is created CONCURRENTLY: a non-concurrent index on the large
+# `statuses` table blocks writes (strong_migrations rejects it), and concurrent
+# index creation requires disable_ddl_transaction!. The column/index existence
+# guards plus the `source_korner IS NULL` backfill filter keep the whole
+# migration idempotent and resumable if it is re-run after a partial failure.
 class AddSourceKornerToStatuses < ActiveRecord::Migration[8.0]
+  disable_ddl_transaction!
+
   KORNER_TABLES = {
     'booth_sets' => 'booth',
     'proposals' => 'kommons',
@@ -23,7 +28,7 @@ class AddSourceKornerToStatuses < ActiveRecord::Migration[8.0]
 
   def up
     add_column :statuses, :source_korner, :string unless column_exists?(:statuses, :source_korner)
-    add_index :statuses, :source_korner unless index_exists?(:statuses, :source_korner)
+    add_index :statuses, :source_korner, algorithm: :concurrently unless index_exists?(:statuses, :source_korner)
 
     # A bounded one-shot backfill (each korner's projected statuses, matched by
     # status_id); safe to run in-line. strong_migrations can't inspect a raw
