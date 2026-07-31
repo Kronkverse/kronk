@@ -301,14 +301,19 @@ code {
       color: var(--kronk-purple-accent);
     }
 
+    // Title carries the punch of the bullet — pushed to Kronk-purple
+    // (same as the digit) so heading + numeral read as one unit, sized
+    // up, and set in the display serif so the three headlines register
+    // before the body copy.
     .welcome-form__bullet-title {
       grid-area: title;
-      margin: 0 0 0.35rem;
-      font-family: $font-display, sans-serif;
-      font-size: 1.1rem;
-      line-height: 1.35;
-      color: $primary-text-color;
+      margin: 0 0 0.5rem;
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      line-height: 1.25;
+      color: var(--kronk-purple-accent);
       font-weight: 700;
+      letter-spacing: -0.01em;
     }
 
     .welcome-form__bullet-body {
