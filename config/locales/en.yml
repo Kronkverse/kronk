@@ -1294,14 +1294,14 @@ en:
       preamble: Pick a name, drop your email, choose a password. That's it — you're in. We'll remind you to confirm the email once you're set up.
       title: Let's get you set up on %{domain}.
     welcome:
-      title: Welcome to Kronk.
-      preamble: A small, community-shaped social space. Here's the shape of it before you dive in.
+      title: Welcome Home.
+      preamble: Real connection, no shit. A digital sphere of integrity.
       bullet_shape_title: Korners, not columns.
-      bullet_shape_body: Kronk is made of small spaces — Kalendar, Kommons, Booth, Kuestions, Albutts, more. Each one has its own shape, but they all share the same feed, the same friends, the same you.
+      bullet_shape_body: Your community online, not your online community. Small spaces to keep connecting when you're apart — for connection, not entertainment.
       bullet_shape_koc_title: Shaped by the people in it.
-      bullet_shape_koc_body: Missing a space? Propose one via Kommons and rally backing. Approved proposals ship as new korners.
+      bullet_shape_koc_body: Collectively owned, community built. Propose a korner via Kommons — the ones the community backs ship.
       bullet_yours_title: Yours to leave.
-      bullet_yours_body: You can request a full archive of everything you posted and delete your account any time. What's yours stays yours.
+      bullet_yours_body: The art of your self-expression belongs to you. Archive it or delete your account any time — walk away clean.
       cta_next: Sounds good →
       cta_back: Back
     privacy:
