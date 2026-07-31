@@ -20,10 +20,9 @@
   --k-dim: var(--text-secondary-color, #9a95c4);
   --k-faint: var(--text-tertiary-color, #6f6a95);
   --k-line: rgba(136, 105, 229, 24%);
-  --k-accent: var(
-    --accent,
-    #4414cc
-  ); // Kronk purple-accent as fallback (hue 285°), not the legacy Mastodon indigo #8c8dff
+
+  // Kronk purple-accent as fallback (hue 285°), not the legacy Mastodon indigo #8c8dff
+  --k-accent: var(--accent, #4414cc);
   --k-serif: var(--font-display, 'Liberation Serif', Georgia, serif);
 
   // Positive stacking so the header sits above the starfield (body
