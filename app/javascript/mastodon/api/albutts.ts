@@ -56,6 +56,11 @@ export const apiContributePhoto = (
     photo: params,
   });
 
+export const apiUpdatePhoto = (photoId: string, params: { caption: string }) =>
+  apiRequestPut<ApiAlbumPhotoJSON>(`v1/albutts/photos/${photoId}`, {
+    photo: params,
+  });
+
 export const apiDeletePhoto = (photoId: string) =>
   apiRequestDelete<Record<string, never>>(`v1/albutts/photos/${photoId}`);
 
