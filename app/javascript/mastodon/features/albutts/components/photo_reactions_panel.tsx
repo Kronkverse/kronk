@@ -6,9 +6,7 @@ import HeartFillIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
 import HeartIcon from '@/material-icons/400-24px/favorite.svg?react';
 import ReplyIcon from '@/material-icons/400-24px/reply.svg?react';
 import { apiRequestPost } from 'mastodon/api';
-import type {
-  ApiAlbumPhotoJSON,
-} from 'mastodon/api_types/albutts';
+import type { ApiAlbumPhotoJSON } from 'mastodon/api_types/albutts';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 import { Icon } from 'mastodon/components/icon';
 
@@ -86,9 +84,7 @@ export const PhotoReactionsPanel: React.FC<PhotoReactionsPanelProps> = ({
             id='favourite'
             icon={status.favorited ? HeartFillIcon : HeartIcon}
           />
-          <span className='albutts-froth__count'>
-            {status.favorites_count}
-          </span>
+          <span className='albutts-froth__count'>{status.favorites_count}</span>
         </button>
 
         <a
