@@ -14,6 +14,7 @@ import { Avatar } from 'mastodon/components/avatar';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 import { useAppDispatch } from 'mastodon/store';
 
+import { CaptionText } from './caption_text';
 import { ContributeComposer } from './contribute_composer';
 
 const messages = defineMessages({
@@ -256,7 +257,9 @@ const PhotoTile: React.FC<{
         )}
       </div>
       {photo.caption && (
-        <div className='albutts-photo__caption'>{photo.caption}</div>
+        <div className='albutts-photo__caption'>
+          <CaptionText text={photo.caption} />
+        </div>
       )}
     </li>
   );

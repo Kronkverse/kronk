@@ -1,17 +1,23 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+import { apiUpdatePhoto } from 'mastodon/api/albutts';
 import type {
   ApiAlbumJSON,
   ApiAlbumPhotoJSON,
 } from 'mastodon/api_types/albutts';
 import { IconButton } from 'mastodon/components/icon_button';
+import { useIdentity } from 'mastodon/identity_context';
 
+import { CaptionText } from './caption_text';
 import { PhotoReactionsPanel } from './photo_reactions_panel';
+
+const CAPTION_MAX = 500;
 
 const messages = defineMessages({
   close: { id: 'albutts.lightbox.close', defaultMessage: 'Close' },
@@ -20,12 +26,33 @@ const messages = defineMessages({
     defaultMessage: 'Previous photo',
   },
   next: { id: 'albutts.lightbox.next', defaultMessage: 'Next photo' },
+  editCaption: {
+    id: 'albutts.lightbox.edit_caption',
+    defaultMessage: 'Edit caption',
+  },
+  addCaption: {
+    id: 'albutts.lightbox.add_caption',
+    defaultMessage: 'Add a caption',
+  },
+  captionPlaceholder: {
+    id: 'albutts.lightbox.caption_placeholder',
+    defaultMessage: 'Add a description (optional)',
+  },
+  saveCaption: {
+    id: 'albutts.lightbox.save_caption',
+    defaultMessage: 'Save',
+  },
+  cancelCaption: {
+    id: 'albutts.lightbox.cancel_caption',
+    defaultMessage: 'Cancel',
+  },
 });
 
 interface AlbumLightboxModalProps {
   photos: ApiAlbumPhotoJSON[];
   initialIndex: number;
   albumTitle: string;
+  albumOwnerId: string;
   onClose: () => void;
   onPhotoChanged?: (photo: ApiAlbumPhotoJSON) => void;
 }
@@ -34,14 +61,26 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
   photos,
   initialIndex,
   albumTitle,
+  albumOwnerId,
   onClose,
   onPhotoChanged,
 }) => {
   const intl = useIntl();
+  const { accountId } = useIdentity();
   const [index, setIndex] = useState(() =>
     Math.max(0, Math.min(initialIndex, photos.length - 1)),
   );
   const [localPhotos, setLocalPhotos] = useState(photos);
+  const [editing, setEditing] = useState(false);
+  const [draftCaption, setDraftCaption] = useState('');
+  const [savingCaption, setSavingCaption] = useState(false);
+  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      editTextareaRef.current?.focus();
+    }
+  }, [editing]);
 
   useEffect(() => {
     setLocalPhotos(photos);
@@ -85,12 +124,58 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
     [onPhotoChanged],
   );
 
+  // Leaving edit mode when the viewer navigates between photos.
+  useEffect(() => {
+    setEditing(false);
+    setDraftCaption('');
+    setSavingCaption(false);
+  }, [index]);
+
+  const startEditingCaption = useCallback(() => {
+    if (!current) return;
+    setDraftCaption(current.caption ?? '');
+    setEditing(true);
+  }, [current]);
+
+  const cancelEditingCaption = useCallback(() => {
+    setEditing(false);
+    setDraftCaption('');
+  }, []);
+
+  const saveCaption = useCallback(() => {
+    if (!current || savingCaption) return;
+    setSavingCaption(true);
+    void (async () => {
+      try {
+        const updated = await apiUpdatePhoto(current.id, {
+          caption: draftCaption.trim(),
+        });
+        handlePhotoUpdated(updated);
+        setEditing(false);
+      } catch (err) {
+        console.error('[albutts] update caption failed', err);
+      } finally {
+        setSavingCaption(false);
+      }
+    })();
+  }, [current, draftCaption, handlePhotoUpdated, savingCaption]);
+
+  const handleDraftChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setDraftCaption(e.currentTarget.value.slice(0, CAPTION_MAX));
+    },
+    [],
+  );
+
   if (!current) return null;
 
   const hasPrev = index > 0;
   const hasNext = index < localPhotos.length - 1;
   const contributor = current.contributor;
   const credit = contributor.display_name || contributor.username;
+  const canEditCaption =
+    accountId !== undefined &&
+    (accountId === contributor.id || accountId === albumOwnerId);
 
   return (
     <div className='albutts-lightbox'>
@@ -130,9 +215,60 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
           ) : (
             <div className='albutts-lightbox__img albutts-lightbox__img--missing' />
           )}
-          {current.caption && (
-            <div className='albutts-lightbox__caption'>{current.caption}</div>
-          )}
+          {editing ? (
+            <div className='albutts-lightbox__caption-edit'>
+              <textarea
+                ref={editTextareaRef}
+                className='albutts-lightbox__caption-textarea'
+                value={draftCaption}
+                onChange={handleDraftChange}
+                placeholder={intl.formatMessage(messages.captionPlaceholder)}
+                maxLength={CAPTION_MAX}
+                rows={3}
+                disabled={savingCaption}
+              />
+              <div className='albutts-lightbox__caption-actions'>
+                <button
+                  type='button'
+                  className='albutts-lightbox__caption-cancel'
+                  onClick={cancelEditingCaption}
+                  disabled={savingCaption}
+                >
+                  {intl.formatMessage(messages.cancelCaption)}
+                </button>
+                <button
+                  type='button'
+                  className='albutts-lightbox__caption-save'
+                  onClick={saveCaption}
+                  disabled={savingCaption}
+                >
+                  {intl.formatMessage(messages.saveCaption)}
+                </button>
+              </div>
+            </div>
+          ) : current.caption ? (
+            <div className='albutts-lightbox__caption'>
+              <span className='albutts-lightbox__caption-text'>
+                <CaptionText text={current.caption} />
+              </span>
+              {canEditCaption && (
+                <IconButton
+                  title={intl.formatMessage(messages.editCaption)}
+                  icon='edit'
+                  iconComponent={EditIcon}
+                  onClick={startEditingCaption}
+                />
+              )}
+            </div>
+          ) : canEditCaption ? (
+            <button
+              type='button'
+              className='albutts-lightbox__caption-add'
+              onClick={startEditingCaption}
+            >
+              {intl.formatMessage(messages.addCaption)}
+            </button>
+          ) : null}
         </div>
         {hasNext && (
           <button
@@ -175,6 +311,7 @@ export const AlbumLightboxModalWrapper: React.FC<{
       photos={album.photos}
       initialIndex={initialIndex === -1 ? 0 : initialIndex}
       albumTitle={album.title}
+      albumOwnerId={album.owner.id}
       onClose={onClose}
     />
   );

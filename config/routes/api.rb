@@ -164,7 +164,7 @@ namespace :api, format: false do
       resources :albums, only: [:index, :show, :create, :update, :destroy] do
         resources :photos, only: [:create], controller: 'photos'
       end
-      resources :album_photos, only: [:destroy], path: 'photos', controller: 'photos'
+      resources :album_photos, only: [:update, :destroy], path: 'photos', controller: 'photos'
       scope path: 'photos/:photo_id', module: :photos do
         post   'froth',    to: 'froths#create'
         delete 'froth',    to: 'froths#destroy'

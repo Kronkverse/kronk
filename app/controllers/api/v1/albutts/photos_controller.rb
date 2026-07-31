@@ -8,7 +8,7 @@ class Api::V1::Albutts::PhotosController < Api::BaseController
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }
   before_action :require_user!
   before_action :set_album,  only: [:create]
-  before_action :set_photo,  only: [:destroy]
+  before_action :set_photo,  only: [:update, :destroy]
 
   def create
     raise Mastodon::NotPermittedError unless @album.contributable_by?(current_account)
@@ -25,9 +25,21 @@ class Api::V1::Albutts::PhotosController < Api::BaseController
     end
   end
 
+  # Caption edit — same authorization rule as `destroy` (contributor or
+  # album owner). Only `:caption` is mutable post-upload; the media
+  # source and external URL are fixed on create.
+  def update
+    raise Mastodon::NotPermittedError unless editable_by_current_account?
+
+    if @photo.update(update_params)
+      render json: @photo, serializer: REST::AlbumPhotoSerializer
+    else
+      render json: { error: @photo.errors.full_messages.to_sentence }, status: :unprocessable_entity
+    end
+  end
+
   def destroy
-    raise Mastodon::NotPermittedError unless @photo.contributor_id == current_account.id ||
-                                             @photo.album.owner_id == current_account.id
+    raise Mastodon::NotPermittedError unless editable_by_current_account?
 
     @photo.destroy!
     render_empty
@@ -60,5 +72,14 @@ class Api::V1::Albutts::PhotosController < Api::BaseController
   # `:media_id` outside the allowlist did exactly that.
   def photo_params
     params.expect(photo: [:caption, :external_url, :media_id])
+  end
+
+  def update_params
+    params.expect(photo: [:caption])
+  end
+
+  def editable_by_current_account?
+    @photo.contributor_id == current_account.id ||
+      @photo.album.owner_id == current_account.id
   end
 end
