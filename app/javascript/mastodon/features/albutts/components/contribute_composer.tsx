@@ -12,14 +12,6 @@ const messages = defineMessages({
     id: 'albutts.contribute.heading',
     defaultMessage: 'Add photos',
   },
-  fileLabel: {
-    id: 'albutts.contribute.file_label',
-    defaultMessage: 'Photos',
-  },
-  fileHint: {
-    id: 'albutts.contribute.file_hint',
-    defaultMessage: 'Pick one or more — image or video.',
-  },
   photosClear: {
     id: 'albutts.contribute.photos_clear',
     defaultMessage: 'Clear',
@@ -279,15 +271,6 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
           {intl.formatMessage(messages.heading)}
         </h2>
 
-        <label
-          className='albutts-composer__label'
-          htmlFor='albutts-contribute-file'
-        >
-          {intl.formatMessage(messages.fileLabel)}
-        </label>
-        <p className='albutts-composer__hint'>
-          {intl.formatMessage(messages.fileHint)}
-        </p>
         {!hasSubmitted && (
           <div
             className={`albutts-composer__drop-zone${dragging ? ' albutts-composer__drop-zone--dragging' : ''}${pending ? ' albutts-composer__drop-zone--disabled' : ''}`}

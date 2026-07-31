@@ -35,15 +35,6 @@ const messages = defineMessages({
     defaultMessage:
       'Krew-scoped albums are landing in a follow-up — pick a different scope for now.',
   },
-  photosLabel: {
-    id: 'albutts.composer.photos_label',
-    defaultMessage: 'Photos',
-  },
-  photosHint: {
-    id: 'albutts.composer.photos_hint',
-    defaultMessage:
-      'Pick one or more — image or video. You can always add more later.',
-  },
   photosClear: {
     id: 'albutts.composer.photos_clear',
     defaultMessage: 'Clear',
@@ -423,15 +414,6 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           </p>
         )}
 
-        <label
-          className='albutts-composer__label'
-          htmlFor='albutts-composer-photos'
-        >
-          {intl.formatMessage(messages.photosLabel)}
-        </label>
-        <p className='albutts-composer__hint'>
-          {intl.formatMessage(messages.photosHint)}
-        </p>
         {!createdAlbum && (
           <div
             className={`albutts-composer__drop-zone${dragging ? ' albutts-composer__drop-zone--dragging' : ''}${pending ? ' albutts-composer__drop-zone--disabled' : ''}`}
