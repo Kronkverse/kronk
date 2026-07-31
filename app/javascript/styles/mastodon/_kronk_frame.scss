@@ -56,41 +56,23 @@
   }
 }
 
-// ── Slots ──────────────────────────────────────────────────────────
-// Each slot occupies a specific grid area. Slots without content
-// collapse to zero visible size in this landing state — the grid
-// tracks are declared but nothing paints them yet.
-
-.kronk-frame__top-band {
-  // Fade strip still viewport-anchored (position: fixed) so it stays
-  // put during scroll. Its children — KronkWordmark on the left,
-  // HubSwitcher--top in the centre, InviteButton on the right — sit
-  // inside via CSS grid instead of self-anchoring with their own
-  // position: fixed. Each component retires its own position: fixed
-  // in _kronk_chrome.scss to become a flow child here.
+// ── The unified L-shaped chrome ────────────────────────────────────
+// One fixed, full-viewport element that paints the WHOLE chrome as a
+// single continuous surface: the top rail fading down, the right rail
+// fading in, and the curved corner where they meet. This replaces the
+// old two-strip fake (TopBand's radial overpainting RightBand via a
+// z-25-over-z-24 trick). The TopBand / RightBand slots below now carry
+// no background of their own — they are transparent zones that position
+// their children (wordmark, switcher, invite; korner sidebar) over this
+// one surface. Result: no second piece, no faked corner, no overlap.
+.kronk-frame__chrome {
   position: fixed;
-  inset: 0 0 auto;
-  height: 9rem;
-
-  // One notch above `.kronk-frame__right-band` (z-index: 24) so the
-  // TopBand paints over the RightBand's fade in the top-right corner
-  // — visually intended (the corner is a single merged curved chrome
-  // painted by TopBand's radial gradient), and load-bearing because
-  // InviteButton's grid slot (column 3, right) sits INSIDE the
-  // RightBand's 7.75rem width. Without this, RightBand's opaque
-  // gradient covered the button.
-  z-index: 25;
-
-  // Two layered backgrounds: a large ellipse at the outer top-right
-  // corner + a linear top-fade extending across the full width.
-  // The ellipse's boundary IS the interior corner curve — dark
-  // sweeps from the top edge to the right rail via a smooth arc,
-  // instead of a right-angle L. Where the ellipse fades past its
-  // boundary, the linear top-fade below takes over for the rest of
-  // the top strip. Painted entirely on TopBand — RightBand stays a
-  // plain vertical strip; the ellipse alone produces the merged
-  // curved chrome.
+  inset: 0;
+  z-index: 23; // behind the transparent band zones (24/25) that hold content
+  pointer-events: none;
   background:
+    // Curved interior corner fillet at top-right — the arc that joins
+    // the two rails instead of a hard right angle.
     radial-gradient(
       ellipse 11rem 9rem at top right,
       #000 0,
@@ -99,22 +81,71 @@
       rgb(0 0 0 / 35%) 92%,
       transparent 100%
     ),
+    // Top rail — dark across the full width, tapering to transparent.
     linear-gradient(
       to bottom,
       #000 0,
       #000 3.25rem,
       rgb(0 0 0 / 82%) 3.9rem,
       rgb(0 0 0 / 45%) 4.7rem,
-      rgb(0 0 0 / 0%) 5.5rem,
-      transparent 9rem
+      transparent 5.5rem
+    ),
+    // Right rail — dark down the full height, tapering inward to the left.
+    linear-gradient(
+      to left,
+      #000 0,
+      #000 5.5rem,
+      rgb(0 0 0 / 82%) 6.15rem,
+      rgb(0 0 0 / 45%) 6.95rem,
+      transparent 7.75rem
     );
   filter: drop-shadow(
     0 2px 16px color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent)
   );
 
-  // Layout for children (wordmark left, switcher centre). The strip
-  // itself doesn't consume pointer events on empty background; each
-  // child re-enables them.
+  // Responsive collapse mirrors the two zones:
+  //  * ≤889px the right rail hides, so the L collapses to just the top
+  //    rail's fade (no right fade, nothing to corner into).
+  //  * ≤629px the top rail hides too — no chrome at all; the bottom
+  //    tab-bar takes over.
+  @media (width <= 889px) {
+    background: linear-gradient(
+      to bottom,
+      #000 0,
+      #000 3.25rem,
+      rgb(0 0 0 / 82%) 3.9rem,
+      rgb(0 0 0 / 45%) 4.7rem,
+      transparent 5.5rem
+    );
+  }
+
+  @media (width <= 629px) {
+    display: none;
+  }
+}
+
+// ── Slots ──────────────────────────────────────────────────────────
+// Each slot occupies a specific grid area. Slots without content
+// collapse to zero visible size in this landing state — the grid
+// tracks are declared but nothing paints them yet.
+
+.kronk-frame__top-band {
+  // Top rail ZONE — a transparent, viewport-anchored positioning layer.
+  // The dark surface behind it is painted by .kronk-frame__chrome; this
+  // element only lays out its children — KronkWordmark (left),
+  // HubSwitcher--top (centre), InviteButton (right) — over that surface.
+  position: fixed;
+  inset: 0 0 auto;
+  height: 9rem;
+
+  // Above the chrome surface (z-23) and the right-rail zone (z-24) so
+  // the InviteButton, sitting in the top-right corner grid slot, always
+  // wins the corner over the korner rail below it.
+  z-index: 25;
+
+  // Layout for children (wordmark left, switcher centre, invite right).
+  // The zone itself is transparent and doesn't consume pointer events on
+  // its empty area; each child re-enables them.
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: start;
@@ -185,36 +216,22 @@
 }
 
 .kronk-frame__right-band {
-  // Fade strip still viewport-anchored; child KornerSidebar sits
-  // inside as a flow element instead of self-anchoring. Sidebar's
-  // own `position: fixed` retires in _korner_sidebar.scss.
-  // The interior corner fillet is painted entirely by TopBand (see
-  // its layered radial background above), so RightBand here stays as
-  // a plain vertical fade strip.
+  // Right rail ZONE — a transparent positioning layer over the chrome
+  // surface (which paints the right fade + the corner). Holds the korner
+  // sidebar; its own `position: fixed` retires in _korner_sidebar.scss.
   position: fixed;
   inset: 0 0 0 auto;
   width: 7.75rem;
   z-index: 24;
-  background: linear-gradient(
-    to left,
-    #000 0,
-    #000 5.5rem,
-    rgb(0 0 0 / 82%) 6.15rem,
-    rgb(0 0 0 / 45%) 6.95rem,
-    rgb(0 0 0 / 0%) 7.75rem
-  );
-  filter: drop-shadow(
-    -2px 0 16px color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent)
-  );
 
-  // Sidebar sits at the right edge with the classic 0.75rem inset.
-  // Vertical offsets (top: 3.75rem, bottom: 0.75rem) preserved via
-  // padding on this container so the sidebar's flow child fills the
-  // right amount of the strip.
+  // Sidebar sits at the right edge with the classic 0.75rem inset. The
+  // top offset now clears the FULL top rail (4.25rem) plus a gap, so the
+  // first korner icon sits cleanly BELOW the InviteButton in the corner
+  // — the reserved-corner fix for the overlap.
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  padding: 3.75rem 0.75rem 0.75rem 0;
+  padding: 4.75rem 0.75rem 0.75rem 0;
   pointer-events: none;
 
   > * {

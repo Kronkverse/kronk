@@ -44,10 +44,29 @@ Mobile (container ≤ 889px)
 ### TopBand
 
 - **Contents:** `<KronkWordmark>` (left), `<HubSwitcher variant="top">`
-  (centre, desktop only).
-- **Owns:** its own dark fade background (was `body::before` before
-  the Frame migration).
+  (centre, desktop only). The InviteButton sits in the far-right corner
+  (a standalone fixed pill so it survives mobile, where the top rail hides).
+- **Background:** none of its own. The top rail's dark fade is painted by
+  the single `.kronk-frame__chrome` element (see **The L-shaped chrome**
+  below); TopBand is a transparent positioning zone over it.
 - **Mobile:** wordmark only; the HubSwitcher moves to BottomBand.
+
+### The L-shaped chrome
+
+As of the 2026-07 chrome unification, the top rail and right rail are one
+continuous surface, painted by a single `position: fixed` element
+`.kronk-frame__chrome` (`inset: 0`, `pointer-events: none`): a top-fade +
+a right-fade + a curved corner fillet where they meet, all as one
+background. This **replaced** the earlier two-strip approach where each
+band painted its own fade and the TopBand faked the merged corner by
+overpainting the RightBand (`z-index: 25` over `24`). Consequences:
+
+- There is no longer a second piece or a faked corner; TopBand and
+  RightBand are transparent zones that only position their children.
+- The InviteButton no longer covers the first korner icon — the right
+  rail now starts at `4.75rem` (below the reserved corner).
+- The stale note about a `mask-image` corner (which never existed) is
+  retired; the corner is the chrome's radial fillet.
 
 ### SpaceNav
 
@@ -91,9 +110,11 @@ Mobile (container ≤ 889px)
 
 ### RightBand
 
-- **Contents:** `<KornerSidebar>` — the vertical rail of korner tiles.
-- **Owns:** its own dark fade background (was `body::after`), fading
-  inward toward Stage.
+- **Contents:** `<KornerSidebar>` — the vertical rail of korner tiles,
+  starting `4.75rem` down so it clears the reserved top-right corner.
+- **Background:** none of its own. The right rail's dark fade is painted
+  by `.kronk-frame__chrome` (see **The L-shaped chrome** above); RightBand
+  is a transparent positioning zone over it.
 - **Desktop only.** Hidden below the 890px container breakpoint.
 
 ### BottomBand

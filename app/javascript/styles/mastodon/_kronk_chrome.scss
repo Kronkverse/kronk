@@ -153,20 +153,17 @@ body.admin {
   }
 }
 
-// ── Invite button — floating FAB, top-right corner ─────────────────
-// Standalone `position: fixed` element, mounted outside the KronkFrame
-// grid (see ui/index.jsx — same tier as KronkMenu). Reasons this is a
-// FAB rather than a TopBand grid child:
-//   * TopBand hides entirely on mobile (≤629px), so a grid-slotted
-//     button would be invisible where people invite most.
-//   * TopBand's right column sits inside the RightBand's 7.75rem fixed
-//     strip on desktop, and RightBand's opaque gradient kept covering
-//     it at every z-index tier we tried.
-// A fixed FAB steers clear of both problems: top-right corner on every
-// viewport, z-index above every band and every stage surface. Standout
-// affordance — solid brand-purple pill with a glow — because
-// "invite people you know" is one of the actions Kronk deliberately
-// makes discoverable.
+// ── Invite button — top rail, far-right corner ────────────────────
+// Standalone `position: fixed` element in the top-right corner (mounted
+// outside the KronkFrame grid, same tier as KronkMenu). It stays a
+// standalone element — rather than a TopBand grid child — for one
+// reason: the TopBand zone hides entirely on mobile (≤629px), and a
+// grid child of a hidden zone would vanish where people invite most.
+// The old corner-COVERING problem is gone: the unified L-chrome now
+// reserves the corner, and the korner rail starts at 4.75rem — below
+// this button — so it no longer sits over the first korner icon.
+// Standout affordance (brand-purple pill + glow) because "invite people
+// you know" is deliberately discoverable.
 .kronk-invite-button {
   position: fixed;
   top: 0.85rem;
