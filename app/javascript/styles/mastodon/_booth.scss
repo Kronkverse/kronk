@@ -1037,10 +1037,39 @@ $booth-accent: var(--accent);
     min-height: 80px;
   }
 
+  // Raw file inputs render as the browser's default "Choose files" button
+  // and ignore every Kronk token. Hide them; the sibling
+  // `.booth-upload-form__file-picker` label drives the click.
   input[type='file'] {
-    padding: 6px;
-    cursor: pointer;
+    display: none;
   }
+}
+
+.booth-upload-form__file-picker {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: var(--radius-medium);
+  border: 1px dashed var(--border-default);
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  align-self: flex-start;
+  transition:
+    color 120ms ease-out,
+    border-color 120ms ease-out;
+
+  &:hover {
+    color: var(--text-primary);
+    border-color: var(--accent);
+    border-style: solid;
+  }
+}
+
+.booth-upload-form__file-picker-label {
+  pointer-events: none;
 }
 
 .booth-upload-form__actions {

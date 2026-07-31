@@ -34,6 +34,18 @@ const messages = defineMessages({
     id: 'booth.upload.cancel_upload',
     defaultMessage: 'Cancel upload',
   },
+  pickAudio: {
+    id: 'booth.upload.pick_audio',
+    defaultMessage: 'Choose audio file',
+  },
+  pickCover: {
+    id: 'booth.upload.pick_cover',
+    defaultMessage: 'Choose cover image',
+  },
+  replaceFile: {
+    id: 'booth.upload.replace_file',
+    defaultMessage: 'Replace',
+  },
 });
 
 interface Props {
@@ -410,15 +422,22 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
             />
           </label>
 
-          <label className='booth-upload-form__field'>
+          <div className='booth-upload-form__field'>
             <span>{intl.formatMessage(messages.audio)} *</span>
-            <input
-              ref={audioInputRef}
-              type='file'
-              accept='audio/*'
-              onChange={handleAudioFileChange}
-              required
-            />
+            <label className='booth-upload-form__file-picker'>
+              <input
+                ref={audioInputRef}
+                type='file'
+                accept='audio/*'
+                onChange={handleAudioFileChange}
+                required
+              />
+              <span className='booth-upload-form__file-picker-label'>
+                {audioFile
+                  ? intl.formatMessage(messages.replaceFile)
+                  : intl.formatMessage(messages.pickAudio)}
+              </span>
+            </label>
             {audioFile && (
               <span className='booth-upload-form__file-info'>
                 {audioFile.name} · {formatSize(audioFile.size)}
@@ -429,21 +448,33 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
                 {audioError}
               </span>
             )}
-          </label>
+          </div>
 
-          <label className='booth-upload-form__field'>
+          <div className='booth-upload-form__field'>
             <span>{intl.formatMessage(messages.cover)}</span>
-            <input
-              type='file'
-              accept='image/*'
-              onChange={handleCoverFileChange}
-            />
+            <label className='booth-upload-form__file-picker'>
+              <input
+                type='file'
+                accept='image/*'
+                onChange={handleCoverFileChange}
+              />
+              <span className='booth-upload-form__file-picker-label'>
+                {coverFile
+                  ? intl.formatMessage(messages.replaceFile)
+                  : intl.formatMessage(messages.pickCover)}
+              </span>
+            </label>
+            {coverFile && (
+              <span className='booth-upload-form__file-info'>
+                {coverFile.name} · {formatSize(coverFile.size)}
+              </span>
+            )}
             {coverError && (
               <span className='booth-upload-form__file-error'>
                 {coverError}
               </span>
             )}
-          </label>
+          </div>
 
           <div className='booth-upload-form__actions'>
             <button
