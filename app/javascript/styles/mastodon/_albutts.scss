@@ -598,38 +598,48 @@
 
   &__file {
     // The raw file input renders as the browser's default "Choose files"
-    // button, which is the one control on the composer that ignores every
-    // Kronk token. Hide it and drive the actual click from the styled
-    // label below, matching the Moments composer pattern.
+    // button. Hide it — the drop-zone label below is the click surface.
     display: none;
   }
 
-  &__file-picker {
-    display: inline-block;
-    padding: 8px 14px;
+  // Drag-and-drop target. The whole box is one big label, so a plain
+  // click opens the OS picker AND a drag from the desktop is accepted.
+  &__drop-zone {
+    position: relative;
+    margin-top: 4px;
+    border: 1.5px dashed var(--border-default);
     border-radius: var(--radius-medium);
-    border: 1px dashed var(--border-default);
     background: var(--surface-elevated);
+    padding: 24px 16px;
+    text-align: center;
+    transition:
+      border-color 120ms ease-out,
+      background 120ms ease-out;
+
+    &--dragging {
+      border-color: var(--accent);
+      border-style: solid;
+      background: color-mix(in oklab, var(--accent), transparent 88%);
+    }
+
+    &--disabled {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    &:hover:not(#{&}--dragging):not(#{&}--disabled) {
+      border-color: var(--accent);
+    }
+  }
+
+  &__drop-zone-label {
+    display: block;
+    cursor: pointer;
     color: var(--text-secondary);
     font-family: var(--font-body);
     font-size: 13px;
     font-weight: 500;
-    cursor: pointer;
-    transition:
-      color 120ms ease-out,
-      border-color 120ms ease-out;
-
-    &:hover {
-      color: var(--text-primary);
-      border-color: var(--accent);
-      border-style: solid;
-    }
-
-    &--disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      pointer-events: none;
-    }
+    line-height: 1.4;
   }
 
   &__thumbs {
