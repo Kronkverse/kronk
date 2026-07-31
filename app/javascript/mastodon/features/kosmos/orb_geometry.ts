@@ -50,6 +50,11 @@ export interface OrbLayout {
   readonly placements: readonly AccountPlacement[];
   readonly chords: readonly ChordCurve[];
   readonly maxConnections: number;
+  // Y coordinate of the densest placement (the hub — the account with
+  // the most graph connections). Kosmos anchors its section plane
+  // here so the cross-section stays on the busiest slice of the orb
+  // instead of sweeping through empty poles.
+  readonly hubY: number;
 }
 
 // ── Palette (reads --kosmos-* CSS custom properties) ───────────────
@@ -183,5 +188,16 @@ export const buildOrbLayout = (
     chords.push({ pts, ylo, yhi, cA, cB, seed: idx * 12.9898 });
   });
 
-  return { sockets, placements, chords, maxConnections };
+  // Find the densest placement's Y — anchor for the Kosmos plane.
+  // Fall back to 0 (equatorial slice) when there are no placements.
+  let hubY = 0;
+  let hubDegree = -1;
+  for (const p of placements) {
+    if (p.connections > hubDegree) {
+      hubDegree = p.connections;
+      hubY = p.pos[1];
+    }
+  }
+
+  return { sockets, placements, chords, maxConnections, hubY };
 };
