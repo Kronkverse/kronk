@@ -242,16 +242,18 @@ code {
       text-align: center;
     }
 
-    // The three-point intro: numbered via CSS counter so the digit
-    // above each bullet is Kronk-purple + serif + big, matching the
-    // display-font aesthetic of the title. Numbers are decorative
-    // ordering; the <ol>/<li> keeps semantic order.
+    // The three-point intro. Each bullet is a bubble card with the
+    // big Kronk-purple digit sitting to the LEFT of the title + body
+    // column. Bubbles use a subtle purple-tinted background + border,
+    // rounded via the shared `--radius-large` token so the three
+    // ideas visually separate as distinct cards rather than reading
+    // as one paragraph.
     .welcome-form__bullets {
       counter-reset: welcome-bullet;
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 2.25rem;
+      gap: 1rem;
       margin: 0 auto 2rem;
       padding: 0;
       max-width: 36rem;
@@ -259,36 +261,50 @@ code {
 
     .welcome-form__bullet {
       counter-increment: welcome-bullet;
-      text-align: center;
-      padding-top: 0.75rem;
+      display: grid;
+      grid-template-columns: 3rem 1fr;
+      grid-template-areas:
+        'num title'
+        'num body';
+      align-items: baseline;
+      gap: 0.25rem 1rem;
+      padding: 1.25rem 1.5rem;
+      text-align: start;
+      border: 1px solid
+        color-mix(in oklab, var(--kronk-purple-accent) 20%, transparent);
+      border-radius: var(--radius-large);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 5%,
+        transparent
+      );
     }
 
-    // The big display digit sitting above each bullet. `::before`
-    // renders `counter(welcome-bullet)` — 1, 2, 3 — as a large
-    // serif digit tinted Kronk purple. Sits centred above the
-    // title, with margin below to separate the digit from the
-    // words.
+    // Big Kronk-purple serif digit, left column of the grid. Aligns
+    // to the baseline of the first line of the title so `1` and the
+    // heading sit level.
     .welcome-form__bullet::before {
       content: counter(welcome-bullet);
-      display: block;
-      margin: 0 auto 0.75rem;
+      grid-area: num;
       font-family: $font-display, serif;
-      font-size: 2.25rem;
+      font-size: 2rem;
       font-weight: 700;
       line-height: 1;
       color: var(--kronk-purple-accent);
     }
 
     .welcome-form__bullet-title {
-      margin: 0 0 0.5rem;
+      grid-area: title;
+      margin: 0 0 0.35rem;
       font-family: $font-display, sans-serif;
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       line-height: 1.35;
       color: $primary-text-color;
       font-weight: 700;
     }
 
     .welcome-form__bullet-body {
+      grid-area: body;
       margin: 0;
       color: $secondary-text-color;
       font-size: 0.95rem;
