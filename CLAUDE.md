@@ -96,13 +96,15 @@ export NODE_OPTIONS="--max-old-space-size=2048"
 
 (On the mainframe dev server this is already set in `/etc/profile.d/mainframe.sh`.)
 
-## CI lint — a required check (run all of it before pushing)
+## CI lint — run all of it before pushing
 
 The pre-commit hook only runs against **staged** files, and `--no-verify`
-skips it entirely — so lint drift reaches CI easily. On CI, **`lint` is a
-required status check on `rebuild/2.0.0`**: the merge queue will not merge a PR
-whose `lint` check is red. It is not one job but several, each of which can fail
-independently:
+skips it entirely — so lint drift reaches CI easily. `lint` is **not** currently
+a required merge gate on `rebuild/2.0.0` (it can't be until the pre-existing
+RuboCop/Haml-lint debt is cleared — see below), so a red `lint` check does
+**not** block the merge queue and drift quietly accumulates. That is exactly why
+you should run it locally before pushing. `lint` is not one job but several,
+each of which can fail independently and each of which CI runs:
 
 - **`lint:js`** — ESLint, run with **`--max-warnings 0`** (so warnings fail the
   build too, e.g. `import/order`, `import/no-duplicates`).
@@ -111,7 +113,10 @@ independently:
   must reference a `--radius-*` token; blank line before comments).
 - **`format:check`** — Prettier (`prettier --check`). A file that is otherwise
   valid still fails here if it isn't Prettier-formatted.
-- Plus **Haml**, **Ruby (RuboCop)**, and **i18n** checks for their file types.
+- Plus **Ruby (RuboCop)**, **Haml (haml-lint)**, and **i18n** checks for their
+  file types. RuboCop and Haml-lint currently carry **pre-existing debt** on the
+  tip, which is why `lint` isn't a required gate yet — making it required while
+  those are red would freeze the merge queue for everyone.
 
 Before pushing, run the ones that match your changes — not just ESLint:
 
@@ -119,6 +124,7 @@ Before pushing, run the ones that match your changes — not just ESLint:
 yarn lint:js       # or: eslint <file> --max-warnings 0
 yarn lint:css      # or: stylelint <file>
 yarn format:check  # or: prettier --check <file>   (yarn format to auto-fix)
+rubocop <file>     # Ruby (bare rubocop, not `bundle exec`, on the dev server)
 ```
 
 Prettier and Stylelint can disagree: a long trailing comment on a
