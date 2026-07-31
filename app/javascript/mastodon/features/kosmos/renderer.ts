@@ -40,7 +40,23 @@ const THREAD_MAX_LINKS_PER_STAR = 2;
 const VIGNETTE_INNER = 0.16; // fraction of min(W,H)
 const VIGNETTE_OUTER = 0.7; // fraction of max(W,H)
 const VIGNETTE_ALPHA = 0.6;
-export const HALF_CYCLE_MS = 300_000; // 300s crown→floor; full breath ~10 min
+
+// Legacy — kept only so kronk_kosmos.tsx's import doesn't break;
+// the depth-sweep animation this drove has been retired in favour of
+// a hub-anchored, slowly-rotating cross-section. Value is no longer
+// consulted inside the renderer.
+export const HALF_CYCLE_MS = 300_000;
+
+// The section plane is now fixed at the graph's hub-Y (densest node)
+// instead of sweeping crown→floor. Rotation replaces the sweep: the
+// projected slice rotates around the viewport centre once every
+// ROTATION_PERIOD_MS. Slow enough that it reads as ambient drift,
+// not as motion — matches the brief's threshold-of-perception rule.
+const ROTATION_PERIOD_MS = 600_000; // one full turn every ~10 minutes
+// How much of the viewport the cross-section fills. The old value
+// was 0.44 (a small disc); bumped so the starfield actually fills
+// the page rather than crowding into the middle.
+const SCALE_FRACTION = 0.85;
 
 interface Star {
   sx: number;
@@ -75,26 +91,29 @@ export const renderFrame = (
   dpr: number,
   params: FrameParams,
 ): void => {
-  // Reduced-motion path: freeze on the core frame (fullest slice,
-  // fully lit) rather than an arbitrary phase-at-load-time. Ceremony
-  // decisions in the veil moment still apply — brightness still
-  // modulates.
-  const p = params.reduced
-    ? 0.5
-    : (() => {
-        const tri = params.phase % 2;
-        return tri < 1 ? tri : 2 - tri;
-      })();
-  const eased = 0.5 - 0.5 * Math.cos(p * Math.PI); // dwell at the poles
-  const depth = SPHERE_RADIUS - eased * 2 * SPHERE_RADIUS;
+  // Section anchor: fixed at the graph's hub-Y (the densest node's
+  // vertical coordinate). Rich cross-section on-screen at all times
+  // — no more sweeping through empty poles.
+  const depth = geo.hubY;
   const rr = Math.sqrt(
     Math.max(0, SPHERE_RADIUS * SPHERE_RADIUS - depth * depth),
   );
 
-  const scale = (Math.min(W, H) * 0.44) / SPHERE_RADIUS;
+  const scale = (Math.min(W, H) * SCALE_FRACTION) / SPHERE_RADIUS;
   const cx = W * 0.5;
   const cy = H * 0.5;
-  const lum = Math.pow(Math.sin(p * Math.PI), 0.8); // 0 at poles → 1 mid
+  // Full luminance always — no pole-fading to worry about with a
+  // fixed hub-anchored plane.
+  const lum = 1;
+
+  // Rotation angle for this frame. Slow, monotonic; freezes on
+  // prefers-reduced-motion so nothing drifts for viewers who opted
+  // out of motion.
+  const theta = params.reduced
+    ? 0
+    : (params.now / ROTATION_PERIOD_MS) * Math.PI * 2;
+  const cosT = Math.cos(theta);
+  const sinT = Math.sin(theta);
 
   // Alpha ceiling floats with the brightness knob. At rest the layer
   // sits at PEAK_ALPHA_CEILING (barely visible). Full reveal lifts it
@@ -108,9 +127,8 @@ export const renderFrame = (
   ctx.fillRect(0, 0, W, H);
   ctx.globalCompositeOperation = 'lighter';
 
-  // Section horizon: a barely-visible ring at the sweep-plane's
-  // projected radius. Alpha rises with luminance so it fades near
-  // the poles alongside the stars.
+  // Section horizon: a barely-visible ring at the plane's projected
+  // radius. Doesn't need rotation — a circle is rotation-invariant.
   const [hr, hg, hb] = palette.horizon;
   ctx.strokeStyle = `rgba(${hr},${hg},${hb},${(0.018 + 0.03 * lum).toFixed(3)})`;
   ctx.lineWidth = 1 * dpr;
@@ -140,8 +158,14 @@ export const renderFrame = (
       const y1 = P1[1] - depth;
       if (y0 === 0 || y0 * y1 > 0) continue; // no crossing in this segment
       const tSeg = y0 / (y0 - y1);
-      const sx = cx + (P0[0] + (P1[0] - P0[0]) * tSeg) * scale;
-      const sy = cy + (P0[2] + (P1[2] - P0[2]) * tSeg) * scale;
+      // 3D crossing point on the plane, then rotate its (x, z)
+      // around the vertical axis by `theta` before projecting.
+      const rawX = P0[0] + (P1[0] - P0[0]) * tSeg;
+      const rawZ = P0[2] + (P1[2] - P0[2]) * tSeg;
+      const rotX = rawX * cosT - rawZ * sinT;
+      const rotZ = rawX * sinT + rawZ * cosT;
+      const sx = cx + rotX * scale;
+      const sy = cy + rotZ * scale;
       const tt = P0[3] + (P1[3] - P0[3]) * tSeg;
       stars.push({
         sx,

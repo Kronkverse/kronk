@@ -140,13 +140,17 @@ kosmos:
   void: '#0b0c11'
   horizon: '#7241ff'
   thread: '#8c7cdc'
-  ramp-0: '#38b2a3'
-  ramp-1: '#3f9aab'
-  ramp-2: '#4f85ab'
-  ramp-3: '#6a72a8'
-  ramp-4: '#8a6b9c'
-  ramp-5: '#a97088'
-  ramp-6: '#c17a76'
-  ramp-7: '#d18a68'
-  ramp-8: '#dd9a5f'
-  ramp-9: '#e6a857'
+  # Ramp encodes graph degree — dim (low connections) → bright (hub).
+  # Repurposed 2026-07-31 to a purple gradient so the ambient starfield
+  # reads as Kronk-native. Previous teal→peach ramp read too much
+  # like ordinary "night sky" astronomy imagery.
+  ramp-0: '#241a4c'
+  ramp-1: '#2f2465'
+  ramp-2: '#3a2e7e'
+  ramp-3: '#453897'
+  ramp-4: '#5342b0'
+  ramp-5: '#634cc7'
+  ramp-6: '#7358df'
+  ramp-7: '#8266f0'
+  ramp-8: '#9276fa'
+  ramp-9: '#a693ff'
