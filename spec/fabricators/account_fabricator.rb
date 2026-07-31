@@ -16,4 +16,10 @@ Fabricator(:account) do
   uri                 { |attrs| attrs[:domain].nil? ? '' : "https://#{attrs[:domain]}/users/#{attrs[:username]}" }
   discoverable        true
   indexable           true
+  # accounts.locked now defaults to true (follower-approval by default, migration
+  # 20260710200000). Pin it false here so inherited-from-Mastodon specs keep the
+  # unlocked posture they assume (a locked account posts private by default,
+  # which StatusPolicy then correctly hides from non-followers). Specs exercising
+  # the locked/follower-approval behaviour set `locked true` explicitly.
+  locked              false
 end
