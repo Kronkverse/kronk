@@ -22,6 +22,7 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
   attribute :nudge_streak, if: :nudge_type?
   attribute :nudge_message, if: :nudge_type?
   attribute :nudge_reactions, if: :nudge_type?
+  attribute :email_confirmation_email, if: :email_confirmation_reminder_type?
 
   def sample_account_ids
     object.sample_accounts.pluck(:id).map(&:to_s)
@@ -61,6 +62,23 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
 
   def nudge_type?
     object.type == :nudge
+  end
+
+  def email_confirmation_reminder_type?
+    object.type == :email_confirmation_reminder
+  end
+
+  # `activity` on an email_confirmation_reminder notification is the
+  # User itself — expose the pending email so the Kronk system pane
+  # can show "Confirm <email>" without a second API round-trip.
+  # `unconfirmed_email` is Devise's re-confirmation store; falls back
+  # to the primary email for fresh signups (unconfirmed_email is nil
+  # until an email change is initiated).
+  def email_confirmation_email
+    user = object.notification&.activity
+    return nil unless user.is_a?(User)
+
+    user.unconfirmed_email.presence || user.email
   end
 
   attribute :media_tag_preview_url, if: :media_tag_type?

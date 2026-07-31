@@ -80,3 +80,11 @@
       cron: '5 0 * * *'
       class: Scheduler::KosmicDailyScheduler
       queue: scheduler
+    email_confirmation_reminder_scheduler:
+      # Monday 09:00 UTC — weekly re-fire of the "confirm your email"
+      # reminder for any user still unconfirmed. The first reminder
+      # lands at signup via User#fire_email_confirmation_reminder;
+      # this worker owns every subsequent week's nudge.
+      cron: '0 9 * * 1'
+      class: Scheduler::EmailConfirmationReminderScheduler
+      queue: scheduler

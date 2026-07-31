@@ -12,12 +12,17 @@ import { Link } from 'react-router-dom';
 
 import DoneAllIcon from '@/material-icons/400-24px/done_all.svg?react';
 import KronkCoinIcon from '@/material-icons/400-24px/kronk_coin.svg?react';
+import MailIcon from '@/material-icons/400-24px/mail-fill.svg?react';
 import { submitMarkers } from 'mastodon/actions/markers';
 import { markNotificationsAsRead } from 'mastodon/actions/notification_groups';
 import { Icon } from 'mastodon/components/icon';
-import type { NotificationGroupProposalComplete } from 'mastodon/models/notification_group';
+import type {
+  NotificationGroupEmailConfirmationReminder,
+  NotificationGroupProposalComplete,
+} from 'mastodon/models/notification_group';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
+import type { KronkSystemGroup } from './kronk_system';
 import { isKronkSystemType } from './kronk_system';
 
 // Cards the user has clicked into stay flagged as "visited" locally
@@ -47,6 +52,24 @@ const messages = defineMessages({
     defaultMessage:
       'System messages — pick a card above to follow up on Kommons.',
   },
+  confirmEmailTitle: {
+    id: 'nudges.kronk.confirm_email.title',
+    defaultMessage: 'Confirm your email',
+  },
+  confirmEmailBodyWithEmail: {
+    id: 'nudges.kronk.confirm_email.body_with_email',
+    defaultMessage:
+      'Check your inbox for the link we sent to {email}. Not there? Resend or change the address.',
+  },
+  confirmEmailBody: {
+    id: 'nudges.kronk.confirm_email.body',
+    defaultMessage:
+      'Check your inbox for the confirmation link. Not there? Resend or change the address.',
+  },
+  confirmEmailCta: {
+    id: 'nudges.kronk.confirm_email.cta',
+    defaultMessage: 'Resend or change email',
+  },
 });
 
 const readVisited = (): Set<string> => {
@@ -69,6 +92,71 @@ const writeVisited = (set: Set<string>): void => {
     // localStorage can be blocked; a silent failure just means the
     // visited state doesn't persist — the click still opens the card.
   }
+};
+
+interface EmailConfirmationReminderMessageProps {
+  group: NotificationGroupEmailConfirmationReminder;
+}
+
+const EmailConfirmationReminderMessage: React.FC<
+  EmailConfirmationReminderMessageProps
+> = ({ group }) => {
+  const intl = useIntl();
+  const email = group.emailConfirmationEmail;
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.5rem',
+        maxWidth: '32rem',
+      }}
+    >
+      {/* Deep-link to /auth/setup, the Devise-side resend/change-email
+          page. Full nav (not <Link>): the setup surface is Rails-served
+          and outside the SPA. */}
+      <a href='/auth/setup' className='notification-event-card'>
+        <div className='notification-event-card__info'>
+          <div className='notification-event-card__title'>
+            <Icon id='mail' icon={MailIcon} />
+            {intl.formatMessage(messages.confirmEmailTitle)}
+          </div>
+          <div className='notification-event-card__meta'>
+            {email
+              ? intl.formatMessage(messages.confirmEmailBodyWithEmail, {
+                  email,
+                })
+              : intl.formatMessage(messages.confirmEmailBody)}
+          </div>
+          <div
+            className='notification-event-card__meta'
+            style={{ marginTop: '0.25rem', opacity: 0.85 }}
+          >
+            {intl.formatMessage(messages.confirmEmailCta)}
+          </div>
+        </div>
+      </a>
+      {group.latest_page_notification_at && (
+        <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+          <FormattedTime
+            value={group.latest_page_notification_at}
+            timeZone={TIMEZONE}
+            hour='2-digit'
+            minute='2-digit'
+          />
+          {' · '}
+          <FormattedDate
+            value={group.latest_page_notification_at}
+            timeZone={TIMEZONE}
+            day='numeric'
+            month='short'
+          />
+          {' AEST'}
+        </span>
+      )}
+    </div>
+  );
 };
 
 interface ProposalCompleteMessageProps {
@@ -157,9 +245,7 @@ export const KronkSystemView: React.FC = () => {
     [
       ...state.notificationGroups.groups,
       ...state.notificationGroups.pendingGroups,
-    ].filter((g): g is NotificationGroupProposalComplete =>
-      isKronkSystemType(g.type),
-    ),
+    ].filter((g): g is KronkSystemGroup => isKronkSystemType(g.type)),
   );
 
   // Opening the Kronk system pane is the "I've read this" signal for
@@ -282,16 +368,28 @@ export const KronkSystemView: React.FC = () => {
             {intl.formatMessage(messages.empty)}
           </p>
         )}
-        {sorted.map((group) => (
-          <ProposalCompleteMessage
-            key={group.group_key}
-            group={group}
-            visited={
-              group.proposal ? visited.has(group.proposal.proposal_id) : false
-            }
-            onVisit={handleVisit}
-          />
-        ))}
+        {sorted.map((group) => {
+          if (group.type === 'email_confirmation_reminder') {
+            return (
+              <EmailConfirmationReminderMessage
+                key={group.group_key}
+                group={group}
+              />
+            );
+          }
+          return (
+            <ProposalCompleteMessage
+              key={group.group_key}
+              group={group}
+              visited={
+                group.proposal
+                  ? visited.has(group.proposal.proposal_id)
+                  : false
+              }
+              onVisit={handleVisit}
+            />
+          );
+        })}
       </div>
 
       {/*

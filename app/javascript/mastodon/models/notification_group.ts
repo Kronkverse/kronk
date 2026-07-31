@@ -59,6 +59,16 @@ export interface NotificationGroupProposalComplete
   proposal: ProposalCompleteData | null;
 }
 
+// Kronk-native self-notice — surfaces in the Kronk system pane of the
+// Nudges messenger. Fired at signup + weekly thereafter while the
+// account is unconfirmed. The email string is what the reminder asks
+// you to confirm (falls back to primary email when there's no pending
+// reconfirmation).
+export interface NotificationGroupEmailConfirmationReminder
+  extends BaseNotification<'email_confirmation_reminder'> {
+  emailConfirmationEmail: string | null;
+}
+
 export type NudgeReactionEmoji = '❤️' | '😂' | '🙌' | '🔥' | '😢';
 export type NudgeReactions = Record<
   NudgeReactionEmoji,
@@ -143,7 +153,8 @@ export type NotificationGroup =
   | NotificationGroupEventInvitation
   | NotificationGroupNudge
   | NotificationGroupMediaTag
-  | NotificationGroupProposalComplete;
+  | NotificationGroupProposalComplete
+  | NotificationGroupEmailConfirmationReminder;
 
 function createReportFromJSON(reportJSON: ApiReportJSON): Report {
   const { target_account, ...report } = reportJSON;
@@ -274,6 +285,13 @@ export function createNotificationGroupFromJSON(
         mediaTagStatusPath: group.media_tag_status_path,
         sampleAccountIds,
       };
+    case 'email_confirmation_reminder':
+      return {
+        ...group,
+        partial: false,
+        emailConfirmationEmail: group.email_confirmation_email,
+        sampleAccountIds,
+      };
     default:
       return {
         sampleAccountIds,
@@ -371,6 +389,12 @@ export function createNotificationGroupFromNotificationJSON(
         type: notification.type,
         mediaTagPreviewUrl: notification.media_tag_preview_url,
         mediaTagStatusPath: notification.media_tag_status_path,
+      };
+    case 'email_confirmation_reminder':
+      return {
+        ...group,
+        type: notification.type,
+        emailConfirmationEmail: notification.email_confirmation_email,
       };
     default:
       return {

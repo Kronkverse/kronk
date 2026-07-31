@@ -26,6 +26,7 @@ export const allNotificationTypes: NotificationType[] = [
   'nudge',
   'media_tag',
   'proposal_status_changed',
+  'email_confirmation_reminder',
 ];
 
 export type NotificationWithStatusType =
@@ -50,7 +51,8 @@ export type NotificationType =
   | 'event_invitation'
   | 'nudge'
   | 'media_tag'
-  | 'proposal_status_changed';
+  | 'proposal_status_changed'
+  | 'email_confirmation_reminder';
 
 export interface BaseNotificationJSON {
   id: string;
@@ -226,6 +228,18 @@ interface MediaTagNotificationJSON extends BaseNotificationJSON {
   media_tag_status_path: string | null;
 }
 
+interface EmailConfirmationReminderNotificationGroupJSON
+  extends BaseNotificationGroupJSON {
+  type: 'email_confirmation_reminder';
+  email_confirmation_email: string | null;
+}
+
+interface EmailConfirmationReminderNotificationJSON
+  extends BaseNotificationJSON {
+  type: 'email_confirmation_reminder';
+  email_confirmation_email: string | null;
+}
+
 export type ApiNotificationJSON =
   | SimpleNotificationJSON
   | ReportNotificationJSON
@@ -235,7 +249,8 @@ export type ApiNotificationJSON =
   | EventInvitationNotificationJSON
   | NudgeNotificationJSON
   | MediaTagNotificationJSON
-  | ProposalStatusChangedNotificationJSON;
+  | ProposalStatusChangedNotificationJSON
+  | EmailConfirmationReminderNotificationJSON;
 
 export type ApiNotificationGroupJSON =
   | SimpleNotificationGroupJSON
@@ -247,7 +262,8 @@ export type ApiNotificationGroupJSON =
   | EventInvitationNotificationGroupJSON
   | NudgeNotificationGroupJSON
   | MediaTagNotificationGroupJSON
-  | ProposalStatusChangedNotificationGroupJSON;
+  | ProposalStatusChangedNotificationGroupJSON
+  | EmailConfirmationReminderNotificationGroupJSON;
 
 export interface ApiNotificationGroupsResultJSON {
   accounts: ApiAccountJSON[];

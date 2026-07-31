@@ -122,6 +122,8 @@ class User < ApplicationRecord
   before_create :set_age_verified_at
   after_commit :send_pending_devise_notifications
   after_create_commit :trigger_webhooks
+  after_create_commit :fire_email_confirmation_reminder
+  after_update_commit :clear_email_confirmation_reminders, if: :saved_change_to_confirmed_at?
 
   normalizes :locale, with: ->(locale) { I18n.available_locales.exclude?(locale.to_sym) ? nil : locale }
   normalizes :time_zone, with: ->(time_zone) { ActiveSupport::TimeZone[time_zone].nil? ? nil : time_zone }
@@ -497,6 +499,31 @@ class User < ApplicationRecord
 
   def sanitize_role
     self.role = nil if role.present? && role.everyone?
+  end
+
+  # Fires the immediate post-signup reminder. Confirmed accounts (e.g.
+  # imported / migrated users, staff bots) skip it — the reminder is
+  # only meaningful when there's an actual pending email.
+  # Weekly re-fires from `Scheduler::EmailConfirmationReminderScheduler`.
+  def fire_email_confirmation_reminder
+    return if confirmed?
+
+    DeliverEmailConfirmationReminderService.new.call(self)
+  end
+
+  # Sweeps any outstanding "confirm your email" reminder from the
+  # Kronk system pane the moment the user confirms — no stale nudge
+  # left over after the action is done. Guarded on `confirmed?` so a
+  # roll-back (unlikely) doesn't wipe the pane too eagerly.
+  def clear_email_confirmation_reminders
+    return unless confirmed?
+
+    Notification.where(
+      type: 'email_confirmation_reminder',
+      account_id: account_id,
+      activity_type: 'User',
+      activity_id: id
+    ).destroy_all
   end
 
   def prepare_new_user!

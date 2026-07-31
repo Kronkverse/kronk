@@ -14,17 +14,25 @@
 // Add types here as they gain a renderer (task_assigned,
 // proposal_challenged are the next candidates).
 
-import type { NotificationGroupProposalComplete } from 'mastodon/models/notification_group';
+import type {
+  NotificationGroupEmailConfirmationReminder,
+  NotificationGroupProposalComplete,
+} from 'mastodon/models/notification_group';
 
-export const KRONK_SYSTEM_TYPES = ['proposal_status_changed'] as const;
+export const KRONK_SYSTEM_TYPES = [
+  'proposal_status_changed',
+  'email_confirmation_reminder',
+] as const;
 
 // Sentinel conversation id the messenger routes to the Kronk system view
 // (`/nudges/kronk`). No real Nudges::Conversation uses this id.
 export const KRONK_CONVERSATION_ID = 'kronk';
 
-// Every currently-surfaced system type has the proposal_status_changed
-// group shape; widen this union as more types are added above.
-export type KronkSystemGroup = NotificationGroupProposalComplete;
+// Union of every system group the KronkSystemView renders. Extend the
+// tuple + this union together when a new type gains a card.
+export type KronkSystemGroup =
+  | NotificationGroupProposalComplete
+  | NotificationGroupEmailConfirmationReminder;
 
 const SYSTEM_TYPE_SET = new Set<string>(KRONK_SYSTEM_TYPES);
 
