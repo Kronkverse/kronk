@@ -166,8 +166,12 @@ body.admin {
 // you know" is deliberately discoverable.
 .kronk-invite-button {
   position: fixed;
-  top: 0.85rem;
-  right: 0.85rem;
+  // Centred in the L-corner: `right: 1.8rem` puts the 2.4rem button's
+  // centre at 3rem from the viewport edge — the same column centre as the
+  // korner icons below it — and `top` drops it to sit on the top rail's
+  // switcher (home / profile) row rather than pinning to the very corner.
+  top: 1.1rem;
+  right: 1.8rem;
   z-index: 40;
   display: inline-flex;
   align-items: center;
