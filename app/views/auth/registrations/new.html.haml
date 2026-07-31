@@ -74,14 +74,16 @@
                                       wrapper: :with_block_label
 
   = hidden_field_tag :accept, params[:accept]
+  = hidden_field_tag :welcomed, params[:welcomed]
+  = hidden_field_tag :privacy_accepted, params[:privacy_accepted]
   = f.input :invite_code, as: :hidden
 
-  .fields-group
-    = f.input :agreement,
-              as: :boolean,
-              label: TermsOfService.live.exists? ? t('auth.user_agreement_html', privacy_policy_path: privacy_policy_path, terms_of_service_path: terms_of_service_path) : t('auth.user_privacy_agreement_html', privacy_policy_path: privacy_policy_path),
-              required: false,
-              wrapper: :with_label
+  -# Agreement was captured on the /auth privacy step (its own page in
+  -# the four-step signup), not as a checkbox here. Passed to the
+  -# backend as a hidden `agreement: '1'` so Devise's validator is
+  -# satisfied — the acceptance itself was recorded when the user hit
+  -# Continue on the privacy step.
+  = f.input :agreement, as: :hidden, input_html: { value: '1' }
 
   .actions
     = f.button :button, @invite.present? ? t('auth.register') : sign_up_message, type: :submit

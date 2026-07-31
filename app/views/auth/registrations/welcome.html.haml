@@ -1,0 +1,30 @@
+- content_for :page_title do
+  = t('auth.register')
+
+- content_for :header_tags do
+  = render partial: 'shared/og', locals: { description: description_for_sign_up(@invite) }
+
+.simple_form
+  = render 'auth/shared/progress', stage: 'welcome'
+
+  %h1.title= t('auth.welcome.title')
+  %p.lead= t('auth.welcome.preamble')
+
+  %ol.rules-list
+    %li
+      %button{ type: 'button', aria: { expanded: 'false' } }
+        .rules-list__text= t('auth.welcome.bullet_shape_title')
+        .rules-list__hint= t('auth.welcome.bullet_shape_body')
+    %li
+      %button{ type: 'button', aria: { expanded: 'false' } }
+        .rules-list__text= t('auth.welcome.bullet_shape_koc_title')
+        .rules-list__hint= t('auth.welcome.bullet_shape_koc_body')
+    %li
+      %button{ type: 'button', aria: { expanded: 'false' } }
+        .rules-list__text= t('auth.welcome.bullet_yours_title')
+        .rules-list__hint= t('auth.welcome.bullet_yours_body')
+
+  .stacked-actions
+    - next_path = @invite_code.present? ? public_invite_url(invite_code: @invite_code, welcomed: @welcome_token) : new_user_registration_path(welcomed: @welcome_token)
+    = link_to t('auth.welcome.cta_next'), next_path, class: 'button'
+    = link_to t('auth.welcome.cta_back'), root_path, class: 'button button-tertiary'

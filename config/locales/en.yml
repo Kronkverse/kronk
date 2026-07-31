@@ -1259,8 +1259,10 @@ en:
     progress:
       confirm: Confirm email
       details: Your details
+      privacy: Privacy
       review: Our review
-      rules: Accept rules
+      rules: Rules
+      welcome: Welcome
     providers:
       cas: CAS
       saml: SAML
@@ -1289,8 +1291,34 @@ en:
       title: Login to %{domain}
     sign_up:
       manual_review: Sign-ups on %{domain} go through manual review by our moderators. To help us process your registration, write a bit about yourself and why you want an account on %{domain}.
-      preamble: With an account on this Kronk server, you'll be able to follow any other person on the fediverse, regardless of where their account is hosted.
+      preamble: Pick a name, drop your email, choose a password. That's it — you're in. We'll remind you to confirm the email once you're set up.
       title: Let's get you set up on %{domain}.
+    welcome:
+      title: Welcome to Kronk.
+      preamble: A small, community-shaped social space. Here's the shape of it before you dive in.
+      bullet_shape_title: Korners, not columns.
+      bullet_shape_body: Kronk is made of small spaces — Kalendar, Kommons, Booth, Kuestions, Albutts, more. Each one has its own shape, but they all share the same feed, the same friends, the same you.
+      bullet_shape_koc_title: Shaped by the people in it.
+      bullet_shape_koc_body: Missing a space? Propose one via Kommons and rally backing. Approved proposals ship as new korners.
+      bullet_yours_title: Yours to leave.
+      bullet_yours_body: You can request a full archive of everything you posted and delete your account any time. What's yours stays yours.
+      cta_next: Sounds good →
+      cta_back: Back
+    privacy:
+      title: Your privacy — the short version.
+      preamble: Full policy is at %{privacy_policy_link}. The bits worth flagging up front:
+      link_full: Read the full privacy policy
+      point_store_title: What we store.
+      point_store_body: Your username, email, password (hashed), posts, media, follows, and account settings. That's it.
+      point_who_title: Who can see it.
+      point_who_body: Public posts are visible to anyone; scoped posts (Mates / Krew / Just me) obey the visibility scope you pick when you post. Your email is never shown to other users.
+      point_delete_title: How to delete.
+      point_delete_body: Delete your account any time from settings. Posts unpublish immediately; media is purged within 24 hours.
+      point_federation_title: Federation.
+      point_federation_body: Your public posts are relayed to other Mastodon-compatible servers as people on those servers follow you. Copies on those servers are outside Kronk's control.
+      agreement_html: I understand and agree to the <a href="%{privacy_policy_path}" target="_blank" rel="noopener">privacy policy</a>.
+      cta_next: Continue
+      cta_back: Back
     status:
       account_status: Account status
       confirming: Waiting for email confirmation to be completed.

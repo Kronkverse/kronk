@@ -13,7 +13,12 @@ class Auth::RegistrationsController < Devise::RegistrationsController
   before_action :set_strikes, only: [:edit, :update]
   before_action :require_not_suspended!, only: [:update]
   before_action :set_rules, only: :new
+  # Four-step signup — the gates render their step in order. Whichever
+  # returns first short-circuits the chain, so a visitor walks:
+  # welcome → rules → privacy → details. See app/views/auth/registrations.
+  before_action :require_welcome_seen!, only: :new
   before_action :require_rules_acceptance!, only: :new
+  before_action :require_privacy_acceptance!, only: :new
   before_action :set_registration_form_time, only: :new
 
   skip_before_action :check_self_destruct!, only: [:edit, :update]
@@ -141,13 +146,60 @@ class Auth::RegistrationsController < Devise::RegistrationsController
     @rules = Rule.ordered.includes(:translations)
   end
 
+  # Step 1: welcome. Explains what Kronk is before we ask for anything.
+  # The `?welcomed=<token>` link on the welcome page round-trips a
+  # per-visit token; on match we flip a *sticky* session flag so
+  # Back-navigating from a later step doesn't re-render the welcome
+  # copy for the same visitor.
+  def require_welcome_seen!
+    return if session[:welcome_seen]
+
+    if session[:welcome_token].present? && params[:welcomed] == session[:welcome_token]
+      session[:welcome_seen] = true
+      return
+    end
+
+    @welcome_token = session[:welcome_token] = SecureRandom.hex
+    @invite_code   = invite_code
+
+    set_locale { render :welcome }
+  end
+
+  # Step 2: server rules. Token-on-URL, sticky-flag-on-match. Existing
+  # gate — same pattern, now with the sticky flag so a Back-nav from
+  # privacy/details doesn't force the user through the rules screen
+  # again.
   def require_rules_acceptance!
-    return if @rules.empty? || (session[:accept_token].present? && params[:accept] == session[:accept_token])
+    return if @rules.empty? || session[:rules_accepted]
+
+    if session[:accept_token].present? && params[:accept] == session[:accept_token]
+      session[:rules_accepted] = true
+      return
+    end
 
     @accept_token = session[:accept_token] = SecureRandom.hex
     @invite_code  = invite_code
 
     set_locale { render :rules }
+  end
+
+  # Step 3: privacy key-points. Same pattern with an independent token
+  # so accepting one gate can't inadvertently pass the other. Sets a
+  # hidden `agreement: '1'` on the details form so Devise's built-in
+  # validator is satisfied downstream — the acceptance itself is
+  # recorded here, not on the details page.
+  def require_privacy_acceptance!
+    return if session[:privacy_accepted]
+
+    if session[:privacy_token].present? && params[:privacy_accepted] == session[:privacy_token]
+      session[:privacy_accepted] = true
+      return
+    end
+
+    @privacy_token = session[:privacy_token] = SecureRandom.hex
+    @invite_code   = invite_code
+
+    set_locale { render :privacy }
   end
 
   def is_flashing_format? # rubocop:disable Naming/PredicatePrefix
