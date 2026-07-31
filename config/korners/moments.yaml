@@ -85,9 +85,9 @@ listens: [] # broadcast surface, not reactive
 
 feed_projection:
   card: # not-applicable — Moments deliberately never post a feed card. A
-        # Moment lives only in the top-of-Home strip and the Moments korner
-        # (24h in the active section, then permanently in the korner log).
-        # It has no backing Status, so there is nothing to project.
+    # Moment lives only in the top-of-Home strip and the Moments korner
+    # (24h in the active section, then permanently in the korner log).
+    # It has no backing Status, so there is nothing to project.
   discriminator: # n/a
 
 notifications:
