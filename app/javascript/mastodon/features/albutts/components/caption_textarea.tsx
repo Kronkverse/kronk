@@ -13,39 +13,31 @@ import { Avatar } from 'mastodon/components/avatar';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 // A drop-in <textarea> replacement for Albutts photo captions that
-// autocompletes `@user` and `#tag` while typing — the same affordance
-// the main Mastodon composer offers, but with a self-contained local
-// state so multiple captions can be edited on one page without a
-// shared redux slice fighting over which token is "active".
+// autocompletes `@user` while typing — the same affordance the main
+// Mastodon composer offers, but with a self-contained local state so
+// multiple captions can be edited on one page without a shared redux
+// slice fighting over which token is "active".
 //
-// The fetch endpoints match what the compose slice already uses
-// (accounts search + v2 search restricted to hashtags), so hits share
-// the same server-side rate limits and cache. We intentionally do NOT
-// hit the compose emoji suggestion path — captions are text, and
-// pulling in that pipeline would drag in unrelated state.
+// Hashtag autocomplete is deliberately NOT wired up: we don't
+// encourage `#` in caption UX. The tagging architecture (server-side
+// extraction / indexing) can still exist behind the scenes without a
+// user-facing surface here.
 
-interface HashtagSuggestion {
-  name: string;
+interface Suggestion {
+  kind: 'account';
+  account: ApiAccountJSON;
 }
 
-type Suggestion =
-  | { kind: 'account'; account: ApiAccountJSON }
-  | { kind: 'tag'; tag: HashtagSuggestion };
-
-interface HashtagSearchResponse {
-  hashtags: HashtagSuggestion[];
-}
-
-const MIN_QUERY = 1; // one character after the `@` or `#` before we search
+const MIN_QUERY = 1; // one character after the `@` before we search
 
 // Find the token under the caret. Returns `[startIndex, token]` or
-// `[null, null]` when the caret is not inside an `@`/`#` word.
+// `[null, null]` when the caret is not inside an `@` word.
 const tokenAtCaret = (
   value: string,
   caret: number,
 ): [number | null, string | null] => {
   if (caret === 0) return [null, null];
-  const left = value.slice(0, caret).search(/[@#][^\s]*$/);
+  const left = value.slice(0, caret).search(/@[^\s]*$/);
   if (left < 0) return [null, null];
   const right = value.slice(caret).search(/\s/);
   const word = right < 0 ? value.slice(left) : value.slice(left, caret + right);
@@ -109,44 +101,23 @@ export const CaptionTextarea = forwardRef<
     setSelectedIndex(0);
   }, []);
 
-  // Debounced fetch — we don't need to rate-limit fetches locally on
-  // top of the server's throttle, but a small delay makes typing
-  // smoother by collapsing bursts.
+  // Fetch account suggestions for the token under the caret. Hits
+  // the same endpoint the main compose slice uses, so it shares the
+  // server's throttle and cache.
   const fetchForToken = useCallback(async (token: string, start: number) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
     try {
-      if (token.startsWith('#')) {
-        const data = await apiRequestGet<HashtagSearchResponse>('v2/search', {
-          q: token.slice(1),
-          type: 'hashtags',
-          resolve: false,
-          limit: 6,
-          exclude_unreviewed: true,
-        });
-        if (controller.signal.aborted) return;
-        setSuggestions(
-          data.hashtags.map((tag) => ({ kind: 'tag' as const, tag })),
-        );
-        setTokenStart(start);
-        setSelectedIndex(0);
-      } else {
-        const data = await apiRequestGet<ApiAccountJSON[]>(
-          'v1/accounts/search',
-          {
-            q: token.slice(1),
-            resolve: false,
-            limit: 6,
-          },
-        );
-        if (controller.signal.aborted) return;
-        setSuggestions(
-          data.map((account) => ({ kind: 'account' as const, account })),
-        );
-        setTokenStart(start);
-        setSelectedIndex(0);
-      }
+      const data = await apiRequestGet<ApiAccountJSON[]>('v1/accounts/search', {
+        q: token.slice(1),
+        resolve: false,
+        limit: 6,
+      });
+      if (controller.signal.aborted) return;
+      setSuggestions(data.map((account) => ({ kind: 'account', account })));
+      setTokenStart(start);
+      setSelectedIndex(0);
     } catch (err) {
       if ((err as { name?: string }).name !== 'CanceledError') {
         // Silent failure — a broken suggestion query shouldn't nuke
@@ -180,12 +151,7 @@ export const CaptionTextarea = forwardRef<
       const caret = textareaRef.current.selectionStart;
       const before = value.slice(0, tokenStart);
       const after = value.slice(caret);
-      let insertion: string;
-      if (suggestion.kind === 'account') {
-        insertion = `@${suggestion.account.acct}`;
-      } else {
-        insertion = `#${suggestion.tag.name}`;
-      }
+      const insertion = `@${suggestion.account.acct}`;
       const nextValue = `${before}${insertion} ${after}`;
       onChange(maxLength ? nextValue.slice(0, maxLength) : nextValue);
       closeSuggestions();
@@ -258,9 +224,7 @@ export const CaptionTextarea = forwardRef<
         <ul className='caption-textarea__suggestions' role='listbox'>
           {suggestions.map((s, i) => (
             <li
-              key={
-                s.kind === 'account' ? `a:${s.account.id}` : `t:${s.tag.name}`
-              }
+              key={`a:${s.account.id}`}
               className={`caption-textarea__suggestion${
                 i === selectedIndex
                   ? ' caption-textarea__suggestion--active'
@@ -274,21 +238,13 @@ export const CaptionTextarea = forwardRef<
                 applySuggestion(s);
               }}
             >
-              {s.kind === 'account' ? (
-                <>
-                  <Avatar
-                    account={createAccountFromServerJSON(s.account)}
-                    size={20}
-                  />
-                  <span className='caption-textarea__suggestion-label'>
-                    @{s.account.acct}
-                  </span>
-                </>
-              ) : (
-                <span className='caption-textarea__suggestion-label'>
-                  #{s.tag.name}
-                </span>
-              )}
+              <Avatar
+                account={createAccountFromServerJSON(s.account)}
+                size={20}
+              />
+              <span className='caption-textarea__suggestion-label'>
+                @{s.account.acct}
+              </span>
             </li>
           ))}
         </ul>

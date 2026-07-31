@@ -1,10 +1,9 @@
 // Albutts — shared-album korner. Slice 2 lands the working directory
 // + detail + composers; visual polish comes in a follow-up pass.
 
-// Caption inline link styling — hashtags + mentions embedded in a
-// photo caption. Rendered by `CaptionText`; reused in the detail tile
-// and the lightbox.
-.albutts-caption__tag,
+// Caption inline link styling — @-mentions embedded in a photo
+// caption. Rendered by `CaptionText`; reused in the detail tile and
+// the lightbox. Hashtags are intentionally NOT surfaced in captions.
 .albutts-caption__mention {
   color: var(--accent);
   text-decoration: none;
