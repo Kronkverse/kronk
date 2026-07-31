@@ -1,16 +1,73 @@
 // Albutts — shared-album korner. Slice 2 lands the working directory
 // + detail + composers; visual polish comes in a follow-up pass.
 
-// Caption inline link styling — hashtags + mentions embedded in a
-// photo caption. Rendered by `CaptionText`; reused in the detail tile
-// and the lightbox.
-.albutts-caption__tag,
+// Caption inline link styling — @-mentions embedded in a photo
+// caption. Rendered by `CaptionText`; reused in the detail tile and
+// the lightbox. Hashtags are intentionally NOT surfaced in captions.
 .albutts-caption__mention {
   color: var(--accent);
   text-decoration: none;
 
   &:hover {
     text-decoration: underline;
+  }
+}
+
+// Caption textarea wrapper — provides positioning context for the
+// autocomplete dropdown. Used everywhere Albutts asks for a caption:
+// both composers' per-photo rows and the lightbox inline edit.
+.caption-textarea {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+
+  > textarea {
+    width: 100%;
+  }
+
+  &__suggestions {
+    position: absolute;
+    left: 0;
+    right: 0;
+
+    // The suggestions drop DOWN below the textarea by default; the
+    // lightbox positions the textarea near the bottom of a dark
+    // overlay, and dropping down would clip. `bottom: 100%` puts the
+    // list above; a small negative margin so it hugs the input.
+    bottom: calc(100% + 4px);
+    z-index: 300;
+    max-height: 220px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    box-shadow: var(--elevation-menu);
+  }
+
+  &__suggestion {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: var(--radius-small);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover,
+    &--active {
+      background: color-mix(in oklab, var(--accent), transparent 82%);
+    }
+  }
+
+  &__suggestion-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 

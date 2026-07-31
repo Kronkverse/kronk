@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -6,6 +6,8 @@ import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate
 import api from 'mastodon/api';
 import { apiContributePhoto } from 'mastodon/api/albutts';
 import { Icon } from 'mastodon/components/icon';
+
+import { CaptionTextarea } from './caption_textarea';
 
 const messages = defineMessages({
   heading: {
@@ -142,17 +144,13 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
     ]);
   }, []);
 
-  const handleCaptionInput = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const key = e.currentTarget.dataset.key;
-      if (!key) return;
-      const value = e.currentTarget.value.slice(0, CAPTION_MAX);
-      setPhotos((prev) =>
-        prev.map((p) => (p.key === key ? { ...p, caption: value } : p)),
-      );
-    },
-    [],
-  );
+  const handleCaptionChange = useCallback((key: string, value: string) => {
+    setPhotos((prev) =>
+      prev.map((p) =>
+        p.key === key ? { ...p, caption: value.slice(0, CAPTION_MAX) } : p,
+      ),
+    );
+  }, []);
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -354,17 +352,14 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
                       {chipGlyph(p.status)}
                     </span>
                   </div>
-                  <textarea
-                    className='albutts-composer__pick-caption'
-                    data-key={p.key}
-                    value={p.caption}
-                    onChange={handleCaptionInput}
+                  <PickCaptionRow
+                    photoKey={p.key}
+                    caption={p.caption}
+                    disabled={pending || p.status === 'done'}
                     placeholder={intl.formatMessage(
                       messages.captionPlaceholder,
                     )}
-                    maxLength={CAPTION_MAX}
-                    rows={2}
-                    disabled={pending || p.status === 'done'}
+                    onChange={handleCaptionChange}
                   />
                 </li>
               ))}
@@ -447,6 +442,40 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
     </div>
   );
 };
+
+interface PickCaptionRowProps {
+  photoKey: string;
+  caption: string;
+  disabled: boolean;
+  placeholder: string;
+  onChange: (key: string, value: string) => void;
+}
+
+const PickCaptionRow = memo(function PickCaptionRow({
+  photoKey,
+  caption,
+  disabled,
+  placeholder,
+  onChange,
+}: PickCaptionRowProps) {
+  const handle = useCallback(
+    (value: string) => {
+      onChange(photoKey, value);
+    },
+    [onChange, photoKey],
+  );
+  return (
+    <CaptionTextarea
+      className='albutts-composer__pick-caption'
+      value={caption}
+      onChange={handle}
+      placeholder={placeholder}
+      maxLength={CAPTION_MAX}
+      rows={2}
+      disabled={disabled}
+    />
+  );
+});
 
 function chipGlyph(status: PhotoStatus): string {
   switch (status) {

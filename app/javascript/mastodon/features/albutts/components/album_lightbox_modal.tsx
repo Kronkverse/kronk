@@ -15,6 +15,8 @@ import { IconButton } from 'mastodon/components/icon_button';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { CaptionText } from './caption_text';
+import type { CaptionTextareaHandle } from './caption_textarea';
+import { CaptionTextarea } from './caption_textarea';
 import { PhotoReactionsPanel } from './photo_reactions_panel';
 
 const CAPTION_MAX = 500;
@@ -74,7 +76,7 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
   const [editing, setEditing] = useState(false);
   const [draftCaption, setDraftCaption] = useState('');
   const [savingCaption, setSavingCaption] = useState(false);
-  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const editTextareaRef = useRef<CaptionTextareaHandle>(null);
 
   useEffect(() => {
     if (editing) {
@@ -160,12 +162,9 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
     })();
   }, [current, draftCaption, handlePhotoUpdated, savingCaption]);
 
-  const handleDraftChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setDraftCaption(e.currentTarget.value.slice(0, CAPTION_MAX));
-    },
-    [],
-  );
+  const handleDraftChange = useCallback((value: string) => {
+    setDraftCaption(value.slice(0, CAPTION_MAX));
+  }, []);
 
   if (!current) return null;
 
@@ -217,7 +216,7 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
           )}
           {editing ? (
             <div className='albutts-lightbox__caption-edit'>
-              <textarea
+              <CaptionTextarea
                 ref={editTextareaRef}
                 className='albutts-lightbox__caption-textarea'
                 value={draftCaption}
