@@ -38,9 +38,14 @@ class Api::V1::InvitesController < Api::BaseController
       )
     end
 
+    # Pretty URL: `/@<username>/invite`. The classic `/invite/<code>`
+    # route still works (backward compat + non-personal invites), but
+    # the shareable URL we hand to the SPA is the pretty one so the
+    # invitee sees who invited them right in the address bar.
+    username = current_resource_owner.account.username
     render json: {
       code: invite.code,
-      url: "https://#{Rails.configuration.x.local_domain}/invite/#{invite.code}",
+      url: "https://#{Rails.configuration.x.local_domain}/@#{username}/invite",
     }
   end
 
