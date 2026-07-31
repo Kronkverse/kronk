@@ -20,6 +20,13 @@ class Answer < ApplicationRecord
   # the whole platform.
   VISIBILITY_SCOPES = %w(public orbit mates self_only).freeze
 
+  # The DB column still defaults to the legacy "connections" value that predates
+  # the public/orbit/mates/self_only vocabulary — which fails the inclusion
+  # validation below. Pin the Rails-level default to a valid scope ("mates", the
+  # rename of "connections") so an answer created without an explicit scope still
+  # saves; real answers set their scope per the responder's choice.
+  attribute :visibility_scope, :string, default: 'mates'
+
   validates :body, presence: true
   validates :account_id, uniqueness: { scope: :question_id }
   validates :visibility_scope, inclusion: { in: VISIBILITY_SCOPES }
