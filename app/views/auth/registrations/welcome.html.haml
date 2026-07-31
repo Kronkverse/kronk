@@ -5,22 +5,20 @@
   = render partial: 'shared/og', locals: { description: description_for_sign_up(@invite) }
 
 .simple_form.welcome-form
-  = render 'auth/shared/progress', stage: 'welcome'
+  = render 'auth/shared/progress', stage: 'welcome', rules_present: @rules.present?, invite_code: @invite_code
 
   %h1.title= t('auth.welcome.title')
   %p.lead= t('auth.welcome.preamble')
 
-  -# Bullets are plain block elements (not the rules-list <button>
-  -# affordance) — nothing to expand/collapse here, just three
-  -# paragraphs to read. Centred via .welcome-form scoping in SCSS.
-  .welcome-form__bullets
-    .welcome-form__bullet
+  -# Numbered three-point intro. Numbers rendered via CSS counter on `.welcome-form__bullets` (see forms.scss `.welcome-form` block) — a big serif digit sits above each bullet so the three ideas visually separate rather than reading as one paragraph.
+  %ol.welcome-form__bullets
+    %li.welcome-form__bullet
       %h2.welcome-form__bullet-title= t('auth.welcome.bullet_shape_title')
       %p.welcome-form__bullet-body= t('auth.welcome.bullet_shape_body')
-    .welcome-form__bullet
+    %li.welcome-form__bullet
       %h2.welcome-form__bullet-title= t('auth.welcome.bullet_shape_koc_title')
       %p.welcome-form__bullet-body= t('auth.welcome.bullet_shape_koc_body')
-    .welcome-form__bullet
+    %li.welcome-form__bullet
       %h2.welcome-form__bullet-title= t('auth.welcome.bullet_yours_title')
       %p.welcome-form__bullet-body= t('auth.welcome.bullet_yours_body')
 

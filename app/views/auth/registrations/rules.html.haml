@@ -5,7 +5,7 @@
   = render partial: 'shared/og', locals: { description: description_for_sign_up(@invite) }
 
 .simple_form
-  = render 'auth/shared/progress', stage: 'rules'
+  = render 'auth/shared/progress', stage: 'rules', rules_present: @rules.present?, invite_code: @invite_code
 
   - if @invite.present? && @invite.autofollow?
     %h1.title= t('auth.rules.title_invited')
@@ -27,8 +27,6 @@
   .stacked-actions
     - accept_path = @invite_code.present? ? public_invite_url(invite_code: @invite_code, accept: @accept_token) : new_user_registration_path(accept: @accept_token)
     = link_to t('auth.rules.accept'), accept_path, class: 'button'
-    -# Back → clears the sticky `welcome_seen` flag so
-    -# `require_welcome_seen!` re-renders the Welcome step. See
-    -# Auth::RegistrationsController#handle_rewind!.
+    -# Back → clears `welcome_seen` (via handle_rewind!) so Welcome re-renders.
     - back_path = @invite_code.present? ? public_invite_url(invite_code: @invite_code, rewind: 'welcome') : new_user_registration_path(rewind: 'welcome')
     = link_to t('auth.rules.back'), back_path, class: 'button button-tertiary'
