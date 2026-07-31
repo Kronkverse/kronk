@@ -1,27 +1,40 @@
-- progress_index = { rules: 0, details: 1, confirm: 2, confirmed: 3, completed: 4 }[stage.to_sym]
+-# Four-step signup: welcome → rules → privacy → details.
+-# `confirm` is kept as a stage alias for legacy templates (e.g.
+-# `auth/setup`) because email confirmation is no longer a ladder step —
+-# it happens as a persistent Kronk-system nudge post-signup
+-# (User#functional_or_moved? no longer requires confirmed?). `review`
+-# still shows at the tail when approved_registrations mode is on.
+
+- progress_index = { welcome: 0, rules: 1, privacy: 2, details: 3, confirm: 3, confirmed: 4, completed: 4 }[stage.to_sym]
 
 %ol.progress-tracker
   %li{ class: progress_index.positive? ? 'completed' : 'active' }
     .circle
       - if progress_index.positive?
         = check_icon
-    .label= t('auth.progress.rules')
+    .label= t('auth.progress.welcome')
   %li.separator{ class: progress_index.positive? ? 'completed' : nil }
   %li{ class: [progress_index > 1 && 'completed', progress_index == 1 && 'active'] }
     .circle
       - if progress_index > 1
         = check_icon
-    .label= t('auth.progress.details')
+    .label= t('auth.progress.rules')
   %li.separator{ class: progress_index > 1 ? 'completed' : nil }
   %li{ class: [progress_index > 2 && 'completed', progress_index == 2 && 'active'] }
     .circle
       - if progress_index > 2
         = check_icon
-    .label= t('auth.progress.confirm')
+    .label= t('auth.progress.privacy')
+  %li.separator{ class: progress_index > 2 ? 'completed' : nil }
+  %li{ class: [progress_index > 3 && 'completed', progress_index == 3 && 'active'] }
+    .circle
+      - if progress_index > 3
+        = check_icon
+    .label= t('auth.progress.details')
   - if approved_registrations?
-    %li.separator{ class: progress_index > 2 ? 'completed' : nil }
-    %li{ class: [progress_index > 3 && 'completed', progress_index == 3 && 'active'] }
+    %li.separator{ class: progress_index > 3 ? 'completed' : nil }
+    %li{ class: [progress_index > 4 && 'completed', progress_index == 4 && 'active'] }
       .circle
-        - if progress_index > 3
+        - if progress_index > 4
           = check_icon
       .label= t('auth.progress.review')
