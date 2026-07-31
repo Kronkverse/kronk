@@ -660,22 +660,22 @@
     font-weight: 600;
   }
 
-  &__thumbs {
+  // Picks — thumbnail + per-photo caption input, one row per pick.
+  // Replaces the flat 64px thumb grid so each photo can carry a
+  // description (surfaces in the lightbox + card on the detail page).
+  &__picks {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 8px 0 4px;
+    flex-direction: column;
+    gap: 8px;
+    margin: 10px 0 4px;
     padding: 0;
     list-style: none;
   }
 
-  &__thumb {
-    position: relative;
-    width: 64px;
-    height: 64px;
-    border-radius: 6px;
-    overflow: hidden;
-    background: color-mix(in oklab, var(--accent), transparent 88%);
+  &__pick {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
     transition: opacity 120ms ease-out;
 
     &--queued {
@@ -685,19 +685,60 @@
     &--uploading {
       opacity: 1;
 
-      .albutts-composer__thumb-img {
+      .albutts-composer__pick-img {
         filter: brightness(0.7);
       }
     }
 
-    &--done {
-      opacity: 1;
-    }
-
     &--failed {
-      .albutts-composer__thumb-img {
+      .albutts-composer__pick-img {
         filter: brightness(0.5);
       }
+    }
+  }
+
+  &__pick-thumb {
+    position: relative;
+    flex: 0 0 72px;
+    width: 72px;
+    height: 72px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: color-mix(in oklab, var(--accent), transparent 88%);
+  }
+
+  &__pick-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__pick-caption {
+    flex: 1;
+    min-height: 72px;
+    padding: 8px 10px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.4;
+    resize: vertical;
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
   }
 
@@ -731,13 +772,6 @@
     &--queued {
       display: none;
     }
-  }
-
-  &__thumb-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
   }
 
   &__clear {
