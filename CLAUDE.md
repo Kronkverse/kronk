@@ -96,6 +96,36 @@ export NODE_OPTIONS="--max-old-space-size=2048"
 
 (On the mainframe dev server this is already set in `/etc/profile.d/mainframe.sh`.)
 
+## CI lint — a required check (run all of it before pushing)
+
+The pre-commit hook only runs against **staged** files, and `--no-verify`
+skips it entirely — so lint drift reaches CI easily. On CI, **`lint` is a
+required status check on `rebuild/2.0.0`**: the merge queue will not merge a PR
+whose `lint` check is red. It is not one job but several, each of which can fail
+independently:
+
+- **`lint:js`** — ESLint, run with **`--max-warnings 0`** (so warnings fail the
+  build too, e.g. `import/order`, `import/no-duplicates`).
+- **`lint:css`** — Stylelint, including the Kronk custom rules (no raw hex —
+  use a `--kronk-*` / `--semantic-*` token or `color-mix()`; `border-radius`
+  must reference a `--radius-*` token; blank line before comments).
+- **`format:check`** — Prettier (`prettier --check`). A file that is otherwise
+  valid still fails here if it isn't Prettier-formatted.
+- Plus **Haml**, **Ruby (RuboCop)**, and **i18n** checks for their file types.
+
+Before pushing, run the ones that match your changes — not just ESLint:
+
+```bash
+yarn lint:js       # or: eslint <file> --max-warnings 0
+yarn lint:css      # or: stylelint <file>
+yarn format:check  # or: prettier --check <file>   (yarn format to auto-fix)
+```
+
+Prettier and Stylelint can disagree: a long trailing comment on a
+`--custom: var(...)` line makes Prettier wrap it, which then trips Stylelint's
+`custom-property-empty-line-before`. Put the comment on its own line above the
+property and re-run **both** — fixing one linter can trip the other.
+
 ## Korners Architecture
 
 Kronk organises features into **korners**, each declared via a manifest under `config/korners/*.yaml`. Every korner mounts under the `/hub/<slug>` prefix and shares a common visual identity — the Kronk-purple palette — with differentiation coming from icon, name, and content.
