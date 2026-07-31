@@ -210,9 +210,36 @@ code {
   // Welcome step — the first stop in the four-step signup. Centred
   // typography (title, preamble, bullets) so it reads like an
   // introduction card, not a form. Rules/Privacy/Details keep their
-  // left-aligned reading rhythm.
+  // left-aligned reading rhythm. A faded `Ӂ` sits behind the content
+  // as a watermark — Kronk's sigil, painted in ~8% Kronk-purple so
+  // the wording stays fully readable. Only on the Welcome step
+  // because it's the landing card; forms don't want visual noise
+  // behind them.
   &.welcome-form {
     text-align: center;
+    position: relative;
+    isolation: isolate;
+
+    &::before {
+      content: 'Ӂ';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: $font-display, serif;
+      font-size: min(60vh, 30rem);
+      font-weight: 900;
+      color: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 8%,
+        transparent
+      );
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+      z-index: -1;
+    }
 
     .title,
     .lead {
