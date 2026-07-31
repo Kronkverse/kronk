@@ -46,6 +46,15 @@ const messages = defineMessages({
     id: 'albutts.composer.photos_clear',
     defaultMessage: 'Clear',
   },
+  photosPick: {
+    id: 'albutts.composer.photos_pick',
+    defaultMessage: 'Choose photos or videos',
+  },
+  photosPickMore: {
+    id: 'albutts.composer.photos_pick_more',
+    defaultMessage:
+      '{count, plural, one {# selected · add more} other {# selected · add more}}',
+  },
   cancel: {
     id: 'albutts.composer.cancel',
     defaultMessage: 'Cancel',
@@ -398,6 +407,18 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           onChange={handlePhotosChange}
           disabled={pending}
         />
+        {!createdAlbum && (
+          <label
+            htmlFor='albutts-composer-photos'
+            className={`albutts-composer__file-picker${pending ? ' albutts-composer__file-picker--disabled' : ''}`}
+          >
+            {photos.length > 0
+              ? intl.formatMessage(messages.photosPickMore, {
+                  count: photos.length,
+                })
+              : intl.formatMessage(messages.photosPick)}
+          </label>
+        )}
         {photos.length > 0 && (
           <>
             <ul className='albutts-composer__thumbs'>
