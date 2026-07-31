@@ -87,26 +87,31 @@ RSpec.describe FeedManager do
         expect(subject.filter?(:home, reblog, bob)).to be true
       end
 
-      it 'returns false for reply by followee to another followee' do
+      # Kronk divergence from upstream: a reply is a comment on a post and
+      # lives in that post's comment section, never as its own entry in the
+      # home feed. So home filters ALL replies — including ones upstream would
+      # surface (reply by a followee to another followee, to you, or a
+      # self-reply/thread). See feed_manager.rb#filter_from_home.
+      it 'returns true for reply by followee to another followee' do
         status = Fabricate(:status, text: 'Hello world', account: jeff)
         reply  = Fabricate(:status, text: 'Nay', thread: status, account: alice)
         bob.follow!(alice)
         bob.follow!(jeff)
-        expect(subject.filter?(:home, reply, bob)).to be false
+        expect(subject.filter?(:home, reply, bob)).to be true
       end
 
-      it 'returns false for reply by followee to recipient' do
+      it 'returns true for reply by followee to recipient' do
         status = Fabricate(:status, text: 'Hello world', account: bob)
         reply  = Fabricate(:status, text: 'Nay', thread: status, account: alice)
         bob.follow!(alice)
-        expect(subject.filter?(:home, reply, bob)).to be false
+        expect(subject.filter?(:home, reply, bob)).to be true
       end
 
-      it 'returns false for reply by followee to self' do
+      it 'returns true for reply by followee to self' do
         status = Fabricate(:status, text: 'Hello world', account: alice)
         reply  = Fabricate(:status, text: 'Nay', thread: status, account: alice)
         bob.follow!(alice)
-        expect(subject.filter?(:home, reply, bob)).to be false
+        expect(subject.filter?(:home, reply, bob)).to be true
       end
 
       it 'returns true for reply by followee to non-followed account' do
