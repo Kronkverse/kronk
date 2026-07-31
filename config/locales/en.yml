@@ -1306,7 +1306,7 @@ en:
       cta_back: Back
     privacy:
       title: Your privacy — the short version.
-      preamble: Full policy is at %{privacy_policy_link}. The bits worth flagging up front:
+      preamble: "Full policy is at %{privacy_policy_link}. The bits worth flagging up front:"
       link_full: Read the full privacy policy
       point_store_title: What we store.
       point_store_body: Your username, email, password (hashed), posts, media, follows, and account settings. That's it.
