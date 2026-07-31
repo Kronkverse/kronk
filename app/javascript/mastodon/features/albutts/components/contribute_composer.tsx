@@ -16,6 +16,10 @@ const messages = defineMessages({
     id: 'albutts.contribute.photos_clear',
     defaultMessage: 'Clear',
   },
+  captionPlaceholder: {
+    id: 'albutts.contribute.caption_placeholder',
+    defaultMessage: 'Add a description (optional)',
+  },
   photosPick: {
     id: 'albutts.contribute.photos_pick',
     defaultMessage: 'Drag photos or videos here, or click to choose',
@@ -84,7 +88,10 @@ interface PhotoDraft {
   previewUrl: string;
   key: string;
   status: PhotoStatus;
+  caption: string;
 }
+
+const CAPTION_MAX = 500;
 
 // Post-album contribute modal — the "Add photos" affordance from the
 // detail page. Same parallel-pool + per-photo status pattern as
@@ -130,9 +137,22 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
         previewUrl: URL.createObjectURL(file),
         key: `${Date.now()}-${idx}-${file.name}`,
         status: 'queued' as PhotoStatus,
+        caption: '',
       })),
     ]);
   }, []);
+
+  const handleCaptionInput = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const key = e.currentTarget.dataset.key;
+      if (!key) return;
+      const value = e.currentTarget.value.slice(0, CAPTION_MAX);
+      setPhotos((prev) =>
+        prev.map((p) => (p.key === key ? { ...p, caption: value } : p)),
+      );
+    },
+    [],
+  );
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -186,7 +206,10 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
               '/api/v1/media',
               form,
             );
-            await apiContributePhoto(albumId, { media_id: media.data.id });
+            await apiContributePhoto(albumId, {
+              media_id: media.data.id,
+              caption: draft.caption.trim() || undefined,
+            });
             setPhotoStatus(draft.key, 'done');
           } catch (e) {
             console.error(
@@ -312,23 +335,37 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
 
         {photos.length > 0 && (
           <>
-            <ul className='albutts-composer__thumbs'>
+            <ul className='albutts-composer__picks'>
               {photos.map((p) => (
                 <li
                   key={p.key}
-                  className={`albutts-composer__thumb albutts-composer__thumb--${p.status}`}
+                  className={`albutts-composer__pick albutts-composer__pick--${p.status}`}
                 >
-                  <img
-                    className='albutts-composer__thumb-img'
-                    src={p.previewUrl}
-                    alt={p.file.name}
+                  <div className='albutts-composer__pick-thumb'>
+                    <img
+                      className='albutts-composer__pick-img'
+                      src={p.previewUrl}
+                      alt={p.caption || p.file.name}
+                    />
+                    <span
+                      className={`albutts-composer__chip albutts-composer__chip--${p.status}`}
+                      aria-hidden
+                    >
+                      {chipGlyph(p.status)}
+                    </span>
+                  </div>
+                  <textarea
+                    className='albutts-composer__pick-caption'
+                    data-key={p.key}
+                    value={p.caption}
+                    onChange={handleCaptionInput}
+                    placeholder={intl.formatMessage(
+                      messages.captionPlaceholder,
+                    )}
+                    maxLength={CAPTION_MAX}
+                    rows={2}
+                    disabled={pending || p.status === 'done'}
                   />
-                  <span
-                    className={`albutts-composer__chip albutts-composer__chip--${p.status}`}
-                    aria-hidden
-                  >
-                    {chipGlyph(p.status)}
-                  </span>
                 </li>
               ))}
             </ul>

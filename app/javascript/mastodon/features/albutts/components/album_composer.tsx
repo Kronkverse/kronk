@@ -39,6 +39,10 @@ const messages = defineMessages({
     id: 'albutts.composer.photos_clear',
     defaultMessage: 'Clear',
   },
+  captionPlaceholder: {
+    id: 'albutts.composer.caption_placeholder',
+    defaultMessage: 'Add a description (optional)',
+  },
   photosPick: {
     id: 'albutts.composer.photos_pick',
     defaultMessage: 'Drag photos or videos here, or click to choose',
@@ -131,7 +135,10 @@ interface PhotoDraft {
   previewUrl: string;
   key: string;
   status: PhotoStatus;
+  caption: string;
 }
+
+const CAPTION_MAX = 500;
 
 export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   onCancel,
@@ -195,9 +202,22 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         previewUrl: URL.createObjectURL(file),
         key: `${Date.now()}-${idx}-${file.name}`,
         status: 'queued' as PhotoStatus,
+        caption: '',
       })),
     ]);
   }, []);
+
+  const handleCaptionInput = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const key = e.currentTarget.dataset.key;
+      if (!key) return;
+      const value = e.currentTarget.value.slice(0, CAPTION_MAX);
+      setPhotos((prev) =>
+        prev.map((p) => (p.key === key ? { ...p, caption: value } : p)),
+      );
+    },
+    [],
+  );
 
   const handlePhotosChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -257,7 +277,10 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
               '/api/v1/media',
               form,
             );
-            await apiContributePhoto(albumId, { media_id: media.data.id });
+            await apiContributePhoto(albumId, {
+              media_id: media.data.id,
+              caption: draft.caption.trim() || undefined,
+            });
             setPhotoStatus(draft.key, 'done');
           } catch (e) {
             console.error(
@@ -454,24 +477,40 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         )}
         {photos.length > 0 && (
           <>
-            <ul className='albutts-composer__thumbs'>
+            <ul className='albutts-composer__picks'>
               {photos.map((p) => (
                 <li
                   key={p.key}
-                  className={`albutts-composer__thumb albutts-composer__thumb--${p.status}`}
-                  title={intl.formatMessage(chipMessage(p.status, messages))}
+                  className={`albutts-composer__pick albutts-composer__pick--${p.status}`}
                 >
-                  <img
-                    className='albutts-composer__thumb-img'
-                    src={p.previewUrl}
-                    alt={p.file.name}
-                  />
-                  <span
-                    className={`albutts-composer__chip albutts-composer__chip--${p.status}`}
-                    aria-hidden
+                  <div
+                    className='albutts-composer__pick-thumb'
+                    title={intl.formatMessage(chipMessage(p.status, messages))}
                   >
-                    {chipGlyph(p.status)}
-                  </span>
+                    <img
+                      className='albutts-composer__pick-img'
+                      src={p.previewUrl}
+                      alt={p.caption || p.file.name}
+                    />
+                    <span
+                      className={`albutts-composer__chip albutts-composer__chip--${p.status}`}
+                      aria-hidden
+                    >
+                      {chipGlyph(p.status)}
+                    </span>
+                  </div>
+                  <textarea
+                    className='albutts-composer__pick-caption'
+                    data-key={p.key}
+                    value={p.caption}
+                    onChange={handleCaptionInput}
+                    placeholder={intl.formatMessage(
+                      messages.captionPlaceholder,
+                    )}
+                    maxLength={CAPTION_MAX}
+                    rows={2}
+                    disabled={pending || p.status === 'done'}
+                  />
                 </li>
               ))}
             </ul>
