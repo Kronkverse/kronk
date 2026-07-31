@@ -235,8 +235,14 @@ class User < ApplicationRecord
     functional_or_moved? && account.moved_to_account_id.nil?
   end
 
+  # Email confirmation is no longer required to reach the SPA. A fresh
+  # signup lands straight in the app; a Kronk-system reminder nudges
+  # the user to confirm — indefinitely, weekly, until `confirmed_at` is
+  # set (see the reminder worker). The one gate that stays is
+  # `approved?` (admin-approved registrations mode) — that's an admin
+  # decision, not a self-service action.
   def functional_or_moved?
-    confirmed? && approved? && !disabled? && !account.unavailable? && !account.memorial?
+    approved? && !disabled? && !account.unavailable? && !account.memorial?
   end
 
   def unconfirmed_or_pending?
