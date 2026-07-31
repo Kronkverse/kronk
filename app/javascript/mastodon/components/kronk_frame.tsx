@@ -23,7 +23,15 @@ interface SlotProps {
 }
 
 const KronkFrameRoot = ({ children }: KronkFrameProps) => (
-  <div className='kronk-frame'>{children}</div>
+  <div className='kronk-frame'>
+    {/* The single L-shaped chrome: one fixed element that paints the top
+        rail + right rail + the corner between them as one continuous
+        surface. The TopBand / RightBand slots sit over it as transparent
+        positioning zones — so there is no second piece and no faked
+        corner (the old radial-over-fade overpaint is retired). */}
+    <div className='kronk-frame__chrome' aria-hidden='true' />
+    {children}
+  </div>
 );
 
 const TopBand = ({ children }: SlotProps) => (
