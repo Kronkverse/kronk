@@ -1367,6 +1367,25 @@ code {
     border-color: $highlight-text-color;
     background: $highlight-text-color;
   }
+
+  // Completed beads are anchors that rewind to their step. Use
+  // `display: contents` so the anchor doesn't disturb the existing
+  // circle + label positioning (label uses absolute positioning
+  // relative to its ancestor `<li>`, and a wrapping inline `<a>` box
+  // would shift the reference frame). Keeps the layout untouched;
+  // the anchor is purely for click-through + hover affordance.
+  .progress-tracker__bead {
+    display: contents;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  li:has(.progress-tracker__bead:hover) .label,
+  li:has(.progress-tracker__bead:focus-visible) .label {
+    color: $primary-text-color;
+    text-decoration: underline;
+  }
 }
 
 .app-form {
