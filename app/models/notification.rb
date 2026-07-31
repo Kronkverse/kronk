@@ -134,6 +134,16 @@ class Notification < ApplicationRecord
       filterable: true,
       legacy: true,
     }.freeze,
+    # Kronk-native self-notice. Fires post-signup and weekly thereafter
+    # while `confirmed_at IS NULL` — surfaces in the Kronk system pane
+    # of the Nudges messenger. Producer:
+    # DeliverEmailConfirmationReminderService (invoked from
+    # User#after_create + Scheduler::EmailConfirmationReminderScheduler).
+    # activity is the User itself.
+    email_confirmation_reminder: {
+      filterable: false,
+      legacy: false,
+    }.freeze,
   }.freeze
 
   LEGACY_TYPES = PROPERTIES.select { |_, props| props[:legacy] }.keys.freeze
