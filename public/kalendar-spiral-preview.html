@@ -185,14 +185,15 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #sheet.full .inflow{max-height:320px;opacity:1;margin-top:var(--sp-4)}
 .if-title{font-family:var(--font-mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;
   color:var(--k-flow);margin-bottom:12px}
-.if-grid{display:flex;flex-direction:column;gap:14px}
-.if-row{display:flex;gap:var(--sp-3);align-items:flex-start}
+.if-grid{display:flex;flex-direction:column;gap:12px}
+.if-row{display:flex;gap:var(--sp-3);align-items:center}
 .if-ico{flex:0 0 30px;width:30px;height:30px;display:grid;place-items:center;
   border-radius:50%;border:1px solid var(--border-subtle);background:var(--surface-sunken);font-size:15px}
 .if-moon{padding:3px}
 .if-sun{color:var(--vis-everyone);border-color:color-mix(in srgb,var(--vis-everyone) 40%,transparent)}
-.if-sign{color:var(--k-flow);font-size:16px}
+.if-sign{flex:0 0 auto;color:var(--k-flow);font-size:22px;line-height:1;width:24px;text-align:center}
 .if-head{font-size:var(--fs-sm);color:var(--text-primary);line-height:1.4}
+.if-station{opacity:.85}
 .if-sub{font-size:var(--fs-xs);color:var(--text-muted);font-family:var(--font-mono);
   margin-top:3px;line-height:1.6}
 .filters{display:flex;gap:6px;flex-wrap:wrap;margin-top:var(--sp-4)}
@@ -200,9 +201,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   border:1px solid var(--border-subtle);color:var(--text-muted);transition:all var(--dur-fast)}
 .chip .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
 .chip[aria-pressed=true]{border-color:var(--border-strong);color:var(--c);background:rgba(114,65,255,.10)}
-.newbtn{margin-left:auto;height:30px;padding:0 12px;border-radius:999px;background:var(--accent);
-  color:#fff;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
-.newbtn:hover{background:var(--purple-bright)}
 .sheet-list{flex:1 1 auto;overflow-y:auto;padding:0 var(--sp-5) var(--sp-5);
   display:flex;flex-direction:column;gap:var(--sp-3);min-height:0}
 .sheet-empty{color:var(--text-muted);font-size:var(--fs-sm);padding:var(--sp-5);text-align:center;
@@ -354,15 +352,16 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
       <div class="if-grid">
         <div class="if-row">
           <span class="if-ico if-moon" id="ifMoonIco"></span>
-          <div><div class="if-head" id="ifMoonHead">—</div><div class="if-sub" id="ifMoonSub">—</div></div>
+          <span class="if-sign" id="ifMoonSign">—</span>
+          <div class="if-head" id="ifMoonHead">—</div>
         </div>
         <div class="if-row">
           <span class="if-ico if-sun">☉</span>
-          <div><div class="if-head" id="ifSunHead">—</div><div class="if-sub" id="ifSunSub">—</div></div>
+          <span class="if-sign" id="ifSunSign">—</span>
+          <div class="if-head" id="ifSunHead">—</div>
         </div>
-        <div class="if-row">
-          <span class="if-ico if-sign" id="ifSignIco">—</span>
-          <div><div class="if-head" id="ifSignHead">—</div><div class="if-sub" id="ifSignSub">—</div></div>
+        <div class="if-row if-station" id="ifStationRow">
+          <div class="if-sub" id="ifStationSub"></div>
         </div>
       </div>
     </div>
@@ -373,7 +372,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
       <button class="chip" aria-pressed="true" data-f="group"    style="--c:var(--k-govern)"><i class="dot"></i>Groups</button>
       <button class="chip" aria-pressed="true" data-f="self"     style="--c:var(--k-self)"><i class="dot"></i>Orbits</button>
       <button class="chip" aria-pressed="true" data-f="flow"     style="--c:var(--k-flow)"><i class="dot"></i>In&nbsp;Flow</button>
-      <button class="newbtn">＋ New</button>
     </div>
   </div>
   <div class="sheet-list" id="sList"></div>
@@ -547,6 +545,19 @@ function nextIngress(date){
     if(s2.s !== cur) return { sign:s2, date:d2, days:i };
   }
   return null;
+}
+/* Which zodiac sign the Moon is in — approximated from its mean tropical
+   longitude (deterministic, in keeping with the almanac's approach; the
+   real build reads In Flow). Good to a sign except right at cusps. */
+const ZODIAC = [
+  {s:'Aries',g:'♈'},{s:'Taurus',g:'♉'},{s:'Gemini',g:'♊'},{s:'Cancer',g:'♋'},
+  {s:'Leo',g:'♌'},{s:'Virgo',g:'♍'},{s:'Libra',g:'♎'},{s:'Scorpio',g:'♏'},
+  {s:'Sagittarius',g:'♐'},{s:'Capricorn',g:'♑'},{s:'Aquarius',g:'♒'},{s:'Pisces',g:'♓'},
+];
+function moonSign(date){
+  const D = (date.getTime() - Date.UTC(2000,0,1,12,0,0)) / DAY;
+  let L = (218.316 + 13.176396 * D) % 360; if(L < 0) L += 360;
+  return ZODIAC[Math.floor(L / 30)];
 }
 const fmtDate = d => d.toLocaleDateString('en',{weekday:'short',day:'numeric',month:'short'});
 const plural = (n,w) => `${n} ${w}${n===1?'':'s'}`;
@@ -877,49 +888,26 @@ function renderSheet(n){
   evs.forEach(e => list.appendChild(kard(e)));
 }
 function renderInFlow(dt){
-  /* ── Moon ── */
+  /* Moon — its current shape + the sign it's in. */
   document.getElementById('ifMoonIco').innerHTML = moonSVG(24, phase(dt));
-  const ill = Math.round(illum(dt)*100);
-  const waxing = phase(dt) < 0.5;
-  document.getElementById('ifMoonHead').textContent = `${moonName(dt)} · ${ill}% lit`;
-  const toFull = daysToPhase(dt, 0.5), toNew = daysToPhase(dt, 0);
-  const near = Math.min(toFull, toNew);
-  let moonSub;
-  if(near < 0.75){
-    moonSub = principal(dt) ? 'At its turn tonight.' : 'On the turn.';
-  } else if(waxing){
-    const dFull = dayFrom(dayDiff(dt, today) + Math.round(toFull));
-    moonSub = `Waxing — full moon in ${plural(Math.round(toFull),'day')}, ${fmtDate(dFull)}.`;
-  } else {
-    const dNew = dayFrom(dayDiff(dt, today) + Math.round(toNew));
-    moonSub = `Waning — new moon in ${plural(Math.round(toNew),'day')}, ${fmtDate(dNew)}.`;
-  }
-  document.getElementById('ifMoonSub').textContent = moonSub;
+  const msign = moonSign(dt);
+  document.getElementById('ifMoonSign').textContent = msign.g;
+  document.getElementById('ifMoonHead').textContent = `${moonName(dt)} · Moon in ${msign.s}`;
 
-  /* ── Sun & season ── */
-  const seas = season(dt);
-  const hemi = state.hemisphere === 'south' ? 'southern' : 'northern';
+  /* Sun — its symbol + the sign it's in. */
+  const ssign = sunSign(dt);
+  const hemi = state.hemisphere === 'south' ? 'Southern' : 'Northern';
+  document.getElementById('ifSunSign').textContent = ssign.g;
+  document.getElementById('ifSunHead').textContent = `Sun in ${ssign.s} · ${hemi} ${season(dt)}`;
+
+  /* Stations (equinox / solstice / cross-quarter) have no glyph — a short
+     one-line note, shown only when one is upon us or close ahead. */
   const st = stationsAround(dt);
-  document.getElementById('ifSunHead').textContent =
-    `${hemi.charAt(0).toUpperCase()+hemi.slice(1)} ${seas}`;
-  let sunSub;
-  if(st.today && st.today.kind === 'station'){
-    sunSub = `${st.today.name} — today. The year pivots here.`;
-  } else if(st.nextSt){
-    const dToNext = dayDiff(st.nextSt.date, dt);
-    const dSincePrev = st.prevSt ? dayDiff(dt, st.prevSt.date) : null;
-    sunSub = `${st.nextSt.name} in ${plural(dToNext,'day')}` +
-      (dSincePrev != null ? ` · ${st.prevSt.name} was ${plural(dSincePrev,'day')} back.` : '.');
-  } else sunSub = '';
-  document.getElementById('ifSunSub').textContent = sunSub;
-
-  /* ── Sun sign ── */
-  const sign = sunSign(dt), ing = nextIngress(dt);
-  document.getElementById('ifSignIco').textContent = sign.g;
-  document.getElementById('ifSignHead').textContent = `Sun in ${sign.s}`;
-  document.getElementById('ifSignSub').textContent = ing
-    ? `Enters ${ing.sign.s} ${ing.sign.g} in ${plural(ing.days,'day')}, ${fmtDate(ing.date)}.`
-    : '';
+  let note = '';
+  if(st.today && st.today.kind === 'station') note = `${st.today.name} — today. The year pivots here.`;
+  else if(st.nextSt) note = `${st.nextSt.name} in ${plural(dayDiff(st.nextSt.date, dt),'day')}.`;
+  document.getElementById('ifStationSub').textContent = note;
+  document.getElementById('ifStationRow').style.display = note ? '' : 'none';
 }
 function stackHTML(e){
   const k = Math.min(4, Math.max(1, e.going));
