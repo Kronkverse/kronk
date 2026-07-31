@@ -224,7 +224,7 @@ end
 
 gem 'cocoon', '~> 1.2'
 gem 'concurrent-ruby', require: false
-gem 'connection_pool', require: false
+gem 'connection_pool', '~> 2.5', require: false
 gem 'xorcist', '~> 1.1'
 
 gem 'net-http', '~> 0.6.0'
