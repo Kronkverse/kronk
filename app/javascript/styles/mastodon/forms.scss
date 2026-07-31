@@ -207,6 +207,51 @@ code {
     margin-bottom: 30px;
   }
 
+  // Welcome step — the first stop in the four-step signup. Centred
+  // typography (title, preamble, bullets) so it reads like an
+  // introduction card, not a form. Rules/Privacy/Details keep their
+  // left-aligned reading rhythm.
+  &.welcome-form {
+    text-align: center;
+
+    .title,
+    .lead {
+      text-align: center;
+    }
+
+    .welcome-form__bullets {
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+      margin: 0 auto 2rem;
+      max-width: 36rem;
+    }
+
+    .welcome-form__bullet {
+      text-align: center;
+    }
+
+    .welcome-form__bullet-title {
+      margin: 0 0 0.35rem;
+      font-family: $font-display, sans-serif;
+      font-size: 1.05rem;
+      line-height: 1.35;
+      color: $primary-text-color;
+      font-weight: 600;
+    }
+
+    .welcome-form__bullet-body {
+      margin: 0;
+      color: $secondary-text-color;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .stacked-actions {
+      align-items: center;
+    }
+  }
+
   .hint {
     color: $darker-text-color;
 
