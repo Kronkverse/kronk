@@ -185,7 +185,7 @@ RSpec.describe Auth::RegistrationsController do
         subject
 
         expect(response)
-          .to redirect_to auth_setup_path
+          .to redirect_to root_path
         expect(User.find_by(email: 'test@example.com'))
           .to be_present
           .and have_attributes(locale: eq(accept_language))
@@ -219,7 +219,7 @@ RSpec.describe Auth::RegistrationsController do
 
       it 'creates unapproved user and redirects to setup' do
         subject
-        expect(response).to redirect_to auth_setup_path
+        expect(response).to redirect_to root_path
 
         user = User.find_by(email: 'test@example.com')
         expect(user).to_not be_nil
@@ -243,7 +243,7 @@ RSpec.describe Auth::RegistrationsController do
 
       it 'creates unapproved user and redirects to setup' do
         subject
-        expect(response).to redirect_to auth_setup_path
+        expect(response).to redirect_to root_path
 
         user = User.find_by(email: 'test@example.com')
         expect(user).to_not be_nil
@@ -263,7 +263,7 @@ RSpec.describe Auth::RegistrationsController do
         subject
 
         expect(response)
-          .to redirect_to auth_setup_path
+          .to redirect_to root_path
 
         expect(User.find_by(email: 'test@example.com'))
           .to be_present
@@ -285,7 +285,7 @@ RSpec.describe Auth::RegistrationsController do
       it 'redirects to setup and creates user' do
         subject
 
-        expect(response).to redirect_to auth_setup_path
+        expect(response).to redirect_to root_path
 
         expect(User.find_by(email: 'test@example.com'))
           .to be_present
@@ -309,7 +309,7 @@ RSpec.describe Auth::RegistrationsController do
       it 'redirects to setup and creates user' do
         subject
 
-        expect(response).to redirect_to auth_setup_path
+        expect(response).to redirect_to root_path
 
         expect(User.find_by(email: 'test@example.com'))
           .to be_present

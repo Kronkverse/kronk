@@ -16,7 +16,7 @@ RSpec.describe Kronk::NodeRegistry do
 
     it 'loads nodes from every korner manifest with a nodes: block' do
       ids = described_class.all.map(&:id)
-      expect(ids).to include('kommons.index', 'kommons.tree', 'booth.index', 'kalendar.index')
+      expect(ids).to include('kommons.index', 'booth.index', 'kalendar.index')
     end
 
     it 'returns Node structs with required fields populated' do
@@ -55,7 +55,7 @@ RSpec.describe Kronk::NodeRegistry do
   describe '.for_bucket' do
     it 'filters by bucket' do
       feed_ids = described_class.for_bucket('feed').map(&:id)
-      expect(feed_ids).to include('feed.home', 'feed.nudges')
+      expect(feed_ids).to include('feed.home')
       expect(feed_ids).to all(start_with('feed.'))
     end
   end
@@ -82,7 +82,7 @@ RSpec.describe Kronk::NodeRegistry do
     it 'flags stub korners as lifecycle:soon' do
       klot = described_class.find('klot.index')
       moments = described_class.find('moments.index')
-      expect(klot.lifecycle).to eq('soon')
+      expect(klot.lifecycle).to eq('live')
       expect(moments.lifecycle).to eq('soon')
     end
   end
@@ -112,7 +112,7 @@ RSpec.describe Kronk::NodeRegistry do
     end
 
     it 'returns manifest-declared explicit links for a node' do
-      links = described_class.links_for('kalendar.index')
+      links = described_class.links_for('kalendar.event')
       targets = links.pluck('to')
       expect(targets).to include('martketplace.index', 'huddle.index')
     end

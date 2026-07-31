@@ -7,9 +7,13 @@ RSpec.describe Kronk::Tokens do
   let(:author)  { Fabricate(:account) }
   let(:proposal) { Fabricate(:proposal, created_by_account: author, status: :open) }
 
-  # Accounts are created with a starting balance by the after_create hook,
-  # so set balances explicitly rather than assuming the grant.
+  # Accounts are created with a starting balance by the after_create hook, so
+  # setting a balance means reconciling the ledger, not just poking the number:
+  # clear any existing transactions and lay down a single grant for the target
+  # amount, so `reconciles?` holds and later grants don't stack on the seed.
   def set_balance(account, amount)
+    TokenTransaction.where(account_id: account.id).delete_all
+    TokenTransaction.create!(account: account, kind: :grant, amount: amount) if amount.positive?
     TokenBalance.for(account).update!(balance: amount)
   end
 

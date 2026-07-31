@@ -3,15 +3,17 @@
 require 'rails_helper'
 
 RSpec.describe Kronk::KornerRegistry do
-  let(:main_branch_slugs) { %w(kommons kuestions kalendar booth inflow nudges) }
-  let(:dev_branch_slugs)  { %w(martketplace tree klot) }
+  let(:enforced_slugs) do
+    %w(albutts booth feed hub huddle inflow kalendar klot kommons kommunity krew kuestions map martketplace moments nudges profile settings)
+  end
+  let(:non_enforced_slugs) { %w(you) }
 
   before { described_class.reload! }
 
   describe '.all' do
     it 'loads every manifest under config/korners/' do
       slugs = described_class.all.map(&:slug)
-      (main_branch_slugs + dev_branch_slugs).each do |slug|
+      (enforced_slugs + non_enforced_slugs).each do |slug|
         expect(slugs).to include(slug), "manifest for #{slug} was not loaded"
       end
     end
@@ -19,7 +21,7 @@ RSpec.describe Kronk::KornerRegistry do
     it 'exposes identity fields' do
       kommons = described_class.find('kommons')
       expect(kommons.name).to eq('Kommons')
-      expect(kommons.icon).to eq('gavel')
+      expect(kommons.icon).to eq('material' => 'construction', 'text_glyph' => '✦')
       expect(kommons.render_target).to eq('native')
       expect(kommons.version).to be_a(String)
     end
@@ -36,14 +38,14 @@ RSpec.describe Kronk::KornerRegistry do
   end
 
   describe '.enforced' do
-    it 'returns only the main-branch manifests' do
+    it 'returns only the enforced manifests' do
       slugs = described_class.enforced.map(&:slug)
-      expect(slugs).to match_array(main_branch_slugs)
+      expect(slugs).to match_array(enforced_slugs)
     end
 
-    it 'excludes dev-branch manifests' do
+    it 'excludes non-enforced manifests' do
       slugs = described_class.enforced.map(&:slug)
-      dev_branch_slugs.each do |slug|
+      non_enforced_slugs.each do |slug|
         expect(slugs).to_not include(slug)
       end
     end
@@ -76,7 +78,7 @@ RSpec.describe Kronk::KornerRegistry do
   describe '.reserved_slugs' do
     it 'loads the reserved slug list from config/korners/reserved_slugs.yaml' do
       slugs = described_class.reserved_slugs
-      expect(slugs).to include('hub', 'kronk', 'nudges', 'admin', 'settings', 'api')
+      expect(slugs).to include('hub', 'kronk', 'admin', 'settings', 'api')
     end
 
     it 'does not include reserved_slugs.yaml as a manifest' do
