@@ -24,6 +24,7 @@ import {
   basemapLayers,
   ensurePmtilesProtocol,
 } from './basemap';
+import { PeopleStrip } from './people_strip';
 
 // Map — Mates lens. A native MapLibre GL map rendering opt-in, coarsened
 // presence pins (docs/spaces/map.md). The basemap is the self-hosted OSM
@@ -249,48 +250,62 @@ export const MatesView: React.FC = () => {
     place('city');
   }, [place]);
 
+  // Centre the map on a person tapped in the people strip.
+  const handleSelectPin = useCallback((pin: ApiPresencePinJSON) => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.flyTo({
+      center: [pin.lng, pin.lat],
+      zoom: Math.max(map.getZoom(), 9),
+      duration: 900,
+    });
+  }, []);
+
   return (
     <div className='map-mates'>
-      <div ref={containerRef} className='map-mates__canvas' />
+      <PeopleStrip pins={pins} selfPin={selfPin} onSelect={handleSelectPin} />
+      <div className='map-mates__stage'>
+        <div ref={containerRef} className='map-mates__canvas' />
 
-      <div className='map-mates__panel'>
-        {locating && (
-          <span className='map-mates__status'>
-            <LoadingIndicator />
-            <FormattedMessage {...messages.locating} />
-          </span>
-        )}
-        {error && <span className='map-mates__error'>{error}</span>}
-
-        {selfPin ? (
-          <>
-            <Button secondary onClick={startPlacing}>
-              {intl.formatMessage(messages.updateMe)}
-            </Button>
-            <Button className='button--destructive' onClick={remove}>
-              {intl.formatMessage(messages.removeMe)}
-            </Button>
-          </>
-        ) : placing ? (
-          <>
-            <span className='map-mates__prompt'>
-              <FormattedMessage
-                id='map.pick_precision'
-                defaultMessage='Show me at:'
-              />
+        <div className='map-mates__panel'>
+          {locating && (
+            <span className='map-mates__status'>
+              <LoadingIndicator />
+              <FormattedMessage {...messages.locating} />
             </span>
-            <Button secondary onClick={placeHood}>
-              {intl.formatMessage(messages.hood)}
+          )}
+          {error && <span className='map-mates__error'>{error}</span>}
+
+          {selfPin ? (
+            <>
+              <Button secondary onClick={startPlacing}>
+                {intl.formatMessage(messages.updateMe)}
+              </Button>
+              <Button className='button--destructive' onClick={remove}>
+                {intl.formatMessage(messages.removeMe)}
+              </Button>
+            </>
+          ) : placing ? (
+            <>
+              <span className='map-mates__prompt'>
+                <FormattedMessage
+                  id='map.pick_precision'
+                  defaultMessage='Show me at:'
+                />
+              </span>
+              <Button secondary onClick={placeHood}>
+                {intl.formatMessage(messages.hood)}
+              </Button>
+              <Button secondary onClick={placeCity}>
+                {intl.formatMessage(messages.city)}
+              </Button>
+            </>
+          ) : (
+            <Button onClick={startPlacing}>
+              {intl.formatMessage(messages.placeMe)}
             </Button>
-            <Button secondary onClick={placeCity}>
-              {intl.formatMessage(messages.city)}
-            </Button>
-          </>
-        ) : (
-          <Button onClick={startPlacing}>
-            {intl.formatMessage(messages.placeMe)}
-          </Button>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

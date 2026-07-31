@@ -5,16 +5,32 @@
 .map-mates {
   position: relative;
   display: flex;
-  flex-direction: column;
+
+  // Desktop: people rail on the left, map stage on the right. Phone flips to a
+  // column (strip across the top) below.
+  flex-direction: row;
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
+  gap: 12px;
 
   // A small buffer so the map sits inside the Stage rather than butting against
   // the browser edge. Dropped to full-bleed on phones below.
   padding: 12px;
 
-  // The canvas fills the height as an in-flow flex child. It must NOT use
+  // Holds the canvas + the overlaid controls panel, and is the positioning
+  // context for that (absolute) panel — so the panel sits over the map, not
+  // over the people rail.
+  &__stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  // The canvas fills the stage height as an in-flow flex child. It must NOT use
   // absolute positioning: MapLibre adds its own `.maplibregl-map` class to
   // this element, and maplibre-gl.css sets `.maplibregl-map { position:
   // relative }`, which overrides `position: absolute` — leaving `inset: 0`
@@ -30,8 +46,10 @@
     overflow: hidden;
   }
 
-  // Phone: full-bleed fit — no buffer or frame, the map fills the viewport.
+  // Phone: strip across the top, full-bleed map below — no buffer or frame.
   @media (width <= 629px) {
+    flex-direction: column;
+    gap: 0;
     padding: 0;
 
     .map-mates__canvas {
@@ -72,6 +90,110 @@
 
   &__error {
     color: var(--error-text, #e0698a);
+  }
+}
+
+// People strip — a face per pin on the map; tapping one centres the map on
+// that person. A vertical rail on desktop (left of the map), a horizontal band
+// across the top on phone. Mirrors the Moments home strip.
+.map-people {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 76px;
+
+  &__scroller {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 2px;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    // Hide scrollbars (matches the Moments strip).
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &__person {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    transition: transform var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      transform: translateY(-2px);
+      outline: none;
+    }
+  }
+
+  &__avatar {
+    width: 52px;
+    height: 52px;
+    padding: 2px;
+    border-radius: 50%;
+    background: linear-gradient(
+      135deg,
+      var(--kronk-purple-bright),
+      var(--kronk-purple-accent)
+    );
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--surface-elevated);
+    }
+  }
+
+  // The viewer's own tile gets a brighter ring so it reads as "you".
+  &__person--self &__avatar {
+    background: linear-gradient(135deg, #fff, var(--kronk-purple-bright));
+  }
+
+  &__label {
+    width: 100%;
+    max-width: 100%;
+    font-size: 10px;
+    text-align: center;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // Phone: horizontal band across the top of the map.
+  @media (width <= 629px) {
+    flex-direction: row;
+    width: 100%;
+
+    .map-people__scroller {
+      flex-direction: row;
+      padding: 10px 12px;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    .map-people__person {
+      width: auto;
+      max-width: 68px;
+    }
   }
 }
 

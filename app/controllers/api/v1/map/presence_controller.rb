@@ -66,6 +66,9 @@ class Api::V1::Map::PresenceController < Api::BaseController
       account_id: account.id.to_s,
       name: account.display_name.presence || account.username,
       handle: account.acct,
+      # Avatar is public (it's shown on the profile these mates already see); the
+      # people strip needs it to render a face per pin. Mirrors AccountSerializer.
+      avatar: full_asset_url(account.avatar_static_url),
       lat: state.lat,
       lng: state.lng,
       precision: state.precision,
