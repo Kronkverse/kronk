@@ -11,6 +11,7 @@ export interface ApiPresencePinJSON {
   account_id: string;
   name: string;
   handle: string;
+  avatar: string; // static avatar URL — drawn in the people strip
   lat: number;
   lng: number;
   precision: MapPrecision;
