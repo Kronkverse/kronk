@@ -1296,11 +1296,11 @@ en:
     welcome:
       title: Welcome Home.
       preamble: Real connection, no shit. A digital sphere of integrity.
-      bullet_shape_title: Korners, not columns.
-      bullet_shape_body: Your community online, not your online community. Small spaces to keep connecting when you're apart — for connection, not entertainment.
-      bullet_shape_koc_title: Shaped by the people in it.
-      bullet_shape_koc_body: Collectively owned, community built. Propose a korner via Kommons — the ones the community backs ship.
-      bullet_yours_title: Yours to leave.
+      bullet_shape_title: Your community online, not your online community.
+      bullet_shape_body: Small spaces to keep connecting when you're apart — for connection, not entertainment.
+      bullet_shape_koc_title: Collectively owned. Community built. Individually responsible.
+      bullet_shape_koc_body: Propose a korner via Kommons — the ones the community backs ship.
+      bullet_yours_title: Towards digital sovereignty.
       bullet_yours_body: The art of your self-expression belongs to you. Archive it or delete your account any time — walk away clean.
       cta_next: Sounds good →
       cta_back: Back
