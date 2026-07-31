@@ -5,7 +5,7 @@
   = render partial: 'shared/og', locals: { description: description_for_sign_up(@invite) }
 
 .simple_form
-  = render 'auth/shared/progress', stage: 'privacy'
+  = render 'auth/shared/progress', stage: 'privacy', rules_present: @rules.present?, invite_code: @invite_code
 
   %h1.title= t('auth.privacy.title')
   %p.lead= t('auth.privacy.preamble', privacy_policy_link: link_to(t('auth.privacy.link_full'), privacy_policy_path, target: '_blank', rel: 'noopener')).html_safe
@@ -31,10 +31,7 @@
   .stacked-actions
     - next_path = @invite_code.present? ? public_invite_url(invite_code: @invite_code, privacy_accepted: @privacy_token) : new_user_registration_path(privacy_accepted: @privacy_token)
     = link_to t('auth.privacy.cta_next'), next_path, class: 'button'
-    -# Back → the previous step. Usually rules, but if the instance
-    -# has no Rule rows the rules step is skipped entirely and Back
-    -# jumps straight to Welcome — otherwise `?rewind=rules` is a
-    -# no-op (nothing to clear) and the user stays on Privacy.
+    -# Back → previous step. If the instance has no Rule rows, the rules step is skipped and Back jumps straight to Welcome.
     - previous_step = @rules.empty? ? 'welcome' : 'rules'
     - back_path = @invite_code.present? ? public_invite_url(invite_code: @invite_code, rewind: previous_step) : new_user_registration_path(rewind: previous_step)
     = link_to t('auth.privacy.cta_back'), back_path, class: 'button button-tertiary'

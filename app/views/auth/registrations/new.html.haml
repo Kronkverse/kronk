@@ -5,7 +5,7 @@
   = render partial: 'shared/og', locals: { description: description_for_sign_up(@invite) }
 
 = simple_form_for(resource, as: resource_name, url: registration_path(resource_name), html: { novalidate: false }) do |f|
-  = render 'auth/shared/progress', stage: 'details'
+  = render 'auth/shared/progress', stage: 'details', rules_present: @rules.present?, invite_code: @invite&.code
 
   %h1.title= t('auth.sign_up.title', domain: site_hostname)
   %p.lead= t('auth.sign_up.preamble')
@@ -78,19 +78,13 @@
   = hidden_field_tag :privacy_accepted, params[:privacy_accepted]
   = f.input :invite_code, as: :hidden
 
-  -# Agreement was captured on the /auth privacy step (its own page in
-  -# the four-step signup), not as a checkbox here. Passed to the
-  -# backend as a hidden `agreement: '1'` so Devise's validator is
-  -# satisfied — the acceptance itself was recorded when the user hit
-  -# Continue on the privacy step.
+  -# Agreement was captured on the /auth privacy step, not as a checkbox here. Passed as a hidden `agreement: '1'` so Devise's validator is satisfied.
   = f.input :agreement, as: :hidden, input_html: { value: '1' }
 
   .actions
     = f.button :button, @invite.present? ? t('auth.register') : sign_up_message, type: :submit
 
-  -# Back → clears the sticky `privacy_accepted` flag so the privacy
-  -# step re-renders. Uses the same `handle_rewind!` gate the other
-  -# steps' Back buttons hit.
+  -# Back → clears the sticky `privacy_accepted` flag so the privacy step re-renders. Uses `handle_rewind!` (see controller).
   - back_path = @invite.present? ? public_invite_url(invite_code: @invite.code, rewind: 'privacy') : new_user_registration_path(rewind: 'privacy')
   .stacked-actions
     = link_to t('auth.rules.back'), back_path, class: 'button button-tertiary'
