@@ -13,7 +13,9 @@
   --kc-text: var(--text-primary, #ece9f5);
   --kc-dim: var(--text-secondary-color, #9a95c4);
   --kc-faint: var(--text-tertiary-color, #6f6a95);
-  --kc-accent: var(--accent, #4414cc); // Kronk purple-accent as fallback (hue 285°), not the legacy Mastodon indigo #8c8dff
+
+  // Kronk purple-accent as fallback (hue 285°), not the legacy Mastodon indigo #8c8dff
+  --kc-accent: var(--accent, #4414cc);
   --kc-serif: var(--font-display, 'Liberation Serif', Georgia, serif);
 
   // Positive stacking above the starfield.

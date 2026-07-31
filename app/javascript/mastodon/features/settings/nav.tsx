@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
-
-import classNames from 'classnames';
 import type { MessageDescriptor } from 'react-intl';
 
+import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
@@ -22,8 +21,7 @@ import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { me } from 'mastodon/initial_state';
-import { useAppDispatch } from 'mastodon/store';
-import { useAppSelector } from 'mastodon/store';
+import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 // Shared navigation pieces for the settings surfaces (settings rebuild §4).
 // The hub drills into a "You" list and a "Korners" list; both, plus the hub

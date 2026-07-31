@@ -382,9 +382,7 @@ export const KronkSystemView: React.FC = () => {
               key={group.group_key}
               group={group}
               visited={
-                group.proposal
-                  ? visited.has(group.proposal.proposal_id)
-                  : false
+                group.proposal ? visited.has(group.proposal.proposal_id) : false
               }
               onVisit={handleVisit}
             />

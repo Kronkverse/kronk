@@ -195,7 +195,8 @@ body.admin {
   );
   cursor: pointer;
   box-shadow:
-    0 4px 14px -2px color-mix(in oklab, var(--kronk-purple-accent) 65%, transparent),
+    0 4px 14px -2px
+      color-mix(in oklab, var(--kronk-purple-accent) 65%, transparent),
     0 0 0 1px color-mix(in oklab, var(--kronk-purple-bright) 40%, transparent);
   transition:
     transform var(--dur-fast) var(--ease-out),
@@ -207,7 +208,8 @@ body.admin {
     transform: scale(1.06);
     filter: brightness(1.1);
     box-shadow:
-      0 6px 20px -2px color-mix(in oklab, var(--kronk-purple-bright) 80%, transparent),
+      0 6px 20px -2px
+        color-mix(in oklab, var(--kronk-purple-bright) 80%, transparent),
       0 0 0 2px color-mix(in oklab, var(--kronk-purple-bright) 60%, transparent);
     outline: none;
   }

@@ -83,22 +83,22 @@
     ),
     // Top rail — dark across the full width, tapering to transparent.
     linear-gradient(
-      to bottom,
-      #000 0,
-      #000 3.25rem,
-      rgb(0 0 0 / 82%) 3.9rem,
-      rgb(0 0 0 / 45%) 4.7rem,
-      transparent 5.5rem
-    ),
+        to bottom,
+        #000 0,
+        #000 3.25rem,
+        rgb(0 0 0 / 82%) 3.9rem,
+        rgb(0 0 0 / 45%) 4.7rem,
+        transparent 5.5rem
+      ),
     // Right rail — dark down the full height, tapering inward to the left.
     linear-gradient(
-      to left,
-      #000 0,
-      #000 5.5rem,
-      rgb(0 0 0 / 82%) 6.15rem,
-      rgb(0 0 0 / 45%) 6.95rem,
-      transparent 7.75rem
-    );
+        to left,
+        #000 0,
+        #000 5.5rem,
+        rgb(0 0 0 / 82%) 6.15rem,
+        rgb(0 0 0 / 45%) 6.95rem,
+        transparent 7.75rem
+      );
   filter: drop-shadow(
     0 2px 16px color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent)
   );
