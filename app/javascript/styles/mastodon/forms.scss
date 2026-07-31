@@ -230,11 +230,7 @@ code {
       font-family: $font-display, serif;
       font-size: min(60vh, 30rem);
       font-weight: 900;
-      color: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 8%,
-        transparent
-      );
+      color: color-mix(in oklab, var(--kronk-purple-accent) 8%, transparent);
       line-height: 1;
       pointer-events: none;
       user-select: none;
