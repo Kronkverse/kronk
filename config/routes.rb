@@ -173,6 +173,11 @@ Rails.application.routes.draw do
     # Profile composer (owner-only) — SPA-served. Same reasoning re:
     # ordering: 'edit' must not be matched as a status id.
     get '/@:account_username/edit', to: 'home#index'
+    # Pretty personal invite: /@tal/invite → looks up Tal's evergreen
+    # personal invite (creating it if absent) and redirects to the
+    # canonical /invite/<code>. Must sit BEFORE the generic /:id
+    # status route so 'invite' isn't matched as a status id.
+    get '/@:account_username/invite', to: 'pretty_invites#show', as: :pretty_invite
     get '/@:account_username/:id', to: 'statuses#show', as: :short_account_status
     get '/@:account_username/:id/embed', to: 'statuses#embed', as: :embed_short_account_status
   end
