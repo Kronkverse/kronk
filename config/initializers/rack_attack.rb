@@ -138,6 +138,14 @@ class Rack::Attack
     req.throttleable_remote_ip if req.post? && req.path_matches?('/auth')
   end
 
+  # Username-availability endpoint is unauthenticated and hit on every
+  # keystroke of the sign-up form (client debounces at ~350ms). Not an
+  # enumeration surface (Kronk profiles are already publicly addressable)
+  # but should not be free either.
+  throttle('throttle_username_availability/ip', limit: 20, period: 1.minute) do |req|
+    req.throttleable_remote_ip if req.get? && req.path_matches?('/auth/username_available')
+  end
+
   throttle('throttle_password_resets/ip', limit: 25, period: 5.minutes) do |req|
     req.throttleable_remote_ip if req.post? && req.path_matches?('/auth/password')
   end

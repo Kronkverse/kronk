@@ -78,6 +78,7 @@ Rails.application.routes.draw do
       resource :setup, only: [:show, :update], controller: :setup
       resource :challenge, only: [:create]
       resource :thresholds, only: [:show, :create], controller: :thresholds
+      get 'username_available', to: 'username_availability#show'
       get 'sessions/security_key_options', to: 'sessions#webauthn_options'
       post 'captcha_confirmation', to: 'confirmations#confirm_captcha', as: :captcha_confirmation
     end
