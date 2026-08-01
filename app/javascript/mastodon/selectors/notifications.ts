@@ -144,19 +144,6 @@ export const selectHasUnreadNudges = createSelector(
   },
 );
 
-// Korner slugs that have an unread korner/system notification (Hub tiles).
-export const selectUnreadKornerSlugs = createSelector(
-  [selectReadMarkerId, selectRawGroups, selectRawPendingGroups],
-  (marker, groups, pendingGroups) => {
-    const slugs = new Set<string>();
-    for (const group of [...groups, ...pendingGroups]) {
-      const slug = KORNER_SYSTEM_TYPE_TO_SLUG[group.type];
-      if (slug && isGroupUnread(group, marker)) slugs.add(slug);
-    }
-    return slugs;
-  },
-);
-
 // The newest nudge/korner-system notification, for the arrival toast.
 // `proposalTitle` is set for proposal notifications so the toast can name it.
 export interface LatestAlertNotification {
