@@ -1,0 +1,88 @@
+// Signup revamp (see KRONK_SIGNUP.md). Two surfaces — Screen 1 (the
+// account form) and Screen 2 (the three-threshold ceremony) — sit on
+// the same void layout. This file carries the shared shell chrome
+// (canvas, vignette, masthead, wordmark). Screen-specific styles
+// arrive in later layers.
+// New location under `styles/kronk/` — the plan (2026-08-01) is to
+// migrate the other `_kronk_*.scss` files out of `styles/mastodon/`
+// and into here over time. This is the first resident.
+// Token discipline: no hex outside `_tokens.scss`. Everything reads
+// from the locked tokens generated into `_tokens.scss` from
+// `tokens.yaml`. Missing prototype tokens are provided as scoped
+// aliases on `.kronk-void-shell` rather than promoted to the global
+// token set (they are signup-only for now).
+
+.kronk-void-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  background: var(--kosmos-void);
+}
+
+.kronk-void-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.9;
+  background:
+    radial-gradient(
+      120% 80% at 50% 45%,
+      color-mix(in oklab, var(--kronk-purple-primary) 14%, transparent) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      140% 100% at 50% 50%,
+      transparent 40%,
+      var(--kosmos-void) 100%
+    );
+}
+
+.kronk-void-shell {
+  // Signup-scoped fallbacks for tokens that don't exist platform-wide
+  // yet. Promote to `_tokens.scss` if they get consumed elsewhere.
+  --surface-sunken: var(--kosmos-void);
+  --border-strong: var(--kronk-purple-primary);
+  --focus-ring: var(--kronk-purple-bright);
+  --font-wordmark: var(--font-display);
+
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+.kronk-void-masthead {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+}
+
+.kronk-void-wordmark {
+  font-family: var(--font-wordmark);
+  font-size: 1.125rem;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--dur-medium) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text-primary);
+  }
+}
+
+// 11px in a family sized against the rest of the masthead.
+.kronk-void-stepcount {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
