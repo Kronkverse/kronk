@@ -100,11 +100,15 @@ class ApplicationController < ActionController::Base
   # Not folded into `require_functional!` deliberately: API / OAuth /
   # ActivityPub / .well-known paths stay open regardless, so a member
   # using a Mastodon client isn't blocked (KRONK_SIGNUP.md §4, §11).
+  #
+  # We check the *path* rather than the format so we exit before ever
+  # touching `current_user` for well-known non-HTML endpoints — that
+  # keeps the gate free of side-effects (session writes on federation
+  # paths, cache_spec's cookie-empty assertion).
   def require_crossed_thresholds!
-    return if current_user.crossed_thresholds?
+    return if request.path.start_with?('/api', '/oauth', '/auth', '/.well-known', '/actor', '/inbox', '/kronk/', '/nodeinfo', '/manifest', '/media_proxy', '/ap/', '/users/')
     return unless request.format.html?
-    return if request.path.start_with?('/auth', '/.well-known') ||
-              request.path == '/kronk/rules' || request.path.start_with?('/kronk/')
+    return if current_user.crossed_thresholds?
 
     redirect_to auth_thresholds_path
   end
