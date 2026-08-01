@@ -1,0 +1,25 @@
+-# The void — the ambient dark-with-stars stage the signup screens sit
+-# on top of. Two children: the starfield canvas (rendered by
+-# entrypoints/kronk_void.ts, colour read from the shared token set)
+-# and the vignette overlay. The shell is a positioned flex column so
+-# each view can render a masthead + a scrolling content area.
+-#
+-# Used by /auth/sign_up and /auth/thresholds. NOT the same as the
+-# `auth` layout (which wraps in `.container-alt > .form-container`
+-# and stays for edit / update / recovery flows).
+
+- content_for :header_tags do
+  = vite_typescript_tag 'kronk_void.ts', crossorigin: 'anonymous'
+
+- content_for :content do
+  %canvas.kronk-void-canvas#kronk-void{ aria: { hidden: 'true' } }
+  .kronk-void-vignette{ aria: { hidden: 'true' } }
+  .kronk-void-shell
+    %header.kronk-void-masthead
+      %a.kronk-void-wordmark{ href: root_path }= t('kronk.signup.wordmark')
+      - if content_for?(:step_counter)
+        %span.kronk-void-stepcount= yield :step_counter
+    = render 'flashes'
+    = yield
+
+= render template: 'layouts/application'
