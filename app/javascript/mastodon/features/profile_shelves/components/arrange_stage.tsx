@@ -131,10 +131,7 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
   }, [cards, sections]);
 
   const publish = useCallback(
-    (
-      nextCards: ApiProfileCardJSON[],
-      nextSections: ApiProfileSectionJSON[],
-    ) => {
+    (nextCards: ApiProfileCardJSON[], nextSections: ApiProfileSectionJSON[]) => {
       setCards(nextCards);
       setSections(nextSections);
       onChange({ cards: nextCards, sections: nextSections });
@@ -385,9 +382,7 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
           <ArrangeSlab
             key={`card-${card.card_type}`}
             slabKey={card.card_type}
-            name={
-              CARD_TITLE[card.card_type] ?? card.card_type.replaceAll('_', ' ')
-            }
+            name={CARD_TITLE[card.card_type] ?? card.card_type.replaceAll('_', ' ')}
             source={null}
             visible={card.visible}
             reach={card.visibility}
