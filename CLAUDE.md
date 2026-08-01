@@ -96,11 +96,18 @@ export NODE_OPTIONS="--max-old-space-size=2048"
 
 (On the mainframe dev server this is already set in `/etc/profile.d/mainframe.sh`.)
 
-## CI lint — run all of it before pushing
+## CI gates — lint + test (run them before pushing)
+
+Two required merge gates guard `rebuild/2.0.0` (since 2026-08-01): **`lint`**
+and **`test (.ruby-version)`** (the rspec suite on the target Ruby). Both run on
+**every** PR and both must be green for the merge queue to merge — so a red one
+blocks the queue. The queue gates only on these two; slow/env checks
+(ImageMagick, E2E, Bundler Audit) are kept off the merge path. `spec/system` and
+`:attachment_processing` specs are excluded from the `test` gate (they need a
+browser / image toolchain and run in the dedicated push-only jobs).
 
 The pre-commit hook only runs against **staged** files, and `--no-verify`
-skips it entirely — so lint drift reaches CI easily. `lint` **is a required
-merge gate** on `rebuild/2.0.0` (since 2026-08-01) — a red `lint` check blocks
+skips it entirely — so lint drift reaches CI easily. A red `lint` check blocks
 the merge queue, so run it locally before pushing rather than finding out in the
 queue. The lint workflows run on **every** PR (no path filters), so `lint`
 always reports even on a docs- or config-only change. `lint` is not one job but
