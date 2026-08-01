@@ -7640,13 +7640,11 @@ a.status-card {
   }
 
   // Five or more.
-  //
   // Kronk raises MEDIA_ATTACHMENTS_LIMIT to 30, but this grid was written for
   // upstream's maximum of four: two explicit `1fr` rows and `overflow: hidden`.
   // Past four no `--layout-N` rule matched, so the explicit rows had to share
   // whatever height was left after the auto-sized implicit rows took theirs —
   // close to nothing — and the first four items rendered at near-zero height.
-  //
   // Justified rather than gridded: a fixed row height with each item growing in
   // proportion to its own aspect ratio, so every row spans the full width and
   // photos keep their shape. Widths come from an inline flex-basis set in
