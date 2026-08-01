@@ -10,11 +10,8 @@ import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
-import { WavingHandBadge } from 'mastodon/components/waving_hand_badge';
 import { useKorners } from 'mastodon/hooks/useKorner';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
-import { selectUnreadKornerSlugs } from 'mastodon/selectors/notifications';
-import { useAppSelector } from 'mastodon/store';
 
 // Hub landing (/hub). Tile aesthetic from the prototype at
 // public/hub-arrangeable-preview.html (retired 2.0.0-alpha.204):
@@ -64,10 +61,11 @@ const stopClick = (e: React.MouseEvent) => {
   e.stopPropagation();
 };
 
-const KornerTile: React.FC<{ korner: ApiKornerJSON; alert?: boolean }> = ({
-  korner,
-  alert,
-}) => {
+const KornerTile: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
+  // New, feed-visible content the viewer hasn't seen (0 for tuned-out korners
+  // and anonymous viewers). Clears when they open the korner or interact with
+  // its posts in the feed. See lib/kronk/korner_seen.rb.
+  const unread = korner.unread_count ?? 0;
   // A tile reads as "coming soon" only when it's neither enforced nor
   // a portal — a portal is functionally live even at enforced:false.
   const soon = korner.enforced === false && !korner.portal?.url;
@@ -88,11 +86,10 @@ const KornerTile: React.FC<{ korner: ApiKornerJSON; alert?: boolean }> = ({
       className={`hub-page__tile ${soon ? 'hub-page__tile--off' : ''}`}
       data-slug={korner.slug}
     >
-      {alert && (
-        <WavingHandBadge
-          className='hub-page__tile-alert'
-          label='New activity'
-        />
+      {unread > 0 && (
+        <span className='hub-page__tile-badge' aria-label={`${unread} new`}>
+          {unread > 99 ? '99+' : unread}
+        </span>
       )}
       <Link
         to={`/hub/${korner.slug}`}
@@ -154,9 +151,6 @@ const ProposeKornerTile: React.FC = () => {
 const Hub: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const korners = useKorners();
-  // Korners with an unread korner/system notification get the waving-hand
-  // alert on their tile (e.g. Kommons when a proposal is ready to finalise).
-  const unreadKornerSlugs = useAppSelector(selectUnreadKornerSlugs);
 
   // Default order: most-tuned-in first, ties broken alphabetically.
   // Coming-soon tiles (enforced: false + no portal) fall to the end so
@@ -192,11 +186,7 @@ const Hub: React.FC<{ multiColumn?: boolean }> = () => {
         {live.length > 0 && (
           <div className='hub-page__board'>
             {live.map((k) => (
-              <KornerTile
-                key={k.slug}
-                korner={k}
-                alert={unreadKornerSlugs.has(k.slug)}
-              />
+              <KornerTile key={k.slug} korner={k} />
             ))}
             <ProposeKornerTile />
           </div>
@@ -212,11 +202,7 @@ const Hub: React.FC<{ multiColumn?: boolean }> = () => {
             </h2>
             <div className='hub-page__board hub-page__board--soon'>
               {soon.map((k) => (
-                <KornerTile
-                  key={k.slug}
-                  korner={k}
-                  alert={unreadKornerSlugs.has(k.slug)}
-                />
+                <KornerTile key={k.slug} korner={k} />
               ))}
             </div>
           </>
