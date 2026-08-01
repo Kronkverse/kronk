@@ -1642,6 +1642,14 @@ en:
       confirm_visit: Are you sure you wish to open this link?
       hide_button: Hide
       label: Potentially sensitive content
+  kronk:
+    thresholds:
+      cta_enter: Enter
+      errors:
+        incomplete: Cross all three thresholds to continue.
+      page_title: Three thresholds
+      stub_body: The ceremony is on its way. For now, cross all three to enter.
+      stub_title: Three thresholds
   lists:
     errors:
       limit: You have reached the maximum number of lists
