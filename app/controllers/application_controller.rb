@@ -44,7 +44,7 @@ class ApplicationController < ActionController::Base
 
   before_action :store_referrer, except: :raise_not_found, if: :devise_controller?
   before_action :require_functional!, if: :user_signed_in?
-  before_action :require_crossed_thresholds!, if: :user_signed_in?
+  before_action :require_crossed_thresholds!, if: :thresholds_gate_active?
 
   before_action :set_cache_control_defaults
 
@@ -101,13 +101,19 @@ class ApplicationController < ActionController::Base
   # ActivityPub / .well-known paths stay open regardless, so a member
   # using a Mastodon client isn't blocked (KRONK_SIGNUP.md §4, §11).
   #
-  # We check the *path* rather than the format so we exit before ever
-  # touching `current_user` for well-known non-HTML endpoints — that
-  # keeps the gate free of side-effects (session writes on federation
-  # paths, cache_spec's cookie-empty assertion).
+  # `thresholds_gate_active?` is the `if:` guard on the `before_action`
+  # — it screens out federation / API paths BEFORE Rails even calls
+  # the method, so `current_user` is never touched on those requests.
+  # (An earlier version guarded inside the method; the extra
+  # `user_signed_in?` evaluation on federation paths surfaced as a
+  # session-cookie side-effect on `cache_spec` `/actor` assertions.)
+  def thresholds_gate_active?
+    return false if request.path.start_with?('/api', '/oauth', '/auth', '/.well-known', '/actor', '/inbox', '/kronk/', '/nodeinfo', '/manifest', '/media_proxy', '/ap/', '/users/')
+
+    user_signed_in? && request.format.html?
+  end
+
   def require_crossed_thresholds!
-    return if request.path.start_with?('/api', '/oauth', '/auth', '/.well-known', '/actor', '/inbox', '/kronk/', '/nodeinfo', '/manifest', '/media_proxy', '/ap/', '/users/')
-    return unless request.format.html?
     return if current_user.crossed_thresholds?
 
     redirect_to auth_thresholds_path

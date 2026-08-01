@@ -341,7 +341,10 @@ RSpec.describe Auth::RegistrationsController do
         subject
 
         expect(response).to have_http_status(:success)
-        expect(controller.resource.errors[:'account.username']).to include(I18n.t('errors.messages.taken'))
+        # `controller.resource` is a protected Devise method; use `send` to
+        # reach it from the spec. Avoids the rails-controller-testing
+        # dependency required for `assigns(:user)`.
+        expect(controller.send(:resource).errors[:'account.username']).to include(I18n.t('errors.messages.taken'))
       end
     end
 
