@@ -15,6 +15,7 @@ RSpec.describe ProfileSection do
         section = described_class.new(account: account, section_type: t, position: 0)
         section.settings = { 'korner_slug' => 'kommons' } if t == 'korner'
         section.settings = { 'tag_name' => 'music' } if t == 'kategory'
+        section.settings = { 'body' => 'Hello, world.' } if t == 'text'
         expect(section).to be_valid, "#{t} should be a valid type"
       end
     end
@@ -30,6 +31,21 @@ RSpec.describe ProfileSection do
 
     it 'requires tag_name for kategory sections' do
       section = described_class.new(account: account, section_type: 'kategory', position: 0, settings: {})
+      expect(section).to_not be_valid
+    end
+
+    it 'requires body for text sections' do
+      section = described_class.new(account: account, section_type: 'text', position: 0, settings: {})
+      expect(section).to_not be_valid
+    end
+
+    it 'rejects a text body longer than the cap' do
+      section = described_class.new(
+        account: account,
+        section_type: 'text',
+        position: 0,
+        settings: { 'body' => 'x' * (described_class::TEXT_BODY_MAX + 1) }
+      )
       expect(section).to_not be_valid
     end
   end
