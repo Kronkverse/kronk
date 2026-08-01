@@ -103,6 +103,16 @@ class Item extends PureComponent {
       height = 50;
     }
 
+    // Past four, the gallery is a justified flex layout rather than a fixed
+    // grid: every item is the same height and grows in proportion to its own
+    // aspect ratio, so each row spans the full width instead of leaving a
+    // ragged gap. Falls back to 3/2 when dimensions are not known yet.
+    const aspect = Number(attachment.getIn(['meta', 'small', 'aspect'])) || 1.5;
+    const justified =
+      size > 4
+        ? { flexGrow: aspect, flexBasis: `${Math.round(aspect * 140)}px` }
+        : undefined;
+
     const description = attachment.getIn(['translation', 'description']) || attachment.get('description');
 
     if (description?.length > 0) {
@@ -111,7 +121,7 @@ class Item extends PureComponent {
 
     if (attachment.get('type') === 'unknown') {
       return (
-        <div className={classNames('media-gallery__item', { standalone, 'media-gallery__item--tall': height === 100, 'media-gallery__item--wide': width === 100 })} key={attachment.get('id')}>
+        <div className={classNames('media-gallery__item', { standalone, 'media-gallery__item--tall': height === 100, 'media-gallery__item--wide': width === 100 })} style={justified} key={attachment.get('id')}>
           <a className='media-gallery__item-thumbnail' href={attachment.get('remote_url') || attachment.get('url')} style={{ cursor: 'pointer' }} title={description} lang={lang} target='_blank' rel='noopener'>
             <Blurhash
               hash={attachment.get('blurhash')}
@@ -190,7 +200,7 @@ class Item extends PureComponent {
     }
 
     return (
-      <div className={classNames('media-gallery__item', { standalone, 'media-gallery__item--error': this.state.error, 'media-gallery__item--tall': height === 100, 'media-gallery__item--wide': width === 100 })} key={attachment.get('id')}>
+      <div className={classNames('media-gallery__item', { standalone, 'media-gallery__item--error': this.state.error, 'media-gallery__item--tall': height === 100, 'media-gallery__item--wide': width === 100 })} style={justified} key={attachment.get('id')}>
         <Blurhash
           hash={attachment.get('blurhash')}
           dummy={!useBlurhash}
@@ -304,14 +314,17 @@ class MediaGallery extends PureComponent {
     let children;
 
     const style = {};
+    const size   = media.size;
 
+    // Past four attachments the grid flows into as many rows as it needs, so a
+    // forced aspect ratio just reserves empty space below the images. Below
+    // five, the fixed 2x2 grid fills the ratio exactly, so it still applies.
     if (this.isFullSizeEligible()) {
       style.aspectRatio = `${this.props.media.getIn([0, 'meta', 'small', 'aspect'])}`;
-    } else {
+    } else if (size <= 4) {
       style.aspectRatio = '3 / 2';
     }
 
-    const size     = media.size;
     const uncached = media.every(attachment => attachment.get('type') === 'unknown');
 
     if (this.isFullSizeEligible()) {
