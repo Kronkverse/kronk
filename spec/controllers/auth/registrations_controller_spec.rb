@@ -330,15 +330,16 @@ RSpec.describe Auth::RegistrationsController do
         Fabricate(:account, username: 'test')
       end
 
+      # The signup revamp (KRONK_SIGNUP.md) replaced simple_form's per-field
+      # `.user_account_username .error` markers with the shared
+      # `_error_messages` partial. This test now asserts on the assigned
+      # resource's error keys directly, which is the load-bearing bit —
+      # the presentation is a UI concern covered by `spec/system`.
       it 'responds with an error message about the username' do
         subject
 
         expect(response).to have_http_status(:success)
-        expect(username_error_text).to eq(I18n.t('errors.messages.taken'))
-      end
-
-      def username_error_text
-        response.parsed_body.css('.user_account_username .error').text
+        expect(assigns(:user).errors[:'account.username']).to include(I18n.t('errors.messages.taken'))
       end
     end
 
