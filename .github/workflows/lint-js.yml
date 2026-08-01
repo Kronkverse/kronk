@@ -19,18 +19,6 @@ on:
       - '.github/workflows/lint-js.yml'
 
   pull_request:
-    paths:
-      - 'package.json'
-      - 'yarn.lock'
-      - 'tsconfig.json'
-      - '.nvmrc'
-      - '.prettier*'
-      - 'eslint.config.mjs'
-      - '**/*.js'
-      - '**/*.jsx'
-      - '**/*.ts'
-      - '**/*.tsx'
-      - '.github/workflows/lint-js.yml'
 
 jobs:
   lint:
