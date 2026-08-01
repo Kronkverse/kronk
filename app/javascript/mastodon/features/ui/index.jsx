@@ -107,6 +107,7 @@ import {
   BoothSetPage,
   ProfileSectionsSettings,
   SectionedProfile,
+  ProfileShelves,
   NudgesLegacyArchive,
   Krews,
   KrewDetail,
@@ -304,6 +305,11 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/settings/privacy' exact component={PrivacySettings} content={children} />}
             {signedIn && <WrappedRoute path="/settings/profile_sections" component={ProfileSectionsSettings} content={children} />}
             <WrappedRoute path='/@:acct/profile' exact component={SectionedProfile} content={children} />
+            {/* Shelved profile — the 2026-08-01 rebuild lives at
+                /@:acct/shelves in parallel with SectionedProfile while
+                Arrange mode + the composer land. Retires the old
+                /@:acct/profile route once it's at parity. */}
+            <WrappedRoute path='/@:acct/shelves' exact component={ProfileShelves} content={children} />
             {/* Kalendar Rebuild (proposal #116969253949249128) — the Spiral
                 is now the Kalendar. Bare /hub/kalendar renders KalendarSpiral;
                 the old Events list component retires. /hub/kalendar/:id

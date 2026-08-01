@@ -295,6 +295,10 @@ export function SectionedProfile () {
   return import("../../sectioned_profile").then(m => ({ default: m.SectionedProfile }));
 }
 
+export function ProfileShelves () {
+  return import("../../profile_shelves");
+}
+
 export function NudgesLegacyArchive () {
   return import("../../nudges_legacy").then(m => ({ default: m.NudgesLegacyArchive }));
 }
