@@ -88,8 +88,11 @@ class REST::NotificationSerializer < ActiveModel::Serializer
     counts = NudgeReaction.where(notification: object).group(:emoji).count
     viewer = scope
     me = viewer ? NudgeReaction.find_by(notification: object, account: viewer.account)&.emoji : nil
-    NudgeReaction::ALLOWED_EMOJI.index_with do |emoji|
-      { count: counts[emoji] || 0, me: me == emoji }
+    # Nudge reactions are arbitrary Unicode emoji (full picker on the client),
+    # so there is no fixed allow-list — return the emoji that actually have
+    # reactions, keyed by emoji.
+    counts.keys.index_with do |emoji|
+      { count: counts[emoji], me: me == emoji }
     end
   end
 

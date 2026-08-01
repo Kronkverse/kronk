@@ -153,6 +153,6 @@ RSpec.describe Trends::Statuses do
   end
 
   def default_threshold_value
-    described_class.default_options[:threshold]
+    subject.options[:threshold]
   end
 end

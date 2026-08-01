@@ -43,7 +43,7 @@ end
 
 RSpec.describe Kronk::Search::Adapter::Null do
   let(:adapter) { described_class.new }
-  let(:record)  { instance_double(Object, id: 42) }
+  let(:record)  { double('record', id: 42) } # rubocop:disable RSpec/VerifiedDoubles -- Object has no #id, so a verifying double can't stand in for an indexable record
 
   describe '#index' do
     it 'does not raise' do
@@ -80,14 +80,14 @@ RSpec.describe Kronk::Search::Adapter::Meilisearch do
   # that must hold regardless of a live server: error swallowing,
   # graceful degradation, and the shape of the search-result hash.
 
-  let(:record) { instance_double(Object, id: 42, respond_to?: false) }
+  let(:record) { double('record', id: 42) } # rubocop:disable RSpec/VerifiedDoubles -- Object has no #id, so a verifying double can't stand in for an indexable record
 
   it 'swallows write-path errors and logs them' do
     fake_client = instance_double(MeiliSearch::Client)
     allow(fake_client).to receive(:index).and_raise(StandardError, 'meili unreachable')
     adapter = described_class.new(client: fake_client)
 
-    expect(Rails.logger).to receive(:warn).with(/index.*failed.*meili unreachable/)
+    expect(Rails.logger).to receive(:error).with(/index.*failed.*meili unreachable/)
     expect { adapter.index(:statuses, record) }.to_not raise_error
   end
 

@@ -102,7 +102,7 @@ RSpec.describe AdminMailer do
         .and(deliver_to(recipient.user_email))
         .and(deliver_from('notifications@localhost'))
         .and(have_subject(I18n.t('admin_mailer.new_software_updates.subject', instance: Rails.configuration.x.local_domain)))
-        .and(have_body_text('New Mastodon versions have been released, you may want to update!'))
+        .and(have_body_text('New Kronk versions have been released, you may want to update!'))
     end
   end
 
@@ -120,7 +120,7 @@ RSpec.describe AdminMailer do
         .and(deliver_to(recipient.user_email))
         .and(deliver_from('notifications@localhost'))
         .and(have_subject(I18n.t('admin_mailer.new_critical_software_updates.subject', instance: Rails.configuration.x.local_domain)))
-        .and(have_body_text('New critical versions of Mastodon have been released, you may want to update as soon as possible!'))
+        .and(have_body_text('New critical versions of Kronk have been released, you may want to update as soon as possible!'))
         .and(have_header('Importance', 'high'))
         .and(have_header('Priority', 'urgent'))
         .and(have_header('X-Priority', '1'))

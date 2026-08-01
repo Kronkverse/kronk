@@ -10,6 +10,12 @@ RSpec.describe StatusPolicy, type: :model do
   let(:bob) { Fabricate(:account, username: 'bob') }
   let(:status) { Fabricate(:status, account: alice) }
 
+  # Kronk reach ladder (docs/kronk_feed_and_reach.md §2).
+  def mate!(one, two)
+    one.follow!(two)
+    two.follow!(one)
+  end
+
   context 'with the permissions of show? and reblog?' do
     permissions :show?, :reblog? do
       it 'grants access when no viewer' do
@@ -82,12 +88,6 @@ RSpec.describe StatusPolicy, type: :model do
         status.visibility = :private
 
         expect(subject).to_not permit(viewer, status)
-      end
-
-      # Kronk reach ladder (docs/kronk_feed_and_reach.md §2).
-      def mate!(one, two)
-        one.follow!(two)
-        two.follow!(one)
       end
 
       it 'grants self_only access to the owner only' do

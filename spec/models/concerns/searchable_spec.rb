@@ -68,6 +68,13 @@ RSpec.describe Searchable do
       Class.new do
         def self.name = 'FakeConditional'
 
+        # See test_class above: `searchable_as` registers `after_*_commit`
+        # callbacks (an ActiveRecord API). This double isn't AR-backed, so
+        # stub the registrations as no-ops to let `searchable_as` run.
+        def self.after_create_commit(*); end
+        def self.after_update_commit(*); end
+        def self.after_destroy_commit(*); end
+
         attr_accessor :id, :flag
 
         include ActiveModel::Model
