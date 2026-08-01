@@ -47,6 +47,46 @@ RSpec.describe 'Korners' do
     end
   end
 
+  describe 'GET /api/v1/korners unread_count' do
+    let(:user) { Fabricate(:user) }
+    let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:accounts') }
+    let(:headers) { { 'Authorization' => "Bearer #{token.token}" } }
+
+    def kommons(body)
+      body.find { |k| k['slug'] == 'kommons' }
+    end
+
+    it 'reports the per-viewer unread count for a tuned-in korner' do
+      poster = Fabricate(:account)
+      user.account.follow!(poster)
+      Fabricate(:status, account: poster, source_korner: 'kommons')
+
+      get api_v1_korners_path, headers: headers
+
+      expect(kommons(response.parsed_body)['unread_count']).to eq(1)
+    end
+
+    it 'is 0 for a korner the viewer has tuned out of' do
+      poster = Fabricate(:account)
+      user.account.follow!(poster)
+      Fabricate(:status, account: poster, source_korner: 'kommons')
+      user.account.tune_out!('kommons')
+
+      get api_v1_korners_path, headers: headers
+
+      expect(kommons(response.parsed_body)['unread_count']).to eq(0)
+    end
+
+    it 'is 0 for anonymous callers' do
+      poster = Fabricate(:account)
+      Fabricate(:status, account: poster, source_korner: 'kommons')
+
+      get api_v1_korners_path
+
+      expect(kommons(response.parsed_body)['unread_count']).to eq(0)
+    end
+  end
+
   describe 'GET /api/v1/korners/:slug' do
     it 'returns a single korner manifest' do
       get api_v1_korner_path(id: 'kommons')
