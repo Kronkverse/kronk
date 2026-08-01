@@ -12,6 +12,8 @@ require Rails.root.join('lib', 'kronk', 'cycle_phase') # Klot phase calculator (
 require Rails.root.join('lib', 'kronk', 'feature_flags')
 require Rails.root.join('lib', 'kronk', 'kategories')
 require Rails.root.join('lib', 'kronk', 'korner_events')
+require Rails.root.join('lib', 'kronk', 'korner_content_streams')
+require Rails.root.join('lib', 'kronk', 'korner_seen')
 require Rails.root.join('lib', 'kronk', 'search')
 require Rails.root.join('lib', 'kronk', 'tune_in_counts')
 require Rails.root.join('lib', 'kronk', 'tune_in_gate')

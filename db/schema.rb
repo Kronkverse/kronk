@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_01_100000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_01_120001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -251,7 +251,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_01_100000) do
     t.index ["album_id"], name: "index_album_photos_on_album_id"
     t.index ["contributor_id"], name: "index_album_photos_on_contributor_id"
     t.index ["media_attachment_id"], name: "index_album_photos_on_media_attachment_id"
-    t.index ["status_id"], name: "index_album_photos_on_status_id", where: "status_id IS NOT NULL"
+    t.index ["status_id"], name: "index_album_photos_on_status_id", where: "(status_id IS NOT NULL)"
     t.check_constraint "(media_attachment_id IS NOT NULL) <> (external_url IS NOT NULL)", name: "album_photos_exactly_one_media_source"
   end
 
@@ -855,6 +855,26 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_01_100000) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["ip"], name: "index_ip_blocks_on_ip", unique: true
+  end
+
+  create_table "korner_content_views", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "korner_slug", null: false
+    t.bigint "content_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["account_id", "korner_slug", "content_id"], name: "index_korner_content_views_uniqueness", unique: true
+    t.index ["account_id", "korner_slug"], name: "index_korner_content_views_on_account_id_and_korner_slug"
+    t.index ["account_id"], name: "index_korner_content_views_on_account_id"
+  end
+
+  create_table "korner_seen_markers", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "korner_slug", null: false
+    t.bigint "baseline_id", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "korner_slug"], name: "index_korner_seen_markers_on_account_id_and_korner_slug", unique: true
+    t.index ["account_id"], name: "index_korner_seen_markers_on_account_id"
   end
 
   create_table "korner_tune_outs", force: :cascade do |t|
@@ -2205,6 +2225,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_01_100000) do
   add_foreign_key "identities", "users", name: "fk_bea040f377", on_delete: :cascade
   add_foreign_key "instance_moderation_notes", "accounts", on_delete: :cascade
   add_foreign_key "invites", "users", on_delete: :cascade
+  add_foreign_key "korner_content_views", "accounts", on_delete: :cascade
+  add_foreign_key "korner_seen_markers", "accounts", on_delete: :cascade
   add_foreign_key "korner_tune_outs", "accounts", on_delete: :cascade
   add_foreign_key "krew_korners", "krews", on_delete: :cascade
   add_foreign_key "krew_memberships", "accounts", on_delete: :cascade
