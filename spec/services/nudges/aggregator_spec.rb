@@ -6,13 +6,21 @@ RSpec.describe Nudges::Aggregator do
   let(:target) { Fabricate(:account) }
   let(:status) { Fabricate(:status, account: target) }
 
+  # Build a real notification of `type` from `actor` about the shared
+  # `status`. Froths/boosts each carry their own activity record (a
+  # Favourite / reblog Status), which is precisely why the aggregator must
+  # group on the underlying subject rather than the activity id.
   def notif(type, actor, at:)
+    activity =
+      case type
+      when :favourite then Fabricate(:favourite, account: actor, status: status)
+      when :reblog    then Fabricate(:status, account: actor, reblog: status)
+      end
+
     Fabricate(:notification,
               account: target,
-              from_account: actor,
+              activity: activity,
               type: type,
-              activity_type: 'Status',
-              activity_id: status.id,
               created_at: at)
   end
 

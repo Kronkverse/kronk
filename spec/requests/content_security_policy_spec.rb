@@ -23,16 +23,16 @@ RSpec.describe 'Content-Security-Policy' do
     <<~CSP.split("\n").map(&:strip)
       base-uri 'none'
       child-src 'self' blob: #{local_domain}
-      connect-src 'self' data: blob: #{local_domain} #{Rails.configuration.x.streaming_api_base_url}
+      connect-src 'self' data: blob: #{local_domain} #{Rails.configuration.x.streaming_api_base_url} https://meet.talitamoss.info #{map_tile_host}
       default-src 'none'
       font-src 'self' #{local_domain}
       form-action 'none'
       frame-ancestors 'none'
       frame-src 'self' https:
-      img-src 'self' data: blob: #{local_domain}
+      img-src 'self' data: blob: #{local_domain} #{map_tile_host}
       manifest-src 'self' #{local_domain}
       media-src 'self' data: #{local_domain}
-      script-src 'self' #{local_domain} 'wasm-unsafe-eval'
+      script-src 'self' #{local_domain} 'wasm-unsafe-eval' https://meet.talitamoss.info
       style-src 'self' #{local_domain} 'nonce-ZbA+JmE7+bK8F5qvADZHuQ=='
       worker-src 'self' blob: #{local_domain}
     CSP
@@ -40,5 +40,9 @@ RSpec.describe 'Content-Security-Policy' do
 
   def local_domain
     root_url(host: Rails.configuration.x.local_domain).chop
+  end
+
+  def map_tile_host
+    ENV.fetch('MAP_TILE_HOST', 'https://kronk-osm.syd1.digitaloceanspaces.com')
   end
 end

@@ -42,16 +42,15 @@ RSpec.describe 'API V1 Accounts Statuses' do
         get "/api/v1/accounts/#{user.account.id}/statuses", params: { exclude_replies: true }, headers: headers
       end
 
-      it 'returns posts along with self replies', :aggregate_failures do
+      it 'returns posts without replies — self-replies are excluded too', :aggregate_failures do
         expect(response)
           .to have_http_status(200)
         expect(response.content_type)
           .to start_with('application/json')
         expect(response.parsed_body)
-          .to have_attributes(size: 2)
+          .to have_attributes(size: 1)
           .and contain_exactly(
-            include(id: status.id.to_s),
-            include(id: status_self_reply.id.to_s)
+            include(id: status.id.to_s)
           )
       end
     end

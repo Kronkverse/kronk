@@ -45,7 +45,7 @@ RSpec.describe Krew do
 
     it 'accepts every registered governance framework' do
       described_class::GOVERNANCE_FRAMEWORKS.each do |framework|
-        krew = build(slug: framework, governance_framework: framework, governance_threshold: 2)
+        krew = build(slug: framework.tr('_', '-'), governance_framework: framework, governance_threshold: 2)
         expect(krew).to be_valid, "#{framework} should be a valid framework"
       end
     end

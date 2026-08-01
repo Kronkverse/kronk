@@ -22,8 +22,12 @@ RSpec.describe Nudges::Conversation do
 
   describe 'validations' do
     it 'refuses unsorted account pair (defense in depth)' do
-      # Skip the sorted factory helper; simulate a raw write.
-      raw = described_class.new(account_a: bob, account_b: alice, last_activity_at: Time.current)
+      # Skip the sorted factory helper; simulate a raw *unsorted* write.
+      # (A plain account_a: bob relies on lazy `let` evaluation order and
+      # can land already-sorted — force the higher id into account_a.)
+      higher = [alice, bob].max_by(&:id)
+      lower  = [alice, bob].min_by(&:id)
+      raw = described_class.new(account_a: higher, account_b: lower, last_activity_at: Time.current)
       expect(raw).to_not be_valid
       expect(raw.errors[:base]).to include(/account_a_id must be less than account_b_id/)
     end

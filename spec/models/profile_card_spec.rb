@@ -61,7 +61,7 @@ RSpec.describe ProfileCard do
       let(:visibility) { :kronk }
 
       it 'is not visible to unauth' do
-        expect(subject.visible_to?(nil)).to be false
+        expect(subject.visible_to?(nil)).to be_falsey
       end
 
       it 'is visible to a local viewer' do

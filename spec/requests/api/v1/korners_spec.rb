@@ -20,11 +20,16 @@ RSpec.describe 'Korners' do
       expect(slugs).to include('kommons', 'kalendar', 'booth')
     end
 
-    it 'excludes core spaces — they are not Hub tenants and get no tile' do
+    it 'includes core spaces — the endpoint is the single source of truth for manifest/icon resolution' do
+      # #676 (alpha.220) reversed the earlier alpha.91 exclusion: every
+      # registered manifest is returned so consumers (HubSwitcher,
+      # AutoSpaceBadge, useKornerIcon) can resolve any slug — core spaces
+      # included — to its declared identity. The Hub grid filters
+      # core === true client-side.
       get '/api/v1/korners'
 
       slugs = response.parsed_body.pluck('slug')
-      expect(slugs).to_not include('feed', 'profile', 'hub', 'nudges', 'settings')
+      expect(slugs).to include('feed', 'profile', 'hub', 'nudges', 'settings')
     end
 
     it 'exposes the manifest structural fields on each korner' do
