@@ -3,88 +3,87 @@
 
 - content_for :header_tags do
   = render partial: 'shared/og', locals: { description: description_for_sign_up(@invite) }
+  = vite_typescript_tag 'signup_account.ts', crossorigin: 'anonymous'
 
-= simple_form_for(resource, as: resource_name, url: registration_path(resource_name), html: { novalidate: false }) do |f|
-  = render 'auth/shared/progress', stage: 'details', rules_present: @rules.present?, invite_code: @invite&.code
+- content_for :step_counter do
+  = t('kronk.signup.account.step_counter')
 
-  %h1.title= t('auth.sign_up.title', domain: site_hostname)
-  %p.lead= t('auth.sign_up.preamble')
+= simple_form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: 'signup-account', multipart: true, novalidate: false }) do |f|
+  .signup-account__lede
+    %h1.signup-account__title= t('kronk.signup.account.lede_title')
+    %p.signup-account__preamble
+      - if @invite.present? && @invite.autofollow?
+        = t('kronk.signup.account.lede_invited', name: @invite.user.account.display_name.presence || @invite.user.account.username)
+      - else
+        = t('kronk.signup.account.lede_no_invite')
 
   = render 'shared/error_messages', object: resource
 
-  - if @invite.present? && @invite.autofollow?
-    .fields-group.invited-by
-      %p.hint= t('invites.invited_by')
-      = render 'application/card', account: @invite.user.account
+  = f.simple_fields_for :account do |ff|
+    .signup-account__avatar-row
+      %button.signup-account__avatar-drop#signup-avatar-drop{ type: 'button', aria: { label: t('kronk.signup.account.avatar_label') } }
+        %span.signup-account__avatar-plus= '+'
+      .signup-account__avatar-meta
+        %span.signup-account__avatar-key= t('kronk.signup.account.avatar_label')
+        %span.signup-account__avatar-value= t('kronk.signup.account.avatar_hint')
+        %button.signup-account__avatar-remove#signup-avatar-remove{ type: 'button', hidden: true }
+          = t('kronk.signup.account.avatar_remove')
+      = ff.input :avatar, as: :file, label: false, wrapper: false, input_html: { id: 'signup-avatar-input', accept: 'image/*', hidden: true, autocomplete: 'off' }
 
-  .fields-group
-    = f.simple_fields_for :account do |ff|
-      = ff.input :username,
-                 append: "@#{site_hostname}",
-                 input_html: { autocomplete: 'off', pattern: '[a-zA-Z0-9_]+', maxlength: Account::USERNAME_LENGTH_LIMIT, placeholder: ' ' },
-                 required: true,
-                 wrapper: :with_label
-    = f.input :email,
-              hint: false,
-              input_html: { autocomplete: 'username', placeholder: ' ' },
-              required: true,
-              wrapper: :with_label
-    = f.input :password,
-              hint: false,
-              input_html: { autocomplete: 'new-password', minlength: User.password_length.first, maxlength: User.password_length.last, placeholder: ' ' },
-              required: true,
-              wrapper: :with_label
-    = f.input :password_confirmation,
-              hint: false,
-              input_html: { 'aria-label': t('simple_form.labels.defaults.confirm_password'), autocomplete: 'new-password', maxlength: User.password_length.last },
-              placeholder: t('simple_form.labels.defaults.confirm_password'),
-              required: true
-    = f.input :confirm_password,
-              as: :string,
-              hint: false,
-              input_html: { 'aria-label': t('simple_form.labels.defaults.honeypot', label: t('simple_form.labels.defaults.password')), autocomplete: 'off' },
-              placeholder: t('simple_form.labels.defaults.honeypot', label: t('simple_form.labels.defaults.password')),
-              required: false
-    = f.input :website,
-              as: :url,
-              input_html: { 'aria-label': t('simple_form.labels.defaults.honeypot', label: 'Website'), autocomplete: 'off' },
-              label: t('simple_form.labels.defaults.honeypot', label: 'Website'),
-              required: false,
-              wrapper: :with_label
+  .signup-account__field
+    %label.signup-account__label{ for: 'user_email' }= t('kronk.signup.account.email_label')
+    .signup-account__control#signup-email-control
+      = f.input_field :email, autocomplete: 'email', placeholder: t('kronk.signup.account.email_placeholder'), required: true, class: 'signup-account__input', data: { 'hint-invalid': t('kronk.signup.account.email_hint_bad'), 'hint-good': t('kronk.signup.account.email_hint_good') }
+    %span.signup-account__hint#signup-email-hint= t('kronk.signup.account.email_hint')
+
+  .signup-account__field
+    %label.signup-account__label{ for: 'user_account_attributes_username' }= t('kronk.signup.account.username_label')
+    .signup-account__control#signup-username-control
+      %span.signup-account__sigil @
+      - username_hints = { 'hint-invalid': t('kronk.signup.account.username_hint_invalid'), 'hint-taken': t('kronk.signup.account.username_hint_taken'), 'hint-reserved': t('kronk.signup.account.username_hint_reserved'), 'hint-available': t('kronk.signup.account.username_hint_available') }
+      = f.simple_fields_for :account do |ff|
+        = ff.input_field :username, autocomplete: 'off', spellcheck: 'false', pattern: '[a-zA-Z0-9_]+', maxlength: Account::USERNAME_LENGTH_LIMIT, placeholder: t('kronk.signup.account.username_placeholder'), required: true, class: 'signup-account__input', data: username_hints
+    %span.signup-account__hint#signup-username-hint= t('kronk.signup.account.username_hint')
+
+  .signup-account__field
+    %label.signup-account__label{ for: 'user_password' }= t('kronk.signup.account.password_label')
+    - password_hints = { 'hint-bad': t('kronk.signup.account.password_hint_bad'), 'hint-ok': t('kronk.signup.account.password_hint_ok'), 'hint-strong': t('kronk.signup.account.password_hint_strong') }
+    .signup-account__control#signup-password-control
+      = f.input_field :password, autocomplete: 'new-password', minlength: User.password_length.first, maxlength: User.password_length.last, placeholder: t('kronk.signup.account.password_placeholder'), required: true, class: 'signup-account__input', data: password_hints
+      %button.signup-account__peek#signup-password-peek{ type: 'button', aria: { label: t('kronk.signup.account.password_peek_show') }, data: { 'label-show': t('kronk.signup.account.password_peek_show'), 'label-hide': t('kronk.signup.account.password_peek_hide') } }
+        = t('kronk.signup.account.password_peek_show')
+    .signup-account__meter#signup-password-meter
+      %i.signup-account__meter-seg
+      %i.signup-account__meter-seg
+      %i.signup-account__meter-seg
+      %i.signup-account__meter-seg
+    %span.signup-account__hint#signup-password-hint= t('kronk.signup.account.password_hint')
+
+  -# Honeypots kept — same shape as before, invisible + off-screen via
+  -# `.signup-account__honeypot` (styled in `_signup.scss`). Same
+  -# validator wiring on the User model.
+  - honeypot_password_label = t('simple_form.labels.defaults.honeypot', label: t('simple_form.labels.defaults.password'))
+  - honeypot_website_label = t('simple_form.labels.defaults.honeypot', label: 'Website')
+  .signup-account__honeypot
+    = f.input :confirm_password, as: :string, hint: false, input_html: { 'aria-label': honeypot_password_label, autocomplete: 'off' }, placeholder: honeypot_password_label, required: false, wrapper: false
+    = f.input :website, as: :url, input_html: { 'aria-label': honeypot_website_label, autocomplete: 'off' }, label: honeypot_website_label, required: false, wrapper: false
 
   - if Setting.min_age.present?
-    .fields-group
-      = f.input :date_of_birth,
-                as: :date_of_birth,
-                hint: t('simple_form.hints.user.date_of_birth', count: Setting.min_age.to_i, domain: site_hostname),
-                required: true,
-                wrapper: :with_block_label
+    .signup-account__field
+      = f.input :date_of_birth, as: :date_of_birth, hint: t('simple_form.hints.user.date_of_birth', count: Setting.min_age.to_i, domain: site_hostname), required: true, wrapper: :with_block_label
 
   - if approved_registrations? && @invite.blank?
-    %p.lead= t('auth.sign_up.manual_review', domain: site_hostname)
-
-    .fields-group
+    .signup-account__field
       = f.simple_fields_for :invite_request, resource.invite_request || resource.build_invite_request do |invite_request_fields|
-        = invite_request_fields.input :text,
-                                      as: :text,
-                                      hint: false,
-                                      label: false,
-                                      input_html: { maxlength: UserInviteRequest::TEXT_SIZE_LIMIT },
-                                      required: Setting.require_invite_text,
-                                      wrapper: :with_block_label
+        = invite_request_fields.input :text, as: :text, hint: false, label: false, input_html: { maxlength: UserInviteRequest::TEXT_SIZE_LIMIT }, required: Setting.require_invite_text, wrapper: :with_block_label
 
-  = hidden_field_tag :accept, params[:accept]
-  = hidden_field_tag :welcomed, params[:welcomed]
-  = hidden_field_tag :privacy_accepted, params[:privacy_accepted]
   = f.input :invite_code, as: :hidden
 
-  -# Agreement was captured on the /auth privacy step, not as a checkbox here. Passed as a hidden `agreement: '1'` so Devise's validator is satisfied.
+  -# Agreement is captured implicitly — the account form's fine-print
+  -# references /kronk/privacy. Passed hidden so Devise's
+  -# `validates :agreement, acceptance:` stays satisfied.
   = f.input :agreement, as: :hidden, input_html: { value: '1' }
 
-  .actions
-    = f.button :button, @invite.present? ? t('auth.register') : sign_up_message, type: :submit
+  = f.button :button, t('kronk.signup.account.continue'), type: :submit, class: 'signup-account__continue', id: 'signup-continue', disabled: true
 
-  -# Back → clears the sticky `privacy_accepted` flag so the privacy step re-renders. Uses `handle_rewind!` (see controller).
-  - back_path = @invite.present? ? public_invite_url(invite_code: @invite.code, rewind: 'privacy') : new_user_registration_path(rewind: 'privacy')
-  .stacked-actions
-    = link_to t('auth.rules.back'), back_path, class: 'button button-tertiary'
+  %p.signup-account__finelow!= t('kronk.signup.account.finelow_html')

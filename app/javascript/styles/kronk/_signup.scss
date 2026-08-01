@@ -86,3 +86,295 @@
   text-transform: uppercase;
   color: var(--text-muted);
 }
+
+// ─────────────────────────────────────────────────────────────
+// Screen 1 — the account form.
+
+.signup-account {
+  width: 100%;
+  max-width: 26rem;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 2rem;
+  animation: signup-account-rise var(--dur-slow) var(--ease-out) both;
+}
+
+@keyframes signup-account-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.signup-account__lede {
+  margin: 0 0 1.5rem;
+}
+
+.signup-account__title {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 2rem;
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+
+.signup-account__preamble {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+
+// avatar row
+.signup-account__avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.signup-account__avatar-drop {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  flex: 0 0 auto;
+  border-radius: 34%;
+  border: 1px dashed var(--border-subtle);
+  background: var(--surface-primary);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    border-color var(--dur-medium) var(--ease-out),
+    box-shadow var(--dur-medium) var(--ease-out);
+
+  &:hover,
+  &.is-over {
+    border-color: var(--kronk-purple-muted);
+    box-shadow: 0 0 0 6px
+      color-mix(in oklab, var(--kronk-purple-bright) 8%, transparent);
+  }
+
+  &.has-img {
+    border-style: solid;
+    border-color: var(--border-default);
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.signup-account__avatar-plus {
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.signup-account__avatar-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.signup-account__avatar-key {
+  font-size: 0.8125rem;
+}
+
+.signup-account__avatar-value {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.signup-account__avatar-remove {
+  margin-top: 0.5rem;
+  align-self: flex-start;
+  font-size: 0.6875rem;
+  color: var(--kronk-purple-bright);
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+// field
+.signup-account__field {
+  margin-bottom: 1rem;
+}
+
+.signup-account__label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.signup-account__control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 38px;
+  padding: 0 0.75rem;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-medium);
+  transition:
+    border-color var(--dur-medium) var(--ease-out),
+    background var(--dur-medium) var(--ease-out);
+
+  &:focus-within {
+    border-color: var(--border-default);
+    background: var(--surface-elevated);
+  }
+
+  &.is-bad {
+    border-color: var(--warning-red);
+  }
+
+  &.is-good {
+    border-color: var(--kronk-purple-muted);
+  }
+}
+
+.signup-account__sigil {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.signup-account__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: 0;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9375rem;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+.signup-account__peek {
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  padding: 0.25rem 0.5rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.signup-account__hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  min-height: 15px;
+
+  &--bad {
+    color: var(--warning-red);
+  }
+
+  &--good {
+    color: var(--success-green);
+  }
+}
+
+// strength meter
+.signup-account__meter {
+  display: flex;
+  gap: 4px;
+  margin-top: 0.5rem;
+}
+
+.signup-account__meter-seg {
+  flex: 1;
+  height: 3px;
+  border-radius: var(--radius-round);
+  background: var(--border-subtle);
+  transition: background var(--dur-medium) var(--ease-out);
+
+  &.is-on {
+    background: var(--kronk-purple-bright);
+  }
+}
+
+// honeypots — pushed off-screen but focusable to bots that hydrate the DOM
+.signup-account__honeypot {
+  position: absolute;
+  left: -9999px;
+  height: 0;
+  overflow: hidden;
+}
+
+// primary continue button
+.signup-account__continue {
+  width: 100%;
+  height: 44px;
+  border-radius: var(--radius-medium);
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  border: 0;
+  cursor: pointer;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    background var(--dur-medium) var(--ease-out),
+    box-shadow var(--dur-medium) var(--ease-out),
+    opacity var(--dur-medium) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    background: var(--kronk-purple-bright);
+    box-shadow: 0 0 28px -6px var(--kronk-purple-bright);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    background: var(--surface-elevated);
+    color: var(--text-muted);
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.signup-account__finelow {
+  margin-top: 1rem;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  text-align: center;
+
+  a {
+    color: var(--kronk-purple-bright);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signup-account {
+    animation-duration: 1ms;
+  }
+}
