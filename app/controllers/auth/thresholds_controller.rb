@@ -14,7 +14,7 @@
 # ApplicationController#require_crossed_thresholds! — wired up in a
 # later layer. API/OAuth paths deliberately stay open.
 class Auth::ThresholdsController < ApplicationController
-  layout 'auth'
+  layout 'kronk_void'
 
   before_action :authenticate_user!
 
