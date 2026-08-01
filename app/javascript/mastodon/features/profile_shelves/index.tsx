@@ -4,7 +4,7 @@
  * closure so the checks look "always truthy/falsy", but the guards
  * are load-bearing: without them setState fires after unmount. */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -13,13 +13,21 @@ import { NavLink, useParams } from 'react-router-dom';
 
 import { apiRequestGet } from 'mastodon/api';
 import type { ApiProfileCardJSON } from 'mastodon/api/profile_cards';
-import { apiGetProfileCards } from 'mastodon/api/profile_cards';
+import {
+  apiGetOwnProfileCards,
+  apiGetProfileCards,
+} from 'mastodon/api/profile_cards';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
-import { apiGetProfileSections } from 'mastodon/api/profile_sections';
+import {
+  apiGetOwnProfileSections,
+  apiGetProfileSections,
+} from 'mastodon/api/profile_sections';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Column } from 'mastodon/components/column';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
+import { me } from 'mastodon/initial_state';
 
+import { ArrangeStage } from './components/arrange_stage';
 import { ProfileHeader } from './components/profile_header';
 import { ShelvesStack } from './components/shelves_stack';
 
@@ -73,6 +81,14 @@ const messages = defineMessages({
     id: 'profile_shelves.not_found',
     defaultMessage: "We couldn't find that profile.",
   },
+  arrange: {
+    id: 'profile_shelves.arrange_toggle',
+    defaultMessage: 'Arrange',
+  },
+  view: {
+    id: 'profile_shelves.view_toggle',
+    defaultMessage: 'View',
+  },
 });
 
 interface RouteParams {
@@ -88,13 +104,17 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
   const [sections, setSections] = useState<ApiProfileSectionJSON[] | null>(
     null,
   );
+  const [mode, setMode] = useState<'view' | 'arrange'>('view');
   const [error, setError] = useState(false);
+
+  const isOwner = account !== null && account.id === me;
 
   useEffect(() => {
     let cancelled = false;
     setAccount(null);
     setCards(null);
     setSections(null);
+    setMode('view');
     setError(false);
 
     void (async () => {
@@ -106,11 +126,19 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
         if (cancelled) return;
         setAccount(acctRes);
 
+        // Owner sees their own unfiltered content (visible: false rows,
+        // only_me shelves); everyone else goes through the viewer path
+        // which the server filters.
+        const viewingSelf = acctRes.id === me;
         const [cardsRes, sectionsRes] = await Promise.all([
-          apiGetProfileCards(acctRes.id).catch(() => [] as ApiProfileCardJSON[]),
-          apiGetProfileSections(acctRes.id).catch(
-            () => [] as ApiProfileSectionJSON[],
-          ),
+          (viewingSelf
+            ? apiGetOwnProfileCards()
+            : apiGetProfileCards(acctRes.id)
+          ).catch(() => [] as ApiProfileCardJSON[]),
+          (viewingSelf
+            ? apiGetOwnProfileSections()
+            : apiGetProfileSections(acctRes.id)
+          ).catch(() => [] as ApiProfileSectionJSON[]),
         ]);
         if (cancelled) return;
         setCards(cardsRes);
@@ -124,6 +152,24 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
       cancelled = true;
     };
   }, [acct]);
+
+  const handleArrangeChange = useCallback(
+    (next: {
+      cards: ApiProfileCardJSON[];
+      sections: ApiProfileSectionJSON[];
+    }) => {
+      setCards(next.cards);
+      setSections(next.sections);
+    },
+    [],
+  );
+
+  const toggleMode = useCallback(() => {
+    setMode((current) => (current === 'arrange' ? 'view' : 'arrange'));
+  }, []);
+  const enterArrange = useCallback(() => {
+    setMode('arrange');
+  }, []);
 
   const title = intl.formatMessage(messages.title);
 
@@ -150,7 +196,24 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
         <title>{title}</title>
       </Helmet>
 
-      {account && <ProfileHeader account={account} />}
+      {account && (
+        <ProfileHeader
+          account={account}
+          actions={
+            isOwner ? (
+              <button
+                type='button'
+                className='profile-shelves__mode-toggle'
+                onClick={toggleMode}
+              >
+                {mode === 'arrange'
+                  ? intl.formatMessage(messages.view)
+                  : intl.formatMessage(messages.arrange)}
+              </button>
+            ) : null
+          }
+        />
+      )}
 
       <nav className='profile-shelves__pillars' aria-label='Profile sections'>
         <NavLink
@@ -181,9 +244,28 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
         <div className='profile-shelves__loading'>
           {intl.formatMessage(messages.loading)}
         </div>
+      ) : mode === 'arrange' && isOwner ? (
+        <ArrangeStage
+          cards={cards ?? []}
+          sections={sections ?? []}
+          onChange={handleArrangeChange}
+        />
       ) : nothingShown ? (
         <div className='profile-shelves__empty'>
-          {intl.formatMessage(messages.emptyViewer)}
+          {isOwner ? (
+            <>
+              <p>{intl.formatMessage(messages.emptyOwner)}</p>
+              <button
+                type='button'
+                className='profile-shelves__mode-toggle'
+                onClick={enterArrange}
+              >
+                {intl.formatMessage(messages.emptyOwnerCta)}
+              </button>
+            </>
+          ) : (
+            intl.formatMessage(messages.emptyViewer)
+          )}
         </div>
       ) : (
         <ShelvesStack cards={cards ?? []} sections={sections ?? []} />
