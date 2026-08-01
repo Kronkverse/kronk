@@ -75,7 +75,7 @@ class Api::V1::Profile::CardsController < Api::BaseController
   end
 
   def card_update_params
-    params.permit(:body, :visibility, :position, :visible)
+    params.permit(:body, :render, :visibility, :position, :visible)
   end
 
   def require_composer_flag!
