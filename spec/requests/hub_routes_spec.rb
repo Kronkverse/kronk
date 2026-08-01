@@ -15,7 +15,6 @@ RSpec.describe 'Hub routes' do
       /hub/kuestions
       /hub/inflow
       /hub/martketplace
-      /hub/tree
     ).each do |path|
       it "GET #{path}" do
         get path

@@ -61,10 +61,11 @@ module Nudges
           current[key].actors << notification.from_account unless notification.from_account.nil? || current[key].actors.include?(notification.from_account)
         else
           finalised << current[key] if current[key]
+          subject_type, subject_id = subject_identity(notification)
           current[key] = Group.new(
             type: notification.type.to_s,
-            subject_type: notification.activity_type,
-            subject_id: notification.activity_id,
+            subject_type: subject_type,
+            subject_id: subject_id,
             actors: [notification.from_account].compact,
             notifications: [notification]
           )
@@ -78,7 +79,20 @@ module Nudges
     private
 
     def group_key(notification)
-      [notification.type, notification.activity_type, notification.activity_id]
+      [notification.type, *subject_identity(notification)]
+    end
+
+    # The subject a notification is *about*. Froths and boosts each carry a
+    # distinct activity record (one Favourite / reblog Status per actor), so
+    # keying on activity_id never collapses them — which is the whole point
+    # of the aggregator. Mirror Notification::Groups: the subject is the
+    # underlying status (target_status) when there is one, else the raw
+    # polymorphic activity for subjectless types (follows, admin, ...).
+    def subject_identity(notification)
+      status = notification.target_status
+      return ['Status', status.id] if status
+
+      [notification.activity_type, notification.activity_id]
     end
 
     def window_for(type)

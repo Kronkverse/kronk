@@ -35,7 +35,9 @@ module Nudges
     def record_message!
       with_lock do
         self.message_count += 1
-        newly_crossed = MILESTONE_THRESHOLDS.find { |t| message_count >= t && last_milestone_hit < t }
+        # Highest threshold newly crossed, not the first: a cold-migration
+        # jump (0 -> 5000) must record 4000, then carry from there.
+        newly_crossed = MILESTONE_THRESHOLDS.reverse.find { |t| message_count >= t && last_milestone_hit < t }
 
         if newly_crossed
           self.last_milestone_hit = newly_crossed

@@ -324,7 +324,7 @@ RSpec.describe UserMailer do
     it 'renders welcome mail' do
       expect(mail)
         .to be_present
-        .and(have_subject(I18n.t('user_mailer.welcome.subject')))
+        .and(have_subject(I18n.t('user_mailer.welcome.subject', name: receiver.account.username)))
         .and(have_body_text(I18n.t('user_mailer.welcome.explanation')))
     end
 

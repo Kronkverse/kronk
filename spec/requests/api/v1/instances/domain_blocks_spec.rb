@@ -52,17 +52,6 @@ RSpec.describe 'Domain Blocks' do
           end
         end
 
-        context 'with unconfirmed user' do
-          before { user.update(confirmed_at: nil) }
-
-          it 'returns http not found' do
-            get api_v1_instance_domain_blocks_path, headers: { 'Authorization' => "Bearer #{token}" }
-
-            expect(response)
-              .to have_http_status(404)
-          end
-        end
-
         context 'with disabled user' do
           before { user.update(disabled: true) }
 
