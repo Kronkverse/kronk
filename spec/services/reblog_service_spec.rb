@@ -87,4 +87,24 @@ RSpec.describe ReblogService do
       expect(ActivityPub::DistributionWorker).to have_received(:perform_async)
     end
   end
+
+  describe 'korner unread marking' do
+    subject { described_class.new }
+
+    let(:alice) { Fabricate(:account, username: 'alice') }
+
+    it 'marks a korner-tagged status seen for the reblogger' do
+      korner_status = Fabricate(:status, account: Fabricate(:account), source_korner: 'kommons')
+
+      subject.call(alice, korner_status)
+
+      expect(KornerContentView.where(account: alice, korner_slug: 'kommons', content_id: korner_status.id)).to exist
+    end
+
+    it 'does not create a seen row for a non-korner status' do
+      status = Fabricate(:status, account: Fabricate(:account))
+
+      expect { subject.call(alice, status) }.to_not change(KornerContentView, :count)
+    end
+  end
 end
