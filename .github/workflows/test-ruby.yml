@@ -15,14 +15,6 @@ on:
       - '.github/workflows/test-ruby.yml'
       - '.github/actions/setup-ruby/**'
   pull_request:
-    paths:
-      - '**/*.rb'
-      - 'db/**'
-      - 'config/**'
-      - 'Gemfile'
-      - 'Gemfile.lock'
-      - '.github/workflows/test-ruby.yml'
-      - '.github/actions/setup-ruby/**'
 
 env:
   BUNDLE_CLEAN: true
@@ -200,7 +192,7 @@ jobs:
     name: ImageMagick tests
     # ImageMagick/libheif isn't available in the merge-queue runner; keep this
     # on PRs and pushes but off the merge group so it doesn't block ALLGREEN.
-    if: ${{ github.event_name != 'merge_group' }}
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
 
     needs:
@@ -290,7 +282,7 @@ jobs:
     name: End to End testing
     # Playwright/browser E2E can't run in the merge-queue runner; keep it on
     # PRs and pushes but off the merge group so it doesn't block ALLGREEN.
-    if: ${{ github.event_name != 'merge_group' }}
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
 
     needs:
@@ -394,6 +386,8 @@ jobs:
 
   test-search:
     name: Elastic Search integration testing
+    # Not a merge gate; skip on PRs (heavy Elasticsearch). Runs on push + merge_group.
+    if: ${{ github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
 
     needs:
