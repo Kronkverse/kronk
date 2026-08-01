@@ -172,13 +172,12 @@ jobs:
             rspec-persistence
 
       # System specs need a JS/browser env (Kronk's frontend is SPA-only, so
-      # server-rendered pages only show a noscript notice). They still run on
-      # PRs and pushes, but are excluded from the merge-queue run where no
-      # browser is available — otherwise every merge group fails on them and
-      # the ALLGREEN queue can never merge.
-      - run: >-
-          bin/flatware rspec -r ./spec/flatware_helper.rb
-          ${{ github.event_name == 'merge_group' && '--exclude-pattern "spec/system/**/*_spec.rb"' || '' }}
+      # server-rendered pages only show a noscript notice). They are always
+      # excluded from this rspec job — on PRs, pushes AND the merge queue —
+      # because there is no browser here; the browser-driven ones run in the
+      # dedicated test-e2e job. Without this every run fails on them, and once
+      # `test` is a required check that would block every PR and freeze the queue.
+      - run: bin/flatware rspec -r ./spec/flatware_helper.rb --exclude-pattern "spec/system/**/*_spec.rb"
 
       - name: Upload coverage reports to Codecov
         if: matrix.ruby-version == '.ruby-version'
