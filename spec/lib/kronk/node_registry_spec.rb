@@ -54,9 +54,12 @@ RSpec.describe Kronk::NodeRegistry do
 
   describe '.for_bucket' do
     it 'filters by bucket' do
-      feed_ids = described_class.for_bucket('feed').map(&:id)
-      expect(feed_ids).to include('feed.home')
-      expect(feed_ids).to all(start_with('feed.'))
+      feed_nodes = described_class.for_bucket('feed')
+      expect(feed_nodes.map(&:id)).to include('feed.home')
+      # Not every feed-bucket id is 'feed.'-prefixed: settings.feed
+      # deliberately hangs off the feed limb (a space configures itself in
+      # its own bucket). Assert on bucket, which is what the method filters.
+      expect(feed_nodes).to all(have_attributes(bucket: 'feed'))
     end
   end
 
@@ -81,9 +84,9 @@ RSpec.describe Kronk::NodeRegistry do
 
     it 'flags stub korners as lifecycle:soon' do
       klot = described_class.find('klot.index')
-      moments = described_class.find('moments.index')
+      albutts = described_class.find('albutts.index')
       expect(klot.lifecycle).to eq('live')
-      expect(moments.lifecycle).to eq('soon')
+      expect(albutts.lifecycle).to eq('soon')
     end
   end
 

@@ -87,7 +87,7 @@ RSpec.describe Kronk::Search::Adapter::Meilisearch do
     allow(fake_client).to receive(:index).and_raise(StandardError, 'meili unreachable')
     adapter = described_class.new(client: fake_client)
 
-    expect(Rails.logger).to receive(:warn).with(/index.*failed.*meili unreachable/)
+    expect(Rails.logger).to receive(:error).with(/index.*failed.*meili unreachable/)
     expect { adapter.index(:statuses, record) }.to_not raise_error
   end
 
