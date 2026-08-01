@@ -35,11 +35,20 @@ class ReblogService < BaseService
 
     create_notification(reblog)
     increment_statistics
+    mark_korner_seen(account, reblogged_status)
 
     reblog
   end
 
   private
+
+  # Reblogging a korner post from your feed marks it seen for that korner's
+  # unread badge. Keyed on the reblogged status; no-op for non-korner statuses.
+  def mark_korner_seen(account, status)
+    return if status.source_korner.blank?
+
+    Kronk::KornerSeen.mark_seen(account, status.source_korner, status.id)
+  end
 
   def create_notification(reblog)
     reblogged_status = reblog.reblog

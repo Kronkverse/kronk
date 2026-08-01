@@ -16,6 +16,18 @@ RSpec.describe FavouriteService do
 
       expect(status.favourites.first).to_not be_nil
     end
+
+    it 'marks a korner-tagged status seen for the sender' do
+      korner_status = Fabricate(:status, account: bob, source_korner: 'kommons')
+
+      subject.call(sender, korner_status)
+
+      expect(KornerContentView.where(account: sender, korner_slug: 'kommons', content_id: korner_status.id)).to exist
+    end
+
+    it 'does not create a seen row for a non-korner status' do
+      expect { subject.call(sender, status) }.to_not change(KornerContentView, :count)
+    end
   end
 
   describe 'remote ActivityPub' do

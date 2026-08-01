@@ -21,11 +21,20 @@ class FavouriteService < BaseService
 
     create_notification(favourite)
     increment_statistics
+    mark_korner_seen(account, status)
 
     favourite
   end
 
   private
+
+  # Interacting with a korner post anywhere (e.g. frothing it in your own feed)
+  # marks it seen for that korner's unread badge. No-op for non-korner statuses.
+  def mark_korner_seen(account, status)
+    return if status.source_korner.blank?
+
+    Kronk::KornerSeen.mark_seen(account, status.source_korner, status.id)
+  end
 
   def create_notification(favourite)
     status = favourite.status
