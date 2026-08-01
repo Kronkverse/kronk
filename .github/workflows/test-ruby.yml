@@ -171,13 +171,16 @@ jobs:
             rspec-persistence-main
             rspec-persistence
 
-      # System specs need a JS/browser env (Kronk's frontend is SPA-only, so
-      # server-rendered pages only show a noscript notice). They are always
-      # excluded from this rspec job — on PRs, pushes AND the merge queue —
-      # because there is no browser here; the browser-driven ones run in the
-      # dedicated test-e2e job. Without this every run fails on them, and once
-      # `test` is a required check that would block every PR and freeze the queue.
-      - run: bin/flatware rspec -r ./spec/flatware_helper.rb --exclude-pattern "spec/system/**/*_spec.rb"
+      # This is the required merge gate, so it must be green in an environment
+      # with no browser and no image toolchain. Two families of specs can't run
+      # here and are always excluded (on PRs, pushes AND the merge queue):
+      #   - `spec/system/**` — need a JS/browser env (Kronk's frontend is
+      #     SPA-only); they run in the dedicated test-e2e job.
+      #   - `:attachment_processing` — do real image processing (HEIC/AVIF need
+      #     libheif etc.); they run in the dedicated test-imagemagick job.
+      # Without these exclusions the gate fails on env-only issues and would
+      # block every PR / freeze the queue.
+      - run: bin/flatware rspec -r ./spec/flatware_helper.rb --exclude-pattern "spec/system/**/*_spec.rb" --tag ~attachment_processing
 
       - name: Upload coverage reports to Codecov
         if: matrix.ruby-version == '.ruby-version'
