@@ -271,6 +271,11 @@ namespace :api, format: false do
     end
 
     namespace :profile do
+      # Library catalogue — told presets (unfilled ProfileCard types)
+      # + drawn presets (available korner-projection shelves for this
+      # account). Powers the composer's "add a shelf/card" grid.
+      get :library, to: 'library#show'
+
       resources :sections, only: [:index, :create, :update, :destroy] do
         collection do
           put :reorder
