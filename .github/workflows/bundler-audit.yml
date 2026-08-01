@@ -21,6 +21,10 @@ on:
 
 jobs:
   security:
+    # Runs on PRs/pushes/schedule as a security scan, but NOT in the merge
+    # queue: a new upstream CVE should not freeze feature merges (it is surfaced
+    # on the PR and the weekly cron instead).
+    if: ${{ github.event_name != 'merge_group' }}
     runs-on: ubuntu-latest
 
     env:

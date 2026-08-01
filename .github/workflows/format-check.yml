@@ -15,15 +15,6 @@ on:
       - '.prettier*'
       - '.github/workflows/format-check.yml'
   pull_request:
-    paths:
-      - 'app/javascript/**/*.ts'
-      - 'app/javascript/**/*.tsx'
-      - 'app/javascript/**/*.js'
-      - 'app/javascript/**/*.scss'
-      - 'package.json'
-      - 'yarn.lock'
-      - '.prettier*'
-      - '.github/workflows/format-check.yml'
 
 jobs:
   lint:
