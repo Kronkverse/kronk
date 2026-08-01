@@ -44,6 +44,7 @@ class ApplicationController < ActionController::Base
 
   before_action :store_referrer, except: :raise_not_found, if: :devise_controller?
   before_action :require_functional!, if: :user_signed_in?
+  before_action :require_crossed_thresholds!, if: :user_signed_in?
 
   before_action :set_cache_control_defaults
 
@@ -92,6 +93,20 @@ class ApplicationController < ActionController::Base
         end
       end
     end
+  end
+
+  # HTML-only gate — redirects a signed-in, functional member to the
+  # threshold ceremony until they've crossed at the current version.
+  # Not folded into `require_functional!` deliberately: API / OAuth /
+  # ActivityPub / .well-known paths stay open regardless, so a member
+  # using a Mastodon client isn't blocked (KRONK_SIGNUP.md §4, §11).
+  def require_crossed_thresholds!
+    return if current_user.crossed_thresholds?
+    return unless request.format.html?
+    return if request.path.start_with?('/auth', '/.well-known') ||
+              request.path == '/kronk/rules' || request.path.start_with?('/kronk/')
+
+    redirect_to auth_thresholds_path
   end
 
   def skip_csrf_meta_tags?

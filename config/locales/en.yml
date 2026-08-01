@@ -1698,10 +1698,6 @@ en:
       page_title: Three thresholds
       restart: restart
       step_counter: Step 2 of 2 · Three thresholds
-      # Stub keys kept so layer 2 doesn't break during rollout — layer 7
-      # replaces the stub view and these can go.
-      stub_body: The ceremony is on its way. For now, cross all three to enter.
-      stub_title: Three thresholds
       vow:
         custodianship:
           more: We're here for community and connection. We achieve this through authentic expression of our human experience; we celebrate our wins together, and show up for each other through the lows. We're all in this together, and the invitation is to look out for your community, and allow them to look out for you. To build a collective sense of intention and trust, everyone who exists here has been invited with love and care. As a custodian, you are welcome to invite anyone you wish — we trust you to help maintain the integrity of Kronk. Choose carefully.
