@@ -136,6 +136,10 @@ group :test do
   # Extra RSpec extension methods and helpers for sidekiq
   gem 'rspec-sidekiq', '~> 5.0'
 
+  # Retry flaky examples on CI so non-deterministic failures (parallel
+  # flatware sharding, attachment/timing races) don't block the merge queue
+  gem 'rspec-retry'
+
   # Browser integration testing
   gem 'capybara', '~> 3.39'
   gem 'capybara-playwright-driver'

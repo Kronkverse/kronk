@@ -45,6 +45,7 @@ require 'capybara/rspec'
 require 'chewy/rspec'
 require 'email_spec/rspec'
 require 'pundit/rspec'
+require 'rspec/retry'
 require 'test_prof/recipes/rspec/before_all'
 
 Rails.root.glob('spec/support/**/*.rb').each { |f| require f }
@@ -77,6 +78,14 @@ Devise::Test::ControllerHelpers.module_eval do
 end
 
 RSpec.configure do |config|
+  # rspec-retry: on CI, retry a failed example up to 3 times so a
+  # non-deterministic flake (parallel flatware sharding, attachment/timing
+  # races) doesn't randomly block the merge queue. Locally, no retry (1 try)
+  # so flakes surface during development instead of being masked.
+  config.verbose_retry = true
+  config.display_try_failure_messages = true
+  config.default_retry_count = ENV['CI'].present? ? 3 : 1
+
   # By default, skip specs that need full JS browser
   config.filter_run_excluding :js
 
