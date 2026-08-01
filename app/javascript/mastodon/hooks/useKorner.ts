@@ -31,6 +31,15 @@ export const useKornerSlugs = (): string[] => {
   return useAppSelector((state) => Object.keys(state.korners));
 };
 
+// Unread badge count for one korner — the number of new, feed-visible items
+// the viewer hasn't seen. 0 when caught up, for anonymous viewers, or before
+// the registry loads. See lib/kronk/korner_seen.rb.
+export const useKornerUnreadCount = (slug: string | undefined): number => {
+  return useAppSelector((state) =>
+    slug ? (state.korners[slug]?.unread_count ?? 0) : 0,
+  );
+};
+
 // Every registered manifest, including core spaces (feed / profile /
 // hub / nudges / settings). Use this only when you specifically need
 // core spaces — settings surfaces that let a user configure them,
