@@ -98,6 +98,31 @@ RSpec.describe 'Korners' do
     end
   end
 
+  describe 'POST /api/v1/korners/:slug/seen' do
+    let(:user) { Fabricate(:user) }
+    let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'write:accounts') }
+    let(:headers) { { 'Authorization' => "Bearer #{token.token}" } }
+
+    it 'advances the seen baseline to the korner newest item and reports unread_count 0' do
+      poster = Fabricate(:account)
+      user.account.follow!(poster)
+      status = Fabricate(:status, account: poster, source_korner: 'kommons')
+
+      post seen_api_v1_korner_path(id: 'kommons'), headers: headers
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body).to include('slug' => 'kommons', 'unread_count' => 0)
+      marker = KornerSeenMarker.find_by(account: user.account, korner_slug: 'kommons')
+      expect(marker.baseline_id).to eq(status.id)
+    end
+
+    it 'requires authentication' do
+      post seen_api_v1_korner_path(id: 'kommons')
+
+      expect(response).to have_http_status(401).or have_http_status(403)
+    end
+  end
+
   describe 'DELETE /api/v1/korners/:slug/tune_out' do
     let(:user) { Fabricate(:user) }
     let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'write:accounts') }

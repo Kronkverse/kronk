@@ -251,6 +251,9 @@ namespace :api, format: false do
         # Canonical spec §K.9 alias.
         post :tune_in, action: :tune_in
 
+        # Opening a korner marks its content seen up to now (unread badge → 0).
+        post :seen, action: :mark_seen
+
         # Per-korner user settings (spec §K).
         get :settings, action: :settings_show
         post :settings, action: :settings_update
