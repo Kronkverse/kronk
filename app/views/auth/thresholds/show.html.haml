@@ -75,5 +75,7 @@
 
         .threshold-ceremony__arrival#threshold-arrival
           .threshold-ceremony__mark= t('kronk.signup.wordmark')
-          %p.threshold-ceremony__said!= t('kronk.thresholds.arrival.line_html', username: current_user.account.username)
+          -# Rails i18n auto-escapes interpolation values on `*_html` keys,
+          -# so `= t(...)` (not `!=`) is safe and Brakeman-quiet.
+          %p.threshold-ceremony__said= t('kronk.thresholds.arrival.line_html', username: current_user.account.username)
           %button.threshold-ceremony__enter#threshold-enter{ type: 'submit' }= t('kronk.thresholds.arrival.cta_enter')
