@@ -1,27 +1,20 @@
 # frozen_string_literal: true
 
-# Kuestions::VisibilityGate — enforces the "answer-before-view" rule
-# AND the per-answer visibility scope, now aligned with the platform-
-# wide reach ladder (docs/kronk_feed_and_reach.md §2).
+# Kuestions::VisibilityGate — enforces the "answer-before-view" rule.
 #
-# Layer 1 (gate): When Question#locked? is true, a viewer who has not
-# posted their own answer sees only their own answer (which may be
-# empty). Once they answer, the full answer set becomes _candidate_
-# visible.
+# The rule (maintainer, 2026-07-31): anyone who can see a question can
+# see all of its answers. The gate is the ONLY access control on the
+# answer list — there is no per-answer hiding from a viewer who has
+# passed it.
 #
-# Layer 2 (per-answer scope): Once the gate opens, each other answer
-# is filtered through its own `visibility_scope`, matching the four
-# tiers Status/Album/Moment use:
+# - Unlocked question: the answers are open — visible to anyone,
+#   including anonymous viewers.
+# - Locked question: a viewer who has not posted their own answer sees
+#   only their own (which may be empty); the asker is exempt. Once the
+#   viewer answers, the full answer set becomes visible.
 #
-# - `public`    — any viewer can see.
-# - `orbit`     — mates-of-mates of the answerer (one hop out).
-# - `mates`     — mutual connections of the answerer.
-# - `self_only` — nobody but the answerer.
-#
-# The pre-2026-07-29 vocabulary (`everyone / kronk_members /
-# connections / vouched / only_me`) was retired in slice 4 of the
-# visibility standardisation; the accompanying migration walks
-# existing rows onto the new set.
+# (An answer's own `visibility_scope` still governs how it projects as a
+# Status into feeds elsewhere; it does not gate the in-question list.)
 module Kuestions
   module VisibilityGate
     module_function
@@ -29,10 +22,11 @@ module Kuestions
     def visible_answers(question, viewer)
       return question.answers.none if question.nil?
 
-      gated = gated_answers(question, viewer)
-      return gated if viewer.nil? # no-viewer path already applied the strict rule
-
-      gated.select { |a| answer_visible?(a, viewer) }
+      # Anyone who can see the question can see its answers: the gate is the
+      # only access control on the list. gated_answers already returns the
+      # correct set for every case (open, locked-unanswered, locked-answered,
+      # asker, anonymous).
+      gated_answers(question, viewer)
     end
 
     def can_view_answers?(question, viewer)
@@ -41,29 +35,6 @@ module Kuestions
       return true if asker?(question, viewer)
 
       question.answered_by?(viewer)
-    end
-
-    # Answer is visible to `viewer` per its `visibility_scope`. The
-    # answerer themselves always sees their own answer regardless of
-    # scope.
-    def answer_visible?(answer, viewer)
-      return false unless answer
-      return true  if viewer && viewer.id == answer.account_id
-
-      case answer.visibility_scope
-      when 'public'
-        true
-      when 'orbit'
-        return false if viewer.nil?
-
-        viewer.mate?(answer.account) || viewer.orbit_of?(answer.account)
-      when 'mates'
-        return false if viewer.nil?
-
-        viewer.mate?(answer.account)
-      else # self_only or an unknown scope
-        false
-      end
     end
 
     def gated_answers(question, viewer)
