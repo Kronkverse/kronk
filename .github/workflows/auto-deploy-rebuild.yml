@@ -19,9 +19,49 @@ jobs:
       - name: Deploy rebuild branch
         env:
           DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
+        # Runs the remote `deploy rebuild/2.0.0` script on shadow. The
+        # script's last observed steps (in a healthy run) were:
+        #
+        #   Running migrations...
+        #   Syncing version label to Kronk::Version ...   ← flaky
+        #   Restarting staging services...
+        #   Clearing instance cache...
+        #   === Staging deploy complete ===
+        #
+        # Since 2026-07-31 the "Syncing version label" step exits 1
+        # (see issue #1057), which aborts the script BEFORE the
+        # container-restart step — leaving shadow stuck on whatever
+        # code was live at the last green deploy. The real fix lives on
+        # the shadow host (the remote deploy script needs `|| true` on
+        # its sync step, or that step needs to move after the restart).
+        # Until that lands, gate the workflow's own success on the
+        # presence of a positive completion signal in the remote log
+        # rather than trusting the ssh exit code alone. The workflow
+        # still exits non-zero — and shadow is still stuck — but the
+        # error message points at the correct root cause instead of at
+        # whichever PR happened to be the latest merge.
         run: |
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/key
           chmod 600 ~/.ssh/key
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "deploy rebuild/2.0.0"
+          set +e
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key \
+            claude@170.64.182.29 "deploy rebuild/2.0.0" \
+            2>&1 | tee /tmp/deploy.log
+          ssh_status=${PIPESTATUS[0]}
           rm -f ~/.ssh/key
+
+          if grep -q "Staging deploy complete" /tmp/deploy.log; then
+            echo "::notice::Shadow container restarted; deploy complete."
+            exit 0
+          fi
+
+          if grep -q "Syncing version label to Kronk::Version" /tmp/deploy.log; then
+            echo "::error::Shadow deploy stopped at the 'Syncing version label' step (issue #1057)."
+            echo "::error::The remote deploy script exited before restarting the container, so shadow is running the previously-deployed code."
+            echo "::error::Fix on the shadow host: patch the remote 'deploy' script so the sync step is best-effort (append '|| true'), or move it after the restart step."
+            exit 1
+          fi
+
+          echo "::error::Shadow deploy failed for an unexpected reason (remote ssh exit=$ssh_status). See the full log above."
+          exit "$ssh_status"
