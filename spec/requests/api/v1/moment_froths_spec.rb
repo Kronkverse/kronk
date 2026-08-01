@@ -1,0 +1,33 @@
+# frozen_string_literal: true
+
+require 'rails_helper'
+
+RSpec.describe 'Moment froths' do
+  let(:user) { Fabricate(:user) }
+  let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'write:favourites') }
+  let(:headers) { { 'Authorization' => "Bearer #{token.token}" } }
+
+  let(:author) { Fabricate(:account) }
+  let(:media)  { Fabricate(:media_attachment, account: author) }
+  let(:moment) { Moment.create!(account: author, media_attachment: media, visibility: :public) }
+
+  describe 'POST /api/v1/moments/:moment_id/froth' do
+    it 'creates the froth and marks the Moment seen for the froather' do
+      expect do
+        post "/api/v1/moments/#{moment.id}/froth", headers: headers
+      end.to change { MomentFroth.where(account: user.account, moment: moment).count }.from(0).to(1)
+
+      expect(response).to have_http_status(200)
+      expect(KornerContentView.where(account: user.account, korner_slug: 'moments', content_id: moment.id)).to exist
+    end
+
+    it 'still records the seen row on a duplicate froth (idempotent)' do
+      moment.moment_froths.create!(account: user.account)
+
+      post "/api/v1/moments/#{moment.id}/froth", headers: headers
+
+      expect(response).to have_http_status(200)
+      expect(KornerContentView.where(account: user.account, korner_slug: 'moments', content_id: moment.id)).to exist
+    end
+  end
+end
