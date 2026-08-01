@@ -11,9 +11,11 @@ import { FormattedMessage } from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 
+import { setKornerSeen } from 'mastodon/actions/korners';
 import { apiRequestGet } from 'mastodon/api';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { me } from 'mastodon/initial_state';
+import { useAppDispatch } from 'mastodon/store';
 
 import { MomentsComposer } from './composer';
 
@@ -38,6 +40,9 @@ interface MomentJSON {
   active: boolean;
   account: AccountJSON;
   media_attachment: MediaJSON;
+  // Whether the viewer has already seen this Moment (viewed or frothed) — its
+  // ring renders dim rather than bright. See lib/kronk/korner_seen.rb.
+  seen_by_viewer?: boolean;
 }
 
 interface RingProps {
@@ -45,6 +50,7 @@ interface RingProps {
   moment?: MomentJSON;
   isOwner: boolean;
   ownerHasMoment: boolean;
+  seen: boolean;
   onCompose: () => void;
   onOpen: (moment: MomentJSON) => void;
 }
@@ -54,6 +60,7 @@ const Ring = ({
   moment,
   isOwner,
   ownerHasMoment,
+  seen,
   onCompose,
   onOpen,
 }: RingProps) => {
@@ -68,7 +75,7 @@ const Ring = ({
   return (
     <button
       type='button'
-      className={`moments-strip__ring${isOwner ? ' moments-strip__ring--owner' : ''}${moment ? ' moments-strip__ring--has-moment' : ''}`}
+      className={`moments-strip__ring${isOwner ? ' moments-strip__ring--owner' : ''}${moment ? ' moments-strip__ring--has-moment' : ''}${moment && seen ? ' moments-strip__ring--seen' : ''}`}
       onClick={handleClick}
       aria-label={`${account.display_name || account.acct}${moment ? ' has an active Moment' : ' — add a Moment'}`}
     >
@@ -99,7 +106,12 @@ export const MomentsStrip = () => {
   const [loading, setLoading] = useState(true);
   const [refreshTick, setRefreshTick] = useState(0);
   const [showComposer, setShowComposer] = useState(false);
+  // Moments seen optimistically this session (opened in the viewer), so their
+  // rings dim immediately without waiting for a refetch. Merged with the
+  // server's seen_by_viewer.
+  const [seenIds, setSeenIds] = useState<Set<string>>(() => new Set());
   const history = useHistory();
+  const dispatch = useAppDispatch();
   const momentsKorner = useKorner('moments');
   const tunedOut = momentsKorner?.tuned_in === false;
 
@@ -134,9 +146,21 @@ export const MomentsStrip = () => {
 
   const openViewer = useCallback(
     (moment: MomentJSON) => {
+      // Viewing a Moment marks it seen: dim its ring now (optimistic) and tick
+      // the Moments badge down by one. The server records it on GET show.
+      if (!moment.seen_by_viewer && !seenIds.has(moment.id)) {
+        setSeenIds((prev) => new Set(prev).add(moment.id));
+        dispatch(setKornerSeen({ slug: 'moments' }));
+      }
       history.push(`/hub/moments/${moment.id}`);
     },
-    [history],
+    [history, dispatch, seenIds],
+  );
+
+  const isSeen = useCallback(
+    (moment: MomentJSON) =>
+      Boolean(moment.seen_by_viewer) || seenIds.has(moment.id),
+    [seenIds],
   );
 
   // Tuned out of Moments → no strip on Home (the korner tune-in gate).
@@ -168,6 +192,7 @@ export const MomentsStrip = () => {
           moment={ownMoment}
           isOwner
           ownerHasMoment={!!ownMoment}
+          seen={false}
           onCompose={openComposer}
           onOpen={openViewer}
         />
@@ -178,6 +203,7 @@ export const MomentsStrip = () => {
             moment={moment}
             isOwner={false}
             ownerHasMoment={false}
+            seen={isSeen(moment)}
             onCompose={openComposer}
             onOpen={openViewer}
           />

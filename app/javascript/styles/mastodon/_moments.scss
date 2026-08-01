@@ -403,6 +403,15 @@
   padding: 2px;
 }
 
+// A Moment the viewer has already seen (viewed or frothed) dims — a muted grey
+// ring instead of the bright purple gradient — so unseen Moments stand out.
+// See lib/kronk/korner_seen.rb.
+.moments-strip__ring--seen.moments-strip__ring--has-moment
+  .moments-strip__ring-avatar {
+  background: var(--border-default);
+  opacity: 0.7;
+}
+
 .moments-strip__ring-add {
   position: absolute;
   bottom: -2px;

@@ -87,6 +87,19 @@ module Kronk
       KornerSeenMarker.where(account_id: account.id, korner_slug: slug.to_s).pick(:baseline_id) || 0
     end
 
+    # Has this account seen one specific item of a korner? True when the item is
+    # at or below the baseline, or has a per-item seen row. Powers per-item UI
+    # state (e.g. dimming a seen Moment ring).
+    def seen?(account, slug, content_id)
+      return false if account.nil? || slug.blank? || content_id.nil?
+
+      slug = slug.to_s
+      content_id = content_id.to_i
+      return true if content_id <= baseline_for(account, slug)
+
+      KornerContentView.exists?(account_id: account.id, korner_slug: slug, content_id: content_id)
+    end
+
     def seen_ids_by_slug(account, slugs)
       account.korner_content_views
              .where(korner_slug: slugs)

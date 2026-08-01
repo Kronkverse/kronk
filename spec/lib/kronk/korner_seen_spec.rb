@@ -43,6 +43,25 @@ RSpec.describe Kronk::KornerSeen do
     end
   end
 
+  describe '.seen?' do
+    it 'is false for an unseen item and true once marked' do
+      status = korner_status
+      expect(described_class.seen?(viewer, slug, status.id)).to be(false)
+      described_class.mark_seen(viewer, slug, status.id)
+      expect(described_class.seen?(viewer, slug, status.id)).to be(true)
+    end
+
+    it 'is true for anything at or below the baseline' do
+      status = korner_status
+      described_class.mark_all_seen(viewer, slug)
+      expect(described_class.seen?(viewer, slug, status.id)).to be(true)
+    end
+
+    it 'is false for a nil account' do
+      expect(described_class.seen?(nil, slug, 1)).to be(false)
+    end
+  end
+
   describe '.mark_all_seen' do
     it 'advances the baseline to the korner newest id and prunes covered rows' do
       old = korner_status
