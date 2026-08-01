@@ -144,17 +144,12 @@ export const ShelfTold: React.FC<ShelfToldProps> = ({ card }) => (
     ) : card.render === 'rail' ? (
       <ul className='profile-shelves__told-rail'>
         {parseRail(card.body).map((entry, i) => (
-          <li
-            key={`${entry.heading}-${i}`}
-            className='profile-shelves__told-rail-item'
-          >
+          <li key={`${entry.heading}-${i}`} className='profile-shelves__told-rail-item'>
             <div className='profile-shelves__told-rail-heading'>
               {entry.heading}
             </div>
             {entry.text && (
-              <div className='profile-shelves__told-rail-text'>
-                {entry.text}
-              </div>
+              <div className='profile-shelves__told-rail-text'>{entry.text}</div>
             )}
           </li>
         ))}
@@ -163,6 +158,7 @@ export const ShelfTold: React.FC<ShelfToldProps> = ({ card }) => (
       // block (default) — server returns sanitised HTML like Account.note.
       <div
         className='profile-shelves__told-block'
+         
         dangerouslySetInnerHTML={{ __html: card.body }}
       />
     )}
