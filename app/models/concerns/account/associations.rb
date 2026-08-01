@@ -79,6 +79,12 @@ module Account::Associations
     # delete rather than destroy — no callbacks to run.
     has_many :korner_tune_outs, inverse_of: :account, dependent: :delete_all
 
+    # Per-korner "seen" plumbing behind unread badges (Kronk::KornerSeen).
+    # content_views = per-item seen-set; seen_markers = per-korner baseline.
+    # Cascade delete — no callbacks to run.
+    has_many :korner_content_views, inverse_of: :account, dependent: :delete_all
+    has_many :korner_seen_markers, inverse_of: :account, dependent: :delete_all
+
     # Per-account Hub grid ordering — absence of rows falls back to the
     # default (tune-in popularity per Kronk::TuneInCounts).
     has_many :user_hub_orders, inverse_of: :account, dependent: :delete_all
