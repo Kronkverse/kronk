@@ -57,7 +57,10 @@ module Kronk
     # milestone is fine there.
     def build_commit
       commit = ENV['SOURCE_COMMIT'] || ENV.fetch('KRONK_BUILD', nil)
-      commit = nil if commit.blank?
+      # Plain Ruby (no ActiveSupport `blank?`): the deploy reads this via bare
+      # `ruby -Ilib -r kronk/version` with Rails not loaded, so `blank?` raised
+      # NoMethodError and aborted the version-label sync. to_s handles nil.
+      commit = nil if commit.to_s.strip.empty?
       commit && commit[0, 8]
     end
   end
