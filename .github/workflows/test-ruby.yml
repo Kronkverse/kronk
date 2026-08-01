@@ -15,6 +15,15 @@ on:
       - '.github/workflows/test-ruby.yml'
       - '.github/actions/setup-ruby/**'
   pull_request:
+  # Nightly + manual runs exercise the full Ruby-version compat matrix (incl.
+  # 3.3). On the merge path (pull_request + merge_group) the `test` job matrix
+  # below runs ONLY .ruby-version, so the queue isn't paying for the 3.3 leg on
+  # every PR — that halves the per-merge suite cost. (`test (.ruby-version)`
+  # stays the required check; GitHub requires it to run on the PR head to
+  # enqueue, so it can't be moved to merge-group-only.)
+  schedule:
+    - cron: '0 6 * * *' # nightly full Ruby-version compat sweep (incl. 3.3)
+  workflow_dispatch:
 
 env:
   BUNDLE_CLEAN: true
@@ -132,10 +141,11 @@ jobs:
       fail-fast: false
       matrix:
         # 3.2 dropped: css_parser (>= 3.3) makes the bundle uninstallable on Ruby 3.2.
-        # The rebuild targets .ruby-version (3.4.7); 3.3 stays as a compat check.
-        ruby-version:
-          - '3.3'
-          - '.ruby-version'
+        # The rebuild targets .ruby-version (3.4.7). The 3.3 compat leg runs only
+        # on the nightly schedule, push to main, and manual dispatch — NOT on the
+        # merge path (pull_request + merge_group), which runs just .ruby-version.
+        # This halves the suite cost on every PR merge while keeping 3.3 covered.
+        ruby-version: ${{ (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch') && fromJSON('["3.3", ".ruby-version"]') || fromJSON('[".ruby-version"]') }}
     steps:
       - uses: actions/checkout@v4
 
