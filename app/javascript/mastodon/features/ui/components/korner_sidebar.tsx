@@ -115,8 +115,13 @@ export const KornerSidebar = () => {
   // Opening a korner (via any entry path — Hub tile, this sidebar, or a deep
   // link) marks its content seen, so the unread badge clears. This effect is
   // the one place every /hub/<slug> navigation funnels through.
+  //
+  // Moments is excluded: it's seen item-by-item (each ring dims as you view or
+  // froth that Moment), so opening one Moment must not mark the whole korner
+  // seen. Its badge clears as the individual Moments are seen instead.
   useEffect(() => {
-    if (activeSlug) dispatch(markKornerSeen({ slug: activeSlug }));
+    if (activeSlug && activeSlug !== 'moments')
+      dispatch(markKornerSeen({ slug: activeSlug }));
   }, [activeSlug, dispatch]);
 
   useEffect(() => {

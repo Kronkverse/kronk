@@ -5,7 +5,7 @@
 # this is the only Moment serializer.
 class REST::MomentSerializer < ActiveModel::Serializer
   attributes :id, :caption, :visibility, :expires_at, :active,
-             :froth_count, :frothed_by_viewer, :created_at
+             :froth_count, :frothed_by_viewer, :seen_by_viewer, :created_at
 
   belongs_to :account, serializer: REST::AccountSerializer
   belongs_to :media_attachment, serializer: REST::MediaAttachmentSerializer
@@ -31,5 +31,12 @@ class REST::MomentSerializer < ActiveModel::Serializer
     return false unless scope
 
     object.frothed_by?(scope)
+  end
+
+  # Whether the viewer has seen this Moment — drives the dim/bright ring in the
+  # Home strip. A Moment is seen once viewed (opened in the viewer) or frothed;
+  # see Kronk::KornerSeen. Moments are keyed under the 'moments' slug.
+  def seen_by_viewer
+    Kronk::KornerSeen.seen?(current_user&.account, 'moments', object.id)
   end
 end
