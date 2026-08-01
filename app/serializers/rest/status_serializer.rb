@@ -39,9 +39,9 @@ class REST::StatusSerializer < ActiveModel::Serializer
   has_one :proposal, serializer: REST::ProposalSummarySerializer
   has_one :booth_set, serializer: REST::BoothSetSummarySerializer
   has_one :listing, serializer: REST::WachuneedListingSummarySerializer
-  has_one :trek, serializer: REST::TrekSummarySerializer
+  has_one :trek, serializer: REST::TrekSummarySerializer, if: :trek_visible_to_viewer?
   has_one :question, serializer: REST::QuestionSummarySerializer
-  has_one :album, serializer: REST::AlbumSummarySerializer
+  has_one :album, serializer: REST::AlbumSummarySerializer, if: :album_visible_to_viewer?
   has_one :quote_approval
 
   def quote
@@ -200,6 +200,29 @@ class REST::StatusSerializer < ActiveModel::Serializer
 
   def relationships
     instance_options && instance_options[:relationships]
+  end
+
+  # Belt-and-braces visibility guards on korner has_one associations
+  # that carry their own visibility rules independent of the parent
+  # Status. In normal operation the publish services (Albutts::PublishAlbum,
+  # Map::PublishTrek) mirror the korner's visibility to the Status, so a
+  # Status that passes StatusPolicy#show? has a same-visibility korner
+  # attached. These guards defend against a leaked status render
+  # (e.g. a caller that skipped the standard filter chain) that would
+  # otherwise spill the korner card along with it.
+  #
+  # Only `album` and `trek` are guarded here — the other korner
+  # associations (event, proposal, booth_set, listing, question) derive
+  # visibility entirely from the parent Status, so the primary gate
+  # already covers them. If a future korner introduces its own visibility
+  # ladder (per-record scopes beyond what the Status carries), add a
+  # `<korner>_visible_to_viewer?` predicate here too.
+  def album_visible_to_viewer?
+    object.album.present? && object.album.visible_to?(current_user&.account)
+  end
+
+  def trek_visible_to_viewer?
+    object.trek.present? && object.trek.visible_to?(current_user&.account)
   end
 
   class ApplicationSerializer < ActiveModel::Serializer
