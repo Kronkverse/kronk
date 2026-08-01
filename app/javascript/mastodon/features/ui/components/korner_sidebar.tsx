@@ -9,9 +9,11 @@ import {
 
 import { Link, useLocation } from 'react-router-dom';
 
+import { markKornerSeen } from 'mastodon/actions/korners';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
-import { useKorners } from 'mastodon/hooks/useKorner';
+import { useKorners, useKornerUnreadCount } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useAppDispatch } from 'mastodon/store';
 
 // Pervasive icon rail on the right. Most-recently-visited korner
 // floats to the top; ties break on tune_in_count desc, then alpha.
@@ -53,6 +55,7 @@ const KornerRow: React.FC<KornerRowProps> = ({
   registerRef,
 }) => {
   const Icon = useKornerIcon(korner.slug);
+  const unread = useKornerUnreadCount(korner.slug);
   const handleClick = useCallback(() => {
     onVisit(korner.slug);
   }, [onVisit, korner.slug]);
@@ -76,6 +79,11 @@ const KornerRow: React.FC<KornerRowProps> = ({
         <Icon />
       </span>
       <span className='korner-sidebar__label'>{korner.name}</span>
+      {unread > 0 && (
+        <span className='korner-sidebar__badge' aria-label={`${unread} new`}>
+          {unread > 99 ? '99+' : unread}
+        </span>
+      )}
     </Link>
   );
 };
@@ -83,6 +91,7 @@ const KornerRow: React.FC<KornerRowProps> = ({
 export const KornerSidebar = () => {
   const location = useLocation();
   const korners = useKorners();
+  const dispatch = useAppDispatch();
   const [recency, setRecency] = useState<Recency>(() => readRecency());
 
   // FLIP bookkeeping: last-seen top offset per slug.
@@ -102,6 +111,13 @@ export const KornerSidebar = () => {
       return next;
     });
   }, [activeSlug]);
+
+  // Opening a korner (via any entry path — Hub tile, this sidebar, or a deep
+  // link) marks its content seen, so the unread badge clears. This effect is
+  // the one place every /hub/<slug> navigation funnels through.
+  useEffect(() => {
+    if (activeSlug) dispatch(markKornerSeen({ slug: activeSlug }));
+  }, [activeSlug, dispatch]);
 
   useEffect(() => {
     const handler = (e: StorageEvent) => {
@@ -132,7 +148,9 @@ export const KornerSidebar = () => {
   const listed = useMemo(
     () =>
       korners
-        .filter((k) => k.enforced !== false)
+        // Hide korners the viewer has tuned out of — the sidebar is "your"
+        // korners; tuned-out ones drop off it (still reachable from the Hub).
+        .filter((k) => k.enforced !== false && k.tuned_in !== false)
         .sort((a, b) => {
           const ra = recency[a.slug] ?? 0;
           const rb = recency[b.slug] ?? 0;
