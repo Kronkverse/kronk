@@ -1,0 +1,15 @@
+- content_for :page_title do
+  = t('kronk.thresholds.page_title', default: 'Three thresholds')
+
+-# STUB — the real ceremony (three-ring stage, vow panels, starfield) lands
+-# in layer 7/8 of the signup revamp. Until then this view lets the
+-# controller boot without a template error. See KRONK_SIGNUP.md §4-6.
+.simple_form
+  %h1.title= t('kronk.thresholds.stub_title')
+  %p.lead= t('kronk.thresholds.stub_body')
+
+  = form_with url: auth_thresholds_path, method: :post do |f|
+    - Kronk::Thresholds::KEYS.each do |key|
+      = f.hidden_field key, value: '1'
+    .actions
+      = f.submit t('kronk.thresholds.cta_enter'), class: 'button'
