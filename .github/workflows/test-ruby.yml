@@ -15,14 +15,6 @@ on:
       - '.github/workflows/test-ruby.yml'
       - '.github/actions/setup-ruby/**'
   pull_request:
-    paths:
-      - '**/*.rb'
-      - 'db/**'
-      - 'config/**'
-      - 'Gemfile'
-      - 'Gemfile.lock'
-      - '.github/workflows/test-ruby.yml'
-      - '.github/actions/setup-ruby/**'
 
 env:
   BUNDLE_CLEAN: true
@@ -179,14 +171,16 @@ jobs:
             rspec-persistence-main
             rspec-persistence
 
-      # System specs need a JS/browser env (Kronk's frontend is SPA-only, so
-      # server-rendered pages only show a noscript notice). They still run on
-      # PRs and pushes, but are excluded from the merge-queue run where no
-      # browser is available — otherwise every merge group fails on them and
-      # the ALLGREEN queue can never merge.
-      - run: >-
-          bin/flatware rspec -r ./spec/flatware_helper.rb
-          ${{ github.event_name == 'merge_group' && '--exclude-pattern "spec/system/**/*_spec.rb"' || '' }}
+      # This is the required merge gate, so it must be green in an environment
+      # with no browser and no image toolchain. Two families of specs can't run
+      # here and are always excluded (on PRs, pushes AND the merge queue):
+      #   - `spec/system/**` — need a JS/browser env (Kronk's frontend is
+      #     SPA-only); they run in the dedicated test-e2e job.
+      #   - `:attachment_processing` — do real image processing (HEIC/AVIF need
+      #     libheif etc.); they run in the dedicated test-imagemagick job.
+      # Without these exclusions the gate fails on env-only issues and would
+      # block every PR / freeze the queue.
+      - run: bin/flatware rspec -r ./spec/flatware_helper.rb --exclude-pattern "spec/system/**/*_spec.rb" --tag ~attachment_processing
 
       - name: Upload coverage reports to Codecov
         if: matrix.ruby-version == '.ruby-version'
@@ -200,7 +194,7 @@ jobs:
     name: ImageMagick tests
     # ImageMagick/libheif isn't available in the merge-queue runner; keep this
     # on PRs and pushes but off the merge group so it doesn't block ALLGREEN.
-    if: ${{ github.event_name != 'merge_group' }}
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
 
     needs:
@@ -290,7 +284,7 @@ jobs:
     name: End to End testing
     # Playwright/browser E2E can't run in the merge-queue runner; keep it on
     # PRs and pushes but off the merge group so it doesn't block ALLGREEN.
-    if: ${{ github.event_name != 'merge_group' }}
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
 
     needs:
@@ -394,6 +388,8 @@ jobs:
 
   test-search:
     name: Elastic Search integration testing
+    # Not a merge gate; skip on PRs (heavy Elasticsearch). Runs on push + merge_group.
+    if: ${{ github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
 
     needs:
