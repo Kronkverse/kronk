@@ -6,44 +6,76 @@ RSpec.describe ProfileSection do
   let(:account) { Fabricate(:account) }
 
   describe 'validations' do
-    it 'requires a valid section_type' do
-      expect(described_class.new(account: account, section_type: 'wat', position: 0)).to_not be_valid
+    it 'requires section_type = drawn' do
+      expect(described_class.new(account: account, section_type: 'told', position: 0, settings: { 'render' => 'block' })).to_not be_valid
     end
 
-    it 'accepts every valid section_type' do
-      described_class::SECTION_TYPES.each do |t|
-        section = described_class.new(account: account, section_type: t, position: 0)
-        section.settings = { 'korner_slug' => 'kommons' } if t == 'korner'
-        section.settings = { 'tag_name' => 'music' } if t == 'kategory'
-        expect(section).to be_valid, "#{t} should be a valid type"
-      end
+    it 'requires a render in settings' do
+      expect(described_class.new(account: account, section_type: 'drawn', position: 0, settings: {})).to_not be_valid
     end
 
     it 'requires position >= 0' do
-      expect(described_class.new(account: account, section_type: 'timeline', position: -1)).to_not be_valid
+      expect(described_class.new(account: account, section_type: 'drawn', position: -1, settings: { 'render' => 'album', 'korner_slug' => 'albutts' })).to_not be_valid
     end
 
-    it 'requires korner_slug for korner sections' do
-      section = described_class.new(account: account, section_type: 'korner', position: 0, settings: {})
+    it 'accepts a valid drawn shelf' do
+      section = described_class.new(account: account, section_type: 'drawn', position: 0, settings: { 'render' => 'album', 'korner_slug' => 'albutts' })
+      expect(section).to be_valid
+    end
+
+    it 'rejects an unknown order' do
+      section = described_class.new(account: account, section_type: 'drawn', position: 0, settings: { 'render' => 'album', 'korner_slug' => 'albutts', 'order' => 'random' })
       expect(section).to_not be_valid
     end
 
-    it 'requires tag_name for kategory sections' do
-      section = described_class.new(account: account, section_type: 'kategory', position: 0, settings: {})
+    it 'requires order_ids when order is chosen' do
+      section = described_class.new(account: account, section_type: 'drawn', position: 0, settings: { 'render' => 'album', 'korner_slug' => 'albutts', 'order' => 'chosen' })
       expect(section).to_not be_valid
+    end
+
+    it 'accepts chosen order with order_ids' do
+      section = described_class.new(
+        account: account,
+        section_type: 'drawn',
+        position: 0,
+        settings: { 'render' => 'album', 'korner_slug' => 'albutts', 'order' => 'chosen', 'order_ids' => ['1'] }
+      )
+      expect(section).to be_valid
     end
   end
 
-  describe 'auto-seeding on account creation' do
-    it 'creates one timeline section on a fresh local account' do
-      account = Fabricate(:account, domain: nil)
-      expect(account.profile_sections.count).to eq(1)
-      expect(account.profile_sections.first.section_type).to eq('timeline')
+  describe 'visibility' do
+    it 'defaults to kronk (same as ProfileCard)' do
+      section = described_class.create!(account: account, section_type: 'drawn', position: 0, settings: { 'render' => 'album', 'korner_slug' => 'albutts' })
+      expect(section.visibility_kronk?).to be true
     end
 
-    it 'does not seed sections on remote accounts' do
-      remote = Fabricate(:account, domain: 'example.com')
-      expect(remote.profile_sections.count).to eq(0)
+    it 'shows everyone-scoped shelves to anonymous viewers' do
+      section = described_class.create!(account: account, section_type: 'drawn', position: 0, settings: { 'render' => 'album', 'korner_slug' => 'albutts' }, visibility: 'everyone')
+      expect(section.visible_to?(nil)).to be true
+    end
+
+    it 'hides kronk-scoped shelves from anonymous viewers' do
+      section = described_class.create!(account: account, section_type: 'drawn', position: 0, settings: { 'render' => 'album', 'korner_slug' => 'albutts' }, visibility: 'kronk')
+      expect(section.visible_to?(nil)).to be false
+    end
+
+    it 'shows any shelf to the owner regardless of visibility' do
+      section = described_class.create!(account: account, section_type: 'drawn', position: 0, settings: { 'render' => 'album', 'korner_slug' => 'albutts' }, visibility: 'only_me')
+      expect(section.visible_to?(account)).to be true
+    end
+
+    it 'hides only_me shelves from strangers' do
+      section = described_class.create!(account: account, section_type: 'drawn', position: 0, settings: { 'render' => 'album', 'korner_slug' => 'albutts' }, visibility: 'only_me')
+      other = Fabricate(:account)
+      expect(section.visible_to?(other)).to be false
+    end
+  end
+
+  describe 'seeding' do
+    it 'does not seed a shelf on account creation' do
+      account = Fabricate(:account, domain: nil)
+      expect(account.profile_sections.count).to eq(0)
     end
   end
 end
