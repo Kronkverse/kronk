@@ -99,12 +99,12 @@ export NODE_OPTIONS="--max-old-space-size=2048"
 ## CI lint — run all of it before pushing
 
 The pre-commit hook only runs against **staged** files, and `--no-verify`
-skips it entirely — so lint drift reaches CI easily. `lint` is **not** currently
-a required merge gate on `rebuild/2.0.0` (it can't be until the pre-existing
-RuboCop/Haml-lint debt is cleared — see below), so a red `lint` check does
-**not** block the merge queue and drift quietly accumulates. That is exactly why
-you should run it locally before pushing. `lint` is not one job but several,
-each of which can fail independently and each of which CI runs:
+skips it entirely — so lint drift reaches CI easily. `lint` **is a required
+merge gate** on `rebuild/2.0.0` (since 2026-08-01) — a red `lint` check blocks
+the merge queue, so run it locally before pushing rather than finding out in the
+queue. The lint workflows run on **every** PR (no path filters), so `lint`
+always reports even on a docs- or config-only change. `lint` is not one job but
+several, each of which can fail independently and each of which CI runs:
 
 - **`lint:js`** — ESLint, run with **`--max-warnings 0`** (so warnings fail the
   build too, e.g. `import/order`, `import/no-duplicates`).
@@ -113,10 +113,9 @@ each of which can fail independently and each of which CI runs:
   must reference a `--radius-*` token; blank line before comments).
 - **`format:check`** — Prettier (`prettier --check`). A file that is otherwise
   valid still fails here if it isn't Prettier-formatted.
-- Plus **Ruby (RuboCop)**, **Haml (haml-lint)**, and **i18n** checks for their
-  file types. RuboCop and Haml-lint currently carry **pre-existing debt** on the
-  tip, which is why `lint` isn't a required gate yet — making it required while
-  those are red would freeze the merge queue for everyone.
+- Plus **Ruby (RuboCop)**, **Haml (haml-lint)**, and **i18n** checks. The
+  RuboCop/Haml-lint debt that previously blocked requiring `lint` has been
+  cleared, so `lint` is now a required gate (see above).
 
 Before pushing, run the ones that match your changes — not just ESLint:
 
