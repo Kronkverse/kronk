@@ -12,6 +12,14 @@ Fabricator(:user) do
   confirmed_at { Time.zone.now }
   current_sign_in_at { Time.zone.now }
   agreement true
+
+  # Default fabricated users to "already crossed the thresholds" so
+  # the `require_crossed_thresholds!` gate in ApplicationController
+  # doesn't redirect every controller-spec request to /auth/thresholds.
+  # The threshold ceremony itself has its own specs that opt out via
+  # `thresholds_version { nil }`.
+  thresholds_agreed_at { Time.zone.now }
+  thresholds_version   { Kronk::Thresholds::CURRENT_VERSION }
 end
 
 Fabricator(:admin_user, from: :user) do

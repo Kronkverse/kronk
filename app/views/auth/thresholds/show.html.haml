@@ -1,15 +1,81 @@
 - content_for :page_title do
-  = t('kronk.thresholds.page_title', default: 'Three thresholds')
+  = t('kronk.thresholds.page_title')
 
--# STUB — the real ceremony (three-ring stage, vow panels, starfield) lands
--# in layer 7/8 of the signup revamp. Until then this view lets the
--# controller boot without a template error. See KRONK_SIGNUP.md §4-6.
-.simple_form
-  %h1.title= t('kronk.thresholds.stub_title')
-  %p.lead= t('kronk.thresholds.stub_body')
+- content_for :header_tags do
+  = vite_typescript_tag 'signup_thresholds.ts', crossorigin: 'anonymous'
 
-  = form_with url: auth_thresholds_path, method: :post do |f|
-    - Kronk::Thresholds::KEYS.each do |key|
-      = f.hidden_field key, value: '1'
-    .actions
-      = f.submit t('kronk.thresholds.cta_enter'), class: 'button'
+- content_for :step_counter do
+  = t('kronk.thresholds.step_counter')
+
+:ruby
+  vow_bodies = {
+    'ownership' => t('kronk.thresholds.vow.ownership.more'),
+    'custodianship' => t('kronk.thresholds.vow.custodianship.more'),
+    'trajectory' => t('kronk.thresholds.vow.trajectory.more'),
+  }
+  vow_lines = {
+    'ownership' => t('kronk.thresholds.vow.ownership.vow'),
+    'custodianship' => t('kronk.thresholds.vow.custodianship.vow'),
+    'trajectory' => t('kronk.thresholds.vow.trajectory.vow'),
+  }
+  vow_positions = %w(one two three)
+  vow_keys = Kronk::Thresholds::KEYS.map(&:to_s)
+  pip_dasharrays = ['30 1541', '26 1074', '22 607']
+  ring_radii = [250, 175, 100]
+
+%section.threshold-ceremony#threshold-ceremony{ data: { depth: '0' } }
+  .threshold-ceremony__stage
+    %svg.threshold-ceremony__rings#threshold-rings{ viewBox: '0 0 600 600', aria: { hidden: 'true' } }
+      -# haml-lint:disable TagName
+      %defs
+        %radialGradient#threshold-core-glow
+          %stop.g0{ offset: '0%', 'stop-opacity': '.5' }
+          %stop.g1{ offset: '60%', 'stop-opacity': '.08' }
+          %stop.g2{ offset: '100%', 'stop-opacity': '0' }
+      -# haml-lint:enable TagName
+      %g#threshold-cosmos
+        %circle.threshold-ceremony__core-halo{ cx: '300', cy: '300', r: '210', fill: 'url(#threshold-core-glow)' }
+        - vow_keys.each_with_index do |_, i|
+          - t_index = i + 1
+          - r = ring_radii[i]
+          %g.threshold-ring{ class: (i.zero? ? 'is-active' : 'is-locked'), data: { t: t_index.to_s } }
+            %circle.threshold-ring__base{ cx: '300', cy: '300', r: r.to_s }
+            %circle.threshold-ring__tick{ cx: '300', cy: '300', r: r.to_s, 'stroke-dasharray': '1 33', 'stroke-linecap': 'round' }
+            %circle.threshold-ring__pip{ cx: '300', cy: '300', r: r.to_s, 'stroke-dasharray': pip_dasharrays[i] }
+        %circle.threshold-ceremony__wash#threshold-wash{ cx: '300', cy: '300', r: '250', fill: 'none' }
+        %text.threshold-ceremony__core-glyph{ x: '300', y: '300' } Ӂ
+
+  .threshold-ceremony__panel
+    .threshold-ceremony__panel-inner
+      = form_with url: auth_thresholds_path, method: :post, id: 'threshold-form' do |f|
+        - vow_keys.each do |k|
+          = f.hidden_field k, id: "threshold-vow-#{k}", value: '0'
+
+        - vow_keys.each_with_index do |key, i|
+          - position = vow_positions[i]
+          %article.threshold-vow{ class: (i.zero? ? 'is-on' : ''), data: { v: (i + 1).to_s, k: key } }
+            .threshold-vow__eyebrow
+              %span= t("kronk.thresholds.eyebrow.#{position}")
+              %span.threshold-vow__eyebrow-wire
+              %span= t("kronk.thresholds.eyebrow_progress.#{position}")
+            .threshold-vow__agree{ role: 'checkbox', 'aria-checked': 'false', tabindex: '0' }
+              %span.threshold-vow__box
+                %svg{ viewBox: '0 0 16 16', aria: { hidden: 'true' } }
+                  %path{ d: 'M2.5 8.5 6 12l7.5-8' }
+              %span.threshold-vow__text= vow_lines[key]
+            %button.threshold-vow__more-toggle{ type: 'button', aria: { expanded: 'false' } }
+              = t('kronk.thresholds.more_toggle')
+              %span.threshold-vow__caret
+            .threshold-vow__more
+              %div
+                %p= vow_bodies[key]
+            .threshold-vow__actions
+              %button.threshold-vow__cross{ type: 'button', disabled: true, data: { v: (i + 1).to_s } }
+                = t("kronk.thresholds.cross.#{position}")
+
+        .threshold-ceremony__arrival#threshold-arrival
+          .threshold-ceremony__mark= t('kronk.signup.wordmark')
+          -# Rails i18n auto-escapes interpolation values on `*_html` keys,
+          -# so `= t(...)` (not `!=`) is safe and Brakeman-quiet.
+          %p.threshold-ceremony__said= t('kronk.thresholds.arrival.line_html', username: current_user.account.username)
+          %button.threshold-ceremony__enter#threshold-enter{ type: 'submit' }= t('kronk.thresholds.arrival.cta_enter')

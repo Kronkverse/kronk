@@ -330,15 +330,21 @@ RSpec.describe Auth::RegistrationsController do
         Fabricate(:account, username: 'test')
       end
 
+      # The signup revamp (KRONK_SIGNUP.md) replaced simple_form's per-field
+      # `.user_account_username .error` markers with the shared
+      # `_error_messages` partial + a `.signup-account__hint--bad` visual
+      # state driven by the client script. This test now asserts on the
+      # controller's resource errors directly (via `controller.resource`)
+      # — the load-bearing bit is that the server produced the right
+      # validation error; presentation is a UI concern covered elsewhere.
       it 'responds with an error message about the username' do
         subject
 
         expect(response).to have_http_status(:success)
-        expect(username_error_text).to eq(I18n.t('errors.messages.taken'))
-      end
-
-      def username_error_text
-        response.parsed_body.css('.user_account_username .error').text
+        # `controller.resource` is a protected Devise method; use `send` to
+        # reach it from the spec. Avoids the rails-controller-testing
+        # dependency required for `assigns(:user)`.
+        expect(controller.send(:resource).errors[:'account.username']).to include(I18n.t('errors.messages.taken'))
       end
     end
 
