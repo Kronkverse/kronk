@@ -32,9 +32,16 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
     scope = scope.where(Status.arel_table[:id].gt(params[:min_id])) if params[:min_id].present?
     scope = scope.limit(limit_param(DEFAULT_LIMIT))
 
-    render json: scope,
+    # Route through the same visibility gate every other statuses
+    # endpoint uses (Api::V1::StatusesController#index, thread lookups,
+    # etc). Without this, a `direct` / `private` / krew-scoped status
+    # bound to this shelf renders to any viewer — the shelf's per-post
+    # visibility is enforced only here.
+    @statuses = Status.permitted_statuses_from_ids(scope.pluck(:id), current_user&.account, stable: true)
+
+    render json: @statuses,
            each_serializer: REST::StatusSerializer,
-           relationships: StatusRelationshipsPresenter.new(scope, current_user&.account_id)
+           relationships: StatusRelationshipsPresenter.new(@statuses, current_user&.account_id)
   end
 
   private
