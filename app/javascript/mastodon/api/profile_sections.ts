@@ -7,17 +7,27 @@ import {
 
 export interface ApiProfileSectionJSON {
   id: string;
-  // `string` covers future-forward compat; the known values are
-  // documented here so consumers can narrow with a `switch` on the
-  // literals.
-  section_type: string; // 'timeline' | 'korner' | 'kategory' | ...
+  // `string` covers future-forward compat; on the shelved profile
+  // (post-2026-08-01) every row is `drawn`. Legacy values still
+  // present pre-migration are `timeline` / `korner` / `kategory` /
+  // `text`.
+  section_type: string;
+  // Alias for `section_type` — matches the frontend copy ("shelves").
+  kind?: string;
   position: number;
   title: string | null;
+  // `settings.render` picks the client render component
+  // (album / track / trek / longform / listing / photo / answers /
+  // moment / chips / korner). `settings.korner_slug`, `tag_name`,
+  // `order` ('newest' | 'oldest' | 'chosen'), `order_ids`, `pins`,
+  // `hides` all live here too.
   settings: Record<string, unknown>;
   visible: boolean;
+  // Reach ladder shared with ProfileCard (five scopes).
+  visibility?: 'everyone' | 'kronk' | 'connections' | 'vouched' | 'only_me';
 }
 
-export const apiGetProfileSections = () =>
+export const apiGetOwnProfileSections = () =>
   apiRequestGet<ApiProfileSectionJSON[]>('v1/profile/sections');
 
 export const apiReorderProfileSections = (order: string[]) =>
@@ -42,3 +52,10 @@ export const apiUpdateProfileSection = (
 
 export const apiDeleteProfileSection = (id: string) =>
   apiRequestDelete(`v1/profile/sections/${id}`);
+
+// Viewer side — another account's visible drawn shelves (or your own,
+// filtered).
+export const apiGetProfileSections = (accountId: string) =>
+  apiRequestGet<ApiProfileSectionJSON[]>(
+    `v1/accounts/${accountId}/profile/sections`,
+  );
