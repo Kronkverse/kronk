@@ -15,12 +15,12 @@
 #     backward-compat with earlier client; prefer per-name PATCH)
 class Api::V1::KornersController < Api::BaseController
   READ_ACTIONS  = [:settings_show].freeze
-  WRITE_ACTIONS = [:tune_out, :tune_in, :settings_update, :setting_patch, :setting_delete].freeze
+  WRITE_ACTIONS = [:tune_out, :tune_in, :mark_seen, :settings_update, :setting_patch, :setting_delete].freeze
 
   before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: READ_ACTIONS
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: WRITE_ACTIONS
   before_action :require_user!, only: (READ_ACTIONS + WRITE_ACTIONS)
-  before_action :set_manifest, only: [:show, :tune_out, :tune_in, :settings_show, :settings_update, :setting_patch, :setting_delete]
+  before_action :set_manifest, only: [:show, :tune_out, :tune_in, :mark_seen, :settings_show, :settings_update, :setting_patch, :setting_delete]
 
   skip_before_action :require_authenticated_user!, only: [:index, :show]
 
@@ -57,6 +57,14 @@ class Api::V1::KornersController < Api::BaseController
   def tune_in
     current_account.tune_in!(@manifest.slug)
     render json: { tuned_in: true, slug: @manifest.slug }
+  end
+
+  # POST /api/v1/korners/:slug/seen — the viewer opened the korner; mark its
+  # content seen up to now (advance the baseline + prune per-item rows). The
+  # unread badge for this korner drops to 0. See Kronk::KornerSeen.
+  def mark_seen
+    Kronk::KornerSeen.mark_all_seen(current_account, @manifest.slug)
+    render json: { slug: @manifest.slug, unread_count: 0 }
   end
 
   def settings_show
