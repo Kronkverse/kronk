@@ -35,9 +35,9 @@ RSpec.describe 'API V1 Accounts Statuses' do
 
     context 'with exclude replies' do
       let!(:status) { Fabricate(:status, account: user.account) }
-      let!(:status_self_reply) { Fabricate(:status, account: user.account, thread: status) }
 
       before do
+        Fabricate(:status, account: user.account, thread: status) # Self-reply — excluded too
         Fabricate(:status, account: user.account, thread: Fabricate(:status)) # Reply to another user
         get "/api/v1/accounts/#{user.account.id}/statuses", params: { exclude_replies: true }, headers: headers
       end
