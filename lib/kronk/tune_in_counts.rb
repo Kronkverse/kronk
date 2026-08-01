@@ -34,7 +34,10 @@ module Kronk
     end
 
     def compute
-      total = Account.local.count
+      # Exclude the instance actor (id -99): it's a local Account by domain
+      # but a system signer, not a person who can tune in or out. Counting it
+      # inflated every korner's tune-in total by one.
+      total = Account.local.without_instance_actor.count
       tune_outs = KornerTuneOut.group(:korner_slug).count
 
       Kronk::KornerRegistry.all.each_with_object({}) do |manifest, hash|
