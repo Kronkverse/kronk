@@ -27,6 +27,7 @@ class Api::V1::KornersController < Api::BaseController
   def index
     tuned_out = tuned_out_slugs
     counts = Kronk::TuneInCounts.for_all_korners
+    unread = unread_counts(tuned_out)
     # Every registered manifest is returned so consumers (top nav
     # HubSwitcher, AutoSpaceBadge, useKornerIcon) can resolve any slug
     # to its declared identity — including core spaces (feed / profile /
@@ -36,7 +37,8 @@ class Api::V1::KornersController < Api::BaseController
     render json: Kronk::KornerRegistry.all.map { |m|
       m.to_h.merge(
         'tuned_in' => !tuned_out.include?(m.slug),
-        'tune_in_count' => counts.fetch(m.slug, 0)
+        'tune_in_count' => counts.fetch(m.slug, 0),
+        'unread_count' => unread.fetch(m.slug, 0)
       )
     }
   end
@@ -45,7 +47,8 @@ class Api::V1::KornersController < Api::BaseController
     tuned_out = tuned_out_slugs
     render json: @manifest.to_h.merge(
       'tuned_in' => !tuned_out.include?(@manifest.slug),
-      'tune_in_count' => Kronk::TuneInCounts.for_korner(@manifest.slug)
+      'tune_in_count' => Kronk::TuneInCounts.for_korner(@manifest.slug),
+      'unread_count' => current_account ? Kronk::KornerSeen.unread_count(current_account, @manifest.slug) : 0
     )
   end
 
@@ -156,6 +159,18 @@ class Api::V1::KornersController < Api::BaseController
     return Set.new unless current_account
 
     current_account.korner_tune_outs.pluck(:korner_slug).to_set
+  end
+
+  # Per-viewer unread counts for the korners the account is tuned into. 0 for
+  # tuned-out korners, core spaces, and anonymous callers. Batched in one pass
+  # (one query per korner via its content stream) — see Kronk::KornerSeen.
+  def unread_counts(tuned_out)
+    return {} unless current_account
+
+    slugs = Kronk::KornerRegistry.all
+                                 .reject { |m| m.core || tuned_out.include?(m.slug) }
+                                 .map(&:slug)
+    Kronk::KornerSeen.counts_for(current_account, slugs)
   end
 
   def settings_payload(row)
