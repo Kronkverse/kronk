@@ -105,4 +105,10 @@ export interface ApiKornerJSON {
   // Aggregate number of accounts tuned in to this korner. Powers the
   // default Hub grid ordering. See lib/kronk/tune_in_counts.rb.
   tune_in_count?: number;
+  // Count of new, feed-visible items in this korner the current viewer
+  // hasn't seen yet — drives the unread badge on Hub tiles and the side
+  // nav. Cleared by opening the korner or interacting with its posts in
+  // your own feed. Absent/undefined for anonymous callers (treated as 0).
+  // See lib/kronk/korner_seen.rb.
+  unread_count?: number;
 }
