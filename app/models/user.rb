@@ -30,6 +30,8 @@
 #  sign_in_token             :string
 #  sign_in_token_sent_at     :datetime
 #  sign_up_ip                :inet
+#  thresholds_agreed_at      :datetime
+#  thresholds_version        :integer
 #  time_zone                 :string
 #  unconfirmed_email         :string
 #  created_at                :datetime         not null
@@ -245,6 +247,22 @@ class User < ApplicationRecord
   # decision, not a self-service action.
   def functional_or_moved?
     approved? && !disabled? && !account.unavailable? && !account.memorial?
+  end
+
+  # The three-thresholds ceremony gate (see Kronk::Thresholds + the
+  # signup revamp). `functional?` deliberately does NOT include this
+  # check — API/OAuth paths stay open for members who haven't crossed
+  # yet, per KRONK_SIGNUP.md §4. The HTML redirect lives in
+  # ApplicationController#require_crossed_thresholds!.
+  def crossed_thresholds?
+    thresholds_version.present? && thresholds_version >= Kronk::Thresholds::CURRENT_VERSION
+  end
+
+  def record_thresholds_crossing!
+    update!(
+      thresholds_agreed_at: Time.now.utc,
+      thresholds_version: Kronk::Thresholds::CURRENT_VERSION
+    )
   end
 
   def unconfirmed_or_pending?

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_31_100000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_01_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -2048,6 +2048,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_31_100000) do
     t.string "otp_secret"
     t.datetime "age_verified_at"
     t.boolean "require_tos_interstitial", default: false, null: false
+    t.datetime "thresholds_agreed_at"
+    t.integer "thresholds_version"
     t.index ["account_id"], name: "index_users_on_account_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["created_by_application_id"], name: "index_users_on_created_by_application_id", where: "(created_by_application_id IS NOT NULL)"
