@@ -363,6 +363,10 @@ class MediaModal extends ImmutablePureComponent {
     const zoomable = mediaType === 'image' && (currentMedia.getIn(['meta', 'original', 'width']) > viewportWidth || currentMedia.getIn(['meta', 'original', 'height']) > viewportHeight);
     const taggable = mediaType !== 'audio' && mediaType !== 'unknown' && !!currentMediaId;
     const currentTags = currentMediaId ? (mediaTags[currentMediaId] ?? null) : null;
+    // The description already reaches screen readers through alt, but it was
+    // never shown to anyone looking at the photo. It sits with the other
+    // bottom chrome so tapping the image hides it along with everything else.
+    const currentDescription = currentMedia.getIn(['translation', 'description']) || currentMedia.get('description');
 
     return (
       <div className='modal-root__modal media-modal' ref={this.setRef}>
@@ -390,6 +394,11 @@ class MediaModal extends ImmutablePureComponent {
           {rightNav}
 
           <div className='media-modal__overlay'>
+            {currentDescription && (
+              <p className='media-modal__description' lang={lang}>
+                {currentDescription}
+              </p>
+            )}
             {pagination && <ul className='media-modal__pagination'>{pagination}</ul>}
             {currentTags && currentTags.length > 0 && (
               <TaggedNames
