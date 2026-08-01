@@ -39,9 +39,6 @@ class Api::V1::Profile::SectionsController < Api::BaseController
 
   def destroy
     section = current_account.profile_sections.find(params[:id])
-
-    return render json: { error: 'timeline section is not removable' }, status: 422 if section.section_type == 'timeline'
-
     section.destroy!
     render json: { ok: true }
   end
@@ -72,10 +69,10 @@ class Api::V1::Profile::SectionsController < Api::BaseController
   end
 
   def section_params
-    params.permit(:section_type, :title, :visible, settings: {})
+    params.permit(:section_type, :title, :visible, :visibility, settings: {})
   end
 
   def section_update_params
-    params.permit(:title, :visible, settings: {})
+    params.permit(:title, :visible, :visibility, settings: {})
   end
 end
