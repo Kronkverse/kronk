@@ -1,6 +1,7 @@
 import {
   apiRequestGet,
   apiRequestPut,
+  apiRequestPatch,
   apiRequestDelete,
 } from 'mastodon/api';
 
@@ -34,6 +35,9 @@ export const apiUpsertProfileCard = (
     visible?: boolean;
   },
 ) => apiRequestPut<ApiProfileCardJSON>(`v1/profile/cards/${cardType}`, params);
+
+export const apiReorderProfileCards = (order: string[]) =>
+  apiRequestPatch<ApiProfileCardJSON[]>('v1/profile/cards/reorder', { order });
 
 export const apiDeleteProfileCard = (cardType: string) =>
   apiRequestDelete(`v1/profile/cards/${cardType}`);

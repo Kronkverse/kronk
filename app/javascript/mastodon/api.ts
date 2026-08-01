@@ -170,6 +170,13 @@ export async function apiRequestPut<ApiResponse = unknown>(
   return apiRequest<ApiResponse>('PUT', url, { data });
 }
 
+export async function apiRequestPatch<ApiResponse = unknown>(
+  url: ApiUrl,
+  data?: RequestParamsOrData,
+) {
+  return apiRequest<ApiResponse>('PATCH', url, { data });
+}
+
 export async function apiRequestDelete<ApiResponse = unknown>(
   url: ApiUrl,
   params?: RequestParamsOrData,
