@@ -108,6 +108,7 @@ interface ArrangeSlabProps {
   onCycleReach: (key: string) => void;
   onCycleOrder?: (key: string) => void;
   onRemove: (key: string) => void;
+  onEdit?: (key: string) => void;
 }
 
 export const ArrangeSlab: React.FC<ArrangeSlabProps> = ({
@@ -125,6 +126,7 @@ export const ArrangeSlab: React.FC<ArrangeSlabProps> = ({
   onCycleReach,
   onCycleOrder,
   onRemove,
+  onEdit,
 }) => {
   const intl = useIntl();
 
@@ -146,6 +148,9 @@ export const ArrangeSlab: React.FC<ArrangeSlabProps> = ({
   const handleRemove = useCallback(() => {
     onRemove(slabKey);
   }, [onRemove, slabKey]);
+  const handleEdit = useCallback(() => {
+    onEdit?.(slabKey);
+  }, [onEdit, slabKey]);
 
   return (
     <div
@@ -172,12 +177,25 @@ export const ArrangeSlab: React.FC<ArrangeSlabProps> = ({
         </button>
       </div>
 
-      <div className='profile-shelves__slab-body'>
-        <div className='profile-shelves__slab-name'>{name}</div>
-        <div className='profile-shelves__slab-source'>
-          {source ?? intl.formatMessage(messages.written)}
+      {onEdit ? (
+        <button
+          type='button'
+          className='profile-shelves__slab-body profile-shelves__slab-body--edit'
+          onClick={handleEdit}
+        >
+          <div className='profile-shelves__slab-name'>{name}</div>
+          <div className='profile-shelves__slab-source'>
+            {source ?? intl.formatMessage(messages.written)}
+          </div>
+        </button>
+      ) : (
+        <div className='profile-shelves__slab-body'>
+          <div className='profile-shelves__slab-name'>{name}</div>
+          <div className='profile-shelves__slab-source'>
+            {source ?? intl.formatMessage(messages.written)}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className='profile-shelves__slab-ctl'>
         {order && onCycleOrder && (
