@@ -138,19 +138,14 @@ export const FollowButton: React.FC<{
     label = intl.formatMessage(messages.mate);
   }
 
+  // Own-account: the classic Rails `/settings/profile` page is not
+  // the right editor for the shelved profile (2026-08-02) — that page
+  // still uses the Mastodon-standard bio/hashtag copy and diverges
+  // from the new composer. The proper edit surface is Arrange mode on
+  // `/@:acct/shelves` (opened from the shelved profile's header). No
+  // button here until the SPA route around Arrange is wired inline.
   if (accountId === me) {
-    return (
-      <a
-        href='/settings/profile'
-        target='_blank'
-        rel='noopener'
-        className={classNames(className, 'button button-secondary', {
-          'button--compact': compact,
-        })}
-      >
-        {label}
-      </a>
-    );
+    return null;
   }
 
   return (
