@@ -67,6 +67,14 @@ listens:
     source_type: Proposal
     source_id_key: proposal_id
     interaction: passive
+  - event: kommons.proposal.commented
+    source_korner: kommons
+    verb: commented
+    source_type: Proposal
+    source_id_key: proposal_id
+    interaction: interactive
+    cta_label: 'View discussion'
+    cta_route: '/hub/kommons/p/{proposal_id}'
   - event: kalendar.event.rsvpd
     source_korner: kalendar
     verb_template: 'rsvpd_{status}'
