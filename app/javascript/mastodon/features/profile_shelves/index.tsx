@@ -244,10 +244,11 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
         <div className='profile-shelves__loading'>
           {intl.formatMessage(messages.loading)}
         </div>
-      ) : mode === 'arrange' && isOwner ? (
+      ) : mode === 'arrange' && isOwner && account ? (
         <ArrangeStage
           cards={cards ?? []}
           sections={sections ?? []}
+          ownerAccountId={account.id}
           onChange={handleArrangeChange}
         />
       ) : nothingShown ? (
