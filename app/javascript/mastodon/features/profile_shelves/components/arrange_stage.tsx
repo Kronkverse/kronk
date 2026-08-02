@@ -21,6 +21,7 @@ import {
 import type { OrderMode, Reach } from './arrange_slab';
 import { ArrangeSlab, ORDER_ORDER, REACH_ORDER } from './arrange_slab';
 import { LibraryGrid } from './library_grid';
+import { TellComposer } from './tell_composer';
 
 // The owner's arrange surface. Renders a slab per shelf (cards +
 // sections combined into one owner-facing list) with grip / reach /
@@ -115,6 +116,7 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
   const [cards, setCards] = useState(initialCards);
   const [sections, setSections] = useState(initialSections);
   const [library, setLibrary] = useState<ApiProfileLibraryJSON | null>(null);
+  const [composing, setComposing] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -329,17 +331,29 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
   );
 
   // ── Library adds ────────────────────────────────────────────────
-  const addCardFromLibrary = useCallback(
-    (cardType: string) => {
-      void apiUpsertProfileCard(cardType, {
-        body: '',
-        visibility: 'only_me',
-        visible: false,
-      })
-        .then((created) => {
-          publish([...cards, created], sections);
-        })
-        .catch(() => undefined);
+  // Adding a told preset opens the composer for that card_type. The
+  // composer upserts on save; nothing is created if the owner cancels.
+  const addCardFromLibrary = useCallback((cardType: string) => {
+    setComposing(cardType);
+  }, []);
+
+  const openComposerForExisting = useCallback((cardType: string) => {
+    setComposing(cardType);
+  }, []);
+
+  const closeComposer = useCallback(() => {
+    setComposing(null);
+  }, []);
+
+  const handleComposerSaved = useCallback(
+    (saved: ApiProfileCardJSON) => {
+      const idx = cards.findIndex((c) => c.card_type === saved.card_type);
+      const nextCards =
+        idx < 0
+          ? [...cards, saved]
+          : cards.map((c) => (c.card_type === saved.card_type ? saved : c));
+      publish(nextCards, sections);
+      setComposing(null);
     },
     [cards, publish, sections],
   );
@@ -393,6 +407,7 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
             onToggleVisible={toggleCardVisible}
             onCycleReach={cycleCardReach}
             onRemove={removeCard}
+            onEdit={openComposerForExisting}
           />
         ))}
         {sections.map((section, i) => {
@@ -430,6 +445,18 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
           library={library}
           onAddCard={addCardFromLibrary}
           onAddSection={addSectionFromLibrary}
+        />
+      )}
+
+      {composing && (
+        <TellComposer
+          cardType={composing}
+          cardTitle={
+            CARD_TITLE[composing] ?? composing.replaceAll('_', ' ')
+          }
+          initial={cards.find((c) => c.card_type === composing) ?? null}
+          onSaved={handleComposerSaved}
+          onCancel={closeComposer}
         />
       )}
     </div>
