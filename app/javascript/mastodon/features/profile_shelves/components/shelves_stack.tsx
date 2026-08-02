@@ -12,11 +12,13 @@ import { ShelfTold } from './shelf_told';
 // stranger only sees the subset they're allowed to.
 
 interface ShelvesStackProps {
+  accountId: string;
   cards: ApiProfileCardJSON[];
   sections: ApiProfileSectionJSON[];
 }
 
 export const ShelvesStack: React.FC<ShelvesStackProps> = ({
+  accountId,
   cards,
   sections,
 }) => (
@@ -25,7 +27,11 @@ export const ShelvesStack: React.FC<ShelvesStackProps> = ({
       <ShelfTold key={`card-${card.id}`} card={card} />
     ))}
     {sections.map((section) => (
-      <ShelfDrawn key={`section-${section.id}`} section={section} />
+      <ShelfDrawn
+        key={`section-${section.id}`}
+        accountId={accountId}
+        section={section}
+      />
     ))}
   </div>
 );

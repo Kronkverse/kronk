@@ -268,9 +268,13 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
             intl.formatMessage(messages.emptyViewer)
           )}
         </div>
-      ) : (
-        <ShelvesStack cards={cards ?? []} sections={sections ?? []} />
-      )}
+      ) : account ? (
+        <ShelvesStack
+          accountId={account.id}
+          cards={cards ?? []}
+          sections={sections ?? []}
+        />
+      ) : null}
     </Column>
   );
 };
