@@ -39,7 +39,7 @@ class WebfingerSerializer < ActiveModel::Serializer
   end
 
   def profile_page_href
-    object.instance_actor? ? about_more_url(instance_actor: true) : short_account_url(object)
+    object.instance_actor? ? about_url(instance_actor: true) : short_account_url(object)
   end
 
   def self_href

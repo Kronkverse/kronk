@@ -364,19 +364,33 @@ Rails.application.routes.draw do
 
   # Kronk organisation space (§O) — served at /kronk/* from markdown
   # under content/kronk/. The wordmark in the app chrome links here.
-  get '/kronk', to: 'kronk#show', defaults: { page: 'about' }
-  get '/kronk/:page', to: 'kronk#show', constraints: { page: %r{[a-z0-9-]+(?:/[a-z0-9-]+)?} }
+  # About / privacy / terms are named routes so existing callers
+  # (`about_url`, `privacy_policy_url`, `terms_of_service_url`) keep
+  # working — they now generate `/kronk/*` paths. The upstream Mastodon
+  # routes (`/about`, `/privacy-policy`, `/terms-of-service`) become
+  # 301 redirects to keep bookmarks and federation crawlers alive.
+  get '/kronk',           to: 'kronk#show', defaults: { page: 'about' }
+  get '/kronk/about',     to: 'kronk#show', defaults: { page: 'about' },   as: :about
+  get '/kronk/privacy',   to: 'kronk#show', defaults: { page: 'privacy' }, as: :privacy_policy
+  get '/kronk/terms',     to: 'kronk#show', defaults: { page: 'terms' },   as: :terms_of_service
+  get '/kronk/:page',     to: 'kronk#show', constraints: { page: %r{[a-z0-9-]+(?:/[a-z0-9-]+)?} }
 
   draw(:web_app)
 
   get '/web/(*any)', to: redirect(path: '/%{any}', status: 302), as: :web, defaults: { any: '' }, format: false
-  get '/about',      to: 'about#show'
-  get '/about/more', to: redirect('/about')
 
-  get '/privacy-policy',   to: 'privacy#show', as: :privacy_policy
-  get '/terms-of-service', to: 'terms_of_service#show', as: :terms_of_service
-  get '/terms-of-service/:date', to: 'terms_of_service#show', as: :terms_of_service_version
-  get '/terms', to: redirect('/terms-of-service')
+  # Legacy upstream Mastodon paths. Retired 2026-08-02 alongside the
+  # signup revamp — all instance-facing HTML consolidated under
+  # `/kronk/*`. 301 to preserve federation crawlers, bookmarks, and
+  # links in already-sent email. `/terms-of-service/:date` (versioned
+  # ToS) is squashed to the current page — versioning goes with the
+  # ToS model retirement.
+  get '/about',                  to: redirect('/kronk/about',   status: 301)
+  get '/about/more',             to: redirect('/kronk/about',   status: 301)
+  get '/privacy-policy',         to: redirect('/kronk/privacy', status: 301)
+  get '/terms-of-service',       to: redirect('/kronk/terms',   status: 301)
+  get '/terms-of-service/:date', to: redirect('/kronk/terms',   status: 301)
+  get '/terms',                  to: redirect('/kronk/terms',   status: 301)
 
   match '/', via: [:post, :put, :patch, :delete], to: 'application#raise_not_found', format: false
   match '*unmatched_route', via: :all, to: 'application#raise_not_found', format: false

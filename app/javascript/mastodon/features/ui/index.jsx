@@ -81,9 +81,6 @@ import {
   OnboardingProfile,
   OnboardingFollows,
   Explore,
-  About,
-  PrivacyPolicy,
-  TermsOfService,
   AccountFeatured,
   Quotes,
   Orbit,
@@ -210,7 +207,11 @@ class SwitchingColumnsArea extends PureComponent {
     } else if (localLiveFeedAccess === 'public' && landingPage === 'local_feed') {
       redirect = <Redirect from='/' to='/public/local' exact />;
     } else {
-      redirect = <Redirect from='/' to='/about' exact />;
+      // The old fallback was `/about`, but About / Privacy / Terms
+      // moved to Rails-served /kronk/*; they no longer exist as SPA
+      // routes. Land on Explore so a signed-out visitor with no
+      // trends/local-feed configured still sees something.
+      redirect = <Redirect from='/' to='/explore' exact />;
     }
 
     return (
@@ -227,9 +228,10 @@ class SwitchingColumnsArea extends PureComponent {
 
             <WrappedRoute path='/getting-started' component={GettingStarted} content={children} />
             <WrappedRoute path='/keyboard-shortcuts' component={KeyboardShortcuts} content={children} />
-            <WrappedRoute path='/about' component={About} content={children} />
-            <WrappedRoute path='/privacy-policy' component={PrivacyPolicy} content={children} />
-            <WrappedRoute path='/terms-of-service/:date?' component={TermsOfService} content={children} />
+            {/* /about, /privacy-policy, /terms-of-service moved to
+                Rails-served /kronk/* (2026-08-02). The corresponding
+                SPA feature bundles are unreferenced and cleaned up in
+                async-components.js. */}
 
             {signedIn && <WrappedRoute path='/home/settings' exact component={FeedSettings} content={children} />}
             <WrappedRoute path={['/home', '/timelines/home']} exact component={HomeTimeline} content={children} />
