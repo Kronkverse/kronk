@@ -21,6 +21,12 @@ RSpec.describe 'Moment froths' do
       expect(KornerContentView.where(account: user.account, korner_slug: 'moments', content_id: moment.id)).to exist
     end
 
+    it 'reports frothed_by_viewer true in the response' do
+      post "/api/v1/moments/#{moment.id}/froth", headers: headers
+
+      expect(response.parsed_body['frothed_by_viewer']).to be(true)
+    end
+
     it 'still records the seen row on a duplicate froth (idempotent)' do
       moment.moment_froths.create!(account: user.account)
 

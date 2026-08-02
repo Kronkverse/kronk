@@ -28,9 +28,11 @@ class REST::MomentSerializer < ActiveModel::Serializer
   end
 
   def frothed_by_viewer
-    return false unless scope
-
-    object.frothed_by?(scope)
+    # `scope` is the current User, not an Account; frothed_by? matches on
+    # account_id, so pass the account (matching seen_by_viewer / the serializer
+    # convention). Passing the User compared account_id against user.id and
+    # always came back false. frothed_by? handles a nil account.
+    object.frothed_by?(current_user&.account)
   end
 
   # Whether the viewer has seen this Moment — drives the dim/bright ring in the
