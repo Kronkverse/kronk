@@ -17,9 +17,10 @@
 #   only_me      draft / soft-hide — only the owner sees it
 class ProfileCard < ApplicationRecord
   # Card types recognised by the frontend. Adding a new one here does
-  # NOT automatically render it — the sectioned_profile Me tab decides
-  # which types to render and how. This list is validated to prevent
-  # arbitrary strings, so the frontend has a bounded set to switch on.
+  # NOT automatically render it — the `profile_shelves` composer
+  # decides which types the Library exposes and how each renders.
+  # This list is validated to prevent arbitrary strings, so the
+  # frontend has a bounded set to switch on.
   CARD_TYPES = %w(
     about
     interests

@@ -106,7 +106,6 @@ import {
   Questions,
   BoothSetPage,
   ProfileSectionsSettings,
-  SectionedProfile,
   ProfileShelves,
   NudgesLegacyArchive,
   Krews,
@@ -304,12 +303,12 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/settings/notifications' exact component={NotificationsSettings} content={children} />}
             {signedIn && <WrappedRoute path='/settings/privacy' exact component={PrivacySettings} content={children} />}
             {signedIn && <WrappedRoute path="/settings/profile_sections" component={ProfileSectionsSettings} content={children} />}
-            <WrappedRoute path='/@:acct/profile' exact component={SectionedProfile} content={children} />
-            {/* Shelved profile — the 2026-08-01 rebuild lives at
-                /@:acct/shelves in parallel with SectionedProfile while
-                Arrange mode + the composer land. Retires the old
-                /@:acct/profile route once it's at parity. */}
-            <WrappedRoute path='/@:acct/shelves' exact component={ProfileShelves} content={children} />
+            {/* Shelved profile — the 2026-08-01 rebuild replaces the
+                old SectionedProfile at `/@:acct` and `/@:acct/profile`.
+                `/@:acct/shelves` stays as an explicit alias for
+                inbound links that were minted during the parallel
+                development window. */}
+            <WrappedRoute path={['/@:acct/profile', '/@:acct/shelves']} exact component={ProfileShelves} content={children} />
             {/* Kalendar Rebuild (proposal #116969253949249128) — the Spiral
                 is now the Kalendar. Bare /hub/kalendar renders KalendarSpiral;
                 the old Events list component retires. /hub/kalendar/:id
@@ -372,11 +371,11 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/you' component={YouPortal} content={children} />
             <WrappedRoute path={['/publish', '/statuses/new']} component={Compose} content={children} />
 
-            {/* /@:acct renders the sectioned profile by default (Kronk 2.0
-                — the profile IS the sectioned view). The classic timeline
+            {/* /@:acct renders the shelved profile by default (Kronk 2.0
+                — the profile IS the shelved view). The classic timeline
                 remains available at /@:acct/posts for people who prefer
                 the flat feed. */}
-            <WrappedRoute path={['/@:acct', '/accounts/:id']} exact component={SectionedProfile} content={children} />
+            <WrappedRoute path={['/@:acct', '/accounts/:id']} exact component={ProfileShelves} content={children} />
             {signedIn && <WrappedRoute path='/@:acct/edit' exact component={ProfileCompose} content={children} />}
             <WrappedRoute path={['/@:acct/posts', '/accounts/:id/posts']} component={AccountTimeline} content={children} />
             <WrappedRoute path={['/@:acct/featured', '/accounts/:id/featured']} component={AccountFeatured} content={children} />
