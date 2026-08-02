@@ -45,9 +45,11 @@ class ServerBanner extends PureComponent {
           <FormattedMessage id='server_banner.is_one_of_many' defaultMessage='{domain} is one of the many independent Mastodon servers you can use to participate in the fediverse.' values={{ domain: <strong>{domain}</strong>, mastodon: <a href='https://joinmastodon.org' target='_blank' rel='noopener'>Mastodon</a> }} />
         </div>
 
-        <Link to='/about'>
+        {/* /kronk/about is Rails-served, not SPA. Plain <a> forces a
+            full-page navigation instead of routing client-side. */}
+        <a href='/kronk/about'>
           <ServerHeroImage blurhash={server.getIn(['thumbnail', 'blurhash'])} src={server.getIn(['thumbnail', 'url'])} className='server-banner__hero' />
-        </Link>
+        </a>
 
         <div className='server-banner__description'>
           {isLoading ? (

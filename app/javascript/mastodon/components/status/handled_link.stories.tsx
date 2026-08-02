@@ -89,8 +89,8 @@ export const Mention: Story = {
 
 export const InternalLink: Story = {
   args: {
-    href: '/about',
-    text: 'About',
+    href: '/explore',
+    text: 'Explore',
   },
 };
 

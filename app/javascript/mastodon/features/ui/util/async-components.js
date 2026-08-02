@@ -186,18 +186,6 @@ export function ClosedRegistrationsModal () {
   return import('../../closed_registrations_modal');
 }
 
-export function About () {
-  return import('../../about');
-}
-
-export function PrivacyPolicy () {
-  return import('../../privacy_policy');
-}
-
-export function TermsOfService () {
-  return import('../../terms_of_service');
-}
-
 export function NotificationRequests () {
   return import('../../notifications/requests');
 }

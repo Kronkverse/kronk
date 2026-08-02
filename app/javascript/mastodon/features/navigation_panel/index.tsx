@@ -392,7 +392,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
         <div className='navigation-panel__legal'>
           <ColumnLink
             transparent
-            to='/about'
+            href='/kronk/about'
             icon='ellipsis-h'
             iconComponent={InfoIcon}
             text={intl.formatMessage(messages.about)}
