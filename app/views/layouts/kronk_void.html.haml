@@ -8,6 +8,16 @@
 -# `auth` layout (which wraps in `.container-alt > .form-container`
 -# and stays for edit / update / recovery flows).
 
+-# `app-body` skips `shared/_kronk_static_chrome` in the application
+-# layout — otherwise the top-band hub-switcher, right-band korner
+-# sidebar, kronk-menu FAB and invite button all render on top of the
+-# signup ceremony. Every one of those chrome links (`/@user`, `/home`,
+-# `/hub`, `/nudges`, `/hub/<slug>`, `/publish`) is a signed-in HTML
+-# path that trips `require_crossed_thresholds!` and bounces back
+-# here, so a member who hasn't crossed yet cannot escape the loop by
+-# clicking chrome. Same reason the ToS interstitial uses `app-body`.
+- content_for :body_classes, 'app-body'
+
 - content_for :header_tags do
   = vite_typescript_tag 'kronk_void.ts', crossorigin: 'anonymous'
 
