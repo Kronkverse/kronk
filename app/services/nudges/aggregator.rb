@@ -44,6 +44,47 @@ module Nudges
       new(notifications).groups
     end
 
+    # Resolve the aggregation window a notification type declares in its
+    # korner manifest. Returns an ActiveSupport::Duration, or nil when the
+    # type declares no window (or `aggregation: none`). This is the single
+    # source of truth shared by the read side (grouping the Activity feed,
+    # below) and the write side (Nudges::EventRouter collapsing an event
+    # burst). Pass `korner_slug:` to narrow the search to one manifest —
+    # write-side callers that already know their korner do, so a same-named
+    # type in another manifest can't shadow theirs.
+    def self.window_for(type, korner_slug: nil)
+      manifests =
+        if korner_slug
+          [Kronk::KornerRegistry.find(korner_slug)].compact
+        else
+          Kronk::KornerRegistry.all
+        end
+
+      # KornerRegistry returns Array<Manifest> — plain arrays, so #each (not
+      # AR's #find_each) is what applies here.
+      manifests.each do |m|
+        next unless m.notifications.is_a?(Array)
+
+        entry = m.notifications.find { |t| t['name'].to_s == type.to_s }
+        next unless entry
+
+        aggregation = entry['aggregation']
+        next if aggregation == 'none'
+        next unless aggregation.is_a?(Hash) && aggregation['window']
+
+        return parse_window(aggregation['window'])
+      end
+      nil
+    end
+
+    def self.parse_window(literal)
+      case literal.to_s
+      when /\A(\d+)h\z/ then ::Regexp.last_match(1).to_i.hours
+      when /\A(\d+)m\z/ then ::Regexp.last_match(1).to_i.minutes
+      when /\A(\d+)s\z/ then ::Regexp.last_match(1).to_i.seconds
+      end
+    end
+
     def initialize(notifications)
       @notifications = notifications.to_a.sort_by(&:created_at)
     end
@@ -54,7 +95,7 @@ module Nudges
 
       @notifications.each do |notification|
         key = group_key(notification)
-        window = window_for(notification.type)
+        window = self.class.window_for(notification.type) || DEFAULT_WINDOW
 
         if current[key] && (notification.created_at - current[key].notifications.last.created_at) <= window
           current[key].notifications << notification
@@ -93,36 +134,6 @@ module Nudges
       return ['Status', status.id] if status
 
       [notification.activity_type, notification.activity_id]
-    end
-
-    def window_for(type)
-      manifest_window = notification_type_window(type)
-      manifest_window || DEFAULT_WINDOW
-    end
-
-    def notification_type_window(type)
-      # KornerRegistry.all returns Array<Manifest> — not AR, so find_each doesn't apply.
-      Kronk::KornerRegistry.all.each do |manifest| # rubocop:disable Rails/FindEach
-        next unless manifest.notifications.is_a?(Array)
-
-        entry = manifest.notifications.find { |t| t['name'].to_s == type.to_s }
-        next unless entry
-
-        aggregation = entry['aggregation']
-        next if aggregation == 'none'
-        next unless aggregation.is_a?(Hash) && aggregation['window']
-
-        return parse_window(aggregation['window'])
-      end
-      nil
-    end
-
-    def parse_window(literal)
-      case literal.to_s
-      when /\A(\d+)h\z/ then ::Regexp.last_match(1).to_i.hours
-      when /\A(\d+)m\z/ then ::Regexp.last_match(1).to_i.minutes
-      when /\A(\d+)s\z/ then ::Regexp.last_match(1).to_i.seconds
-      end
     end
   end
 end
