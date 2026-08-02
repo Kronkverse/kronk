@@ -22,7 +22,6 @@
 #  otp_backup_codes          :string           is an Array
 #  otp_required_for_login    :boolean          default(FALSE), not null
 #  otp_secret                :string
-#  require_tos_interstitial  :boolean          default(FALSE), not null
 #  reset_password_sent_at    :datetime
 #  reset_password_token      :string
 #  settings                  :text

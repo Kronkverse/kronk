@@ -345,20 +345,6 @@ RSpec.describe UserMailer do
     it_behaves_like 'delivery to memorialized user'
   end
 
-  describe '#terms_of_service_changed' do
-    let(:terms) { Fabricate :terms_of_service }
-    let(:mail) { described_class.terms_of_service_changed(receiver, terms) }
-
-    it 'renders terms_of_service_changed mail' do
-      expect(mail)
-        .to be_present
-        .and(have_subject(I18n.t('user_mailer.terms_of_service_changed.subject')))
-        .and(have_body_text(I18n.t('user_mailer.terms_of_service_changed.changelog')))
-    end
-
-    it_behaves_like 'optional bulk mailer settings'
-  end
-
   describe '#announcement_published' do
     let(:announcement) { Fabricate :announcement }
     let(:mail) { described_class.announcement_published(receiver, announcement) }
