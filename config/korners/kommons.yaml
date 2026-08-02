@@ -36,6 +36,7 @@ storage:
 emits:
   - kommons.proposal.backed # a Kronker stakes tokens on a proposal; Nudges routes to the author's Mate chat
   - kommons.proposal.frothed # a Favourite lands on the proposal's discussion Status; Nudges routes to author
+  - kommons.proposal.commented # a ProposalComment is posted; Nudges routes to the proposal author
 listens: []
 
 feed_projection:
