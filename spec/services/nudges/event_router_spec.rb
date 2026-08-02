@@ -85,5 +85,97 @@ RSpec.describe Nudges::EventRouter do
         ).to eq(:self_dropped)
       end
     end
+
+    context 'with an aggregation window (a burst on one subject)' do
+      before { make_mates!(alice, bob) }
+
+      # Mirrors the albutts `album_new_photo` case: repeated activity on
+      # the same source ref (Album) within the window collapses onto one
+      # event instead of stacking a row per photo.
+      let(:agg_args) do
+        {
+          actor: alice,
+          recipient: bob,
+          source_korner_slug: 'albutts',
+          verb: 'added_photo',
+          source_type: 'Album',
+          source_id: 7,
+          interaction: 'interactive',
+          cta_label: 'View album',
+          cta_route: '/hub/albutts/albums/7',
+          aggregate_window: 15.minutes,
+        }
+      end
+
+      it 'collapses a second delivery in-window onto the first event' do
+        first  = described_class.deliver(**agg_args)
+        second = travel(5.minutes) { described_class.deliver(**agg_args) }
+
+        expect(Nudges::Event.count).to eq(1)
+        expect(second.id).to eq(first.id)
+      end
+
+      it 're-floats the collapsed event to the latest delivery time' do
+        first    = described_class.deliver(**agg_args)
+        original = first.created_at
+
+        travel(5.minutes) { described_class.deliver(**agg_args) }
+
+        expect(first.reload.created_at).to be > original
+      end
+
+      it 'surfaces the latest actor on the collapsed event' do
+        # Same Mate conversation (mate_between! is order-independent), so a
+        # reply-direction contribution lands on the same event and updates
+        # who it is from.
+        described_class.deliver(**agg_args)
+        travel(5.minutes) do
+          described_class.deliver(**agg_args.merge(actor: bob, recipient: alice))
+        end
+
+        expect(Nudges::Event.count).to eq(1)
+        expect(Nudges::Event.first.actor_account).to eq(bob)
+      end
+
+      it 'starts a fresh event once the window has elapsed' do
+        described_class.deliver(**agg_args)
+        travel(20.minutes) { described_class.deliver(**agg_args) }
+
+        expect(Nudges::Event.count).to eq(2)
+      end
+
+      it 'does not collapse across different source refs' do
+        described_class.deliver(**agg_args)
+        travel(5.minutes) { described_class.deliver(**agg_args.merge(source_id: 8)) }
+
+        expect(Nudges::Event.count).to eq(2)
+      end
+
+      it 'does not collapse a different verb on the same subject' do
+        described_class.deliver(**agg_args)
+        travel(5.minutes) { described_class.deliver(**agg_args.merge(verb: 'removed_photo')) }
+
+        expect(Nudges::Event.count).to eq(2)
+      end
+
+      it 'never aggregates without a window (default behaviour is preserved)' do
+        described_class.deliver(**agg_args.merge(aggregate_window: nil))
+        travel(1.minute) { described_class.deliver(**agg_args.merge(aggregate_window: nil)) }
+
+        expect(Nudges::Event.count).to eq(2)
+      end
+    end
+  end
+
+  describe '.window_for resolution used by aggregating callers' do
+    it 'resolves the albutts album_new_photo window from the manifest' do
+      expect(Nudges::Aggregator.window_for('album_new_photo', korner_slug: 'albutts'))
+        .to eq(15.minutes)
+    end
+
+    it 'returns nil for a type that declares no aggregation window' do
+      expect(Nudges::Aggregator.window_for('contribution_rights_granted', korner_slug: 'albutts'))
+        .to be_nil
+    end
   end
 end

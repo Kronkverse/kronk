@@ -101,12 +101,16 @@ Rails.application.config.after_initialize do
   # (docs/spaces/albutts.md §Notifications). The Mate gate still
   # applies per recipient; a contribution burst reaching non-mates
   # silently drops those legs. Aggregation (`window: 15m,
-  # key: album_id`) declared in the manifest is not yet enforced by
-  # the router — comes in a follow-up.
+  # key: album_id`) declared on the `album_new_photo` type is honoured
+  # by passing the manifest window to the router: a burst of photos to
+  # one album collapses into a single nudge per recipient (keyed on the
+  # Album source ref) instead of one nudge per photo.
   Kronk::KornerEvents.subscribe('albutts.album.new_photo') do |payload|
     album = Album.find_by(id: payload[:album_id])
     actor = Account.find_by(id: payload[:actor_account_id])
     next unless album && actor
+
+    aggregate_window = Nudges::Aggregator.window_for('album_new_photo', korner_slug: 'albutts')
 
     fellow_ids = album.photos.where.not(contributor_id: actor.id)
                       .distinct.pluck(:contributor_id)
@@ -125,7 +129,8 @@ Rails.application.config.after_initialize do
         source_id: album.id,
         interaction: 'interactive',
         cta_label: 'View album',
-        cta_route: "/hub/albutts/albums/#{album.id}"
+        cta_route: "/hub/albutts/albums/#{album.id}",
+        aggregate_window: aggregate_window
       )
     end
   end
