@@ -487,4 +487,205 @@
       color: var(--text-muted);
     }
   }
+
+  // Editable slab body (click-to-open composer)
+  &__slab-body--edit {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    text-align: left;
+    color: inherit;
+    font-family: inherit;
+    cursor: pointer;
+    min-width: 0;
+
+    &:hover .profile-shelves__slab-name {
+      color: var(--accent);
+    }
+  }
+
+  // ── Composer modal ──────────────────────────────────────────────
+
+  &__composer-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgb(0 0 0 / 55%);
+    padding: var(--sp-5, 24px);
+  }
+
+  &__composer {
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-large, 16px);
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: var(--sp-5, 24px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4, 16px);
+  }
+
+  &__composer-head {
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: var(--sp-3, 12px);
+    margin-bottom: var(--sp-1, 4px);
+  }
+
+  &__composer-kicker {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: var(--sp-1, 4px);
+  }
+
+  &__composer-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    margin: 0;
+    color: var(--text-primary);
+  }
+
+  &__composer-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2, 8px);
+  }
+
+  &__composer-inline {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  &__composer-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__composer-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2, 8px);
+  }
+
+  &__composer-pill {
+    padding: 6px var(--sp-3, 12px);
+    border-radius: var(--radius-small, 6px);
+    border: 1px solid var(--border-subtle);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+
+    &--active {
+      border-color: var(--accent);
+      color: var(--text-primary);
+      background: color-mix(in oklab, var(--accent), transparent 82%);
+    }
+
+    &:hover:not(#{&}--active) {
+      border-color: var(--border-default);
+      color: var(--text-primary);
+    }
+  }
+
+  &__composer-body {
+    width: 100%;
+    padding: var(--sp-3, 12px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium, 10px);
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+  }
+
+  &__composer-hint {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  &__composer-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2, 8px);
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+
+    input {
+      cursor: pointer;
+    }
+  }
+
+  &__composer-error {
+    padding: var(--sp-3, 12px);
+    border-radius: var(--radius-medium, 10px);
+    background: color-mix(in oklab, var(--warning-red, #ef4444), transparent 85%);
+    color: var(--warning-red, #ef4444);
+    font-size: 13px;
+  }
+
+  &__composer-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--sp-2, 8px);
+    padding-top: var(--sp-2, 8px);
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  &__composer-cancel,
+  &__composer-save {
+    padding: 8px var(--sp-4, 16px);
+    border-radius: var(--radius-small, 6px);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__composer-cancel {
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+
+    &:hover:not(:disabled) {
+      color: var(--text-primary);
+      border-color: var(--border-strong, var(--accent));
+    }
+  }
+
+  &__composer-save {
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: var(--text-on-accent);
+
+    &:hover:not(:disabled) {
+      filter: brightness(1.1);
+    }
+  }
 }
