@@ -209,6 +209,110 @@
     font-size: 13px;
   }
 
+  // Drawn rail — horizontal carousel of cards. Card renderers are the
+  // existing StatusAlbuttsCard / StatusBoothCard / StatusTrekCard etc.
+  // Longform / photo / generic renderers live in shelf_drawn.tsx.
+  &__drawn-rail {
+    display: flex;
+    gap: var(--sp-3, 12px);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: var(--sp-1, 4px) 0 var(--sp-2, 8px);
+    margin: 0;
+    list-style: none;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &__drawn-rail-item {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    min-width: 220px;
+    max-width: 320px;
+  }
+
+  &__drawn-card {
+    display: block;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium, 10px);
+    padding: var(--sp-3, 12px);
+    color: var(--text-primary);
+    text-decoration: none;
+    transition:
+      border-color 120ms ease-out,
+      transform 120ms ease-out;
+
+    &:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+  }
+
+  &__drawn-longform {
+    width: 240px;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__drawn-longform-excerpt {
+    flex: 1;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.5;
+    overflow: hidden;
+    mask-image: linear-gradient(#000 60%, transparent);
+  }
+
+  &__drawn-longform-meta {
+    margin-top: var(--sp-2, 8px);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  &__drawn-photo {
+    width: 140px;
+    height: 140px;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  &__drawn-photo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__drawn-excerpt {
+    width: 240px;
+    padding: var(--sp-3, 12px);
+  }
+
+  &__drawn-excerpt-source {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: var(--sp-2, 8px);
+  }
+
+  &__drawn-excerpt-text {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+  }
+
   // ── Arrange mode ────────────────────────────────────────────────
 
   &__acts {
