@@ -21,6 +21,7 @@ import {
 import type { OrderMode, Reach } from './arrange_slab';
 import { ArrangeSlab, ORDER_ORDER, REACH_ORDER } from './arrange_slab';
 import { LibraryGrid } from './library_grid';
+import { PostPicker } from './post_picker';
 import { TellComposer } from './tell_composer';
 
 // The owner's arrange surface. Renders a slab per shelf (cards +
@@ -100,6 +101,7 @@ const next = <T,>(list: readonly [T, ...T[]], current: T): T => {
 interface ArrangeStageProps {
   cards: ApiProfileCardJSON[];
   sections: ApiProfileSectionJSON[];
+  ownerAccountId: string;
   onChange: (next: {
     cards: ApiProfileCardJSON[];
     sections: ApiProfileSectionJSON[];
@@ -109,6 +111,7 @@ interface ArrangeStageProps {
 export const ArrangeStage: React.FC<ArrangeStageProps> = ({
   cards: initialCards,
   sections: initialSections,
+  ownerAccountId,
   onChange,
 }) => {
   const intl = useIntl();
@@ -117,6 +120,7 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
   const [sections, setSections] = useState(initialSections);
   const [library, setLibrary] = useState<ApiProfileLibraryJSON | null>(null);
   const [composing, setComposing] = useState<string | null>(null);
+  const [picking, setPicking] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -300,8 +304,50 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
       void apiUpdateProfileSection(id, { settings: nextSettings }).catch(() => {
         setSections(sections);
       });
+      // Landing on `chosen` for the first time (or with no picks yet)
+      // is a good moment to prompt the owner to populate them — but
+      // don't force-open on every cycle, only when the mode flips to
+      // chosen from something else AND there's no curated list yet.
+      if (
+        nextOrder === 'chosen' &&
+        Array(section.settings.order_ids as string[] | undefined).length === 0
+      ) {
+        setPicking(id);
+      }
     },
     [cards, publish, sections],
+  );
+
+  const openPicker = useCallback((id: string) => {
+    setPicking(id);
+  }, []);
+
+  const closePicker = useCallback(() => {
+    setPicking(null);
+  }, []);
+
+  const handlePickerSaved = useCallback(
+    (orderIds: string[]) => {
+      if (!picking) return;
+      const section = sections.find((s) => s.id === picking);
+      if (!section) {
+        setPicking(null);
+        return;
+      }
+      const nextSettings = {
+        ...section.settings,
+        order: 'chosen',
+        order_ids: orderIds,
+      };
+      publish(
+        cards,
+        sections.map((s) =>
+          s.id === picking ? { ...s, settings: nextSettings } : s,
+        ),
+      );
+      setPicking(null);
+    },
+    [cards, picking, publish, sections],
   );
 
   const moveSectionUp = useCallback(
@@ -431,6 +477,7 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
               canMoveDown={i < sections.length - 1}
               onMoveUp={moveSectionUp}
               onMoveDown={moveSectionDown}
+              onEdit={order === 'chosen' ? openPicker : undefined}
               onToggleVisible={toggleSectionVisible}
               onCycleReach={cycleSectionReach}
               onCycleOrder={cycleSectionOrder}
@@ -459,6 +506,27 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
           onCancel={closeComposer}
         />
       )}
+
+      {picking &&
+        (() => {
+          const section = sections.find((s) => s.id === picking);
+          if (!section) return null;
+          const kornerSlug =
+            (section.settings.korner_slug as string | undefined) ?? 'korner';
+          const orderIds = Array.isArray(section.settings.order_ids)
+            ? (section.settings.order_ids as string[])
+            : [];
+          return (
+            <PostPicker
+              accountId={ownerAccountId}
+              sectionId={section.id}
+              kornerSlug={kornerSlug}
+              initialOrderIds={orderIds}
+              onSaved={handlePickerSaved}
+              onCancel={closePicker}
+            />
+          );
+        })()}
     </div>
   );
 };
