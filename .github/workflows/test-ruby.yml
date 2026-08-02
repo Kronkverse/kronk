@@ -1,7 +1,14 @@
 name: Ruby Testing
 
 on:
-  merge_group:
+  # NOT triggered on `merge_group`. `test (.ruby-version)` is no longer a
+  # required check on rebuild/2.0.0 (2026-08-02) — only `lint` gates the
+  # merge queue — so running the ~15-min suite in the merge group was pure
+  # wasted Actions minutes: the queue merged without waiting for it. The
+  # suite still runs on every `pull_request` (below), so red is caught
+  # before enqueue; it just no longer runs a second, ignored time in the
+  # queue. Re-add `merge_group:` here if the test gate is ever restored
+  # (e.g. after the suite is sharded fast enough to gate again).
   push:
     branches:
       - 'main'
@@ -16,11 +23,8 @@ on:
       - '.github/actions/setup-ruby/**'
   pull_request:
   # Nightly + manual runs exercise the full Ruby-version compat matrix (incl.
-  # 3.3). On the merge path (pull_request + merge_group) the `test` job matrix
-  # below runs ONLY .ruby-version, so the queue isn't paying for the 3.3 leg on
-  # every PR — that halves the per-merge suite cost. (`test (.ruby-version)`
-  # stays the required check; GitHub requires it to run on the PR head to
-  # enqueue, so it can't be moved to merge-group-only.)
+  # 3.3). On the `pull_request` merge path the `test` job matrix below runs
+  # ONLY .ruby-version, so PRs aren't paying for the 3.3 leg on every push.
   schedule:
     - cron: '0 6 * * *' # nightly full Ruby-version compat sweep (incl. 3.3)
   workflow_dispatch:
