@@ -54,6 +54,7 @@ class User < ApplicationRecord
     moderator
     remember_created_at
     remember_token
+    require_tos_interstitial
     skip_sign_in_token
   )
 
