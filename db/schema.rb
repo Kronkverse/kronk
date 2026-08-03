@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_01_120001) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_03_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1911,17 +1911,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_01_120001) do
     t.index ["proposal_id"], name: "index_tasks_on_proposal_id"
   end
 
-  create_table "terms_of_services", force: :cascade do |t|
-    t.text "text", default: "", null: false
-    t.text "changelog", default: "", null: false
-    t.datetime "published_at"
-    t.datetime "notification_sent_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.date "effective_date"
-    t.index ["effective_date"], name: "index_terms_of_services_on_effective_date", unique: true, where: "(effective_date IS NOT NULL)"
-  end
-
   create_table "token_balances", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.integer "balance", default: 0, null: false
@@ -2067,7 +2056,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_01_120001) do
     t.string "time_zone"
     t.string "otp_secret"
     t.datetime "age_verified_at"
-    t.boolean "require_tos_interstitial", default: false, null: false
     t.datetime "thresholds_agreed_at"
     t.integer "thresholds_version"
     t.index ["account_id"], name: "index_users_on_account_id"
