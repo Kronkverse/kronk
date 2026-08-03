@@ -38,6 +38,15 @@ const messages = defineMessages({
     defaultMessage: 'Couldn’t save',
   },
 
+  alwaysSendEmails: {
+    id: 'notifications_settings.always_send_emails',
+    defaultMessage: 'Email me even when I’m active',
+  },
+  alwaysSendEmailsHint: {
+    id: 'notifications_settings.always_send_emails_hint',
+    defaultMessage:
+      'By default, emails pause while you’re using Kronk. Turn this on to receive them regardless.',
+  },
   emailMention: {
     id: 'notifications_settings.email_mention',
     defaultMessage: 'Email me on mentions',
@@ -77,6 +86,7 @@ const messages = defineMessages({
 });
 
 const LABELS: Record<string, MessageDescriptor> = {
+  always_send_emails: messages.alwaysSendEmails,
   email_mention: messages.emailMention,
   email_follow: messages.emailFollow,
   email_follow_request: messages.emailFollowRequest,
@@ -88,6 +98,7 @@ const LABELS: Record<string, MessageDescriptor> = {
 };
 
 const HINTS: Record<string, MessageDescriptor> = {
+  always_send_emails: messages.alwaysSendEmailsHint,
   email_software_updates: messages.emailSoftwareUpdatesHint,
 };
 
