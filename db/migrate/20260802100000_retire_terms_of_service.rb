@@ -18,9 +18,20 @@
 # `require_tos_interstitial` any more (see the retirement of
 # `WebAppControllerConcern#redirect_to_tos_interstitial!`).
 class RetireTermsOfService < ActiveRecord::Migration[8.0]
+  # `safety_assured` blocks required by `strong_migrations`:
+  #   - `remove_column` on a live table with a nullable column is flagged
+  #     because a stale AR schema cache on an old process could try to
+  #     write to the column between the migration and the code reload.
+  #     Kronk's shadow + production deploys are single-instance restarts
+  #     (see /home/shared/infra.md — `deploy-staging.sh` migrates then
+  #     restarts the Rails process in one shot), so there is no rolling
+  #     window; the code that referenced this column is already gone.
+  #   - `drop_table` is flagged for the same reason. Same rationale.
+  # The code side of the retirement (User model / serializer / worker)
+  # already merged in #1102; this migration is just DB cleanup.
   def up
-    remove_column :users, :require_tos_interstitial if column_exists?(:users, :require_tos_interstitial)
-    drop_table :terms_of_services if table_exists?(:terms_of_services)
+    safety_assured { remove_column :users, :require_tos_interstitial } if column_exists?(:users, :require_tos_interstitial)
+    safety_assured { drop_table :terms_of_services } if table_exists?(:terms_of_services)
   end
 
   def down
