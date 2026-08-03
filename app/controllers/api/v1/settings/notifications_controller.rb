@@ -21,9 +21,12 @@ class Api::V1::Settings::NotificationsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:update]
   before_action :require_user!
 
-  # Public name => user-settings store key (all under notification_emails).
-  # options yields enum choices (nil for booleans).
+  # Public name => user-settings store key. Most sit under
+  # `notification_emails`; `always_send_emails` is a top-level user setting
+  # (deliver emails even while the member is active). options yields enum
+  # choices (nil for booleans).
   FIELDS = {
+    'always_send_emails' => { key: 'always_send_emails', kind: 'boolean', options: -> {} },
     'email_mention' => { key: 'notification_emails.mention', kind: 'boolean', options: -> {} },
     'email_follow' => { key: 'notification_emails.follow', kind: 'boolean', options: -> {} },
     'email_follow_request' => { key: 'notification_emails.follow_request', kind: 'boolean', options: -> {} },
