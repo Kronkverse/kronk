@@ -63,19 +63,19 @@ both lag reality. Confirmed shipped on `rebuild/2.0.0` (tip alpha.189):
 
 ### Framework + korners — still genuine gaps
 
-| Item                                                                                                                                                                                      | State | Effort                    |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------- |
-| Nudges Phase 5 cutover — retire the classic notifications bell UI _for real_ (currently CSS-hidden)                                                                                       | work  | M                         |
-| Huddle Phase 9.5 — event bus wiring (Phase 9.1–9.2 models shipped; 9.3–9.5 pending)                                                                                                       | work  | M                         |
-| Nudges hasn't absorbed notification-email prefs (`notification_emails.*`, `always_send_emails`, `software_updates`)                                                                       | todo  | M                         |
-| **moments / albutts / kompass** — manifests set `enforced: false`; no models. Phase 13 stubs (each a "coming soon" card).                                                                 | todo  | S each × 3                |
-| **klot** — manifest-only; runtime lives on `dev/tbone` (not merged)                                                                                                                       | todo  | L (out-of-scope for 2.0?) |
-| CLAUDE.md must-read line for the Standard before editing `config/korners/*.yaml`                                                                                                          | todo  | S                         |
-| ~~L7 stylelint-governance doctor check~~ — **DONE** (alpha.196): `korners.rb` now implements the L7 check + `stylelint_governance_list` helper, so the doctor gates L1/L3/L4/L5/L6/L7/L10 | done  | —                         |
-| ~~Core-space manifests for Feed/Profile/Hub~~ — **DONE**: `config/korners/{feed,hub,profile,settings}.yaml` all present; doctor distinguishes core via `manifest.core?`                   | done  | —                         |
-| Launch card (§8.7) declared in 10 manifests, parsed, but no producer/service — the one-time launch announcement never projects                                                            | todo  | M                         |
-| Korner tombstones / 410 Gone (§5.6) — only AP Statuses tombstone; Listing etc. have no `deleted_at`/410 resolution                                                                        | todo  | M                         |
-| `render_target` inert (§9.1) — every manifest sets it; nothing consumes it (also open decision §13.2)                                                                                     | todo  | L / defer                 |
+| Item                                                                                                                                                                                                                                                                                                                                               | State | Effort                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------- |
+| ~~Nudges Phase 5 cutover — retire the classic notifications bell UI~~ **DONE** (bell retired: Nudges is a hub-switcher pillar w/ unread badge; `nudges_legacy` archive; `/notifications`→`/nudges`). See `implementation_plan.md` §Phase 5 status table (2026-08-03). Only email-prefs (row below) + dead-`features/notifications` cleanup remain. | done  | —                         |
+| Huddle Phase 9.5 — event bus wiring (Phase 9.1–9.2 models shipped; 9.3–9.5 pending)                                                                                                                                                                                                                                                                | work  | M                         |
+| Nudges hasn't absorbed notification-email prefs (`notification_emails.*`, `always_send_emails`, `software_updates`)                                                                                                                                                                                                                                | todo  | M                         |
+| **moments / albutts / kompass** — manifests set `enforced: false`; no models. Phase 13 stubs (each a "coming soon" card).                                                                                                                                                                                                                          | todo  | S each × 3                |
+| **klot** — manifest-only; runtime lives on `dev/tbone` (not merged)                                                                                                                                                                                                                                                                                | todo  | L (out-of-scope for 2.0?) |
+| CLAUDE.md must-read line for the Standard before editing `config/korners/*.yaml`                                                                                                                                                                                                                                                                   | todo  | S                         |
+| ~~L7 stylelint-governance doctor check~~ — **DONE** (alpha.196): `korners.rb` now implements the L7 check + `stylelint_governance_list` helper, so the doctor gates L1/L3/L4/L5/L6/L7/L10                                                                                                                                                          | done  | —                         |
+| ~~Core-space manifests for Feed/Profile/Hub~~ — **DONE**: `config/korners/{feed,hub,profile,settings}.yaml` all present; doctor distinguishes core via `manifest.core?`                                                                                                                                                                            | done  | —                         |
+| Launch card (§8.7) declared in 10 manifests, parsed, but no producer/service — the one-time launch announcement never projects                                                                                                                                                                                                                     | todo  | M                         |
+| Korner tombstones / 410 Gone (§5.6) — only AP Statuses tombstone; Listing etc. have no `deleted_at`/410 resolution                                                                                                                                                                                                                                 | todo  | M                         |
+| `render_target` inert (§9.1) — every manifest sets it; nothing consumes it (also open decision §13.2)                                                                                                                                                                                                                                              | todo  | L / defer                 |
 
 ### Settings retirement — blocks retiring classic /settings
 
@@ -124,9 +124,11 @@ Ordered by dependency:
    now exist.
 4. **Launch card producer** (M) — Phase 5 side-quest; needed for
    Phase 14 announcement flow.
-5. **Nudges Phase 5 cutover proper** — retire the classic bell UI
-   (not just CSS-hide) + absorb notification-email prefs into
-   Nudges settings. Currently work-M each.
+5. **Nudges Phase 5 cutover** — bell retirement **DONE** (Nudges is a
+   hub-switcher pillar; `nudges_legacy` archive; redirects). The only
+   remaining piece is absorbing notification-email prefs into Nudges
+   settings (work-M). See `implementation_plan.md` §Phase 5 status
+   table (reconciled 2026-08-03).
 6. **Huddle Phase 9.5** — event-bus wiring. Currently work-M.
 7. **Phase 13 stubs** — moments / albutts / kompass "coming soon"
    cards (S each × 3).
@@ -146,18 +148,18 @@ Not on the critical path:
 For the board at `talitamoss.info/rebuild-status.html`, the following
 state changes reflect reality on 2026-07-23:
 
-| Section             | Item                      | Board says | Actual                                         |
-| ------------------- | ------------------------- | ---------- | ---------------------------------------------- |
-| Individual korners  | kuestions                 | done       | done ✓ (already correct)                       |
-| Individual korners  | tree                      | **work**   | **done**                                       |
-| Individual korners  | nudges                    | **work**   | still work — Phase 5 cutover is the gap        |
-| Individual korners  | huddle                    | work       | still work — Phase 9.5 pending                 |
-| Navigation & chrome | Profile composer via Ӂ    | **work**   | **done** (#352 merged 2026-07-17)              |
-| Custom features     | Profile composer polish   | **work**   | **done** (#353 merged 2026-07-17)              |
-| Infrastructure      | Project tsc green         | **work**   | **done** (zero errors)                         |
-| Infrastructure      | Purge `aws/` from history | **work**   | **done** (commit ae202349b)                    |
-| Docs                | Retire stale shared docs  | work       | still work — templates still un-formal-retired |
-| Release prep        | CI fully green (tsc gate) | **work**   | **done**                                       |
+| Section             | Item                      | Board says | Actual                                                                                           |
+| ------------------- | ------------------------- | ---------- | ------------------------------------------------------------------------------------------------ |
+| Individual korners  | kuestions                 | done       | done ✓ (already correct)                                                                         |
+| Individual korners  | tree                      | **work**   | **done**                                                                                         |
+| Individual korners  | nudges                    | **work**   | **~done** — Phase 5 cutover shipped; only email-prefs absorption left (see 2026-08-03 reconcile) |
+| Individual korners  | huddle                    | work       | still work — Phase 9.5 pending                                                                   |
+| Navigation & chrome | Profile composer via Ӂ    | **work**   | **done** (#352 merged 2026-07-17)                                                                |
+| Custom features     | Profile composer polish   | **work**   | **done** (#353 merged 2026-07-17)                                                                |
+| Infrastructure      | Project tsc green         | **work**   | **done** (zero errors)                                                                           |
+| Infrastructure      | Purge `aws/` from history | **work**   | **done** (commit ae202349b)                                                                      |
+| Docs                | Retire stale shared docs  | work       | still work — templates still un-formal-retired                                                   |
+| Release prep        | CI fully green (tsc gate) | **work**   | **done**                                                                                         |
 
 **New section to add** (not currently on the board):
 
