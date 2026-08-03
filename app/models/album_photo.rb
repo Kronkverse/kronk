@@ -23,6 +23,13 @@ class AlbumPhoto < ApplicationRecord
 
   scope :chronological, -> { order(created_at: :asc) }
   scope :newest, -> { order(created_at: :desc) }
+  # Legacy AlbumPhoto rows created before the 2026-07-31 Status-backed
+  # refactor have `status_id = NULL`. They can't be interacted with
+  # (no froth, no thread, no rendered media through Status) and would
+  # crash Status-assuming client code. Serializers filter through this
+  # scope so those rows stay hidden until a follow-up migration drops
+  # them.
+  scope :with_status, -> { where.not(status_id: nil) }
 
   before_destroy :destroy_status!, prepend: true
 

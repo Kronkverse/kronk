@@ -19,17 +19,24 @@ class REST::AlbumSerializer < ActiveModel::Serializer
     object.id.to_s
   end
 
+  # Filter through `with_status` so legacy photos (pre-2026-07-31
+  # refactor, `status_id = NULL`) don't reach the client — the client
+  # types + rendering assume `photo.status` is non-null.
+  def photos
+    object.photos.with_status
+  end
+
   def cover_url
     object.cover_media_attachment&.file&.url(:small).presence ||
-      object.photos.chronological.first&.rendered_url
+      object.photos.with_status.chronological.first&.rendered_url
   end
 
   def contributor_count
-    @contributor_count ||= object.photos.distinct.count(:contributor_id)
+    @contributor_count ||= object.photos.with_status.distinct.count(:contributor_id)
   end
 
   def photo_count
-    @photo_count ||= object.photos.count
+    @photo_count ||= object.photos.with_status.count
   end
 
   def is_owner
