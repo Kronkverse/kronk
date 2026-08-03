@@ -1643,6 +1643,13 @@ en:
       hide_button: Hide
       label: Potentially sensitive content
   kronk:
+    landing:
+      link_about: About Kronk
+      link_how: How it works
+      og_description: A small community, built together.
+      og_title_suffix: Sign in
+      title: Welcome to Kronk
+      tagline: A small community, built together. Sign in to take up space.
     signup:
       account:
         avatar_hint: Optional. You can add one any time.

@@ -1,0 +1,58 @@
+-# Signed-out landing. Lives at `/` (see HomeController#index).
+-# Renders inside the `kronk_void` layout — starfield + wordmark
+-# masthead — and hosts the sign-in form inline so a visitor doesn't
+-# have to navigate to a separate page to log in.
+-#
+-# Content is deliberately terse for now: wordmark + one-line lede +
+-# form + tail-links to /kronk/about and /invite. The heavier
+-# marketing copy is a follow-up — this PR is scaffolding, not final
+-# language.
+
+- content_for :page_title do
+  = t('auth.login')
+
+- content_for :header_tags do
+  = opengraph 'og:site_name', site_title
+  = opengraph 'og:url', "#{root_url.chomp('/')}#{request.path}"
+  = opengraph 'og:type', 'website'
+  = opengraph 'og:title', "#{site_title} — #{t('kronk.landing.og_title_suffix')}"
+  = opengraph 'og:description', t('kronk.landing.og_description')
+  = opengraph 'og:image', "#{root_url.chomp('/')}/home-preview.png"
+  = opengraph 'og:image:width', '1200'
+  = opengraph 'og:image:height', '630'
+  = opengraph 'twitter:card', 'summary_large_image'
+
+%section.kronk-landing
+  %h1.kronk-landing__title= t('kronk.landing.title')
+  %p.kronk-landing__lede= t('kronk.landing.tagline')
+
+  -# `simple_form_for` with a symbol scope means no model object — the
+  -# form has no attribute types to introspect, so `as:` is required on
+  -# each field or they all default to a text input. Devise's session
+  -# controller only cares about `params[:user][:email]` and
+  -# `params[:user][:password]`.
+  = simple_form_for(:user, url: user_session_path, html: { class: 'kronk-landing__form' }) do |f|
+    .kronk-landing__field
+      = f.input :email,
+                as: :email,
+                autofocus: true,
+                hint: false,
+                input_html: { 'aria-label': t('simple_form.labels.defaults.email'), autocomplete: 'email' },
+                label: t('simple_form.labels.defaults.email'),
+                wrapper: :with_label
+
+    .kronk-landing__field
+      = f.input :password,
+                as: :password,
+                hint: false,
+                input_html: { 'aria-label': t('simple_form.labels.defaults.password'), autocomplete: 'current-password' },
+                label: t('simple_form.labels.defaults.password'),
+                wrapper: :with_label
+
+    .kronk-landing__actions
+      = f.button :button, t('auth.login'), type: :submit, class: 'kronk-landing__submit'
+
+  %ul.kronk-landing__links
+    %li= link_to t('auth.forgot_password'), new_user_password_path
+    %li= link_to t('kronk.landing.link_about'), about_path
+    %li= link_to t('kronk.landing.link_how'), '/kronk/how-it-works'
