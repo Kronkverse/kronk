@@ -17,6 +17,29 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-04 — Launch card retired (no producer, no in-feed announcement)
+
+The manifest's `launch:` block (§8.7 of `kronk_korner_spec.md`) was the
+"one-time in-feed announcement when a korner opens" mechanism —
+`blurb` + `cta` per korner, projected into every user's feed once at
+open time. Field is parsed; ~10 korners declare their copy; no
+producer was ever built.
+
+Retired on Tal's call — no producer, no announcement. The `launch:`
+field stays parsed as-is (vestigial rather than an active concept)
+because ripping it out of ~10 manifests is churn for no user-facing
+gain; a subsequent cleanup can drop the field when the spec is next
+revised.
+
+Consequence for Phase 14: no "welcome our new korners" flow.
+Discovery of new korners routes through the normal channels — Hub
+tile lighting up, Kronk menu, `/kronk/about`, word-of-mouth. The
+implication that the launch card was necessary for Phase 14 (in
+`remaining_work_2026-08-04.md` — "needed for the Phase 14
+announcement flow") is retracted in the same edit.
+
+---
+
 ## 2026-08-04 — `tsc --noEmit` removed from the pre-commit hook
 
 The pre-commit hook (`lint-staged`) bundled the cheap changed-file auto-fixers
