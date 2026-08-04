@@ -1,0 +1,442 @@
+import { useCallback, useEffect, useState } from 'react';
+
+import { defineMessages, useIntl } from 'react-intl';
+
+import type { ApiProfileCardJSON } from 'mastodon/api/profile_cards';
+import {
+  apiDeleteProfileCard,
+  apiReorderProfileCards,
+  apiUpsertProfileCard,
+} from 'mastodon/api/profile_cards';
+import type { ApiProfileLibraryJSON } from 'mastodon/api/profile_library';
+import { apiGetProfileLibrary } from 'mastodon/api/profile_library';
+import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
+import {
+  apiCreateProfileSection,
+  apiDeleteProfileSection,
+  apiReorderProfileSections,
+  apiUpdateProfileSection,
+} from 'mastodon/api/profile_sections';
+
+import type { OrderMode, Reach } from './arrange_slab';
+import { ArrangeSlab, ORDER_ORDER, REACH_ORDER } from './arrange_slab';
+import { LibraryGrid } from './library_grid';
+
+// The owner's arrange surface. Renders a slab per shelf (cards +
+// sections combined into one owner-facing list) with grip / reach /
+// order / visible controls, plus the Library grid underneath.
+//
+// State is owned locally: mutations optimistically update the local
+// arrays, fire the REST call, and roll back on failure. The parent
+// gets a callback so the read-side view can refresh when the owner
+// switches back to view mode.
+//
+// The `chosen` order state carries an implicit assumption: the shelf
+// has a curated `settings.order_ids` list somewhere. This surface
+// only cycles the order MODE — populating order_ids belongs on the
+// per-shelf post picker (follow-up PR).
+
+const messages = defineMessages({
+  kicker: {
+    id: 'profile_shelves.arrange.kicker',
+    defaultMessage: 'Profile · arrange',
+  },
+  title: {
+    id: 'profile_shelves.arrange.title',
+    defaultMessage: "What's on your profile, and in what order",
+  },
+  lede: {
+    id: 'profile_shelves.arrange.lede',
+    defaultMessage:
+      'Everything here is off until you turn it on, and every shelf carries its own reach. Shelves drawn from your posts never copy them — turn a shelf off and nothing is deleted, it just stops being shown.',
+  },
+  cardAbout: {
+    id: 'profile_shelves.card_type.about',
+    defaultMessage: 'About',
+  },
+});
+
+const CARD_TITLE: Record<string, string> = {
+  about: 'About',
+  interests: 'Interests',
+  values: 'Values',
+  exploring: 'Currently exploring',
+  personality: 'Personality',
+  drive: 'What drives me',
+  rotation: 'In rotation',
+  moments: 'Moments',
+  note: 'Note',
+  highlights: 'Highlights',
+  at_a_glance: 'At a glance',
+  open_to: 'Open to',
+  where_i_am: 'Where I am',
+  pod_credentials: 'Pod credentials',
+};
+
+const KORNER_SOURCE: Record<string, string> = {
+  albutts: 'Albutts',
+  booth: 'The Booth',
+  map: 'Map',
+  wachuneed: 'Wachuneed',
+  kuestions: 'Kuestions',
+  moments: 'Moments',
+};
+
+const KORNER_RENDER: Record<string, string> = {
+  albutts: 'album',
+  booth: 'track',
+  map: 'trek',
+  wachuneed: 'listing',
+  kuestions: 'answers',
+  moments: 'moment',
+};
+
+const next = <T,>(list: readonly [T, ...T[]], current: T): T => {
+  const i = list.indexOf(current);
+  return list[(i + 1) % list.length] ?? list[0];
+};
+
+interface ArrangeStageProps {
+  cards: ApiProfileCardJSON[];
+  sections: ApiProfileSectionJSON[];
+  onChange: (next: {
+    cards: ApiProfileCardJSON[];
+    sections: ApiProfileSectionJSON[];
+  }) => void;
+}
+
+export const ArrangeStage: React.FC<ArrangeStageProps> = ({
+  cards: initialCards,
+  sections: initialSections,
+  onChange,
+}) => {
+  const intl = useIntl();
+
+  const [cards, setCards] = useState(initialCards);
+  const [sections, setSections] = useState(initialSections);
+  const [library, setLibrary] = useState<ApiProfileLibraryJSON | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void apiGetProfileLibrary()
+      .then((data) => {
+        if (!cancelled) setLibrary(data);
+      })
+      .catch(() => {
+        if (!cancelled) setLibrary({ told: [], drawn: [] });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [cards, sections]);
+
+  const publish = useCallback(
+    (
+      nextCards: ApiProfileCardJSON[],
+      nextSections: ApiProfileSectionJSON[],
+    ) => {
+      setCards(nextCards);
+      setSections(nextSections);
+      onChange({ cards: nextCards, sections: nextSections });
+    },
+    [onChange],
+  );
+
+  // ── Cards ───────────────────────────────────────────────────────
+  const moveCard = useCallback(
+    (cardType: string, delta: 1 | -1) => {
+      const idx = cards.findIndex((c) => c.card_type === cardType);
+      if (idx < 0) return;
+      const targetIdx = idx + delta;
+      if (targetIdx < 0 || targetIdx >= cards.length) return;
+      const nextCards = [...cards];
+      const [moved] = nextCards.splice(idx, 1);
+      if (!moved) return;
+      nextCards.splice(targetIdx, 0, moved);
+      publish(nextCards, sections);
+      void apiReorderProfileCards(nextCards.map((c) => c.card_type)).catch(
+        () => {
+          setCards(cards);
+        },
+      );
+    },
+    [cards, publish, sections],
+  );
+
+  const toggleCardVisible = useCallback(
+    (cardType: string) => {
+      const card = cards.find((c) => c.card_type === cardType);
+      if (!card) return;
+      const nextCard = { ...card, visible: !card.visible };
+      const nextCards = cards.map((c) =>
+        c.card_type === cardType ? nextCard : c,
+      );
+      publish(nextCards, sections);
+      void apiUpsertProfileCard(cardType, { visible: nextCard.visible }).catch(
+        () => {
+          setCards(cards);
+        },
+      );
+    },
+    [cards, publish, sections],
+  );
+
+  const cycleCardReach = useCallback(
+    (cardType: string) => {
+      const card = cards.find((c) => c.card_type === cardType);
+      if (!card) return;
+      const nextReach = next(REACH_ORDER, card.visibility);
+      const nextCard = { ...card, visibility: nextReach };
+      publish(
+        cards.map((c) => (c.card_type === cardType ? nextCard : c)),
+        sections,
+      );
+      void apiUpsertProfileCard(cardType, { visibility: nextReach }).catch(
+        () => {
+          setCards(cards);
+        },
+      );
+    },
+    [cards, publish, sections],
+  );
+
+  const removeCard = useCallback(
+    (cardType: string) => {
+      publish(
+        cards.filter((c) => c.card_type !== cardType),
+        sections,
+      );
+      void apiDeleteProfileCard(cardType).catch(() => {
+        setCards(cards);
+      });
+    },
+    [cards, publish, sections],
+  );
+
+  const moveCardUp = useCallback(
+    (key: string) => {
+      moveCard(key, -1);
+    },
+    [moveCard],
+  );
+  const moveCardDown = useCallback(
+    (key: string) => {
+      moveCard(key, 1);
+    },
+    [moveCard],
+  );
+
+  // ── Sections ────────────────────────────────────────────────────
+  const moveSection = useCallback(
+    (id: string, delta: 1 | -1) => {
+      const idx = sections.findIndex((s) => s.id === id);
+      if (idx < 0) return;
+      const targetIdx = idx + delta;
+      if (targetIdx < 0 || targetIdx >= sections.length) return;
+      const nextSections = [...sections];
+      const [moved] = nextSections.splice(idx, 1);
+      if (!moved) return;
+      nextSections.splice(targetIdx, 0, moved);
+      publish(cards, nextSections);
+      void apiReorderProfileSections(nextSections.map((s) => s.id)).catch(
+        () => {
+          setSections(sections);
+        },
+      );
+    },
+    [cards, publish, sections],
+  );
+
+  const toggleSectionVisible = useCallback(
+    (id: string) => {
+      const section = sections.find((s) => s.id === id);
+      if (!section) return;
+      const nextSection = { ...section, visible: !section.visible };
+      publish(
+        cards,
+        sections.map((s) => (s.id === id ? nextSection : s)),
+      );
+      void apiUpdateProfileSection(id, {
+        visible: nextSection.visible,
+      }).catch(() => {
+        setSections(sections);
+      });
+    },
+    [cards, publish, sections],
+  );
+
+  const cycleSectionReach = useCallback(
+    (id: string) => {
+      const section = sections.find((s) => s.id === id);
+      if (!section) return;
+      const currentReach: Reach = section.visibility ?? 'kronk';
+      const nextReach = next(REACH_ORDER, currentReach);
+      const nextSection = { ...section, visibility: nextReach };
+      publish(
+        cards,
+        sections.map((s) => (s.id === id ? nextSection : s)),
+      );
+      void apiUpdateProfileSection(id, {
+        settings: { ...section.settings, visibility: nextReach },
+      }).catch(() => {
+        setSections(sections);
+      });
+    },
+    [cards, publish, sections],
+  );
+
+  const cycleSectionOrder = useCallback(
+    (id: string) => {
+      const section = sections.find((s) => s.id === id);
+      if (!section) return;
+      const current = ((section.settings.order as string | undefined) ??
+        'newest') as OrderMode;
+      const nextOrder = next(ORDER_ORDER, current);
+      const nextSettings = { ...section.settings, order: nextOrder };
+      const nextSection = { ...section, settings: nextSettings };
+      publish(
+        cards,
+        sections.map((s) => (s.id === id ? nextSection : s)),
+      );
+      void apiUpdateProfileSection(id, { settings: nextSettings }).catch(() => {
+        setSections(sections);
+      });
+    },
+    [cards, publish, sections],
+  );
+
+  const moveSectionUp = useCallback(
+    (key: string) => {
+      moveSection(key, -1);
+    },
+    [moveSection],
+  );
+  const moveSectionDown = useCallback(
+    (key: string) => {
+      moveSection(key, 1);
+    },
+    [moveSection],
+  );
+
+  const removeSection = useCallback(
+    (id: string) => {
+      publish(
+        cards,
+        sections.filter((s) => s.id !== id),
+      );
+      void apiDeleteProfileSection(id).catch(() => {
+        setSections(sections);
+      });
+    },
+    [cards, publish, sections],
+  );
+
+  // ── Library adds ────────────────────────────────────────────────
+  const addCardFromLibrary = useCallback(
+    (cardType: string) => {
+      void apiUpsertProfileCard(cardType, {
+        body: '',
+        visibility: 'only_me',
+        visible: false,
+      })
+        .then((created) => {
+          publish([...cards, created], sections);
+        })
+        .catch(() => undefined);
+    },
+    [cards, publish, sections],
+  );
+
+  const addSectionFromLibrary = useCallback(
+    (kornerSlug: string) => {
+      const render = KORNER_RENDER[kornerSlug] ?? 'korner';
+      const title = KORNER_SOURCE[kornerSlug] ?? kornerSlug;
+      void apiCreateProfileSection({
+        section_type: 'drawn',
+        title,
+        settings: {
+          render,
+          korner_slug: kornerSlug,
+          order: 'newest',
+        },
+      })
+        .then((created) => {
+          publish(cards, [...sections, created]);
+        })
+        .catch(() => undefined);
+    },
+    [cards, publish, sections],
+  );
+
+  return (
+    <div className='profile-shelves__arrange'>
+      <div className='profile-shelves__arrange-kicker'>
+        {intl.formatMessage(messages.kicker)}
+      </div>
+      <h2 className='profile-shelves__arrange-title'>
+        {intl.formatMessage(messages.title)}
+      </h2>
+      <p className='profile-shelves__arrange-lede'>
+        {intl.formatMessage(messages.lede)}
+      </p>
+
+      <div className='profile-shelves__arrange-list'>
+        {cards.map((card, i) => (
+          <ArrangeSlab
+            key={`card-${card.card_type}`}
+            slabKey={card.card_type}
+            name={
+              CARD_TITLE[card.card_type] ?? card.card_type.replaceAll('_', ' ')
+            }
+            source={null}
+            visible={card.visible}
+            reach={card.visibility}
+            canMoveUp={i > 0}
+            canMoveDown={i < cards.length - 1}
+            onMoveUp={moveCardUp}
+            onMoveDown={moveCardDown}
+            onToggleVisible={toggleCardVisible}
+            onCycleReach={cycleCardReach}
+            onRemove={removeCard}
+          />
+        ))}
+        {sections.map((section, i) => {
+          const render = section.settings.render as string | undefined;
+          const kornerSlug = section.settings.korner_slug as string | undefined;
+          const source = kornerSlug
+            ? (KORNER_SOURCE[kornerSlug] ?? kornerSlug)
+            : (render ?? 'Section');
+          const order = ((section.settings.order as string | undefined) ??
+            'newest') as OrderMode;
+          return (
+            <ArrangeSlab
+              key={`section-${section.id}`}
+              slabKey={section.id}
+              name={section.title ?? source}
+              source={source}
+              visible={section.visible}
+              reach={section.visibility ?? 'kronk'}
+              order={order}
+              canMoveUp={i > 0}
+              canMoveDown={i < sections.length - 1}
+              onMoveUp={moveSectionUp}
+              onMoveDown={moveSectionDown}
+              onToggleVisible={toggleSectionVisible}
+              onCycleReach={cycleSectionReach}
+              onCycleOrder={cycleSectionOrder}
+              onRemove={removeSection}
+            />
+          );
+        })}
+      </div>
+
+      {library && (
+        <LibraryGrid
+          library={library}
+          onAddCard={addCardFromLibrary}
+          onAddSection={addSectionFromLibrary}
+        />
+      )}
+    </div>
+  );
+};

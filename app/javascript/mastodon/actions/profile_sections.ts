@@ -1,5 +1,5 @@
 import {
-  apiGetProfileSections,
+  apiGetOwnProfileSections,
   apiReorderProfileSections,
 } from 'mastodon/api/profile_sections';
 import { createDataLoadingThunk } from 'mastodon/store/typed_functions';
@@ -9,7 +9,7 @@ import { createDataLoadingThunk } from 'mastodon/store/typed_functions';
 // account's public sections in a later chunk.
 export const fetchProfileSections = createDataLoadingThunk(
   'profile_sections/fetch',
-  () => apiGetProfileSections(),
+  () => apiGetOwnProfileSections(),
   (data) => data,
 );
 
