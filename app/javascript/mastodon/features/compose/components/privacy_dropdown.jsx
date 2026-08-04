@@ -24,7 +24,7 @@ export const messages = defineMessages({
   self_only_short: { id: 'privacy.self_only.short', defaultMessage: 'Just me' },
   self_only_long: { id: 'privacy.self_only.long', defaultMessage: 'On your own timeline only — no one else sees it' },
   unlisted_short: { id: 'privacy.unlisted.short', defaultMessage: 'Quiet public' },
-  unlisted_long: { id: 'privacy.unlisted.long', defaultMessage: 'Hidden from Mastodon search results, trending, and public timelines' },
+  unlisted_long: { id: 'privacy.unlisted.long', defaultMessage: 'Hidden from Kronk search results, trending, and public timelines' },
   private_short: { id: 'privacy.private.short', defaultMessage: 'Followers' },
   private_long: { id: 'privacy.private.long', defaultMessage: 'Only your followers' },
   direct_short: { id: 'privacy.direct.short', defaultMessage: 'Specific people' },
@@ -32,7 +32,7 @@ export const messages = defineMessages({
   krew_short: { id: 'privacy.krew.short', defaultMessage: 'Krew' },
   krew_long: { id: 'privacy.krew.long', defaultMessage: 'Only members of the Krews you select' },
   change_privacy: { id: 'privacy.change', defaultMessage: 'Change post privacy' },
-  unlisted_extra: { id: 'privacy.unlisted.additional', defaultMessage: 'This behaves exactly like public, except the post will not appear in live feeds or hashtags, explore, or Mastodon search, even if you are opted-in account-wide.' },
+  unlisted_extra: { id: 'privacy.unlisted.additional', defaultMessage: 'This behaves exactly like public, except the post will not appear in live feeds or hashtags, explore, or Kronk search, even if you are opted-in account-wide.' },
 });
 
 class PrivacyDropdown extends PureComponent {

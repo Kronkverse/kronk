@@ -1202,7 +1202,7 @@ en:
     boosting_preferences_info_html: "<strong>Tip:</strong> Regardless of settings, <kbd>Shift</kbd> + <kbd>Click</kbd> on the %{icon} Boost icon will immediately boost."
     discovery: Discovery
     localization:
-      body: Mastodon is translated by volunteers.
+      body: Kronk is translated by volunteers.
       guide_link: https://crowdin.com/project/mastodon
       guide_link_text: Everyone can contribute.
     sensitive_content: Sensitive content
@@ -1243,7 +1243,7 @@ en:
     description:
       prefix_invited_by_user: "@%{name} invites you to join this Kronk server!"
       prefix_sign_up: Sign up on Kronk today!
-      suffix: With an account, you will be able to follow people, post updates and exchange messages with users from any Mastodon server and more!
+      suffix: With an account, you will be able to follow people, post updates and exchange messages with users from any server and more!
     didnt_get_confirmation: Didn't receive a confirmation link?
     dont_have_your_security_key: Don't have your security key?
     forgot_password: Forgot your password?
@@ -1315,7 +1315,7 @@ en:
       point_delete_title: How to delete.
       point_delete_body: Delete your account any time from settings. Posts unpublish immediately; media is purged within 24 hours.
       point_federation_title: Federation.
-      point_federation_body: Your public posts are relayed to other Mastodon-compatible servers as people on those servers follow you. Copies on those servers are outside Kronk's control.
+      point_federation_body: Your public posts are relayed to other servers on the network as people on those servers follow you. Copies on those servers are outside Kronk's control.
       agreement_html: I understand and agree to the <a href="%{privacy_policy_path}" target="_blank" rel="noopener">privacy policy</a>.
       cta_next: Continue
       cta_back: Back
@@ -1434,7 +1434,7 @@ en:
       content: We're sorry, but something went wrong on our end.
       title: This page is not correct
     '503': The page could not be served due to a temporary server failure.
-    noscript_html: To use the Kronk web application, please enable JavaScript. Alternatively, try one of the <a href="%{apps_path}">native apps</a> for Mastodon for your platform.
+    noscript_html: To use the Kronk web application, please enable JavaScript. Alternatively, try one of the <a href="%{apps_path}">native apps</a> for Kronk for your platform.
   existing_username_validator:
     not_found: could not find a local user with that username
     not_found_multiple: could not find %{usernames}
@@ -2060,7 +2060,7 @@ en:
       public: Public
       public_long: Anyone on and off Kronk
       unlisted: Quiet public
-      unlisted_long: Hidden from Mastodon search results, trending, and public timelines
+      unlisted_long: Hidden from Kronk search results, trending, and public timelines
   statuses_cleanup:
     enabled: Automatically delete old posts
     enabled_hint: Automatically deletes your posts once they reach a specified age threshold, unless they match one of the exceptions below
