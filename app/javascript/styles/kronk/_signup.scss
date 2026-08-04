@@ -847,14 +847,24 @@
 
 // ─────────────────────────────────────────────────────────────
 // Signed-out landing — rendered by HomeController#index at `/`.
-// Void layout is shared with the signup surfaces; only the copy +
-// form styling live here.
+// Sits inside the standard `application` layout (not `kronk_void`),
+// so the `_kronk_static_chrome` top-band wordmark renders above it.
+// The signup + threshold surfaces live in `kronk_void`; the landing
+// stays on the frame chassis for consistency with every other
+// Rails-served signed-out page.
 
 .kronk-landing {
+  // Vertically centre in the viewport below the top-band chrome
+  // (~4.25rem tall). `min-height: 100dvh - top-band` keeps the
+  // content optically centred without depending on flex parents.
   width: 100%;
   max-width: 24rem;
   margin: 0 auto;
-  padding: 2rem 1.5rem 3rem;
+  padding: 3rem 1.5rem;
+  min-height: calc(100dvh - 4.25rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   text-align: center;
   animation: signup-account-rise var(--dur-slow) var(--ease-out) both;
 }

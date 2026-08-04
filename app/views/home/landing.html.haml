@@ -1,20 +1,16 @@
--# Signed-out landing. Lives at `/` (see HomeController#index).
--# Renders inside the `kronk_void` layout — starfield + wordmark
--# masthead — and hosts the sign-in form inline so a visitor doesn't
--# have to navigate to a separate page to log in.
+-# Signed-out landing at `/`. Renders under `layouts/application`
+-# (the default), so the `_kronk_static_chrome` top-band wordmark
+-# renders around this content. Signed-out visitors get: chrome
+-# wordmark top-left (via the static chrome partial), giant hero
+-# wordmark centred, tagline, sign-in form, tail-links to /kronk/*
+-# instance pages.
 -#
--# Content is deliberately terse for now: wordmark + one-line lede +
--# form + tail-links to /kronk/about and /invite. The heavier
--# marketing copy is a follow-up — this PR is scaffolding, not final
--# language.
+-# NOT under the `kronk_void` layout — that starfield/vignette chassis
+-# is reserved for the signup ritual (`/auth/sign_up` and
+-# `/auth/thresholds`). The landing is an ambient page, not a ritual.
 
 - content_for :page_title do
   = t('auth.login')
-
--# Signals to `layouts/kronk_void.html.haml` that this page renders
--# its own hero wordmark, so the layout suppresses the small
--# top-left masthead wordmark to avoid brand-identity confusion.
-- content_for :hero_wordmark, true
 
 - content_for :header_tags do
   = opengraph 'og:site_name', site_title
@@ -22,17 +18,17 @@
   = opengraph 'og:type', 'website'
   = opengraph 'og:title', "#{site_title} — #{t('kronk.landing.og_title_suffix')}"
   = opengraph 'og:description', t('kronk.landing.og_description')
-  = opengraph 'og:image', "#{root_url.chomp('/')}/home-preview.png"
+  = opengraph 'og:image', "#{root_url.chomp('/')}/preview.png"
   = opengraph 'og:image:width', '1200'
   = opengraph 'og:image:height', '630'
   = opengraph 'twitter:card', 'summary_large_image'
 
 %section.kronk-landing
-  -# Hero wordmark — renders via the shared partial with the `:hero`
-  -# size variant. Every Kronk surface (SPA chrome, static chrome,
-  -# void masthead, this landing) routes through the same partial +
-  -# CSS at `styles/kronk/_wordmark.scss` so brand drift is
-  -# structurally impossible.
+  -# Hero wordmark — the giant centred `ЖЯѺƝ₭`. Same canonical
+  -# partial as everywhere else, `:hero` size variant. The small
+  -# top-left chrome wordmark (in `_kronk_static_chrome`) is
+  -# complementary, not duplicate: chrome = "you're in Kronk",
+  -# hero = "welcome to Kronk".
   %h1.kronk-landing__hero
     = render 'shared/kronk_wordmark', size: :hero
     %span.sr-only= t('kronk.landing.wordmark_sr_label')

@@ -3,12 +3,14 @@
 class HomeController < ApplicationController
   include WebAppControllerConcern
 
-  # Signed-out `/` renders the landing view (void starfield + inline
-  # sign-in form) instead of booting the SPA and falling through to
-  # `/explore`. Signed-in `/` boots the SPA as before. Layout swap only
-  # happens for the landing branch — the SPA render path continues to
-  # use the default `application` layout.
-  layout :determine_layout
+  # Signed-out `/` renders the landing view under the default
+  # `application` layout — same layout every other Rails-served
+  # signed-out surface uses (e.g. /kronk/*), which means the
+  # `_kronk_static_chrome` top-band + wordmark render around it.
+  # The starfield/void chassis is reserved for the signup ritual
+  # (`/auth/sign_up`, `/auth/thresholds`), not for the landing.
+  #
+  # Signed-in `/` boots the SPA under the same layout, as before.
 
   # The landing view hosts an HTML form that POSTs to `/auth/sign_in`,
   # so the browser needs `form-action 'self'` in the CSP. The default
@@ -28,11 +30,5 @@ class HomeController < ApplicationController
     else
       render :landing
     end
-  end
-
-  private
-
-  def determine_layout
-    user_signed_in? ? 'application' : 'kronk_void'
   end
 end
