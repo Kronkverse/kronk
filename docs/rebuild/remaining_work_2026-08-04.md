@@ -186,17 +186,17 @@ Sequenced stack (mostly landed):
 | Wachuneed offers/interactions (5 interaction modes)                            | L      |
 | Wachuneed `subcategory` column doc says "retires" but persists + is serialized | S      |
 
-### Tier 0 sweep — small correctness fixes (bundle into one PR)
+### Tier 0 sweep — small correctness fixes
 
-Copied forward from `remaining_work_2026-07-23.md`; verified still open on 2026-08-04.
+Reviewed against code on 2026-08-04. **Four of five items had already shipped without moving off the 07-23 list** — the "sweep PR" (see the Item column below) is much smaller than the framing suggested. Only `settings.account`/`settings.data` was genuinely open.
 
-| Item                                                                                                                                                | Effort |
-| --------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `settings.account` + `settings.data` nav nodes lead nowhere (declared with URLs but no route/component)                                             | S      |
-| Verify SPA `/settings/privacy` covers `indexable`/`noindex`, `hide_collections`, `show_application`                                                 | S      |
-| `fetch_link_card` `ALLOWED_LOCAL_PATHS` lists legacy korner paths, not `/hub/<slug>`                                                                | S      |
-| Dead `interactions.must_be_follower`/`must_be_following` settings keys (writeable, wired to nothing)                                                | S      |
-| Dead code from Frame migration — `<KornerExit>`, `<SpaceTabs>`, per-panel `.space-title` heroes in Kuestions (retired by spec rule 5 but not swept) | S      |
+| Item                                                                                    | State                                                                                                    | Effort |
+| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------ |
+| `settings.account` + `settings.data` nav nodes lead nowhere                             | fixed 2026-08-04                                                                                         | S      |
+| Verify SPA `/settings/privacy` covers `indexable`/`hide_collections`/`show_application` | done — all three in `features/privacy_settings/index.tsx`                                                | —      |
+| `fetch_link_card` `ALLOWED_LOCAL_PATHS` uses legacy paths                               | done — `%w(/hub /home /nudges /kronk).freeze` in `fetch_link_card_service.rb:46`                         | —      |
+| Dead `interactions.must_be_follower`/`must_be_following` settings keys                  | done — retired 2026-07-23 per `user_settings.rb:72` comment; only `must_be_following_dm` remains as live | —      |
+| Dead code from Frame migration — `<KornerExit>`, `<SpaceTabs>`, `.space-title`          | done — retired 2026-07-23 per `_kronk_stage.scss:146` comment; no live SPA refs                          | —      |
 
 ### Per-space UI vision (design-heavy — mostly post-2.0 unless promoted)
 
@@ -212,8 +212,11 @@ dashboard + Kosmic subscribe.
 
 Ordered by dependency:
 
-1. **Tier 0 sweep** (one bundled PR, ½ day) — clears the ~5 small
-   correctness bugs and the Frame dead code.
+1. ~~**Tier 0 sweep**~~ — **shipped 2026-08-04**. Audit found four
+   of the five copied-forward items were already shipped without
+   being crossed off; only `settings.account`/`settings.data` node
+   URLs were genuinely open (now pointed at real Rails paths — 2FA
+   methods for account/security, `/settings/export` for data).
 2. **Settings Account & Security rehome** (L) — big surface, may
    ship as 2.1. Currently the nav pretends it's there and the
    #1101 change made the classic-Rails escape hatch (`Edit profile`
