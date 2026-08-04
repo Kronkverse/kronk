@@ -48,7 +48,9 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({ section }) => {
     typeof settings.render === 'string' ? settings.render : 'korner';
   const source = SOURCE_LABEL[render] ?? render;
   const title =
-    section.title ?? SOURCE_LABEL[render] ?? intl.formatMessage(messages.untitled);
+    section.title ??
+    SOURCE_LABEL[render] ??
+    intl.formatMessage(messages.untitled);
 
   return (
     <section

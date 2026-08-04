@@ -38,9 +38,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <div className='profile-shelves__dname'>{displayName}</div>
           <div className='profile-shelves__handle'>@{account.acct}</div>
         </div>
-        {actions && (
-          <div className='profile-shelves__acts'>{actions}</div>
-        )}
+        {actions && <div className='profile-shelves__acts'>{actions}</div>}
       </div>
     </header>
   );
