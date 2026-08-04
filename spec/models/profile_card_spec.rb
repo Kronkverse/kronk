@@ -33,6 +33,23 @@ RSpec.describe ProfileCard do
       long = 'a' * 4001
       expect(described_class.new(account: owner, card_type: 'about', position: 0, body: long)).to_not be_valid
     end
+
+    it 'defaults to the block render' do
+      card = described_class.create!(account: owner, card_type: 'about', position: 0)
+      expect(card.render).to eq('block')
+    end
+
+    it 'accepts every declared render shape' do
+      described_class::RENDER_SHAPES.each_with_index do |shape, i|
+        card = described_class.new(account: owner, card_type: described_class::CARD_TYPES[i], position: i, render: shape)
+        expect(card).to be_valid, "#{shape} should be a valid render"
+      end
+    end
+
+    it 'rejects an unknown render shape' do
+      card = described_class.new(account: owner, card_type: 'about', position: 0, render: 'holograph')
+      expect(card).to_not be_valid
+    end
   end
 
   describe 'default visibility' do

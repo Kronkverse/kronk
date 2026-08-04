@@ -37,6 +37,21 @@ class ProfileCard < ApplicationRecord
     pod_credentials
   ).freeze
 
+  # The three told-shape renders the composer offers.
+  #
+  #   block  — free-form paragraph (default). Uses `body` as-is.
+  #   chips  — a list of short tag-style strings. Body is comma or
+  #            newline separated; the client tokenises client-side.
+  #   rail   — a horizontal rail of mini-cards, each `heading — text`.
+  #            Body carries the whole rail as newline-separated pairs;
+  #            the client parses. Keeping it in `body` avoids a schema
+  #            branch per shape — every render still reads/writes one
+  #            text field.
+  #
+  # New shapes can land in a pure-frontend PR — the backend accepts
+  # any value here so long as it's on this list.
+  RENDER_SHAPES = %w(block chips rail).freeze
+
   belongs_to :account, inverse_of: :profile_cards
 
   enum :visibility, {
@@ -51,6 +66,7 @@ class ProfileCard < ApplicationRecord
                         uniqueness: { scope: :account_id }
   validates :position, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :body, length: { maximum: 4000 }
+  validates :render, inclusion: { in: RENDER_SHAPES }
 
   scope :ordered, -> { order(:position) }
   scope :shown,   -> { where(visible: true) }

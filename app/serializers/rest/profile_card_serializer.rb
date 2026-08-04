@@ -3,7 +3,7 @@
 class REST::ProfileCardSerializer < ActiveModel::Serializer
   include FormattingHelper
 
-  attributes :id, :card_type, :body, :visibility, :position, :visible
+  attributes :id, :card_type, :body, :render, :visibility, :position, :visible
 
   def id
     object.id.to_s
