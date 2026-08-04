@@ -45,6 +45,11 @@ export const apiNudgeAccount = (
   params?: {
     text?: string;
     media_id?: string;
+    // Optional voice memo — MediaAttachment id from the shared
+    // `<VoiceRecorder>` upload. NudgeService writes this to the
+    // conversation_message's `voice_attachment_id`; the serializer
+    // surfaces it back as `voice_url` on subsequent thread fetches.
+    voice_id?: string;
     in_reply_to_notification_id?: string;
   },
 ) =>

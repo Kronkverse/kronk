@@ -13337,6 +13337,17 @@ noscript {
     object-fit: cover;
   }
 
+  // Slot for the shared <VoicePlayer> inside a chat bubble. The
+  // player brings its own colours; this just gives it a rounded,
+  // padded surface that reads as part of the bubble.
+  &__voice {
+    display: block;
+    min-width: 200px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    background: rgb(0 0 0 / 15%);
+  }
+
   &__audio {
     display: block;
     width: 100%;
@@ -13519,6 +13530,14 @@ noscript {
   &--disabled {
     opacity: 0.55;
     pointer-events: none;
+  }
+
+  // Slot for the shared <VoiceRecorder>. Renders in whatever state
+  // the wrapper picks (idle mic button, recording row, or preview).
+  // Sits just above the message text row when not carrying an
+  // image/video attachment.
+  &__voice {
+    margin: 6px 12px 0;
   }
 
   &__waiting {
