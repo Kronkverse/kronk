@@ -459,7 +459,7 @@ const QuotePolicyHelper: FC<
     hintText = (
       <FormattedMessage
         id='visibility_modal.helper.private_quoting'
-        defaultMessage="Follower-only posts authored on Mastodon can't be quoted by others."
+        defaultMessage="Follower-only posts authored on Kronk can't be quoted by others."
       />
     );
   }
@@ -468,7 +468,7 @@ const QuotePolicyHelper: FC<
     hintText = (
       <FormattedMessage
         id='visibility_modal.helper.direct_quoting'
-        defaultMessage="Private mentions authored on Mastodon can't be quoted by others."
+        defaultMessage="Private mentions authored on Kronk can't be quoted by others."
       />
     );
   }

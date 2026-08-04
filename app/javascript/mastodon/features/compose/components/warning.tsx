@@ -60,7 +60,7 @@ export const Warning = () => {
       <WarningMessage>
         <FormattedMessage
           id='compose_form.encryption_warning'
-          defaultMessage='Posts on Mastodon are not end-to-end encrypted. Do not share any dangerous information over Mastodon.'
+          defaultMessage='Posts on Kronk are not end-to-end encrypted. Do not share any dangerous information over Kronk.'
         />{' '}
         <a href='/terms' target='_blank'>
           <FormattedMessage

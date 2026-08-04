@@ -69,12 +69,12 @@ export const LinkFooter: React.FC<{
       </p>
 
       <p>
-        <strong>Mastodon</strong>:{' '}
-        <a href='https://joinmastodon.org' target='_blank' rel='noopener'>
+        <strong>Kronk</strong>:{' '}
+        <a href='/about'>
           <FormattedMessage id='footer.about' defaultMessage='About' />
         </a>
         <DividingCircle />
-        <a href='https://joinmastodon.org/apps' target='_blank' rel='noopener'>
+        <a href='/about'>
           <FormattedMessage id='footer.get_app' defaultMessage='Get the app' />
         </a>
         <DividingCircle />
