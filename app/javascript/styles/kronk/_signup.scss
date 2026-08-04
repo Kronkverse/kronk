@@ -864,20 +864,42 @@
   max-width: 24rem;
   margin: 0 auto;
   padding: 2rem 1.5rem 3rem;
+  text-align: center;
   animation: signup-account-rise var(--dur-slow) var(--ease-out) both;
 }
 
-.kronk-landing__title {
-  margin: 0 0 0.75rem;
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(1.75rem, 5vw, 2.375rem);
-  line-height: 1.1;
-  color: var(--text-primary);
+// Hero wordmark. The base `.kronk-wordmark` (declared in
+// `styles/mastodon/_kronk_chrome.scss`) is tuned for the top-band —
+// chrome-sized (1.5rem), grid-anchored, and hidden below the sidebar
+// breakpoint because on mobile the top strip is replaced by a
+// bottom-tab bar. None of that applies here: the landing IS the hero
+// on every viewport. This modifier promotes the font-size and undoes
+// the chrome-only assumptions.
+.kronk-landing__wordmark {
+  display: inline-flex;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  padding: 0;
+  font-size: clamp(2.75rem, 8vw, 4rem);
+  line-height: 1;
+
+  // Override `.kronk-wordmark`'s mobile hide — the hero must show on
+  // every viewport.
+  @media (width <= 889px) {
+    display: inline-flex;
+  }
+
+  // The chrome wordmark scales on hover as an easter-egg tease; on
+  // the landing it's already the focal element, so let it sit still.
+  &:hover,
+  &:focus-visible {
+    transform: none;
+  }
 }
 
 .kronk-landing__lede {
-  margin: 0 0 2rem;
+  margin: 0 auto 2rem;
+  max-width: 20rem;
   color: var(--text-secondary);
   font-size: 0.9375rem;
   line-height: 1.5;
