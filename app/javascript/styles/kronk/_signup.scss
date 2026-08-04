@@ -64,19 +64,10 @@
   padding: 1rem 1.5rem;
 }
 
-.kronk-void-wordmark {
-  font-family: var(--font-wordmark);
-  font-size: 1.125rem;
-  letter-spacing: 0.06em;
-  color: var(--text-secondary);
-  text-decoration: none;
-  transition: color var(--dur-medium) var(--ease-out);
-
-  &:hover,
-  &:focus-visible {
-    color: var(--text-primary);
-  }
-}
+// `.kronk-void-wordmark` retired 2026-08-04 — the void masthead now
+// renders the canonical `.kronk-wordmark--chrome` from
+// `_wordmark.scss` via the shared `_kronk_wordmark.html.haml`
+// partial. One source of truth for the sigil everywhere.
 
 // 11px in a family sized against the rest of the masthead.
 .kronk-void-stepcount {
@@ -868,33 +859,15 @@
   animation: signup-account-rise var(--dur-slow) var(--ease-out) both;
 }
 
-// Hero wordmark. The base `.kronk-wordmark` (declared in
-// `styles/mastodon/_kronk_chrome.scss`) is tuned for the top-band —
-// chrome-sized (1.5rem), grid-anchored, and hidden below the sidebar
-// breakpoint because on mobile the top strip is replaced by a
-// bottom-tab bar. None of that applies here: the landing IS the hero
-// on every viewport. This modifier promotes the font-size and undoes
-// the chrome-only assumptions.
-.kronk-landing__wordmark {
-  display: inline-flex;
-  justify-content: center;
-  margin: 0 auto 1rem;
-  padding: 0;
-  font-size: clamp(2.75rem, 8vw, 4rem);
-  line-height: 1;
+// `.kronk-landing__wordmark` retired 2026-08-04 — the landing hero
+// now renders the canonical `.kronk-wordmark--hero` from
+// `_wordmark.scss` via the shared `_kronk_wordmark.html.haml`
+// partial. `.kronk-landing__hero` below is the wrapping H1 (screen-
+// reader label + hero wordmark inside).
 
-  // Override `.kronk-wordmark`'s mobile hide — the hero must show on
-  // every viewport.
-  @media (width <= 889px) {
-    display: inline-flex;
-  }
-
-  // The chrome wordmark scales on hover as an easter-egg tease; on
-  // the landing it's already the focal element, so let it sit still.
-  &:hover,
-  &:focus-visible {
-    transform: none;
-  }
+.kronk-landing__hero {
+  text-align: center;
+  margin: 0 0 1rem;
 }
 
 .kronk-landing__lede {

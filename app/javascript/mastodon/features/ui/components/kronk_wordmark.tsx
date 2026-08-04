@@ -5,6 +5,11 @@ import { useCallback, useRef } from 'react';
 // spans — not one word/logo — so per-character routing can hang off
 // individual glyphs.
 //
+// Sibling of the Rails partial at `app/views/shared/_kronk_wordmark.html.haml`
+// — both emit the same 5-span structure with a size modifier. CSS
+// lives in `styles/kronk/_wordmark.scss` (base `.kronk-wordmark` +
+// `.kronk-wordmark--{chrome,hero,inline}` variants).
+//
 // Default click on any glyph (or the wordmark as a whole via keyboard
 // Enter) navigates to `/kronk` — the Kronk org space (spec §O),
 // Rails-served, so a plain <a> full-navigates.
@@ -27,7 +32,15 @@ const KRONK_HREF = '/kronk';
 // query param so the intent is legible in server logs / analytics.
 const EASTER_EGG_HREF = '/kronk?ephemera=1';
 
-export const KronkWordmark = () => {
+type WordmarkSize = 'chrome' | 'hero' | 'inline';
+
+interface KronkWordmarkProps {
+  size?: WordmarkSize;
+}
+
+export const KronkWordmark: React.FC<KronkWordmarkProps> = ({
+  size = 'chrome',
+}) => {
   const clickCount = useRef(0);
   const timerRef = useRef<number | null>(null);
 
@@ -62,7 +75,11 @@ export const KronkWordmark = () => {
   }, []);
 
   return (
-    <a href={KRONK_HREF} className='kronk-wordmark' aria-label='Kronk'>
+    <a
+      href={KRONK_HREF}
+      className={`kronk-wordmark kronk-wordmark--${size}`}
+      aria-label='Kronk'
+    >
       {GLYPHS.map((glyph, index) => (
         <span
           key={glyph}

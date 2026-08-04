@@ -110,52 +110,20 @@ body.admin {
 // see .kronk-frame__top-band and .kronk-frame__right-band in
 // _kronk_frame.scss. body::before / body::after are retired.
 
-.kronk-wordmark {
-  // Un-fixed in alpha.179 — now a flow child of .kronk-frame__top-band
-  // (grid column 1). The band's grid layout positions it; the wordmark
-  // itself no longer self-anchors. z-index kept because it sits in the
-  // TopBand's stacking context. When the top-band has no HubSwitcher
-  // (signed-out visitors — the switcher is auth-only), the wordmark
-  // spans the whole grid and centres itself. `:has()` swap is on the
-  // parent — see the
-  // `.kronk-frame__top-band:not(:has(.hub-switcher--top))` block in
-  // _kronk_frame.scss.
+// The `.kronk-wordmark` visual identity (font, colour, weight,
+// tracking, chrome + hero + inline variants) moved to
+// `styles/kronk/_wordmark.scss` in the wordmark canonicalisation
+// (2026-08-04). What remains here is only the top-band POSITIONING —
+// grid-column + justify-self + z-index — which is chrome-only and
+// belongs alongside the other `.kronk-frame__top-band` selectors.
+// When the top-band has no HubSwitcher (signed-out visitors — the
+// switcher is auth-only), the wordmark spans the whole grid and
+// centres itself; that `:has()` swap is on the parent in
+// _kronk_frame.scss.
+.kronk-frame__top-band > .kronk-wordmark {
   grid-column: 1;
   justify-self: start;
   z-index: 25;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15em;
-  padding: 0.3rem 0.4rem;
-  color: var(--kronk-purple-accent);
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-decoration: none;
-  transition:
-    transform var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
-
-  // Each glyph is its own span (inline-flex gap separates them) so per-
-  // character routing + an easter egg can land in a later pass.
-  &__char {
-    display: inline-block;
-  }
-
-  &:hover,
-  &:focus-visible {
-    color: var(--kronk-purple-bright, #fff);
-    transform: scale(1.03);
-    outline: none;
-  }
-
-  // On mobile the top strip is gone (the switcher moves to the bottom
-  // tab-bar), so the fixed wordmark would just float over page content.
-  // Drop it below the sidebar breakpoint — same as the side rails.
-  @media (width <= 889px) {
-    display: none;
-  }
 }
 
 // ── Invite button — top rail, far-right corner ────────────────────
