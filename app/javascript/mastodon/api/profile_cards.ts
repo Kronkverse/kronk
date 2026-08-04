@@ -1,8 +1,4 @@
-import {
-  apiRequestGet,
-  apiRequestPut,
-  apiRequestDelete,
-} from 'mastodon/api';
+import { apiRequestGet, apiRequestPut, apiRequestDelete } from 'mastodon/api';
 
 // Owner-authored identity content on a profile — the "told" side of
 // the shelved profile. Backend model: ProfileCard.
@@ -40,6 +36,4 @@ export const apiDeleteProfileCard = (cardType: string) =>
 
 // Viewer side — someone else's visible cards (or your own, filtered).
 export const apiGetProfileCards = (accountId: string) =>
-  apiRequestGet<ApiProfileCardJSON[]>(
-    `v1/accounts/${accountId}/profile/cards`,
-  );
+  apiRequestGet<ApiProfileCardJSON[]>(`v1/accounts/${accountId}/profile/cards`);

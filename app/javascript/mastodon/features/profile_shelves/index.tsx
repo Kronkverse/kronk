@@ -107,7 +107,9 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
         setAccount(acctRes);
 
         const [cardsRes, sectionsRes] = await Promise.all([
-          apiGetProfileCards(acctRes.id).catch(() => [] as ApiProfileCardJSON[]),
+          apiGetProfileCards(acctRes.id).catch(
+            () => [] as ApiProfileCardJSON[],
+          ),
           apiGetProfileSections(acctRes.id).catch(
             () => [] as ApiProfileSectionJSON[],
           ),
@@ -138,10 +140,8 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
     );
   }
 
-  const loading =
-    account === null || cards === null || sections === null;
-  const nothingShown =
-    !loading && cards.length === 0 && sections.length === 0;
+  const loading = account === null || cards === null || sections === null;
+  const nothingShown = !loading && cards.length === 0 && sections.length === 0;
 
   return (
     <Column bindToDocument label={title}>
