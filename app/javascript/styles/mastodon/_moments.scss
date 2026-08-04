@@ -270,6 +270,20 @@
   }
 }
 
+// Voice player overlay on a photo+voice Moment — sits above the
+// caption but below the action rail. Semi-opaque dark background so
+// the waveform + play button read against any still.
+.moments-viewer__voice {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 118px;
+  padding: 6px 10px;
+  border-radius: var(--radius-medium);
+  background: rgb(0 0 0 / 42%);
+  z-index: 3;
+}
+
 .moments-viewer__caption {
   position: absolute;
   left: 12px;
@@ -427,6 +441,29 @@
   display: grid;
   place-items: center;
   border: 2px solid var(--surface-primary);
+}
+
+// Mic glyph on the ring — indicates the Moment carries a voice clip
+// under the still (spec § Where you see Moments). Bottom-right badge,
+// same slot as the add-plus but on someone else's Moment.
+.moments-strip__ring-voice {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--surface-primary);
+
+  svg {
+    width: 12px;
+    height: 12px;
+    fill: currentcolor;
+  }
 }
 
 .moments-strip__ring-label {
@@ -679,37 +716,19 @@
   color: var(--text-muted);
 }
 
-.moments-composer__file {
-  display: none;
-}
-
-.moments-composer__file-buttons {
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-
-  .moments-composer__file-picker {
-    flex: 1;
-  }
-}
-
-.moments-composer__file-picker,
+// Selected-file placeholder that replaces `<MediaPickButtons>` once
+// the user has picked a file. Match the pick-button visual (dashed
+// dropzone → solid rounded chip) so the composer doesn't jump
+// visually on selection.
 .moments-composer__file-summary {
   padding: 10px 14px;
   border-radius: var(--radius-medium);
-  border: 1px dashed var(--border-default);
+  border: 1px solid var(--border-default);
   background: var(--surface-elevated);
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 13px;
   text-align: center;
-  cursor: pointer;
-}
-
-.moments-composer__file-summary {
-  color: var(--text-primary);
-  cursor: default;
-  border-style: solid;
 }
 
 .moments-composer__caption {

@@ -46,12 +46,16 @@ class Vacuum::MediaAttachmentsVacuum
     # reaped after TTL — which must not happen: Moments are kept forever
     # in the korner log. Exclude them, same as BoothSet media above.
     moment_ids = Moment.where.not(media_attachment_id: nil).select(:media_attachment_id)
+    # Same treatment for the optional companion voice clip on
+    # photo+voice Moments — kept for the lifetime of the Moment.
+    moment_voice_ids = Moment.where.not(voice_media_attachment_id: nil).select(:voice_media_attachment_id)
 
     MediaAttachment
       .unattached
       .where.not(id: booth_audio_ids)
       .where.not(id: booth_cover_ids)
       .where.not(id: moment_ids)
+      .where.not(id: moment_voice_ids)
       .created_before(TTL.ago)
   end
 

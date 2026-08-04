@@ -10,6 +10,10 @@ class Moment < ApplicationRecord
 
   belongs_to :account
   belongs_to :media_attachment
+  # Optional companion voice clip — populated only for photo+voice
+  # Moments (docs/spaces/moments.md, added 2026-08-04). Enforced null
+  # by validation when the primary media is a video.
+  belongs_to :voice_media_attachment, class_name: 'MediaAttachment', optional: true
   belongs_to :krew, optional: true # only present when visibility == :krew
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :moment
 
@@ -26,6 +30,7 @@ class Moment < ApplicationRecord
   validates :expires_at, presence: true
   validates :caption, length: { maximum: 500 }, allow_blank: true
   validate  :krew_only_when_krew_visibility
+  validate  :voice_only_paired_with_a_still
 
   # Convenience alias for the historical `group_id` name used in
   # cross-korner payloads and older comments. The column is `krew_id`
@@ -120,5 +125,16 @@ class Moment < ApplicationRecord
     elsif !visible_to_krew? && krew_id.present?
       errors.add(:krew_id, 'must be blank unless visibility is krew')
     end
+  end
+
+  # Voice clip is only meaningful over a still photo. Video already
+  # carries its own audio track, so we reject the combination rather
+  # than silently muxing them (docs/spaces/moments.md § What a Moment
+  # is — voice does not pair with video).
+  def voice_only_paired_with_a_still
+    return if voice_media_attachment_id.blank?
+    return unless media_attachment&.video? || media_attachment&.gifv?
+
+    errors.add(:voice_media_attachment_id, 'may only pair with a still photo, not a video')
   end
 end

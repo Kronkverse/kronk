@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_03_100000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_04_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1122,11 +1122,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_03_100000) do
     t.bigint "status_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "voice_media_attachment_id"
     t.index ["account_id"], name: "index_moments_on_account_id"
     t.index ["expires_at"], name: "index_moments_on_expires_at"
     t.index ["krew_id"], name: "index_moments_on_krew_id"
     t.index ["media_attachment_id"], name: "index_moments_on_media_attachment_id"
     t.index ["status_id"], name: "index_moments_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
+    t.index ["voice_media_attachment_id"], name: "index_moments_on_voice_media_attachment_id", where: "(voice_media_attachment_id IS NOT NULL)"
   end
 
   create_table "mutes", force: :cascade do |t|

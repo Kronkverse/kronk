@@ -32,6 +32,7 @@ import {
 } from 'mastodon/api';
 import { KornerKrewPicker } from 'mastodon/components/korner_krew_picker';
 import { KornerVisibilityPicker } from 'mastodon/components/korner_visibility_picker';
+import { VoicePlayer } from 'mastodon/components/media';
 import { me } from 'mastodon/initial_state';
 
 const audienceLabels = defineMessages({
@@ -84,6 +85,12 @@ interface MomentJSON {
   account: AccountJSON;
   krew: { id: string; name: string } | null;
   media_attachment: MediaJSON;
+  // Populated only for photo+voice Moments (spec § What a Moment is
+  // — voice does not pair with video). The viewer renders a
+  // <VoicePlayer> over the still; audio autoplay is unlocked by the
+  // tap-to-open gesture, so no explicit play button is needed on
+  // opening (the player is still visible + interactive).
+  voice_url: string | null;
 }
 
 const ELAPSED_UPDATE_MS = 30_000; // refresh the progress bar every 30s
@@ -646,6 +653,12 @@ const ViewerBody = ({
             aria-label='Next Moment'
           />
         </div>
+
+        {moment.voice_url && !isVideo && (
+          <div className='moments-viewer__voice'>
+            <VoicePlayer src={moment.voice_url} />
+          </div>
+        )}
 
         {moment.caption && (
           <div className='moments-viewer__caption'>{moment.caption}</div>
