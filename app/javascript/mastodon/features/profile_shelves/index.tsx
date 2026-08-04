@@ -11,6 +11,8 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { NavLink, useParams } from 'react-router-dom';
 
+import { fetchRelationships } from 'mastodon/actions/accounts';
+import { importFetchedAccount } from 'mastodon/actions/importer';
 import { openModal } from 'mastodon/actions/modal';
 import { apiRequestGet } from 'mastodon/api';
 import type { ApiProfileCardJSON } from 'mastodon/api/profile_cards';
@@ -135,6 +137,16 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
         );
         if (cancelled) return;
         setAccount(acctRes);
+        // Seed Redux so downstream components (FollowButton,
+        // ProfileViewerActions) that read from `state.accounts`
+        // find this account. The classic profile does this via its
+        // own reducers; the shelved profile fetches locally and
+        // has to relay the account explicitly. Also kick off the
+        // relationship fetch — Groove/Nudge/More all depend on it.
+        dispatch(importFetchedAccount(acctRes));
+        if (acctRes.id !== me) {
+          dispatch(fetchRelationships([acctRes.id]));
+        }
 
         // Owner sees their own unfiltered content (visible: false rows,
         // only_me shelves); everyone else goes through the viewer path
@@ -161,7 +173,7 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
     return () => {
       cancelled = true;
     };
-  }, [acct]);
+  }, [acct, dispatch]);
 
   const handleArrangeChange = useCallback(
     (next: {
