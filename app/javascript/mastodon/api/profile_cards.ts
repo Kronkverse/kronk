@@ -44,6 +44,4 @@ export const apiDeleteProfileCard = (cardType: string) =>
 
 // Viewer side — someone else's visible cards (or your own, filtered).
 export const apiGetProfileCards = (accountId: string) =>
-  apiRequestGet<ApiProfileCardJSON[]>(
-    `v1/accounts/${accountId}/profile/cards`,
-  );
+  apiRequestGet<ApiProfileCardJSON[]>(`v1/accounts/${accountId}/profile/cards`);

@@ -106,13 +106,19 @@ const REACH_MESSAGES: Record<Reach, keyof typeof messages> = {
   only_me: 'reachOnlyMe',
 };
 
-const RENDER_MESSAGES: Record<(typeof RENDER_SHAPES)[number], keyof typeof messages> = {
+const RENDER_MESSAGES: Record<
+  (typeof RENDER_SHAPES)[number],
+  keyof typeof messages
+> = {
   block: 'renderBlock',
   chips: 'renderChips',
   rail: 'renderRail',
 };
 
-const HINT_MESSAGES: Record<(typeof RENDER_SHAPES)[number], keyof typeof messages> = {
+const HINT_MESSAGES: Record<
+  (typeof RENDER_SHAPES)[number],
+  keyof typeof messages
+> = {
   block: 'hintBlock',
   chips: 'hintChips',
   rail: 'hintRail',

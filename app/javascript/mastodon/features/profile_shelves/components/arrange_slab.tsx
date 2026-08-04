@@ -113,7 +113,11 @@ interface ArrangeSlabProps {
   onRemove: (key: string) => void;
   onEdit?: (key: string) => void;
   onDragStart?: (key: string, family: 'told' | 'drawn') => void;
-  onDragOver?: (key: string, family: 'told' | 'drawn', pos: 'above' | 'below') => void;
+  onDragOver?: (
+    key: string,
+    family: 'told' | 'drawn',
+    pos: 'above' | 'below',
+  ) => void;
   onDragEnd?: () => void;
   onDrop?: (key: string, family: 'told' | 'drawn') => void;
 }
