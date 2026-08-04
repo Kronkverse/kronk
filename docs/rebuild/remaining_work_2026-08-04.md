@@ -163,7 +163,7 @@ Sequenced stack (mostly landed):
 | Item                                                                                                                                                                                                                                                                                                                                                                                                                                                              | State | Effort    |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | --------- |
 | **Map realtime pubsub** — presence refresh is 30 s HTTP polling; realtime pubsub would give sub-second pin updates. Not a release blocker; parked for 2.1. _Earlier draft of this doc claimed the whole Map backend was TBD — that was wrong (backend shipped alpha.270); manifest header updated in the same PR as this correction._                                                                                                                             | defer | L (2.1)   |
-| **Launch card** (§8.7) declared in 10 manifests, parsed, but no producer/service — the one-time launch announcement never projects.                                                                                                                                                                                                                                                                                                                               | todo  | M         |
+| ~~**Launch card** (§8.7)~~ — **retired 2026-08-04** (Tal). The manifest `launch:` field stays parsed but vestigial; no producer, no in-feed announcement. See `decisions.md`.                                                                                                                                                                                                                                                                                     | done  | —         |
 | **Korner tombstones / 410 Gone** (§5.6) — only AP Statuses tombstone; Listing etc. have no `deleted_at`/410 resolution.                                                                                                                                                                                                                                                                                                                                           | todo  | M         |
 | `render_target` inert (§9.1) — every manifest sets it; nothing consumes it. Also open decision §13.2.                                                                                                                                                                                                                                                                                                                                                             | todo  | L / defer |
 | **Huddle Phase 9.5 — event bus wiring** — the primitive shipped (`Kronk::KornerEvents.publish/subscribe`), and the initializer at `config/initializers/nudges_event_bus.rb` reads manifest `listens:` and registers real subscribers for the Nudges routes (2026-08-03 reconcile of Phase 5). Cross-korner listeners _other than_ Nudges (e.g. Huddle ← `kalendar.event.created`) still live unbuilt on the plan; the framework is ready when their handlers are. | work  | M         |
@@ -214,14 +214,12 @@ Ordered by dependency:
 
 1. **Tier 0 sweep** (one bundled PR, ½ day) — clears the ~5 small
    correctness bugs and the Frame dead code.
-2. **Launch card producer** (M) — Phase 5 side-quest; needed for
-   the Phase 14 announcement flow.
-3. **Settings Account & Security rehome** (L) — big surface, may
+2. **Settings Account & Security rehome** (L) — big surface, may
    ship as 2.1. Currently the nav pretends it's there and the
    #1101 change made the classic-Rails escape hatch (`Edit profile`
    on your own profile) go away — that back-door was the only
    working path to the classic pages from the SPA.
-4. **Phase 14** — flip enforcement + version + CHANGELOG + main PR.
+3. **Phase 14** — flip enforcement + version + CHANGELOG + main PR.
 
 Not on the critical path:
 
