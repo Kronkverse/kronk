@@ -125,6 +125,7 @@ class User < ApplicationRecord
   after_commit :send_pending_devise_notifications
   after_create_commit :trigger_webhooks
   after_create_commit :fire_email_confirmation_reminder
+  after_create_commit :enqueue_inviter_groove, if: :invited?
   after_update_commit :clear_email_confirmation_reminders, if: :saved_change_to_confirmed_at?
 
   normalizes :locale, with: ->(locale) { I18n.available_locales.exclude?(locale.to_sym) ? nil : locale }
@@ -527,6 +528,14 @@ class User < ApplicationRecord
     return if confirmed?
 
     DeliverEmailConfirmationReminderService.new.call(self)
+  end
+
+  # Invited signups auto-Groove (follow) the person who invited them, so
+  # their home isn't empty and they're linked to whoever brought them in.
+  # Runs off the request in a worker; the inviter's follower-approval lock
+  # is bypassed there (inviting is implicit consent to a follow-back).
+  def enqueue_inviter_groove
+    AutoGrooveInviterWorker.perform_async(id)
   end
 
   # Sweeps any outstanding "confirm your email" reminder from the
