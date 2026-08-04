@@ -26,6 +26,19 @@ class Auth::RegistrationsController < Devise::RegistrationsController
   end
 
   def create
+    # Unified signup: the form POST carries account fields + avatar
+    # + three threshold acknowledgements
+    # (`user[thresholds][ownership|custodianship|trajectory]`). All
+    # three must be truthy — no crossing state, no signup. Enforced
+    # BEFORE Devise's create runs so we don't create a User only to
+    # find them un-crossed.
+    unless thresholds_all_acknowledged?
+      flash.now[:alert] = I18n.t('kronk.thresholds.errors.incomplete')
+      self.resource = resource_class.new(sign_up_params)
+      respond_with(resource) { render :new, status: 422 }
+      return
+    end
+
     super
   end
 
@@ -63,9 +76,27 @@ class Auth::RegistrationsController < Devise::RegistrationsController
     # accounts (test seeds, staff bots, service accounts) keep the
     # framework default of unlocked.
     resource.account.locked = true if resource.account && !resource.account.locked
+
+    # Threshold crossing is atomic with account creation — the form
+    # POST includes the three vow acknowledgements as a single
+    # `user[thresholds]` hash. If the guard in `#create` didn't 422,
+    # they're all acknowledged; stamp the crossing here so it lands
+    # in the same DB transaction as the User + Account create. Legacy
+    # members who signed up before this (no thresholds_version) still
+    # go through `Auth::ThresholdsController` for their re-cross.
+    if thresholds_all_acknowledged?
+      resource.thresholds_agreed_at = Time.now.utc
+      resource.thresholds_version   = Kronk::Thresholds::CURRENT_VERSION
+    end
   end
 
   def configure_sign_up_params
+    # Threshold acknowledgements (`user[thresholds][KEY]`) are NOT
+    # part of the User's assignable attributes — they're read from
+    # raw params in `#create` and `#build_resource`. Keeping them
+    # out of the sanitized set means Devise's `User.new(sign_up_params)`
+    # doesn't try to assign a `thresholds=` that doesn't exist on
+    # the model.
     devise_parameter_sanitizer.permit(:sign_up) do |user_params|
       user_params.permit({ account_attributes: [:username, :display_name, :avatar], invite_request_attributes: [:text] }, :email, :password, :invite_code, :agreement, :website, :confirm_password, :date_of_birth)
     end
@@ -111,6 +142,19 @@ class Auth::RegistrationsController < Devise::RegistrationsController
   end
 
   private
+
+  # True iff the form POST carries a truthy acknowledgement for each
+  # of the three canonical thresholds. Values come in as '1' / '0'
+  # strings from the hidden inputs the ceremony JS flips as the
+  # member crosses each ring; parse via ActiveModel's boolean caster
+  # for consistency with the standalone ThresholdsController.
+  def thresholds_all_acknowledged?
+    return false unless params.dig(:user, :thresholds).is_a?(ActionController::Parameters)
+
+    Kronk::Thresholds::KEYS.all? do |key|
+      ActiveModel::Type::Boolean.new.cast(params[:user][:thresholds][key])
+    end
+  end
 
   def set_invite
     @invite = begin

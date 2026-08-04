@@ -79,6 +79,56 @@
 }
 
 // ─────────────────────────────────────────────────────────────
+// Unified signup chassis — the two sections (account form +
+// threshold ceremony) sit side-by-side in a 200vw-wide track
+// inside a 100vw overflow-hidden window. The track translates
+// on section change so each section fills the viewport in turn.
+// State is DOM-only (see `signup.ts`); going back from
+// thresholds preserves account fields with no server round-trip.
+.signup {
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+.signup__track {
+  display: flex;
+  width: 200%;
+  transition: transform var(--dur-slow) var(--ease-out);
+
+  &[data-section='thresholds'] {
+    transform: translateX(-50%);
+  }
+}
+
+.signup__section {
+  flex: 0 0 50%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+
+  // Account section centres its narrower form vertically-optically
+  // via the section's own padding; the ceremony section stretches
+  // full-width for its ring choreography.
+  &--account {
+    align-items: center;
+  }
+
+  &--thresholds {
+    justify-content: center;
+    min-height: 100dvh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signup__track {
+    transition-duration: 1ms;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
 // Screen 1 — the account form.
 
 .signup-account {
