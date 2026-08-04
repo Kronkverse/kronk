@@ -51,7 +51,14 @@ A deploy usually **succeeded** even when it looks like it didn't:
 
 ### 3. Open a PR, land it via the merge queue
 
-Open a PR from your feature branch to the **active integration branch** (`rebuild/2.0.0` during the rebuild; `main` for production). **Contributors never merge to `main` — the maintainer does.** `rebuild/2.0.0` PRs land through the **GitHub merge queue** (enabled 2026-07-30): after review, hit "Add to merge queue" instead of "Merge". The queue serialises merges, rebases each PR against the tip, re-runs the required checks, then merges. (PRs no longer bump a version number — see **Body** — so there's nothing left to collide on.) Trust the queue: don't force-merge past it.
+Open a PR from your feature branch to the **active integration branch** (`rebuild/2.0.0` during the rebuild; `main` for production). **Contributors never merge to `main` — the maintainer does.** `rebuild/2.0.0` PRs land through the **GitHub merge queue** (enabled 2026-07-30): after review, hit "Add to merge queue" instead of "Merge". The queue serialises merges, rebases each PR against the tip, re-runs the required check (`lint` — see **CI gates**), then merges. (PRs no longer bump a version number — see **Body** — so there's nothing left to collide on.) Trust the queue: don't force-merge past it.
+
+**Landing a PR — and two traps.** Once it's reviewed and **`lint` is green**, land it via "Add to merge queue" in the UI, or `gh pr merge <N> --squash --auto` from the CLI. But:
+
+- **Don't use the "Enable auto-merge" button.** It's not the same as "Add to merge queue": it arms a plain `merge` (the queue requires **squash**) and, if `lint` is **red**, it silently _parks_ the PR — armed, but never entered into the queue, with no error, indefinitely. If "Add to merge queue" is greyed out, that **is** the signal your `lint` is red — fix the lint, don't reach for auto-merge.
+- **Don't mass-arm failing or stale PRs.** A stack of armed-but-blocked PRs looks like a jammed queue but is not _in_ the queue at all — each is just waiting on its own red check, holding nothing up. Get `lint` green on each first, then queue it.
+
+A red required check means the PR simply **cannot** enter the queue — that's the gate working, not a bug. The only thing that overrides it is a maintainer's admin **"merge without waiting for requirements"**, which is also the only way an unchecked PR could actually land — so it's used deliberately, never as a shortcut.
 
 **Title:** a short, descriptive summary of the change. (The rebuild version is no longer a per-PR number — see **Body** below — so the title describes the work, not a version.)
 
@@ -96,17 +103,22 @@ export NODE_OPTIONS="--max-old-space-size=2048"
 
 (On the mainframe dev server this is already set in `/etc/profile.d/mainframe.sh`.)
 
-## CI gates — lint + test (run them before pushing)
+## CI gates — `lint` is the only merge gate (run it before pushing)
 
-Two required merge gates guard `rebuild/2.0.0` (since 2026-08-01): **`lint`** and
-**`test (.ruby-version)`** (the rspec suite on the target Ruby). Both run on
-**every** PR and both must be green for the merge queue to merge. The queue gates
-only on these two; slow/env checks (ImageMagick, E2E, Elasticsearch, Bundler
-Audit) run but are kept **off** the merge path so they can't freeze it. The
-`test` gate excludes `spec/system` (browser) and `:attachment_processing`
-(image toolchain) specs — those run in the dedicated push-only jobs. The suite
-is flaky under parallel CI, so **`rspec-retry`** retries a failed example up to
-3× **on CI** (not locally, so flakes still surface in development).
+**Only `lint` gates the merge queue** on `rebuild/2.0.0` (since 2026-08-02; was
+`lint` + `test` before that). The rspec suite (`test (.ruby-version)`) and every
+other check still run on **every PR** — so keep them green — but they **no
+longer block the merge**: the queue merges as soon as `lint` is green, even
+while `test` is still running. Rationale: the ~15-min Ruby suite _was_ the
+queue's latency, so taking it off the merge path cut merges from ~15 min to ~2;
+regressions are caught at PR-review time instead (see
+`docs/rebuild/decisions.md`). The suite is flaky under parallel CI, so
+**`rspec-retry`** retries a failed example up to 3× **on CI** (not locally, so
+flakes still surface in development).
+
+> **A green queue is not a green suite.** Because `test` no longer gates, a red
+> `test` will **not** stop your PR merging. Read your PR's `test` result before
+> you queue it — the queue won't do it for you.
 
 The pre-commit hook only runs against **staged** files, and `--no-verify`
 skips it entirely — so lint drift reaches CI easily. A red `lint` check blocks
