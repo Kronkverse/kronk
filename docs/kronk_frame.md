@@ -25,7 +25,7 @@ Desktop (container ≥ 890px)
 │                                                     │          │
 └─────────────────────────────────────────────────────┴──────────┘
 
-                    OVERLAY: Ӂ menu (position: fixed, draggable)
+                    OVERLAY: Kronk menu (position: fixed, draggable)
 
 Mobile (container ≤ 889px)
 ┌────────────────────────────────────────────────────────────────┐
@@ -126,12 +126,12 @@ overpainting the RightBand (`z-index: 25` over `24`). Consequences:
 
 ### OVERLAY (not a grid cell)
 
-- **Contents:** `<KronkMenu>` (Ӂ) — the draggable floating action
+- **Contents:** `<KronkMenu>` (Ж) — the draggable floating action
   button that opens Post / New / Search.
 - **Position:** `fixed`, deliberately outside the grid. The user can
   drag it anywhere on the viewport; the parked position is
   bottom-left desktop, bottom-right mobile (clear of the tab-bar).
-- **Why outside the grid:** the Ӂ menu belongs to the viewport, not
+- **Why outside the grid:** the Kronk menu belongs to the viewport, not
   to any single layout cell. Anything else that needs to float
   independently of the grid (modals, dropdowns, snackbars) goes here.
 
@@ -201,7 +201,7 @@ consistent:
 | View picker  | `.space-view-picker`    | shared `<SpaceViewPicker>` component         |
 | Stage        | `.kronk-stage`          | shared `<Stage>` component (per-korner body) |
 | Sidebar tile | `.korner-sidebar__tile` | `<KornerSidebar>` (Frame-owned)              |
-| Ӂ menu       | `.kronk-menu`           | `<KronkMenu>` (Frame-owned)                  |
+| Kronk menu   | `.kronk-menu`           | `<KronkMenu>` (Frame-owned)                  |
 
 (The Frame grid cells themselves are `.kronk-frame__stage`,
 `.kronk-frame__space-nav`, `.kronk-frame__top-band`,
@@ -215,7 +215,7 @@ reimplement its own back-out pill or view tabs.
 ## Rules
 
 1. **Frame is untouchable per-space.** The Wordmark, HubSwitcher,
-   RightBand fade, and Ӂ menu are the same on every page. New
+   RightBand fade, and Kronk menu are the same on every page. New
    persistent affordances propose a Frame change, not a per-space
    add-on.
 

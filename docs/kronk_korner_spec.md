@@ -72,7 +72,7 @@ launch:                                # one-time announcement when the space op
   blurb:          "Market is open — buy, sell, and trade within Kronk."
   cta:            "Tap in"             # inline tune-in action shown on the launch card
 
-compose:                               # the Ӂ floating-bubble Post action for this space
+compose:                               # the Ж floating-bubble Post action for this space
   label:          "New listing"        # user-facing verb; short enough to fit the menu item
   route:          "/hub/market/new"    # SPA route the bubble navigates to; wire it in features/ui/index.jsx
                                        # (features/ui/components/kronk_menu.tsx reads this via useKorner)
@@ -143,18 +143,18 @@ Light theme mirrors with darkened palette values and inverted surfaces; see `_to
 | `--font-body`    | `mastodon-font-sans-serif, sans-serif`                | Body copy, controls, chrome labels            |
 | `--font-mono`    | `'Roboto Mono', 'Fira Mono', ui-monospace, monospace` | Code, hex chips, telemetry                    |
 
-Bundle Liberation Serif and the Ӂ Я Ѻ Ɲ ₭ wordmark glyphs on every platform. Not on stock Android; verify early.
+Bundle Liberation Serif and the Ж Я Ѻ Ɲ ₭ wordmark glyphs on every platform. Not on stock Android; verify early.
 
 ### 3.3 Radius — universal corner language
 
 Everything rounds. No sharp corners in the shell. If a surface can't fit a radius, it becomes a hairline divider (border, not box).
 
-| Token             | Value   | Applied to                                                                       |
-| ----------------- | ------- | -------------------------------------------------------------------------------- |
-| `--radius-small`  | `6px`   | Inline chips, small icon buttons, focus rings, dropdown items                    |
-| `--radius-medium` | `10px`  | Cards, panels, dropdowns, sidebar tiles, Ӂ menu items                            |
-| `--radius-large`  | `16px`  | Hero surfaces — top strip, sidebar, Hub Korner cards, Ӂ menu panel, modal frames |
-| `--radius-round`  | `999px` | Pills — HubSwitcher, tags, badges, tune-in controls, every capsule button        |
+| Token             | Value   | Applied to                                                                           |
+| ----------------- | ------- | ------------------------------------------------------------------------------------ |
+| `--radius-small`  | `6px`   | Inline chips, small icon buttons, focus rings, dropdown items                        |
+| `--radius-medium` | `10px`  | Cards, panels, dropdowns, sidebar tiles, Kronk menu items                            |
+| `--radius-large`  | `16px`  | Hero surfaces — top strip, sidebar, Hub Korner cards, Kronk menu panel, modal frames |
+| `--radius-round`  | `999px` | Pills — HubSwitcher, tags, badges, tune-in controls, every capsule button            |
 
 ### 3.4 Elevation presets
 
@@ -163,7 +163,7 @@ Everything rounds. No sharp corners in the shell. If a surface can't fit a radiu
 | `--elevation-subtle`   | `0 1px 2px rgb(0 0 0 / 12%)`         | Inline surfaces, subtle depth      |
 | `--elevation-card`     | `0 4px 12px -4px rgb(0 0 0 / 30%)`   | Floating cards, panels             |
 | `--elevation-floating` | `0 8px 24px -8px rgb(0 0 0 / 40%)`   | Top strip, sidebar, floating menus |
-| `--elevation-menu`     | `0 20px 48px -12px rgb(0 0 0 / 50%)` | Ӂ menu panel, modals               |
+| `--elevation-menu`     | `0 20px 48px -12px rgb(0 0 0 / 50%)` | Kronk menu panel, modals           |
 
 Additional shadow layers are composed on top when a surface needs accent glow — usually `color-mix(in oklab, var(--kronk-purple-accent) N%, transparent)`.
 
@@ -182,7 +182,7 @@ The Korner sidebar reorders with a hand-rolled FLIP animation using `--ease-spri
 
 ### 3.6 Component kit
 
-A shared, documented set: buttons, cards, toggles, chips, pills, modals, column chrome, feed card (§8.2), Ӂ menu, HubSwitcher, sidebar tiles, Korner card. New Korners **compose these**, not roll their own. `/styleguide` is the living source of truth; when a Korner needs a new visual pattern that isn't there, that pattern lands in the shared kit and the style guide first, then the Korner picks it up.
+A shared, documented set: buttons, cards, toggles, chips, pills, modals, column chrome, feed card (§8.2), Kronk menu, HubSwitcher, sidebar tiles, Korner card. New Korners **compose these**, not roll their own. `/styleguide` is the living source of truth; when a Korner needs a new visual pattern that isn't there, that pattern lands in the shared kit and the style guide first, then the Korner picks it up.
 
 Every Korner-authored SCSS file lives under `app/javascript/styles/mastodon/` and gets a stylelint override that enforces token usage. Adding a new file? Add it to the override list in `stylelint.config.js`.
 

@@ -32,9 +32,9 @@ The same idiom scales down unchanged from the four platform pillars to a two- or
 
 Left → right:
 
-- **Leading glyph** — the korner's Unicode letter (platform bar uses the `ӁЯѺƝ₭` wordmark instead). Display serif, `--purple-bright`. Non-interactive here; on the platform bar the wordmark links to Kronk/About spaces.
+- **Leading glyph** — the korner's Unicode letter (platform bar uses the `ЖЯѺƝ₭` wordmark instead). Display serif, `--purple-bright`. Non-interactive here; on the platform bar the wordmark links to Kronk/About spaces.
 - **Pillars** — flat text labels in a row. This is the `tablist`.
-- **Utilities** — pushed to the right edge (settings gear, and on the platform bar the `Ӂ` action button). Utilities are **not** pillars and get no pool position of their own (see §5).
+- **Utilities** — pushed to the right edge (settings gear, and on the platform bar the `Ж` action button). Utilities are **not** pillars and get no pool position of their own (see §5).
 - **Wire** — a 1px line spanning the full width of the bar, sitting on its bottom edge, coloured `--border-subtle`.
 - **Pool** — the light indicator riding on the wire.
 
@@ -65,7 +65,7 @@ All values reference the locked `2026-07-14` token set. No new tokens are introd
 |                | glow                          | `0 0 10px 1px --purple-bright`, `0 0 20px 3px rgba(114,65,255,.5)`   |
 |                | halo                          | radial `rgba(114,65,255,.28)` → transparent, ellipse behind the core |
 |                | glide transition              | `left` + `width` over `--dur-slow` `400ms` `--ease-out`              |
-| Utility button | see existing gear / `Ӂ` specs | —                                                                    |
+| Utility button | see existing gear / `Ж` specs | —                                                                    |
 
 Focus: pillars take a `--focus-ring` `#7241ff` outline, `3px`, inset offset, on `:focus-visible`.
 
@@ -95,7 +95,7 @@ Settings, compose/ask, and any surface reached from a utility button are **not p
 
 ## 6. Arrival signal (platform bar only)
 
-On the **platform top bar**, the wire is also the delivery mechanism for notifications. When a Nudge arrives, a glint travels along the wire toward the **Nudges** pillar and its count updates. This is the argument for keeping Nudges on the bar rather than in the `Ӂ` menu — the membrane literally carries the signal to where it lives.
+On the **platform top bar**, the wire is also the delivery mechanism for notifications. When a Nudge arrives, a glint travels along the wire toward the **Nudges** pillar and its count updates. This is the argument for keeping Nudges on the bar rather than in the `Ж` menu — the membrane literally carries the signal to where it lives.
 
 Resting liveness is **calm**: the pool sits still under the active pillar. The travelling glint fires **only on genuine arrival**, never on a timer. (An earlier exploration offered `still / current / pulse` characters; the resolved default is _calm at rest, glint on real arrival_.)
 
@@ -123,7 +123,7 @@ In-korner sub-navs (Kuestions, etc.) **do not** carry the arrival signal — the
 ## 9. Scope of this spec
 
 - **In scope:** the visual and behavioural definition of the nav idiom — flat pillars, wire, pool, glide, glint, arrival signal, park-vs-fade, a11y, responsive rules.
-- **Out of scope:** which pillars exist in a given surface (that's each korner's own spec), routing, and panel contents. The platform pillar set (Feed / Profile / Hub / Nudges) and the `Ӂ` action menu (Post / Search / Settings) are defined in the shell redesign spec, not here.
+- **Out of scope:** which pillars exist in a given surface (that's each korner's own spec), routing, and panel contents. The platform pillar set (Feed / Profile / Hub / Nudges) and the `Ж` action menu (Post / Search / Settings) are defined in the shell redesign spec, not here.
 
 ---
 

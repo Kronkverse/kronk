@@ -37,7 +37,7 @@ Skeleton's motion spec) was not part of this fold-in.
 
 ---
 
-# Ӂommons — Lattice: Motion & Interaction Spec
+# Kommons — Lattice: Motion & Interaction Spec
 
 Companion to `kronk_kommons_lattice.html` and its screenshots.
 Sibling document to `KRONK_KOMMONS_MOTION.md` (the Skeleton view).
@@ -298,7 +298,7 @@ chevron if the node has children.
 | hover                 | `surface-elevated @ 92%`, `border-strong`, icon `scale(1.1)`                        |
 | `open`                | `surface-elevated @ 96%`, `border-strong`, **chevron rotates 90°** (`--dur-medium`) |
 | `sel` (leaf selected) | `purple-bright @ 16%` fill, `purple-bright` border + 1px ring                       |
-| `core` (Ӂ)            | `purple-bright @ 22%` fill, `purple-bright @ 46%` border, centred content           |
+| `core` (Ж)            | `purple-bright @ 22%` fill, `purple-bright @ 46%` border, centred content           |
 
 The rotating chevron is the affordance that tells you a row is a branch rather than a destination.
 Keep it.
@@ -331,7 +331,7 @@ connections. Clicking a connection re-opens the lattice along that node's path a
 | click row **with a URL**            | selects it; panel opens in the next column                          |
 | click selected leaf again           | deselects; panel closes                                             |
 | click a **Wired to** entry          | opens the lattice along that node's path, selects it, scrolls to it |
-| click **Ӂ**                         | the core row; folds everything back to the three limbs              |
+| click **Ж**                         | the core row; folds everything back to the three limbs              |
 
 Folding must **prune recursively** — closing Hub has to remove Booth and Booth's pages from the open
 set, and clear the selection if the selected leaf lived inside. Leaving orphans in the open set

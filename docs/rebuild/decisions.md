@@ -218,7 +218,7 @@ Profile/settings work.
 Audit of the ~29 leftover Mastodon page-components during the Frame migration
 (`docs/kronk_frame.md`). Decisions:
 
-- **Search** — KronkSearch (`/hub/search`) is canonical. The Ӂ menu now opens it;
+- **Search** — KronkSearch (`/hub/search`) is canonical. The Kronk menu now opens it;
   Mastodon's `/search` + `features/search` are retired.
 - **Lists** — cut. Mastodon lists (`features/lists`, `list_timeline`, the deck
   `LIST` column, the list nav panel) are removed; Feed scope

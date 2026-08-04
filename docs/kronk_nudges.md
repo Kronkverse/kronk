@@ -68,7 +68,7 @@ Recon before build. Open by `@`-referencing and mapping, in this order, before w
 
 - the Nudges manifest (settings block, `emits:` / `listens:`, `enforced: false`)
 - the notifications store (the unread source that feeds the dotbadge)
-- `HubSwitcher` (currently 3-way) and the `Ӂ` menu (which currently carries the Nudges entry + badge)
+- `HubSwitcher` (currently 3-way) and the `Ж` menu (which currently carries the Nudges entry + badge)
 - existing `/nudges/*` routes and controllers
 - `Notification` model — `LEGACY_TYPES`, `PROPERTIES`
 - `Nudges::Aggregator`
@@ -96,7 +96,7 @@ Interactive nudges are answered in-context — a reply is simply the next messag
 
 ## Surfaces
 
-**1 — Pillar entry.** `HubSwitcher` grows 3-way → 4-way; mobile bottom tab bar grows 3 → 4. Icon: `partner_exchange`. Tap deep-links to `/nudges`. The unread dotbadge migrates off the `Ӂ` menu's Nudges entry (which retires) and onto the pillar, sourced from the notifications store. Manifest gains `hub_visible: false` (grid filter reads this) **and** `pillar: true` (nav reads this) — both, so the two concerns never collapse into one overloaded field.
+**1 — Pillar entry.** `HubSwitcher` grows 3-way → 4-way; mobile bottom tab bar grows 3 → 4. Icon: `partner_exchange`. Tap deep-links to `/nudges`. The unread dotbadge migrates off the `Ж` menu's Nudges entry (which retires) and onto the pillar, sourced from the notifications store. Manifest gains `hub_visible: false` (grid filter reads this) **and** `pillar: true` (nav reads this) — both, so the two concerns never collapse into one overloaded field.
 
 **2 — Messenger shell** at `/nudges`. One continuous surface split by a divider: sidebar (search + conversation list) on the left, open conversation on the right. `/nudges/:conversationId` deep-links straight to a conversation.
 

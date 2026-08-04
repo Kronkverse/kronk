@@ -25,23 +25,23 @@ Intended outcome: a 2.0.0 release that (a) formalises the Korner framework to sp
 
 ## Phase overview
 
-| #   | Phase                                                                      | PRs | Est. cal. time | Blocked by                |
-| --- | -------------------------------------------------------------------------- | --- | -------------- | ------------------------- |
-| 0   | Warm-up (ships to `main` as 1.7.x)                                         | 5   | 1 week         | none                      |
-| 1   | Framework core (manifest v2, registry rename, API, CLI)                    | 6   | 1.5 weeks      | Phase 0                   |
-| 2   | Aesthetic system (tokens, planet retirement)                               | 5   | 1.5 weeks      | Phase 0 (parallel with 1) |
-| 3   | URL & routing migration to `/hub/<slug>`                                   | 3   | 3 days         | Phases 1, 2               |
-| 4   | Tune-in + Hub personalisation                                              | 4   | 1 week         | Phase 3                   |
-| 5   | Nudges cutover (retire bell)                                               | 6   | 2 weeks        | Phase 4                   |
-| 6   | Status linkage canonicalisation                                            | 3   | 4 days         | Phase 1                   |
-| 7   | Primitives: Kategories → Search → Groups                                   | 7   | 2.5 weeks      | Phase 4                   |
-| 8   | Kuestions v2 (dedicated model + gate)                                      | 4   | 1 week         | Phase 6                   |
-| 9   | Huddle korner split (Kalendar decouple)                                    | 4   | 1 week         | Phases 3, 6               |
-| 10  | InFlow kosmic + Wachuneed greenfield + Skeleton WIP                        | 5   | 1.5 weeks      | Phase 1                   |
-| 11  | Org space `/kronk/*` + Profile rebuild `/@user`                            | 4   | 1 week         | Phase 3                   |
-| 12  | Nav-chrome redesign (Ӂ menu, three-way switcher, wordmark, mobile tab-bar) | 3   | 1 week         | Phases 3, 11              |
-| 13  | 2.x new korner manifests (Moments, Albutts, Map) — `enforced: false`       | 3   | 3 days         | Phase 1                   |
-| 14  | Release hardening + main PR                                                | 3   | 1 week         | all above                 |
+| #   | Phase                                                                          | PRs | Est. cal. time | Blocked by                |
+| --- | ------------------------------------------------------------------------------ | --- | -------------- | ------------------------- |
+| 0   | Warm-up (ships to `main` as 1.7.x)                                             | 5   | 1 week         | none                      |
+| 1   | Framework core (manifest v2, registry rename, API, CLI)                        | 6   | 1.5 weeks      | Phase 0                   |
+| 2   | Aesthetic system (tokens, planet retirement)                                   | 5   | 1.5 weeks      | Phase 0 (parallel with 1) |
+| 3   | URL & routing migration to `/hub/<slug>`                                       | 3   | 3 days         | Phases 1, 2               |
+| 4   | Tune-in + Hub personalisation                                                  | 4   | 1 week         | Phase 3                   |
+| 5   | Nudges cutover (retire bell)                                                   | 6   | 2 weeks        | Phase 4                   |
+| 6   | Status linkage canonicalisation                                                | 3   | 4 days         | Phase 1                   |
+| 7   | Primitives: Kategories → Search → Groups                                       | 7   | 2.5 weeks      | Phase 4                   |
+| 8   | Kuestions v2 (dedicated model + gate)                                          | 4   | 1 week         | Phase 6                   |
+| 9   | Huddle korner split (Kalendar decouple)                                        | 4   | 1 week         | Phases 3, 6               |
+| 10  | InFlow kosmic + Wachuneed greenfield + Skeleton WIP                            | 5   | 1.5 weeks      | Phase 1                   |
+| 11  | Org space `/kronk/*` + Profile rebuild `/@user`                                | 4   | 1 week         | Phase 3                   |
+| 12  | Nav-chrome redesign (Kronk menu, three-way switcher, wordmark, mobile tab-bar) | 3   | 1 week         | Phases 3, 11              |
+| 13  | 2.x new korner manifests (Moments, Albutts, Map) — `enforced: false`           | 3   | 3 days         | Phase 1                   |
+| 14  | Release hardening + main PR                                                    | 3   | 1 week         | all above                 |
 
 **Total:** ~65 PRs, ~15 calendar weeks with parallelisation. Serial critical path ~10 weeks.
 
@@ -207,8 +207,8 @@ Parallel PRs, single phase for scheduling clarity.
 
 Per Tal's mockup at `talitamoss.info/files/uploads/kronk_feed_redesign.html`. Ships as its own phase inside 2.0.0.
 
-- **12.1** ӁЯѺƝ₭ wordmark top-left (routes to `/kronk` per Phase 11.1). Three-way top switcher Feed / Profile / Hub on desktop. Remove side navigation bar.
-- **12.2** Ӂ floating button with radial menu (Profile, Settings, Post, Search, Nudges). Bottom tab-bar on mobile with same three primaries.
+- **12.1** ЖЯѺƝ₭ wordmark top-left (routes to `/kronk` per Phase 11.1). Three-way top switcher Feed / Profile / Hub on desktop. Remove side navigation bar.
+- **12.2** Kronk floating button with radial menu (Profile, Settings, Post, Search, Nudges). Bottom tab-bar on mobile with same three primaries.
 - **12.3** Sub-bar (when inside a korner): back-to-Hub + breadcrumb glyph.
 
 Testing: Vitest heavy on router + layout; visual regression via Storybook stories for each chrome piece.
