@@ -25,7 +25,7 @@ both lag reality. Confirmed shipped on `rebuild/2.0.0` (tip alpha.189):
   `/hub/<slug>` route via `SLUG_TO_GLYPH`, `<SpaceViewPicker>` +
   `<AutoSpaceViewPicker>` via `SLUG_TO_VIEWS` (Kuestions only for
   now).
-- **Profile composer** — PRs #352 (Ӂ-menu entry) + #353 (Me-tab
+- **Profile composer** — PRs #352 (Ж-menu entry) + #353 (Me-tab
   card render) both **merged 2026-07-17**. Board still shows them
   as drafts; that's stale by six days.
 - **Kommons Tree standalone surface** — Directory + Lattice
@@ -154,7 +154,7 @@ state changes reflect reality on 2026-07-23:
 | Individual korners  | tree                      | **work**   | **done**                                                                                         |
 | Individual korners  | nudges                    | **work**   | **~done** — Phase 5 cutover shipped; only email-prefs absorption left (see 2026-08-03 reconcile) |
 | Individual korners  | huddle                    | work       | still work — Phase 9.5 pending                                                                   |
-| Navigation & chrome | Profile composer via Ӂ    | **work**   | **done** (#352 merged 2026-07-17)                                                                |
+| Navigation & chrome | Profile composer via Ж    | **work**   | **done** (#352 merged 2026-07-17)                                                                |
 | Custom features     | Profile composer polish   | **work**   | **done** (#353 merged 2026-07-17)                                                                |
 | Infrastructure      | Project tsc green         | **work**   | **done** (zero errors)                                                                           |
 | Infrastructure      | Purge `aws/` from history | **work**   | **done** (commit ae202349b)                                                                      |

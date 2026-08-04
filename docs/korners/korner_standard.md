@@ -80,7 +80,7 @@ _(This layer is `docs/kronk_aesthetic_system.md` §6, restated as korner require
 
 ### L8 — Settings (§K)
 
-- ⚙︎ **Every korner has a settings page at `/hub/<slug>/settings`**, regardless of whether the manifest carries a `settings:` block. Empty settings still get a page — the page is the surface a user reaches from the Settings Hub, from the Ӂ menu's contextual "Settings" item, and from any per-korner gear affordance. A missing mount here is a dead link from the hub grid.
+- ⚙︎ **Every korner has a settings page at `/hub/<slug>/settings`**, regardless of whether the manifest carries a `settings:` block. Empty settings still get a page — the page is the surface a user reaches from the Settings Hub, from the Kronk menu's contextual "Settings" item, and from any per-korner gear affordance. A missing mount here is a dead link from the hub grid.
 - ⚙︎ Manifest `settings:` block declares the user-facing options the framework will render for free. Every entry needs `name` + `kind` + `default`. Choice kinds (`enum`, `multi_enum`) add `options`; range kinds (`integer`, `number`, `duration`) add `min` / `max`.
 - ⚙︎ If the korner exposes options in the manifest, it also declares a `settings.<slug>` node in the tree with `settings_for: <slug>` — the doctor's L6 checks pin the two together.
 - ◇ **Schema-driven is the default, not the ceiling.** Simple korners render fine through the shared widgets (`SettingRow` / `NamedSettingRow` dispatch on `kind`). Korners with meaningful live state (Klot's current phase + share list; Kommons' token balance; Krew's memberships) may compose a bespoke page that renders their manifest settings alongside the state — this is the recommended shape once the korner's settings surface stops being trivial. Bespoke pages MUST still adhere to L12 (Frame chrome).
@@ -139,7 +139,7 @@ No `<h1>`, no `<nav>` tab row, no repeated tagline copy. Title / tagline / tabs 
 
 ### L12 — Settings adhere to the same Frame chrome
 
-_(Added after the alpha.251/.253 settings audit. The failure this closes: settings pages shipped as classic Mastodon `<Column>` surfaces — bespoke back buttons, big square column headers, no shared title typography — while every korner around them moved to the Frame. The result was that entering settings felt like leaving Kronk, and reaching one settings page from another required going all the way back out through the Ӂ menu.)_
+_(Added after the alpha.251/.253 settings audit. The failure this closes: settings pages shipped as classic Mastodon `<Column>` surfaces — bespoke back buttons, big square column headers, no shared title typography — while every korner around them moved to the Frame. The result was that entering settings felt like leaving Kronk, and reaching one settings page from another required going all the way back out through the Kronk menu.)_
 
 Settings pages are second-class korners: they carry no manifest and no `views:`, but they otherwise obey the same Frame contract as `/hub/<slug>` surfaces.
 

@@ -93,7 +93,7 @@ section; none shipped in v1):
 
 **Entry points**:
 
-- Ӂ (Kronk) menu → "New Moment" alongside New Post / New Krew.
+- Kronk menu → "New Moment" alongside New Post / New Krew.
 - `/hub/moments` grid → the "+" tile (always leftmost when the viewer
   has posted no active Moment).
 - Home strip → the empty-state CTA and the owner tile double as

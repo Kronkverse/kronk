@@ -114,12 +114,12 @@ branch.
 #### Nav chrome
 
 - `KronkWordmark`, `HubSwitcher` (Feed / Profile / Hub), `KronkMenu`
-  (Ӂ floating action) become the primary navigation surfaces
+  (Kronk floating action) become the primary navigation surfaces
 - Classic Mastodon side nav (`.navigation-panel`, `.tabs-bar`, bell)
   hidden via `_kronk_chrome.scss`
 - `KornerSubBar` — back-to-Hub breadcrumb pill when inside a
   `/hub/<slug>` route
-- Ӂ menu carries: Profile, Settings, Post, Search, Explore, Local,
+- Kronk menu carries: Profile, Settings, Post, Search, Explore, Local,
   Nudges, Activity, Connections (with follow-request badge), Profile
   sections, Groups, About Kronk, Feed scope picker
 
@@ -143,7 +143,7 @@ branch.
 - `Nudges::Aggregator` wired into `/api/v1/nudges/activity`
 - `/nudges/activity` SPA page renders aggregated groups
   ("3 froths on your post")
-- Activity tab in the Nudges tab strip + Ӂ menu
+- Activity tab in the Nudges tab strip + Kronk menu
 
 #### Groups
 
@@ -157,7 +157,7 @@ branch.
 
 - `kronk.feed_scope` user setting (Friends / FoF / Kommunity)
 - `/api/v1/kronk_settings` REST surface (show/update)
-- Picker mounted at bottom of Ӂ menu; timeline gate deferred behind
+- Picker mounted at bottom of Kronk menu; timeline gate deferred behind
   `Kronk::FeatureFlags.feed_scope_enforced`
 
 #### Doctor
