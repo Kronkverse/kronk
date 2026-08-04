@@ -75,6 +75,10 @@ listens:
     interaction: interactive
     cta_label: 'View discussion'
     cta_route: '/hub/kommons/p/{proposal_id}'
+    # A flurry of comments on one proposal collapses into a single
+    # re-floating "commented" nudge per recipient within the window,
+    # rather than one nudge per comment.
+    aggregation: { window: 10m }
   - event: kalendar.event.rsvpd
     source_korner: kalendar
     verb_template: 'rsvpd_{status}'
