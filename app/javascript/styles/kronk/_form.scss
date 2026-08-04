@@ -1,0 +1,247 @@
+// Canonical Kronk form vocabulary. ONE source of truth for form
+// styling across every Kronk surface — signup, landing, auth
+// (sign-in / password reset / confirmation / setup), any future
+// form we build.
+// Extracted from `.signup-account__*` (which pioneered the
+// treatment in `_signup.scss` — mono uppercase labels, 44px pill
+// controls, accent-fill pill buttons, focus-within state, token-
+// driven throughout). Signup + landing keep their scoped classes
+// for now; new surfaces (starting with the Devise auth-form partial
+// in a follow-up PR) use `.kronk-form__*` directly.
+// Structure: `.kronk-form` wraps a form. Inside, each row is a
+// `.kronk-form__field` containing a `.kronk-form__label` above a
+// `.kronk-form__control` (which houses the actual `<input>`).
+// Validation feedback: `.kronk-form__hint` (below), and
+// `is-bad` / `is-good` state modifiers on the control.
+
+.kronk-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+// One label + control + hint stack.
+.kronk-form__field {
+  display: block;
+  margin: 0;
+}
+
+// Field label — monospace, uppercase, muted. The tightening that
+// makes the label feel like technical metadata rather than a form
+// prompt; the input carries the visual weight.
+.kronk-form__label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+// Input container. The border + background live here, not on the
+// `<input>`, so `:focus-within` lights up the wrapper (which can
+// hold sigil prefixes, peek buttons, meters — see signup for the
+// pattern). If the surface uses a plain `<input>` with no wrapper,
+// the same treatment lands via `input.kronk-form__input` below.
+.kronk-form__control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 44px;
+  padding: 0 0.875rem;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-medium);
+  transition:
+    border-color var(--dur-medium) var(--ease-out),
+    background var(--dur-medium) var(--ease-out);
+
+  &:focus-within {
+    border-color: var(--border-default);
+    background: var(--surface-elevated);
+  }
+
+  &.is-bad {
+    border-color: var(--warning-red);
+  }
+
+  &.is-good {
+    border-color: var(--kronk-purple-muted);
+  }
+}
+
+// The input itself — transparent, borderless; the wrapping control
+// carries the visual chrome. Also styles bare `<input>` elements
+// (no wrapper) so they match without needing `.kronk-form__control`.
+.kronk-form__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: 0;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9375rem;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+// Direct input styling for surfaces that emit a bare `<input>`
+// without a wrapper — mostly simple_form defaults. Matches the
+// control's visual chrome so a page can drop it in and have it look
+// like the rest.
+input.kronk-form__input {
+  width: 100%;
+  height: 44px;
+  padding: 0 0.875rem;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-medium);
+  transition:
+    border-color var(--dur-medium) var(--ease-out),
+    background var(--dur-medium) var(--ease-out);
+
+  &:focus {
+    outline: 0;
+    border-color: var(--border-default);
+    background: var(--surface-elevated);
+  }
+}
+
+// Hint text — sits below the control. `min-height` reserves the row
+// so validation state changes don't shift the layout.
+.kronk-form__hint {
+  display: block;
+  margin-top: 0.5rem;
+  min-height: 15px;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+
+  &--bad {
+    color: var(--warning-red);
+  }
+
+  &--good {
+    color: var(--success-green);
+  }
+}
+
+// Actions row — sits below the last field. Usually holds the
+// primary submit button, sometimes flanked by a secondary link.
+.kronk-form__actions {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+// Primary CTA — accent-fill pill button. Full-width by default;
+// pages can constrain width by wrapping in a container.
+.kronk-form__button {
+  width: 100%;
+  height: 44px;
+  padding: 0 1.25rem;
+  border-radius: var(--radius-medium);
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  border: 0;
+  cursor: pointer;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    background var(--dur-medium) var(--ease-out),
+    box-shadow var(--dur-medium) var(--ease-out),
+    opacity var(--dur-medium) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    background: var(--kronk-purple-bright);
+    box-shadow: 0 0 28px -6px var(--kronk-purple-bright);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    background: var(--surface-elevated);
+    color: var(--text-muted);
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  // Secondary variant — subtle surface, accent border on hover.
+  // Used for "cancel" or paired options where two buttons live in
+  // the same actions row.
+  &--secondary {
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+
+    &:hover:not(:disabled) {
+      background: var(--surface-primary);
+      border-color: var(--kronk-purple-accent);
+      box-shadow: none;
+    }
+  }
+}
+
+// Fine-print block below actions — links to /kronk/privacy,
+// /kronk/terms, etc.
+.kronk-form__finelow {
+  margin-top: 1rem;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  text-align: center;
+
+  a {
+    color: var(--kronk-purple-bright);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// Tail-links row below a form — muted horizontal list ("forgot
+// password", "about", "how it works" etc.). Matches the landing's
+// `.kronk-landing__links` treatment.
+.kronk-form__links {
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.375rem 1rem;
+
+  li {
+    margin: 0;
+  }
+
+  a {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    text-decoration: none;
+    transition: color var(--dur-medium) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text-secondary);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kronk-form__button,
+  .kronk-form__control,
+  input.kronk-form__input {
+    transition-duration: 1ms;
+  }
+}
