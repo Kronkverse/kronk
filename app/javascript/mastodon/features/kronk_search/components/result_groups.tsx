@@ -1,5 +1,7 @@
 import { defineMessages, useIntl } from 'react-intl';
 
+import { Link } from 'react-router-dom';
+
 import type { ApiSearchResults } from 'mastodon/api/kronk_search';
 
 // Renders result groups by object type per spec §"Universal search
@@ -7,8 +9,10 @@ import type { ApiSearchResults } from 'mastodon/api/kronk_search';
 // entries; deeper drill-in ("See all") is a follow-up once
 // per-type endpoints exist.
 //
-// Rendered as inert previews for now — a follow-up PR wires each
-// row to its live component (StatusCard / AccountRow / TagCard).
+// Each row links to its subject: a person → their profile, a post →
+// the status, a kategory → its timeline. (Richer inline rows — avatars,
+// an inline follow/orbit action — are a follow-up; the link is what
+// makes results actually usable.)
 
 const messages = defineMessages({
   accountsHeader: {
@@ -81,10 +85,10 @@ export const ResultGroups: React.FC<Props> = ({ results }) => {
           <ul className='kronk-search__group-list'>
             {accounts.map((a) => (
               <li key={a.id ?? a.acct}>
-                <span className='kronk-search__account'>
+                <Link to={`/@${a.acct}`} className='kronk-search__account'>
                   <strong>{a.display_name ?? a.acct}</strong>
                   <span className='kronk-search__account-acct'>@{a.acct}</span>
-                </span>
+                </Link>
               </li>
             ))}
           </ul>
@@ -101,7 +105,10 @@ export const ResultGroups: React.FC<Props> = ({ results }) => {
           <ul className='kronk-search__group-list'>
             {statuses.map((s) => (
               <li key={s.id}>
-                <div className='kronk-search__status'>
+                <Link
+                  to={`/@${s.account?.acct}/${s.id}`}
+                  className='kronk-search__status'
+                >
                   <span className='kronk-search__status-author'>
                     @{s.account?.acct}
                   </span>
@@ -110,7 +117,7 @@ export const ResultGroups: React.FC<Props> = ({ results }) => {
                       ? s.spoiler_text
                       : (s.content ?? '').replace(/<[^>]+>/g, '').slice(0, 140)}
                   </p>
-                </div>
+                </Link>
               </li>
             ))}
           </ul>
@@ -127,9 +134,12 @@ export const ResultGroups: React.FC<Props> = ({ results }) => {
           <ul className='kronk-search__group-list'>
             {hashtags.map((t) => (
               <li key={t.name}>
-                <span className='kronk-search__kategory kategory-pill'>
+                <Link
+                  to={`/tags/${t.name}`}
+                  className='kronk-search__kategory kategory-pill'
+                >
                   {t.name}
-                </span>
+                </Link>
               </li>
             ))}
           </ul>
