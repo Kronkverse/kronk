@@ -2,15 +2,15 @@
   = vite_typescript_tag 'public.tsx', crossorigin: 'anonymous'
 
 - content_for :content do
-  .container-alt
-    -# Wordmark comes from the static Kronk chrome top-band
-    -# (shared/_kronk_static_chrome.html.haml), rendered by the
-    -# application layout wrapper below. Rendering another one here
-    -# doubled the logo on every auth page — one at the top of the
-    -# chrome, one above the form. Retired 2026-07-31.
-    .form-container
-      = render 'flashes'
+  -# Wordmark comes from `_kronk_static_chrome` (rendered by the
+  -# application layout wrapper below). The old `.container-alt >
+  -# .form-container` wrapping was upstream Mastodon's centred-form
+  -# pattern; retired 2026-08-04 in favour of the
+  -# `.kronk-auth-shell` treatment declared in `styles/kronk/_form.scss`.
+  -# Each Devise view renders its own shell via
+  -# `auth/shared/_kronk_auth_form` and handles its own centring.
+  = render 'flashes'
 
-      = yield
+  = yield
 
 = render template: 'layouts/application'

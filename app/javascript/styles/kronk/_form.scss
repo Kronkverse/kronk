@@ -245,3 +245,188 @@ input.kronk-form__input {
     transition-duration: 1ms;
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// Kronk auth-form shell — wraps every Devise view (sign_in,
+// password reset, confirmation, setup) via
+// `auth/shared/_kronk_auth_form.html.haml`. Sits inside the
+// frame chrome layout (`layouts/application`) — top-band wordmark
+// above, this shell holds the form.
+// Uses `.simple_form`-scoped selectors (rather than migrating
+// every Devise view to explicit `.kronk-form__*` classes) so
+// simple_form's default HTML gets the canonical Kronk treatment
+// without needing per-input wiring. Devise-generated markup:
+//   .fields-group > label + input[type=email|password|text]
+//   .actions > button
+// Both patterns styled below to match the `.kronk-form__*` visual
+// standard.
+
+.kronk-auth-shell {
+  width: 100%;
+  max-width: 24rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  min-height: calc(100dvh - 4.25rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  animation: signup-account-rise var(--dur-slow) var(--ease-out) both;
+}
+
+.kronk-auth-shell__header {
+  margin-bottom: 1.75rem;
+  text-align: center;
+}
+
+.kronk-auth-shell__title {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 4vw, 1.875rem);
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+
+.kronk-auth-shell__lede {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.kronk-auth-shell__body {
+  .fields-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 0 0 1.25rem;
+  }
+
+  .fields-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .fields-group input[type='email'],
+  .fields-group input[type='password'],
+  .fields-group input[type='text'] {
+    width: 100%;
+    height: 44px;
+    padding: 0 0.875rem;
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.9375rem;
+    transition:
+      border-color var(--dur-medium) var(--ease-out),
+      background var(--dur-medium) var(--ease-out);
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:focus {
+      outline: 0;
+      border-color: var(--border-default);
+      background: var(--surface-elevated);
+    }
+  }
+
+  .actions {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    button {
+      width: 100%;
+      height: 44px;
+      padding: 0 1.25rem;
+      border-radius: var(--radius-medium);
+      background: var(--accent);
+      color: var(--text-on-accent);
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.9375rem;
+      border: 0;
+      cursor: pointer;
+      transition:
+        transform var(--dur-fast) var(--ease-out),
+        background var(--dur-medium) var(--ease-out),
+        box-shadow var(--dur-medium) var(--ease-out),
+        opacity var(--dur-medium) var(--ease-out);
+
+      &:hover:not(:disabled) {
+        background: var(--kronk-purple-bright);
+        box-shadow: 0 0 28px -6px var(--kronk-purple-bright);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(1px);
+      }
+
+      &:disabled {
+        background: var(--surface-elevated);
+        color: var(--text-muted);
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  // Devise setup form: an in-body <details>/<summary> for the
+  // "email link not received" affordance. Keep it token-styled.
+  details summary {
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+    margin-bottom: 0.75rem;
+
+    strong {
+      color: var(--text-primary);
+    }
+  }
+}
+
+.kronk-auth-shell__footer {
+  margin-top: 1.5rem;
+
+  ul.no-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.375rem 1rem;
+
+    li {
+      margin: 0;
+    }
+
+    a {
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+      text-decoration: none;
+      transition: color var(--dur-medium) var(--ease-out);
+
+      &:hover,
+      &:focus-visible {
+        color: var(--text-secondary);
+      }
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kronk-auth-shell {
+    animation-duration: 1ms;
+  }
+}

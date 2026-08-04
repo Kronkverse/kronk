@@ -1,0 +1,39 @@
+-# Canonical Kronk auth-form shell. Used by every Devise view that
+-# takes a form on a Rails-served page: sign-in, forgot password,
+-# reset password, resend confirmation, email setup.
+-#
+-# The shell handles the surrounding layout — title, lede, error
+-# messages, footer links — and takes the form fields as a block.
+-# Inside the block, use plain simple_form_for with `.kronk-form__*`
+-# classes on inputs (see the individual view files for the
+-# canonical pattern).
+-#
+-# Locals:
+-#   title:    (required) H1 text for the page.
+-#   lede:     (optional) sub-headline under the title. HAML string,
+-#             may include links.
+-#   footer_links: (optional, default true) render `_links.html.haml`
+-#             below the form. Sign-in / password reset always want
+-#             them; captcha pages sometimes don't.
+-#
+-# Block:
+-#   The form body. Typically a `simple_form_for(...)` with
+-#   `.kronk-form__field` rows inside.
+
+:ruby
+  title        = local_assigns.fetch(:title)
+  lede         = local_assigns[:lede]
+  footer_links = local_assigns.fetch(:footer_links, true)
+
+.kronk-auth-shell
+  %header.kronk-auth-shell__header
+    %h1.kronk-auth-shell__title= title
+    - if lede
+      %p.kronk-auth-shell__lede= lede
+
+  .kronk-auth-shell__body
+    = yield
+
+  - if footer_links
+    .kronk-auth-shell__footer
+      = render 'auth/shared/links'
