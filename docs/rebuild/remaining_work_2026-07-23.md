@@ -1,4 +1,6 @@
-# Remaining-work backlog — 2026-07-23
+# Remaining-work backlog — 2026-07-23 (superseded)
+
+> **SUPERSEDED on 2026-08-04 by [`remaining_work_2026-08-04.md`](./remaining_work_2026-08-04.md)** after ~440 PRs of drift. Read the newer doc for current status; the sections below are kept for history only.
 
 > Supersedes `remaining_work_2026-07-20.md`. Refreshed after the
 > Kuestions v2 completion, the KronkFrame + shared space-chrome
