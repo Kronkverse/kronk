@@ -683,6 +683,16 @@
   display: none;
 }
 
+.moments-composer__file-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+
+  .moments-composer__file-picker {
+    flex: 1;
+  }
+}
+
 .moments-composer__file-picker,
 .moments-composer__file-summary {
   padding: 10px 14px;
