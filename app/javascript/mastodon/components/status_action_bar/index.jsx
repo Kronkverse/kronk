@@ -32,8 +32,6 @@ const messages = defineMessages({
   delete: { id: 'status.delete', defaultMessage: 'Delete' },
   redraft: { id: 'status.redraft', defaultMessage: 'Delete & re-draft' },
   edit: { id: 'status.edit', defaultMessage: 'Edit' },
-  direct: { id: 'status.direct', defaultMessage: 'Privately mention @{name}' },
-  mention: { id: 'status.mention', defaultMessage: 'Mention @{name}' },
   mute: { id: 'account.mute', defaultMessage: 'Mute @{name}' },
   block: { id: 'account.block', defaultMessage: 'Block @{name}' },
   reply: { id: 'status.reply', defaultMessage: 'Reply' },
@@ -89,8 +87,6 @@ class StatusActionBar extends ImmutablePureComponent {
     onDelete: PropTypes.func,
     onRevokeQuote: PropTypes.func,
     onQuotePolicyChange: PropTypes.func,
-    onDirect: PropTypes.func,
-    onMention: PropTypes.func,
     onMute: PropTypes.func,
     onUnmute: PropTypes.func,
     onBlock: PropTypes.func,
@@ -171,14 +167,6 @@ class StatusActionBar extends ImmutablePureComponent {
 
   handlePinClick = () => {
     this.props.onPin(this.props.status);
-  };
-
-  handleMentionClick = () => {
-    this.props.onMention(this.props.status.get('account'));
-  };
-
-  handleDirectClick = () => {
-    this.props.onDirect(this.props.status.get('account'));
   };
 
   handleMuteClick = () => {
@@ -331,10 +319,6 @@ class StatusActionBar extends ImmutablePureComponent {
           menu.push({ text: intl.formatMessage(messages.redraft), action: this.handleRedraftClick, dangerous: true });
         }
       } else {
-        menu.push({ text: intl.formatMessage(messages.mention, { name: account.get('username') }), action: this.handleMentionClick });
-        menu.push({ text: intl.formatMessage(messages.direct, { name: account.get('username') }), action: this.handleDirectClick });
-        menu.push(null);
-
         if (isQuotingMe) {
           menu.push({ text: intl.formatMessage(messages.revokeQuote, { name: account.get('username') }), action: this.handleRevokeQuoteClick, dangerous: true });
         }

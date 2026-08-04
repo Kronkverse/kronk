@@ -32,7 +32,6 @@ export const COMPOSE_SUBMIT_SUCCESS  = 'COMPOSE_SUBMIT_SUCCESS';
 export const COMPOSE_SUBMIT_FAIL     = 'COMPOSE_SUBMIT_FAIL';
 export const COMPOSE_REPLY           = 'COMPOSE_REPLY';
 export const COMPOSE_REPLY_CANCEL    = 'COMPOSE_REPLY_CANCEL';
-export const COMPOSE_DIRECT          = 'COMPOSE_DIRECT';
 export const COMPOSE_MENTION         = 'COMPOSE_MENTION';
 export const COMPOSE_RESET           = 'COMPOSE_RESET';
 export const COMPOSE_SET_DRAFT        = 'COMPOSE_SET_DRAFT';
@@ -184,17 +183,6 @@ export function mentionCompose(account) {
 export function mentionComposeById(accountId) {
   return (dispatch, getState) => {
     dispatch(mentionCompose(getState().accounts.get(accountId)));
-  };
-}
-
-export function directCompose(account) {
-  return (dispatch, getState) => {
-    dispatch({
-      type: COMPOSE_DIRECT,
-      account: account,
-    });
-
-    ensureComposeIsVisible(getState);
   };
 }
 

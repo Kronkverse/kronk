@@ -29,7 +29,6 @@ import { initBlockModal } from '../../actions/blocks';
 import {
   replyCompose,
   mentionCompose,
-  directCompose,
 } from '../../actions/compose';
 import {
   initDomainBlockModal,
@@ -311,10 +310,6 @@ class Status extends ImmutablePureComponent {
     } else {
       dispatch(editStatus(status.get('id')));
     }
-  };
-
-  handleDirectClick = (account) => {
-    this.props.dispatch(directCompose(account));
   };
 
   handleMentionClick = (account) => {
@@ -609,8 +604,6 @@ class Status extends ImmutablePureComponent {
                   onQuotePolicyChange={this.handleQuotePolicyChange}
                   onQuote={this.handleQuote}
                   onEdit={this.handleEditClick}
-                  onDirect={this.handleDirectClick}
-                  onMention={this.handleMentionClick}
                   onMute={this.handleMuteClick}
                   onUnmute={this.handleUnmuteClick}
                   onMuteConversation={this.handleConversationMuteClick}
