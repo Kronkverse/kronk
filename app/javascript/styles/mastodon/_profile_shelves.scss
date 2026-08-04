@@ -744,7 +744,11 @@
   &__composer-error {
     padding: var(--sp-3, 12px);
     border-radius: var(--radius-medium, 10px);
-    background: color-mix(in oklab, var(--warning-red, #ef4444), transparent 85%);
+    background: color-mix(
+      in oklab,
+      var(--warning-red, #ef4444),
+      transparent 85%
+    );
     color: var(--warning-red, #ef4444);
     font-size: 13px;
   }
