@@ -1648,8 +1648,8 @@ en:
       link_how: How it works
       og_description: A small community, built together.
       og_title_suffix: Sign in
-      title: Welcome to Kronk
       tagline: A small community, built together. Sign in to take up space.
+      wordmark_sr_label: Kronk
     signup:
       account:
         avatar_hint: Optional. You can add one any time.
