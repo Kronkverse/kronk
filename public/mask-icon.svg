@@ -1,5 +1,5 @@
-<svg id="logo-symbol-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2017.0 1341.0" width="2017.0" height="1341.0" role="img" aria-label="Kronk">
-  <g fill="currentColor" transform="translate(0.0 1341.0) scale(1 -1)">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2017.0 1341.0" width="2017.0" height="1341.0" role="img" aria-label="Kronk">
+  <g fill="#000000" transform="translate(0.0 1341.0) scale(1 -1)">
     <path transform="translate(-4.0 0)" d="M712 1341H1313V1268L1160 1242V684L1638 1242L1525 1268V1341H1937V1268L1793 1242L1452 844L1906 100L2021 73V0H1621L1268 638L1160 551V100L1319 73V0H706V73L865 100V551L756 638L404 0H4V73L119 100L572 844L232 1242L88 1268V1341H500V1268L387 1242L865 684V1242L712 1268Z"/>
   </g>
 </svg>

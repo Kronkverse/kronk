@@ -27,7 +27,12 @@ class ManifestSerializer < ActiveModel::Serializer
   end
 
   def icons
-    SiteUpload::ANDROID_ICON_SIZES.map do |size|
+    # The android-chrome icons are transparent, edge-to-edge Ж glyphs
+    # (`purpose: 'any'`). A launcher that masks them would clip the
+    # glyph. For maskable rendering, expose the two dedicated
+    # `icon-{192,512}-maskable.png` variants — opaque, with an 80%
+    # safe circle around the mark.
+    any = SiteUpload::ANDROID_ICON_SIZES.map do |size|
       src = app_icon_path(size.to_i)
       src = URI.join(root_url, src).to_s if src.present?
 
@@ -35,9 +40,18 @@ class ManifestSerializer < ActiveModel::Serializer
         src: src || frontend_asset_url("icons/android-chrome-#{size}x#{size}.png"),
         sizes: "#{size}x#{size}",
         type: 'image/png',
-        purpose: 'any maskable',
+        purpose: 'any',
       }
     end
+    maskable = [192, 512].map do |size|
+      {
+        src: frontend_asset_url("icons/icon-#{size}-maskable.png"),
+        sizes: "#{size}x#{size}",
+        type: 'image/png',
+        purpose: 'maskable',
+      }
+    end
+    any + maskable
   end
 
   def theme_color
