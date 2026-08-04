@@ -65,16 +65,32 @@
   }
 
   &__pillar {
+    // Icon-only pillar (label rides on aria-label + title tooltip).
+    // Site-wide pattern for horizontal pillar navs per 2026-08-04.
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: var(--text-muted);
-    font-size: 13px;
-    letter-spacing: 0.02em;
     text-decoration: none;
-    padding: var(--sp-2, 8px) 0;
-    transition: color 200ms ease-out;
+    padding: var(--sp-2, 8px) var(--sp-3, 12px);
+    border-radius: var(--radius-small, 6px);
+    transition:
+      color 200ms ease-out,
+      background 200ms ease-out;
 
-    &--active,
+    svg {
+      width: 20px;
+      height: 20px;
+      fill: currentcolor;
+    }
+
     &:hover {
       color: var(--text-primary);
+      background: var(--surface-elevated);
+    }
+
+    &--active {
+      color: var(--accent);
     }
   }
 

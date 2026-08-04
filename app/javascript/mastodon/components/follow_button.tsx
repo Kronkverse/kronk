@@ -20,15 +20,24 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 import { useBreakpoint } from '../features/ui/hooks/useBreakpoint';
 
 // Kronk — Mates. The connect button speaks the Mates vocabulary
-// (docs/kronk_feed_and_reach.md §1): Mate (send request) / Mating… (pending
-// outgoing request, tap to withdraw) / Unmate (remove an established, mutual
-// Mate) / Accept (the other side already asked you).
+// (docs/kronk_feed_and_reach.md §1): **Groove** is the action verb
+// (send a Mates request); **Grooving…** is a pending outgoing request
+// (tap to withdraw); **Ungroove** removes an established Mate; **Accept**
+// converts an inbound request to Mates (auto-mutual).
+//
+// Semantic split (locked 2026-08-04):
+//   • Verb (button label) → Groove / Grooving / Ungroove
+//   • Noun (state name)   → Mate ("You're Mates" tag, "your Mates" tab)
+//
+// You _Groove_ someone to become their _Mate_. The underlying model +
+// data primitives stay named `mate` / `mates` (unchanged); only the
+// user-facing verb labels here swap.
 const longMessages = defineMessages({
   unblock: { id: 'account.unblock_short', defaultMessage: 'Unblock' },
   unmute: { id: 'account.unmute_short', defaultMessage: 'Unmute' },
-  mate: { id: 'account.mate', defaultMessage: 'Mate' },
-  mating: { id: 'account.mating', defaultMessage: 'Mating…' },
-  unmate: { id: 'account.unmate', defaultMessage: 'Unmate' },
+  mate: { id: 'account.mate', defaultMessage: 'Groove' },
+  mating: { id: 'account.mating', defaultMessage: 'Grooving…' },
+  unmate: { id: 'account.unmate', defaultMessage: 'Ungroove' },
   mateAccept: { id: 'account.mate_accept', defaultMessage: 'Accept' },
   editProfile: { id: 'account.edit_profile', defaultMessage: 'Edit profile' },
 });
