@@ -58,7 +58,10 @@ const SOURCE_LABEL: Record<string, string> = {
 };
 
 const stripHtml = (html: string): string =>
-  html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  html
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 const longformExcerpt = (status: ApiStatusJSON) => {
   const raw = status.content ?? status.text ?? '';
@@ -238,10 +241,7 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
       ) : (
         <ul className='profile-shelves__drawn-rail'>
           {statuses.map((status) => (
-            <li
-              key={status.id}
-              className='profile-shelves__drawn-rail-item'
-            >
+            <li key={status.id} className='profile-shelves__drawn-rail-item'>
               <StatusCard status={status} render={render} />
             </li>
           ))}

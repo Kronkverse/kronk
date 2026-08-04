@@ -77,7 +77,10 @@ const matchesKornerSlug = (status: ApiStatusJSON, slug: string): boolean =>
     : status.source_korner === slug;
 
 const stripHtml = (html: string): string =>
-  html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  html
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 const excerpt = (status: ApiStatusJSON): string => {
   const raw = status.content ?? status.text ?? '';
@@ -148,7 +151,9 @@ const PostPickerRow: React.FC<PostPickerRowProps> = ({
       </div>
       {picked && (
         <div className='profile-shelves__picker-order'>
-          <span className='profile-shelves__picker-badge'>{pickedIndex + 1}</span>
+          <span className='profile-shelves__picker-badge'>
+            {pickedIndex + 1}
+          </span>
           <button
             type='button'
             className='profile-shelves__picker-arrow'

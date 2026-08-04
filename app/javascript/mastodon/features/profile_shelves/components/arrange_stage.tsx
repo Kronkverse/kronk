@@ -145,7 +145,10 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
   }, [cards, sections]);
 
   const publish = useCallback(
-    (nextCards: ApiProfileCardJSON[], nextSections: ApiProfileSectionJSON[]) => {
+    (
+      nextCards: ApiProfileCardJSON[],
+      nextSections: ApiProfileSectionJSON[],
+    ) => {
       setCards(nextCards);
       setSections(nextSections);
       onChange({ cards: nextCards, sections: nextSections });
@@ -399,7 +402,11 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
 
   const handleDropCards = useCallback(
     (targetKey: string, pos: 'above' | 'below') => {
-      if (!dragging || dragging.family !== 'told' || dragging.key === targetKey) {
+      if (
+        !dragging ||
+        dragging.family !== 'told' ||
+        dragging.key === targetKey
+      ) {
         return;
       }
       const fromIdx = cards.findIndex((c) => c.card_type === dragging.key);
@@ -442,9 +449,11 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
       const insertAt = pos === 'below' ? insertBase + 1 : insertBase;
       nextSections.splice(insertAt, 0, moved);
       publish(cards, nextSections);
-      void apiReorderProfileSections(nextSections.map((s) => s.id)).catch(() => {
-        setSections(sections);
-      });
+      void apiReorderProfileSections(nextSections.map((s) => s.id)).catch(
+        () => {
+          setSections(sections);
+        },
+      );
     },
     [cards, dragging, publish, sections],
   );
@@ -541,7 +550,9 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
             key={`card-${card.card_type}`}
             slabKey={card.card_type}
             family='told'
-            name={CARD_TITLE[card.card_type] ?? card.card_type.replaceAll('_', ' ')}
+            name={
+              CARD_TITLE[card.card_type] ?? card.card_type.replaceAll('_', ' ')
+            }
             source={null}
             visible={card.visible}
             reach={card.visibility}
@@ -549,9 +560,7 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
             canMoveDown={i < cards.length - 1}
             isDragging={dragging?.key === card.card_type}
             isDragTarget={
-              dragTarget?.key === card.card_type
-                ? dragTarget.pos
-                : null
+              dragTarget?.key === card.card_type ? dragTarget.pos : null
             }
             onMoveUp={moveCardUp}
             onMoveDown={moveCardDown}
@@ -616,9 +625,7 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
       {composing && (
         <TellComposer
           cardType={composing}
-          cardTitle={
-            CARD_TITLE[composing] ?? composing.replaceAll('_', ' ')
-          }
+          cardTitle={CARD_TITLE[composing] ?? composing.replaceAll('_', ' ')}
           initial={cards.find((c) => c.card_type === composing) ?? null}
           onSaved={handleComposerSaved}
           onCancel={closeComposer}
