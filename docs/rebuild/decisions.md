@@ -17,6 +17,28 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-02 — Merge queue gates down to `lint` only
+
+`rebuild/2.0.0`'s merge queue required two checks — `lint` and
+`test (.ruby-version)`. The Ruby suite ran ~15 min and _was_ the entire queue
+latency; a PR sat ~15–20 min even though `lint` (which catches most breakage
+cheaply) finished in ~2. Dropped `test` from the required checks on ruleset
+20013211 and set the batch wait 5→0, so **only `lint` gates** and merges land
+in ~2 min. `test` still runs on every PR (visibility) and on push to
+`main`/`stable-*`; it just no longer runs in the merge group (`test-ruby.yml`
+lost its `merge_group:` trigger) or blocks the merge.
+
+Trade accepted: the queue no longer re-verifies the _combined_ result of
+stacked PRs against the suite — a pair that each pass alone but break together
+can land, caught on the next PR's run. Acceptable because `rebuild/2.0.0` feeds
+shadow, not production. The durable "fast _and_ fully-gated" answer is to shard
+the rspec suite (~15→~4 min) and re-add it as a gate; until then, **read your
+PR's `test` result yourself — a green queue is not a green suite.** Contributor
+guidance is in `CLAUDE.md` (§"CI gates" + §3, incl. the "Enable auto-merge"
+parking trap). Prior ruleset config was backed up before the change.
+
+Supersedes the "two required gates" framing from the 2026-08-01 CI work.
+
 ## 2026-07-20 — Korner conformance gates (L1 / L10) + event bus
 
 Decisions taken while building the conformance gates from
