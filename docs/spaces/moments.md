@@ -4,11 +4,12 @@
 
 ## Purpose
 
-Moments make space for the **ephemeral** — a single photo or short
-video (up to 60 seconds) with an optional caption. The point is to
-**lower the bar to sharing**: a Moment never enters the timeline (there
-is no feed card) and stops demanding attention after a day, so it
-doesn't need to be interesting enough to survive a feed.
+Moments make space for the **ephemeral** — a single photo, a short
+video (up to 60 seconds), or a photo paired with a short voice clip
+— with an optional caption. The point is to **lower the bar to
+sharing**: a Moment never enters the timeline (there is no feed card)
+and stops demanding attention after a day, so it doesn't need to be
+interesting enough to survive a feed.
 
 A Moment is **live for 24 hours** — it sits in the top-of-Home strip
 and the korner's **"Now"** section — then it leaves those live surfaces
@@ -18,11 +19,20 @@ everyone's way, but it's kept (the author can always find it, and it
 stays visible to whoever its visibility allowed). `hub_teaser` still
 sums up the feeling: _"Gone by morning."_
 
-## What a Moment is (locked 2026-07-29 · reconciled with the shipped model 2026-07-30)
+## What a Moment is (locked 2026-07-29 · reconciled with the shipped model 2026-07-30 · voice-clip pairing added 2026-08-04)
 
-- **Content** — one photo, or one video (≤ 60 s), with an optional
-  caption. No multi-image posts. No text-only Moments. The visual is
-  the primary object; caption is subordinate.
+- **Content** — one of three shapes, with an optional caption:
+  - one **photo**, or
+  - one **video** (≤ 60 s), or
+  - one **photo + voice clip** (≤ 60 s of audio, played over the
+    still).
+
+  No multi-image posts. No text-only Moments. No voice-only Moments
+  (voice always sits under a still — the visual carries first, audio
+  reinforces). Voice does not pair with video; video has its own
+  audio track. The visual is the primary object; caption is
+  subordinate to it and audio is subordinate to both.
+
 - **Expiry & the log** — **fixed 24 hours** of live prominence from post
   time (not user-adjustable; the mechanic is the identity). At 24h a
   Moment leaves the strip and the korner's "Now" section but is **not
@@ -52,7 +62,10 @@ Status). Its surfaces are:
    Home feed showing the currently **active** Moments you're permitted
    to see. **Empty state**: a compose CTA ("Share a Moment"); the owner
    tile sits on the left. The full-screen viewer opens on tap and cycles
-   through the stack.
+   through the stack. A photo+voice Moment is signalled with a small
+   audio indicator on the ring; the voice plays over the still once
+   the viewer opens (the tap-to-open is the browser gesture that
+   unlocks audio autoplay).
 2. **`/hub/moments` korner** — two sections over the same
    visibility-gated collection:
    - **Now** — active Moments (still inside the 24h window), each tile
@@ -74,13 +87,28 @@ sections rather than optional badges.
 
 **Shipped:**
 
-1. **Media pick** — upload a photo or video (≤ 60 s).
+1. **Media pick** — upload a photo or video (≤ 60 s), or capture
+   one live via the OS camera (`<input capture="environment">` — see
+   PR #1112).
 2. **Caption** — one line, optional.
 3. **Visibility** — the reach ladder: Public / Orbit / Mates
    (**default**) / Only me / Krew. Choosing **Krew** reveals a
    single-select picker of your own krews (the shared
    `KornerKrewPicker`); Post stays disabled until a krew is chosen.
 4. **Post** — button.
+
+**In flight:**
+
+5. **Voice clip (photo Moments only)** — once a still photo has
+   been chosen, a "Record voice" affordance appears under the media
+   preview. Uses the `MediaRecorder` browser API to capture up to
+   60 s of audio; live tap to start / tap to stop, with a running
+   timer. The recorded clip can be cleared and re-recorded before
+   posting. Suppressed when the picked media is a video (video
+   carries its own audio track). Format is whatever the browser
+   produces — `audio/webm` (Chromium/Firefox) or `audio/mp4`
+   (Safari); both round-trip through the standard MediaAttachment
+   pipeline unchanged.
 
 **Deferred — cross-korner attachments** (each a future collapsible
 section; none shipped in v1):
@@ -140,7 +168,10 @@ it's a broadcast surface, not a reactive one.
 - `moments` table (shipped) — the primary row. Fields: `id`,
   `account_id`, `media_attachment_id`, `caption`, `visibility`,
   `krew_id` (nullable), `status_id` (nullable — **legacy**; a Moment no
-  longer creates a backing Status), `expires_at`, `created_at`.
+  longer creates a backing Status), `expires_at`, `created_at`,
+  and (from the voice-pairing PR) `voice_media_attachment_id`
+  (nullable — populated only for photo+voice Moments; enforced null
+  when the primary `media_attachment_id` refers to a video).
   `visibility` is the reach-ladder enum: `public` (0) / `mates` (1) /
   `krew` (2) / `orbit` (3) / `self_only` (4), with a
   `krew_only_when_krew_visibility` validation keeping `krew_id`
@@ -210,6 +241,14 @@ which can land without any attach flow.
   v1 without? Then add?
 - **Video codec + max size** — h264 or h265 acceptable? What's the
   DO Spaces cap per Moment? Media pipeline work.
+- **Voice-clip max length + waveform preview** — spec caps at 60 s to
+  mirror the video cap; do we surface a waveform (nice) or just an
+  audio scrubber (cheap) in the viewer? Waveform is the polish
+  follow-up; MVP is the browser's default audio controls hidden
+  behind a play/pause tap over the still.
+- **Photo+voice ring indicator** — the strip signals a voice-carrying
+  Moment somehow (small dot on the ring? subtle waveform arc? tiny
+  mic glyph?). Pick before the composer ships.
 
 ## Related
 
