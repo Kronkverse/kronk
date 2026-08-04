@@ -1,0 +1,275 @@
+@use 'variables';
+
+// Shared media-capture surfaces — voice recorder, voice player,
+// waveform bars, camera+library pick buttons. Consumed by any korner
+// composer or chat surface that needs voice/media capture (Moments
+// first; Nudges + others to follow). Class names are generic —
+// consumers only re-namespace when they need positioning overrides
+// on the shared class.
+
+// ── Waveform primitive ───────────────────────────────────────────
+.waveform-bars {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 32px;
+
+  &__bar {
+    flex: 1;
+    border-radius: 2px;
+    background: var(--accent);
+    opacity: 0.55;
+    height: calc(var(--bar-h, 0.1) * 100%);
+    min-height: 3px;
+    transition: height 0.06s ease;
+
+    &--played {
+      opacity: 0.95;
+    }
+  }
+
+  &--live &__bar {
+    background: variables.$error-red;
+    opacity: 0.85;
+    transition: height 0.03s linear;
+  }
+}
+
+// ── Voice recorder (idle → recording → preview) ─────────────────
+.voice-recorder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-medium);
+
+  &--idle {
+    background: var(--surface-elevated);
+    border: 1px dashed var(--border-default);
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+    justify-content: center;
+    padding: 10px 14px;
+
+    svg {
+      width: 16px;
+      height: 16px;
+      fill: currentcolor;
+    }
+
+    &:hover:not(:disabled) {
+      color: var(--text-primary);
+      border-style: solid;
+      border-color: var(--accent);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+
+  &--recording {
+    background: var(--surface-elevated);
+    border: 1px solid variables.$error-red;
+  }
+
+  &--preview {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+  }
+
+  &__dot {
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: variables.$error-red;
+    animation: voice-recorder-pulse 1s ease-in-out infinite;
+  }
+
+  &__timer,
+  &__duration {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-secondary);
+    min-width: 28px;
+    text-align: right;
+  }
+
+  &__stop {
+    flex-shrink: 0;
+    background: variables.$error-red;
+    border: 0;
+    border-radius: 50%;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 16px;
+      height: 16px;
+      fill: currentcolor;
+    }
+  }
+
+  &__play {
+    flex-shrink: 0;
+    background: var(--accent);
+    border: 0;
+    border-radius: 50%;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 18px;
+      height: 18px;
+      fill: currentcolor;
+    }
+  }
+
+  &__remove {
+    flex-shrink: 0;
+    background: none;
+    border: 0;
+    color: var(--text-secondary);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: var(--radius-small);
+
+    &:hover {
+      color: variables.$error-red;
+    }
+  }
+
+  &__preview-audio {
+    display: none;
+  }
+
+  &__label {
+    // Sits inside the idle button next to the mic glyph.
+  }
+}
+
+@keyframes voice-recorder-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+// ── Voice player (inline playback with waveform) ────────────────
+.voice-player {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 180px;
+
+  &__play {
+    flex-shrink: 0;
+    background: rgb(255 255 255 / 20%);
+    border: 0;
+    border-radius: 50%;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 16px;
+      height: 16px;
+      fill: currentcolor;
+    }
+
+    &:hover {
+      background: rgb(255 255 255 / 30%);
+    }
+  }
+
+  &__waveform {
+    height: 28px;
+  }
+
+  &__time {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: rgb(255 255 255 / 70%);
+    min-width: 28px;
+    text-align: right;
+  }
+
+  // Right-aligned chat bubble variant — inverted colours for
+  // consumers that render on a light bubble.
+  &--sent &__play {
+    background: rgb(0 0 0 / 15%);
+    color: var(--text-primary);
+
+    &:hover {
+      background: rgb(0 0 0 / 25%);
+    }
+  }
+
+  &--sent &__time {
+    color: var(--text-secondary);
+  }
+}
+
+// ── Camera + library pick pair ──────────────────────────────────
+.media-pick-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+
+  &__input {
+    display: none;
+  }
+
+  &__btn {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: var(--radius-medium);
+    border: 1px dashed var(--border-default);
+    background: var(--surface-elevated);
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    text-align: center;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      color: var(--text-primary);
+      border-style: solid;
+      border-color: var(--accent);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+}
