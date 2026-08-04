@@ -328,7 +328,7 @@ Rails.application.routes.draw do
   # router resolves /hub/klot.
   get '/hub/klot', to: 'home#index'
   get '/hub/klot/*path', to: 'home#index', format: false
-  # Framework surfaces reached from the Ӂ menu — SPA-only, no controller.
+  # Framework surfaces reached from the Ж menu — SPA-only, no controller.
   # Without these, a direct load / hard-reload of the deep link 404s.
   get '/hub/search', to: 'home#index'
   get '/hub/you', to: 'home#index'

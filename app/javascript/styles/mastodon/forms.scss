@@ -210,7 +210,7 @@ code {
   // Welcome step — the first stop in the four-step signup. Centred
   // typography (title, preamble, bullets) so it reads like an
   // introduction card, not a form. Rules/Privacy/Details keep their
-  // left-aligned reading rhythm. A faded `Ӂ` sits behind the content
+  // left-aligned reading rhythm. A faded `Ж` sits behind the content
   // as a watermark — Kronk's sigil, painted in ~8% Kronk-purple so
   // the wording stays fully readable. Only on the Welcome step
   // because it's the landing card; forms don't want visual noise
@@ -221,7 +221,7 @@ code {
     isolation: isolate;
 
     &::before {
-      content: 'Ӂ';
+      content: 'Ж';
       position: absolute;
       inset: 0;
       display: flex;

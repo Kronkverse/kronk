@@ -430,7 +430,7 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
               >
                 <span className='lattice-row__icon'>
                   {isCore ? (
-                    <span className='lattice-core-glyph'>Ӂ</span>
+                    <span className='lattice-core-glyph'>Ж</span>
                   ) : (
                     <Icon id='' icon={latticeIcon(node, ROOT_ID)} />
                   )}

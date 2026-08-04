@@ -31,7 +31,7 @@ class Api::V1::KrewsController < Api::BaseController
               # non-listed ones — private krews only surface here.
               current_account.krews.reorder(last_activity_at: :desc)
             when 'all'
-              # Listed + viewer's own, union'd. Useful for the Ӂ menu
+              # Listed + viewer's own, union'd. Useful for the Ж menu
               # "Krews" surface where users want both.
               listed = Krew.listed
               mine   = current_account&.krews || Krew.none

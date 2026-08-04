@@ -28,7 +28,7 @@ const LIMB_ICON: Record<string, IconProp> = {
 };
 
 // A node's icon, by what it is: the korner mark for a korner, the limb's icon
-// for a limb, a generic page mark otherwise. The core (Ӂ) is drawn by the
+// for a limb, a generic page mark otherwise. The core (Ж) is drawn by the
 // component itself, not here.
 export const latticeIcon = (node: MapNode, rootId: string): IconProp => {
   if (node.korner) return kornerIcon(node.korner);

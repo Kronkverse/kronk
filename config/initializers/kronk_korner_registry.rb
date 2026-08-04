@@ -39,7 +39,7 @@ module Kronk
       :notifications,
       :feed_projection,
       :settings,
-      # Compose action (§K.10) — powers the Ӂ menu's Post button when
+      # Compose action (§K.10) — powers the Ж menu's Post button when
       # the viewer is inside this korner. Shape: { 'label' => String,
       # 'route' => String }. Optional; if absent the menu hides Post.
       :compose,
@@ -275,7 +275,7 @@ module Kronk
 
       # Compose action must be a Hash with String label + String route.
       # Anything else (nil, wrong shape, missing field) resolves to nil so
-      # the Ӂ menu hides the Post item for this korner.
+      # the Ж menu hides the Post item for this korner.
       def extract_compose(yaml)
         raw = yaml['compose']
         return nil unless raw.is_a?(Hash)

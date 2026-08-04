@@ -85,9 +85,9 @@ font:
 #   small   →  6px   inline chips, small icon buttons, focus rings,
 #                    dropdown items
 #   medium  →  10px  cards, panels, dropdowns, sidebar korner tiles,
-#                    Ӂ menu items
+#                    Ж menu items
 #   large   →  16px  hero surfaces — the top strip, the sidebar, hub
-#                    korner cards, Ӂ menu panel, modal frames
+#                    korner cards, Ж menu panel, modal frames
 #   round   →  999px pills — HubSwitcher, tags, badges, tune-in
 #                    controls, every capsule button
 #

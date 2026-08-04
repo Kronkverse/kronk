@@ -27,7 +27,7 @@ const messages = defineMessages({
 // clicking a Finger in the Kommons tree: the "what is this page, and what's
 // being proposed about it" view. It never opens the product page directly —
 // a "Go to this page" button does that, so the tree stays a governance surface.
-// Create a proposal about this page via the Ӂ menu (scoped to this node).
+// Create a proposal about this page via the Ж menu (scoped to this node).
 const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
   const { nodeId = '' } = useParams<{ nodeId: string }>();
   const intl = useIntl();

@@ -1,11 +1,11 @@
-// Kronk chrome — wordmark, hub-switcher, and Ӂ-menu styling.
+// Kronk chrome — wordmark, hub-switcher, and Ж-menu styling.
 // Phase 12 rebuild: classic Mastodon side nav is hidden below;
 // KronkWordmark + HubSwitcher + KronkMenu take over the navigation
 // surfaces.
 
 // The classic Mastodon NavigationBar + side navigation panel are RETIRED
 // (removed from render — see ui/index.jsx + columns_area.jsx); the Kronk
-// chrome (wordmark, hub-switcher, Ӂ-menu) is the navigation surface. The
+// chrome (wordmark, hub-switcher, Ж-menu) is the navigation surface. The
 // tabs-bar wrapper is still rendered by columns_area as a portal host for
 // mobile column headers, so it stays hidden here.
 .tabs-bar,
@@ -516,7 +516,7 @@ body:has(.korner-sub-bar) {
 
 // Center the main timeline on the page. Classic Mastodon leaves the
 // timeline flush-left with a fixed right pane; Kronk chrome hides the
-// side nav and floats the Ӂ menu, so the main column should occupy
+// side nav and floats the Ж menu, so the main column should occupy
 // the middle rather than sit on the left. Applies only above the
 // mobile breakpoint.
 @media (width >= 890px) {
@@ -546,7 +546,7 @@ body:has(.korner-sub-bar) {
     display: none;
   }
 
-  // Compose is reached from the Ӂ menu now, not a persistent left
+  // Compose is reached from the Ж menu now, not a persistent left
   // column. Hide the compositional (compose) pane so content centres in
   // the full width instead of being shoved right by an empty compose
   // box — and so wide surfaces (the profile) aren't crammed + clipped.
@@ -948,9 +948,9 @@ body:has(.korner-sub-bar) {
     box-shadow: none;
   }
 
-  // Collapsed variant — single-line pill + Ӂ sigil button. Click either
+  // Collapsed variant — single-line pill + Ж sigil button. Click either
   // half → expands into the full compose form. Matches the aesthetic of
-  // the KronkMenu (Ӂ) so it reads as a peer surface, not a form.
+  // the KronkMenu (Ж) so it reads as a peer surface, not a form.
   &--collapsed {
     display: flex;
     align-items: center;
@@ -1050,7 +1050,7 @@ body:has(.korner-sub-bar) {
 // input surface, sharp 4px corners, blue focus). Retarget them plus
 // the older `.privacy-dropdown__*` classes (still used by other
 // consumers of the same shared DropdownSelector) to Kronk semantic
-// tokens with the KronkMenu (Ӂ) menu-language: layered purple-tinted
+// tokens with the KronkMenu (Ж) menu-language: layered purple-tinted
 // elevation, backdrop blur, --radius-large corners, spring entry, and
 // row hover with translateX + purple wash.
 // Scoped to `.privacy-dropdown__*` + `.visibility-dropdown__*` — the

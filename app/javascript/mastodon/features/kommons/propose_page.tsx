@@ -36,7 +36,7 @@ const messages = defineMessages({
   removeDoc: { id: 'propose.remove_doc', defaultMessage: 'Remove document' },
 });
 
-// Plant a proposal (Kommons' native "compose"). Reached from the Ӂ menu or a
+// Plant a proposal (Kommons' native "compose"). Reached from the Ж menu or a
 // Space page's button. When opened with ?space=<slug> it scopes the proposal
 // to that space, anchoring it to the space's index node so it lands on the
 // Space page and the Kommons tree. Without a space it's an unscoped proposal.

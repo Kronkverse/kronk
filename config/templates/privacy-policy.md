@@ -1,4 +1,4 @@
-ӁЯѺƝ₭ doesn't track you, profile you, or sell your data. We collect only what's needed to make the service work—nothing more.
+ЖЯѺƝ₭ doesn't track you, profile you, or sell your data. We collect only what's needed to make the service work—nothing more.
 
 You own what you create here. If that sounds right, welcome home.
 
