@@ -36,6 +36,14 @@ Rails.application.config.after_initialize do
     event = entry['event']
     next unless event
 
+    # A listen entry may declare `aggregation: { window: <Nm|Nh|Ns> }`. When it
+    # does, a burst of the same event on the same subject collapses into a
+    # single re-floating nudge per recipient within the window, instead of one
+    # nudge per occurrence (see Nudges::EventRouter#aggregable_event). Resolved
+    # once here and captured by the subscriber closure.
+    aggregation = entry['aggregation']
+    aggregate_window = (Nudges::Aggregator.parse_window(aggregation['window']) if aggregation.is_a?(Hash) && aggregation['window'])
+
     Kronk::KornerEvents.subscribe(event) do |payload|
       actor     = Account.find_by(id: payload[:actor_account_id])
       recipient = Account.find_by(id: payload[:recipient_account_id])
@@ -55,7 +63,8 @@ Rails.application.config.after_initialize do
         source_id: source_id,
         interaction: entry['interaction'] || 'passive',
         cta_label: NUDGES_TEMPLATE.call(entry['cta_label'], payload),
-        cta_route: NUDGES_TEMPLATE.call(entry['cta_route'], payload)
+        cta_route: NUDGES_TEMPLATE.call(entry['cta_route'], payload),
+        aggregate_window: aggregate_window
       )
     end
   end
