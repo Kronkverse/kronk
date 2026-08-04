@@ -32,10 +32,12 @@ import { ProfileHeader } from './components/profile_header';
 import { ShelvesStack } from './components/shelves_stack';
 
 // Shelved profile — the rebuild of the sectioned profile per
-// docs/spaces/profile.md and the 2026-08-01 questioning round. The
-// route mounts at `/@:acct/shelves` in parallel with the existing
-// SectionedProfile so both can be developed side-by-side; the older
-// route retires once the shelved surface reaches parity.
+// docs/spaces/profile.md and the 2026-08-01 questioning round.
+// Renders at `/@:acct`, `/@:acct/profile`, and `/@:acct/shelves`.
+// The old SectionedProfile retired 2026-08-01 — its 1626 lines +
+// _sectioned_profile.scss are gone; `/@:acct/shelves` sticks around
+// as an explicit alias for inbound links that were minted during
+// the parallel development window.
 //
 // The page has three pillars in the membrane:
 //
@@ -242,10 +244,11 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
         <div className='profile-shelves__loading'>
           {intl.formatMessage(messages.loading)}
         </div>
-      ) : mode === 'arrange' && isOwner ? (
+      ) : mode === 'arrange' && isOwner && account ? (
         <ArrangeStage
           cards={cards ?? []}
           sections={sections ?? []}
+          ownerAccountId={account.id}
           onChange={handleArrangeChange}
         />
       ) : nothingShown ? (
@@ -265,9 +268,13 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
             intl.formatMessage(messages.emptyViewer)
           )}
         </div>
-      ) : (
-        <ShelvesStack cards={cards ?? []} sections={sections ?? []} />
-      )}
+      ) : account ? (
+        <ShelvesStack
+          accountId={account.id}
+          cards={cards ?? []}
+          sections={sections ?? []}
+        />
+      ) : null}
     </Column>
   );
 };

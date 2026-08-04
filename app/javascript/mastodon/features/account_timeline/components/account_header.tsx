@@ -974,9 +974,9 @@ export const AccountHeader: React.FC<{
 
       {!(hideTabs || hidden) && (
         <div className='account__section-headline'>
-          {/* Sections is the Kronk 2.0 profile default (/@user renders
-              SectionedProfile). Posts remains available under /posts
-              for viewers who prefer the flat feed. */}
+          {/* The shelved profile is the Kronk 2.0 default (/@user
+              renders ProfileShelves). Posts remains available under
+              /posts for viewers who prefer the flat feed. */}
           <NavLink exact to={`/@${account.acct}`}>
             <FormattedMessage id='account.sections' defaultMessage='Sections' />
           </NavLink>

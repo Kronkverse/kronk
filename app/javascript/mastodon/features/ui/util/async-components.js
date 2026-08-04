@@ -291,10 +291,6 @@ export function ProfileSectionsSettings () {
   return import("../../profile_sections_settings").then(m => ({ default: m.ProfileSectionsSettings }));
 }
 
-export function SectionedProfile () {
-  return import("../../sectioned_profile").then(m => ({ default: m.SectionedProfile }));
-}
-
 export function ProfileShelves () {
   return import("../../profile_shelves");
 }

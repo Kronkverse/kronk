@@ -95,6 +95,7 @@ const ORDER_LABELS: Record<OrderMode, keyof typeof messages> = {
 
 interface ArrangeSlabProps {
   slabKey: string;
+  family: 'told' | 'drawn';
   name: string;
   source: string | null; // null → told; string label → drawn
   visible: boolean;
@@ -102,16 +103,28 @@ interface ArrangeSlabProps {
   order?: OrderMode; // drawn only
   canMoveUp: boolean;
   canMoveDown: boolean;
+  isDragging?: boolean;
+  isDragTarget?: 'above' | 'below' | null;
   onMoveUp: (key: string) => void;
   onMoveDown: (key: string) => void;
   onToggleVisible: (key: string) => void;
   onCycleReach: (key: string) => void;
   onCycleOrder?: (key: string) => void;
   onRemove: (key: string) => void;
+  onEdit?: (key: string) => void;
+  onDragStart?: (key: string, family: 'told' | 'drawn') => void;
+  onDragOver?: (
+    key: string,
+    family: 'told' | 'drawn',
+    pos: 'above' | 'below',
+  ) => void;
+  onDragEnd?: () => void;
+  onDrop?: (key: string, family: 'told' | 'drawn') => void;
 }
 
 export const ArrangeSlab: React.FC<ArrangeSlabProps> = ({
   slabKey,
+  family,
   name,
   source,
   visible,
@@ -119,12 +132,19 @@ export const ArrangeSlab: React.FC<ArrangeSlabProps> = ({
   order,
   canMoveUp,
   canMoveDown,
+  isDragging,
+  isDragTarget,
   onMoveUp,
   onMoveDown,
   onToggleVisible,
   onCycleReach,
   onCycleOrder,
   onRemove,
+  onEdit,
+  onDragStart,
+  onDragOver,
+  onDragEnd,
+  onDrop,
 }) => {
   const intl = useIntl();
 
@@ -146,12 +166,70 @@ export const ArrangeSlab: React.FC<ArrangeSlabProps> = ({
   const handleRemove = useCallback(() => {
     onRemove(slabKey);
   }, [onRemove, slabKey]);
+  const handleEdit = useCallback(() => {
+    onEdit?.(slabKey);
+  }, [onEdit, slabKey]);
+
+  const handleDragStart = useCallback(
+    (e: React.DragEvent) => {
+      if (!onDragStart) return;
+      // Empty text/plain payload keeps the browser from painting a
+      // "no-drop" cursor over the target area.
+      e.dataTransfer.setData('text/plain', slabKey);
+      e.dataTransfer.effectAllowed = 'move';
+      onDragStart(slabKey, family);
+    },
+    [family, onDragStart, slabKey],
+  );
+
+  const handleDragOver = useCallback(
+    (e: React.DragEvent) => {
+      if (!onDragOver) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pos = e.clientY < rect.top + rect.height / 2 ? 'above' : 'below';
+      onDragOver(slabKey, family, pos);
+    },
+    [family, onDragOver, slabKey],
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      if (!onDrop) return;
+      e.preventDefault();
+      onDrop(slabKey, family);
+    },
+    [family, onDrop, slabKey],
+  );
+
+  const slabClass = [
+    'profile-shelves__slab',
+    visible ? '' : 'profile-shelves__slab--off',
+    isDragging ? 'profile-shelves__slab--dragging' : '',
+    isDragTarget === 'above' ? 'profile-shelves__slab--drop-above' : '',
+    isDragTarget === 'below' ? 'profile-shelves__slab--drop-below' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <div
-      className={`profile-shelves__slab${visible ? '' : ' profile-shelves__slab--off'}`}
+      className={slabClass}
+      draggable={onDragStart !== undefined}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onDragEnd={onDragEnd}
     >
       <div className='profile-shelves__slab-grip'>
+        <span
+          className='profile-shelves__slab-grip-handle'
+          aria-hidden='true'
+          title='Drag to reorder'
+        >
+          ⋮⋮
+        </span>
         <button
           type='button'
           className='profile-shelves__slab-grip-btn'
@@ -172,12 +250,25 @@ export const ArrangeSlab: React.FC<ArrangeSlabProps> = ({
         </button>
       </div>
 
-      <div className='profile-shelves__slab-body'>
-        <div className='profile-shelves__slab-name'>{name}</div>
-        <div className='profile-shelves__slab-source'>
-          {source ?? intl.formatMessage(messages.written)}
+      {onEdit ? (
+        <button
+          type='button'
+          className='profile-shelves__slab-body profile-shelves__slab-body--edit'
+          onClick={handleEdit}
+        >
+          <div className='profile-shelves__slab-name'>{name}</div>
+          <div className='profile-shelves__slab-source'>
+            {source ?? intl.formatMessage(messages.written)}
+          </div>
+        </button>
+      ) : (
+        <div className='profile-shelves__slab-body'>
+          <div className='profile-shelves__slab-name'>{name}</div>
+          <div className='profile-shelves__slab-source'>
+            {source ?? intl.formatMessage(messages.written)}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className='profile-shelves__slab-ctl'>
         {order && onCycleOrder && (

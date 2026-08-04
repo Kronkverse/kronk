@@ -21,6 +21,8 @@ import {
 import type { OrderMode, Reach } from './arrange_slab';
 import { ArrangeSlab, ORDER_ORDER, REACH_ORDER } from './arrange_slab';
 import { LibraryGrid } from './library_grid';
+import { PostPicker } from './post_picker';
+import { TellComposer } from './tell_composer';
 
 // The owner's arrange surface. Renders a slab per shelf (cards +
 // sections combined into one owner-facing list) with grip / reach /
@@ -99,6 +101,7 @@ const next = <T,>(list: readonly [T, ...T[]], current: T): T => {
 interface ArrangeStageProps {
   cards: ApiProfileCardJSON[];
   sections: ApiProfileSectionJSON[];
+  ownerAccountId: string;
   onChange: (next: {
     cards: ApiProfileCardJSON[];
     sections: ApiProfileSectionJSON[];
@@ -108,6 +111,7 @@ interface ArrangeStageProps {
 export const ArrangeStage: React.FC<ArrangeStageProps> = ({
   cards: initialCards,
   sections: initialSections,
+  ownerAccountId,
   onChange,
 }) => {
   const intl = useIntl();
@@ -115,6 +119,16 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
   const [cards, setCards] = useState(initialCards);
   const [sections, setSections] = useState(initialSections);
   const [library, setLibrary] = useState<ApiProfileLibraryJSON | null>(null);
+  const [composing, setComposing] = useState<string | null>(null);
+  const [picking, setPicking] = useState<string | null>(null);
+  const [dragging, setDragging] = useState<{
+    key: string;
+    family: 'told' | 'drawn';
+  } | null>(null);
+  const [dragTarget, setDragTarget] = useState<{
+    key: string;
+    pos: 'above' | 'below';
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -301,8 +315,50 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
       void apiUpdateProfileSection(id, { settings: nextSettings }).catch(() => {
         setSections(sections);
       });
+      // Landing on `chosen` for the first time (or with no picks yet)
+      // is a good moment to prompt the owner to populate them — but
+      // don't force-open on every cycle, only when the mode flips to
+      // chosen from something else AND there's no curated list yet.
+      if (
+        nextOrder === 'chosen' &&
+        Array(section.settings.order_ids as string[] | undefined).length === 0
+      ) {
+        setPicking(id);
+      }
     },
     [cards, publish, sections],
+  );
+
+  const openPicker = useCallback((id: string) => {
+    setPicking(id);
+  }, []);
+
+  const closePicker = useCallback(() => {
+    setPicking(null);
+  }, []);
+
+  const handlePickerSaved = useCallback(
+    (orderIds: string[]) => {
+      if (!picking) return;
+      const section = sections.find((s) => s.id === picking);
+      if (!section) {
+        setPicking(null);
+        return;
+      }
+      const nextSettings = {
+        ...section.settings,
+        order: 'chosen',
+        order_ids: orderIds,
+      };
+      publish(
+        cards,
+        sections.map((s) =>
+          s.id === picking ? { ...s, settings: nextSettings } : s,
+        ),
+      );
+      setPicking(null);
+    },
+    [cards, picking, publish, sections],
   );
 
   const moveSectionUp = useCallback(
@@ -316,6 +372,102 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
       moveSection(key, 1);
     },
     [moveSection],
+  );
+
+  // ── Drag reorder ────────────────────────────────────────────────
+  const handleDragStart = useCallback(
+    (key: string, family: 'told' | 'drawn') => {
+      setDragging({ key, family });
+      setDragTarget(null);
+    },
+    [],
+  );
+
+  const handleDragOver = useCallback(
+    (key: string, family: 'told' | 'drawn', pos: 'above' | 'below') => {
+      // Only allow drop within the same family — cards and sections
+      // have their own reorder endpoints, and cross-family drop would
+      // need a shared position we don't have yet.
+      if (dragging && dragging.family === family) {
+        setDragTarget({ key, pos });
+      }
+    },
+    [dragging],
+  );
+
+  const handleDragEnd = useCallback(() => {
+    setDragging(null);
+    setDragTarget(null);
+  }, []);
+
+  const handleDropCards = useCallback(
+    (targetKey: string, pos: 'above' | 'below') => {
+      if (
+        !dragging ||
+        dragging.family !== 'told' ||
+        dragging.key === targetKey
+      ) {
+        return;
+      }
+      const fromIdx = cards.findIndex((c) => c.card_type === dragging.key);
+      const targetIdx = cards.findIndex((c) => c.card_type === targetKey);
+      if (fromIdx < 0 || targetIdx < 0) return;
+      const nextCards = [...cards];
+      const [moved] = nextCards.splice(fromIdx, 1);
+      if (!moved) return;
+      // If we removed something before the target, the target's index
+      // shifts down by 1.
+      const insertBase = fromIdx < targetIdx ? targetIdx - 1 : targetIdx;
+      const insertAt = pos === 'below' ? insertBase + 1 : insertBase;
+      nextCards.splice(insertAt, 0, moved);
+      publish(nextCards, sections);
+      void apiReorderProfileCards(nextCards.map((c) => c.card_type)).catch(
+        () => {
+          setCards(cards);
+        },
+      );
+    },
+    [cards, dragging, publish, sections],
+  );
+
+  const handleDropSections = useCallback(
+    (targetKey: string, pos: 'above' | 'below') => {
+      if (
+        !dragging ||
+        dragging.family !== 'drawn' ||
+        dragging.key === targetKey
+      ) {
+        return;
+      }
+      const fromIdx = sections.findIndex((s) => s.id === dragging.key);
+      const targetIdx = sections.findIndex((s) => s.id === targetKey);
+      if (fromIdx < 0 || targetIdx < 0) return;
+      const nextSections = [...sections];
+      const [moved] = nextSections.splice(fromIdx, 1);
+      if (!moved) return;
+      const insertBase = fromIdx < targetIdx ? targetIdx - 1 : targetIdx;
+      const insertAt = pos === 'below' ? insertBase + 1 : insertBase;
+      nextSections.splice(insertAt, 0, moved);
+      publish(cards, nextSections);
+      void apiReorderProfileSections(nextSections.map((s) => s.id)).catch(
+        () => {
+          setSections(sections);
+        },
+      );
+    },
+    [cards, dragging, publish, sections],
+  );
+
+  const handleDrop = useCallback(
+    (targetKey: string, family: 'told' | 'drawn') => {
+      if (!dragTarget) return;
+      const pos = dragTarget.pos;
+      setDragging(null);
+      setDragTarget(null);
+      if (family === 'told') handleDropCards(targetKey, pos);
+      else handleDropSections(targetKey, pos);
+    },
+    [dragTarget, handleDropCards, handleDropSections],
   );
 
   const removeSection = useCallback(
@@ -332,17 +484,29 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
   );
 
   // ── Library adds ────────────────────────────────────────────────
-  const addCardFromLibrary = useCallback(
-    (cardType: string) => {
-      void apiUpsertProfileCard(cardType, {
-        body: '',
-        visibility: 'only_me',
-        visible: false,
-      })
-        .then((created) => {
-          publish([...cards, created], sections);
-        })
-        .catch(() => undefined);
+  // Adding a told preset opens the composer for that card_type. The
+  // composer upserts on save; nothing is created if the owner cancels.
+  const addCardFromLibrary = useCallback((cardType: string) => {
+    setComposing(cardType);
+  }, []);
+
+  const openComposerForExisting = useCallback((cardType: string) => {
+    setComposing(cardType);
+  }, []);
+
+  const closeComposer = useCallback(() => {
+    setComposing(null);
+  }, []);
+
+  const handleComposerSaved = useCallback(
+    (saved: ApiProfileCardJSON) => {
+      const idx = cards.findIndex((c) => c.card_type === saved.card_type);
+      const nextCards =
+        idx < 0
+          ? [...cards, saved]
+          : cards.map((c) => (c.card_type === saved.card_type ? saved : c));
+      publish(nextCards, sections);
+      setComposing(null);
     },
     [cards, publish, sections],
   );
@@ -385,6 +549,7 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
           <ArrangeSlab
             key={`card-${card.card_type}`}
             slabKey={card.card_type}
+            family='told'
             name={
               CARD_TITLE[card.card_type] ?? card.card_type.replaceAll('_', ' ')
             }
@@ -393,11 +558,20 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
             reach={card.visibility}
             canMoveUp={i > 0}
             canMoveDown={i < cards.length - 1}
+            isDragging={dragging?.key === card.card_type}
+            isDragTarget={
+              dragTarget?.key === card.card_type ? dragTarget.pos : null
+            }
             onMoveUp={moveCardUp}
             onMoveDown={moveCardDown}
             onToggleVisible={toggleCardVisible}
             onCycleReach={cycleCardReach}
             onRemove={removeCard}
+            onEdit={openComposerForExisting}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDrop={handleDrop}
           />
         ))}
         {sections.map((section, i) => {
@@ -412,6 +586,7 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
             <ArrangeSlab
               key={`section-${section.id}`}
               slabKey={section.id}
+              family='drawn'
               name={section.title ?? source}
               source={source}
               visible={section.visible}
@@ -419,12 +594,21 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
               order={order}
               canMoveUp={i > 0}
               canMoveDown={i < sections.length - 1}
+              isDragging={dragging?.key === section.id}
+              isDragTarget={
+                dragTarget?.key === section.id ? dragTarget.pos : null
+              }
               onMoveUp={moveSectionUp}
               onMoveDown={moveSectionDown}
+              onEdit={order === 'chosen' ? openPicker : undefined}
               onToggleVisible={toggleSectionVisible}
               onCycleReach={cycleSectionReach}
               onCycleOrder={cycleSectionOrder}
               onRemove={removeSection}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+              onDrop={handleDrop}
             />
           );
         })}
@@ -437,6 +621,37 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
           onAddSection={addSectionFromLibrary}
         />
       )}
+
+      {composing && (
+        <TellComposer
+          cardType={composing}
+          cardTitle={CARD_TITLE[composing] ?? composing.replaceAll('_', ' ')}
+          initial={cards.find((c) => c.card_type === composing) ?? null}
+          onSaved={handleComposerSaved}
+          onCancel={closeComposer}
+        />
+      )}
+
+      {picking &&
+        (() => {
+          const section = sections.find((s) => s.id === picking);
+          if (!section) return null;
+          const kornerSlug =
+            (section.settings.korner_slug as string | undefined) ?? 'korner';
+          const orderIds = Array.isArray(section.settings.order_ids)
+            ? (section.settings.order_ids as string[])
+            : [];
+          return (
+            <PostPicker
+              accountId={ownerAccountId}
+              sectionId={section.id}
+              kornerSlug={kornerSlug}
+              initialOrderIds={orderIds}
+              onSaved={handlePickerSaved}
+              onCancel={closePicker}
+            />
+          );
+        })()}
     </div>
   );
 };
