@@ -196,12 +196,6 @@ class REST::StatusSerializer < ActiveModel::Serializer
     }
   end
 
-  private
-
-  def relationships
-    instance_options && instance_options[:relationships]
-  end
-
   # Belt-and-braces visibility guards on korner has_one associations
   # that carry their own visibility rules independent of the parent
   # Status. In normal operation the publish services (Albutts::PublishAlbum,
@@ -217,12 +211,23 @@ class REST::StatusSerializer < ActiveModel::Serializer
   # already covers them. If a future korner introduces its own visibility
   # ladder (per-record scopes beyond what the Status carries), add a
   # `<korner>_visible_to_viewer?` predicate here too.
+  #
+  # These MUST be public: they back `has_one ..., if:` association
+  # conditions, and AMS evaluates association conditions via public_send
+  # (unlike attribute conditions, which use send). Defining them under
+  # `private` raised NoMethodError on every timeline render.
   def album_visible_to_viewer?
     object.album.present? && object.album.visible_to?(current_user&.account)
   end
 
   def trek_visible_to_viewer?
     object.trek.present? && object.trek.visible_to?(current_user&.account)
+  end
+
+  private
+
+  def relationships
+    instance_options && instance_options[:relationships]
   end
 
   class ApplicationSerializer < ActiveModel::Serializer
