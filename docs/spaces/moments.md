@@ -19,7 +19,7 @@ everyone's way, but it's kept (the author can always find it, and it
 stays visible to whoever its visibility allowed). `hub_teaser` still
 sums up the feeling: _"Gone by morning."_
 
-## What a Moment is (locked 2026-07-29 · reconciled with the shipped model 2026-07-30 · voice-clip pairing added 2026-08-04)
+## What a Moment is (locked 2026-07-29 · reconciled with the shipped model 2026-07-30 · voice-clip pairing shipped 2026-08-04)
 
 - **Content** — one of three shapes, with an optional caption:
   - one **photo**, or
@@ -62,10 +62,10 @@ Status). Its surfaces are:
    Home feed showing the currently **active** Moments you're permitted
    to see. **Empty state**: a compose CTA ("Share a Moment"); the owner
    tile sits on the left. The full-screen viewer opens on tap and cycles
-   through the stack. A photo+voice Moment is signalled with a small
-   audio indicator on the ring; the voice plays over the still once
-   the viewer opens (the tap-to-open is the browser gesture that
-   unlocks audio autoplay).
+   through the stack. A photo+voice Moment is signalled with a **mic
+   glyph badge** on the ring (bottom-right, accent bubble matching the
+   `+` on the owner tile); the voice plays over the still via an
+   inline waveform-driven `<VoicePlayer>` in the viewer.
 2. **`/hub/moments` korner** — two sections over the same
    visibility-gated collection:
    - **Now** — active Moments (still inside the 24h window), each tile
@@ -97,18 +97,19 @@ sections rather than optional badges.
    `KornerKrewPicker`); Post stays disabled until a krew is chosen.
 4. **Post** — button.
 
-**In flight:**
-
 5. **Voice clip (photo Moments only)** — once a still photo has
    been chosen, a "Record voice" affordance appears under the media
-   preview. Uses the `MediaRecorder` browser API to capture up to
-   60 s of audio; live tap to start / tap to stop, with a running
-   timer. The recorded clip can be cleared and re-recorded before
-   posting. Suppressed when the picked media is a video (video
-   carries its own audio track). Format is whatever the browser
-   produces — `audio/webm` (Chromium/Firefox) or `audio/mp4`
-   (Safari); both round-trip through the standard MediaAttachment
-   pipeline unchanged.
+   preview via the shared `<VoiceRecorder>` primitive
+   (`components/media/`). Uses the `MediaRecorder` browser API to
+   capture up to 60 s of audio; tap to start / tap to stop, with a
+   live waveform strip + running timer. Preview surface shows the
+   captured waveform + play/pause + delete. Suppressed when the
+   picked media is a video (video carries its own audio track);
+   enforced at the model level too via
+   `voice_only_paired_with_a_still` validation. Format is whatever
+   the browser produces — `audio/webm` (Chromium/Firefox) or
+   `audio/mp4` (Safari); both round-trip through the standard
+   MediaAttachment pipeline unchanged.
 
 **Deferred — cross-korner attachments** (each a future collapsible
 section; none shipped in v1):
@@ -241,14 +242,13 @@ which can land without any attach flow.
   v1 without? Then add?
 - **Video codec + max size** — h264 or h265 acceptable? What's the
   DO Spaces cap per Moment? Media pipeline work.
-- **Voice-clip max length + waveform preview** — spec caps at 60 s to
-  mirror the video cap; do we surface a waveform (nice) or just an
-  audio scrubber (cheap) in the viewer? Waveform is the polish
-  follow-up; MVP is the browser's default audio controls hidden
-  behind a play/pause tap over the still.
-- **Photo+voice ring indicator** — the strip signals a voice-carrying
-  Moment somehow (small dot on the ring? subtle waveform arc? tiny
-  mic glyph?). Pick before the composer ships.
+- **Voice-clip max length + waveform preview** — **closed
+  2026-08-04**: 60 s cap; **waveform** (both live during recording
+  and captured for playback) via the shared `<VoiceRecorder>` +
+  `<VoicePlayer>` in `components/media/`, not a scrubber.
+- **Photo+voice ring indicator** — **closed 2026-08-04**: **mic
+  glyph** on an accent-coloured bubble in the ring's bottom-right
+  corner (same slot as the owner tile's `+`).
 
 ## Related
 

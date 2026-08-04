@@ -5,7 +5,8 @@
 # this is the only Moment serializer.
 class REST::MomentSerializer < ActiveModel::Serializer
   attributes :id, :caption, :visibility, :expires_at, :active,
-             :froth_count, :frothed_by_viewer, :seen_by_viewer, :created_at
+             :froth_count, :frothed_by_viewer, :seen_by_viewer, :created_at,
+             :voice_url
 
   belongs_to :account, serializer: REST::AccountSerializer
   belongs_to :media_attachment, serializer: REST::MediaAttachmentSerializer
@@ -40,5 +41,13 @@ class REST::MomentSerializer < ActiveModel::Serializer
   # see Kronk::KornerSeen. Moments are keyed under the 'moments' slug.
   def seen_by_viewer
     Kronk::KornerSeen.seen?(current_user&.account, 'moments', object.id)
+  end
+
+  # URL to the paired voice clip on a photo+voice Moment, or nil for
+  # a photo-only / video Moment. Client uses this to render the
+  # <VoicePlayer> overlay + the mic-glyph ring indicator on the
+  # Home strip.
+  def voice_url
+    object.voice_media_attachment&.file&.url(:original)
   end
 end

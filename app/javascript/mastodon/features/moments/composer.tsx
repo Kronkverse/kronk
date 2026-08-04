@@ -1,15 +1,17 @@
-// Moments composer — v1 slice. Uploads one media attachment, adds an
-// optional caption, picks a visibility, posts. The cross-korner
-// attach flows (Kalendar / Krew / Map / Klot / mARTketplace)
-// declared in docs/spaces/moments.md are not shipped in v1; they
-// land in a follow-up.
+// Moments composer. Uploads one media attachment (a photo or a
+// ≤60 s video) and, when the media is a still photo, optionally
+// pairs it with a browser-recorded voice clip (≤60 s). Third media
+// shape spec: docs/spaces/moments.md § What a Moment is.
 //
-// Media upload flow: POST /api/v1/media (multipart) → get the
+// Media upload flow: POST /api/v2/media (multipart) → get the
 // attachment id → POST /api/v1/moments with { media_attachment_id,
-// caption, visibility }.
+// voice_media_attachment_id, caption, visibility }.
+//
+// The cross-korner attach flows (Kalendar / Krew / Map / Klot /
+// mARTketplace) declared in the spec are not shipped in v1 — they
+// land in follow-ups.
 
-import type { ChangeEvent } from 'react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { FormattedMessage } from 'react-intl';
@@ -19,6 +21,8 @@ import axios from 'axios';
 import api, { apiRequestPost } from 'mastodon/api';
 import { KornerKrewPicker } from 'mastodon/components/korner_krew_picker';
 import { KornerVisibilityPicker } from 'mastodon/components/korner_visibility_picker';
+import { MediaPickButtons, VoiceRecorder } from 'mastodon/components/media';
+import type { VoiceRecorderChange } from 'mastodon/components/media';
 
 // Full four-tier ladder + krew (docs/kronk_feed_and_reach.md §2). The
 // shared visibility picker reads `visibility_scopes` from the moments
@@ -39,23 +43,33 @@ interface Props {
 }
 
 const MAX_CAPTION_LENGTH = 500;
+const VOICE_MAX_SECONDS = 60;
 
 export const MomentsComposer = ({ onClose, onPosted }: Props) => {
   const [file, setFile] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
   const [visibility, setVisibility] = useState<Visibility>('mates');
   const [krewId, setKrewId] = useState<string | null>(null);
+  const [voice, setVoice] = useState<VoiceRecorderChange | null>(null);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const libraryInputRef = useRef<HTMLInputElement | null>(null);
-  const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
-  const onFileChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    setFile(event.target.files?.[0] ?? null);
+  // Voice only makes sense over a still photo — video already carries
+  // its own audio track (spec § What a Moment is).
+  const primaryIsStill = useMemo(
+    () => !!file && !file.type.startsWith('video/'),
+    [file],
+  );
+
+  const onFileChange = useCallback((picked: File) => {
+    setFile(picked);
+    // A newly-picked video invalidates any prior voice recording —
+    // don't leave stray state around when the constraint flips.
+    if (picked.type.startsWith('video/')) setVoice(null);
   }, []);
 
   const onCaptionChange = useCallback(
-    (event: ChangeEvent<HTMLTextAreaElement>) => {
+    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
       setCaption(event.target.value.slice(0, MAX_CAPTION_LENGTH));
     },
     [],
@@ -82,6 +96,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
       const mediaId = mediaResp.data.id;
       await apiRequestPost<MomentResponse>('v1/moments', {
         media_attachment_id: mediaId,
+        voice_media_attachment_id: primaryIsStill ? voice?.mediaId : null,
         caption: caption.trim(),
         visibility,
         krew_id: visibility === 'krew' ? krewId : null,
@@ -97,26 +112,22 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
       }
       setPosting(false);
     }
-  }, [file, caption, visibility, krewId, posting, onPosted]);
+  }, [
+    file,
+    primaryIsStill,
+    voice,
+    caption,
+    visibility,
+    krewId,
+    posting,
+    onPosted,
+  ]);
 
   // ESLint no-misused-promises wants a void-returning handler; wrap
   // the async so the promise is dropped intentionally.
   const submit = useCallback(() => {
     void submitAsync();
   }, [submitAsync]);
-
-  const chooseFile = useCallback(() => {
-    libraryInputRef.current?.click();
-  }, []);
-
-  // Camera capture — triggers the OS camera on mobile browsers (the
-  // `capture` attribute on <input type=file> is the standardised path).
-  // Desktop browsers ignore `capture` and fall back to their file
-  // picker, so on a laptop the button behaves the same as "choose from
-  // library" — mild UX bloat, but always functional.
-  const openCamera = useCallback(() => {
-    cameraInputRef.current?.click();
-  }, []);
 
   // Portal to <body> so the fixed overlay escapes the feed column's
   // containing block. On classic feed routes (Home) the ancestor
@@ -149,59 +160,38 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
         </header>
 
         <section className='moments-composer__section'>
-          <label
-            className='moments-composer__label'
-            htmlFor='moments-composer-file'
-          >
+          <span className='moments-composer__label'>
             <FormattedMessage
               id='moments.composer.media'
               defaultMessage='Media'
             />
-          </label>
-          <input
-            ref={libraryInputRef}
-            id='moments-composer-file'
-            className='moments-composer__file'
-            type='file'
-            accept='image/*,video/*'
-            onChange={onFileChange}
-          />
-          <input
-            ref={cameraInputRef}
-            id='moments-composer-camera'
-            className='moments-composer__file'
-            type='file'
-            accept='image/*,video/*'
-            capture='environment'
-            onChange={onFileChange}
-          />
+          </span>
           {file ? (
             <div className='moments-composer__file-summary'>{file.name}</div>
           ) : (
-            <div className='moments-composer__file-buttons'>
-              <button
-                type='button'
-                className='moments-composer__file-picker'
-                onClick={openCamera}
-              >
-                <FormattedMessage
-                  id='moments.composer.capture_media'
-                  defaultMessage='Take a photo or video'
-                />
-              </button>
-              <button
-                type='button'
-                className='moments-composer__file-picker'
-                onClick={chooseFile}
-              >
-                <FormattedMessage
-                  id='moments.composer.pick_media'
-                  defaultMessage='Choose from library'
-                />
-              </button>
-            </div>
+            <MediaPickButtons
+              onPick={onFileChange}
+              className='moments-composer__pick'
+            />
           )}
         </section>
+
+        {primaryIsStill && (
+          <section className='moments-composer__section'>
+            <span className='moments-composer__label'>
+              <FormattedMessage
+                id='moments.composer.voice'
+                defaultMessage='Voice (optional)'
+              />
+            </span>
+            <VoiceRecorder
+              onChange={setVoice}
+              maxSeconds={VOICE_MAX_SECONDS}
+              disabled={posting}
+              className='moments-composer__voice'
+            />
+          </section>
+        )}
 
         <section className='moments-composer__section'>
           <label

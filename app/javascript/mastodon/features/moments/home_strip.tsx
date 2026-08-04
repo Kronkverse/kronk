@@ -11,8 +11,10 @@ import { FormattedMessage } from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 
+import MicIcon from '@/material-icons/400-24px/mic.svg?react';
 import { setKornerSeen } from 'mastodon/actions/korners';
 import { apiRequestGet } from 'mastodon/api';
+import { Icon } from 'mastodon/components/icon';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
@@ -43,6 +45,10 @@ interface MomentJSON {
   // Whether the viewer has already seen this Moment (viewed or frothed) — its
   // ring renders dim rather than bright. See lib/kronk/korner_seen.rb.
   seen_by_viewer?: boolean;
+  // Populated only for photo+voice Moments — drives the mic-glyph
+  // indicator on the ring (spec § Where you see Moments). The
+  // viewer uses this same field to render the <VoicePlayer> overlay.
+  voice_url?: string | null;
 }
 
 interface RingProps {
@@ -84,6 +90,15 @@ const Ring = ({
         {isOwner && !ownerHasMoment && (
           <span className='moments-strip__ring-add' aria-hidden>
             +
+          </span>
+        )}
+        {moment?.voice_url && (
+          <span
+            className='moments-strip__ring-voice'
+            aria-label='has voice'
+            title='has voice'
+          >
+            <Icon id='mic' icon={MicIcon} />
           </span>
         )}
       </span>

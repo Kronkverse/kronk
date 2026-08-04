@@ -32,7 +32,7 @@ class Api::V1::MomentsController < Api::BaseController
     scope = scope.for_account(Account.find(params[:account_id])) if params[:account_id].present?
     scope = params[:filter] == 'log' ? scope.expired : scope.active
 
-    @moments = scope.recent.includes(:account, :media_attachment).limit(60)
+    @moments = scope.recent.includes(:account, :media_attachment, :voice_media_attachment).limit(60)
     render json: @moments, each_serializer: REST::MomentSerializer
   end
 
@@ -84,9 +84,10 @@ class Api::V1::MomentsController < Api::BaseController
   end
 
   def moment_params
-    permitted = params.permit(:media_attachment_id, :caption, :visibility, :krew_id)
+    permitted = params.permit(:media_attachment_id, :voice_media_attachment_id, :caption, :visibility, :krew_id)
     permitted[:visibility] = permitted[:visibility].presence || 'mates'
     permitted[:krew_id] = nil unless permitted[:visibility] == 'krew'
+    permitted[:voice_media_attachment_id] = nil if permitted[:voice_media_attachment_id].blank?
     permitted
   end
 
