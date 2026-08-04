@@ -1692,6 +1692,7 @@ en:
         three: Cross the third threshold
         two: Cross the second threshold
       errors:
+        crossing_failed: Something snagged when we tried to record your crossing. Try once more?
         incomplete: Cross all three thresholds to continue.
       eyebrow:
         one: First threshold

@@ -35,7 +35,27 @@ class Auth::ThresholdsController < ApplicationController
       redirect_to(auth_thresholds_path, alert: I18n.t('kronk.thresholds.errors.incomplete')) && return
     end
 
-    current_user.record_thresholds_crossing!
+    # `record_thresholds_crossing!` is a `User#update!` — it triggers
+    # every model validation (email format, MX check when email
+    # changes, etc.) and every `after_commit` (Devise notifications,
+    # session tracking). A failure anywhere in that chain used to
+    # bubble to a generic 500 that told the member nothing except
+    # "sorry, something went wrong" AFTER they'd committed to all
+    # three vows — the worst possible failure mode for a ritual
+    # surface. Catch broadly, log with the user id + exception, then
+    # redirect back to the ceremony with an actionable alert so the
+    # member can retry.
+    begin
+      current_user.record_thresholds_crossing!
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::StatementInvalid, StandardError => e
+      Rails.logger.error(
+        "Threshold crossing failed for user_id=#{current_user.id} " \
+        "(#{e.class}): #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}"
+      )
+      redirect_to(auth_thresholds_path, alert: I18n.t('kronk.thresholds.errors.crossing_failed'))
+      return
+    end
+
     redirect_to root_path
   end
 end
