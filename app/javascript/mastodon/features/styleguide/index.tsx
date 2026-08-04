@@ -64,7 +64,7 @@ const elevations = [
     var: '--elevation-floating',
     use: 'top strip, sidebar, floating menus',
   },
-  { name: 'menu', var: '--elevation-menu', use: 'Ӂ menu panel, modals' },
+  { name: 'menu', var: '--elevation-menu', use: 'Ж menu panel, modals' },
 ];
 
 const motions = [

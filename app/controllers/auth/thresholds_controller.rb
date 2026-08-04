@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# The threshold ceremony — three concentric rings around Ӂ, one vow
+# The threshold ceremony — three concentric rings around Ж, one vow
 # per ring, crossed in order. See KRONK_SIGNUP.md §4 for the flow
 # and §6 for the canonical vow copy.
 #

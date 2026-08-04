@@ -257,7 +257,7 @@ nodes:
   # ── KRONK (the organisation pillar, §O) ──────────────────────────────
   #
   # The org space is served by KronkController from markdown under
-  # content/kronk/ (routes: `/kronk/:page`); the ӁЯѺƝ₭ wordmark links here.
+  # content/kronk/ (routes: `/kronk/:page`); the ЖЯѺƝ₭ wordmark links here.
   # These nodes put its real pages in the Kommons Directory so members can see and
   # plant proposals about how Kronk itself is run and built. `spa: true` skips
   # the route-name drift check — there is no per-page named Rails route (the

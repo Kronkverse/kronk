@@ -97,13 +97,13 @@ launch: # retrospective — Kommons predates launch cards
   blurb: '₭ommons — the space where structural moves are decided.'
   cta: 'Tap in'
 
-# The Ӂ menu's Post button while inside Kommons. Kommons' native create action
+# The Ж menu's Post button while inside Kommons. Kommons' native create action
 # IS proposing: a proposal is Kommons content. On a Space page the composer
 # scopes the proposal to that space (the bubble appends ?space=<slug>).
 compose:
   label: 'Open a Proposal'
   # Unscoped entry: the target picker (choose which page the proposal is about).
-  # On a space/meta page the Ӂ menu skips this and scopes straight to the
+  # On a space/meta page the Ж menu skips this and scopes straight to the
   # Proposer — see kronk_menu.tsx.
   route: '/hub/kommons/pick'
 

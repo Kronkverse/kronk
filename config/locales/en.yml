@@ -1681,7 +1681,7 @@ en:
         username_hint_taken: "@%{username} is already someone here. Try another."
         username_label: Username
         username_placeholder: yourname
-      wordmark: ӁЯѺƝ₭
+      wordmark: ЖЯѺƝ₭
     thresholds:
       arrival:
         cta_enter: Enter

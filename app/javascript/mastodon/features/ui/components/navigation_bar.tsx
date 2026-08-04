@@ -1,5 +1,5 @@
 // NOTE: the classic <NavigationBar> mobile tabs bar is RETIRED — it is no
-// longer rendered anywhere; the Kronk chrome (HubSwitcher bottom bar + Ӂ
+// longer rendered anywhere; the Kronk chrome (HubSwitcher bottom bar + Ж
 // menu) is the navigation surface. This file is kept only for its shared
 // `messages` export, which compose/index.tsx still reuses. Removing the
 // component entirely means relocating those tabs_bar.* messages first.

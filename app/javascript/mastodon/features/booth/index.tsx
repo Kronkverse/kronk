@@ -135,7 +135,7 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
       });
   }, []);
 
-  // The Ӂ menu's Post button (booth.yaml compose → /hub/booth/new) is the
+  // The Ж menu's Post button (booth.yaml compose → /hub/booth/new) is the
   // single entry to the composer — there is no in-page create button. The
   // upload overlay is open exactly when the URL is /hub/booth/new; closing
   // it (cancel or success) returns to /hub/booth.

@@ -782,7 +782,7 @@ class UI extends PureComponent {
               children instead of self-anchoring with position: fixed.
               KornerSubBar stays as a Frame sibling because it's route-
               conditional (Stage routes retire it, Column routes keep
-              it) and isn't tied to a single slot. KronkMenu (Ӂ) is the
+              it) and isn't tied to a single slot. KronkMenu (Ж) is the
               OVERLAY layer — deliberately outside the grid. */}
           <KronkFrame>
             <KronkFrame.TopBand>

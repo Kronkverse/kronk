@@ -454,7 +454,7 @@ export const ProfileCompose = () => {
 
       <div className='scrollable kcompose'>
         <header className='kcompose__topbar'>
-          <span className='kcompose__wordmark'>ӁЯѺƝ₭</span>
+          <span className='kcompose__wordmark'>ЖЯѺƝ₭</span>
           <span className='kcompose__crumb'>
             <FormattedMessage {...messages.crumbLead} />
             {' · '}

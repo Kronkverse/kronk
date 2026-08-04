@@ -96,7 +96,7 @@ settings:
 compose:
   label: 'Ask a Kuestion'
   # Reuses the same Kuestions shell — the component opens on the Ask
-  # panel when the pathname ends `/ask`. Deep-linkable so the Ӂ menu's
+  # panel when the pathname ends `/ask`. Deep-linkable so the Ж menu's
   # Post can drop the user straight into the composer regardless of
   # which panel they were on last.
   route: '/hub/kuestions/ask'

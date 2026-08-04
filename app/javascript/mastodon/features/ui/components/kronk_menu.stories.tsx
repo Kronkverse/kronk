@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { KronkMenu } from './kronk_menu';
 
-// The Ӂ menu — bottom-right FAB with a spring-in panel.
+// The Ж menu — bottom-right FAB with a spring-in panel.
 // Trimmed to four verbs: Post / Nudges / Search / Settings.
 // Settings entry is context-aware.
 

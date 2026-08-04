@@ -11,7 +11,7 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 
-// Kronk's Ӂ menu — a FLOATING, user-movable action button. Three primary
+// Kronk's Ж menu — a FLOATING, user-movable action button. Three primary
 // verbs: Post / Search / Settings (Nudges moved to the top-bar switcher).
 // The Settings entry is CONTEXT-AWARE — it points at the settings space
 // for the surface the user is on. The Post entry is per-space.
@@ -341,7 +341,7 @@ export const KronkMenu = () => {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
       >
-        <span aria-hidden='true'>Ӂ</span>
+        <span aria-hidden='true'>Ж</span>
       </button>
 
       {open && (

@@ -27,7 +27,7 @@ const messages = defineMessages({
   loading: { id: 'albutts.loading', defaultMessage: 'Loading…' },
   empty: {
     id: 'albutts.empty',
-    defaultMessage: 'No albums yet — start one via the Ӂ menu.',
+    defaultMessage: 'No albums yet — start one via the Ж menu.',
   },
   photos: {
     id: 'albutts.photos',
@@ -56,7 +56,7 @@ const Albutts: React.FC<{ multiColumn?: boolean }> = () => {
           <AlbumDetailRoute />
         </Route>
         <Route path='/hub/albutts/new' exact>
-          {/* The Ӂ menu (features/ui/components/kronk_menu.tsx) reads
+          {/* The Ж menu (features/ui/components/kronk_menu.tsx) reads
               albutts.yaml's `compose.route` and lands here. Directory
               renders with the composer pre-opened so the manifest-
               driven Post action Just Works. */}
@@ -75,7 +75,7 @@ export default Albutts;
 
 interface DirectoryProps {
   // When true (the `/hub/albutts/new` route), the composer opens
-  // automatically on mount. The Ӂ floating bubble sends the user
+  // automatically on mount. The Ж floating bubble sends the user
   // there via the manifest's `compose.route`.
   autoOpenComposer?: boolean;
 }

@@ -1,4 +1,4 @@
--# Static chrome for Rails-served pages. Mirrors what the React KronkFrame renders on SPA routes: top-band grid (wordmark + hub-switcher), fixed right-band (korner sidebar), fixed Ӂ menu. Icons resolve from `config/korners/<slug>.yaml → icon.material` — same source the SPA reads.
+-# Static chrome for Rails-served pages. Mirrors what the React KronkFrame renders on SPA routes: top-band grid (wordmark + hub-switcher), fixed right-band (korner sidebar), fixed Ж menu. Icons resolve from `config/korners/<slug>.yaml → icon.material` — same source the SPA reads.
 
 :ruby
   korners =
@@ -29,7 +29,7 @@
 -# to swap the top-band grid to center-align the wordmark.
 %header.kronk-frame__top-band
   %a.kronk-wordmark{ href: '/kronk' }
-    %span{ 'aria-hidden' => 'true' } ӁЯѺƝ₭
+    %span{ 'aria-hidden' => 'true' } ЖЯѺƝ₭
 
   - if user_signed_in?
     %nav.hub-switcher.hub-switcher--top{ 'aria-label' => 'Primary surfaces' }
@@ -84,4 +84,4 @@
 
   .kronk-menu
     %a.kronk-menu__trigger{ href: '/publish', 'aria-label': 'Post', title: 'Post' }
-      %span{ 'aria-hidden': 'true' } Ӂ
+      %span{ 'aria-hidden': 'true' } Ж

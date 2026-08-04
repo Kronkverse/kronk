@@ -19,7 +19,7 @@ import ComposeFormContainer from 'mastodon/features/compose/containers/compose_f
 // label ("Kronk it" instead of "Post").
 //
 // Collapsed by default: a single-line pill showing the daily prompt +
-// a Ӂ sigil button. Click either → expands into the full compose form.
+// a Ж sigil button. Click either → expands into the full compose form.
 // The full form takes focus so typing starts immediately.
 //
 // One-Redux-slice by design: if the user opens /publish mid-typing they
@@ -100,7 +100,7 @@ export const HomeStatusBox: React.FC = () => {
           onClick={handleExpand}
           aria-label={intl.formatMessage(messages.expandLabel)}
         >
-          Ӂ
+          Ж
         </button>
       </div>
     );
