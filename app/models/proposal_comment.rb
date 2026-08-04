@@ -20,11 +20,12 @@ class ProposalComment < ApplicationRecord
   scope :roots, -> { where(parent_id: nil) }
   scope :chronological, -> { order(:created_at) }
 
-  # A new comment nudges the proposal author via the korner event bus
-  # (`kommons.proposal.commented` → Nudges, wired in the nudges manifest's
-  # `listens:` block). Mirrors Favourite#publish_korner_froth: a synchronous
-  # in-process event; the author commenting on their own proposal (self-nudge)
-  # and non-Mate recipients are dropped downstream by Nudges::EventRouter.
+  # A new comment nudges the proposal author, and — on a reply — the parent
+  # commenter too, via the korner event bus (`kommons.proposal.commented` →
+  # Nudges, wired in the nudges manifest's `listens:` block). Mirrors
+  # Favourite#publish_korner_froth: a synchronous in-process event. Self-nudges
+  # (commenting on your own proposal / replying to yourself) and non-Mate
+  # recipients are dropped downstream by Nudges::EventRouter.
   after_create :publish_korner_comment
 
   private
@@ -40,11 +41,20 @@ class ProposalComment < ApplicationRecord
   end
 
   def publish_korner_comment
-    Kronk::KornerEvents.publish(
-      'kommons.proposal.commented',
-      actor_account_id: account_id,
-      recipient_account_id: proposal.created_by_account_id,
-      proposal_id: proposal_id
-    )
+    # Proposal author + (on a reply) the parent commenter. De-dup so one
+    # person never gets two nudges for the same comment, and skip the
+    # commenter themselves.
+    recipient_ids = [proposal.created_by_account_id, parent&.account_id].compact.uniq
+
+    recipient_ids.each do |recipient_id|
+      next if recipient_id == account_id
+
+      Kronk::KornerEvents.publish(
+        'kommons.proposal.commented',
+        actor_account_id: account_id,
+        recipient_account_id: recipient_id,
+        proposal_id: proposal_id
+      )
+    end
   end
 end
