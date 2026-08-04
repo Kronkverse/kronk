@@ -9,9 +9,12 @@
 > canonical statement of what each phase contains, and nothing supersedes them. The _phase
 > statuses_, PR counts and the "~15 calendar weeks" estimate are from 2026-07-10 and are
 > stale. Several phases described here as planned have since shipped. For current status
-> see the latest in-repo backlog — **`docs/rebuild/remaining_work_2026-07-23.md`** — not this
-> file's inline statuses (the earlier `phase_audit_2026-07-20.md` it superseded). (Audits live in the repo now, per the source-of-truth doctrine;
-> the old `~/kronk-notes/audits/` location on mainframe is retired.)
+> see the latest in-repo backlog — **`docs/rebuild/remaining_work_2026-08-04.md`** — not this
+> file's inline statuses (which reconcile individual phases as they're audited: currently
+> Phase 5 at 2026-08-03 and Phase 13 at 2026-08-04). Older audits
+> (`phase_audit_2026-07-20.md`, `remaining_work_2026-07-23.md`) are kept for history;
+> both are marked superseded. (Audits live in the repo now, per the source-of-truth
+> doctrine; the old `~/kronk-notes/audits/` location on mainframe is retired.)
 
 ## Context
 
@@ -215,7 +218,15 @@ Testing: Vitest heavy on router + layout; visual regression via Storybook storie
 
 ### Phase 13 — 2.x new korner manifests
 
-Tiny PRs; each ships a manifest with `enforced: false` and a "coming soon" card. No models yet.
+**STATUS — reconciled against code 2026-08-04.** Phase 13's original scope ("tiny stub PRs with `enforced: false` and coming-soon cards") is retired. All three korners have gone well beyond stubs; the status table below is authoritative. Original planning list preserved after for history.
+
+| Item         | Status                                       | Reality in code                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------ | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 13.1 Moments | **Done, end-to-end**                         | Full model + composer + Home strip + korner page + deep-link viewer + per-Moment visibility (reach ladder + krew, editable after posting) + Log archive. Camera-in-composer (#1112). Photo + voice-clip pairing (#1119) built on shared `components/media/` (#1117). Spec at `docs/spaces/moments.md`. Manifest `enforced: true`.                                                                 |
+| 13.2 Albutts | **Done, end-to-end**                         | Full backend (alpha.315) + frontend directory/detail/composers + feed card + Mate-gated new-photo fan-out nudges + Kalendar `spawn_album` linkage (alpha.315–.320). Status-backed photo refactor (#1028 — AlbumPhoto is now a thin join to Status; favourites/replies ride the standard pipeline). Zombie-row cleanup (#1106/#1109). Spec at `docs/spaces/albutts.md`. Manifest `enforced: true`. |
+| 13.3 Map     | **Partial** — frontend done; backend pending | Renamed from Kompass at alpha.215; `/hub/kompass` still redirects. Full frontend at `features/map_v2/` — Trek recording, GPX drag/drop + import, log-a-trek from the compose bubble, Firehose Map/Trek card (alpha.273–.296). Backend (`presence_states` + realtime infra per manifest) unbuilt — see `remaining_work_2026-08-04.md` for the "build or park at `enforced: false`" decision.       |
+
+_Original planning list (historical):_
 
 - **13.1** `config/korners/moments.yaml` — ephemeral, 24h expiry noted in `settings`.
 - **13.2** `config/korners/albutts.yaml` — shared albums.
