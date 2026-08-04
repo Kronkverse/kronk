@@ -17,6 +17,27 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-04 — `tsc --noEmit` removed from the pre-commit hook
+
+The pre-commit hook (`lint-staged`) bundled the cheap changed-file auto-fixers
+(`prettier --write`, `eslint --fix`, `rubocop -a`, `stylelint --fix`) with a
+**project-wide `tsc -p tsconfig.json --noEmit`**. TS can't be scoped to changed
+files, so that ran over the whole codebase on every `.tsx` commit — ~2 GB, slow,
+OOM-prone on portal. The predictable consequence: contributors committed with
+`--no-verify` to escape it, which skips the _entire_ hook — including
+`prettier --write`. Unformatted code then reached PRs and failed the `lint`
+merge gate (prettier "Check formatting"), so those PRs couldn't enter the queue
+and parked/staled. This was the actual cause of the 2026-08-03 "slow queue"
+(≈10 parked profile-shelves PRs), not queue congestion.
+
+Removed the `tsc` line from `lint-staged.config.js`. The hook is now fast enough
+that there's no reason to bypass it, so the formatters always run. **Nothing is
+lost:** CI runs the identical `yarn typecheck` (`tsc --noEmit`) in
+`.github/workflows/lint-js.yml`, and contributors can run it locally before
+pushing. Supersedes the CLAUDE.md "pre-commit runs tsc" guidance (updated in the
+same PR); continues the queue-hygiene thread from the 2026-08-02 lint-only
+decision below.
+
 ## 2026-08-02 — Merge queue gates down to `lint` only
 
 `rebuild/2.0.0`'s merge queue required two checks — `lint` and
