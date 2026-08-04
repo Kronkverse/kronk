@@ -93,15 +93,15 @@ NODE_OPTIONS=--max-old-space-size=2048 RAILS_ENV=production bundle exec rails as
 
 ## Pre-commit Hooks
 
-The repo uses **husky + lint-staged**. On commit it runs **prettier** (formatting), **eslint** (strict TS: no-unsafe-\*, no-non-null-assertion, prefer-nullish-coalescing), **stylelint** (CSS), and **tsc --noEmit** (full project type check).
+The repo uses **husky + lint-staged**. On commit it runs, on **changed files only**, the fast auto-fixers: **prettier** (formatting), **eslint --fix** (strict TS: no-unsafe-\*, no-non-null-assertion, prefer-nullish-coalescing), **stylelint --fix** (CSS), **rubocop -a**, **haml-lint -a**. These are quick — **let the hook run; do not `--no-verify` past it.** A bypass skips the whole hook including `prettier --write`, which is exactly how unformatted code reaches a PR and fails the `lint` merge gate (the parked-PR pattern of 2026-08-03).
 
-`tsc` runs project-wide and needs extra memory:
+**Type-checking is not in the pre-commit hook** (changed 2026-08-04). Project-wide `tsc --noEmit` can't be scoped to changed files, so running it on every `.tsx` commit was slow + needed ~2 GB + drove people to `--no-verify` (taking the formatters down with it). **CI runs the identical check** (`yarn typecheck` in `.github/workflows/lint-js.yml`), so nothing is lost. To catch type errors locally before pushing, run it yourself once:
 
 ```bash
-export NODE_OPTIONS="--max-old-space-size=2048"
+NODE_OPTIONS="--max-old-space-size=2048" yarn typecheck
 ```
 
-(On the mainframe dev server this is already set in `/etc/profile.d/mainframe.sh`.)
+(On the mainframe dev server the memory flag is already set in `/etc/profile.d/mainframe.sh`.)
 
 ## CI gates — `lint` is the only merge gate (run it before pushing)
 
