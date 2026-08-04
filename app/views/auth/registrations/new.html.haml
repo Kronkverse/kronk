@@ -1,89 +1,197 @@
+-# Unified signup — one page, one form, atomic on Enter.
+-#
+-# The Account section and the Threshold Ceremony section both live in
+-# this single view, both write to the same `simple_form_for`. The
+-# ceremony's three vow acknowledgements are hidden inputs the ceremony
+-# JS flips as the member crosses each ring. Enter (from the arrival
+-# panel) submits the whole form to `Auth::RegistrationsController#create`,
+-# which validates the acknowledgements alongside the account fields
+-# and creates the User + Account with `thresholds_agreed_at` /
+-# `thresholds_version` set in the SAME transaction — no intermediate
+-# state, no pre-crossed sign-in, no "already signed in" trap.
+-#
+-# Client-side section navigation is handled by `signup.ts` — the two
+-# sections sit side-by-side in a viewport-wide track; the track
+-# translates on section change. Members can go back to the account
+-# form from the ceremony at any time (fields keep their values —
+-# they're DOM state, no server round-trip).
+
 - content_for :page_title do
   = t('auth.register')
 
 - content_for :header_tags do
   = render partial: 'shared/og', locals: { description: description_for_sign_up(@invite) }
-  = vite_typescript_tag 'signup_account.ts', crossorigin: 'anonymous'
+  = vite_typescript_tag 'signup.ts', crossorigin: 'anonymous'
 
-- content_for :step_counter do
-  = t('kronk.signup.account.step_counter')
+:ruby
+  vow_bodies = {
+    'ownership' => t('kronk.thresholds.vow.ownership.more'),
+    'custodianship' => t('kronk.thresholds.vow.custodianship.more'),
+    'trajectory' => t('kronk.thresholds.vow.trajectory.more'),
+  }
+  vow_lines = {
+    'ownership' => t('kronk.thresholds.vow.ownership.vow'),
+    'custodianship' => t('kronk.thresholds.vow.custodianship.vow'),
+    'trajectory' => t('kronk.thresholds.vow.trajectory.vow'),
+  }
+  vow_positions = %w(one two three)
+  vow_keys = Kronk::Thresholds::KEYS.map(&:to_s)
+  pip_dasharrays = ['30 1541', '26 1074', '22 607']
+  ring_radii = [250, 175, 100]
 
-= simple_form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: 'signup-account', multipart: true, novalidate: false }) do |f|
-  .signup-account__lede
-    %h1.signup-account__title= t('kronk.signup.account.lede_title')
-    %p.signup-account__preamble
-      - if @invite.present? && @invite.autofollow?
-        = t('kronk.signup.account.lede_invited', name: @invite.user.account.display_name.presence || @invite.user.account.username)
-      - else
-        = t('kronk.signup.account.lede_no_invite')
+= simple_form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: 'signup', multipart: true, novalidate: false, id: 'signup-form' }) do |f|
+  .signup__track#signup-track
+    -# ═════════════════════════════════════════════════════════════
+    -# Section 1 — the account form.
+    -# ═════════════════════════════════════════════════════════════
+    %section.signup__section.signup__section--account.is-on{ data: { section: 'account' } }
+      .signup-account
+        .signup-account__lede
+          %h1.signup-account__title= t('kronk.signup.account.lede_title')
+          %p.signup-account__preamble
+            - if @invite.present? && @invite.autofollow?
+              = t('kronk.signup.account.lede_invited', name: @invite.user.account.display_name.presence || @invite.user.account.username)
+            - else
+              = t('kronk.signup.account.lede_no_invite')
 
-  = render 'shared/error_messages', object: resource
+        = render 'shared/error_messages', object: resource
 
-  = f.simple_fields_for :account do |ff|
-    .signup-account__avatar-row
-      %button.signup-account__avatar-drop#signup-avatar-drop{ type: 'button', aria: { label: t('kronk.signup.account.avatar_label') } }
-        %span.signup-account__avatar-plus= '+'
-      .signup-account__avatar-meta
-        %span.signup-account__avatar-key= t('kronk.signup.account.avatar_label')
-        %span.signup-account__avatar-value= t('kronk.signup.account.avatar_hint')
-        %button.signup-account__avatar-remove#signup-avatar-remove{ type: 'button', hidden: true }
-          = t('kronk.signup.account.avatar_remove')
-      = ff.input :avatar, as: :file, label: false, wrapper: false, input_html: { id: 'signup-avatar-input', accept: 'image/*', hidden: true, autocomplete: 'off' }
+        = f.simple_fields_for :account do |ff|
+          .signup-account__avatar-row
+            %button.signup-account__avatar-drop#signup-avatar-drop{ type: 'button', aria: { label: t('kronk.signup.account.avatar_label') } }
+              %span.signup-account__avatar-plus= '+'
+            .signup-account__avatar-meta
+              %span.signup-account__avatar-key= t('kronk.signup.account.avatar_label')
+              %span.signup-account__avatar-value= t('kronk.signup.account.avatar_hint')
+              %button.signup-account__avatar-remove#signup-avatar-remove{ type: 'button', hidden: true }
+                = t('kronk.signup.account.avatar_remove')
+            = ff.input :avatar, as: :file, label: false, wrapper: false, input_html: { id: 'signup-avatar-input', accept: 'image/*', hidden: true, autocomplete: 'off' }
 
-  .signup-account__field
-    %label.signup-account__label{ for: 'user_email' }= t('kronk.signup.account.email_label')
-    .signup-account__control#signup-email-control
-      = f.input_field :email, autocomplete: 'email', placeholder: t('kronk.signup.account.email_placeholder'), required: true, class: 'signup-account__input', data: { 'hint-invalid': t('kronk.signup.account.email_hint_bad'), 'hint-good': t('kronk.signup.account.email_hint_good') }
-    %span.signup-account__hint#signup-email-hint= t('kronk.signup.account.email_hint')
+        .signup-account__field
+          %label.signup-account__label{ for: 'user_email' }= t('kronk.signup.account.email_label')
+          .signup-account__control#signup-email-control
+            = f.input_field :email, autocomplete: 'email', placeholder: t('kronk.signup.account.email_placeholder'), required: true, class: 'signup-account__input', data: { 'hint-invalid': t('kronk.signup.account.email_hint_bad'), 'hint-good': t('kronk.signup.account.email_hint_good') }
+          %span.signup-account__hint#signup-email-hint= t('kronk.signup.account.email_hint')
 
-  .signup-account__field
-    %label.signup-account__label{ for: 'user_account_attributes_username' }= t('kronk.signup.account.username_label')
-    .signup-account__control#signup-username-control
-      %span.signup-account__sigil @
-      - username_hints = { 'hint-invalid': t('kronk.signup.account.username_hint_invalid'), 'hint-taken': t('kronk.signup.account.username_hint_taken'), 'hint-reserved': t('kronk.signup.account.username_hint_reserved'), 'hint-available': t('kronk.signup.account.username_hint_available') }
-      = f.simple_fields_for :account do |ff|
-        = ff.input_field :username, autocomplete: 'off', spellcheck: 'false', pattern: '[a-zA-Z0-9_]+', maxlength: Account::USERNAME_LENGTH_LIMIT, placeholder: t('kronk.signup.account.username_placeholder'), required: true, class: 'signup-account__input', data: username_hints
-    %span.signup-account__hint#signup-username-hint= t('kronk.signup.account.username_hint')
+        .signup-account__field
+          %label.signup-account__label{ for: 'user_account_attributes_username' }= t('kronk.signup.account.username_label')
+          .signup-account__control#signup-username-control
+            %span.signup-account__sigil @
+            - username_hints = { 'hint-invalid': t('kronk.signup.account.username_hint_invalid'), 'hint-taken': t('kronk.signup.account.username_hint_taken'), 'hint-reserved': t('kronk.signup.account.username_hint_reserved'), 'hint-available': t('kronk.signup.account.username_hint_available') }
+            = f.simple_fields_for :account do |ff|
+              = ff.input_field :username, autocomplete: 'off', spellcheck: 'false', pattern: '[a-zA-Z0-9_]+', maxlength: Account::USERNAME_LENGTH_LIMIT, placeholder: t('kronk.signup.account.username_placeholder'), required: true, class: 'signup-account__input', data: username_hints
+          %span.signup-account__hint#signup-username-hint= t('kronk.signup.account.username_hint')
 
-  .signup-account__field
-    %label.signup-account__label{ for: 'user_password' }= t('kronk.signup.account.password_label')
-    - password_hints = { 'hint-bad': t('kronk.signup.account.password_hint_bad'), 'hint-ok': t('kronk.signup.account.password_hint_ok'), 'hint-strong': t('kronk.signup.account.password_hint_strong') }
-    .signup-account__control#signup-password-control
-      = f.input_field :password, autocomplete: 'new-password', minlength: User.password_length.first, maxlength: User.password_length.last, placeholder: t('kronk.signup.account.password_placeholder'), required: true, class: 'signup-account__input', data: password_hints
-      %button.signup-account__peek#signup-password-peek{ type: 'button', aria: { label: t('kronk.signup.account.password_peek_show') }, data: { 'label-show': t('kronk.signup.account.password_peek_show'), 'label-hide': t('kronk.signup.account.password_peek_hide') } }
-        = t('kronk.signup.account.password_peek_show')
-    .signup-account__meter#signup-password-meter
-      %i.signup-account__meter-seg
-      %i.signup-account__meter-seg
-      %i.signup-account__meter-seg
-      %i.signup-account__meter-seg
-    %span.signup-account__hint#signup-password-hint= t('kronk.signup.account.password_hint')
+        .signup-account__field
+          %label.signup-account__label{ for: 'user_password' }= t('kronk.signup.account.password_label')
+          - password_hints = { 'hint-bad': t('kronk.signup.account.password_hint_bad'), 'hint-ok': t('kronk.signup.account.password_hint_ok'), 'hint-strong': t('kronk.signup.account.password_hint_strong') }
+          .signup-account__control#signup-password-control
+            = f.input_field :password, autocomplete: 'new-password', minlength: User.password_length.first, maxlength: User.password_length.last, placeholder: t('kronk.signup.account.password_placeholder'), required: true, class: 'signup-account__input', data: password_hints
+            %button.signup-account__peek#signup-password-peek{ type: 'button', aria: { label: t('kronk.signup.account.password_peek_show') }, data: { 'label-show': t('kronk.signup.account.password_peek_show'), 'label-hide': t('kronk.signup.account.password_peek_hide') } }
+              = t('kronk.signup.account.password_peek_show')
+          .signup-account__meter#signup-password-meter
+            %i.signup-account__meter-seg
+            %i.signup-account__meter-seg
+            %i.signup-account__meter-seg
+            %i.signup-account__meter-seg
+          %span.signup-account__hint#signup-password-hint= t('kronk.signup.account.password_hint')
 
-  -# Honeypots kept — same shape as before, invisible + off-screen via
-  -# `.signup-account__honeypot` (styled in `_signup.scss`). Same
-  -# validator wiring on the User model.
-  - honeypot_password_label = t('simple_form.labels.defaults.honeypot', label: t('simple_form.labels.defaults.password'))
-  - honeypot_website_label = t('simple_form.labels.defaults.honeypot', label: 'Website')
-  .signup-account__honeypot
-    = f.input :confirm_password, as: :string, hint: false, input_html: { 'aria-label': honeypot_password_label, autocomplete: 'off' }, placeholder: honeypot_password_label, required: false, wrapper: false
-    = f.input :website, as: :url, input_html: { 'aria-label': honeypot_website_label, autocomplete: 'off' }, label: honeypot_website_label, required: false, wrapper: false
+        -# Honeypots kept — same shape as before, invisible + off-screen via
+        -# `.signup-account__honeypot` (styled in `_signup.scss`). Same
+        -# validator wiring on the User model.
+        - honeypot_password_label = t('simple_form.labels.defaults.honeypot', label: t('simple_form.labels.defaults.password'))
+        - honeypot_website_label = t('simple_form.labels.defaults.honeypot', label: 'Website')
+        .signup-account__honeypot
+          = f.input :confirm_password, as: :string, hint: false, input_html: { 'aria-label': honeypot_password_label, autocomplete: 'off' }, placeholder: honeypot_password_label, required: false, wrapper: false
+          = f.input :website, as: :url, input_html: { 'aria-label': honeypot_website_label, autocomplete: 'off' }, label: honeypot_website_label, required: false, wrapper: false
 
-  - if Setting.min_age.present?
-    .signup-account__field
-      = f.input :date_of_birth, as: :date_of_birth, hint: t('simple_form.hints.user.date_of_birth', count: Setting.min_age.to_i, domain: site_hostname), required: true, wrapper: :with_block_label
+        - if Setting.min_age.present?
+          .signup-account__field
+            = f.input :date_of_birth, as: :date_of_birth, hint: t('simple_form.hints.user.date_of_birth', count: Setting.min_age.to_i, domain: site_hostname), required: true, wrapper: :with_block_label
 
-  - if approved_registrations? && @invite.blank?
-    .signup-account__field
-      = f.simple_fields_for :invite_request, resource.invite_request || resource.build_invite_request do |invite_request_fields|
-        = invite_request_fields.input :text, as: :text, hint: false, label: false, input_html: { maxlength: UserInviteRequest::TEXT_SIZE_LIMIT }, required: Setting.require_invite_text, wrapper: :with_block_label
+        - if approved_registrations? && @invite.blank?
+          .signup-account__field
+            = f.simple_fields_for :invite_request, resource.invite_request || resource.build_invite_request do |invite_request_fields|
+              = invite_request_fields.input :text, as: :text, hint: false, label: false, input_html: { maxlength: UserInviteRequest::TEXT_SIZE_LIMIT }, required: Setting.require_invite_text, wrapper: :with_block_label
 
-  = f.input :invite_code, as: :hidden
+        = f.input :invite_code, as: :hidden
 
-  -# Agreement is captured implicitly — the account form's fine-print
-  -# references /kronk/privacy. Passed hidden so Devise's
-  -# `validates :agreement, acceptance:` stays satisfied.
-  = f.input :agreement, as: :hidden, input_html: { value: '1' }
+        -# Agreement captured implicitly. Fine-print references
+        -# /kronk/privacy. Passed hidden so Devise's
+        -# `validates :agreement, acceptance:` stays satisfied.
+        = f.input :agreement, as: :hidden, input_html: { value: '1' }
 
-  = f.button :button, t('kronk.signup.account.continue'), type: :submit, class: 'signup-account__continue', id: 'signup-continue', disabled: true
+        -# "Continue" here does NOT submit the form. It's a
+        -# section-navigation trigger the JS intercepts to slide the
+        -# track to the ceremony section (only when account fields
+        -# validate). type=button prevents implicit form submission.
+        %button.signup-account__continue#signup-continue{ type: 'button', disabled: true }= t('kronk.signup.account.continue')
 
-  %p.signup-account__finelow!= t('kronk.signup.account.finelow_html')
+        %p.signup-account__finelow!= t('kronk.signup.account.finelow_html')
+
+    -# ═════════════════════════════════════════════════════════════
+    -# Section 2 — the three-threshold ceremony.
+    -# ═════════════════════════════════════════════════════════════
+    %section.signup__section.signup__section--thresholds{ data: { section: 'thresholds' } }
+      %section.threshold-ceremony#threshold-ceremony{ data: { depth: '0' } }
+        .threshold-ceremony__stage
+          %svg.threshold-ceremony__rings#threshold-rings{ viewBox: '0 0 600 600', aria: { hidden: 'true' } }
+            -# haml-lint:disable TagName
+            %defs
+              %radialGradient#threshold-core-glow
+                %stop.g0{ offset: '0%', 'stop-opacity': '.5' }
+                %stop.g1{ offset: '60%', 'stop-opacity': '.08' }
+                %stop.g2{ offset: '100%', 'stop-opacity': '0' }
+            -# haml-lint:enable TagName
+            %g#threshold-cosmos
+              %circle.threshold-ceremony__core-halo{ cx: '300', cy: '300', r: '210', fill: 'url(#threshold-core-glow)' }
+              - vow_keys.each_with_index do |_, i|
+                - t_index = i + 1
+                - r = ring_radii[i]
+                %g.threshold-ring{ class: (i.zero? ? 'is-active' : 'is-locked'), data: { t: t_index.to_s } }
+                  %circle.threshold-ring__base{ cx: '300', cy: '300', r: r.to_s }
+                  %circle.threshold-ring__tick{ cx: '300', cy: '300', r: r.to_s, 'stroke-dasharray': '1 33', 'stroke-linecap': 'round' }
+                  %circle.threshold-ring__pip{ cx: '300', cy: '300', r: r.to_s, 'stroke-dasharray': pip_dasharrays[i] }
+              %circle.threshold-ceremony__wash#threshold-wash{ cx: '300', cy: '300', r: '250', fill: 'none' }
+              %text.threshold-ceremony__core-glyph{ x: '300', y: '300' } Ж
+
+        .threshold-ceremony__panel
+          .threshold-ceremony__panel-inner
+            -# Threshold acknowledgement fields inside the OUTER signup
+            -# form (not a separate form). Named `user[thresholds][KEY]`
+            -# so the controller can read them via strong params.
+            - vow_keys.each do |k|
+              = f.hidden_field "thresholds_#{k}", value: '0', id: "threshold-vow-#{k}", name: "user[thresholds][#{k}]"
+
+            - vow_keys.each_with_index do |key, i|
+              - position = vow_positions[i]
+              %article.threshold-vow{ class: (i.zero? ? 'is-on' : ''), data: { v: (i + 1).to_s, k: key } }
+                .threshold-vow__eyebrow
+                  %span= t("kronk.thresholds.eyebrow.#{position}")
+                  %span.threshold-vow__eyebrow-wire
+                  %span= t("kronk.thresholds.eyebrow_progress.#{position}")
+                .threshold-vow__agree{ role: 'checkbox', 'aria-checked': 'false', tabindex: '0' }
+                  %span.threshold-vow__box
+                    %svg{ viewBox: '0 0 16 16', aria: { hidden: 'true' } }
+                      %path{ d: 'M2.5 8.5 6 12l7.5-8' }
+                  %span.threshold-vow__text= vow_lines[key]
+                %button.threshold-vow__more-toggle{ type: 'button', aria: { expanded: 'false' } }
+                  = t('kronk.thresholds.more_toggle')
+                  %span.threshold-vow__caret
+                .threshold-vow__more
+                  %div
+                    %p= vow_bodies[key]
+                .threshold-vow__actions
+                  %button.threshold-vow__cross{ type: 'button', disabled: true, data: { v: (i + 1).to_s } }
+                    = t("kronk.thresholds.cross.#{position}")
+
+            .threshold-ceremony__arrival#threshold-arrival
+              .threshold-ceremony__mark= t('kronk.signup.wordmark')
+              -# Greeting username is filled in by `signup.ts` from the
+              -# account form's username input just before the arrival
+              -# panel is revealed. Server-side we don't have a
+              -# `current_user` yet — the User isn't created until this
+              -# form is submitted.
+              %p.threshold-ceremony__said
+                != t('kronk.thresholds.arrival.line_html', username: '<span class="threshold-arrival__handle" id="threshold-arrival-handle">…</span>')
+              %button.threshold-ceremony__enter#threshold-enter{ type: 'submit' }= t('kronk.thresholds.arrival.cta_enter')
