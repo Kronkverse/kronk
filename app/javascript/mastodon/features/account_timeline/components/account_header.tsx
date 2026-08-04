@@ -25,7 +25,6 @@ import {
   removeAccountFromFollowers,
 } from 'mastodon/actions/accounts';
 import { initBlockModal } from 'mastodon/actions/blocks';
-import { mentionCompose, directCompose } from 'mastodon/actions/compose';
 import {
   initDomainBlockModal,
   unblockDomain,
@@ -74,8 +73,6 @@ const messages = defineMessages({
     defaultMessage:
       'This account privacy status is set to locked. The owner manually reviews who can follow them.',
   },
-  mention: { id: 'account.mention', defaultMessage: 'Mention @{name}' },
-  direct: { id: 'account.direct', defaultMessage: 'Privately mention @{name}' },
   unmute: { id: 'account.unmute', defaultMessage: 'Unmute @{name}' },
   block: { id: 'account.block', defaultMessage: 'Block @{name}' },
   mute: { id: 'account.mute', defaultMessage: 'Mute @{name}' },
@@ -250,22 +247,6 @@ export const AccountHeader: React.FC<{
     }
   }, [dispatch, account, relationship]);
 
-  const handleMention = useCallback(() => {
-    if (!account) {
-      return;
-    }
-
-    dispatch(mentionCompose(account));
-  }, [dispatch, account]);
-
-  const handleDirect = useCallback(() => {
-    if (!account) {
-      return;
-    }
-
-    dispatch(directCompose(account));
-  }, [dispatch, account]);
-
   const handleReport = useCallback(() => {
     if (!account) {
       return;
@@ -418,22 +399,6 @@ export const AccountHeader: React.FC<{
 
     if (!account) {
       return arr;
-    }
-
-    if (signedIn && !account.suspended) {
-      arr.push({
-        text: intl.formatMessage(messages.mention, {
-          name: account.username,
-        }),
-        action: handleMention,
-      });
-      arr.push({
-        text: intl.formatMessage(messages.direct, {
-          name: account.username,
-        }),
-        action: handleDirect,
-      });
-      arr.push(null);
     }
 
     if (isRemote) {
@@ -626,9 +591,7 @@ export const AccountHeader: React.FC<{
     handleBlock,
     handleBlockDomain,
     handleChangeLanguages,
-    handleDirect,
     handleEndorseToggle,
-    handleMention,
     handleMute,
     handleReblogToggle,
     handleReport,

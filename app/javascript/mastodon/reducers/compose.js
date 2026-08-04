@@ -17,7 +17,6 @@ import {
   COMPOSE_CHANGE,
   COMPOSE_REPLY,
   COMPOSE_REPLY_CANCEL,
-  COMPOSE_DIRECT,
   COMPOSE_MENTION,
   COMPOSE_SUBMIT_REQUEST,
   COMPOSE_SUBMIT_SUCCESS,
@@ -493,14 +492,6 @@ export const composeReducer = (state = initialState, action) => {
   case COMPOSE_MENTION:
     return state.withMutations(map => {
       map.update('text', text => [text.trim(), `@${action.account.get('acct')} `].filter((str) => str.length !== 0).join(' '));
-      map.set('focusDate', new Date());
-      map.set('caretPosition', null);
-      map.set('idempotencyKey', uuid());
-    });
-  case COMPOSE_DIRECT:
-    return state.withMutations(map => {
-      map.update('text', text => [text.trim(), `@${action.account.get('acct')} `].filter((str) => str.length !== 0).join(' '));
-      map.set('privacy', 'direct');
       map.set('focusDate', new Date());
       map.set('caretPosition', null);
       map.set('idempotencyKey', uuid());

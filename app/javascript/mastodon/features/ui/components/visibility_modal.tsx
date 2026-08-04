@@ -37,7 +37,6 @@ import {
   useAppDispatch,
   useAppSelector,
 } from '@/mastodon/store';
-import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
@@ -243,15 +242,6 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
           iconComponent: GroupsIcon,
         });
       }
-
-      // Specific people — direct mentions (DMs). Always available.
-      items.push({
-        value: 'direct',
-        text: intl.formatMessage(privacyMessages.direct_short),
-        meta: intl.formatMessage(privacyMessages.direct_long),
-        icon: 'at',
-        iconComponent: AlternateEmailIcon,
-      });
 
       return items;
     }, [intl, disablePublicVisibilities]);

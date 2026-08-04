@@ -6,7 +6,6 @@ import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import { initBlockModal } from 'mastodon/actions/blocks';
-import { mentionCompose, directCompose } from 'mastodon/actions/compose';
 import { openModal } from 'mastodon/actions/modal';
 import { initMuteModal } from 'mastodon/actions/mutes';
 import { initReport } from 'mastodon/actions/reports';
@@ -49,11 +48,6 @@ const messages = defineMessages({
   moreActions: {
     id: 'account.more_actions',
     defaultMessage: 'More actions',
-  },
-  mention: { id: 'account.mention', defaultMessage: 'Mention @{name}' },
-  direct: {
-    id: 'account.direct',
-    defaultMessage: 'Privately mention @{name}',
   },
   openOriginalPage: {
     id: 'account.open_original_page',
@@ -128,16 +122,6 @@ export const ProfileViewerActions: React.FC<ProfileViewerActionsProps> = ({
       });
   }, [account]);
 
-  const handleMention = useCallback(() => {
-    if (!account) return;
-    dispatch(mentionCompose(account));
-  }, [dispatch, account]);
-
-  const handleDirect = useCallback(() => {
-    if (!account) return;
-    dispatch(directCompose(account));
-  }, [dispatch, account]);
-
   const handleMute = useCallback(() => {
     if (!account) return;
     if (relationship?.muting) return;
@@ -157,22 +141,6 @@ export const ProfileViewerActions: React.FC<ProfileViewerActionsProps> = ({
   const menuItems = useMemo(() => {
     const items: MenuItem[] = [];
     if (!account) return items;
-
-    if (signedIn) {
-      items.push({
-        text: intl.formatMessage(messages.mention, {
-          name: account.username,
-        }),
-        action: handleMention,
-      });
-      items.push({
-        text: intl.formatMessage(messages.direct, {
-          name: account.username,
-        }),
-        action: handleDirect,
-      });
-      items.push(null);
-    }
 
     const isRemote = account.acct !== account.username;
     if (isRemote) {
@@ -204,16 +172,7 @@ export const ProfileViewerActions: React.FC<ProfileViewerActionsProps> = ({
     }
 
     return items;
-  }, [
-    account,
-    signedIn,
-    intl,
-    handleMention,
-    handleDirect,
-    handleMute,
-    handleBlock,
-    handleReport,
-  ]);
+  }, [account, signedIn, intl, handleMute, handleBlock, handleReport]);
 
   // Own account → no viewer actions. Owner-only affordances (Arrange)
   // are passed from the parent instead of composed here.

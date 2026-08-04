@@ -7,11 +7,7 @@ import {
   unblockAccount,
 } from '../actions/accounts';
 import { initBlockModal } from '../actions/blocks';
-import {
-  replyCompose,
-  mentionCompose,
-  directCompose,
-} from '../actions/compose';
+import { replyCompose } from '../actions/compose';
 import { quoteComposeById } from '../actions/compose_typed';
 import {
   initDomainBlockModal,
@@ -154,14 +150,6 @@ const mapDispatchToProps = (dispatch, { contextType }) => ({
     } else {
       dispatch(translateStatus(status.get('id')));
     }
-  },
-
-  onDirect (account) {
-    dispatch(directCompose(account));
-  },
-
-  onMention (account) {
-    dispatch(mentionCompose(account));
   },
 
   onOpenMedia (statusId, media, index, lang) {

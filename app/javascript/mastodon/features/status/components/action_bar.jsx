@@ -26,8 +26,6 @@ const messages = defineMessages({
   delete: { id: 'status.delete', defaultMessage: 'Delete' },
   redraft: { id: 'status.redraft', defaultMessage: 'Delete & re-draft' },
   edit: { id: 'status.edit', defaultMessage: 'Edit' },
-  direct: { id: 'status.direct', defaultMessage: 'Privately mention @{name}' },
-  mention: { id: 'status.mention', defaultMessage: 'Mention @{name}' },
   reply: { id: 'status.reply', defaultMessage: 'Reply' },
   favourite: { id: 'status.favourite', defaultMessage: 'Froth' },
   removeFavourite: { id: 'status.remove_favourite', defaultMessage: 'Remove froth' },
@@ -80,8 +78,6 @@ class ActionBar extends PureComponent {
     onRevokeQuote: PropTypes.func,
     onQuotePolicyChange: PropTypes.func,
     onEdit: PropTypes.func.isRequired,
-    onDirect: PropTypes.func.isRequired,
-    onMention: PropTypes.func.isRequired,
     onMute: PropTypes.func,
     onUnmute: PropTypes.func,
     onBlock: PropTypes.func,
@@ -133,14 +129,6 @@ class ActionBar extends PureComponent {
 
   handleEditClick = () => {
     this.props.onEdit(this.props.status);
-  };
-
-  handleDirectClick = () => {
-    this.props.onDirect(this.props.status.get('account'));
-  };
-
-  handleMentionClick = () => {
-    this.props.onMention(this.props.status.get('account'));
   };
 
   handleMuteClick = () => {
@@ -264,9 +252,6 @@ class ActionBar extends PureComponent {
         menu.push({ text: intl.formatMessage(messages.delete), action: this.handleDeleteClick, dangerous: true });
         menu.push({ text: intl.formatMessage(messages.redraft), action: this.handleRedraftClick, dangerous: true });
       } else {
-        menu.push({ text: intl.formatMessage(messages.mention, { name: status.getIn(['account', 'username']) }), action: this.handleMentionClick });
-        menu.push(null);
-
         if (quotedAccountId === me) {
           menu.push({ text: intl.formatMessage(messages.revokeQuote, { name: account.get('username') }), action: this.handleRevokeQuoteClick, dangerous: true });
         }
