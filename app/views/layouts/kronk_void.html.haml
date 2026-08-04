@@ -25,10 +25,18 @@
   %canvas.kronk-void-canvas#kronk-void{ aria: { hidden: 'true' } }
   .kronk-void-vignette{ aria: { hidden: 'true' } }
   .kronk-void-shell
-    %header.kronk-void-masthead
-      %a.kronk-void-wordmark{ href: root_path }= t('kronk.signup.wordmark')
-      - if content_for?(:step_counter)
-        %span.kronk-void-stepcount= yield :step_counter
+    -# Void masthead: small wordmark top-left + optional step counter
+    -# top-right. Suppressed when the page renders its own hero
+    -# wordmark (landing does this — a small chrome mark alongside a
+    -# hero mark reads as brand-identity confusion). Signup Screen 1
+    -# ("Make your mark.") and the threshold ceremony (SVG core) both
+    -# have text-hero H1s rather than a wordmark hero, so they still
+    -# want the small top-left mark for context.
+    - unless content_for?(:hero_wordmark)
+      %header.kronk-void-masthead
+        = render 'shared/kronk_wordmark', size: :chrome, href: root_path
+        - if content_for?(:step_counter)
+          %span.kronk-void-stepcount= yield :step_counter
     = render 'flashes'
     = yield
 

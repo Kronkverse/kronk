@@ -11,6 +11,11 @@
 - content_for :page_title do
   = t('auth.login')
 
+-# Signals to `layouts/kronk_void.html.haml` that this page renders
+-# its own hero wordmark, so the layout suppresses the small
+-# top-left masthead wordmark to avoid brand-identity confusion.
+- content_for :hero_wordmark, true
+
 - content_for :header_tags do
   = opengraph 'og:site_name', site_title
   = opengraph 'og:url', "#{root_url.chomp('/')}#{request.path}"
@@ -23,17 +28,13 @@
   = opengraph 'twitter:card', 'summary_large_image'
 
 %section.kronk-landing
-  -# Hero wordmark uses the same 5-span structure and visual treatment
-  -# as `KronkWordmark` (`features/ui/components/kronk_wordmark.tsx`)
-  -# — the canonical Kronk sigil that lives in the top-band chrome
-  -# throughout the app. Same glyphs, same font (`--font-display`,
-  -# Liberation Serif), same colour (`--kronk-purple-accent`), just
-  -# sized as a hero. Uses the base `.kronk-wordmark` class so any
-  -# future change to the wordmark's visual identity applies here too;
-  -# `.kronk-landing__wordmark` is the size-modifier layer.
-  %h1.kronk-wordmark.kronk-landing__wordmark
-    - %w(Ж Я Ѻ Ɲ ₭).each do |glyph|
-      %span.kronk-wordmark__char{ 'aria-hidden' => 'true' }= glyph
+  -# Hero wordmark — renders via the shared partial with the `:hero`
+  -# size variant. Every Kronk surface (SPA chrome, static chrome,
+  -# void masthead, this landing) routes through the same partial +
+  -# CSS at `styles/kronk/_wordmark.scss` so brand drift is
+  -# structurally impossible.
+  %h1.kronk-landing__hero
+    = render 'shared/kronk_wordmark', size: :hero
     %span.sr-only= t('kronk.landing.wordmark_sr_label')
 
   %p.kronk-landing__lede= t('kronk.landing.tagline')

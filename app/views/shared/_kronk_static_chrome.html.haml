@@ -28,8 +28,7 @@
 -# switcher. CSS in `_kronk_frame.scss` uses `:has(.hub-switcher)`
 -# to swap the top-band grid to center-align the wordmark.
 %header.kronk-frame__top-band
-  %a.kronk-wordmark{ href: '/kronk' }
-    %span{ 'aria-hidden' => 'true' } ЖЯѺƝ₭
+  = render 'shared/kronk_wordmark', size: :chrome
 
   - if user_signed_in?
     %nav.hub-switcher.hub-switcher--top{ 'aria-label' => 'Primary surfaces' }
