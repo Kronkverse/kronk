@@ -47,7 +47,8 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
   const [krewId, setKrewId] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const libraryInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
   const onFileChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     setFile(event.target.files?.[0] ?? null);
@@ -105,7 +106,16 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
   }, [submitAsync]);
 
   const chooseFile = useCallback(() => {
-    inputRef.current?.click();
+    libraryInputRef.current?.click();
+  }, []);
+
+  // Camera capture — triggers the OS camera on mobile browsers (the
+  // `capture` attribute on <input type=file> is the standardised path).
+  // Desktop browsers ignore `capture` and fall back to their file
+  // picker, so on a laptop the button behaves the same as "choose from
+  // library" — mild UX bloat, but always functional.
+  const openCamera = useCallback(() => {
+    cameraInputRef.current?.click();
   }, []);
 
   // Portal to <body> so the fixed overlay escapes the feed column's
@@ -149,26 +159,47 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
             />
           </label>
           <input
-            ref={inputRef}
+            ref={libraryInputRef}
             id='moments-composer-file'
             className='moments-composer__file'
             type='file'
             accept='image/*,video/*'
             onChange={onFileChange}
           />
+          <input
+            ref={cameraInputRef}
+            id='moments-composer-camera'
+            className='moments-composer__file'
+            type='file'
+            accept='image/*,video/*'
+            capture='environment'
+            onChange={onFileChange}
+          />
           {file ? (
             <div className='moments-composer__file-summary'>{file.name}</div>
           ) : (
-            <button
-              type='button'
-              className='moments-composer__file-picker'
-              onClick={chooseFile}
-            >
-              <FormattedMessage
-                id='moments.composer.pick_media'
-                defaultMessage='Choose a photo or video'
-              />
-            </button>
+            <div className='moments-composer__file-buttons'>
+              <button
+                type='button'
+                className='moments-composer__file-picker'
+                onClick={openCamera}
+              >
+                <FormattedMessage
+                  id='moments.composer.capture_media'
+                  defaultMessage='Take a photo or video'
+                />
+              </button>
+              <button
+                type='button'
+                className='moments-composer__file-picker'
+                onClick={chooseFile}
+              >
+                <FormattedMessage
+                  id='moments.composer.pick_media'
+                  defaultMessage='Choose from library'
+                />
+              </button>
+            </div>
           )}
         </section>
 
