@@ -2,13 +2,14 @@
 # to say. Every share is a deliberate act; nothing is broadcast unless
 # the user flips a toggle each session.
 #
-# Ships in 2.0.0 as a prototype-driven surface at /hub/map (Kommons
-# proposal #116969555027300161 "New Korner: Map — To see where your
-# mates are and share activities"). The frontend view is the
-# hand-authored prototype iframed via features/map_v2/. Backend
-# (presence_states + real-time infra) still to build — this manifest
-# stays enforced so the tile lights up on the Hub, but the surface is
-# read-only until wiring lands.
+# Ships in 2.0.0 (Kommons proposal #116969555027300161 "New Korner:
+# Map — To see where your mates are and share activities"). The
+# surface is a first-class SPA at features/map_v2/ (not iframed) and
+# the backend is live: PresenceState + Trek models, Api::V1::Map::
+# {PresenceController,TreksController}, Kronk::GeoCoarsen (server-
+# side raw→fuzzed point) + Kronk::RoutePrivacy (trek route trimming).
+# Presence refresh is 30 s HTTP polling; realtime pubsub is a 2.1
+# polish item, not a release blocker.
 
 slug: map
 name: Map
@@ -19,7 +20,7 @@ icon:
   # No text_glyph — Map isn't K-branded, so the badge falls back to its
   # name's first letter ("M") rather than a stylised Kra letterform.
 render_target: native
-version: 0.0.0
+version: 0.1.0 # backend + SPA both shipped in 2.0.0 rebuild (alpha.270 onward)
 
 security:
   permissions:
@@ -91,5 +92,5 @@ nodes:
   - id: map.index
     label: Map
     url: /hub/map
-    lifecycle: soon
+    lifecycle: live # backend + Mates view + Treks view + logger all shipped
     spa: true

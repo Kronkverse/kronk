@@ -28,13 +28,22 @@ have both lagged reality by two weeks. Confirmed shipped on
   favourites/replies ride the standard pipeline), zombie-row
   cleanup (#1106 / #1109), autocomplete on caption inputs, drag +
   drop photo picker.
-- **Map** — shipped as _Map_ (renamed from Kompass at alpha.215).
-  Frontend at `features/map_v2/` — Trek recording, GPX
-  drag + drop / import, log-a-trek from the compose bubble,
-  Firehose Map/Trek card (alpha.273–.296). Backend
-  (`presence_states` + realtime infra per manifest) still TBD;
-  manifest is `enforced: true` because the tile lights up and the
-  route renders.
+- **Map** — shipped end-to-end as _Map_ (renamed from Kompass at
+  alpha.215). **Correction to this doc's first cut:** the backend
+  is not TBD — a recheck against the code on 2026-08-04 found the
+  full pipeline live: `PresenceState` + `Trek` models,
+  `Api::V1::Map::{PresenceController,TreksController}`,
+  `Kronk::GeoCoarsen` (server-side raw→fuzzed point) +
+  `Kronk::RoutePrivacy` (route trimming), migrations
+  `create_presence_states` + `create_treks` (2026-07-24), full test
+  coverage. Frontend at `features/map_v2/` polls presence every
+  30 s, renders pins + fuzz circles on maplibre, publishes treks
+  to a Status at the author-chosen reach for feed projection via
+  `trek_card`. Recent activity: PR #1029 (people strip). The
+  manifest header claim "backend still to build" is stale and is
+  being fixed in the same PR as this correction. Realtime pubsub
+  (vs the current 30 s polling) is a 2.1 polish item, not a
+  release blocker.
 
 ### Phase 5 — Nudges cutover: fully reconciled (2026-08-03 in `implementation_plan.md`)
 
@@ -153,7 +162,7 @@ Sequenced stack (mostly landed):
 
 | Item                                                                                                                                                                                                                                                                                                                                                                                                                                                              | State | Effort    |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | --------- |
-| **Map backend** — `presence_states` + realtime infra. Manifest is enforced (tile + read-only route both render); the presence/pin pipeline underneath is unbuilt. Frontend at `features/map_v2/` already renders treks.                                                                                                                                                                                                                                           | todo  | L         |
+| **Map realtime pubsub** — presence refresh is 30 s HTTP polling; realtime pubsub would give sub-second pin updates. Not a release blocker; parked for 2.1. _Earlier draft of this doc claimed the whole Map backend was TBD — that was wrong (backend shipped alpha.270); manifest header updated in the same PR as this correction._                                                                                                                             | defer | L (2.1)   |
 | **Launch card** (§8.7) declared in 10 manifests, parsed, but no producer/service — the one-time launch announcement never projects.                                                                                                                                                                                                                                                                                                                               | todo  | M         |
 | **Korner tombstones / 410 Gone** (§5.6) — only AP Statuses tombstone; Listing etc. have no `deleted_at`/410 resolution.                                                                                                                                                                                                                                                                                                                                           | todo  | M         |
 | `render_target` inert (§9.1) — every manifest sets it; nothing consumes it. Also open decision §13.2.                                                                                                                                                                                                                                                                                                                                                             | todo  | L / defer |
@@ -207,15 +216,12 @@ Ordered by dependency:
    correctness bugs and the Frame dead code.
 2. **Launch card producer** (M) — Phase 5 side-quest; needed for
    the Phase 14 announcement flow.
-3. **Map backend decision** — either build the `presence_states`
-   pipeline (L) or park the manifest at `enforced: false` and
-   ship read-only for 2.0. Same call the doc has been dodging.
-4. **Settings Account & Security rehome** (L) — big surface, may
+3. **Settings Account & Security rehome** (L) — big surface, may
    ship as 2.1. Currently the nav pretends it's there and the
-   #1101 change made the classic-Rails escape hatch (`Edit
-profile` on your own profile) go away — that back-door was the
-   only working path to the classic pages from the SPA.
-5. **Phase 14** — flip enforcement + version + CHANGELOG + main PR.
+   #1101 change made the classic-Rails escape hatch (`Edit profile`
+   on your own profile) go away — that back-door was the only
+   working path to the classic pages from the SPA.
+4. **Phase 14** — flip enforcement + version + CHANGELOG + main PR.
 
 Not on the critical path:
 
@@ -224,29 +230,29 @@ Not on the critical path:
 - **Wachuneed detail / composer / interactions** — program of work.
 - **Per-korner design roadmap items** — Krew audience-scoping,
   Booth taxonomy, Inflow unified dashboard, etc.
-- **Map backend** — if it's parked to `enforced: false` (option 3
-  above), the presence pipeline moves to 2.1.
+- **Map realtime pubsub** — 30 s HTTP polling is the current
+  shipping state; realtime pubsub is a 2.1 polish item.
 
 ## Live status board diff
 
 For the board at `talitamoss.info/rebuild-status.html`, the following
 state changes reflect reality on 2026-08-04:
 
-| Section             | Item                         | Board says (likely) | Actual                                                                                        |
-| ------------------- | ---------------------------- | ------------------- | --------------------------------------------------------------------------------------------- |
-| Individual korners  | moments                      | **work / stub**     | **done** — end-to-end, plus camera + voice pairing shipped 2026-08-04                         |
-| Individual korners  | albutts                      | **work / stub**     | **done** — end-to-end + Status-backed refactor                                                |
-| Individual korners  | map                          | **stub**            | **partial** — frontend renders (`features/map_v2/`); backend `presence_states` unbuilt        |
-| Individual korners  | klot                         | **work**            | **done** — enforced, full frontend + backend on `rebuild/2.0.0`                               |
-| Individual korners  | kompass                      | present             | **retired** — renamed to `map` at alpha.215; only a `/hub/kompass → /hub/map` redirect        |
-| Individual korners  | huddle                       | work                | still work — Phase 9.5 cross-korner listener unbuilt                                          |
-| Individual korners  | nudges                       | work                | **done** — full Phase 5 cutover (bell retired, hub-switcher pillar, email-prefs, voice)       |
-| Custom features     | Signup revamp                | not listed          | **done** — 8-layer chain #1061–#1071 (Screen 1 account form + Screen 2 ceremony + gate)       |
-| Custom features     | Shared media capture library | not listed          | **done** — `components/media/` with `<VoiceRecorder>`, `<VoicePlayer>`, etc. (#1117)          |
-| Navigation & chrome | Ӂ → Ж breve retirement       | not listed          | **done** — #1115/#1116                                                                        |
-| Navigation & chrome | Brand assets refresh         | not listed          | **done** — #1118 (Ж-rendered PNGs + real-outline SVGs + icon set)                             |
-| Navigation & chrome | Signed-out landing at `/`    | not listed          | **done** — #1108/#1110                                                                        |
-| Custom features     | Profile shelved rebuild      | work                | **~done** — full stack (#1073–#1096) shipped; only avatar/header/display-name pending         |
-| Custom features     | URL consolidation `/kronk/*` | not listed          | **done** — #1097/#1100/#1102 (Booth gate + about/privacy/terms → `/kronk/*` + ToS retirement) |
-| Custom features     | Per-korner unread badges     | not listed          | **done** — 8-layer stack #1074–#1088                                                          |
-| Release prep        | CI merge queue lint-only     | not listed          | **done** — 2026-08-02 (see `decisions.md`); merges land in ~2 min                             |
+| Section             | Item                         | Board says (likely) | Actual                                                                                                                                                               |
+| ------------------- | ---------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Individual korners  | moments                      | **work / stub**     | **done** — end-to-end, plus camera + voice pairing shipped 2026-08-04                                                                                                |
+| Individual korners  | albutts                      | **work / stub**     | **done** — end-to-end + Status-backed refactor                                                                                                                       |
+| Individual korners  | map                          | **stub**            | **done** — full backend (`PresenceState` + `Trek` + coarsening + route-privacy libs) + SPA at `features/map_v2/` + Treks feed card. Realtime pubsub deferred to 2.1. |
+| Individual korners  | klot                         | **work**            | **done** — enforced, full frontend + backend on `rebuild/2.0.0`                                                                                                      |
+| Individual korners  | kompass                      | present             | **retired** — renamed to `map` at alpha.215; only a `/hub/kompass → /hub/map` redirect                                                                               |
+| Individual korners  | huddle                       | work                | still work — Phase 9.5 cross-korner listener unbuilt                                                                                                                 |
+| Individual korners  | nudges                       | work                | **done** — full Phase 5 cutover (bell retired, hub-switcher pillar, email-prefs, voice)                                                                              |
+| Custom features     | Signup revamp                | not listed          | **done** — 8-layer chain #1061–#1071 (Screen 1 account form + Screen 2 ceremony + gate)                                                                              |
+| Custom features     | Shared media capture library | not listed          | **done** — `components/media/` with `<VoiceRecorder>`, `<VoicePlayer>`, etc. (#1117)                                                                                 |
+| Navigation & chrome | Ӂ → Ж breve retirement       | not listed          | **done** — #1115/#1116                                                                                                                                               |
+| Navigation & chrome | Brand assets refresh         | not listed          | **done** — #1118 (Ж-rendered PNGs + real-outline SVGs + icon set)                                                                                                    |
+| Navigation & chrome | Signed-out landing at `/`    | not listed          | **done** — #1108/#1110                                                                                                                                               |
+| Custom features     | Profile shelved rebuild      | work                | **~done** — full stack (#1073–#1096) shipped; only avatar/header/display-name pending                                                                                |
+| Custom features     | URL consolidation `/kronk/*` | not listed          | **done** — #1097/#1100/#1102 (Booth gate + about/privacy/terms → `/kronk/*` + ToS retirement)                                                                        |
+| Custom features     | Per-korner unread badges     | not listed          | **done** — 8-layer stack #1074–#1088                                                                                                                                 |
+| Release prep        | CI merge queue lint-only     | not listed          | **done** — 2026-08-02 (see `decisions.md`); merges land in ~2 min                                                                                                    |
