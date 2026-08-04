@@ -339,6 +339,34 @@
     }
   }
 
+  // Owner-only action cluster in the shelved profile header — Arrange
+  // toggle + Log out. Log out uses a muted look so it doesn't compete
+  // with Arrange as the primary owner affordance.
+  &__owner-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2, 8px);
+  }
+
+  &__log-out {
+    padding: 8px var(--sp-3, 12px);
+    border-radius: var(--radius-small, 6px);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition:
+      color 120ms ease-out,
+      border-color 120ms ease-out;
+
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--border-default);
+    }
+  }
+
   &__arrange {
     padding: var(--sp-5, 24px) var(--sp-4, 16px) var(--sp-6, 32px);
   }
@@ -948,5 +976,24 @@
       opacity: 0.35;
       cursor: not-allowed;
     }
+  }
+}
+
+// Viewer-only action row (Groove / Nudge / Share / More) — sits in
+// the shelved profile header's `actions` slot when the viewer is
+// signed in and looking at someone else's profile. Compact row so
+// the header stays visually spare next to `__mode-toggle` on the
+// owner view.
+.profile-viewer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2, 8px);
+
+  // FollowButton renders a plain <button> — give it enough room to
+  // read as the primary CTA in this cluster.
+  .button {
+    padding: 8px var(--sp-4, 16px);
+    border-radius: var(--radius-small, 6px);
+    font-size: 13px;
   }
 }

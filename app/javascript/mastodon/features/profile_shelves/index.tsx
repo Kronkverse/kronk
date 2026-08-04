@@ -11,6 +11,7 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { NavLink, useParams } from 'react-router-dom';
 
+import { openModal } from 'mastodon/actions/modal';
 import { apiRequestGet } from 'mastodon/api';
 import type { ApiProfileCardJSON } from 'mastodon/api/profile_cards';
 import {
@@ -26,9 +27,11 @@ import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Column } from 'mastodon/components/column';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
 import { me } from 'mastodon/initial_state';
+import { useAppDispatch } from 'mastodon/store';
 
 import { ArrangeStage } from './components/arrange_stage';
 import { ProfileHeader } from './components/profile_header';
+import { ProfileViewerActions } from './components/profile_viewer_actions';
 import { ShelvesStack } from './components/shelves_stack';
 
 // Shelved profile — the rebuild of the sectioned profile per
@@ -91,6 +94,10 @@ const messages = defineMessages({
     id: 'profile_shelves.view_toggle',
     defaultMessage: 'View',
   },
+  logOut: {
+    id: 'profile_shelves.log_out',
+    defaultMessage: 'Log out',
+  },
 });
 
 interface RouteParams {
@@ -99,6 +106,7 @@ interface RouteParams {
 
 const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
+  const dispatch = useAppDispatch();
   const { acct } = useParams<RouteParams>();
 
   const [account, setAccount] = useState<ApiAccountJSON | null>(null);
@@ -173,6 +181,14 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
     setMode('arrange');
   }, []);
 
+  // Owner-only affordance on the shelved profile header. The confirmation
+  // modal (`CONFIRM_LOG_OUT`) already handles the DELETE /auth/sign_out
+  // call via `mastodon/utils/log_out`. Same wiring used by the classic
+  // navigation panel's "More" link + the compose overlay's account menu.
+  const handleLogOut = useCallback(() => {
+    dispatch(openModal({ modalType: 'CONFIRM_LOG_OUT', modalProps: {} }));
+  }, [dispatch]);
+
   const title = intl.formatMessage(messages.title);
 
   if (error) {
@@ -201,16 +217,27 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
           account={account}
           actions={
             isOwner ? (
-              <button
-                type='button'
-                className='profile-shelves__mode-toggle'
-                onClick={toggleMode}
-              >
-                {mode === 'arrange'
-                  ? intl.formatMessage(messages.view)
-                  : intl.formatMessage(messages.arrange)}
-              </button>
-            ) : null
+              <div className='profile-shelves__owner-actions'>
+                <button
+                  type='button'
+                  className='profile-shelves__mode-toggle'
+                  onClick={toggleMode}
+                >
+                  {mode === 'arrange'
+                    ? intl.formatMessage(messages.view)
+                    : intl.formatMessage(messages.arrange)}
+                </button>
+                <button
+                  type='button'
+                  className='profile-shelves__log-out'
+                  onClick={handleLogOut}
+                >
+                  {intl.formatMessage(messages.logOut)}
+                </button>
+              </div>
+            ) : (
+              <ProfileViewerActions accountId={account.id} />
+            )
           }
         />
       )}
