@@ -52,6 +52,10 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({
   title: { id: 'me_hub.title', defaultMessage: 'Me' },
+  tagline: {
+    id: 'me_hub.tagline',
+    defaultMessage: 'Your Kronk, at a glance.',
+  },
   profile: { id: 'me_hub.profile', defaultMessage: 'Profile' },
   timeline: { id: 'me_hub.timeline', defaultMessage: 'Timeline' },
   mates: { id: 'me_hub.mates', defaultMessage: 'Mates' },
@@ -210,6 +214,22 @@ export const MeHub: React.FC<MeHubProps> = () => {
 
       <div className='me-hub' role='navigation' aria-label={title}>
         <MeHubStars />
+
+        {/* Space title. /me isn't a `/hub/<slug>` route so the
+            manifest-driven <AutoSpaceHeader> doesn't fire; we hand-
+            render one using the same `.space-header` classes +
+            `data-frame-header` attribute so it inherits the shared
+            styling and passes the Frame-parasite <h1> exception
+            (Standard L11). */}
+        <header className='space-header me-hub__title' data-frame-header=''>
+          <h1 className='space-header__title'>
+            <FormattedMessage {...messages.title} />
+          </h1>
+          <p className='space-header__tagline'>
+            <FormattedMessage {...messages.tagline} />
+          </p>
+        </header>
+
         <div className='me-hub__wheel'>
           {/* Dashed connector ring — decorative, purely visual link
               between the spokes. `aria-hidden` because it carries no
