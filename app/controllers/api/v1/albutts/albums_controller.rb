@@ -66,11 +66,11 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
   end
 
   def album_params_for_create
-    params.expect(album: [:title, :description, :visibility, :cover_media_attachment_id])
+    params.expect(album: [:title, :description, :visibility, :contribution, :cover_media_attachment_id])
   end
 
   def album_params_for_update
-    params.expect(album: [:title, :description, :visibility, :cover_media_attachment_id])
+    params.expect(album: [:title, :description, :visibility, :contribution, :cover_media_attachment_id])
   end
 
   def krew_ids_param

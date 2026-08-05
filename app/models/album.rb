@@ -20,6 +20,26 @@ class Album < ApplicationRecord
        { public: 0, mates: 1, krew: 2, orbit: 3, self_only: 4 },
        suffix: :scope
 
+  # Kronk Scope Picker — contribution axis. See
+  # docs/kronk_scope_picker.md. Split from visibility so an owner
+  # can e.g. keep a mates-visible album but restrict adds to only
+  # themselves (`closed`). Enum values match the `ContributionRoster`
+  # TypeScript union in `components/scope_picker.tsx` verbatim.
+  #
+  # `open` is the NEW-row default (matches how albums have always
+  # behaved before this split). Existing albums were bulk-set to
+  # `closed` on migration per Tal's 2026-08-05 call — owners must
+  # actively open them back up now that the picker exists.
+  #
+  # `invited` / `krew` (as a contribution roster) / `event` are
+  # part of the vocabulary but require infrastructure that lands
+  # in follow-up PRs (account autocomplete for invited, event
+  # attendee query for event). Model accepts them today so the
+  # data path is ready; composer offers only open/closed in v1.
+  enum :contribution,
+       { open: 0, closed: 1, invited: 2, krew: 3, event: 4 },
+       prefix: :contribution
+
   validates :title, presence: true, length: { maximum: 240 }
   validates :description, length: { maximum: 4000 }, allow_blank: true
   validate  :krew_scope_has_at_least_one_krew
@@ -73,11 +93,47 @@ class Album < ApplicationRecord
     false
   end
 
-  # Anyone who can view can also contribute — open-roster within
-  # scope, per the spec. Self-only is a special case: nobody but the
-  # owner can view, and only the owner contributes.
+  # Split from `visible_to?` per the Kronk Scope Picker rollout
+  # (2026-08-05). Contribution now consults BOTH axes:
+  #
+  #   1. Viewer must be able to see the album (visibility gate).
+  #   2. Viewer must be in the contribution roster.
+  #
+  # The owner always contributes regardless of roster (there's no
+  # reason to lock yourself out of your own album). Roster branches:
+  #
+  #   * open     — anyone who cleared the visibility gate
+  #   * closed   — owner only
+  #   * invited  — accounts in `album_contributors` (join table
+  #                added in a follow-up PR when the invited-list UX
+  #                ships; safe to return false today because the
+  #                composer doesn't expose the `invited` chip yet)
+  #   * krew     — accounts belonging to any of `album_krews`. This
+  #                REUSES the existing join table because the picker
+  #                auto-mirrors Krew selection across the two axes
+  #                (docs/kronk_scope_picker.md § Decisions).
+  #   * event    — accounts on the linked event's RSVP roster (also
+  #                a follow-up PR when the Kalendar attendee reader
+  #                ships).
   def contributable_by?(viewer)
-    visible_to?(viewer)
+    return false unless visible_to?(viewer)
+    return true  if viewer && viewer.id == owner_id
+
+    # rubocop:disable Lint/DuplicateBranch
+    # `invited` + `event` both return false today because their
+    # sub-picker UIs + backing infrastructure land in follow-up
+    # PRs (account autocomplete for invited, Kalendar attendee
+    # reader for event). Kept as separate branches (rather than a
+    # collapsed `else false`) so the signal about which roster
+    # gets wired next stays legible in the code.
+    case contribution
+    when 'open'    then true
+    when 'closed'  then false
+    when 'invited' then false # TODO(scope-picker): consult album_contributors when the join table ships
+    when 'krew'    then album_krews.exists?(krew_id: viewer.krews.select(:id))
+    when 'event'   then false # TODO(scope-picker): consult event attendees when the Kalendar reader ships
+    end
+    # rubocop:enable Lint/DuplicateBranch
   end
 
   private

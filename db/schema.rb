@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_05_020000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_05_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -267,6 +267,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_05_020000) do
     t.bigint "status_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "contribution", default: 0, null: false
+    t.index ["contribution"], name: "index_albums_on_contribution"
     t.index ["cover_media_attachment_id"], name: "index_albums_on_cover_media_attachment_id"
     t.index ["event_id"], name: "index_albums_on_event_id"
     t.index ["owner_id"], name: "index_albums_on_owner_id"
