@@ -78,6 +78,14 @@ const messages = defineMessages({
     id: 'me_hub.avatar_preview.add_photo',
     defaultMessage: 'Add photo',
   },
+  uploadPhoto: {
+    id: 'me_hub.avatar_preview.upload',
+    defaultMessage: 'Use this photo',
+  },
+  cancelPhoto: {
+    id: 'me_hub.avatar_preview.cancel',
+    defaultMessage: 'Cancel',
+  },
   uploading: {
     id: 'me_hub.avatar_preview.uploading',
     defaultMessage: 'Uploading\u2026',
@@ -410,8 +418,23 @@ const AvatarPreview: React.FC<AvatarPreviewProps> = ({
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadFailed, setUploadFailed] = useState(false);
+
+  // Object URL for the *pending* pick so the panel shows the selected
+  // photo before it uploads. Regenerated whenever the pending file
+  // changes; revoked on unmount / re-pick so we don't leak blob URLs.
+  const previewUrl = useMemo(() => {
+    if (!pendingFile) return null;
+    return URL.createObjectURL(pendingFile);
+  }, [pendingFile]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -423,47 +446,76 @@ const AvatarPreview: React.FC<AvatarPreviewProps> = ({
     };
   }, [onClose]);
 
-  const uploadAvatar = useCallback(
-    async (file: File) => {
-      setUploading(true);
-      setUploadFailed(false);
-      try {
-        const form = new FormData();
-        form.append('avatar', file);
-        const response = await api().patch<ApiAccountJSON>(
-          '/api/v1/accounts/update_credentials',
-          form,
-        );
-        dispatch(importFetchedAccount(response.data));
-        onClose();
-      } catch {
-        setUploadFailed(true);
-        setUploading(false);
-      }
-    },
-    [dispatch, onClose],
-  );
-
   const handleFileChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
-      // Reset the input so re-picking the same file re-triggers.
+      // Reset the input value so re-picking the same file re-fires.
       event.target.value = '';
       if (!file) return;
-      void uploadAvatar(file);
+      setUploadFailed(false);
+      setPendingFile(file);
     },
-    [uploadAvatar],
+    [],
   );
 
   const openFilePicker = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
 
-  const uploadLabel = uploading
-    ? intl.formatMessage(messages.uploading)
-    : avatarUrl
-      ? intl.formatMessage(messages.changePhoto)
-      : intl.formatMessage(messages.addPhoto);
+  const cancelPending = useCallback(() => {
+    setPendingFile(null);
+    setUploadFailed(false);
+  }, []);
+
+  const confirmUpload = useCallback(async () => {
+    if (!pendingFile) return;
+    setUploading(true);
+    setUploadFailed(false);
+    try {
+      const form = new FormData();
+      form.append('avatar', pendingFile);
+      const response = await api().patch<ApiAccountJSON>(
+        '/api/v1/accounts/update_credentials',
+        form,
+      );
+      dispatch(importFetchedAccount(response.data));
+      onClose();
+    } catch {
+      setUploadFailed(true);
+      setUploading(false);
+    }
+  }, [dispatch, onClose, pendingFile]);
+
+  // Which image the panel currently shows:
+  //   - pending pick's blob URL (before upload)
+  //   - else the current avatar
+  //   - else the glyph fallback
+  const displayImage = previewUrl ?? avatarUrl ?? null;
+  const hasPending = pendingFile !== null;
+
+  // Primary button label depends on state:
+  //   - uploading → "Uploading…"
+  //   - pending pick → "Use this photo"
+  //   - has current avatar → "Change photo"
+  //   - no avatar yet → "Add photo"
+  let primaryLabel: string;
+  if (uploading) {
+    primaryLabel = intl.formatMessage(messages.uploading);
+  } else if (hasPending) {
+    primaryLabel = intl.formatMessage(messages.uploadPhoto);
+  } else if (avatarUrl) {
+    primaryLabel = intl.formatMessage(messages.changePhoto);
+  } else {
+    primaryLabel = intl.formatMessage(messages.addPhoto);
+  }
+
+  const handlePrimaryClick = useCallback(() => {
+    if (hasPending) {
+      void confirmUpload();
+    } else {
+      openFilePicker();
+    }
+  }, [confirmUpload, hasPending, openFilePicker]);
 
   return (
     <div
@@ -480,9 +532,9 @@ const AvatarPreview: React.FC<AvatarPreviewProps> = ({
       />
       <div className='me-hub-avatar-preview__panel'>
         <div className='me-hub-avatar-preview__image'>
-          {avatarUrl ? (
+          {displayImage ? (
             <img
-              src={avatarUrl}
+              src={displayImage}
               alt=''
               className='me-hub-avatar-preview__img'
             />
@@ -509,11 +561,20 @@ const AvatarPreview: React.FC<AvatarPreviewProps> = ({
           <button
             type='button'
             className='me-hub-avatar-preview__btn'
-            onClick={openFilePicker}
+            onClick={handlePrimaryClick}
             disabled={uploading}
           >
-            {uploadLabel}
+            {primaryLabel}
           </button>
+          {hasPending && !uploading && (
+            <button
+              type='button'
+              className='me-hub-avatar-preview__btn me-hub-avatar-preview__btn--secondary'
+              onClick={cancelPending}
+            >
+              <FormattedMessage {...messages.cancelPhoto} />
+            </button>
+          )}
           {uploadFailed && (
             <p className='me-hub-avatar-preview__error' role='alert'>
               <FormattedMessage {...messages.uploadFailed} />
