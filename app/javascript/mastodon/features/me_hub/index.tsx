@@ -76,7 +76,7 @@ interface Spoke {
   // One of:
   //   `to`     — SPA route (uses history.push)
   //   `href`   — full-page nav (used for Rails-served /auth/sign_out)
-  //   `action` — dispatch (invite modal, switch stub)
+  //   `action` — dispatch (invite modal, account-switcher modal)
   //   nothing  — inert placeholder
   to?: string;
   href?: string;
@@ -173,9 +173,7 @@ export const MeHub: React.FC<MeHubProps> = () => {
       if (spoke.action === 'invite') {
         dispatch(openModal({ modalType: 'INVITE', modalProps: {} }));
       } else if (spoke.action === 'switch') {
-        // TODO(me-hub): wire the account switcher when the multi-
-        // account infrastructure lands. No-op today so the button
-        // renders but doesn't route somewhere confusing.
+        dispatch(openModal({ modalType: 'ACCOUNT_SWITCHER', modalProps: {} }));
       } else if (spoke.to) {
         history.push(spoke.to);
       }
