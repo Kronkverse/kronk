@@ -39,17 +39,19 @@
   background: transparent;
 }
 
-// Row 2: wheel + hint pair, vertically centered inside its grid
-// row (which is `1fr`, so it takes the remaining vertical space
-// below the title).
+// Row 2: wheel + hint pair. Top-anchored (was `justify-content:
+// center`, but on a tall viewport that pushed the wheel to the middle
+// of `1fr` — a huge gap below the title). Now sits just below the
+// title with a comfortable, viewport-scaled space above it.
 .me-hub__stack {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 1.25rem;
+  padding-top: clamp(1rem, 3vh, 2.25rem);
 }
 
 // Kronk-purple star field behind the wheel — mirrors the Kuestions
