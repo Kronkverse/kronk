@@ -322,6 +322,12 @@ export const ProfileCompose = () => {
   const bodyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    // The composer only ever edits the signed-in account's own cards
+    // (`v1/profile/cards` is self-scoped). Don't load anything when the URL
+    // names someone else — or before we know who we are — so we never fetch
+    // or render editor data on another account's edit URL.
+    if (acct && acct !== myAcct) return undefined;
+
     let cancelled = false;
     void apiRequestGet<ProfileCardJSON[]>('v1/profile/cards')
       .then((rows) => {
@@ -335,7 +341,7 @@ export const ProfileCompose = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [acct, myAcct]);
 
   useEffect(
     () => () => {
@@ -429,9 +435,13 @@ export const ProfileCompose = () => {
     (card) => (CARD_MODE[card.card_type] ?? 'me') === mode,
   );
 
-  // Owner gate. If the URL acct doesn't match the signed-in user, redirect.
-  if (acct && myAcct && acct !== myAcct) {
-    return <Redirect to={`/@${acct}`} />;
+  // Owner gate. The composer edits the signed-in account only, so an edit URL
+  // that names someone else must never render the editor. If we know who we
+  // are and it isn't us, bounce to that account's (read-only) profile; while
+  // ownership is still unknown (accounts not yet hydrated), render nothing
+  // rather than flash the editor chrome on someone else's URL.
+  if (acct && acct !== myAcct) {
+    return myAcct ? <Redirect to={`/@${acct}`} /> : null;
   }
 
   const doneHref = myAcct ? `/@${myAcct}` : '/';
