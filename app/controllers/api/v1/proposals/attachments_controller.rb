@@ -6,6 +6,8 @@
 # always with an attachment disposition. Attachments may be HTML, and
 # serving that inline would execute it in the user's session.
 class Api::V1::Proposals::AttachmentsController < Api::BaseController
+  before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :destroy]
   before_action :require_user!
   before_action :set_proposal
   before_action :set_attachment, only: [:show, :destroy]

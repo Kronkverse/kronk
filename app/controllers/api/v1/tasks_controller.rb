@@ -1,9 +1,12 @@
 # frozen_string_literal: true
 
 class Api::V1::TasksController < Api::BaseController
+  before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update]
   before_action :require_user!
   before_action :set_proposal, only: [:index, :create]
   before_action :set_task,     only: [:update]
+  before_action :require_proposal_creator_or_steward!, only: [:create, :update]
 
   def index
     @tasks = @proposal.tasks.order(created_at: :asc)
@@ -75,6 +78,21 @@ class Api::V1::TasksController < Api::BaseController
 
   def set_task
     @task = Task.find(params[:id])
+  end
+
+  # Only the proposal's creator or a steward (admin/mod) may add or change its
+  # tasks. Without this, any authenticated user could inject tasks into, or
+  # reassign/mark-done tasks on, a proposal they don't own — and marking the
+  # last task done force-delivers the proposal (deliver_proposal_if_work_complete).
+  # Mirrors ProposalsController#require_creator_or_steward!. On create the
+  # proposal comes from set_proposal; on update it's derived from the task.
+  def require_proposal_creator_or_steward!
+    proposal = @proposal || @task&.proposal
+    return forbidden if proposal.nil?
+
+    is_creator = proposal.created_by_account_id == current_account.id
+    is_steward = current_user.role&.can?(:administrator) || current_user.role&.can?(:manage_reports)
+    forbidden unless is_creator || is_steward
   end
 
   def task_params

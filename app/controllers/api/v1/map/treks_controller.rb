@@ -24,7 +24,8 @@ class Api::V1::Map::TreksController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, except: [:index, :show]
   before_action :require_user!
-  before_action :set_trek, only: [:show, :publish, :unpublish, :destroy]
+  before_action :set_trek,       only: [:show]
+  before_action :set_owned_trek, only: [:publish, :unpublish, :destroy]
 
   def index
     treks = Trek.feed_for(current_account).includes(:account, :status).limit(limit)
@@ -110,9 +111,17 @@ class Api::V1::Map::TreksController < Api::BaseController
 
   private
 
+  # Read path: any trek by id; show re-checks visible_to?(current_account).
   def set_trek
-    @trek = Trek.find_by(id: params[:id], account_id: current_account.id) ||
-            Trek.find(params[:id])
+    @trek = Trek.find(params[:id])
+  end
+
+  # Write path (publish/unpublish/destroy): scope strictly to the owner, so a
+  # non-owner gets 404 instead of being able to delete another user's trek or
+  # force-publish their private draft. (The previous `|| Trek.find` fallback
+  # defeated the owner scoping entirely.)
+  def set_owned_trek
+    @trek = Trek.find_by!(id: params[:id], account_id: current_account.id)
   end
 
   def limit

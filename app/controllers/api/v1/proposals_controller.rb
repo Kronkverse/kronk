@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Api::V1::ProposalsController < Api::BaseController
+  before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :vote, :unvote, :back, :complete]
   before_action :require_user!
   before_action :set_proposal, only: [:show, :vote, :unvote, :back, :complete, :update]
   before_action :require_creator_or_steward!, only: [:update]
