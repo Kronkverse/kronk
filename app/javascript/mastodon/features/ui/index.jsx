@@ -69,6 +69,7 @@ import {
   NotificationRequest,
   FollowRequests,
   MateRequests,
+  MeHub,
   FavouritedStatuses,
   BookmarkedStatuses,
   FollowedTags,
@@ -266,6 +267,10 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/start/follows' component={OnboardingFollows} content={children} />
             <WrappedRoute path='/directory' component={Directory} content={children} />
             <WrappedRoute path='/explore' component={Explore} content={children} />
+            {/* /me — signed-in radial hub of self actions (Profile
+                / Timeline / Mates / Switch / Invite / Sign out).
+                See features/me_hub. */}
+            {signedIn && <WrappedRoute path='/me' exact component={MeHub} content={children} />}
             <WrappedRoute path="/orbit" component={Orbit} content={children} />
             {/* Per-korner settings MUST come before any specific
                 /hub/<slug> route — otherwise non-exact korner routes

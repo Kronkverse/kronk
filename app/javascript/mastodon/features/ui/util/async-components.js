@@ -170,6 +170,10 @@ export function Explore () {
   return import('../../explore');
 }
 
+export function MeHub () {
+  return import('../../me_hub');
+}
+
 export function FilterModal () {
   return import('../components/filter_modal');
 }
