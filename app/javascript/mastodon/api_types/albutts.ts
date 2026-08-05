@@ -8,6 +8,16 @@ export type AlbumVisibility =
   | 'self_only'
   | 'krew';
 
+// Split from `AlbumVisibility` per the Kronk Scope Picker rollout
+// (docs/kronk_scope_picker.md, 2026-08-05). Mirrors the
+// ContributionRoster type in `components/scope_picker.tsx`.
+export type AlbumContribution =
+  | 'open'
+  | 'closed'
+  | 'invited'
+  | 'krew'
+  | 'event';
+
 // Since 2026-07-31 an AlbumPhoto is a thin join to a Status. The
 // Status carries the caption (text), media, favourites (froths), and
 // reply thread. `caption` + `url` are kept as top-level convenience
@@ -26,6 +36,7 @@ export interface ApiAlbumJSON {
   title: string;
   description: string | null;
   visibility: AlbumVisibility;
+  contribution: AlbumContribution;
   contributor_count: number;
   photo_count: number;
   cover_url: string | null;
