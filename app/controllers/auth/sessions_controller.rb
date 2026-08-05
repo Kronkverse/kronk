@@ -16,6 +16,7 @@ class Auth::SessionsController < Devise::SessionsController
   around_action :preserve_stored_location, only: :destroy, if: :continue_after?
 
   prepend_before_action :check_suspicious!, only: [:create]
+  prepend_before_action :capture_account_being_added, only: [:create]
 
   include Auth::TwoFactorAuthenticationConcern
 
@@ -101,6 +102,11 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   def require_no_authentication
+    # Let an already-signed-in user reach the login form when they're
+    # explicitly adding another account (the account switcher's "Add account"),
+    # instead of Devise bouncing them back home.
+    return if adding_another_account?
+
     super
 
     # Delete flash message that isn't entirely useful and may be confusing in
@@ -109,6 +115,25 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   private
+
+  # True when a signed-in user is explicitly adding another account (the
+  # switcher links to /auth/sign_in?add=1).
+  def adding_another_account?
+    user_signed_in? && params[:add].present?
+  end
+
+  # Before Devise authenticates the newly-submitted credentials, record the
+  # account the user is currently signed in as into the switcher set, so an
+  # "add account" PRESERVES it — and works even for sessions that predate the
+  # switcher, whose set would otherwise be empty (so the add would silently
+  # replace the current account instead of joining it). A create POST while
+  # already signed in is only ever the add flow: require_no_authentication is
+  # skipped for :create, and the form is only reachable via ?add=1.
+  def capture_account_being_added
+    return unless user_signed_in?
+
+    record_authed_account(current_user, cookies.signed['_session_id'], prior: authed_accounts)
+  end
 
   def preserve_stored_location
     original_stored_location = stored_location_for(:user)
