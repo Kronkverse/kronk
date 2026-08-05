@@ -80,6 +80,9 @@ Rails.application.routes.draw do
       resource :thresholds, only: [:show, :create], controller: :thresholds
       get 'username_available', to: 'username_availability#show'
       get 'sessions/security_key_options', to: 'sessions#webauthn_options'
+      # Account switcher (server-side multi-session).
+      get  'accounts', to: 'switches#index'
+      post 'switch',   to: 'switches#create'
       post 'captcha_confirmation', to: 'confirmations#confirm_captcha', as: :captcha_confirmation
     end
   end

@@ -2,6 +2,7 @@
 
 class Auth::SessionsController < Devise::SessionsController
   include Redisable
+  include AccountSwitching
 
   MAX_2FA_ATTEMPTS_PER_HOUR = 10
 
@@ -33,6 +34,19 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   def destroy
+    # Logging out ends EVERY account held on this browser (MVP): revoke each
+    # held account's activation and clear the switcher set, so no account is
+    # left silently signed in. Then the normal Devise logout (which also emits
+    # Clear-Site-Data, see respond_to_on_destroy). Switching to a remaining
+    # account on a single logout is a follow-up.
+    # Clear the switcher set and do the normal Devise logout, which revokes the
+    # ACTIVE account's session (before_logout in devise.rb) and emits
+    # Clear-Site-Data (respond_to_on_destroy). NOTE: any OTHER account held on
+    # this browser keeps its own SessionActivation alive (like any other device
+    # session — manageable from account settings / capped by
+    # max_session_activations). Revoking every held account on logout, and the
+    # "log out just this one, switch to the other" variant, are follow-ups.
+    session.delete(:authed_accounts)
     super
     session.delete(:challenge_passed_at)
     flash.delete(:notice)
@@ -156,13 +170,23 @@ class Auth::SessionsController < Devise::SessionsController
     # Rotate the Rails session id on successful authentication to close the
     # session-fixation gap: a session id issued before login must not carry
     # over into the authenticated session. Preserve the post-login redirect
-    # target across the reset.
+    # target AND the account-switcher set across the reset. A non-empty prior
+    # set means the user was already signed into another account on this
+    # browser — i.e. this is an "add account" (see below).
+    prior_accounts  = authed_accounts
+    adding_account  = prior_accounts.present?
     stored_location = stored_location_for(:user)
     reset_session
     store_location_for(:user, stored_location) if stored_location
 
     user.update_sign_in!(new_sign_in: true)
     sign_in(user)
+
+    # Record this account in the switcher set, keyed to the activation the
+    # after_set_user hook just wrote to the _session_id cookie, preserving any
+    # already-authenticated accounts.
+    record_authed_account(user, cookies.signed['_session_id'], prior: prior_accounts)
+
     flash.delete(:notice)
 
     user.login_activities.create(
@@ -172,7 +196,9 @@ class Auth::SessionsController < Devise::SessionsController
       )
     )
 
-    UserMailer.suspicious_sign_in(user, request.remote_ip, request.user_agent, Time.now.utc).deliver_later! if @login_is_suspicious
+    # Suppress the new-sign-in email for a same-browser "add account" — the user
+    # is already here; only surface it for genuinely new sessions.
+    UserMailer.suspicious_sign_in(user, request.remote_ip, request.user_agent, Time.now.utc).deliver_later! if @login_is_suspicious && !adding_account
   end
 
   def suspicious_sign_in?(user)

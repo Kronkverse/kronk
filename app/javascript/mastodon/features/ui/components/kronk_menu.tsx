@@ -11,6 +11,8 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 
+import { AccountSwitcherItems } from './account_switcher_items';
+
 // Kronk's Ж menu — a FLOATING, user-movable action button. Three primary
 // verbs: Post / Search / Settings (Nudges moved to the top-bar switcher).
 // The Settings entry is CONTEXT-AWARE — it points at the settings space
@@ -397,6 +399,7 @@ export const KronkMenu = () => {
               <span className='kronk-menu__item-label'>{settings.label}</span>
             </Link>
           )}
+          <AccountSwitcherItems onNavigate={close} />
         </div>
       )}
     </div>
