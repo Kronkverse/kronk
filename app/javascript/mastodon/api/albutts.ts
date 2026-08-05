@@ -8,12 +8,14 @@ import type {
   ApiAlbumJSON,
   ApiAlbumPhotoJSON,
   AlbumVisibility,
+  AlbumContribution,
 } from 'mastodon/api_types/albutts';
 
 interface CreateAlbumParams {
   title: string;
   description?: string;
   visibility?: AlbumVisibility;
+  contribution?: AlbumContribution;
   cover_media_attachment_id?: string;
   krew_ids?: string[];
 }
@@ -22,6 +24,7 @@ interface UpdateAlbumParams {
   title?: string;
   description?: string;
   visibility?: AlbumVisibility;
+  contribution?: AlbumContribution;
   cover_media_attachment_id?: string | null;
   krew_ids?: string[];
 }
