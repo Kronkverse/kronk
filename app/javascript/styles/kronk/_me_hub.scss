@@ -9,33 +9,47 @@
 //            rotate(calc(-1 * --spoke-angle))`.
 
 .me-hub {
-  // Vertically centered stack: title + wheel + hint move together
-  // in the middle of the column. `min-height` claims the whole
-  // scrollable region so the starry background fills the viewport
-  // and there's real vertical space to center inside.
+  // Two-row grid so the title top-anchors like every other space
+  // header, while the wheel + hint pair centers vertically in the
+  // remaining space. Previously used a single flex-column with
+  // `justify-content: center`, which put the title in the middle
+  // of the viewport — off from the standard title location.
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(1.5rem, 4vh, 3rem) 1rem;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: clamp(1rem, 2.5vh, 1.75rem) 1rem clamp(1.5rem, 4vh, 2.5rem);
   min-height: 100vh;
   background: var(--kosmos-void);
   color: var(--text-primary);
   overflow: hidden;
 }
 
-// Title block sits above the wheel. Uses the shared `.space-header`
-// classes for typography — this scope just handles the me-hub
-// positioning: centered, above the wheel, with breathing room.
+// Row 1: title block. Uses the shared `.space-header` classes for
+// typography; this scope just centers horizontally and neutralises
+// the border/padding `.space-header` sometimes carries in other
+// contexts.
 .me-hub__title {
   position: relative;
   z-index: 1;
+  justify-self: center;
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin: 0;
   padding: 0;
   border: 0;
   background: transparent;
+}
+
+// Row 2: wheel + hint pair, vertically centered inside its grid
+// row (which is `1fr`, so it takes the remaining vertical space
+// below the title).
+.me-hub__stack {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
 }
 
 // Kronk-purple star field behind the wheel — mirrors the Kuestions
@@ -241,10 +255,12 @@
 }
 
 // Aspirational subtitle below the wheel. Muted; Tal's copy.
+// Spacing to the wheel is owned by `.me-hub__stack`'s `gap` — no
+// `margin-top` here, otherwise it stacks with `gap` and doubles.
 .me-hub__hint {
   position: relative;
   z-index: 1;
-  margin-top: 1.25rem;
+  margin: 0;
   max-width: 20rem;
   text-align: center;
   color: var(--text-muted);
