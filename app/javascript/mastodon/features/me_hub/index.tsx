@@ -228,48 +228,55 @@ export const MeHub: React.FC<MeHubProps> = () => {
           </p>
         </header>
 
-        <div className='me-hub__wheel'>
-          {/* Dashed connector ring — decorative, purely visual link
-              between the spokes. `aria-hidden` because it carries no
-              meaning for AT. */}
-          <div className='me-hub__ring' aria-hidden />
+        {/* Wheel + hint pair — wrapped so they can vertically center
+            together in the space left below the title (which lives
+            top-anchored above). Grid layout on `.me-hub` gives this
+            stack `1fr` of vertical room, and the flex-column here
+            centers wheel/hint inside it. */}
+        <div className='me-hub__stack'>
+          <div className='me-hub__wheel'>
+            {/* Dashed connector ring — decorative, purely visual link
+                between the spokes. `aria-hidden` because it carries no
+                meaning for AT. */}
+            <div className='me-hub__ring' aria-hidden />
 
-          {/* Center: avatar or initial. Also a button — click routes
-              to the public profile. Subtitle below establishes the
-              aspirational "view as a mate" intent. */}
-          <button
-            type='button'
-            className='me-hub__center'
-            onClick={handleCenterClick}
-            aria-label={intl.formatMessage(messages.profile)}
-          >
-            {myAccount?.avatar ? (
-              <img
-                src={myAccount.avatar}
-                alt=''
-                aria-hidden
-                className='me-hub__center-avatar'
+            {/* Center: avatar or initial. Tapping opens the avatar
+                preview overlay (see below) — the Profile spoke is
+                the affordance for navigating to the profile page. */}
+            <button
+              type='button'
+              className='me-hub__center'
+              onClick={handleCenterClick}
+              aria-label={intl.formatMessage(messages.profile)}
+            >
+              {myAccount?.avatar ? (
+                <img
+                  src={myAccount.avatar}
+                  alt=''
+                  aria-hidden
+                  className='me-hub__center-avatar'
+                />
+              ) : (
+                <span className='me-hub__center-glyph' aria-hidden>
+                  {displayGlyph}
+                </span>
+              )}
+            </button>
+
+            {spokes.map((spoke) => (
+              <Spoke
+                key={spoke.key}
+                spoke={spoke}
+                label={intl.formatMessage(messages[spoke.labelId])}
+                onClick={handleSpokeClick}
               />
-            ) : (
-              <span className='me-hub__center-glyph' aria-hidden>
-                {displayGlyph}
-              </span>
-            )}
-          </button>
+            ))}
+          </div>
 
-          {spokes.map((spoke) => (
-            <Spoke
-              key={spoke.key}
-              spoke={spoke}
-              label={intl.formatMessage(messages[spoke.labelId])}
-              onClick={handleSpokeClick}
-            />
-          ))}
+          <p className='me-hub__hint'>
+            <FormattedMessage {...messages.centerHint} />
+          </p>
         </div>
-
-        <p className='me-hub__hint'>
-          <FormattedMessage {...messages.centerHint} />
-        </p>
       </div>
 
       {avatarOpen && (
