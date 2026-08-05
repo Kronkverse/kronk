@@ -29,7 +29,7 @@
 // "Tap your face to see yourself the way a mate does" hints at
 // that. Full "preview as a mate would" mode is a separate follow-up.
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -43,7 +43,10 @@ import LogoutIcon from '@/material-icons/400-24px/logout.svg?react';
 import PersonIcon from '@/material-icons/400-24px/person.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import SwapIcon from '@/material-icons/400-24px/sync_alt.svg?react';
+import { importFetchedAccount } from 'mastodon/actions/importer';
 import { openModal } from 'mastodon/actions/modal';
+import api from 'mastodon/api';
+import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Column } from 'mastodon/components/column';
 import { Icon } from 'mastodon/components/icon';
 import type { IconProp } from 'mastodon/components/icon';
@@ -66,6 +69,22 @@ const messages = defineMessages({
   centerHint: {
     id: 'me_hub.center_hint',
     defaultMessage: 'Tap your face to see yourself the way a mate does.',
+  },
+  changePhoto: {
+    id: 'me_hub.avatar_preview.change_photo',
+    defaultMessage: 'Change photo',
+  },
+  addPhoto: {
+    id: 'me_hub.avatar_preview.add_photo',
+    defaultMessage: 'Add photo',
+  },
+  uploading: {
+    id: 'me_hub.avatar_preview.uploading',
+    defaultMessage: 'Uploading\u2026',
+  },
+  uploadFailed: {
+    id: 'me_hub.avatar_preview.upload_failed',
+    defaultMessage: "Couldn't upload — try again.",
   },
 });
 
@@ -350,10 +369,22 @@ const MeHubStars: React.FC = () => {
 };
 
 // Avatar preview overlay — opens on center-tap. Full-screen dim +
-// the avatar at size + display name / handle underneath. Backdrop
-// click or Esc closes. Purposefully lightweight (no Redux modal
-// dispatch, no MediaModal contract juggling) — this is a one-shot
-// self-view, not a status-attachment lightbox.
+// the avatar at size + display name / handle + a Change/Add photo
+// affordance. Backdrop click or Esc closes. Purposefully lightweight
+// (no Redux modal dispatch, no MediaModal contract juggling) — this
+// is a one-shot self-view + a shortcut to swap the avatar without
+// leaving the /me hub.
+//
+// Upload flow: `<input type="file">` triggered from the visible
+// button → PATCH /api/v1/accounts/update_credentials with just the
+// `avatar` multipart field (deliberately not the full `updateAccount`
+// thunk from `actions/accounts.js`, which also sends display_name /
+// note / etc. and would overwrite them with whatever it thinks the
+// current values are). On success we dispatch `importFetchedAccount`
+// so `state.accounts[me]` picks up the new avatar URL immediately,
+// then close the overlay. Bio / display-name / header edit surfaces
+// stay TODO in `/settings/profile` for now — this slice is just the
+// avatar.
 interface AvatarPreviewProps {
   avatarUrl: string | undefined;
   glyph: string;
@@ -369,6 +400,12 @@ const AvatarPreview: React.FC<AvatarPreviewProps> = ({
   handle,
   onClose,
 }) => {
+  const intl = useIntl();
+  const dispatch = useAppDispatch();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadFailed, setUploadFailed] = useState(false);
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -378,6 +415,48 @@ const AvatarPreview: React.FC<AvatarPreviewProps> = ({
       window.removeEventListener('keydown', handleKey);
     };
   }, [onClose]);
+
+  const uploadAvatar = useCallback(
+    async (file: File) => {
+      setUploading(true);
+      setUploadFailed(false);
+      try {
+        const form = new FormData();
+        form.append('avatar', file);
+        const response = await api().patch<ApiAccountJSON>(
+          '/api/v1/accounts/update_credentials',
+          form,
+        );
+        dispatch(importFetchedAccount(response.data));
+        onClose();
+      } catch {
+        setUploadFailed(true);
+        setUploading(false);
+      }
+    },
+    [dispatch, onClose],
+  );
+
+  const handleFileChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      // Reset the input so re-picking the same file re-triggers.
+      event.target.value = '';
+      if (!file) return;
+      void uploadAvatar(file);
+    },
+    [uploadAvatar],
+  );
+
+  const openFilePicker = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const uploadLabel = uploading
+    ? intl.formatMessage(messages.uploading)
+    : avatarUrl
+      ? intl.formatMessage(messages.changePhoto)
+      : intl.formatMessage(messages.addPhoto);
 
   return (
     <div
@@ -410,6 +489,28 @@ const AvatarPreview: React.FC<AvatarPreviewProps> = ({
           <div className='me-hub-avatar-preview__name'>{displayName}</div>
           {handle && (
             <div className='me-hub-avatar-preview__handle'>{handle}</div>
+          )}
+        </div>
+        <div className='me-hub-avatar-preview__actions'>
+          <input
+            ref={fileInputRef}
+            type='file'
+            accept='image/*'
+            className='me-hub-avatar-preview__file-input'
+            onChange={handleFileChange}
+          />
+          <button
+            type='button'
+            className='me-hub-avatar-preview__btn'
+            onClick={openFilePicker}
+            disabled={uploading}
+          >
+            {uploadLabel}
+          </button>
+          {uploadFailed && (
+            <p className='me-hub-avatar-preview__error' role='alert'>
+              <FormattedMessage {...messages.uploadFailed} />
+            </p>
           )}
         </div>
       </div>
