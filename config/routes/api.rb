@@ -202,6 +202,13 @@ namespace :api, format: false do
       get 'circle', to: 'circle#index'
     end
 
+    namespace :kommunity do
+      # Discover — the list surface for the Kommunity korner. Returns
+      # local accounts the viewer is allowed to see per each account's
+      # `kommunity_discoverability`, paginated by activity.
+      get 'discover', to: 'discover#index'
+    end
+
     resources :reports, only: [:create]
     resources :trends, only: [:index], controller: 'trends/tags'
     resources :filters, only: [:index, :create, :show, :update, :destroy]

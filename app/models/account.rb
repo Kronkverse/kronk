@@ -181,6 +181,40 @@ class Account < ApplicationRecord
   scope :auditable, -> { where(id: Admin::ActionLog.select(:account_id).distinct) }
   scope :searchable, -> { without_unapproved.without_suspended.where(moved_to_account_id: nil) }
   scope :discoverable, -> { searchable.without_silenced.where(discoverable: true).joins(:account_stat) }
+
+  # Kronk-native discoverability knob for the Kommunity `discover` list
+  # (docs/spaces/kommunity.md — new list surface, 2026-08-05). Separate
+  # from Mastodon's boolean `discoverable` above, which governs
+  # federated search / similar-profile suggestions and has to keep
+  # meaning what upstream means.
+  #
+  #   everyone → any signed-in Kronk user sees this account in the list
+  #   orbit    → only mates-of-mates (one hop out from the viewer) see it
+  #   nobody   → hidden from the list entirely
+  enum :kommunity_discoverability,
+       { everyone: 0, orbit: 1, nobody: 2 },
+       prefix: :kommunity_discoverable_by
+
+  # Accounts visible to `viewer` on the Kommunity discover list, per
+  # each account's own `kommunity_discoverability` scope. Local
+  # accounts only; excludes self, excludes anyone the viewer is
+  # blocking / blocked by. `orbit` gate leverages the existing
+  # mate-relationship helpers.
+  scope :kommunity_discoverable_to, lambda { |viewer|
+    return none if viewer.nil?
+
+    base = local.without_suspended.without_silenced.where.not(id: viewer.id)
+    base = base.where.not(id: viewer.excluded_from_timeline_account_ids)
+
+    everyone_scope = base.kommunity_discoverable_by_everyone
+    orbit_scope    = base.kommunity_discoverable_by_orbit
+                         .where(id: viewer.mates.select(:id))
+                         .or(base.kommunity_discoverable_by_orbit
+                                 .where(id: Follow.where(account_id: viewer.mates.select(:id))
+                                                  .select(:target_account_id)))
+
+    everyone_scope.or(orbit_scope)
+  }
   scope :by_recent_status, -> { includes(:account_stat).merge(AccountStat.by_recent_status).references(:account_stat) }
   scope :by_recent_activity, -> { left_joins(:user, :account_stat).order(coalesced_activity_timestamps.desc).order(id: :desc) }
   scope :by_domain_and_subdomains, ->(domain) { where(domain: Instance.by_domain_and_subdomains(domain).select(:domain)) }
