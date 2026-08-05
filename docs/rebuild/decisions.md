@@ -249,11 +249,19 @@ Audit of the ~29 leftover Mastodon page-components during the Frame migration
 - **DMs** — `/conversations` redirects to Nudges (the messenger is the DM home).
 - **Dead code** — `community_timeline`, `public_timeline` (superseded by Firehose)
   and the unrouted `notifications_v2/index` page are removed.
-- **Discovery — TODO** — Mastodon's `explore` (trends) and `directory` (profile
-  listing) are kept as **placeholders** for now. Kronk should build its **own
-  find-people / directory surface** designed for Kronk users (korners, froths,
-  presence) rather than the federated Mastodon directory; then retire
-  explore/directory. Tracked here until it has a spec.
+- **Discovery — split, one half done (2026-08-05).**
+  - **`/directory`** (profile listing) — **retired.** The Kronk-native
+    `/hub/kommunity/discover` (#1149) replaces it: opt-in per-account
+    visibility (everyone / orbit / nobody), activity-ordered, tap-through
+    to shelved profiles where Groove + Nudge live. The SPA `/directory`
+    now 301-redirects to Kommunity Discover; the `features/directory`
+    bundle + its action / api / reducer entries are deleted. The
+    `/api/v1/directory` REST endpoint stays intact for federation-facing
+    external consumers (third-party clients, ActivityPub actors); only
+    the Kronk-side UI usage is gone.
+  - **`/explore`** (trends — statuses, tags, links) — **still open.** No
+    Kronk-native replacement yet. The retirement is scoped to when a
+    replacement exists; until then, `/explore` remains as a placeholder.
 
 ---
 
