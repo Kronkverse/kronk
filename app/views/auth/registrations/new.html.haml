@@ -189,9 +189,11 @@
               .threshold-ceremony__mark= t('kronk.signup.wordmark')
               -# Greeting username is filled in by `signup.ts` from the
               -# account form's username input just before the arrival
-              -# panel is revealed. Server-side we don't have a
-              -# `current_user` yet — the User isn't created until this
-              -# form is submitted.
+              -# panel reveals — the User isn't created until submit,
+              -# so no `current_user` here. Rails auto-escapes
+              -# interpolation values on `*_html` locale keys, so the
+              -# placeholder span needs `.html_safe` or it renders as
+              -# literal text in the greeting (a bug on 2026-08-05).
               %p.threshold-ceremony__said
-                != t('kronk.thresholds.arrival.line_html', username: '<span class="threshold-arrival__handle" id="threshold-arrival-handle">…</span>')
+                != t('kronk.thresholds.arrival.line_html', username: '<span class="threshold-arrival__handle" id="threshold-arrival-handle">…</span>'.html_safe)
               %button.threshold-ceremony__enter#threshold-enter{ type: 'submit' }= t('kronk.thresholds.arrival.cta_enter')
