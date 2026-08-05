@@ -25,7 +25,7 @@ import { useAppSelector } from 'mastodon/store';
 // Membrane) or the bottom tab-bar (mobile, icon+label) without
 // duplication.
 //
-//   Me      → /@me    (SPA resolves to the signed-in account)
+//   Me      → /me    (radial hub — see features/me_hub)
 //   Home    → /home
 //   Hub     → /hub
 //   Nudges  → /nudges (activity; carries the unread badge)
@@ -82,9 +82,12 @@ export const HubSwitcher = ({
   // notifications (proposal complete, etc.).
   const hasUnread = useAppSelector(selectHasUnreadNudges);
 
-  const profilePath = currentAccountUsername
-    ? `/@${currentAccountUsername}`
-    : '/getting-started';
+  // 2026-08-05: "Me" pillar retargeted from `/@{username}` (public
+  // profile) to `/me` (radial hub of self actions — see
+  // features/me_hub). The pillar stays highlighted on either surface
+  // via `isActive` so the user knows they're still under Me even
+  // when they navigate through to the public profile from the hub.
+  const meHubPath = currentAccountUsername ? '/me' : '/getting-started';
 
   const profileManifest = useKorner('profile');
   const feedManifest = useKorner('feed');
@@ -95,11 +98,11 @@ export const HubSwitcher = ({
     () => [
       {
         key: 'me',
-        to: profilePath,
+        to: meHubPath,
         label: messages.me,
         Icon: kornerIcon('profile', profileManifest),
         iconId: 'profile',
-        isActive: (p) => p.startsWith('/@'),
+        isActive: (p) => p === '/me' || p.startsWith('/@'),
       },
       {
         key: 'home',
@@ -126,7 +129,7 @@ export const HubSwitcher = ({
         isActive: (p) => p === '/nudges' || p.startsWith('/nudges/'),
       },
     ],
-    [profilePath, profileManifest, feedManifest, hubManifest, nudgesManifest],
+    [meHubPath, profileManifest, feedManifest, hubManifest, nudgesManifest],
   );
 
   const activeKey =

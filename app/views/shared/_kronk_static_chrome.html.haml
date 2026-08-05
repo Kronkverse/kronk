@@ -33,8 +33,12 @@
   - if user_signed_in?
     %nav.hub-switcher.hub-switcher--top{ 'aria-label' => 'Primary surfaces' }
       .hub-switcher__row{ role: 'tablist' }
-        - me_active = path.start_with?('/@')
-        %a.hub-switcher__pillar{ href: "/@#{current_user.account.username}", role: 'tab', 'aria-selected': me_active.to_s, class: ('hub-switcher__pillar--active' if me_active) }
+        -# "Me" points at the radial hub at /me (see
+        -# features/me_hub). The pillar stays highlighted on the
+        -# public profile too so the user knows they're still under
+        -# Me after clicking through from the hub.
+        - me_active = path == '/me' || path.start_with?('/@')
+        %a.hub-switcher__pillar{ href: '/me', role: 'tab', 'aria-selected': me_active.to_s, class: ('hub-switcher__pillar--active' if me_active) }
           - if hub_switcher_icons['profile']
             = material_symbol(hub_switcher_icons['profile'], class: 'hub-switcher__pillar-icon')
           %span.hub-switcher__label.hub-switcher__label--sr Me
