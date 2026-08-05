@@ -200,6 +200,12 @@ Rails.application.routes.draw do
   get '/settings/notifications', to: 'home#index'
   get '/settings/privacy', to: 'home#index'
 
+  # /me — the "Me" hub (SPA, `features/me_hub/`, shipped in #1159).
+  # Needs a Rails-side mount to `home#index` so the SPA shell renders
+  # before React Router picks up the route; without this Rails 404s
+  # before the SPA gets a chance to match.
+  get '/me', to: 'home#index'
+
   draw(:settings)
 
   namespace :disputes do
