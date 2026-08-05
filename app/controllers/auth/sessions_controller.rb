@@ -153,6 +153,14 @@ class Auth::SessionsController < Devise::SessionsController
     clear_2fa_attempt_from_user(user)
     clear_attempt_from_session
 
+    # Rotate the Rails session id on successful authentication to close the
+    # session-fixation gap: a session id issued before login must not carry
+    # over into the authenticated session. Preserve the post-login redirect
+    # target across the reset.
+    stored_location = stored_location_for(:user)
+    reset_session
+    store_location_for(:user, stored_location) if stored_location
+
     user.update_sign_in!(new_sign_in: true)
     sign_in(user)
     flash.delete(:notice)
@@ -198,6 +206,14 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   def respond_to_on_destroy(**)
+    # Evict the authenticated page from the browser's back/forward cache on
+    # logout. Without this, Safari/WebKit restore the signed-in page (with the
+    # previous account's embedded state) from bfcache when the user presses
+    # Back — even though the session and token are already revoked server-side.
+    # Clearing cache/cookies/storage on the sign-out response forces a fresh,
+    # unauthenticated load on any subsequent back-navigation.
+    response.set_header('Clear-Site-Data', '"cache", "cookies", "storage"')
+
     respond_to do |format|
       format.json do
         render json: {
