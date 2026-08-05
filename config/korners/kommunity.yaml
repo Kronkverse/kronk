@@ -68,10 +68,28 @@ launch:
 # the tile lights up on the Hub — the surface works end-to-end today.
 enforced: true
 
+# SpaceNav view switcher. First entry is the default (bare
+# /hub/kommunity). Icons are text labels for now; picks in a
+# follow-up per the pattern set with Kuestions (#1146).
+#
+#   orb      the 3D graph view (existing)
+#   discover the list of visible Kronkers, each account's own
+#            `kommunity_discoverability` (everyone/orbit/nobody)
+#            gates whether they appear (docs/spaces/kommunity.md
+#            — new list surface, 2026-08-05).
+views:
+  - { key: orb, label: Orb }
+  - { key: discover, label: Discover }
+
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 nodes:
   - id: kommunity.index
     label: Kommunity
     url: /hub/kommunity
+    lifecycle: live
+    spa: true
+  - id: kommunity.discover
+    label: Kommunity · Discover
+    url: /hub/kommunity/discover
     lifecycle: live
     spa: true

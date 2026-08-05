@@ -78,3 +78,113 @@
     display: none;
   }
 }
+
+// ── Discover list (Kommunity view #2) ────────────────────────────
+// The paginated grid of visible Kronkers. Each row = one account,
+// tap-through to their shelved profile where Groove + Nudge live.
+
+.kommunity-discover {
+  padding: var(--sp-5, 24px) var(--sp-4, 16px) var(--sp-6, 32px);
+  max-width: 1080px;
+  margin: 0 auto;
+
+  &__header {
+    font-family: var(--font-display, inherit);
+    font-size: 20px;
+    color: var(--text-primary);
+    margin: 0 0 var(--sp-4, 16px);
+  }
+
+  &__loading,
+  &__empty {
+    padding: var(--sp-6, 32px);
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  &__grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--sp-3, 12px);
+  }
+
+  &__row {
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    transition:
+      border-color 160ms ease-out,
+      background 160ms ease-out;
+
+    &:hover {
+      border-color: var(--accent);
+      background: var(--surface-elevated);
+    }
+  }
+
+  &__link {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3, 12px);
+    padding: var(--sp-3, 12px);
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+
+  &__names {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__dname {
+    font-size: 14px;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__handle {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__more {
+    display: flex;
+    justify-content: center;
+    padding: var(--sp-5, 24px);
+  }
+
+  &__more-btn {
+    padding: 8px var(--sp-5, 24px);
+    border-radius: var(--radius-medium);
+    border: 1px solid var(--border-default);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition:
+      color 160ms ease-out,
+      border-color 160ms ease-out;
+
+    &:hover:not(:disabled) {
+      color: var(--text-primary);
+      border-color: var(--accent);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+  }
+}

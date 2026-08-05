@@ -17,9 +17,17 @@ class Api::V1::Settings::PrivacyController < Api::BaseController
   before_action :require_user!
 
   # target: :account => an Account column (attr); :settings => a UserSettings key.
+  # kind: 'boolean' | 'enum' — enum carries an ordered options array; the SPA
+  # renders it as a dropdown, the coercer keeps the raw string value.
   FIELDS = {
     'locked' => { target: :account, attr: :locked, kind: 'boolean' },
     'discoverable' => { target: :account, attr: :discoverable, kind: 'boolean' },
+    'kommunity_discoverability' => {
+      target: :account,
+      attr: :kommunity_discoverability,
+      kind: 'enum',
+      options: %w(everyone orbit nobody),
+    },
     'indexable' => { target: :settings, key: 'indexable', kind: 'boolean' },
     'hide_collections' => { target: :account, attr: :hide_collections, kind: 'boolean' },
     'show_application' => { target: :settings, key: 'show_application', kind: 'boolean' },
@@ -61,15 +69,23 @@ class Api::V1::Settings::PrivacyController < Api::BaseController
   private
 
   def coerce(kind, raw)
-    kind == 'boolean' ? ActiveModel::Type::Boolean.new.cast(raw) : raw.to_s
+    case kind
+    when 'boolean' then ActiveModel::Type::Boolean.new.cast(raw)
+    else raw.to_s
+    end
   end
 
   def payload
     {
-      settings_schema: FIELDS.map { |name, cfg| { name: name, kind: cfg[:kind] } },
+      settings_schema: FIELDS.map do |name, cfg|
+        entry = { name: name, kind: cfg[:kind] }
+        entry[:options] = cfg[:options] if cfg[:options]
+        entry
+      end,
       values: {
         'locked' => current_account.locked,
         'discoverable' => current_account.discoverable,
+        'kommunity_discoverability' => current_account.kommunity_discoverability,
         'indexable' => current_user.settings['indexable'],
         'hide_collections' => current_account.hide_collections,
         'show_application' => current_user.settings['show_application'],

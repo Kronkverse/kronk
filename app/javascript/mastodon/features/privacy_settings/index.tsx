@@ -68,6 +68,15 @@ const messages = defineMessages({
     id: 'privacy_settings.discoverable_hint',
     defaultMessage: 'Show up in the directory, search, and follow suggestions.',
   },
+  kommunityDiscoverability: {
+    id: 'privacy_settings.kommunity_discoverability',
+    defaultMessage: 'Who can find you in the Kommunity list',
+  },
+  kommunityDiscoverabilityHint: {
+    id: 'privacy_settings.kommunity_discoverability_hint',
+    defaultMessage:
+      'Controls whether you appear in the Kommunity Discover list. Independent of federation-side search.',
+  },
   indexable: {
     id: 'privacy_settings.indexable',
     defaultMessage: 'Include posts in search engines',
@@ -123,6 +132,7 @@ const messages = defineMessages({
 const LABELS: Record<string, MessageDescriptor> = {
   locked: messages.locked,
   discoverable: messages.discoverable,
+  kommunity_discoverability: messages.kommunityDiscoverability,
   indexable: messages.indexable,
   hide_collections: messages.hideCollections,
   show_application: messages.showApplication,
@@ -132,6 +142,7 @@ const LABELS: Record<string, MessageDescriptor> = {
 const HINTS: Record<string, MessageDescriptor> = {
   locked: messages.lockedHint,
   discoverable: messages.discoverableHint,
+  kommunity_discoverability: messages.kommunityDiscoverabilityHint,
   indexable: messages.indexableHint,
   hide_collections: messages.hideCollectionsHint,
   show_application: messages.showApplicationHint,

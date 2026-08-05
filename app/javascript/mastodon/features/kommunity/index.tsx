@@ -1,14 +1,16 @@
-// Kommunity — the whole-graph orb view. A first-class Kronk korner at
-// /hub/kommunity. Sits inside the shared KornerShell so
-// AutoSpaceBadge, AutoSpaceHeader, and AutoSpaceViewPicker do the
-// chrome (Standard L11) — this file only declares the default view
-// and mounts the orb.
+// Kommunity — the whole-graph orb view + the Discover list. A
+// first-class Kronk korner at /hub/kommunity. Sits inside the shared
+// KornerShell so AutoSpaceBadge, AutoSpaceHeader, and
+// AutoSpaceViewPicker do the chrome (Standard L11) — this file only
+// declares the views + mounts them.
 
 import { KornerShell } from 'mastodon/components/korner_shell';
 
+import { KommunityDiscover } from './discover';
 import { KronkOrb } from './orb';
 
 const OrbView = () => <KronkOrb />;
+const DiscoverView = () => <KommunityDiscover />;
 
 export const Kommunity = () => (
   <KornerShell
@@ -16,7 +18,7 @@ export const Kommunity = () => (
     label='Kommunity'
     className='kommunity'
     defaultView='orb'
-    views={{ orb: OrbView }}
+    views={{ orb: OrbView, discover: DiscoverView }}
   />
 );
 
