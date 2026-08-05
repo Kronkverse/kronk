@@ -77,7 +77,6 @@ import {
   DomainBlocks,
   Mutes,
   PinnedStatuses,
-  Directory,
   OnboardingProfile,
   OnboardingFollows,
   Explore,
@@ -264,7 +263,14 @@ class SwitchingColumnsArea extends PureComponent {
 
             <WrappedRoute path={['/start', '/start/profile']} exact component={OnboardingProfile} content={children} />
             <WrappedRoute path='/start/follows' component={OnboardingFollows} content={children} />
-            <WrappedRoute path='/directory' component={Directory} content={children} />
+            {/* Legacy Mastodon `/directory` — retired 2026-08-05 in
+                favour of `/hub/kommunity/discover`, the Kronk-native
+                Discover list (docs/rebuild/decisions.md). Any inbound
+                link — federation mail, third-party embed, cached
+                bookmark — lands at Discover instead of a dead SPA
+                route. The `/api/v1/directory` endpoint stays intact
+                for federation-facing external consumers. */}
+            <Redirect from='/directory' to='/hub/kommunity/discover' />
             <WrappedRoute path='/explore' component={Explore} content={children} />
             <WrappedRoute path="/orbit" component={Orbit} content={children} />
             {/* Per-korner settings MUST come before any specific

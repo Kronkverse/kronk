@@ -12,7 +12,6 @@ import {
   HashtagTimeline,
   FavouritedStatuses,
   BookmarkedStatuses,
-  Directory,
 } from '../util/async-components';
 import { useColumnsContext } from '../util/columns_context';
 
@@ -30,7 +29,6 @@ const componentMap = {
   'HASHTAG': HashtagTimeline,
   'FAVOURITES': FavouritedStatuses,
   'BOOKMARKS': BookmarkedStatuses,
-  'DIRECTORY': Directory,
 };
 
 const TabsBarPortal = () => {

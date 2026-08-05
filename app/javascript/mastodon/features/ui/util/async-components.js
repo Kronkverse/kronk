@@ -150,10 +150,6 @@ export function Audio () {
   return import('../../audio');
 }
 
-export function Directory () {
-  return import('../../directory');
-}
-
 export function OnboardingProfile () {
   return import('../../onboarding/profile');
 }

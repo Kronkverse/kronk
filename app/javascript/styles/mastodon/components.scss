@@ -4625,7 +4625,7 @@ a.status-card {
 // an IntersectionObserver on it silently triggers infinite scroll.
 // See components/load_more_sentinel.tsx. Kept as a discrete rule so
 // nothing bleeds into the classic `.load-more` button styling below
-// (still used by features/directory).
+// (still used by `components/load_more.tsx`).
 .load-more-sentinel {
   width: 100%;
   height: 1px;
