@@ -364,9 +364,21 @@
     font-family: var(--font-display, inherit);
     font-size: 0.85rem;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     transition:
       color var(--dur-fast) var(--ease-out),
       background var(--dur-fast) var(--ease-out);
+
+    // Icon-carrying buttons (view has `icon` in the manifest) render
+    // a 20px Material Symbol coloured via currentcolor. Sits on the
+    // same segmented-pill baseline as text views.
+    svg {
+      width: 20px;
+      height: 20px;
+      fill: currentcolor;
+    }
 
     &[aria-pressed='true'] {
       background: var(--kronk-purple-accent);

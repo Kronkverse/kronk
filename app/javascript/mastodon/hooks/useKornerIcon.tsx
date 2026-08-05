@@ -1,8 +1,10 @@
 import AccountCircleIcon from '@/material-icons/400-24px/account_circle.svg?react';
 import AllInclusiveIcon from '@/material-icons/400-24px/all_inclusive.svg?react';
+import ChoiceIcon from '@/material-icons/400-24px/choice.svg?react';
 import ConstructionIcon from '@/material-icons/400-24px/construction.svg?react';
 import CycleIcon from '@/material-icons/400-24px/cycle.svg?react';
 import DiversityIcon from '@/material-icons/400-24px/diversity_2.svg?react';
+import FmdBadIcon from '@/material-icons/400-24px/fmd_bad.svg?react';
 import GlobeIcon from '@/material-icons/400-24px/globe.svg?react';
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import GynecologyIcon from '@/material-icons/400-24px/gynecology.svg?react';
@@ -11,11 +13,13 @@ import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import HourglassIcon from '@/material-icons/400-24px/hourglass.svg?react';
 import HubIcon from '@/material-icons/400-24px/hub.svg?react';
 import KronkCoinIcon from '@/material-icons/400-24px/kronk_coin.svg?react';
+import NotListedLocationIcon from '@/material-icons/400-24px/not_listed_location.svg?react';
 import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import RavenIcon from '@/material-icons/400-24px/raven.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import SnowflakeIcon from '@/material-icons/400-24px/snowflake.svg?react';
+import StacksIcon from '@/material-icons/400-24px/stacks.svg?react';
 import TauntIcon from '@/material-icons/400-24px/taunt.svg?react';
 import TravelExploreIcon from '@/material-icons/400-24px/travel_explore.svg?react';
 import type { IconProp } from 'mastodon/components/icon';
@@ -29,9 +33,11 @@ import { store } from 'mastodon/store';
 const MATERIAL_TO_ICON: Record<string, IconProp> = {
   account_circle: AccountCircleIcon,
   all_inclusive: AllInclusiveIcon,
+  choice: ChoiceIcon,
   construction: ConstructionIcon,
   cycle: CycleIcon,
   diversity_2: DiversityIcon,
+  fmd_bad: FmdBadIcon,
   globe: GlobeIcon,
   groups: GroupsIcon,
   gynecology: GynecologyIcon,
@@ -40,11 +46,13 @@ const MATERIAL_TO_ICON: Record<string, IconProp> = {
   hourglass: HourglassIcon,
   hub: HubIcon,
   kronk_coin: KronkCoinIcon,
+  not_listed_location: NotListedLocationIcon,
   photo_library: PhotoLibraryIcon,
   question_mark: QuestionMarkIcon,
   raven: RavenIcon,
   settings: SettingsIcon,
   snowflake: SnowflakeIcon,
+  stacks: StacksIcon,
   taunt: TauntIcon,
   travel_explore: TravelExploreIcon,
 };

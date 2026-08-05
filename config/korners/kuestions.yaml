@@ -102,11 +102,14 @@ compose:
   route: '/hub/kuestions/ask'
 
 # SpaceNav view switcher (first entry = default, bare /hub/kuestions).
+# `icon` is a Material Symbol name; the frontend resolves it via
+# `useKornerIcon.tsx#MATERIAL_TO_ICON`. Labels ride on aria-label +
+# tooltip when an icon is present. Icon picks locked 2026-08-05.
 views:
-  - { key: deck, label: Deck }
-  - { key: today, label: Today }
-  - { key: answered, label: Answered }
-  - { key: ask, label: Ask }
+  - { key: deck, label: Deck, icon: stacks }
+  - { key: today, label: Today, icon: choice }
+  - { key: answered, label: Answered, icon: fmd_bad }
+  - { key: ask, label: Ask, icon: not_listed_location }
 
 launch:
   blurb: 'Kuestions — ask, answer, unlock.'
