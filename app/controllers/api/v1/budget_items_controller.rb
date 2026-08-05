@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Api::V1::BudgetItemsController < Api::BaseController
+  before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update]
   before_action :require_user!
   before_action :require_steward!
   before_action :set_proposal,    only: [:index, :create]

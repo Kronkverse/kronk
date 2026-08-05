@@ -3,6 +3,8 @@
 # Comments on a Kommons proposal — the discussion surface for the support-model
 # proposal page. Nested under a proposal; one level of threading (`parent_id`).
 class Api::V1::Proposals::CommentsController < Api::BaseController
+  before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :destroy]
   before_action :require_user!
   before_action :set_proposal
   before_action :set_comment, only: [:destroy]

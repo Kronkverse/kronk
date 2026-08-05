@@ -76,6 +76,8 @@ class Api::V1::EventsController < Api::BaseController
   end
 
   def invite
+    authorize_event_owner!
+
     account_ids = Array(params[:account_ids]).map(&:to_i)
     accounts = Account.where(id: account_ids)
 
