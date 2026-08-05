@@ -19,12 +19,31 @@
 # which is philosophically the same posture — open unless the user
 # opts down).
 #
-# strong_migrations pattern: `add_column` with a non-volatile
-# default is safe in modern Postgres (metadata-only, no table
-# rewrite), so no `disable_ddl_transaction!` dance.
+# strong_migrations pattern:
+#   * `add_column` with a non-volatile default is safe in modern
+#     Postgres (metadata-only, no table rewrite) — no lock issue.
+#   * `add_index` on a large-ish table (accounts) MUST run with
+#     `algorithm: :concurrently` so it doesn't block writes; that
+#     requires `disable_ddl_transaction!` because concurrent index
+#     builds can't happen inside a transaction.
+#   * `if_not_exists: true` on both so this replays cleanly if a
+#     prior half-run left partial state — the initial deploy of this
+#     migration aborted at the non-concurrent add_index step
+#     (strong_migrations caught it before the column was created),
+#     so `add_column` will actually create the column on the retry.
 class AddKommunityDiscoverabilityToAccounts < ActiveRecord::Migration[8.0]
-  def change
-    add_column :accounts, :kommunity_discoverability, :integer, default: 0, null: false
-    add_index  :accounts, :kommunity_discoverability
+  disable_ddl_transaction!
+
+  def up
+    add_column :accounts, :kommunity_discoverability, :integer, default: 0, null: false, if_not_exists: true
+
+    add_index :accounts, :kommunity_discoverability,
+              algorithm: :concurrently,
+              if_not_exists: true
+  end
+
+  def down
+    remove_index :accounts, :kommunity_discoverability, algorithm: :concurrently, if_exists: true
+    remove_column :accounts, :kommunity_discoverability, if_exists: true
   end
 end
