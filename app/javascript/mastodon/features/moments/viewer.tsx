@@ -20,6 +20,7 @@ import {
 
 import { useHistory, useParams } from 'react-router-dom';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ReplyIcon from '@/material-icons/400-24px/chat_bubble.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import FrothIcon from '@/material-icons/400-24px/star-fill.svg?react';
@@ -32,8 +33,11 @@ import {
 } from 'mastodon/api';
 import { KornerKrewPicker } from 'mastodon/components/korner_krew_picker';
 import { KornerVisibilityPicker } from 'mastodon/components/korner_visibility_picker';
+import { KronkStarfield } from 'mastodon/components/kronk_starfield';
 import { VoicePlayer } from 'mastodon/components/media';
 import { me } from 'mastodon/initial_state';
+
+import { MomentsComposer } from './composer';
 
 const audienceLabels = defineMessages({
   public: { id: 'moments.audience.public', defaultMessage: 'Anyone' },
@@ -107,6 +111,12 @@ const MomentViewer = () => {
   const [now, setNow] = useState(() => Date.now());
   const [frothPending, setFrothPending] = useState(false);
   const [visibilityPending, setVisibilityPending] = useState(false);
+  const [composerOpen, setComposerOpen] = useState(false);
+  // Bumped after a successful post from the in-viewer composer so the
+  // stack-load effect re-runs and picks up the new Moment. The clicked
+  // Moment stays the initial cursor position (indexes shift only if the
+  // user is on their own stack, which the effect handles by re-seeking).
+  const [reloadTick, setReloadTick] = useState(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Fetch the requested Moment first, then load the owner's whole
@@ -146,7 +156,7 @@ const MomentViewer = () => {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, reloadTick]);
 
   // Keep the progress bar honest even if the tab stays open for a
   // while (the Moment marches toward its 24h expiry regardless of
@@ -296,6 +306,17 @@ const MomentViewer = () => {
     history.push(`/nudges/${moment.account.id}`);
   }, [moment, history]);
 
+  const openComposer = useCallback(() => {
+    setComposerOpen(true);
+  }, []);
+  const closeComposer = useCallback(() => {
+    setComposerOpen(false);
+  }, []);
+  const onPosted = useCallback(() => {
+    setComposerOpen(false);
+    setReloadTick((n) => n + 1);
+  }, []);
+
   const onCloseClick = useCallback(
     (event: MouseEvent) => {
       event.stopPropagation();
@@ -373,26 +394,32 @@ const MomentViewer = () => {
   }
 
   return (
-    <ViewerBody
-      moment={moment}
-      stack={stack}
-      index={index}
-      now={now}
-      frothPending={frothPending}
-      videoRef={videoRef}
-      onBackdropClick={onBackdropClick}
-      onBackdropKey={onBackdropKey}
-      onCloseClick={onCloseClick}
-      onLeftTap={onLeftTap}
-      onCentreTap={onCentreTap}
-      onRightTap={onRightTap}
-      onFroth={toggleFroth}
-      onReply={reply}
-      isOwner={moment.account.id === me}
-      onChangeVisibility={changeVisibility}
-      visibilityPending={visibilityPending}
-      intl={intl}
-    />
+    <>
+      <ViewerBody
+        moment={moment}
+        stack={stack}
+        index={index}
+        now={now}
+        frothPending={frothPending}
+        videoRef={videoRef}
+        onBackdropClick={onBackdropClick}
+        onBackdropKey={onBackdropKey}
+        onCloseClick={onCloseClick}
+        onLeftTap={onLeftTap}
+        onCentreTap={onCentreTap}
+        onRightTap={onRightTap}
+        onFroth={toggleFroth}
+        onReply={reply}
+        isOwner={moment.account.id === me}
+        onChangeVisibility={changeVisibility}
+        visibilityPending={visibilityPending}
+        onAddAnother={openComposer}
+        intl={intl}
+      />
+      {composerOpen && (
+        <MomentsComposer onClose={closeComposer} onPosted={onPosted} />
+      )}
+    </>
   );
 };
 
@@ -414,6 +441,7 @@ interface ViewerBodyProps {
   isOwner: boolean;
   onChangeVisibility: (next: string, krewId: string | null) => void;
   visibilityPending: boolean;
+  onAddAnother: () => void;
   intl: ReturnType<typeof useIntl>;
 }
 
@@ -435,6 +463,7 @@ const ViewerBody = ({
   isOwner,
   onChangeVisibility,
   visibilityPending,
+  onAddAnother,
   intl,
 }: ViewerBodyProps) => {
   const isVideo = moment.media_attachment.type === 'video';
@@ -491,6 +520,13 @@ const ViewerBody = ({
       role='dialog'
       aria-label={`Moment by ${moment.account.acct}`}
     >
+      {/* Backdrop is transparent — the starfield sits behind it and
+          shows through. Click anywhere off the stage closes the viewer,
+          same as before; the starfield canvas is pointer-events:none so
+          taps fall through to this button. */}
+      <div className='moments-viewer__cosmos' aria-hidden>
+        <KronkStarfield />
+      </div>
       <button
         type='button'
         className='moments-viewer__backdrop'
@@ -665,6 +701,25 @@ const ViewerBody = ({
         )}
 
         <footer className='moments-viewer__actions'>
+          {isOwner && (
+            <button
+              type='button'
+              className='moments-viewer__action moments-viewer__action--add'
+              onClick={onAddAnother}
+              aria-label={intl.formatMessage({
+                id: 'moments.viewer.add_another',
+                defaultMessage: 'Post another Moment',
+              })}
+            >
+              <AddIcon />
+              <span className='moments-viewer__action-label'>
+                <FormattedMessage
+                  id='moments.viewer.add_another_label'
+                  defaultMessage='Add'
+                />
+              </span>
+            </button>
+          )}
           <button
             type='button'
             className={`moments-viewer__action moments-viewer__action--froth${
@@ -687,23 +742,25 @@ const ViewerBody = ({
               {moment.froth_count}
             </span>
           </button>
-          <button
-            type='button'
-            className='moments-viewer__action moments-viewer__action--reply'
-            onClick={onReply}
-            aria-label={intl.formatMessage({
-              id: 'moments.viewer.reply',
-              defaultMessage: 'Reply via Nudge',
-            })}
-          >
-            <ReplyIcon />
-            <span className='moments-viewer__action-label'>
-              <FormattedMessage
-                id='moments.viewer.reply_label'
-                defaultMessage='Reply'
-              />
-            </span>
-          </button>
+          {!isOwner && (
+            <button
+              type='button'
+              className='moments-viewer__action moments-viewer__action--reply'
+              onClick={onReply}
+              aria-label={intl.formatMessage({
+                id: 'moments.viewer.reply',
+                defaultMessage: 'Reply via Nudge',
+              })}
+            >
+              <ReplyIcon />
+              <span className='moments-viewer__action-label'>
+                <FormattedMessage
+                  id='moments.viewer.reply_label'
+                  defaultMessage='Reply'
+                />
+              </span>
+            </button>
+          )}
         </footer>
       </div>
     </div>
