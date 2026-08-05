@@ -91,6 +91,11 @@ interface PhotoDraft {
   key: string;
   status: PhotoStatus;
   caption: string;
+  // Server error message from the failed upload attempt (e.g.
+  // "This album is only open to Tal's Mates…"). Populated when
+  // status flips to 'failed' so the UI can surface WHY the upload
+  // was rejected — was previously just a generic "failed" chip.
+  errorMessage?: string;
 }
 
 const CAPTION_MAX = 500;
@@ -182,11 +187,14 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
     setPhotos([]);
   }, []);
 
-  const setPhotoStatus = useCallback((key: string, status: PhotoStatus) => {
-    setPhotos((prev) =>
-      prev.map((p) => (p.key === key ? { ...p, status } : p)),
-    );
-  }, []);
+  const setPhotoStatus = useCallback(
+    (key: string, status: PhotoStatus, errorMessage?: string) => {
+      setPhotos((prev) =>
+        prev.map((p) => (p.key === key ? { ...p, status, errorMessage } : p)),
+      );
+    },
+    [],
+  );
 
   const runUploadPool = useCallback(
     async (drafts: PhotoDraft[]) => {
@@ -210,16 +218,29 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
             });
             setPhotoStatus(draft.key, 'done');
           } catch (e) {
+            // Extract the server's `error` message from the axios
+            // error response so the failed-chip tooltip / row error
+            // shows WHY (e.g. "This album is only open to
+            // @tal's Mates…") instead of a generic "failed". Both
+            // photo POST (403 / 422) and media POST (422) return
+            // `{ error: string }` bodies.
+            const err = e as {
+              response?: { data?: { error?: string } };
+              message?: string;
+            };
+            const serverMsg =
+              err.response?.data?.error ?? err.message ?? 'Upload failed';
             console.error(
               '[albutts] contribute photo upload failed',
               {
                 name: draft.file.name,
                 size: draft.file.size,
                 type: draft.file.type,
+                serverMsg,
               },
               e,
             );
-            setPhotoStatus(draft.key, 'failed');
+            setPhotoStatus(draft.key, 'failed', serverMsg);
           }
         }
       };
@@ -348,19 +369,27 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
                     <span
                       className={`albutts-composer__chip albutts-composer__chip--${p.status}`}
                       aria-hidden
+                      title={p.status === 'failed' ? p.errorMessage : undefined}
                     >
                       {chipGlyph(p.status)}
                     </span>
                   </div>
-                  <PickCaptionRow
-                    photoKey={p.key}
-                    caption={p.caption}
-                    disabled={pending || p.status === 'done'}
-                    placeholder={intl.formatMessage(
-                      messages.captionPlaceholder,
+                  <div className='albutts-composer__pick-body'>
+                    <PickCaptionRow
+                      photoKey={p.key}
+                      caption={p.caption}
+                      disabled={pending || p.status === 'done'}
+                      placeholder={intl.formatMessage(
+                        messages.captionPlaceholder,
+                      )}
+                      onChange={handleCaptionChange}
+                    />
+                    {p.status === 'failed' && p.errorMessage && (
+                      <p className='albutts-composer__pick-error' role='alert'>
+                        {p.errorMessage}
+                      </p>
                     )}
-                    onChange={handleCaptionChange}
-                  />
+                  </div>
                 </li>
               ))}
             </ul>
