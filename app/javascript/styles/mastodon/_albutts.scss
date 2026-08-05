@@ -916,6 +916,27 @@
     }
   }
 
+  // Per-pick body wrapper (caption + optional error). Was a bare
+  // `.pick-caption` before; wrapping so the error message can sit
+  // below the caption without disrupting the flex row.
+  &__pick-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  // Failed-upload row error. Server's `error` string (e.g. "This
+  // album is only open to Mates…") — surfaces WHY the upload was
+  // rejected without needing dev-tools.
+  &__pick-error {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--warning-red);
+  }
+
   &__chip {
     position: absolute;
     top: 4px;
