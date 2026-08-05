@@ -90,6 +90,7 @@ export const MODAL_COMPONENTS = {
   'ANNUAL_REPORT': AnnualReportModal,
   'COMPOSE_PRIVACY': () => Promise.resolve({ default: VisibilityModal }),
   'INVITE': () => import('./invite_modal'),
+  'ACCOUNT_SWITCHER': () => import('./account_switcher_modal'),
   'NUDGE_COMPOSE': () => Promise.resolve({ default: NudgeComposeModal }),
   'TAG_PEOPLE': () => Promise.resolve({ default: TagPeopleModal }),
   'SELF_TAG': () => Promise.resolve({ default: SelfTagModal }),
