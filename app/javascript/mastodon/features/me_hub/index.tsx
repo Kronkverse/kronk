@@ -7,12 +7,14 @@
 // six that mattered enough to earn a spoke:
 //
 //   * Profile   → /@{username}          (public profile view)
-//   * Timeline  → /@{username}          (their own posts stream; same
-//                                        target today; will diverge
-//                                        when a "your posts" view lands)
+//   * Timeline  → /@{username}/posts    (their own posts stream,
+//                                        matching the Timeline pillar
+//                                        on the shelved profile)
 //   * Mates     → /@{username}/mates    (mates list)
-//   * Invite    → opens the invite modal (same modal the top-band
-//                                        Invite FAB opens)
+//   * Invite    → opens the invite modal (same modal that used to sit
+//                                        in the top-right chrome —
+//                                        that chrome button is now
+//                                        retired since Me hub carries it)
 //   * Switch    → placeholder for account-switcher (real UX in a
 //                                        follow-up when multi-account
 //                                        infrastructure lands)
@@ -21,11 +23,13 @@
 // Two `?` slots on the ring are visible placeholders — the mockup
 // shows them; keeping them makes the future extension obvious.
 //
-// Center avatar tap navigates to the public profile. Subtitle
-// "Tap your face to see yourself the way a mate does" is
-// aspirational — the "as-a-mate" preview mode isn't built yet.
+// Center avatar opens a lightweight avatar-preview overlay (own
+// component, no Redux modal) — the intent being "see your face at
+// size, alongside how mates read your identity". Subtitle
+// "Tap your face to see yourself the way a mate does" hints at
+// that. Full "preview as a mate would" mode is a separate follow-up.
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -96,7 +100,16 @@ export const MeHub: React.FC<MeHubProps> = () => {
 
   const username = myAccount?.username ?? '';
   const profilePath = username ? `/@${username}` : '/getting-started';
+  const timelinePath = username ? `/@${username}/posts` : '/getting-started';
   const matesPath = username ? `/@${username}/mates` : '/getting-started';
+
+  const [avatarOpen, setAvatarOpen] = useState(false);
+  const openAvatar = useCallback(() => {
+    setAvatarOpen(true);
+  }, []);
+  const closeAvatar = useCallback(() => {
+    setAvatarOpen(false);
+  }, []);
 
   // Spokes clockwise from top. Two `?` placeholders inherit the
   // `placeholder` label + null icon; they render but don't act.
@@ -144,13 +157,16 @@ export const MeHub: React.FC<MeHubProps> = () => {
       labelId: 'timeline',
       icon: HistoryIcon,
       angle: 315,
-      to: profilePath,
+      to: timelinePath,
     },
   ];
 
-  const handleCenterClick = useCallback(() => {
-    history.push(profilePath);
-  }, [history, profilePath]);
+  // The center avatar used to navigate to the profile page — but the
+  // Profile spoke already goes there, so the two affordances were
+  // redundant. Instead, tapping the face opens the avatar itself at
+  // size (with the display name + handle as detail). See the
+  // <AvatarPreview> overlay below.
+  const handleCenterClick = openAvatar;
 
   const handleSpokeClick = useCallback(
     (spoke: Spoke) => {
@@ -193,6 +209,7 @@ export const MeHub: React.FC<MeHubProps> = () => {
       </Helmet>
 
       <div className='me-hub' role='navigation' aria-label={title}>
+        <MeHubStars />
         <div className='me-hub__wheel'>
           {/* Dashed connector ring — decorative, purely visual link
               between the spokes. `aria-hidden` because it carries no
@@ -236,7 +253,149 @@ export const MeHub: React.FC<MeHubProps> = () => {
           <FormattedMessage {...messages.centerHint} />
         </p>
       </div>
+
+      {avatarOpen && (
+        <AvatarPreview
+          avatarUrl={myAccount?.avatar}
+          glyph={displayGlyph}
+          displayName={
+            trimmedName.length > 0 ? trimmedName : trimmedUser || username
+          }
+          handle={username ? `@${username}` : ''}
+          onClose={closeAvatar}
+        />
+      )}
     </Column>
+  );
+};
+
+// Kronk-purple star field behind the wheel. Mirrors the visual
+// treatment on the Kuestions shell (`features/questions/
+// stars_background.tsx`) — same idea, own class namespace so a
+// change to one surface doesn't cascade to the other. 90 elements
+// is a subtle field without visible tiling; positions are
+// pseudo-random but stable within a session (useMemo).
+const ME_HUB_STAR_COUNT = 90;
+
+interface StarPoint {
+  key: number;
+  plus: boolean;
+  size: number;
+  left: number;
+  top: number;
+  opacity: number;
+}
+
+const MeHubStars: React.FC = () => {
+  const stars = useMemo<StarPoint[]>(
+    () =>
+      Array.from({ length: ME_HUB_STAR_COUNT }, (_, i) => ({
+        key: i,
+        plus: Math.random() > 0.45,
+        size: 7 + Math.random() * 6,
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        opacity: 0.18 + Math.random() * 0.5,
+      })),
+    [],
+  );
+  return (
+    <div className='me-hub__stars' aria-hidden>
+      {stars.map((s) =>
+        s.plus ? (
+          <span
+            key={s.key}
+            className='me-hub__stars-glyph'
+            style={{
+              fontSize: `${String(s.size)}px`,
+              left: `${String(s.left)}%`,
+              top: `${String(s.top)}%`,
+              opacity: s.opacity.toFixed(2),
+            }}
+          >
+            ✦
+          </span>
+        ) : (
+          <span
+            key={s.key}
+            className='me-hub__stars-dot'
+            style={{
+              left: `${String(s.left)}%`,
+              top: `${String(s.top)}%`,
+              opacity: s.opacity.toFixed(2),
+            }}
+          />
+        ),
+      )}
+    </div>
+  );
+};
+
+// Avatar preview overlay — opens on center-tap. Full-screen dim +
+// the avatar at size + display name / handle underneath. Backdrop
+// click or Esc closes. Purposefully lightweight (no Redux modal
+// dispatch, no MediaModal contract juggling) — this is a one-shot
+// self-view, not a status-attachment lightbox.
+interface AvatarPreviewProps {
+  avatarUrl: string | undefined;
+  glyph: string;
+  displayName: string;
+  handle: string;
+  onClose: () => void;
+}
+
+const AvatarPreview: React.FC<AvatarPreviewProps> = ({
+  avatarUrl,
+  glyph,
+  displayName,
+  handle,
+  onClose,
+}) => {
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className='me-hub-avatar-preview'
+      role='dialog'
+      aria-modal='true'
+      aria-label={displayName}
+    >
+      <button
+        type='button'
+        className='me-hub-avatar-preview__backdrop'
+        onClick={onClose}
+        aria-label='Close'
+      />
+      <div className='me-hub-avatar-preview__panel'>
+        <div className='me-hub-avatar-preview__image'>
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt=''
+              className='me-hub-avatar-preview__img'
+            />
+          ) : (
+            <span className='me-hub-avatar-preview__glyph' aria-hidden>
+              {glyph}
+            </span>
+          )}
+        </div>
+        <div className='me-hub-avatar-preview__details'>
+          <div className='me-hub-avatar-preview__name'>{displayName}</div>
+          {handle && (
+            <div className='me-hub-avatar-preview__handle'>{handle}</div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -9,15 +9,45 @@
 //            rotate(calc(-1 * --spoke-angle))`.
 
 .me-hub {
+  // Tighten the vertical padding so the wheel sits closer to the
+  // top; on tall viewports the hint was floating in space with the
+  // wheel visually stranded far from the top-band. `min-height: 100%`
+  // keeps the starry background covering the full column.
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 2rem 1rem 3rem;
+  justify-content: flex-start;
+  padding: clamp(1rem, 3vh, 2rem) 1rem clamp(1.5rem, 4vh, 2.5rem);
   min-height: 100%;
   background: var(--kosmos-void);
   color: var(--text-primary);
+  overflow: hidden;
+}
+
+// Kronk-purple star field behind the wheel — mirrors the Kuestions
+// shell's ambient effect. Sits at z-index 0 so the wheel + hint
+// (natural z-index 1+) float above.
+.me-hub__stars {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.me-hub__stars-glyph {
+  position: absolute;
+  color: var(--kronk-purple-bright);
+  line-height: 1;
+  user-select: none;
+}
+
+.me-hub__stars-dot {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: rgb(65 60 140 / 60%);
 }
 
 // The wheel is a square whose side = 2 × (radius + bubble width).
@@ -29,6 +59,7 @@
   --me-hub-center: 7rem;
 
   position: relative;
+  z-index: 1;
   width: calc(2 * (var(--me-hub-radius) + var(--me-hub-bubble)));
   height: calc(2 * (var(--me-hub-radius) + var(--me-hub-bubble)));
   display: flex;
@@ -198,12 +229,98 @@
 
 // Aspirational subtitle below the wheel. Muted; Tal's copy.
 .me-hub__hint {
-  margin-top: 2rem;
+  position: relative;
+  z-index: 1;
+  margin-top: 1.25rem;
   max-width: 20rem;
   text-align: center;
   color: var(--text-muted);
   font-size: 0.8125rem;
   line-height: 1.5;
+}
+
+// Avatar preview overlay — center-tap opens this. Full-screen dim
+// backdrop + a centered panel with the avatar at size and the
+// display name + handle underneath. Own overlay (not the Redux
+// MediaModal) because the shape is deliberately small and
+// self-contained.
+.me-hub-avatar-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+.me-hub-avatar-preview__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 82%);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.me-hub-avatar-preview__panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.75rem;
+  border-radius: var(--radius-large, 16px);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 24px 80px -12px rgb(0 0 0 / 60%);
+  max-width: 22rem;
+}
+
+.me-hub-avatar-preview__image {
+  width: min(60vw, 16rem);
+  height: min(60vw, 16rem);
+  border-radius: var(--radius-round);
+  overflow: hidden;
+  background: var(--surface-elevated);
+  border: 2px solid var(--kronk-purple-accent);
+  display: grid;
+  place-items: center;
+  color: var(--kronk-purple-accent);
+}
+
+.me-hub-avatar-preview__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.me-hub-avatar-preview__glyph {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 6rem;
+  line-height: 1;
+}
+
+.me-hub-avatar-preview__details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.me-hub-avatar-preview__name {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.me-hub-avatar-preview__handle {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {
