@@ -4,7 +4,7 @@
 # `/api/v1/albutts/albums` (index/show/create/update). Trimmed shape
 # for feed embedding lives in REST::AlbumSummarySerializer.
 class REST::AlbumSerializer < ActiveModel::Serializer
-  attributes :id, :title, :description, :visibility,
+  attributes :id, :title, :description, :visibility, :contribution,
              :contributor_count, :photo_count, :created_at
 
   attribute :cover_url
