@@ -237,26 +237,41 @@ Follow-ups after the initial doc + picker + Albutts wiring:
   bespoke visibility dropdown becomes redundant. That's a
   bigger conversation.
 
-## Open questions for Tal
+## Decisions (2026-08-05, Tal)
 
-- Sub-picker inline vs. modal? Inline reveal keeps the
-  conversation in flow but eats vertical space when three
-  scopes are picked with sub-pickers. Modal is more compact
-  but breaks the "one continuous conversation" feel.
-- Krew for BOTH visibility and contribution: if visibility
-  is Krew-A, is contribution 'krew' automatically Krew-A too,
-  or can it be Krew-B (a subset / different Krew)? Probably
-  auto-mirror; edge cases can be revisited if anyone wants
-  the split.
-- Kalendar event scope: does the album inherit the event's
-  visibility, or does the owner set them independently? An
-  event might be public but its photo album mates-only.
-  Recommendation: independent (composer keeps both axes for
-  the album; event membership only feeds the contribution
-  roster).
+- **Sub-pickers inline.** The Krew list, invited-account
+  autocomplete, and event picker all reveal inline below the
+  chip they're triggered by. The "one continuous conversation"
+  quality is worth the vertical space cost. If the composer
+  gets crowded on mobile, that's a per-korner responsive
+  concern, not a picker-model change.
+- **Krew auto-mirrors between the two axes.** If visibility
+  is `krew` and contribution is also `krew`, the contribution
+  Krew list defaults to (and stays in sync with) the visibility
+  Krew list. Owner picks Krews once; both axes read from that
+  selection. If an owner ever wants split Krews (visibility =
+  Krew-A, contribution = Krew-B), that's a follow-up when
+  someone actually asks for it.
+- **Event sets contribution only.** Album visibility and
+  event membership are independent. Choosing "Anyone at Event"
+  for contribution binds the album to a Kalendar event's RSVP
+  list for the ADD roster; visibility stays whatever the owner
+  picked separately. Rationale: an event might be public but
+  its photo album mates-only, or vice versa. The album is not
+  the event; it's a companion surface, and the two decisions
+  are decoupled.
 
-Once these are resolved, this doc becomes the spec for a
-follow-up PR chain: (1) `<ScopePicker />` component +
-`_scope_picker.scss`, (2) Albutts backend wiring + migration,
-(3) Albutts composer + edit UX. Later PRs adopt in other
-korners.
+Doc is now the spec. Follow-up PR chain per the roadmap in
+the section above:
+
+1. `<ScopePicker />` component + `_scope_picker.scss` +
+   Storybook story (no wiring, no visible change).
+2. Album backend — `contribution` field, migration
+   (existing → `closed` per Tal), `contributable_by?` split
+   from `visible_to?`, controller sanitizer + API accepts
+   both fields.
+3. Albutts composer + edit UX wire in `<ScopePicker />`;
+   API types + client-side actions carry the new fields.
+
+Later PRs adopt the picker in other korners (statuses,
+proposals, questions, moments, etc. — one per korner).
