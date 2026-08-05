@@ -39,6 +39,10 @@ import { me } from 'mastodon/initial_state';
 
 import { MomentsComposer } from './composer';
 
+// `self_only` is no longer offered by the composer (see composer.tsx
+// + config/korners/moments.yaml) but is retained here so existing
+// rows with visibility=self_only still render a sensible chip during
+// their 24h expiry window. Safe to drop this case after that window.
 const audienceLabels = defineMessages({
   public: { id: 'moments.audience.public', defaultMessage: 'Anyone' },
   orbit: { id: 'moments.audience.orbit', defaultMessage: 'Orbit' },

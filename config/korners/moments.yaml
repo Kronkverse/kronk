@@ -28,10 +28,14 @@ security:
   permissions:
     - read:statuses
     - write:statuses
-  # Full four-tier reach ladder + krew (docs/kronk_feed_and_reach.md
-  # §2). Moments can be broadcast (public), spread through mate-of-mate
-  # (orbit), close (mates), private (self_only), or krew-scoped.
-  visibility_scopes: [public, orbit, mates, self_only, krew]
+  # Reach ladder + krew (docs/kronk_feed_and_reach.md §2), minus
+  # `self_only`: a Moment is an ephemeral piece of social sharing
+  # (24h expiry, Home strip, viewer modal) — a "Only me" Moment is a
+  # private journal entry, which isn't the shape of the feature.
+  # `self_only` remains in the DB enum (app/models/moment.rb) so
+  # existing rows keep round-tripping through their 24h lifetime; the
+  # composer just no longer offers it as a choice.
+  visibility_scopes: [public, orbit, mates, krew]
   maintainers:
     - moderator
   federates: false # Kronk-local only in v1; federated Moments deferred

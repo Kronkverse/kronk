@@ -24,10 +24,14 @@ import { KornerVisibilityPicker } from 'mastodon/components/korner_visibility_pi
 import { MediaPickButtons, VoiceRecorder } from 'mastodon/components/media';
 import type { VoiceRecorderChange } from 'mastodon/components/media';
 
-// Full four-tier ladder + krew (docs/kronk_feed_and_reach.md §2). The
-// shared visibility picker reads `visibility_scopes` from the moments
-// manifest; picking `krew` reveals the krew sub-picker below.
-type Visibility = 'public' | 'orbit' | 'mates' | 'self_only' | 'krew';
+// Reach ladder + krew (docs/kronk_feed_and_reach.md §2), minus
+// `self_only` — dropped from the Moments composer because an
+// audience-of-one on an ephemeral share is a private journal, not a
+// Moment (see docs/spaces/moments.md § Reach). The DB enum keeps it
+// for older rows. The shared visibility picker reads
+// `visibility_scopes` from the moments manifest; picking `krew`
+// reveals the krew sub-picker below.
+type Visibility = 'public' | 'orbit' | 'mates' | 'krew';
 
 interface MediaResponse {
   id: string;

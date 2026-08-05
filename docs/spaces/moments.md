@@ -39,11 +39,15 @@ sums up the feeling: _"Gone by morning."_
   deleted** — it is kept forever in the korner's **Log**, and its media
   is retained (Moment media is excluded from the unattached-media
   reaper). There is deliberately no expiry reaper.
-- **Reach** — the full reach ladder + krew: `public` / `orbit` /
-  `mates` (**default**) / `self_only` / `krew`. Enforced per-Moment
-  against the viewer by a `visible_to` gate (the same reach-ladder
-  scope Albums use), so the strip and the korner only ever show what
-  your relationship + the Moment's own visibility permit. A Moment is
+- **Reach** — the reach ladder + krew, minus `self_only`: `public` /
+  `orbit` / `mates` (**default**) / `krew`. `self_only` is
+  deliberately omitted — a Moment is an ephemeral piece of social
+  sharing, so an audience-of-one is a private journal entry, not the
+  feature. The DB enum still recognises `self_only` for older rows,
+  but the composer no longer offers it. Enforced per-Moment against
+  the viewer by a `visible_to` gate (the same reach-ladder scope
+  Albums use), so the strip and the korner only ever show what your
+  relationship + the Moment's own visibility permit. A Moment is
   **re-scopeable at any time** from the viewer (owner only).
 - **Reactions** — **Froth + Reply**. Froth is a favourite that persists
   with the Moment (including once it has settled into the Log). Reply
@@ -92,9 +96,10 @@ sections rather than optional badges.
    PR #1112).
 2. **Caption** — one line, optional.
 3. **Visibility** — the reach ladder: Public / Orbit / Mates
-   (**default**) / Only me / Krew. Choosing **Krew** reveals a
-   single-select picker of your own krews (the shared
-   `KornerKrewPicker`); Post stays disabled until a krew is chosen.
+   (**default**) / Krew. Choosing **Krew** reveals a single-select
+   picker of your own krews (the shared `KornerKrewPicker`); Post
+   stays disabled until a krew is chosen. (Only me is deliberately
+   not offered here — see § Reach.)
 4. **Post** — button.
 
 5. **Voice clip (photo Moments only)** — once a still photo has
