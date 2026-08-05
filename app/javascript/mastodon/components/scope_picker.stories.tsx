@@ -13,18 +13,11 @@ import { ScopePicker } from './scope_picker';
 // korner that scopes visibility + contribution. Stories cover: the
 // Albutts default (all five visibilities, all five contributions),
 // a status-composer-style subset, and the disabled state.
-
-const meta = {
-  title: 'Chrome/ScopePicker',
-  component: ScopePicker,
-  parameters: {
-    layout: 'padded',
-  },
-} satisfies Meta<typeof ScopePicker>;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
+//
+// Stories bind against `Harness` rather than `ScopePicker` directly
+// so they don't have to supply the picker's controlled-component
+// required props (visibility / callbacks / etc.) — the Harness
+// owns those internally.
 
 const ALL_VIS: readonly VisibilityScope[] = [
   'self_only',
@@ -105,10 +98,22 @@ const Harness: React.FC<HarnessProps> = ({
   );
 };
 
+const meta = {
+  title: 'Chrome/ScopePicker',
+  component: Harness,
+  parameters: {
+    layout: 'padded',
+  },
+} satisfies Meta<typeof Harness>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
 // Albutts-style — all five visibility scopes, all five contribution
 // rosters. Default: 'mates' + 'open'.
 export const Albutts: Story = {
-  render: () => <Harness />,
+  args: {},
 };
 
 // Status-composer style — no self_only or orbit (statuses don't
@@ -116,19 +121,19 @@ export const Albutts: Story = {
 // (statuses are always open-within-scope; a reply either fits the
 // visibility or doesn't).
 export const StatusComposer: Story = {
-  render: () => (
-    <Harness
-      visibilityOptions={['mates', 'krew', 'public']}
-      contributionOptions={['open']}
-      initialVisibility='public'
-      initialContribution='open'
-    />
-  ),
+  args: {
+    visibilityOptions: ['mates', 'krew', 'public'],
+    contributionOptions: ['open'],
+    initialVisibility: 'public',
+    initialContribution: 'open',
+  },
 };
 
 // Locked-in state (for post-publish read-only view).
 export const Disabled: Story = {
-  render: () => (
-    <Harness initialVisibility='krew' initialContribution='closed' disabled />
-  ),
+  args: {
+    initialVisibility: 'krew',
+    initialContribution: 'closed',
+    disabled: true,
+  },
 };

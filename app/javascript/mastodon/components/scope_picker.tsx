@@ -287,7 +287,11 @@ export const ScopePicker: React.FC<ScopePickerProps> = ({
   // KornerKrewPicker); the array form is preserved because the
   // backend already stores album_krews as a many-to-many and
   // multi-select is likely in a later iteration.
-  const activeKrewId = krewIds && krewIds.length > 0 ? krewIds[0] : null;
+  // `?? null` — with noUncheckedIndexedAccess `krewIds[0]` typed
+  // as `string | undefined` even after the length guard; the picker
+  // expects `string | null`.
+  const activeKrewId: string | null =
+    krewIds && krewIds.length > 0 ? (krewIds[0] ?? null) : null;
   const handleKrewChange = useCallback(
     (nextKrewId: string) => {
       const meta: ScopePickerMeta = { krewIds: [nextKrewId] };
