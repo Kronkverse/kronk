@@ -25,7 +25,6 @@ import { BoothMiniPlayer } from 'mastodon/features/booth/components/booth_mini_p
 import { HuddlePip } from 'mastodon/features/huddle_pip';
 import { PictureInPicture } from 'mastodon/features/picture_in_picture';
 import { HubSwitcher } from './components/hub_switcher';
-import { InviteButton } from './components/invite_button';
 import { KornerSubBar } from './components/korner_sub_bar';
 import { KornerSidebar } from './components/korner_sidebar';
 import { KronkFrame } from 'mastodon/components/kronk_frame';
@@ -832,7 +831,12 @@ class UI extends PureComponent {
           <AlertsController />
 
           <KornerSubBar />
-          {this.props.identity.signedIn && <InviteButton />}
+          {/* Top-right Invite button retired 2026-08-05 — /me hub
+              carries the Invite spoke now (features/me_hub/index.tsx),
+              so the persistent chrome affordance is redundant. Rails-
+              served pages still emit their static twin from
+              _kronk_static_chrome.html.haml (its own concern; kept
+              until the same retirement pass reaches Rails chrome). */}
           {this.props.identity.signedIn && <KronkMenu />}
           {!disableHoverCards && <HoverCardController />}
           <HashtagMenuController />
