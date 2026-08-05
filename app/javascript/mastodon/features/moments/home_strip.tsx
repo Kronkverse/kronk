@@ -17,7 +17,7 @@ import { apiRequestGet } from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { me } from 'mastodon/initial_state';
-import { useAppDispatch } from 'mastodon/store';
+import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { MomentsComposer } from './composer';
 
@@ -78,6 +78,16 @@ const Ring = ({
     }
   }, [isOwner, ownerHasMoment, moment, onCompose, onOpen]);
 
+  // Owner tile: preview the moment's media if one exists; otherwise
+  // fall through to the account avatar (viewer's profile picture).
+  // Mate tiles: always show the mate's avatar (Instagram-Stories
+  // convention — the RING indicates a live moment, the AVATAR
+  // identifies the poster).
+  const showMomentPreview = isOwner && moment;
+  const tileImage = showMomentPreview
+    ? moment.media_attachment.preview_url
+    : account.avatar || account.avatar_static;
+
   return (
     <button
       type='button'
@@ -86,7 +96,7 @@ const Ring = ({
       aria-label={`${account.display_name || account.acct}${moment ? ' has an active Moment' : ' — add a Moment'}`}
     >
       <span className='moments-strip__ring-avatar'>
-        <img src={account.avatar || account.avatar_static} alt='' aria-hidden />
+        <img src={tileImage} alt='' aria-hidden />
         {isOwner && !ownerHasMoment && (
           <span className='moments-strip__ring-add' aria-hidden>
             +
@@ -105,8 +115,8 @@ const Ring = ({
       <span className='moments-strip__ring-label'>
         {isOwner ? (
           <FormattedMessage
-            id='moments.strip.your_moment'
-            defaultMessage='Your Moment'
+            id='moments.strip.owner_label'
+            defaultMessage='Moments'
           />
         ) : (
           `@${account.acct}`
@@ -129,6 +139,13 @@ export const MomentsStrip = () => {
   const dispatch = useAppDispatch();
   const momentsKorner = useKorner('moments');
   const tunedOut = momentsKorner?.tuned_in === false;
+  // Viewer's own account — used to render the owner tile's avatar
+  // when they haven't posted a Moment yet. Was previously an empty
+  // string (broken image) because the strip only fetches Moments,
+  // not accounts.
+  const myAccount = useAppSelector((state) =>
+    me ? state.accounts.get(me) : undefined,
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -189,14 +206,18 @@ export const MomentsStrip = () => {
 
   const ownerAccount: AccountJSON = ownMoment?.account ?? {
     id: me ?? '',
-    acct: '',
-    display_name: '',
-    // If the viewer hasn't posted a Moment, the strip still needs an
-    // owner tile to invite them to post one. The avatar url will be
-    // filled by the browser cache if visited; empty string falls
-    // back to the default avatar via the img error handler.
-    avatar: '',
-    avatar_static: '',
+    acct: myAccount?.acct ?? '',
+    display_name: myAccount?.display_name ?? '',
+    // Viewer's actual avatar from the Redux store so the owner tile
+    // shows their profile picture when no Moment exists yet — per
+    // Tal's spec: "hold the user's profile picture until they
+    // upload a moment, in which it should preview that moment".
+    // Empty string only if the accounts slice hasn't hydrated yet;
+    // the `img` element's onError handler could add a fallback but
+    // in practice the accounts slice is populated at boot for the
+    // signed-in user.
+    avatar: myAccount?.avatar ?? '',
+    avatar_static: myAccount?.avatar_static ?? '',
   };
 
   return (
