@@ -1,0 +1,140 @@
+// Kronk Scope Picker — shared visual treatment for the
+// "who's this for / who can add?" conversation. Rendered by
+// `components/scope_picker.tsx`. See docs/kronk_scope_picker.md.
+// Uses the canonical Kronk form vocabulary + tokens so the
+// picker's visual weight lines up with the composer surface
+// it sits in (signup, album composer, future korners).
+
+.scope-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+
+  &[disabled] {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+}
+
+.scope-picker__question {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.scope-picker__legend {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0;
+}
+
+.scope-picker__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+// Chip base — pill button. Neutral rest state; accent-filled when
+// selected. Focus ring uses --focus-ring (falls back to
+// --kronk-purple-bright per the token discipline).
+.scope-picker__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.85rem;
+  min-height: 32px;
+  background: var(--surface-primary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-round);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--dur-medium) var(--ease-out),
+    border-color var(--dur-medium) var(--ease-out),
+    color var(--dur-medium) var(--ease-out),
+    box-shadow var(--dur-medium) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    border-color: var(--border-default);
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring, var(--kronk-purple-bright));
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &--selected {
+    background: var(--accent);
+    color: var(--text-on-accent);
+    border-color: var(--accent);
+
+    &:hover:not(:disabled) {
+      background: var(--kronk-purple-bright);
+      border-color: var(--kronk-purple-bright);
+      color: var(--text-on-accent);
+    }
+  }
+}
+
+// Sub-pickers reveal inline below the question they belong to.
+// Padded on the left so the visual hierarchy (question →
+// sub-picker) reads at a glance.
+.scope-picker__subpicker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: -0.5rem; // tucks against the chip row above
+  padding: 0.75rem 0 0.75rem 0.875rem;
+  border-left: 2px solid var(--kronk-purple-accent);
+  animation: scope-picker-reveal var(--dur-medium) var(--ease-out) both;
+}
+
+.scope-picker__subpicker-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.scope-picker__subpicker--invited,
+.scope-picker__subpicker--event {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+@keyframes scope-picker-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scope-picker__chip,
+  .scope-picker__subpicker {
+    animation-duration: 1ms;
+    transition-duration: 1ms;
+  }
+}
