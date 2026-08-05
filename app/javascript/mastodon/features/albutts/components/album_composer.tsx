@@ -5,9 +5,18 @@ import { defineMessages, useIntl } from 'react-intl';
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import api from 'mastodon/api';
 import { apiContributePhoto, apiCreateAlbum } from 'mastodon/api/albutts';
-import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
+import type {
+  AlbumContribution,
+  AlbumVisibility,
+  ApiAlbumJSON,
+} from 'mastodon/api_types/albutts';
 import { Icon } from 'mastodon/components/icon';
-import { KornerVisibilityPicker } from 'mastodon/components/korner_visibility_picker';
+import type {
+  ContributionRoster,
+  ScopePickerMeta,
+  VisibilityScope,
+} from 'mastodon/components/scope_picker';
+import { ScopePicker } from 'mastodon/components/scope_picker';
 
 import { CaptionTextarea } from './caption_textarea';
 
@@ -27,15 +36,6 @@ const messages = defineMessages({
   descriptionLabel: {
     id: 'albutts.composer.description_label',
     defaultMessage: 'Description (optional)',
-  },
-  visibilityLabel: {
-    id: 'albutts.composer.visibility_label',
-    defaultMessage: 'Who can see it?',
-  },
-  krewNote: {
-    id: 'albutts.composer.krew_note',
-    defaultMessage:
-      'Krew-scoped albums are landing in a follow-up — pick a different scope for now.',
   },
   photosClear: {
     id: 'albutts.composer.photos_clear',
@@ -113,9 +113,25 @@ const messages = defineMessages({
 
 const TITLE_MAX = 240;
 const DESCRIPTION_MAX = 4000;
-// Krew stays a placeholder in the picker until the krew picker lands
-// (Slice 3-and-a-half of the Albutts build).
-const KREW_DISABLED = ['krew'] as const;
+// ScopePicker option sets — Albutts declares its supported subsets
+// per the docs. Both axes are exposed today; the composer state
+// carries the chosen values. Invited + event contribution rosters
+// are in the vocabulary (the ScopePicker renders them) but their
+// sub-picker UIs land in follow-up PRs.
+const VISIBILITY_OPTIONS = [
+  'self_only',
+  'mates',
+  'orbit',
+  'krew',
+  'public',
+] as const satisfies readonly VisibilityScope[];
+const CONTRIBUTION_OPTIONS = [
+  'open',
+  'closed',
+  'invited',
+  'krew',
+  'event',
+] as const satisfies readonly ContributionRoster[];
 // Concurrency cap on the upload pool. Four keeps browser socket count
 // reasonable (major browsers cap ~6 per host) and matches the load
 // Mastodon media processing can absorb without queue backup.
@@ -149,7 +165,9 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const intl = useIntl();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [visibility, setVisibility] = useState<AlbumVisibility>('public');
+  const [visibility, setVisibility] = useState<AlbumVisibility>('mates');
+  const [contribution, setContribution] = useState<AlbumContribution>('open');
+  const [krewIds, setKrewIds] = useState<string[]>([]);
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -168,7 +186,13 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   }, [photos]);
 
   const trimmed = title.trim();
-  const canSubmit = trimmed !== '' && !pending && visibility !== 'krew';
+  // Krew visibility requires at least one Krew selected — the model
+  // validation catches the empty case server-side, but gate the
+  // submit here so the button state reflects the picker's state.
+  const canSubmit =
+    trimmed !== '' &&
+    !pending &&
+    !(visibility === 'krew' && krewIds.length === 0);
 
   const doneCount = photos.filter((p) => p.status === 'done').length;
   const failedCount = photos.filter((p) => p.status === 'failed').length;
@@ -185,9 +209,21 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     [],
   );
 
-  const handleVisibilityChange = useCallback((next: string) => {
-    setVisibility(next as AlbumVisibility);
-  }, []);
+  const handleVisibilityChange = useCallback(
+    (next: VisibilityScope, meta?: ScopePickerMeta) => {
+      setVisibility(next as AlbumVisibility);
+      if (meta?.krewIds) setKrewIds(meta.krewIds);
+    },
+    [],
+  );
+
+  const handleContributionChange = useCallback(
+    (next: ContributionRoster, meta?: ScopePickerMeta) => {
+      setContribution(next as AlbumContribution);
+      if (meta?.krewIds) setKrewIds(meta.krewIds);
+    },
+    [],
+  );
 
   // Accept only images and videos. Drag-and-drop hands us the entire
   // OS clipboard including e.g. text/uri-list, so filter to media types
@@ -319,6 +355,11 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           title: trimmed,
           description: description.trim() || undefined,
           visibility,
+          contribution,
+          krew_ids:
+            visibility === 'krew' || contribution === 'krew'
+              ? krewIds
+              : undefined,
         });
       } catch (e) {
         console.error('[albutts] create album failed', e);
@@ -337,7 +378,16 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
 
       setPending(false);
     })();
-  }, [canSubmit, description, photos, runUploadPool, trimmed, visibility]);
+  }, [
+    canSubmit,
+    contribution,
+    description,
+    krewIds,
+    photos,
+    runUploadPool,
+    trimmed,
+    visibility,
+  ]);
 
   // Retry only the photos currently in `failed` status.
   const handleRetryFailed = useCallback(() => {
@@ -419,21 +469,22 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           disabled={!!createdAlbum}
         />
 
-        <div className='albutts-composer__label'>
-          {intl.formatMessage(messages.visibilityLabel)}
-        </div>
-        <KornerVisibilityPicker
-          slug='albutts'
-          value={visibility}
-          onChange={handleVisibilityChange}
+        {/* Kronk Scope Picker — see docs/kronk_scope_picker.md.
+            Replaced the bespoke KornerVisibilityPicker on 2026-08-05
+            with the shared two-axes primitive. `contribution` +
+            `visibility` state stored separately; picker enforces
+            constraint logic (auto-mirror Krews, suppress `open`
+            when `self_only`). */}
+        <ScopePicker
+          visibilityOptions={VISIBILITY_OPTIONS}
+          contributionOptions={CONTRIBUTION_OPTIONS}
+          visibility={visibility as VisibilityScope}
+          contribution={contribution as ContributionRoster}
+          krewIds={krewIds}
+          onVisibilityChange={handleVisibilityChange}
+          onContributionChange={handleContributionChange}
           disabled={!!createdAlbum}
-          disabledScopes={KREW_DISABLED}
         />
-        {visibility === 'krew' && !createdAlbum && (
-          <p className='albutts-composer__hint'>
-            {intl.formatMessage(messages.krewNote)}
-          </p>
-        )}
 
         {!createdAlbum && (
           <div
