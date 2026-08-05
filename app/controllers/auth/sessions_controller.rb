@@ -132,7 +132,26 @@ class Auth::SessionsController < Devise::SessionsController
   def capture_account_being_added
     return unless user_signed_in?
 
-    record_authed_account(current_user, cookies.signed['_session_id'], prior: authed_accounts)
+    # The account being added must PRESERVE the current one, so compute the set
+    # (current account + anything already held) up front, keyed to the current
+    # account's live SessionActivation.
+    preserved = authed_accounts.merge(current_user.id.to_s => cookies.signed['_session_id'])
+
+    # Warden would otherwise short-circuit: the signed-in user is already the
+    # session user, and the `_session_id` cookie is itself a credential (the
+    # SessionActivationRememberable strategy), so `warden.authenticate!` returns
+    # the CURRENT account and never checks the newly-submitted credentials.
+    # Drop the `_session_id` cookie FIRST — this both disarms that strategy and
+    # makes before_logout's `SessionActivation.deactivate(nil)` a no-op, so the
+    # current account's activation stays ALIVE (we need it to switch back) — then
+    # sign the current account out at the session level so Devise authenticates
+    # the new credentials fresh.
+    cookies.delete('_session_id')
+    sign_out(current_user)
+
+    # Re-record the set after sign_out (which clears the scoped session user);
+    # on_authentication_success reads this to know it's an add and to preserve it.
+    self.authed_accounts = preserved
   end
 
   def preserve_stored_location
