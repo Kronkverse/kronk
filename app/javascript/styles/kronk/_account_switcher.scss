@@ -1,0 +1,171 @@
+// Account switcher — the body of the /me hub's "Switch Account" modal.
+// Dark, Kronk-token styling: the current account, any other accounts to switch
+// to, an accent "Add account" button, and a quiet "Log out" at the foot.
+
+.account-switcher-modal {
+  width: 100%;
+  max-width: 420px;
+
+  &__body {
+    padding: 4px 2px 2px;
+  }
+}
+
+.account-switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__accounts {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  // One account row — a div for the current account, a button for switch targets.
+  &__account {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    background: var(--surface-sunken);
+    color: var(--text-primary);
+    text-align: start;
+    font: inherit;
+  }
+
+  &__account--current {
+    background: var(--surface-variant-background-color);
+    border-color: var(--kronk-purple-muted);
+  }
+
+  &__account--switch {
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: var(--surface-variant-active-background-color);
+      border-color: var(--kronk-purple-bright);
+      transform: translateY(-1px);
+      outline: none;
+    }
+  }
+
+  &__avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: 0 0 auto;
+    background: var(--surface-elevated);
+  }
+
+  &__identity {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  &__name {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__acct {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__badge {
+    flex: 0 0 auto;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--kronk-purple-accent);
+    color: var(--text-on-accent);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  // Accent primary action.
+  &__add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 44px;
+    margin-top: 2px;
+    border-radius: var(--radius-medium);
+    background: var(--accent);
+    color: var(--text-on-accent);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background var(--dur-medium) var(--ease-out),
+      box-shadow var(--dur-medium) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: var(--kronk-purple-bright);
+      box-shadow: 0 0 24px -8px var(--kronk-purple-bright);
+      outline: none;
+    }
+  }
+
+  &__add-glyph {
+    font-size: 1.25rem;
+    font-weight: 400;
+    line-height: 1;
+  }
+
+  // Quiet destructive action, set off under a divider.
+  &__logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    height: 40px;
+    margin-top: 2px;
+    padding-top: 8px;
+    border: 0;
+    border-top: 1px solid var(--border-subtle);
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    svg {
+      width: 17px;
+      height: 17px;
+      fill: currentColor;
+    }
+  }
+}
