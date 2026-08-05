@@ -396,6 +396,21 @@
     opacity: 0.6;
     cursor: default;
   }
+
+  // Ghost variant for the Cancel action next to Use this photo.
+  // Keeps the same size + shape as the primary so the pair reads as
+  // a two-choice row; the muted fill is what signals "secondary".
+  &--secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      background: var(--surface-elevated);
+      color: var(--text-primary);
+    }
+  }
 }
 
 .me-hub-avatar-preview__error {
