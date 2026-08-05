@@ -408,13 +408,18 @@
   }
 }
 
-// Owner-tile slot: layout-neutral wrapper. `inline-flex` collapses to
-// the ring button's own size (so the scroller's flex-row measures the
-// slot exactly like it would a bare ring button), and `position:
-// relative` anchors the absolutely-positioned `+` add badge.
+// Owner-tile slot: layout-neutral wrapper. Must NOT be `inline-flex`
+// here — as a child of the scroller (a flex row with default
+// `align-items: stretch`), `inline-flex` blockifies to `flex` and its
+// own default `align-items: stretch` then stretches the ring button
+// vertically, which cascades into the avatar span and produces an
+// oblong tile. `display: block` keeps the wrapper a plain positioning
+// box: the ring button inside stays at its intrinsic 60×60 avatar +
+// label height. `width: fit-content` collapses to the ring's width.
 .moments-strip__ring-slot {
   position: relative;
-  display: inline-flex;
+  display: block;
+  width: fit-content;
   flex: 0 0 auto;
 }
 
