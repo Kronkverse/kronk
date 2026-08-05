@@ -287,11 +287,18 @@ module Kronk
         { 'label' => label, 'route' => route }
       end
 
-      # SpaceNav views — an ordered array of `{ key, label }` hashes.
-      # Each entry needs a non-empty String key + label; malformed
-      # entries are dropped. Returns [] when absent so a korner with a
-      # single view renders no picker. Order is preserved: entry 0 is
-      # the default view (bare `/hub/<slug>`).
+      # SpaceNav views — an ordered array of `{ key, label, icon? }`
+      # hashes. Each entry needs a non-empty String key + label;
+      # malformed entries are dropped. Returns [] when absent so a
+      # korner with a single view renders no picker. Order is
+      # preserved: entry 0 is the default view (bare `/hub/<slug>`).
+      #
+      # `icon` is optional. When present, the frontend's SpaceViewPicker
+      # renders the matching Material Symbol from the shared registry
+      # (see `useKornerIcon.tsx#MATERIAL_TO_ICON`) instead of the text
+      # label; the label rides on aria-label + tooltip. Applies the
+      # 2026-08-04 direction that horizontal pillar navs prefer
+      # icon-only rendering.
       def extract_views(yaml)
         raw = yaml['views']
         return [] unless raw.is_a?(Array)
@@ -303,7 +310,10 @@ module Kronk
           label = entry['label'].to_s
           next if key.empty? || label.empty?
 
-          { 'key' => key, 'label' => label }
+          view = { 'key' => key, 'label' => label }
+          icon = entry['icon'].to_s
+          view['icon'] = icon unless icon.empty?
+          view
         end
       end
 

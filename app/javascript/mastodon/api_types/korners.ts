@@ -52,6 +52,10 @@ export interface ApiKornerIconJSON {
 export interface ApiKornerViewJSON {
   key: string;
   label: string;
+  // Optional Material Symbol name. When present, the SpaceViewPicker
+  // renders the icon (with `label` as the aria-label + tooltip) instead
+  // of the text label. Resolves via `useKornerIcon.tsx#MATERIAL_TO_ICON`.
+  icon?: string;
 }
 
 export interface ApiKornerJSON {
