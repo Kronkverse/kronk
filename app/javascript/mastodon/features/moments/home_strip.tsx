@@ -78,6 +78,14 @@ const Ring = ({
     }
   }, [isOwner, ownerHasMoment, moment, onCompose, onOpen]);
 
+  const handleAddClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onCompose();
+    },
+    [onCompose],
+  );
+
   // Owner tile: preview the moment's media if one exists; otherwise
   // fall through to the account avatar (viewer's profile picture).
   // Mate tiles: always show the mate's avatar (Instagram-Stories
@@ -87,21 +95,17 @@ const Ring = ({
   const tileImage = showMomentPreview
     ? moment.media_attachment.preview_url
     : account.avatar || account.avatar_static;
+  // Show the `+` add-affordance on the owner tile in both cases: no
+  // Moment yet (primary CTA), OR the owner already has one but might
+  // want to post another (answers the "how do I add a second?"
+  // discoverability gap). Rendered as a sibling button in a `<div>`
+  // wrapper so we don't nest buttons.
+  const showAddBadge = isOwner;
 
-  return (
-    <button
-      type='button'
-      className={`moments-strip__ring${isOwner ? ' moments-strip__ring--owner' : ''}${moment ? ' moments-strip__ring--has-moment' : ''}${moment && seen ? ' moments-strip__ring--seen' : ''}`}
-      onClick={handleClick}
-      aria-label={`${account.display_name || account.acct}${moment ? ' has an active Moment' : ' — add a Moment'}`}
-    >
+  const innerFace = (
+    <>
       <span className='moments-strip__ring-avatar'>
         <img src={tileImage} alt='' aria-hidden />
-        {isOwner && !ownerHasMoment && (
-          <span className='moments-strip__ring-add' aria-hidden>
-            +
-          </span>
-        )}
         {moment?.voice_url && (
           <span
             className='moments-strip__ring-voice'
@@ -122,7 +126,48 @@ const Ring = ({
           `@${account.acct}`
         )}
       </span>
-    </button>
+    </>
+  );
+
+  const wrapperClassName = `moments-strip__ring${isOwner ? ' moments-strip__ring--owner' : ''}${moment ? ' moments-strip__ring--has-moment' : ''}${moment && seen ? ' moments-strip__ring--seen' : ''}`;
+
+  if (!showAddBadge) {
+    return (
+      <button
+        type='button'
+        className={wrapperClassName}
+        onClick={handleClick}
+        aria-label={`${account.display_name || account.acct}${moment ? ' has an active Moment' : ' — add a Moment'}`}
+      >
+        {innerFace}
+      </button>
+    );
+  }
+
+  return (
+    <div className={wrapperClassName}>
+      <button
+        type='button'
+        className='moments-strip__ring-face'
+        onClick={handleClick}
+        aria-label={
+          moment
+            ? 'View your Moment'
+            : `${account.display_name || account.acct} — add a Moment`
+        }
+      >
+        {innerFace}
+      </button>
+      <button
+        type='button'
+        className='moments-strip__ring-add'
+        onClick={handleAddClick}
+        aria-label={moment ? 'Post another Moment' : 'Post a Moment'}
+        title={moment ? 'Post another' : 'Post a Moment'}
+      >
+        +
+      </button>
+    </div>
   );
 };
 

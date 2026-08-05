@@ -3,6 +3,12 @@
 // expiry reaper + notifications still to come.
 
 // ── Deep-link viewer (fullscreen modal) ────────────────────────────
+// Layout: fixed inset. `.moments-viewer__cosmos` is the darkened
+// starfield backdrop (canvas + dark surface). `.moments-viewer__backdrop`
+// is a transparent click-target on top of the cosmos for tap-to-close.
+// `.moments-viewer__stage` is a flex-column with header / media /
+// caption / actions stacked as siblings — everything reads directly
+// against the void backdrop, so no text overlays fight the image.
 .moments-viewer {
   position: fixed;
   inset: 0;
@@ -38,39 +44,50 @@
   cursor: pointer;
 }
 
+// Cosmos layer: darkened void + twinkling starfield. Sits below the
+// backdrop click-target so taps still close. The canvas inside is
+// pointer-events:none via `.kronk-starfield`, so nothing here
+// intercepts clicks.
+.moments-viewer__cosmos {
+  position: absolute;
+  inset: 0;
+  background: var(--kosmos-void, rgb(0 0 0 / 92%));
+  z-index: 0;
+}
+
 .moments-viewer__backdrop {
   position: absolute;
   inset: 0;
-  background: rgb(0 0 0 / 88%);
+  background: transparent;
   border: 0;
   padding: 0;
   cursor: pointer;
+  z-index: 1;
 }
 
 .moments-viewer__stage {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: 100%;
   max-width: 420px;
-  aspect-ratio: 3 / 4;
   max-height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
-  border-radius: var(--radius-large);
-  overflow: hidden;
-  background: var(--kosmos-void);
-  box-shadow: var(--elevation-menu);
+  gap: 10px;
+  overflow-y: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-// Progress bar — one segment per Moment in the owner's stack.
+// Progress bar — one segment per Moment in the owner's stack. Now sits
+// in-flow above the header (no longer an absolute overlay on media).
 .moments-viewer__progress {
-  position: absolute;
-  top: 8px;
-  left: 12px;
-  right: 12px;
   display: flex;
   gap: 3px;
-  z-index: 3;
+  padding: 0 2px;
 }
 
 .moments-viewer__progress-seg {
@@ -93,16 +110,11 @@
 }
 
 .moments-viewer__header {
-  position: absolute;
-  top: 18px;
-  left: 12px;
-  right: 12px;
   display: flex;
   align-items: center;
   gap: 10px;
-  z-index: 3;
   color: var(--text-primary);
-  padding-top: 4px;
+  padding: 4px 2px 2px;
 }
 
 .moments-viewer__avatar {
@@ -110,7 +122,7 @@
   height: 32px;
   border-radius: 34%;
   object-fit: cover;
-  border: 2px solid var(--surface-primary);
+  border: 2px solid rgb(255 255 255 / 40%);
 }
 
 .moments-viewer__identity {
@@ -132,7 +144,7 @@
 .moments-viewer__ago {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: rgb(255 255 255 / 70%);
+  color: rgb(255 255 255 / 78%);
   letter-spacing: 0.03em;
 }
 
@@ -166,7 +178,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin: 0 16px 8px;
+  margin: 0;
   padding: 12px;
   border-radius: var(--radius-medium);
   background: rgb(0 0 0 / 55%);
@@ -223,13 +235,20 @@
   }
 }
 
+// Media wrap: the image itself, framed by the stage. The stage now
+// stacks header + media + caption + actions vertically, so the media
+// gets its own 3/4 slot inside a rounded surface rather than being the
+// entire stage.
 .moments-viewer__media-wrap {
   position: relative;
-  flex: 1;
-  min-height: 0;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-large);
+  overflow: hidden;
+  background: rgb(255 255 255 / 5%);
+  box-shadow: var(--elevation-menu);
   display: grid;
   place-items: center;
-  background: var(--kosmos-void);
 }
 
 .moments-viewer__image,
@@ -240,6 +259,8 @@
   display: block;
 }
 
+// Tap zones still layered over the media (prev / play-pause / next) —
+// unchanged, they only cover the image, not the header or caption.
 .moments-viewer__tap {
   position: absolute;
   top: 0;
@@ -270,42 +291,26 @@
   }
 }
 
-// Voice player overlay on a photo+voice Moment — sits above the
-// caption but below the action rail. Semi-opaque dark background so
-// the waveform + play button read against any still.
+// Voice player: now sits in-flow below the media, above the caption /
+// actions. Same VoicePlayer chrome as elsewhere so no dark scrim
+// wrapper is needed against the void.
 .moments-viewer__voice {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 118px;
-  padding: 6px 10px;
-  border-radius: var(--radius-medium);
-  background: rgb(0 0 0 / 42%);
-  z-index: 3;
+  padding: 2px 2px 0;
 }
 
 .moments-viewer__caption {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 72px;
-  padding: 8px 12px;
-  border-radius: var(--radius-medium);
-  background: rgb(0 0 0 / 42%);
+  padding: 6px 4px 2px;
   color: #fff;
   font-family: var(--font-body);
-  font-size: 13px;
-  line-height: 1.45;
-  z-index: 3;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .moments-viewer__actions {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
   display: flex;
   gap: 8px;
-  z-index: 3;
+  padding: 4px 2px 8px;
+  justify-content: flex-end;
 }
 
 .moments-viewer__action {
@@ -314,8 +319,8 @@
   gap: 6px;
   padding: 8px 14px;
   border-radius: var(--radius-round);
-  border: 0;
-  background: rgb(0 0 0 / 50%);
+  border: 1px solid rgb(255 255 255 / 22%);
+  background: rgb(255 255 255 / 8%);
   color: #fff;
   font-family: var(--font-mono);
   font-size: 11px;
@@ -331,7 +336,7 @@
   }
 
   &:hover:not(:disabled) {
-    background: rgb(0 0 0 / 70%);
+    background: rgb(255 255 255 / 16%);
   }
 
   &:disabled {
@@ -341,6 +346,19 @@
 
   &--frothed {
     color: var(--decision-pending);
+  }
+
+  // "Post another" — same shape as the other actions but tinted with
+  // the accent so it reads as a primary owner-only affordance.
+  &--add {
+    background: var(--accent);
+    border-color: transparent;
+    color: var(--text-on-accent);
+
+    &:hover:not(:disabled) {
+      background: var(--accent);
+      transform: translateY(-1px);
+    }
   }
 }
 
@@ -366,7 +384,13 @@
   }
 }
 
+// Ring wrapper: either a lone `<button>` (mate tile) or a `<div>`
+// hosting a face button + a `+` add button (owner tile — see
+// home_strip.tsx). The visual is the same either way; the div variant
+// exists purely so the `+` badge can be its own click target without
+// nesting buttons.
 .moments-strip__ring {
+  position: relative;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
@@ -383,6 +407,20 @@
   &:hover {
     transform: translateY(-1px);
   }
+}
+
+// Owner-tile face — same layout as the ring on its own, but as a
+// nested button so the sibling `+` badge stays clickable.
+.moments-strip__ring-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
 }
 
 .moments-strip__ring-avatar {
@@ -426,12 +464,19 @@
   opacity: 0.7;
 }
 
+// `+` add-a-Moment badge — a real button positioned over the bottom-
+// right of the ring-avatar. Its owner is the wrapper `.moments-strip__
+// ring` (which is `position: relative`), sitting at the position that
+// the .ring-avatar's bottom-right lands. This works because the ring
+// wrapper has predictable dimensions (avatar 60 + label + padding),
+// and the `+` sits at a fixed offset within it.
 .moments-strip__ring-add {
   position: absolute;
-  bottom: -2px;
-  right: -2px;
+  bottom: 22px; // label + gap
+  right: 0;
   width: 22px;
   height: 22px;
+  padding: 0;
   border-radius: 50%;
   background: var(--accent);
   color: var(--text-on-accent);
@@ -441,6 +486,11 @@
   display: grid;
   place-items: center;
   border: 2px solid var(--surface-primary);
+  cursor: pointer;
+
+  &:hover {
+    transform: scale(1.08);
+  }
 }
 
 // Mic glyph on the ring — indicates the Moment carries a voice clip
