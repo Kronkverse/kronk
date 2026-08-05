@@ -384,11 +384,10 @@
   }
 }
 
-// Ring wrapper: either a lone `<button>` (mate tile) or a `<div>`
-// hosting a face button + a `+` add button (owner tile — see
-// home_strip.tsx). The visual is the same either way; the div variant
-// exists purely so the `+` badge can be its own click target without
-// nesting buttons.
+// The ring itself is always a `<button>` — one tap on the whole tile.
+// Owner tiles are additionally wrapped in `.moments-strip__ring-slot`
+// (see home_strip.tsx) purely to host the `+` add button as an
+// absolute-positioned sibling. Ring layout is unchanged either way.
 .moments-strip__ring {
   position: relative;
   flex: 0 0 auto;
@@ -409,18 +408,14 @@
   }
 }
 
-// Owner-tile face — same layout as the ring on its own, but as a
-// nested button so the sibling `+` badge stays clickable.
-.moments-strip__ring-face {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 0;
-  background: none;
-  border: 0;
-  cursor: pointer;
-  color: inherit;
+// Owner-tile slot: layout-neutral wrapper. `inline-flex` collapses to
+// the ring button's own size (so the scroller's flex-row measures the
+// slot exactly like it would a bare ring button), and `position:
+// relative` anchors the absolutely-positioned `+` add badge.
+.moments-strip__ring-slot {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
 }
 
 .moments-strip__ring-avatar {
@@ -464,15 +459,15 @@
   opacity: 0.7;
 }
 
-// `+` add-a-Moment badge — a real button positioned over the bottom-
-// right of the ring-avatar. Its owner is the wrapper `.moments-strip__
-// ring` (which is `position: relative`), sitting at the position that
-// the .ring-avatar's bottom-right lands. This works because the ring
-// wrapper has predictable dimensions (avatar 60 + label + padding),
-// and the `+` sits at a fixed offset within it.
+// `+` add-a-Moment badge — sibling of the ring button inside
+// `.moments-strip__ring-slot`. Sits over the bottom-right of the
+// ring-avatar. Offsets are pixel-anchored to the ring layout: 4px
+// top-padding + 60px avatar means the avatar's bottom is 64px from the
+// slot top; label + gap adds another ~18px below, so `bottom: 18px`
+// places the badge across the avatar's bottom-right corner.
 .moments-strip__ring-add {
   position: absolute;
-  bottom: 22px; // label + gap
+  bottom: 18px;
   right: 0;
   width: 22px;
   height: 22px;
@@ -487,6 +482,7 @@
   place-items: center;
   border: 2px solid var(--surface-primary);
   cursor: pointer;
+  z-index: 1;
 
   &:hover {
     transform: scale(1.08);

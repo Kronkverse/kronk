@@ -129,35 +129,30 @@ const Ring = ({
     </>
   );
 
-  const wrapperClassName = `moments-strip__ring${isOwner ? ' moments-strip__ring--owner' : ''}${moment ? ' moments-strip__ring--has-moment' : ''}${moment && seen ? ' moments-strip__ring--seen' : ''}`;
+  const ringClassName = `moments-strip__ring${isOwner ? ' moments-strip__ring--owner' : ''}${moment ? ' moments-strip__ring--has-moment' : ''}${moment && seen ? ' moments-strip__ring--seen' : ''}`;
 
-  if (!showAddBadge) {
-    return (
-      <button
-        type='button'
-        className={wrapperClassName}
-        onClick={handleClick}
-        aria-label={`${account.display_name || account.acct}${moment ? ' has an active Moment' : ' — add a Moment'}`}
-      >
-        {innerFace}
-      </button>
-    );
-  }
+  const ringButton = (
+    <button
+      type='button'
+      className={ringClassName}
+      onClick={handleClick}
+      aria-label={`${account.display_name || account.acct}${moment ? ' has an active Moment' : ' — add a Moment'}`}
+    >
+      {innerFace}
+    </button>
+  );
 
+  // Mate tile: no wrapper — the button is the whole thing.
+  if (!showAddBadge) return ringButton;
+
+  // Owner tile: wrap in a layout-neutral positioning slot so the `+`
+  // add-Moment button can sit as an absolutely-positioned sibling
+  // without nesting inside the ring button (invalid HTML). The slot's
+  // only jobs are being a `position: relative` anchor and sizing to
+  // its child button — no flex, no padding, no border of its own.
   return (
-    <div className={wrapperClassName}>
-      <button
-        type='button'
-        className='moments-strip__ring-face'
-        onClick={handleClick}
-        aria-label={
-          moment
-            ? 'View your Moment'
-            : `${account.display_name || account.acct} — add a Moment`
-        }
-      >
-        {innerFace}
-      </button>
+    <div className='moments-strip__ring-slot'>
+      {ringButton}
       <button
         type='button'
         className='moments-strip__ring-add'
