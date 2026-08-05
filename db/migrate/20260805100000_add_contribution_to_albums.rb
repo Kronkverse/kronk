@@ -35,11 +35,21 @@ class AddContributionToAlbums < ActiveRecord::Migration[8.0]
       SQL
     end
 
-    # Now enforce NOT NULL + default for new rows.
-    change_column_null    :albums, :contribution, false
+    # Now enforce NOT NULL + default for new rows. strong_migrations flags a
+    # bare change_column_null on an existing column (it takes an ACCESS
+    # EXCLUSIVE lock for a full-table validation). Here it's safe to assert:
+    # the backfill above already set every existing row, and `albums` is a
+    # small table — so wrap it in safety_assured rather than the check-
+    # constraint dance. (Without this the migration aborts, which stalls the
+    # whole deploy's db:migrate step and blocks puma from restarting.)
+    safety_assured { change_column_null :albums, :contribution, false }
     change_column_default :albums, :contribution, from: nil, to: 0
 
-    add_index :albums, :contribution
+    # Same rationale: a non-concurrent add_index takes a brief lock, which
+    # strong_migrations flags, but on a small table it's fine to assert.
+    # (Kept in-transaction with the rest rather than splitting into a
+    # separate disable_ddl_transaction! concurrent-index migration.)
+    safety_assured { add_index :albums, :contribution }
   end
 
   def down
