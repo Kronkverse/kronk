@@ -86,13 +86,14 @@ const Ring = ({
     [onCompose],
   );
 
-  // Owner tile: preview the moment's media if one exists; otherwise
-  // fall through to the account avatar (viewer's profile picture).
-  // Mate tiles: always show the mate's avatar (Instagram-Stories
-  // convention — the RING indicates a live moment, the AVATAR
-  // identifies the poster).
-  const showMomentPreview = isOwner && moment;
-  const tileImage = showMomentPreview
+  // Tile image: preview the moment's media when there IS one — for
+  // every tile, owner or mate. Previously mates showed only the
+  // avatar (Instagram-Stories convention: ring = live moment, avatar
+  // = who posted), but kronky flagged this on Kommons #117047187124512791
+  // — the strip is more useful when the *photo you'll open* is what
+  // you see. Falls back to the account avatar when the tile has no
+  // Moment yet (owner-with-nothing-posted case).
+  const tileImage = moment
     ? moment.media_attachment.preview_url
     : account.avatar || account.avatar_static;
   // Show the `+` add-affordance on the owner tile in both cases: no
