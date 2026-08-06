@@ -1,6 +1,6 @@
 import { defineMessages, useIntl } from 'react-intl';
 
-import ToysFanIcon from '@/material-icons/400-24px/toys_fan.svg?react';
+import CampaignIcon from '@/material-icons/400-24px/campaign.svg?react';
 import type { ApiProposalSummaryJSON } from 'mastodon/api_types/statuses';
 
 import { StatusKornerCard } from './status_korner_card';
@@ -8,7 +8,7 @@ import { StatusKornerCard } from './status_korner_card';
 const messages = defineMessages({
   badge: {
     id: 'status_kommons_card.badge',
-    defaultMessage: 'SEED',
+    defaultMessage: 'PROPOSAL',
   },
   supports: {
     id: 'status_kommons_card.supports',
@@ -43,8 +43,8 @@ export const StatusKommonsCard: React.FC<{
       className='status-kommons-card'
       to={`/hub/kommons/p/${proposal.id}`}
       badge={{
-        icon: ToysFanIcon,
-        iconId: 'toys_fan',
+        icon: CampaignIcon,
+        iconId: 'campaign',
         label: intl.formatMessage(messages.badge),
       }}
     >
