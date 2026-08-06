@@ -94,9 +94,30 @@ Interactive nudges are answered in-context — a reply is simply the next messag
 
 ---
 
+## Relevance engine — who gets a nudge
+
+Every nudge is produced by **one rule**, applied once per korner event by the router — superseding the old per-event hand-wired Mate-gate bypasses (`groups.member.joined`, `mates.request.*`, etc.). A nudge fires to user **U** for an event (actor **A** did **X** to object **O** in korner **K**) if **any** of three tiers holds, then dialed by U's per-type preference:
+
+1. **Directed at U** — O is U's, or X targets U (reply / mention, a reaction on U's content, an RSVP to U's event, an offer on U's listing, an answer to U's question, a task assigned to U, a mate request / accept). **Fires always — no Mate, follow, or tune-in test.** This corrects today's router, which drops directed nudges when the actor is not a Mate — the bug behind "a mate request from a not-yet-Mate produced no nudge for the recipient." The Mate gate must never apply to directed events.
+2. **Someone U chose** — A is an account U **follows (Groove) or Mates**, and X is a surfaced type (posted / frothed / backed / rsvp'd / joined). The "a person I picked did a thing" signal; one-way follows count, not only Mates.
+3. **Somewhere U tuned in** — U has **tuned into korner K** (`korner_tune_outs` absence = tuned in, default-on) **or is watching object O** (derived: U authored / backed / RSVP'd / is a member — there is no explicit "watch" toggle), and X is notable for that object/korner.
+
+**Tier-3 loudness is per-korner.** Each korner declares in its manifest the default surfacing for tuned-in-but-uninvolved members, per activity type — a governance korner (Kommons) can be chattier than a high-traffic one. Default is **on-but-quiet**: it lands in Nudges but does not push. U can override per korner / per type.
+
+### Storage — mostly derived, one small new record
+
+Relevance is **computed from data we already keep**, not a separate who-gets-what table:
+
+- **Follow / Mate** — derived from the follow graph (Mate = mutual). → Tier 2.
+- **Tune-in** — `korner_tune_outs` (one row per account + korner-slug; absence = tuned in; **slug-scoped**, never per-object). → Tier 3 korner half.
+- **Object-watching** — **derived** from involvement rows (authorship / backing / RSVP / membership). No explicit watch. The only new per-object state is an **opt-out** ("mute this thread / object").
+- **Per-user tuning** — one small **preference + mute record**: per-korner / per-type overrides of the manifest defaults, plus per-thread mutes. This is the single genuinely new per-user store; the per-korner _default_ lives in the manifest, not per user.
+
+---
+
 ## Surfaces
 
-**1 — Pillar entry.** `HubSwitcher` grows 3-way → 4-way; mobile bottom tab bar grows 3 → 4. Icon: `partner_exchange`. Tap deep-links to `/nudges`. The unread dotbadge migrates off the `Ж` menu's Nudges entry (which retires) and onto the pillar, sourced from the notifications store. Manifest gains `hub_visible: false` (grid filter reads this) **and** `pillar: true` (nav reads this) — both, so the two concerns never collapse into one overloaded field.
+**1 — Pillar entry.** `HubSwitcher` grows 3-way → 4-way; mobile bottom tab bar grows 3 → 4. Icon: `partner_exchange`. Tap deep-links to `/nudges`. The unread dotbadge migrates off the `Ж` menu's Nudges entry (which retires) and onto the pillar, **sourced from the nudges data itself** (see _Self-delivering delivery_ below) — **not** the Mastodon notifications store the earlier draft pointed it at. Manifest gains `hub_visible: false` (grid filter reads this) **and** `pillar: true` (nav reads this) — both, so the two concerns never collapse into one overloaded field.
 
 **2 — Messenger shell** at `/nudges`. One continuous surface split by a divider: sidebar (search + conversation list) on the left, open conversation on the right. `/nudges/:conversationId` deep-links straight to a conversation.
 
@@ -127,7 +148,7 @@ Post-share cards render a shared Status as a proper card, not a raw link. Reacti
 
 ## Data model — required fields
 
-**Conversation** — snowflake `id`; `kind` (`mate` | `krew`); `last_activity_at` (drives sidebar sort); per-viewer `unread_count`. Mate: the two account ids. Krew: `krew_id`, member account ids, `home_korner`.
+**Conversation** — snowflake `id`; `kind` (`mate` | `krew`); `last_activity_at` (drives sidebar sort); per-viewer `unread_count` — **counts messages _and_ unseen nudge events** (see _Self-delivering delivery_), not messages alone. Mate: the two account ids. Krew: `krew_id`, member account ids, `home_korner`.
 
 **Message** — snowflake `id`; `conversation_id`; `author_account_id`; `body` (nullable when attachment-only); optional `attachment` { `type` (`image` | `video` | `voice`), object-storage ref (DO Spaces), `duration` for voice/video, poster ref for video }; `created_at`; read state (per-recipient in a Krew); `reactions` [{ `account_id`, `symbol` }] capped at 3 distinct; nullable `expires_at` for time-boxed threads.
 
@@ -137,7 +158,38 @@ Post-share cards render a shared Status as a proper card, not a raw link. Reacti
 
 **Korner → colour/space map** (fixed by domain): Sun → Orbit; Mercury → Murmur; Neptune → Kalendar/gathering; Jupiter → Kommons; Pluto → Market. Colours from the `2026-07-14` planet ramp.
 
-**Manifest** — `enforced: false`; `hub_visible: false`; `pillar: true`; `icon: partner_exchange`; `emits:` / `listens:` blocks; settings block as in Surface 5.
+**Manifest** — `enforced: false`; `hub_visible: false`; `pillar: true`; `icon: partner_exchange`; `emits:` / `listens:` blocks; per-korner Tier-3 default-loudness declarations (per activity type); settings block as in Surface 5.
+
+**Relevance state (new, per user)** — a per-recipient **event `seen_at`** (so unread counts nudges, not only messages) and a **preference + mute record** (per-korner / per-type overrides + per-thread/object mutes). Everything else the relevance engine needs is derived (§ _Relevance engine_).
+
+---
+
+## Self-delivering delivery (decision B)
+
+Nudges deliver on their **own** machinery, decoupled from the Mastodon `Notification` store the badge used to lean on. That store is now **legacy-only**: `/nudges/legacy` and the synthetic "Kronk system" view still read it for one release cycle, then it retires with the bell.
+
+- **User-level live stream.** A per-account channel `timeline:nudges:account:<id>` (alongside the existing per-conversation `timeline:nudges:conversation:<id>`), so a new event or conversation pushes to U's open messenger live — not only when U already has that exact conversation open. The router holds the recipient; it publishes the envelope to the recipient's account channel as the event lands.
+- **Event-aware unread.** Unread counts **events, not just messages** — nudge events carry the per-recipient `seen_at` above (or a per-conversation `has_unseen_event` flag), so a conversation whose only new item is a nudge still reads unread. Today `unread_count` counts messages and excludes events; that is the gap.
+- **Nudge-native badge.** The pillar/nav badge reads the **nudges** unread (Σ conversation unread over messages _and_ events), seeded on list load and kept live by the account stream — replacing the read from the notification store's `nudge`-type count.
+
+---
+
+## In-space activity indicators — the second surface
+
+Relevance produces a nudge; the **in-space indicator is a projection of the nudge system**, not a separate signal. A card or tile lights up when U has an **unseen nudge referencing that object or korner** (via the nudge's `source_ref`), and clears when U views it. One source of truth — unseen nudges — feeds both the messenger and the in-space dots, so "there's something here for you" reads consistently in the feed, on korner boards, and (as a count) on the Hub tile.
+
+This **generalises the existing Kommons proposal-card indicator** — today a `WavingHandBadge` wired to unread notifications — into a shared, nudge-derived dot: a slot on the `StatusKornerCard` feed frame and on each korner's own board/detail card, driven by a shared selector keyed on the nudge's `(source_korner, object_id)`.
+
+---
+
+## Build stages
+
+1. **Self-delivery** — account-level stream + event-aware unread + nudge-native badge (unblocks every event-driven nudge at once; independent of the relevance change).
+2. **Relevance-engine router** — directed nudges bypass the Mate gate; add follow + tune-in as inputs; per-korner Tier-3 loudness from the manifest.
+3. **In-space dots** — the shared nudge-derived indicator on the card frame + korner boards.
+4. **Preferences + mutes** — the per-user override/mute record and per-korner manifest defaults.
+
+This supersedes the hand-wired per-event Mate-gate bypass approach (e.g. the `mates.request.*` subscribers): those become Tier-1 directed nudges under the one rule.
 
 ---
 
@@ -157,7 +209,7 @@ Post-share cards render a shared Status as a proper card, not a raw link. Reacti
 
 ## Open decisions (surface to Tal, do not resolve unilaterally)
 
-- **Non-Mate nudges.** A stranger frothing your proposal has no Mate conversation to land in. Either a nudge implies/opens a lightweight conversation, or these route to a separate surface. This model currently assumes a conversation exists.
+- **Non-Mate nudges — resolved.** A stranger frothing your proposal is a **Tier-1 directed** nudge (§ _Relevance engine_): it fires regardless of Mate status, and the pair's Mate conversation is created on demand (`Nudges::Conversation.mate_between!`). No separate surface; the Mate-gate-on-directed-events was the bug, not a missing conversation.
 - **Passive aggregates in a 1:1.** Whether bare favourites/boosts aggregate into a single periodic strip inside a Mate chat, or stay as individual passive lines. Prototype keeps boosts and mentions inline, omits bare favourites.
 - **Krew nudge volume.** A busy governance Krew can bury messages under froth/abstain lines. Options: collapse consecutive same-motion nudges into one expandable line, or gate low-signal ones behind `show_activity_in_chats`. Prototype renders everything.
 - **Sidebar tiers.** Recency-only today. Whether to add a pinned section or unread-first ordering.
