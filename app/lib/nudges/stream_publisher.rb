@@ -16,10 +16,13 @@ module Nudges
   module StreamPublisher
     module_function
 
-    CHANNEL = 'nudges:conversation'
+    CHANNEL         = 'nudges:conversation'
+    ACCOUNT_CHANNEL = 'nudges:account'
 
     def message_created(message)
-      publish(message.conversation_id, 'nudges.message.created', serialize_message(message))
+      serialized = serialize_message(message)
+      publish(message.conversation_id, 'nudges.message.created', serialized)
+      fan_to_accounts(message.conversation, 'nudges.message.created', serialized)
     end
 
     def message_updated(message)
@@ -31,7 +34,9 @@ module Nudges
     end
 
     def event_created(event)
-      publish(event.conversation_id, 'nudges.event.created', serialize_event(event))
+      serialized = serialize_event(event)
+      publish(event.conversation_id, 'nudges.event.created', serialized)
+      fan_to_accounts(event.conversation, 'nudges.event.created', serialized)
     end
 
     def read_pointer(conversation:, reader_account_id:, up_to_message_id:)
@@ -54,6 +59,37 @@ module Nudges
       end
     rescue => e
       Rails.logger.warn("Nudges::StreamPublisher failed for conversation=#{conversation_id} event=#{event}: #{e.class}: #{e.message}")
+    end
+
+    # Fan the same envelope to every participant's ACCOUNT-level channel, so a
+    # member sitting on /nudges gets the live push even for a conversation they
+    # don't currently have open (the per-conversation channel can't reach them
+    # there — nobody's subscribed to a brand-new conversation's channel). The
+    # client subscribes to `nudges:account` (streaming/index.js) → the Redis
+    # channel `timeline:nudges:account:<account_id>`.
+    def fan_to_accounts(conversation, event, payload_json)
+      participant_account_ids(conversation).each do |account_id|
+        publish_account(account_id, event, payload_json)
+      end
+    end
+
+    def participant_account_ids(conversation)
+      if conversation.mate?
+        [conversation.account_a_id, conversation.account_b_id].compact
+      else
+        conversation.memberships.pluck(:account_id)
+      end
+    end
+
+    def publish_account(account_id, event, payload_json)
+      RedisConnection.with do |redis|
+        redis.publish(
+          "timeline:#{ACCOUNT_CHANNEL}:#{account_id}",
+          Oj.dump(event: event, payload: payload_json)
+        )
+      end
+    rescue => e
+      Rails.logger.warn("Nudges::StreamPublisher account fan-out failed for account=#{account_id} event=#{event}: #{e.class}: #{e.message}")
     end
 
     def serialize_message(message)

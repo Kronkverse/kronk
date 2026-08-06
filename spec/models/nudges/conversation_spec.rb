@@ -79,4 +79,41 @@ RSpec.describe Nudges::Conversation do
       expect(convo.expired?).to be true
     end
   end
+
+  describe '#unread_count_for (event-aware)' do
+    let(:convo)  { Fabricate(:nudges_conversation) }
+    let(:viewer) { convo.account_a }
+    let(:other)  { convo.account_b }
+
+    it 'counts unseen messages from the other party' do
+      Fabricate(:nudges_conversation_message, conversation: convo, author_account: other)
+      expect(convo.unread_count_for(viewer)).to eq 1
+    end
+
+    it 'counts unseen nudge events (not just messages)' do
+      Fabricate(:nudges_event, conversation: convo, actor_account: other)
+      expect(convo.unread_count_for(viewer)).to eq 1
+    end
+
+    it 'sums unseen messages and events together' do
+      Fabricate(:nudges_conversation_message, conversation: convo, author_account: other)
+      Fabricate(:nudges_event, conversation: convo, actor_account: other)
+      expect(convo.unread_count_for(viewer)).to eq 2
+    end
+
+    it 'does not count the viewer’s own message or event' do
+      Fabricate(:nudges_conversation_message, conversation: convo, author_account: viewer)
+      Fabricate(:nudges_event, conversation: convo, actor_account: viewer)
+      expect(convo.unread_count_for(viewer)).to eq 0
+    end
+
+    it 'clears both messages and events on mark_read!' do
+      message = Fabricate(:nudges_conversation_message, conversation: convo, author_account: other)
+      Fabricate(:nudges_event, conversation: convo, actor_account: other)
+      expect(convo.unread_count_for(viewer)).to eq 2
+
+      convo.mark_read!(viewer, message.id)
+      expect(convo.reload.unread_count_for(viewer)).to eq 0
+    end
+  end
 end

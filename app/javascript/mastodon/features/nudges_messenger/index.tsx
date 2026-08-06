@@ -13,11 +13,14 @@ import type {
   ApiNudgeConversationJSON,
   ApiNudgeConversationDetail,
 } from 'mastodon/api_types/nudges_conversations';
+import { setNudgesUnread } from 'mastodon/actions/nudges';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useAppDispatch } from 'mastodon/store';
 
 import { ConversationList } from './conversation_list';
+import { useNudgesAccountStream } from './use_nudges_account_stream';
 import { ConversationView } from './conversation_view';
 import { EmptyState } from './empty_state';
 import { KRONK_CONVERSATION_ID } from './kronk_system';
@@ -44,6 +47,7 @@ const NudgesMessenger: React.FC<{ multiColumn?: boolean }> = ({
 }) => {
   const intl = useIntl();
   const history = useHistory();
+  const dispatch = useAppDispatch();
   const { conversationId } = useParams<RouteParams>();
   const Icon = useKornerIcon('nudges');
 
@@ -55,24 +59,31 @@ const NudgesMessenger: React.FC<{ multiColumn?: boolean }> = ({
     useState<ApiNudgeConversationDetail | null>(null);
   const [activeLoading, setActiveLoading] = useState(false);
 
-  // Load the sidebar list on mount.
+  // Load the sidebar list + reseed the nudge-native unread badge (Σ of each
+  // conversation's unread — messages AND events). Also invoked by the account
+  // stream on any live arrival, so both the list and the badge stay current
+  // without a reload.
+  const loadConversations = useCallback(async () => {
+    try {
+      const data = await apiListNudgeConversations();
+      setConversations(data);
+      dispatch(
+        setNudgesUnread(data.reduce((sum, c) => sum + c.unread_count, 0)),
+      );
+    } catch {
+      // Empty state is fine — surface a real error UI in a follow-up.
+    } finally {
+      setConversationsLoading(false);
+    }
+  }, [dispatch]);
+
   useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const data = await apiListNudgeConversations();
-        if (!cancelled) setConversations(data);
-      } catch {
-        // Empty state is fine — surface a real error UI in a follow-up.
-      } finally {
-        if (!cancelled) setConversationsLoading(false);
-      }
-    };
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    void loadConversations();
+  }, [loadConversations]);
+
+  // Live: any new event/message in any of the viewer's conversations refreshes
+  // the list + reseeds unread — even a conversation not currently open.
+  useNudgesAccountStream(loadConversations);
 
   // Load the active conversation whenever the URL param changes.
   useEffect(() => {

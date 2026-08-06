@@ -108,6 +108,7 @@ const CHANNEL_NAMES = [
   'hashtag',
   'hashtag:local',
   'nudges:conversation',
+  'nudges:account',
 ];
 
 const startServer = async () => {
@@ -436,6 +437,8 @@ const startServer = async () => {
       return 'list';
     case '/api/v1/streaming/nudges/conversation':
       return 'nudges:conversation';
+    case '/api/v1/streaming/nudges/account':
+      return 'nudges:account';
     default:
       return undefined;
     }
@@ -460,7 +463,7 @@ const startServer = async () => {
     // user stream will not contain notifications unless
     // the token has either read or read:notifications scope
     // as well, this is handled separately.
-    if (channelName === 'user:notification' || channelName === 'nudges:conversation') {
+    if (channelName === 'user:notification' || channelName === 'nudges:conversation' || channelName === 'nudges:account') {
       requiredScopes.push('read:notifications');
     } else {
       requiredScopes.push('read:statuses');
@@ -1193,6 +1196,18 @@ const startServer = async () => {
         });
       }).catch(() => {
         reject(new AuthenticationError('Not authorized to stream this Nudges conversation'));
+      });
+
+      break;
+    case 'nudges:account':
+      // The account's own nudges firehose: every conversation they participate
+      // in fans its new events/messages here (see Nudges::StreamPublisher
+      // #fan_to_accounts), so the messenger gets live pushes for conversations
+      // it doesn't have open. Auth is simply "self" — the authenticated account
+      // streams only its own channel.
+      resolve({
+        channelIds: [`timeline:nudges:account:${req.accountId}`],
+        options: { needsFiltering: false },
       });
 
       break;

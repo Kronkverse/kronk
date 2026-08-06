@@ -104,13 +104,13 @@ module Nudges
       account_a_id == account.id ? account_b : account_a
     end
 
+    # Unread counts BOTH unseen messages and unseen nudge events past this
+    # account's read pointers — so a conversation whose only new item is a
+    # nudge still reads unread (the self-delivery premise).
     def unread_count_for(account)
       return 0 if muted_for?(account)
 
-      pointer = last_read_message_id_for(account)
-      scope   = messages.where.not(author_account_id: account.id)
-      scope = scope.where(Nudges::ConversationMessage.arel_table[:id].gt(pointer)) if pointer
-      scope.count
+      unread_messages_for(account) + unread_events_for(account)
     end
 
     def muted_for?(account)
@@ -119,13 +119,22 @@ module Nudges
       memberships.exists?(account_id: account.id, muted: true)
     end
 
-    def mark_read!(account, up_to_message_id)
+    # Advance both read pointers. Opening a conversation sees every event in it
+    # (they're system items, not addressed), so the event pointer jumps to the
+    # latest event unless an explicit id is given; the message pointer honours
+    # the client's last-rendered message.
+    def mark_read!(account, up_to_message_id, up_to_event_id: nil)
+      up_to_event_id ||= events.maximum(:id)
+
       if mate?
-        column = account_a_id == account.id ? :last_read_message_id_a : :last_read_message_id_b
-        update!(column => up_to_message_id)
+        if account_a_id == account.id
+          update!(last_read_message_id_a: up_to_message_id, last_read_event_id_a: up_to_event_id)
+        else
+          update!(last_read_message_id_b: up_to_message_id, last_read_event_id_b: up_to_event_id)
+        end
       else
         membership = memberships.find_by(account_id: account.id)
-        membership&.update!(last_read_message_id: up_to_message_id)
+        membership&.update!(last_read_message_id: up_to_message_id, last_read_event_id: up_to_event_id)
       end
 
       Nudges::StreamPublisher.read_pointer(
@@ -173,11 +182,35 @@ module Nudges
 
     private
 
+    def unread_messages_for(account)
+      pointer = last_read_message_id_for(account)
+      scope   = messages.where.not(author_account_id: account.id)
+      scope = scope.where(Nudges::ConversationMessage.arel_table[:id].gt(pointer)) if pointer
+      scope.count
+    end
+
+    # Events authored by the account itself never count (you don't get nudged by
+    # your own action — the router drops self-nudges, this is belt-and-braces).
+    def unread_events_for(account)
+      pointer = last_read_event_id_for(account)
+      scope   = events.where.not(actor_account_id: account.id)
+      scope = scope.where(Nudges::Event.arel_table[:id].gt(pointer)) if pointer
+      scope.count
+    end
+
     def last_read_message_id_for(account)
       if mate?
         account_a_id == account.id ? last_read_message_id_a : last_read_message_id_b
       else
         memberships.find_by(account_id: account.id)&.last_read_message_id
+      end
+    end
+
+    def last_read_event_id_for(account)
+      if mate?
+        account_a_id == account.id ? last_read_event_id_a : last_read_event_id_b
+      else
+        memberships.find_by(account_id: account.id)&.last_read_event_id
       end
     end
 
