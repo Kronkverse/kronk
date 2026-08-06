@@ -13,6 +13,16 @@
 // This module is shared between the viewer's read-only render and
 // the composer's editable render — the editor adds interaction on
 // top of the same visual primitive so what-you-see-is-what-you-post.
+//
+// Structure (learned the hard way, 2026-08-06): positioning lives
+// on a *wrapper* (OverlayPositioned in the read path, EditableOverlay
+// in the editor), not on OverlayText itself. `<OverlayText>` used
+// to be `position: absolute` with `max-width: N%` — inside an
+// inline-block wrapper that had no explicit width, the % resolved
+// against a 0-width parent and every character wrapped to its own
+// line, making the text render *vertically*. Keeping OverlayText as
+// pure inline-block styling (font, colour, backing, padding) means
+// the wrapper controls sizing and the text just fills.
 
 // The overlay's typographic family. Maps 1:1 to the Kronk font
 // tokens (see `_tokens.scss`). Adding a font here is a two-step
@@ -68,9 +78,10 @@ const FONT_VAR: Record<OverlayFont, string> = {
   mono: 'var(--font-mono)',
 };
 
-// Read-only render. The composer's editable render wraps each of
-// these in a gesture handler; both share the same visual so what's
-// on screen in the editor matches what lands in the viewer.
+// Read-only render. Wraps each overlay in a positioned span so the
+// text itself stays a plain inline-block; percentages on the wrapper
+// resolve against the overlay layer (which has real width from its
+// containing block), so wrapping happens at the right point.
 export const OverlayLayer: React.FC<{
   overlays: TextOverlay[];
 }> = ({ overlays }) => {
@@ -78,26 +89,36 @@ export const OverlayLayer: React.FC<{
   return (
     <div className='moments-overlay-layer' aria-hidden={false}>
       {overlays.map((o) => (
-        <OverlayText key={o.id} overlay={o} />
+        <OverlayPositioned key={o.id} overlay={o}>
+          <OverlayText overlay={o} />
+        </OverlayPositioned>
       ))}
     </div>
   );
 };
 
-// A single overlay rendered as a positioned block. Aspect-invariant
-// because every dimension is expressed as a fraction of the parent
-// (which must be `position: relative`). Style is inline for the
-// per-overlay values (colour, size, rotation, position, font) and
-// class-based for the shared backing treatment.
+// Positioning wrapper for one overlay. Owns `left/top/maxWidth/
+// transform` — read-side only; the editor has its own equivalent
+// wrapper that adds gesture handlers around the same shape.
+export const OverlayPositioned: React.FC<{
+  overlay: TextOverlay;
+  children: React.ReactNode;
+}> = ({ overlay, children }) => (
+  <span className='moments-overlay-position' style={positionStyle(overlay)}>
+    {children}
+  </span>
+);
+
+// A single overlay's *visual* — the styled text span. NO positioning
+// here; positioning lives on the wrapper. Making this static-flow
+// means the wrapper's max-width resolves against a real containing
+// block (the overlay layer), so text wraps at the right point rather
+// than collapsing to zero-width and stacking vertically.
 export const OverlayText: React.FC<{ overlay: TextOverlay }> = ({
   overlay,
 }) => {
   const style: React.CSSProperties = {
-    left: `${(overlay.x * 100).toString()}%`,
-    top: `${(overlay.y * 100).toString()}%`,
-    maxWidth: `${(overlay.width * 100).toString()}%`,
     fontSize: `${(overlay.size * 100).toString()}cqh`,
-    transform: `translate(-50%, -50%) rotate(${overlay.rotation.toString()}deg)`,
     color: overlay.color,
     fontFamily: FONT_VAR[overlay.font],
   };
@@ -110,6 +131,16 @@ export const OverlayText: React.FC<{ overlay: TextOverlay }> = ({
     </span>
   );
 };
+
+// The wrapper's positioning style, extracted so the editor's own
+// positioning wrapper can reuse the same shape without duplicating
+// the arithmetic.
+export const positionStyle = (overlay: TextOverlay): React.CSSProperties => ({
+  left: `${(overlay.x * 100).toString()}%`,
+  top: `${(overlay.y * 100).toString()}%`,
+  maxWidth: `${(overlay.width * 100).toString()}%`,
+  transform: `translate(-50%, -50%) rotate(${overlay.rotation.toString()}deg)`,
+});
 
 // Convenience: default overlay for a "new text" tap. Placed at
 // centre, medium width, sans-serif, white on dark pill (Signal's

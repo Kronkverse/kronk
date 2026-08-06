@@ -924,14 +924,26 @@
   z-index: 1;
 }
 
-.moments-overlay__text {
+// Positioning wrapper for a single overlay — owns left / top /
+// max-width / transform so `<OverlayText>` inside can stay a plain
+// inline-block styling primitive. The editor uses its own wrapper
+// (`.moments-text-editor__layer`) with the same positioning shape
+// plus drag handlers; both live inside a `container-type: size` /
+// real-width parent so % max-width resolves correctly and long
+// text wraps at the right point (not one-character-per-line).
+.moments-overlay-position {
   position: absolute;
+  display: inline-block;
+  text-align: center;
+  transform-origin: center;
+}
+
+.moments-overlay__text {
   display: inline-block;
   padding: 0.15em 0.4em;
   line-height: 1.15;
   font-weight: 600;
   text-align: center;
-  transform-origin: center;
   white-space: pre-wrap;
   overflow-wrap: break-word;
   border-radius: 0.25em;
@@ -1118,13 +1130,21 @@
   color: rgb(255 255 255 / 60%);
 }
 
+// Stage: takes the remaining vertical space between header and
+// toolbar. Flex-centres the image (grid + place-items: center had
+// intermittent issues where the img rendered at 0×0). `container-
+// type: size` is set here (not on the overlays layer) so it has an
+// externally-determined size to contain against — flex:1 in a fixed
+// parent is exactly that.
 .moments-text-editor__stage {
   position: relative;
   flex: 1;
   min-height: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
+  container-type: size;
 }
 
 .moments-text-editor__image {
@@ -1136,25 +1156,26 @@
   user-select: none;
 }
 
-// Overlay container: sized to the image via `position: absolute;
-// inset: 0` and matched to the image aspect via the flex layout
-// above. `container-type: size` gives the overlays a `cqh` frame
-// identical to the viewer's, so a size:0.06 in the editor renders
-// at the same visual size in the shipped viewer.
+// Overlay container: fills the stage; overlays inside position
+// against this (via `.moments-overlay-position`). Container-type
+// lives on the stage above so this stays a plain absolute frame.
 .moments-text-editor__overlays {
   position: absolute;
   inset: 0;
-  container-type: size;
   pointer-events: none;
 }
 
-// One editable overlay. Uses `.moments-overlay__text` for the actual
-// text rendering (via <OverlayText>), and adds a dashed outline +
-// resize/rotate handle when selected. `pointer-events: auto` re-
-// enables interaction inside the pointer-events:none layer above.
+// One editable overlay. Owns positioning (left/top/max-width/
+// transform, set inline from the overlay's normalised coords) so
+// `<OverlayText>` inside can stay a plain inline-block styling
+// primitive — text wraps at the layer's max-width and no longer
+// collapses vertically. `pointer-events: auto` re-enables
+// interaction inside the pointer-events:none overlays layer above.
 .moments-text-editor__layer {
   position: absolute;
   display: inline-block;
+  text-align: center;
+  transform-origin: center;
   pointer-events: auto;
   cursor: grab;
 

@@ -37,7 +37,12 @@ import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import DeleteIcon from '@/material-icons/400-24px/delete.svg?react';
 
 import type { OverlayBacking, OverlayFont, TextOverlay } from './text_overlay';
-import { OVERLAY_COLORS, OverlayText, newOverlay } from './text_overlay';
+import {
+  OVERLAY_COLORS,
+  OverlayText,
+  newOverlay,
+  positionStyle,
+} from './text_overlay';
 
 const messages = defineMessages({
   title: {
@@ -487,16 +492,12 @@ const EditableOverlay: React.FC<{
   return (
     <div
       className={`moments-text-editor__layer${selected ? ' moments-text-editor__layer--selected' : ''}`}
-      style={{
-        left: `${(overlay.x * 100).toString()}%`,
-        top: `${(overlay.y * 100).toString()}%`,
-        transform: `translate(-50%, -50%) rotate(${overlay.rotation.toString()}deg)`,
-      }}
+      style={positionStyle(overlay)}
       {...bindBody()}
       onPointerDown={handleClick}
       onDoubleClick={handleDoubleClick}
     >
-      <OverlayText overlay={{ ...overlay, x: 0.5, y: 0.5, rotation: 0 }} />
+      <OverlayText overlay={overlay} />
       {selected && (
         <span className='moments-text-editor__handle' {...bindHandle()} />
       )}
@@ -551,11 +552,8 @@ const InlineTextInput: React.FC<{
       ref={inputRef}
       className='moments-text-editor__input'
       style={{
-        left: `${(overlay.x * 100).toString()}%`,
-        top: `${(overlay.y * 100).toString()}%`,
-        maxWidth: `${(overlay.width * 100).toString()}%`,
+        ...positionStyle(overlay),
         fontSize: `${(overlay.size * 100).toString()}cqh`,
-        transform: `translate(-50%, -50%) rotate(${overlay.rotation.toString()}deg)`,
         color: overlay.color,
         fontFamily:
           overlay.font === 'display'
