@@ -4,168 +4,94 @@
 // Commons — governance feature styles
 // Theme-aware via --accent shared token (set by governance/index.tsx)
 
-// ─── Koin wallet card ───────────────────────────────────────────────────────
-// It's people's governance weight — give it the presence of a wallet, not a
-// counter: available-of-total, a staked-vs-available bar, and a plain reminder
-// that staking is never spending. Adapted from Tal's kronk_kommons_home mockup.
-
-// Wallet (2/3) + Backed card (1/3) share the top row.
-.kommons-wallet-row {
-  display: flex;
-  align-items: stretch;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.kommons-wallet {
-  @include kronk-cover-glow;
-
-  position: relative;
-  flex: 2;
-  min-width: 0;
-  display: flex;
+// ─── Koin glance ────────────────────────────────────────────────────────────
+// Was two hero cards (wallet + backed toggle) taking the top ~200px of the
+// page. Tal, 2026-08-06: too central, "aggressively AI aesthetic." Same data
+// now sits as a thin inline chip on the right of the head row — balance you
+// can read at a glance without being shouted at, backed count is still a
+// one-tap lens toggle.
+.kommons-glance {
+  display: inline-flex;
   align-items: center;
-  gap: 14px;
-  overflow: hidden;
-  padding: 16px;
-  border-radius: var(
-    --radius-large,
-    16px
-  ); // override the mixin's bottom-only radius
-
+  gap: 10px;
+  padding: 4px;
+  border-radius: var(--radius-round);
+  background: color-mix(in srgb, var(--kronk-purple-bright) 6%, transparent);
   border: 1px solid
-    color-mix(in srgb, var(--kronk-purple-bright) 30%, transparent);
+    color-mix(in srgb, var(--kronk-purple-bright) 18%, transparent);
+  font-family: var(--font-body);
 
-  // A minted ₭ coin — the money signifier, in front of the balance.
-  &__coin-badge {
-    flex: none;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background:
-      radial-gradient(
-        circle at 32% 28%,
-        color-mix(in srgb, #fff 45%, transparent),
-        transparent 55%
-      ),
-      linear-gradient(
-        155deg,
-        var(--kronk-purple-bright),
-        var(--kronk-purple-deep)
-      );
-    border: 2px solid
-      color-mix(in srgb, var(--kronk-purple-bright) 60%, transparent);
-    box-shadow:
-      inset 0 2px 5px color-mix(in srgb, #fff 30%, transparent),
-      inset 0 -4px 8px color-mix(in srgb, #000 34%, transparent),
-      0 6px 18px color-mix(in srgb, var(--kronk-purple-bright) 34%, transparent);
+  &__balance {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 2px 10px;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
   }
 
   &__kip {
     font-family: var(--font-display);
-    font-size: 30px;
+    font-size: 14px;
     font-weight: 600;
-    line-height: 1;
-    color: var(--text-on-accent);
-    text-shadow: 0 1px 2px color-mix(in srgb, #000 40%, transparent);
-  }
-
-  &__content {
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__bal {
-    display: flex;
-    align-items: flex-end;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-
-  &__big {
-    font-family: var(--font-display, Georgia, serif);
-    font-size: 36px;
-    line-height: 0.9;
-    color: var(--text-primary);
-    font-variant-numeric: tabular-nums;
-  }
-
-  &__of {
-    font-size: 15px;
-    color: var(--text-secondary);
-    padding-bottom: 4px;
-  }
-
-  // The fill is Koin available to stake; the empty remainder is locked stake.
-  &__bar {
-    height: 10px;
-    border-radius: var(--radius-round);
-    overflow: hidden;
-    background: color-mix(in srgb, #000 30%, transparent);
-  }
-
-  &__fill {
-    height: 100%;
-    border-radius: var(--radius-round);
-    background: linear-gradient(
-      90deg,
-      var(--accent),
-      var(--kronk-purple-bright)
-    );
-    transition: width 0.4s ease;
-  }
-}
-
-// The matched 1/3 card — count of proposals you're backing; toggles the list
-// to just those.
-.kommons-backed {
-  @include kronk-cover-glow;
-
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  padding: 16px;
-  text-align: center;
-  cursor: pointer;
-  border-radius: var(--radius-large);
-  border: 1px solid
-    color-mix(in srgb, var(--kronk-purple-bright) 30%, transparent);
-  transition:
-    border-color 0.15s,
-    transform 0.1s,
-    box-shadow 0.2s;
-
-  &:hover {
-    border-color: var(--kronk-purple-bright);
-    transform: translateY(-2px);
-  }
-
-  &.active {
-    border-color: var(--accent);
-    box-shadow: inset 0 0 0 1px var(--accent);
+    color: var(--kronk-purple-bright);
   }
 
   &__num {
-    font-family: var(--font-display, Georgia, serif);
-    font-size: 36px;
-    line-height: 0.9;
-    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  &__of {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  &__backed {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: var(--radius-round);
+    background: transparent;
+    border: 0;
+    color: var(--text-secondary);
+    font-family: inherit;
+    cursor: pointer;
+    transition:
+      background 0.15s var(--ease-out),
+      color 0.15s var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      outline: none;
+      background: color-mix(
+        in srgb,
+        var(--kronk-purple-bright) 12%,
+        transparent
+      );
+      color: var(--text-primary);
+    }
+
+    &.active {
+      background: var(--accent);
+      color: var(--text-on-accent);
+    }
+  }
+
+  &__backed-num {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
 
-  &__label {
-    font-size: 11px;
+  &__backed-label {
+    font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 600;
-    color: var(--text-secondary);
+    letter-spacing: 0.06em;
   }
 }
 
@@ -186,7 +112,8 @@
 
 .kommons-page__head {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 16px;
@@ -353,58 +280,25 @@
     opacity: 0.7;
   }
 
-  &__gauge {
+  // Left column — the target korner's own manifest icon in a soft
+  // chip. Replaces the old backing ring (which was doing double duty
+  // as a big number container and a proportional gauge — chaotic on
+  // a list of 17 proposals). The icon-first reading is: "this
+  // proposal is about Moments / Kommunity / Kalendar…", instant.
+  &__space-icon {
     flex: none;
-    width: 56px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-  }
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-medium);
+    background: color-mix(in srgb, var(--kronk-purple-bright) 10%, transparent);
+    color: var(--kronk-purple-bright);
 
-  &__ring {
-    position: relative;
-    width: 52px;
-    height: 52px;
-
-    svg {
-      width: 52px;
-      height: 52px;
-      transform: rotate(-90deg);
+    .icon {
+      width: 22px;
+      height: 22px;
     }
-  }
-
-  &__ring-track {
-    fill: none;
-    stroke: color-mix(in srgb, var(--text-primary) 10%, transparent);
-    stroke-width: 5;
-  }
-
-  &__ring-fill {
-    fill: none;
-    stroke: var(--kronk-purple-bright);
-    stroke-width: 5;
-    stroke-linecap: round;
-    transition: stroke-dashoffset 0.4s ease;
-  }
-
-  &__ring-num {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-display);
-    font-size: 16px;
-    color: var(--text-primary);
-    font-variant-numeric: tabular-nums;
-  }
-
-  &__ring-label {
-    font-size: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
   }
 
   &__body {
@@ -420,20 +314,15 @@
     margin-bottom: 4px;
   }
 
-  &__space {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+  // Space name text label — sibling to the left icon, sits in the
+  // chip row. Kept because the icon alone doesn't communicate the
+  // korner name to a sighted user who doesn't recognise the glyph.
+  &__space-label {
     font-size: 11px;
     color: var(--kronk-purple-bright);
     padding: 1px 8px;
     border-radius: var(--radius-round);
     background: color-mix(in srgb, var(--kronk-purple-bright) 12%, transparent);
-
-    .icon {
-      width: 12px;
-      height: 12px;
-    }
   }
 
   &__size {
@@ -553,10 +442,6 @@
     }
   }
 
-  &__rank {
-    font-variant-numeric: tabular-nums;
-  }
-
   &__seeder {
     display: inline-flex;
     align-items: center;
@@ -584,6 +469,36 @@
     padding: 2px 8px;
     border-radius: var(--radius-round);
     background: color-mix(in srgb, var(--kronk-purple-bright) 14%, transparent);
+  }
+
+  // Right column — the ₭ backed number that used to live inside the
+  // gauge ring. Right-aligned, tabular numerals, small "backed" label
+  // underneath. Muted when zero so an unbacked proposal doesn't shout
+  // its emptiness.
+  &__backing {
+    flex: none;
+    min-width: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    text-align: right;
+    color: var(--text-primary);
+  }
+
+  &__backing-num {
+    font-family: var(--font-display);
+    font-size: 20px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__backing-label {
+    margin-top: 2px;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
   }
 }
 

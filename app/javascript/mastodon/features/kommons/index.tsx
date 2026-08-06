@@ -7,8 +7,8 @@ import { Helmet } from 'react-helmet';
 import api from 'mastodon/api';
 import { Stage } from 'mastodon/components/stage';
 
-import { KoinWallet } from './components/koin_wallet';
-import type { Wallet } from './components/koin_wallet';
+import { KoinGlance } from './components/koin_glance';
+import type { Wallet } from './components/koin_glance';
 import { ProposalCard } from './components/proposal_card';
 import { ProposalDetail } from './components/proposal_detail';
 import type { Proposal } from './types';
@@ -143,7 +143,6 @@ const Kommons: React.FC<{ multiColumn?: boolean }> = () => {
     lens === 'mine'
       ? proposals.filter((p) => p.backing.my_stake > 0)
       : proposals;
-  const maxBacking = Math.max(0, ...shown.map((p) => p.backing.total));
 
   return (
     <Stage label={intl.formatMessage(messages.title)}>
@@ -160,28 +159,6 @@ const Kommons: React.FC<{ multiColumn?: boolean }> = () => {
           />
         ) : (
           <>
-            {wallet && (
-              <div className='kommons-wallet-row'>
-                <KoinWallet wallet={wallet} />
-                <button
-                  type='button'
-                  className={`kommons-backed${lens === 'mine' ? ' active' : ''}`}
-                  onClick={handleToggleBacked}
-                  aria-pressed={lens === 'mine'}
-                >
-                  <span className='kommons-backed__num'>
-                    {wallet.staked_seeds}
-                  </span>
-                  <span className='kommons-backed__label'>
-                    <FormattedMessage
-                      id='governance.backed'
-                      defaultMessage='Backed'
-                    />
-                  </span>
-                </button>
-              </div>
-            )}
-
             <div className='kommons-page__head'>
               <div className='kommons-page__head-text'>
                 <h1 className='kommons-page__head-title'>
@@ -195,6 +172,17 @@ const Kommons: React.FC<{ multiColumn?: boolean }> = () => {
                   </span>
                 )}
               </div>
+              {/* Koin balance + "Backed" lens toggle live inline in
+                  the head — the old two-card wallet row was
+                  dominating the surface (see 2026-08-06 screenshot).
+                  Same data, a fraction of the ink. */}
+              {wallet && (
+                <KoinGlance
+                  wallet={wallet}
+                  backedActive={lens === 'mine'}
+                  onToggleBacked={handleToggleBacked}
+                />
+              )}
             </div>
 
             <div className='kommons-page__strip'>
@@ -263,7 +251,6 @@ const Kommons: React.FC<{ multiColumn?: boolean }> = () => {
                 <ProposalCard
                   key={proposal.id}
                   proposal={proposal}
-                  maxBacking={maxBacking}
                   onSelect={handleSelectProposal}
                 />
               ))}
