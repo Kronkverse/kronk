@@ -324,8 +324,11 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   </button>
 </div>
 
-<div class="hud" id="depth"><b id="depthLabel">today</b><br><span id="depthSub">at the head</span></div>
-<div class="hud" id="hint">scroll to wind · click a day to spin to it</div>
+<!-- HUD labels (`#depth` "TODAY / AT THE HEAD" and `#hint` scroll
+     instruction) retired 2026-08-06 (Tal: "make it simple and clean,
+     more chill, more quiet"). The TODAY card already tells you what
+     day the head is on; scrolling the spiral is self-evident. -->
+
 
 <!-- the sheet rises when you settle -->
 <section id="sheet" aria-label="Selected day">
@@ -339,40 +342,14 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
       <div><span class="s-dow" id="sDow">—</span><span class="s-date" id="sDate">—</span></div>
       <div class="s-rel" id="sRel"></div>
     </div>
-    <div class="flowstrip">
-      <span id="sMoon"></span>
-      <div>
-        <div class="flow-title" id="sMoonName">—</div>
-        <div class="flow-sub" id="sMoonSub">—</div>
-      </div>
-      <div class="flow-mark" id="sMark" hidden></div>
-    </div>
-    <div class="inflow" id="inflow">
-      <div class="if-title">In Flow · the sky on this day</div>
-      <div class="if-grid">
-        <div class="if-row">
-          <span class="if-ico if-moon" id="ifMoonIco"></span>
-          <span class="if-sign" id="ifMoonSign">—</span>
-          <div class="if-head" id="ifMoonHead">—</div>
-        </div>
-        <div class="if-row">
-          <span class="if-ico if-sun">☉</span>
-          <span class="if-sign" id="ifSunSign">—</span>
-          <div class="if-head" id="ifSunHead">—</div>
-        </div>
-        <div class="if-row if-station" id="ifStationRow">
-          <div class="if-sub" id="ifStationSub"></div>
-        </div>
-      </div>
-    </div>
-    <div class="filters">
-      <button class="chip" aria-pressed="true" data-f="kalendar" style="--c:var(--k-gather)"><i class="dot"></i>Events</button>
-      <button class="chip" aria-pressed="true" data-f="market"   style="--c:var(--k-exchange)"><i class="dot"></i>Ticketed</button>
-      <button class="chip" aria-pressed="true" data-f="huddle"   style="--c:var(--info-blue)"><i class="dot"></i>Huddles</button>
-      <button class="chip" aria-pressed="true" data-f="group"    style="--c:var(--k-govern)"><i class="dot"></i>Groups</button>
-      <button class="chip" aria-pressed="true" data-f="self"     style="--c:var(--k-self)"><i class="dot"></i>Orbits</button>
-      <button class="chip" aria-pressed="true" data-f="flow"     style="--c:var(--k-flow)"><i class="dot"></i>In&nbsp;Flow</button>
-    </div>
+    <!-- Retired 2026-08-06 in the "chill Kalendar" pass:
+         * `.flowstrip` (moon phase name + illumination percentage)
+         * `.inflow` (Moon in <sign>, Sun in <sign>, cross-quarter note)
+         * `.filters` (six event-source chips — Events, Ticketed,
+           Huddles, Groups, Orbits, In Flow). The `state.filters` Set
+           is still initialised with all sources on so `eventsOn(n)`
+           returns everything by default; when a real filter UX
+           lands, it can drive that Set again. -->
   </div>
   <div class="sheet-list" id="sList"></div>
 </section>
@@ -681,10 +658,11 @@ function bindCell(c, n){
   c.el.classList.toggle('gone', n<0);
   c.el.classList.toggle('station', !!c.mark);
   c.lab.textContent = c.mark ? c.mark.name : '';
-  c.glyph.innerHTML = (c.mark ? stationGlyph(c.mark.kind) : '') +
-    (state.filters.has('flow')
-      ? moonSVG(24, phase(dt), 'moonpip').replace('<svg','<svg style="opacity:'+(c.principal?1:.35)+'"')
-      : '');
+  // Moon-phase pip on every date bubble retired 2026-08-06 (Tal:
+  // "so many bits and bobs, so much unnecessary random shit clogging
+  // up comprehension space"). Station glyphs (solstice / equinox /
+  // cross-quarter) stay — they mark the year, not the month.
+  c.glyph.innerHTML = c.mark ? stationGlyph(c.mark.kind) : '';
   const evs = eventsOn(n);
   c.dots.innerHTML = evs.slice(0,4).map(e => `<i style="--d:${SRC[e.src].c}"></i>`).join('');
 }
@@ -813,12 +791,11 @@ function layout(now){
   headline.style.top = '0px';
   headline.style.height = `calc(44% - ${hr + hs/2 + 14}px)`;
 
-  /* HUD */
+  /* Head-of-spiral tracking. The `#depth` HUD that used to read
+     "today / at the head" was retired 2026-08-06 — TODAY card
+     already carries the day, and the `.away` modifier still gives
+     the card its "you're off today" treatment. */
   const head = Math.round(t);
-  document.getElementById('depthLabel').textContent =
-    head === 0 ? 'today' : dayFrom(head).toLocaleDateString('en',{day:'numeric',month:'short',year:'numeric'});
-  document.getElementById('depthSub').textContent =
-    head === 0 ? 'at the head' : (head > 0 ? `${head} days ahead` : `${-head} days back`);
   todayCard.classList.toggle('away', head !== 0);
 
   if(head !== lastHead){
@@ -867,14 +844,10 @@ function renderSheet(n){
   document.getElementById('sDate').textContent = dt.toLocaleDateString('en',{day:'numeric',month:'long'});
   const rel = n===0?'today':n===1?'tomorrow':n===-1?'yesterday':n>0?`in ${n} days`:`${-n} days ago`;
   document.getElementById('sRel').innerHTML = `${rel}<br>${season(dt)} · ${dt.getFullYear()}`;
-  document.getElementById('sMoon').innerHTML = moonSVG(34, phase(dt));
-  document.getElementById('sMoonName').textContent = moonName(dt);
-  document.getElementById('sMoonSub').textContent =
-    `${Math.round(illum(dt)*100)}% lit · day ${moonAge(dt).toFixed(1)} of ${SYN.toFixed(1)}`;
-  const mk = skyMark(dt), mkEl = document.getElementById('sMark');
-  if(mk){ mkEl.hidden = false; mkEl.textContent = mk.name; } else mkEl.hidden = true;
-
-  renderInFlow(dt);
+  // Astronomy row (moon phase + illumination + sky-mark chip) and
+  // the In Flow expandable block retired 2026-08-06. The chill pass
+  // dropped their DOM slots; keeping the reads here would throw on
+  // null. Users who want moon/sky details go to the In Flow korner.
 
   const list = document.getElementById('sList');
   const evs = eventsOn(n);
@@ -887,28 +860,10 @@ function renderSheet(n){
   }
   evs.forEach(e => list.appendChild(kard(e)));
 }
-function renderInFlow(dt){
-  /* Moon — its current shape + the sign it's in. */
-  document.getElementById('ifMoonIco').innerHTML = moonSVG(24, phase(dt));
-  const msign = moonSign(dt);
-  document.getElementById('ifMoonSign').textContent = msign.g;
-  document.getElementById('ifMoonHead').textContent = `${moonName(dt)} · Moon in ${msign.s}`;
-
-  /* Sun — its symbol + the sign it's in. */
-  const ssign = sunSign(dt);
-  const hemi = state.hemisphere === 'south' ? 'Southern' : 'Northern';
-  document.getElementById('ifSunSign').textContent = ssign.g;
-  document.getElementById('ifSunHead').textContent = `Sun in ${ssign.s} · ${hemi} ${season(dt)}`;
-
-  /* Stations (equinox / solstice / cross-quarter) have no glyph — a short
-     one-line note, shown only when one is upon us or close ahead. */
-  const st = stationsAround(dt);
-  let note = '';
-  if(st.today && st.today.kind === 'station') note = `${st.today.name} — today. The year pivots here.`;
-  else if(st.nextSt) note = `${st.nextSt.name} in ${plural(dayDiff(st.nextSt.date, dt),'day')}.`;
-  document.getElementById('ifStationSub').textContent = note;
-  document.getElementById('ifStationRow').style.display = note ? '' : 'none';
-}
+// renderInFlow (Moon/Sun sign + station note) retired 2026-08-06
+// alongside its DOM slots. `moonSign` / `sunSign` / `stationsAround`
+// stay in scope for anything else that wants them (nothing else does
+// today), and cost nothing to leave declared.
 function stackHTML(e){
   const k = Math.min(4, Math.max(1, e.going));
   let h = '';
@@ -1059,12 +1014,10 @@ const todayCard = document.getElementById('todayCard');
     : 'nothing held today';
 })();
 todayCard.onclick = () => spinTo(0);
-document.querySelectorAll('.chip').forEach(c => c.onclick = () => {
-  const on = c.getAttribute('aria-pressed') === 'true';
-  c.setAttribute('aria-pressed', on?'false':'true');
-  on ? state.filters.delete(c.dataset.f) : state.filters.add(c.dataset.f);
-  rebind(true); renderSheet(Math.round(state.travel));
-});
+// Chip click handler retired 2026-08-06 — the `.filters` chip row
+// is gone. `state.filters` stays fully populated so `eventsOn(n)`
+// returns everything; a proper filter UX can re-drive that Set
+// when it lands.
 
 /* ── sheet gestures ──────────────────────────────────────── */
 const sheetEl = document.getElementById('sheet');
