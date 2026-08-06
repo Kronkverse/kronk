@@ -20,6 +20,7 @@ import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react'
 import RavenIcon from '@/material-icons/400-24px/raven.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import SnowflakeIcon from '@/material-icons/400-24px/snowflake.svg?react';
+import SpiralIcon from '@/material-icons/400-24px/spiral.svg?react';
 import StacksIcon from '@/material-icons/400-24px/stacks.svg?react';
 import TauntIcon from '@/material-icons/400-24px/taunt.svg?react';
 import TravelExploreIcon from '@/material-icons/400-24px/travel_explore.svg?react';
@@ -54,6 +55,7 @@ const MATERIAL_TO_ICON: Record<string, IconProp> = {
   raven: RavenIcon,
   settings: SettingsIcon,
   snowflake: SnowflakeIcon,
+  spiral: SpiralIcon,
   stacks: StacksIcon,
   taunt: TauntIcon,
   travel_explore: TravelExploreIcon,
