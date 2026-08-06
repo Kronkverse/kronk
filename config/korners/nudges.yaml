@@ -132,6 +132,11 @@ listens:
   # groups.member.joined is NOT here — routes into the Krew conversation
   # directly (no Mates gate) and stays hand-wired in
   # config/initializers/nudges_event_bus.rb.
+  #
+  # mates.request.sent + mates.request.accepted are also NOT here —
+  # both need to bypass the Mates gate (a mate request is by
+  # definition non-Mate; the accept race can trail the follow-cache
+  # by a few ms), so they're hand-wired in the same initializer.
 
 feed_projection:
   card: # not-applicable — Nudges appear in the notifications drawer, not the timeline.

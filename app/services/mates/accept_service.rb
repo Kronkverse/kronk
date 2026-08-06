@@ -22,6 +22,18 @@ module Mates
       AuthorizeFollowService.new.call(@requester, @recipient)
       FollowService.new.call(@recipient, @requester, bypass_locked: true) unless @recipient.following?(@requester)
 
+      # Nudges surface: tell the requester their request was
+      # accepted. They're now Mates (the two follow calls above
+      # made them mutual), but this is hand-wired anyway — paired
+      # with `mates.request.sent` in the initializer, both bypass
+      # the standard Mates gate for the same reason: the transition
+      # to Mates is what these events are announcing.
+      Kronk::KornerEvents.publish(
+        'mates.request.accepted',
+        actor_account_id: @recipient.id,
+        recipient_account_id: @requester.id
+      )
+
       true
     end
   end

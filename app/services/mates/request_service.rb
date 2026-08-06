@@ -36,6 +36,21 @@ module Mates
       return unless @target.local?
 
       LocalNotificationWorker.perform_async(@target.id, request.id, request.class.name, 'follow_request')
+
+      # Nudges surface: the legacy bell notification alone doesn't
+      # reach the messenger. A mate request is inherently non-Mate
+      # (the two accounts aren't mutual yet — that's the whole
+      # point), so the standard `Nudges::EventRouter` path would
+      # drop it as `:non_mate_dropped`. Instead, emit an event that
+      # the hand-wired subscriber in `nudges_event_bus.rb` picks up
+      # and drops onto their (soon-to-be) Mate conversation
+      # directly, bypassing the Mates gate.
+      Kronk::KornerEvents.publish(
+        'mates.request.sent',
+        actor_account_id: @source.id,
+        recipient_account_id: @target.id,
+        follow_request_id: request.id
+      )
     end
   end
 end
