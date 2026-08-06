@@ -306,43 +306,65 @@
   padding: 6px 12px 2px;
 }
 
-// ── feed revolve — the home feed's carousel transition ────────
-// The feed rides in on the SAME barrel the selector turns on: the root carries
-// the perspective (set inline), and the stage orbits a vertical axis `radius`
-// behind the screen (`translateZ(-R) rotateY(θ) translateZ(R)`, written from
-// JS) so the incoming face arcs in from the side and swings flat to front. The
-// veil + sheen shade it as a curved solid, exactly like a selector face; the
-// turn borrows the selector's own duration + easing so they move as one body.
-.feed-revolve {
-  --fr-dur: 1000ms;
-  --fr-ease: cubic-bezier(0.42, 0.02, 0.18, 1);
+// ── feed drum — the home feed as the lower half of the spindle ─
+// The scope selector turns on a barrel; the feed turns on the same body. At
+// rest the feed is the normal scrolling column (`__live`). On a scope change,
+// FeedDrum drops a transient `__overlay` over the visible band and plays a solid
+// quarter-turn (`__cube`, preserve-3d): a snapshot of the outgoing feed swings
+// away edge-on while a snapshot of the incoming feed swings in from the side.
+// The veil + sheen shade the turning faces exactly like a selector face, and
+// `--fd-dur`/`--fd-ease` mirror the selector's `--sc-dur-turn`/`--sc-ease-turn`
+// so both halves of the spindle turn as one object. All 3D geometry is written
+// from JS (per-face transforms depend on the measured width).
+.feed-drum {
+  --fd-dur: 900ms;
+  --fd-ease: cubic-bezier(0.42, 0.02, 0.18, 1);
 
   position: relative;
 
-  &__stage {
-    position: relative;
-    transform-origin: 50% 50%;
-    will-change: transform;
-
-    // Back-face never shows before 90deg, but keep it hidden so a mid-turn
-    // frame can't flash a mirrored feed.
-    backface-visibility: hidden;
-
-    // The resting transition; the JS turns transitions off for the snap-to-side
-    // frame, then hands back to this to ease home.
-    transition: transform var(--fr-dur) var(--fr-ease);
+  &__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    z-index: 5;
+    pointer-events: none;
   }
 
-  // Cylindrical shading — a veil darkens the turning edge, a sheen lifts the
-  // leading one. Opacities are set imperatively per turn angle in JS, mirroring
-  // the selector face. Both ride the transformed stage plane (flat overlay).
+  &__cube {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    will-change: transform;
+    transition: transform var(--fd-dur) var(--fd-ease);
+  }
+
+  &__face {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    backface-visibility: hidden;
+    background: var(--surface-primary);
+    border-radius: var(--radius-large);
+  }
+
+  // The cloned feed sits at the top of its face; the face clips the overflow to
+  // the visible band.
+  &__content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
   &__veil,
   &__sheen {
     position: absolute;
     inset: 0;
     pointer-events: none;
     opacity: 0;
-    transition: opacity var(--fr-dur) var(--fr-ease);
+    transition: opacity var(--fd-dur) var(--fd-ease);
   }
 
   &__veil {
@@ -361,9 +383,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .feed-revolve__stage,
-  .feed-revolve__veil,
-  .feed-revolve__sheen {
+  .feed-drum__cube,
+  .feed-drum__veil,
+  .feed-drum__sheen {
     transition-duration: 0.01ms !important;
   }
 }

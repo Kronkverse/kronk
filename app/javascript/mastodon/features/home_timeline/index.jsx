@@ -18,7 +18,7 @@ import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { SymbolLogo } from 'mastodon/components/logo';
 import { NotSignedInIndicator } from 'mastodon/components/not_signed_in_indicator';
 import { ScopeCarousel } from 'mastodon/components/scope_carousel';
-import { FeedRevolve } from 'mastodon/features/home_timeline/components/feed_revolve';
+import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 import { VeilScene } from 'mastodon/features/inflow/veil_scene';
 import { MomentsStrip } from 'mastodon/features/moments/home_strip';
 import { withBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
@@ -323,7 +323,7 @@ class HomeTimeline extends PureComponent {
         {signedIn && <HomeStatusBox />}
 
         {signedIn ? (
-          <FeedRevolve
+          <FeedDrum
             reach={reach}
             order={feedFaces.map((f) => f.key)}
             onScopeChange={this.handleScopeChange}
@@ -340,7 +340,7 @@ class HomeTimeline extends PureComponent {
               emptyMessage={feedConfig.emptyMessage}
               bindToDocument={!multiColumn}
             />
-          </FeedRevolve>
+          </FeedDrum>
         ) : <NotSignedInIndicator />}
 
         <Helmet>
