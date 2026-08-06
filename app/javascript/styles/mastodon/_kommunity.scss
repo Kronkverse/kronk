@@ -80,8 +80,10 @@
 }
 
 // ── Discover list (Kommunity view #2) ────────────────────────────
-// The paginated grid of visible Kronkers. Each row = one account,
-// tap-through to their shelved profile where Groove + Nudge live.
+// The paginated grid of visible Kronkers. Each row = one account.
+// Tap the avatar/name → shelved profile; tap the Mate button on
+// the right → send / withdraw / accept a Mate request inline
+// (Kommons proposal #117047168766649089, 2026-08-06).
 
 .kommunity-discover {
   padding: var(--sp-5, 24px) var(--sp-4, 16px) var(--sp-6, 32px);
@@ -113,6 +115,10 @@
   }
 
   &__row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2, 8px);
+    padding-inline-end: var(--sp-3, 12px);
     background: var(--surface-primary);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-medium);
@@ -127,12 +133,26 @@
   }
 
   &__link {
+    flex: 1 1 auto;
+    min-width: 0;
     display: flex;
     align-items: center;
     gap: var(--sp-3, 12px);
     padding: var(--sp-3, 12px);
     color: var(--text-primary);
     text-decoration: none;
+  }
+
+  // Inline Mate action — sits opposite the profile link on each row.
+  // `flex: 0 0 auto` refuses to shrink; on narrow rows the names
+  // ellipsis before the button does. The button's own styling is
+  // owned by the shared `<Button>` primitive (`--secondary`,
+  // `--destructive` modifiers depending on relationship state);
+  // this class just handles positioning.
+  &__mate-btn {
+    flex: 0 0 auto;
+    min-width: 88px;
+    justify-content: center;
   }
 
   &__names {
