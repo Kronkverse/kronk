@@ -15,11 +15,15 @@ const messages = defineMessages({
 });
 
 interface MediaPickButtonsProps {
-  // Fired when the user has picked a file via either the camera or
-  // library input. Consumer owns any subsequent upload / preview.
-  onPick: (file: File) => void;
+  // Fired when the user has picked one or more files via either the
+  // camera or library input. Always an array — single-file callers
+  // read `[0]`. Consumer owns any subsequent upload / preview.
+  onPick: (files: File[]) => void;
   // Restricts the accept attribute. Defaults to 'image/*,video/*'.
   accept?: string;
+  // Allow picking multiple files at once on the library input. The
+  // camera input never gets `multiple` (mobile shutter is one-shot).
+  multiple?: boolean;
   disabled?: boolean;
   className?: string;
 }
@@ -34,6 +38,7 @@ interface MediaPickButtonsProps {
 export const MediaPickButtons: React.FC<MediaPickButtonsProps> = ({
   onPick,
   accept = 'image/*,video/*',
+  multiple = false,
   disabled,
   className,
 }) => {
@@ -43,9 +48,9 @@ export const MediaPickButtons: React.FC<MediaPickButtonsProps> = ({
 
   const onFileChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      onPick(file);
+      const files = Array.from(event.target.files ?? []);
+      if (files.length === 0) return;
+      onPick(files);
       // Reset the input so picking the same filename again re-fires.
       event.target.value = '';
     },
@@ -70,6 +75,7 @@ export const MediaPickButtons: React.FC<MediaPickButtonsProps> = ({
         className='media-pick-buttons__input'
         type='file'
         accept={accept}
+        multiple={multiple}
         onChange={onFileChange}
         disabled={disabled}
       />
