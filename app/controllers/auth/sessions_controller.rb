@@ -15,6 +15,14 @@ class Auth::SessionsController < Devise::SessionsController
 
   around_action :preserve_stored_location, only: :destroy, if: :continue_after?
 
+  # Expose any accounts already authenticated on this browser (via
+  # `session[:authed_accounts]`) to the sign-in view so it can offer
+  # them as one-tap alternatives to typing credentials. Returns [] when
+  # the session cookie is fresh, so the view renders unchanged for
+  # first-time / logged-out visitors — see
+  # `auth/shared/_switcher_roster.html.haml`.
+  before_action :expose_switcher_roster, only: :new
+
   prepend_before_action :check_suspicious!, only: [:create]
   prepend_before_action :capture_account_being_added, only: [:create]
 
@@ -22,6 +30,15 @@ class Auth::SessionsController < Devise::SessionsController
 
   content_security_policy only: :new do |p|
     p.form_action(false)
+  end
+
+  # Explicit `#new` override is here only to satisfy
+  # `Rails/LexicallyScopedActionFilter` — `expose_switcher_roster` (a
+  # `before_action` on `:new`) needs the action to be defined on this
+  # subclass, not just inherited from Devise. Delegates straight to the
+  # parent for the actual render.
+  def new
+    super
   end
 
   def create
@@ -194,6 +211,10 @@ class Auth::SessionsController < Devise::SessionsController
 
   def clear_2fa_attempt_from_user(user)
     redis.del(second_factor_attempts_key(user))
+  end
+
+  def expose_switcher_roster
+    @switcher_roster = switcher_roster
   end
 
   def check_second_factor_rate_limits(user)

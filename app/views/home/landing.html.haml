@@ -27,4 +27,4 @@
   = opengraph 'og:image:height', '630'
   = opengraph 'twitter:card', 'summary_large_image'
 
-= render 'auth/shared/sign_in_form'
+= render 'auth/shared/sign_in_form', switcher_roster: @switcher_roster || []

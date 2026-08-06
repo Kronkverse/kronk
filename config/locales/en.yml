@@ -1643,6 +1643,10 @@ en:
       hide_button: Hide
       label: Potentially sensitive content
   kronk:
+    continue_as:
+      aria_label: "Continue as @%{acct}"
+      heading: Already signed in
+      or: or sign in with another account
     landing:
       link_about: About Kronk
       link_how: How it works

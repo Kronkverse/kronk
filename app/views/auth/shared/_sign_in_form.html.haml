@@ -14,12 +14,24 @@
 -#                  sessions#new passes `params.dig(:user, :email)`
 -#                  after a failed login so the user doesn't have to
 -#                  retype it. Landing renders it blank.
+-#   switcher_roster: (optional) accounts already authenticated on
+-#                    this browser, from `AccountSwitching#switcher_roster`
+-#                    (populated by home#index and Auth::SessionsController#new
+-#                    via `@switcher_roster`). Rendered above the
+-#                    credentials form as tap-to-switch chips when
+-#                    non-empty; defaults to [] so first-time /
+-#                    signed-out visitors see the form unchanged.
 
 :ruby
-  prefill_email = local_assigns[:prefill_email]
+  prefill_email   = local_assigns[:prefill_email]
+  switcher_roster = local_assigns.fetch(:switcher_roster, [])
 
 = render 'auth/shared/kronk_auth_form',
          lede: t('kronk.landing.tagline') do
+  -# Any accounts already authenticated on this browser are offered
+  -# above the credentials form as one-tap alternatives.
+  = render 'auth/shared/switcher_roster', roster: switcher_roster
+
   -# `simple_form_for` with a symbol scope means no model object —
   -# `as:` is required on each field or they all default to text.
   -# Devise's session controller only cares about

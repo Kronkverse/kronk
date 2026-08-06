@@ -72,9 +72,14 @@ RSpec.describe 'Account switcher' do
       expect(roster.find { |a| a['id'] == user_a.id.to_s }['active']).to be(true) # still A
     end
 
-    it 'requires an authenticated user' do
+    it 'fails closed for an unauthenticated visitor with no roster' do
+      # Anyone can POST /auth/switch (the sign-in / landing views expose
+      # "Continue as @X" buttons that reach it before any Devise
+      # authentication has landed) — but the same `set.key?(target)` check
+      # applies. A visitor whose session has no authed_accounts can never
+      # switch to any account.
       post '/auth/switch', params: { user_id: user_a.id }, as: :json
-      expect(response).to have_http_status(401)
+      expect(response).to have_http_status(403)
     end
 
     it 'prunes and fails closed when the target activation is gone' do
