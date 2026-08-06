@@ -1,21 +1,20 @@
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-// A tiny, glance-only Koin readout — replaces the old card-sized
-// `KoinWallet` + `.kommons-backed` pair that dominated the top of the
-// Kommons page (see the 2026-08-06 screenshot). Same data, one row:
+import type { Wallet } from './koin_wallet';
+
+// A tiny, glance-only Koin readout — the compact alternative to
+// `KoinWallet`. `KoinWallet` still ships (Kommons settings renders it
+// as a proper wallet section where the fuller presentation is
+// appropriate); `KoinGlance` is what the board list uses so the ₭
+// balance stays legible without dominating the surface. Same data,
+// one row:
 //
 //   ₭ 19 available  ·  1 backed
 //
 // The "N backed" segment is a toggle — active state means the list is
-// lensed to just the proposals the viewer is backing. Reads as one
-// line in the head strip; never the visual anchor of the page.
+// lensed to just the proposals the viewer is backing.
 
-export interface Wallet {
-  available: number;
-  staked: number;
-  staked_seeds: number;
-  total: number;
-}
+export type { Wallet } from './koin_wallet';
 
 const messages = defineMessages({
   aria: {

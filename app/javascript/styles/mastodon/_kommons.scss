@@ -95,6 +95,86 @@
   }
 }
 
+// ─── Koin wallet (larger card presentation) ────────────────────────────────
+// The `<KoinWallet>` component still ships even though the Kommons board
+// switched to `<KoinGlance>`. Kommons settings (/hub/kommons/settings)
+// renders the wallet as a proper section — a page dedicated to "your
+// ₭oin" is the one context where the fuller card presence is right.
+// Kept minimal here (no big gradient minted coin badge, no glow) so
+// even in settings it doesn't shout — just a solid balance readout
+// with an availability bar.
+.kommons-wallet {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-large);
+  border: 1px solid var(--border-default);
+  background: var(--surface-elevated);
+
+  &__coin-badge {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--kronk-purple-bright) 14%, transparent);
+    border: 1px solid
+      color-mix(in srgb, var(--kronk-purple-bright) 32%, transparent);
+  }
+
+  &__kip {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--kronk-purple-bright);
+    line-height: 1;
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__bal {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  &__big {
+    font-family: var(--font-display);
+    font-size: 26px;
+    line-height: 0.9;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__of {
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding-bottom: 3px;
+  }
+
+  &__bar {
+    height: 6px;
+    border-radius: var(--radius-round);
+    overflow: hidden;
+    background: color-mix(in srgb, #000 22%, transparent);
+  }
+
+  &__fill {
+    height: 100%;
+    border-radius: var(--radius-round);
+    background: var(--accent);
+    transition: width 0.4s ease;
+  }
+}
+
 // ─── Page shell ────────────────────────────────────────────────────────────
 
 .kommons-page {
