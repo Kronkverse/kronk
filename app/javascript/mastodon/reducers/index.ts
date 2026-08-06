@@ -29,6 +29,7 @@ import { notificationGroupsReducer } from './notification_groups';
 import { notificationPolicyReducer } from './notification_policy';
 import { notificationRequestsReducer } from './notification_requests';
 import notifications from './notifications';
+import { nudgesReducer } from './nudges';
 import { nudgesLegacyReducer } from './nudges_legacy';
 import { pictureInPictureReducer } from './picture_in_picture';
 import { pollsReducer } from './polls';
@@ -61,6 +62,7 @@ const reducers = {
   accounts_map: accountsMapReducer,
   accounts_familiar_followers: accountsFamiliarFollowersReducer,
   korners: kornersReducer,
+  nudges: nudgesReducer,
   nudges_legacy: nudgesLegacyReducer,
   profile_sections: profileSectionsReducer,
   statuses,

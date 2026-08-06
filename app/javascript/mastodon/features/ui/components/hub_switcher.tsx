@@ -16,7 +16,10 @@ import type { IconProp } from 'mastodon/components/icon';
 import { WavingHandBadge } from 'mastodon/components/waving_hand_badge';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
-import { selectHasUnreadNudges } from 'mastodon/selectors/notifications';
+import {
+  selectHasUnreadNudges,
+  selectUnreadNudgesCount,
+} from 'mastodon/selectors/notifications';
 import { useAppSelector } from 'mastodon/store';
 
 // Four-way switcher between Kronk's primary personal surfaces —
@@ -75,9 +78,7 @@ export const HubSwitcher = ({
 }: HubSwitcherProps) => {
   const intl = useIntl();
   const location = useLocation();
-  const unreadNudges = useAppSelector(
-    (state) => state.notificationGroups.unreadNudgeCount,
-  );
+  const unreadNudges = useAppSelector(selectUnreadNudgesCount);
   // Shows the waving-hand alert for Mate nudges OR korner/system
   // notifications (proposal complete, etc.).
   const hasUnread = useAppSelector(selectHasUnreadNudges);
