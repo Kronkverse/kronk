@@ -7,6 +7,14 @@
 // attachment id → POST /api/v1/moments with { media_attachment_id,
 // voice_media_attachment_id, caption, visibility }.
 //
+// Multi-photo (Kommons #117047177063699814): when the user picks
+// several photos at once, the composer posts them as N separate
+// Moments in sequence, all sharing the same caption / visibility /
+// krew. Voice pairing stays a single-photo affordance (and is only
+// offered when exactly one still is picked). Video is single-shot
+// only — if any file in the pick is a video, we keep just the first
+// video and drop the rest.
+//
 // The cross-korner attach flows (Kalendar / Krew / Map / Klot /
 // mARTketplace) declared in the spec are not shipped in v1 — they
 // land in follow-ups.
@@ -50,26 +58,47 @@ const MAX_CAPTION_LENGTH = 500;
 const VOICE_MAX_SECONDS = 60;
 
 export const MomentsComposer = ({ onClose, onPosted }: Props) => {
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [caption, setCaption] = useState('');
   const [visibility, setVisibility] = useState<Visibility>('mates');
   const [krewId, setKrewId] = useState<string | null>(null);
   const [voice, setVoice] = useState<VoiceRecorderChange | null>(null);
   const [posting, setPosting] = useState(false);
+  const [postingProgress, setPostingProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Voice only makes sense over a still photo — video already carries
-  // its own audio track (spec § What a Moment is).
-  const primaryIsStill = useMemo(
-    () => !!file && !file.type.startsWith('video/'),
-    [file],
-  );
+  // Voice only makes sense over a *single* still photo — a mixed or
+  // multi-photo batch drops the voice affordance entirely, and video
+  // already carries its own audio track (spec § What a Moment is).
+  // Destructure so `noUncheckedIndexedAccess` gets a nullable local
+  // rather than an unguarded `files[0]`.
+  const voiceEligible = useMemo(() => {
+    const [only] = files;
+    return only !== undefined && !only.type.startsWith('video/');
+  }, [files]);
 
-  const onFileChange = useCallback((picked: File) => {
-    setFile(picked);
-    // A newly-picked video invalidates any prior voice recording —
-    // don't leave stray state around when the constraint flips.
-    if (picked.type.startsWith('video/')) setVoice(null);
+  const onFileChange = useCallback((picked: File[]) => {
+    // A pick that contains any video collapses to just the first
+    // video — video-in-Moments is single-shot only, and a
+    // "photo+video batch" doesn't have obvious semantics.
+    const firstVideo = picked.find((f) => f.type.startsWith('video/'));
+    const next = firstVideo ? [firstVideo] : picked;
+    setFiles(next);
+    // Newly picked video / multi-photo batch both invalidate any
+    // prior voice recording — don't leave stray state around when
+    // the constraint flips. `isSingleStill` handles both branches
+    // (video-in-single-slot and multi-photo) without indexing into
+    // the array.
+    const isSingleStill = next.length === 1 && !firstVideo;
+    if (!isSingleStill) setVoice(null);
+  }, []);
+
+  const clearFiles = useCallback(() => {
+    setFiles([]);
+    setVoice(null);
   }, []);
 
   const onCaptionChange = useCallback(
@@ -84,27 +113,39 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
   }, []);
 
   const submitAsync = useCallback(async () => {
-    if (!file || posting) return;
+    if (files.length === 0 || posting) return;
     setPosting(true);
+    setPostingProgress({ current: 0, total: files.length });
     setError(null);
+    const trimmedCaption = caption.trim();
+    const voiceMediaId = voiceEligible ? (voice?.mediaId ?? null) : null;
+    const krewIdOrNull = visibility === 'krew' ? krewId : null;
     try {
-      const form = new FormData();
-      form.append('file', file);
-      // `api()` has no baseURL, so the raw axios instance needs the
-      // absolute `/api/…` path (unlike the apiRequest* helpers, which
-      // prepend it). A bare `v1/media` posts relative to the current
-      // page → 404. Matches the other korner composers' upload path.
-      const mediaResp = await api().post<MediaResponse>('/api/v2/media', form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      const mediaId = mediaResp.data.id;
-      await apiRequestPost<MomentResponse>('v1/moments', {
-        media_attachment_id: mediaId,
-        voice_media_attachment_id: primaryIsStill ? voice?.mediaId : null,
-        caption: caption.trim(),
-        visibility,
-        krew_id: visibility === 'krew' ? krewId : null,
-      });
+      for (const [i, file] of files.entries()) {
+        setPostingProgress({ current: i + 1, total: files.length });
+        const form = new FormData();
+        form.append('file', file);
+        // `api()` has no baseURL, so the raw axios instance needs the
+        // absolute `/api/…` path (unlike the apiRequest* helpers,
+        // which prepend it). A bare `v1/media` posts relative to the
+        // current page → 404. Matches the other korner composers'
+        // upload path.
+        const mediaResp = await api().post<MediaResponse>(
+          '/api/v2/media',
+          form,
+          { headers: { 'Content-Type': 'multipart/form-data' } },
+        );
+        const mediaId = mediaResp.data.id;
+        await apiRequestPost<MomentResponse>('v1/moments', {
+          media_attachment_id: mediaId,
+          // Voice pairs with a single-photo batch only (voiceEligible
+          // already enforced when the recorder was reachable).
+          voice_media_attachment_id: voiceMediaId,
+          caption: trimmedCaption,
+          visibility,
+          krew_id: krewIdOrNull,
+        });
+      }
       onPosted();
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
@@ -115,10 +156,11 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
         setError('Something went wrong.');
       }
       setPosting(false);
+      setPostingProgress(null);
     }
   }, [
-    file,
-    primaryIsStill,
+    files,
+    voiceEligible,
     voice,
     caption,
     visibility,
@@ -170,17 +212,39 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
               defaultMessage='Media'
             />
           </span>
-          {file ? (
-            <div className='moments-composer__file-summary'>{file.name}</div>
+          {files.length > 0 ? (
+            <div className='moments-composer__file-summary'>
+              {files.length === 1 ? (
+                (files[0]?.name ?? '')
+              ) : (
+                <FormattedMessage
+                  id='moments.composer.file_summary_multi'
+                  defaultMessage='{count} photos selected'
+                  values={{ count: files.length }}
+                />
+              )}
+              <button
+                type='button'
+                className='moments-composer__file-clear'
+                onClick={clearFiles}
+                disabled={posting}
+              >
+                <FormattedMessage
+                  id='moments.composer.file_clear'
+                  defaultMessage='Change'
+                />
+              </button>
+            </div>
           ) : (
             <MediaPickButtons
               onPick={onFileChange}
+              multiple
               className='moments-composer__pick'
             />
           )}
         </section>
 
-        {primaryIsStill && (
+        {voiceEligible && (
           <section className='moments-composer__section'>
             <span className='moments-composer__label'>
               <FormattedMessage
@@ -258,12 +322,33 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
             type='button'
             className='moments-composer__post'
             onClick={submit}
-            disabled={!file || posting || (visibility === 'krew' && !krewId)}
+            disabled={
+              files.length === 0 ||
+              posting ||
+              (visibility === 'krew' && !krewId)
+            }
           >
             {posting ? (
+              postingProgress && postingProgress.total > 1 ? (
+                <FormattedMessage
+                  id='moments.composer.posting_multi'
+                  defaultMessage='Sharing {current} of {total}…'
+                  values={{
+                    current: postingProgress.current,
+                    total: postingProgress.total,
+                  }}
+                />
+              ) : (
+                <FormattedMessage
+                  id='moments.composer.posting'
+                  defaultMessage='Sharing…'
+                />
+              )
+            ) : files.length > 1 ? (
               <FormattedMessage
-                id='moments.composer.posting'
-                defaultMessage='Sharing…'
+                id='moments.composer.post_multi'
+                defaultMessage='Share {count}'
+                values={{ count: files.length }}
               />
             ) : (
               <FormattedMessage
