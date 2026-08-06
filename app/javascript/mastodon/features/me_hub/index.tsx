@@ -31,7 +31,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+import {
+  defineMessages,
+  FormattedDate,
+  FormattedMessage,
+  useIntl,
+} from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 import { useHistory } from 'react-router-dom';
@@ -50,6 +55,7 @@ import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Column } from 'mastodon/components/column';
 import { Icon } from 'mastodon/components/icon';
 import type { IconProp } from 'mastodon/components/icon';
+import { ShortNumber } from 'mastodon/components/short_number';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
@@ -93,6 +99,18 @@ const messages = defineMessages({
   uploadFailed: {
     id: 'me_hub.avatar_preview.upload_failed',
     defaultMessage: "Couldn't upload — try again.",
+  },
+  statMates: {
+    id: 'me_hub.avatar_preview.stat_mates',
+    defaultMessage: 'Mates',
+  },
+  statPosts: {
+    id: 'me_hub.avatar_preview.stat_posts',
+    defaultMessage: 'Posts',
+  },
+  statJoined: {
+    id: 'me_hub.avatar_preview.stat_joined',
+    defaultMessage: 'Joined',
   },
 });
 
@@ -238,7 +256,10 @@ export const MeHub: React.FC<MeHubProps> = () => {
       </Helmet>
 
       <div className='me-hub' role='navigation' aria-label={title}>
-        <MeHubStars />
+        {/* Background is the global <KronkKosmos> ambient canvas
+            (mounted at Frame level in features/ui/index.jsx) — the
+            .me-hub background is transparent so that sky shows
+            through. No per-view star field. */}
 
         {/* Space title. /me isn't a `/hub/<slug>` route so the
             manifest-driven <AutoSpaceHeader> doesn't fire; we hand-
@@ -314,72 +335,13 @@ export const MeHub: React.FC<MeHubProps> = () => {
             trimmedName.length > 0 ? trimmedName : trimmedUser || username
           }
           handle={username ? `@${username}` : ''}
+          matesCount={myAccount?.followers_count ?? 0}
+          postsCount={myAccount?.statuses_count ?? 0}
+          joinedAt={myAccount?.created_at}
           onClose={closeAvatar}
         />
       )}
     </Column>
-  );
-};
-
-// Kronk-purple star field behind the wheel. Mirrors the visual
-// treatment on the Kuestions shell (`features/questions/
-// stars_background.tsx`) — same idea, own class namespace so a
-// change to one surface doesn't cascade to the other. 90 elements
-// is a subtle field without visible tiling; positions are
-// pseudo-random but stable within a session (useMemo).
-const ME_HUB_STAR_COUNT = 90;
-
-interface StarPoint {
-  key: number;
-  plus: boolean;
-  size: number;
-  left: number;
-  top: number;
-  opacity: number;
-}
-
-const MeHubStars: React.FC = () => {
-  const stars = useMemo<StarPoint[]>(
-    () =>
-      Array.from({ length: ME_HUB_STAR_COUNT }, (_, i) => ({
-        key: i,
-        plus: Math.random() > 0.45,
-        size: 7 + Math.random() * 6,
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        opacity: 0.18 + Math.random() * 0.5,
-      })),
-    [],
-  );
-  return (
-    <div className='me-hub__stars' aria-hidden>
-      {stars.map((s) =>
-        s.plus ? (
-          <span
-            key={s.key}
-            className='me-hub__stars-glyph'
-            style={{
-              fontSize: `${String(s.size)}px`,
-              left: `${String(s.left)}%`,
-              top: `${String(s.top)}%`,
-              opacity: s.opacity.toFixed(2),
-            }}
-          >
-            ✦
-          </span>
-        ) : (
-          <span
-            key={s.key}
-            className='me-hub__stars-dot'
-            style={{
-              left: `${String(s.left)}%`,
-              top: `${String(s.top)}%`,
-              opacity: s.opacity.toFixed(2),
-            }}
-          />
-        ),
-      )}
-    </div>
   );
 };
 
@@ -405,6 +367,9 @@ interface AvatarPreviewProps {
   glyph: string;
   displayName: string;
   handle: string;
+  matesCount: number;
+  postsCount: number;
+  joinedAt: string | undefined;
   onClose: () => void;
 }
 
@@ -413,6 +378,9 @@ const AvatarPreview: React.FC<AvatarPreviewProps> = ({
   glyph,
   displayName,
   handle,
+  matesCount,
+  postsCount,
+  joinedAt,
   onClose,
 }) => {
   const intl = useIntl();
@@ -550,6 +518,38 @@ const AvatarPreview: React.FC<AvatarPreviewProps> = ({
             <div className='me-hub-avatar-preview__handle'>{handle}</div>
           )}
         </div>
+        {/* Stats row wrapping the face: Mates / Posts / Joined. Uses
+            the shared `<ShortNumber>` for K/M formatting. Joined year
+            is a plain <FormattedDate> — falls back gracefully when
+            `created_at` is missing. */}
+        <dl className='me-hub-avatar-preview__stats'>
+          <div className='me-hub-avatar-preview__stat'>
+            <dt className='me-hub-avatar-preview__stat-label'>
+              <FormattedMessage {...messages.statMates} />
+            </dt>
+            <dd className='me-hub-avatar-preview__stat-value'>
+              <ShortNumber value={matesCount} />
+            </dd>
+          </div>
+          <div className='me-hub-avatar-preview__stat'>
+            <dt className='me-hub-avatar-preview__stat-label'>
+              <FormattedMessage {...messages.statPosts} />
+            </dt>
+            <dd className='me-hub-avatar-preview__stat-value'>
+              <ShortNumber value={postsCount} />
+            </dd>
+          </div>
+          {joinedAt && (
+            <div className='me-hub-avatar-preview__stat'>
+              <dt className='me-hub-avatar-preview__stat-label'>
+                <FormattedMessage {...messages.statJoined} />
+              </dt>
+              <dd className='me-hub-avatar-preview__stat-value'>
+                <FormattedDate value={joinedAt} year='numeric' />
+              </dd>
+            </div>
+          )}
+        </dl>
         <div className='me-hub-avatar-preview__actions'>
           <input
             ref={fileInputRef}
