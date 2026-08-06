@@ -8,7 +8,6 @@ purpose: "To let the community decide Kronk's structural moves together, in the 
 tagline: 'Kronk is Kommunal, we build it together. What should we build next?'
 icon:
   material: construction
-  text_glyph: '✦'
 render_target: native # web-native React; §9 render_target semantics not enforced yet
 version: 0.1.0 # retrospective; predates the spec
 

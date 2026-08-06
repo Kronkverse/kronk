@@ -25,7 +25,6 @@ icon:
   # strong semantic match for the whole-community orb) as a stand-in.
   # Swap to diversity_3 once the SVG lands in app/javascript/material-icons/.
   material: globe
-  text_glyph: 'Ķ'
 render_target: native
 version: 2.0.0
 

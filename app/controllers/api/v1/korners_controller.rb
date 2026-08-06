@@ -33,7 +33,7 @@ class Api::V1::KornersController < Api::BaseController
     # to its declared identity — including core spaces (feed / profile /
     # hub / nudges / settings). The Hub grid filters `core === true`
     # client-side; the endpoint stays the single source of truth for
-    # icon.material / icon.text_glyph etc.
+    # icon.material etc.
     render json: Kronk::KornerRegistry.all.map { |m|
       m.to_h.merge(
         'tuned_in' => !tuned_out.include?(m.slug),

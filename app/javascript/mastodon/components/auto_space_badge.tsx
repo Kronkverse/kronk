@@ -20,11 +20,9 @@ const HUB_ROUTE_RE = /^\/hub\/([a-z0-9-]+)/;
 // don't double up.
 const SETTINGS_SUBROUTE_RE = /^\/hub\/[a-z0-9-]+\/settings(?:\/|$)/;
 
-// The badge glyph is now read from the manifest — each korner's
-// `icon.text_glyph` field carries a hand-picked character (definitely
-// NOT emoji, so the badge reads as a Kronk letterform rather than
-// colour-emoji chrome from the OS). Missing entries fall back to the
-// first letter of the space name so the layout doesn't collapse.
+// The decorative letterform slot between the arrow and the korner
+// name was retired 2026-08-06 (Tal: "superfluous"); SpaceBadge now
+// renders `[← <name>]` only.
 
 export const AutoSpaceBadge: React.FC = () => {
   const location = useLocation();
@@ -41,6 +39,5 @@ export const AutoSpaceBadge: React.FC = () => {
   // korner badge — their own chrome (SettingsBadge) takes the slot instead.
   if (!korner || korner.core) return null;
 
-  const glyph = korner.icon?.text_glyph ?? korner.name.charAt(0).toUpperCase();
-  return <SpaceBadge glyph={glyph} name={korner.name} backTo='/hub' />;
+  return <SpaceBadge name={korner.name} backTo='/hub' />;
 };

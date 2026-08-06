@@ -2,7 +2,7 @@
 //
 // The Kronk Frame provides three chrome slots for this route:
 //
-//   • AutoSpaceBadge      — the space title, from manifest `name` + `icon.text_glyph`
+//   • AutoSpaceBadge      — the space title, from manifest `name`
 //   • AutoSpaceHeader     — the in-content title (<h1>{name}</h1>) + tagline
 //   • AutoSpaceViewPicker — the tab row, from manifest `views:`
 //

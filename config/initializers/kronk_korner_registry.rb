@@ -238,18 +238,16 @@ module Kronk
       #   material   — Material Symbols name (drives useKornerIcon)
       #   glyph_path — inline SVG path data for the Hub tile line-art
       #                (KornerGlyph)
-      #   text_glyph — single character for the AutoSpaceBadge
-      # Any of the sub-fields may be missing; consumers fall back
-      # (Material component missing → AccentCircle; glyph_path missing
-      # → KornerGlyph's built-in slug map or the FALLBACK stroke;
-      # text_glyph missing → derived from name initial).
+      # `text_glyph` was retired 2026-08-06 (Tal: "I never asked for
+      # them and i reckon they're superfluous"). Any legacy value in
+      # a manifest is silently ignored here — the SpaceBadge no
+      # longer renders a decorative letter, so nothing consumes it.
       def normalize_icon(raw)
         case raw
         when Hash
           {
             'material' => raw['material'].is_a?(String) ? raw['material'] : nil,
             'glyph_path' => raw['glyph_path'].is_a?(String) ? raw['glyph_path'] : nil,
-            'text_glyph' => raw['text_glyph'].is_a?(String) ? raw['text_glyph'] : nil,
           }.compact
         when String
           { 'material' => raw }

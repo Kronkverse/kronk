@@ -14,7 +14,6 @@ icon:
   # reads as the Kalendar Spiral it's meant to be, per the Kronk
   # Spiral (kalendar_spiral) already shipped in the SPA.
   material: spiral
-  text_glyph: 'Ķ'
 render_target: native
 version: 0.1.0
 

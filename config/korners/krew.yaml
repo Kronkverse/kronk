@@ -14,7 +14,6 @@ purpose: 'To let several people share selectively — a defined group of people 
 tagline: 'Find your Krew, build your own. Family is chosen.'
 icon:
   material: groups
-  text_glyph: 'Ҝ'
 render_target: web
 version: 1.0.0
 
