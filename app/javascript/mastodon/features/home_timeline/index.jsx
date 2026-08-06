@@ -13,9 +13,11 @@ import CampaignIcon from '@/material-icons/400-24px/campaign.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { fetchAnnouncements, toggleShowAnnouncements } from 'mastodon/actions/announcements';
+import { apiRequestPut } from 'mastodon/api';
 import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { SymbolLogo } from 'mastodon/components/logo';
 import { NotSignedInIndicator } from 'mastodon/components/not_signed_in_indicator';
+import { ScopeCarousel } from 'mastodon/components/scope_carousel';
 import { VeilScene } from 'mastodon/features/inflow/veil_scene';
 import { MomentsStrip } from 'mastodon/features/moments/home_strip';
 import { withBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
@@ -39,6 +41,13 @@ const messages = defineMessages({
   show_announcements: { id: 'home.show_announcements', defaultMessage: 'Show announcements' },
   hide_announcements: { id: 'home.hide_announcements', defaultMessage: 'Hide announcements' },
   feedSettings: { id: 'home.feed_settings', defaultMessage: 'Feed settings' },
+  scopeAria: { id: 'home.scope.aria', defaultMessage: 'Choose what you see' },
+  scopeKronk: { id: 'home.scope.kronk', defaultMessage: 'Kronk' },
+  scopeKronkDesc: { id: 'home.scope.kronk_desc', defaultMessage: 'Everything the whole place is saying.' },
+  scopeOrbit: { id: 'home.scope.orbit', defaultMessage: 'Orbit' },
+  scopeOrbitDesc: { id: 'home.scope.orbit_desc', defaultMessage: 'Your mates, and theirs.' },
+  scopeMates: { id: 'home.scope.mates', defaultMessage: 'Mates' },
+  scopeMatesDesc: { id: 'home.scope.mates_desc', defaultMessage: 'Only the people you’ve bonded with.' },
 });
 
 const mapStateToProps = state => ({
@@ -103,6 +112,25 @@ class HomeTimeline extends PureComponent {
     } catch {
       // Silent — default reach stays.
     }
+  };
+
+  // Inline feed-scope change from the ScopeCarousel: optimistic swap +
+  // persist to kronk_settings, rolling back on failure. Mirrors the
+  // /home/settings changeScope so both surfaces stay in sync.
+  handleScopeChange = (key) => {
+    const prev = this.state.reach;
+    if (key === prev) return;
+
+    if (key === 'kommunity' && !this.state.kommunityInitialized) {
+      this.props.dispatch(expandCommunityTimeline({}));
+      this.setState({ reach: key, kommunityInitialized: true });
+    } else {
+      this.setState({ reach: key });
+    }
+
+    apiRequestPut('v1/kronk_settings', { feed_scope: key }).catch(() => {
+      this.setState({ reach: prev });
+    });
   };
 
   handlePin = () => {
@@ -241,6 +269,14 @@ class HomeTimeline extends PureComponent {
       };
     }
 
+    // Feed-view faces for the ScopeCarousel (widest → narrowest). No Krews
+    // face: feed_scope has no krews value yet (backend follow-up).
+    const feedFaces = [
+      { key: 'kommunity', label: intl.formatMessage(messages.scopeKronk), desc: intl.formatMessage(messages.scopeKronkDesc), mark: 'kronk' },
+      { key: 'orbit', label: intl.formatMessage(messages.scopeOrbit), desc: intl.formatMessage(messages.scopeOrbitDesc), mark: 'orbit' },
+      { key: 'mates', label: intl.formatMessage(messages.scopeMates), desc: intl.formatMessage(messages.scopeMatesDesc), mark: 'mates' },
+    ];
+
     return (
       <Column bindToDocument={!multiColumn} ref={this.setRef} label={intl.formatMessage(messages.title)}>
         <ColumnHeader
@@ -258,6 +294,20 @@ class HomeTimeline extends PureComponent {
         >
           <ColumnSettings />
         </ColumnHeader>
+
+        {/* ScopeCarousel — inline feed-view selector at the top of the feed.
+            Rotating it swaps + persists the feed scope. Signed-in only. */}
+        {signedIn && (
+          <div className='scope-carousel-slot'>
+            <ScopeCarousel
+              size='large'
+              ariaLabel={intl.formatMessage(messages.scopeAria)}
+              faces={feedFaces}
+              value={reach}
+              onChange={this.handleScopeChange}
+            />
+          </div>
+        )}
 
         {/* Moments Home strip — sits directly under the column header,
             above the feed. Signed-in only. */}

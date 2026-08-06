@@ -271,3 +271,9 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+// The feed-header slot the LARGE carousel mounts into, at the top of the
+// home column. Breathing room above the Moments strip / feed below.
+.scope-carousel-slot {
+  padding: 16px 16px 4px;
+}
