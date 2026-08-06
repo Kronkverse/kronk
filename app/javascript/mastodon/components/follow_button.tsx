@@ -20,24 +20,25 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 import { useBreakpoint } from '../features/ui/hooks/useBreakpoint';
 
 // Kronk — Mates. The connect button speaks the Mates vocabulary
-// (docs/kronk_feed_and_reach.md §1): **Groove** is the action verb
-// (send a Mates request); **Grooving…** is a pending outgoing request
-// (tap to withdraw); **Ungroove** removes an established Mate; **Accept**
+// (docs/kronk_feed_and_reach.md §1): **Mate** is the action verb
+// (send a Mates request); **Mating…** is a pending outgoing request
+// (tap to withdraw); **Unmate** removes an established Mate; **Accept**
 // converts an inbound request to Mates (auto-mutual).
 //
-// Semantic split (locked 2026-08-04):
-//   • Verb (button label) → Groove / Grooving / Ungroove
-//   • Noun (state name)   → Mate ("You're Mates" tag, "your Mates" tab)
-//
-// You _Groove_ someone to become their _Mate_. The underlying model +
-// data primitives stay named `mate` / `mates` (unchanged); only the
-// user-facing verb labels here swap.
+// Copy unified into one word family (Kommons proposal
+// #117047168766649089, 2026-08-06): button verb and state noun share
+// a stem, so "Mate them → Mating… → Mates" reads as one journey
+// instead of two vocabularies (Groove-the-verb / Mate-the-noun) the
+// user had to hold in their head. Message IDs stay stable — this is a
+// defaultMessage swap only, so translations that already track the
+// IDs don't churn, and the underlying data primitives (still
+// `mate` / `mates`) are untouched.
 const longMessages = defineMessages({
   unblock: { id: 'account.unblock_short', defaultMessage: 'Unblock' },
   unmute: { id: 'account.unmute_short', defaultMessage: 'Unmute' },
-  mate: { id: 'account.mate', defaultMessage: 'Groove' },
-  mating: { id: 'account.mating', defaultMessage: 'Grooving…' },
-  unmate: { id: 'account.unmate', defaultMessage: 'Ungroove' },
+  mate: { id: 'account.mate', defaultMessage: 'Mate' },
+  mating: { id: 'account.mating', defaultMessage: 'Mating…' },
+  unmate: { id: 'account.unmate', defaultMessage: 'Unmate' },
   mateAccept: { id: 'account.mate_accept', defaultMessage: 'Accept' },
   editProfile: { id: 'account.edit_profile', defaultMessage: 'Edit profile' },
 });

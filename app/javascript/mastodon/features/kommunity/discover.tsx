@@ -13,7 +13,7 @@ import { createAccountFromServerJSON } from 'mastodon/models/account';
 // Kommunity Discover — the list surface. Fetches accounts the viewer
 // is allowed to see per each account's own
 // `kommunity_discoverability` (backend gate), ordered by recent
-// activity. Tap a row → `/@:acct/shelves` where Groove + Nudge live
+// activity. Tap a row → `/@:acct/shelves` where Mate + Nudge live
 // on the shelved profile header (`ProfileViewerActions`, #1138).
 //
 // v1 is a simple paginated grid: 40 accounts per fetch, "Load more"

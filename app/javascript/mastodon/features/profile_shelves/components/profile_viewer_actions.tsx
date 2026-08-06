@@ -28,7 +28,7 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 // classic header's bio / stats / tabs / relationships-tag chrome.
 //
 // Copy comes through the underlying components (FollowButton owns
-// the Groove/Mate/Ungroove/Accept label; the More menu items own
+// the Mate/Mating/Unmate/Accept label; the More menu items own
 // their own labels). This component adds no new user-facing text
 // beyond the icon-button ARIA labels, so a global copy sweep on any
 // of those primitives flows through unchanged.
