@@ -49,7 +49,7 @@ interface ScopeCarouselProps {
   faces: ScopeFace[];
   value: string;
   onChange: (key: string) => void;
-  size?: 'large' | 'small';
+  size?: 'large' | 'small' | 'mini';
   ariaLabel: string;
 }
 
@@ -162,7 +162,7 @@ export const ScopeCarousel: React.FC<ScopeCarouselProps> = ({
   const intl = useIntl();
   const n = faces.length;
   const step = n > 0 ? 360 / n : 360;
-  const markSize = size === 'large' ? 62 : 34;
+  const markSize = size === 'large' ? 62 : size === 'mini' ? 30 : 34;
 
   const stageRef = useRef<HTMLDivElement>(null);
   const barrelRef = useRef<HTMLDivElement>(null);
@@ -469,12 +469,19 @@ export const ScopeCarousel: React.FC<ScopeCarouselProps> = ({
         />
       </div>
 
-      <div className='scope-carousel__groundshadow'>
-        <i ref={shadowRef} />
-      </div>
-      <div className='scope-carousel__wire'>
-        <div ref={poolRef} className='scope-carousel__pool' />
-      </div>
+      {/* Axis chrome (ground shadow + wire + pool) sells "a solid object on
+          an axis". The mini variant drops it — that metaphor now lives on the
+          revolving feed below, and mini must stay ~44px. */}
+      {size !== 'mini' && (
+        <>
+          <div className='scope-carousel__groundshadow'>
+            <i ref={shadowRef} />
+          </div>
+          <div className='scope-carousel__wire'>
+            <div ref={poolRef} className='scope-carousel__pool' />
+          </div>
+        </>
+      )}
 
       <div className='scope-carousel__live' aria-live='polite' ref={liveRef} />
     </div>

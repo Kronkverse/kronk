@@ -178,6 +178,32 @@
   }
 }
 
+// ── mini (inline home-feed selector) ──────────────────────────
+// The compact home variant: a single ~44px row, name only. The
+// "solid object on an axis" metaphor is dropped here (chrome is
+// gated off in the component) — it now lives on the revolving feed
+// below. Description + count are hidden so the row stays tight.
+.scope-carousel--mini {
+  .scope-carousel__stage {
+    height: 44px;
+  }
+
+  .scope-carousel__face {
+    gap: 8px;
+    padding: 0 12px;
+    border-radius: var(--radius-medium);
+  }
+
+  .scope-carousel__name {
+    font-size: 1rem;
+  }
+
+  .scope-carousel__desc,
+  .scope-carousel__count {
+    display: none;
+  }
+}
+
 // ── ground shadow — sells a solid body on an axis ─────────────
 .scope-carousel__groundshadow {
   position: relative;
@@ -275,5 +301,23 @@
 // The feed-header slot the LARGE carousel mounts into, at the top of the
 // home column. Breathing room above the Moments strip / feed below.
 .scope-carousel-slot {
-  padding: 16px 16px 4px;
+  // Tight wrapper for the mini home selector — the old 16px top/side
+  // padding was most of the "takes up too much space" complaint.
+  padding: 6px 12px 2px;
+}
+
+// ── feed revolve — the home feed's scope transition ───────────
+// The root carries the perspective (set inline); the stage is the element
+// that pivots. `transform-style: flat` is deliberate — the revolve is a
+// feels-like single-plane hinge, not a real 3D barrel (no preserve-3d).
+.feed-revolve {
+  &__stage {
+    transform-style: flat;
+    transform-origin: 50% 50%;
+    will-change: transform, opacity;
+
+    // Back-face never shows at these shallow angles, but keep it hidden so a
+    // mid-flick frame can't flash a mirrored feed.
+    backface-visibility: hidden;
+  }
 }

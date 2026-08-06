@@ -18,6 +18,7 @@ import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { SymbolLogo } from 'mastodon/components/logo';
 import { NotSignedInIndicator } from 'mastodon/components/not_signed_in_indicator';
 import { ScopeCarousel } from 'mastodon/components/scope_carousel';
+import { FeedRevolve } from 'mastodon/features/home_timeline/components/feed_revolve';
 import { VeilScene } from 'mastodon/features/inflow/veil_scene';
 import { MomentsStrip } from 'mastodon/features/moments/home_strip';
 import { withBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
@@ -120,6 +121,10 @@ class HomeTimeline extends PureComponent {
   handleScopeChange = (key) => {
     const prev = this.state.reach;
     if (key === prev) return;
+
+    // Reset scroll so the feed's revolve transition starts from the top of
+    // the new scope (fires for both the selector and swipe paths).
+    this.column?.scrollTop?.();
 
     if (key === 'kommunity' && !this.state.kommunityInitialized) {
       this.props.dispatch(expandCommunityTimeline({}));
@@ -300,7 +305,7 @@ class HomeTimeline extends PureComponent {
         {signedIn && (
           <div className='scope-carousel-slot'>
             <ScopeCarousel
-              size='large'
+              size='mini'
               ariaLabel={intl.formatMessage(messages.scopeAria)}
               faces={feedFaces}
               value={reach}
@@ -318,18 +323,24 @@ class HomeTimeline extends PureComponent {
         {signedIn && <HomeStatusBox />}
 
         {signedIn ? (
-          <StatusListContainer
-            prepend={feedConfig.prepend}
-            alwaysPrepend={feedConfig.prepend.length > 0}
-            insertAfter={feedConfig.insertNode ? 2 : undefined}
-            insertNode={feedConfig.insertNode}
-            trackScroll={!pinned}
-            scrollKey={`home_timeline-${feedConfig.timelineId}-${columnId}`}
-            onLoadMore={feedConfig.onLoadMore}
-            timelineId={feedConfig.timelineId}
-            emptyMessage={feedConfig.emptyMessage}
-            bindToDocument={!multiColumn}
-          />
+          <FeedRevolve
+            reach={reach}
+            order={feedFaces.map((f) => f.key)}
+            onScopeChange={this.handleScopeChange}
+          >
+            <StatusListContainer
+              prepend={feedConfig.prepend}
+              alwaysPrepend={feedConfig.prepend.length > 0}
+              insertAfter={feedConfig.insertNode ? 2 : undefined}
+              insertNode={feedConfig.insertNode}
+              trackScroll={!pinned}
+              scrollKey={`home_timeline-${feedConfig.timelineId}-${columnId}`}
+              onLoadMore={feedConfig.onLoadMore}
+              timelineId={feedConfig.timelineId}
+              emptyMessage={feedConfig.emptyMessage}
+              bindToDocument={!multiColumn}
+            />
+          </FeedRevolve>
         ) : <NotSignedInIndicator />}
 
         <Helmet>
