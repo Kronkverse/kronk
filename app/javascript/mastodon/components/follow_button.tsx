@@ -20,10 +20,12 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 import { useBreakpoint } from '../features/ui/hooks/useBreakpoint';
 
 // Kronk — Mates. The connect button speaks the Mates vocabulary
-// (docs/kronk_feed_and_reach.md §1): **Mate** is the action verb
-// (send a Mates request); **Mating…** is a pending outgoing request
-// (tap to withdraw); **Unmate** removes an established Mate; **Accept**
-// converts an inbound request to Mates (auto-mutual).
+// (docs/kronk_feed_and_reach.md §1): **Mate?** is the invitation
+// (send a Mates request — the "?" reads it as a question you're
+// asking them, not an imperative); **Mating…** is a pending
+// outgoing request (tap to withdraw); **Unmate** removes an
+// established Mate; **Accept** converts an inbound request to
+// Mates (auto-mutual).
 //
 // Copy unified into one word family (Kommons proposal
 // #117047168766649089, 2026-08-06): button verb and state noun share
@@ -36,7 +38,7 @@ import { useBreakpoint } from '../features/ui/hooks/useBreakpoint';
 const longMessages = defineMessages({
   unblock: { id: 'account.unblock_short', defaultMessage: 'Unblock' },
   unmute: { id: 'account.unmute_short', defaultMessage: 'Unmute' },
-  mate: { id: 'account.mate', defaultMessage: 'Mate' },
+  mate: { id: 'account.mate', defaultMessage: 'Mate?' },
   mating: { id: 'account.mating', defaultMessage: 'Mating…' },
   unmate: { id: 'account.unmate', defaultMessage: 'Unmate' },
   mateAccept: { id: 'account.mate_accept', defaultMessage: 'Accept' },
