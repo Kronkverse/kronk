@@ -1,10 +1,6 @@
--# Devise sign-in view. Renders the same shell as the ambient `/`
--# landing (`home#landing`) so failed-login re-renders and expired-
--# session redirects don't jump the user to a different-looking page.
--# Previously used `_kronk_auth_form` (a plain title + lede layout),
--# which meant `/` and `/auth/sign_in` looked like two different
--# apps — Tal flagged that on 2026-08-06.
--#
+-# Devise sign-in view. Renders the same shared sign-in form as the
+-# ambient `/` landing so failed-login re-renders and expired-session
+-# redirects don't jump the user to a different-looking page.
 -# Prefill: pass `params.dig(:user, :email)` so a failed login keeps
 -# the typed email in the field. Password is deliberately not
 -# prefilled.
@@ -12,4 +8,4 @@
 - content_for :page_title do
   = t('auth.login')
 
-= render 'home/landing_body', prefill_email: params.dig(:user, :email)
+= render 'auth/shared/sign_in_form', prefill_email: params.dig(:user, :email)

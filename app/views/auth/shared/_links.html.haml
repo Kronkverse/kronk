@@ -14,5 +14,13 @@
   - if controller_name != 'confirmations' && (!user_signed_in? || !current_user.confirmed? || current_user.unconfirmed_email.present?)
     %li= link_to t('auth.didnt_get_confirmation'), new_user_confirmation_path
 
+  -# About / How-it-works — surfaced on every signed-out auth
+  -# surface so the tail-links row is consistent with what the
+  -# ambient landing at `/` shows (Tal, 2026-08-06: "keep it
+  -# simple, unify"). Signed-in users don't need them here.
+  - unless user_signed_in?
+    %li= link_to t('kronk.landing.link_about'), about_path
+    %li= link_to t('kronk.landing.link_how'), '/kronk/how-it-works'
+
   - if user_signed_in?
     %li= link_to t('auth.logout'), destroy_user_session_path, data: { method: :delete }
