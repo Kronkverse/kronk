@@ -31,6 +31,17 @@ class Moment < ApplicationRecord
   validates :caption, length: { maximum: 500 }, allow_blank: true
   validate  :krew_only_when_krew_visibility
   validate  :voice_only_paired_with_a_still
+  validate  :text_overlays_have_valid_shape
+
+  # Bound on how many overlays a single Moment can carry. Signal caps
+  # at ~5–10 layers; this is defensive against runaway JSON that would
+  # blow up the read path. Docs live alongside the shape in the
+  # migration comment.
+  MAX_TEXT_OVERLAYS = 12
+  TEXT_OVERLAY_BACKINGS = %w(none dark light accent).freeze
+  TEXT_OVERLAY_FONTS = %w(display body mono).freeze
+  TEXT_OVERLAY_MAX_TEXT = 200
+  TEXT_OVERLAY_NUMERIC_KEYS = %w(x y width size).freeze
 
   # Convenience alias for the historical `group_id` name used in
   # cross-korner payloads and older comments. The column is `krew_id`
@@ -136,5 +147,50 @@ class Moment < ApplicationRecord
     return unless media_attachment&.video? || media_attachment&.gifv?
 
     errors.add(:voice_media_attachment_id, 'may only pair with a still photo, not a video')
+  end
+
+  # Structural check on the `text_overlays` JSONB — each entry must
+  # be a hash with the right keys + correct value types + values in
+  # range. The composer builds well-formed overlays, so this catches
+  # API misuse rather than user typos.
+  def text_overlays_have_valid_shape
+    return if text_overlays.blank?
+
+    unless text_overlays.is_a?(Array)
+      errors.add(:text_overlays, 'must be an array')
+      return
+    end
+
+    if text_overlays.size > MAX_TEXT_OVERLAYS
+      errors.add(:text_overlays, "may have at most #{MAX_TEXT_OVERLAYS} entries")
+      return
+    end
+
+    text_overlays.each_with_index do |ov, i|
+      unless ov.is_a?(Hash)
+        errors.add(:text_overlays, "entry #{i} is not an object")
+        next
+      end
+
+      text = ov['text'] || ov[:text]
+      errors.add(:text_overlays, "entry #{i} has invalid text") unless text.is_a?(String) && !text.empty? && text.length <= TEXT_OVERLAY_MAX_TEXT
+
+      TEXT_OVERLAY_NUMERIC_KEYS.each do |key|
+        v = ov[key] || ov[key.to_sym]
+        errors.add(:text_overlays, "entry #{i} #{key} must be 0..1") unless v.is_a?(Numeric) && v >= 0 && v <= 1
+      end
+
+      rot = ov['rotation'] || ov[:rotation] || 0
+      errors.add(:text_overlays, "entry #{i} rotation must be numeric") unless rot.is_a?(Numeric)
+
+      color = ov['color'] || ov[:color]
+      errors.add(:text_overlays, "entry #{i} color must be a #hex string") unless color.is_a?(String) && color.match?(/\A#[0-9a-fA-F]{3,8}\z/)
+
+      backing = ov['backing'] || ov[:backing]
+      errors.add(:text_overlays, "entry #{i} backing must be one of #{TEXT_OVERLAY_BACKINGS.join('/')}") unless TEXT_OVERLAY_BACKINGS.include?(backing)
+
+      font = ov['font'] || ov[:font]
+      errors.add(:text_overlays, "entry #{i} font must be one of #{TEXT_OVERLAY_FONTS.join('/')}") unless TEXT_OVERLAY_FONTS.include?(font)
+    end
   end
 end

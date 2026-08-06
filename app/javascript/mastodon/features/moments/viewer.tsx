@@ -38,6 +38,8 @@ import { VoicePlayer } from 'mastodon/components/media';
 import { me } from 'mastodon/initial_state';
 
 import { MomentsComposer } from './composer';
+import type { TextOverlay } from './text_overlay';
+import { OverlayLayer } from './text_overlay';
 
 // `self_only` is no longer offered by the composer (see composer.tsx
 // + config/korners/moments.yaml) but is retained here so existing
@@ -99,6 +101,10 @@ interface MomentJSON {
   // tap-to-open gesture, so no explicit play button is needed on
   // opening (the player is still visible + interactive).
   voice_url: string | null;
+  // Text overlays laid over the image at composition time. Rendered
+  // by `<OverlayLayer>` inside the media wrap — see
+  // `./text_overlay.tsx` for the shape.
+  text_overlays: TextOverlay[];
 }
 
 const ELAPSED_UPDATE_MS = 30_000; // refresh the progress bar every 30s
@@ -692,6 +698,13 @@ const ViewerBody = ({
             onClick={onRightTap}
             aria-label='Next Moment'
           />
+
+          {/* Text overlays laid on top of the image at composition
+              time. Rendered above the media but below the tap
+              buttons via z-index (see _moments.scss); the overlay
+              layer itself is pointer-events:none so it doesn't
+              swallow prev/next/pause taps. */}
+          <OverlayLayer overlays={moment.text_overlays} />
         </div>
 
         {moment.voice_url && !isVideo && (

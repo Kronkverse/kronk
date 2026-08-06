@@ -238,7 +238,11 @@
 // Media wrap: the image itself, framed by the stage. The stage now
 // stacks header + media + caption + actions vertically, so the media
 // gets its own 3/4 slot inside a rounded surface rather than being the
-// entire stage.
+// entire stage. `container-type: size` gives text overlays inside it
+// a proper `cqh` frame — an overlay's `size: 0.06` (see text_overlay.tsx)
+// renders as 6% of the media height regardless of the media's absolute
+// pixel size, so what you see in the composer editor lines up with
+// what the viewer renders here.
 .moments-viewer__media-wrap {
   position: relative;
   width: 100%;
@@ -249,6 +253,7 @@
   box-shadow: var(--elevation-menu);
   display: grid;
   place-items: center;
+  container-type: size;
 }
 
 .moments-viewer__image,
@@ -901,5 +906,507 @@
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+}
+
+// ── Text overlays (viewer + composer preview) ─────────────────────
+// The overlay layer sits inside a `container-type: size` frame
+// (media-wrap in the viewer, preview-frame in the composer). Every
+// overlay's font-size uses `cqh` so it scales with the container
+// height, keeping the composer preview visually identical to the
+// deployed viewer render. Layer itself is pointer-events: none so
+// the viewer's tap zones (prev / play / next) still receive taps.
+
+.moments-overlay-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.moments-overlay__text {
+  position: absolute;
+  display: inline-block;
+  padding: 0.15em 0.4em;
+  line-height: 1.15;
+  font-weight: 600;
+  text-align: center;
+  transform-origin: center;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  border-radius: 0.25em;
+
+  // Subtle text-shadow gives the `backing: none` mode enough
+  // separation from busy photo backgrounds without a full pill.
+  text-shadow: 0 1px 3px rgb(0 0 0 / 60%);
+
+  &--dark {
+    background: rgb(0 0 0 / 55%);
+    text-shadow: none;
+  }
+
+  &--light {
+    background: rgb(255 255 255 / 82%);
+    color: var(--kronk-purple-deep, #191b22) !important;
+    text-shadow: none;
+  }
+
+  &--accent {
+    background: var(--kronk-purple-accent);
+    color: #fff !important;
+    text-shadow: none;
+  }
+}
+
+// ── Composer preview thumbnails ───────────────────────────────────
+// Replaces the old file-name summary chip. Each thumb shows the
+// picked pixels at 3:4 (matching the viewer's media aspect) with
+// its overlays composited on top and a corner button that opens
+// the text editor.
+
+.moments-composer__previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.moments-composer__preview {
+  flex: 0 0 auto;
+}
+
+.moments-composer__preview-frame {
+  position: relative;
+  width: 90px;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+  background: var(--kosmos-void, #191b22);
+  container-type: size;
+}
+
+.moments-composer__preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.moments-composer__preview-edit {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 2;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: currentcolor;
+  }
+}
+
+.moments-composer__preview-video {
+  width: 90px;
+  min-height: 120px;
+  padding: 8px;
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.moments-composer__preview-video-badge {
+  font-size: 18px;
+  color: var(--accent);
+}
+
+.moments-composer__preview-video-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+// ── Text editor (full-screen portal) ──────────────────────────────
+// Opens on tap of a preview's edit button; edits one photo at a
+// time, threads through a batch via the header's Back/Next chevrons.
+// Layout: `header / stage / toolbar` vertical, stage is `flex: 1`
+// and hosts the image + interactive overlays.
+
+.moments-text-editor {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: var(--kosmos-void, #0b0b12);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  touch-action: none;
+}
+
+.moments-text-editor__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: rgb(0 0 0 / 30%);
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+}
+
+.moments-text-editor__cancel,
+.moments-text-editor__done {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.moments-text-editor__cancel {
+  background: transparent;
+  color: rgb(255 255 255 / 75%);
+  padding: 0 8px;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: currentcolor;
+  }
+}
+
+.moments-text-editor__done {
+  margin-inline-start: auto;
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.moments-text-editor__title {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 60%);
+}
+
+.moments-text-editor__stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.moments-text-editor__image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+// Overlay container: sized to the image via `position: absolute;
+// inset: 0` and matched to the image aspect via the flex layout
+// above. `container-type: size` gives the overlays a `cqh` frame
+// identical to the viewer's, so a size:0.06 in the editor renders
+// at the same visual size in the shipped viewer.
+.moments-text-editor__overlays {
+  position: absolute;
+  inset: 0;
+  container-type: size;
+  pointer-events: none;
+}
+
+// One editable overlay. Uses `.moments-overlay__text` for the actual
+// text rendering (via <OverlayText>), and adds a dashed outline +
+// resize/rotate handle when selected. `pointer-events: auto` re-
+// enables interaction inside the pointer-events:none layer above.
+.moments-text-editor__layer {
+  position: absolute;
+  display: inline-block;
+  pointer-events: auto;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &--selected .moments-overlay__text {
+    outline: 1px dashed rgb(255 255 255 / 55%);
+    outline-offset: 4px;
+  }
+}
+
+// Bottom-right corner handle: combined resize + rotate. Positioned
+// as a small circle that the user drags. Sits outside the text box
+// (translate 50%) so it doesn't obscure the text.
+.moments-text-editor__handle {
+  position: absolute;
+  right: -18px;
+  bottom: -18px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid rgb(255 255 255 / 90%);
+  cursor: nwse-resize;
+  touch-action: none;
+  z-index: 3;
+}
+
+.moments-text-editor__input {
+  position: absolute;
+  padding: 0.15em 0.4em;
+  background: transparent;
+  border: 1px dashed rgb(255 255 255 / 55%);
+  border-radius: 0.25em;
+  color: inherit;
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: center;
+  resize: none;
+  outline: none;
+  pointer-events: auto;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  min-width: 4ch;
+}
+
+.moments-text-editor__empty-cta {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 30%);
+  background: rgb(255 255 255 / 8%);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  cursor: pointer;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: currentcolor;
+  }
+}
+
+// Bottom toolbar. Two states — empty (just "add text" + carousel
+// nav) and selected (font / backing / colour rows for the current
+// overlay).
+.moments-text-editor__toolbar {
+  background: rgb(0 0 0 / 55%);
+  padding: 12px 14px 18px;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+
+.moments-text-editor__toolbar-empty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+}
+
+.moments-text-editor__add {
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: currentcolor;
+  }
+}
+
+.moments-text-editor__nav {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 25%);
+  background: transparent;
+  color: rgb(255 255 255 / 80%);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.moments-text-editor__nav-spacer {
+  width: 60px;
+}
+
+.moments-text-editor__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.moments-text-editor__control-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.moments-text-editor__control-divider {
+  width: 1px;
+  height: 20px;
+  background: rgb(255 255 255 / 18%);
+  margin: 0 4px;
+}
+
+.moments-text-editor__font {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgb(255 255 255 / 22%);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+
+  &--display {
+    font-family: var(--font-display);
+  }
+
+  &--body {
+    font-family: var(--font-body);
+  }
+
+  &--mono {
+    font-family: var(--font-mono);
+  }
+
+  &.is-active {
+    border-color: var(--accent);
+    background: rgb(114 65 255 / 18%);
+  }
+}
+
+.moments-text-editor__backing {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgb(255 255 255 / 22%);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+
+  &--none {
+    background: transparent;
+  }
+
+  &--dark {
+    background: rgb(0 0 0 / 65%);
+  }
+
+  &--light {
+    background: rgb(255 255 255 / 85%);
+    color: #000;
+  }
+
+  &--accent {
+    background: var(--kronk-purple-accent);
+  }
+
+  &.is-active {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.moments-text-editor__color {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgb(255 255 255 / 25%);
+  cursor: pointer;
+  padding: 0;
+
+  &.is-active {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.moments-text-editor__edit {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 30%);
+  background: transparent;
+  color: rgb(255 255 255 / 85%);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.moments-text-editor__delete {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgb(239 68 68 / 60%);
+  background: transparent;
+  color: rgb(239 68 68 / 95%);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    fill: currentcolor;
   }
 }

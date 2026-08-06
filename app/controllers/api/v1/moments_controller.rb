@@ -84,10 +84,17 @@ class Api::V1::MomentsController < Api::BaseController
   end
 
   def moment_params
-    permitted = params.permit(:media_attachment_id, :voice_media_attachment_id, :caption, :visibility, :krew_id)
+    permitted = params.permit(:media_attachment_id, :voice_media_attachment_id, :caption, :visibility, :krew_id,
+                              text_overlays: [:id, :text, :x, :y, :width, :size, :rotation, :color, :backing, :font])
     permitted[:visibility] = permitted[:visibility].presence || 'mates'
     permitted[:krew_id] = nil unless permitted[:visibility] == 'krew'
     permitted[:voice_media_attachment_id] = nil if permitted[:voice_media_attachment_id].blank?
+    # Rails permit turns each ActionController::Parameters element into a
+    # HashWithIndifferentAccess, which round-trips through the JSONB
+    # column as-is. Strip explicit nils / defaults on the composer side —
+    # the model's validator (Moment#text_overlays_have_valid_shape) is
+    # the last-word gate on shape.
+    permitted[:text_overlays] = Array(permitted[:text_overlays]).map(&:to_h)
     permitted
   end
 

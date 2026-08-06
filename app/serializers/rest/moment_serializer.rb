@@ -6,7 +6,7 @@
 class REST::MomentSerializer < ActiveModel::Serializer
   attributes :id, :caption, :visibility, :expires_at, :active,
              :froth_count, :frothed_by_viewer, :seen_by_viewer, :created_at,
-             :voice_url
+             :voice_url, :text_overlays
 
   belongs_to :account, serializer: REST::AccountSerializer
   belongs_to :media_attachment, serializer: REST::MediaAttachmentSerializer
