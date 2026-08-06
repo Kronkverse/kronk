@@ -5,31 +5,20 @@ import type { ApiProposalSummaryJSON } from 'mastodon/api_types/statuses';
 
 import { StatusKornerCard } from './status_korner_card';
 
+// Kommons proposal card as it appears embedded in the home feed
+// (a boosted / referenced proposal). The whole card is one tap
+// target that opens `/hub/kommons/p/:id`, so it stays minimal:
+// PROPOSAL badge + campaign glyph, title, optional summary. The
+// former footer (Open pill / N supports / N challenges / "View in
+// ₭ommons →" action) is retired — every piece of it duplicated the
+// affordance the card itself already carries (Tal, 2026-08-06).
+
 const messages = defineMessages({
   badge: {
     id: 'status_kommons_card.badge',
     defaultMessage: 'PROPOSAL',
   },
-  supports: {
-    id: 'status_kommons_card.supports',
-    defaultMessage: '{count, plural, one {# support} other {# supports}}',
-  },
-  challenges: {
-    id: 'status_kommons_card.challenges',
-    defaultMessage: '{count, plural, one {# challenge} other {# challenges}}',
-  },
-  viewSeed: {
-    id: 'status_kommons_card.view_seed',
-    defaultMessage: 'View in ₭ommons →',
-  },
 });
-
-const STATUS_LABELS: Record<string, string> = {
-  open: 'Open',
-  completed: 'Completed',
-  delivered: 'Delivered',
-  annulled: 'Annulled',
-};
 
 export const StatusKommonsCard: React.FC<{
   proposal: ApiProposalSummaryJSON;
@@ -53,31 +42,6 @@ export const StatusKommonsCard: React.FC<{
         {proposal.summary && (
           <div className='status-kommons-card__summary'>{proposal.summary}</div>
         )}
-      </div>
-
-      <div className='status-korner-card__footer status-kommons-card__footer'>
-        <div className='status-korner-card__meta'>
-          <span
-            className={`status-kommons-card__status status-kommons-card__status--${proposal.status}`}
-          >
-            {STATUS_LABELS[proposal.status] ?? proposal.status}
-          </span>
-          <span className='status-kommons-card__vote status-kommons-card__vote--support'>
-            {intl.formatMessage(messages.supports, {
-              count: proposal.support_count,
-            })}
-          </span>
-          {proposal.challenge_count > 0 && (
-            <span className='status-kommons-card__vote status-kommons-card__vote--challenge'>
-              {intl.formatMessage(messages.challenges, {
-                count: proposal.challenge_count,
-              })}
-            </span>
-          )}
-        </div>
-        <span className='status-korner-card__action'>
-          {intl.formatMessage(messages.viewSeed)}
-        </span>
       </div>
     </StatusKornerCard>
   );
