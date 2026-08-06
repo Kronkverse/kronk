@@ -6,17 +6,20 @@ import DoneAllIcon from '@/material-icons/400-24px/done_all.svg?react';
 import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import { WavingHandBadge } from 'mastodon/components/waving_hand_badge';
-import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { selectUnreadProposalIds } from 'mastodon/selectors/notifications';
 import { useAppSelector } from 'mastodon/store';
 
 import type { Proposal } from '../types';
 
-// A proposal on the Kommons board. Support here is token backing, not votes:
-// the card leads with a backing ring (this proposal's staked ₭ relative to the
-// strongest-backed one on screen), then backers, rank and steps. The retired
-// agree/abstain/block "fans" are gone.
-
+// A proposal on the Kommons board. Redesign 2026-08-06 (Tal:
+// "kommons space is chaotic"): the old busy left-hand backing ring
+// is out; each card now leads with the icon of the korner the
+// proposal targets (read from that korner's manifest via
+// `useKornerIcon`), the title + author sit in the middle, and the
+// ₭-backed count parks on the right as a small numeric column.
+// Support here is still token backing, not votes.
+//
 // node_id like "kommons.index" → the space (korner) it's about.
 const SPACE_LABELS: Record<string, string> = {
   kommons: 'Kommons',
@@ -51,17 +54,13 @@ const STATUS_LABELS: Record<Proposal['status'], string> = {
   annulled: 'Annulled',
 };
 
-const RING_R = 21;
-const RING_C = 2 * Math.PI * RING_R;
-
 const spaceSlug = (nodeId: string | null): string | undefined =>
   nodeId?.split('.')[0];
 
 export const ProposalCard: React.FC<{
   proposal: Proposal;
-  maxBacking: number;
   onSelect: (id: string) => void;
-}> = ({ proposal, maxBacking, onSelect }) => {
+}> = ({ proposal, onSelect }) => {
   const handleClick = useCallback(() => {
     onSelect(proposal.id);
   }, [onSelect, proposal.id]);
@@ -69,11 +68,10 @@ export const ProposalCard: React.FC<{
   const { backing } = proposal;
   const steps = proposal.task_summary;
   const totalSteps = steps.open + steps.in_progress + steps.done;
-  const ringOffset =
-    maxBacking > 0 ? RING_C * (1 - backing.total / maxBacking) : RING_C;
 
   const slug = spaceSlug(proposal.node_id);
   const spaceLabel = slug ? (SPACE_LABELS[slug] ?? slug) : null;
+  const KornerIconComponent = useKornerIcon(slug);
 
   // Waving-hand alert when this proposal has an unread notification
   // (e.g. its work was just marked complete).
@@ -90,41 +88,21 @@ export const ProposalCard: React.FC<{
         </span>
       )}
 
-      <div className='kommons-proposal__gauge'>
-        <div className='kommons-proposal__ring'>
-          <svg viewBox='0 0 52 52' aria-hidden='true'>
-            <circle
-              className='kommons-proposal__ring-track'
-              cx={26}
-              cy={26}
-              r={RING_R}
-            />
-            <circle
-              className='kommons-proposal__ring-fill'
-              cx={26}
-              cy={26}
-              r={RING_R}
-              strokeDasharray={RING_C.toFixed(1)}
-              strokeDashoffset={ringOffset.toFixed(1)}
-            />
-          </svg>
-          <span className='kommons-proposal__ring-num'>{backing.total}</span>
-        </div>
-        <span className='kommons-proposal__ring-label'>
-          <FormattedMessage
-            id='governance.card.backed'
-            defaultMessage='backed'
-          />
-        </span>
+      {/* Left column — the target korner's own icon, sourced from its
+          manifest. Chip is decorative (aria-hidden); the korner name
+          still reads on-screen through the space chip in the body. */}
+      <div
+        className='kommons-proposal__space-icon'
+        aria-hidden='true'
+        title={spaceLabel ?? undefined}
+      >
+        <Icon id={`space-${slug ?? 'unknown'}`} icon={KornerIconComponent} />
       </div>
 
       <div className='kommons-proposal__body'>
         <div className='kommons-proposal__chips'>
-          {slug && spaceLabel && (
-            <span className='kommons-proposal__space'>
-              <Icon id={`space-${slug}`} icon={kornerIcon(slug)} />
-              {spaceLabel}
-            </span>
+          {spaceLabel && (
+            <span className='kommons-proposal__space-label'>{spaceLabel}</span>
           )}
           <span
             className={`kommons-proposal__size kommons-proposal__size--${proposal.proposal_type}`}
@@ -170,11 +148,6 @@ export const ProposalCard: React.FC<{
               values={{ count: backing.backers }}
             />
           </span>
-          {backing.rank !== null && (
-            <span className='kommons-proposal__m kommons-proposal__rank'>
-              #{backing.rank}
-            </span>
-          )}
           {totalSteps > 0 && (
             <span className='kommons-proposal__m'>
               <Icon id='done_all' icon={DoneAllIcon} />
@@ -182,6 +155,19 @@ export const ProposalCard: React.FC<{
             </span>
           )}
         </div>
+      </div>
+
+      {/* Right column — Koin backed, the primary quantitative signal
+          for this proposal. Was the centrepiece of the old ring on
+          the left; now a small right-aligned numeric readout. */}
+      <div className='kommons-proposal__backing'>
+        <span className='kommons-proposal__backing-num'>₭{backing.total}</span>
+        <span className='kommons-proposal__backing-label'>
+          <FormattedMessage
+            id='governance.card.backed'
+            defaultMessage='backed'
+          />
+        </span>
       </div>
     </button>
   );
