@@ -1,8 +1,8 @@
 import { defineMessages, useIntl } from 'react-intl';
 
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
+import CampaignIcon from '@/material-icons/400-24px/campaign.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
-import ToysFanIcon from '@/material-icons/400-24px/toys_fan.svg?react';
 import { Icon } from 'mastodon/components/icon';
 
 const messages = defineMessages({
@@ -18,9 +18,9 @@ const messages = defineMessages({
     id: 'status_space_bar.created_event',
     defaultMessage: 'created an event',
   },
-  plantedSeed: {
-    id: 'status_space_bar.planted_seed',
-    defaultMessage: 'planted a seed',
+  openedProposal: {
+    id: 'status_space_bar.opened_proposal',
+    defaultMessage: 'opened a proposal',
   },
 });
 
@@ -60,9 +60,9 @@ function getConfig(
 
   if (postType === 'proposal') {
     return {
-      iconComponent: ToysFanIcon,
-      iconId: 'toys_fan',
-      verbKey: 'plantedSeed',
+      iconComponent: CampaignIcon,
+      iconId: 'campaign',
+      verbKey: 'openedProposal',
     };
   }
 
