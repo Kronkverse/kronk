@@ -9,7 +9,15 @@ class Auth::SwitchesController < ApplicationController
   include AccountSwitching
 
   skip_before_action :require_functional!
-  before_action :require_signed_in!
+  # `#index` still requires a live session — an anonymous JSON probe of the
+  # roster is not something we want to expose. `#create` is deliberately
+  # unguarded: the `set.key?(target)` check below is the real gate, and the
+  # `authed_accounts` set only holds ids the visitor's own browser
+  # authenticated. Dropping `require_signed_in!` on `#create` lets the
+  # sign-in / landing views' "Continue as @X" buttons work even before the
+  # visitor has re-authenticated as any of them (see
+  # `_switcher_roster.html.haml`).
+  before_action :require_signed_in!, only: :index
 
   # GET /auth/accounts — the non-secret roster for the switcher UI.
   def index
