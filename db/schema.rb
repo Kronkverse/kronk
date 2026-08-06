@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_05_100000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_06_220000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1127,6 +1127,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_05_100000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "voice_media_attachment_id"
+    t.jsonb "text_overlays", default: [], null: false
     t.index ["account_id"], name: "index_moments_on_account_id"
     t.index ["expires_at"], name: "index_moments_on_expires_at"
     t.index ["krew_id"], name: "index_moments_on_krew_id"
