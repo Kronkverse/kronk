@@ -12,6 +12,7 @@ import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import HourglassIcon from '@/material-icons/400-24px/hourglass.svg?react';
 import HubIcon from '@/material-icons/400-24px/hub.svg?react';
+import InFlowIcon from '@/material-icons/400-24px/in_flow.svg?react';
 import KronkCoinIcon from '@/material-icons/400-24px/kronk_coin.svg?react';
 import NotListedLocationIcon from '@/material-icons/400-24px/not_listed_location.svg?react';
 import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library.svg?react';
@@ -45,6 +46,7 @@ const MATERIAL_TO_ICON: Record<string, IconProp> = {
   home: HomeIcon,
   hourglass: HourglassIcon,
   hub: HubIcon,
+  in_flow: InFlowIcon,
   kronk_coin: KronkCoinIcon,
   not_listed_location: NotListedLocationIcon,
   photo_library: PhotoLibraryIcon,
