@@ -149,4 +149,45 @@ Rails.application.config.after_initialize do
   # and replies now flow through the standard Status notification
   # pipeline (Favourite / Notification records), so no bespoke
   # subscribe is needed here.
+
+  # ── Hand-wired: mates.request.sent + mates.request.accepted ─────
+  # A mate request is inherently non-Mate — the two accounts are
+  # not mutual yet, that's the whole point — so the standard
+  # `Nudges::EventRouter` (which requires Mates) would drop these
+  # as `:non_mate_dropped`. Route them straight onto the Mate
+  # conversation between the pair (which `mate_between!` creates
+  # on demand and reuses once they accept), so the requester's
+  # invite lands in the target's messenger, and the accept lands
+  # back in the requester's.
+  Kronk::KornerEvents.subscribe('mates.request.sent') do |payload|
+    actor     = Account.find_by(id: payload[:actor_account_id])
+    recipient = Account.find_by(id: payload[:recipient_account_id])
+    next unless actor && recipient
+
+    convo = Nudges::Conversation.mate_between!(actor, recipient)
+    convo.events.create!(
+      actor_account: actor,
+      source_korner_slug: 'mates',
+      verb: 'mate_requested',
+      interaction: Nudges::Event::INTERACTIVE,
+      cta_label: 'Respond',
+      cta_route: '/mate_requests'
+    )
+  end
+
+  Kronk::KornerEvents.subscribe('mates.request.accepted') do |payload|
+    actor     = Account.find_by(id: payload[:actor_account_id])
+    recipient = Account.find_by(id: payload[:recipient_account_id])
+    next unless actor && recipient
+
+    convo = Nudges::Conversation.mate_between!(actor, recipient)
+    convo.events.create!(
+      actor_account: actor,
+      source_korner_slug: 'mates',
+      verb: 'mate_accepted',
+      interaction: Nudges::Event::INTERACTIVE,
+      cta_label: 'Say hi',
+      cta_route: "/nudges/#{actor.id}"
+    )
+  end
 end
