@@ -4,17 +4,28 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
+import { importFetchedAccounts } from 'mastodon/actions/importer';
 import { apiRequestGet } from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Avatar } from 'mastodon/components/avatar';
+import { FollowButton } from 'mastodon/components/follow_button';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
+import { useAppDispatch } from 'mastodon/store';
 
 // Kommunity Discover — the list surface. Fetches accounts the viewer
 // is allowed to see per each account's own
 // `kommunity_discoverability` (backend gate), ordered by recent
-// activity. Tap a row → `/@:acct/shelves` where Mate + Nudge live
-// on the shelved profile header (`ProfileViewerActions`, #1138).
+// activity. Tap a row's avatar/name → `/@:acct/shelves`; tap the
+// Mate button (right side of the row) to send / withdraw / accept
+// a Mate request without leaving the list.
+//
+// Kommons proposal #117047168766649089 ("Flow" — "Should be easy to
+// Groove people", 2026-08-06): the inline Mate button is what
+// answers that ask. Before it landed, sending a Mate request meant
+// tapping through to the profile, finding the button in the
+// shelved header, tapping again — three taps for a one-decision
+// action. Now it's one.
 //
 // v1 is a simple paginated grid: 40 accounts per fetch, "Load more"
 // button at the bottom. Infinite scroll can layer on later; the
@@ -48,6 +59,7 @@ const messages = defineMessages({
 
 export const KommunityDiscover: React.FC = () => {
   const intl = useIntl();
+  const dispatch = useAppDispatch();
   const [accounts, setAccounts] = useState<ApiAccountJSON[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -68,6 +80,11 @@ export const KommunityDiscover: React.FC = () => {
     fetchPage(null)
       .then((data) => {
         if (cancelled) return;
+        // Hydrate the accounts slice so `FollowButton` (below) can
+        // read `state.accounts.get(id)` + `state.relationships.get(id)`
+        // for each row. Without this the button spins forever waiting
+        // for the account to resolve from a store it was never put in.
+        dispatch(importFetchedAccounts(data));
         setAccounts(data);
         setHasMore(data.length >= PAGE_SIZE);
       })
@@ -81,7 +98,7 @@ export const KommunityDiscover: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [fetchPage]);
+  }, [fetchPage, dispatch]);
 
   const handleLoadMore = useCallback(() => {
     if (loadingMore || !hasMore) return;
@@ -90,6 +107,7 @@ export const KommunityDiscover: React.FC = () => {
     setLoadingMore(true);
     fetchPage(last.id)
       .then((data) => {
+        dispatch(importFetchedAccounts(data));
         setAccounts((prev) => [...prev, ...data]);
         setHasMore(data.length >= PAGE_SIZE);
       })
@@ -99,7 +117,7 @@ export const KommunityDiscover: React.FC = () => {
       .finally(() => {
         setLoadingMore(false);
       });
-  }, [accounts, fetchPage, hasMore, loadingMore]);
+  }, [accounts, fetchPage, hasMore, loadingMore, dispatch]);
 
   if (loading) {
     return (
@@ -158,6 +176,11 @@ export const KommunityDiscover: React.FC = () => {
 const DiscoverRow: React.FC<{ account: ApiAccountJSON }> = ({ account }) => {
   const modelAccount = createAccountFromServerJSON(account);
   const name = account.display_name || account.username;
+  // Link + FollowButton are siblings so tapping Mate never triggers
+  // the profile navigation. FollowButton reads its own account +
+  // relationship from the store (hydrated in KommunityDiscover's
+  // fetchPage above) — a fresh row shows a brief loader in the
+  // button until the relationship fetch on mount resolves.
   return (
     <li className='kommunity-discover__row'>
       <Link
@@ -170,6 +193,11 @@ const DiscoverRow: React.FC<{ account: ApiAccountJSON }> = ({ account }) => {
           <div className='kommunity-discover__handle'>@{account.acct}</div>
         </div>
       </Link>
+      <FollowButton
+        accountId={account.id}
+        compact
+        className='kommunity-discover__mate-btn'
+      />
     </li>
   );
 };
