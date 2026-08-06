@@ -318,7 +318,19 @@ export const ScopeCarousel: React.FC<ScopeCarouselProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, n]);
 
-  const nudge = useCallback((d: number) => go(indexRef.current + d), [go]);
+  const nudge = useCallback(
+    (d: number) => {
+      go(indexRef.current + d);
+    },
+    [go],
+  );
+
+  const handlePrev = useCallback(() => {
+    nudge(-1);
+  }, [nudge]);
+  const handleNext = useCallback(() => {
+    nudge(1);
+  }, [nudge]);
 
   const bind = useDrag(
     ({ down, movement: [mx], velocity: [vx], direction: [dx], last }) => {
@@ -372,6 +384,26 @@ export const ScopeCarousel: React.FC<ScopeCarouselProps> = ({
     [go, n],
   );
 
+  const handleFaceClick = useCallback(
+    (
+      e: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>,
+    ) => {
+      const idx = Number(e.currentTarget.dataset.index);
+      if (!Number.isNaN(idx)) onFaceClick(idx);
+    },
+    [onFaceClick],
+  );
+
+  const handleFaceKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleFaceClick(e);
+      }
+    },
+    [handleFaceClick],
+  );
+
   const setFaceRef = useMemo(
     () => (i: number) => (el: HTMLDivElement | null) => {
       faceRefs.current[i] = el;
@@ -387,15 +419,14 @@ export const ScopeCarousel: React.FC<ScopeCarouselProps> = ({
           icon='chevron-left'
           iconComponent={ChevronLeftIcon}
           title={intl.formatMessage(messages.prev)}
-          onClick={() => {
-            nudge(-1);
-          }}
+          onClick={handlePrev}
         />
         <div
           ref={stageRef}
           className='scope-carousel__stage'
           role='radiogroup'
           aria-label={ariaLabel}
+          tabIndex={-1}
           onKeyDown={onKeyDown}
           {...bind()}
         >
@@ -404,14 +435,14 @@ export const ScopeCarousel: React.FC<ScopeCarouselProps> = ({
               <div
                 key={f.key}
                 ref={setFaceRef(i)}
+                data-index={i}
                 className='scope-carousel__face'
                 role='radio'
                 aria-checked='false'
                 aria-label={f.label}
                 tabIndex={-1}
-                onClick={() => {
-                  onFaceClick(i);
-                }}
+                onClick={handleFaceClick}
+                onKeyDown={handleFaceKeyDown}
               >
                 <div className='scope-carousel__veil' />
                 <div className='scope-carousel__sheen' />
@@ -434,9 +465,7 @@ export const ScopeCarousel: React.FC<ScopeCarouselProps> = ({
           icon='chevron-right'
           iconComponent={ChevronRightIcon}
           title={intl.formatMessage(messages.next)}
-          onClick={() => {
-            nudge(1);
-          }}
+          onClick={handleNext}
         />
       </div>
 
