@@ -19,8 +19,6 @@ purpose: 'To make space for the ephemeral — posts that are gone by morning.'
 tagline: 'Moments make us who we are, and we come here to share the authentic us.'
 icon:
   material: hourglass
-  # No text_glyph — Moments isn't K-branded; the badge falls back to
-  # the first letter of the name ('M').
 render_target: native
 version: 0.0.1 # bumped from 0.0.0 on discovery lock
 

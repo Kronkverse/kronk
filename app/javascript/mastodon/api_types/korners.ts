@@ -42,11 +42,11 @@ export interface ApiKornerComposeJSON {
 
 // Manifest `icon:` is normalized server-side into an object shape.
 // Legacy string form is coerced into `{ material }` in
-// Kronk::KornerRegistry#normalize_icon.
+// Kronk::KornerRegistry#normalize_icon. `text_glyph` was retired
+// 2026-08-06 — SpaceBadge no longer renders a decorative letter.
 export interface ApiKornerIconJSON {
   material?: string; // Material Symbols name (drives useKornerIcon)
   glyph_path?: string; // Optional line-art SVG path (Hub tile)
-  text_glyph?: string; // Optional single-char breadcrumb glyph
 }
 
 export interface ApiKornerViewJSON {

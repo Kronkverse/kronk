@@ -287,7 +287,7 @@ card. See how `REST::WachuneedListingSummarySerializer` handles this on
 
 | Slot                      | Frame component         | Manifest field                           | You render this in your index?                                                                                                                           |
 | ------------------------- | ----------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Space badge (chrome)      | `<AutoSpaceBadge>`      | `name` + `icon.text_glyph`               | **No.** The badge is the persistent top-left `[← Ł Klot]` pill that stays visible as content scrolls. It's the back affordance.                          |
+| Space badge (chrome)      | `<AutoSpaceBadge>`      | `name`                                   | **No.** The badge is the persistent top-left `[← Klot]` pill that stays visible as content scrolls. It's the back affordance.                            |
 | Space header (in-content) | `<AutoSpaceHeader>`     | `name` + `tagline`                       | **No.** The header renders `<h1>{name}</h1>` above the tagline at the top of the Stage's scrollable region — it scrolls with content. Don't emit either. |
 | View / tab row            | `<AutoSpaceViewPicker>` | `views:` (ordered `[{ key, label }, …]`) | **No.** Don't emit `role="tablist"` or a bespoke tab class.                                                                                              |
 

@@ -23,7 +23,6 @@ purpose: 'To let kronkers offer and find art, stuff, and offerings person-to-per
 tagline: 'Wachuneed? Wachugot?? Share your art, stuff, and offerings — and see what the community is making.'
 icon:
   material: kronk_coin
-  text_glyph: '₭'
 render_target: native
 version: 2.0.0
 

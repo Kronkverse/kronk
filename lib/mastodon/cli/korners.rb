@@ -287,7 +287,7 @@ module Mastodon
       # provides three chrome slots for every /hub/<slug> route via the
       # shared Auto* components:
       #
-      #   * AutoSpaceBadge — the space title (manifest `name` + `icon.text_glyph`)
+      #   * AutoSpaceBadge — the space title (manifest `name`)
       #   * AutoSpaceHeader — the in-content title + tagline (manifest `name` + `tagline`)
       #   * AutoSpaceViewPicker — the tab row (manifest `views:`)
       #

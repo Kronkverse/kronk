@@ -17,8 +17,6 @@ purpose: "To let people signal presence on their own terms — who's around, onl
 tagline: 'Allow yourself to be found, know where your mates are & explore the world.'
 icon:
   material: travel_explore
-  # No text_glyph — Map isn't K-branded, so the badge falls back to its
-  # name's first letter ("M") rather than a stylised Kra letterform.
 render_target: native
 version: 0.1.0 # backend + SPA both shipped in 2.0.0 rebuild (alpha.270 onward)
 

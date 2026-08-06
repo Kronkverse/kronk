@@ -21,7 +21,7 @@ RSpec.describe Kronk::KornerRegistry do
     it 'exposes identity fields' do
       kommons = described_class.find('kommons')
       expect(kommons.name).to eq('Kommons')
-      expect(kommons.icon).to eq('material' => 'construction', 'text_glyph' => '✦')
+      expect(kommons.icon).to eq('material' => 'construction')
       expect(kommons.render_target).to eq('native')
       expect(kommons.version).to be_a(String)
     end

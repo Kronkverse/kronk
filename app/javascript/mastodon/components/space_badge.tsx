@@ -6,19 +6,24 @@ import { Link } from 'react-router-dom';
 // "← Hub" + the space's own hero title) into one compact pill. Same
 // spot on every Stage-based korner (top-left, floating). Tapping
 // navigates to the outer page (typically `/hub`). The arrow signals
-// the affordance; the glyph + name provide the "you are here" cue.
+// the affordance; the name provides the "you are here" cue.
+//
+// Historically also rendered a decorative letterform between the
+// arrow and the name (from each manifest's `icon.text_glyph`).
+// Retired 2026-08-06 (Tal: "I never asked for them and i reckon
+// they're superfluous") — the pill is now just `[← <name>]`.
+// `.space-badge__glyph` CSS is kept for SettingsBadge, which still
+// renders a real cog SVG in that slot.
 //
 // Spec: docs/kronk_frame.md § SpaceNav.
 // Prototype: docs/kronk_frame_prototype_v11.html.
 
 interface SpaceBadgeProps {
-  glyph: string;
   name: string;
   backTo?: string;
 }
 
 export const SpaceBadge: React.FC<SpaceBadgeProps> = ({
-  glyph,
   name,
   backTo = '/hub',
 }) => (
@@ -41,7 +46,6 @@ export const SpaceBadge: React.FC<SpaceBadgeProps> = ({
         strokeLinejoin='round'
       />
     </svg>
-    <span className='space-badge__glyph'>{glyph}</span>
     <span className='space-badge__name'>{name}</span>
   </Link>
 );

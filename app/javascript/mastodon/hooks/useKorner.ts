@@ -5,7 +5,7 @@ import { useAppSelector } from 'mastodon/store';
 // hasn't loaded yet / the slug isn't registered.
 //
 //   const kommons = useKorner('kommons');
-//   kommons?.icon              // → { material: 'construction', text_glyph: '✦' }
+//   kommons?.icon              // → { material: 'construction' }
 //   kommons?.icon?.material    // → 'construction'
 //   kommons?.name              // → 'Kommons'
 //

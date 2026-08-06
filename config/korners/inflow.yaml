@@ -14,7 +14,6 @@ icon:
   # Material recycling loop) until this manifest bump; the custom
   # mark reads much closer to Inflow's Kosmic navigation identity.
   material: in_flow
-  text_glyph: '≈'
 render_target: native
 version: 2.0.0
 
