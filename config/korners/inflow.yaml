@@ -7,7 +7,13 @@ name: Inflow
 tagline: 'Bringing the natural world and the digital realm together.'
 purpose: 'To offer a daily moment of Kosmic reflection — celestial navigation and a once-a-day dispatch.'
 icon:
-  material: cycle
+  # Custom-drawn Inflow glyph (`in_flow.svg` — the swirling flow
+  # mark Tal supplied 2026-08-06), dropped alongside the Material
+  # Symbols set at `app/javascript/material-icons/400-24px/` so the
+  # same `icon.material` field resolves it. Was `cycle` (a stock
+  # Material recycling loop) until this manifest bump; the custom
+  # mark reads much closer to Inflow's Kosmic navigation identity.
+  material: in_flow
   text_glyph: '≈'
 render_target: native
 version: 2.0.0
