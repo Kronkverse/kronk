@@ -306,18 +306,64 @@
   padding: 6px 12px 2px;
 }
 
-// ── feed revolve — the home feed's scope transition ───────────
-// The root carries the perspective (set inline); the stage is the element
-// that pivots. `transform-style: flat` is deliberate — the revolve is a
-// feels-like single-plane hinge, not a real 3D barrel (no preserve-3d).
+// ── feed revolve — the home feed's carousel transition ────────
+// The feed rides in on the SAME barrel the selector turns on: the root carries
+// the perspective (set inline), and the stage orbits a vertical axis `radius`
+// behind the screen (`translateZ(-R) rotateY(θ) translateZ(R)`, written from
+// JS) so the incoming face arcs in from the side and swings flat to front. The
+// veil + sheen shade it as a curved solid, exactly like a selector face; the
+// turn borrows the selector's own duration + easing so they move as one body.
 .feed-revolve {
-  &__stage {
-    transform-style: flat;
-    transform-origin: 50% 50%;
-    will-change: transform, opacity;
+  --fr-dur: 1000ms;
+  --fr-ease: cubic-bezier(0.42, 0.02, 0.18, 1);
 
-    // Back-face never shows at these shallow angles, but keep it hidden so a
-    // mid-flick frame can't flash a mirrored feed.
+  position: relative;
+
+  &__stage {
+    position: relative;
+    transform-origin: 50% 50%;
+    will-change: transform;
+
+    // Back-face never shows before 90deg, but keep it hidden so a mid-turn
+    // frame can't flash a mirrored feed.
     backface-visibility: hidden;
+
+    // The resting transition; the JS turns transitions off for the snap-to-side
+    // frame, then hands back to this to ease home.
+    transition: transform var(--fr-dur) var(--fr-ease);
+  }
+
+  // Cylindrical shading — a veil darkens the turning edge, a sheen lifts the
+  // leading one. Opacities are set imperatively per turn angle in JS, mirroring
+  // the selector face. Both ride the transformed stage plane (flat overlay).
+  &__veil,
+  &__sheen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--fr-dur) var(--fr-ease);
+  }
+
+  &__veil {
+    background: var(--surface-sunken);
+  }
+
+  &__sheen {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--sc-star, rgb(206 203 246)) 12%, transparent) 0%,
+      transparent 42%,
+      transparent 58%,
+      color-mix(in srgb, #000 26%, transparent) 100%
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feed-revolve__stage,
+  .feed-revolve__veil,
+  .feed-revolve__sheen {
+    transition-duration: 0.01ms !important;
   }
 }
