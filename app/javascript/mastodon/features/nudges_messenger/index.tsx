@@ -5,6 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useParams, useHistory } from 'react-router-dom';
 
+import { setNudgesUnread } from 'mastodon/actions/nudges';
 import {
   apiListNudgeConversations,
   apiGetNudgeConversation,
@@ -13,18 +14,17 @@ import type {
   ApiNudgeConversationJSON,
   ApiNudgeConversationDetail,
 } from 'mastodon/api_types/nudges_conversations';
-import { setNudgesUnread } from 'mastodon/actions/nudges';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useAppDispatch } from 'mastodon/store';
 
 import { ConversationList } from './conversation_list';
-import { useNudgesAccountStream } from './use_nudges_account_stream';
 import { ConversationView } from './conversation_view';
 import { EmptyState } from './empty_state';
 import { KRONK_CONVERSATION_ID } from './kronk_system';
 import { KronkSystemView } from './kronk_system_view';
+import { useNudgesAccountStream } from './use_nudges_account_stream';
 
 // Nudges messenger shell — the Signal-shaped surface at /nudges.
 // Sidebar (conversation list) on the left, open conversation on the
@@ -83,7 +83,10 @@ const NudgesMessenger: React.FC<{ multiColumn?: boolean }> = ({
 
   // Live: any new event/message in any of the viewer's conversations refreshes
   // the list + reseeds unread — even a conversation not currently open.
-  useNudgesAccountStream(loadConversations);
+  const handleStreamArrival = useCallback(() => {
+    void loadConversations();
+  }, [loadConversations]);
+  useNudgesAccountStream(handleStreamArrival);
 
   // Load the active conversation whenever the URL param changes.
   useEffect(() => {
