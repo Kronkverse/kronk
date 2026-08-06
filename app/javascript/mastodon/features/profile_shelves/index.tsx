@@ -146,7 +146,7 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
         // find this account. The classic profile does this via its
         // own reducers; the shelved profile fetches locally and
         // has to relay the account explicitly. Also kick off the
-        // relationship fetch — Groove/Nudge/More all depend on it.
+        // relationship fetch — Mate/Nudge/More all depend on it.
         dispatch(importFetchedAccount(acctRes));
         if (acctRes.id !== me) {
           dispatch(fetchRelationships([acctRes.id]));
