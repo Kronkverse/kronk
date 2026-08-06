@@ -73,10 +73,12 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
   // Voice only makes sense over a *single* still photo — a mixed or
   // multi-photo batch drops the voice affordance entirely, and video
   // already carries its own audio track (spec § What a Moment is).
-  const voiceEligible = useMemo(
-    () => files.length === 1 && !files[0].type.startsWith('video/'),
-    [files],
-  );
+  // Destructure so `noUncheckedIndexedAccess` gets a nullable local
+  // rather than an unguarded `files[0]`.
+  const voiceEligible = useMemo(() => {
+    const [only] = files;
+    return only !== undefined && !only.type.startsWith('video/');
+  }, [files]);
 
   const onFileChange = useCallback((picked: File[]) => {
     // A pick that contains any video collapses to just the first
@@ -87,8 +89,11 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     setFiles(next);
     // Newly picked video / multi-photo batch both invalidate any
     // prior voice recording — don't leave stray state around when
-    // the constraint flips.
-    if (next.length !== 1 || next[0].type.startsWith('video/')) setVoice(null);
+    // the constraint flips. `isSingleStill` handles both branches
+    // (video-in-single-slot and multi-photo) without indexing into
+    // the array.
+    const isSingleStill = next.length === 1 && !firstVideo;
+    if (!isSingleStill) setVoice(null);
   }, []);
 
   const clearFiles = useCallback(() => {
@@ -116,10 +121,10 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     const voiceMediaId = voiceEligible ? (voice?.mediaId ?? null) : null;
     const krewIdOrNull = visibility === 'krew' ? krewId : null;
     try {
-      for (let i = 0; i < files.length; i += 1) {
+      for (const [i, file] of files.entries()) {
         setPostingProgress({ current: i + 1, total: files.length });
         const form = new FormData();
-        form.append('file', files[i]);
+        form.append('file', file);
         // `api()` has no baseURL, so the raw axios instance needs the
         // absolute `/api/…` path (unlike the apiRequest* helpers,
         // which prepend it). A bare `v1/media` posts relative to the
@@ -210,7 +215,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
           {files.length > 0 ? (
             <div className='moments-composer__file-summary'>
               {files.length === 1 ? (
-                files[0].name
+                (files[0]?.name ?? '')
               ) : (
                 <FormattedMessage
                   id='moments.composer.file_summary_multi'
