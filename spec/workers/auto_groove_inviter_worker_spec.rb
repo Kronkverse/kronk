@@ -4,14 +4,16 @@ require 'rails_helper'
 
 RSpec.describe AutoGrooveInviterWorker do
   describe '#perform' do
-    it 'grooves (follows) the inviter, bypassing their follower-approval lock' do
+    it 'auto-mates the invitee and the inviter (mutual follow), bypassing lock in both directions' do
       inviter = Fabricate(:user, account: Fabricate(:account, username: 'inviter', locked: true))
       invite  = Fabricate(:invite, user: inviter)
-      newbie  = Fabricate(:user, invite: invite, account: Fabricate(:account, username: 'newbie'))
+      newbie  = Fabricate(:user, invite: invite, account: Fabricate(:account, username: 'newbie', locked: true))
 
       described_class.new.perform(newbie.id)
 
       expect(newbie.account.following?(inviter.account)).to be(true)
+      expect(inviter.account.following?(newbie.account)).to be(true)
+      expect(newbie.account.mate?(inviter.account)).to be(true)
     end
 
     it 'is a no-op for a user that was not invited' do
