@@ -1285,8 +1285,8 @@ en-GB:
       new_confirmation_instructions_sent: You will receive a new email with the confirmation link in a few minutes!
       title: Check your inbox
     sign_in:
-      preamble_html: Log in with your <strong>%{domain}</strong> credentials. If your account is hosted on a different server, you will not be able to log in here.
-      title: Log in to %{domain}
+      preamble_html: Welcome back.
+      title: Log in to Kronk
     sign_up:
       manual_review: Sign-ups on %{domain} go through manual review by our moderators. To help us process your registration, write a bit about yourself and why you want an account on %{domain}.
       preamble: With an account on this Mastodon server, you'll be able to follow any other person on the Fediverse, regardless of where their account is hosted.
