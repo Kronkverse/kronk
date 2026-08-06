@@ -1,6 +1,8 @@
 import AccountCircleIcon from '@/material-icons/400-24px/account_circle.svg?react';
+import AllInclusiveFillIcon from '@/material-icons/400-24px/all_inclusive-fill.svg?react';
 import AllInclusiveIcon from '@/material-icons/400-24px/all_inclusive.svg?react';
 import ChoiceIcon from '@/material-icons/400-24px/choice.svg?react';
+import ConstructionFillIcon from '@/material-icons/400-24px/construction-fill.svg?react';
 import ConstructionIcon from '@/material-icons/400-24px/construction.svg?react';
 import CycleIcon from '@/material-icons/400-24px/cycle.svg?react';
 import DiversityIcon from '@/material-icons/400-24px/diversity_2.svg?react';
@@ -11,10 +13,12 @@ import GynecologyIcon from '@/material-icons/400-24px/gynecology.svg?react';
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import HourglassIcon from '@/material-icons/400-24px/hourglass.svg?react';
+import HubFillIcon from '@/material-icons/400-24px/hub-fill.svg?react';
 import HubIcon from '@/material-icons/400-24px/hub.svg?react';
 import InFlowIcon from '@/material-icons/400-24px/in_flow.svg?react';
 import KronkCoinIcon from '@/material-icons/400-24px/kronk_coin.svg?react';
 import NotListedLocationIcon from '@/material-icons/400-24px/not_listed_location.svg?react';
+import PhotoLibraryFillIcon from '@/material-icons/400-24px/photo_library-fill.svg?react';
 import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import RavenIcon from '@/material-icons/400-24px/raven.svg?react';
@@ -61,6 +65,19 @@ const MATERIAL_TO_ICON: Record<string, IconProp> = {
   travel_explore: TravelExploreIcon,
 };
 
+// Filled variants — a subset of MATERIAL_TO_ICON. Populated only for
+// glyphs that HAVE a `-fill.svg` (Google Material Symbols mostly do;
+// Kronk-custom glyphs — spiral, in_flow, raven, kronk_coin, choice —
+// don't ship fills, and gracefully fall back to their outline). Used
+// by the sidebar to switch selected korners to the filled variant
+// (the Material Symbols `FILL` axis analog for a static-SVG codebase).
+const MATERIAL_TO_ICON_FILLED: Record<string, IconProp> = {
+  all_inclusive: AllInclusiveFillIcon,
+  construction: ConstructionFillIcon,
+  hub: HubFillIcon,
+  photo_library: PhotoLibraryFillIcon,
+};
+
 // Fallback when a slug has no mapped icon yet — renders a Kronk-purple
 // circle so the layout doesn't collapse.
 export const AccentCircle: IconProp = (props) => (
@@ -80,20 +97,32 @@ export const AccentCircle: IconProp = (props) => (
 // Kommons lattice's `latticeIcon`) stay pure without every caller
 // having to grab the store first.
 //
+// The optional `filled` flag returns the filled variant when the glyph
+// has one — used by the sidebar for selected korners. Falls back to
+// the outline for glyphs that don't ship a fill (Kronk-custom icons).
+//
 //   const icon = useKornerIcon('kommons');
 //   <ColumnHeader iconComponent={icon} title='Kommons' />
 export const kornerIcon = (
   slug: string | undefined,
   manifest?: { icon?: { material?: string | null } | null },
+  filled = false,
 ): IconProp => {
   if (!slug) return AccentCircle;
   const resolved = manifest ?? store.getState().korners[slug];
   const material = resolved?.icon?.material ?? undefined;
-  if (material && MATERIAL_TO_ICON[material]) return MATERIAL_TO_ICON[material];
+  if (!material) return AccentCircle;
+  if (filled && MATERIAL_TO_ICON_FILLED[material]) {
+    return MATERIAL_TO_ICON_FILLED[material];
+  }
+  if (MATERIAL_TO_ICON[material]) return MATERIAL_TO_ICON[material];
   return AccentCircle;
 };
 
-export const useKornerIcon = (slug: string | undefined): IconProp => {
+export const useKornerIcon = (
+  slug: string | undefined,
+  filled = false,
+): IconProp => {
   const manifest = useKorner(slug);
-  return kornerIcon(slug, manifest);
+  return kornerIcon(slug, manifest, filled);
 };
