@@ -1,9 +1,7 @@
 import { defineMessages, useIntl } from 'react-intl';
 
-import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
-import CampaignIcon from '@/material-icons/400-24px/campaign.svg?react';
-import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import { Icon } from 'mastodon/components/icon';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 const messages = defineMessages({
   askedQuestion: {
@@ -24,9 +22,16 @@ const messages = defineMessages({
   },
 });
 
+// Which korner the space bar attributes each post type to. The icon
+// itself is read from that korner's manifest (`icon.material` in
+// `config/korners/<slug>.yaml`) via `useKornerIcon` — so renaming the
+// glyph in the manifest surfaces here without a code change. Was a
+// hardcoded per-postType icon before (question_mark / calendar_month
+// / campaign); switched to the manifest source of truth 2026-08-06
+// after Tal flagged that arbitrary picks in this component and the
+// korner card / chrome drift apart.
 interface SpaceConfig {
-  iconComponent: React.FC<React.SVGProps<SVGSVGElement>>;
-  iconId: string;
+  kornerSlug: string;
   verbKey: keyof typeof messages;
 }
 
@@ -35,35 +40,19 @@ function getConfig(
   hasEvent: boolean,
 ): SpaceConfig | null {
   if (postType === 'question') {
-    return {
-      iconComponent: QuestionMarkIcon,
-      iconId: 'question_mark',
-      verbKey: 'askedQuestion',
-    };
+    return { kornerSlug: 'kuestions', verbKey: 'askedQuestion' };
   }
 
   if (postType === 'answer') {
-    return {
-      iconComponent: QuestionMarkIcon,
-      iconId: 'question_mark',
-      verbKey: 'answeredQuestion',
-    };
+    return { kornerSlug: 'kuestions', verbKey: 'answeredQuestion' };
   }
 
   if (hasEvent) {
-    return {
-      iconComponent: CalendarMonthIcon,
-      iconId: 'calendar_month',
-      verbKey: 'createdEvent',
-    };
+    return { kornerSlug: 'kalendar', verbKey: 'createdEvent' };
   }
 
   if (postType === 'proposal') {
-    return {
-      iconComponent: CampaignIcon,
-      iconId: 'campaign',
-      verbKey: 'openedProposal',
-    };
+    return { kornerSlug: 'kommons', verbKey: 'openedProposal' };
   }
 
   return null;
@@ -76,34 +65,40 @@ export const StatusSpaceBar: React.FC<{
 }> = ({ postType, hasEvent = false, inline = false }) => {
   const intl = useIntl();
   const config = getConfig(postType, hasEvent);
+  // `useKornerIcon(undefined)` returns the AccentCircle fallback, so
+  // calling this unconditionally (React hook rule) is safe even when
+  // `config` is null — we bail out with `return null` below and the
+  // resolved icon is discarded.
+  const IconComponent = useKornerIcon(config?.kornerSlug);
 
   if (!config) return null;
+
+  const iconEl = (
+    <Icon
+      id={config.kornerSlug}
+      icon={IconComponent}
+      className='status-space-bar__icon'
+    />
+  );
+  const verbEl = (
+    <span className='status-space-bar__verb'>
+      {intl.formatMessage(messages[config.verbKey])}
+    </span>
+  );
 
   if (inline) {
     return (
       <span className='status-space-bar status-space-bar--inline'>
-        <Icon
-          id={config.iconId}
-          icon={config.iconComponent}
-          className='status-space-bar__icon'
-        />
-        <span className='status-space-bar__verb'>
-          {intl.formatMessage(messages[config.verbKey])}
-        </span>
+        {iconEl}
+        {verbEl}
       </span>
     );
   }
 
   return (
     <div className='status-space-bar'>
-      <Icon
-        id={config.iconId}
-        icon={config.iconComponent}
-        className='status-space-bar__icon'
-      />
-      <span className='status-space-bar__verb'>
-        {intl.formatMessage(messages[config.verbKey])}
-      </span>
+      {iconEl}
+      {verbEl}
     </div>
   );
 };
