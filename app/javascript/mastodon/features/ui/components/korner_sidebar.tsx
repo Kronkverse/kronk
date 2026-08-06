@@ -54,8 +54,13 @@ const KornerRow: React.FC<KornerRowProps> = ({
   onVisit,
   registerRef,
 }) => {
-  const Icon = useKornerIcon(korner.slug);
+  // Selected row swaps the icon to its filled variant when one ships
+  // for that glyph (Material Symbols FILL-axis analog for a static-SVG
+  // codebase — see useKornerIcon.tsx). Falls back to the outline for
+  // Kronk-custom glyphs that don't have a `-fill.svg` yet.
+  const Icon = useKornerIcon(korner.slug, active);
   const unread = useKornerUnreadCount(korner.slug);
+  const hasUnread = unread > 0;
   const handleClick = useCallback(() => {
     onVisit(korner.slug);
   }, [onVisit, korner.slug]);
@@ -65,10 +70,17 @@ const KornerRow: React.FC<KornerRowProps> = ({
     },
     [registerRef, korner.slug],
   );
+  const className = [
+    'korner-sidebar__row',
+    active ? 'korner-sidebar__row--active' : '',
+    hasUnread ? 'korner-sidebar__row--has-unread' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
   return (
     <Link
       to={`/hub/${korner.slug}`}
-      className={`korner-sidebar__row ${active ? 'korner-sidebar__row--active' : ''}`}
+      className={className}
       onClick={handleClick}
       data-name={korner.name}
       aria-label={korner.name}
@@ -79,7 +91,7 @@ const KornerRow: React.FC<KornerRowProps> = ({
         <Icon />
       </span>
       <span className='korner-sidebar__label'>{korner.name}</span>
-      {unread > 0 && (
+      {hasUnread && (
         <span className='korner-sidebar__badge' aria-label={`${unread} new`}>
           {unread > 99 ? '99+' : unread}
         </span>

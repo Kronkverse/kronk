@@ -151,6 +151,16 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
         color: #fff;
       }
     }
+
+    // Pending unread nudges — a gentle scale + opacity breathe on the
+    // glyph (~1.8s, ease-in-out, infinite). Static-SVG analog to the
+    // Material Symbols `wght`-axis pulse we'd otherwise reach for. Only
+    // touches the glyph chip, never the label/border/badge, so it
+    // reads as "this korner has something waiting" rather than
+    // "something is moving on this row." Respects reduced-motion.
+    &--has-unread .korner-sidebar__glyph {
+      animation: korner-sidebar-pulse 1.8s ease-in-out infinite;
+    }
   }
 
   &__glyph {
@@ -224,5 +234,27 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
 @media (min-width: $rail-breakpoint) {
   body:has(.korner-sidebar):not(:has(.kronk-stage)) {
     padding-right: calc($rail-width + $rail-gutter);
+  }
+}
+
+// Pulse keyframes for `.korner-sidebar__row--has-unread .korner-sidebar__glyph`
+// (see above). Amplitude deliberately small — the glyph should feel
+// like it's breathing, not bouncing.
+@keyframes korner-sidebar-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.06);
+    opacity: 0.75;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .korner-sidebar__row--has-unread .korner-sidebar__glyph {
+    animation: none;
   }
 }
