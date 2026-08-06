@@ -1,0 +1,46 @@
+-# Shared sign-in body — the "wordmark + tagline + email/password
+-# form" content used by both entry points to sign in:
+-#   * `/` (home#landing) — the ambient signed-out landing.
+-#   * `/auth/sign_in` (auth/sessions#new) — Devise's sign-in view,
+-#     where a failed login / expired session / explicit link punts
+-#     you.
+-# One partial for both keeps the visual identical across the two
+-# URLs (Tal, 2026-08-06: "keep it simple, unify"). Renders inside
+-# the canonical `_kronk_auth_form` shell — that shell owns the
+-# hero wordmark, header/footer chrome, and tail links.
+-#
+-# Locals:
+-#   prefill_email: (optional) value to prefill the email field with.
+-#                  sessions#new passes `params.dig(:user, :email)`
+-#                  after a failed login so the user doesn't have to
+-#                  retype it. Landing renders it blank.
+
+:ruby
+  prefill_email = local_assigns[:prefill_email]
+
+= render 'auth/shared/kronk_auth_form',
+         lede: t('kronk.landing.tagline') do
+  -# `simple_form_for` with a symbol scope means no model object —
+  -# `as:` is required on each field or they all default to text.
+  -# Devise's session controller only cares about
+  -# `params[:user][:email]` and `params[:user][:password]`.
+  = simple_form_for(:user, url: user_session_path) do |f|
+    .fields-group
+      = f.input :email,
+                as: :email,
+                autofocus: true,
+                hint: false,
+                input_html: { 'aria-label': t('simple_form.labels.defaults.email'), autocomplete: 'email', value: prefill_email },
+                label: t('simple_form.labels.defaults.email'),
+                wrapper: :with_label
+
+    .fields-group
+      = f.input :password,
+                as: :password,
+                hint: false,
+                input_html: { 'aria-label': t('simple_form.labels.defaults.password'), autocomplete: 'current-password' },
+                label: t('simple_form.labels.defaults.password'),
+                wrapper: :with_label
+
+    .actions
+      = f.button :button, t('auth.login'), type: :submit

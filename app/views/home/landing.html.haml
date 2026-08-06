@@ -2,8 +2,12 @@
 -# (the default), so the `_kronk_static_chrome` top-band wordmark
 -# renders around this content. Signed-out visitors get: chrome
 -# wordmark top-left (via the static chrome partial), giant hero
--# wordmark centred, tagline, sign-in form, tail-links to /kronk/*
--# instance pages.
+-# wordmark centred, tagline, sign-in form, tail-links.
+-#
+-# Uses the canonical `_kronk_auth_form` shell — the same one every
+-# Devise view (sign-in, password reset, confirmation, setup) uses —
+-# so every signed-out surface reads as one place. Tal, 2026-08-06:
+-# "keep it simple, unify".
 -#
 -# NOT under the `kronk_void` layout — that starfield/vignette chassis
 -# is reserved for the signup ritual (`/auth/sign_up` and
@@ -23,4 +27,4 @@
   = opengraph 'og:image:height', '630'
   = opengraph 'twitter:card', 'summary_large_image'
 
-= render 'home/landing_body'
+= render 'auth/shared/sign_in_form'

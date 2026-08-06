@@ -278,17 +278,31 @@ input.kronk-form__input {
   text-align: center;
 }
 
+// Hero wordmark — the same big centred `ЖЯѺƝ₭` that used to live
+// only on the ambient landing at `/`. Now shared across every
+// Devise view so the auth surfaces read as one place. The `H1`
+// wrapper carries this class; the wordmark SVG inside is sized by
+// `.kronk-wordmark--hero` (see `_wordmark.scss`).
+.kronk-auth-shell__hero {
+  margin: 0 0 1rem;
+  text-align: center;
+}
+
+// Optional H2 title under the wordmark ("Reset password", "Set a
+// new password", etc.). Landing/sign-in omit this — the wordmark
+// alone reads as the title.
 .kronk-auth-shell__title {
   margin: 0 0 0.5rem;
   font-family: var(--font-display);
   font-weight: 500;
-  font-size: clamp(1.5rem, 4vw, 1.875rem);
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
   line-height: 1.15;
   color: var(--text-primary);
 }
 
 .kronk-auth-shell__lede {
-  margin: 0;
+  margin: 0 auto;
+  max-width: 20rem;
   color: var(--text-secondary);
   font-size: 0.9375rem;
   line-height: 1.5;
