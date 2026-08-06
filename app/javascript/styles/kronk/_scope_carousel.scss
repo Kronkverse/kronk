@@ -1,0 +1,273 @@
+// ScopeCarousel — the "Prism": a true CSS-3D barrel of scope faces turned on one
+// axis. Ported from the design prototype; uses Kronk's real tokens. The turn
+// duration/easing are local (not part of the global token set).
+
+.scope-carousel {
+  --sc-dur-turn: 1000ms;
+  --sc-ease-turn: cubic-bezier(0.42, 0.02, 0.18, 1);
+  --sc-star: rgb(206 203 246);
+  --sc-card-shadow: 0 4px 12px -4px rgb(0 0 0 / 30%);
+
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.scope-carousel__rotor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scope-carousel__arrow {
+  flex: 0 0 auto;
+}
+
+.scope-carousel__stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  perspective: 1100px;
+  perspective-origin: 50% 50%;
+  touch-action: pan-y;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &:focus-visible .scope-carousel__face.is-front {
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--kronk-purple-bright) 55%, transparent);
+  }
+}
+
+.scope-carousel__barrel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform var(--sc-dur-turn) var(--sc-ease-turn);
+
+  &.no-anim {
+    transition: none;
+  }
+}
+
+.scope-carousel__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  background: linear-gradient(
+    160deg,
+    var(--surface-elevated),
+    var(--surface-primary)
+  );
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-large);
+  backface-visibility: hidden;
+  box-shadow: var(--sc-card-shadow);
+  overflow: hidden;
+  text-align: start;
+  transition: border-color var(--dur-medium) var(--ease-out);
+
+  &.is-front {
+    border-color: var(--border-default);
+  }
+}
+
+// cylindrical shading: a veil darkens the turning edge, a sheen lifts the
+// leading one — the opacities are set imperatively per face angle in JS.
+.scope-carousel__veil,
+.scope-carousel__sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.scope-carousel__veil {
+  background: var(--surface-sunken);
+  opacity: 0;
+}
+
+.scope-carousel__sheen {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--sc-star) 12%, transparent) 0%,
+    transparent 42%,
+    transparent 58%,
+    color-mix(in srgb, #000 26%, transparent) 100%
+  );
+  opacity: 0;
+}
+
+.scope-carousel__mark {
+  flex: 0 0 auto;
+  display: block;
+}
+
+.scope-carousel__copy {
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.scope-carousel__name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.scope-carousel__desc {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.scope-carousel__count {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+// ── large (feed view) ─────────────────────────────────────────
+.scope-carousel--large {
+  .scope-carousel__stage {
+    height: 132px;
+  }
+
+  .scope-carousel__name {
+    font-size: 1.5rem;
+  }
+
+  .scope-carousel__desc {
+    font-size: 0.8125rem;
+  }
+
+  .scope-carousel__count {
+    font-size: 0.6875rem;
+  }
+}
+
+// ── small (compose reach) ─────────────────────────────────────
+.scope-carousel--small {
+  .scope-carousel__stage {
+    height: 62px;
+  }
+
+  .scope-carousel__face {
+    gap: 12px;
+    padding: 0 16px;
+    border-radius: var(--radius-medium);
+  }
+
+  .scope-carousel__name {
+    font-size: 1.125rem;
+  }
+
+  .scope-carousel__desc {
+    font-size: 0.6875rem;
+  }
+}
+
+// ── ground shadow — sells a solid body on an axis ─────────────
+.scope-carousel__groundshadow {
+  position: relative;
+  height: 16px;
+  margin-top: -6px;
+  pointer-events: none;
+
+  i {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 62%;
+    height: 14px;
+    margin-left: -31%;
+    border-radius: 50%;
+    background: radial-gradient(
+      ellipse at center,
+      color-mix(in srgb, #000 55%, transparent) 0%,
+      transparent 70%
+    );
+    transition:
+      transform var(--sc-dur-turn) var(--sc-ease-turn),
+      opacity var(--sc-dur-turn) var(--sc-ease-turn);
+  }
+}
+
+// ── wire + the "pool of light" tracking the front face ────────
+.scope-carousel__wire {
+  position: relative;
+  height: 18px;
+  margin-top: 12px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--border-subtle) 12%,
+      var(--border-subtle) 88%,
+      transparent
+    );
+  }
+}
+
+.scope-carousel__pool {
+  position: absolute;
+  top: -9px;
+  width: 78px;
+  height: 36px;
+  margin-left: -39px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--kronk-purple-bright) 62%, transparent) 0%,
+    color-mix(in srgb, var(--kronk-purple-bright) 16%, transparent) 42%,
+    transparent 72%
+  );
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 26px;
+    height: 1px;
+    margin: -0.5px 0 0 -13px;
+    background: var(--kronk-purple-bright);
+    box-shadow: 0 0 6px var(--kronk-purple-bright);
+  }
+}
+
+.scope-carousel__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scope-carousel__barrel,
+  .scope-carousel__groundshadow i,
+  .scope-carousel__pool {
+    transition-duration: 0.01ms !important;
+  }
+}
