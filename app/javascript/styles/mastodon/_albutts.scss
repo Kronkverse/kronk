@@ -711,31 +711,17 @@
   }
 }
 
+// AlbumComposer + ContributeComposer bodies — both render inside
+// `<ComposeShell>` (which owns the outer floating panel, backdrop,
+// header, and footer). This selector is now just the field-flow
+// container within the shell's body slot; the wrapping fixed-overlay
+// + panel styles that used to sit here (and the `__panel` /
+// `__heading` / `__actions` selectors that went with them) have all
+// moved into `_compose_shell.scss` where every composer inherits
+// them uniformly.
 .albutts-composer {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgb(0 0 0 / 55%);
-  padding: 20px;
-
-  &__panel {
-    background: var(--surface-background-color);
-    border-radius: 14px;
-    padding: 22px;
-    width: 100%;
-    max-width: 460px;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-
-  &__heading {
-    font-size: 18px;
-    font-weight: 700;
-    margin: 0 0 14px;
-  }
+  flex-direction: column;
 
   &__label {
     font-size: 12px;
@@ -1005,10 +991,14 @@
     font-size: 13px;
   }
 
-  &__actions {
+  // Inline actions row — used for one-off action buttons the shell's
+  // footer isn't the right home for (currently just the "Retry N
+  // failed" affordance after album creation, when some photo uploads
+  // in the batch didn't land).
+  &__inline-actions {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    margin-top: 18px;
+    margin-top: 12px;
   }
 }

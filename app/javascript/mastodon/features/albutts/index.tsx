@@ -11,12 +11,14 @@ import {
   useRouteMatch,
 } from 'react-router-dom';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import {
   apiCreateAlbum,
   apiGetAlbum,
   apiListAlbums,
 } from 'mastodon/api/albutts';
 import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
+import { ComposeFab } from 'mastodon/components/compose_fab';
 import { Stage } from 'mastodon/components/stage';
 
 import { AlbumComposer } from './components/album_composer';
@@ -27,7 +29,7 @@ const messages = defineMessages({
   loading: { id: 'albutts.loading', defaultMessage: 'Loading…' },
   empty: {
     id: 'albutts.empty',
-    defaultMessage: 'No albums yet — start one via the Ж menu.',
+    defaultMessage: 'No albums yet — tap the compose button to start one.',
   },
   photos: {
     id: 'albutts.photos',
@@ -37,6 +39,10 @@ const messages = defineMessages({
     id: 'albutts.contributors',
     defaultMessage:
       '{count, plural, one {# contributor} other {# contributors}}',
+  },
+  fab: {
+    id: 'albutts.fab.label',
+    defaultMessage: 'New album',
   },
 });
 
@@ -55,11 +61,16 @@ const Albutts: React.FC<{ multiColumn?: boolean }> = () => {
         <Route path='/hub/albutts/albums/:id' exact>
           <AlbumDetailRoute />
         </Route>
+        {/* Composer routes. The canonical entry is `/composer`
+            (matches every other korner's forthcoming standard). The
+            legacy `/new` URL is preserved as an alias so bookmarks
+            / in-flight tabs / stale Ж-menu targets don't 404 while
+            the manifest / callers migrate. Both open the same
+            ComposeShell-wrapped AlbumComposer. */}
+        <Route path='/hub/albutts/composer' exact>
+          <Directory autoOpenComposer />
+        </Route>
         <Route path='/hub/albutts/new' exact>
-          {/* The Ж menu (features/ui/components/kronk_menu.tsx) reads
-              albutts.yaml's `compose.route` and lands here. Directory
-              renders with the composer pre-opened so the manifest-
-              driven Post action Just Works. */}
           <Directory autoOpenComposer />
         </Route>
         <Route path='/hub/albutts' exact>
@@ -101,8 +112,9 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
 
   const closeComposer = useCallback(() => {
     setComposerOpen(false);
-    // If we arrived via `/hub/albutts/new`, drop back to the plain
-    // directory URL so the composer doesn't reopen on refresh.
+    // If we arrived via the composer route (`/composer` or the legacy
+    // `/new`), drop back to the plain directory URL so the composer
+    // doesn't reopen on refresh.
     if (autoOpenComposer) history.replace('/hub/albutts');
   }, [autoOpenComposer, history]);
 
@@ -157,6 +169,20 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
 
       {composerOpen && (
         <AlbumComposer onCancel={closeComposer} onCreated={handleCreated} />
+      )}
+
+      {/* Every korner surface that supports posting gets one floating
+          compose bubble in a consistent bottom-right position. The
+          FAB is a Link — pushing to /composer opens the ComposeShell,
+          and back-button closes it. Hidden while the composer itself
+          is open so it doesn't sit on top of the shell. */}
+      {!composerOpen && (
+        <ComposeFab
+          to='/hub/albutts/composer'
+          label={intl.formatMessage(messages.fab)}
+          icon={AddIcon}
+          iconId='add'
+        />
       )}
     </div>
   );

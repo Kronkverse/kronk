@@ -116,7 +116,7 @@ launch:
 # features/ui/components/kronk_menu.tsx (usePostTarget).
 compose:
   label: 'New album'
-  route: '/hub/albutts/new'
+  route: '/hub/albutts/composer'
 
 enforced: true # boot validator gates L1-L11 for albutts (2026-07-29)
 
