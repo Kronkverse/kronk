@@ -7,7 +7,7 @@ import type { Map, List } from 'immutable';
 
 import ReactSwipeableViews from 'react-swipeable-views';
 
-import elephantUIPlane from '@/images/elephant_ui_plane.svg';
+import kronkMascot from '@/images/logo-symbol-icon.svg';
 import { CustomEmojiProvider } from '@/mastodon/components/emoji/context';
 import { IconButton } from '@/mastodon/components/icon_button';
 import { mascot, reduceMotion } from '@/mastodon/initial_state';
@@ -62,7 +62,7 @@ export const Announcements: FC = () => {
         className='announcements__mastodon'
         alt=''
         draggable='false'
-        src={mascot ?? elephantUIPlane}
+        src={mascot ?? kronkMascot}
       />
 
       <div className='announcements__container'>
