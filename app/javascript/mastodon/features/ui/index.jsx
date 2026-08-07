@@ -304,6 +304,7 @@ class SwitchingColumnsArea extends PureComponent {
                 → per-Room Jitsi. Krew Huddles come with Phase 9.1/9.2. */}
             <Redirect from='/huddle' to='/hub/huddle' exact />
             {signedIn && <WrappedRoute path='/hub/huddle/room/:id' exact component={LiveRoom} content={children} />}
+            {signedIn && <WrappedRoute path='/hub/huddle/new' exact component={Live} componentParams={{ autoOpenNewRoom: true }} content={children} />}
             {signedIn && <WrappedRoute path='/hub/huddle' exact component={Live} content={children} />}
             <WrappedRoute path={["/booth/sets/:id", "/hub/booth/sets/:id"]} component={BoothSetPage} content={children} />
             {/* Native Booth. The non-exact /hub/booth match also catches the
