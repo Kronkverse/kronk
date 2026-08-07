@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_06_220000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_07_040000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -812,8 +812,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_06_220000) do
     t.datetime "ended_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "scope", default: "room", null: false
+    t.string "icon", limit: 32
+    t.datetime "last_active_at"
+    t.datetime "retired_at"
     t.index ["host_account_id"], name: "index_huddle_sessions_on_host_account_id"
     t.index ["scheduled_start"], name: "index_huddle_sessions_on_scheduled_start", where: "(scheduled_start IS NOT NULL)"
+    t.index ["scope", "last_active_at"], name: "index_huddle_sessions_live_rooms", where: "(retired_at IS NULL)"
     t.index ["state"], name: "index_huddle_sessions_on_state"
     t.index ["status_id"], name: "index_huddle_sessions_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
   end

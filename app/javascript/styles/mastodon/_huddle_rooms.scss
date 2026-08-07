@@ -1,0 +1,199 @@
+// Huddle Rooms — open topical Huddle spaces (Coworking, Meetings,
+// Music, Late-night, …) rendered on `/hub/huddle` between the Main
+// Huddle lobby and (future) Krew Huddles. Phase 9.6. Discovery +
+// create in one panel; each card links to the per-Room lobby at
+// `/hub/huddle/room/:id`.
+
+.huddle-rooms {
+  width: 100%;
+  max-width: 720px;
+  margin: 24px auto 0;
+  padding: 20px 16px;
+  border-top: 1px solid var(--background-border-color, rgb(255 255 255 / 12%));
+}
+
+.huddle-rooms__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.huddle-rooms__heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--primary-text-color, var(--text-primary));
+}
+
+.huddle-rooms__new {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    background: var(--accent);
+    color: var(--text-on-accent, #fff);
+  }
+}
+
+.huddle-rooms__create {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px solid var(--background-border-color, rgb(255 255 255 / 12%));
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated, rgb(255 255 255 / 3%));
+}
+
+.huddle-rooms__input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-medium);
+  border: 1px solid var(--background-border-color, rgb(255 255 255 / 15%));
+  background: var(--surface-primary, rgb(0 0 0 / 25%));
+  color: var(--primary-text-color, var(--text-primary));
+  font-family: inherit;
+  font-size: 14px;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  &--icon {
+    max-width: 120px;
+  }
+}
+
+.huddle-rooms__error {
+  margin: 0;
+  color: var(--warning-red, #ef4444);
+  font-size: 12px;
+}
+
+.huddle-rooms__create-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.huddle-rooms__cancel,
+.huddle-rooms__submit {
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.huddle-rooms__cancel {
+  border: 1px solid var(--background-border-color, rgb(255 255 255 / 22%));
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.huddle-rooms__submit {
+  border: none;
+  background: var(--accent);
+  color: var(--text-on-accent, #fff);
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.huddle-rooms__empty {
+  margin: 0;
+  padding: 16px 0;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.huddle-rooms__grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.huddle-rooms__card {
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+  border: 1px solid var(--background-border-color, rgb(255 255 255 / 12%));
+  background: var(--surface-primary, rgb(255 255 255 / 3%));
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+
+  &:hover {
+    border-color: var(--accent);
+    background: var(--surface-elevated, rgb(255 255 255 / 6%));
+  }
+}
+
+.huddle-rooms__card-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.huddle-rooms__card-icon {
+  font-size: 24px;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.huddle-rooms__card-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.huddle-rooms__card-name {
+  font-weight: 600;
+  color: var(--primary-text-color, var(--text-primary));
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.huddle-rooms__card-desc {
+  color: var(--text-secondary);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.huddle-rooms__card-occ {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}

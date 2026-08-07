@@ -15,6 +15,8 @@ import { Stage } from 'mastodon/components/stage';
 import { me, getAccessToken } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
+import { RoomsList } from './rooms_list';
+
 const messages = defineMessages({
   heading: { id: 'live.title', defaultMessage: 'Huddle' },
   join: { id: 'live.join', defaultMessage: 'Huddle Up' },
@@ -544,6 +546,12 @@ const Live: React.FC<{ multiColumn?: boolean }> = () => {
               <br />
               End-to-end encrypted
             </p>
+
+            {/* Rooms — the open topical Huddle spaces (Coworking,
+                Meetings, Music, …) live beneath the Main Huddle
+                lobby. Any signed-in user can create; the reaper
+                sunsets idle ones after 6 months. Phase 9.6. */}
+            <RoomsList />
           </div>
         ) : (
           <div style={inRoomContainerStyle}>

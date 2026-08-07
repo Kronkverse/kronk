@@ -84,6 +84,7 @@ import {
   Quotes,
   Orbit,
   Live,
+  LiveRoom,
   EventDetail,
   KalendarSpiral,
   Hub,
@@ -297,9 +298,13 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/hub/kuestions/settings' exact component={KuestionsSettings} content={children} />}
             {signedIn && <WrappedRoute path='/hub/:slug/settings' exact component={KornerSettings} content={children} />}
             {/* Huddle is a korner surface at /hub/huddle; the legacy
-                /huddle path forwards to it. */}
+                /huddle path forwards to it. `/hub/huddle` renders the
+                Main Huddle lobby + the open Rooms discovery list
+                (Phase 9.6). `/hub/huddle/room/:id` is a per-Room lobby
+                → per-Room Jitsi. Krew Huddles come with Phase 9.1/9.2. */}
             <Redirect from='/huddle' to='/hub/huddle' exact />
-            {signedIn && <WrappedRoute path='/hub/huddle' component={Live} content={children} />}
+            {signedIn && <WrappedRoute path='/hub/huddle/room/:id' exact component={LiveRoom} content={children} />}
+            {signedIn && <WrappedRoute path='/hub/huddle' exact component={Live} content={children} />}
             <WrappedRoute path={["/booth/sets/:id", "/hub/booth/sets/:id"]} component={BoothSetPage} content={children} />
             {/* Native Booth. The non-exact /hub/booth match also catches the
                 lens sub-paths (/hub/booth/musik, /artists, …); the component
