@@ -41,40 +41,45 @@ class AddRoomScopeToHuddleSessions < ActiveRecord::Migration[8.0]
       add_column :huddle_sessions, :icon, :string, limit: 32, if_not_exists: true
       add_column :huddle_sessions, :last_active_at, :datetime, if_not_exists: true
       add_column :huddle_sessions, :retired_at, :datetime, if_not_exists: true
-    end
 
-    # Seed `last_active_at` from `updated_at` so pre-scope rows start
-    # with a plausible activity marker — otherwise the reaper's first
-    # run would soft-retire everything created earlier than 6 months
-    # ago on day zero.
-    execute <<~SQL.squish
-      UPDATE huddle_sessions
-      SET last_active_at = updated_at
-      WHERE last_active_at IS NULL
-    SQL
+      # Seed `last_active_at` from `updated_at` so pre-scope rows start
+      # with a plausible activity marker — otherwise the reaper's first
+      # run would soft-retire everything created earlier than 6 months
+      # ago on day zero. Wrapped in safety_assured because
+      # strong_migrations can't inspect the SQL and defaults to
+      # refusing raw `execute`.
+      execute <<~SQL.squish
+        UPDATE huddle_sessions
+        SET last_active_at = updated_at
+        WHERE last_active_at IS NULL
+      SQL
+
+      # Singleton Main Huddle. Naturally idempotent via WHERE NOT
+      # EXISTS. Inside safety_assured for the same execute-inspection
+      # reason as the seed above.
+      execute <<~SQL.squish
+        INSERT INTO huddle_sessions
+          (scope, title, session_url, state, host_account_id,
+           last_active_at, created_at, updated_at)
+        SELECT 'main', 'Main Huddle', 'huddle-main', 'live',
+               (SELECT id FROM accounts ORDER BY id ASC LIMIT 1),
+               NOW(), NOW(), NOW()
+        WHERE NOT EXISTS (SELECT 1 FROM huddle_sessions WHERE scope = 'main')
+          AND EXISTS (SELECT 1 FROM accounts)
+      SQL
+    end
 
     # Reaper query: rooms where retired_at IS NULL AND last_active_at
     # < N.months.ago. Partial index keeps it small (only live rooms).
+    # Not inside safety_assured — `add_index :concurrently` is the
+    # correct primitive here and strong_migrations already recognises
+    # it as safe.
     add_index :huddle_sessions,
               [:scope, :last_active_at],
               where: 'retired_at IS NULL',
               name: 'index_huddle_sessions_live_rooms',
               algorithm: :concurrently,
               if_not_exists: true
-
-    # Singleton Main Huddle. `find_or_create_by`-shape upsert so this
-    # migration is idempotent even if a Main row happens to exist
-    # (e.g. from earlier manual seed).
-    execute <<~SQL.squish
-      INSERT INTO huddle_sessions
-        (scope, title, session_url, state, host_account_id,
-         last_active_at, created_at, updated_at)
-      SELECT 'main', 'Main Huddle', 'huddle-main', 'live',
-             (SELECT id FROM accounts ORDER BY id ASC LIMIT 1),
-             NOW(), NOW(), NOW()
-      WHERE NOT EXISTS (SELECT 1 FROM huddle_sessions WHERE scope = 'main')
-        AND EXISTS (SELECT 1 FROM accounts)
-    SQL
   end
 
   def down
