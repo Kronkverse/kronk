@@ -1,0 +1,275 @@
+// Compose reframe — the post composer shaped like the feed card it becomes:
+// an identity header with the audience dropdown to its right, and a quiet action
+// bar whose options tuck behind a chevron they slide out of. Paired components:
+// components/reach_dropdown.tsx, features/compose/components/char_ring.tsx.
+
+// ── header row: identity + audience ──────────────────────────
+.compose-form__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0 8px;
+
+  .navigation-bar {
+    flex: 0 1 auto;
+    min-width: 0;
+    padding: 0;
+  }
+}
+
+.compose-form__head-spacer {
+  flex: 1 1 auto;
+}
+
+// ── audience dropdown ─────────────────────────────────────────
+.reach-dropdown {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.reach-dropdown__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px 5px 7px;
+  border-radius: var(--radius-round, 999px);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    color: var(--text-primary);
+    border-color: var(--border-default);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid
+      color-mix(in srgb, var(--kronk-purple-bright) 55%, transparent);
+    outline-offset: 1px;
+  }
+}
+
+.reach-dropdown__button-mark {
+  display: block;
+  flex: none;
+}
+
+.reach-dropdown__button-label {
+  white-space: nowrap;
+}
+
+.reach-dropdown__chevron {
+  width: 15px;
+  height: 15px;
+  transition: transform 0.18s ease;
+
+  .reach-dropdown__button[aria-expanded='true'] & {
+    transform: rotate(180deg);
+  }
+}
+
+.reach-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 40;
+  width: 246px;
+  padding: 6px;
+  background: var(--surface-sunken, var(--surface-primary));
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium, 10px);
+  box-shadow: 0 18px 44px -18px rgb(0 0 0 / 60%);
+}
+
+.reach-dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 9px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: var(--surface-elevated);
+  }
+
+  &--selected {
+    background: color-mix(in srgb, var(--kronk-purple-deep) 45%, transparent);
+  }
+}
+
+.reach-dropdown__item-mark {
+  display: block;
+  flex: none;
+}
+
+.reach-dropdown__item-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.reach-dropdown__item-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.reach-dropdown__item-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.reach-dropdown__item-tick {
+  margin-inline-start: auto;
+  width: 18px;
+  height: 18px;
+  color: var(--kronk-purple-bright);
+  opacity: 0;
+
+  .reach-dropdown__item--selected & {
+    opacity: 1;
+  }
+}
+
+// ── action bar: reveal + sliding tools + ring ─────────────────
+.compose-form__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.compose-form__reveal {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--text-secondary);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    background: var(--surface-elevated);
+    color: var(--kronk-purple-bright);
+  }
+
+  .icon {
+    width: 22px;
+    height: 22px;
+    transition: transform 0.3s cubic-bezier(0.4, 0.05, 0.2, 1);
+  }
+
+  &.open .icon {
+    transform: rotate(180deg);
+  }
+}
+
+.compose-form__tools {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  transition:
+    max-width 0.34s cubic-bezier(0.4, 0.05, 0.2, 1),
+    opacity 0.22s ease;
+
+  &.open {
+    max-width: 320px;
+    opacity: 1;
+  }
+}
+
+.compose-form__actions-spacer {
+  flex: 1 1 auto;
+}
+
+// ── char ring ─────────────────────────────────────────────────
+.char-ring {
+  width: 30px;
+  height: 30px;
+  flex: none;
+
+  circle {
+    fill: none;
+    stroke-width: 3;
+  }
+
+  &__track {
+    stroke: var(--border-subtle);
+  }
+
+  &__fill {
+    stroke: var(--kronk-purple-bright);
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+    transition:
+      stroke-dashoffset 0.2s ease,
+      stroke 0.2s ease;
+  }
+
+  &__num {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    fill: var(--text-muted);
+    opacity: 0.7;
+  }
+
+  &--near {
+    .char-ring__fill {
+      stroke: var(--warning, oklch(72% 0.15 70deg));
+    }
+
+    .char-ring__num {
+      fill: var(--warning, oklch(72% 0.15 70deg));
+      opacity: 1;
+    }
+  }
+
+  &--over {
+    .char-ring__fill {
+      stroke: var(--error, oklch(62% 0.2 25deg));
+    }
+
+    .char-ring__num {
+      fill: var(--error, oklch(62% 0.2 25deg));
+      opacity: 1;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compose-form__reveal .icon,
+  .compose-form__tools,
+  .reach-dropdown__chevron,
+  .char-ring__fill {
+    transition-duration: 0.01ms;
+  }
+}
