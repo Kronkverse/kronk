@@ -39,7 +39,7 @@ Intended outcome: a 2.0.0 release that (a) formalises the Korner framework to sp
 | 6   | Status linkage canonicalisation                                                | 3   | 4 days         | Phase 1                   |
 | 7   | Primitives: Kategories → Search → Groups                                       | 7   | 2.5 weeks      | Phase 4                   |
 | 8   | Kuestions v2 (dedicated model + gate)                                          | 4   | 1 week         | Phase 6                   |
-| 9   | Huddle korner split (Kalendar decouple)                                        | 4   | 1 week         | Phases 3, 6               |
+| 9   | Huddle korner split + open Rooms (Kalendar decouple)                           | 5   | 1.5 weeks      | Phases 3, 6               |
 | 10  | InFlow kosmic + Wachuneed greenfield + Skeleton WIP                            | 5   | 1.5 weeks      | Phase 1                   |
 | 11  | Org space `/kronk/*` + Profile rebuild `/@user`                                | 4   | 1 week         | Phase 3                   |
 | 12  | Nav-chrome redesign (Kronk menu, three-way switcher, wordmark, mobile tab-bar) | 3   | 1 week         | Phases 3, 11              |
@@ -188,6 +188,7 @@ Depends on Phase 6, Phase 3.
 - **9.3** New `config/korners/huddle.yaml` with `emits: [huddle.started]`; Kalendar `listens: [huddle.started]`. Add tiny in-process event bus `Kronk::KornerEvents.publish/subscribe` sufficient for §6.
 - **9.4** Huddle korner UI moves to `/hub/huddle`.
 - **9.5** Event-bus wiring + runtime gate. The 9.3 `publish/subscribe` primitive shipped (`lib/kronk/korner_events.rb`), but the wiring did not — there are zero `KornerEvents.subscribe` calls in application code (only in specs), so every emit publishes into a void. Add the boot initializer that reads each manifest's `listens:` and registers real `Kronk::KornerEvents.subscribe` handlers. Upgrade `detect_orphan_listens` (`lib/mastodon/cli/korners.rb:323`) to check registered subscribers, not manifest text. Reconcile declared-but-unpublished `emits` (Wachuneed declares 5, publishes 0 — the Wachuneed/InFlow emit _implementation_ lands in Phase 10; 9.5 owns only the gate) and unwired `listens` (Huddle → `kalendar.event.created`): wire or drop each. Gate: a declared `emits`/`listens` with no runtime counterpart = `doctor` fail.
+- **9.6** Open Rooms (third scope, added 2026-08-07 per `docs/spaces/huddle.md` § Three categories). Adds `huddle_sessions.scope :room` alongside `:main` and `:krew`, plus columns `name`, `description`, `icon`, `created_by_account_id`, `last_active_at`, `retired_at`. Endpoints: `POST /api/v1/huddle/rooms` (any signed-in user; one-tap "New Room" affordance on `/hub/huddle`), `GET /api/v1/huddle/rooms` (open, non-retired only, ordered by activity). Reaper: `HuddleRoomReaper` scheduled daily, soft-retires (`retired_at`) rooms where `last_active_at < 6.months.ago`. New emits `huddle.room.created` + `huddle.room.retired` (declared on the manifest). `/hub/huddle` UI grows a middle "Rooms" section between Main Huddle and Your Krew Huddles.
 
 ### Phase 10 — InFlow, Wachuneed, Skeleton
 
