@@ -171,8 +171,58 @@ const findInviteesForSubject = (
   members: readonly TimelineMember[],
 ): TimelineMember[] => members.filter((m) => m.inviter_id === subjectId);
 
+// Outer shell: owns the live fetch for the requested subject and
+// gates the visual layout on loading / error / empty. Pulled out of
+// the render body so the layout code stays synchronous — everything
+// below `data.members` still assumes a resolved snapshot.
 export const MatesTimeline = ({ viewerHandle }: { viewerHandle?: string }) => {
-  const data: MatesTimelineData = useMatesTimeline();
+  const { data, loading, error } = useMatesTimeline(viewerHandle);
+
+  if (loading && !data) {
+    return (
+      <div className='mates-timeline__status'>
+        <FormattedMessage
+          id='mates_tab.loading'
+          defaultMessage='Loading Mates…'
+        />
+      </div>
+    );
+  }
+
+  if (error && !data) {
+    return (
+      <div
+        className='mates-timeline__status mates-timeline__status--error'
+        role='alert'
+      >
+        <FormattedMessage
+          id='mates_tab.error'
+          defaultMessage="Couldn't load Mates. Try again in a moment."
+        />
+      </div>
+    );
+  }
+
+  if (!data || data.members.length === 0) {
+    return (
+      <div className='mates-timeline__status'>
+        <FormattedMessage
+          id='mates_tab.empty'
+          defaultMessage='No Mates yet — the timeline lights up as your community grows.'
+        />
+      </div>
+    );
+  }
+
+  return <MatesTimelineView data={data} viewerHandle={viewerHandle} />;
+};
+
+interface MatesTimelineViewProps {
+  data: MatesTimelineData;
+  viewerHandle?: string;
+}
+
+const MatesTimelineView = ({ data, viewerHandle }: MatesTimelineViewProps) => {
   const membersById = useMemo(() => {
     const map = new Map<string, TimelineMember>();
     data.members.forEach((m) => map.set(m.id, m));
