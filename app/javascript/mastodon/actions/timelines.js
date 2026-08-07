@@ -154,7 +154,14 @@ export function fillTimelineGaps(timelineId, path, params = {}) {
   };
 }
 
-export const expandHomeTimeline            = ({ maxId } = {}) => expandTimeline('home', '/api/v1/timelines/home', { max_id: maxId });
+// Audience-scope tiers each fetch into their own timeline so switching between
+// them keeps distinct caches (like `community` does). `orbit` is the plain,
+// streaming `home` timeline; `mates`/`me` fetch `/api/v1/timelines/home?scope=`
+// (the server narrows them behind the feed_scope_enforced flag).
+export const expandHomeTimeline            = ({ maxId, scope } = {}) => {
+  const scoped = scope && scope !== 'orbit';
+  return expandTimeline(scoped ? `home:${scope}` : 'home', '/api/v1/timelines/home', { max_id: maxId, scope: scoped ? scope : undefined });
+};
 export const expandPublicTimeline          = ({ maxId, onlyMedia, onlyRemote } = {}) => expandTimeline(`public${onlyRemote ? ':remote' : ''}${onlyMedia ? ':media' : ''}`, '/api/v1/timelines/public', { remote: !!onlyRemote, max_id: maxId, only_media: !!onlyMedia });
 export const expandCommunityTimeline       = ({ maxId, onlyMedia } = {}) => expandTimeline(`community${onlyMedia ? ':media' : ''}`, '/api/v1/timelines/public', { local: true, max_id: maxId, only_media: !!onlyMedia });
 export const expandAccountTimeline         = (accountId, { maxId, withReplies, tagged } = {}) => expandTimeline(`account:${accountId}${withReplies ? ':with_replies' : ''}${tagged ? `:${tagged}` : ''}`, `/api/v1/accounts/${accountId}/statuses`, { exclude_replies: !withReplies, exclude_reblogs: withReplies, tagged, max_id: maxId });

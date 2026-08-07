@@ -6,7 +6,7 @@ class Api::V1::Timelines::HomeController < Api::V1::Timelines::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }
   before_action :require_user!
 
-  PERMITTED_PARAMS = %i(local limit).freeze
+  PERMITTED_PARAMS = %i(local limit scope).freeze
 
   def show
     with_read_replica do
@@ -27,7 +27,21 @@ class Api::V1::Timelines::HomeController < Api::V1::Timelines::BaseController
   def load_statuses
     # Kronk::TuneInGate is a no-op unless FeatureFlags.tune_in_enforced is set —
     # keeps the read path unchanged until Phase 14 flips the flag.
-    Kronk::TuneInGate.filter(current_user&.account, preloaded_home_statuses)
+    statuses = Kronk::TuneInGate.filter(current_user&.account, preloaded_home_statuses)
+
+    # Audience-scope narrowing (Me / Mates / Orbit). Gated behind
+    # feed_scope_enforced so the read path is unchanged until the flag is
+    # flipped; orbit and an absent scope pass through untouched.
+    return statuses unless Kronk::FeatureFlags.enabled?(:feed_scope_enforced)
+
+    Kronk::AudienceScope.filter_statuses(current_user&.account, statuses, requested_scope)
+  end
+
+  # The requested audience tier: the explicit `scope` param wins (the frontend
+  # fetches each scope into its own timeline), falling back to the viewer's
+  # persisted feed_scope setting, then orbit.
+  def requested_scope
+    params[:scope].presence || current_user&.settings&.[]('kronk.feed_scope') || 'orbit'
   end
 
   def preloaded_home_statuses

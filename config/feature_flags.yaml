@@ -15,6 +15,12 @@ default:
   # composer lands (canvas + inspector + per-card visibility); further
   # steps (modes, sections fold-in, preview) build on top behind this.
   profile_composer: true
+  # Read-time enforcement of the Home audience ladder (Me / Mates /
+  # Orbit). When off, the scope chip persists but the home timeline is
+  # unfiltered (Mates and Orbit show the same feed). When on,
+  # Kronk::AudienceScope narrows the feed to the requested tier. Off by
+  # default; flip on to test the ring end-to-end on shadow.
+  feed_scope_enforced: false
 # Uncomment and populate as flags are introduced.
 # development: {}
 # test: {}
