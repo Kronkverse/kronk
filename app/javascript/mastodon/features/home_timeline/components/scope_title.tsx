@@ -84,11 +84,13 @@ export const ScopeTitle: React.FC<Props> = ({
       onClick={handleClick}
       onKeyDown={handleKeyDown}
     >
-      {/* Keyed on the scope so a change remounts and replays the fade-in. */}
-      <div className='scope-title__inner' key={face.key}>
+      {/* Renders the shared `.space-header` block so the scope title sits in
+          the exact same place, and at the same scale, as every other space's
+          title/tagline. Keyed on the scope so a change replays the fade-in. */}
+      <header className='space-header' key={face.key}>
         <h1 className='space-header__title'>{face.label}</h1>
         {face.desc && <p className='space-header__tagline'>{face.desc}</p>}
-      </div>
+      </header>
     </div>
   );
 };
