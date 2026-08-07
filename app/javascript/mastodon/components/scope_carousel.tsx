@@ -11,6 +11,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import { useDrag } from '@use-gesture/react';
 
 import { IconButton } from '@/mastodon/components/icon_button';
+import { ScopeMark } from '@/mastodon/components/scope_mark';
 import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 
@@ -53,102 +54,12 @@ interface ScopeCarouselProps {
   ariaLabel: string;
 }
 
-// Concentric-ring marks — one glyph per scope tier, reading as a distance
-// ladder (a tight self dot out to Kronk's wide ring). Ported from the
-// prototype's mark() helper.
-const Mark: React.FC<{ kind: MarkKind; size: number }> = ({ kind, size }) => {
-  const c = size / 2;
-  const bright = 'var(--kronk-purple-bright)';
-  const mid = 'var(--kronk-purple-muted)';
-  const dim = 'var(--text-muted)';
-  const rings: React.ReactNode[] = [];
-
-  const ring = (r: number, col: string, dash?: string, w = 1.25) => (
-    <circle
-      key={`r${rings.length}`}
-      cx={c}
-      cy={c}
-      r={r}
-      fill='none'
-      stroke={col}
-      strokeWidth={w}
-      strokeDasharray={dash}
-    />
-  );
-  const dot = (r: number, col: string) => (
-    <circle key={`d${rings.length}`} cx={c} cy={c} r={r} fill={col} />
-  );
-
-  if (kind === 'self') {
-    rings.push(dot(size * 0.1, bright), ring(size * 0.22, dim, '1 4'));
-  } else if (kind === 'mates') {
-    rings.push(
-      dot(size * 0.09, bright),
-      ring(size * 0.24, bright),
-      ring(size * 0.4, dim, '1 5'),
-    );
-  } else if (kind === 'orbit') {
-    rings.push(
-      dot(size * 0.08, mid),
-      ring(size * 0.2, mid),
-      ring(size * 0.32, bright),
-      ring(size * 0.44, dim, '1 5'),
-    );
-  } else if (kind === 'kronk') {
-    rings.push(
-      dot(size * 0.07, mid),
-      ring(size * 0.18, mid),
-      ring(size * 0.29, mid),
-      ring(size * 0.42, bright, undefined, 1.6),
-    );
-  } else {
-    // krews — three interlinked rings around a hub
-    const r = size * 0.115;
-    const d = size * 0.2;
-    rings.push(
-      <circle
-        key='k1'
-        cx={c}
-        cy={c - d}
-        r={r}
-        fill='none'
-        stroke={bright}
-        strokeWidth={1.4}
-      />,
-      <circle
-        key='k2'
-        cx={c - d * 0.92}
-        cy={c + d * 0.62}
-        r={r}
-        fill='none'
-        stroke={bright}
-        strokeWidth={1.4}
-      />,
-      <circle
-        key='k3'
-        cx={c + d * 0.92}
-        cy={c + d * 0.62}
-        r={r}
-        fill='none'
-        stroke={mid}
-        strokeWidth={1.4}
-      />,
-      <circle key='k4' cx={c} cy={c} r={size * 0.03} fill={dim} />,
-    );
-  }
-
-  return (
-    <svg
-      className='scope-carousel__mark'
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      aria-hidden='true'
-    >
-      {rings}
-    </svg>
-  );
-};
+// Concentric-ring marks now live in the shared ScopeMark component (so the
+// carousel, the reach selector, and anywhere else the ladder is drawn share one
+// glyph). This thin wrapper keeps the carousel's own class for local styling.
+const Mark: React.FC<{ kind: MarkKind; size: number }> = ({ kind, size }) => (
+  <ScopeMark kind={kind} size={size} className='scope-carousel__mark' />
+);
 
 const norm = (i: number, n: number) => ((i % n) + n) % n;
 
