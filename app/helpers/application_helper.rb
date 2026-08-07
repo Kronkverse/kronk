@@ -237,7 +237,10 @@ module ApplicationHelper
   end
 
   def mascot_url
-    full_asset_url(instance_presenter.mascot&.file&.url || frontend_asset_path('images/logo-symbol-icon.svg'))
+    # Falls back to the purple-baked Kronk mark at `public/kronk-logo.svg`
+    # (single stable static URL, matches every JS-side mascot surface).
+    # Any admin-uploaded SiteUpload(var: 'mascot') still wins over this.
+    full_asset_url(instance_presenter.mascot&.file&.url || '/kronk-logo.svg')
   end
 
   def copyable_input(options = {})

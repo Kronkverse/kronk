@@ -7,7 +7,6 @@ import { Link } from 'react-router-dom';
 
 import type { Map as ImmutableMap, List as ImmutableList } from 'immutable';
 
-import kronkMascot from '@/images/logo-symbol-icon.svg';
 import EditIcon from '@/material-icons/400-24px/edit_square.svg?react';
 import PeopleIcon from '@/material-icons/400-24px/group.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
@@ -31,6 +30,13 @@ import { messages as navbarMessages } from '../ui/components/navigation_bar';
 
 import { Search } from './components/search';
 import ComposeFormContainer from './containers/compose_form_container';
+
+// `/kronk-logo.svg` (in `public/`) — the purple-baked Kronk mark
+// used across mascot / empty-state / error surfaces. Living outside
+// the Vite pipeline is deliberate: a single stable static URL lets
+// Rails-served surfaces (error.html.haml) and JS-side surfaces
+// reference the exact same file, no fingerprint drift.
+const KRONK_MASCOT_URL = '/kronk-logo.svg';
 
 const messages = defineMessages({
   live_feed_public: {
@@ -161,7 +167,7 @@ const Compose: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
             <ComposeFormContainer />
 
             <div className='drawer__inner__mastodon'>
-              <img alt='' draggable='false' src={mascot ?? kronkMascot} />
+              <img alt='' draggable='false' src={mascot ?? KRONK_MASCOT_URL} />
             </div>
           </div>
         </div>
