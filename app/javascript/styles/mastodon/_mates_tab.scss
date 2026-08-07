@@ -9,6 +9,20 @@
   color: var(--text-primary);
 }
 
+// Loading / error / empty states surfaced by the outer MatesTimeline
+// shell before the fetched snapshot has resolved (or when it comes
+// back empty). Single-line message centred in the canvas.
+.mates-timeline__status {
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+
+  &--error {
+    color: var(--semantic-danger);
+  }
+}
+
 .mates-tab__layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
