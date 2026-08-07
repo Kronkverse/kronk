@@ -64,6 +64,12 @@ emits:
   - huddle.started
   - huddle.ended
   - huddle.participant.joined
+  # Room lifecycle (open topical Rooms — see docs/spaces/huddle.md
+  # § Three categories, Rebuild vision). Rooms are the third scope
+  # alongside Main and Krew; created by any signed-in user, retired
+  # by the reaper after 6 continuous months of no session activity.
+  - huddle.room.created
+  - huddle.room.retired
 
 listens:
   - kalendar.event.created # if a Kalendar event references a huddle_session_id,
