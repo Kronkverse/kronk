@@ -79,9 +79,20 @@ export class FeedDrum extends Component<Props> {
       !reduceMotion &&
       this.liveRef.current
     ) {
+      // Direction is wrap-aware around the closed scope ring, matching the
+      // selector's own shortest-path turn — so both halves of the spindle turn
+      // the SAME way, including across the seam (Mates -> Kronk continues
+      // forward around the loop rather than reversing).
+      const { order } = this.props;
+      const n = order.length;
       const from = prev.order.indexOf(prev.reach);
-      const to = this.props.order.indexOf(this.props.reach);
-      this.dir = from >= 0 && to >= 0 && to < from ? -1 : 1;
+      const to = order.indexOf(this.props.reach);
+      let diff = to - from;
+      if (from >= 0 && to >= 0 && n > 0) {
+        if (diff > n / 2) diff -= n;
+        if (diff < -n / 2) diff += n;
+      }
+      this.dir = diff < 0 ? -1 : 1;
       this.snapshot = this.liveRef.current.cloneNode(true) as HTMLElement;
     }
     return null;
@@ -231,10 +242,13 @@ export class FeedDrum extends Component<Props> {
 
   private step(delta: number) {
     const { order, reach, onScopeChange } = this.props;
+    const n = order.length;
     const idx = order.indexOf(reach);
-    if (idx < 0) return;
-    const next = order[idx + delta];
-    if (next === undefined) return;
+    if (idx < 0 || n === 0) return;
+    // Wrap around the ring, like the selector: a flick past the last scope
+    // continues around to the first.
+    const next = order[(((idx + delta) % n) + n) % n];
+    if (next === undefined || next === reach) return;
     onScopeChange(next);
   }
 
