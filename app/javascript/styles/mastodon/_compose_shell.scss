@@ -5,10 +5,14 @@
 // across every korner).
 
 // ─── Shell ──────────────────────────────────────────────────────────
+// z-index has to clear Mastodon's `.modal-root` (9998) since both are
+// portalled to <body> and their stacking order isn't otherwise
+// guaranteed. Pinned at 10000 so a stray Mastodon modal never
+// obscures a compose shell that opens on top of it.
 .compose-shell {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 10000;
   display: grid;
   place-items: center;
   padding: 1.5rem;
@@ -204,10 +208,10 @@
 }
 
 // ─── FAB ────────────────────────────────────────────────────────────
-// One per korner surface, bottom-right of the Stage. Uses `position:
-// fixed` so it stays anchored while the korner content scrolls under
-// it. z-index 40 keeps it above ordinary Frame content but below the
-// ComposeShell (100) so the shell overlays it cleanly when opened.
+// One per korner surface, bottom-right of the Stage. `position: fixed`
+// so it stays anchored while the korner content scrolls under it.
+// z-index 40 keeps it above ordinary Frame content, well below the
+// ComposeShell (10000) so the shell overlays it cleanly when opened.
 .compose-fab {
   position: fixed;
   right: clamp(1rem, 4vw, 2rem);
@@ -222,6 +226,14 @@
   background: var(--kronk-purple-accent);
   color: var(--text-on-accent);
   text-decoration: none;
+
+  // Push clear of the icon rail on viewports where it renders
+  // ($rail-width = 4.5rem + gutter). Otherwise the FAB parks under
+  // the sidebar on wide screens and never gets tapped.
+  @media (width >= 890px) {
+    right: calc(4.5rem + 1.5rem + clamp(0.5rem, 2vw, 1.5rem));
+  }
+
   box-shadow:
     0 12px 28px -8px
       color-mix(in oklab, var(--kronk-purple-bright) 55%, transparent),
