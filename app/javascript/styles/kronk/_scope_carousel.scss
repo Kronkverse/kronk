@@ -306,6 +306,59 @@
   padding: 6px 12px 2px;
 }
 
+// ── scope title — the home feed's scope label as a space header ─
+// The feed turns on scope change now, so the selector is just the current
+// scope's name + description, reusing the shared `.space-header__title` /
+// `.space-header__tagline` type (see _kronk_stage.scss). It stays a control:
+// tap steps the scope, so it reads as tappable.
+.scope-title {
+  text-align: center;
+  padding: 8px 16px 4px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+
+  // Tighter than a page space-header — this sits inline at the top of the feed.
+  .space-header__title {
+    font-size: 1.9rem;
+  }
+
+  &:hover .space-header__title {
+    filter: brightness(1.12);
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &:focus-visible .space-header__title {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+}
+
+.scope-title__inner {
+  animation: scope-title-in var(--dur-medium, 240ms) var(--ease-out, ease);
+}
+
+@keyframes scope-title-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scope-title__inner {
+    animation: none;
+  }
+}
+
 // ── feed drum — the home feed as the lower half of the spindle ─
 // The scope selector turns on a barrel; the feed turns on the same body. At
 // rest the feed is the normal scrolling column (`__live`). On a scope change,

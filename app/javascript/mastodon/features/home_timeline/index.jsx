@@ -17,8 +17,8 @@ import { apiRequestPut } from 'mastodon/api';
 import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { SymbolLogo } from 'mastodon/components/logo';
 import { NotSignedInIndicator } from 'mastodon/components/not_signed_in_indicator';
-import { ScopeCarousel } from 'mastodon/components/scope_carousel';
 import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
+import { ScopeTitle } from 'mastodon/features/home_timeline/components/scope_title';
 import { VeilScene } from 'mastodon/features/inflow/veil_scene';
 import { MomentsStrip } from 'mastodon/features/moments/home_strip';
 import { withBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
@@ -34,7 +34,6 @@ import StatusListContainer from '../ui/containers/status_list_container';
 import { Announcements } from './components/announcements';
 import { ColumnSettings } from './components/column_settings';
 import { CriticalUpdateBanner } from './components/critical_update_banner';
-import { HomeStatusBox } from './components/home_status_box';
 import { LiveBanner } from './components/live_banner';
 
 const messages = defineMessages({
@@ -300,27 +299,22 @@ class HomeTimeline extends PureComponent {
           <ColumnSettings />
         </ColumnHeader>
 
-        {/* ScopeCarousel — inline feed-view selector at the top of the feed.
-            Rotating it swaps + persists the feed scope. Signed-in only. */}
+        {/* Scope title — the current feed scope's name + description, styled as
+            a space header. The feed itself turns on scope change (FeedDrum), so
+            this is just the label; tap / arrows / a swipe step the scope.
+            Signed-in only. */}
         {signedIn && (
-          <div className='scope-carousel-slot'>
-            <ScopeCarousel
-              size='mini'
-              ariaLabel={intl.formatMessage(messages.scopeAria)}
-              faces={feedFaces}
-              value={reach}
-              onChange={this.handleScopeChange}
-            />
-          </div>
+          <ScopeTitle
+            ariaLabel={intl.formatMessage(messages.scopeAria)}
+            faces={feedFaces}
+            value={reach}
+            onChange={this.handleScopeChange}
+          />
         )}
 
         {/* Moments Home strip — sits directly under the column header,
             above the feed. Signed-in only. */}
         {signedIn && <MomentsStrip />}
-
-        {/* Inline status composer — reuses the global compose reducer;
-            placeholder is the day's Kuestion prompt. Signed-in only. */}
-        {signedIn && <HomeStatusBox />}
 
         {signedIn ? (
           <FeedDrum
