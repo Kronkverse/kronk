@@ -210,6 +210,10 @@ export function Live () {
   return import("../../live");
 }
 
+export function LiveRoom () {
+  return import("../../live/room");
+}
+
 export function Events () {
   return import("../../events").then(m => ({ default: m.Events }));
 }

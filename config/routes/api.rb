@@ -71,6 +71,10 @@ namespace :api, format: false do
     resources :preferences, only: [:index]
 
     resource :huddle_token, only: [:show]
+    # Open Huddle Rooms — docs/spaces/huddle.md § Three categories.
+    namespace :huddle do
+      resources :rooms, only: [:index, :create]
+    end
     resource :token_balance, only: [:show]
     resources :annual_reports, only: [:index, :show] do
       member do
