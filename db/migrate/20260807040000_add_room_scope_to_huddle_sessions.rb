@@ -29,12 +29,18 @@
 class AddRoomScopeToHuddleSessions < ActiveRecord::Migration[8.0]
   disable_ddl_transaction!
 
+  # Idempotent — every add_* guards on existence. Shadow's DB had a
+  # `scope` column present from somewhere before this migration ever
+  # ran (deploy 2026-08-07 03:53 failed with `PG::DuplicateColumn`);
+  # rather than track it down, make the migration safe to re-run over
+  # any partial state. The seed at the bottom already uses
+  # `WHERE NOT EXISTS` so it's naturally idempotent.
   def up
     safety_assured do
-      add_column :huddle_sessions, :scope, :string, default: 'room', null: false
-      add_column :huddle_sessions, :icon, :string, limit: 32
-      add_column :huddle_sessions, :last_active_at, :datetime
-      add_column :huddle_sessions, :retired_at, :datetime
+      add_column :huddle_sessions, :scope, :string, default: 'room', null: false, if_not_exists: true
+      add_column :huddle_sessions, :icon, :string, limit: 32, if_not_exists: true
+      add_column :huddle_sessions, :last_active_at, :datetime, if_not_exists: true
+      add_column :huddle_sessions, :retired_at, :datetime, if_not_exists: true
     end
 
     # Seed `last_active_at` from `updated_at` so pre-scope rows start
@@ -53,7 +59,8 @@ class AddRoomScopeToHuddleSessions < ActiveRecord::Migration[8.0]
               [:scope, :last_active_at],
               where: 'retired_at IS NULL',
               name: 'index_huddle_sessions_live_rooms',
-              algorithm: :concurrently
+              algorithm: :concurrently,
+              if_not_exists: true
 
     # Singleton Main Huddle. `find_or_create_by`-shape upsert so this
     # migration is idempotent even if a Main row happens to exist
