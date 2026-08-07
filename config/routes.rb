@@ -371,6 +371,14 @@ Rails.application.routes.draw do
   # Per-korner settings pages (spec §K). Fall through to the SPA.
   get '/hub/:slug/settings', to: 'home#index', constraints: { slug: /[a-z0-9-]+/ }
 
+  # /mates — the Mates timeline is a per-account view living at
+  # `/@:handle/mates`. Bare `/mates` (typed in the address bar, /me hub
+  # spoke click, etc.) is a friendlier entry that resolves to the
+  # signed-in user's own timeline. Unsigned visitors bounce to sign-in
+  # (via the standard Devise redirect) so they never land on a 404 they
+  # can't act on.
+  get '/mates', to: 'mates_shortcut#show'
+
   # Kronk organisation space (§O) — served at /kronk/* from markdown
   # under content/kronk/. The wordmark in the app chrome links here.
   # About / privacy / terms are named routes so existing callers
