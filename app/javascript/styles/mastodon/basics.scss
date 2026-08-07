@@ -134,14 +134,23 @@ body {
       vertical-align: middle;
       margin: 20px;
 
+      // Rails-side error page (layouts/error.html.haml). Sized + faded
+      // to match the SPA's `.error-column` treatment — the Kronk K
+      // looms behind, the message reads clearly below. The old
+      // `max-width: 470px` + `margin-top: -120px` values were tuned
+      // for Mastodon's elephant SVG (natural whitespace padding
+      // around a small character); the Kronk K fills its viewBox
+      // edge-to-edge, so those settings rendered as a dominating
+      // glyph swallowing the title.
       &__illustration {
         img {
           display: block;
-          max-width: 470px;
-          width: 100%;
+          width: 40%;
+          max-width: 160px;
           height: auto;
-          margin-top: -120px;
-          margin-bottom: -45px;
+          opacity: 0.35;
+          filter: saturate(0.7);
+          margin: 0 auto 32px;
         }
       }
 
