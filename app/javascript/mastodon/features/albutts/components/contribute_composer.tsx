@@ -5,6 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import api from 'mastodon/api';
 import { apiContributePhoto } from 'mastodon/api/albutts';
+import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
 
 import { CaptionTextarea } from './caption_textarea';
@@ -34,10 +35,6 @@ const messages = defineMessages({
   photosDropCue: {
     id: 'albutts.contribute.photos_drop_cue',
     defaultMessage: 'Drop to add',
-  },
-  cancel: {
-    id: 'albutts.contribute.cancel',
-    defaultMessage: 'Cancel',
   },
   submit: {
     id: 'albutts.contribute.submit',
@@ -306,13 +303,25 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
 
   const finished = hasSubmitted && !pending && totalCount > 0;
 
-  return (
-    <div className='albutts-composer' role='dialog' aria-modal='true'>
-      <div className='albutts-composer__panel'>
-        <h2 className='albutts-composer__heading'>
-          {intl.formatMessage(messages.heading)}
-        </h2>
+  // Shell CTA + submit: pre-submit → "Add N to album" / apiContributePhoto;
+  // post-submit (uploads finished) → "Done" / onContributed.
+  const shellSubmitLabel = finished
+    ? intl.formatMessage(messages.done)
+    : submitLabel;
+  const shellSubmit = finished ? onContributed : submit;
+  const shellCanSubmit = finished ? !pending : canSubmit;
 
+  return (
+    <ComposeShell
+      korner='albutts'
+      label={intl.formatMessage(messages.heading)}
+      submitLabel={shellSubmitLabel}
+      submitting={pending}
+      canSubmit={shellCanSubmit}
+      onSubmit={shellSubmit}
+      onCancel={onCancel}
+    >
+      <div className='albutts-composer'>
         {!hasSubmitted && (
           <div
             className={`albutts-composer__drop-zone${dragging ? ' albutts-composer__drop-zone--dragging' : ''}${pending ? ' albutts-composer__drop-zone--disabled' : ''}`}
@@ -422,53 +431,22 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
           </p>
         )}
 
-        <div className='albutts-composer__actions'>
-          {finished ? (
-            <>
-              {failedCount > 0 && (
-                <button
-                  type='button'
-                  className='albutts-btn albutts-btn--ghost'
-                  onClick={handleRetryFailed}
-                  disabled={pending}
-                >
-                  {intl.formatMessage(messages.retryFailed, {
-                    count: failedCount,
-                  })}
-                </button>
-              )}
-              <button
-                type='button'
-                className='albutts-btn albutts-btn--primary'
-                onClick={onContributed}
-                disabled={pending}
-              >
-                {intl.formatMessage(messages.done)}
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type='button'
-                className='albutts-btn albutts-btn--ghost'
-                onClick={onCancel}
-                disabled={pending}
-              >
-                {intl.formatMessage(messages.cancel)}
-              </button>
-              <button
-                type='button'
-                className='albutts-btn albutts-btn--primary'
-                onClick={submit}
-                disabled={!canSubmit}
-              >
-                {submitLabel}
-              </button>
-            </>
-          )}
-        </div>
+        {finished && failedCount > 0 && (
+          <div className='albutts-composer__inline-actions'>
+            <button
+              type='button'
+              className='albutts-btn albutts-btn--ghost'
+              onClick={handleRetryFailed}
+              disabled={pending}
+            >
+              {intl.formatMessage(messages.retryFailed, {
+                count: failedCount,
+              })}
+            </button>
+          </div>
+        )}
       </div>
-    </div>
+    </ComposeShell>
   );
 };
 

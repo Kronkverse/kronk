@@ -10,6 +10,7 @@ import type {
   AlbumVisibility,
   ApiAlbumJSON,
 } from 'mastodon/api_types/albutts';
+import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
 import type {
   ContributionRoster,
@@ -57,10 +58,6 @@ const messages = defineMessages({
   photosDropCue: {
     id: 'albutts.composer.photos_drop_cue',
     defaultMessage: 'Drop to add',
-  },
-  cancel: {
-    id: 'albutts.composer.cancel',
-    defaultMessage: 'Cancel',
   },
   create: {
     id: 'albutts.composer.create',
@@ -430,13 +427,29 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       ? intl.formatMessage(messages.create)
       : intl.formatMessage(messages.createWithPhotos, { count: photos.length });
 
-  return (
-    <div className='albutts-composer' role='dialog' aria-modal='true'>
-      <div className='albutts-composer__panel'>
-        <h2 className='albutts-composer__heading'>
-          {intl.formatMessage(messages.heading)}
-        </h2>
+  // Shell primary-CTA + submit handler depend on which phase we're in:
+  //   * Phase 1 (composing) — "Create album" (± "with N photos"),
+  //     submit triggers apiCreateAlbum + queues uploads.
+  //   * Phase 2 (created, uploads running) — "Continue to album",
+  //     submit navigates to the new album detail. Retry-failed is
+  //     rendered inline in the body when there's something to retry.
+  const shellSubmitLabel = createdAlbum
+    ? intl.formatMessage(messages.continueToAlbum)
+    : submitLabel;
+  const shellSubmit = createdAlbum ? handleContinue : submit;
+  const shellCanSubmit = createdAlbum ? !pending : canSubmit;
 
+  return (
+    <ComposeShell
+      korner='albutts'
+      label={intl.formatMessage(messages.heading)}
+      submitLabel={shellSubmitLabel}
+      submitting={pending}
+      canSubmit={shellCanSubmit}
+      onSubmit={shellSubmit}
+      onCancel={onCancel}
+    >
+      <div className='albutts-composer'>
         <label
           className='albutts-composer__label'
           htmlFor='albutts-composer-title'
@@ -597,52 +610,21 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           </p>
         )}
 
-        <div className='albutts-composer__actions'>
-          {createdAlbum ? (
-            <>
-              {failedCount > 0 && !pending && (
-                <button
-                  type='button'
-                  className='albutts-btn albutts-btn--ghost'
-                  onClick={handleRetryFailed}
-                >
-                  {intl.formatMessage(messages.retryFailed, {
-                    count: failedCount,
-                  })}
-                </button>
-              )}
-              <button
-                type='button'
-                className='albutts-btn albutts-btn--primary'
-                onClick={handleContinue}
-                disabled={pending}
-              >
-                {intl.formatMessage(messages.continueToAlbum)}
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type='button'
-                className='albutts-btn albutts-btn--ghost'
-                onClick={onCancel}
-                disabled={pending}
-              >
-                {intl.formatMessage(messages.cancel)}
-              </button>
-              <button
-                type='button'
-                className='albutts-btn albutts-btn--primary'
-                onClick={submit}
-                disabled={!canSubmit}
-              >
-                {submitLabel}
-              </button>
-            </>
-          )}
-        </div>
+        {createdAlbum && failedCount > 0 && !pending && (
+          <div className='albutts-composer__inline-actions'>
+            <button
+              type='button'
+              className='albutts-btn albutts-btn--ghost'
+              onClick={handleRetryFailed}
+            >
+              {intl.formatMessage(messages.retryFailed, {
+                count: failedCount,
+              })}
+            </button>
+          </div>
+        )}
       </div>
-    </div>
+    </ComposeShell>
   );
 };
 
