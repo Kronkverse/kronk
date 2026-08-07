@@ -5474,12 +5474,18 @@ a.status-card {
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  gap: 32px;
   cursor: default;
 
+  // Kronk mascot — a subtle looming K, not an overt lilac graphic
+  // (Tal 2026-08-07). Small enough that the message sits cleanly
+  // below it in the flex column, faded enough that it reads as
+  // background chrome rather than the main event.
   &__image {
-    width: 70%;
-    max-width: 350px;
-    margin-top: -50px;
+    width: 40%;
+    max-width: 160px;
+    opacity: 0.35;
+    filter: saturate(0.7);
   }
 
   &__message {
@@ -6587,10 +6593,16 @@ a.status-card {
     display: flex;
     align-items: center;
     flex-direction: column;
+    gap: 24px;
 
+    // Subtle looming Kronk mascot — matches the .error-column
+    // treatment (Tal 2026-08-07: "looming in the background, writing
+    // under, not on top"). Message reads cleanly below.
     &__image {
-      width: 70%;
-      max-width: 350px;
+      width: 30%;
+      max-width: 140px;
+      opacity: 0.35;
+      filter: saturate(0.7);
     }
 
     &__message {
