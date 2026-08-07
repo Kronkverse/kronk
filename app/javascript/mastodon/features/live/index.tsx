@@ -180,7 +180,14 @@ const jitsiContainerStyle: React.CSSProperties = {
   height: '100%',
 };
 
-const Live: React.FC<{ multiColumn?: boolean }> = () => {
+// `autoOpenNewRoom` is set by the `/hub/huddle/new` route (the Ж
+// menu's compose target for this korner — see config/korners/
+// huddle.yaml). When true, RoomsList opens its create form on mount
+// and cleans the URL back to `/hub/huddle`.
+const Live: React.FC<{
+  multiColumn?: boolean;
+  autoOpenNewRoom?: boolean;
+}> = ({ autoOpenNewRoom }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
@@ -549,9 +556,10 @@ const Live: React.FC<{ multiColumn?: boolean }> = () => {
 
             {/* Rooms — the open topical Huddle spaces (Coworking,
                 Meetings, Music, …) live beneath the Main Huddle
-                lobby. Any signed-in user can create; the reaper
-                sunsets idle ones after 6 months. Phase 9.6. */}
-            <RoomsList />
+                lobby. The "New Room" affordance is the Ж menu (see
+                config/korners/huddle.yaml `compose:`); this list
+                is discovery only. Phase 9.6. */}
+            <RoomsList autoOpenCreate={autoOpenNewRoom} />
           </div>
         ) : (
           <div style={inRoomContainerStyle}>

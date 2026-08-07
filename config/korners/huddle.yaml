@@ -22,6 +22,17 @@ storage:
   db_namespace: huddle_ # tables: huddle_sessions, huddle_participants
   media_prefix: spaces/huddle/
 
+# Ж-menu compose action. Any signed-in user can open a new open
+# Room (see docs/spaces/huddle.md § Three categories); the create
+# affordance lives on the floating Kronk menu per the Korner
+# Standard (docs/korners/adding_a_korner.md §11.5 — "Never build a
+# per-page 'Add' / 'New X' / 'Create' button"). Route mounts the
+# Huddle shell with `autoOpenNewRoom`, which opens the RoomsList's
+# create form on mount and cleans the URL back to `/hub/huddle`.
+compose:
+  label: 'New Room'
+  route: '/hub/huddle/new'
+
 feed_projection:
   card: huddle_card
   planned: true # backend unbuilt — no session create/projection path yet

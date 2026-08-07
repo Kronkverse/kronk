@@ -1,19 +1,24 @@
 // Rooms list — the open topical Huddle Rooms surface on
 // `/hub/huddle`. Sits between the Main Huddle lobby chrome and the
-// "Huddle Up" button. Fetches from `GET /api/v1/huddle/rooms`, lets
-// any signed-in user create a new one via `POST /api/v1/huddle/rooms`,
-// and links each Room card to `/hub/huddle/room/:id` where the
-// per-room Jitsi lobby lives.
+// "Huddle Up" button. Fetches from `GET /api/v1/huddle/rooms` and
+// links each Room card to `/hub/huddle/room/:id`.
 //
-// See docs/spaces/huddle.md § Three categories of Huddle. This is
-// the Phase 9.6 discovery slice — no Krew Huddles here yet (Phase
-// 9.1 / 9.2 territory).
+// The "New Room" action is NOT rendered here — it lives on the Ж
+// floating Kronk menu (see config/korners/huddle.yaml `compose:` +
+// docs/korners/adding_a_korner.md §11.5, "Never build a per-page
+// 'Add' / 'New X' / 'Create' button"). Tapping "New Room" on the Ж
+// menu routes the user to `/hub/huddle/new`, which mounts this
+// component with `autoOpenCreate` — we open the inline create form
+// on mount and clean the URL back to `/hub/huddle`.
+//
+// See docs/spaces/huddle.md § Three categories of Huddle. Phase 9.6
+// discovery slice — no Krew Huddles here yet (Phase 9.1 / 9.2).
 
 import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 import { apiRequestGet, apiRequestPost } from 'mastodon/api';
 
@@ -32,10 +37,6 @@ const messages = defineMessages({
   heading: {
     id: 'huddle.rooms.heading',
     defaultMessage: 'Rooms',
-  },
-  newRoom: {
-    id: 'huddle.rooms.new',
-    defaultMessage: 'New Room',
   },
   namePrompt: {
     id: 'huddle.rooms.name_prompt',
@@ -59,7 +60,9 @@ const messages = defineMessages({
   },
   empty: {
     id: 'huddle.rooms.empty',
-    defaultMessage: 'No rooms yet. Be the first to open one.',
+    // Empty-state copy points at the Ж menu per the Korner
+    // Standard — no click target inline.
+    defaultMessage: 'No rooms yet — start one via the Ж menu.',
   },
   occupancy: {
     id: 'huddle.rooms.occupancy',
@@ -68,11 +71,14 @@ const messages = defineMessages({
   },
 });
 
-export const RoomsList: React.FC = () => {
+export const RoomsList: React.FC<{ autoOpenCreate?: boolean }> = ({
+  autoOpenCreate,
+}) => {
   const intl = useIntl();
+  const history = useHistory();
   const [rooms, setRooms] = useState<HuddleRoomJSON[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState(Boolean(autoOpenCreate));
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -96,10 +102,14 @@ export const RoomsList: React.FC = () => {
     void fetchRooms();
   }, [fetchRooms]);
 
-  const handleOpenCreate = useCallback(() => {
-    setShowCreate(true);
-    setError(null);
-  }, []);
+  // If the Ж menu routed us here (`/hub/huddle/new`), clean the URL
+  // back to the plain `/hub/huddle` on mount so the create-form flag
+  // doesn't stick around on refresh (mirrors Albutts's
+  // /hub/albutts/new pattern in features/albutts/index.tsx).
+  useEffect(() => {
+    if (autoOpenCreate) history.replace('/hub/huddle');
+  }, [autoOpenCreate, history]);
+
   const handleCancel = useCallback(() => {
     setShowCreate(false);
     setName('');
@@ -155,15 +165,6 @@ export const RoomsList: React.FC = () => {
         <h2 className='huddle-rooms__heading'>
           {intl.formatMessage(messages.heading)}
         </h2>
-        {!showCreate && (
-          <button
-            type='button'
-            className='huddle-rooms__new'
-            onClick={handleOpenCreate}
-          >
-            + {intl.formatMessage(messages.newRoom)}
-          </button>
-        )}
       </header>
 
       {showCreate && (
