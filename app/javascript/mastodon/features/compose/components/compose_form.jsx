@@ -23,15 +23,14 @@ import UploadButtonContainer from '../containers/upload_button_container';
 import { countableText } from '../util/counter';
 
 import { CharacterCounter } from './character_counter';
+import { ComposeReachSelector } from './compose_reach_selector';
 import { EditIndicator } from './edit_indicator';
 import { KategoryPicker } from './kategory_picker';
-import { KrewTargets } from './krew_targets';
 import { NavigationBar } from './navigation_bar';
 import { PollForm } from "./poll_form";
 import { ComposeQuotedStatus } from './quoted_post';
 import { ReplyIndicator } from './reply_indicator';
 import { UploadForm } from './upload_form';
-import { VisibilityButton } from './visibility_button';
 import { Warning } from './warning';
 
 const allowedAroundShortCode = '><\u0085\u0020\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\u2028\u2029\u0009\u000a\u000b\u000c\u000d';
@@ -286,16 +285,14 @@ class ComposeForm extends ImmutablePureComponent {
         <div className={classNames('compose-form__highlightable', { active: highlighted })} ref={this.setRef}>
           <EditIndicator />
 
-          <div className='compose-form__dropdowns'>
-            <VisibilityButton disabled={this.props.isEditing} />
-            {/* Language picker hidden from the composer: the post's language is
-                still auto-tagged from the user's posting-language default (set
-                in compose state via clearAll and sent on submit), which is what
-                translation, language feed-filtering and screen readers consume.
-                Multilingual users change their default in Settings → Posting. */}
-          </div>
-
-          <KrewTargets />
+          {/* Reach — the shared "who can see this?" ladder (Me / Mates /
+              Orbit / Kronk + Krew, with an inline krew sub-picker). Replaces
+              the old VisibilityButton modal + separate KrewTargets; writes the
+              same compose.privacy + krew_ids, so the submit path is unchanged.
+              Language picker stays hidden: the post's language is auto-tagged
+              from the user's posting-language default (sent on submit); change
+              it in Settings → Posting. */}
+          <ComposeReachSelector disabled={this.props.isEditing} />
 
           <KategoryPicker />
 
