@@ -308,20 +308,15 @@
 
 // ── scope title — the home feed's scope label as a space header ─
 // The feed turns on scope change now, so the selector is just the current
-// scope's name + description, reusing the shared `.space-header__title` /
-// `.space-header__tagline` type (see _kronk_stage.scss). It stays a control:
-// tap steps the scope, so it reads as tappable.
+// scope's name + description. It renders the shared `.space-header` block
+// verbatim (see _kronk_stage.scss) so it sits in the same place and scale as
+// every other space's title; this wrapper only adds the tap affordance + a
+// fade on change. No layout of its own — the row-less `.space-header`
+// (max-width 34rem, centred, its own vertical rhythm) owns placement.
 .scope-title {
-  text-align: center;
-  padding: 8px 16px 4px;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
-
-  // Tighter than a page space-header — this sits inline at the top of the feed.
-  .space-header__title {
-    font-size: 1.9rem;
-  }
 
   &:hover .space-header__title {
     filter: brightness(1.12);
@@ -335,10 +330,10 @@
     text-decoration: underline;
     text-underline-offset: 4px;
   }
-}
 
-.scope-title__inner {
-  animation: scope-title-in var(--dur-medium, 240ms) var(--ease-out, ease);
+  .space-header {
+    animation: scope-title-in var(--dur-medium, 240ms) var(--ease-out, ease);
+  }
 }
 
 @keyframes scope-title-in {
@@ -354,7 +349,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .scope-title__inner {
+  .scope-title .space-header {
     animation: none;
   }
 }
