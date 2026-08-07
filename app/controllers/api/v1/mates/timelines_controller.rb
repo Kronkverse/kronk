@@ -40,6 +40,21 @@ class Api::V1::Mates::TimelinesController < Api::BaseController
       members: members.map { |m| m.except(:account_id) },
       mates: bonds,
     }
+  rescue => e
+    # Diagnostic rescue for the /@:acct/mates page — the outer shell
+    # renders a generic "Couldn't load" state, so any 500 here is
+    # invisible to the browser. Log the class + message + first frame
+    # to Rails.logger, and surface the same to the JSON so we can pinpoint
+    # a bad-data or missing-column issue on shadow without needing SSH
+    # into the container. Follow-up removes the response echo once the
+    # page is stable.
+    Rails.logger.warn("Mates::Timeline#show error for subject=#{@subject&.acct.inspect}: #{e.class} #{e.message}\n  #{e.backtrace&.first}")
+    render json: {
+      error: 'timeline_failed',
+      klass: e.class.name,
+      message: e.message,
+      where: e.backtrace&.first,
+    }, status: 500
   end
 
   private
