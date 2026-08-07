@@ -11,9 +11,11 @@ import ImmutablePureComponent from 'react-immutable-pure-component';
 import { length } from 'stringz';
 
 
+import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import AutosuggestInput from 'mastodon/components/autosuggest_input';
 import AutosuggestTextarea from 'mastodon/components/autosuggest_textarea';
 import { Button } from 'mastodon/components/button';
+import { Icon } from 'mastodon/components/icon';
 import { missingAltTextModal } from 'mastodon/initial_state';
 
 import EmojiPickerDropdown from '../containers/emoji_picker_dropdown_container';
@@ -22,10 +24,11 @@ import SpoilerButtonContainer from '../containers/spoiler_button_container';
 import UploadButtonContainer from '../containers/upload_button_container';
 import { countableText } from '../util/counter';
 
-import { CharacterCounter } from './character_counter';
-import { ComposeReachSelector } from './compose_reach_selector';
+import { CharRing } from './char_ring';
+import { ComposeReachDropdown } from './compose_reach_dropdown';
 import { EditIndicator } from './edit_indicator';
 import { KategoryPicker } from './kategory_picker';
+import { KrewTargets } from './krew_targets';
 import { NavigationBar } from './navigation_bar';
 import { PollForm } from "./poll_form";
 import { ComposeQuotedStatus } from './quoted_post';
@@ -38,9 +41,10 @@ const allowedAroundShortCode = '><\u0085\u0020\u00a0\u1680\u2000\u2001\u2002\u20
 const messages = defineMessages({
   placeholder: { id: 'compose_form.placeholder', defaultMessage: 'What is on your mind?' },
   spoiler_placeholder: { id: 'compose_form.spoiler_placeholder', defaultMessage: 'Content warning (optional)' },
-  publish: { id: 'compose_form.publish', defaultMessage: 'Post' },
+  publish: { id: 'compose_form.publish', defaultMessage: 'Kronk it' },
   saveChanges: { id: 'compose_form.save_changes', defaultMessage: 'Update' },
   reply: { id: 'compose_form.reply', defaultMessage: 'Reply' },
+  moreOptions: { id: 'compose_form.more_options', defaultMessage: 'More options' },
 });
 
 class ComposeForm extends ImmutablePureComponent {
@@ -92,6 +96,11 @@ class ComposeForm extends ImmutablePureComponent {
 
   state = {
     highlighted: false,
+    toolsOpen: false,
+  };
+
+  handleToggleTools = () => {
+    this.setState((state) => ({ toolsOpen: !state.toolsOpen }));
   };
 
   constructor(props) {
@@ -274,27 +283,30 @@ class ComposeForm extends ImmutablePureComponent {
 
   render () {
     const { intl, onPaste, autoFocus, withoutNavigation, maxChars, isSubmitting } = this.props;
-    const { highlighted } = this.state;
+    const { highlighted, toolsOpen } = this.state;
 
     return (
       <form className='compose-form' onSubmit={this.handleSubmit}>
         <ReplyIndicator />
-        {!withoutNavigation && <NavigationBar />}
         <Warning />
 
         <div className={classNames('compose-form__highlightable', { active: highlighted })} ref={this.setRef}>
           <EditIndicator />
 
-          {/* Reach — the shared "who can see this?" ladder (Me / Mates /
-              Orbit / Kronk + Krew, with an inline krew sub-picker). Replaces
-              the old VisibilityButton modal + separate KrewTargets; writes the
-              same compose.privacy + krew_ids, so the submit path is unchanged.
-              Language picker stays hidden: the post's language is auto-tagged
+          {/* Header — identity (avatar + name) with the audience dropdown to the
+              right, mirroring how a post's author + reach read in the feed. The
+              language picker stays hidden: the post's language is auto-tagged
               from the user's posting-language default (sent on submit); change
               it in Settings → Posting. */}
-          <ComposeReachSelector disabled={this.props.isEditing} />
+          <div className='compose-form__head'>
+            {!withoutNavigation && <NavigationBar />}
+            <div className='compose-form__head-spacer' />
+            <ComposeReachDropdown disabled={this.props.isEditing} />
+          </div>
 
-          <KategoryPicker />
+          {/* Krew multi-select — renders only when reach is a Krew (writes
+              compose.krew_ids). */}
+          <KrewTargets />
 
           {this.props.spoiler && (
             <div className='spoiler-input'>
@@ -344,15 +356,32 @@ class ComposeForm extends ImmutablePureComponent {
           <PollForm />
           <ComposeQuotedStatus />
 
+          <KategoryPicker />
+
           <div className='compose-form__footer'>
             <div className='compose-form__actions'>
-              <div className='compose-form__buttons'>
+              {/* Options tuck behind a chevron they slide out of, so the
+                  resting composer stays quiet. */}
+              <button
+                type='button'
+                className={classNames('compose-form__reveal', { open: toolsOpen })}
+                aria-expanded={toolsOpen}
+                aria-label={intl.formatMessage(messages.moreOptions)}
+                onClick={this.handleToggleTools}
+              >
+                <Icon id='' icon={ChevronRightIcon} />
+              </button>
+
+              <div className={classNames('compose-form__tools', { open: toolsOpen })}>
                 <UploadButtonContainer />
                 <PollButtonContainer />
                 <SpoilerButtonContainer />
                 <EmojiPickerDropdown onPickEmoji={this.handleEmojiPick} />
-                <CharacterCounter max={maxChars} text={this.getFulltextForCharacterCounting()} />
               </div>
+
+              <div className='compose-form__actions-spacer' />
+
+              <CharRing max={maxChars} text={this.getFulltextForCharacterCounting()} />
 
               <div className='compose-form__submit'>
                 <Button
