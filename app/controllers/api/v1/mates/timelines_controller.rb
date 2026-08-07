@@ -36,7 +36,7 @@ class Api::V1::Mates::TimelinesController < Api::BaseController
     render json: {
       generated_at: Time.now.utc.iso8601,
       provenance: "Live from the Mates graph for #{@subject.acct}.",
-      anchor_date: @subject.user&.created_at&.to_date&.iso8601 || @subject.created_at.to_date.iso8601,
+      anchor_date: (@subject.user&.created_at || @subject.created_at).to_date.iso8601,
       members: members.map { |m| m.except(:account_id) },
       mates: bonds,
     }
@@ -56,19 +56,51 @@ class Api::V1::Mates::TimelinesController < Api::BaseController
 
   # The member set: subject + subject.mates + inviter + invitees. Sorted
   # by join date so `rank` is monotonic-in-time (rank 1 is oldest).
+  #
+  # Everything's resolved in bulk before the map so we don't N+1 on:
+  #   - inviter-account lookup per member (map user_id → account_id up front)
+  #   - mate-count per member (one grouped query for all members at once)
   def build_members
-    subject_user   = @subject.user
-    inviter        = subject_user&.invite&.user&.account
-    invitees       = subject_user ? Account.joins(user: :invite).where(users: { invites: { user_id: subject_user.id } }) : Account.none
-    mates          = @subject.mates
+    subject_user = @subject.user
+    inviter      = subject_user&.invite&.user&.account
+    invitees     = if subject_user
+                     Account.joins(user: :invite)
+                            .where(invites: { user_id: subject_user.id })
+                   else
+                     Account.none
+                   end
 
-    accounts = Account.where(id: [@subject.id, inviter&.id, *invitees.pluck(:id), *mates.pluck(:id)].compact.uniq)
-                      .includes(:user)
+    account_ids = [@subject.id, inviter&.id, *invitees.pluck(:id), *@subject.mates.pluck(:id)].compact.uniq
+
+    accounts = Account.where(id: account_ids)
+                      .includes(user: :invite)
                       .to_a
                       .sort_by { |a| a.user&.created_at || a.created_at }
 
+    # Bulk-resolve inviter's account_id for every member whose user has an
+    # invite. Users don't have a direct `inviter_account_id`; the chain is
+    # user → invite → invite.user → invite.user.account. Precompute one
+    # `inviter_user_id → account_id` map so each member's inviter_id is a
+    # cheap Hash lookup below (and users whose invites point at a purged
+    # inviter fall through to nil).
+    inviter_user_ids = accounts.filter_map { |a| a.user&.invite&.user_id }.uniq
+    inviter_account_by_user = User.where(id: inviter_user_ids).pluck(:id, :account_id).to_h
+
+    # One grouped `follows` count for every member's mate-count. Mate =
+    # mutual follow, so the mate-count of an account is the count of its
+    # outgoing follows whose target also follows back — that's a self-join
+    # on the follows table. Cheap at N ≤ a few hundred; if we ever hit
+    # thousands of members per timeline this should move to a
+    # materialised view.
+    mate_counts = Account.where(id: account_ids)
+                         .joins('INNER JOIN follows f_out ON f_out.account_id = accounts.id')
+                         .joins('INNER JOIN follows f_in ON f_in.target_account_id = accounts.id AND f_in.account_id = f_out.target_account_id')
+                         .group('accounts.id')
+                         .count
+
     accounts.each_with_index.map do |account, i|
       user = account.user
+      inviter_user_id = user&.invite&.user_id
       {
         # `account_id` is a numeric join key kept only for `build_bonds`
         # below; stripped before serialisation.
@@ -78,8 +110,8 @@ class Api::V1::Mates::TimelinesController < Api::BaseController
         handle: account.acct,
         display_name: account.display_name.presence || account.username,
         joined_at: (user&.created_at || account.created_at).to_date.iso8601,
-        inviter_id: user&.invite&.user_id ? Account.where(user_id: user.invite.user_id).pick(:id)&.to_s : nil,
-        connections: account.mates.count,
+        inviter_id: inviter_user_id ? inviter_account_by_user[inviter_user_id]&.to_s : nil,
+        connections: mate_counts[account.id] || 0,
         korners: [],
         vouch_count: 0,
       }
@@ -101,7 +133,10 @@ class Api::V1::Mates::TimelinesController < Api::BaseController
       a, b = [src, tgt].sort
       key = [a, b]
       existing = by_pair[key]
-      by_pair[key] = { count: (existing&.dig(:count) || 0) + 1, latest: [existing&.dig(:latest), at].compact.max }
+      by_pair[key] = {
+        count: (existing&.dig(:count) || 0) + 1,
+        latest: [existing&.dig(:latest), at].compact.max,
+      }
     end
 
     by_pair.filter_map do |(a, b), entry|
