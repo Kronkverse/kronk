@@ -77,17 +77,19 @@ class UserSettings
   end
 
   # Kronk feed reach: how wide a slice of the network the home column
-  # shows. The three tiers are the Mates → Orbit → Kommunity distance
-  # scale from docs/kronk_feed_and_reach.md §2.1. Default is Orbit
-  # (Mates + Mates-of-Mates) — a middle ring, not a walled garden and
-  # not the whole instance. Persists here; the timeline enforcement
-  # gate lands behind Kronk::FeatureFlags.feed_scope_enforced.
+  # shows. The tiers are the Me → Mates → Orbit → Kommunity distance
+  # scale from docs/kronk_feed_and_reach.md §2.1 (Me = your own posts,
+  # the innermost ring). Default is Orbit (Mates + Mates-of-Mates) — a
+  # middle ring, not a walled garden and not the whole instance.
+  # Persists here; the timeline enforcement is applied by
+  # Kronk::AudienceScope, gated behind
+  # Kronk::FeatureFlags.feed_scope_enforced.
   #
   # Legacy values `friends | friends_of_friends` may still be present
   # in existing user hashes; the API controller translates them on
   # read and any subsequent write normalises the stored value.
   namespace :kronk do
-    setting :feed_scope, default: 'orbit', in: %w(mates orbit kommunity)
+    setting :feed_scope, default: 'orbit', in: %w(me mates orbit kommunity)
   end
 
   def initialize(original_hash)

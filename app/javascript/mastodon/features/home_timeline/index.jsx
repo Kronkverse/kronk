@@ -48,6 +48,8 @@ const messages = defineMessages({
   scopeOrbitDesc: { id: 'home.scope.orbit_desc', defaultMessage: 'Your mates, and theirs.' },
   scopeMates: { id: 'home.scope.mates', defaultMessage: 'Mates' },
   scopeMatesDesc: { id: 'home.scope.mates_desc', defaultMessage: 'Only the people you’ve bonded with.' },
+  scopeMe: { id: 'home.scope.me', defaultMessage: 'Me' },
+  scopeMeDesc: { id: 'home.scope.me_desc', defaultMessage: 'Just your own posts.' },
 });
 
 const mapStateToProps = state => ({
@@ -77,16 +79,31 @@ class HomeTimeline extends PureComponent {
     matchesBreakpoint: PropTypes.bool,
   };
 
-  // The Home column shows one status feed at a time, driven by the
-  // user's persisted kronk.feed_scope setting (Mates / Orbit /
-  // Kommunity). The picker lives on /home/settings; the column reads
-  // the setting once on mount. Mates and Orbit both drive the
-  // mastodon home timeline for now — the split lands with
-  // Kronk::FeatureFlags.feed_scope_enforced. Kommunity drives the
-  // local timeline.
+  // The Home column shows one status feed at a time, driven by the user's
+  // persisted kronk.feed_scope setting. Me / Mates / Orbit all ride the
+  // mastodon home timeline — Me and Mates fetch it with a `?scope=` param into
+  // their own cache, and the server narrows them behind
+  // Kronk::FeatureFlags.feed_scope_enforced (until the flag is on, every tier
+  // shows the same feed). Kommunity drives the local timeline. `loadedScopes`
+  // tracks which non-orbit feeds we've kicked off an initial fetch for (orbit
+  // rides the auto-loaded `home` timeline, so it's pre-seeded).
   state = {
     reach: 'orbit',
-    kommunityInitialized: false,
+  };
+
+  loadedScopes = new Set(['orbit']);
+
+  // Kick off the initial fetch for a scope's timeline the first time it's
+  // shown (idempotent). Orbit is pre-seeded; the others fetch on first view.
+  ensureScopeLoaded = (scope) => {
+    if (this.loadedScopes.has(scope)) return;
+    this.loadedScopes.add(scope);
+
+    if (scope === 'kommunity') {
+      this.props.dispatch(expandCommunityTimeline({}));
+    } else if (scope === 'mates' || scope === 'me') {
+      this.props.dispatch(expandHomeTimeline({ scope }));
+    }
   };
 
   loadPersistedFeedScope = async () => {
@@ -98,39 +115,28 @@ class HomeTimeline extends PureComponent {
       if (!res.ok) return;
       const data = await res.json();
       const scope = data?.feed_scope;
-      if (scope === 'mates' || scope === 'orbit' || scope === 'kommunity') {
-        this.setState(prev => {
-          if (prev.reach === scope) return null;
-          const next = { reach: scope };
-          if (scope === 'kommunity' && !prev.kommunityInitialized) {
-            this.props.dispatch(expandCommunityTimeline({}));
-            next.kommunityInitialized = true;
-          }
-          return next;
-        });
+      if (['me', 'mates', 'orbit', 'kommunity'].includes(scope)) {
+        this.ensureScopeLoaded(scope);
+        this.setState(prev => (prev.reach === scope ? null : { reach: scope }));
       }
     } catch {
       // Silent — default reach stays.
     }
   };
 
-  // Inline feed-scope change from the ScopeCarousel: optimistic swap +
+  // Inline feed-scope change from the scope title / drum: optimistic swap +
   // persist to kronk_settings, rolling back on failure. Mirrors the
   // /home/settings changeScope so both surfaces stay in sync.
   handleScopeChange = (key) => {
     const prev = this.state.reach;
     if (key === prev) return;
 
-    // Reset scroll so the feed's revolve transition starts from the top of
-    // the new scope (fires for both the selector and swipe paths).
+    // Reset scroll so the feed's drum transition starts from the top of the
+    // new scope (fires for both the selector and swipe paths).
     this.column?.scrollTop?.();
 
-    if (key === 'kommunity' && !this.state.kommunityInitialized) {
-      this.props.dispatch(expandCommunityTimeline({}));
-      this.setState({ reach: key, kommunityInitialized: true });
-    } else {
-      this.setState({ reach: key });
-    }
+    this.ensureScopeLoaded(key);
+    this.setState({ reach: key });
 
     apiRequestPut('v1/kronk_settings', { feed_scope: key }).catch(() => {
       this.setState({ reach: prev });
@@ -166,6 +172,12 @@ class HomeTimeline extends PureComponent {
 
   handleLoadMoreKommunity = maxId => {
     this.props.dispatch(expandCommunityTimeline({ maxId }));
+  };
+
+  // Load-more for the scoped home feeds (Me / Mates) — carries the current
+  // scope so pagination stays within the same narrowed timeline.
+  handleLoadMoreScoped = maxId => {
+    this.props.dispatch(expandHomeTimeline({ maxId, scope: this.state.reach }));
   };
 
   componentDidMount () {
@@ -254,6 +266,10 @@ class HomeTimeline extends PureComponent {
       banners.push(<CriticalUpdateBanner key='critical-update-banner' />);
     }
 
+    // Feed inserts (banners + the InFlow veil) that the audience-scoped home
+    // feeds share with orbit.
+    const homeInsertNode = this.props.inflowTunedOut ? undefined : <VeilScene key='inflow-veil' />;
+
     let feedConfig;
     if (reach === 'kommunity') {
       feedConfig = {
@@ -263,22 +279,35 @@ class HomeTimeline extends PureComponent {
         prepend: [],
         insertNode: undefined,
       };
+    } else if (reach === 'mates' || reach === 'me') {
+      // Me / Mates ride the home timeline narrowed by ?scope=, in their own
+      // cache (home:me / home:mates) so switching keeps distinct feeds.
+      feedConfig = {
+        timelineId: `home:${reach}`,
+        onLoadMore: this.handleLoadMoreScoped,
+        emptyMessage: reach === 'me'
+          ? <FormattedMessage id='empty_column.home_me' defaultMessage='You haven’t posted anything yet.' />
+          : <FormattedMessage id='empty_column.home_mates' defaultMessage='None of your mates have posted lately.' />,
+        prepend: banners,
+        insertNode: homeInsertNode,
+      };
     } else {
       feedConfig = {
         timelineId: 'home',
         onLoadMore: this.handleLoadMoreHome,
         emptyMessage: <FormattedMessage id='empty_column.home' defaultMessage='Your home timeline is empty! Follow more people to fill it up.' />,
         prepend: banners,
-        insertNode: this.props.inflowTunedOut ? undefined : <VeilScene key='inflow-veil' />,
+        insertNode: homeInsertNode,
       };
     }
 
-    // Feed-view faces for the ScopeCarousel (widest → narrowest). No Krews
+    // Feed-view faces for the scope title / drum (widest → narrowest). No Krews
     // face: feed_scope has no krews value yet (backend follow-up).
     const feedFaces = [
       { key: 'kommunity', label: intl.formatMessage(messages.scopeKronk), desc: intl.formatMessage(messages.scopeKronkDesc), mark: 'kronk' },
       { key: 'orbit', label: intl.formatMessage(messages.scopeOrbit), desc: intl.formatMessage(messages.scopeOrbitDesc), mark: 'orbit' },
       { key: 'mates', label: intl.formatMessage(messages.scopeMates), desc: intl.formatMessage(messages.scopeMatesDesc), mark: 'mates' },
+      { key: 'me', label: intl.formatMessage(messages.scopeMe), desc: intl.formatMessage(messages.scopeMeDesc), mark: 'self' },
     ];
 
     return (
