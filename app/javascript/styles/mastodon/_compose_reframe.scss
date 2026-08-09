@@ -291,14 +291,41 @@
   gap: 2px;
   overflow: hidden;
   max-width: 0;
-  opacity: 0;
-  transition:
-    max-width 0.34s cubic-bezier(0.4, 0.05, 0.2, 1),
-    opacity 0.22s ease;
+  transition: max-width 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  // Each tool starts tucked behind the chevron and slides out; a small per-icon
+  // stagger makes the row read as smoothly opening rather than a block popping.
+  > * {
+    opacity: 0;
+    transform: translateX(-12px);
+    transition:
+      opacity 0.28s ease,
+      transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
 
   &.open {
-    max-width: 260px;
-    opacity: 1;
+    max-width: 180px;
+
+    > * {
+      opacity: 1;
+      transform: none;
+    }
+
+    > :nth-child(1) {
+      transition-delay: 0.02s;
+    }
+
+    > :nth-child(2) {
+      transition-delay: 0.07s;
+    }
+
+    > :nth-child(3) {
+      transition-delay: 0.12s;
+    }
+
+    > :nth-child(4) {
+      transition-delay: 0.17s;
+    }
   }
 }
 
@@ -365,6 +392,7 @@
 @media (prefers-reduced-motion: reduce) {
   .compose-form__reveal .icon,
   .compose-form__tools,
+  .compose-form__tools > *,
   .reach-dropdown__chevron,
   .char-ring__fill {
     transition-duration: 0.01ms;
