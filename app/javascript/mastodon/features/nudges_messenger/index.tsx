@@ -146,6 +146,39 @@ const NudgesMessenger: React.FC<{ multiColumn?: boolean }> = ({
     [],
   );
 
+  // Non-message conversation-summary updates (currently: mark-read
+  // acknowledged). Refresh the sidebar row in place and drop the
+  // global badge count by whatever this conversation was carrying —
+  // without this, the sidebar unread pill + pillar badge stay stuck
+  // until the next stream event forces a full reseed.
+  const handleConversationUpdate = useCallback(
+    (detail: ApiNudgeConversationDetail) => {
+      setActiveDetail((prev) =>
+        prev && prev.conversation.id === detail.conversation.id
+          ? { ...prev, conversation: detail.conversation }
+          : prev,
+      );
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === detail.conversation.id ? detail.conversation : c,
+        ),
+      );
+    },
+    [],
+  );
+
+  // Keep the global unread-nudges badge in lockstep with the sidebar
+  // list. Reseeds on every list change (initial load, sends,
+  // mark-read, stream arrivals) with the sum of current unread —
+  // never a delta, so it can't drift.
+  useEffect(() => {
+    dispatch(
+      setNudgesUnread(
+        conversations.reduce((sum, c) => sum + c.unread_count, 0),
+      ),
+    );
+  }, [conversations, dispatch]);
+
   const sortedConversations = useMemo(
     () =>
       [...conversations].sort((a, b) =>
@@ -188,6 +221,7 @@ const NudgesMessenger: React.FC<{ multiColumn?: boolean }> = ({
               detail={activeDetail}
               loading={activeLoading}
               onMessageSent={handleMessageSent}
+              onConversationUpdate={handleConversationUpdate}
             />
           ) : (
             <EmptyState />
