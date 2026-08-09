@@ -1,6 +1,7 @@
 import AccountCircleIcon from '@/material-icons/400-24px/account_circle.svg?react';
 import AllInclusiveFillIcon from '@/material-icons/400-24px/all_inclusive-fill.svg?react';
 import AllInclusiveIcon from '@/material-icons/400-24px/all_inclusive.svg?react';
+import AppsIcon from '@/material-icons/400-24px/apps.svg?react';
 import AustraliaIcon from '@/material-icons/400-24px/australia.svg?react';
 import ChoiceIcon from '@/material-icons/400-24px/choice.svg?react';
 import ConstructionFillIcon from '@/material-icons/400-24px/construction-fill.svg?react';
@@ -9,8 +10,6 @@ import CycleIcon from '@/material-icons/400-24px/cycle.svg?react';
 import DiversityIcon from '@/material-icons/400-24px/diversity_2.svg?react';
 import FmdBadIcon from '@/material-icons/400-24px/fmd_bad.svg?react';
 import GlobeIcon from '@/material-icons/400-24px/globe.svg?react';
-import GridOnFillIcon from '@/material-icons/400-24px/grid_on-fill.svg?react';
-import GridOnIcon from '@/material-icons/400-24px/grid_on.svg?react';
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import GynecologyIcon from '@/material-icons/400-24px/gynecology.svg?react';
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
@@ -43,6 +42,7 @@ import { store } from 'mastodon/store';
 const MATERIAL_TO_ICON: Record<string, IconProp> = {
   account_circle: AccountCircleIcon,
   all_inclusive: AllInclusiveIcon,
+  apps: AppsIcon,
   australia: AustraliaIcon,
   choice: ChoiceIcon,
   construction: ConstructionIcon,
@@ -50,7 +50,6 @@ const MATERIAL_TO_ICON: Record<string, IconProp> = {
   diversity_2: DiversityIcon,
   fmd_bad: FmdBadIcon,
   globe: GlobeIcon,
-  grid_on: GridOnIcon,
   groups: GroupsIcon,
   gynecology: GynecologyIcon,
   headphones: HeadphonesIcon,
@@ -81,7 +80,6 @@ const MATERIAL_TO_ICON: Record<string, IconProp> = {
 const MATERIAL_TO_ICON_FILLED: Record<string, IconProp> = {
   all_inclusive: AllInclusiveFillIcon,
   construction: ConstructionFillIcon,
-  grid_on: GridOnFillIcon,
   hub: HubFillIcon,
   photo_library: PhotoLibraryFillIcon,
 };
