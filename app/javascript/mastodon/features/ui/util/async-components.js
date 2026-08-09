@@ -170,6 +170,10 @@ export function MeHub () {
   return import('../../me_hub');
 }
 
+export function Awawb () {
+  return import('../../awawb');
+}
+
 export function FilterModal () {
   return import('../components/filter_modal');
 }

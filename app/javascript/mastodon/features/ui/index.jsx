@@ -69,6 +69,7 @@ import {
   FollowRequests,
   MateRequests,
   MeHub,
+  Awawb,
   FavouritedStatuses,
   BookmarkedStatuses,
   FollowedTags,
@@ -277,6 +278,9 @@ class SwitchingColumnsArea extends PureComponent {
                 / Timeline / Mates / Switch / Invite / Sign out).
                 See features/me_hub. */}
             {signedIn && <WrappedRoute path='/me' exact component={MeHub} content={children} />}
+            {/* /awawb — a still page. Reached from the middle pillar
+                of the top Membrane. See features/awawb. */}
+            <WrappedRoute path='/awawb' exact component={Awawb} content={children} />
             <WrappedRoute path="/orbit" component={Orbit} content={children} />
             {/* Per-korner settings MUST come before any specific
                 /hub/<slug> route — otherwise non-exact korner routes
