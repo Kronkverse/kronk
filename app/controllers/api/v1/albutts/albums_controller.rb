@@ -15,9 +15,16 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
   DEFAULT_LIMIT = 24
   MAX_LIMIT     = 60
 
+  # Faces of the `<ScopeTitle>` rotator on /hub/albutts. `all` is the
+  # legacy behaviour (every album the viewer can see); the others
+  # narrow that set. Unknown values fall back to `all` so a stale URL
+  # segment can't 404.
+  SCOPES = %w(all mine contributed mates).freeze
+
   def index
-    scope = Album.visible_to(current_account).recent.limit(clamp_limit)
-    render json: scope, each_serializer: REST::AlbumSerializer
+    scope = Album.visible_to(current_account).recent
+    scope = narrow_by_scope(scope)
+    render json: scope.limit(clamp_limit), each_serializer: REST::AlbumSerializer
   end
 
   def show
@@ -63,6 +70,26 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
 
   def clamp_limit
     [params.fetch(:limit, DEFAULT_LIMIT).to_i, MAX_LIMIT].min.clamp(1, MAX_LIMIT)
+  end
+
+  # Filter the base `visible_to` relation to the requested scope.
+  # `mine` / `contributed` / `mates` all require a signed-in caller —
+  # for an unauthenticated request they degrade to `all` rather than
+  # 401 so the front-end can share one code path across states.
+  def narrow_by_scope(relation)
+    requested = params[:scope].to_s.presence_in(SCOPES) || 'all'
+    return relation if current_account.nil? || requested == 'all'
+
+    case requested
+    when 'mine'
+      relation.where(owner_id: current_account.id)
+    when 'contributed'
+      relation.where(id: AlbumPhoto.where(contributor_id: current_account.id).select(:album_id).distinct)
+    when 'mates'
+      relation.where(owner_id: current_account.mates.select(:id))
+    else
+      relation
+    end
   end
 
   def album_params_for_create
