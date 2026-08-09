@@ -23,7 +23,26 @@
       "user_input": "followed_ids.map(&:to_i).join(\",\")",
       "warning_code": 0,
       "warning_type": "SQL Injection"
+    },
+    {
+      "check_name": "EOLRails",
+      "code": null,
+      "confidence": "Weak",
+      "cwe_id": [
+        1104
+      ],
+      "file": "Gemfile.lock",
+      "fingerprint": "21ab0fe00fdd5899ffc405cff75aadb91b805ee996a614f7e27b08a287e9062d",
+      "line": 662,
+      "link": "https://brakemanscanner.org/docs/warning_types/unmaintained_dependency/",
+      "location": null,
+      "message": "Support for Rails 8.0.5.1 ends on 2026-10-07",
+      "note": "Rails 8.0.5.1 EOL is 2 months out (2026-10-07). Advisory-only; not a security bug. Bump Rails before the EOL date and this entry can go — until then it's a repo-wide `lint` blocker on every PR.",
+      "render_path": null,
+      "user_input": null,
+      "warning_code": 122,
+      "warning_type": "Unmaintained Dependency"
     }
   ],
-  "updated": "2026-07-31"
+  "updated": "2026-08-09"
 }
