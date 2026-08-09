@@ -249,17 +249,24 @@
     display: none;
   }
 
+  // Icon-only pickers: the camera icon captures, add-photo picks from library.
+  // Titles carry the meaning for pointer + assistive tech since there's no label.
   &__btn {
     flex: 1;
-    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 14px;
     border-radius: var(--radius-medium);
     border: 1px dashed var(--border-default);
     background: var(--surface-elevated);
     color: var(--text-secondary);
-    font-family: var(--font-body);
-    font-size: 13px;
-    text-align: center;
     cursor: pointer;
+
+    .icon {
+      width: 22px;
+      height: 22px;
+    }
 
     &:hover:not(:disabled) {
       color: var(--text-primary);

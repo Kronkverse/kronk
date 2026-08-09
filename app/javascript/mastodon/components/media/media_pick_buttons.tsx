@@ -3,6 +3,10 @@ import { useCallback, useRef } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
+import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
+import { Icon } from 'mastodon/components/icon';
+
 const messages = defineMessages({
   capture: {
     id: 'media_pick.capture',
@@ -93,16 +97,20 @@ export const MediaPickButtons: React.FC<MediaPickButtonsProps> = ({
         className='media-pick-buttons__btn'
         onClick={openCamera}
         disabled={disabled}
+        title={intl.formatMessage(messages.capture)}
+        aria-label={intl.formatMessage(messages.capture)}
       >
-        {intl.formatMessage(messages.capture)}
+        <Icon id='photo_camera' icon={PhotoCameraIcon} />
       </button>
       <button
         type='button'
         className='media-pick-buttons__btn'
         onClick={openLibrary}
         disabled={disabled}
+        title={intl.formatMessage(messages.library)}
+        aria-label={intl.formatMessage(messages.library)}
       >
-        {intl.formatMessage(messages.library)}
+        <Icon id='add_photo_alternate' icon={AddPhotoAlternateIcon} />
       </button>
     </div>
   );
