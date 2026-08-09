@@ -24,7 +24,15 @@
 # Cache: keyed by lowercased+trimmed query; 24-hour TTL. Nominatim
 # results for a place name are stable within that window.
 class Api::V1::Map::GeocodeController < Api::BaseController
-  before_action -> { doorkeeper_authorize! :read }
+  # Accept the same scope pair as PresenceController — the SPA's Web-app
+  # token grants top-level `:read`, but korner-scoped tokens (e.g. Map's
+  # own manifest declares `read:accounts`) only carry `:read:accounts`.
+  # Requiring `:read` exclusively 401'd those tokens even though the
+  # user had every right to search a place name; broadening the scope
+  # list matches PresenceController and stops the client showing
+  # "Couldn't reach the geocoder — try again." for what is really an
+  # auth-shape mismatch.
+  before_action -> { doorkeeper_authorize! :read, :'read:accounts' }
   before_action :require_user!
 
   MAX_QUERY_LENGTH = 200
@@ -39,17 +47,28 @@ class Api::V1::Map::GeocodeController < Api::BaseController
     query = params[:q].to_s.strip
     return render(json: []) if query.blank? || query.length > MAX_QUERY_LENGTH
 
-    results = Rails.cache.fetch(cache_key(query), expires_in: CACHE_TTL) do
-      fetch_from_nominatim(query)
-    end
-
-    render json: results || []
+    results = fetch_cached(query)
+    render json: results
   end
 
   private
 
   def cache_key(query)
     "geocode:v1:#{Digest::SHA1.hexdigest(query.downcase)}"
+  end
+
+  # A wide rescue on the cache lookup: if Redis / the backing store is
+  # having a moment, we still want to return results (bypassing the
+  # cache), never 500 — a 500 flips the client to the "couldn't reach
+  # the geocoder" error state, which reads as an OSM outage the user
+  # can't do anything about.
+  def fetch_cached(query)
+    Rails.cache.fetch(cache_key(query), expires_in: CACHE_TTL) do
+      fetch_from_nominatim(query)
+    end
+  rescue => e
+    Rails.logger.warn("Geocode cache failed for #{query.inspect}: #{e.class} #{e.message}")
+    fetch_from_nominatim(query)
   end
 
   def fetch_from_nominatim(query)
@@ -76,7 +95,12 @@ class Api::V1::Map::GeocodeController < Api::BaseController
 
       { label: label, lat: lat, lng: lng }
     end
-  rescue Faraday::Error, JSON::ParserError => e
+  # StandardError, not just Faraday::Error / JSON::ParserError: adapter
+  # timeouts, SocketError, IO::TimeoutError (Ruby 3.4), or any other
+  # transport glitch should still return an empty result set, not blow
+  # up into a 500. The client shows "No matches — try a different
+  # name.", which is the least alarming failure mode.
+  rescue => e
     Rails.logger.warn("Nominatim geocode failed for #{query.inspect}: #{e.class} #{e.message}")
     []
   end
