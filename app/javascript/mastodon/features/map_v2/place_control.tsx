@@ -103,6 +103,13 @@ export const PlaceControl: React.FC<Props> = ({ onPlaced }) => {
   >('idle');
   const [placing, setPlacing] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  // Monotonic id of the latest issued search. Every fetch captures its
+  // own id; when it settles, it ignores itself if a newer search has
+  // been issued in the meantime. Without this, a stale rejected
+  // request can arrive after a newer successful one and flip the panel
+  // to the "couldn't reach the geocoder" error while the newer
+  // results are still on screen.
+  const searchIdRef = useRef(0);
 
   // Autofocus when the panel opens so the caller doesn't need a second tap.
   useEffect(() => {
@@ -110,12 +117,15 @@ export const PlaceControl: React.FC<Props> = ({ onPlaced }) => {
   }, [open]);
 
   // Debounced geocode. A new keystroke cancels the pending timer, so
-  // only the last one after a 350ms pause hits the server.
+  // only the last one after a 350ms pause hits the server. In-flight
+  // fetches from prior keystrokes can still land after a newer one;
+  // the searchIdRef guard below drops their results.
   useEffect(() => {
     if (!open) return;
 
     const trimmed = query.trim();
     if (trimmed.length < 2) {
+      searchIdRef.current += 1; // invalidate any in-flight fetch
       setResults([]);
       setStatus('idle');
       return;
@@ -123,12 +133,16 @@ export const PlaceControl: React.FC<Props> = ({ onPlaced }) => {
 
     setStatus('searching');
     const handle = window.setTimeout(() => {
+      searchIdRef.current += 1;
+      const mySearchId = searchIdRef.current;
       apiGeocodeSearch(trimmed)
         .then((rows) => {
+          if (mySearchId !== searchIdRef.current) return;
           setResults(rows);
           setStatus(rows.length === 0 ? 'empty' : 'idle');
         })
         .catch(() => {
+          if (mySearchId !== searchIdRef.current) return;
           setResults([]);
           setStatus('error');
         });
