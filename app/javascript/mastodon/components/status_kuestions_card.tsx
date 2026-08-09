@@ -1,6 +1,6 @@
 import { defineMessages, useIntl } from 'react-intl';
 
-import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import { StatusKornerCard } from './status_korner_card';
 
@@ -43,6 +43,10 @@ export const StatusKuestionsCard: React.FC<{ question: QuestionSummary }> = ({
   question,
 }) => {
   const intl = useIntl();
+  // Icon sourced from the Kuestions manifest (see useKornerIcon.tsx),
+  // so a rename in `config/korners/kuestions.yaml` propagates here for
+  // free — same pattern the status space bar (#1195) already uses.
+  const BadgeIcon = useKornerIcon('kuestions');
 
   const ctaMessage = question.has_answered ? messages.answer : messages.unlock;
 
@@ -53,8 +57,8 @@ export const StatusKuestionsCard: React.FC<{ question: QuestionSummary }> = ({
       className='status-kuestions-card'
       to={`/hub/kuestions/${question.id}`}
       badge={{
-        icon: QuestionMarkIcon,
-        iconId: 'question_mark',
+        icon: BadgeIcon,
+        iconId: 'kuestions',
         label: intl.formatMessage(messages.badge),
       }}
     >

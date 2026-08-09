@@ -17,6 +17,7 @@ import HubFillIcon from '@/material-icons/400-24px/hub-fill.svg?react';
 import HubIcon from '@/material-icons/400-24px/hub.svg?react';
 import InFlowIcon from '@/material-icons/400-24px/in_flow.svg?react';
 import KronkCoinIcon from '@/material-icons/400-24px/kronk_coin.svg?react';
+import KuestionIcon from '@/material-icons/400-24px/kuestion.svg?react';
 import NotListedLocationIcon from '@/material-icons/400-24px/not_listed_location.svg?react';
 import PhotoLibraryFillIcon from '@/material-icons/400-24px/photo_library-fill.svg?react';
 import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library.svg?react';
@@ -53,6 +54,7 @@ const MATERIAL_TO_ICON: Record<string, IconProp> = {
   hub: HubIcon,
   in_flow: InFlowIcon,
   kronk_coin: KronkCoinIcon,
+  kuestion: KuestionIcon,
   not_listed_location: NotListedLocationIcon,
   photo_library: PhotoLibraryIcon,
   question_mark: QuestionMarkIcon,
