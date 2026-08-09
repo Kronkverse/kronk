@@ -294,8 +294,13 @@
   transition: max-width 0.38s cubic-bezier(0.22, 0.61, 0.36, 1);
 
   &.open {
-    max-width: 190px;
+    max-width: 230px;
   }
+}
+
+// Inline voice recorder (mic button in the drawer toggles it).
+.compose-form__voice-recorder {
+  margin: 6px 0 4px;
 }
 
 .compose-form__tools-tray {

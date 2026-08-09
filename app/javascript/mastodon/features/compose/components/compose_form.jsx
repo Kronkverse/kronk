@@ -12,10 +12,12 @@ import { length } from 'stringz';
 
 
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
+import MicIcon from '@/material-icons/400-24px/mic.svg?react';
 import AutosuggestInput from 'mastodon/components/autosuggest_input';
 import AutosuggestTextarea from 'mastodon/components/autosuggest_textarea';
 import { Button } from 'mastodon/components/button';
 import { Icon } from 'mastodon/components/icon';
+import { IconButton } from 'mastodon/components/icon_button';
 import { missingAltTextModal } from 'mastodon/initial_state';
 
 import EmojiPickerDropdown from '../containers/emoji_picker_dropdown_container';
@@ -26,6 +28,7 @@ import { countableText } from '../util/counter';
 
 import { CharRing } from './char_ring';
 import { ComposeReachDropdown } from './compose_reach_dropdown';
+import { ComposeVoiceRecorder } from './compose_voice_recorder';
 import { EditIndicator } from './edit_indicator';
 import { KategoryPicker } from './kategory_picker';
 import { KrewTargets } from './krew_targets';
@@ -45,6 +48,7 @@ const messages = defineMessages({
   saveChanges: { id: 'compose_form.save_changes', defaultMessage: 'Update' },
   reply: { id: 'compose_form.reply', defaultMessage: 'Reply' },
   moreOptions: { id: 'compose_form.more_options', defaultMessage: 'More options' },
+  recordVoice: { id: 'compose_form.record_voice', defaultMessage: 'Record a voice clip' },
 });
 
 class ComposeForm extends ImmutablePureComponent {
@@ -97,10 +101,19 @@ class ComposeForm extends ImmutablePureComponent {
   state = {
     highlighted: false,
     toolsOpen: false,
+    voiceOpen: false,
   };
 
   handleToggleTools = () => {
     this.setState((state) => ({ toolsOpen: !state.toolsOpen }));
+  };
+
+  handleToggleVoice = () => {
+    this.setState((state) => ({ voiceOpen: !state.voiceOpen }));
+  };
+
+  handleCloseVoice = () => {
+    this.setState({ voiceOpen: false });
   };
 
   constructor(props) {
@@ -283,7 +296,7 @@ class ComposeForm extends ImmutablePureComponent {
 
   render () {
     const { intl, onPaste, autoFocus, withoutNavigation, maxChars, isSubmitting } = this.props;
-    const { highlighted, toolsOpen } = this.state;
+    const { highlighted, toolsOpen, voiceOpen } = this.state;
 
     return (
       <form className='compose-form' onSubmit={this.handleSubmit}>
@@ -355,6 +368,7 @@ class ComposeForm extends ImmutablePureComponent {
 
           <UploadForm />
           <PollForm />
+          <ComposeVoiceRecorder open={voiceOpen} onClose={this.handleCloseVoice} />
           <ComposeQuotedStatus />
 
           <div className='compose-form__footer'>
@@ -377,6 +391,16 @@ class ComposeForm extends ImmutablePureComponent {
                   <PollButtonContainer />
                   <SpoilerButtonContainer />
                   <EmojiPickerDropdown onPickEmoji={this.handleEmojiPick} />
+                  <IconButton
+                    icon='microphone'
+                    iconComponent={MicIcon}
+                    title={intl.formatMessage(messages.recordVoice)}
+                    onClick={this.handleToggleVoice}
+                    active={voiceOpen}
+                    disabled={this.props.isEditing}
+                    size={18}
+                    inverted
+                  />
                 </div>
               </div>
 
