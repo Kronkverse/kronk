@@ -749,8 +749,22 @@
   gap: 14px;
 }
 
+// Feed-card-shaped head: title on the left, ReachDropdown on the
+// right. Both baselines align so the dropdown reads as chrome next
+// to the title, not a form field below.
 .moments-composer__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
   padding-bottom: 4px;
+}
+
+.moments-composer__titles {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .moments-composer__title {
@@ -761,7 +775,7 @@
 }
 
 .moments-composer__subtitle {
-  margin: 4px 0 0;
+  margin: 0;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;

@@ -30,9 +30,10 @@ import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import api, { apiRequestPost } from 'mastodon/api';
 import { KornerKrewPicker } from 'mastodon/components/korner_krew_picker';
-import { KornerVisibilityPicker } from 'mastodon/components/korner_visibility_picker';
 import { MediaPickButtons, VoiceRecorder } from 'mastodon/components/media';
 import type { VoiceRecorderChange } from 'mastodon/components/media';
+import type { ReachValue } from 'mastodon/components/reach_dropdown';
+import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 
 import { MomentsTextEditor } from './text_editor';
 import type { TextOverlay } from './text_overlay';
@@ -174,8 +175,12 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     [],
   );
 
-  const onVisibilityChange = useCallback((next: string) => {
+  // ReachDropdown emits the full 5-rung ladder; Moments hides
+  // `self_only` in the menu so the callback only ever yields one of
+  // our narrower Visibility values. Cast is safe on that ground.
+  const onReachChange = useCallback((next: ReachValue) => {
     setVisibility(next as Visibility);
+    if (next !== 'krew') setKrewId(null);
   }, []);
 
   const submitAsync = useCallback(async () => {
@@ -258,20 +263,41 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
         aria-label='Close composer'
       />
       <div className='moments-composer__panel'>
+        {/* Feed-card-shaped head: title on the left, ReachDropdown on
+            the right — matches Portal's compose reframe (#1230) so
+            "who sees this?" reads as chrome, not a form field.
+            `self_only` is hidden because Moments are ephemeral social
+            sharing (spec: docs/spaces/moments.md § Reach). */}
         <header className='moments-composer__header'>
-          <h2 className='moments-composer__title'>
-            <FormattedMessage
-              id='moments.composer.title'
-              defaultMessage='Share a Moment'
-            />
-          </h2>
-          <p className='moments-composer__subtitle'>
-            <FormattedMessage
-              id='moments.composer.subtitle'
-              defaultMessage='Gone in 24 hours.'
-            />
-          </p>
+          <div className='moments-composer__titles'>
+            <h2 className='moments-composer__title'>
+              <FormattedMessage
+                id='moments.composer.title'
+                defaultMessage='Share a Moment'
+              />
+            </h2>
+            <p className='moments-composer__subtitle'>
+              <FormattedMessage
+                id='moments.composer.subtitle'
+                defaultMessage='Gone in 24 hours.'
+              />
+            </p>
+          </div>
+          <ReachDropdown
+            value={visibility as ReachValue}
+            onChange={onReachChange}
+            hide={['self_only']}
+            disabled={posting}
+          />
         </header>
+        {visibility === 'krew' && (
+          <KornerKrewPicker
+            value={krewId}
+            onChange={setKrewId}
+            disabled={posting}
+            className='moments-composer__krew'
+          />
+        )}
 
         <section className='moments-composer__section'>
           <span className='moments-composer__label'>
@@ -349,29 +375,6 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
             maxLength={MAX_CAPTION_LENGTH}
             rows={2}
           />
-        </section>
-
-        <section className='moments-composer__section'>
-          <span className='moments-composer__label'>
-            <FormattedMessage
-              id='moments.composer.visibility'
-              defaultMessage='Who sees it'
-            />
-          </span>
-          <KornerVisibilityPicker
-            slug='moments'
-            value={visibility}
-            onChange={onVisibilityChange}
-            className='moments-composer__visibility'
-          />
-          {visibility === 'krew' && (
-            <KornerKrewPicker
-              value={krewId}
-              onChange={setKrewId}
-              disabled={posting}
-              className='moments-composer__krew'
-            />
-          )}
         </section>
 
         {error && <div className='moments-composer__error'>{error}</div>}
