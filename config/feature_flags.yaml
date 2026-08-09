@@ -21,7 +21,13 @@ default:
   # Kronk::AudienceScope narrows the feed to the requested tier. Off by
   # default; flip on to test the ring end-to-end on shadow.
   feed_scope_enforced: false
-# Uncomment and populate as flags are introduced.
+
+# Shadow runs RAILS_ENV=production off rebuild/2.0.0, so this block turns the
+# Home audience ladder ON for shadow testing. Real production is deployed from
+# `main`, which does not carry this config — so this does not affect it. Roll
+# back by removing this block.
+production:
+  feed_scope_enforced: true
+# Uncomment and populate as more per-env overrides are needed.
 # development: {}
 # test: {}
-# production: {}

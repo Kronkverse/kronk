@@ -37,11 +37,14 @@ class Api::V1::Timelines::HomeController < Api::V1::Timelines::BaseController
     Kronk::AudienceScope.filter_statuses(current_user&.account, statuses, requested_scope)
   end
 
-  # The requested audience tier: the explicit `scope` param wins (the frontend
-  # fetches each scope into its own timeline), falling back to the viewer's
-  # persisted feed_scope setting, then orbit.
+  # The requested audience tier comes from the explicit `scope` param — the
+  # frontend fetches each tier into its own timeline (home:mates / home:me) and
+  # leaves the Orbit tab paramless. An absent param means Orbit (the full home
+  # graph): we deliberately do NOT fall back to the persisted feed_scope setting,
+  # or the paramless Orbit tab would be narrowed for anyone whose saved scope is
+  # Mates/Me.
   def requested_scope
-    params[:scope].presence || current_user&.settings&.[]('kronk.feed_scope') || 'orbit'
+    params[:scope].presence || 'orbit'
   end
 
   def preloaded_home_statuses
