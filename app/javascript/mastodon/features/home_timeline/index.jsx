@@ -42,7 +42,7 @@ const messages = defineMessages({
   hide_announcements: { id: 'home.hide_announcements', defaultMessage: 'Hide announcements' },
   feedSettings: { id: 'home.feed_settings', defaultMessage: 'Feed settings' },
   scopeAria: { id: 'home.scope.aria', defaultMessage: 'Choose what you see' },
-  scopeKronk: { id: 'home.scope.kronk', defaultMessage: 'Kronk' },
+  scopeKronk: { id: 'home.scope.kronk', defaultMessage: 'Kronkverse' },
   scopeKronkDesc: { id: 'home.scope.kronk_desc', defaultMessage: 'Everything the whole place is saying.' },
   scopeOrbit: { id: 'home.scope.orbit', defaultMessage: 'Orbit' },
   scopeOrbitDesc: { id: 'home.scope.orbit_desc', defaultMessage: 'Your mates, and theirs.' },

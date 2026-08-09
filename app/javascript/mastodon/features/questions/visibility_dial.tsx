@@ -17,7 +17,7 @@ export const SCOPE_ORDER: KuestionVisibilityScope[] = [
 const messages = defineMessages({
   public: {
     id: 'kuestions.scope.public',
-    defaultMessage: 'Kronk',
+    defaultMessage: 'Kronkverse',
   },
   publicNote: {
     id: 'kuestions.scope.public_note',

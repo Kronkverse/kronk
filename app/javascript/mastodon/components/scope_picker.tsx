@@ -86,7 +86,7 @@ const VISIBILITY_META: Record<VisibilityScope, ChipMeta> = {
     label: (
       <FormattedMessage
         id='scope_picker.visibility.public'
-        defaultMessage='Everyone on Kronk'
+        defaultMessage='Kronkverse'
       />
     ),
     title: 'Any signed-in Kronk member.',
