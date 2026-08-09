@@ -59,10 +59,7 @@ const messages = defineMessages({
     id: 'hub_switcher.awawb',
     defaultMessage: 'Always was, always will be',
   },
-  // "Apps" is the user-facing label for the Hub pillar (Tal 2026-08-09).
-  // Route + code identifier stay `hub` — this is a display rename only,
-  // matching the same pattern Kronk uses elsewhere (e.g. Group → Krew).
-  hub: { id: 'hub_switcher.hub', defaultMessage: 'Apps' },
+  hub: { id: 'hub_switcher.hub', defaultMessage: 'Hub' },
   nudges: { id: 'hub_switcher.nudges', defaultMessage: 'Nudges' },
   aria: { id: 'hub_switcher.aria', defaultMessage: 'Primary surfaces' },
 });
