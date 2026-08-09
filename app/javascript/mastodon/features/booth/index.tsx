@@ -22,20 +22,16 @@ import { ShareForm } from './components/share_form';
 import { UploadForm } from './components/upload_form';
 import type { BoothSet } from './types';
 
-// The Booth — native Musik lens (replaces the iframe prototype). The
-// SpaceNav badge + intro come from the Frame; lenses are the manifest
-// `views:` (Musik / Artists / Events / Live / Me) driven by the URL.
-// Only Musik is built here — the others are coming-soon panels pending
-// their own surfaces (Artists roster, Events/Nights, Live, Me).
+// The Booth — Musik (grid of sets) + Artists (roster + per-artist
+// detail). Both drive off the URL segment after `/hub/booth`.
+// The manifest's `views:` list matches; Events / Live / Me were
+// declared before their surfaces existed and shipped as
+// "coming-soon" placeholders in the switcher, which read as broken
+// nav — they're gone here and in the manifest. Add them back when
+// their surfaces are built.
 
-type Lens = 'musik' | 'artists' | 'events' | 'live' | 'me';
-const LENS_KEYS: readonly string[] = [
-  'musik',
-  'artists',
-  'events',
-  'live',
-  'me',
-];
+type Lens = 'musik' | 'artists';
+const LENS_KEYS: readonly string[] = ['musik', 'artists'];
 type Size = 'compact' | 'standard' | 'large';
 const SIZES: { key: Size; label: string }[] = [
   { key: 'compact', label: 'Compact' },
@@ -50,10 +46,6 @@ const messages = defineMessages({
     defaultMessage: 'No sets yet. Be the first to upload!',
   },
   loading: { id: 'booth.loading', defaultMessage: 'Loading sets…' },
-  soon: {
-    id: 'booth.lens_soon',
-    defaultMessage: 'Coming soon — this lens lands in a follow-up.',
-  },
   artistsEmpty: {
     id: 'booth.artists_empty',
     defaultMessage: 'No artists yet — publish a set to appear here.',
@@ -402,14 +394,6 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
             )}
           </div>
         )}
-
-        {/* Events / Live / Me — still coming soon (later PRs) */}
-        {!overlayOpen &&
-          (lens === 'events' || lens === 'live' || lens === 'me') && (
-            <div className='booth-native__soon'>
-              {intl.formatMessage(messages.soon)}
-            </div>
-          )}
       </div>
 
       <BoothDock />
