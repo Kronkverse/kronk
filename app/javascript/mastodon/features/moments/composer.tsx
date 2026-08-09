@@ -20,15 +20,15 @@
 // land in follow-ups.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
 
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl, defineMessages } from 'react-intl';
 
 import axios from 'axios';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import api, { apiRequestPost } from 'mastodon/api';
+import { ComposeShell } from 'mastodon/components/compose_shell';
 import { KornerKrewPicker } from 'mastodon/components/korner_krew_picker';
 import { MediaPickButtons, VoiceRecorder } from 'mastodon/components/media';
 import type { VoiceRecorderChange } from 'mastodon/components/media';
@@ -248,190 +248,145 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     void submitAsync();
   }, [submitAsync]);
 
-  // Portal to <body> so the fixed overlay escapes the feed column's
-  // containing block. On classic feed routes (Home) the ancestor
-  // `.columns-area__panels__main` sets `contain: paint layout style`,
-  // which makes it the containing block for `position: fixed` — so an
-  // inline overlay's backdrop only darkens the column and its panel is
-  // clipped out of view (see _kronk_stage.scss § containment escape).
-  return createPortal(
-    <div className='moments-composer'>
-      <button
-        type='button'
-        className='moments-composer__backdrop'
-        onClick={onClose}
-        aria-label='Close composer'
-      />
-      <div className='moments-composer__panel'>
-        {/* Feed-card-shaped head: title on the left, ReachDropdown on
-            the right — matches Portal's compose reframe (#1230) so
-            "who sees this?" reads as chrome, not a form field.
-            `self_only` is hidden because Moments are ephemeral social
-            sharing (spec: docs/spaces/moments.md § Reach). */}
-        <header className='moments-composer__header'>
-          <div className='moments-composer__titles'>
-            <h2 className='moments-composer__title'>
-              <FormattedMessage
-                id='moments.composer.title'
-                defaultMessage='Share a Moment'
-              />
-            </h2>
-            <p className='moments-composer__subtitle'>
-              <FormattedMessage
-                id='moments.composer.subtitle'
-                defaultMessage='Gone in 24 hours.'
-              />
-            </p>
-          </div>
-          <ReachDropdown
-            value={visibility as ReachValue}
-            onChange={onReachChange}
-            hide={['self_only']}
-            disabled={posting}
-          />
-        </header>
-        {visibility === 'krew' && (
-          <KornerKrewPicker
-            value={krewId}
-            onChange={setKrewId}
-            disabled={posting}
-            className='moments-composer__krew'
-          />
-        )}
+  const intl = useIntl();
 
-        <section className='moments-composer__section'>
-          <span className='moments-composer__label'>
-            <FormattedMessage
-              id='moments.composer.media'
-              defaultMessage='Media'
-            />
-          </span>
-          {files.length > 0 ? (
-            <div className='moments-composer__previews'>
-              {files.map((file, i) => (
-                <PreviewThumb
-                  key={`${file.name}-${i.toString()}`}
-                  index={i}
-                  file={file}
-                  url={previewUrls[i] ?? ''}
-                  overlays={overlaysByFile[i] ?? []}
-                  disabled={posting}
-                  onEdit={openEditor}
-                />
-              ))}
-              <button
-                type='button'
-                className='moments-composer__file-clear'
-                onClick={clearFiles}
-                disabled={posting}
-              >
-                <FormattedMessage
-                  id='moments.composer.file_clear'
-                  defaultMessage='Change'
-                />
-              </button>
-            </div>
-          ) : (
-            <MediaPickButtons
-              onPick={onFileChange}
-              multiple
-              className='moments-composer__pick'
+  // Shell CTA label — file count drives the resting label ("Share" /
+  // "Share N") and mid-flight the multi-item progress ("Sharing 2 of
+  // 3…"). Shell owns the button; body just tells it what to say.
+  const submitLabel =
+    files.length > 1
+      ? intl.formatMessage(shellMessages.postMulti, { count: files.length })
+      : intl.formatMessage(shellMessages.post);
+  const submittingLabel =
+    postingProgress && postingProgress.total > 1
+      ? intl.formatMessage(shellMessages.postingMulti, {
+          current: postingProgress.current,
+          total: postingProgress.total,
+        })
+      : intl.formatMessage(shellMessages.posting);
+  const canSubmit =
+    files.length > 0 && (visibility !== 'krew' || krewId !== null);
+
+  // ReachDropdown lives in the shell header (right side, before the
+  // close button) via the `headerAction` slot — feed-card shape per
+  // Portal's compose reframe (#1230). `self_only` hidden because
+  // Moments are ephemeral social sharing (spec: docs/spaces/moments.md
+  // § Reach).
+  const reachControl = (
+    <ReachDropdown
+      value={visibility as ReachValue}
+      onChange={onReachChange}
+      hide={['self_only']}
+      disabled={posting}
+    />
+  );
+
+  return (
+    <>
+      <ComposeShell
+        korner='moments'
+        label={intl.formatMessage(shellMessages.title)}
+        subtitle={intl.formatMessage(shellMessages.subtitle)}
+        submitLabel={submitLabel}
+        submittingLabel={submittingLabel}
+        submitting={posting}
+        canSubmit={canSubmit}
+        onSubmit={submit}
+        onCancel={onClose}
+        headerAction={reachControl}
+      >
+        <div className='moments-composer'>
+          {visibility === 'krew' && (
+            <KornerKrewPicker
+              value={krewId}
+              onChange={setKrewId}
+              disabled={posting}
+              className='moments-composer__krew'
             />
           )}
-        </section>
 
-        {voiceEligible && (
           <section className='moments-composer__section'>
             <span className='moments-composer__label'>
               <FormattedMessage
-                id='moments.composer.voice'
-                defaultMessage='Voice (optional)'
+                id='moments.composer.media'
+                defaultMessage='Media'
               />
             </span>
-            <VoiceRecorder
-              onChange={setVoice}
-              maxSeconds={VOICE_MAX_SECONDS}
-              disabled={posting}
-              className='moments-composer__voice'
-            />
-          </section>
-        )}
-
-        <section className='moments-composer__section'>
-          <label
-            className='moments-composer__label'
-            htmlFor='moments-composer-caption'
-          >
-            <FormattedMessage
-              id='moments.composer.caption'
-              defaultMessage='Caption (optional)'
-            />
-          </label>
-          <textarea
-            id='moments-composer-caption'
-            className='moments-composer__caption'
-            value={caption}
-            onChange={onCaptionChange}
-            maxLength={MAX_CAPTION_LENGTH}
-            rows={2}
-          />
-        </section>
-
-        {error && <div className='moments-composer__error'>{error}</div>}
-
-        <footer className='moments-composer__footer'>
-          <button
-            type='button'
-            className='moments-composer__cancel'
-            onClick={onClose}
-            disabled={posting}
-          >
-            <FormattedMessage
-              id='moments.composer.cancel'
-              defaultMessage='Cancel'
-            />
-          </button>
-          <button
-            type='button'
-            className='moments-composer__post'
-            onClick={submit}
-            disabled={
-              files.length === 0 ||
-              posting ||
-              (visibility === 'krew' && !krewId)
-            }
-          >
-            {posting ? (
-              postingProgress && postingProgress.total > 1 ? (
-                <FormattedMessage
-                  id='moments.composer.posting_multi'
-                  defaultMessage='Sharing {current} of {total}…'
-                  values={{
-                    current: postingProgress.current,
-                    total: postingProgress.total,
-                  }}
-                />
-              ) : (
-                <FormattedMessage
-                  id='moments.composer.posting'
-                  defaultMessage='Sharing…'
-                />
-              )
-            ) : files.length > 1 ? (
-              <FormattedMessage
-                id='moments.composer.post_multi'
-                defaultMessage='Share {count}'
-                values={{ count: files.length }}
-              />
+            {files.length > 0 ? (
+              <div className='moments-composer__previews'>
+                {files.map((file, i) => (
+                  <PreviewThumb
+                    key={`${file.name}-${i.toString()}`}
+                    index={i}
+                    file={file}
+                    url={previewUrls[i] ?? ''}
+                    overlays={overlaysByFile[i] ?? []}
+                    disabled={posting}
+                    onEdit={openEditor}
+                  />
+                ))}
+                <button
+                  type='button'
+                  className='moments-composer__file-clear'
+                  onClick={clearFiles}
+                  disabled={posting}
+                >
+                  <FormattedMessage
+                    id='moments.composer.file_clear'
+                    defaultMessage='Change'
+                  />
+                </button>
+              </div>
             ) : (
-              <FormattedMessage
-                id='moments.composer.post'
-                defaultMessage='Share'
+              <MediaPickButtons
+                onPick={onFileChange}
+                multiple
+                className='moments-composer__pick'
               />
             )}
-          </button>
-        </footer>
-      </div>
+          </section>
+
+          {voiceEligible && (
+            <section className='moments-composer__section'>
+              <span className='moments-composer__label'>
+                <FormattedMessage
+                  id='moments.composer.voice'
+                  defaultMessage='Voice (optional)'
+                />
+              </span>
+              <VoiceRecorder
+                onChange={setVoice}
+                maxSeconds={VOICE_MAX_SECONDS}
+                disabled={posting}
+                className='moments-composer__voice'
+              />
+            </section>
+          )}
+
+          <section className='moments-composer__section'>
+            <label
+              className='moments-composer__label'
+              htmlFor='moments-composer-caption'
+            >
+              <FormattedMessage
+                id='moments.composer.caption'
+                defaultMessage='Caption (optional)'
+              />
+            </label>
+            <textarea
+              id='moments-composer-caption'
+              className='moments-composer__caption'
+              value={caption}
+              onChange={onCaptionChange}
+              maxLength={MAX_CAPTION_LENGTH}
+              rows={2}
+            />
+          </section>
+
+          {error && <div className='moments-composer__error'>{error}</div>}
+        </div>
+      </ComposeShell>
+
       {editorIndex !== null && files[editorIndex] && (
         <MomentsTextEditor
           file={files[editorIndex]}
@@ -444,10 +399,36 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
           onPrev={editorIndex > 0 ? handleEditorPrev : undefined}
         />
       )}
-    </div>,
-    document.body,
+    </>
   );
 };
+
+const shellMessages = defineMessages({
+  title: {
+    id: 'moments.composer.title',
+    defaultMessage: 'Share a Moment',
+  },
+  subtitle: {
+    id: 'moments.composer.subtitle',
+    defaultMessage: 'Gone in 24 hours.',
+  },
+  post: {
+    id: 'moments.composer.post',
+    defaultMessage: 'Share',
+  },
+  postMulti: {
+    id: 'moments.composer.post_multi',
+    defaultMessage: 'Share {count}',
+  },
+  posting: {
+    id: 'moments.composer.posting',
+    defaultMessage: 'Sharing\u2026',
+  },
+  postingMulti: {
+    id: 'moments.composer.posting_multi',
+    defaultMessage: 'Sharing {current} of {total}\u2026',
+  },
+});
 
 // One photo's preview tile in the composer's media section. Shows
 // the actual picked pixels (via `URL.createObjectURL`), the current

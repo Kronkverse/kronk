@@ -75,6 +75,16 @@
   gap: 2px;
 }
 
+// Chrome slot on the right side of the shell header (before the
+// close button). Used by feed-card-shaped composers to surface a
+// reach control (ReachDropdown) that reads as chrome, not as a form
+// field down in the body.
+.compose-shell__header-action {
+  flex: none;
+  display: flex;
+  align-items: center;
+}
+
 .compose-shell__label {
   margin: 0;
   font-family: var(--font-display);

@@ -53,6 +53,11 @@ interface ComposeShellProps {
   // for korners with more than one composer flow (Maps: Post /
   // Place). Body owns the rendering.
   switcher?: React.ReactNode;
+  // Optional chrome control that sits inside the shell header on the
+  // right, before the close button. Used for reach controls that need
+  // to read as chrome (the "who sees this?" ReachDropdown in the
+  // feed-card composer shape from #1230).
+  headerAction?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -67,6 +72,7 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
   onSubmit,
   onCancel,
   switcher,
+  headerAction,
   children,
 }) => {
   const intl = useIntl();
@@ -112,6 +118,9 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
             <h2 className='compose-shell__label'>{label}</h2>
             {subtitle && <p className='compose-shell__subtitle'>{subtitle}</p>}
           </div>
+          {headerAction && (
+            <div className='compose-shell__header-action'>{headerAction}</div>
+          )}
           <button
             type='button'
             className='compose-shell__close'
