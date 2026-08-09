@@ -63,6 +63,11 @@ interface Props {
   value: ReachValue;
   onChange: (value: ReachValue) => void;
   disabled?: boolean;
+  // Rungs to drop from the menu — e.g. Moments hides `self_only`
+  // because a Moment is an ephemeral piece of social sharing; an
+  // audience-of-one there is a private journal, not the feature (spec:
+  // docs/spaces/moments.md § Reach). Defaults to no filtering.
+  hide?: readonly ReachValue[];
 }
 
 const ReachMenuItem: React.FC<{
@@ -102,7 +107,10 @@ export const ReachDropdown: React.FC<Props> = ({
   value,
   onChange,
   disabled = false,
+  hide,
 }) => {
+  const hideSet = new Set<ReachValue>(hide ?? []);
+  const visibleOrder = ORDER.filter((o) => !hideSet.has(o));
   const intl = useIntl();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -163,7 +171,7 @@ export const ReachDropdown: React.FC<Props> = ({
 
       {open && (
         <div className='reach-dropdown__menu' role='listbox'>
-          {ORDER.map((option) => (
+          {visibleOrder.map((option) => (
             <ReachMenuItem
               key={option}
               option={option}
