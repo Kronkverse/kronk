@@ -141,14 +141,16 @@ body {
       // for Mastodon's elephant SVG (natural whitespace padding
       // around a small character); the Kronk K fills its viewBox
       // edge-to-edge, so those settings rendered as a dominating
-      // glyph swallowing the title.
+      // glyph swallowing the title. Bumped 2026-08-09 (160px →
+      // 220px, opacity 0.35 → 0.5) — "almost invisible again, a
+      // touch more visible + a bit bigger".
       &__illustration {
         img {
           display: block;
-          width: 40%;
-          max-width: 160px;
+          width: 50%;
+          max-width: 220px;
           height: auto;
-          opacity: 0.35;
+          opacity: 0.5;
           filter: saturate(0.7);
           margin: 0 auto 32px;
         }

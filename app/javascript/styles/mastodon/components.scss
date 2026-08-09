@@ -5478,13 +5478,14 @@ a.status-card {
   cursor: default;
 
   // Kronk mascot — a subtle looming K, not an overt lilac graphic
-  // (Tal 2026-08-07). Small enough that the message sits cleanly
-  // below it in the flex column, faded enough that it reads as
-  // background chrome rather than the main event.
+  // (Tal 2026-08-07). Sized + faded enough to read as background
+  // chrome, big + solid enough to actually be seen. Values bumped
+  // 2026-08-09: 160px → 220px, opacity 0.35 → 0.5, per Tal
+  // "almost invisible again, a touch more visible + a bit bigger".
   &__image {
-    width: 40%;
-    max-width: 160px;
-    opacity: 0.35;
+    width: 50%;
+    max-width: 220px;
+    opacity: 0.5;
     filter: saturate(0.7);
   }
 
@@ -6597,11 +6598,12 @@ a.status-card {
 
     // Subtle looming Kronk mascot — matches the .error-column
     // treatment (Tal 2026-08-07: "looming in the background, writing
-    // under, not on top"). Message reads cleanly below.
+    // under, not on top"). Bumped 2026-08-09 for a touch more
+    // visibility.
     &__image {
-      width: 30%;
-      max-width: 140px;
-      opacity: 0.35;
+      width: 40%;
+      max-width: 190px;
+      opacity: 0.5;
       filter: saturate(0.7);
     }
 
