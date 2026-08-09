@@ -952,6 +952,7 @@
 }
 
 .moments-composer__hero-tool {
+  position: relative;
   width: 30px;
   height: 30px;
   border: 0;
@@ -976,6 +977,25 @@
     opacity: 0.5;
     cursor: default;
   }
+}
+
+// Small count pip on a tool button when it has committed picks (used by
+// the Tag People tool to show the tagged-count without opening the panel).
+.moments-composer__hero-tool-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-round);
+  background: var(--kronk-purple-bright);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
 }
 
 .moments-composer__hero-nav {
@@ -1713,4 +1733,187 @@
     height: 18px;
     fill: currentcolor;
   }
+}
+
+// ── Tag People panel (composer) ─────────────────────────────────────
+// Small floating card that opens over the composer to collect the
+// accounts to tag on the active photo. Positioned centred; picker is
+// modal-ish (no overlay dimming, just sits above the hero).
+.moments-tag-panel {
+  position: fixed;
+  z-index: 60;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(90vw, 360px);
+  max-height: 80vh;
+  overflow: auto;
+  padding: 16px;
+  border-radius: var(--radius-large);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--elev-modal, 0 12px 40px rgb(0 0 0 / 45%));
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.moments-tag-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.moments-tag-panel__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.moments-tag-panel__close {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+
+  &:hover {
+    color: var(--text-primary);
+    background: color-mix(in oklab, var(--text-primary) 8%, transparent);
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: currentcolor;
+  }
+}
+
+.moments-tag-panel__search {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-medium);
+  border: 1px solid var(--border-default);
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+
+  &:focus {
+    outline: none;
+    border-color: var(--kronk-purple-accent);
+  }
+}
+
+.moments-tag-panel__suggestions {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.moments-tag-panel__suggestion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius-medium);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 12%,
+      transparent
+    );
+  }
+}
+
+.moments-tag-panel__suggestion-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.moments-tag-panel__suggestion-acct {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.moments-tag-panel__chips {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.moments-tag-panel__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px 10px;
+  border-radius: var(--radius-round);
+  background: color-mix(in oklab, var(--kronk-purple-accent) 18%, transparent);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.moments-tag-panel__chip-remove {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+
+  &:hover {
+    color: var(--text-primary);
+    background: color-mix(in oklab, var(--text-primary) 12%, transparent);
+  }
+
+  svg {
+    width: 12px;
+    height: 12px;
+    fill: currentcolor;
+  }
+}
+
+.moments-tag-panel__empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.moments-tag-panel__footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.moments-tag-panel__done {
+  min-width: 88px;
+}
+
+// ── Viewer: "with @X, @Y" line under the caption ────────────────────
+.moments-viewer__tagged {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
