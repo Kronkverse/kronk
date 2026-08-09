@@ -176,6 +176,11 @@ interface ConversationViewProps {
   detail: ApiNudgeConversationDetail | null;
   loading: boolean;
   onMessageSent: (next: ApiNudgeConversationDetail) => void;
+  // Called when this conversation's summary changes without a new
+  // message — currently after a successful mark-read. The parent
+  // uses this to refresh the sidebar row (clear its unread dot) and
+  // the global nudges badge.
+  onConversationUpdate: (next: ApiNudgeConversationDetail) => void;
 }
 
 export const ConversationView: React.FC<ConversationViewProps> = ({
@@ -183,6 +188,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   detail,
   loading,
   onMessageSent,
+  onConversationUpdate,
 }) => {
   const intl = useIntl();
   const history = useHistory();
@@ -384,11 +390,23 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     })();
   }, [conversationId, detail, loadingOlder, hasMore, onMessageSent]);
 
-  // On open, mark read.
+  // On open, mark read. The API returns the updated conversation
+  // summary with `unread_count: 0`; bubble it up so the sidebar row
+  // drops its dot and the global nudges badge recomputes. Without
+  // this, opening a conversation reads the messages server-side but
+  // the UI still shows the unread pill (and the pillar badge keeps
+  // its count until the next stream event forces a reseed).
   useEffect(() => {
     if (!detail || detail.conversation.unread_count === 0) return;
-    void apiMarkNudgeConversationRead(conversationId);
-  }, [conversationId, detail]);
+    void (async () => {
+      try {
+        const updated = await apiMarkNudgeConversationRead(conversationId);
+        onConversationUpdate({ ...detail, conversation: updated });
+      } catch {
+        // Non-fatal — the next open or stream event retries.
+      }
+    })();
+  }, [conversationId, detail, onConversationUpdate]);
 
   // Truly optimistic: prepend a client-authored row with a tempId
   // before the POST, then reconcile with the server response (replace
