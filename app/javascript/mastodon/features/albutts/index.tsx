@@ -8,6 +8,7 @@ import {
   Switch,
   Link,
   useHistory,
+  useLocation,
   useRouteMatch,
 } from 'react-router-dom';
 
@@ -17,9 +18,13 @@ import {
   apiGetAlbum,
   apiListAlbums,
 } from 'mastodon/api/albutts';
+import type { AlbumsScope } from 'mastodon/api/albutts';
 import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
 import { ComposeFab } from 'mastodon/components/compose_fab';
 import { Stage } from 'mastodon/components/stage';
+import { ScopeTitle } from 'mastodon/features/home_timeline/components/scope_title';
+import type { ScopeTitleFace } from 'mastodon/features/home_timeline/components/scope_title';
+import { useIdentity } from 'mastodon/identity_context';
 
 import { AlbumComposer } from './components/album_composer';
 import { AlbumDetail } from './components/album_detail';
@@ -27,9 +32,21 @@ import { AlbumDetail } from './components/album_detail';
 const messages = defineMessages({
   title: { id: 'albutts.title', defaultMessage: 'Albutts' },
   loading: { id: 'albutts.loading', defaultMessage: 'Loading…' },
-  empty: {
-    id: 'albutts.empty',
+  emptyAll: {
+    id: 'albutts.empty.all',
     defaultMessage: 'No albums yet — tap the compose button to start one.',
+  },
+  emptyMine: {
+    id: 'albutts.empty.mine',
+    defaultMessage: "You haven't started any albums yet.",
+  },
+  emptyContributed: {
+    id: 'albutts.empty.contributed',
+    defaultMessage: "You haven't contributed to any albums yet.",
+  },
+  emptyMates: {
+    id: 'albutts.empty.mates',
+    defaultMessage: 'None of your mates have shared an album yet.',
   },
   photos: {
     id: 'albutts.photos',
@@ -44,7 +61,52 @@ const messages = defineMessages({
     id: 'albutts.fab.label',
     defaultMessage: 'New album',
   },
+  scopeAria: {
+    id: 'albutts.scope.aria',
+    defaultMessage: 'Change which albums you see',
+  },
+  scopeAll: { id: 'albutts.scope.all', defaultMessage: 'All albums' },
+  scopeAllDesc: {
+    id: 'albutts.scope.all_desc',
+    defaultMessage: 'Every album you can see',
+  },
+  scopeMine: { id: 'albutts.scope.mine', defaultMessage: 'My albums' },
+  scopeMineDesc: {
+    id: 'albutts.scope.mine_desc',
+    defaultMessage: 'Albums you started',
+  },
+  scopeContributed: {
+    id: 'albutts.scope.contributed',
+    defaultMessage: 'Contributed',
+  },
+  scopeContributedDesc: {
+    id: 'albutts.scope.contributed_desc',
+    defaultMessage: "Albums you've added a photo to",
+  },
+  scopeMates: { id: 'albutts.scope.mates', defaultMessage: "Mates'" },
+  scopeMatesDesc: {
+    id: 'albutts.scope.mates_desc',
+    defaultMessage: 'Albums your mates started',
+  },
 });
+
+// Path segment that follows /hub/albutts drives which scope face is
+// selected. Kept in the URL so refresh / back / share stays honest —
+// same pattern as the /home feed's scope routing.
+const SCOPE_KEYS: AlbumsScope[] = ['all', 'mine', 'contributed', 'mates'];
+
+const scopeFromPath = (pathname: string): AlbumsScope => {
+  const match = /^\/hub\/albutts\/([a-z]+)$/.exec(pathname);
+  const seg = match?.[1];
+  return seg && (SCOPE_KEYS as string[]).includes(seg)
+    ? (seg as AlbumsScope)
+    : 'all';
+};
+
+const useCurrentScope = (): AlbumsScope => {
+  const { pathname } = useLocation();
+  return scopeFromPath(pathname);
+};
 
 // /hub/albutts — directory of visible albums, plus /albums/:id detail
 // child route. See docs/spaces/albutts.md.
@@ -73,6 +135,19 @@ const Albutts: React.FC<{ multiColumn?: boolean }> = () => {
         <Route path='/hub/albutts/new' exact>
           <Directory autoOpenComposer />
         </Route>
+        {/* Scope segments — one per ScopeTitle face other than the
+            default `all` (which is the bare /hub/albutts). Directory
+            reads the scope from the URL, so refresh + back + share
+            all preserve the view. */}
+        <Route path='/hub/albutts/mine' exact>
+          <Directory />
+        </Route>
+        <Route path='/hub/albutts/contributed' exact>
+          <Directory />
+        </Route>
+        <Route path='/hub/albutts/mates' exact>
+          <Directory />
+        </Route>
         <Route path='/hub/albutts' exact>
           <Directory />
         </Route>
@@ -94,21 +169,58 @@ interface DirectoryProps {
 const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
   const intl = useIntl();
   const history = useHistory();
+  const { signedIn } = useIdentity();
+  const scope = useCurrentScope();
   const [albums, setAlbums] = useState<ApiAlbumJSON[] | null>(null);
   const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
 
   const load = useCallback(async () => {
     setAlbums(null);
     try {
-      setAlbums(await apiListAlbums());
+      setAlbums(await apiListAlbums(scope));
     } catch {
       setAlbums([]);
     }
-  }, []);
+  }, [scope]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Faces are the same order as SCOPE_KEYS + the controller's SCOPES
+  // constant, so a keyboard arrow / swipe steps through them in the
+  // same order everywhere.
+  const scopeFaces: ScopeTitleFace[] = [
+    {
+      key: 'all',
+      label: intl.formatMessage(messages.scopeAll),
+      desc: intl.formatMessage(messages.scopeAllDesc),
+    },
+    {
+      key: 'mine',
+      label: intl.formatMessage(messages.scopeMine),
+      desc: intl.formatMessage(messages.scopeMineDesc),
+    },
+    {
+      key: 'contributed',
+      label: intl.formatMessage(messages.scopeContributed),
+      desc: intl.formatMessage(messages.scopeContributedDesc),
+    },
+    {
+      key: 'mates',
+      label: intl.formatMessage(messages.scopeMates),
+      desc: intl.formatMessage(messages.scopeMatesDesc),
+    },
+  ];
+
+  const handleScopeChange = useCallback(
+    (next: string) => {
+      // `all` is the bare URL; the others carry the scope as a
+      // segment so refresh / back / share all preserve the view.
+      history.push(next === 'all' ? '/hub/albutts' : `/hub/albutts/${next}`);
+    },
+    [history],
+  );
 
   const closeComposer = useCallback(() => {
     setComposerOpen(false);
@@ -127,13 +239,35 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
     [history],
   );
 
+  const emptyMessage = intl.formatMessage(
+    scope === 'mine'
+      ? messages.emptyMine
+      : scope === 'contributed'
+        ? messages.emptyContributed
+        : scope === 'mates'
+          ? messages.emptyMates
+          : messages.emptyAll,
+  );
+
   return (
     <div className='albutts-directory'>
+      {/* Scope title — same rotating space-header primitive as the
+          /home feed. Signed-in only; the scope faces other than
+          `all` require a caller identity to filter against. */}
+      {signedIn && (
+        <ScopeTitle
+          ariaLabel={intl.formatMessage(messages.scopeAria)}
+          faces={scopeFaces}
+          value={scope}
+          onChange={handleScopeChange}
+        />
+      )}
+
       {albums === null ? (
         <p className='space-subtitle'>{intl.formatMessage(messages.loading)}</p>
       ) : albums.length === 0 ? (
         <p className='space-subtitle albutts-directory__empty'>
-          {intl.formatMessage(messages.empty)}
+          {emptyMessage}
         </p>
       ) : (
         <ul className='albutts-directory__grid'>

@@ -34,8 +34,16 @@ interface ContributePhotoParams {
   caption?: string;
 }
 
-export const apiListAlbums = () =>
-  apiRequestGet<ApiAlbumJSON[]>('v1/albutts/albums');
+// Directory faces on /hub/albutts. `all` is the default (every
+// album the viewer can see); the others narrow that set. Backend:
+// `Api::V1::Albutts::AlbumsController#index` — SCOPES constant.
+export type AlbumsScope = 'all' | 'mine' | 'contributed' | 'mates';
+
+export const apiListAlbums = (scope: AlbumsScope = 'all') =>
+  apiRequestGet<ApiAlbumJSON[]>(
+    'v1/albutts/albums',
+    scope === 'all' ? undefined : { scope },
+  );
 
 export const apiGetAlbum = (id: string) =>
   apiRequestGet<ApiAlbumJSON>(`v1/albutts/albums/${id}`);
