@@ -42,7 +42,7 @@ module Nudges
     def initialize(actor:, recipient:, source_korner_slug:, verb:,
                    source_type: nil, source_id: nil,
                    interaction: 'passive', cta_label: nil, cta_route: nil,
-                   aggregate_window: nil)
+                   aggregate_window: nil, directed: false)
       @actor              = actor
       @recipient          = recipient
       @source_korner_slug = source_korner_slug.to_s
@@ -53,11 +53,18 @@ module Nudges
       @cta_label          = cta_label
       @cta_route          = cta_route
       @aggregate_window   = aggregate_window
+      @directed           = directed
     end
 
     def call
-      return :self_dropped     if self_nudge?
-      return :non_mate_dropped unless mates?
+      return :self_dropped if self_nudge?
+      # Tier-1 "directed at U" events (per docs/kronk_nudges.md
+      # § Relevance engine) fire ALWAYS — no Mate/follow/tune-in test.
+      # These are events where the actor targeted the recipient
+      # specifically: @mentions, replies, reactions on U's content,
+      # mate requests, RSVPs to U's event, etc. The Mate gate applies
+      # only to Tier-2/3 (someone-U-chose / somewhere-U-tuned-in).
+      return :non_mate_dropped unless @directed || mates?
 
       conversation = ensure_conversation
 

@@ -67,6 +67,16 @@ RSpec.describe Nudges::EventRouter do
       it 'returns the :non_mate_dropped sentinel' do
         expect(described_class.deliver(**base_args)).to eq(:non_mate_dropped)
       end
+
+      # docs/kronk_nudges.md § Relevance engine Tier 1: directed events
+      # (@mentions, replies, reactions on U's content, mate requests,
+      # RSVPs, etc.) MUST fire regardless of Mate status — the whole
+      # point is "someone reached out to you". Bypass the gate when
+      # the caller flags `directed: true`.
+      it 'bypasses the Mate gate when directed: true' do
+        expect { described_class.deliver(**base_args.merge(directed: true)) }
+          .to change(Nudges::Event, :count).by(1)
+      end
     end
 
     context 'when only one direction follows' do
