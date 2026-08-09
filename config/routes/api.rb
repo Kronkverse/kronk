@@ -188,6 +188,12 @@ namespace :api, format: false do
       post   'presence',      to: 'presence#create'
       delete 'presence',      to: 'presence#destroy'
 
+      # Server-side proxy for OSM Nominatim — see
+      # `Api::V1::Map::GeocodeController` for why we don't hit Nominatim
+      # from the browser directly. Search box on the map's place
+      # control hits this to turn a typed place name into lat/lng.
+      get 'geocode', to: 'geocode#index'
+
       # Treks — recorded activities; feed is mine + Mates' published.
       resources :treks, only: [:index, :show, :create, :destroy] do
         member do
