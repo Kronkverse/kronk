@@ -9,6 +9,7 @@ import { apiNudgeAccount } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { Button } from 'mastodon/components/button';
 import { Icon } from 'mastodon/components/icon';
+import { uploadMediaBlob } from 'mastodon/components/media';
 import { useAppSelector } from 'mastodon/store';
 
 const MAX_WORDS = 100;
@@ -16,35 +17,6 @@ const MAX_VOICE_SECONDS = 30;
 
 function countWords(text: string): number {
   return text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-}
-
-async function uploadBlob(blob: Blob, csrfToken: string): Promise<string> {
-  let uploadType: string;
-  let ext: string;
-  if (blob.type.startsWith('audio/ogg')) {
-    uploadType = 'audio/ogg';
-    ext = 'ogg';
-  } else if (
-    blob.type.startsWith('audio/mp4') ||
-    blob.type.startsWith('audio/x-m4a')
-  ) {
-    uploadType = 'audio/mp4';
-    ext = 'm4a';
-  } else {
-    uploadType = 'video/webm';
-    ext = 'webm';
-  }
-  const form = new FormData();
-  form.append('file', new File([blob], `voice.${ext}`, { type: uploadType }));
-  const res = await fetch('/api/v2/media', {
-    method: 'POST',
-    body: form,
-    headers: { 'X-CSRF-Token': csrfToken },
-    credentials: 'same-origin',
-  });
-  if (!res.ok) throw new Error('upload failed');
-  const json = (await res.json()) as { id: string };
-  return json.id;
 }
 
 export const NudgeComposeModal: React.FC<{
@@ -205,14 +177,9 @@ export const NudgeComposeModal: React.FC<{
       setSending(true);
       setError(null);
       try {
-        const csrfMeta = document.querySelector<HTMLMetaElement>(
-          'meta[name="csrf-token"]',
-        );
-        const csrfToken = csrfMeta?.content ?? '';
-
         let resolvedVoiceId = voiceId;
         if (withMessage && voiceBlob && !voiceId) {
-          resolvedVoiceId = await uploadBlob(voiceBlob, csrfToken);
+          resolvedVoiceId = await uploadMediaBlob(voiceBlob);
           setVoiceId(resolvedVoiceId);
         }
 
