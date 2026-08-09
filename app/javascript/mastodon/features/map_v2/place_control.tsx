@@ -53,6 +53,10 @@ const messages = defineMessages({
     id: 'map.place_control.error',
     defaultMessage: "Couldn't reach the geocoder — try again.",
   },
+  placeError: {
+    id: 'map.place_control.place_error',
+    defaultMessage: "Couldn't drop your pin — try again.",
+  },
   placing: {
     id: 'map.place_control.placing',
     defaultMessage: 'Dropping your pin…',
@@ -102,6 +106,12 @@ export const PlaceControl: React.FC<Props> = ({ onPlaced }) => {
     'idle' | 'searching' | 'empty' | 'error'
   >('idle');
   const [placing, setPlacing] = useState(false);
+  // Separate from `status` — place failures were reusing the search
+  // error copy ("Couldn't reach the geocoder"), which read as "search
+  // is broken" when what actually broke was `POST /api/v1/map/presence`
+  // after the user picked a result. Keep the two concerns distinct so
+  // the copy points at the thing that failed.
+  const [placeError, setPlaceError] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   // Monotonic id of the latest issued search. Every fetch captures its
   // own id; when it settles, it ignores itself if a newer search has
@@ -162,11 +172,13 @@ export const PlaceControl: React.FC<Props> = ({ onPlaced }) => {
     setQuery('');
     setResults([]);
     setStatus('idle');
+    setPlaceError(false);
   }, []);
 
   const handleSelect = useCallback(
     (result: ApiGeocodeResultJSON) => {
       setPlacing(true);
+      setPlaceError(false);
       apiPlacePresence({
         lat: result.lat,
         lng: result.lng,
@@ -179,7 +191,13 @@ export const PlaceControl: React.FC<Props> = ({ onPlaced }) => {
           handleClose();
         })
         .catch(() => {
-          setStatus('error');
+          // The pin-drop failed, not the geocoder — show the
+          // place-specific copy instead of "Couldn't reach the
+          // geocoder", which the previous branch flagged as
+          // misleading. Server-side we now surface a specific 4xx/5xx
+          // body (see PresenceController#create rescue), so a follow-up
+          // can inspect the response and surface it verbatim.
+          setPlaceError(true);
         })
         .finally(() => {
           setPlacing(false);
@@ -253,6 +271,11 @@ export const PlaceControl: React.FC<Props> = ({ onPlaced }) => {
       {status === 'error' && (
         <div className='place-control__meta place-control__meta--error'>
           {intl.formatMessage(messages.error)}
+        </div>
+      )}
+      {placeError && !placing && (
+        <div className='place-control__meta place-control__meta--error'>
+          {intl.formatMessage(messages.placeError)}
         </div>
       )}
       {placing && (
