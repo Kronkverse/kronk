@@ -9,7 +9,7 @@ slug: hub
 name: Hub
 tagline: "Korners of Kronk, a digital world we're building together."
 icon:
-  material: grid_on
+  material: apps
 render_target: native
 version: 0.1.0
 
