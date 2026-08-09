@@ -128,18 +128,14 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #todayCard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--k-gather)}
 #todayCard:hover{border-color:var(--border-default);transform:translateY(-1px)}
 .tc-top{display:flex;align-items:center;gap:6px;margin-bottom:2px}
-.tc-kicker{font-family:var(--font-mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-muted)}
 .tc-moon{margin-left:auto;width:16px;height:16px;display:block}
 .tc-num{font-family:var(--font-display);font-size:30px;line-height:1;font-weight:500;color:var(--text-primary)}
-.tc-sub{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--text-secondary);margin-top:3px}
-.tc-foot{font-size:11px;color:var(--text-muted);margin-top:7px}
 .tc-return{position:absolute;right:10px;bottom:9px;font-family:var(--font-mono);font-size:9px;
   letter-spacing:.08em;text-transform:uppercase;color:var(--k-flow);
   opacity:0;transform:translateX(4px);transition:all var(--dur-med) var(--ease-out);pointer-events:none}
 /* away state — you've drifted from today */
 #todayCard.away{border-color:var(--border-strong);
   box-shadow:0 4px 12px -4px rgb(0 0 0 / 30%), 0 0 0 1px rgba(114,65,255,.25), 0 0 22px -6px rgba(114,65,255,.5)}
-#todayCard.away .tc-foot{opacity:0}
 #todayCard.away .tc-return{opacity:1;transform:none}
 
 /* ═══ the sheet — peek is a bottom preview; full is a whole page ═══ */
@@ -316,10 +312,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 
 <div class="corner">
   <button id="todayCard" aria-label="Jump to today">
-    <div class="tc-top"><span class="tc-kicker">Chooseday</span><span id="tcMoon" class="tc-moon"></span></div>
+    <div class="tc-top"><span id="tcMoon" class="tc-moon"></span></div>
     <div class="tc-num" id="tcNum">—</div>
-    <div class="tc-sub" id="tcSub">—</div>
-    <div class="tc-foot" id="tcFoot">—</div>
     <span class="tc-return" id="tcReturn">↺ back to now</span>
   </button>
 </div>
@@ -1005,13 +999,6 @@ const todayCard = document.getElementById('todayCard');
   const dt = today;
   document.getElementById('tcMoon').innerHTML = moonSVG(16, phase(dt));
   document.getElementById('tcNum').textContent = dt.getDate();
-  document.getElementById('tcSub').textContent =
-    dt.toLocaleDateString('en',{weekday:'short'}) + ' · ' + dt.toLocaleDateString('en',{month:'long'});
-  const evs = EVENTS.filter(e => e.d === 0);
-  const foot = document.getElementById('tcFoot');
-  foot.textContent = evs.length
-    ? `${evs.length} ${evs.length===1?'gathering':'gatherings'} today`
-    : 'nothing held today';
 })();
 todayCard.onclick = () => spinTo(0);
 // Chip click handler retired 2026-08-06 — the `.filters` chip row
