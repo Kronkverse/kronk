@@ -9,6 +9,7 @@ import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { Icon } from 'mastodon/components/icon';
+import { SpaceHeader } from 'mastodon/components/space_header';
 import { Stage } from 'mastodon/components/stage';
 import { useKorners } from 'mastodon/hooks/useKorner';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
@@ -174,6 +175,8 @@ const Hub: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       <div className='hub-page'>
+        <SpaceHeader slug='hub' />
+
         {live.length === 0 && soon.length === 0 && (
           <p className='hub-page__empty'>
             <FormattedMessage
