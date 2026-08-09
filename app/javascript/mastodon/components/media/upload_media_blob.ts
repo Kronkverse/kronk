@@ -3,12 +3,13 @@ import api from 'mastodon/api';
 // Upload an audio Blob (a `MediaRecorder` output, typically) to
 // `/api/v2/media` and resolve to the returned MediaAttachment ID.
 //
-// Format handling: Paperclip's spoof detector correctly identifies
-// `audio/ogg` and `audio/mp4`, so those go through as-is. WebM,
-// however, is always classified by the `file` command as `video/webm`
-// — declaring it as `audio/webm` triggers a 422 mismatch. We spoof
-// WebM as `video/webm` (still valid; routes through the video
-// transcoder), which is why the extension is `webm` not `weba`.
+// Format handling: the `file` command reads a container, not an intent,
+// so an audio-only MP4 or WebM is detected as `video/mp4` / `video/webm`.
+// Declaring the blob as `audio/*` then trips Paperclip's spoof detector
+// on the major-type mismatch (audio vs video) → 422. We therefore declare
+// the mp4- and webm-container clips as their `video/*` type (still valid;
+// they route through the video transcoder), matching what `file` sees.
+// Ogg is the exception — `file` reports `audio/ogg`, so it goes as-is.
 //
 // Extracted from the archived nudges/voices.tsx so any component
 // producing a browser-recorded audio Blob can drop it here without
@@ -23,8 +24,8 @@ export async function uploadMediaBlob(blob: Blob): Promise<string> {
     blob.type.startsWith('audio/mp4') ||
     blob.type.startsWith('audio/x-m4a')
   ) {
-    uploadType = 'audio/mp4';
-    ext = 'm4a';
+    uploadType = 'video/mp4';
+    ext = 'mp4';
   } else {
     uploadType = 'video/webm';
     ext = 'webm';
