@@ -45,27 +45,34 @@
   background: transparent;
 }
 
-// Row 2: wheel + hint pair. Top-anchored (was `justify-content:
-// center`, but on a tall viewport that pushed the wheel to the middle
-// of `1fr` — a huge gap below the title). Now sits just below the
-// title with a comfortable, viewport-scaled space above it.
+// Row 2: wheel + hint pair. Vertically centered in the space below
+// the title so the wheel sits in the middle of the viewport, not
+// tucked up against the header. `padding-top`'s min-space keeps a
+// visible breather between title and wheel on short viewports; the
+// `1fr` grid row + `justify-content: center` do the rest.
 .me-hub__stack {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  gap: 1.25rem;
+  justify-content: center;
+  gap: 1.5rem;
   padding-top: clamp(1rem, 3vh, 2.25rem);
 }
 
 // The wheel is a square whose side = 2 × (radius + bubble width).
 // Setting an intrinsic size lets the ring anchor to the middle of
 // it via `absolute; inset: 0; margin: auto;`.
+// Sizes (2026-08-09 pass, Tal's direction):
+//   - centre stays comfortable at 7rem (unchanged; already reads well)
+//   - spoke bubbles grow to 4rem so labels/icons breathe and the ring
+//     doesn't feel dwarfed by the face
+//   - radius grows to 11rem so the spokes stand clear of the centre
+//     instead of crowding it
 .me-hub__wheel {
-  --me-hub-radius: 8.5rem;
-  --me-hub-bubble: 3rem;
+  --me-hub-radius: 11rem;
+  --me-hub-bubble: 4rem;
   --me-hub-center: 7rem;
 
   position: relative;
@@ -81,8 +88,8 @@
   // automatically because everything is expressed in the radius
   // variable.
   @media (width <= 480px) {
-    --me-hub-radius: 6.5rem;
-    --me-hub-bubble: 2.5rem;
+    --me-hub-radius: 7.5rem;
+    --me-hub-bubble: 3rem;
     --me-hub-center: 5.5rem;
   }
 }
@@ -227,8 +234,8 @@
 }
 
 .me-hub__spoke-icon {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.6rem;
+  height: 1.6rem;
 }
 
 .me-hub__spoke-label {
