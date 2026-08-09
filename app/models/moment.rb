@@ -9,10 +9,13 @@ class Moment < ApplicationRecord
   DEFAULT_LIFETIME = 24.hours
 
   belongs_to :account
-  belongs_to :media_attachment
-  # Optional companion voice clip — populated only for photo+voice
-  # Moments (docs/spaces/moments.md, added 2026-08-04). Enforced null
-  # by validation when the primary media is a video.
+  # Optional since voice-only Moments (2026-08-09) — a Moment may be a
+  # bare voice clip with no photo/video. `media_present_or_voice`
+  # keeps it from being wholly empty.
+  belongs_to :media_attachment, optional: true
+  # Companion voice clip. On a photo Moment it's the paired note; on a
+  # voice-only Moment it's the whole content (docs/spaces/moments.md,
+  # added 2026-08-04, voice-only 2026-08-09). Never pairs with a video.
   belongs_to :voice_media_attachment, class_name: 'MediaAttachment', optional: true
   belongs_to :krew, optional: true # only present when visibility == :krew
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :moment
@@ -29,6 +32,7 @@ class Moment < ApplicationRecord
 
   validates :expires_at, presence: true
   validates :caption, length: { maximum: 500 }, allow_blank: true
+  validate  :media_present_or_voice
   validate  :krew_only_when_krew_visibility
   validate  :voice_only_paired_with_a_still
   validate  :text_overlays_have_valid_shape
@@ -104,6 +108,15 @@ class Moment < ApplicationRecord
   end
 
   private
+
+  # A Moment must carry something: a photo/video, a voice clip, or both.
+  # Guards the relaxed media_attachment_id NOT NULL (voice-only Moments,
+  # 2026-08-09) against a wholly empty row.
+  def media_present_or_voice
+    return if media_attachment_id.present? || voice_media_attachment_id.present?
+
+    errors.add(:base, 'must have a photo, video, or voice clip')
+  end
 
   def mates_visible_to?(viewer)
     return false if viewer.nil?

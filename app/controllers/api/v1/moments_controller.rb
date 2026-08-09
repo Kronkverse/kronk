@@ -89,6 +89,10 @@ class Api::V1::MomentsController < Api::BaseController
     permitted[:visibility] = permitted[:visibility].presence || 'mates'
     permitted[:krew_id] = nil unless permitted[:visibility] == 'krew'
     permitted[:voice_media_attachment_id] = nil if permitted[:voice_media_attachment_id].blank?
+    # Voice-only Moments send no photo; normalise a blank id to nil so
+    # the optional belongs_to stays clean (model's media_present_or_voice
+    # rejects the wholly-empty case).
+    permitted[:media_attachment_id] = nil if permitted[:media_attachment_id].blank?
     # Rails permit turns each ActionController::Parameters element into a
     # HashWithIndifferentAccess, which round-trips through the JSONB
     # column as-is. Strip explicit nils / defaults on the composer side —

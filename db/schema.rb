@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_07_040000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_09_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1123,7 +1123,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_07_040000) do
 
   create_table "moments", force: :cascade do |t|
     t.bigint "account_id", null: false
-    t.bigint "media_attachment_id", null: false
+    t.bigint "media_attachment_id"
     t.text "caption"
     t.integer "visibility", default: 1, null: false
     t.bigint "krew_id"
