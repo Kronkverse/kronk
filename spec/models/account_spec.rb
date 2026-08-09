@@ -810,4 +810,31 @@ RSpec.describe Account do
       expect(subject.reload.followers_count).to eq 15
     end
   end
+
+  describe 'seed_korner_seen_baselines (after_create)' do
+    let(:poster) { Fabricate(:account) }
+
+    it 'seeds a marker per non-core korner with existing content so historic posts stay off the new-user badge' do
+      # Existing history in a status-backed korner.
+      pre_signup = Fabricate(:status, account: poster, source_korner: 'kommons', visibility: :public)
+
+      new_user = Fabricate(:user).account
+
+      marker = KornerSeenMarker.find_by(account: new_user, korner_slug: 'kommons')
+      expect(marker).to be_present
+      expect(marker.baseline_id).to eq(pre_signup.id)
+    end
+
+    it 'does not seed markers for korners with no content' do
+      new_user = Fabricate(:user).account
+      # No status was ever tagged with this slug — nothing to seed.
+      expect(KornerSeenMarker.where(account: new_user, korner_slug: 'kalendar')).to be_empty
+    end
+
+    it 'is a no-op for remote accounts' do
+      Fabricate(:status, account: poster, source_korner: 'kommons', visibility: :public)
+      remote = Fabricate(:account, domain: 'example.com')
+      expect(KornerSeenMarker.where(account: remote)).to be_empty
+    end
+  end
 end

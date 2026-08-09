@@ -512,6 +512,13 @@ class Account < ApplicationRecord
   before_validation :prepare_contents, if: :local?
   before_create :generate_keys
   after_create :grant_starting_tokens, if: :local?
+  # New accounts start caught-up on every korner — their side-rail
+  # unread badges only reflect activity that happens AFTER signup
+  # (Tal 2026-08-09). Without this, the count query defaults every
+  # unseen historic item to unread, so a fresh account sees big
+  # numbers on korners that have accumulated years of posts.
+  # See Kronk::KornerSeen and lib/kronk/korner_content_streams.rb.
+  after_create :seed_korner_seen_baselines, if: :local?
   before_destroy :clean_feed_manager
 
   def ensure_keys!
@@ -558,6 +565,35 @@ class Account < ApplicationRecord
     Kronk::Tokens.grant!(self, TokenBalance::STARTING_BALANCE)
   rescue => e
     Rails.logger.error("Failed to grant starting tokens to account #{id}: #{e.class} #{e.message}")
+  end
+
+  # Seed KornerSeenMarker rows at signup so a new account starts caught
+  # up on every korner. Each row's `baseline_id` is the korner's current
+  # newest content id — anything created ≤ that id is treated as seen
+  # wholesale, so the side-rail unread badge only reflects activity that
+  # happens AFTER signup.
+  #
+  # Without this, `Kronk::KornerSeen.baseline_for` defaults to 0 for
+  # accounts with no marker rows, and `SourceKornerStream#unread_relation`
+  # counts every historic post as unread (Tal 2026-08-09).
+  #
+  # Skips core spaces + korners with no content yet (a baseline of 0 is
+  # semantically the same as no row, so there's no gain from persisting
+  # empty rows). Non-fatal on error — a marker-seeding failure must not
+  # block signup.
+  def seed_korner_seen_baselines
+    rows = Kronk::KornerRegistry.all.reject(&:core?).filter_map do |manifest|
+      newest = Kronk::KornerContentStreams.for(manifest.slug).newest_id(self).to_i
+      next if newest <= 0
+
+      { account_id: id, korner_slug: manifest.slug, baseline_id: newest, created_at: Time.current, updated_at: Time.current }
+    end
+
+    return if rows.empty?
+
+    KornerSeenMarker.insert_all(rows)
+  rescue => e
+    Rails.logger.error("Failed to seed korner-seen baselines for account #{id}: #{e.class} #{e.message}")
   end
 
   def create_canonical_email_block!
