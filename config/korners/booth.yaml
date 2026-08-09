@@ -73,14 +73,13 @@ compose:
   route: '/hub/booth/new'
 
 # SpaceNav view switcher (first entry = default, bare /hub/booth).
-# Musik is native; Artists/Events/Live/Me ship as coming-soon panels
-# until their surfaces are built (follow-up PRs).
+# Only the surfaces that actually render live here — Events, Live and
+# Me were declared before their views existed and shipped as
+# "coming-soon" placeholders in the switcher, which read as broken
+# nav. Add them back when their surfaces are built.
 views:
   - { key: musik, label: Musik }
   - { key: artists, label: Artists }
-  - { key: events, label: Events }
-  - { key: live, label: Live }
-  - { key: me, label: Me }
 
 launch:
   blurb: 'The Booth — DJ sets and mixes at Kronk.'
