@@ -37,6 +37,11 @@
 .compose-form__kategory-picker {
   position: relative;
   flex: 0 0 auto;
+
+  // Clear the leftover section divider + block padding from when Kategorize
+  // lived below the content — as a header pill it needs neither.
+  padding: 0;
+  border-top: 0;
 }
 
 .compose-form__kategory-toggle {

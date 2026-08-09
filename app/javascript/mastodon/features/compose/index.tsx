@@ -52,6 +52,7 @@ const messages = defineMessages({
     defaultMessage: 'Preferences',
   },
   logout: { id: 'navigation_bar.logout', defaultMessage: 'Logout' },
+  composeTitle: { id: 'compose.title', defaultMessage: 'New post' },
 });
 
 type ColumnMap = ImmutableMap<'id' | 'uuid' | 'params', string>;
@@ -189,6 +190,13 @@ const Compose: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
       />
 
       <div className='scrollable'>
+        {/* Standard space-header title, matching every other space. */}
+        <header className='space-header'>
+          <h1 className='space-header__title'>
+            {intl.formatMessage(messages.composeTitle)}
+          </h1>
+        </header>
+
         <ComposeFormContainer />
       </div>
 
