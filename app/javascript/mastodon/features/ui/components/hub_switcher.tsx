@@ -15,6 +15,7 @@ import AboriginalFlagIcon from '@/material-icons/400-24px/aboriginal_flag.svg?re
 import { Icon } from 'mastodon/components/icon';
 import type { IconProp } from 'mastodon/components/icon';
 import { WavingHandBadge } from 'mastodon/components/waving_hand_badge';
+import { useNudgesBadgeSeed } from 'mastodon/features/nudges_messenger/use_nudges_badge_seed';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { me } from 'mastodon/initial_state';
@@ -88,6 +89,11 @@ export const HubSwitcher = ({
   // Shows the waving-hand alert for Mate nudges OR korner/system
   // notifications (proposal complete, etc.).
   const hasUnread = useAppSelector(selectHasUnreadNudges);
+  // Seed `state.nudges.unread` on boot + keep it live from the
+  // account-level stream. Without this the pillar badge stayed at
+  // zero until the user opened /nudges (only the messenger seeded
+  // it) — defeating the badge's purpose.
+  useNudgesBadgeSeed();
 
   // 2026-08-05: "Me" pillar retargeted from `/@{username}` (public
   // profile) to `/me` (radial hub of self actions — see
