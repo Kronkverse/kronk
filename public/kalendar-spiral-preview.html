@@ -131,13 +131,11 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .tc-kicker{font-family:var(--font-mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-muted)}
 .tc-moon{margin-left:auto;width:16px;height:16px;display:block}
 .tc-num{font-family:var(--font-display);font-size:30px;line-height:1;font-weight:500;color:var(--text-primary)}
-.tc-return{position:absolute;right:10px;bottom:9px;font-family:var(--font-mono);font-size:9px;
-  letter-spacing:.08em;text-transform:uppercase;color:var(--k-flow);
-  opacity:0;transform:translateX(4px);transition:all var(--dur-med) var(--ease-out);pointer-events:none}
-/* away state — you've drifted from today */
+/* away state — you've drifted from today. The whole card is already a
+   button that spins back to today on click; the ambient purple glow is
+   the only visual cue now. */
 #todayCard.away{border-color:var(--border-strong);
   box-shadow:0 4px 12px -4px rgb(0 0 0 / 30%), 0 0 0 1px rgba(114,65,255,.25), 0 0 22px -6px rgba(114,65,255,.5)}
-#todayCard.away .tc-return{opacity:1;transform:none}
 
 /* ═══ the sheet — peek is a bottom preview; full is a whole page ═══ */
 #sheet{position:fixed;left:0;right:0;bottom:0;z-index:6;
@@ -315,7 +313,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   <button id="todayCard" aria-label="Jump to today">
     <div class="tc-top"><span class="tc-kicker">Chooseday</span><span id="tcMoon" class="tc-moon"></span></div>
     <div class="tc-num" id="tcNum">—</div>
-    <span class="tc-return" id="tcReturn">↺ back to now</span>
   </button>
 </div>
 
