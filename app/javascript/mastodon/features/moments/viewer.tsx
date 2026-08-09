@@ -76,11 +76,23 @@ interface AccountJSON {
   avatar_static: string;
 }
 
+// A single tagged account on a Moment's photo. Matches
+// REST::MediaTagSerializer's shape (which the media-attachment
+// serializer nests under `tags`).
+interface MediaTagJSON {
+  account: {
+    id: string;
+    acct: string;
+    display_name: string;
+  };
+}
+
 interface MediaJSON {
   id: string;
   preview_url: string;
   url: string;
   type: string;
+  tags?: MediaTagJSON[];
 }
 
 interface MomentJSON {
@@ -716,6 +728,21 @@ const ViewerBody = ({
         {moment.caption && (
           <div className='moments-viewer__caption'>{moment.caption}</div>
         )}
+
+        {moment.media_attachment.tags &&
+          moment.media_attachment.tags.length > 0 && (
+            <div className='moments-viewer__tagged'>
+              <FormattedMessage
+                id='moments.viewer.tagged_with'
+                defaultMessage='with {names}'
+                values={{
+                  names: moment.media_attachment.tags
+                    .map((t) => `@${t.account.acct}`)
+                    .join(', '),
+                }}
+              />
+            </div>
+          )}
 
         <footer className='moments-viewer__actions'>
           {isOwner && (

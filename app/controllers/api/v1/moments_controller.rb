@@ -55,6 +55,13 @@ class Api::V1::MomentsController < Api::BaseController
 
     @moment.save!
 
+    # Fire media_tag notifications for anyone the composer tagged on
+    # this Moment's photo. The MediaTagsController itself only notifies
+    # when the media is attached to a Status; Moments don't ride that
+    # path, so we notify here once the Moment exists. Best-effort per
+    # tag — a single flaky lookup shouldn't drop the whole create.
+    notify_media_tags!
+
     render json: @moment, serializer: REST::MomentSerializer
   end
 
@@ -108,5 +115,24 @@ class Api::V1::MomentsController < Api::BaseController
     permitted = params.permit(:visibility, :krew_id)
     permitted[:krew_id] = nil if permitted[:visibility].present? && permitted[:visibility] != 'krew'
     permitted
+  end
+
+  # Notify every account tagged on this Moment's photo. Skips self (a
+  # composer tagging themselves shouldn't buzz their own notifications).
+  # Wraps each call in a rescue so one flaky delivery never sinks the
+  # whole set. No-ops for voice-only Moments (no media attachment).
+  def notify_media_tags!
+    media = @moment.media_attachment
+    return unless media
+
+    media.media_tags.includes(:account).find_each do |tag|
+      next if tag.account_id == current_account.id
+
+      begin
+        NotifyService.new.call(tag.account, :media_tag, tag)
+      rescue => e
+        Rails.logger.warn "MediaTag notification for Moment #{@moment.id} failed for account #{tag.account_id}: #{e.class} #{e.message}"
+      end
+    end
   end
 end

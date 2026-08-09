@@ -29,8 +29,10 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import MicIcon from '@/material-icons/400-24px/mic.svg?react';
+import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import api, { apiRequestPost } from 'mastodon/api';
+import { apiAddMediaTag } from 'mastodon/api/media_tags';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
 import { KornerKrewPicker } from 'mastodon/components/korner_krew_picker';
@@ -39,6 +41,8 @@ import type { VoiceRecorderChange } from 'mastodon/components/media';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 
+import { MomentsTagPeoplePanel } from './tag_people_panel';
+import type { TaggedAccountLite } from './tag_people_panel';
 import { MomentsTextEditor } from './text_editor';
 import type { TextOverlay } from './text_overlay';
 import { OverlayLayer } from './text_overlay';
@@ -57,6 +61,11 @@ interface MediaItem {
   url: string;
   isVideo: boolean;
   overlays: TextOverlay[];
+  // People tagged on this photo. Empty for videos (the picker UI is
+  // hidden for those, matching the text-overlay treatment). Sent to
+  // the server as apiAddMediaTag calls after the media upload
+  // succeeds — the mediaId only exists at submit time.
+  taggedAccounts: TaggedAccountLite[];
 }
 interface VoiceItem {
   kind: 'voice';
@@ -92,6 +101,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
   const [recording, setRecording] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [editorIndex, setEditorIndex] = useState<number | null>(null);
+  const [tagPickerIndex, setTagPickerIndex] = useState<number | null>(null);
   const [caption, setCaption] = useState('');
   const [visibility, setVisibility] = useState<Visibility>('mates');
   const [krewId, setKrewId] = useState<string | null>(null);
@@ -129,6 +139,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
           url,
           isVideo: file.type.startsWith('video/'),
           overlays: [],
+          taggedAccounts: [],
         };
       });
       setActive(items.length); // focus the first newly-added tile
@@ -249,6 +260,28 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     });
   }, []);
 
+  // ── tag-people picker ────────────────────────────────────────────
+  const openTagPickerActive = useCallback(() => {
+    setTagPickerIndex(active);
+  }, [active]);
+  const closeTagPicker = useCallback(() => {
+    setTagPickerIndex(null);
+  }, []);
+  const handleTagsCommit = useCallback((tagged: TaggedAccountLite[]) => {
+    setTagPickerIndex((cur) => {
+      if (cur === null) return null;
+      setItems((prev) => {
+        const next = [...prev];
+        const target = next[cur];
+        if (target && target.kind === 'media') {
+          next[cur] = { ...target, taggedAccounts: tagged };
+        }
+        return next;
+      });
+      return cur;
+    });
+  }, []);
+
   const onCaptionChange = useCallback(
     (event: React.ChangeEvent<HTMLTextAreaElement>) => {
       setCaption(event.target.value.slice(0, MAX_CAPTION_LENGTH));
@@ -297,6 +330,26 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
           });
         } else {
           const mediaId = await uploadFile(item.file);
+          // Post any tagged accounts against the freshly-uploaded
+          // media BEFORE creating the Moment. Doing it after would
+          // race with the Moment's `media_tag` notification pass in
+          // MomentsController#create — we want the tags in place so
+          // the pass sees them. Failures per-tag are logged and
+          // continued (a single flaky account lookup shouldn't drop
+          // the whole Moment) — sequential so 5 tags don't slam the
+          // endpoint.
+          if (!item.isVideo && item.taggedAccounts.length > 0) {
+            for (const tag of item.taggedAccounts) {
+              try {
+                // Centre coord for now; positional tap-to-place is a
+                // follow-up (Instagram Stories-style). The server clamps
+                // to [0, 1] regardless.
+                await apiAddMediaTag(mediaId, tag.accountId, 0.5, 0.5);
+              } catch (e) {
+                console.warn('media tag failed', tag.acct, e);
+              }
+            }
+          }
           await apiRequestPost<MomentResponse>('v1/moments', {
             media_attachment_id: mediaId,
             caption: trimmedCaption,
@@ -332,6 +385,8 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     [items],
   );
   const editorTarget = editorIndex !== null ? items[editorIndex] : undefined;
+  const tagPickerTarget =
+    tagPickerIndex !== null ? items[tagPickerIndex] : undefined;
 
   const submitLabel =
     items.length > 1
@@ -449,6 +504,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
                   total={items.length}
                   disabled={posting}
                   onEdit={openEditorActive}
+                  onTagPeople={openTagPickerActive}
                   onRemove={removeActive}
                   onPrev={active > 0 ? goPrev : undefined}
                   onNext={active < items.length - 1 ? goNext : undefined}
@@ -537,6 +593,17 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
             onCommit={handleEditorCommit}
           />
         )}
+
+      {tagPickerIndex !== null &&
+        tagPickerTarget &&
+        tagPickerTarget.kind === 'media' &&
+        !tagPickerTarget.isVideo && (
+          <MomentsTagPeoplePanel
+            initial={tagPickerTarget.taggedAccounts}
+            onSave={handleTagsCommit}
+            onClose={closeTagPicker}
+          />
+        )}
     </>
   );
 };
@@ -580,10 +647,21 @@ const Hero: React.FC<{
   total: number;
   disabled: boolean;
   onEdit: () => void;
+  onTagPeople: () => void;
   onRemove: () => void;
   onPrev?: () => void;
   onNext?: () => void;
-}> = ({ item, index, total, disabled, onEdit, onRemove, onPrev, onNext }) => {
+}> = ({
+  item,
+  index,
+  total,
+  disabled,
+  onEdit,
+  onTagPeople,
+  onRemove,
+  onPrev,
+  onNext,
+}) => {
   const intl = useIntl();
   return (
     <div className='moments-composer__hero'>
@@ -636,6 +714,26 @@ const Hero: React.FC<{
             )}
           >
             <EditIcon />
+          </button>
+        )}
+        {isStill(item) && (
+          <button
+            type='button'
+            className='moments-composer__hero-tool'
+            onClick={onTagPeople}
+            disabled={disabled}
+            aria-label={intl.formatMessage(
+              item.taggedAccounts.length > 0
+                ? messages.editTags
+                : messages.addTags,
+            )}
+          >
+            <PersonAddIcon />
+            {item.taggedAccounts.length > 0 && (
+              <span className='moments-composer__hero-tool-count'>
+                {item.taggedAccounts.length}
+              </span>
+            )}
           </button>
         )}
         <button
@@ -763,6 +861,14 @@ const messages = defineMessages({
   addMore: { id: 'moments.composer.add_more', defaultMessage: 'Add more' },
   addText: { id: 'moments.composer.add_text', defaultMessage: 'Add text' },
   editText: { id: 'moments.composer.edit_text', defaultMessage: 'Edit text' },
+  addTags: {
+    id: 'moments.composer.add_tags',
+    defaultMessage: 'Tag people',
+  },
+  editTags: {
+    id: 'moments.composer.edit_tags',
+    defaultMessage: 'Edit tagged people',
+  },
   remove: { id: 'moments.composer.remove', defaultMessage: 'Remove' },
   previous: { id: 'moments.composer.previous', defaultMessage: 'Previous' },
   next: { id: 'moments.composer.next', defaultMessage: 'Next' },
