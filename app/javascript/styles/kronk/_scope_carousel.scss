@@ -314,21 +314,66 @@
 // fade on change. No layout of its own — the row-less `.space-header`
 // (max-width 34rem, centred, its own vertical rhythm) owns placement.
 .scope-title {
-  cursor: pointer;
+  position: relative;
   user-select: none;
   -webkit-user-select: none;
 
-  &:hover .space-header__title {
-    filter: brightness(1.12);
+  &__label {
+    cursor: pointer;
+
+    &:hover .space-header__title {
+      filter: brightness(1.12);
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+
+    &:focus-visible .space-header__title {
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
   }
 
-  &:focus-visible {
-    outline: none;
-  }
+  // Subtle prev/next chevrons flanking the title. Absolutely positioned so
+  // they never push the centred .space-header around, dim by default so they
+  // read as a hint rather than chrome that competes with the title.
+  &__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 0;
+    padding: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    opacity: 0.4;
+    cursor: pointer;
+    transition:
+      opacity var(--dur-fast, 120ms) var(--ease-out, ease),
+      color var(--dur-fast, 120ms) var(--ease-out, ease);
 
-  &:focus-visible .space-header__title {
-    text-decoration: underline;
-    text-underline-offset: 4px;
+    &:hover,
+    &:focus-visible {
+      opacity: 0.9;
+      color: var(--accent, var(--text-muted));
+      outline: none;
+    }
+
+    &--prev {
+      left: 4px;
+    }
+
+    &--next {
+      right: 4px;
+    }
+
+    .icon {
+      width: 20px;
+      height: 20px;
+    }
   }
 
   .space-header {
