@@ -47,6 +47,20 @@ class Api::V1::Map::PresenceController < Api::BaseController
     render json: { error: e.message }, status: 400
   rescue ArgumentError => e
     render json: { error: e.message }, status: 422
+  rescue ActiveRecord::RecordInvalid => e
+    # place!'s state.update! surfaces validation failures here. The old
+    # code left this uncaught, which 500'd the request and lit the
+    # client's "Couldn't reach the geocoder" copy for what was really a
+    # validation issue (e.g. GeoCoarsen returning nil for out-of-range
+    # coords). Return the validation message.
+    render json: { error: e.record.errors.full_messages.to_sentence }, status: 422
+  rescue => e
+    # Last-resort catch so an unexpected exception in the pin-drop path
+    # (GeoCoarsen edge case, transient DB issue, etc.) becomes a clean
+    # 500 with a log line and a client-consumable body — not an
+    # unhandled 500 that reads as "the whole map is down".
+    Rails.logger.error("PresenceController#create failed for account #{current_account&.id}: #{e.class} #{e.message}")
+    render json: { error: I18n.t('kronk.map.presence.place_failed') }, status: 500
   end
 
   def destroy

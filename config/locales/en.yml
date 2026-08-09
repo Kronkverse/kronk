@@ -1648,6 +1648,9 @@ en:
       aria_label: "Continue as @%{acct}"
       heading: Already signed in
       or: or sign in with another account
+    map:
+      presence:
+        place_failed: Could not drop your pin. Try again in a moment.
     landing:
       link_about: About Kronk
       link_how: How it works
