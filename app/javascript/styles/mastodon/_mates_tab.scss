@@ -6,9 +6,13 @@
 // detail panel geometry when the two-view shape landed 2026-08-07.
 
 .mates-tab {
-  padding: 24px clamp(16px, 3vw, 32px) 60px;
-  max-width: 720px;
+  // Full-width inside the Stage; a max-width keeps the reading
+  // measure comfortable on wide viewports without shrinking to a
+  // Column-sized column on narrow ones.
+  width: 100%;
+  max-width: 640px;
   margin: 0 auto;
+  padding: 20px clamp(16px, 4vw, 28px) 60px;
   color: var(--text-primary);
 }
 
@@ -25,14 +29,13 @@
   }
 }
 
-// View tabs (List / Timeline). Chip pair at the top of the shell,
-// same visual language as other in-page tab groups (Kommons filters,
-// Notification filters).
+// View tabs (List / Timeline). Left-aligned chip pair at the top of
+// the shell, same visual language as other in-page tab groups.
 .mates-tab__tabs {
   display: inline-flex;
   gap: 2px;
   padding: 3px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   border-radius: var(--radius-round);
   border: 1px solid var(--border-default);
 }
@@ -41,7 +44,7 @@
   background: transparent;
   border: 0;
   border-radius: var(--radius-round);
-  padding: 6px 16px;
+  padding: 6px 18px;
   font-family: inherit;
   font-size: 13px;
   font-weight: 500;

@@ -19,8 +19,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { useParams } from 'react-router-dom';
 
-import { Column } from 'mastodon/components/column';
-import { ColumnBackButton } from 'mastodon/components/column_back_button';
+import { Stage } from 'mastodon/components/stage';
 
 import { MatesEventTimeline } from './event_timeline';
 import { MatesListView } from './list_view';
@@ -71,8 +70,7 @@ const MatesTab = () => {
   );
 
   return (
-    <Column bindToDocument label={intl.formatMessage(messages.title)}>
-      <ColumnBackButton />
+    <Stage bindToDocument label={intl.formatMessage(messages.title)}>
       <div className='mates-tab'>
         {loading && !data && (
           <div className='mates-tab__status'>
@@ -115,7 +113,7 @@ const MatesTab = () => {
           </>
         )}
       </div>
-    </Column>
+    </Stage>
   );
 };
 
