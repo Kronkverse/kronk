@@ -105,6 +105,15 @@ class FanOutOnWriteService < BaseService
         [mention.account_id, mention.id, 'Mention', 'mention']
       end
 
+      # Also land the mention as a Tier-1 "directed at U" nudge on
+      # the pair's Mate conversation, so it surfaces in the Nudges
+      # messenger (the classic /notifications column redirects to
+      # /nudges — a mention that ONLY created a classic Notification
+      # record is invisible to the recipient). The router bypasses
+      # the Mate gate for directed events per
+      # docs/kronk_nudges.md § Relevance engine Tier 1.
+      route_mention_nudges(mentions) unless update?
+
       next unless update?
 
       # This may result in duplicate update payloads, but this ensures clients
@@ -113,6 +122,30 @@ class FanOutOnWriteService < BaseService
       PushUpdateWorker.push_bulk(mentions.filter { |mention| subscribed_to_streaming_api?(mention.account_id) }) do |mention|
         [mention.account_id, @status.id, "timeline:#{mention.account_id}:notifications", { 'update' => true }]
       end
+    end
+  end
+
+  # Fire a Nudges::EventRouter delivery for each fresh mention so the
+  # recipient's messenger picks up "@X mentioned you". Skipped on the
+  # edit / update path — a re-mention on an update shouldn't double up.
+  def route_mention_nudges(mentions)
+    actor = @account
+    mentions.each do |mention|
+      recipient = Account.find_by(id: mention.account_id)
+      next if recipient.nil? || recipient.id == actor.id
+
+      Nudges::EventRouter.deliver(
+        actor: actor,
+        recipient: recipient,
+        source_korner_slug: 'nudges',
+        verb: 'mention',
+        source_type: 'Status',
+        source_id: @status.id,
+        interaction: 'interactive',
+        cta_label: 'Open',
+        cta_route: "/@#{actor.username}/#{@status.id}",
+        directed: true
+      )
     end
   end
 
