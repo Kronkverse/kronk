@@ -282,6 +282,20 @@ body.admin {
     fill: currentcolor;
   }
 
+  // Me pillar renders the viewer's avatar in place of the glyph.
+  // Same slot size (28×28), rounded to a circle, `object-fit: cover`
+  // so a non-square upload doesn't distort. A subtle ring lifts it
+  // off the dark chrome without borrowing the pool-of-light treatment
+  // reserved for the active pillar.
+  &__pillar-icon--avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-round);
+    object-fit: cover;
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--kronk-purple-bright) 30%, transparent);
+  }
+
   // Visually-hidden label — keeps the pillar accessible without
   // showing the text (icons carry the visual identity per §KRONK
   // aesthetic). Screen readers still announce "Me / Home / Hub /

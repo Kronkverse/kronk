@@ -11,11 +11,13 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { NavLink, useLocation } from 'react-router-dom';
 
+import AboriginalFlagIcon from '@/material-icons/400-24px/aboriginal_flag.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import type { IconProp } from 'mastodon/components/icon';
 import { WavingHandBadge } from 'mastodon/components/waving_hand_badge';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { me } from 'mastodon/initial_state';
 import {
   selectHasUnreadNudges,
   selectUnreadNudgesCount,
@@ -47,11 +49,15 @@ interface HubSwitcherProps {
   currentAccountUsername?: string;
 }
 
-type PillarKey = 'me' | 'home' | 'hub' | 'nudges';
+type PillarKey = 'me' | 'home' | 'awawb' | 'hub' | 'nudges';
 
 const messages = defineMessages({
   me: { id: 'hub_switcher.me', defaultMessage: 'Me' },
   home: { id: 'hub_switcher.home', defaultMessage: 'Home' },
+  awawb: {
+    id: 'hub_switcher.awawb',
+    defaultMessage: 'Always was, always will be',
+  },
   hub: { id: 'hub_switcher.hub', defaultMessage: 'Hub' },
   nudges: { id: 'hub_switcher.nudges', defaultMessage: 'Nudges' },
   aria: { id: 'hub_switcher.aria', defaultMessage: 'Primary surfaces' },
@@ -95,6 +101,14 @@ export const HubSwitcher = ({
   const hubManifest = useKorner('hub');
   const nudgesManifest = useKorner('nudges');
 
+  // Me pillar renders the viewer's avatar in place of the profile
+  // korner glyph — you're looking at *your* face, not an abstract
+  // account chip. Falls back to the profile-korner icon when the
+  // avatar hasn't landed in state yet (initial paint, signed-out).
+  const myAvatar = useAppSelector((state) =>
+    me ? (state.accounts.get(me)?.avatar_static ?? null) : null,
+  );
+
   const pillars: PillarConfig[] = useMemo(
     () => [
       {
@@ -112,6 +126,17 @@ export const HubSwitcher = ({
         Icon: kornerIcon('feed', feedManifest),
         iconId: 'feed',
         isActive: (p) => p === '/home' || p.startsWith('/home/'),
+      },
+      {
+        // Middle pillar: /awawb — Aboriginal-flag glyph, one line of
+        // still text. Sits between Home and Hub so it's the visual
+        // centre of the top Membrane row.
+        key: 'awawb',
+        to: '/awawb',
+        label: messages.awawb,
+        Icon: AboriginalFlagIcon,
+        iconId: 'awawb',
+        isActive: (p) => p === '/awawb',
       },
       {
         key: 'hub',
@@ -151,6 +176,7 @@ export const HubSwitcher = ({
       hasUnread={hasUnread}
       ariaLabel={ariaLabel}
       formatLabel={formatLabel}
+      myAvatar={myAvatar}
     />
   ) : (
     <BottomTabBar
@@ -159,6 +185,7 @@ export const HubSwitcher = ({
       hasUnread={hasUnread}
       ariaLabel={ariaLabel}
       formatLabel={formatLabel}
+      myAvatar={myAvatar}
     />
   );
 };
@@ -172,6 +199,7 @@ interface MembraneTopProps {
   hasUnread: boolean;
   ariaLabel: string;
   formatLabel: (m: (typeof messages)[keyof typeof messages]) => string;
+  myAvatar: string | null;
 }
 
 const MembraneTop = ({
@@ -181,11 +209,13 @@ const MembraneTop = ({
   hasUnread,
   ariaLabel,
   formatLabel,
+  myAvatar,
 }: MembraneTopProps) => {
   const rowRef = useRef<HTMLDivElement>(null);
   const pillarRefs = useRef<Record<PillarKey, HTMLAnchorElement | null>>({
     me: null,
     home: null,
+    awawb: null,
     hub: null,
     nudges: null,
   });
@@ -298,14 +328,23 @@ const MembraneTop = ({
               activeClassName='hub-switcher__pillar--active'
               innerRef={registerPillar(pillar.key)}
             >
-              <Icon
-                id={pillar.iconId}
-                icon={pillar.Icon}
-                className='hub-switcher__pillar-icon'
-              />
+              {pillar.key === 'me' && myAvatar ? (
+                <img
+                  src={myAvatar}
+                  alt=''
+                  className='hub-switcher__pillar-icon hub-switcher__pillar-icon--avatar'
+                />
+              ) : (
+                <Icon
+                  id={pillar.iconId}
+                  icon={pillar.Icon}
+                  className='hub-switcher__pillar-icon'
+                />
+              )}
               {/* Label remains in the DOM as sr-only text so screen
-                  readers still announce Me / Home / Hub / Nudges even
-                  though the visible pillar carries the icon only. */}
+                  readers still announce Me / Home / AWAWB / Hub /
+                  Nudges even though the visible pillar carries the
+                  icon (or avatar, for Me) only. */}
               <span className='hub-switcher__label hub-switcher__label--sr'>
                 {label}
               </span>
@@ -342,6 +381,7 @@ interface BottomTabBarProps {
   hasUnread: boolean;
   ariaLabel: string;
   formatLabel: (m: (typeof messages)[keyof typeof messages]) => string;
+  myAvatar: string | null;
 }
 
 const BottomTabBar = ({
@@ -350,6 +390,7 @@ const BottomTabBar = ({
   hasUnread,
   ariaLabel,
   formatLabel,
+  myAvatar,
 }: BottomTabBarProps) => (
   <nav className='hub-switcher hub-switcher--bottom' aria-label={ariaLabel}>
     {pillars.map((pillar) => {
@@ -362,7 +403,15 @@ const BottomTabBar = ({
           activeClassName='hub-switcher__item--active'
         >
           <span className='hub-switcher__icon' aria-hidden>
-            <Icon />
+            {pillar.key === 'me' && myAvatar ? (
+              <img
+                src={myAvatar}
+                alt=''
+                className='hub-switcher__pillar-icon--avatar'
+              />
+            ) : (
+              <Icon />
+            )}
           </span>
           <span className='hub-switcher__label'>
             {formatLabel(pillar.label)}
