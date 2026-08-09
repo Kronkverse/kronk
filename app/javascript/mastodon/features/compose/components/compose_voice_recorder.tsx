@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
 import { uploadCompose } from 'mastodon/actions/compose';
-import { VoiceRecorder } from 'mastodon/components/media';
+import { VoiceRecorder, voiceBlobToFile } from 'mastodon/components/media';
 import type { VoiceRecorderChange } from 'mastodon/components/media';
 import { useAppDispatch } from 'mastodon/store';
 
@@ -22,14 +22,9 @@ export const ComposeVoiceRecorder: React.FC<Props> = ({ open, onClose }) => {
   const handleChange = useCallback(
     (change: VoiceRecorderChange | null) => {
       if (!change?.blob) return;
-      const type = change.blob.type || 'audio/webm';
-      const ext = type.includes('ogg')
-        ? 'ogg'
-        : type.includes('mp4') || type.includes('mpeg')
-          ? 'm4a'
-          : 'webm';
-      const file = new File([change.blob], `voice.${ext}`, { type });
-      dispatch(uploadCompose([file]));
+      // voiceBlobToFile owns the container-vs-MIME dance (mp4/webm audio must
+      // be declared video/* or Paperclip 422s the spoof check).
+      dispatch(uploadCompose([voiceBlobToFile(change.blob)]));
       onClose();
     },
     [dispatch, onClose],

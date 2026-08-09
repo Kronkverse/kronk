@@ -6,7 +6,7 @@
 // pending: Nudges (revives archived voice sending, PR follow-up),
 // Booth/Albutts (media pick unification, opportunistic).
 export { MediaPickButtons } from './media_pick_buttons';
-export { uploadMediaBlob } from './upload_media_blob';
+export { uploadMediaBlob, voiceBlobToFile } from './upload_media_blob';
 export type { VoiceRecorderChange } from './voice_recorder';
 export { VoiceRecorder } from './voice_recorder';
 export { VoicePlayer } from './voice_player';
