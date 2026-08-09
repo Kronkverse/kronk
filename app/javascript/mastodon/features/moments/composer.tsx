@@ -34,7 +34,7 @@ import api, { apiRequestPost } from 'mastodon/api';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
 import { KornerKrewPicker } from 'mastodon/components/korner_krew_picker';
-import { VoiceRecorder } from 'mastodon/components/media';
+import { VoiceRecorder, uploadMediaBlob } from 'mastodon/components/media';
 import type { VoiceRecorderChange } from 'mastodon/components/media';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
@@ -285,15 +285,10 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
         if (item.kind === 'voice') {
           const blob = item.change.blob;
           if (!blob) continue;
-          const type = blob.type || 'audio/webm';
-          const ext = type.includes('ogg')
-            ? 'ogg'
-            : type.includes('mp4') || type.includes('mpeg')
-              ? 'm4a'
-              : 'webm';
-          const voiceId =
-            item.change.mediaId ??
-            (await uploadFile(new File([blob], `voice.${ext}`, { type })));
+          // uploadMediaBlob owns the audio extension-vs-MIME dance
+          // (WebM must be declared video/webm or Paperclip 422s the
+          // spoof check) — the same helper the recorder uses.
+          const voiceId = item.change.mediaId ?? (await uploadMediaBlob(blob));
           await apiRequestPost<MomentResponse>('v1/moments', {
             voice_media_attachment_id: voiceId,
             caption: trimmedCaption,
