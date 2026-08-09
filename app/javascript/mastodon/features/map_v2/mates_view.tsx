@@ -1,21 +1,20 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+import { defineMessages, useIntl } from 'react-intl';
 
 import type { Feature, Polygon } from 'geojson';
 import * as maplibregl from 'maplibre-gl';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
+import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import {
   apiGetPresence,
   apiGetSelfPresence,
-  apiPlacePresence,
   apiRemovePresence,
 } from 'mastodon/api/map';
-import type { ApiPresencePinJSON, MapPrecision } from 'mastodon/api/map';
-import { Button } from 'mastodon/components/button';
-import { LoadingIndicator } from 'mastodon/components/loading_indicator';
+import type { ApiPresencePinJSON } from 'mastodon/api/map';
+import { Icon } from 'mastodon/components/icon';
 
 import {
   BASEMAP_URL,
@@ -25,6 +24,7 @@ import {
   ensurePmtilesProtocol,
 } from './basemap';
 import { PeopleStrip } from './people_strip';
+import { PlaceControl } from './place_control';
 
 // Map — Mates lens. A native MapLibre GL map rendering opt-in, coarsened
 // presence pins (docs/spaces/map.md). The basemap is the self-hosted OSM
@@ -33,17 +33,7 @@ import { PeopleStrip } from './people_strip';
 // geography, roads and pins render. Presence is polled, not streamed.
 
 const messages = defineMessages({
-  placeMe: { id: 'map.place_me', defaultMessage: 'Place me on the map' },
-  updateMe: { id: 'map.update_me', defaultMessage: 'Update my spot' },
-  removeMe: { id: 'map.remove_me', defaultMessage: 'Remove me' },
-  hood: { id: 'map.precision.hood', defaultMessage: 'Neighbourhood' },
-  city: { id: 'map.precision.city', defaultMessage: 'City' },
-  locating: { id: 'map.locating', defaultMessage: 'Finding you…' },
-  geoError: {
-    id: 'map.geo_error',
-    defaultMessage:
-      "Couldn't get your location — check the browser permission.",
-  },
+  removeMe: { id: 'map.remove_me', defaultMessage: 'Remove me from the map' },
 });
 
 const POLL_MS = 30_000;
@@ -77,9 +67,6 @@ export const MatesView: React.FC = () => {
   const [ready, setReady] = useState(false);
   const [pins, setPins] = useState<ApiPresencePinJSON[]>([]);
   const [selfPin, setSelfPin] = useState<ApiPresencePinJSON | null>(null);
-  const [placing, setPlacing] = useState(false);
-  const [locating, setLocating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // ── Map init ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -201,36 +188,15 @@ export const MatesView: React.FC = () => {
   }, [pins, selfPin, ready]);
 
   // ── Place / remove me ─────────────────────────────────────────────
-  const place = useCallback(
-    (precision: MapPrecision) => {
-      setError(null);
-      setLocating(true);
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          void apiPlacePresence({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            precision,
-            share_scope: 'friends',
-          })
-            .then((pin) => {
-              setSelfPin(pin);
-              mapRef.current?.flyTo({ center: [pin.lng, pin.lat], zoom: 11 });
-              refresh();
-            })
-            .finally(() => {
-              setLocating(false);
-              setPlacing(false);
-            });
-        },
-        () => {
-          setError(intl.formatMessage(messages.geoError));
-          setLocating(false);
-        },
-        { enableHighAccuracy: false, timeout: 15_000 },
-      );
+  // Placing lives in <PlaceControl>; when it returns a pin, fly to it
+  // and refresh so the mates projection picks it up on the next poll.
+  const handlePlaced = useCallback(
+    (pin: ApiPresencePinJSON) => {
+      setSelfPin(pin);
+      mapRef.current?.flyTo({ center: [pin.lng, pin.lat], zoom: 11 });
+      refresh();
     },
-    [intl, refresh],
+    [refresh],
   );
 
   const remove = useCallback(() => {
@@ -239,16 +205,6 @@ export const MatesView: React.FC = () => {
       refresh();
     });
   }, [refresh]);
-
-  const startPlacing = useCallback(() => {
-    setPlacing(true);
-  }, []);
-  const placeHood = useCallback(() => {
-    place('hood');
-  }, [place]);
-  const placeCity = useCallback(() => {
-    place('city');
-  }, [place]);
 
   // Centre the map on a person tapped in the people strip.
   const handleSelectPin = useCallback((pin: ApiPresencePinJSON) => {
@@ -267,43 +223,22 @@ export const MatesView: React.FC = () => {
       <div className='map-mates__stage'>
         <div ref={containerRef} className='map-mates__canvas' />
 
-        <div className='map-mates__panel'>
-          {locating && (
-            <span className='map-mates__status'>
-              <LoadingIndicator />
-              <FormattedMessage {...messages.locating} />
-            </span>
-          )}
-          {error && <span className='map-mates__error'>{error}</span>}
-
+        {/* Bottom-left place control: either the "remove me" pill (when
+            I already have a pin) or the search-a-place FAB. Placing and
+            removing are the two states, and only one shows at a time. */}
+        <div className='map-mates__place-slot'>
           {selfPin ? (
-            <>
-              <Button secondary onClick={startPlacing}>
-                {intl.formatMessage(messages.updateMe)}
-              </Button>
-              <Button className='button--destructive' onClick={remove}>
-                {intl.formatMessage(messages.removeMe)}
-              </Button>
-            </>
-          ) : placing ? (
-            <>
-              <span className='map-mates__prompt'>
-                <FormattedMessage
-                  id='map.pick_precision'
-                  defaultMessage='Show me at:'
-                />
-              </span>
-              <Button secondary onClick={placeHood}>
-                {intl.formatMessage(messages.hood)}
-              </Button>
-              <Button secondary onClick={placeCity}>
-                {intl.formatMessage(messages.city)}
-              </Button>
-            </>
+            <button
+              type='button'
+              className='place-control__remove'
+              onClick={remove}
+              aria-label={intl.formatMessage(messages.removeMe)}
+              title={intl.formatMessage(messages.removeMe)}
+            >
+              <Icon id='close' icon={CloseIcon} />
+            </button>
           ) : (
-            <Button onClick={startPlacing}>
-              {intl.formatMessage(messages.placeMe)}
-            </Button>
+            <PlaceControl onPlaced={handlePlaced} />
           )}
         </div>
       </div>

@@ -58,38 +58,201 @@
     }
   }
 
-  &__panel {
+  // Bottom-left slot for the place control (search-a-place FAB /
+  // panel / remove pill). Positioned by the stage so the control
+  // itself can stay layout-agnostic.
+  &__place-slot {
     position: absolute;
-    left: 50%;
-    bottom: 20px;
-    transform: translateX(-50%);
+    left: 16px;
+    bottom: 16px;
     z-index: 5;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    max-width: calc(100% - 24px);
-    padding: 8px 10px;
-    border-radius: 12px;
-    border: 1px solid var(--border-default);
-    background: rgb(20 20 30 / 82%);
-    backdrop-filter: blur(8px);
-    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
+    max-width: calc(100% - 32px);
   }
+}
 
-  &__prompt,
-  &__status,
-  &__error {
+// Place control — the map's bottom-left "search a place to pin
+// yourself" affordance. Two visual states:
+//   1. Collapsed — a round pin FAB. Tap to open.
+//   2. Expanded — a search box + geocode suggestions, with an
+//      attribution line. Type → 350ms debounce → Nominatim → tap a
+//      result to drop your pin.
+// A separate `.place-control__remove` variant is used by `mates_view`
+// when the caller already has a pin — same slot, an X to unplace.
+.place-control {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(320px, 100%);
+  padding: 10px;
+  border-radius: var(--radius-medium, 12px);
+  border: 1px solid var(--border-default);
+  background: rgb(20 20 30 / 88%);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
+  color: var(--text-primary);
+
+  &__fab,
+  &__remove {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--border-default);
+    border-radius: 999px;
+    background: rgb(20 20 30 / 88%);
+    color: var(--text-primary);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
+    cursor: pointer;
+    transition:
+      background 0.15s ease,
+      transform 0.15s ease,
+      border-color 0.15s ease;
+
+    .icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: rgb(40 40 60 / 92%);
+      border-color: var(--kronk-purple-bright, #b39dff);
+      outline: none;
+    }
+  }
+
+  &__remove {
+    color: var(--error-text, #e0698a);
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--error-text, #e0698a);
+    }
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
     gap: 6px;
-    font-size: 13px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: rgb(0 0 0 / 30%);
+    border: 1px solid var(--border-default);
+  }
+
+  &__search-icon {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
     color: var(--text-secondary);
   }
 
-  &__error {
-    color: var(--error-text, #e0698a);
+  &__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 4px 2px;
+    background: transparent;
+    border: 0;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 14px;
+
+    &::placeholder {
+      color: var(--text-secondary);
+    }
+
+    &:focus {
+      outline: none;
+    }
+
+    // Kill Safari's search-input decorations so the row stays clean.
+    &::-webkit-search-cancel-button,
+    &::-webkit-search-decoration {
+      appearance: none;
+    }
+  }
+
+  &__close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    color: var(--text-secondary);
+    border-radius: 999px;
+    cursor: pointer;
+
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text-primary);
+      background: rgb(255 255 255 / 6%);
+      outline: none;
+    }
+  }
+
+  &__meta {
+    padding: 4px 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+
+    &--error {
+      color: var(--error-text, #e0698a);
+    }
+  }
+
+  &__results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__result {
+    width: 100%;
+    padding: 8px 10px;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    color: var(--text-primary);
+    text-align: start;
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.35;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: rgb(124 92 255 / 18%);
+      outline: none;
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+  }
+
+  &__attribution {
+    padding: 2px 6px 0;
+    font-size: 11px;
+    color: var(--text-secondary);
+    opacity: 0.75;
   }
 }
 

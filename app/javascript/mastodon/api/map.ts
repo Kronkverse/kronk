@@ -44,3 +44,17 @@ export const apiPlacePresence = (params: {
 
 // Remove me — hard delete, nothing retained.
 export const apiRemovePresence = () => apiRequestDelete('v1/map/presence');
+
+// Geocode a typed place name via the server-side Nominatim proxy
+// (Api::V1::Map::GeocodeController). Returns up to 5 candidates; the
+// server caches identical queries so repeat searches don't hit the
+// upstream. Attribution ("© OpenStreetMap contributors") is the
+// caller's responsibility to render.
+export interface ApiGeocodeResultJSON {
+  label: string;
+  lat: number;
+  lng: number;
+}
+
+export const apiGeocodeSearch = (query: string) =>
+  apiRequestGet<ApiGeocodeResultJSON[]>('v1/map/geocode', { q: query });
