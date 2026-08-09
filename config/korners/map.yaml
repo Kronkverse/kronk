@@ -16,7 +16,11 @@ name: Map
 purpose: "To let people signal presence on their own terms — who's around, only if they choose to say."
 tagline: 'Allow yourself to be found, know where your mates are & explore the world.'
 icon:
-  material: travel_explore
+  # `australia` is the Kronk-custom map glyph — outline of Australia,
+  # sourced from talitamoss.info/files/uploads/australia.svg. Wired into
+  # useKornerIcon.tsx (MATERIAL_TO_ICON) and lives at
+  # app/javascript/material-icons/400-24px/australia.svg.
+  material: australia
 render_target: native
 version: 0.1.0 # backend + SPA both shipped in 2.0.0 rebuild (alpha.270 onward)
 
