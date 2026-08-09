@@ -552,33 +552,6 @@
   margin: 0 auto;
 }
 
-.moments__actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 4px 0 18px;
-  border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: 20px;
-}
-
-.moments__compose-cta {
-  padding: 10px 18px;
-  border-radius: var(--radius-round);
-  border: 0;
-  background: var(--accent);
-  color: var(--text-on-accent);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: transform 0.14s;
-
-  &:hover {
-    transform: translateY(-1px);
-  }
-}
-
 .moments__loading,
 .moments__empty,
 .moments__error {
@@ -718,69 +691,15 @@
   border-top: 1px solid var(--border-subtle);
 }
 
-// ── Composer overlay ───────────────────────────────────────────────
+// ── Composer body ──────────────────────────────────────────────────
+// Outer shell (portal, backdrop, header with title + reach dropdown,
+// footer with Cancel + Share) is provided by `<ComposeShell>` — see
+// _compose_shell.scss. `.moments-composer` is now just the field-flow
+// container inside the shell's body slot.
 .moments-composer {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-}
-
-.moments-composer__backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgb(0 0 0 / 60%);
-  cursor: pointer;
-}
-
-.moments-composer__panel {
-  position: relative;
-  width: 100%;
-  max-width: 480px;
-  background: var(--surface-primary);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-large);
-  padding: 22px 20px 18px;
-  box-shadow: var(--elevation-menu);
   display: flex;
   flex-direction: column;
   gap: 14px;
-}
-
-// Feed-card-shaped head: title on the left, ReachDropdown on the
-// right. Both baselines align so the dropdown reads as chrome next
-// to the title, not a form field below.
-.moments-composer__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  padding-bottom: 4px;
-}
-
-.moments-composer__titles {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.moments-composer__title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 20px;
-  color: var(--text-primary);
-}
-
-.moments-composer__subtitle {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
 }
 
 .moments-composer__section {
@@ -860,15 +779,6 @@
   }
 }
 
-// The Moments visibility strip is now the shared
-// `.korner-visibility-picker` component; the standalone
-// `.moments-composer__visibility` selector is passed as a className
-// hook if a composer wants to add spacing but no longer carries the
-// mono/uppercase per-button style. See _korner_visibility_picker.scss.
-.moments-composer__visibility {
-  margin-top: 4px;
-}
-
 .moments-composer__error {
   padding: 8px 12px;
   border-radius: var(--radius-medium);
@@ -876,51 +786,6 @@
   color: var(--warning-red);
   font-family: var(--font-mono);
   font-size: 11px;
-}
-
-.moments-composer__footer {
-  display: flex;
-  gap: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border-subtle);
-  margin-top: 4px;
-  justify-content: flex-end;
-}
-
-.moments-composer__cancel,
-.moments-composer__post {
-  padding: 8px 18px;
-  border-radius: var(--radius-round);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition:
-    color 0.14s,
-    background 0.14s;
-}
-
-.moments-composer__cancel {
-  border: 1px solid var(--border-subtle);
-  background: transparent;
-  color: var(--text-secondary);
-
-  &:hover:not(:disabled) {
-    color: var(--text-primary);
-    border-color: var(--accent);
-  }
-}
-
-.moments-composer__post {
-  border: 0;
-  background: var(--accent);
-  color: var(--text-on-accent);
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
 }
 
 // ── Text overlays (viewer + composer preview) ─────────────────────
