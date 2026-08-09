@@ -372,10 +372,12 @@ class ComposeForm extends ImmutablePureComponent {
               </button>
 
               <div className={classNames('compose-form__tools', { open: toolsOpen })}>
-                <UploadButtonContainer />
-                <PollButtonContainer />
-                <SpoilerButtonContainer />
-                <EmojiPickerDropdown onPickEmoji={this.handleEmojiPick} />
+                <div className='compose-form__tools-tray'>
+                  <UploadButtonContainer />
+                  <PollButtonContainer />
+                  <SpoilerButtonContainer />
+                  <EmojiPickerDropdown onPickEmoji={this.handleEmojiPick} />
+                </div>
               </div>
 
               <div className='compose-form__actions-spacer' />
