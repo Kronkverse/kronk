@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
-import { useIntl, defineMessages } from 'react-intl';
-
-import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
-import { Icon } from 'mastodon/components/icon';
-import { LoadingIndicator } from 'mastodon/components/loading_indicator';
-
-const messages = defineMessages({
-  load_more: { id: 'status.load_more', defaultMessage: 'Load more' },
-});
+// Invisible mid-stream gap sentinel. When a `TIMELINE_GAP` marker sits
+// between two loaded batches (server returned an incomplete window),
+// this fires the paginated `onClick(param)` fetch silently as the gap
+// scrolls near the viewport. There's no button and no spinner — the
+// user should never see a "load more" affordance for a data-continuity
+// concern the client can resolve on its own. Matches the sibling
+// LoadMoreSentinel pattern used at list-end (PR #993).
+//
+// Fires once per mount; if the fetch fails and the gap stays in the
+// DOM, React re-mounts on the next list update and the observer
+// re-engages.
 
 interface Props<T> {
   disabled: boolean;
@@ -17,31 +19,20 @@ interface Props<T> {
 }
 
 export const LoadGap = <T,>({ disabled, param, onClick }: Props<T>) => {
-  const intl = useIntl();
-  const [loading, setLoading] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const firedRef = useRef(false);
 
-  const handleClick = useCallback(() => {
-    if (firedRef.current) return;
-    firedRef.current = true;
-    setLoading(true);
-    onClick(param);
-  }, [param, onClick]);
-
-  // Auto-load the gap when it comes near the viewport. The user
-  // shouldn't have to manually resolve a data-continuity concern; if
-  // scrolling toward missing statuses, silently fetch them so the feed
-  // just closes up. Fires once per gap; if the fetch fails and the gap
-  // stays in the DOM, the button is still clickable as a fallback.
   useEffect(() => {
-    const el = buttonRef.current;
-    if (!el || disabled || firedRef.current) return;
+    const el = ref.current;
+    if (!el || disabled) return;
+    firedRef.current = false;
 
     const io = new IntersectionObserver(
       (entries) => {
+        if (firedRef.current) return;
         if (entries.some((e) => e.isIntersecting)) {
-          handleClick();
+          firedRef.current = true;
+          onClick(param);
         }
       },
       { rootMargin: '400px 0px' },
@@ -50,22 +41,7 @@ export const LoadGap = <T,>({ disabled, param, onClick }: Props<T>) => {
     return () => {
       io.disconnect();
     };
-  }, [disabled, handleClick]);
+  }, [disabled, param, onClick]);
 
-  return (
-    <button
-      ref={buttonRef}
-      className='load-more load-gap'
-      disabled={disabled}
-      onClick={handleClick}
-      aria-label={intl.formatMessage(messages.load_more)}
-      title={intl.formatMessage(messages.load_more)}
-    >
-      {loading ? (
-        <LoadingIndicator />
-      ) : (
-        <Icon id='ellipsis-h' icon={MoreHorizIcon} />
-      )}
-    </button>
-  );
+  return <div ref={ref} className='load-gap-sentinel' aria-hidden='true' />;
 };
