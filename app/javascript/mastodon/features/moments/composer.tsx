@@ -1,36 +1,40 @@
-// Moments composer. Uploads one media attachment (a photo or a
-// ≤60 s video) and, when the media is a still photo, optionally
-// pairs it with a browser-recorded voice clip (≤60 s). Third media
-// shape spec: docs/spaces/moments.md § What a Moment is.
+// Moments composer — image-first. The picked media IS the composer: a
+// full-size hero preview with the media filling the frame, a thumbnail
+// filmstrip to move between shots, and a caption below. The empty state
+// offers three peers — Camera, Upload, Voice — and the trailing "+" on
+// the strip adds more.
 //
-// Media upload flow: POST /api/v2/media (multipart) → get the
-// attachment id → POST /api/v1/moments with { media_attachment_id,
-// voice_media_attachment_id, caption, visibility }.
+// Each tile in the strip posts as its own Moment, all sharing the one
+// caption / visibility / krew:
+//   • a photo / video tile → a media Moment (POST v2/media → v1/moments
+//     with media_attachment_id)
+//   • a voice tile → a voice-only Moment (voice_media_attachment_id,
+//     no photo) — enabled back-end 2026-08-09.
 //
-// Multi-photo (Kommons #117047177063699814): when the user picks
-// several photos at once, the composer posts them as N separate
-// Moments in sequence, all sharing the same caption / visibility /
-// krew. Voice pairing stays a single-photo affordance (and is only
-// offered when exactly one still is picked). Video is single-shot
-// only — if any file in the pick is a video, we keep just the first
-// video and drop the rest.
-//
-// The cross-korner attach flows (Kalendar / Krew / Map / Klot /
-// mARTketplace) declared in the spec are not shipped in v1 — they
-// land in follow-ups.
+// Still photos can carry text overlays (the hero "Aa" tool opens the
+// editor); videos and voice clips cannot. The cross-korner attach flows
+// (Kalendar / Krew / Map / Klot / mARTketplace) declared in the spec are
+// not shipped in v1 — they land in follow-ups.
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { FormattedMessage, useIntl, defineMessages } from 'react-intl';
 
 import axios from 'axios';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
+import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
+import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
+import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+import MicIcon from '@/material-icons/400-24px/mic.svg?react';
+import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import api, { apiRequestPost } from 'mastodon/api';
 import { ComposeShell } from 'mastodon/components/compose_shell';
+import { Icon } from 'mastodon/components/icon';
 import { KornerKrewPicker } from 'mastodon/components/korner_krew_picker';
-import { MediaPickButtons, VoiceRecorder } from 'mastodon/components/media';
+import { VoiceRecorder } from 'mastodon/components/media';
 import type { VoiceRecorderChange } from 'mastodon/components/media';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
@@ -40,18 +44,29 @@ import type { TextOverlay } from './text_overlay';
 import { OverlayLayer } from './text_overlay';
 
 // Reach ladder + krew (docs/kronk_feed_and_reach.md §2), minus
-// `self_only` — dropped from the Moments composer because an
-// audience-of-one on an ephemeral share is a private journal, not a
-// Moment (see docs/spaces/moments.md § Reach). The DB enum keeps it
-// for older rows. The shared visibility picker reads
-// `visibility_scopes` from the moments manifest; picking `krew`
-// reveals the krew sub-picker below.
+// `self_only` — an audience-of-one on an ephemeral share is a private
+// journal, not a Moment (docs/spaces/moments.md § Reach).
 type Visibility = 'public' | 'orbit' | 'mates' | 'krew';
+
+// One tile in the strip. A media tile wraps a picked File (photo or
+// video); a voice tile wraps a recorded clip. `url` is an object URL
+// for preview, revoked on removal / unmount.
+interface MediaItem {
+  kind: 'media';
+  file: File;
+  url: string;
+  isVideo: boolean;
+  overlays: TextOverlay[];
+}
+interface VoiceItem {
+  kind: 'voice';
+  change: VoiceRecorderChange;
+}
+type Item = MediaItem | VoiceItem;
 
 interface MediaResponse {
   id: string;
 }
-
 interface MomentResponse {
   id: string;
 }
@@ -64,22 +79,22 @@ interface Props {
 const MAX_CAPTION_LENGTH = 500;
 const VOICE_MAX_SECONDS = 60;
 
+const isStill = (item: Item): item is MediaItem =>
+  item.kind === 'media' && !item.isVideo;
+
 export const MomentsComposer = ({ onClose, onPosted }: Props) => {
-  const [files, setFiles] = useState<File[]>([]);
-  // Preview URLs parallel to `files`. Held in state (not derived at
-  // render) so we can revoke them on file change / unmount without
-  // re-creating them on every render tick.
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  // Per-file text overlays. Parallel array to `files`; index i's
-  // overlays fly with files[i]. Empty on newly-picked files; the
-  // editor writes back into this slot on Done.
-  const [overlaysByFile, setOverlaysByFile] = useState<TextOverlay[][]>([]);
-  // Which photo the text editor is open on. Null = editor closed.
+  const intl = useIntl();
+  const [items, setItems] = useState<Item[]>([]);
+  const [active, setActive] = useState(0);
+  // Stage modes: the voice recorder takes over the hero while arming /
+  // recording; `addMenu` is the little Camera/Upload/Voice popover the
+  // strip's "+" opens.
+  const [recording, setRecording] = useState(false);
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [editorIndex, setEditorIndex] = useState<number | null>(null);
   const [caption, setCaption] = useState('');
   const [visibility, setVisibility] = useState<Visibility>('mates');
   const [krewId, setKrewId] = useState<string | null>(null);
-  const [voice, setVoice] = useState<VoiceRecorderChange | null>(null);
   const [posting, setPosting] = useState(false);
   const [postingProgress, setPostingProgress] = useState<{
     current: number;
@@ -87,85 +102,151 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Voice only makes sense over a *single* still photo — a mixed or
-  // multi-photo batch drops the voice affordance entirely, and video
-  // already carries its own audio track (spec § What a Moment is).
-  // Destructure so `noUncheckedIndexedAccess` gets a nullable local
-  // rather than an unguarded `files[0]`.
-  const voiceEligible = useMemo(() => {
-    const [only] = files;
-    return only !== undefined && !only.type.startsWith('video/');
-  }, [files]);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  const libraryInputRef = useRef<HTMLInputElement | null>(null);
+  // Object URLs currently held, so unmount can revoke every one even if
+  // React has already dropped the item from state.
+  const urlsRef = useRef<Set<string>>(new Set());
 
-  const onFileChange = useCallback((picked: File[]) => {
-    // A pick that contains any video collapses to just the first
-    // video — video-in-Moments is single-shot only, and a
-    // "photo+video batch" doesn't have obvious semantics.
-    const firstVideo = picked.find((f) => f.type.startsWith('video/'));
-    const next = firstVideo ? [firstVideo] : picked;
-    setFiles(next);
-    // Fresh pick → fresh overlays. Videos never get overlays (the
-    // editor is a still-image-only surface for v1).
-    setOverlaysByFile(next.map(() => []));
-    // Newly picked video / multi-photo batch both invalidate any
-    // prior voice recording — don't leave stray state around when
-    // the constraint flips. `isSingleStill` handles both branches
-    // (video-in-single-slot and multi-photo) without indexing into
-    // the array.
-    const isSingleStill = next.length === 1 && !firstVideo;
-    if (!isSingleStill) setVoice(null);
-  }, []);
-
-  const clearFiles = useCallback(() => {
-    setFiles([]);
-    setOverlaysByFile([]);
-    setVoice(null);
-  }, []);
-
-  // Preview URLs — created on file change, revoked on next change /
-  // unmount so we don't leak object URLs across batches.
-  useEffect(() => {
-    const urls = files.map((f) => URL.createObjectURL(f));
-    setPreviewUrls(urls);
-    return () => {
-      urls.forEach((u) => {
+  useEffect(
+    () => () => {
+      urlsRef.current.forEach((u) => {
         URL.revokeObjectURL(u);
       });
-    };
-  }, [files]);
+    },
+    [],
+  );
 
-  const openEditor = useCallback((i: number) => {
-    setEditorIndex(i);
+  const appendFiles = useCallback(
+    (picked: File[]) => {
+      if (picked.length === 0) return;
+      const added: MediaItem[] = picked.map((file) => {
+        const url = URL.createObjectURL(file);
+        urlsRef.current.add(url);
+        return {
+          kind: 'media',
+          file,
+          url,
+          isVideo: file.type.startsWith('video/'),
+          overlays: [],
+        };
+      });
+      setActive(items.length); // focus the first newly-added tile
+      setItems((prev) => [...prev, ...added]);
+    },
+    [items.length],
+  );
+
+  const onCameraChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      appendFiles(Array.from(event.target.files ?? []));
+      event.target.value = '';
+    },
+    [appendFiles],
+  );
+  const onLibraryChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      appendFiles(Array.from(event.target.files ?? []));
+      event.target.value = '';
+    },
+    [appendFiles],
+  );
+
+  const openCamera = useCallback(() => {
+    setAddMenuOpen(false);
+    cameraInputRef.current?.click();
   }, []);
+  const openLibrary = useCallback(() => {
+    setAddMenuOpen(false);
+    libraryInputRef.current?.click();
+  }, []);
+  const startVoice = useCallback(() => {
+    setAddMenuOpen(false);
+    setRecording(true);
+  }, []);
+  const cancelVoice = useCallback(() => {
+    setRecording(false);
+  }, []);
+
+  // Recorder handed back a finished clip (autoUpload off → blob only);
+  // append it as a voice tile and leave recording mode.
+  const onVoiceChange = useCallback(
+    (change: VoiceRecorderChange | null) => {
+      if (!change?.blob) return;
+      setActive(items.length);
+      setItems((prev) => [...prev, { kind: 'voice', change }]);
+      setRecording(false);
+    },
+    [items.length],
+  );
+
+  const toggleAddMenu = useCallback(() => {
+    setAddMenuOpen((v) => !v);
+  }, []);
+
+  // Drop a tile; the `active` clamp effect below re-homes the cursor.
+  const removeAt = useCallback((index: number) => {
+    setItems((prev) => {
+      const target = prev[index];
+      if (target?.kind === 'media') {
+        URL.revokeObjectURL(target.url);
+        urlsRef.current.delete(target.url);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+  }, []);
+
+  const removeActive = useCallback(() => {
+    removeAt(active);
+  }, [removeAt, active]);
+
+  const goPrev = useCallback(() => {
+    setActive((a) => Math.max(0, a - 1));
+  }, []);
+  const goNext = useCallback(() => {
+    setActive((a) => a + 1);
+  }, []);
+
+  // Clamp `active` if the tail was removed elsewhere.
+  useEffect(() => {
+    setActive((a) => Math.min(a, Math.max(0, items.length - 1)));
+  }, [items.length]);
+
+  // Keyboard left / right moves between tiles (only when the strip has
+  // more than one and no modal / recorder is capturing input).
+  useEffect(() => {
+    if (items.length < 2 || editorIndex !== null || recording) return undefined;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') setActive((a) => Math.max(0, a - 1));
+      if (e.key === 'ArrowRight')
+        setActive((a) => Math.min(items.length - 1, a + 1));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [items.length, editorIndex, recording]);
+
+  // ── text overlay editor ──────────────────────────────────────────
+  const openEditorActive = useCallback(() => {
+    setEditorIndex(active);
+  }, [active]);
   const closeEditor = useCallback(() => {
     setEditorIndex(null);
   }, []);
-  // Commit handler for the editor. Reads the current `editorIndex`
-  // from state, writes overlays into that slot, then advances the
-  // editor to the next photo (or closes if this was the last).
-  const handleEditorCommit = useCallback(
-    (overlays: TextOverlay[]) => {
-      setEditorIndex((cur) => {
-        if (cur === null) return null;
-        setOverlaysByFile((prev) => {
-          const next = [...prev];
-          next[cur] = overlays;
-          return next;
-        });
-        return cur + 1 < files.length ? cur + 1 : null;
+  const handleEditorCommit = useCallback((overlays: TextOverlay[]) => {
+    setEditorIndex((cur) => {
+      if (cur === null) return null;
+      setItems((prev) => {
+        const next = [...prev];
+        const target = next[cur];
+        if (target && target.kind === 'media') {
+          next[cur] = { ...target, overlays };
+        }
+        return next;
       });
-    },
-    [files.length],
-  );
-
-  // Explicit next / prev — used by the editor's carousel buttons
-  // (multi-photo pick) without committing. Stable identity via
-  // useCallback so the editor's JSX doesn't fail react/jsx-no-bind.
-  const handleEditorNext = useCallback(() => {
-    setEditorIndex((i) => (i !== null && i + 1 < files.length ? i + 1 : i));
-  }, [files.length]);
-  const handleEditorPrev = useCallback(() => {
-    setEditorIndex((i) => (i !== null && i > 0 ? i - 1 : i));
+      return null;
+    });
   }, []);
 
   const onCaptionChange = useCallback(
@@ -175,48 +256,60 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     [],
   );
 
-  // ReachDropdown emits the full 5-rung ladder; Moments hides
-  // `self_only` in the menu so the callback only ever yields one of
-  // our narrower Visibility values. Cast is safe on that ground.
   const onReachChange = useCallback((next: ReachValue) => {
     setVisibility(next as Visibility);
     if (next !== 'krew') setKrewId(null);
   }, []);
 
+  const uploadFile = useCallback(async (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    // `api()` has no baseURL, so the raw axios instance needs the
+    // absolute `/api/…` path (the apiRequest* helpers prepend it).
+    const resp = await api().post<MediaResponse>('/api/v2/media', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return resp.data.id;
+  }, []);
+
   const submitAsync = useCallback(async () => {
-    if (files.length === 0 || posting) return;
+    if (items.length === 0 || posting) return;
     setPosting(true);
-    setPostingProgress({ current: 0, total: files.length });
+    setPostingProgress({ current: 0, total: items.length });
     setError(null);
     const trimmedCaption = caption.trim();
-    const voiceMediaId = voiceEligible ? (voice?.mediaId ?? null) : null;
     const krewIdOrNull = visibility === 'krew' ? krewId : null;
     try {
-      for (const [i, file] of files.entries()) {
-        setPostingProgress({ current: i + 1, total: files.length });
-        const form = new FormData();
-        form.append('file', file);
-        // `api()` has no baseURL, so the raw axios instance needs the
-        // absolute `/api/…` path (unlike the apiRequest* helpers,
-        // which prepend it). A bare `v1/media` posts relative to the
-        // current page → 404. Matches the other korner composers'
-        // upload path.
-        const mediaResp = await api().post<MediaResponse>(
-          '/api/v2/media',
-          form,
-          { headers: { 'Content-Type': 'multipart/form-data' } },
-        );
-        const mediaId = mediaResp.data.id;
-        await apiRequestPost<MomentResponse>('v1/moments', {
-          media_attachment_id: mediaId,
-          // Voice pairs with a single-photo batch only (voiceEligible
-          // already enforced when the recorder was reachable).
-          voice_media_attachment_id: voiceMediaId,
-          caption: trimmedCaption,
-          visibility,
-          krew_id: krewIdOrNull,
-          text_overlays: overlaysByFile[i] ?? [],
-        });
+      for (const [i, item] of items.entries()) {
+        setPostingProgress({ current: i + 1, total: items.length });
+        if (item.kind === 'voice') {
+          const blob = item.change.blob;
+          if (!blob) continue;
+          const type = blob.type || 'audio/webm';
+          const ext = type.includes('ogg')
+            ? 'ogg'
+            : type.includes('mp4') || type.includes('mpeg')
+              ? 'm4a'
+              : 'webm';
+          const voiceId =
+            item.change.mediaId ??
+            (await uploadFile(new File([blob], `voice.${ext}`, { type })));
+          await apiRequestPost<MomentResponse>('v1/moments', {
+            voice_media_attachment_id: voiceId,
+            caption: trimmedCaption,
+            visibility,
+            krew_id: krewIdOrNull,
+          });
+        } else {
+          const mediaId = await uploadFile(item.file);
+          await apiRequestPost<MomentResponse>('v1/moments', {
+            media_attachment_id: mediaId,
+            caption: trimmedCaption,
+            visibility,
+            krew_id: krewIdOrNull,
+            text_overlays: item.isVideo ? [] : item.overlays,
+          });
+        }
       }
       onPosted();
     } catch (err) {
@@ -230,32 +323,24 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
       setPosting(false);
       setPostingProgress(null);
     }
-  }, [
-    files,
-    voiceEligible,
-    voice,
-    caption,
-    visibility,
-    krewId,
-    posting,
-    onPosted,
-    overlaysByFile,
-  ]);
+  }, [items, caption, visibility, krewId, posting, onPosted, uploadFile]);
 
-  // ESLint no-misused-promises wants a void-returning handler; wrap
-  // the async so the promise is dropped intentionally.
+  // ESLint no-misused-promises wants a void-returning handler.
   const submit = useCallback(() => {
     void submitAsync();
   }, [submitAsync]);
 
-  const intl = useIntl();
+  // Editor labels: index / total are over still photos only (voice +
+  // video tiles don't take overlays and aren't counted).
+  const stillIndexes = useMemo(
+    () => items.map((it, i) => (isStill(it) ? i : -1)).filter((i) => i >= 0),
+    [items],
+  );
+  const editorTarget = editorIndex !== null ? items[editorIndex] : undefined;
 
-  // Shell CTA label — file count drives the resting label ("Share" /
-  // "Share N") and mid-flight the multi-item progress ("Sharing 2 of
-  // 3…"). Shell owns the button; body just tells it what to say.
   const submitLabel =
-    files.length > 1
-      ? intl.formatMessage(shellMessages.postMulti, { count: files.length })
+    items.length > 1
+      ? intl.formatMessage(shellMessages.postMulti, { count: items.length })
       : intl.formatMessage(shellMessages.post);
   const submittingLabel =
     postingProgress && postingProgress.total > 1
@@ -265,13 +350,8 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
         })
       : intl.formatMessage(shellMessages.posting);
   const canSubmit =
-    files.length > 0 && (visibility !== 'krew' || krewId !== null);
+    items.length > 0 && (visibility !== 'krew' || krewId !== null);
 
-  // ReachDropdown lives in the shell header (right side, before the
-  // close button) via the `headerAction` slot — feed-card shape per
-  // Portal's compose reframe (#1230). `self_only` hidden because
-  // Moments are ephemeral social sharing (spec: docs/spaces/moments.md
-  // § Reach).
   const reachControl = (
     <ReachDropdown
       value={visibility as ReachValue}
@@ -280,6 +360,8 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
       disabled={posting}
     />
   );
+
+  const activeItem = items[active];
 
   return (
     <>
@@ -305,74 +387,134 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
             />
           )}
 
-          <section className='moments-composer__section'>
-            <span className='moments-composer__label'>
-              <FormattedMessage
-                id='moments.composer.media'
-                defaultMessage='Media'
-              />
-            </span>
-            {files.length > 0 ? (
-              <div className='moments-composer__previews'>
-                {files.map((file, i) => (
-                  <PreviewThumb
-                    key={`${file.name}-${i.toString()}`}
-                    index={i}
-                    file={file}
-                    url={previewUrls[i] ?? ''}
-                    overlays={overlaysByFile[i] ?? []}
-                    disabled={posting}
-                    onEdit={openEditor}
-                  />
-                ))}
+          {/* hidden file inputs, driven by the picker + strip "+" */}
+          <input
+            ref={cameraInputRef}
+            className='moments-composer__file-input'
+            type='file'
+            accept='image/*,video/*'
+            capture='environment'
+            onChange={onCameraChange}
+          />
+          <input
+            ref={libraryInputRef}
+            className='moments-composer__file-input'
+            type='file'
+            accept='image/*,video/*'
+            multiple
+            onChange={onLibraryChange}
+          />
+
+          <div className='moments-composer__stage'>
+            {recording ? (
+              <div className='moments-composer__recorder'>
+                <VoiceRecorder
+                  onChange={onVoiceChange}
+                  autoUpload={false}
+                  maxSeconds={VOICE_MAX_SECONDS}
+                  disabled={posting}
+                />
                 <button
                   type='button'
-                  className='moments-composer__file-clear'
-                  onClick={clearFiles}
-                  disabled={posting}
+                  className='moments-composer__recorder-cancel'
+                  onClick={cancelVoice}
                 >
                   <FormattedMessage
-                    id='moments.composer.file_clear'
-                    defaultMessage='Change'
+                    id='moments.composer.cancel_voice'
+                    defaultMessage='Cancel'
                   />
                 </button>
               </div>
-            ) : (
-              <MediaPickButtons
-                onPick={onFileChange}
-                multiple
-                className='moments-composer__pick'
-              />
-            )}
-          </section>
-
-          {voiceEligible && (
-            <section className='moments-composer__section'>
-              <span className='moments-composer__label'>
-                <FormattedMessage
-                  id='moments.composer.voice'
-                  defaultMessage='Voice (optional)'
+            ) : items.length === 0 ? (
+              <div className='moments-composer__picker'>
+                <PickChoice
+                  iconId='photo_camera'
+                  icon={PhotoCameraIcon}
+                  label={intl.formatMessage(messages.camera)}
+                  onClick={openCamera}
                 />
-              </span>
-              <VoiceRecorder
-                onChange={setVoice}
-                maxSeconds={VOICE_MAX_SECONDS}
-                disabled={posting}
-                className='moments-composer__voice'
-              />
-            </section>
+                <PickChoice
+                  iconId='add_photo_alternate'
+                  icon={AddPhotoAlternateIcon}
+                  label={intl.formatMessage(messages.upload)}
+                  onClick={openLibrary}
+                />
+                <PickChoice
+                  iconId='mic'
+                  icon={MicIcon}
+                  label={intl.formatMessage(messages.voice)}
+                  onClick={startVoice}
+                />
+              </div>
+            ) : (
+              activeItem && (
+                <Hero
+                  item={activeItem}
+                  index={active}
+                  total={items.length}
+                  disabled={posting}
+                  onEdit={openEditorActive}
+                  onRemove={removeActive}
+                  onPrev={active > 0 ? goPrev : undefined}
+                  onNext={active < items.length - 1 ? goNext : undefined}
+                />
+              )
+            )}
+          </div>
+
+          {items.length > 0 && (
+            <div className='moments-composer__strip'>
+              {items.map((item, i) => (
+                <Thumb
+                  key={
+                    item.kind === 'media' ? item.url : `voice-${i.toString()}`
+                  }
+                  index={i}
+                  item={item}
+                  active={i === active}
+                  disabled={posting}
+                  onSelect={setActive}
+                  onRemove={removeAt}
+                />
+              ))}
+              <div className='moments-composer__add'>
+                <button
+                  type='button'
+                  className='moments-composer__add-tile'
+                  onClick={toggleAddMenu}
+                  disabled={posting}
+                  aria-label={intl.formatMessage(messages.addMore)}
+                  aria-expanded={addMenuOpen}
+                >
+                  <Icon id='add' icon={AddIcon} />
+                </button>
+                {addMenuOpen && (
+                  <div className='moments-composer__add-menu'>
+                    <AddMenuItem
+                      iconId='photo_camera'
+                      icon={PhotoCameraIcon}
+                      label={intl.formatMessage(messages.camera)}
+                      onClick={openCamera}
+                    />
+                    <AddMenuItem
+                      iconId='add_photo_alternate'
+                      icon={AddPhotoAlternateIcon}
+                      label={intl.formatMessage(messages.upload)}
+                      onClick={openLibrary}
+                    />
+                    <AddMenuItem
+                      iconId='mic'
+                      icon={MicIcon}
+                      label={intl.formatMessage(messages.voice)}
+                      onClick={startVoice}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           )}
 
-          <section className='moments-composer__section'>
-            <label
-              className='moments-composer__label'
-              htmlFor='moments-composer-caption'
-            >
-              <FormattedMessage
-                id='moments.composer.caption'
-                defaultMessage='Caption (optional)'
-              />
-            </label>
+          {items.length > 0 && (
             <textarea
               id='moments-composer-caption'
               className='moments-composer__caption'
@@ -380,28 +522,264 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
               onChange={onCaptionChange}
               maxLength={MAX_CAPTION_LENGTH}
               rows={2}
+              placeholder={intl.formatMessage(messages.captionPlaceholder)}
             />
-          </section>
+          )}
 
           {error && <div className='moments-composer__error'>{error}</div>}
         </div>
       </ComposeShell>
 
-      {editorIndex !== null && files[editorIndex] && (
-        <MomentsTextEditor
-          file={files[editorIndex]}
-          initial={overlaysByFile[editorIndex] ?? []}
-          index={editorIndex}
-          total={files.length}
-          onCancel={closeEditor}
-          onCommit={handleEditorCommit}
-          onNext={editorIndex + 1 < files.length ? handleEditorNext : undefined}
-          onPrev={editorIndex > 0 ? handleEditorPrev : undefined}
-        />
-      )}
+      {editorIndex !== null &&
+        editorTarget &&
+        editorTarget.kind === 'media' && (
+          <MomentsTextEditor
+            file={editorTarget.file}
+            initial={editorTarget.overlays}
+            index={Math.max(0, stillIndexes.indexOf(editorIndex))}
+            total={stillIndexes.length}
+            onCancel={closeEditor}
+            onCommit={handleEditorCommit}
+          />
+        )}
     </>
   );
 };
+
+// ── empty-state choice: a big icon disc + label ────────────────────
+const PickChoice: React.FC<{
+  iconId: string;
+  icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  label: string;
+  onClick: () => void;
+}> = ({ iconId, icon, label, onClick }) => (
+  <button type='button' className='moments-composer__choice' onClick={onClick}>
+    <span className='moments-composer__choice-disc'>
+      <Icon id={iconId} icon={icon} />
+    </span>
+    {label}
+  </button>
+);
+
+// ── strip "+" menu row ─────────────────────────────────────────────
+const AddMenuItem: React.FC<{
+  iconId: string;
+  icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  label: string;
+  onClick: () => void;
+}> = ({ iconId, icon, label, onClick }) => (
+  <button
+    type='button'
+    className='moments-composer__add-menu-item'
+    onClick={onClick}
+  >
+    <Icon id={iconId} icon={icon} />
+    {label}
+  </button>
+);
+
+// ── full-size hero of the active tile ──────────────────────────────
+const Hero: React.FC<{
+  item: Item;
+  index: number;
+  total: number;
+  disabled: boolean;
+  onEdit: () => void;
+  onRemove: () => void;
+  onPrev?: () => void;
+  onNext?: () => void;
+}> = ({ item, index, total, disabled, onEdit, onRemove, onPrev, onNext }) => {
+  const intl = useIntl();
+  return (
+    <div className='moments-composer__hero'>
+      {item.kind === 'voice' ? (
+        <div className='moments-composer__hero-voice'>
+          <Icon id='mic' icon={MicIcon} />
+          <span className='moments-composer__hero-voice-label'>
+            <FormattedMessage
+              id='moments.composer.voice_clip'
+              defaultMessage='Voice · {seconds}s'
+              values={{ seconds: Math.round(item.change.seconds) }}
+            />
+          </span>
+        </div>
+      ) : item.isVideo ? (
+        <video
+          className='moments-composer__hero-media'
+          src={item.url}
+          controls
+          muted
+          playsInline
+        />
+      ) : (
+        <>
+          <img
+            className='moments-composer__hero-media'
+            src={item.url}
+            alt=''
+            aria-hidden
+          />
+          <OverlayLayer overlays={item.overlays} />
+        </>
+      )}
+
+      <span className='moments-composer__hero-badge'>
+        {item.kind === 'voice'
+          ? intl.formatMessage(messages.voice)
+          : `${(index + 1).toString()} / ${total.toString()}`}
+      </span>
+
+      <div className='moments-composer__hero-tools'>
+        {isStill(item) && (
+          <button
+            type='button'
+            className='moments-composer__hero-tool'
+            onClick={onEdit}
+            disabled={disabled}
+            aria-label={intl.formatMessage(
+              item.overlays.length > 0 ? messages.editText : messages.addText,
+            )}
+          >
+            <EditIcon />
+          </button>
+        )}
+        <button
+          type='button'
+          className='moments-composer__hero-tool'
+          onClick={onRemove}
+          disabled={disabled}
+          aria-label={intl.formatMessage(messages.remove)}
+        >
+          <CloseIcon />
+        </button>
+      </div>
+
+      {onPrev && (
+        <button
+          type='button'
+          className='moments-composer__hero-nav moments-composer__hero-nav--prev'
+          onClick={onPrev}
+          aria-label={intl.formatMessage(messages.previous)}
+        >
+          <ChevronLeftIcon />
+        </button>
+      )}
+      {onNext && (
+        <button
+          type='button'
+          className='moments-composer__hero-nav moments-composer__hero-nav--next'
+          onClick={onNext}
+          aria-label={intl.formatMessage(messages.next)}
+        >
+          <ChevronRightIcon />
+        </button>
+      )}
+
+      {total > 1 && (
+        <div className='moments-composer__hero-dots' aria-hidden>
+          {Array.from({ length: total }, (_, i) => (
+            <span
+              key={i}
+              className={
+                i === index
+                  ? 'moments-composer__hero-dot moments-composer__hero-dot--on'
+                  : 'moments-composer__hero-dot'
+              }
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── filmstrip thumbnail ────────────────────────────────────────────
+const Thumb: React.FC<{
+  index: number;
+  item: Item;
+  active: boolean;
+  disabled: boolean;
+  onSelect: (i: number) => void;
+  onRemove: (i: number) => void;
+}> = ({ index, item, active, disabled, onSelect, onRemove }) => {
+  const intl = useIntl();
+  const handleSelect = useCallback(() => {
+    onSelect(index);
+  }, [onSelect, index]);
+  const handleRemove = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onRemove(index);
+    },
+    [onRemove, index],
+  );
+  return (
+    <div
+      className={
+        active
+          ? 'moments-composer__thumb moments-composer__thumb--active'
+          : 'moments-composer__thumb'
+      }
+    >
+      <button
+        type='button'
+        className='moments-composer__thumb-face'
+        onClick={handleSelect}
+        aria-label={intl.formatMessage(messages.selectTile, {
+          n: index + 1,
+        })}
+      >
+        {item.kind === 'voice' ? (
+          <span className='moments-composer__thumb-voice'>
+            <Icon id='mic' icon={MicIcon} />
+          </span>
+        ) : item.isVideo ? (
+          <video
+            className='moments-composer__thumb-media'
+            src={item.url}
+            muted
+          />
+        ) : (
+          <img
+            className='moments-composer__thumb-media'
+            src={item.url}
+            alt=''
+            aria-hidden
+          />
+        )}
+      </button>
+      <button
+        type='button'
+        className='moments-composer__thumb-remove'
+        onClick={handleRemove}
+        disabled={disabled}
+        aria-label={intl.formatMessage(messages.remove)}
+      >
+        <CloseIcon />
+      </button>
+    </div>
+  );
+};
+
+const messages = defineMessages({
+  camera: { id: 'moments.composer.camera', defaultMessage: 'Camera' },
+  upload: { id: 'moments.composer.upload', defaultMessage: 'Upload' },
+  voice: { id: 'moments.composer.voice_label', defaultMessage: 'Voice' },
+  addMore: { id: 'moments.composer.add_more', defaultMessage: 'Add more' },
+  addText: { id: 'moments.composer.add_text', defaultMessage: 'Add text' },
+  editText: { id: 'moments.composer.edit_text', defaultMessage: 'Edit text' },
+  remove: { id: 'moments.composer.remove', defaultMessage: 'Remove' },
+  previous: { id: 'moments.composer.previous', defaultMessage: 'Previous' },
+  next: { id: 'moments.composer.next', defaultMessage: 'Next' },
+  selectTile: {
+    id: 'moments.composer.select_tile',
+    defaultMessage: 'Show item {n}',
+  },
+  captionPlaceholder: {
+    id: 'moments.composer.caption_placeholder',
+    defaultMessage: 'Say something about this Moment…',
+  },
+});
 
 const shellMessages = defineMessages({
   title: {
@@ -422,65 +800,10 @@ const shellMessages = defineMessages({
   },
   posting: {
     id: 'moments.composer.posting',
-    defaultMessage: 'Sharing\u2026',
+    defaultMessage: 'Sharing…',
   },
   postingMulti: {
     id: 'moments.composer.posting_multi',
-    defaultMessage: 'Sharing {current} of {total}\u2026',
+    defaultMessage: 'Sharing {current} of {total}…',
   },
 });
-
-// One photo's preview tile in the composer's media section. Shows
-// the actual picked pixels (via `URL.createObjectURL`), the current
-// overlay layer (so the composer previews what will land), and an
-// "Add text" or "Edit text" affordance that opens the editor.
-// Videos render the file-name only — the text editor is a still-
-// image surface in v1.
-const PreviewThumb: React.FC<{
-  index: number;
-  file: File;
-  url: string;
-  overlays: TextOverlay[];
-  disabled: boolean;
-  onEdit: (i: number) => void;
-}> = ({ index, file, url, overlays, disabled, onEdit }) => {
-  const isVideo = file.type.startsWith('video/');
-  const handleEdit = useCallback(() => {
-    onEdit(index);
-  }, [onEdit, index]);
-  return (
-    <div className='moments-composer__preview'>
-      {isVideo ? (
-        <div className='moments-composer__preview-video'>
-          <span className='moments-composer__preview-video-badge'>▶</span>
-          <span className='moments-composer__preview-video-name'>
-            {file.name}
-          </span>
-        </div>
-      ) : (
-        <div className='moments-composer__preview-frame'>
-          {url && (
-            <img
-              className='moments-composer__preview-img'
-              src={url}
-              alt=''
-              aria-hidden
-            />
-          )}
-          <OverlayLayer overlays={overlays} />
-          <button
-            type='button'
-            className='moments-composer__preview-edit'
-            onClick={handleEdit}
-            disabled={disabled}
-            aria-label={
-              overlays.length > 0 ? 'Edit text overlays' : 'Add text overlay'
-            }
-          >
-            {overlays.length > 0 ? <EditIcon /> : <AddIcon />}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
