@@ -3,12 +3,23 @@
 // bar whose options tuck behind a chevron they slide out of. Paired components:
 // components/reach_dropdown.tsx, features/compose/components/char_ring.tsx.
 
+// ── card: more breathing room round the edge, content aligned down the
+// left rather than the avatar jammed against the border ──────
+.compose-form__highlightable {
+  padding: 12px 16px;
+}
+
+// Body text sits just inside the header, not deeply indented past it.
+.compose-form .autosuggest-textarea__textarea {
+  padding-inline: 2px;
+}
+
 // ── header row: identity + audience ──────────────────────────
 .compose-form__head {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 2px 0 8px;
+  padding: 4px 0 10px;
 
   .navigation-bar {
     flex: 0 1 auto;
@@ -151,10 +162,26 @@
 }
 
 // ── action bar: reveal + sliding tools + ring ─────────────────
+// Slimmer than the stock footer, and the send button holds its size — the
+// sliding tools consume the flexible spacer, never the button.
+.compose-form__footer {
+  padding-block: 2px;
+}
+
 .compose-form__actions {
   display: flex;
   align-items: center;
   gap: 2px;
+
+  // Overrides components.scss `.compose-form__actions .button { flex: 1 1 auto }`
+  // so the tools slide into the spacer instead of squeezing "Kronk it".
+  .button {
+    flex: 0 0 auto;
+  }
+}
+
+.compose-form__submit {
+  flex: 0 0 auto;
 }
 
 .compose-form__reveal {
@@ -163,8 +190,8 @@
   background: transparent;
   cursor: pointer;
   flex: none;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border-radius: 10px;
   display: grid;
   place-items: center;
@@ -192,7 +219,7 @@
 .compose-form__tools {
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 2px;
   overflow: hidden;
   max-width: 0;
   opacity: 0;
@@ -201,7 +228,7 @@
     opacity 0.22s ease;
 
   &.open {
-    max-width: 320px;
+    max-width: 260px;
     opacity: 1;
   }
 }
@@ -222,7 +249,8 @@
   }
 
   &__track {
-    stroke: var(--border-subtle);
+    stroke: var(--border-default);
+    opacity: 0.7;
   }
 
   &__fill {
