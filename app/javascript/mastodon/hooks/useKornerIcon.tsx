@@ -1,6 +1,7 @@
 import AccountCircleIcon from '@/material-icons/400-24px/account_circle.svg?react';
 import AllInclusiveFillIcon from '@/material-icons/400-24px/all_inclusive-fill.svg?react';
 import AllInclusiveIcon from '@/material-icons/400-24px/all_inclusive.svg?react';
+import AustraliaIcon from '@/material-icons/400-24px/australia.svg?react';
 import ChoiceIcon from '@/material-icons/400-24px/choice.svg?react';
 import ConstructionFillIcon from '@/material-icons/400-24px/construction-fill.svg?react';
 import ConstructionIcon from '@/material-icons/400-24px/construction.svg?react';
@@ -40,6 +41,7 @@ import { store } from 'mastodon/store';
 const MATERIAL_TO_ICON: Record<string, IconProp> = {
   account_circle: AccountCircleIcon,
   all_inclusive: AllInclusiveIcon,
+  australia: AustraliaIcon,
   choice: ChoiceIcon,
   construction: ConstructionIcon,
   cycle: CycleIcon,
