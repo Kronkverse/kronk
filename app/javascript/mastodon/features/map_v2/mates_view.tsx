@@ -43,6 +43,13 @@ import { PlaceControl } from './place_control';
 //     panel takes over, opening a dropdown of avatar bubbles for the
 //     mates currently inside the viewport. That way a screenshot of a
 //     tight zoom can never reveal a specific address.
+//   * Off-map compass: mates whose pins fall OUTSIDE the current
+//     viewport render as small avatar dots pinned to the map's edge,
+//     with a chevron indicating the outward direction. Tap → fly the
+//     map to that mate. Marks in similar directions collapse to a
+//     "+N" pill so a hundred mates in one direction stay legible.
+//     Hidden at anonymised zoom (the in-view panel is the only
+//     surface then).
 
 const messages = defineMessages({
   removeMe: { id: 'map.remove_me', defaultMessage: 'Remove me from the map' },
@@ -68,6 +75,13 @@ const CLUSTER_PX = 56;
 // takes over. 11 ≈ metropolitan area — anything closer is neighbourhood
 // / street-scale and precise enough to be personally identifying.
 const ANON_ZOOM = 11;
+// Off-map compass: marks within this angular distance (radians) collapse
+// into a single "+N" pill so a hundred mates in one direction stay
+// legible instead of stacking on top of each other.
+const COMPASS_CLUSTER_RAD = (18 * Math.PI) / 180;
+// Inset from the canvas edge where the compass marks sit. Enough to
+// keep the avatar disc fully inside the map frame + not clip the arrow.
+const COMPASS_INSET = 26;
 
 // GeoJSON polygon approximating the honest-fuzz circle drawn under each
 // pin at wider zooms. Above ANON_ZOOM the circle layer is also hidden.
@@ -177,6 +191,14 @@ export const MatesView: React.FC = () => {
     zoom: number;
     bounds: maplibregl.LngLatBounds | null;
   }>({ zoom: HOME_ZOOM, bounds: null });
+  // Canvas size (CSS pixels). Needed to project the off-map compass
+  // ray from centre-to-pin onto the canvas edge without dropping the
+  // last few pixels off-screen. Populated by the same ResizeObserver
+  // that already resizes the map.
+  const [canvasSize, setCanvasSize] = useState<{
+    w: number;
+    h: number;
+  } | null>(null);
   const [inViewOpen, setInViewOpen] = useState(false);
 
   // ── Map init ──────────────────────────────────────────────────────
@@ -240,8 +262,12 @@ export const MatesView: React.FC = () => {
     map.on('zoomend', emitViewport);
     mapRef.current = map;
 
-    const resizeObserver = new ResizeObserver(() => {
+    const resizeObserver = new ResizeObserver((entries) => {
       map.resize();
+      const entry = entries[0];
+      if (!entry) return;
+      const rect = entry.contentRect;
+      setCanvasSize({ w: rect.width, h: rect.height });
     });
     resizeObserver.observe(container);
 
@@ -290,6 +316,88 @@ export const MatesView: React.FC = () => {
   }, [allPins, viewport]);
 
   const anonymising = viewport.zoom >= ANON_ZOOM;
+
+  // Off-map compass marks. Recomputed whenever the viewport, the
+  // canvas size, or the pin set changes. Only relevant when we're NOT
+  // anonymising — at close zoom the in-view panel is the whole
+  // affordance and the compass would just crowd the same information.
+  const compassMarks = useMemo(() => {
+    const map = mapRef.current;
+    const bounds = viewport.bounds;
+    if (
+      !map ||
+      !ready ||
+      anonymising ||
+      !bounds ||
+      !canvasSize ||
+      canvasSize.w <= 0 ||
+      canvasSize.h <= 0
+    ) {
+      return [];
+    }
+
+    const offPins = allPins.filter((p) => !bounds.contains([p.lng, p.lat]));
+    if (offPins.length === 0) return [];
+
+    const { w, h } = canvasSize;
+    const cx = w / 2;
+    const cy = h / 2;
+    const halfW = Math.max(cx - COMPASS_INSET, 1);
+    const halfH = Math.max(cy - COMPASS_INSET, 1);
+
+    // Project every off-map pin to a canvas-edge position + angle.
+    // `map.project` gives the ideal pixel coord (can be negative or
+    // beyond width/height); the ray from centre → that coord hits
+    // the inset rectangle at parameter t = min(halfW/|dx|, halfH/|dy|).
+    const projected = offPins.map((pin) => {
+      const p = map.project([pin.lng, pin.lat]);
+      const dx = p.x - cx;
+      const dy = p.y - cy;
+      const t =
+        dx === 0 && dy === 0
+          ? 0
+          : Math.min(
+              dx === 0 ? Infinity : halfW / Math.abs(dx),
+              dy === 0 ? Infinity : halfH / Math.abs(dy),
+            );
+      return {
+        pin,
+        x: cx + t * dx,
+        y: cy + t * dy,
+        angle: Math.atan2(dy, dx),
+      };
+    });
+
+    // Group marks by angle so a bunch of mates in the same direction
+    // don't stack into an unreadable pile. Sort first so the greedy
+    // walk finds neighbours in constant time.
+    projected.sort((a, b) => a.angle - b.angle);
+    interface Mark {
+      id: string;
+      x: number;
+      y: number;
+      angle: number;
+      pins: ApiPresencePinJSON[];
+    }
+    const groups: Mark[] = [];
+    for (const item of projected) {
+      const nearest = groups.find(
+        (g) => Math.abs(g.angle - item.angle) <= COMPASS_CLUSTER_RAD,
+      );
+      if (nearest) {
+        nearest.pins.push(item.pin);
+      } else {
+        groups.push({
+          id: item.pin.account_id,
+          x: item.x,
+          y: item.y,
+          angle: item.angle,
+          pins: [item.pin],
+        });
+      }
+    }
+    return groups;
+  }, [allPins, viewport, canvasSize, anonymising, ready]);
 
   // ── Render markers + fuzz circles ─────────────────────────────────
   useEffect(() => {
@@ -407,6 +515,23 @@ export const MatesView: React.FC = () => {
           />
         )}
 
+        {/* Off-map compass overlay — a marker at the canvas edge per
+            direction that has mates outside the viewport. Absolute-
+            positioned inside the stage; pointer-events are only enabled
+            on the marks themselves so the map behind them still pans
+            and zooms freely. */}
+        {!anonymising && compassMarks.length > 0 && (
+          <div className='map-compass' aria-hidden={false}>
+            {compassMarks.map((mark) => (
+              <CompassMark
+                key={mark.id}
+                mark={mark}
+                onSelect={handleSelectPin}
+              />
+            ))}
+          </div>
+        )}
+
         {/* Bottom-left place control: either "remove me" (when I have
             a pin) or the search-a-place FAB. */}
         <div className='map-mates__place-slot'>
@@ -513,5 +638,56 @@ const InViewPanel: React.FC<InViewPanelProps> = ({
         </div>
       )}
     </div>
+  );
+};
+
+// ── Off-map compass mark ────────────────────────────────────────────
+// One dot pinned to the canvas edge for each direction that has mates
+// beyond the viewport. Avatar disc for the first mate in the group; a
+// "+N" pill if the group has more; a chevron rotated to point outward.
+// Click → onSelect(pin) which flies the map to that mate.
+
+interface CompassMarkData {
+  id: string;
+  x: number;
+  y: number;
+  angle: number; // radians, atan2(dy, dx) — 0 is east, π/2 is south (screen coords)
+  pins: ApiPresencePinJSON[];
+}
+
+const CompassMark: React.FC<{
+  mark: CompassMarkData;
+  onSelect: (pin: ApiPresencePinJSON) => void;
+}> = ({ mark, onSelect }) => {
+  const [first] = mark.pins;
+  const extra = mark.pins.length - 1;
+  const handleClick = useCallback(() => {
+    if (first) onSelect(first);
+  }, [first, onSelect]);
+  if (!first) return null;
+  const title = mark.pins.map((p) => p.name).join(', ');
+  return (
+    <button
+      type='button'
+      className='map-compass__mark'
+      style={{ left: `${mark.x}px`, top: `${mark.y}px` }}
+      onClick={handleClick}
+      title={title}
+      aria-label={title}
+    >
+      <span
+        className='map-compass__avatar'
+        style={{ backgroundImage: `url("${first.avatar}")` }}
+      />
+      {extra > 0 && <span className='map-compass__count'>+{extra}</span>}
+      {/* Chevron: an outward-pointing tri built with CSS borders (no
+          SVG needed). The parent rotation orients it toward the pin's
+          direction; the tri itself is centred at 0,0 relative to the
+          rotation origin sitting at the avatar's outer edge. */}
+      <span
+        className='map-compass__arrow'
+        style={{ transform: `rotate(${mark.angle}rad)` }}
+      />
+    </button>
   );
 };

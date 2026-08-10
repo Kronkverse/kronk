@@ -620,6 +620,99 @@
   }
 }
 
+// ── Off-map compass ────────────────────────────────────────────────
+// Overlay pinned to the map stage. Absolutely-positioned marks sit at
+// the canvas edge showing avatar-dot direction indicators for mates
+// currently outside the viewport. Container is pointer-events:none so
+// the map still pans/zooms; marks re-enable pointer events on their
+// own bbox so they stay clickable.
+.map-compass {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.map-compass__mark {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: transparent;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  transition: transform var(--dur-fast, 120ms) var(--ease-out, ease);
+
+  &:hover,
+  &:focus-visible {
+    transform: translate(-50%, -50%) scale(1.1);
+    outline: none;
+  }
+}
+
+.map-compass__avatar {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-round);
+  background-color: var(--surface-elevated);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  box-shadow:
+    0 0 0 2px var(--kronk-purple-bright),
+    0 3px 8px -2px rgb(0 0 0 / 55%);
+}
+
+// "+N" pill overlaid on the avatar when the direction has more than
+// one mate grouped into it.
+.map-compass__count {
+  position: absolute;
+  right: -6px;
+  bottom: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-round);
+  background: var(--kronk-purple-accent);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--surface-elevated);
+  pointer-events: none;
+}
+
+// Outward-pointing chevron. Drawn as a CSS triangle (no SVG), rotated
+// by the mark's atan2(dy, dx) angle. Anchored just outside the avatar
+// (translateX(20px)) so the tip points at the edge, not the centre.
+.map-compass__arrow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: -5px;
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 7px solid var(--kronk-purple-bright);
+    filter: drop-shadow(0 1px 2px rgb(0 0 0 / 50%));
+  }
+}
+
 // Map — Treks lens. A list of the caller's own treks + their Mates' published
 // treks, and a detail view that draws the privacy-trimmed route on the shared
 // Kronk basemap.
