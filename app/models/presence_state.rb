@@ -2,7 +2,11 @@
 
 # Map — a single account's opt-in presence pin. One row per account; the
 # stored (lat, lng) is ALREADY coarsened (Kronk::GeoCoarsen) — the raw point
-# never reaches this table. Every pin auto-expires; "remove me" hard-deletes.
+# never reaches this table. Pins persist until the account removes them
+# (Tal 2026-08-10 — "They should remain until a user removes them");
+# `expires_at` still exists as a hard-cap so an abandoned account can't
+# leak forever, but the default TTL is a century, which is
+# indistinguishable from "forever" from any user's perspective.
 class PresenceState < ApplicationRecord
   belongs_to :account
 
@@ -19,7 +23,13 @@ class PresenceState < ApplicationRecord
   validates :account_id, uniqueness: true
   validates :lat, :lng, :expires_at, presence: true
 
-  DEFAULT_TTL_MINUTES = 60
+  # Effectively "forever" — a Kronk pin persists until the account
+  # explicitly removes it. A short auto-expire was the previous default
+  # (60 minutes), which meant pins silently vanished after an hour and
+  # forced every user to keep re-placing themselves. 100 years is well
+  # beyond any account's active lifetime; the column stays non-null so
+  # existing indexes and the `active` scope keep working unchanged.
+  DEFAULT_TTL_MINUTES = 100 * 365 * 24 * 60
 
   # Currently-visible pins: not expired and actually shared.
   scope :active, -> { where(expires_at: Time.current..).where.not(share_scope: share_scopes[:none]) }

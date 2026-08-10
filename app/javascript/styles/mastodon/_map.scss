@@ -1283,12 +1283,17 @@
   }
 
   // Attribution — the "© OpenStreetMap" pill in the bottom-right.
-  // `.maplibregl-ctrl-attrib` is the container; `-attrib-inner` holds
-  // the links; `-attrib-button` is the ⓘ collapse toggle on small
-  // viewports. All three need dark treatment or the pill reads as a
-  // bright block sitting on the map.
-  .maplibregl-ctrl-attrib {
-    background: color-mix(in oklab, var(--surface-elevated) 88%, transparent);
+  // MapLibre's own selectors are chained (`.maplibregl-ctrl-attrib.
+  // maplibregl-compact { background-color: #fff }`, specificity 0,2,0),
+  // and we init the map with `attributionControl: { compact: true }`
+  // so that variant always applies. Matching my selectors with a
+  // chained `.maplibregl-compact` bumps the specificity to (0,3,0) so
+  // we beat MapLibre's rule regardless of bundle order.
+  // Also picks up the `-compact-show` state (attribution expanded via
+  // the ⓘ toggle) which has its own background rule.
+  .maplibregl-ctrl-attrib.maplibregl-compact,
+  .maplibregl-ctrl-attrib.maplibregl-compact-show {
+    background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
     color: var(--text-secondary);
 
     a {
@@ -1299,8 +1304,11 @@
       }
     }
 
+    // The ⓘ collapse toggle MapLibre paints on small viewports —
+    // background-image SVG with a dark fill, so invert to read on the
+    // dark surface. Chained specificity matches the pattern above.
     .maplibregl-ctrl-attrib-button {
-      background-color: var(--surface-elevated);
+      background-color: transparent;
       filter: invert(1) brightness(1.2);
     }
   }
