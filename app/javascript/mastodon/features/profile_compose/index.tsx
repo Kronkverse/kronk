@@ -7,6 +7,8 @@ import { Redirect, useParams } from 'react-router-dom';
 
 import { apiRequestGet, apiRequestPut, apiRequestDelete } from 'mastodon/api';
 import { Column } from 'mastodon/components/column';
+import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 
@@ -158,25 +160,21 @@ const messages = defineMessages({
     defaultMessage: 'Remove this card from your profile',
   },
 
-  visEveryone: {
-    id: 'profile_compose.visibility.everyone',
-    defaultMessage: 'Everyone',
+  visSelf: {
+    id: 'profile_compose.visibility.self_only',
+    defaultMessage: 'Me',
   },
-  visKronk: {
-    id: 'profile_compose.visibility.kronk',
-    defaultMessage: 'Kronk members',
+  visMates: {
+    id: 'profile_compose.visibility.mates',
+    defaultMessage: 'Mates',
   },
-  visConnections: {
-    id: 'profile_compose.visibility.connections',
-    defaultMessage: 'Connections',
+  visOrbit: {
+    id: 'profile_compose.visibility.orbit',
+    defaultMessage: 'Orbit',
   },
-  visVouched: {
-    id: 'profile_compose.visibility.vouched',
-    defaultMessage: 'Vouched',
-  },
-  visOnlyMe: {
-    id: 'profile_compose.visibility.only_me',
-    defaultMessage: 'Only me',
+  visPublic: {
+    id: 'profile_compose.visibility.public',
+    defaultMessage: 'Kronkverse',
   },
 });
 
@@ -184,30 +182,29 @@ interface ProfileCardJSON {
   id: string;
   card_type: string;
   body: string;
-  visibility: 'everyone' | 'kronk' | 'connections' | 'vouched' | 'only_me';
+  visibility: 'self_only' | 'mates' | 'orbit' | 'public';
   position: number;
   visible: boolean;
 }
 
 type Visibility = ProfileCardJSON['visibility'];
 
+// Narrow → wide, matching the reach ladder used everywhere.
 const VISIBILITY_ORDER: Visibility[] = [
-  'everyone',
-  'kronk',
-  'connections',
-  'vouched',
-  'only_me',
+  'self_only',
+  'mates',
+  'orbit',
+  'public',
 ];
 
 const VISIBILITY_LABELS: Record<
   Visibility,
   { id: string; defaultMessage: string }
 > = {
-  everyone: messages.visEveryone,
-  kronk: messages.visKronk,
-  connections: messages.visConnections,
-  vouched: messages.visVouched,
-  only_me: messages.visOnlyMe,
+  self_only: messages.visSelf,
+  mates: messages.visMates,
+  orbit: messages.visOrbit,
+  public: messages.visPublic,
 };
 
 interface PaletteEntry {
@@ -657,7 +654,7 @@ const CanvasCard: React.FC<{
   const handleCycle = useCallback(() => {
     const idx = VISIBILITY_ORDER.indexOf(card.visibility);
     const next =
-      VISIBILITY_ORDER[(idx + 1) % VISIBILITY_ORDER.length] ?? 'everyone';
+      VISIBILITY_ORDER[(idx + 1) % VISIBILITY_ORDER.length] ?? 'public';
     onCycleVisibility(card.card_type, next);
   }, [card.card_type, card.visibility, onCycleVisibility]);
 
@@ -709,34 +706,6 @@ const CanvasCard: React.FC<{
   );
 };
 
-const VisibilityOption: React.FC<{
-  value: Visibility;
-  active: boolean;
-  onSelect: (value: Visibility) => void;
-}> = ({ value, active, onSelect }) => {
-  const intl = useIntl();
-  const handleClick = useCallback(() => {
-    onSelect(value);
-  }, [onSelect, value]);
-
-  return (
-    <button
-      type='button'
-      className={`kcompose__vopt kcompose__vopt--${value}${active ? ' kcompose__vopt--on' : ''}`}
-      onClick={handleClick}
-      aria-pressed={active}
-    >
-      <span className='kcompose__vopt-ring' aria-hidden />
-      <span className='kcompose__vopt-label'>
-        {intl.formatMessage(VISIBILITY_LABELS[value])}
-      </span>
-      <span className='kcompose__vopt-chk' aria-hidden>
-        ✓
-      </span>
-    </button>
-  );
-};
-
 const Inspector: React.FC<{
   card: ProfileCardJSON;
   onBodyChange: (cardType: string, body: string) => void;
@@ -755,8 +724,9 @@ const Inspector: React.FC<{
   );
 
   const handleVisSelect = useCallback(
-    (visibility: Visibility) => {
-      onVisibility(cardType, visibility);
+    (visibility: ReachValue) => {
+      // Krew is hidden, so the value is always one of the profile ladder rungs.
+      onVisibility(cardType, visibility as Visibility);
     },
     [onVisibility, cardType],
   );
@@ -789,14 +759,11 @@ const Inspector: React.FC<{
         <p className='kcompose__insp-hint'>
           <FormattedMessage {...messages.inspectorWhoHint} />
         </p>
-        {VISIBILITY_ORDER.map((v) => (
-          <VisibilityOption
-            key={v}
-            value={v}
-            active={card.visibility === v}
-            onSelect={handleVisSelect}
-          />
-        ))}
+        <ReachDropdown
+          value={card.visibility}
+          onChange={handleVisSelect}
+          hide={['krew']}
+        />
       </div>
 
       <div className='kcompose__danger'>
