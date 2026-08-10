@@ -389,3 +389,45 @@
     transition-duration: 0.01ms;
   }
 }
+
+// ── draft-restored pill ───────────────────────────────────────
+// Shown when useComposerDraft repopulated a composer from a saved draft.
+.draft-restored-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 3px 5px 3px 11px;
+  border-radius: var(--radius-round, 999px);
+  border: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--kronk-purple-deep) 35%, transparent);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+
+  &__label {
+    white-space: nowrap;
+  }
+
+  &__discard {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 8px 2px 9px;
+    border: 0;
+    border-radius: var(--radius-round, 999px);
+    background: var(--surface-elevated);
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+
+    .icon {
+      width: 13px;
+      height: 13px;
+    }
+
+    &:hover {
+      color: var(--text-primary);
+    }
+  }
+}
