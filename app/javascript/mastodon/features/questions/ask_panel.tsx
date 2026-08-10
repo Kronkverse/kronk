@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -12,6 +12,8 @@ import type {
   KuestionAnswerFormat,
 } from 'mastodon/api_types/kuestions';
 import { Avatar } from 'mastodon/components/avatar';
+import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
+import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 import { AnswerSheet } from './answer_sheet';
@@ -156,6 +158,42 @@ const AskComposer: React.FC<AskComposerProps> = ({ onDone, onSubmitted }) => {
         ? mcFilled.length >= MC_MIN
         : true;
 
+  // Draft auto-save: preserve a half-written question across an accidental
+  // navigate-away / refresh (docs/rebuild/decisions.md 2026-08-10).
+  const draftSnapshot = useMemo(
+    () => ({ text, format, mcOptions }),
+    [text, format, mcOptions],
+  );
+  const handleRestore = useCallback(
+    (d: {
+      text: string;
+      format: KuestionAnswerFormat;
+      mcOptions: string[];
+    }) => {
+      setText(d.text);
+      setFormat(d.format);
+      setMcOptions(d.mcOptions.length >= MC_MIN ? d.mcOptions : ['', '']);
+    },
+    [],
+  );
+  const draft = useComposerDraft(
+    'kuestions:ask',
+    draftSnapshot,
+    handleRestore,
+    {
+      enabled: trimmed !== '' && !pending,
+    },
+  );
+  const discardDraft = draft.discard;
+  const handleDiscardDraft = useCallback(() => {
+    setText('');
+    setMcOptions(['', '']);
+    setFormat('text');
+    setStage(0);
+    setError(null);
+    discardDraft();
+  }, [discardDraft]);
+
   const handleTextChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setText(e.target.value.slice(0, TITLE_MAX));
@@ -197,13 +235,14 @@ const AskComposer: React.FC<AskComposerProps> = ({ onDone, onSubmitted }) => {
         setFormat('text');
         setStage(0);
         setPending(false);
+        discardDraft();
         onSubmitted();
       } catch {
         setError('ask_failed');
         setPending(false);
       }
     })();
-  }, [format, mcFilled, onSubmitted, pending, trimmed]);
+  }, [format, mcFilled, onSubmitted, pending, trimmed, discardDraft]);
 
   const handleNext = useCallback(() => {
     if (stage === 0) {
@@ -234,6 +273,8 @@ const AskComposer: React.FC<AskComposerProps> = ({ onDone, onSubmitted }) => {
       </p>
 
       <div className='kuestions-ask'>
+        {draft.restored && <DraftRestoredPill onDiscard={handleDiscardDraft} />}
+
         <div className='kuestions-ask__stage-dots'>
           <span className='kuestions-ask__dot kuestions-ask__dot--on' />
           <span
