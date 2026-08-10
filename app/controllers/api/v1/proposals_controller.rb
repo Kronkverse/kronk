@@ -14,6 +14,8 @@ class Api::V1::ProposalsController < Api::BaseController
             when 'delivered' then scope.delivered
             when 'completed' then scope.completed
             when 'annulled'  then scope.annulled
+            when 'involved'  then involved_scope(scope)
+            when 'drafts'    then Proposal.none # backend draft state not modelled yet; UI shows a placeholder
             else                  scope.open
             end
 
@@ -46,7 +48,7 @@ class Api::V1::ProposalsController < Api::BaseController
     # (Skipped when already viewing the `delivered` filter, and on node/korner
     # single-page lists.)
     own_delivered =
-      if node_scoped || params[:filter] == 'delivered'
+      if node_scoped || %w(delivered completed annulled involved drafts).include?(params[:filter].to_s)
         []
       else
         Proposal.delivered.where(created_by_account_id: current_account.id).order(updated_at: :desc).to_a
@@ -150,6 +152,25 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   private
+
+  # "Involved" scope for the Kommons view rotator: proposals the
+  # viewer has voted on, backed, or authored a comment on. Union via
+  # WHERE IN (three distinct subqueries) rather than joins so the
+  # `.recent` / `.most_backed` order clauses further down still
+  # compose without DISTINCT ON gymnastics. Signed-out callers get
+  # nothing — you can't have "involved" without an identity.
+  def involved_scope(scope)
+    return Proposal.none if current_account.nil?
+
+    account_id = current_account.id
+    voted_ids  = ProposalVote.where(account_id: account_id).select(:proposal_id)
+    backed_ids = ProposalBacking.where(account_id: account_id).select(:proposal_id)
+    commented_ids = ProposalComment.where(account_id: account_id).select(:proposal_id)
+
+    scope.where(id: voted_ids)
+         .or(scope.where(id: backed_ids))
+         .or(scope.where(id: commented_ids))
+  end
 
   def set_proposal
     @proposal = Proposal.find(params[:id])
