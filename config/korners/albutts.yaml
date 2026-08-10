@@ -118,6 +118,26 @@ compose:
   label: 'New album'
   route: '/hub/albutts/composer'
 
+# The directory rotates through four faces (All / Mine / Contributed
+# / Mates') sharing one grid — reach-narrowing scopes over the same
+# `visible_to(current_account)` set. First entry is the default
+# (bare `/hub/albutts`); the rest map to `/hub/albutts/<key>`.
+# `header.rotator: true` opts the space title into the shared
+# `<ScopeTitle>` rotator (Standard L11) — the title carries both
+# the identity and the current face; per-view `tagline` is what
+# the rotator shows under each face label.
+views:
+  - { key: all, label: 'All albums', tagline: 'Every album you can see' }
+  - { key: mine, label: 'My albums', tagline: 'Albums you started' }
+  - {
+      key: contributed,
+      label: 'Contributed',
+      tagline: "Albums you've added a photo to",
+    }
+  - { key: mates, label: "Mates'", tagline: 'Albums your mates started' }
+header:
+  rotator: true
+
 enforced: true # boot validator gates L1-L11 for albutts (2026-07-29)
 
 # ── Directory nodes ──────────────────────────────────────────────

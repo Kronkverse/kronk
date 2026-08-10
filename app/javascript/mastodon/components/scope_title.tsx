@@ -17,29 +17,39 @@ interface Props {
   value: string;
   onChange: (key: string) => void;
   ariaLabel: string;
+  // Marks the rendered `<header>` as Frame-provided chrome so the
+  // Stage's dev-only Frame-parasite warning (see
+  // `docs/korners/korner_standard.md` L11) exempts its `<h1>` from
+  // the "no local <h1>" check. Set true when this component is the
+  // korner's title (rendered from `<AutoSpaceHeader>`); leave false
+  // when a non-korner surface (e.g. `/home` Column) drives it.
+  frameHeader?: boolean;
 }
 
-// ScopeTitle — the home feed's scope label, styled as a space header.
+// ScopeTitle — the shared rotating space header. Renders as the same
+// `.space-header` typography every korner uses, but with chevron
+// affordances flanking the title so the caller can step through
+// faces (view scopes on /home, view keys on a korner). Tap the
+// title steps forward; arrow keys step either way.
 //
-// Now that the feed itself turns on the scope drum (FeedDrum), the selector no
-// longer needs to be a rotating control — it's just the current scope's name +
-// description, in the same fashion as every other space's title/tagline (reuses
-// the shared `.space-header__title` / `.space-header__tagline` classes). It
-// stays changeable: tap the title (or Enter/Space) steps forward around the
-// scope ring, arrow keys step either way, subtle chevrons flanking the title
-// step one direction each, and a swipe on the feed does the same on touch.
+// Was previously `/home`-only under `features/home_timeline/`. Now
+// promoted so `<AutoSpaceHeader>` can render it for korners whose
+// manifest opts in (`header.rotator: true`) — keeping the Standard's
+// one-title-per-space rule while giving spaces with view faces the
+// same rotator metaphor `/home` already uses. See
+// `docs/korners/korner_standard.md` L11.
 
 const messages = defineMessages({
   cycle: {
-    id: 'home.scope.cycle',
+    id: 'scope_title.cycle',
     defaultMessage: 'Change what you see (currently {scope})',
   },
   prev: {
-    id: 'home.scope.prev',
+    id: 'scope_title.prev',
     defaultMessage: 'Previous view',
   },
   next: {
-    id: 'home.scope.next',
+    id: 'scope_title.next',
     defaultMessage: 'Next view',
   },
 });
@@ -49,6 +59,7 @@ export const ScopeTitle: React.FC<Props> = ({
   value,
   onChange,
   ariaLabel,
+  frameHeader = false,
 }) => {
   const intl = useIntl();
   const n = faces.length;
@@ -123,8 +134,15 @@ export const ScopeTitle: React.FC<Props> = ({
       >
         {/* Renders the shared `.space-header` block so the scope title sits in
             the exact same place, and at the same scale, as every other space's
-            title/tagline. Keyed on the scope so a change replays the fade-in. */}
-        <header className='space-header' key={face.key}>
+            title/tagline. Keyed on the scope so a change replays the fade-in.
+            `data-frame-header` marks this as Frame-provided chrome when the
+            caller sits inside `<Stage>` (Standard L11's parasite check
+            exempts headers carrying this attribute). */}
+        <header
+          className='space-header'
+          data-frame-header={frameHeader ? '' : undefined}
+          key={face.key}
+        >
           <h1 className='space-header__title'>{face.label}</h1>
           {face.desc && <p className='space-header__tagline'>{face.desc}</p>}
         </header>
