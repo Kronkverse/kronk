@@ -17,23 +17,22 @@ class Moment < ApplicationRecord
   # voice-only Moment it's the whole content (docs/spaces/moments.md,
   # added 2026-08-04, voice-only 2026-08-09). Never pairs with a video.
   belongs_to :voice_media_attachment, class_name: 'MediaAttachment', optional: true
-  belongs_to :krew, optional: true # only present when visibility == :krew
+  belongs_to :krew, optional: true # orthogonal audience add-on (additive to reach)
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :moment
 
   has_many :moment_froths, dependent: :destroy, inverse_of: :moment
 
-  # Full four-tier reach ladder (docs/kronk_feed_and_reach.md §2) +
-  # krew as the orthogonal axis. Integer 0 was `public_reach` under
-  # the pre-Reach naming; kept at 0 as `public` so existing rows
-  # round-trip without a data migration.
+  # Reach ladder (docs/kronk_feed_and_reach.md §2). Krew is an ORTHOGONAL
+  # axis — a separate `krew_id` whose members see the Moment in ADDITION to
+  # the reach tier — so it is deliberately not a rung here (krew:2 retired
+  # 2026-08-10 and remapped to self_only; the gap at 2 is intentional).
   enum :visibility,
-       { public: 0, mates: 1, krew: 2, orbit: 3, self_only: 4 },
+       { public: 0, mates: 1, orbit: 3, self_only: 4 },
        prefix: :visible_to
 
   validates :expires_at, presence: true
   validates :caption, length: { maximum: 500 }, allow_blank: true
   validate  :media_present_or_voice
-  validate  :krew_only_when_krew_visibility
   validate  :voice_only_paired_with_a_still
   validate  :text_overlays_have_valid_shape
 
@@ -58,11 +57,11 @@ class Moment < ApplicationRecord
   scope :for_account, ->(account) { where(account: account) }
   scope :recent, -> { order(created_at: :desc) }
 
-  # Moments visible to `viewer`, per the reach ladder + krew axis
-  # (docs/kronk_feed_and_reach.md §2). Mirrors Album.visible_to:
-  #   public → everyone; mates → owner's mutuals; orbit → mates-of-mates;
-  #   krew → viewer is in the moment's krew; self_only → owner only.
-  # The owner always sees their own. Compose with .active / .expired.
+  # Moments visible to `viewer`, per the reach ladder (public → everyone;
+  # mates → owner's mutuals; orbit → mates-of-mates; self_only → owner only)
+  # PLUS the orthogonal krew axis: any Moment targeting a krew the viewer is
+  # in is visible regardless of its reach tier (docs/kronk_feed_and_reach.md
+  # §2). The owner always sees their own. Compose with .active / .expired.
   scope :visible_to, lambda { |viewer|
     return visible_to_public if viewer.nil?
 
@@ -77,7 +76,7 @@ class Moment < ApplicationRecord
       .or(visible_to_public)
       .or(visible_to_mates.where(account_id: mate_ids))
       .or(visible_to_orbit.where(account_id: mates_of_mates))
-      .or(visible_to_krew.where(krew_id: krew_ids))
+      .or(where(krew_id: krew_ids))
   }
 
   def active?
@@ -98,13 +97,13 @@ class Moment < ApplicationRecord
   # #show so a hidden Moment can't be fetched directly by id.
   def visible_to?(viewer)
     return true if viewer && viewer.id == account_id
-    return false if visible_to_self_only?
-    return true  if visible_to_public?
+    # Krew is additive — a member sees it whatever the reach tier is.
+    return true if krew_visible_to?(viewer)
+    return true if visible_to_public?
     return mates_visible_to?(viewer) if visible_to_mates?
     return orbit_visible_to?(viewer) if visible_to_orbit?
-    return krew_visible_to?(viewer) if visible_to_krew?
 
-    false
+    false # self_only — owner-only, already handled above
   end
 
   private
@@ -139,16 +138,6 @@ class Moment < ApplicationRecord
 
   def set_default_expiry
     self.expires_at ||= created_at.presence&.+(DEFAULT_LIFETIME) || (Time.current + DEFAULT_LIFETIME)
-  end
-
-  def krew_only_when_krew_visibility
-    return if visible_to_krew? == krew_id.present?
-
-    if visible_to_krew? && krew_id.blank?
-      errors.add(:krew_id, 'must be present when visibility is krew')
-    elsif !visible_to_krew? && krew_id.present?
-      errors.add(:krew_id, 'must be blank unless visibility is krew')
-    end
   end
 
   # Voice clip is only meaningful over a still photo. Video already
