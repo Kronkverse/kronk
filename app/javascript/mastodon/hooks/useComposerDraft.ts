@@ -20,9 +20,14 @@ interface StoredDraft<T> {
 
 interface Options {
   // While false, nothing is persisted and any existing draft is cleared —
-  // e.g. there's no meaningful content yet, or the composer is editing an
-  // existing post. Flip true once there's content worth preserving.
+  // e.g. there's no meaningful content yet. Flip true once there's content
+  // worth preserving.
   enabled: boolean;
+  // When false the hook is entirely inert: it neither restores on mount nor
+  // touches storage (leaving any saved "new" draft untouched). Use for a
+  // composer opened to edit an existing item, so it doesn't clobber it with a
+  // new-composer draft. Defaults to true.
+  active?: boolean;
   debounceMs?: number;
   maxAgeMs?: number;
 }
@@ -69,6 +74,7 @@ export function useComposerDraft<T>(
 ): DraftControls {
   const {
     enabled,
+    active = true,
     debounceMs = DEFAULT_DEBOUNCE,
     maxAgeMs = DEFAULT_MAX_AGE,
   } = options;
@@ -86,6 +92,7 @@ export function useComposerDraft<T>(
   useEffect(() => {
     if (didRestore.current) return;
     didRestore.current = true;
+    if (!active) return;
     const found = readDraft<T>(storageKey, maxAgeMs);
     if (found) {
       onRestoreRef.current(found.data);
@@ -101,6 +108,7 @@ export function useComposerDraft<T>(
   const serialized = JSON.stringify(snapshot);
 
   useEffect(() => {
+    if (!active) return undefined; // inert (e.g. editing) — leave storage be
     if (!enabled) {
       try {
         window.localStorage.removeItem(storageKey);
@@ -124,7 +132,7 @@ export function useComposerDraft<T>(
     return () => {
       window.clearTimeout(handle);
     };
-  }, [enabled, serialized, storageKey, debounceMs]);
+  }, [active, enabled, serialized, storageKey, debounceMs]);
 
   const discard = useCallback(() => {
     try {
