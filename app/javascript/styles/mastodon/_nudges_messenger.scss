@@ -5,29 +5,25 @@
 // Token-only. All colours reference --semantic-* / --kronk-* / the
 // existing radius + motion scale.
 
-// Anchor the messenger's height explicitly. `.column` (Mastodon's
-// wrapper) has no bounded height of its own — the Kronk Stage / the
-// document owns the scroll — so a `height: 100%` on us and every
-// parent `flex: 1 1 auto` scheme collapses to intrinsic content.
-// PRs #1310 (dropped the previous fixed height) and #1314 (added
-// `.column:has(.nudges-messenger) { height: 100% }`) both failed for
-// this reason: with no bounded ancestor, `100%` has nothing to
-// resolve against.
-// Fall back to viewport-math, but compute it correctly this time.
-// Chrome above the messenger:
-//   * Kronk Frame top-band (grid row-1) — 4.25rem
-//   * `<ColumnHeader>` this route wraps — ~3rem
-// = 7.25rem of overhead, so `100vh - 7.5rem` (with ~4px slack)
-// keeps the composer safely inside the visible viewport. The
-// previous `100vh - 6rem` undercounted the ColumnHeader.
-// `dvh` (dynamic viewport height) collapses the mobile browser's
-// URL-bar dance so the composer doesn't slip below the fold when a
-// touch keyboard opens.
+// Bound the messenger's Column to the visible viewport height (below
+// the Kronk Frame's top-band). Every prior attempt (#1310 flex-fill,
+// #1314 `height: 100%` on Column, #1315 viewport-math on messenger,
+// #1317 sticky-composer) missed differently — the through-line was
+// that the whole `.column` chain has no bounded ancestor, so the
+// only reliable anchor is `100dvh - <top-band>` on the Column
+// itself. Everything inside the Column then flexes into that fixed
+// space, ColumnHeader takes intrinsic height, messenger takes the
+// remainder, and the composer sits at the messenger's bottom.
+.column:has(.nudges-messenger) {
+  height: calc(100dvh - 4.25rem);
+  min-height: 0;
+  overflow: hidden;
+}
+
 .nudges-messenger {
   display: flex;
   flex: 1 1 auto;
   min-height: 0;
-  height: calc(100dvh - 7.5rem);
   border-top: 1px solid var(--border-subtle);
   background: var(--surface-primary);
 }
@@ -1229,11 +1225,11 @@
 // Below the tablet breakpoint, sidebar and pane stack: sidebar full
 // width until a conversation is chosen, then the pane replaces it.
 @media (width <= 889px) {
-  // Mobile has less chrome above the messenger — Frame's top-band
-  // hides at ≤629px, ColumnHeader stays. Undercount slightly rather
-  // than eat visible viewport.
-  .nudges-messenger {
-    height: calc(100dvh - 4rem);
+  // Frame's top-band hides at ≤629px, ColumnHeader stays. Give the
+  // Column a smaller overhead than desktop's 4.25rem so we don't
+  // waste vertical space.
+  .column:has(.nudges-messenger) {
+    height: calc(100dvh - 0.25rem);
   }
 
   .nudges-messenger:has(.nudges-conversation) .nudges-messenger__sidebar {
