@@ -28,11 +28,15 @@ class Api::V1::Map::PresenceController < Api::BaseController
   before_action :require_user!
 
   def index
-    base = PresenceState.active.where.not(account_id: current_account.id)
-
-    visible = base.where(share_scope: :friends, account_id: current_account.mates.select(:id))
-                  .or(base.where(share_scope: :kommunity))
-                  .includes(:account)
+    # Mates-only presence (Tal 2026-08-10 — "only visible to mates,
+    # never Kronkverse-wide"). The `kommunity` scope stays in the DB
+    # enum for legacy rows but is no longer surfaced anywhere — the
+    # composer never sends it, the API contract drops it, and this
+    # scope query no longer OR-ins those rows.
+    visible = PresenceState.active
+                           .where.not(account_id: current_account.id)
+                           .where(share_scope: :friends, account_id: current_account.mates.select(:id))
+                           .includes(:account)
 
     render json: visible.map { |state| project(state) }
   end

@@ -57,9 +57,13 @@ class PresenceState < ApplicationRecord
     return false if viewer.nil? || expired? || scope_none? || account_id == viewer.id
 
     case share_scope
-    when 'friends'   then account.mate?(viewer)
-    when 'kommunity' then true
-    else false # groups reserved until Krew-scoping lands
+    when 'friends' then account.mate?(viewer)
+    # `kommunity` was previously "anyone on this instance" — retired
+    # 2026-08-10 (Tal: "only visible to mates, never Kronkverse-wide").
+    # Legacy rows with that scope should not surface via visibility
+    # checks any longer. Kept as an enum value only so existing rows
+    # still load.
+    else false # kommunity retired; groups reserved until Krew-scoping lands
     end
   end
 end
