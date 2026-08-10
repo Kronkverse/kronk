@@ -5,39 +5,29 @@
 // Token-only. All colours reference --semantic-* / --kronk-* / the
 // existing radius + motion scale.
 
-// The Mastodon `.column` wrapper is `display: flex; flex-direction:
-// column` but has no bounded height of its own — the Kronk Stage
-// scrolls the whole column. That was fine for feed columns (which
-// scroll internally via .scrollable), but it means a nested
-// `flex: 1 1 auto` child has nothing to grow into: without a
-// bounded parent height, the child collapses to its intrinsic
-// content and any inner `overflow-y: auto` never triggers.
-// The nudges messenger needs to pin its composer to the bottom of
-// the visible pane, which requires a bounded height at some
-// ancestor. Scope `height: 100%` to the Column ONLY when it holds
-// this messenger — no wider Mastodon columns are affected, and the
-// flex chain below can then take its remaining space cleanly.
-.column:has(.nudges-messenger) {
-  height: 100%;
-  min-height: 0;
-}
-
+// Anchor the messenger's height explicitly. `.column` (Mastodon's
+// wrapper) has no bounded height of its own — the Kronk Stage / the
+// document owns the scroll — so a `height: 100%` on us and every
+// parent `flex: 1 1 auto` scheme collapses to intrinsic content.
+// PRs #1310 (dropped the previous fixed height) and #1314 (added
+// `.column:has(.nudges-messenger) { height: 100% }`) both failed for
+// this reason: with no bounded ancestor, `100%` has nothing to
+// resolve against.
+// Fall back to viewport-math, but compute it correctly this time.
+// Chrome above the messenger:
+//   * Kronk Frame top-band (grid row-1) — 4.25rem
+//   * `<ColumnHeader>` this route wraps — ~3rem
+// = 7.25rem of overhead, so `100vh - 7.5rem` (with ~4px slack)
+// keeps the composer safely inside the visible viewport. The
+// previous `100vh - 6rem` undercounted the ColumnHeader.
+// `dvh` (dynamic viewport height) collapses the mobile browser's
+// URL-bar dance so the composer doesn't slip below the fold when a
+// touch keyboard opens.
 .nudges-messenger {
-  // Fills the (now bounded) parent Column's remaining vertical
-  // space via `flex: 1 1 auto` + `min-height: 0`. The internal
-  // `.nudges-conversation__stream { flex: 1 1 auto; overflow-y:
-  // auto }` then keeps the composer pinned to the messenger's
-  // bottom regardless of message count. See the Column selector
-  // above for the height-anchor story.
-  // Tal 2026-08-11 saw a conversation with no message-bar at the
-  // bottom under the old `height: calc(100vh - 6rem)` — that math
-  // undercounted the actual chrome (Kronk Frame top-band ~68px +
-  // this route's ColumnHeader ~48px = ~116px, not the assumed
-  // 96px). Dropping the viewport math and anchoring on the parent
-  // Column (above) is the correct fix.
   display: flex;
   flex: 1 1 auto;
   min-height: 0;
+  height: calc(100dvh - 7.5rem);
   border-top: 1px solid var(--border-subtle);
   background: var(--surface-primary);
 }
@@ -1227,9 +1217,13 @@
 // Below the tablet breakpoint, sidebar and pane stack: sidebar full
 // width until a conversation is chosen, then the pane replaces it.
 @media (width <= 889px) {
-  // No mobile-specific height override needed — the desktop rule
-  // above already fills its parent flex space, which the mobile
-  // Column layout also gives us.
+  // Mobile has less chrome above the messenger — Frame's top-band
+  // hides at ≤629px, ColumnHeader stays. Undercount slightly rather
+  // than eat visible viewport.
+  .nudges-messenger {
+    height: calc(100dvh - 4rem);
+  }
+
   .nudges-messenger:has(.nudges-conversation) .nudges-messenger__sidebar {
     display: none;
   }
