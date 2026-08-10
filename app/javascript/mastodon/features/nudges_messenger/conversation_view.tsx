@@ -672,7 +672,11 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         })}
       </div>
 
-      <Composer onSend={handleSend} conversationId={conversationId} />
+      <Composer
+        key={conversationId}
+        onSend={handleSend}
+        conversationId={conversationId}
+      />
     </div>
   );
 };

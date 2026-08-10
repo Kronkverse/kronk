@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -6,6 +6,7 @@ import AttachIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react'
 import SendIcon from '@/material-icons/400-24px/arrow_upward-fill.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import { apiUploadMedia } from 'mastodon/api/nudges_conversations';
+import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 
 const messages = defineMessages({
   placeholder: {
@@ -44,59 +45,40 @@ interface StagedMedia {
 
 const ACCEPT = 'image/*,video/*';
 const MAX_MEDIA = 4;
-const DRAFT_KEY_PREFIX = 'nudges:draft:';
-
-const draftKey = (id: string | undefined) =>
-  id ? `${DRAFT_KEY_PREFIX}${id}` : null;
-
-const readDraft = (id: string | undefined): string => {
-  const key = draftKey(id);
-  if (!key || typeof window === 'undefined') return '';
-  try {
-    return window.localStorage.getItem(key) ?? '';
-  } catch {
-    // Private-mode Safari + storage-disabled browsers throw on read.
-    return '';
-  }
-};
-
-const writeDraft = (id: string | undefined, value: string) => {
-  const key = draftKey(id);
-  if (!key || typeof window === 'undefined') return;
-  try {
-    if (value === '') window.localStorage.removeItem(key);
-    else window.localStorage.setItem(key, value);
-  } catch {
-    // Quota exceeded / storage disabled — silent, drafts are best-effort.
-  }
-};
 
 // Composer with a text field + attach affordance. Up to MAX_MEDIA
 // attachments per message (matches Mastodon Status default). Voice
 // recording is kronk-app parity-gated per docs/kronk_nudges.md
-// §Surface 4. Unsent text is persisted per conversation to
-// localStorage so a nav-away doesn't drop what you were typing.
+// §Surface 4. Unsent text is persisted per conversation via the shared
+// useComposerDraft hook so a nav-away doesn't drop what you were typing.
+// The parent keys this component on conversationId, so switching
+// conversations remounts it and restores that conversation's draft.
 export const Composer: React.FC<ComposerProps> = ({
   onSend,
   conversationId,
 }) => {
   const intl = useIntl();
-  // Load-once from storage on mount / conversationId change. This
-  // pattern (initial state via a function) avoids clobbering an
-  // in-progress compose if the parent re-renders.
-  const [value, setValue] = useState(() => readDraft(conversationId));
-  useEffect(() => {
-    setValue(readDraft(conversationId));
-  }, [conversationId]);
-  useEffect(() => {
-    writeDraft(conversationId, value);
-  }, [conversationId, value]);
+  const [value, setValue] = useState('');
   const [sending, setSending] = useState(false);
   const [staged, setStaged] = useState<StagedMedia[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Persist unsent text per conversation (shared draft mechanism). Silent
+  // restore — no pill — matching a chat input's expectation that a draft is
+  // just there. Inert without a conversationId.
+  const draftSnapshot = useMemo(() => ({ value }), [value]);
+  const handleRestore = useCallback((d: { value: string }) => {
+    setValue(d.value);
+  }, []);
+  useComposerDraft(
+    `nudges:conversation:${conversationId ?? ''}`,
+    draftSnapshot,
+    handleRestore,
+    { active: Boolean(conversationId), enabled: value.trim() !== '' },
+  );
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
