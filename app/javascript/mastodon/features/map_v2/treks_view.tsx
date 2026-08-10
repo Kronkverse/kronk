@@ -22,6 +22,8 @@ import type {
 } from 'mastodon/api/map_treks';
 import { Button } from 'mastodon/components/button';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
+import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import type { ReachValue } from 'mastodon/components/reach_dropdown';
 
 import { BASEMAP_URL, basemapLayers, ensurePmtilesProtocol } from './basemap';
 import { TrekComments } from './trek_comments';
@@ -44,18 +46,7 @@ const messages = defineMessages({
     id: 'map.treks.shared',
     defaultMessage: 'Shared to your timeline.',
   },
-  reachPublic: { id: 'map.treks.reach.public', defaultMessage: 'Public' },
-  reachOrbit: { id: 'map.treks.reach.orbit', defaultMessage: 'Orbit' },
-  reachMates: { id: 'map.treks.reach.mates', defaultMessage: 'Mates' },
-  reachSelf: { id: 'map.treks.reach.self', defaultMessage: 'Just me' },
 });
-
-const REACH_OPTIONS: { value: TrekReach; label: keyof typeof messages }[] = [
-  { value: 'public', label: 'reachPublic' },
-  { value: 'orbit', label: 'reachOrbit' },
-  { value: 'mates', label: 'reachMates' },
-  { value: 'self_only', label: 'reachSelf' },
-];
 
 const ACTIVITY_GLYPH: Record<TrekActivity, string> = {
   run: '🏃',
@@ -170,8 +161,10 @@ const TrekDetail: React.FC<{
   const intl = useIntl();
 
   const [reach, setReach] = useState<TrekReach>('mates');
-  const onReach = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setReach(e.currentTarget.value as TrekReach);
+  // ReachDropdown emits the full ladder; krew is hidden here, so the value is
+  // always one of the TrekReach rungs (self_only/mates/orbit/public).
+  const onReach = useCallback((value: ReachValue) => {
+    setReach(value as TrekReach);
   }, []);
   const publish = useCallback(() => {
     void apiPublishTrek(trek.id, reach).then(onChange);
@@ -271,16 +264,10 @@ const TrekDetail: React.FC<{
 
       {trek.self && trek.state !== 'published' && (
         <div className='trek-detail__actions'>
-          <label className='trek-detail__reach'>
+          <div className='trek-detail__reach'>
             <span>{intl.formatMessage(messages.shareWith)}</span>
-            <select value={reach} onChange={onReach}>
-              {REACH_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {intl.formatMessage(messages[opt.label])}
-                </option>
-              ))}
-            </select>
-          </label>
+            <ReachDropdown value={reach} onChange={onReach} hide={['krew']} />
+          </div>
           <Button onClick={publish}>
             {intl.formatMessage(messages.publish)}
           </Button>
