@@ -50,10 +50,18 @@ module Kronk
       :hub_teaser,
       # SpaceNav views (§4 SpaceNav) — the per-korner view switcher the
       # Frame renders in the floating nav. Ordered array of
-      # { 'key' => String, 'label' => String }; the first is the default
-      # (bare `/hub/<slug>`), the rest map to `/hub/<slug>/<key>`. Empty
-      # when the korner has a single view (no picker rendered).
+      # { 'key' => String, 'label' => String, 'tagline' => String? };
+      # the first is the default (bare `/hub/<slug>`), the rest map to
+      # `/hub/<slug>/<key>`. Empty when the korner has a single view
+      # (no picker rendered). Per-view `tagline` is optional and only
+      # consumed when `header.rotator` is on.
       :views,
+      # Header configuration (§Korner Standard L11). Currently only
+      # `rotator` — when true, `<AutoSpaceHeader>` renders the space
+      # title as a `<ScopeTitle>` cycling through `views:` instead of
+      # a static `name + tagline`. Preserves the "one title per space"
+      # rule: the rotator IS the title. Shape: { 'rotator' => Bool }.
+      :header,
       # Launch card (§8.7)
       :launch,
       # Space page — the "why" and "who" a member sees when they open the
@@ -216,6 +224,7 @@ module Kronk
           listens: Array(yaml['listens']),
           hub_teaser: yaml['hub_teaser'].is_a?(Hash) ? yaml['hub_teaser'] : nil,
           views: extract_views(yaml),
+          header: extract_header(yaml),
           launch: yaml['launch'].is_a?(Hash) ? yaml['launch'] : nil,
           purpose: yaml['purpose'].is_a?(String) ? yaml['purpose'] : nil,
           tagline: yaml['tagline'].is_a?(String) ? yaml['tagline'] : nil,
@@ -311,8 +320,21 @@ module Kronk
           view = { 'key' => key, 'label' => label }
           icon = entry['icon'].to_s
           view['icon'] = icon unless icon.empty?
+          tagline = entry['tagline'].to_s
+          view['tagline'] = tagline unless tagline.empty?
           view
         end
+      end
+
+      # Optional `header:` block. Currently exposes just a `rotator`
+      # boolean; other header knobs land here as they arrive. Returns
+      # nil (not {}) when absent so the frontend can straightforwardly
+      # `header?.rotator` gate.
+      def extract_header(yaml)
+        raw = yaml['header']
+        return nil unless raw.is_a?(Hash)
+
+        { 'rotator' => raw['rotator'] == true }
       end
 
       # Notifications may arrive as either `notifications: [<type>, ...]`

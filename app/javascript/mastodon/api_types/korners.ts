@@ -56,6 +56,23 @@ export interface ApiKornerViewJSON {
   // renders the icon (with `label` as the aria-label + tooltip) instead
   // of the text label. Resolves via `useKornerIcon.tsx#MATERIAL_TO_ICON`.
   icon?: string;
+  // Optional per-view tagline. When the manifest opts into
+  // `header.rotator: true`, the `<AutoSpaceHeader>` rotates through
+  // views and renders this text as the tagline under the face's
+  // label. Falls back to the korner's top-level `tagline` if
+  // absent. Ignored when the header rotator is off.
+  tagline?: string;
+}
+
+export interface ApiKornerHeaderJSON {
+  // When true, `<AutoSpaceHeader>` renders the korner's title as a
+  // rotator (`<ScopeTitle>`) driven by the manifest's `views:` list
+  // instead of a static `name + tagline`. Each view's `label` +
+  // optional `tagline` become one face; the current URL segment
+  // picks which face is front. The Standard's "one title per space"
+  // rule (Korner Standard L11) is preserved — the rotator is the
+  // title.
+  rotator?: boolean;
 }
 
 export interface ApiKornerJSON {
@@ -79,6 +96,10 @@ export interface ApiKornerJSON {
   // view (bare `/hub/<slug>`), the rest map to `/hub/<slug>/<key>`.
   // Drives both the nav picker and where the auto intro is shown.
   views?: ApiKornerViewJSON[];
+  // Per-korner header configuration. Currently only `rotator` — opts
+  // the `<AutoSpaceHeader>` into rendering as a `<ScopeTitle>` that
+  // cycles through `views:`.
+  header?: ApiKornerHeaderJSON;
   launch?: Record<string, unknown> | null;
   // Space page — the evolutionary purpose ("why this space exists") and the
   // handle of its steward. Both optional; declared in the manifest.

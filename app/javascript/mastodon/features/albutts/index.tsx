@@ -23,8 +23,6 @@ import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
 import { ComposeFab } from 'mastodon/components/compose_fab';
 import { Stage } from 'mastodon/components/stage';
 import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
-import { ScopeTitle } from 'mastodon/features/home_timeline/components/scope_title';
-import type { ScopeTitleFace } from 'mastodon/features/home_timeline/components/scope_title';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { AlbumComposer } from './components/album_composer';
@@ -62,38 +60,12 @@ const messages = defineMessages({
     id: 'albutts.fab.label',
     defaultMessage: 'New album',
   },
-  scopeAria: {
-    id: 'albutts.scope.aria',
-    defaultMessage: 'Change which albums you see',
-  },
-  scopeAll: { id: 'albutts.scope.all', defaultMessage: 'All albums' },
-  scopeAllDesc: {
-    id: 'albutts.scope.all_desc',
-    defaultMessage: 'Every album you can see',
-  },
-  scopeMine: { id: 'albutts.scope.mine', defaultMessage: 'My albums' },
-  scopeMineDesc: {
-    id: 'albutts.scope.mine_desc',
-    defaultMessage: 'Albums you started',
-  },
-  scopeContributed: {
-    id: 'albutts.scope.contributed',
-    defaultMessage: 'Contributed',
-  },
-  scopeContributedDesc: {
-    id: 'albutts.scope.contributed_desc',
-    defaultMessage: "Albums you've added a photo to",
-  },
-  scopeMates: { id: 'albutts.scope.mates', defaultMessage: "Mates'" },
-  scopeMatesDesc: {
-    id: 'albutts.scope.mates_desc',
-    defaultMessage: 'Albums your mates started',
-  },
 });
 
 // Path segment that follows /hub/albutts drives which scope face is
-// selected. Kept in the URL so refresh / back / share stays honest —
-// same pattern as the /home feed's scope routing.
+// selected. Must stay in sync with `views:` in albutts.yaml — the
+// manifest is the source of truth; the frontend keeps this list for
+// (a) the API scope enum and (b) the FeedDrum's rotation order.
 const SCOPE_KEYS: AlbumsScope[] = ['all', 'mine', 'contributed', 'mates'];
 
 const scopeFromPath = (pathname: string): AlbumsScope => {
@@ -115,10 +87,7 @@ const Albutts: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
 
   return (
-    // The Directory's `<ScopeTitle>` already carries the korner's
-    // identity + current view, so the Frame's auto space header
-    // would stack a duplicate title on top of it. Opt out.
-    <Stage label={intl.formatMessage(messages.title)} hideSpaceHeader>
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
@@ -139,10 +108,11 @@ const Albutts: React.FC<{ multiColumn?: boolean }> = () => {
         <Route path='/hub/albutts/new' exact>
           <Directory autoOpenComposer />
         </Route>
-        {/* Scope segments — one per ScopeTitle face other than the
-            default `all` (which is the bare /hub/albutts). Directory
-            reads the scope from the URL, so refresh + back + share
-            all preserve the view. */}
+        {/* Scope segments — one per manifest view other than the
+            default `all` (bare `/hub/albutts`). Title rotation lives
+            in the Frame's `<AutoSpaceHeader>` (manifest opt-in
+            `header.rotator: true`); Directory reads the scope from
+            the URL so refresh + back + share preserve the view. */}
         <Route path='/hub/albutts/mine' exact>
           <Directory />
         </Route>
@@ -191,36 +161,10 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
     void load();
   }, [load]);
 
-  // Faces are the same order as SCOPE_KEYS + the controller's SCOPES
-  // constant, so a keyboard arrow / swipe steps through them in the
-  // same order everywhere.
-  const scopeFaces: ScopeTitleFace[] = [
-    {
-      key: 'all',
-      label: intl.formatMessage(messages.scopeAll),
-      desc: intl.formatMessage(messages.scopeAllDesc),
-    },
-    {
-      key: 'mine',
-      label: intl.formatMessage(messages.scopeMine),
-      desc: intl.formatMessage(messages.scopeMineDesc),
-    },
-    {
-      key: 'contributed',
-      label: intl.formatMessage(messages.scopeContributed),
-      desc: intl.formatMessage(messages.scopeContributedDesc),
-    },
-    {
-      key: 'mates',
-      label: intl.formatMessage(messages.scopeMates),
-      desc: intl.formatMessage(messages.scopeMatesDesc),
-    },
-  ];
-
+  // FeedDrum drives its wrap direction from `order`; navigating a
+  // step is a URL push (same handler shape the AutoSpaceHeader uses).
   const handleScopeChange = useCallback(
     (next: string) => {
-      // `all` is the bare URL; the others carry the scope as a
-      // segment so refresh / back / share all preserve the view.
       history.push(next === 'all' ? '/hub/albutts' : `/hub/albutts/${next}`);
     },
     [history],
@@ -292,18 +236,11 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
 
   return (
     <div className='albutts-directory'>
-      {/* Scope title — same rotating space-header primitive as the
-          /home feed. Signed-in only; the scope faces other than
-          `all` require a caller identity to filter against. */}
-      {signedIn && (
-        <ScopeTitle
-          ariaLabel={intl.formatMessage(messages.scopeAria)}
-          faces={scopeFaces}
-          value={scope}
-          onChange={handleScopeChange}
-        />
-      )}
-
+      {/* Title lives in the Frame's `<AutoSpaceHeader>` — the
+          manifest opts into the shared rotator (`header.rotator:
+          true` in albutts.yaml), so the title above cycles through
+          the four views. Directory only owns the content grid + the
+          drum that rotates it. */}
       {signedIn ? (
         // FeedDrum turns the grid on scope change — same quarter-turn
         // that the /home feed uses under its ScopeTitle, so the top
