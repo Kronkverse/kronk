@@ -65,7 +65,7 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
   def read
     up_to = params[:up_to_message_id].to_i
     @conversation.mark_read!(current_account, up_to.positive? ? up_to : @conversation.messages.maximum(:id))
-    render json: REST::Nudges::ConversationSerializer.new(@conversation.reload, scope: current_account)
+    render json: @conversation.reload, serializer: REST::Nudges::ConversationSerializer, scope: current_account
   end
 
   # Leave a Krew conversation. Removes the account's
@@ -120,7 +120,7 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
     end
 
     membership.update!(muted: value)
-    render json: REST::Nudges::ConversationSerializer.new(@conversation.reload, scope: current_account)
+    render json: @conversation.reload, serializer: REST::Nudges::ConversationSerializer, scope: current_account
   end
 
   def set_conversation

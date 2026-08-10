@@ -36,7 +36,7 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
       media_attachment_ids: media_ids
     )
 
-    render json: REST::Nudges::MessageSerializer.new(message, scope: current_account), status: 201
+    render json: message, serializer: REST::Nudges::MessageSerializer, scope: current_account, status: 201
   end
 
   # Author-only soft delete. The row stays (id claimed, no reuse);
@@ -47,7 +47,7 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
     return render json: { error: 'forbidden' }, status: 403 unless @message.author_account_id == current_account.id
 
     @message.tombstone!
-    render json: REST::Nudges::MessageSerializer.new(@message, scope: current_account)
+    render json: @message, serializer: REST::Nudges::MessageSerializer, scope: current_account
   end
 
   private
