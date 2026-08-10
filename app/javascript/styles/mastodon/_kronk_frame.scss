@@ -406,6 +406,124 @@
   }
 }
 
+// Dropdown alternate to .space-view-picker — used by korners whose
+// `header.picker: 'menu'` manifest opt-in signals views that are
+// separate workflows (Kommons: Feed/Backing/Tasks/Budget) or an
+// item count the segmented row can't carry. Trigger takes one
+// button's worth of chrome; the menu portals below via absolute
+// positioning inside the header row's right slot.
+.space-view-menu {
+  position: relative;
+  display: inline-flex;
+
+  &__trigger {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem 0.35rem 0.85rem;
+    border-radius: var(--radius-round);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-family: var(--font-display, inherit);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible,
+    &[aria-expanded='true'] {
+      color: var(--text-primary);
+      border-color: var(--kronk-purple-accent);
+      outline: none;
+    }
+  }
+
+  &__trigger-icon,
+  &__trigger-caret,
+  &__item-icon,
+  &__item-check {
+    width: 18px;
+    height: 18px;
+    fill: currentcolor;
+    flex: 0 0 auto;
+  }
+
+  &__trigger-caret {
+    margin-inline-start: 0.15rem;
+    opacity: 0.7;
+  }
+
+  &__list {
+    position: absolute;
+    top: calc(100% + 6px);
+    inset-inline-end: 0;
+    z-index: 20;
+    min-width: 12rem;
+    padding: 0.35rem;
+    border-radius: var(--radius-medium, 12px);
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 12px 32px -8px rgb(0 0 0 / 55%);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__item {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    border-radius: var(--radius-small, 8px);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    text-align: start;
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text-primary);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-bright) 12%,
+        transparent
+      );
+      outline: none;
+    }
+
+    &--current {
+      color: var(--text-primary);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-bright) 18%,
+        transparent
+      );
+    }
+  }
+
+  &__item-label {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__item-check {
+    opacity: 0.85;
+  }
+}
+
 // Rounded interior L corner — now painted inline via mask-image on
 // TopBand and RightBand (see .kronk-frame__top-band and
 // .kronk-frame__right-band above). No third element required.

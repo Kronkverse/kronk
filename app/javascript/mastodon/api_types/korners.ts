@@ -73,6 +73,18 @@ export interface ApiKornerHeaderJSON {
   // rule (Korner Standard L11) is preserved — the rotator is the
   // title.
   rotator?: boolean;
+  // Shape of the Frame's `<AutoSpaceViewPicker>`:
+  //
+  //   `pills` (default) — segmented pill row; every view is a
+  //     visible button. Fits ≤3 views over the same material.
+  //   `menu`            — compact dropdown; trigger shows the current
+  //     face, tap opens a list. For korners whose views are
+  //     genuinely separate workflows (Kommons: Feed / Backing /
+  //     Tasks / Budget) or where the count exceeds a comfortable
+  //     pill row.
+  //
+  // Ignored when `rotator` is on (the title carries the switch).
+  picker?: 'pills' | 'menu';
 }
 
 export interface ApiKornerJSON {

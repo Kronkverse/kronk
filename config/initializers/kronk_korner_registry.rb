@@ -326,15 +326,22 @@ module Kronk
         end
       end
 
-      # Optional `header:` block. Currently exposes just a `rotator`
-      # boolean; other header knobs land here as they arrive. Returns
-      # nil (not {}) when absent so the frontend can straightforwardly
-      # `header?.rotator` gate.
+      # Optional `header:` block. Exposes:
+      #   rotator — Bool. Title becomes `<ScopeTitle>` cycling views.
+      #   picker  — 'pills' | 'menu'. Shape of the Frame's view
+      #             switcher when rotator is off. Unknown values are
+      #             dropped (frontend defaults to pills).
+      # Returns nil (not {}) when absent so the frontend can
+      # straightforwardly `header?.rotator` / `header?.picker` gate.
       def extract_header(yaml)
         raw = yaml['header']
         return nil unless raw.is_a?(Hash)
 
-        { 'rotator' => raw['rotator'] == true }
+        picker = raw['picker'].to_s
+        {
+          'rotator' => raw['rotator'] == true,
+          'picker' => (%w(pills menu).include?(picker) ? picker : nil),
+        }.compact
       end
 
       # Notifications may arrive as either `notifications: [<type>, ...]`
