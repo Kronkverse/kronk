@@ -114,7 +114,10 @@ const Albutts: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
 
   return (
-    <Stage label={intl.formatMessage(messages.title)}>
+    // The Directory's `<ScopeTitle>` already carries the korner's
+    // identity + current view, so the Frame's auto space header
+    // would stack a duplicate title on top of it. Opt out.
+    <Stage label={intl.formatMessage(messages.title)} hideSpaceHeader>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>

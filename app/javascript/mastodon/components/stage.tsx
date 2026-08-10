@@ -35,10 +35,20 @@ interface StageProps {
   children?: React.ReactNode;
   label?: string;
   bindToDocument?: boolean;
+  // Hide the Frame-provided center `<AutoSpaceHeader>` (the
+  // manifest-driven title + tagline) while keeping the badge /
+  // settings / view-picker chrome. Used by pages that render their
+  // own title row — e.g. Albutts' rotating `<ScopeTitle>` carries
+  // both identity and current view, and stacking that below the
+  // auto header reads as a duplicate.
+  hideSpaceHeader?: boolean;
 }
 
 export const Stage = forwardRef<StageRef, StageProps>(
-  ({ children, label, bindToDocument }, ref: Ref<StageRef>) => {
+  (
+    { children, label, bindToDocument, hideSpaceHeader = false },
+    ref: Ref<StageRef>,
+  ) => {
     const nodeRef = useRef<HTMLDivElement>(null);
 
     useImperativeHandle(ref, () => ({
@@ -101,7 +111,7 @@ export const Stage = forwardRef<StageRef, StageProps>(
         aria-label={label}
         className='kronk-stage'
       >
-        <SpaceHeaderRow />
+        <SpaceHeaderRow hideCenter={hideSpaceHeader} />
         {children}
       </div>
     );
