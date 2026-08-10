@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import axios from 'axios';
+
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import PushPinIcon from '@/material-icons/400-24px/push_pin.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
@@ -111,7 +113,7 @@ export const PlaceControl: React.FC<Props> = ({ onPlaced }) => {
   // is broken" when what actually broke was `POST /api/v1/map/presence`
   // after the user picked a result. Keep the two concerns distinct so
   // the copy points at the thing that failed.
-  const [placeError, setPlaceError] = useState(false);
+  const [placeError, setPlaceError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   // Monotonic id of the latest issued search. Every fetch captures its
   // own id; when it settles, it ignores itself if a newer search has
@@ -172,13 +174,15 @@ export const PlaceControl: React.FC<Props> = ({ onPlaced }) => {
     setQuery('');
     setResults([]);
     setStatus('idle');
-    setPlaceError(false);
+    setPlaceError(null);
   }, []);
+
+  const defaultPlaceError = intl.formatMessage(messages.placeError);
 
   const handleSelect = useCallback(
     (result: ApiGeocodeResultJSON) => {
       setPlacing(true);
-      setPlaceError(false);
+      setPlaceError(null);
       apiPlacePresence({
         lat: result.lat,
         lng: result.lng,
@@ -190,20 +194,28 @@ export const PlaceControl: React.FC<Props> = ({ onPlaced }) => {
           onPlaced(pin);
           handleClose();
         })
-        .catch(() => {
-          // The pin-drop failed, not the geocoder — show the
-          // place-specific copy instead of "Couldn't reach the
-          // geocoder", which the previous branch flagged as
-          // misleading. Server-side we now surface a specific 4xx/5xx
-          // body (see PresenceController#create rescue), so a follow-up
-          // can inspect the response and surface it verbatim.
-          setPlaceError(true);
+        .catch((err: unknown) => {
+          // PresenceController#create returns `{ error: "…" }` on
+          // ParameterMissing / ArgumentError / RecordInvalid / any
+          // unhandled exception (see PR #1273). Surface that verbatim
+          // when present so a specific validation message or the
+          // "Could not drop your pin. Try again in a moment." fallback
+          // reaches the user, instead of always showing the generic
+          // client-side copy that swallows the real cause.
+          let message = defaultPlaceError;
+          if (axios.isAxiosError(err)) {
+            const body = err.response?.data as { error?: string } | undefined;
+            if (body?.error && typeof body.error === 'string') {
+              message = body.error;
+            }
+          }
+          setPlaceError(message);
         })
         .finally(() => {
           setPlacing(false);
         });
     },
-    [onPlaced, handleClose],
+    [onPlaced, handleClose, defaultPlaceError],
   );
 
   const handleQueryChange = useCallback(
@@ -275,7 +287,7 @@ export const PlaceControl: React.FC<Props> = ({ onPlaced }) => {
       )}
       {placeError && !placing && (
         <div className='place-control__meta place-control__meta--error'>
-          {intl.formatMessage(messages.placeError)}
+          {placeError}
         </div>
       )}
       {placing && (
