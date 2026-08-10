@@ -8,7 +8,7 @@ import type {
   KuestionVisibilityScope,
 } from 'mastodon/api_types/kuestions';
 
-import { VisibilityDial } from './visibility_dial';
+import { KuestionScopePicker } from './kuestion_scope_picker';
 
 const messages = defineMessages({
   cancel: { id: 'kuestions.sheet.cancel', defaultMessage: 'Back to deck' },
@@ -139,7 +139,7 @@ export const AnswerSheet: React.FC<AnswerSheetProps> = ({
               placeholder={intl.formatMessage(messages.placeholder)}
               disabled={pending}
             />
-            <VisibilityDial value={scope} onChange={setScope} />
+            <KuestionScopePicker value={scope} onChange={setScope} />
           </>
         )}
 

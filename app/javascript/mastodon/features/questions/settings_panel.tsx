@@ -5,7 +5,7 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import api from 'mastodon/api';
 import type { KuestionVisibilityScope } from 'mastodon/api_types/kuestions';
 
-import { VisibilityDial } from './visibility_dial';
+import { KuestionScopePicker } from './kuestion_scope_picker';
 
 // Kuestions Answer scope + the manifest setting both use the platform
 // reach ladder (docs/kronk_feed_and_reach.md §2) after slice 4 of the
@@ -266,9 +266,8 @@ const ScopeRow: React.FC<ScopeRowProps> = ({ value, onChange }) => {
         <b>{intl.formatMessage(messages.scopeTitle)}</b>
         <span>{intl.formatMessage(messages.scopeNote)}</span>
       </div>
-      {/* Import intentionally deferred — we reuse the VisibilityDial
-          component from the answer sheet so the two surfaces don't
-          drift. */}
+      {/* Same standard reach selector as the answer sheet so the two
+          surfaces don't drift. */}
       <ScopeDial value={value} onChange={onChange} />
     </div>
   );
@@ -278,5 +277,5 @@ const ScopeDial: React.FC<{
   value: KuestionVisibilityScope;
   onChange: (next: KuestionVisibilityScope) => void;
 }> = ({ value, onChange }) => (
-  <VisibilityDial value={value} onChange={onChange} withNote={false} />
+  <KuestionScopePicker value={value} onChange={onChange} />
 );
