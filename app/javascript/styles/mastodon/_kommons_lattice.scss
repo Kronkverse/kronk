@@ -188,29 +188,6 @@
       );
       outline: none;
     }
-
-    // The middle button is the zoom-level readout (`100%`); tapping
-    // it resets zoom. Marked with the accent fill so it reads as the
-    // control's "current state" rather than another action chip.
-    &:nth-child(2) {
-      color: var(--text-primary);
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 26%,
-        transparent
-      );
-      min-width: 44px;
-      font-variant-numeric: tabular-nums;
-
-      &:hover,
-      &:focus-visible {
-        background: color-mix(
-          in oklab,
-          var(--kronk-purple-bright) 40%,
-          transparent
-        );
-      }
-    }
   }
 }
 

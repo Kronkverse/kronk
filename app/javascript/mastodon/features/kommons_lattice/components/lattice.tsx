@@ -153,20 +153,6 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
   const zoomOut = useCallback(() => {
     stepZoom(1 / 1.2);
   }, [stepZoom]);
-  const resetZoom = useCallback(() => {
-    flashZoomTransition();
-    setZoom(1);
-  }, [flashZoomTransition]);
-  const fit = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const z = clampZoom(
-      Math.min((el.clientWidth - 24) / planeW, (el.clientHeight - 24) / planeH),
-    );
-    flashZoomTransition();
-    setZoom(z);
-    el.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
-  }, [planeW, planeH, flashZoomTransition]);
 
   // Anchored wheel zoom on ctrl/⌘ + wheel — keep the point under the cursor
   // fixed. A bare wheel scrolls. Non-passive so preventDefault holds.
@@ -480,14 +466,8 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
         <button type='button' onClick={zoomOut} aria-label='Zoom out'>
           −
         </button>
-        <button type='button' onClick={resetZoom}>
-          {Math.round(zoom * 100)}%
-        </button>
         <button type='button' onClick={zoomIn} aria-label='Zoom in'>
           +
-        </button>
-        <button type='button' onClick={fit}>
-          fit
         </button>
       </div>
 
