@@ -10,27 +10,17 @@ class StatusPolicy < ApplicationPolicy
   def show?
     return false if author.unavailable?
 
-    if krew_scoped?
-      # KRONK_KREWS §3 — a krew-scoped status is visible to the
-      # author + members of any targeted Krew. Not federated; not
-      # visible outside that membership set.
-      owned? || viewer_in_targeted_krew?
-    elsif self_scoped?
-      # Reach: self_only — the author's own timeline, no one else.
-      owned?
-    elsif mates_scoped?
-      # Reach: mates — the author + their mutual connections.
-      owned? || author_mate?
-    elsif orbit_scoped?
-      # Reach: orbit — mates + mates-of-mates (one hop out).
-      owned? || author_mate? || in_author_orbit?
-    elsif requires_mention?
-      owned? || mention_exists?
-    elsif private?
-      owned? || following_author? || mention_exists?
-    else
-      current_account.nil? || (!author_blocking? && !author_blocking_domain?)
-    end
+    # Reach tier first: if the status's reach tier already admits this
+    # viewer, we're done — and crucially, a public/normal post never pays
+    # for the krew membership query below (the hot feed path).
+    return true if visible_by_reach?
+
+    # Krew is an additive audience axis (KRONK_KREWS §3,
+    # docs/rebuild/krew_axis_migration.md): even when the reach tier
+    # excludes this viewer, a member of any Krew the status targets can
+    # still see it. Checked only on the reach-miss path, so it costs a
+    # query only for statuses the viewer couldn't otherwise see.
+    viewer_in_targeted_krew?
   end
 
   def quote?
@@ -57,6 +47,27 @@ class StatusPolicy < ApplicationPolicy
 
   private
 
+  # The reach-tier half of show? — the audience implied by the status's
+  # `visibility` alone, ignoring any additive krew targeting.
+  def visible_by_reach?
+    if self_scoped?
+      # Reach: self_only — the author's own timeline, no one else.
+      owned?
+    elsif mates_scoped?
+      # Reach: mates — the author + their mutual connections.
+      owned? || author_mate?
+    elsif orbit_scoped?
+      # Reach: orbit — mates + mates-of-mates (one hop out).
+      owned? || author_mate? || in_author_orbit?
+    elsif requires_mention?
+      owned? || mention_exists?
+    elsif private?
+      owned? || following_author? || mention_exists?
+    else
+      current_account.nil? || (!author_blocking? && !author_blocking_domain?)
+    end
+  end
+
   def requires_mention?
     record.direct_visibility? || record.limited_visibility?
   end
@@ -67,10 +78,6 @@ class StatusPolicy < ApplicationPolicy
 
   def private?
     record.private_visibility?
-  end
-
-  def krew_scoped?
-    record.krew_visibility?
   end
 
   def self_scoped?
@@ -86,9 +93,10 @@ class StatusPolicy < ApplicationPolicy
   end
 
   # Local-only reach scopes that must never be reblogged into a wider
-  # audience (mirrors the krew guard).
+  # audience. (Krew-targeted posts are already covered: their reach tier
+  # is one of these — a migrated krew post is self_only.)
   def restricted_scope?
-    krew_scoped? || self_scoped? || mates_scoped? || orbit_scoped?
+    self_scoped? || mates_scoped? || orbit_scoped?
   end
 
   def author_mate?

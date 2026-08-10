@@ -79,8 +79,6 @@ class Api::V1::StatusesController < Api::BaseController
   end
 
   def create
-    return render json: { error: 'krew_visibility_requires_krew_ids' }, status: 422 if status_params[:visibility] == 'krew' && Array(status_params[:krew_ids]).compact_blank.empty?
-
     @status = PostStatusService.new.call(
       current_user.account,
       text: status_params[:status],
@@ -91,17 +89,17 @@ class Api::V1::StatusesController < Api::BaseController
       media_ids: status_params[:media_ids],
       sensitive: status_params[:sensitive],
       spoiler_text: status_params[:spoiler_text],
-      visibility: status_params[:visibility],
+      visibility: normalized_visibility,
       language: status_params[:language],
       scheduled_at: status_params[:scheduled_at],
       application: doorkeeper_token.application,
       poll: status_params[:poll],
       allowed_mentions: status_params[:allowed_mentions],
       idempotency: request.headers['Idempotency-Key'],
-      # Attachment happens inside PostStatusService's transaction so
-      # the fan-out (enqueued in postprocess_status!) sees the join
-      # rows on `visibility='krew'` posts. See PostStatusService
-      # #attach_status_to_krews!.
+      # Krew is now an orthogonal, additive axis — krew_ids may accompany
+      # any reach tier. Attachment happens inside PostStatusService's
+      # transaction so the fan-out (enqueued in postprocess_status!) sees
+      # the join rows. See PostStatusService#attach_status_to_krews!.
       krew_ids: status_params[:krew_ids],
       with_rate_limit: true
     )
@@ -194,6 +192,16 @@ class Api::V1::StatusesController < Api::BaseController
 
   def statuses_params
     params.permit(id: [])
+  end
+
+  # Accept-both: a legacy client may still send `visibility: 'krew'` (krew
+  # used to be a visibility value). Krew is now an orthogonal axis
+  # (docs/rebuild/krew_axis_migration.md), so map it to the `self_only`
+  # reach tier and keep the krew_ids — the audience (owner + krew members)
+  # is preserved additively.
+  def normalized_visibility
+    visibility = status_params[:visibility]
+    visibility == 'krew' ? 'self_only' : visibility
   end
 
   def status_params

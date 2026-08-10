@@ -47,9 +47,15 @@ class FanOutOnWriteService < BaseService
     # not any hashtag or public stream. It also does not fire mention
     # or quote notifications, because the target audience is one
     # account (the author), and the recipient would 403 on click.
-    deliver_to_self! unless @status.self_only_visibility?
+    #
+    # A self_only status that ALSO targets a Krew is not audience-empty:
+    # krew is an additive axis (docs/rebuild/krew_axis_migration.md), so it
+    # has a real audience (author + krew members). Such a post behaves like
+    # the old `krew` visibility did — it lands in the author's own home and
+    # fires its notifications. `radiates_to_no_one?` captures that.
+    deliver_to_self! unless radiates_to_no_one?
 
-    unless @options[:skip_notifications] || @status.self_only_visibility?
+    unless @options[:skip_notifications] || radiates_to_no_one?
       notify_quoted_account!
       notify_mentioned_accounts!
       notify_about_update! if update?
@@ -66,18 +72,23 @@ class FanOutOnWriteService < BaseService
       # push is deferred (§6 flags its cost); FoF see orbit posts on read.
       deliver_to_mates!
     when :self_only
-      # No fan-out. See the comment on `deliver_to_self!` above.
+      # No reach-tier fan-out. See the comment on `deliver_to_self!` above.
       nil
     when :limited
       deliver_to_mentioned_followers!
-    when :krew
-      # KRONK_KREWS §3 — audience is the union of members across the
-      # targeted Krews, deduplicated. No followers/lists fan-out.
-      deliver_to_krew_members!
     else
       deliver_to_mentioned_followers!
       deliver_to_conversation!
     end
+
+    # Krew is an additive audience axis (KRONK_KREWS §3,
+    # docs/rebuild/krew_axis_migration.md): independently of the reach tier
+    # above, push to the Home feed of every local member across the Krews
+    # this status targets. deliver_to_krew_members! is a cheap no-op when
+    # the status targets none, dedupes, and skips the author — so it is safe
+    # to run alongside any tier (a mate who is also a krew member just gets
+    # one idempotent home insert).
+    deliver_to_krew_members!
   end
 
   def fan_out_to_public_recipients!
@@ -269,6 +280,19 @@ class FanOutOnWriteService < BaseService
 
   def update?
     @options[:update]
+  end
+
+  # True when a status reaches nobody but the author: self_only reach AND
+  # no additive krew targeting. A self_only post that targets a krew has a
+  # real audience (the krew's members), so it does NOT radiate to no one.
+  def radiates_to_no_one?
+    @status.self_only_visibility? && !targets_krew?
+  end
+
+  def targets_krew?
+    return @targets_krew if defined?(@targets_krew)
+
+    @targets_krew = @status.krews.exists?
   end
 
   def broadcastable?
