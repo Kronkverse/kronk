@@ -93,25 +93,30 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
   end
 
   def album_params_for_create
-    params.expect(album: [:title, :description, :visibility, :contribution, :cover_media_attachment_id])
+    normalize_visibility(params.expect(album: [:title, :description, :visibility, :contribution, :cover_media_attachment_id]))
   end
 
   def album_params_for_update
-    params.expect(album: [:title, :description, :visibility, :contribution, :cover_media_attachment_id])
+    normalize_visibility(params.expect(album: [:title, :description, :visibility, :contribution, :cover_media_attachment_id]))
+  end
+
+  # Krew is orthogonal now — accept a legacy `visibility=krew` from an
+  # un-migrated client, mapping it to self_only. The krew(s) still arrive via
+  # the separate krew_ids param, so the audience (owner + krew) is unchanged.
+  def normalize_visibility(permitted)
+    permitted[:visibility] = 'self_only' if permitted[:visibility] == 'krew'
+    permitted
   end
 
   def krew_ids_param
     Array(params[:krew_ids]).map(&:to_i).reject(&:zero?).uniq
   end
 
-  # Sync the krew_ids set. On create this seeds the join table; on
-  # update it replaces the set wholesale (removing any krews no longer
-  # in the list). Only meaningful when visibility is `krew`; the model
-  # validation catches the empty-krews case.
+  # Sync the album's krew set (the orthogonal, additive-visibility axis). On
+  # create it seeds the join table; on update it replaces the set wholesale
+  # (an empty list removes every krew).
   def attach_krews!
     krew_ids = krew_ids_param
-    return if krew_ids.empty? && @album.krew_scope?
-
     @album.album_krews.where.not(krew_id: krew_ids).destroy_all
     existing = @album.album_krews.pluck(:krew_id)
     (krew_ids - existing).each { |kid| @album.album_krews.create!(krew_id: kid) }

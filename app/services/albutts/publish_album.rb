@@ -42,7 +42,7 @@ module Albutts
         visibility: ALBUM_TO_STATUS_VISIBILITY.fetch(@album.visibility, 'public')
       )
 
-      attach_krews!(status) if @album.krew_scope?
+      attach_krews!(status) if @album.album_krews.exists?
 
       @album.update_columns(status_id: status.id)
       status.update_column(:source_korner, 'albutts') # feed projection discriminator (§3.2)

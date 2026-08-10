@@ -41,7 +41,7 @@ module Albutts
         media_ids: [@media_attachment.id]
       )
       status.update_column(:source_korner, 'albutts')
-      attach_krews!(status) if @album.krew_scope?
+      attach_krews!(status) if @album.album_krews.exists?
       status
     end
 

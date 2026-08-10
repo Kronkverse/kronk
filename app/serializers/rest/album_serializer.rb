@@ -13,7 +13,7 @@ class REST::AlbumSerializer < ActiveModel::Serializer
 
   belongs_to :owner, serializer: REST::AccountSerializer
   has_many   :photos, serializer: REST::AlbumPhotoSerializer
-  has_many   :krews, serializer: REST::KrewSerializer, if: :krew_scoped?
+  has_many   :krews, serializer: REST::KrewSerializer, if: :krews?
 
   def id
     object.id.to_s
@@ -55,7 +55,9 @@ class REST::AlbumSerializer < ActiveModel::Serializer
     object.created_at.iso8601
   end
 
-  def krew_scoped?
-    object.krew_scope?
+  # Krew is orthogonal now — expose the album's krews whenever it targets any,
+  # regardless of reach tier.
+  def krews?
+    object.album_krews.exists?
   end
 end
