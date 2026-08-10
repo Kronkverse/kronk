@@ -4,6 +4,7 @@ import { FormattedMessage } from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 
+import ZheIcon from '@/material-icons/400-24px/zhe.svg?react';
 import { Icon } from 'mastodon/components/icon';
 
 import { Composer } from '../../kommons_tree/components/composer';
@@ -416,7 +417,11 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
               >
                 <span className='lattice-row__icon'>
                   {isCore ? (
-                    <span className='lattice-core-glyph'>Ж</span>
+                    <Icon
+                      id='zhe'
+                      icon={ZheIcon}
+                      className='lattice-core-glyph'
+                    />
                   ) : (
                     <Icon id='' icon={latticeIcon(node, ROOT_ID)} />
                   )}

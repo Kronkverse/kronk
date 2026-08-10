@@ -351,11 +351,20 @@
   }
 }
 
+// Kronk core glyph (Ж) at the root of the lattice. Was a text span in
+// the display font; now renders the shared
+// `material-icons/400-24px/zhe.svg` via `<Icon className='lattice-
+// core-glyph' />` (Tal 2026-08-11) so the same asset can be reused
+// wherever the core needs to appear. `fill: currentcolor` on the
+// path picks up the purple set here.
 .lattice-core-glyph {
   color: var(--kronk-purple-bright);
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 700;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: currentcolor;
+  }
 }
 
 // ── Leaf panel (§7) ──────────────────────────────────────────────────────────
