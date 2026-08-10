@@ -283,7 +283,7 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
     (id: string) => {
       const section = sections.find((s) => s.id === id);
       if (!section) return;
-      const currentReach: Reach = section.visibility ?? 'kronk';
+      const currentReach: Reach = section.visibility ?? 'public';
       const nextReach = next(REACH_ORDER, currentReach);
       const nextSection = { ...section, visibility: nextReach };
       publish(
@@ -590,7 +590,7 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
               name={section.title ?? source}
               source={source}
               visible={section.visible}
-              reach={section.visibility ?? 'kronk'}
+              reach={section.visibility ?? 'public'}
               order={order}
               canMoveUp={i > 0}
               canMoveDown={i < sections.length - 1}

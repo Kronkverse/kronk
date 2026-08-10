@@ -26,22 +26,12 @@ const messages = defineMessages({
     id: 'profile_shelves.arrange.remove',
     defaultMessage: 'Remove',
   },
-  reachEveryone: {
-    id: 'profile_shelves.reach.everyone',
-    defaultMessage: 'Everyone',
-  },
-  reachKronk: { id: 'profile_shelves.reach.kronk', defaultMessage: 'Kronk' },
-  reachConnections: {
-    id: 'profile_shelves.reach.connections',
-    defaultMessage: 'Connections',
-  },
-  reachVouched: {
-    id: 'profile_shelves.reach.vouched',
-    defaultMessage: 'Vouched',
-  },
-  reachOnlyMe: {
-    id: 'profile_shelves.reach.only_me',
-    defaultMessage: 'Only me',
+  reachSelf: { id: 'profile_shelves.reach.self_only', defaultMessage: 'Me' },
+  reachMates: { id: 'profile_shelves.reach.mates', defaultMessage: 'Mates' },
+  reachOrbit: { id: 'profile_shelves.reach.orbit', defaultMessage: 'Orbit' },
+  reachPublic: {
+    id: 'profile_shelves.reach.public',
+    defaultMessage: 'Kronkverse',
   },
   orderNewest: {
     id: 'profile_shelves.order.newest',
@@ -65,13 +55,7 @@ const messages = defineMessages({
   },
 });
 
-export const REACH_ORDER = [
-  'everyone',
-  'kronk',
-  'connections',
-  'vouched',
-  'only_me',
-] as const;
+export const REACH_ORDER = ['self_only', 'mates', 'orbit', 'public'] as const;
 
 export type Reach = (typeof REACH_ORDER)[number];
 
@@ -80,11 +64,10 @@ export const ORDER_ORDER = ['newest', 'oldest', 'chosen'] as const;
 export type OrderMode = (typeof ORDER_ORDER)[number];
 
 const REACH_LABELS: Record<Reach, keyof typeof messages> = {
-  everyone: 'reachEveryone',
-  kronk: 'reachKronk',
-  connections: 'reachConnections',
-  vouched: 'reachVouched',
-  only_me: 'reachOnlyMe',
+  self_only: 'reachSelf',
+  mates: 'reachMates',
+  orbit: 'reachOrbit',
+  public: 'reachPublic',
 };
 
 const ORDER_LABELS: Record<OrderMode, keyof typeof messages> = {

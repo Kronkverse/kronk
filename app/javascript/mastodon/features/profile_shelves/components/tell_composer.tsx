@@ -4,9 +4,10 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import type { ApiProfileCardJSON } from 'mastodon/api/profile_cards';
 import { apiUpsertProfileCard } from 'mastodon/api/profile_cards';
+import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import type { ReachValue } from 'mastodon/components/reach_dropdown';
 
 import type { Reach } from './arrange_slab';
-import { REACH_ORDER } from './arrange_slab';
 
 // The told-card composer. Opens from Arrange mode (click a card's
 // name, or add a preset from the Library) and lets the owner:
@@ -63,23 +64,6 @@ const messages = defineMessages({
     id: 'profile_shelves.composer.reach',
     defaultMessage: 'Who sees it',
   },
-  reachEveryone: {
-    id: 'profile_shelves.reach.everyone',
-    defaultMessage: 'Everyone',
-  },
-  reachKronk: { id: 'profile_shelves.reach.kronk', defaultMessage: 'Kronk' },
-  reachConnections: {
-    id: 'profile_shelves.reach.connections',
-    defaultMessage: 'Connections',
-  },
-  reachVouched: {
-    id: 'profile_shelves.reach.vouched',
-    defaultMessage: 'Vouched',
-  },
-  reachOnlyMe: {
-    id: 'profile_shelves.reach.only_me',
-    defaultMessage: 'Only me',
-  },
   visible: {
     id: 'profile_shelves.composer.visible',
     defaultMessage: 'Show on profile',
@@ -97,14 +81,6 @@ const messages = defineMessages({
     defaultMessage: 'Saving…',
   },
 });
-
-const REACH_MESSAGES: Record<Reach, keyof typeof messages> = {
-  everyone: 'reachEveryone',
-  kronk: 'reachKronk',
-  connections: 'reachConnections',
-  vouched: 'reachVouched',
-  only_me: 'reachOnlyMe',
-};
 
 const RENDER_MESSAGES: Record<
   (typeof RENDER_SHAPES)[number],
@@ -182,56 +158,6 @@ const RenderPickerOption: React.FC<RenderPickerOptionProps> = ({
   );
 };
 
-interface ReachPickerProps {
-  value: Reach;
-  onSelect: (value: Reach) => void;
-}
-
-const ReachPicker: React.FC<ReachPickerProps> = ({ value, onSelect }) => {
-  const intl = useIntl();
-  return (
-    <div className='profile-shelves__composer-picker'>
-      {REACH_ORDER.map((reach) => (
-        <ReachPickerOption
-          key={reach}
-          reach={reach}
-          label={intl.formatMessage(messages[REACH_MESSAGES[reach]])}
-          active={value === reach}
-          onSelect={onSelect}
-        />
-      ))}
-    </div>
-  );
-};
-
-interface ReachPickerOptionProps {
-  reach: Reach;
-  label: string;
-  active: boolean;
-  onSelect: (value: Reach) => void;
-}
-
-const ReachPickerOption: React.FC<ReachPickerOptionProps> = ({
-  reach,
-  label,
-  active,
-  onSelect,
-}) => {
-  const handleClick = useCallback(() => {
-    onSelect(reach);
-  }, [onSelect, reach]);
-  return (
-    <button
-      type='button'
-      className={`profile-shelves__composer-pill profile-shelves__composer-pill--reach-${reach}${active ? ' profile-shelves__composer-pill--active' : ''}`}
-      aria-pressed={active}
-      onClick={handleClick}
-    >
-      {label}
-    </button>
-  );
-};
-
 export const TellComposer: React.FC<TellComposerProps> = ({
   cardType,
   cardTitle,
@@ -248,7 +174,11 @@ export const TellComposer: React.FC<TellComposerProps> = ({
       : 'block';
   });
   const [body, setBody] = useState(initial?.body ?? '');
-  const [reach, setReach] = useState<Reach>(initial?.visibility ?? 'kronk');
+  const [reach, setReach] = useState<Reach>(initial?.visibility ?? 'public');
+  const handleReachChange = useCallback((value: ReachValue) => {
+    // Krew is hidden, so the value is always one of the profile ladder rungs.
+    setReach(value as Reach);
+  }, []);
   const [visible, setVisible] = useState(initial?.visible ?? false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
@@ -332,7 +262,11 @@ export const TellComposer: React.FC<TellComposerProps> = ({
           <label className='profile-shelves__composer-label'>
             {intl.formatMessage(messages.reach)}
           </label>
-          <ReachPicker value={reach} onSelect={setReach} />
+          <ReachDropdown
+            value={reach}
+            onChange={handleReachChange}
+            hide={['krew']}
+          />
         </div>
 
         <div className='profile-shelves__composer-section profile-shelves__composer-inline'>
