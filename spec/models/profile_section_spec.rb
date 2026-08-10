@@ -45,30 +45,35 @@ RSpec.describe ProfileSection do
   end
 
   describe 'visibility' do
-    it 'defaults to kronk (same as ProfileCard)' do
+    def build(visibility)
+      described_class.create!(account: account, section_type: 'drawn', position: 0,
+                              settings: { 'render' => 'album', 'korner_slug' => 'albutts' }, visibility: visibility)
+    end
+
+    it 'defaults to public (Kronkverse), same as ProfileCard' do
       section = described_class.create!(account: account, section_type: 'drawn', position: 0, settings: { 'render' => 'album', 'korner_slug' => 'albutts' })
-      expect(section.visibility_kronk?).to be true
+      expect(section.visibility_public?).to be true
     end
 
-    it 'shows everyone-scoped shelves to anonymous viewers' do
-      section = described_class.create!(account: account, section_type: 'drawn', position: 0, settings: { 'render' => 'album', 'korner_slug' => 'albutts' }, visibility: 'everyone')
-      expect(section.visible_to?(nil)).to be true
+    it 'hides public (Kronkverse) shelves from logged-out viewers' do
+      expect(build('public').visible_to?(nil)).to be false
     end
 
-    it 'hides kronk-scoped shelves from anonymous viewers' do
-      section = described_class.create!(account: account, section_type: 'drawn', position: 0, settings: { 'render' => 'album', 'korner_slug' => 'albutts' }, visibility: 'kronk')
-      expect(section.visible_to?(nil)).to be false
+    it 'shows public (Kronkverse) shelves to a signed-in local member' do
+      expect(build('public').visible_to?(Fabricate(:account, domain: nil))).to be true
     end
 
     it 'shows any shelf to the owner regardless of visibility' do
-      section = described_class.create!(account: account, section_type: 'drawn', position: 0, settings: { 'render' => 'album', 'korner_slug' => 'albutts' }, visibility: 'only_me')
-      expect(section.visible_to?(account)).to be true
+      expect(build('self_only').visible_to?(account)).to be true
     end
 
-    it 'hides only_me shelves from strangers' do
-      section = described_class.create!(account: account, section_type: 'drawn', position: 0, settings: { 'render' => 'album', 'korner_slug' => 'albutts' }, visibility: 'only_me')
-      other = Fabricate(:account)
-      expect(section.visible_to?(other)).to be false
+    it 'hides self_only shelves from strangers' do
+      expect(build('self_only').visible_to?(Fabricate(:account))).to be false
+    end
+
+    it 'maps a legacy identity scope onto the ladder' do
+      expect(described_class.normalize_visibility('everyone')).to eq('public')
+      expect(described_class.normalize_visibility('connections')).to eq('mates')
     end
   end
 

@@ -53,35 +53,23 @@ RSpec.describe ProfileCard do
   end
 
   describe 'default visibility' do
-    it 'defaults to kronk (this instance)' do
+    it 'defaults to public (Kronkverse)' do
       card = described_class.create!(account: owner, card_type: 'about', position: 0)
-      expect(card.visibility).to eq('kronk')
+      expect(card.visibility).to eq('public')
     end
   end
 
   describe '#visible_to?' do
     subject { described_class.create!(account: owner, card_type: 'about', position: 0, visibility: visibility) }
 
-    context 'when visibility is everyone' do
-      let(:visibility) { :everyone }
+    context 'when visibility is public (Kronkverse)' do
+      let(:visibility) { :public }
 
-      it 'is visible to nil (unauth) viewer' do
-        expect(subject.visible_to?(nil)).to be true
-      end
-
-      it 'is visible to any account' do
-        expect(subject.visible_to?(remote)).to be true
-      end
-    end
-
-    context 'when visibility is kronk (local)' do
-      let(:visibility) { :kronk }
-
-      it 'is not visible to unauth' do
+      it 'is not visible to a logged-out (nil) viewer' do
         expect(subject).to_not be_visible_to(nil)
       end
 
-      it 'is visible to a local viewer' do
+      it 'is visible to a signed-in local member' do
         expect(subject.visible_to?(viewer)).to be true
       end
 
@@ -90,8 +78,8 @@ RSpec.describe ProfileCard do
       end
     end
 
-    context 'when visibility is connections' do
-      let(:visibility) { :connections }
+    context 'when visibility is mates' do
+      let(:visibility) { :mates }
 
       it 'is not visible without a follow' do
         expect(subject.visible_to?(viewer)).to be false
@@ -109,18 +97,31 @@ RSpec.describe ProfileCard do
       end
     end
 
-    context 'when visibility is vouched (Anthemos placeholder — falls back to connections)' do
-      let(:visibility) { :vouched }
+    context 'when visibility is orbit' do
+      let(:visibility) { :orbit }
 
-      it 'behaves like connections while Anthemos is deferred' do
+      it 'is visible to a direct mate' do
         Fabricate(:follow, account: viewer, target_account: owner)
         Fabricate(:follow, account: owner, target_account: viewer)
         expect(subject.visible_to?(viewer)).to be true
       end
+
+      it 'is visible to a mate-of-a-mate' do
+        mate = Fabricate(:account, domain: nil)
+        Fabricate(:follow, account: owner, target_account: mate)
+        Fabricate(:follow, account: mate, target_account: owner)
+        Fabricate(:follow, account: mate, target_account: viewer)
+        Fabricate(:follow, account: viewer, target_account: mate)
+        expect(subject.visible_to?(viewer)).to be true
+      end
+
+      it 'is not visible to an unrelated account' do
+        expect(subject.visible_to?(viewer)).to be false
+      end
     end
 
-    context 'when visibility is only_me' do
-      let(:visibility) { :only_me }
+    context 'when visibility is self_only' do
+      let(:visibility) { :self_only }
 
       it 'is not visible to any other account' do
         expect(subject.visible_to?(viewer)).to be false
@@ -132,11 +133,25 @@ RSpec.describe ProfileCard do
     end
 
     it 'always shows to the owner regardless of visibility' do
-      %i(everyone kronk connections vouched only_me).each do |v|
+      %i(public mates orbit self_only).each do |v|
         card = described_class.create!(account: owner, card_type: 'about', position: 0, visibility: v)
         expect(card.visible_to?(owner)).to be(true), "#{v} should be visible to owner"
         card.destroy!
       end
+    end
+  end
+
+  describe '.normalize_visibility' do
+    it 'maps legacy identity scopes onto the reach ladder' do
+      expect(described_class.normalize_visibility('everyone')).to eq('public')
+      expect(described_class.normalize_visibility('kronk')).to eq('public')
+      expect(described_class.normalize_visibility('connections')).to eq('mates')
+      expect(described_class.normalize_visibility('vouched')).to eq('mates')
+      expect(described_class.normalize_visibility('only_me')).to eq('self_only')
+    end
+
+    it 'passes a reach-ladder value through unchanged' do
+      expect(described_class.normalize_visibility('orbit')).to eq('orbit')
     end
   end
 end
