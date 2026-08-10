@@ -6,10 +6,21 @@
 // existing radius + motion scale.
 
 .nudges-messenger {
+  // Fill the parent <Column>'s remaining vertical space rather than
+  // reaching for a viewport-math height. The old `height: calc(100vh
+  // - 6rem)` assumed the only chrome above us was ~96px, but the
+  // Kronk Frame (top-band ~68px) + this route's own ColumnHeader
+  // (~48px) put the actual overhead past that, which made the
+  // messenger taller than the visible Stage and pushed the composer
+  // below the fold — Tal 2026-08-11 saw a conversation with no
+  // message-bar at the bottom. `flex: 1 1 auto` + `min-height: 0`
+  // lets the messenger take exactly the space the Column gives it,
+  // and the internal `flex: 1 1 auto; overflow-y: auto` on
+  // `.nudges-conversation__stream` keeps the composer pinned to the
+  // messenger's bottom regardless of message count.
   display: flex;
   flex: 1 1 auto;
   min-height: 0;
-  height: calc(100vh - 6rem);
   border-top: 1px solid var(--border-subtle);
   background: var(--surface-primary);
 }
@@ -1199,10 +1210,9 @@
 // Below the tablet breakpoint, sidebar and pane stack: sidebar full
 // width until a conversation is chosen, then the pane replaces it.
 @media (width <= 889px) {
-  .nudges-messenger {
-    height: calc(100vh - 5rem);
-  }
-
+  // No mobile-specific height override needed — the desktop rule
+  // above already fills its parent flex space, which the mobile
+  // Column layout also gives us.
   .nudges-messenger:has(.nudges-conversation) .nudges-messenger__sidebar {
     display: none;
   }
