@@ -91,6 +91,11 @@ settings:
 views:
   - { key: proposals, label: Proposals }
   - { key: lattice, label: Directory }
+header:
+  # Proposals + Directory are distinct workflows (live feed vs
+  # browsable lattice), not filters over the same material — render
+  # the switcher as a compact dropdown.
+  picker: menu
 
 launch: # retrospective — Kommons predates launch cards
   blurb: '₭ommons — the space where structural moves are decided.'

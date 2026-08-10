@@ -79,6 +79,11 @@ enforced: true
 views:
   - { key: orb, label: Orb }
   - { key: discover, label: Discover }
+header:
+  # Orb (whole-graph visualisation) and Discover (opt-in people
+  # list) are separate workflows — render the switcher as a compact
+  # dropdown.
+  picker: menu
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 nodes:

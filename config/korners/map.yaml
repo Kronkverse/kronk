@@ -73,6 +73,12 @@ listens: []
 views:
   - { key: mates, label: Mates }
   - { key: treks, label: Treks }
+header:
+  # Mates (a live map surface) and Treks (a list of recorded trips)
+  # are separate workflows — render the switcher as a compact
+  # dropdown so the two feel like distinct pages, not scopes over
+  # the same material.
+  picker: menu
 
 # The Ж menu's compose bubble while inside Map. Map's native create
 # action is logging a trek, so the bubble opens the Logger.
