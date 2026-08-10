@@ -6,16 +6,13 @@
 # shown on the sectioned profile Me tab. They hold identity content —
 # not statuses. (Post collections live on ProfileSection.)
 #
-# Every card carries a per-card visibility scope so a user can share
-# some identity content publicly and keep other cards private:
-#
-#   everyone     the fediverse — no gate
-#   kronk        only accounts on the same instance
-#   connections  only mutual follows
-#   vouched      Anthemos-verified tier 2+ — falls back to `connections`
-#                until the membrane ships
-#   only_me      draft / soft-hide — only the owner sees it
+# Every card carries a per-card visibility scope (the platform reach ladder:
+# public / mates / orbit / self_only) so a user can share some identity
+# content Kronkverse-wide and keep other cards private. See
+# ProfileVisibility for the ladder semantics + the legacy-scope mapping.
 class ProfileCard < ApplicationRecord
+  include ProfileVisibility
+
   # Card types recognised by the frontend. Adding a new one here does
   # NOT automatically render it — the `profile_shelves` composer
   # decides which types the Library exposes and how each renders.
@@ -55,14 +52,6 @@ class ProfileCard < ApplicationRecord
 
   belongs_to :account, inverse_of: :profile_cards
 
-  enum :visibility, {
-    everyone: 0,
-    kronk: 1,
-    connections: 2,
-    vouched: 3,
-    only_me: 4,
-  }, prefix: true
-
   validates :card_type, presence: true, inclusion: { in: CARD_TYPES },
                         uniqueness: { scope: :account_id }
   validates :position, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
@@ -71,34 +60,4 @@ class ProfileCard < ApplicationRecord
 
   scope :ordered, -> { order(:position) }
   scope :shown,   -> { where(visible: true) }
-
-  # Filter — is this card visible to the given viewer account? viewer
-  # may be nil (unauthenticated / logged-out fediverse visitor).
-  def visible_to?(viewer)
-    return true if visibility_everyone?
-
-    # Owner always sees everything they've written.
-    return true if viewer && viewer.id == account_id
-
-    case visibility
-    when 'kronk'
-      viewer&.local? && account.local?
-    when 'connections'
-      viewer && mutual_follow?(viewer)
-    when 'vouched' # rubocop:disable Lint/DuplicateBranch
-      # Vouched requires Anthemos. Until the membrane ships, fall back
-      # to the connections gate — a slightly narrower audience than the
-      # designed behaviour but never leaks content wider than intended.
-      viewer && mutual_follow?(viewer)
-    else # only_me — already handled by the owner check above
-      false
-    end
-  end
-
-  private
-
-  def mutual_follow?(viewer)
-    Follow.exists?(account_id: account_id, target_account_id: viewer.id) &&
-      Follow.exists?(account_id: viewer.id, target_account_id: account_id)
-  end
 end

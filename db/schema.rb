@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_09_000000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_10_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1485,11 +1485,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_09_000000) do
     t.bigint "account_id", null: false
     t.string "card_type", null: false
     t.text "body"
-    t.integer "visibility", default: 1, null: false
+    t.integer "visibility", default: 0, null: false
     t.integer "position", default: 0, null: false
     t.boolean "visible", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "render", default: "block", null: false
     t.index ["account_id", "card_type"], name: "index_profile_cards_on_account_id_and_card_type", unique: true
     t.index ["account_id", "position"], name: "index_profile_cards_on_account_id_and_position"
     t.index ["account_id"], name: "index_profile_cards_on_account_id"
@@ -1504,9 +1505,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_09_000000) do
     t.boolean "visible", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "visibility", default: 0, null: false
     t.index ["account_id", "position"], name: "index_profile_sections_on_account_id_and_position"
     t.index ["account_id", "section_type"], name: "index_profile_sections_on_account_id_and_section_type"
     t.index ["account_id"], name: "index_profile_sections_on_account_id"
+    t.index ["visibility"], name: "index_profile_sections_on_visibility"
   end
 
   create_table "proposal_attachments", force: :cascade do |t|

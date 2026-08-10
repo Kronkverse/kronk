@@ -69,10 +69,17 @@ class Api::V1::Profile::SectionsController < Api::BaseController
   end
 
   def section_params
-    params.permit(:section_type, :title, :visible, :visibility, settings: {})
+    normalize_visibility(params.permit(:section_type, :title, :visible, :visibility, settings: {}))
   end
 
   def section_update_params
-    params.permit(:title, :visible, :visibility, settings: {})
+    normalize_visibility(params.permit(:title, :visible, :visibility, settings: {}))
+  end
+
+  # Accept a legacy identity-scope value (everyone/kronk/connections/…) from a
+  # client that hasn't moved to the reach-ladder vocabulary yet.
+  def normalize_visibility(permitted)
+    permitted[:visibility] = ProfileSection.normalize_visibility(permitted[:visibility]) if permitted[:visibility].present?
+    permitted
   end
 end

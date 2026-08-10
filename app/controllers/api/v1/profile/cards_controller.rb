@@ -75,7 +75,11 @@ class Api::V1::Profile::CardsController < Api::BaseController
   end
 
   def card_update_params
-    params.permit(:body, :render, :visibility, :position, :visible)
+    permitted = params.permit(:body, :render, :visibility, :position, :visible)
+    # Accept a legacy identity-scope value (everyone/kronk/connections/…) from
+    # a client that hasn't moved to the reach-ladder vocabulary yet.
+    permitted[:visibility] = ProfileCard.normalize_visibility(permitted[:visibility]) if permitted[:visibility].present?
+    permitted
   end
 
   def require_composer_flag!
