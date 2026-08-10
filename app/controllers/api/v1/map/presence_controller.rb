@@ -12,6 +12,17 @@
 # coarsened point — no serializer, no `include :account` leaking fields. The
 # `friends` scope is Mates-gated (mutual follow), not one-way following.
 class Api::V1::Map::PresenceController < Api::BaseController
+  # `full_asset_url` (used in `project` to expand the avatar URL) lives
+  # in RoutingHelper. Api::BaseController inherits from
+  # ActionController::API, which does NOT auto-include app helpers, so
+  # the call fell through to NoMethodError. Every serializer that needs
+  # `full_asset_url` includes RoutingHelper explicitly (see
+  # rest/account_serializer.rb, rest/media_attachment_serializer.rb,
+  # rest/notification_group_serializer.rb) — mirror that here since
+  # this controller builds its projection inline rather than through a
+  # serializer.
+  include RoutingHelper
+
   before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:create, :destroy]
   before_action :require_user!
@@ -59,17 +70,8 @@ class Api::V1::Map::PresenceController < Api::BaseController
     # (GeoCoarsen edge case, transient DB issue, etc.) becomes a clean
     # 500 with a log line and a client-consumable body — not an
     # unhandled 500 that reads as "the whole map is down".
-    #
-    # Diagnostic aid: include the exception class + message in the JSON
-    # body while we chase an unresolved pin-drop failure on shadow (see
-    # place_control.tsx — the client surfaces `error` verbatim). This
-    # is safe: we already log the same string, and the whole endpoint
-    # is auth-gated. Drop back to a plain "…try again in a moment."
-    # body once the root cause is fixed.
     Rails.logger.error("PresenceController#create failed for account #{current_account&.id}: #{e.class} #{e.message}")
-    render json: {
-      error: "#{I18n.t('kronk.map.presence.place_failed')} (#{e.class}: #{e.message})",
-    }, status: 500
+    render json: { error: I18n.t('kronk.map.presence.place_failed') }, status: 500
   end
 
   def destroy
