@@ -25,6 +25,7 @@ import {
   COMPOSE_UPLOAD_SUCCESS,
   COMPOSE_UPLOAD_FAIL,
   COMPOSE_UPLOAD_UNDO,
+  COMPOSE_MEDIA_RESTORE,
   COMPOSE_UPLOAD_PROGRESS,
   COMPOSE_UPLOAD_PROCESSING,
   THUMBNAIL_UPLOAD_REQUEST,
@@ -471,6 +472,13 @@ export const composeReducer = (state = initialState, action) => {
       .update('pending_media_attachments', n => n - 1);
   case COMPOSE_UPLOAD_UNDO:
     return removeMedia(state, action.media_id);
+  case COMPOSE_MEDIA_RESTORE:
+    // Re-attach already-uploaded media from a restored draft. Guarded so it
+    // never clobbers media the user has already added this session.
+    if (state.get('media_attachments').size > 0) {
+      return state;
+    }
+    return state.set('media_attachments', ImmutableList(action.media).map(m => fromJS(m).set('unattached', true)));
   case COMPOSE_UPLOAD_PROGRESS:
     return state.set('progress', calculateProgress(action.loaded, action.total));
   case THUMBNAIL_UPLOAD_REQUEST:

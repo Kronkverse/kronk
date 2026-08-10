@@ -42,6 +42,7 @@ export const COMPOSE_UPLOAD_FAIL       = 'COMPOSE_UPLOAD_FAIL';
 export const COMPOSE_UPLOAD_PROGRESS   = 'COMPOSE_UPLOAD_PROGRESS';
 export const COMPOSE_UPLOAD_PROCESSING = 'COMPOSE_UPLOAD_PROCESSING';
 export const COMPOSE_UPLOAD_UNDO       = 'COMPOSE_UPLOAD_UNDO';
+export const COMPOSE_MEDIA_RESTORE     = 'COMPOSE_MEDIA_RESTORE';
 
 export const THUMBNAIL_UPLOAD_REQUEST  = 'THUMBNAIL_UPLOAD_REQUEST';
 export const THUMBNAIL_UPLOAD_SUCCESS  = 'THUMBNAIL_UPLOAD_SUCCESS';
@@ -575,6 +576,16 @@ export function undoUploadCompose(media_id) {
   return {
     type: COMPOSE_UPLOAD_UNDO,
     media_id: media_id,
+  };
+}
+
+// Re-attach already-uploaded media from a restored draft (useComposerDraft).
+// `media` is a plain array of the compose media-attachment objects saved to
+// localStorage. No-op in the reducer if the composer already holds media.
+export function restoreComposeMedia(media) {
+  return {
+    type: COMPOSE_MEDIA_RESTORE,
+    media,
   };
 }
 
