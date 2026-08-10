@@ -131,17 +131,13 @@ body:has(.kronk-stage) {
   max-width: none;
 }
 
-// The classic KornerSubBar breadcrumb pill (`← Hub / [glyph] name ⚙`)
-// duplicates the reserved-zone affordances on Stage routes:
-//   * `← Hub` → covered by `.korner-exit` top-left.
-//   * space name/glyph → covered by the space's own title slot.
-//   * settings gear → the sub-bar's remaining gear stays as the single
-//     way into `/hub/<slug>/settings`.
-// Hide the pill body but keep the standalone gear (rendered as a
-// separate button by KornerSubBar) so nothing is lost.
-body:has(.kronk-stage) .korner-sub-bar {
-  display: none;
-}
+// KornerSubBar's Stage-route hide used to live here as
+// `body:has(.kronk-stage) .korner-sub-bar { display: none }` — but
+// that raced with the Stage's async chunk mount and left the pill
+// flashing in during navigation. The gate now lives in the React
+// component itself (`korner.render_target === 'native' → null`),
+// which fires before the Stage mounts. Kept as a comment so future
+// readers don't reintroduce the CSS.
 
 // KornerExit / SpaceTabs / .space-title retired 2026-07-23. Replaced
 // by <SpaceBadge> + <AutoSpaceViewPicker> in KronkFrame.SpaceNav
