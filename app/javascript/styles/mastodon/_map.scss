@@ -58,80 +58,36 @@
     }
   }
 
-  // Bottom-left slot for the place control (search-a-place FAB /
-  // panel / remove pill). Positioned by the stage so the control
-  // itself can stay layout-agnostic.
-  &__place-slot {
-    position: absolute;
-    left: 16px;
-    bottom: 16px;
-    z-index: 5;
-    max-width: calc(100% - 32px);
-  }
+  // Bottom-left place slot retired 2026-08-10 (Tal — "remove the pin
+  // from the bottom left corner, and instead place it at the top of
+  // the list of mates"). Trigger + remove now live in the strip's
+  // self-slot; the search panel positions itself absolutely over the
+  // map on open (see `.place-control` below).
 }
 
-// Place control — the map's bottom-left "search a place to pin
-// yourself" affordance. Two visual states:
-//   1. Collapsed — a round pin FAB. Tap to open.
-//   2. Expanded — a search box + geocode suggestions, with an
-//      attribution line. Type → 350ms debounce → Nominatim → tap a
-//      result to drop your pin.
-// A separate `.place-control__remove` variant is used by `mates_view`
-// when the caller already has a pin — same slot, an X to unplace.
+// Place-a-pin panel. No FAB / no bottom-left slot: the trigger lives
+// in the people-strip's self-slot (see .map-people__self-place). This
+// class is the search overlay that appears over the map when the user
+// taps the trigger. Anchored top-centre so it clears the top-right
+// zoom controls and the top-left in-view panel without crowding
+// either.
 .place-control {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: min(320px, 100%);
+  width: min(360px, calc(100% - 32px));
   padding: 10px;
   border-radius: var(--radius-medium, 12px);
   border: 1px solid var(--border-default);
-  background: rgb(20 20 30 / 88%);
+  background: rgb(20 20 30 / 92%);
   backdrop-filter: blur(10px);
   box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
   color: var(--text-primary);
-
-  &__fab,
-  &__remove {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    border: 1px solid var(--border-default);
-    border-radius: 999px;
-    background: rgb(20 20 30 / 88%);
-    color: var(--text-primary);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
-    cursor: pointer;
-    transition:
-      background 0.15s ease,
-      transform 0.15s ease,
-      border-color 0.15s ease;
-
-    .icon {
-      width: 20px;
-      height: 20px;
-    }
-
-    &:hover,
-    &:focus-visible {
-      background: rgb(40 40 60 / 92%);
-      border-color: var(--kronk-purple-bright, #b39dff);
-      outline: none;
-    }
-  }
-
-  &__remove {
-    color: var(--error-text, #e0698a);
-
-    &:hover,
-    &:focus-visible {
-      border-color: var(--error-text, #e0698a);
-    }
-  }
 
   &__search {
     display: flex;
@@ -339,6 +295,86 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  // ── Self-slot at the top of the strip ─────────────────────────
+  // Wraps the viewer's own tile so the "remove me" × can sit as a
+  // sibling badge tucked into the corner. Two visual states:
+  //   * pre-place — a LocationOn button (`__self-place`) with the
+  //     purple gradient ring; click opens the search-a-place panel.
+  //   * post-place — the standard person tile + a small × badge
+  //     (`__self-remove`) top-right to unplace.
+  &__self {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+  }
+
+  &__self-place {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: linear-gradient(
+      135deg,
+      var(--kronk-purple-bright),
+      var(--kronk-purple-accent)
+    );
+    color: #fff;
+    cursor: pointer;
+    transition: transform var(--dur-fast) var(--ease-out);
+
+    .icon {
+      width: 22px;
+      height: 22px;
+    }
+
+    &:hover,
+    &:focus-visible {
+      transform: translateY(-2px);
+      outline: none;
+    }
+  }
+
+  &__self-remove {
+    position: absolute;
+    top: -4px;
+    right: calc(50% - 30px);
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+    box-shadow:
+      0 0 0 2px var(--kronk-purple-bright),
+      0 2px 4px rgb(0 0 0 / 45%);
+    cursor: pointer;
+
+    .icon {
+      width: 12px;
+      height: 12px;
+    }
+
+    &:hover,
+    &:focus-visible {
+      color: var(--error-text, #e0698a);
+      box-shadow:
+        0 0 0 2px var(--error-text, #e0698a),
+        0 2px 4px rgb(0 0 0 / 45%);
+      outline: none;
+    }
   }
 
   // Phone: horizontal band across the top of the map.
