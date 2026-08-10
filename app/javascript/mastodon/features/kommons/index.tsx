@@ -3,10 +3,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useLocation } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 
 import api from 'mastodon/api';
 import { Stage } from 'mastodon/components/stage';
+import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 
 import { KoinGlance } from './components/koin_glance';
 import type { Wallet } from './components/koin_glance';
@@ -75,6 +76,7 @@ const emptyMessages = defineMessages({
 // bespoke tab row. See docs/kronk_frame.md and Standard L11.
 const Kommons: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
+  const history = useHistory();
   const { pathname } = useLocation();
   const filter = filterFromPath(pathname);
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -147,6 +149,18 @@ const Kommons: React.FC<{ multiColumn?: boolean }> = () => {
     setSelectedId(id);
   }, []);
 
+  // FeedDrum turns the proposal list on scope change, same
+  // quarter-turn `/home` uses. Kommons rotates via the AutoSpaceHeader
+  // above; this handler is what the drum invokes when a swipe on
+  // the list itself asks for the next face. Bare `/hub/kommons` is
+  // the default (`open`); others carry the segment.
+  const handleScopeChange = useCallback(
+    (next: string) => {
+      history.push(next === 'open' ? '/hub/kommons' : `/hub/kommons/${next}`);
+    },
+    [history],
+  );
+
   const selected = proposals.find((p) => p.id === selectedId) ?? null;
 
   return (
@@ -191,30 +205,40 @@ const Kommons: React.FC<{ multiColumn?: boolean }> = () => {
               </select>
             </div>
 
-            {loading && proposals.length === 0 && (
-              <div className='kommons-page__empty'>
-                <FormattedMessage
-                  id='governance.loading'
-                  defaultMessage='Loading proposals…'
-                />
-              </div>
-            )}
-
-            {!loading && proposals.length === 0 && (
-              <div className='kommons-page__empty'>
-                {intl.formatMessage(emptyMessages[filter])}
-              </div>
-            )}
-
-            <div className='kommons-page__list'>
-              {proposals.map((proposal) => (
-                <ProposalCard
-                  key={proposal.id}
-                  proposal={proposal}
-                  onSelect={handleSelectProposal}
-                />
-              ))}
-            </div>
+            {/* FeedDrum turns the list on scope change — same
+                quarter-turn `/home` + Albutts use, so the top of the
+                spindle (AutoSpaceHeader rotator) and the bottom (this
+                list) read as one solid object. Loading / empty states
+                live inside the drum so it stays mounted across scope
+                changes (snapshot cloning needs a live DOM). */}
+            <FeedDrum
+              reach={filter}
+              order={[...FILTER_KEYS]}
+              onScopeChange={handleScopeChange}
+            >
+              {loading && proposals.length === 0 ? (
+                <div className='kommons-page__empty'>
+                  <FormattedMessage
+                    id='governance.loading'
+                    defaultMessage='Loading proposals…'
+                  />
+                </div>
+              ) : proposals.length === 0 ? (
+                <div className='kommons-page__empty'>
+                  {intl.formatMessage(emptyMessages[filter])}
+                </div>
+              ) : (
+                <div className='kommons-page__list'>
+                  {proposals.map((proposal) => (
+                    <ProposalCard
+                      key={proposal.id}
+                      proposal={proposal}
+                      onSelect={handleSelectProposal}
+                    />
+                  ))}
+                </div>
+              )}
+            </FeedDrum>
           </>
         )}
       </div>
