@@ -107,6 +107,12 @@ hub_teaser:
 views:
   - { key: wachuneed, label: Wachuneed }
   - { key: wachugot, label: Wachugot }
+header:
+  # Wachuneed (browsing others' listings) and Wachugot (managing
+  # your own) are distinct workflows — render the switcher as a
+  # compact dropdown. Growing to Wanttolearn / Cantouhelp is planned;
+  # the menu already fits the eventual four-way list.
+  picker: menu
 
 launch:
   blurb: 'mARTketplace — art, stuff, and offerings from the Kronk community.'
