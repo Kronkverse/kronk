@@ -5,7 +5,6 @@ import { defineMessages, useIntl } from 'react-intl';
 import axios from 'axios';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
-import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import { apiGeocodeSearch, apiPlacePresence } from 'mastodon/api/map';
 import type {
@@ -14,22 +13,18 @@ import type {
 } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
 
-// Map — "search a place" control. A small pin icon at the map's
-// bottom-left; tap it and a search box slides open. Typing debounces
-// against `Api::V1::Map::GeocodeController` (an OSM Nominatim proxy)
-// and any result is one tap away from becoming your pin.
+// Map — "search a place" panel. Externally controlled: the caller
+// owns whether it's open, and the panel renders `null` when closed.
+// The trigger button lives with the caller — currently the
+// people-strip's self-slot (Tal 2026-08-10 — "remove the pin from
+// the bottom left corner, and instead place it at the top of the list
+// of mates"). No visual FAB here anymore.
 //
-// Prior UI asked the browser for GPS then let you pick between two
-// precisions ("Neighbourhood" / "City"). That coupled *where* you're
-// placed to *how the device sees you*, which is the wrong axis on a
-// social map — people want to say "I'm in Wellington" without leaking
-// their exact device coordinate, and want to drop themselves anywhere,
-// not only where they physically are. Search-by-place solves both:
-// the coordinate is a public place's centre, and any place on earth
-// is reachable.
+// Typing debounces against `Api::V1::Map::GeocodeController` (an OSM
+// Nominatim proxy); any result is one tap away from becoming a pin.
 //
-// Pin precision is always 'city' here — the input is a place name, and
-// the server-side geo_coarsen jitters within a ~6km radius so we don't
+// Pin precision is always 'city' — the input is a place name, and the
+// server-side geo_coarsen jitters within a ~6km radius so we don't
 // pin the exact centre of a place.
 
 const messages = defineMessages({
@@ -70,6 +65,8 @@ const messages = defineMessages({
 const DEBOUNCE_MS = 350;
 
 interface Props {
+  open: boolean;
+  onClose: () => void;
   onPlaced: (pin: ApiPresencePinJSON) => void;
 }
 
@@ -99,9 +96,8 @@ const ResultRow: React.FC<{
   );
 };
 
-export const PlaceControl: React.FC<Props> = ({ onPlaced }) => {
+export const PlaceControl: React.FC<Props> = ({ open, onClose, onPlaced }) => {
   const intl = useIntl();
-  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<ApiGeocodeResultJSON[]>([]);
   const [status, setStatus] = useState<
@@ -165,17 +161,15 @@ export const PlaceControl: React.FC<Props> = ({ onPlaced }) => {
     };
   }, [query, open]);
 
-  const handleOpen = useCallback(() => {
-    setOpen(true);
-  }, []);
-
+  // Reset the internal working state whenever the panel is dismissed
+  // — otherwise the next open would show yesterday's query + results.
   const handleClose = useCallback(() => {
-    setOpen(false);
     setQuery('');
     setResults([]);
     setStatus('idle');
     setPlaceError(null);
-  }, []);
+    onClose();
+  }, [onClose]);
 
   const defaultPlaceError = intl.formatMessage(messages.placeError);
 
@@ -225,19 +219,7 @@ export const PlaceControl: React.FC<Props> = ({ onPlaced }) => {
     [],
   );
 
-  if (!open) {
-    return (
-      <button
-        type='button'
-        className='place-control__fab'
-        onClick={handleOpen}
-        aria-label={intl.formatMessage(messages.open)}
-        title={intl.formatMessage(messages.open)}
-      >
-        <Icon id='location-on' icon={LocationOnIcon} />
-      </button>
-    );
-  }
+  if (!open) return null;
 
   return (
     <div

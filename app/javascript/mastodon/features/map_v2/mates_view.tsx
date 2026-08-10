@@ -7,7 +7,6 @@ import * as maplibregl from 'maplibre-gl';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import GroupIcon from '@/material-icons/400-24px/groups.svg?react';
 import {
   apiGetPresence,
@@ -52,7 +51,6 @@ import { PlaceControl } from './place_control';
 //     surface then).
 
 const messages = defineMessages({
-  removeMe: { id: 'map.remove_me', defaultMessage: 'Remove me from the map' },
   hereN: {
     id: 'map.cluster.here',
     defaultMessage: '{count} here',
@@ -200,6 +198,10 @@ export const MatesView: React.FC = () => {
     h: number;
   } | null>(null);
   const [inViewOpen, setInViewOpen] = useState(false);
+  // Whether the place-a-pin panel is open. Owned here (was internal to
+  // PlaceControl before the Tal 2026-08-10 rework) so the trigger can
+  // live in the people-strip's self-slot instead of a bottom-left FAB.
+  const [placeOpen, setPlaceOpen] = useState(false);
 
   // ── Map init ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -459,6 +461,7 @@ export const MatesView: React.FC = () => {
   const handlePlaced = useCallback(
     (pin: ApiPresencePinJSON) => {
       setSelfPin(pin);
+      setPlaceOpen(false); // successful place → dismiss the panel
       // Fly to a zoom that STAYS below ANON_ZOOM — otherwise dropping
       // a pin would immediately hide it under the anonymisation gate.
       mapRef.current?.flyTo({
@@ -470,7 +473,14 @@ export const MatesView: React.FC = () => {
     [refresh],
   );
 
-  const remove = useCallback(() => {
+  const openPlacePanel = useCallback(() => {
+    setPlaceOpen(true);
+  }, []);
+  const closePlacePanel = useCallback(() => {
+    setPlaceOpen(false);
+  }, []);
+
+  const removeSelf = useCallback(() => {
     void apiRemovePresence().then(() => {
       setSelfPin(null);
       refresh();
@@ -496,7 +506,13 @@ export const MatesView: React.FC = () => {
 
   return (
     <div className='map-mates'>
-      <PeopleStrip pins={pins} selfPin={selfPin} onSelect={handleSelectPin} />
+      <PeopleStrip
+        pins={pins}
+        selfPin={selfPin}
+        onSelect={handleSelectPin}
+        onOpenPlace={openPlacePanel}
+        onRemoveSelf={removeSelf}
+      />
       <div className='map-mates__stage'>
         <div ref={containerRef} className='map-mates__canvas' />
 
@@ -532,23 +548,15 @@ export const MatesView: React.FC = () => {
           </div>
         )}
 
-        {/* Bottom-left place control: either "remove me" (when I have
-            a pin) or the search-a-place FAB. */}
-        <div className='map-mates__place-slot'>
-          {selfPin ? (
-            <button
-              type='button'
-              className='place-control__remove'
-              onClick={remove}
-              aria-label={intl.formatMessage(messages.removeMe)}
-              title={intl.formatMessage(messages.removeMe)}
-            >
-              <Icon id='close' icon={CloseIcon} />
-            </button>
-          ) : (
-            <PlaceControl onPlaced={handlePlaced} />
-          )}
-        </div>
+        {/* Place-a-pin panel. Trigger lives in the people-strip's
+            self-slot (top-left). Panel renders as an overlay over the
+            map when open — self-contained state + auto-clears on
+            close. Not rendered when closed. */}
+        <PlaceControl
+          open={placeOpen}
+          onClose={closePlacePanel}
+          onPlaced={handlePlaced}
+        />
       </div>
     </div>
   );
