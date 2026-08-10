@@ -22,6 +22,7 @@ import type { AlbumsScope } from 'mastodon/api/albutts';
 import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
 import { ComposeFab } from 'mastodon/components/compose_fab';
 import { Stage } from 'mastodon/components/stage';
+import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 import { ScopeTitle } from 'mastodon/features/home_timeline/components/scope_title';
 import type { ScopeTitleFace } from 'mastodon/features/home_timeline/components/scope_title';
 import { useIdentity } from 'mastodon/identity_context';
@@ -249,6 +250,43 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
           : messages.emptyAll,
   );
 
+  // The grid, empty state, and loading state all live inside the
+  // drum so it stays mounted across scope changes. Snapshotting
+  // requires a live DOM to clone; unmounting the drum mid-turn
+  // would abort the animation.
+  const gridContent =
+    albums === null ? (
+      <p className='space-subtitle'>{intl.formatMessage(messages.loading)}</p>
+    ) : albums.length === 0 ? (
+      <p className='space-subtitle albutts-directory__empty'>{emptyMessage}</p>
+    ) : (
+      <ul className='albutts-directory__grid'>
+        {albums.map((a) => (
+          <li key={a.id} className='albutts-directory__cell'>
+            <Link to={`/hub/albutts/albums/${a.id}`} className='albutts-card'>
+              {a.cover_url ? (
+                <img className='albutts-card__cover' src={a.cover_url} alt='' />
+              ) : (
+                <div className='albutts-card__cover albutts-card__cover--empty' />
+              )}
+              <div className='albutts-card__body'>
+                <div className='albutts-card__title'>{a.title}</div>
+                <div className='albutts-card__meta'>
+                  {intl.formatMessage(messages.photos, {
+                    count: a.photo_count,
+                  })}
+                  {' · '}
+                  {intl.formatMessage(messages.contributors, {
+                    count: a.contributor_count,
+                  })}
+                </div>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    );
+
   return (
     <div className='albutts-directory'>
       {/* Scope title — same rotating space-header primitive as the
@@ -263,42 +301,22 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
         />
       )}
 
-      {albums === null ? (
-        <p className='space-subtitle'>{intl.formatMessage(messages.loading)}</p>
-      ) : albums.length === 0 ? (
-        <p className='space-subtitle albutts-directory__empty'>
-          {emptyMessage}
-        </p>
+      {signedIn ? (
+        // FeedDrum turns the grid on scope change — same quarter-turn
+        // that the /home feed uses under its ScopeTitle, so the top
+        // and bottom of the spindle read as one solid object. Stays
+        // mounted across scope changes (including the loading beat
+        // between old + new data) so the snapshot has something to
+        // clone from.
+        <FeedDrum
+          reach={scope}
+          order={SCOPE_KEYS}
+          onScopeChange={handleScopeChange}
+        >
+          {gridContent}
+        </FeedDrum>
       ) : (
-        <ul className='albutts-directory__grid'>
-          {albums.map((a) => (
-            <li key={a.id} className='albutts-directory__cell'>
-              <Link to={`/hub/albutts/albums/${a.id}`} className='albutts-card'>
-                {a.cover_url ? (
-                  <img
-                    className='albutts-card__cover'
-                    src={a.cover_url}
-                    alt=''
-                  />
-                ) : (
-                  <div className='albutts-card__cover albutts-card__cover--empty' />
-                )}
-                <div className='albutts-card__body'>
-                  <div className='albutts-card__title'>{a.title}</div>
-                  <div className='albutts-card__meta'>
-                    {intl.formatMessage(messages.photos, {
-                      count: a.photo_count,
-                    })}
-                    {' · '}
-                    {intl.formatMessage(messages.contributors, {
-                      count: a.contributor_count,
-                    })}
-                  </div>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        gridContent
       )}
 
       {composerOpen && (
