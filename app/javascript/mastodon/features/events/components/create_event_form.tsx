@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -7,9 +7,11 @@ import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?reac
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
 import api from 'mastodon/api';
+import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
 import { Icon } from 'mastodon/components/icon';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
+import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 
 interface Account {
   id: string;
@@ -148,6 +150,75 @@ export const CreateEventForm: React.FC<Props> = ({
   );
   const [removeImage, setRemoveImage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Draft auto-save: preserve a half-filled new-event form across an accidental
+  // navigate-away / refresh (docs/rebuild/decisions.md 2026-08-10). The image
+  // File can't ride in localStorage; everything else does. Inert while editing
+  // an existing event.
+  const draftSnapshot = useMemo(
+    () => ({
+      title,
+      description,
+      startDate,
+      startTime,
+      endDate,
+      endTime,
+      locationName,
+      locationUrl,
+      eventType,
+      visibility,
+      rsvpEnabled,
+      spawnAlbum,
+      recurrenceRule,
+    }),
+    [
+      title,
+      description,
+      startDate,
+      startTime,
+      endDate,
+      endTime,
+      locationName,
+      locationUrl,
+      eventType,
+      visibility,
+      rsvpEnabled,
+      spawnAlbum,
+      recurrenceRule,
+    ],
+  );
+  const handleRestore = useCallback(
+    (d: typeof draftSnapshot) => {
+      setTitle(d.title);
+      setDescription(d.description);
+      setStartDate(d.startDate);
+      setStartTime(d.startTime);
+      setEndDate(d.endDate);
+      setEndTime(d.endTime);
+      setLocationName(d.locationName);
+      setLocationUrl(d.locationUrl);
+      setEventType(d.eventType);
+      setVisibility(d.visibility);
+      setRsvpEnabled(d.rsvpEnabled);
+      setSpawnAlbum(d.spawnAlbum);
+      setRecurrenceRule(d.recurrenceRule);
+    },
+    // setters are stable; the closure captures nothing that changes.
+    [],
+  );
+  const draft = useComposerDraft('kalendar:new', draftSnapshot, handleRestore, {
+    active: !editing,
+    enabled: !submitting && (title.trim() !== '' || description.trim() !== ''),
+  });
+  const discardDraft = draft.discard;
+  const handleDiscardDraft = useCallback(() => {
+    setTitle('');
+    setDescription('');
+    setLocationName('');
+    setLocationUrl('');
+    setRecurrenceRule('');
+    discardDraft();
+  }, [discardDraft]);
 
   const handleImageChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -310,6 +381,7 @@ export const CreateEventForm: React.FC<Props> = ({
           );
         } else {
           response = await api().post<Event>('/api/v1/events', payload);
+          discardDraft();
         }
 
         onEventCreated(response.data);
@@ -338,6 +410,7 @@ export const CreateEventForm: React.FC<Props> = ({
       editing,
       editEvent,
       onEventCreated,
+      discardDraft,
     ],
   );
 
@@ -370,6 +443,7 @@ export const CreateEventForm: React.FC<Props> = ({
 
   return (
     <form className='create-event-form' onSubmit={onSubmit}>
+      {draft.restored && <DraftRestoredPill onDiscard={handleDiscardDraft} />}
       <div className='create-event-form__header'>
         <h3>
           {editing ? (

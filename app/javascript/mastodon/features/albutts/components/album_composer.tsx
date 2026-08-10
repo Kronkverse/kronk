@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -11,6 +11,7 @@ import type {
   ApiAlbumJSON,
 } from 'mastodon/api_types/albutts';
 import { ComposeShell } from 'mastodon/components/compose_shell';
+import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
 import { Icon } from 'mastodon/components/icon';
 import type {
   ContributionRoster,
@@ -18,6 +19,7 @@ import type {
   VisibilityScope,
 } from 'mastodon/components/scope_picker';
 import { ScopePicker } from 'mastodon/components/scope_picker';
+import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 
 import { CaptionTextarea } from './caption_textarea';
 
@@ -170,6 +172,38 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [createdAlbum, setCreatedAlbum] = useState<ApiAlbumJSON | null>(null);
   const [dragging, setDragging] = useState(false);
+
+  // Draft auto-save: preserve a half-written album (title / description /
+  // audience) across an accidental navigate-away / refresh
+  // (docs/rebuild/decisions.md 2026-08-10). Photos are Files — not
+  // localStorage-friendly — so they aren't preserved; the text is.
+  const draftSnapshot = useMemo(
+    () => ({ title, description, visibility, contribution, krewIds }),
+    [title, description, visibility, contribution, krewIds],
+  );
+  const handleRestore = useCallback(
+    (d: typeof draftSnapshot) => {
+      setTitle(d.title);
+      setDescription(d.description);
+      setVisibility(d.visibility);
+      setContribution(d.contribution);
+      setKrewIds(d.krewIds);
+    },
+    // setters are stable; the closure captures nothing that changes.
+    [],
+  );
+  const draft = useComposerDraft('albutts:new', draftSnapshot, handleRestore, {
+    enabled:
+      !pending &&
+      !createdAlbum &&
+      (title.trim() !== '' || description.trim() !== ''),
+  });
+  const discardDraft = draft.discard;
+  const handleDiscardDraft = useCallback(() => {
+    setTitle('');
+    setDescription('');
+    discardDraft();
+  }, [discardDraft]);
 
   // Revoke blob URLs on unmount / list churn so the browser doesn't
   // hold onto the underlying Blobs after the composer closes.
@@ -366,6 +400,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       }
 
       setCreatedAlbum(album);
+      discardDraft();
 
       const drafts = photos.map((p) => ({
         ...p,
@@ -384,6 +419,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     runUploadPool,
     trimmed,
     visibility,
+    discardDraft,
   ]);
 
   // Retry only the photos currently in `failed` status.
@@ -450,6 +486,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       onCancel={onCancel}
     >
       <div className='albutts-composer'>
+        {draft.restored && <DraftRestoredPill onDiscard={handleDiscardDraft} />}
         <label
           className='albutts-composer__label'
           htmlFor='albutts-composer-title'
