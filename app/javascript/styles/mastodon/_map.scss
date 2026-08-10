@@ -360,46 +360,263 @@
   }
 }
 
-// Presence pins (MapLibre markers rendered from a custom element).
-.map-pin {
-  position: relative;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 2px solid #fff;
-  background: #7c5cff;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 50%);
-  cursor: pointer;
+// ── Presence pins ─────────────────────────────────────────────────
+// Teardrop marker with the account's avatar clipped into the bulb —
+// a LocationOn-shaped SVG mask filled with Kronk purple, with the
+// avatar positioned as a circular inset. Retired the plain
+// .map-pin dot in favour of this in the Tal 2026-08-10 pin rework.
+// The teardrop shape is drawn via a SVG data-URI mask so the pin
+// resolves crisply at any density; the fill is a css var so it can
+// theme freely (self pin uses the accent variant).
+.map-teardrop {
+  --tp-w: 40px;
+  --tp-h: 48px;
 
+  position: relative;
+  width: var(--tp-w);
+  height: var(--tp-h);
+  transform: translateY(
+    -16px
+  ); // seat the bulb, not the tail, on the coordinate
+
+  cursor: pointer;
+  filter: drop-shadow(0 3px 6px rgb(0 0 0 / 45%));
+  transition: transform var(--dur-fast, 120ms) var(--ease-out, ease);
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-18px) scale(1.06);
+  }
+
+  // Teardrop body — CSS mask rendered from an inline SVG (path is a
+  // LocationOn-style teardrop centred in a 40x48 box). Fill = Kronk
+  // purple; the accent variant just swaps the fill.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--kronk-purple-bright);
+    mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 48'><path d='M20 0 C9 0 1 8 1 19 C1 30 12 39 20 48 C28 39 39 30 39 19 C39 8 31 0 20 0 Z'/></svg>");
+    mask-repeat: no-repeat;
+    mask-size: 100% 100%;
+    -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 48'><path d='M20 0 C9 0 1 8 1 19 C1 30 12 39 20 48 C28 39 39 30 39 19 C39 8 31 0 20 0 Z'/></svg>");
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+  }
+
+  // Avatar disc — circular, insetted into the bulb. Border tone
+  // matches the teardrop body so the two read as one solid shape.
+  &__avatar {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-round);
+    background-color: var(--surface-elevated);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+
+  // Self pin — brighter accent variant + a pulsing ring so "you"
+  // reads at a glance in a crowd. Pulse honours reduced-motion.
   &--self {
-    background: var(--kronk-purple-bright, #b39dff);
+    &::before {
+      background: var(--kronk-purple-accent);
+    }
 
     &::after {
       content: '';
       position: absolute;
-      inset: -6px;
-      border-radius: 50%;
-      border: 2px solid rgb(124 92 255 / 50%);
-      animation: map-pin-pulse 2s ease-out infinite;
+      left: 50%;
+      top: 20px;
+      width: 38px;
+      height: 38px;
+      margin: -19px 0 0 -19px;
+      border-radius: var(--radius-round);
+      border: 2px solid
+        color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
+      animation: map-teardrop-pulse 2s ease-out infinite;
+      pointer-events: none;
     }
   }
 }
 
-@keyframes map-pin-pulse {
+@keyframes map-teardrop-pulse {
   0% {
-    opacity: 0.7;
-    transform: scale(0.6);
+    opacity: 0.75;
+    transform: scale(0.5);
   }
 
   100% {
     opacity: 0;
-    transform: scale(1.6);
+    transform: scale(1.7);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .map-pin--self::after {
+  .map-teardrop--self::after {
     animation: none;
+  }
+}
+
+// ── Cluster marker (2+ pins collapsed into "N here") ──────────────
+// Sits at the mean of the group; clicking flies in one zoom step
+// deeper so the cluster resolves into individuals (still clamped
+// under ANON_ZOOM so it never zooms straight into anonymisation).
+.map-cluster {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-round);
+  background: var(--kronk-purple-bright);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent),
+    0 4px 10px -2px rgb(0 0 0 / 55%);
+  transition: transform var(--dur-fast, 120ms) var(--ease-out, ease);
+
+  &:hover,
+  &:focus-visible {
+    transform: scale(1.08);
+  }
+
+  &__count {
+    display: inline-block;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ── "N mates in view" panel (anonymised zoom) ─────────────────────
+// At close zoom, precise pins hide. This top-left panel becomes the
+// only affordance for finding a mate: a count pill that expands into
+// a dropdown of avatar bubbles. Tap a bubble → re-centre the map on
+// that mate (handleSelectPin still clamps to ANON_ZOOM - 0.5, so the
+// user zooms OUT to see them — anonymisation is preserved).
+.map-in-view {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(300px, calc(100% - 32px));
+
+  &__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px 8px 12px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: rgb(20 20 30 / 92%);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
+
+    .icon {
+      width: 16px;
+      height: 16px;
+      color: var(--kronk-purple-bright);
+    }
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--kronk-purple-bright);
+      outline: none;
+    }
+  }
+
+  &__panel {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px;
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: rgb(20 20 30 / 92%);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
+  }
+
+  &__empty {
+    margin: 0;
+    padding: 10px 12px;
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  &__row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: var(--radius-medium);
+    background: transparent;
+    color: var(--text-primary);
+    text-align: start;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      outline: none;
+    }
+
+    &--self .map-in-view__name::after {
+      content: ' · you';
+      color: var(--kronk-purple-bright);
+      font-weight: 500;
+    }
+  }
+
+  &__avatar {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-round);
+    background-color: var(--surface-elevated);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+
+  &__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__handle {
+    flex: 0 0 auto;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
   }
 }
 
