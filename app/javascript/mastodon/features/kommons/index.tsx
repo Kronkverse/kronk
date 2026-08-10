@@ -27,7 +27,7 @@ const messages = defineMessages({
 // bare `/hub/kommons` = the default face (`open`); the rest map to
 // `/hub/kommons/<key>`. Kept in sync with the manifest — a mismatch
 // silently falls through to `open`.
-const FILTER_KEYS = ['open', 'completed', 'drafts', 'involved'] as const;
+const FILTER_KEYS = ['open', 'involved', 'drafts', 'completed'] as const;
 type FilterType = (typeof FILTER_KEYS)[number];
 
 const filterFromPath = (pathname: string): FilterType => {

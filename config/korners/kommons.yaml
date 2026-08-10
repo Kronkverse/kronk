@@ -102,15 +102,15 @@ settings:
 views:
   - { key: open, label: 'Open', tagline: 'Proposals under consideration' }
   - {
-      key: completed,
-      label: 'Completed',
-      tagline: 'Proposals that have delivered',
-    }
-  - { key: drafts, label: 'Drafts', tagline: 'Your unpublished proposals' }
-  - {
       key: involved,
       label: 'Involved',
       tagline: "Proposals you've voted, backed, or commented on",
+    }
+  - { key: drafts, label: 'Drafts', tagline: 'Your unpublished proposals' }
+  - {
+      key: completed,
+      label: 'Completed',
+      tagline: 'Proposals that have delivered',
     }
 header:
   # Rotator: title itself cycles through the four faces. Manifest
