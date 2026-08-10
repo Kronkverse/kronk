@@ -30,4 +30,41 @@ RSpec.describe Moment do
       expect(moment.errors[:base]).to include('must have a photo, video, or voice clip')
     end
   end
+
+  describe 'krew as an orthogonal audience axis' do
+    let(:krew)     { Krew.create!(slug: 'squad', name: 'Squad', access: 'open') }
+    let(:member)   { Fabricate(:account) }
+    let(:stranger) { Fabricate(:account) }
+
+    before { krew.krew_memberships.create!(account: member) }
+
+    it 'is no longer a visibility value' do
+      expect(described_class.visibilities).to_not have_key('krew')
+    end
+
+    it 'is valid as a self_only Moment carrying a krew (owner + krew audience)' do
+      moment = described_class.new(account: account, media_attachment: photo, visibility: :self_only, krew: krew)
+      expect(moment).to be_valid
+    end
+
+    it 'shows a self_only + krew Moment to a member of that krew (additive)' do
+      moment = described_class.create!(account: account, media_attachment: photo, visibility: :self_only, krew: krew)
+      expect(moment.visible_to?(member)).to be true
+    end
+
+    it 'hides a self_only + krew Moment from a non-member' do
+      moment = described_class.create!(account: account, media_attachment: photo, visibility: :self_only, krew: krew)
+      expect(moment.visible_to?(stranger)).to be false
+    end
+
+    it 'shows a mates Moment to a krew member who is not a mate (additive)' do
+      moment = described_class.create!(account: account, media_attachment: photo, visibility: :mates, krew: krew)
+      expect(moment.visible_to?(member)).to be true
+    end
+
+    it 'includes krew-targeted Moments in the visible_to scope regardless of reach' do
+      moment = described_class.create!(account: account, media_attachment: photo, visibility: :self_only, krew: krew)
+      expect(described_class.visible_to(member)).to include(moment)
+    end
+  end
 end

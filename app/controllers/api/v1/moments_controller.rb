@@ -66,8 +66,8 @@ class Api::V1::MomentsController < Api::BaseController
   end
 
   # Change a Moment's audience after it's posted — "visibility can be
-  # changed at any time" (Stage 3). Owner only. The model's
-  # krew_only_when_krew_visibility validation keeps krew_id consistent.
+  # changed at any time" (Stage 3). Owner only. Reach tier + the orthogonal
+  # krew are both editable and independent.
   def update
     authorize_moment_owner!
     @moment.update!(update_params)
@@ -94,7 +94,11 @@ class Api::V1::MomentsController < Api::BaseController
     permitted = params.permit(:media_attachment_id, :voice_media_attachment_id, :caption, :visibility, :krew_id,
                               text_overlays: [:id, :text, :x, :y, :width, :size, :rotation, :color, :backing, :font])
     permitted[:visibility] = permitted[:visibility].presence || 'mates'
-    permitted[:krew_id] = nil unless permitted[:visibility] == 'krew'
+    # Krew is orthogonal now — kept independent of the reach tier. Accept a
+    # legacy `visibility=krew` from an un-migrated client: map it to self_only
+    # and keep the krew_id, so the audience (owner + krew) is unchanged.
+    permitted[:visibility] = 'self_only' if permitted[:visibility] == 'krew'
+    permitted[:krew_id] = nil if permitted[:krew_id].blank?
     permitted[:voice_media_attachment_id] = nil if permitted[:voice_media_attachment_id].blank?
     # Voice-only Moments send no photo; normalise a blank id to nil so
     # the optional belongs_to stays clean (model's media_present_or_voice
@@ -109,11 +113,12 @@ class Api::V1::MomentsController < Api::BaseController
     permitted
   end
 
-  # Update only touches the audience — media/caption are fixed once
-  # posted. krew_id is cleared when moving to a non-krew visibility.
+  # Update only touches the audience (reach tier + orthogonal krew) — media
+  # and caption are fixed once posted.
   def update_params
     permitted = params.permit(:visibility, :krew_id)
-    permitted[:krew_id] = nil if permitted[:visibility].present? && permitted[:visibility] != 'krew'
+    permitted[:visibility] = 'self_only' if permitted[:visibility] == 'krew' # legacy client
+    permitted[:krew_id] = nil if permitted.key?(:krew_id) && permitted[:krew_id].blank?
     permitted
   end
 
