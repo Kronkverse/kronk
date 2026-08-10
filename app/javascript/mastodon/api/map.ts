@@ -5,7 +5,12 @@ import { apiRequestGet, apiRequestPost, apiRequestDelete } from 'mastodon/api';
 // already fuzzed; `radius` is the honest imprecision circle to draw.
 
 export type MapPrecision = 'hood' | 'city';
-export type MapShareScope = 'friends' | 'kommunity';
+// Presence is Mates-only now (Tal 2026-08-10): "only visible to
+// mates, never Kronkverse-wide". The `kommunity` enum value stays in
+// the DB for legacy rows; the API contract and the client no longer
+// offer it, and PresenceController#index no longer returns pins with
+// that scope.
+export type MapShareScope = 'friends';
 
 export interface ApiPresencePinJSON {
   account_id: string;

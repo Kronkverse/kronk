@@ -916,3 +916,54 @@
     opacity: 0.6;
   }
 }
+
+// ── MapLibre chrome — Kronk-colour the +/- buttons and attribution ─
+// MapLibre ships default white surfaces + black text. On the Kronk
+// violet basemap that reads as bright chrome sitting on top of the
+// map. Recolour to the same dark elevated surface + Kronk purple
+// hover accent used across the app so the controls sit in the design
+// system, not on top of it. Selectors target only classes MapLibre
+// itself renders (`.maplibregl-ctrl-*`) — no third-party overrides.
+.maplibregl-ctrl {
+  &-group {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--elev-card, 0 4px 12px -4px rgb(0 0 0 / 30%));
+
+    button {
+      background: transparent;
+      color: var(--text-primary);
+
+      &:hover {
+        background: color-mix(
+          in oklab,
+          var(--kronk-purple-accent) 18%,
+          transparent
+        );
+      }
+
+      // The +/- glyphs are baked into MapLibre as CSS-mask/background
+      // SVGs coloured by the button's `color`; the `&:not([disabled])`
+      // gate mirrors how MapLibre nulls them out when a control is
+      // greyed. The `filter: invert()` recolours the mask against a
+      // dark surface without shipping a fork of MapLibre's CSS.
+      span {
+        filter: invert(1) brightness(1.1);
+      }
+    }
+  }
+
+  // Attribution — the "© OpenStreetMap" pill in the bottom-right.
+  &-attrib {
+    background: color-mix(in oklab, var(--surface-elevated) 82%, transparent);
+    color: var(--text-secondary);
+
+    a {
+      color: var(--kronk-purple-bright);
+
+      &:hover {
+        color: var(--kronk-purple-accent);
+      }
+    }
+  }
+}

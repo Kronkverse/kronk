@@ -11,9 +11,12 @@ import { Protocol } from 'pmtiles';
 export const BASEMAP_URL =
   'pmtiles://https://kronk-osm.syd1.digitaloceanspaces.com/planet.pmtiles';
 
-// Default view — open on Australia.
+// Default view — open on Australia. Tal 2026-08-10: nudge zoom
+// down from 3.7 → 3.2 so the whole landmass (Tasmania south, Cape York
+// north, WA west, Norfolk Island vicinity east) sits inside the frame
+// on a typical desktop viewport, not cropped.
 export const HOME_CENTER: [number, number] = [134, -25.5];
-export const HOME_ZOOM = 3.7;
+export const HOME_ZOOM = 3.2;
 
 // "Midnight Violet" — dark-violet land under white roads, a cornflower water
 // that reads clearly against them, and a Kronk-violet bushland. Landuse patches
