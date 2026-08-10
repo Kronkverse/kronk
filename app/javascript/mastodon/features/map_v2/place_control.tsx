@@ -5,7 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import axios from 'axios';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
-import PushPinIcon from '@/material-icons/400-24px/push_pin.svg?react';
+import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import { apiGeocodeSearch, apiPlacePresence } from 'mastodon/api/map';
 import type {
@@ -234,7 +234,7 @@ export const PlaceControl: React.FC<Props> = ({ onPlaced }) => {
         aria-label={intl.formatMessage(messages.open)}
         title={intl.formatMessage(messages.open)}
       >
-        <Icon id='pin' icon={PushPinIcon} />
+        <Icon id='location-on' icon={LocationOnIcon} />
       </button>
     );
   }
