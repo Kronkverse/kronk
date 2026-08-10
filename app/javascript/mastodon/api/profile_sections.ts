@@ -24,7 +24,7 @@ export interface ApiProfileSectionJSON {
   settings: Record<string, unknown>;
   visible: boolean;
   // Reach ladder shared with ProfileCard (five scopes).
-  visibility?: 'everyone' | 'kronk' | 'connections' | 'vouched' | 'only_me';
+  visibility?: 'self_only' | 'mates' | 'orbit' | 'public';
 }
 
 export const apiGetOwnProfileSections = () =>

@@ -153,7 +153,7 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
         }
 
         // Owner sees their own unfiltered content (visible: false rows,
-        // only_me shelves); everyone else goes through the viewer path
+        // self_only shelves); everyone else goes through the viewer path
         // which the server filters.
         const viewingSelf = acctRes.id === me;
         const [cardsRes, sectionsRes] = await Promise.all([

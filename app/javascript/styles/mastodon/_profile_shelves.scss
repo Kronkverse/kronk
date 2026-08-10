@@ -564,12 +564,12 @@
       }
     }
 
-    &--reach-everyone::before {
+    &--reach-public::before {
       background: var(--purple-bright, var(--accent));
       box-shadow: 0 0 6px -1px var(--purple-bright, var(--accent));
     }
 
-    &--reach-only_me::before {
+    &--reach-self_only::before {
       background: var(--text-muted);
       box-shadow: none;
     }
@@ -765,34 +765,6 @@
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-  }
-
-  &__composer-picker {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-2, 8px);
-  }
-
-  &__composer-pill {
-    padding: 6px var(--sp-3, 12px);
-    border-radius: var(--radius-small, 6px);
-    border: 1px solid var(--border-subtle);
-    background: transparent;
-    color: var(--text-secondary);
-    font-family: inherit;
-    font-size: 13px;
-    cursor: pointer;
-
-    &--active {
-      border-color: var(--accent);
-      color: var(--text-primary);
-      background: color-mix(in oklab, var(--accent), transparent 82%);
-    }
-
-    &:hover:not(#{&}--active) {
-      border-color: var(--border-default);
-      color: var(--text-primary);
-    }
   }
 
   &__composer-body {

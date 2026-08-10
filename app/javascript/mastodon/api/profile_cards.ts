@@ -15,7 +15,7 @@ export interface ApiProfileCardJSON {
   // The backend keeps this open; new renders can ship in a
   // pure-frontend PR once the client renders them.
   render: string;
-  visibility: 'everyone' | 'kronk' | 'connections' | 'vouched' | 'only_me';
+  visibility: 'self_only' | 'mates' | 'orbit' | 'public';
   position: number;
   visible: boolean;
 }
