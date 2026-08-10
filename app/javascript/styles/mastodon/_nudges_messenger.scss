@@ -15,7 +15,14 @@
 // space, ColumnHeader takes intrinsic height, messenger takes the
 // remainder, and the composer sits at the messenger's bottom.
 .column:has(.nudges-messenger) {
-  height: calc(100dvh - 4.25rem);
+  // Bump the chrome allowance from 4.25rem (Frame top-band) to 6rem
+  // — the 4.25rem count matched the Frame grid row-1 exactly, but on
+  // shadow the composer still sat below the fold with a document
+  // scrollbar (Tal 2026-08-11). The extra 1.75rem covers small
+  // ancestor-chain overhead (page-level scrollbar gutter, any
+  // classic Mastodon body padding) so nothing on Nudges routes
+  // needs a document scrollbar to see the composer.
+  height: calc(100dvh - 6rem);
   min-height: 0;
   overflow: hidden;
 }
