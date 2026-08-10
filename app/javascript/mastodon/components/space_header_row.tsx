@@ -16,14 +16,22 @@ import { AutoSpaceViewPicker } from './auto_space_view_picker';
 // child gates itself on route/manifest so an unmounted slot collapses.
 // See docs/kronk_frame.md § SpaceNav.
 
-export const SpaceHeaderRow: React.FC = () => (
+interface Props {
+  // When true, the center `<AutoSpaceHeader>` slot is omitted while
+  // the badge / settings / view-picker chrome stays. Used by pages
+  // that render their own title row (e.g. Albutts' rotating
+  // `<ScopeTitle>`) and would otherwise stack a duplicate.
+  hideCenter?: boolean;
+}
+
+export const SpaceHeaderRow: React.FC<Props> = ({ hideCenter = false }) => (
   <div className='space-header-row'>
     <div className='space-header-row__left'>
       <AutoSpaceBadge />
       <AutoSettingsBadge />
     </div>
     <div className='space-header-row__center'>
-      <AutoSpaceHeader />
+      {!hideCenter && <AutoSpaceHeader />}
     </div>
     <div className='space-header-row__right'>
       <AutoSpaceViewPicker />
