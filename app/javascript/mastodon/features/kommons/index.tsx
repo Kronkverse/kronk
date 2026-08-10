@@ -6,8 +6,12 @@ import { Helmet } from 'react-helmet';
 import { useHistory, useLocation } from 'react-router-dom';
 
 import api from 'mastodon/api';
+import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import { Stage } from 'mastodon/components/stage';
 import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
+import { Lattice } from 'mastodon/features/kommons_lattice/components/lattice';
+import { fromApiNodes } from 'mastodon/features/kommons_tree/data/nodes';
+import type { KommonsNode } from 'mastodon/features/kommons_tree/data/nodes';
 
 import { KoinGlance } from './components/koin_glance';
 import type { Wallet } from './components/koin_glance';
@@ -25,18 +29,28 @@ const messages = defineMessages({
 
 // Manifest `views:` are the source of truth for face order (see
 // kommons.yaml). This keys off the URL segment the Frame produces:
-// bare `/hub/kommons` = the default face (`open`); the rest map to
+// bare `/hub/kommons` = the default face (`directory`); the rest map to
 // `/hub/kommons/<key>`. Kept in sync with the manifest — a mismatch
-// silently falls through to `open`.
-const FILTER_KEYS = ['open', 'involved', 'drafts', 'completed'] as const;
-type FilterType = (typeof FILTER_KEYS)[number];
+// silently falls through to `directory`.
+const FACE_KEYS = [
+  'directory',
+  'open',
+  'involved',
+  'drafts',
+  'completed',
+] as const;
+type FaceKey = (typeof FACE_KEYS)[number];
 
-const filterFromPath = (pathname: string): FilterType => {
+// Every face other than `directory` is a proposal filter. Narrow type
+// used by fetchProposals + the per-face empty-message map.
+type FilterKey = Exclude<FaceKey, 'directory'>;
+
+const faceFromPath = (pathname: string): FaceKey => {
   const match = /^\/hub\/kommons\/([a-z]+)/.exec(pathname);
   const seg = match?.[1];
-  return seg && (FILTER_KEYS as readonly string[]).includes(seg)
-    ? (seg as FilterType)
-    : 'open';
+  return seg && (FACE_KEYS as readonly string[]).includes(seg)
+    ? (seg as FaceKey)
+    : 'directory';
 };
 
 const SORT_ORDER = ['most_backed', 'newest'] as const;
@@ -70,47 +84,91 @@ const emptyMessages = defineMessages({
   },
 });
 
+const directoryMessages = defineMessages({
+  loading: {
+    id: 'governance.directory.loading',
+    defaultMessage: 'Loading the Directory…',
+  },
+  loadError: {
+    id: 'governance.directory.load_error',
+    defaultMessage: "Couldn't load the Directory. Refresh to try again.",
+  },
+});
+
 // Renders into the Frame's Stage. The title + rotating view faces are
 // Frame-provided via <AutoSpaceHeader> reading `header.rotator: true`
 // from kommons.yaml — this page renders neither its own `<h1>` nor a
 // bespoke tab row. See docs/kronk_frame.md and Standard L11.
+//
+// One Kommons component owns every face (Directory + the four proposal
+// filters) so the FeedDrum can rotate between them without a route
+// swap unmounting the drum mid-turn. Directory face embeds the shared
+// `<Lattice>` component; proposal faces render the ProposalCard list.
 const Kommons: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const history = useHistory();
   const { pathname } = useLocation();
-  const filter = filterFromPath(pathname);
+  const face = faceFromPath(pathname);
+  const isProposalFace = face !== 'directory';
+
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [sort, setSort] = useState<SortType>('most_backed');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [balanceRefresh, setBalanceRefresh] = useState(0);
 
-  const fetchProposals = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await api().get('/api/v1/proposals', {
-        params: { filter, sort },
-      });
-      setProposals(res.data as Proposal[]);
-    } catch (err) {
-      console.error('Failed to fetch proposals:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [filter, sort]);
+  // Directory face — lazy-loaded on first entry, cached after.
+  const [directoryNodes, setDirectoryNodes] = useState<KommonsNode[] | null>(
+    null,
+  );
+  const [directoryError, setDirectoryError] = useState(false);
+
+  const fetchProposals = useCallback(
+    async (filter: FilterKey) => {
+      setLoading(true);
+      try {
+        const res = await api().get('/api/v1/proposals', {
+          params: { filter, sort },
+        });
+        setProposals(res.data as Proposal[]);
+      } catch (err) {
+        console.error('Failed to fetch proposals:', err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [sort],
+  );
 
   useEffect(() => {
-    void fetchProposals();
-  }, [fetchProposals]);
+    // Narrow the FaceKey union to FilterKey via the boolean guard
+    // (isProposalFace === face !== 'directory').
+    if (face !== 'directory') void fetchProposals(face);
+  }, [face, fetchProposals]);
 
-  // Selecting into a proposal detail is a per-face concern; the URL
-  // face change should clear any open detail so the caller lands on
-  // the new face's list, not on an unrelated proposal from the old
-  // face still open in state.
+  useEffect(() => {
+    if (face !== 'directory' || directoryNodes !== null) return;
+    let cancelled = false;
+    apiGetKommonsNodes()
+      .then((res) => {
+        if (!cancelled) setDirectoryNodes(fromApiNodes(res.nodes));
+        return undefined;
+      })
+      .catch(() => {
+        if (!cancelled) setDirectoryError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [face, directoryNodes]);
+
+  // Face change should clear any open proposal detail so the caller
+  // lands on the new face's content, not on an unrelated proposal
+  // from the old face still open in state.
   useEffect(() => {
     setSelectedId(null);
-  }, [filter]);
+  }, [face]);
 
   useEffect(() => {
     let active = true;
@@ -149,14 +207,16 @@ const Kommons: React.FC<{ multiColumn?: boolean }> = () => {
     setSelectedId(id);
   }, []);
 
-  // FeedDrum turns the proposal list on scope change, same
-  // quarter-turn `/home` uses. Kommons rotates via the AutoSpaceHeader
-  // above; this handler is what the drum invokes when a swipe on
-  // the list itself asks for the next face. Bare `/hub/kommons` is
-  // the default (`open`); others carry the segment.
+  // FeedDrum turns the content on scope change, same quarter-turn
+  // `/home` uses. Kommons rotates via the AutoSpaceHeader above; this
+  // handler is what the drum invokes when a swipe on the content
+  // itself asks for the next face. Bare `/hub/kommons` is the default
+  // (`directory`); others carry the segment.
   const handleScopeChange = useCallback(
     (next: string) => {
-      history.push(next === 'open' ? '/hub/kommons' : `/hub/kommons/${next}`);
+      history.push(
+        next === 'directory' ? '/hub/kommons' : `/hub/kommons/${next}`,
+      );
     },
     [history],
   );
@@ -178,45 +238,64 @@ const Kommons: React.FC<{ multiColumn?: boolean }> = () => {
           />
         ) : (
           <>
-            {/* Single toolbar row — count on the left, Koin glance +
-                sort on the right. No local `<h1>`, no bespoke tab row:
-                the Frame's `<AutoSpaceHeader>` (rotator) is the title,
-                and the rotator IS the filter switcher. */}
+            {/* Single toolbar row — count + sort only apply to
+                proposal faces; Koin glance stays visible on every
+                face because it identifies the caller's stake in the
+                surface. */}
             <div className='kommons-page__toolbar'>
               <span className='kommons-page__count'>
-                {!loading &&
+                {isProposalFace &&
+                  !loading &&
                   intl.formatMessage(messages.count, {
                     count: proposals.length,
                   })}
               </span>
               <span className='kommons-page__toolbar-grow' />
               {wallet && <KoinGlance wallet={wallet} />}
-              <select
-                className='kommons-page__sort'
-                value={sort}
-                onChange={handleSortChange}
-                aria-label={intl.formatMessage(sortMessages.most_backed)}
-              >
-                {SORT_ORDER.map((key) => (
-                  <option key={key} value={key}>
-                    {intl.formatMessage(sortMessages[key])}
-                  </option>
-                ))}
-              </select>
+              {isProposalFace && (
+                <select
+                  className='kommons-page__sort'
+                  value={sort}
+                  onChange={handleSortChange}
+                  aria-label={intl.formatMessage(sortMessages.most_backed)}
+                >
+                  {SORT_ORDER.map((key) => (
+                    <option key={key} value={key}>
+                      {intl.formatMessage(sortMessages[key])}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
-            {/* FeedDrum turns the list on scope change — same
+            {/* FeedDrum turns the content on scope change — same
                 quarter-turn `/home` + Albutts use, so the top of the
-                spindle (AutoSpaceHeader rotator) and the bottom (this
-                list) read as one solid object. Loading / empty states
-                live inside the drum so it stays mounted across scope
-                changes (snapshot cloning needs a live DOM). */}
+                spindle (AutoSpaceHeader rotator) and the bottom
+                (this content) read as one solid object. Loading /
+                empty states live inside the drum so it stays mounted
+                across scope changes (snapshot cloning needs a live
+                DOM). Directory + proposal faces share the drum so
+                the Directory → Open turn plays too. */}
             <FeedDrum
-              reach={filter}
-              order={[...FILTER_KEYS]}
+              reach={face}
+              order={[...FACE_KEYS]}
               onScopeChange={handleScopeChange}
             >
-              {loading && proposals.length === 0 ? (
+              {face === 'directory' ? (
+                directoryError ? (
+                  <div className='kommons-page__empty'>
+                    {intl.formatMessage(directoryMessages.loadError)}
+                  </div>
+                ) : directoryNodes === null ? (
+                  <div className='kommons-page__empty'>
+                    {intl.formatMessage(directoryMessages.loading)}
+                  </div>
+                ) : (
+                  <div className='kommons-lattice'>
+                    <Lattice nodes={directoryNodes} />
+                  </div>
+                )
+              ) : loading && proposals.length === 0 ? (
                 <div className='kommons-page__empty'>
                   <FormattedMessage
                     id='governance.loading'
@@ -225,7 +304,7 @@ const Kommons: React.FC<{ multiColumn?: boolean }> = () => {
                 </div>
               ) : proposals.length === 0 ? (
                 <div className='kommons-page__empty'>
-                  {intl.formatMessage(emptyMessages[filter])}
+                  {intl.formatMessage(emptyMessages[face])}
                 </div>
               ) : (
                 <div className='kommons-page__list'>

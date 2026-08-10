@@ -95,11 +95,18 @@ settings:
 # exist in the DB and are queryable via `?filter=annulled`, but
 # nobody wanted a public face for them (Tal 2026-08-10).
 #
-# The Directory (Lattice) is not a view face — it's a distinct
-# surface reachable at /hub/kommons/lattice via internal links
-# (Space page, node metadata page). Keeping it out of the rotator
-# keeps every face here the same *shape* of thing.
+# The Directory (Lattice) sits first as the default landing face —
+# a browsable tree of every Kronk corner you can propose changes to
+# (Tal 2026-08-10). Bare `/hub/kommons` lands on it; the four
+# proposal faces (Open / Involved / Drafts / Completed) each carry
+# a URL segment. `/hub/kommons/lattice` still resolves for external
+# links (redirects to the bare URL).
 views:
+  - {
+      key: directory,
+      label: 'Directory',
+      tagline: 'Every corner of Kronk you can propose changes to',
+    }
   - { key: open, label: 'Open', tagline: 'Proposals under consideration' }
   - {
       key: involved,
