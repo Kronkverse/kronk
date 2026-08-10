@@ -918,44 +918,67 @@
 }
 
 // ── MapLibre chrome — Kronk-colour the +/- buttons and attribution ─
-// MapLibre ships default white surfaces + black text. On the Kronk
-// violet basemap that reads as bright chrome sitting on top of the
-// map. Recolour to the same dark elevated surface + Kronk purple
-// hover accent used across the app so the controls sit in the design
-// system, not on top of it. Selectors target only classes MapLibre
-// itself renders (`.maplibregl-ctrl-*`) — no third-party overrides.
-.maplibregl-ctrl {
-  &-group {
+// MapLibre ships its own CSS (imported inside mates_view.tsx /
+// treks_view.tsx) that sets `.maplibregl-ctrl-group { background:
+// #fff }` and paints the +/- icons as an embedded SVG
+// background-image with `fill='%23333'`. Prior attempt targeted
+// root-level `.maplibregl-ctrl-*` selectors — same specificity
+// (0,1,0) as MapLibre's own CSS, so the win depended on bundle
+// order. Vite inlines JS-imported CSS after our SCSS, so MapLibre
+// kept winning.
+// Fix: scope every override under `.maplibregl-map` (the class
+// MapLibre itself puts on any map container). That raises the
+// specificity to (0,2,0) vs MapLibre's (0,1,0), guaranteeing we win
+// without an !important war. And because the +/- icons are
+// background-image SVGs (not <svg> elements whose fill can be
+// changed by CSS `color`), we invert them with `filter` on the
+// icon element itself — filters DO affect background-image render.
+.maplibregl-map {
+  .maplibregl-ctrl-group {
     background: var(--surface-elevated);
     border: 1px solid var(--border-default);
     box-shadow: var(--elev-card, 0 4px 12px -4px rgb(0 0 0 / 30%));
 
     button {
       background: transparent;
-      color: var(--text-primary);
 
       &:hover {
         background: color-mix(
           in oklab,
-          var(--kronk-purple-accent) 18%,
+          var(--kronk-purple-accent) 22%,
           transparent
         );
       }
 
-      // The +/- glyphs are baked into MapLibre as CSS-mask/background
-      // SVGs coloured by the button's `color`; the `&:not([disabled])`
-      // gate mirrors how MapLibre nulls them out when a control is
-      // greyed. The `filter: invert()` recolours the mask against a
-      // dark surface without shipping a fork of MapLibre's CSS.
-      span {
-        filter: invert(1) brightness(1.1);
+      &:focus-visible {
+        outline: 2px solid var(--kronk-purple-bright);
+        outline-offset: -2px;
       }
+
+      // Divider between stacked buttons — MapLibre paints a hairline
+      // grey; recolour to the Kronk border tone against dark surface.
+      &:not(:first-child) {
+        border-top: 1px solid var(--border-default);
+      }
+    }
+
+    // The +/- glyphs are `.maplibregl-ctrl-icon` background-images
+    // (baked SVG data URIs, dark fill). `filter: invert() brightness()`
+    // recolours them so they read against the dark surface. This
+    // matches the technique KronkMenu uses on its own MapLibre-adjacent
+    // controls.
+    .maplibregl-ctrl-icon {
+      filter: invert(1) brightness(1.2);
     }
   }
 
   // Attribution — the "© OpenStreetMap" pill in the bottom-right.
-  &-attrib {
-    background: color-mix(in oklab, var(--surface-elevated) 82%, transparent);
+  // `.maplibregl-ctrl-attrib` is the container; `-attrib-inner` holds
+  // the links; `-attrib-button` is the ⓘ collapse toggle on small
+  // viewports. All three need dark treatment or the pill reads as a
+  // bright block sitting on the map.
+  .maplibregl-ctrl-attrib {
+    background: color-mix(in oklab, var(--surface-elevated) 88%, transparent);
     color: var(--text-secondary);
 
     a {
@@ -964,6 +987,11 @@
       &:hover {
         color: var(--kronk-purple-accent);
       }
+    }
+
+    .maplibregl-ctrl-attrib-button {
+      background-color: var(--surface-elevated);
+      filter: invert(1) brightness(1.2);
     }
   }
 }
