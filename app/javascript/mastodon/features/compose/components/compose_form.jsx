@@ -27,6 +27,7 @@ import UploadButtonContainer from '../containers/upload_button_container';
 import { countableText } from '../util/counter';
 
 import { CharRing } from './char_ring';
+import { ComposeDraft } from './compose_draft';
 import { ComposeReachDropdown } from './compose_reach_dropdown';
 import { ComposeVoiceRecorder } from './compose_voice_recorder';
 import { EditIndicator } from './edit_indicator';
@@ -305,6 +306,7 @@ class ComposeForm extends ImmutablePureComponent {
 
         <div className={classNames('compose-form__highlightable', { active: highlighted })} ref={this.setRef}>
           <EditIndicator />
+          <ComposeDraft />
 
           {/* Header — identity (avatar + name) with the audience dropdown to the
               right, mirroring how a post's author + reach read in the feed. The

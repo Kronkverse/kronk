@@ -1,8 +1,10 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import api from 'mastodon/api';
+import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
+import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 
 import type { BoothSet } from '../types';
 
@@ -122,6 +124,35 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
   const audioInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const stageRef = useRef<UploadStage>(null);
+
+  // Draft auto-save: preserve the set metadata across an accidental
+  // navigate-away / refresh (docs/rebuild/decisions.md 2026-08-10). The audio +
+  // cover Files can't ride in localStorage; the text does.
+  const draftSnapshot = useMemo(
+    () => ({ title, artistName, description, genres }),
+    [title, artistName, description, genres],
+  );
+  const handleRestore = useCallback(
+    (d: typeof draftSnapshot) => {
+      setTitle(d.title);
+      setArtistName(d.artistName);
+      setDescription(d.description);
+      setGenres(d.genres);
+    },
+    // setters are stable; the closure captures nothing that changes.
+    [],
+  );
+  const draft = useComposerDraft('booth:upload', draftSnapshot, handleRestore, {
+    enabled: !submitting && (title.trim() !== '' || description.trim() !== ''),
+  });
+  const discardDraft = draft.discard;
+  const handleDiscardDraft = useCallback(() => {
+    setTitle('');
+    setArtistName('');
+    setDescription('');
+    setGenres([]);
+    discardDraft();
+  }, [discardDraft]);
 
   const stageLabel =
     stage === 'audio'
@@ -283,6 +314,7 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
               signal: controller.signal,
             },
           );
+          discardDraft();
           onSuccess(res.data);
         } catch (err) {
           if ((err as { name?: string }).name === 'CanceledError') return;
@@ -316,12 +348,14 @@ export const UploadForm: React.FC<Props> = ({ onSuccess, onCancel }) => {
       audioFile,
       coverFile,
       onSuccess,
+      discardDraft,
     ],
   );
 
   return (
     <form className='booth-upload-form' onSubmit={handleSubmit}>
       <h3 className='booth-upload-form__heading'>Upload a set</h3>
+      {draft.restored && <DraftRestoredPill onDiscard={handleDiscardDraft} />}
 
       {error && <div className='booth-upload-form__error'>{error}</div>}
 
