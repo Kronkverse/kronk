@@ -137,7 +137,10 @@
   }
 }
 
-// Zoom controls, bottom-right (§5).
+// Zoom controls, bottom-right (§5). Kronk-native pill: same
+// smoked-glass background + purple accent family as the compose
+// FAB and map's place control so the Lattice's floating chrome
+// reads as part of the Kronk aesthetic, not a browser default.
 .lattice-zoom {
   position: sticky;
   bottom: 12px;
@@ -148,26 +151,65 @@
   align-items: center;
   width: max-content;
   margin: 12px;
-  padding: 3px;
+  padding: 4px;
   border: 1px solid var(--border-default);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-elevated) 96%, transparent);
+  border-radius: var(--radius-round);
+  background: color-mix(in oklab, var(--surface-elevated) 82%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px -10px rgb(0 0 0 / 60%);
+  color: var(--text-secondary);
+  font-family: var(--font-display);
 
   button {
-    min-width: 34px;
-    height: 26px;
-    padding: 0 8px;
-    border-radius: 999px;
-    color: var(--text-secondary, #e9e7f2);
-    font-size: 0.75rem;
+    appearance: none;
+    min-width: 32px;
+    height: 28px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1;
     cursor: pointer;
+    transition:
+      color var(--dur-fast, 120ms) var(--ease-out, ease),
+      background var(--dur-fast, 120ms) var(--ease-out, ease);
 
-    &:hover {
+    &:hover,
+    &:focus-visible {
+      color: var(--text-primary);
       background: color-mix(
-        in srgb,
-        var(--kronk-purple-bright) 20%,
+        in oklab,
+        var(--kronk-purple-bright) 22%,
         transparent
       );
+      outline: none;
+    }
+
+    // The middle button is the zoom-level readout (`100%`); tapping
+    // it resets zoom. Marked with the accent fill so it reads as the
+    // control's "current state" rather than another action chip.
+    &:nth-child(2) {
+      color: var(--text-primary);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 26%,
+        transparent
+      );
+      min-width: 44px;
+      font-variant-numeric: tabular-nums;
+
+      &:hover,
+      &:focus-visible {
+        background: color-mix(
+          in oklab,
+          var(--kronk-purple-bright) 40%,
+          transparent
+        );
+      }
     }
   }
 }
