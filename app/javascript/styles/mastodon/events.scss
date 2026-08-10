@@ -436,7 +436,8 @@ $ev-interested-color: #b8945f;
   &__field {
     margin-bottom: 14px;
 
-    label {
+    label,
+    .create-event-form__field-label {
       display: block;
       font-size: 12px;
       font-weight: 600;

@@ -8,6 +8,8 @@ import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
 import api from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
+import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import type { ReachValue } from 'mastodon/components/reach_dropdown';
 
 interface Account {
   id: string;
@@ -132,7 +134,7 @@ export const CreateEventForm: React.FC<Props> = ({
   );
   const [locationUrl, setLocationUrl] = useState(editEvent?.location_url ?? '');
   const [eventType, setEventType] = useState(editEvent?.event_type ?? 'event');
-  const [visibility, setVisibility] = useState('public');
+  const [visibility, setVisibility] = useState<ReachValue>('public');
   const [rsvpEnabled, setRsvpEnabled] = useState(
     editEvent?.rsvp_enabled ?? true,
   );
@@ -221,12 +223,9 @@ export const CreateEventForm: React.FC<Props> = ({
     [],
   );
 
-  const handleVisibilityChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setVisibility(e.target.value);
-    },
-    [],
-  );
+  const handleVisibilityChange = useCallback((value: ReachValue) => {
+    setVisibility(value);
+  }, []);
 
   const handleRecurrenceChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -355,7 +354,6 @@ export const CreateEventForm: React.FC<Props> = ({
   const locationInputId = 'event-form-location';
   const linkInputId = 'event-form-link';
   const descriptionInputId = 'event-form-description';
-  const visibilityInputId = 'event-form-visibility';
   const repeatInputId = 'event-form-repeat';
   const rsvpInputId = 'event-form-rsvp';
   const spawnAlbumInputId = 'event-form-spawn-album';
@@ -570,22 +568,21 @@ export const CreateEventForm: React.FC<Props> = ({
       <div className='create-event-form__row'>
         {!editing && (
           <div className='create-event-form__field'>
-            <label htmlFor={visibilityInputId}>
+            <span className='create-event-form__field-label'>
               <FormattedMessage
                 id='events.form.visibility'
                 defaultMessage='Visibility'
               />
-            </label>
-            <select
-              id={visibilityInputId}
+            </span>
+            {/* Standard reach ladder (docs/rebuild/decisions.md 2026-08-09) —
+                replaces the legacy Mastodon public/unlisted/private/direct
+                select. Krew is hidden for now: krew-scoped events would need a
+                krew sub-picker, and krew is moving to an orthogonal axis. */}
+            <ReachDropdown
               value={visibility}
               onChange={handleVisibilityChange}
-            >
-              <option value='public'>Public</option>
-              <option value='unlisted'>Unlisted</option>
-              <option value='private'>Followers only</option>
-              <option value='direct'>Mentioned only</option>
-            </select>
+              hide={['krew']}
+            />
           </div>
         )}
         <div className='create-event-form__field'>
