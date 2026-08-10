@@ -141,6 +141,48 @@ RSpec.describe StatusPolicy, type: :model do
     end
   end
 
+  # Krew is an orthogonal, additive audience axis
+  # (docs/rebuild/krew_axis_migration.md): a member of any Krew a status
+  # targets sees it regardless of its reach tier, and non-members see only
+  # what the reach tier alone grants.
+  context 'with the permission of show? for krew-targeted statuses' do
+    let(:krew) { Krew.create!(slug: 'squad', name: 'Squad', access: 'open') }
+    let(:member) { Fabricate(:account, username: 'member') }
+    let(:stranger) { Fabricate(:account, username: 'stranger') }
+
+    before { krew.krew_memberships.create!(account: member) }
+
+    permissions :show? do
+      it 'grants a self_only + krew status to a member of that krew (additive)' do
+        status.visibility = :self_only
+        status.krews << krew
+
+        expect(subject).to permit(member, status)
+      end
+
+      it 'denies a self_only + krew status to a non-member' do
+        status.visibility = :self_only
+        status.krews << krew
+
+        expect(subject).to_not permit(stranger, status)
+      end
+
+      it 'grants a mates + krew status to a krew member who is not a mate (additive)' do
+        status.visibility = :mates
+        status.krews << krew
+
+        expect(subject).to permit(member, status)
+      end
+
+      it 'still denies a self_only status with no krew to everyone but the author' do
+        status.visibility = :self_only
+
+        expect(subject).to_not permit(member, status)
+        expect(subject).to permit(alice, status)
+      end
+    end
+  end
+
   context 'with the permission of quote?' do
     permissions :quote? do
       it 'does not grant access when direct and account is viewer' do
