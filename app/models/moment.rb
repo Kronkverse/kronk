@@ -6,6 +6,8 @@
 # projects to a Status for feed presence, mirroring the pattern used
 # by Event (kalendar) and KosmicUpdate (inflow).
 class Moment < ApplicationRecord
+  include Reachable
+
   DEFAULT_LIFETIME = 24.hours
 
   belongs_to :account
@@ -57,27 +59,16 @@ class Moment < ApplicationRecord
   scope :for_account, ->(account) { where(account: account) }
   scope :recent, -> { order(created_at: :desc) }
 
-  # Moments visible to `viewer`, per the reach ladder (public → everyone;
-  # mates → owner's mutuals; orbit → mates-of-mates; self_only → owner only)
-  # PLUS the orthogonal krew axis: any Moment targeting a krew the viewer is
-  # in is visible regardless of its reach tier (docs/kronk_feed_and_reach.md
-  # §2). The owner always sees their own. Compose with .active / .expired.
-  scope :visible_to, lambda { |viewer|
-    return visible_to_public if viewer.nil?
+  # Reachable adapter — reach + additive-krew visibility (visible_to /
+  # visible_to?) lives in the concern; these tell it how a Moment stores its
+  # owner + its single krew.
+  def self.reachable_owner_column
+    :account_id
+  end
 
-    mate_ids       = viewer.mates.select(:id)
-    krew_ids       = viewer.krews.select(:id)
-    mates_of_mates = Account.where(id: Follow.where(account_id: mate_ids).select(:target_account_id))
-                            .where(id: Follow.where(target_account_id: mate_ids).select(:account_id))
-                            .where.not(id: viewer.id)
-                            .select(:id)
-
-    where(account_id: viewer.id)
-      .or(visible_to_public)
-      .or(visible_to_mates.where(account_id: mate_ids))
-      .or(visible_to_orbit.where(account_id: mates_of_mates))
-      .or(where(krew_id: krew_ids))
-  }
+  def self.reachable_krew_scope(krew_ids)
+    where(krew_id: krew_ids)
+  end
 
   def active?
     expires_at.future?
@@ -93,20 +84,22 @@ class Moment < ApplicationRecord
     moment_froths.exists?(account: other_account)
   end
 
-  # Single-record counterpart to the `visible_to` scope — used to gate
-  # #show so a hidden Moment can't be fetched directly by id.
-  def visible_to?(viewer)
-    return true if viewer && viewer.id == account_id
-    # Krew is additive — a member sees it whatever the reach tier is.
-    return true if krew_visible_to?(viewer)
-    return true if visible_to_public?
-    return mates_visible_to?(viewer) if visible_to_mates?
-    return orbit_visible_to?(viewer) if visible_to_orbit?
+  private
 
-    false # self_only — owner-only, already handled above
+  # Reachable adapter (instance side).
+  def reachable_owner_id
+    account_id
   end
 
-  private
+  def reachable_owner
+    account
+  end
+
+  def reachable_krew_member?(viewer)
+    return false if viewer.nil? || krew_id.nil?
+
+    viewer.krews.exists?(id: krew_id)
+  end
 
   # A Moment must carry something: a photo/video, a voice clip, or both.
   # Guards the relaxed media_attachment_id NOT NULL (voice-only Moments,
@@ -115,25 +108,6 @@ class Moment < ApplicationRecord
     return if media_attachment_id.present? || voice_media_attachment_id.present?
 
     errors.add(:base, 'must have a photo, video, or voice clip')
-  end
-
-  def mates_visible_to?(viewer)
-    return false if viewer.nil?
-
-    viewer.mates.exists?(id: account_id)
-  end
-
-  def orbit_visible_to?(viewer)
-    return false if viewer.nil?
-    return true  if viewer.mates.exists?(id: account_id) # mates see orbit too
-
-    viewer.orbit_of?(account)
-  end
-
-  def krew_visible_to?(viewer)
-    return false if viewer.nil? || krew_id.nil?
-
-    viewer.krews.exists?(id: krew_id)
   end
 
   def set_default_expiry
