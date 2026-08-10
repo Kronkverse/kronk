@@ -101,7 +101,6 @@ import {
   KommonsNodeMeta,
   KommonsPropose,
   KommonsProposePicker,
-  KommonsLattice,
   KronkSearch,
   YouPortal,
   Questions,
@@ -377,8 +376,15 @@ class SwitchingColumnsArea extends PureComponent {
                 messenger, which renders KronkSystemView for the sentinel. */}
             {signedIn && <WrappedRoute path="/nudges/:conversationId(\d+|kronk)" component={Nudges} content={children} />}
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} exact />}
-            {signedIn && <Redirect from="/hub/kommons/skeleton" to="/hub/kommons/lattice" />}
-            {signedIn && <WrappedRoute path="/hub/kommons/lattice" component={KommonsLattice} content={children} />}
+            {signedIn && <Redirect from="/hub/kommons/skeleton" to="/hub/kommons" />}
+            {/* The Directory (Lattice) used to live at /hub/kommons/lattice
+                with its own route + component. It's now the default face of
+                the Kommons rotator (bare `/hub/kommons` in the manifest),
+                embedded inline in the Kommons component so the FeedDrum
+                rotation carries Directory ↔ proposal faces as one spindle.
+                Redirect kept for external / internal links that still
+                point at /lattice (space_page, node_meta_page). */}
+            {signedIn && <Redirect from="/hub/kommons/lattice" to="/hub/kommons" exact />}
             {signedIn && <WrappedRoute path="/hub/kommons/p/:proposalId" component={KommonsProposal} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/space/:slug" component={KommonsSpace} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/node/:nodeId" component={KommonsNodeMeta} content={children} />}
