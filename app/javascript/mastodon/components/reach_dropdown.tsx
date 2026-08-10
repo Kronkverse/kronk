@@ -10,8 +10,8 @@ import { ScopeMark } from 'mastodon/components/scope_mark';
 
 // ReachDropdown — the "who can see this?" control as a compact dropdown that
 // sits in the composer header (where a post's audience shows in the feed). Same
-// ring-mark glyphs + vocabulary as the feed scope: Me / Mates / Orbit / Kronk +
-// Krew. Pure controlled input (value / onChange); the krew sub-picker + any side
+// ring-mark glyphs + vocabulary as the feed scope: Me / Mates / Orbit /
+// Kronkverse + Krew. Pure controlled input (value / onChange); the krew sub-picker + any side
 // effects live at the call site.
 
 export type ReachValue = 'self_only' | 'mates' | 'orbit' | 'public' | 'krew';
@@ -21,7 +21,7 @@ const messages = defineMessages({
   me: { id: 'reach.me', defaultMessage: 'Me' },
   mates: { id: 'reach.mates', defaultMessage: 'Mates' },
   orbit: { id: 'reach.orbit', defaultMessage: 'Orbit' },
-  kronk: { id: 'reach.kronk', defaultMessage: 'Kronk' },
+  kronk: { id: 'reach.kronk', defaultMessage: 'Kronkverse' },
   krew: { id: 'reach.krew', defaultMessage: 'Krew' },
   meHint: { id: 'reach.me_hint', defaultMessage: 'Only you' },
   matesHint: {
