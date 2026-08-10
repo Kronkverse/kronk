@@ -668,6 +668,21 @@
     }
   }
 
+  &__draft {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+
+    input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--kronk-purple-bright, #b39dff);
+    }
+  }
+
   &__row {
     display: flex;
     gap: 14px;

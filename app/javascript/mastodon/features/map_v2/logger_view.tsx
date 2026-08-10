@@ -7,6 +7,8 @@ import { Link } from 'react-router-dom';
 import { apiCreateTrek, apiPublishTrek } from 'mastodon/api/map_treks';
 import type { TrekActivity, TrekReach } from 'mastodon/api/map_treks';
 import { Button } from 'mastodon/components/button';
+import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import type { ReachValue } from 'mastodon/components/reach_dropdown';
 
 import { parseTrackFile } from './gpx';
 import type { ParsedTrack } from './gpx';
@@ -82,7 +84,10 @@ export const LoggerView: React.FC = () => {
   const [parsed, setParsed] = useState<ParsedTrack | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [share, setShare] = useState<ShareTarget>('mates');
+  // Reach + a separate "save as draft" toggle (draft keeps the trek unshared).
+  // Standard ReachDropdown for the reach; krew is hidden (TrekReach has none).
+  const [reach, setReach] = useState<TrekReach>('mates');
+  const [isDraft, setIsDraft] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedTitle, setSavedTitle] = useState<string | null>(null);
   const [savedShare, setSavedShare] = useState<ShareTarget>('mates');
@@ -91,9 +96,15 @@ export const LoggerView: React.FC = () => {
   const onActivity = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setActivity(e.currentTarget.value as TrekActivity);
   }, []);
-  const onShare = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setShare(e.currentTarget.value as ShareTarget);
+  const onReach = useCallback((value: ReachValue) => {
+    setReach(value as TrekReach);
   }, []);
+  const onDraftToggle = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setIsDraft(e.currentTarget.checked);
+    },
+    [],
+  );
   const onTitle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.currentTarget.value);
   }, []);
@@ -187,13 +198,12 @@ export const LoggerView: React.FC = () => {
         elevation_gain: parsed?.elevation_gain ?? undefined,
       })
         .then((trek) => {
-          // 'draft' keeps it unshared; any reach publishes it to the feed.
-          const published =
-            share === 'draft'
-              ? Promise.resolve()
-              : apiPublishTrek(trek.id, share);
+          // Draft keeps it unshared; otherwise publish at the chosen reach.
+          const published = isDraft
+            ? Promise.resolve()
+            : apiPublishTrek(trek.id, reach);
           return published.then(() => {
-            setSavedShare(share);
+            setSavedShare(isDraft ? 'draft' : reach);
             setSavedTitle(trek.title);
             setActivity('run');
             setTitle('');
@@ -210,7 +220,7 @@ export const LoggerView: React.FC = () => {
           setSaving(false);
         });
     },
-    [activity, title, distanceKm, timeMin, parsed, share],
+    [activity, title, distanceKm, timeMin, parsed, reach, isDraft],
   );
 
   return (
@@ -337,15 +347,19 @@ export const LoggerView: React.FC = () => {
           </label>
         </div>
 
-        <label className='map-logger__field'>
+        <div className='map-logger__field'>
           <span>{intl.formatMessage(messages.shareLabel)}</span>
-          <select value={share} onChange={onShare}>
-            {SHARE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {intl.formatMessage(messages[o.label])}
-              </option>
-            ))}
-          </select>
+          <ReachDropdown
+            value={reach}
+            onChange={onReach}
+            hide={['krew']}
+            disabled={isDraft}
+          />
+        </div>
+
+        <label className='map-logger__draft'>
+          <input type='checkbox' checked={isDraft} onChange={onDraftToggle} />
+          <span>{intl.formatMessage(messages.draft)}</span>
         </label>
 
         {error && <p className='map-logger__error'>{error}</p>}
@@ -354,7 +368,7 @@ export const LoggerView: React.FC = () => {
           {intl.formatMessage(
             saving
               ? messages.saving
-              : share === 'draft'
+              : isDraft
                 ? messages.saveDraft
                 : messages.post,
           )}
