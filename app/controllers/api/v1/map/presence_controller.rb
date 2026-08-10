@@ -59,8 +59,17 @@ class Api::V1::Map::PresenceController < Api::BaseController
     # (GeoCoarsen edge case, transient DB issue, etc.) becomes a clean
     # 500 with a log line and a client-consumable body — not an
     # unhandled 500 that reads as "the whole map is down".
+    #
+    # Diagnostic aid: include the exception class + message in the JSON
+    # body while we chase an unresolved pin-drop failure on shadow (see
+    # place_control.tsx — the client surfaces `error` verbatim). This
+    # is safe: we already log the same string, and the whole endpoint
+    # is auth-gated. Drop back to a plain "…try again in a moment."
+    # body once the root cause is fixed.
     Rails.logger.error("PresenceController#create failed for account #{current_account&.id}: #{e.class} #{e.message}")
-    render json: { error: I18n.t('kronk.map.presence.place_failed') }, status: 500
+    render json: {
+      error: "#{I18n.t('kronk.map.presence.place_failed')} (#{e.class}: #{e.message})",
+    }, status: 500
   end
 
   def destroy
