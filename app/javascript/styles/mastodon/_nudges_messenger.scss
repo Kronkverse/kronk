@@ -1056,7 +1056,19 @@
 }
 
 // ── Composer ─────────────────────────────────────────────────────
+// `position: sticky; bottom: 0` belt-and-suspenders: even if the
+// height-anchor chain above (see the header comment) shifts by a
+// few pixels for any reason (mobile URL-bar dance, unexpected
+// padding elsewhere), the composer still pins to the bottom of the
+// nearest scrolling ancestor (the messenger, which we bound via
+// `calc(100dvh - 7.5rem)`). Solid background + z-index so scrolling
+// messages don't bleed under it. #1310, #1314, #1315 tried
+// bounding the flex chain from different angles — this makes the
+// composer's visibility independent of that math.
 .nudges-composer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
