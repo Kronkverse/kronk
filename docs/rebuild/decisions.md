@@ -17,6 +17,64 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-09 — Cross-site standardisation decisions
+
+From a site-wide standardisation audit (six read-only sweeps: composers,
+space chrome, audience/reach, media/uploads, post interactions, cross-cutting
+idioms). Four calls made by Tal; the remainder are ranked opportunities, not
+decisions.
+
+### Reach: the widest tier is "Kronkverse" everywhere
+
+The widest reach/visibility tier shows **Kronkverse** on every picker and the
+feed switcher. It was labelled three ways: `Kronk` (ReachDropdown, the feed
+scope switcher, the Kuestions dial) and `Everyone on Kronk` (ScopePicker);
+`KornerVisibilityPicker` already said Kronkverse. Display copy only — the
+internal values (`public` / `kommunity` scope keys, the `kronk` ring-mark
+glyph) are unchanged. The bespoke pickers (Kuestions' `VisibilityDial`,
+profile shelves' `ReachPicker`, the map/event `<select>`s) fold onto the
+shared `ReachDropdown` in follow-ups; that is the one standard visibility
+selector.
+
+### Krew is an orthogonal axis, not a visibility value
+
+Per the reach spec, a krew is a group you post _into_, independent of the
+distance ladder — "mates **and** krew X" must be expressible. Today every
+model (`Status`, `Moment`, `Album`) encodes krew as a mutually-exclusive enum
+value (picking krew discards the tier), and the krew integer slot disagrees
+across models (`Status` krew=5, `Moment`/`Album` krew=2). Decision: krew
+becomes a **separate field** (reach tier + krew id(s)) — a schema/enum
+migration across the three models plus the picker rework, which also fixes
+the integer mismatch. Supersedes the implicit "krew is one slot in the
+ladder" the code assumed.
+
+### Moments are Home-strip-only; they do not project to the feed
+
+Moments live in the Home strip, not as feed cards. The `Moment` model /
+`MomentsController` docstrings asserting "every Moment projects to a Status
+for feed presence" are wrong — nothing populates `status_id`, and `moment` is
+not a registered korner card. Fix: correct the docstrings and drop the dead
+`belongs_to :status`. (Separately, Moments froth moves off the bespoke
+`MomentFroth`/star model onto the shared `Favourite`/heart — the last korner
+still on a private froth model after Albutts moved on 2026-07-31.)
+
+### mARTketplace listings do project to the feed
+
+Listings should appear as feed cards. The wiring exists (`Listing belongs_to
+:status`, `Status has_one :listing`, a `KORNER_CARDS` entry) but
+`listings_controller` never calls `PostStatusService` or stamps
+`source_korner`, so the link is never populated and listings are silently
+absent from the feed. Fix: wire the projection (through the shared
+`FeedProjectable` concern when it lands).
+
+### Open (from this audit)
+
+- What `vouched` (the `ProfileCard` / `ProfileSection` visibility tier, which
+  has no equivalent in the mates graph) maps onto — to be decided during the
+  reach-unification pass.
+
+---
+
 ## 2026-08-04 — Launch card retired (no producer, no in-feed announcement)
 
 The manifest's `launch:` block (§8.7 of `kronk_korner_spec.md`) was the
