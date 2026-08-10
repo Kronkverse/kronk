@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useEffect } from 'react';
+import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -8,8 +8,10 @@ import StopIcon from '@/material-icons/400-24px/stop.svg?react';
 import { apiNudgeAccount } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { Button } from 'mastodon/components/button';
+import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
 import { Icon } from 'mastodon/components/icon';
 import { uploadMediaBlob } from 'mastodon/components/media';
+import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 import { useAppSelector } from 'mastodon/store';
 
 const MAX_WORDS = 100;
@@ -51,6 +53,37 @@ export const NudgeComposeModal: React.FC<{
 
   const wordCount = countWords(text);
   const overLimit = wordCount > MAX_WORDS;
+
+  // Draft auto-save: preserve a half-written nudge (text + an uploaded image)
+  // across an accidental close / refresh (docs/rebuild/decisions.md
+  // 2026-08-10). Keyed per recipient (+ reply context). The recorded voice
+  // Blob can't ride in localStorage; text + image do.
+  const draftSnapshot = useMemo(
+    () => ({ text, mediaId, mediaPreview }),
+    [text, mediaId, mediaPreview],
+  );
+  const handleRestore = useCallback(
+    (d: { text: string; mediaId?: string; mediaPreview?: string }) => {
+      if (d.text || d.mediaId) setMode('compose');
+      setText(d.text);
+      setMediaId(d.mediaId);
+      setMediaPreview(d.mediaPreview);
+    },
+    [],
+  );
+  const draft = useComposerDraft(
+    `nudges:modal:${accountId}:${inReplyToNotificationId ?? ''}`,
+    draftSnapshot,
+    handleRestore,
+    { enabled: !sending && (text.trim() !== '' || mediaId !== undefined) },
+  );
+  const discardDraft = draft.discard;
+  const handleDiscardDraft = useCallback(() => {
+    setText('');
+    setMediaId(undefined);
+    setMediaPreview(undefined);
+    discardDraft();
+  }, [discardDraft]);
 
   useEffect(
     () => () => {
@@ -192,6 +225,7 @@ export const NudgeComposeModal: React.FC<{
             }
           : {};
         const result = await apiNudgeAccount(accountId, params);
+        discardDraft();
         onSent?.(result.streak);
         onClose();
       } catch (err: unknown) {
@@ -219,6 +253,7 @@ export const NudgeComposeModal: React.FC<{
       sending,
       onSent,
       onClose,
+      discardDraft,
     ],
   );
 
@@ -283,6 +318,9 @@ export const NudgeComposeModal: React.FC<{
         </div>
       ) : (
         <div className='nudge-compose-modal__body'>
+          {draft.restored && (
+            <DraftRestoredPill onDiscard={handleDiscardDraft} />
+          )}
           <textarea
             className='nudge-compose-modal__textarea'
             placeholder='Write something… (optional)'
