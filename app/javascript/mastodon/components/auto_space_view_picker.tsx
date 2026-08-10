@@ -4,13 +4,23 @@ import { useHistory, useLocation } from 'react-router-dom';
 
 import { useKorner } from 'mastodon/hooks/useKorner';
 
+import { SpaceViewMenu } from './space_view_menu';
 import { SpaceViewPicker } from './space_view_picker';
 
-// AutoSpaceViewPicker — renders <SpaceViewPicker> automatically for
+// AutoSpaceViewPicker — renders one of two shapes automatically for
 // korners that declare a `views` list in their manifest. Current view
 // is derived from the URL; selecting a view navigates via
 // history.push. This is the Frame-provided per-space nav — every korner
 // picks it up from its manifest without wiring up its own switcher.
+//
+// Shape:
+//   * `header.picker: 'menu'`   → `<SpaceViewMenu>` (dropdown).
+//   * `header.picker: 'pills'`  → `<SpaceViewPicker>` (segmented row).
+//   * unset / anything else     → `<SpaceViewPicker>` (default).
+//
+// When the manifest opts into `header.rotator: true`, the title
+// itself carries the switch (via `<AutoSpaceHeader>` → `<ScopeTitle>`)
+// and this component renders nothing — a single switcher per surface.
 //
 // Views come from the manifest (config/korners/<slug>.yaml → `views:`),
 // the same source as the space title and intro, so title + description
@@ -50,10 +60,23 @@ export const AutoSpaceViewPicker: React.FC = () => {
     [history, slug, views],
   );
 
-  if (onSettings || korner?.core || !slug || !views?.length) return null;
+  if (onSettings || !slug || !korner || korner.core || !views?.length)
+    return null;
+
+  // Rotator korners get their view switch through `<AutoSpaceHeader>`
+  // (title-as-switcher). Rendering a second picker on the right
+  // would be a duplicate — return null here and let the header
+  // handle it.
+  if (korner.header?.rotator) return null;
 
   const current = subPath ?? views[0]?.key;
   if (!current) return null;
+
+  if (korner.header?.picker === 'menu') {
+    return (
+      <SpaceViewMenu views={views} current={current} onChange={handleChange} />
+    );
+  }
 
   return (
     <SpaceViewPicker views={views} current={current} onChange={handleChange} />
