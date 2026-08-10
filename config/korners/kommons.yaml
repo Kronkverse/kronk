@@ -88,14 +88,35 @@ settings:
     description: Fires a nudge when a proposal you've backed advances, gets vetoed, or delivers.
 
 # SpaceNav view switcher (first entry = default, bare /hub/kommons).
+# Kommons is a public space — no reach filters — so the top-level
+# lens is the proposal's *state* (Open / Completed) plus surfaces
+# for a Kronker's own drafts and everything they've engaged with
+# (Involved: voted / backed / commented). Annulled proposals still
+# exist in the DB and are queryable via `?filter=annulled`, but
+# nobody wanted a public face for them (Tal 2026-08-10).
+#
+# The Directory (Lattice) is not a view face — it's a distinct
+# surface reachable at /hub/kommons/lattice via internal links
+# (Space page, node metadata page). Keeping it out of the rotator
+# keeps every face here the same *shape* of thing.
 views:
-  - { key: proposals, label: Proposals }
-  - { key: lattice, label: Directory }
+  - { key: open, label: 'Open', tagline: 'Proposals under consideration' }
+  - {
+      key: completed,
+      label: 'Completed',
+      tagline: 'Proposals that have delivered',
+    }
+  - { key: drafts, label: 'Drafts', tagline: 'Your unpublished proposals' }
+  - {
+      key: involved,
+      label: 'Involved',
+      tagline: "Proposals you've voted, backed, or commented on",
+    }
 header:
-  # Proposals + Directory are distinct workflows (live feed vs
-  # browsable lattice), not filters over the same material — render
-  # the switcher as a compact dropdown.
-  picker: menu
+  # Rotator: title itself cycles through the four faces. Manifest
+  # `views:` supplies the labels + per-face taglines. Same treatment
+  # /home + Albutts use.
+  rotator: true
 
 launch: # retrospective — Kommons predates launch cards
   blurb: '₭ommons — the space where structural moves are decided.'
