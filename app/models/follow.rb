@@ -48,6 +48,10 @@ class Follow < ApplicationRecord
   after_destroy :decrement_cache_counters
   after_commit :invalidate_follow_recommendations_cache
   after_commit :invalidate_hash_cache
+  # A new / removed follow shifts the Kommunity orb's edge set; bust
+  # the cached projection so the next viewer sees the change rather
+  # than waiting on OrbController's 5-min TTL.
+  after_commit :bust_kommunity_orb_cache
 
   private
 
@@ -103,5 +107,9 @@ class Follow < ApplicationRecord
 
   def invalidate_follow_recommendations_cache
     Rails.cache.delete("follow_recommendations/#{account_id}")
+  end
+
+  def bust_kommunity_orb_cache
+    Api::V1::Kommunity::OrbController.bust_cache!
   end
 end

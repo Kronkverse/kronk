@@ -37,6 +37,10 @@ export const KronkKosmos = () => {
     if (!canvas) return undefined;
     const ctx = canvas.getContext('2d');
     if (!ctx) return undefined;
+    // `useMatesOrb` returns `null` until its first fetch resolves.
+    // The ambient background can bail cleanly in that window — the
+    // effect re-runs once data lands.
+    if (!orb) return undefined;
 
     const palette = readPalette();
     const geometry = buildGeometry(orb, palette);
