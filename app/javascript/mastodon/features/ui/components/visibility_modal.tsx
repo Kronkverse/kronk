@@ -1,28 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition --
- * `cancelled` in the KrewPicker useEffect cleanup mutates after the
- * async fetch reads it; TS control-flow doesn't track mutation across
- * the closure so `!cancelled` reads as always-truthy — but the guard
- * is load-bearing to prevent a setState after unmount. */
-
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useState,
-} from 'react';
+import { forwardRef, useCallback, useId, useMemo, useState } from 'react';
 import type { FC } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import classNames from 'classnames';
 
-import { List as ImmutableList } from 'immutable';
-
-import { changeComposeKrewTargets } from '@/mastodon/actions/compose';
-import { apiRequestGet } from '@/mastodon/api';
-import type { ApiKrewJSON } from '@/mastodon/api/krew';
 import type { ApiQuotePolicy } from '@/mastodon/api_types/quotes';
 import { isQuotePolicy } from '@/mastodon/api_types/quotes';
 import { isStatusVisibility } from '@/mastodon/api_types/statuses';
@@ -32,14 +14,9 @@ import { Dropdown } from '@/mastodon/components/dropdown';
 import type { SelectItem } from '@/mastodon/components/dropdown_selector';
 import { IconButton } from '@/mastodon/components/icon_button';
 import { messages as privacyMessages } from '@/mastodon/features/compose/components/privacy_dropdown';
-import {
-  createAppSelector,
-  useAppDispatch,
-  useAppSelector,
-} from '@/mastodon/store';
+import { createAppSelector, useAppSelector } from '@/mastodon/store';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
-import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import OrbitIcon from '@/material-icons/400-24px/orbit.svg?react';
 import PublicIcon from '@/material-icons/400-24px/public.svg?react';
@@ -63,23 +40,6 @@ const messages = defineMessages({
   quoteNobody: {
     id: 'visibility_modal.quote_nobody',
     defaultMessage: 'Just me',
-  },
-  krewPickerLabel: {
-    id: 'visibility_modal.krew_picker_label',
-    defaultMessage: 'Which Krews',
-  },
-  krewPickerLoading: {
-    id: 'visibility_modal.krew_picker_loading',
-    defaultMessage: 'Loading your Krews…',
-  },
-  krewPickerEmpty: {
-    id: 'visibility_modal.krew_picker_empty',
-    defaultMessage: "You aren't in any Krews yet.",
-  },
-  krewPickerHelper: {
-    id: 'visibility_modal.krew_picker_helper',
-    defaultMessage:
-      'Pick one or more Krews. Members of any picked Krew will see the post.',
   },
 });
 

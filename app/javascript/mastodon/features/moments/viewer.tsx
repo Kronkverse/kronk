@@ -10,13 +10,7 @@
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import type { MessageDescriptor } from 'react-intl';
-import {
-  FormattedMessage,
-  FormattedRelativeTime,
-  defineMessages,
-  useIntl,
-} from 'react-intl';
+import { FormattedMessage, FormattedRelativeTime, useIntl } from 'react-intl';
 
 import { useHistory, useParams } from 'react-router-dom';
 
