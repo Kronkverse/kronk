@@ -11,22 +11,29 @@ import type {
   AlbumContribution,
 } from 'mastodon/api_types/albutts';
 
-interface CreateAlbumParams {
+// The audience/contribution roster arrays are sent at the TOP LEVEL of the
+// request (the controller reads `params[:krew_ids]` etc.), separate from the
+// album attributes which go under `album: {...}`.
+interface AlbumRoster {
+  krew_ids?: string[]; // audience krews
+  contributor_krew_ids?: string[]; // subset that also contributes
+  contributor_account_ids?: string[]; // specific people who contribute
+}
+
+interface CreateAlbumParams extends AlbumRoster {
   title: string;
   description?: string;
   visibility?: AlbumVisibility;
   contribution?: AlbumContribution;
   cover_media_attachment_id?: string;
-  krew_ids?: string[];
 }
 
-interface UpdateAlbumParams {
+interface UpdateAlbumParams extends AlbumRoster {
   title?: string;
   description?: string;
   visibility?: AlbumVisibility;
   contribution?: AlbumContribution;
   cover_media_attachment_id?: string | null;
-  krew_ids?: string[];
 }
 
 interface ContributePhotoParams {
@@ -48,11 +55,34 @@ export const apiListAlbums = (scope: AlbumsScope = 'all') =>
 export const apiGetAlbum = (id: string) =>
   apiRequestGet<ApiAlbumJSON>(`v1/albutts/albums/${id}`);
 
-export const apiCreateAlbum = (params: CreateAlbumParams) =>
-  apiRequestPost<ApiAlbumJSON>('v1/albutts/albums', { album: params });
+export const apiCreateAlbum = ({
+  krew_ids,
+  contributor_krew_ids,
+  contributor_account_ids,
+  ...album
+}: CreateAlbumParams) =>
+  apiRequestPost<ApiAlbumJSON>('v1/albutts/albums', {
+    album,
+    krew_ids,
+    contributor_krew_ids,
+    contributor_account_ids,
+  });
 
-export const apiUpdateAlbum = (id: string, params: UpdateAlbumParams) =>
-  apiRequestPut<ApiAlbumJSON>(`v1/albutts/albums/${id}`, { album: params });
+export const apiUpdateAlbum = (
+  id: string,
+  {
+    krew_ids,
+    contributor_krew_ids,
+    contributor_account_ids,
+    ...album
+  }: UpdateAlbumParams,
+) =>
+  apiRequestPut<ApiAlbumJSON>(`v1/albutts/albums/${id}`, {
+    album,
+    krew_ids,
+    contributor_krew_ids,
+    contributor_account_ids,
+  });
 
 export const apiDeleteAlbum = (id: string) =>
   apiRequestDelete<Record<string, never>>(`v1/albutts/albums/${id}`);

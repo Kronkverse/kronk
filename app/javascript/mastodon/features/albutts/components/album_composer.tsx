@@ -5,19 +5,12 @@ import { defineMessages, useIntl } from 'react-intl';
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import api from 'mastodon/api';
 import { apiContributePhoto, apiCreateAlbum } from 'mastodon/api/albutts';
-import type {
-  AlbumContribution,
-  AlbumVisibility,
-  ApiAlbumJSON,
-} from 'mastodon/api_types/albutts';
+import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
+import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
 import { Icon } from 'mastodon/components/icon';
-import type {
-  ContributionRoster,
-  ScopePickerMeta,
-  VisibilityScope,
-} from 'mastodon/components/scope_picker';
+import type { VisibilityScope } from 'mastodon/components/scope_picker';
 import { ScopePicker } from 'mastodon/components/scope_picker';
 import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 
@@ -112,25 +105,14 @@ const messages = defineMessages({
 
 const TITLE_MAX = 240;
 const DESCRIPTION_MAX = 4000;
-// ScopePicker option sets — Albutts declares its supported subsets
-// per the docs. Both axes are exposed today; the composer state
-// carries the chosen values. Invited + event contribution rosters
-// are in the vocabulary (the ScopePicker renders them) but their
-// sub-picker UIs land in follow-up PRs.
+// Reach tiers Albutts offers. Krew is not a tier — it's the additive audience
+// axis the ScopePicker renders separately (docs/rebuild/krew_axis_migration.md).
 const VISIBILITY_OPTIONS = [
   'self_only',
   'mates',
   'orbit',
-  'krew',
   'public',
 ] as const satisfies readonly VisibilityScope[];
-const CONTRIBUTION_OPTIONS = [
-  'open',
-  'closed',
-  'invited',
-  'krew',
-  'event',
-] as const satisfies readonly ContributionRoster[];
 // Concurrency cap on the upload pool. Four keeps browser socket count
 // reasonable (major browsers cap ~6 per host) and matches the load
 // Mastodon media processing can absorb without queue backup.
@@ -165,8 +147,14 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [visibility, setVisibility] = useState<AlbumVisibility>('mates');
-  const [contribution, setContribution] = useState<AlbumContribution>('open');
-  const [krewIds, setKrewIds] = useState<string[]>([]);
+  // Contribution: open (anyone who can see it) vs a restricted roster of
+  // krews ∪ people (docs/spaces/albutts.md, additive roster).
+  const [contributionOpen, setContributionOpen] = useState(true);
+  const [audienceKrewIds, setAudienceKrewIds] = useState<string[]>([]);
+  const [contributorKrewIds, setContributorKrewIds] = useState<string[]>([]);
+  const [contributorAccounts, setContributorAccounts] = useState<AccountLite[]>(
+    [],
+  );
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -178,16 +166,34 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   // (docs/rebuild/decisions.md 2026-08-10). Photos are Files — not
   // localStorage-friendly — so they aren't preserved; the text is.
   const draftSnapshot = useMemo(
-    () => ({ title, description, visibility, contribution, krewIds }),
-    [title, description, visibility, contribution, krewIds],
+    () => ({
+      title,
+      description,
+      visibility,
+      contributionOpen,
+      audienceKrewIds,
+      contributorKrewIds,
+      contributorAccounts,
+    }),
+    [
+      title,
+      description,
+      visibility,
+      contributionOpen,
+      audienceKrewIds,
+      contributorKrewIds,
+      contributorAccounts,
+    ],
   );
   const handleRestore = useCallback(
     (d: typeof draftSnapshot) => {
       setTitle(d.title);
       setDescription(d.description);
       setVisibility(d.visibility);
-      setContribution(d.contribution);
-      setKrewIds(d.krewIds);
+      setContributionOpen(d.contributionOpen);
+      setAudienceKrewIds(d.audienceKrewIds);
+      setContributorKrewIds(d.contributorKrewIds);
+      setContributorAccounts(d.contributorAccounts);
     },
     // setters are stable; the closure captures nothing that changes.
     [],
@@ -217,13 +223,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   }, [photos]);
 
   const trimmed = title.trim();
-  // Krew visibility requires at least one Krew selected — the model
-  // validation catches the empty case server-side, but gate the
-  // submit here so the button state reflects the picker's state.
-  const canSubmit =
-    trimmed !== '' &&
-    !pending &&
-    !(visibility === 'krew' && krewIds.length === 0);
+  const canSubmit = trimmed !== '' && !pending;
 
   const doneCount = photos.filter((p) => p.status === 'done').length;
   const failedCount = photos.filter((p) => p.status === 'failed').length;
@@ -240,21 +240,34 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     [],
   );
 
-  const handleVisibilityChange = useCallback(
-    (next: VisibilityScope, meta?: ScopePickerMeta) => {
-      setVisibility(next as AlbumVisibility);
-      if (meta?.krewIds) setKrewIds(meta.krewIds);
-    },
-    [],
-  );
+  const handleVisibilityChange = useCallback((next: VisibilityScope) => {
+    setVisibility(next as AlbumVisibility);
+  }, []);
 
-  const handleContributionChange = useCallback(
-    (next: ContributionRoster, meta?: ScopePickerMeta) => {
-      setContribution(next as AlbumContribution);
-      if (meta?.krewIds) setKrewIds(meta.krewIds);
-    },
-    [],
-  );
+  const handleToggleAudienceKrew = useCallback((id: string) => {
+    setAudienceKrewIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+    // If a krew leaves the audience it can't remain a contributor (you must
+    // be able to see an album to add to it). No-op when adding.
+    setContributorKrewIds((prev) => prev.filter((x) => x !== id));
+  }, []);
+
+  const handleToggleContributorKrew = useCallback((id: string) => {
+    setContributorKrewIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+    // A contributor krew is always also an audience krew.
+    setAudienceKrewIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  }, []);
+
+  const handleContributionOpenChange = useCallback((open: boolean) => {
+    setContributionOpen(open);
+  }, []);
+
+  const handleContributorAccountsChange = useCallback((next: AccountLite[]) => {
+    setContributorAccounts(next);
+  }, []);
 
   // Accept only images and videos. Drag-and-drop hands us the entire
   // OS clipboard including e.g. text/uri-list, so filter to media types
@@ -386,11 +399,14 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           title: trimmed,
           description: description.trim() || undefined,
           visibility,
-          contribution,
-          krew_ids:
-            visibility === 'krew' || contribution === 'krew'
-              ? krewIds
-              : undefined,
+          // The `contribution` enum only needs to encode open vs restricted;
+          // the roster arrays carry the detail.
+          contribution: contributionOpen ? 'open' : 'invited',
+          krew_ids: audienceKrewIds,
+          contributor_krew_ids: contributionOpen ? [] : contributorKrewIds,
+          contributor_account_ids: contributionOpen
+            ? []
+            : contributorAccounts.map((a) => a.id),
         });
       } catch (e) {
         console.error('[albutts] create album failed', e);
@@ -412,9 +428,11 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     })();
   }, [
     canSubmit,
-    contribution,
+    contributionOpen,
+    contributorKrewIds,
+    contributorAccounts,
     description,
-    krewIds,
+    audienceKrewIds,
     photos,
     runUploadPool,
     trimmed,
@@ -527,12 +545,16 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
             when `self_only`). */}
         <ScopePicker
           visibilityOptions={VISIBILITY_OPTIONS}
-          contributionOptions={CONTRIBUTION_OPTIONS}
           visibility={visibility as VisibilityScope}
-          contribution={contribution as ContributionRoster}
-          krewIds={krewIds}
           onVisibilityChange={handleVisibilityChange}
-          onContributionChange={handleContributionChange}
+          audienceKrewIds={audienceKrewIds}
+          onToggleAudienceKrew={handleToggleAudienceKrew}
+          contributionOpen={contributionOpen}
+          onContributionOpenChange={handleContributionOpenChange}
+          contributorKrewIds={contributorKrewIds}
+          onToggleContributorKrew={handleToggleContributorKrew}
+          contributorAccounts={contributorAccounts}
+          onContributorAccountsChange={handleContributorAccountsChange}
           disabled={!!createdAlbum}
         />
 

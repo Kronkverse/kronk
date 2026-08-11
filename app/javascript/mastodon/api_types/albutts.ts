@@ -37,6 +37,13 @@ export interface ApiAlbumJSON {
   description: string | null;
   visibility: AlbumVisibility;
   contribution: AlbumContribution;
+  // Additive contribution roster (2026-08-11). `contribution_open` is the
+  // base (anyone who can see it may add); when false, the roster is the union
+  // of `invited_contributor_ids` (people) and the members of
+  // `contributor_krew_ids`. `krews` (audience) is exposed separately.
+  contribution_open: boolean;
+  contributor_krew_ids: string[];
+  invited_contributor_ids: string[];
   contributor_count: number;
   photo_count: number;
   cover_url: string | null;

@@ -2,98 +2,85 @@ import { useCallback, useState } from 'react';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import type {
-  VisibilityScope,
-  ContributionRoster,
-  ScopePickerMeta,
-} from './scope_picker';
+import type { AccountLite } from './account_multi_select';
+import type { VisibilityScope } from './scope_picker';
 import { ScopePicker } from './scope_picker';
 
-// The canonical two-question scope conversation shared across every
-// korner that scopes visibility + contribution. Stories cover: the
-// Albutts default (all five visibilities, all five contributions),
-// a status-composer-style subset, and the disabled state.
+// The canonical two-question scope conversation. Both axes are additive
+// (2026-08-11): a reach tier + krews for audience; an open/restricted base +
+// a roster of krews ∪ people for contribution.
 //
-// Stories bind against `Harness` rather than `ScopePicker` directly
-// so they don't have to supply the picker's controlled-component
-// required props (visibility / callbacks / etc.) — the Harness
-// owns those internally.
+// Stories bind against `Harness` rather than `ScopePicker` directly so they
+// don't have to supply the controlled-component props — the Harness owns the
+// state. (The krew sub-pickers fetch the viewer's krews from the API, which is
+// empty in Storybook, so they render their empty state.)
 
 const ALL_VIS: readonly VisibilityScope[] = [
   'self_only',
   'mates',
   'orbit',
-  'krew',
   'public',
-];
-const ALL_CONTRIB: readonly ContributionRoster[] = [
-  'open',
-  'closed',
-  'invited',
-  'krew',
-  'event',
 ];
 
 interface HarnessProps {
   visibilityOptions?: readonly VisibilityScope[];
-  contributionOptions?: readonly ContributionRoster[];
   initialVisibility?: VisibilityScope;
-  initialContribution?: ContributionRoster;
+  initialOpen?: boolean;
   disabled?: boolean;
 }
 
-// Controlled-state harness so each story is fully interactive in
-// Storybook — click a chip and see the state flip.
 const Harness: React.FC<HarnessProps> = ({
   visibilityOptions = ALL_VIS,
-  contributionOptions = ALL_CONTRIB,
   initialVisibility = 'mates',
-  initialContribution = 'open',
+  initialOpen = true,
   disabled,
 }) => {
   const [visibility, setVisibility] =
     useState<VisibilityScope>(initialVisibility);
-  const [contribution, setContribution] =
-    useState<ContributionRoster>(initialContribution);
-  const [krewIds, setKrewIds] = useState<string[]>([]);
+  const [audienceKrewIds, setAudienceKrewIds] = useState<string[]>([]);
+  const [contributionOpen, setContributionOpen] = useState(initialOpen);
+  const [contributorKrewIds, setContributorKrewIds] = useState<string[]>([]);
+  const [contributorAccounts, setContributorAccounts] = useState<AccountLite[]>(
+    [],
+  );
 
-  const onVisibilityChange = useCallback(
-    (v: VisibilityScope, meta?: ScopePickerMeta) => {
-      setVisibility(v);
-      if (meta?.krewIds) setKrewIds(meta.krewIds);
+  const toggle = useCallback(
+    (setter: React.Dispatch<React.SetStateAction<string[]>>, id: string) => {
+      setter((prev) =>
+        prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+      );
     },
     [],
   );
-  const onContributionChange = useCallback(
-    (c: ContributionRoster, meta?: ScopePickerMeta) => {
-      setContribution(c);
-      if (meta?.krewIds) setKrewIds(meta.krewIds);
+  const onToggleAudienceKrew = useCallback(
+    (id: string) => {
+      toggle(setAudienceKrewIds, id);
     },
-    [],
+    [toggle],
+  );
+  const onToggleContributorKrew = useCallback(
+    (id: string) => {
+      toggle(setContributorKrewIds, id);
+    },
+    [toggle],
   );
 
   return (
     <div style={{ padding: '2rem', maxWidth: '30rem', background: '#141420' }}>
       <ScopePicker
         visibilityOptions={visibilityOptions}
-        contributionOptions={contributionOptions}
         visibility={visibility}
-        contribution={contribution}
-        krewIds={krewIds}
-        onVisibilityChange={onVisibilityChange}
-        onContributionChange={onContributionChange}
+        onVisibilityChange={setVisibility}
+        audienceKrewIds={audienceKrewIds}
+        onToggleAudienceKrew={onToggleAudienceKrew}
+        contributionOpen={contributionOpen}
+        onContributionOpenChange={setContributionOpen}
+        contributorKrewIds={contributorKrewIds}
+        onToggleContributorKrew={onToggleContributorKrew}
+        contributorAccounts={contributorAccounts}
+        onContributorAccountsChange={setContributorAccounts}
         disabled={disabled}
       />
-      <pre
-        style={{
-          marginTop: '1rem',
-          fontSize: 11,
-          color: '#8880a8',
-          fontFamily: 'monospace',
-        }}
-      >
-        {JSON.stringify({ visibility, contribution, krewIds }, null, 2)}
-      </pre>
     </div>
   );
 };
@@ -110,30 +97,23 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Albutts-style — all five visibility scopes, all five contribution
-// rosters. Default: 'mates' + 'open'.
+// Albutts default — the four reach tiers, contribution open.
 export const Albutts: Story = {
   args: {},
 };
 
-// Status-composer style — no self_only or orbit (statuses don't
-// have those semantics); no `invited` or `event` contribution
-// (statuses are always open-within-scope; a reply either fits the
-// visibility or doesn't).
-export const StatusComposer: Story = {
+// Restricted contribution — shows the contributor krew + people sub-pickers.
+export const RestrictedContribution: Story = {
   args: {
-    visibilityOptions: ['mates', 'krew', 'public'],
-    contributionOptions: ['open'],
-    initialVisibility: 'public',
-    initialContribution: 'open',
+    initialVisibility: 'mates',
+    initialOpen: false,
   },
 };
 
-// Locked-in state (for post-publish read-only view).
+// Locked-in state (post-publish read-only view).
 export const Disabled: Story = {
   args: {
-    initialVisibility: 'krew',
-    initialContribution: 'closed',
+    initialVisibility: 'public',
     disabled: true,
   },
 };
