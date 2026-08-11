@@ -62,6 +62,11 @@ interface HoverInfo {
 
 interface NodeRecord {
   id: string;
+  // Username is optional — the bundled fallback JSON has opaque `m1`
+  // ids without display detail; the live payload from
+  // `Api::V1::Kommunity::OrbController` populates it. Tooltip prefers
+  // username, falls back to id.
+  username?: string;
   rank: number;
   connections: number;
   following: number;
@@ -158,6 +163,7 @@ export const KronkOrb = () => {
       if (!acc) return;
       const record: NodeRecord = {
         id: p.id,
+        username: acc.username,
         rank: acc.rank,
         connections: acc.connections,
         following: acc.following,
@@ -363,7 +369,9 @@ export const KronkOrb = () => {
           following: record.following,
           followers: record.followers,
           interconnections: record.interconnections,
-          handle: record.id, // TODO: swap for username when endpoint lands
+          // Live payload gives a real handle; bundled fallback (opaque
+          // `m1` ids) falls back to the id itself.
+          handle: record.username ? `@${record.username}` : record.id,
         });
       } else {
         hoveredId = null;

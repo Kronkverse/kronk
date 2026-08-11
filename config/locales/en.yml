@@ -1648,6 +1648,8 @@ en:
       aria_label: "Continue as @%{acct}"
       heading: Already signed in
       or: or sign in with another account
+    kommunity:
+      orb_failed: Could not load kommunity orb.
     map:
       presence:
         place_failed: Could not drop your pin. Try again in a moment.
