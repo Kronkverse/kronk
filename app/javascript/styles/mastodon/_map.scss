@@ -799,52 +799,20 @@
   &__items {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+
+    // Feed cards are chunky by design; give them the same breathing
+    // room they get on Home.
+    gap: 16px;
     list-style: none;
     margin: 0;
     padding: 0;
   }
 }
 
-.trek-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid var(--border-default);
-  background: var(--surface-variant-background-color, rgb(255 255 255 / 3%));
-  text-align: start;
-  cursor: pointer;
-
-  &:hover {
-    border-color: var(--kronk-purple, #7c5cff);
-  }
-
-  &__glyph {
-    font-size: 24px;
-    line-height: 1;
-    flex: 0 0 auto;
-  }
-
-  &__body {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-  }
-
-  &__title {
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  &__meta {
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
-}
+// `.trek-card` (the old bespoke button row) retired 2026-08-11 —
+// the Treks list now renders each trek through the same
+// `StatusTrekCard` the feed uses (`_status_trek_card.scss`), so
+// there's no separate style set to maintain here.
 
 .trek-detail {
   display: flex;

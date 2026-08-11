@@ -183,6 +183,24 @@ export const MatesView: React.FC = () => {
   const [ready, setReady] = useState(false);
   const [pins, setPins] = useState<ApiPresencePinJSON[]>([]);
   const [selfPin, setSelfPin] = useState<ApiPresencePinJSON | null>(null);
+
+  // People strip is sorted closest-to-me first when a self-pin exists;
+  // otherwise the API's own order is preserved (freshest first, per
+  // PresenceController). Cosine-corrected planar distance is fine for
+  // ordering — pins are already coarsened, and the pole/date-line
+  // pathologies of pure Euclidean don't apply at community-map scale.
+  const sortedPins = useMemo(() => {
+    if (!selfPin) return pins;
+    const anchorLat = selfPin.lat;
+    const anchorLng = selfPin.lng;
+    const kx = Math.cos((anchorLat * Math.PI) / 180);
+    const distSq = (p: ApiPresencePinJSON) => {
+      const dx = (p.lng - anchorLng) * kx;
+      const dy = p.lat - anchorLat;
+      return dx * dx + dy * dy;
+    };
+    return [...pins].sort((a, b) => distSq(a) - distSq(b));
+  }, [pins, selfPin]);
   // Viewport state — updated on every move/zoom so the render pass
   // knows whether to anonymise and what pixel positions to cluster on.
   const [viewport, setViewport] = useState<{
@@ -507,7 +525,7 @@ export const MatesView: React.FC = () => {
   return (
     <div className='map-mates'>
       <PeopleStrip
-        pins={pins}
+        pins={sortedPins}
         selfPin={selfPin}
         onSelect={handleSelectPin}
         onOpenPlace={openPlacePanel}

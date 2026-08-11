@@ -24,6 +24,7 @@ import { Button } from 'mastodon/components/button';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
+import { StatusTrekCard } from 'mastodon/components/status_trek_card';
 
 import { BASEMAP_URL, basemapLayers, ensurePmtilesProtocol } from './basemap';
 import { TrekComments } from './trek_comments';
@@ -354,13 +355,6 @@ export const TreksView: React.FC = () => {
   const back = useCallback(() => {
     history.push('/hub/map/treks');
   }, [history]);
-  const select = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
-      const id = e.currentTarget.dataset.id;
-      if (id) history.push(`/hub/map/treks/${id}`);
-    },
-    [history],
-  );
 
   const onDetailChange = useCallback(
     (t: ApiTrekJSON | null) => {
@@ -417,28 +411,16 @@ export const TreksView: React.FC = () => {
       {visible.length === 0 ? (
         <p className='trek-list__empty'>{intl.formatMessage(messages.empty)}</p>
       ) : (
+        // Cards match the feed's `StatusTrekCard` shape one-for-one
+        // (route glimpse + stats), so a trek reads the same whether
+        // you meet it in Home or here. Tapping opens the detail via
+        // `to={/hub/map/treks/:id}` (baked into StatusTrekCard).
+        // Draft treks render the same way; the detail view exposes
+        // the publish / delete affordances.
         <ul className='trek-list__items'>
           {visible.map((trek) => (
             <li key={trek.id}>
-              <button
-                type='button'
-                className='trek-card'
-                data-id={trek.id}
-                onClick={select}
-              >
-                <span className='trek-card__glyph'>
-                  {ACTIVITY_GLYPH[trek.activity_type]}
-                </span>
-                <span className='trek-card__body'>
-                  <span className='trek-card__title'>
-                    {trek.title || trek.activity_type}
-                  </span>
-                  <span className='trek-card__meta'>
-                    {km(trek.distance_m)} km · {duration(trek.moving_sec)}
-                    {trek.self && trek.state === 'draft' && ' · draft'}
-                  </span>
-                </span>
-              </button>
+              <StatusTrekCard trek={trek} />
             </li>
           ))}
         </ul>

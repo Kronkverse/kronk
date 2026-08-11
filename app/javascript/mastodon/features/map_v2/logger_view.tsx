@@ -147,17 +147,36 @@ export const LoggerView: React.FC = () => {
     [handleFile],
   );
 
+  // Stop the drop from bubbling to Mastodon's window-level file-drop
+  // handler in features/ui/index.jsx, which otherwise fires
+  // `uploadCompose(files)` on the GPX and 422s ("File has contents
+  // that are not what they are reported to be" — Paperclip spoof
+  // detection). Native handlers on `document` aren't inside the React
+  // tree, so a plain `e.stopPropagation()` isn't enough — the
+  // underlying event needs `stopImmediatePropagation` too.
+  const stopFromWindow = (e: React.DragEvent) => {
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
+  };
+  const onDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    stopFromWindow(e);
+    setDragging(true);
+  }, []);
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    stopFromWindow(e);
     setDragging(true);
   }, []);
   const onDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    stopFromWindow(e);
     setDragging(false);
   }, []);
   const onDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
+      stopFromWindow(e);
       setDragging(false);
       handleFile(e.dataTransfer.files[0]);
     },
@@ -278,7 +297,7 @@ export const LoggerView: React.FC = () => {
         <div
           className={`map-logger__import${dragging ? ' is-dragging' : ''}`}
           onDragOver={onDragOver}
-          onDragEnter={onDragOver}
+          onDragEnter={onDragEnter}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
         >
