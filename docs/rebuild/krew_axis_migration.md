@@ -98,8 +98,9 @@ their own dialect. A later unification is possible but not attempted here.
 | 2/4   | **Album** — adopts `Reachable`, krew orthogonal, migration             | #1319 | ✅ merged      |
 | 3/4   | **Status** — StatusPolicy + fan-out + federation, migration            | #1325 | ✅ merged      |
 | 4a/4  | **Main composer** — additive krew submenu in the reach dropdown        | #1331 | ✅ merged      |
-| 4b/4  | **Moments composer** — single-krew additive submenu                    | #1332 | 🔨 in review   |
-| 4c/4  | **Albutts** `ScopePicker` — needs a design pass (see below)            | —     | ⬜ not started |
+| 4b/4  | **Moments composer** — single-krew additive submenu                    | #1332 | ✅ merged      |
+| 4c/4  | **Albutts** — additive contribution roster (backend)                   | #1339 | ✅ merged      |
+| 4c/4  | **Albutts** `ScopePicker` — additive audience + contribution (UI)      | #1343 | 🔨 in review   |
 | 4d/4  | **Moments edit** (`viewer.tsx`) — additive on the edit path            | —     | ⬜ not started |
 | 4e/4  | **Remove `krew` from the shared `ReachValue`/`StatusVisibility` type** | —     | ⬜ not started |
 
@@ -165,16 +166,27 @@ omits them gets an unchanged plain reach picker.
   `krew_id` independent of reach, removes the gate / clear-on-leave / krew-
   required submit guard / the separate `KornerKrewPicker`.
 
-### 4c — Albutts `ScopePicker` (needs a design pass)
+### 4c — Albutts (decided: split, and made contribution additive too)
 
-Albutts is **not** a mechanical port. Its `ScopePicker` is a two-axis chip
-picker — **visibility** _and_ **contribution** — where `krew` is a chip on
-either axis, sharing one auto-mirrored krew set. The migration only concerns
-**visibility** (audience); `contribution == 'krew'` ("krew members can
-contribute") is a separate roster concept that should stay. Open question to
-settle first: once visibility-krew becomes the additive picker, does it still
-**share** its krew set with contribution-krew, or do they split? Decide, then
-build. Not urgent — accept-both keeps today's picker working.
+Albutts wasn't a mechanical port. Decision (2026-08-11): the audience and
+contributor krew sets are **split**, and — because the motivating case was "an
+album shared with mates where only a few can add" — **contribution itself
+became additive**, mirroring audience: an open/restricted base + a roster that
+is the union of specific **people** and **krews**. This also shipped the
+long-stubbed `invited` roster.
+
+- **Backend (#1339, merged).** The `contribution` enum's `open` already meant
+  "anyone who can see it", so restricted = not-open; no new albums column. The
+  roster is `album_krews.for_contribution` (contributor subset — a contributor
+  krew is always also an audience krew) + a new `album_contributors` join
+  (people). `contributable_by?` = visible AND (owner OR open OR invited-person
+  OR contributor-krew-member). Behaviour-preserving migration + accept-both.
+- **Frontend (#1343, in review).** `ScopePicker` rebuilt: reach chips + an
+  audience-krew multiselect; a contribution open/restricted toggle revealing
+  contributor-krew + contributor-people pickers. New reusable
+  `AccountMultiSelect` + `KrewMultiSelect`. `api/albutts` now sends the roster
+  arrays at the top level (fixes a latent create-time bug where `krew_ids` were
+  nested under `album:` and never read).
 
 ### 4d — Moments edit path
 
