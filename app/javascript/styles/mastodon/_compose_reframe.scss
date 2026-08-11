@@ -355,6 +355,11 @@
     background: var(--kronk-purple-bright);
     border-color: var(--kronk-purple-bright);
   }
+
+  // Single-krew korners (Moments): a round indicator reads as "pick one".
+  &--radio {
+    border-radius: 50%;
+  }
 }
 
 .reach-dropdown__krew-check {

@@ -35,11 +35,11 @@ import api, { apiRequestPost } from 'mastodon/api';
 import { apiAddMediaTag } from 'mastodon/api/media_tags';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
-import { KornerKrewPicker } from 'mastodon/components/korner_krew_picker';
 import { VoiceRecorder, uploadMediaBlob } from 'mastodon/components/media';
 import type { VoiceRecorderChange } from 'mastodon/components/media';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 
 import { MomentsTagPeoplePanel } from './tag_people_panel';
 import type { TaggedAccountLite } from './tag_people_panel';
@@ -47,10 +47,12 @@ import { MomentsTextEditor } from './text_editor';
 import type { TextOverlay } from './text_overlay';
 import { OverlayLayer } from './text_overlay';
 
-// Reach ladder + krew (docs/kronk_feed_and_reach.md §2), minus
-// `self_only` — an audience-of-one on an ephemeral share is a private
-// journal, not a Moment (docs/spaces/moments.md § Reach).
-type Visibility = 'public' | 'orbit' | 'mates' | 'krew';
+// Reach ladder (docs/kronk_feed_and_reach.md §2) minus `self_only` — an
+// audience-of-one on an ephemeral share is a private journal, not a Moment
+// (docs/spaces/moments.md § Reach). Krew is an orthogonal, additive axis now
+// (docs/rebuild/krew_axis_migration.md) — a single `krewId` picked separately,
+// not a visibility value.
+type Visibility = 'public' | 'orbit' | 'mates';
 
 // One tile in the strip. A media tile wraps a picked File (photo or
 // video); a voice tile wraps a recorded clip. `url` is an object URL
@@ -289,9 +291,17 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     [],
   );
 
+  const availableKrews = useAvailableKrews();
+
   const onReachChange = useCallback((next: ReachValue) => {
+    // Krew is independent now — changing reach never clears the krew.
     setVisibility(next as Visibility);
-    if (next !== 'krew') setKrewId(null);
+  }, []);
+
+  // Single-krew: picking a krew replaces any prior pick; picking the current
+  // one clears it (a Moment may have no krew).
+  const onToggleKrew = useCallback((id: string) => {
+    setKrewId((prev) => (prev === id ? null : id));
   }, []);
 
   const uploadFile = useCallback(async (file: File) => {
@@ -311,7 +321,6 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     setPostingProgress({ current: 0, total: items.length });
     setError(null);
     const trimmedCaption = caption.trim();
-    const krewIdOrNull = visibility === 'krew' ? krewId : null;
     try {
       for (const [i, item] of items.entries()) {
         setPostingProgress({ current: i + 1, total: items.length });
@@ -326,7 +335,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
             voice_media_attachment_id: voiceId,
             caption: trimmedCaption,
             visibility,
-            krew_id: krewIdOrNull,
+            krew_id: krewId,
           });
         } else {
           const mediaId = await uploadFile(item.file);
@@ -354,7 +363,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
             media_attachment_id: mediaId,
             caption: trimmedCaption,
             visibility,
-            krew_id: krewIdOrNull,
+            krew_id: krewId,
             text_overlays: item.isVideo ? [] : item.overlays,
           });
         }
@@ -399,15 +408,18 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
           total: postingProgress.total,
         })
       : intl.formatMessage(shellMessages.posting);
-  const canSubmit =
-    items.length > 0 && (visibility !== 'krew' || krewId !== null);
+  const canSubmit = items.length > 0;
 
   const reachControl = (
     <ReachDropdown
       value={visibility as ReachValue}
       onChange={onReachChange}
-      hide={['self_only']}
+      hide={['self_only', 'krew']}
       disabled={posting}
+      krews={availableKrews}
+      selectedKrewIds={krewId ? [krewId] : []}
+      onToggleKrew={onToggleKrew}
+      krewSingleSelect
     />
   );
 
@@ -428,15 +440,6 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
         headerAction={reachControl}
       >
         <div className='moments-composer'>
-          {visibility === 'krew' && (
-            <KornerKrewPicker
-              value={krewId}
-              onChange={setKrewId}
-              disabled={posting}
-              className='moments-composer__krew'
-            />
-          )}
-
           {/* hidden file inputs, driven by the picker + strip "+" */}
           <input
             ref={cameraInputRef}
