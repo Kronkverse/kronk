@@ -223,6 +223,150 @@
   }
 }
 
+// ── additive krew axis: "Krews ›" row + cascading multi-select submenu ──
+.reach-dropdown__button-krewcount {
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.reach-dropdown__divider {
+  height: 1px;
+  margin: 5px 6px;
+  background: var(--border-subtle);
+}
+
+.reach-dropdown__sub-anchor {
+  position: relative;
+}
+
+.reach-dropdown__krews-row {
+  &--open {
+    background: var(--surface-elevated);
+  }
+}
+
+.reach-dropdown__krew-count {
+  margin-inline-start: auto;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--radius-round, 999px);
+  background: var(--kronk-purple-bright);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.reach-dropdown__caret {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+
+  // When there's no count badge the caret still hugs the end.
+  .reach-dropdown__krew-count + & {
+    margin-inline-start: 4px;
+  }
+
+  &:only-of-type {
+    margin-inline-start: auto;
+  }
+}
+
+.reach-dropdown__submenu {
+  position: absolute;
+  inset-inline-end: calc(100% + 8px);
+  top: -6px;
+  z-index: 41;
+  width: 224px;
+  padding: 6px;
+  background: var(--surface-sunken, var(--surface-primary));
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium, 10px);
+  box-shadow: 0 18px 44px -18px rgb(0 0 0 / 60%);
+
+  // Narrow viewports: drop the flyout inline, indented under the row.
+  @media (width <= 560px) {
+    position: static;
+    inset-inline-end: auto;
+    top: auto;
+    width: auto;
+    margin: 4px 0 2px;
+    border-style: dashed;
+    box-shadow: none;
+  }
+}
+
+.reach-dropdown__submenu-title {
+  padding: 6px 9px 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.reach-dropdown__submenu-empty,
+.reach-dropdown__submenu-hint {
+  margin: 0;
+  padding: 4px 9px 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.reach-dropdown__krew {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 9px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: var(--surface-elevated);
+  }
+
+  &--checked {
+    background: color-mix(in srgb, var(--kronk-purple-deep) 45%, transparent);
+  }
+}
+
+.reach-dropdown__krew-box {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  border: 1.5px solid var(--border-default);
+  color: #fff;
+
+  .reach-dropdown__krew--checked & {
+    background: var(--kronk-purple-bright);
+    border-color: var(--kronk-purple-bright);
+  }
+}
+
+.reach-dropdown__krew-check {
+  width: 13px;
+  height: 13px;
+  opacity: 0;
+
+  .reach-dropdown__krew--checked & {
+    opacity: 1;
+  }
+}
+
 // ── action bar: reveal + sliding tools + ring ─────────────────
 // Slimmer than the stock footer, and the send button holds its size — the
 // sliding tools consume the flexible spacer, never the button.
