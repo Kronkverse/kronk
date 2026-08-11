@@ -349,11 +349,7 @@ export const LoggerView: React.FC = () => {
 
         <div className='map-logger__field'>
           <span>{intl.formatMessage(messages.shareLabel)}</span>
-          <ReachDropdown
-            value={reach}
-            onChange={onReach}
-            disabled={isDraft}
-          />
+          <ReachDropdown value={reach} onChange={onReach} disabled={isDraft} />
         </div>
 
         <label className='map-logger__draft'>

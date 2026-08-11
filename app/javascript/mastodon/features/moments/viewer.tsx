@@ -36,7 +36,6 @@ import { MomentsComposer } from './composer';
 import type { TextOverlay } from './text_overlay';
 import { OverlayLayer } from './text_overlay';
 
-
 interface AccountJSON {
   id: string;
   acct: string;
@@ -273,7 +272,11 @@ const MomentViewer = () => {
           const copy = [...prev];
           const found = copy[index];
           if (found)
-            copy[index] = { ...found, visibility: previous, krew: previousKrew };
+            copy[index] = {
+              ...found,
+              visibility: previous,
+              krew: previousKrew,
+            };
           return copy;
         });
       } finally {

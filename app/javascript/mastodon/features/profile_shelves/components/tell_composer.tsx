@@ -262,10 +262,7 @@ export const TellComposer: React.FC<TellComposerProps> = ({
           <label className='profile-shelves__composer-label'>
             {intl.formatMessage(messages.reach)}
           </label>
-          <ReachDropdown
-            value={reach}
-            onChange={handleReachChange}
-          />
+          <ReachDropdown value={reach} onChange={handleReachChange} />
         </div>
 
         <div className='profile-shelves__composer-section profile-shelves__composer-inline'>

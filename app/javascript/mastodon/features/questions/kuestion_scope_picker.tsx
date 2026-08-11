@@ -23,7 +23,5 @@ export const KuestionScopePicker: React.FC<Props> = ({ value, onChange }) => {
     [onChange],
   );
 
-  return (
-    <ReachDropdown value={value} onChange={handleChange} />
-  );
+  return <ReachDropdown value={value} onChange={handleChange} />;
 };
