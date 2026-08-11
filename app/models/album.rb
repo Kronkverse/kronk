@@ -18,6 +18,13 @@ class Album < ApplicationRecord
   has_many :album_krews, dependent: :destroy
   has_many :krews, through: :album_krews
 
+  # Contribution roster (docs/spaces/albutts.md) — who MAY add photos when the
+  # album isn't `open`. Additive: specific people (`album_contributors`) ∪
+  # members of contributor krews (the `album_krews` flagged `for_contribution`;
+  # a contributor krew is always also an audience krew — you must see an album
+  # to add to it). Membership is read via scoped queries in `contributable_by?`.
+  has_many :album_contributors, dependent: :destroy
+
   # Reach ladder. Krew is an ORTHOGONAL, additive axis (via album_krews) — a
   # krew member sees the album on top of its reach tier — not a rung here
   # (krew:2 retired 2026-08-10 → self_only; gap intentional). See Reachable.
@@ -69,46 +76,27 @@ class Album < ApplicationRecord
   end
 
   # Split from `visible_to?` per the Kronk Scope Picker rollout
-  # (2026-08-05). Contribution now consults BOTH axes:
+  # (2026-08-05); made an additive roster 2026-08-11. Contribution
+  # consults BOTH axes:
   #
   #   1. Viewer must be able to see the album (visibility gate).
-  #   2. Viewer must be in the contribution roster.
+  #   2. Then, unless the album is `open`, the viewer must be on the
+  #      contribution roster.
   #
-  # The owner always contributes regardless of roster (there's no
-  # reason to lock yourself out of your own album). Roster branches:
-  #
-  #   * open     — anyone who cleared the visibility gate
-  #   * closed   — owner only
-  #   * invited  — accounts in `album_contributors` (join table
-  #                added in a follow-up PR when the invited-list UX
-  #                ships; safe to return false today because the
-  #                composer doesn't expose the `invited` chip yet)
-  #   * krew     — accounts belonging to any of `album_krews`. This
-  #                REUSES the existing join table because the picker
-  #                auto-mirrors Krew selection across the two axes
-  #                (docs/kronk_scope_picker.md § Decisions).
-  #   * event    — accounts on the linked event's RSVP roster (also
-  #                a follow-up PR when the Kalendar attendee reader
-  #                ships).
+  # The owner always contributes (no reason to lock yourself out).
+  # `open` means anyone who cleared the visibility gate. Otherwise the
+  # roster is additive — the union of:
+  #   * specific people   — `album_contributors` (the "invited" list), and
+  #   * contributor krews — `album_krews` flagged `for_contribution`.
+  # (`event`-sourced rosters — the Kalendar attendee reader — remain a
+  # follow-up; such albums contribute owner-only until it ships, matching
+  # their prior behaviour.)
   def contributable_by?(viewer)
     return false unless visible_to?(viewer)
     return true  if viewer && viewer.id == owner_id
+    return true  if contribution_open?
 
-    # rubocop:disable Lint/DuplicateBranch
-    # `invited` + `event` both return false today because their
-    # sub-picker UIs + backing infrastructure land in follow-up
-    # PRs (account autocomplete for invited, Kalendar attendee
-    # reader for event). Kept as separate branches (rather than a
-    # collapsed `else false`) so the signal about which roster
-    # gets wired next stays legible in the code.
-    case contribution
-    when 'open'    then true
-    when 'closed'  then false
-    when 'invited' then false # TODO(scope-picker): consult album_contributors when the join table ships
-    when 'krew'    then album_krews.exists?(krew_id: viewer.krews.select(:id))
-    when 'event'   then false # TODO(scope-picker): consult event attendees when the Kalendar reader ships
-    end
-    # rubocop:enable Lint/DuplicateBranch
+    invited_to_contribute?(viewer) || contributor_krew_member?(viewer)
   end
 
   private
@@ -126,5 +114,18 @@ class Album < ApplicationRecord
     return false if viewer.nil?
 
     album_krews.exists?(krew_id: viewer.krews.select(:id))
+  end
+
+  # Contribution-roster membership (only consulted for non-`open` albums).
+  def invited_to_contribute?(viewer)
+    return false if viewer.nil?
+
+    album_contributors.exists?(account_id: viewer.id)
+  end
+
+  def contributor_krew_member?(viewer)
+    return false if viewer.nil?
+
+    album_krews.where(for_contribution: true).exists?(krew_id: viewer.krews.select(:id))
   end
 end
