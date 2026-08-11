@@ -97,9 +97,11 @@ their own dialect. A later unification is possible but not attempted here.
 | —     | **Extract `Reachable`** + Moment adopts it                             | #1316 | ✅ merged      |
 | 2/4   | **Album** — adopts `Reachable`, krew orthogonal, migration             | #1319 | ✅ merged      |
 | 3/4   | **Status** — StatusPolicy + fan-out + federation, migration            | #1325 | ✅ merged      |
-| 4a/4  | **Main composer** — additive krew submenu in the reach dropdown        | #1331 | 🔨 in review   |
-| 4b/4  | **Moments + Albutts composers** — adopt the additive submenu           | —     | ⬜ not started |
-| 4c/4  | **Remove `krew` from the shared `ReachValue`/`StatusVisibility` type** | —     | ⬜ not started |
+| 4a/4  | **Main composer** — additive krew submenu in the reach dropdown        | #1331 | ✅ merged      |
+| 4b/4  | **Moments composer** — single-krew additive submenu                    | #1332 | 🔨 in review   |
+| 4c/4  | **Albutts** `ScopePicker` — needs a design pass (see below)            | —     | ⬜ not started |
+| 4d/4  | **Moments edit** (`viewer.tsx`) — additive on the edit path            | —     | ⬜ not started |
+| 4e/4  | **Remove `krew` from the shared `ReachValue`/`StatusVisibility` type** | —     | ⬜ not started |
 
 All three content models (Moment, Album, Status) are done: krew is an additive
 axis end-to-end on the backend, and legacy `visibility=krew` is accept-both
@@ -143,7 +145,7 @@ one post). This lives in the shared `components/reach_dropdown.tsx` behind
 optional props (`krews`, `selectedKrewIds`, `onToggleKrew`); a call site that
 omits them gets an unchanged plain reach picker.
 
-### 4a — Main composer (PR #1331, in review)
+### 4a — Main composer (PR #1331, merged)
 
 - `components/reach_dropdown.tsx` — the additive krew submenu (above).
 - `hooks/useAvailableKrews.ts` — one place to fetch the viewer's postable krews.
@@ -153,16 +155,35 @@ omits them gets an unchanged plain reach picker.
   `krew_ids` separately, so no store/submit change.)
 - Removes the old gated `KrewTargets` chip row.
 
-### 4b — Moments + Albutts composers
+### 4b — Moments composer (PR #1332, in review)
 
-- **Moments** (`features/moments/composer.tsx`, `viewer.tsx`) — Moment's data
-  model is **single-krew** (`krew_id`, not a join), so its submenu is
-  single-select; drop the `visibility === 'krew'` gate + the clear-on-leave.
-- **Albutts** (`components/scope_picker.tsx`) — already a two-axis picker with a
-  Krews axis; conform its krew selection to the additive submenu shape.
-- Any other `hide={['krew']}` call site is already reach-only and needs nothing.
+- `reach_dropdown.tsx` gains an optional `krewSingleSelect` mode — the submenu
+  renders as a **radio** list for single-krew korners.
+- `features/moments/composer.tsx` — Moment's model holds **one** `krew_id`, so
+  it uses `krewSingleSelect` (the call site enforces single via `onToggleKrew`).
+  Drops `'krew'` from its `Visibility` type, hides the rung, always sends
+  `krew_id` independent of reach, removes the gate / clear-on-leave / krew-
+  required submit guard / the separate `KornerKrewPicker`.
 
-### 4c — Retire `krew` as a type value
+### 4c — Albutts `ScopePicker` (needs a design pass)
+
+Albutts is **not** a mechanical port. Its `ScopePicker` is a two-axis chip
+picker — **visibility** _and_ **contribution** — where `krew` is a chip on
+either axis, sharing one auto-mirrored krew set. The migration only concerns
+**visibility** (audience); `contribution == 'krew'` ("krew members can
+contribute") is a separate roster concept that should stay. Open question to
+settle first: once visibility-krew becomes the additive picker, does it still
+**share** its krew set with contribution-krew, or do they split? Decide, then
+build. Not urgent — accept-both keeps today's picker working.
+
+### 4d — Moments edit path
+
+`features/moments/viewer.tsx` still edits a Moment's audience via
+`KornerVisibilityPicker` (a manifest button-strip with a `krew` chip) +
+`KornerKrewPicker`. Bring it onto the additive model for parity with the
+composer. Lower traffic; accept-both holds meanwhile.
+
+### 4e — Retire `krew` as a type value
 
 Once no composer sends `visibility='krew'`, remove `krew` from `ReachValue`
 (`reach_dropdown.tsx`) and `StatusVisibility` (`api_types/statuses.ts`), plus
