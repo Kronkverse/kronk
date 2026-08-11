@@ -10,11 +10,25 @@ import { SpaceBadge } from './space_badge';
 // <KronkFrame.SpaceNav> so every korner picks up the same chrome
 // without opting in per-space.
 //
+// Back-target follows the URL hierarchy:
+//
+//   * `/hub/<slug>`             → `/hub` (label: "Hub")
+//   * `/hub/<slug>/<view-key>`  → `/hub` (a rotator/picker face is
+//                                  still the space landing; the ring
+//                                  cycles, it doesn't descend)
+//   * `/hub/<slug>/<anything-else>` and deeper → `/hub/<slug>`
+//                                  (label: the korner's name)
+//
+// Deep sub-pages (`/propose`, `/pick`, `/p/:id`, `/space/:slug`, …)
+// therefore back up one level to the korner root; the korner root
+// backs out to the Hub grid. Matches Tal's "up the hierarchy"
+// direction (2026-08-11).
+//
 // Spec: docs/kronk_frame.md § SpaceNav — the space badge is the shared
 // affordance across every Stage-based korner. This is what makes that
 // promise real.
 
-const HUB_ROUTE_RE = /^\/hub\/([a-z0-9-]+)/;
+const HUB_ROUTE_RE = /^\/hub\/([a-z0-9-]+)(?:\/([a-z0-9-]+))?/;
 // On /hub/<slug>/settings, AutoSettingsBadge takes over the SpaceNav
 // slot (see components/auto_settings_badge.tsx). Skip here so the two
 // don't double up.
@@ -39,5 +53,14 @@ export const AutoSpaceBadge: React.FC = () => {
   // korner badge — their own chrome (SettingsBadge) takes the slot instead.
   if (!korner || korner.core) return null;
 
-  return <SpaceBadge name={korner.name} backTo='/hub' />;
+  const segment = match[2];
+  const isView =
+    segment !== undefined &&
+    (korner.views ?? []).some((view) => view.key === segment);
+  const atSpaceRoot = segment === undefined || isView;
+
+  const backTo = atSpaceRoot ? '/hub' : `/hub/${slug}`;
+  const name = atSpaceRoot ? 'Hub' : korner.name;
+
+  return <SpaceBadge name={name} backTo={backTo} />;
 };

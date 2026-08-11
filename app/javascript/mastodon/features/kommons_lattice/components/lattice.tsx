@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { FormattedMessage } from 'react-intl';
-
 import { useHistory } from 'react-router-dom';
 
 import ZheIcon from '@/material-icons/400-24px/zhe.svg?react';
@@ -190,11 +188,7 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     if (e.button !== 0) return;
     const target = e.target as HTMLElement;
-    if (
-      target.closest(
-        '.lattice-row, .lattice-panel, .lattice-zoom, .lattice-actions',
-      )
-    ) {
+    if (target.closest('.lattice-row, .lattice-panel, .lattice-zoom')) {
       // A fresh press on a row is a click, not a pan. Clear any `moved` left by
       // a previous pan so the click that follows isn't swallowed by handleClick
       // — otherwise the first node you tap after panning does nothing.
@@ -309,17 +303,12 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
   const openComposer = useCallback(() => {
     setComposerOpen(true);
   }, []);
-  // "+ New Korner" — deep-link into the Proposer scoped to the
-  // kommons.new_korner anchor (declared in config/korners/kommons.yaml).
-  // A pill lives in the Lattice actions cluster because the Directory
-  // is where "everything Kronk contains" is visible, so it's the
-  // natural place to notice a space that's missing.
-  const openNewKornerProposer = useCallback(() => {
-    history.push({
-      pathname: '/hub/kommons/propose',
-      search: '?node=kommons.new_korner',
-    });
-  }, [history]);
+  // The "+ Propose a new Korner" pill retired 2026-08-11 — the
+  // korner's compose bubble (floating `Ж`) already routes to the
+  // Proposer via manifest `compose.route`, so the second inline
+  // entry point was chrome duplication (Tal). The deep-link
+  // `/hub/kommons/propose?node=kommons.new_korner` still works if a
+  // caller ever wants to reach it directly.
   const closeComposer = useCallback(() => {
     setComposerOpen(false);
   }, []);
@@ -452,19 +441,6 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
             />
           )}
         </div>
-      </div>
-
-      <div className='lattice-actions'>
-        <button
-          type='button'
-          className='lattice-actions__new-korner'
-          onClick={openNewKornerProposer}
-        >
-          <FormattedMessage
-            id='kommons_lattice.new_korner'
-            defaultMessage='+ Propose a new Korner'
-          />
-        </button>
       </div>
 
       <div className='lattice-zoom'>

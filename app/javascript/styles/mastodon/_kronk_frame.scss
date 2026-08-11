@@ -292,37 +292,56 @@
   }
 }
 
-// ── SpaceBadge — the "you are in X, tap to go back" pill ───────────
+// ── SpaceBadge — the "back up the hierarchy" pill ──────────────────
 // A reserved-slot component per docs/kronk_frame.md § SpaceNav.
 // Rendered as a flow child of .kronk-frame__space-nav — the SpaceNav
 // grid cell's flex layout positions it (top of the left rail on
-// desktop; left of the horizontal row on mobile).
+// desktop; left of the horizontal row on mobile). Tap navigates one
+// step up the URL hierarchy (see auto_space_badge.tsx); label is the
+// destination name (`Hub` at the space root, the korner name from a
+// sub-page).
+// Aesthetic: the shared Kronk floating-chrome family (smoked-glass
+// backdrop with `backdrop-filter: blur(10px)`, soft shadow, purple
+// accent on hover) — matches the Lattice zoom pill, the map's place
+// control, and the compose FAB. The previous variant (translucent
+// deep-purple wash with a low-contrast accent border) read as washed
+// out against the Kosmos background (Tal 2026-08-11).
 .space-badge {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.35rem 0.85rem 0.35rem 0.5rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--kronk-purple-deep) 60%, transparent);
-  border: 1px solid
-    color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
-  color: var(--kronk-purple-bright);
+  padding: 0.4rem 0.9rem 0.4rem 0.55rem;
+  border-radius: var(--radius-round);
+  background: color-mix(in oklab, var(--surface-elevated) 82%, transparent);
+  border: 1px solid var(--border-default);
+  box-shadow: 0 8px 24px -10px rgb(0 0 0 / 60%);
+  backdrop-filter: blur(10px);
+  color: var(--text-secondary);
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 0.9rem;
   letter-spacing: 0.01em;
   white-space: nowrap;
   text-decoration: none;
   cursor: pointer;
-  backdrop-filter: blur(8px);
   transition:
+    color var(--dur-fast) var(--ease-out),
     background var(--dur-fast) var(--ease-out),
     border-color var(--dur-fast) var(--ease-out);
 
   &:hover,
   &:focus-visible {
-    background: color-mix(in srgb, var(--kronk-purple-deep) 85%, transparent);
-    border-color: var(--kronk-purple-bright);
+    color: var(--text-primary);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-bright) 22%,
+      transparent
+    );
+    border-color: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 55%,
+      transparent
+    );
     outline: none;
 
     .space-badge__arrow {
@@ -331,15 +350,15 @@
   }
 
   &__arrow {
-    width: 0.95rem;
-    height: 0.95rem;
+    width: 0.9rem;
+    height: 0.9rem;
     flex: 0 0 auto;
-    color: color-mix(in oklab, var(--kronk-purple-bright) 85%, white);
+    color: currentcolor;
     transition: transform var(--dur-fast) var(--ease-out);
   }
 
   &__glyph {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     line-height: 1;
     font-family: var(--font-display);
   }
