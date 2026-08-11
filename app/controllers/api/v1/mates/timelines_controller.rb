@@ -124,6 +124,9 @@ class Api::V1::Mates::TimelinesController < Api::BaseController
         rank: i + 1,
         handle: account.acct,
         display_name: account.display_name.presence || account.username,
+        # Static (non-animated) avatar variant — the list view renders
+        # a plain <img>; animation is expensive at roster scale.
+        avatar: full_asset_url(account.avatar_static_url),
         joined_at: (user&.created_at || account.created_at).to_date.iso8601,
         inviter_id: inviter_user_id ? inviter_account_by_user[inviter_user_id]&.to_s : nil,
         connections: mate_counts[account.id] || 0,

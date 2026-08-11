@@ -7,6 +7,7 @@ export interface TimelineMember {
   rank: number;
   handle: string;
   display_name: string;
+  avatar: string; // static (non-animated) avatar URL
   joined_at: string; // ISO date (day-precision; time-of-day is ignored)
   inviter_id: string | null;
   connections: number;
