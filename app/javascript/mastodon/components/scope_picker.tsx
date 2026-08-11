@@ -1,25 +1,30 @@
-// Kronk Scope Picker — the standard "who's this for / who can
-// add?" conversation, shared across every korner that scopes
-// visibility + contribution. See docs/kronk_scope_picker.md.
+// Kronk Scope Picker — the standard "who's this for / who can add?"
+// conversation, shared across every korner that scopes visibility +
+// contribution. See docs/kronk_scope_picker.md and
+// docs/rebuild/krew_axis_migration.md.
 //
-// Controlled component. Parent owns state (visibility, contribution,
-// krewIds, invitedIds, eventId) and passes callbacks. Picker
-// renders the two-question chip UI + inline sub-pickers when
-// needed. Constraint logic (auto-mirror Krews, suppress `open`
-// when `self_only`) is enforced here so each korner doesn't
-// re-derive it.
+// Both axes are ADDITIVE (2026-08-11):
+//   * Audience    = a reach tier (self_only/mates/orbit/public) + any krews.
+//   * Contribution= a base (anyone who can see it, OR a restricted roster)
+//                   + a roster that is the union of specific people and krews.
 //
-// First user: Albutts (2026-08-05). Other korners adopt as their
-// composers migrate.
+// Controlled component. The parent owns all state and passes callbacks; this
+// renders the two-question UI + the additive sub-pickers.
 
 import { useCallback, useMemo } from 'react';
 
-import { FormattedMessage } from 'react-intl';
+import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-import { KornerKrewPicker } from './korner_krew_picker';
+import type { AccountLite } from './account_multi_select';
+import { AccountMultiSelect } from './account_multi_select';
+import { KrewMultiSelect } from './krew_multi_select';
+import type { KrewOption } from './reach_dropdown';
+import { useAvailableKrews } from '../hooks/useAvailableKrews';
 
 // ────────────────────────────────────────────────────────────────
-// Vocabulary (matches docs/kronk_scope_picker.md).
+// Vocabulary (matches docs/kronk_scope_picker.md). `krew` stays in the
+// union for back-compat but is no longer offered as a reach tier — it's the
+// additive krew axis below.
 // ────────────────────────────────────────────────────────────────
 
 export type VisibilityScope =
@@ -29,17 +34,6 @@ export type VisibilityScope =
   | 'krew'
   | 'self_only';
 
-export type ContributionRoster =
-  | 'open'
-  | 'closed'
-  | 'invited'
-  | 'krew'
-  | 'event';
-
-// Chip metadata: label + short helper text (rendered as `title` on
-// the chip for tooltip discoverability). Kept as data (not JSX) so
-// the same records serve programmatic consumers (server-side
-// validation error messages, for example) if they get exported later.
 interface ChipMeta {
   label: React.ReactNode;
   title: string;
@@ -93,89 +87,63 @@ const VISIBILITY_META: Record<VisibilityScope, ChipMeta> = {
   },
 };
 
-const CONTRIBUTION_META: Record<ContributionRoster, ChipMeta> = {
-  open: {
-    label: (
-      <FormattedMessage
-        id='scope_picker.contribution.open'
-        defaultMessage='Anyone who can see it'
-      />
-    ),
-    title: 'Whoever can view this can also add to it.',
+const messages = defineMessages({
+  audienceKrews: {
+    id: 'scope_picker.audience_krews',
+    defaultMessage: 'Also visible to krews',
   },
-  closed: {
-    label: (
-      <FormattedMessage
-        id='scope_picker.contribution.closed'
-        defaultMessage='Only me'
-      />
-    ),
-    title: 'You are the sole contributor.',
+  noKrews: {
+    id: 'scope_picker.no_krews',
+    defaultMessage: 'You’re not in any krews yet.',
   },
-  invited: {
-    label: (
-      <FormattedMessage
-        id='scope_picker.contribution.invited'
-        defaultMessage='People I add'
-      />
-    ),
-    title: 'A specific set of accounts you nominate.',
+  contributionOpen: {
+    id: 'scope_picker.contribution.open',
+    defaultMessage: 'Anyone who can see it',
   },
-  krew: {
-    label: (
-      <FormattedMessage
-        id='scope_picker.contribution.krew'
-        defaultMessage='A specific Krew'
-      />
-    ),
-    title: 'Members of the Krews you pick below.',
+  contributionRestricted: {
+    id: 'scope_picker.contribution.restricted',
+    defaultMessage: 'Only people I choose',
   },
-  event: {
-    label: (
-      <FormattedMessage
-        id='scope_picker.contribution.event'
-        defaultMessage='Anyone at an event'
-      />
-    ),
-    title: "Everyone who RSVP'd to the event you pick below.",
+  contributorKrews: {
+    id: 'scope_picker.contributor_krews',
+    defaultMessage: 'Krews who can add',
   },
-};
+  contributorPeople: {
+    id: 'scope_picker.contributor_people',
+    defaultMessage: 'People who can add',
+  },
+  selfOnlyNote: {
+    id: 'scope_picker.self_only_note',
+    defaultMessage: 'Only you can add to a just-me album.',
+  },
+});
 
 // ────────────────────────────────────────────────────────────────
 // Props.
 // ────────────────────────────────────────────────────────────────
 
-// Which sub-picker payload changed alongside the axis change.
-// Callbacks receive it so korners can persist krewIds / invitedIds
-// / eventId atomically with the axis flip.
-export interface ScopePickerMeta {
-  krewIds?: string[];
-  invitedIds?: string[];
-  eventId?: string | null;
-}
-
 export interface ScopePickerProps {
-  // Which options this korner supports. Declaration-order becomes
-  // render order in the chip row.
+  // Reach tiers this korner offers (declaration order = render order).
   visibilityOptions: readonly VisibilityScope[];
-  contributionOptions: readonly ContributionRoster[];
-
-  // Current state (controlled).
   visibility: VisibilityScope;
-  contribution: ContributionRoster;
-  krewIds?: string[];
-  invitedIds?: string[];
-  eventId?: string | null;
+  onVisibilityChange: (v: VisibilityScope) => void;
 
-  // State updates.
-  onVisibilityChange: (v: VisibilityScope, meta?: ScopePickerMeta) => void;
-  onContributionChange: (c: ContributionRoster, meta?: ScopePickerMeta) => void;
+  // Additive audience krews.
+  audienceKrewIds: readonly string[];
+  onToggleAudienceKrew: (id: string) => void;
 
-  // Optional per-korner label overrides (e.g. Kommons might say
-  // "Who can back it?" instead of "Who can add to it?").
+  // Contribution: open (anyone who can see it) vs a restricted roster.
+  contributionOpen: boolean;
+  onContributionOpenChange: (open: boolean) => void;
+
+  // Restricted-roster members (additive: krews ∪ people).
+  contributorKrewIds: readonly string[];
+  onToggleContributorKrew: (id: string) => void;
+  contributorAccounts: AccountLite[];
+  onContributorAccountsChange: (next: AccountLite[]) => void;
+
   visibilityQuestion?: React.ReactNode;
   contributionQuestion?: React.ReactNode;
-
   disabled?: boolean;
   className?: string;
 }
@@ -184,74 +152,53 @@ export interface ScopePickerProps {
 // Chip row primitive.
 // ────────────────────────────────────────────────────────────────
 
-interface ChipRowProps<T extends string> {
-  options: readonly T[];
-  meta: Record<T, ChipMeta>;
-  value: T;
-  onSelect: (v: T) => void;
-  disabledSet?: ReadonlySet<T>;
-  disabled?: boolean;
-}
-
-interface ChipButtonProps<T extends string> {
-  option: T;
+interface ChipButtonProps {
   isSelected: boolean;
   isDisabled: boolean;
   label: React.ReactNode;
-  title: string;
-  onSelect: (v: T) => void;
+  title?: string;
+  onSelect: () => void;
 }
 
-// Per-chip component so `onClick` is a stable callback rather than
-// an inline arrow inside the map (react/jsx-no-bind).
-const ChipButton = <T extends string>({
-  option,
+const ChipButton: React.FC<ChipButtonProps> = ({
   isSelected,
   isDisabled,
   label,
   title,
   onSelect,
-}: ChipButtonProps<T>) => {
-  const handleClick = useCallback(() => {
+}) => (
+  <button
+    type='button'
+    role='radio'
+    aria-checked={isSelected}
+    className={`scope-picker__chip${isSelected ? ' scope-picker__chip--selected' : ''}`}
+    title={title}
+    disabled={isDisabled}
+    onClick={onSelect}
+  >
+    {label}
+  </button>
+);
+
+const VisibilityChip: React.FC<{
+  option: VisibilityScope;
+  selected: boolean;
+  disabled: boolean;
+  onSelect: (v: VisibilityScope) => void;
+}> = ({ option, selected, disabled, onSelect }) => {
+  const handle = useCallback(() => {
     onSelect(option);
   }, [onSelect, option]);
   return (
-    <button
-      type='button'
-      role='radio'
-      aria-checked={isSelected}
-      className={`scope-picker__chip${isSelected ? ' scope-picker__chip--selected' : ''}`}
-      title={title}
-      disabled={isDisabled}
-      onClick={handleClick}
-    >
-      {label}
-    </button>
+    <ChipButton
+      isSelected={selected}
+      isDisabled={disabled}
+      label={VISIBILITY_META[option].label}
+      title={VISIBILITY_META[option].title}
+      onSelect={handle}
+    />
   );
 };
-
-const ChipRow = <T extends string>({
-  options,
-  meta,
-  value,
-  onSelect,
-  disabledSet,
-  disabled,
-}: ChipRowProps<T>) => (
-  <div className='scope-picker__chips' role='radiogroup'>
-    {options.map((opt) => (
-      <ChipButton
-        key={opt}
-        option={opt}
-        isSelected={opt === value}
-        isDisabled={Boolean(disabled) || Boolean(disabledSet?.has(opt))}
-        label={meta[opt].label}
-        title={meta[opt].title}
-        onSelect={onSelect}
-      />
-    ))}
-  </div>
-);
 
 // ────────────────────────────────────────────────────────────────
 // The picker.
@@ -259,82 +206,43 @@ const ChipRow = <T extends string>({
 
 export const ScopePicker: React.FC<ScopePickerProps> = ({
   visibilityOptions,
-  contributionOptions,
   visibility,
-  contribution,
-  krewIds,
-  invitedIds,
-  eventId,
   onVisibilityChange,
-  onContributionChange,
+  audienceKrewIds,
+  onToggleAudienceKrew,
+  contributionOpen,
+  onContributionOpenChange,
+  contributorKrewIds,
+  onToggleContributorKrew,
+  contributorAccounts,
+  onContributorAccountsChange,
   visibilityQuestion,
   contributionQuestion,
-  disabled,
+  disabled = false,
   className,
 }) => {
-  // ── Constraint: contribution `open` doesn't make sense with
-  // ── visibility `self_only` (nobody besides the owner sees it,
-  // ── so 'anyone who can see it' collapses to just the owner —
-  // ── which is `closed`). Suppress `open` in that state.
-  const contributionDisabled = useMemo<ReadonlySet<ContributionRoster>>(() => {
-    const set = new Set<ContributionRoster>();
-    if (visibility === 'self_only') set.add('open');
-    return set;
-  }, [visibility]);
+  const intl = useIntl();
+  const krews: readonly KrewOption[] = useAvailableKrews();
 
-  // Krew sub-picker — SHARED between visibility and contribution
-  // per the auto-mirror decision. Single-select for now (matches
-  // KornerKrewPicker); the array form is preserved because the
-  // backend already stores album_krews as a many-to-many and
-  // multi-select is likely in a later iteration.
-  // `?? null` — with noUncheckedIndexedAccess `krewIds[0]` typed
-  // as `string | undefined` even after the length guard; the picker
-  // expects `string | null`.
-  const activeKrewId: string | null =
-    krewIds && krewIds.length > 0 ? (krewIds[0] ?? null) : null;
-  const handleKrewChange = useCallback(
-    (nextKrewId: string) => {
-      const meta: ScopePickerMeta = { krewIds: [nextKrewId] };
-      // Fire on whichever axis is currently `krew` — usually both
-      // when auto-mirrored. If only one is `krew`, fire that one.
-      if (visibility === 'krew') onVisibilityChange('krew', meta);
-      if (contribution === 'krew') onContributionChange('krew', meta);
-    },
-    [visibility, contribution, onVisibilityChange, onContributionChange],
-  );
+  const audienceIsSelfOnly = visibility === 'self_only';
 
-  // Visibility change handler — auto-mirror Krew: if the user
-  // picks `krew` for visibility while contribution is already
-  // `krew`, share the same Krew list (contribution krew
-  // auto-follows visibility krew).
-  const handleVisibilityChange = useCallback(
-    (next: VisibilityScope) => {
-      if (next === visibility) return;
-      const meta: ScopePickerMeta = { krewIds };
-      onVisibilityChange(next, meta);
-      // If flipping AWAY from `krew`, and contribution is `krew`,
-      // contribution's Krew list still holds — but the shared
-      // picker is only rendered when at least one axis needs it,
-      // so the row stays visible via contribution.
-    },
-    [visibility, krewIds, onVisibilityChange],
-  );
-
-  const handleContributionChange = useCallback(
-    (next: ContributionRoster) => {
-      if (next === contribution) return;
-      const meta: ScopePickerMeta = { krewIds, invitedIds, eventId };
-      onContributionChange(next, meta);
-    },
-    [contribution, krewIds, invitedIds, eventId, onContributionChange],
-  );
-
-  const showKrewSubpicker = visibility === 'krew' || contribution === 'krew';
+  const handleOpen = useCallback(() => {
+    onContributionOpenChange(true);
+  }, [onContributionOpenChange]);
+  const handleRestricted = useCallback(() => {
+    onContributionOpenChange(false);
+  }, [onContributionOpenChange]);
 
   const rootClass = `scope-picker ${className ?? ''}`.trim();
 
+  const krewsEmptyLabel = useMemo(
+    () => intl.formatMessage(messages.noKrews),
+    [intl],
+  );
+
   return (
     <fieldset className={rootClass} disabled={disabled}>
+      {/* ── Audience ─────────────────────────────────────────── */}
       <div className='scope-picker__question'>
         <legend className='scope-picker__legend'>
           {visibilityQuestion ?? (
@@ -344,15 +252,33 @@ export const ScopePicker: React.FC<ScopePickerProps> = ({
             />
           )}
         </legend>
-        <ChipRow
-          options={visibilityOptions}
-          meta={VISIBILITY_META}
-          value={visibility}
-          onSelect={handleVisibilityChange}
-          disabled={disabled}
-        />
+        <div className='scope-picker__chips' role='radiogroup'>
+          {visibilityOptions.map((opt) => (
+            <VisibilityChip
+              key={opt}
+              option={opt}
+              selected={opt === visibility}
+              disabled={disabled}
+              onSelect={onVisibilityChange}
+            />
+          ))}
+        </div>
+
+        <div className='scope-picker__subpicker'>
+          <div className='scope-picker__subpicker-label'>
+            {intl.formatMessage(messages.audienceKrews)}
+          </div>
+          <KrewMultiSelect
+            options={krews}
+            selectedIds={audienceKrewIds}
+            onToggle={onToggleAudienceKrew}
+            disabled={disabled}
+            emptyLabel={krewsEmptyLabel}
+          />
+        </div>
       </div>
 
+      {/* ── Contribution ─────────────────────────────────────── */}
       <div className='scope-picker__question'>
         <legend className='scope-picker__legend'>
           {contributionQuestion ?? (
@@ -362,60 +288,58 @@ export const ScopePicker: React.FC<ScopePickerProps> = ({
             />
           )}
         </legend>
-        <ChipRow
-          options={contributionOptions}
-          meta={CONTRIBUTION_META}
-          value={contribution}
-          onSelect={handleContributionChange}
-          disabledSet={contributionDisabled}
-          disabled={disabled}
-        />
+
+        {audienceIsSelfOnly ? (
+          <p className='scope-picker__note'>
+            {intl.formatMessage(messages.selfOnlyNote)}
+          </p>
+        ) : (
+          <>
+            <div className='scope-picker__chips' role='radiogroup'>
+              <ChipButton
+                isSelected={contributionOpen}
+                isDisabled={disabled}
+                label={intl.formatMessage(messages.contributionOpen)}
+                onSelect={handleOpen}
+              />
+              <ChipButton
+                isSelected={!contributionOpen}
+                isDisabled={disabled}
+                label={intl.formatMessage(messages.contributionRestricted)}
+                onSelect={handleRestricted}
+              />
+            </div>
+
+            {!contributionOpen && (
+              <>
+                <div className='scope-picker__subpicker'>
+                  <div className='scope-picker__subpicker-label'>
+                    {intl.formatMessage(messages.contributorKrews)}
+                  </div>
+                  <KrewMultiSelect
+                    options={krews}
+                    selectedIds={contributorKrewIds}
+                    onToggle={onToggleContributorKrew}
+                    disabled={disabled}
+                    emptyLabel={krewsEmptyLabel}
+                  />
+                </div>
+
+                <div className='scope-picker__subpicker'>
+                  <div className='scope-picker__subpicker-label'>
+                    {intl.formatMessage(messages.contributorPeople)}
+                  </div>
+                  <AccountMultiSelect
+                    value={contributorAccounts}
+                    onChange={onContributorAccountsChange}
+                    disabled={disabled}
+                  />
+                </div>
+              </>
+            )}
+          </>
+        )}
       </div>
-
-      {/* Shared Krew sub-picker — one instance drives both axes
-         when they mirror. Renders below both questions rather
-         than under a specific chip so the auto-mirror is
-         visually obvious ("this Krew applies to both"). */}
-      {showKrewSubpicker && (
-        <div className='scope-picker__subpicker scope-picker__subpicker--krew'>
-          <div className='scope-picker__subpicker-label'>
-            <FormattedMessage
-              id='scope_picker.krew.label'
-              defaultMessage='Which Krew?'
-            />
-          </div>
-          <KornerKrewPicker
-            value={activeKrewId}
-            onChange={handleKrewChange}
-            disabled={disabled}
-          />
-        </div>
-      )}
-
-      {/* Invited-list and event sub-pickers are declared in the
-         vocabulary but not yet implemented — they need supporting
-         infrastructure (account autocomplete, Kalendar event
-         picker + attendee query) that lands in follow-up PRs.
-         Until then, korners can render them as disabled chips or
-         omit from contributionOptions entirely. */}
-      {contribution === 'invited' && (
-        <div className='scope-picker__subpicker scope-picker__subpicker--invited'>
-          <FormattedMessage
-            id='scope_picker.invited.placeholder'
-            defaultMessage='Invited-list picker is not built yet — you have {n} account(s) selected.'
-            values={{ n: invitedIds?.length ?? 0 }}
-          />
-        </div>
-      )}
-      {contribution === 'event' && (
-        <div className='scope-picker__subpicker scope-picker__subpicker--event'>
-          <FormattedMessage
-            id='scope_picker.event.placeholder'
-            defaultMessage='Event picker is not built yet — selected event: {id}'
-            values={{ id: eventId ?? '—' }}
-          />
-        </div>
-      )}
     </fieldset>
   );
 };
