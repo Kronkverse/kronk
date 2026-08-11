@@ -49,8 +49,9 @@ RSpec.describe 'Albutts albums API' do
 
       album = created_album
       expect(album.album_krews.find_by(krew_id: krew.id).for_contribution).to be false
-      expect(album.visible_to?(member)).to be true       # sees it via the audience krew
-      expect(album.contributable_by?(member)).to be false # but can't add photos
+      # Sees it via the audience krew, but can't add photos.
+      expect(album.visible_to?(member)).to be true
+      expect(album.contributable_by?(member)).to be false
     end
 
     it 'adds specific invited people to the contribution roster' do
