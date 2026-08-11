@@ -762,7 +762,6 @@ const Inspector: React.FC<{
         <ReachDropdown
           value={card.visibility}
           onChange={handleVisSelect}
-          hide={['krew']}
         />
       </div>
 

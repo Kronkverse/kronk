@@ -265,7 +265,6 @@ export const TellComposer: React.FC<TellComposerProps> = ({
           <ReachDropdown
             value={reach}
             onChange={handleReachChange}
-            hide={['krew']}
           />
         </div>
 

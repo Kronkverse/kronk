@@ -414,7 +414,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     <ReachDropdown
       value={visibility as ReachValue}
       onChange={onReachChange}
-      hide={['self_only', 'krew']}
+      hide={['self_only']}
       disabled={posting}
       krews={availableKrews}
       selectedKrewIds={krewId ? [krewId] : []}

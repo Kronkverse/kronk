@@ -266,7 +266,7 @@ const TrekDetail: React.FC<{
         <div className='trek-detail__actions'>
           <div className='trek-detail__reach'>
             <span>{intl.formatMessage(messages.shareWith)}</span>
-            <ReachDropdown value={reach} onChange={onReach} hide={['krew']} />
+            <ReachDropdown value={reach} onChange={onReach} />
           </div>
           <Button onClick={publish}>
             {intl.formatMessage(messages.publish)}

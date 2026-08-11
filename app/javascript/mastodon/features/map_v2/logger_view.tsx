@@ -352,7 +352,6 @@ export const LoggerView: React.FC = () => {
           <ReachDropdown
             value={reach}
             onChange={onReach}
-            hide={['krew']}
             disabled={isDraft}
           />
         </div>

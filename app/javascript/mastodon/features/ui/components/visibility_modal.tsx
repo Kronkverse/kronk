@@ -176,7 +176,6 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
     const disableQuotePolicy =
       visibility === 'private' ||
       visibility === 'direct' ||
-      visibility === 'krew' ||
       visibility === 'mates' ||
       visibility === 'orbit' ||
       visibility === 'self_only';
@@ -230,18 +229,8 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
         iconComponent: LockIcon,
       });
 
-      if (!disablePublicVisibilities) {
-        // Krew — a separate group-target axis. Selecting it makes
-        // KrewTargets in the composer the multi-select for which Krews
-        // carry the post.
-        items.push({
-          value: 'krew',
-          text: intl.formatMessage(privacyMessages.krew_short),
-          meta: intl.formatMessage(privacyMessages.krew_long),
-          icon: 'group',
-          iconComponent: GroupsIcon,
-        });
-      }
+      // Krew is no longer a visibility — it's an additive audience axis picked
+      // in the composer (docs/rebuild/krew_axis_migration.md).
 
       return items;
     }, [intl, disablePublicVisibilities]);
@@ -360,8 +349,6 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
               )}
             </div>
 
-            {visibility === 'krew' && !statusId && <KrewPicker />}
-
             <div
               className={classNames('visibility-dropdown', {
                 disabled: disableQuotePolicy,
@@ -468,124 +455,4 @@ const QuotePolicyHelper: FC<
   }
 
   return <p {...otherProps}>{hintText}</p>;
-};
-
-// Inline Krew picker — appears in the visibility modal when the user
-// selects 'krew'. Reads and writes the compose reducer's krew_ids
-// directly so the selection is picked up by the compose form on Save.
-// KRONK_KREWS §7.1: a Krew-scoped post carries at least one krew_id;
-// PostStatusService rejects visibility='krew' with an empty list.
-const KrewPicker: FC = () => {
-  const intl = useIntl();
-  const dispatch = useAppDispatch();
-  const selectedIds = useAppSelector(
-    (state) =>
-      (state.compose.get('krew_ids') ??
-        ImmutableList()) as ImmutableList<string>,
-  );
-
-  const [available, setAvailable] = useState<ApiKrewJSON[]>([]);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const krews = await apiRequestGet<ApiKrewJSON[]>('v1/krews', {
-          limit: 100,
-        });
-        if (!cancelled) {
-          setAvailable(
-            krews.filter((k) => k.viewer_role !== null && !k.archived),
-          );
-        }
-      } catch {
-        // Best-effort — the empty state renders if this fails.
-      } finally {
-        if (!cancelled) setLoaded(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const toggle = useCallback(
-    (id: string) => {
-      const next = selectedIds.includes(id)
-        ? selectedIds.filter((x) => x !== id)
-        : selectedIds.push(id);
-      dispatch(changeComposeKrewTargets(next.toArray()));
-    },
-    [dispatch, selectedIds],
-  );
-
-  const handleToggleClick = useCallback<
-    React.MouseEventHandler<HTMLButtonElement>
-  >(
-    (e) => {
-      const id = e.currentTarget.dataset.id;
-      if (id) toggle(id);
-    },
-    [toggle],
-  );
-
-  return (
-    <div className='visibility-dropdown krew-picker'>
-      <p className='visibility-dropdown__label'>
-        {intl.formatMessage(messages.krewPickerLabel)}
-      </p>
-
-      {!loaded && (
-        <p className='visibility-dropdown__helper'>
-          {intl.formatMessage(messages.krewPickerLoading)}
-        </p>
-      )}
-
-      {loaded && available.length === 0 && (
-        <p className='visibility-dropdown__helper'>
-          {intl.formatMessage(messages.krewPickerEmpty)}
-        </p>
-      )}
-
-      {loaded && available.length > 0 && (
-        <>
-          <ul className='krew-picker__list' role='group'>
-            {available.map((k) => {
-              const selected = selectedIds.includes(k.id);
-              return (
-                <li key={k.id}>
-                  <button
-                    type='button'
-                    role='checkbox'
-                    aria-checked={selected}
-                    data-id={k.id}
-                    onClick={handleToggleClick}
-                    className={classNames('krew-picker__row', {
-                      'krew-picker__row--active': selected,
-                    })}
-                  >
-                    <span
-                      className={classNames('krew-picker__check', {
-                        'krew-picker__check--on': selected,
-                      })}
-                      aria-hidden='true'
-                    />
-                    <span className='krew-picker__name'>{k.name}</span>
-                    <span className='krew-picker__meta'>
-                      {k.member_count}{' '}
-                      {k.member_count === 1 ? 'member' : 'members'}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-          <p className='visibility-dropdown__helper'>
-            {intl.formatMessage(messages.krewPickerHelper)}
-          </p>
-        </>
-      )}
-    </div>
-  );
 };
