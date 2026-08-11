@@ -72,9 +72,77 @@ interface NodeRecord {
   following: number;
   followers: number;
   interconnections: number;
-  mesh: THREE.Mesh;
+  // Sprite (not Mesh): the node renders as a camera-facing quad with
+  // a circular texture — a coloured disc initially, upgraded to the
+  // account's avatar once the image fetch completes. Sprite keeps the
+  // disc perpendicular to the camera as the user spins the sphere,
+  // so avatars always face the viewer.
+  mesh: THREE.Sprite;
   color: THREE.Color;
 }
+
+// Build a solid-colour circular texture on a canvas — the placeholder
+// look for a node before its avatar downloads (and the final look for
+// nodes whose avatar_url isn't available or fails to load).
+const buildCircleTexture = (
+  rgb: readonly [number, number, number],
+): THREE.CanvasTexture => {
+  const size = 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.fillStyle = `rgb(${rgb[0].toString()}, ${rgb[1].toString()}, ${rgb[2].toString()})`;
+    ctx.fill();
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  return tex;
+};
+
+// Load an avatar URL and clip it into a circular canvas texture.
+// Resolves `null` on any failure (network error, CORS blocking the
+// canvas paint) — caller keeps the placeholder disc in that case.
+const loadAvatarCircle = (url: string): Promise<THREE.CanvasTexture | null> =>
+  new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const size = 96;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(null);
+        return;
+      }
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      try {
+        ctx.drawImage(img, 0, 0, size, size);
+        ctx.restore();
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.needsUpdate = true;
+        resolve(tex);
+      } catch {
+        // Tainted canvas (CORS): the browser refuses to read pixels
+        // back into a texture. Fall through to the placeholder disc.
+        resolve(null);
+      }
+    };
+    img.onerror = () => {
+      resolve(null);
+    };
+    img.src = url;
+  });
 
 export const KronkOrb = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -143,6 +211,9 @@ export const KronkOrb = () => {
     });
 
     const usedSocketPositions = new Set<string>();
+    // Track baked textures so we can dispose on unmount + on avatar
+    // swap. WebGL leaks otherwise.
+    const nodeTextures: THREE.Texture[] = [];
     layout.placements.forEach((p) => {
       const rad =
         1.5 +
@@ -152,12 +223,24 @@ export const KronkOrb = () => {
         p.col[1] / 255,
         p.col[2] / 255,
       );
-      const mesh = new THREE.Mesh(
-        new THREE.SphereGeometry(rad, 16, 12),
-        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1 }),
-      );
-      mesh.position.set(p.pos[0], p.pos[1], p.pos[2]);
-      nodeGroup.add(mesh);
+      // Placeholder texture: a coloured circle. If the account has an
+      // avatar_url we async-load it and swap the texture in place
+      // when it arrives. Tainted-canvas / network-failure keeps this
+      // disc — sphere never has a blank hole.
+      const tex = buildCircleTexture(p.col);
+      nodeTextures.push(tex);
+      const material = new THREE.SpriteMaterial({
+        map: tex,
+        transparent: true,
+        opacity: 1,
+      });
+      const sprite = new THREE.Sprite(material);
+      sprite.position.set(p.pos[0], p.pos[1], p.pos[2]);
+      // Sprite scale is world-unit width / height; double the sphere
+      // rad so the disc reads at a comparable visual size to the
+      // previous SphereGeometry(rad, …).
+      sprite.scale.setScalar(rad * 2);
+      nodeGroup.add(sprite);
       usedSocketPositions.add(`${p.pos[0]},${p.pos[1]},${p.pos[2]}`);
       const acc = orb.accounts.find((a) => a.id === p.id);
       if (!acc) return;
@@ -169,11 +252,22 @@ export const KronkOrb = () => {
         following: acc.following,
         followers: acc.followers,
         interconnections: acc.interconnections,
-        mesh,
+        mesh: sprite,
         color,
       };
       nodes.push(record);
       byId.set(p.id, record);
+      if (acc.avatar_url) {
+        void loadAvatarCircle(acc.avatar_url).then((avatarTex) => {
+          if (!avatarTex) return;
+          // Swap on the live material — dispose the old placeholder
+          // to release its GPU texture memory.
+          material.map = avatarTex;
+          material.needsUpdate = true;
+          tex.dispose();
+          nodeTextures.push(avatarTex);
+        });
+      }
     });
 
     // Empty sockets — the community's remaining room, shown as dim
@@ -426,11 +520,23 @@ export const KronkOrb = () => {
       }
       nodes.forEach((n) => {
         const mat = n.mesh.material;
-        if (!(mat instanceof THREE.MeshBasicMaterial)) return;
+        // Sprite always carries SpriteMaterial; keep the check so a
+        // typed mat lets us touch opacity/transparent without a cast.
+        if (!(mat instanceof THREE.SpriteMaterial)) return;
         const lit = !sel || neighbourhood.has(n.id);
         mat.transparent = true;
         mat.opacity = lit ? 1 : 0.22;
-        n.mesh.scale.setScalar(n.id === sel ? 1.7 : lit ? 1 : 0.8);
+        // Sprite's base scale is set at build-time (rad*2); the
+        // highlight multiplies from that baseline via `setScalar`
+        // — matches the Mesh behaviour it replaces since both use
+        // scale.x/y/z uniformly.
+        const baseScale =
+          n.mesh.userData.baseScale === undefined
+            ? n.mesh.scale.x
+            : (n.mesh.userData.baseScale as number);
+        n.mesh.userData.baseScale = baseScale;
+        const factor = n.id === sel ? 1.7 : lit ? 1 : 0.8;
+        n.mesh.scale.setScalar(baseScale * factor);
       });
       const ambMat = ambientLines.material;
       if (ambMat instanceof THREE.LineBasicMaterial) {
@@ -491,9 +597,15 @@ export const KronkOrb = () => {
       shell.geometry.dispose();
       if (shell.material instanceof THREE.Material) shell.material.dispose();
       nodes.forEach((n) => {
-        n.mesh.geometry.dispose();
+        // Sprite's geometry is a shared static (see three/src/objects/
+        // Sprite) — disposing it would break every other sprite in
+        // the app, so only the material comes out here. Material
+        // holds `.map` which we dispose via `nodeTextures` below.
         if (n.mesh.material instanceof THREE.Material)
           n.mesh.material.dispose();
+      });
+      nodeTextures.forEach((t) => {
+        t.dispose();
       });
       emptyGeo.dispose();
       emptyMat.dispose();
