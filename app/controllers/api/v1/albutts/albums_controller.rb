@@ -35,9 +35,10 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
 
   def create
     @album = current_account.owned_albums.new(album_params_for_create)
-    attach_krews! if krew_ids_param.any?
 
     if @album.save
+      sync_krews!
+      sync_contributors!
       Albutts::PublishAlbum.new(@album).call
       render json: @album.reload, serializer: REST::AlbumSerializer, status: 201
     else
@@ -49,8 +50,9 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
     authorize_owner!
 
     if @album.update(album_params_for_update)
-      attach_krews! if params.key?(:krew_ids)
-      render json: @album, serializer: REST::AlbumSerializer
+      sync_krews! if krew_params_present?
+      sync_contributors! if params.key?(:contributor_account_ids)
+      render json: @album.reload, serializer: REST::AlbumSerializer
     else
       render json: { error: @album.errors.full_messages.to_sentence }, status: :unprocessable_entity
     end
@@ -112,14 +114,49 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
     Array(params[:krew_ids]).map(&:to_i).reject(&:zero?).uniq
   end
 
-  # Sync the album's krew set (the orthogonal, additive-visibility axis). On
-  # create it seeds the join table; on update it replaces the set wholesale
-  # (an empty list removes every krew).
-  def attach_krews!
-    krew_ids = krew_ids_param
-    @album.album_krews.where.not(krew_id: krew_ids).destroy_all
+  # Krews that also grant contribution. Explicit param wins; otherwise a legacy
+  # `contribution=krew` client (no contributor list) means the audience krews
+  # double as contributors — the pre-2026-08-11 auto-mirror behaviour.
+  def contributor_krew_ids_param
+    if params.key?(:contributor_krew_ids)
+      Array(params[:contributor_krew_ids]).map(&:to_i).reject(&:zero?).uniq
+    elsif @album.contribution_krew?
+      krew_ids_param
+    else
+      []
+    end
+  end
+
+  def contributor_account_ids_param
+    Array(params[:contributor_account_ids]).map(&:to_i).reject(&:zero?).uniq
+  end
+
+  def krew_params_present?
+    params.key?(:krew_ids) || params.key?(:contributor_krew_ids)
+  end
+
+  # Sync the album's krew set. Audience krews (the additive-visibility axis) are
+  # the union of `krew_ids` and any contributor krews — a contributor krew must
+  # also see the album. `for_contribution` flags the contributor subset. On
+  # update this replaces the set wholesale (an empty list removes every krew).
+  def sync_krews!
+    contributor_ids = contributor_krew_ids_param
+    audience_ids = (krew_ids_param + contributor_ids).uniq
+
+    @album.album_krews.where.not(krew_id: audience_ids).destroy_all
     existing = @album.album_krews.pluck(:krew_id)
-    (krew_ids - existing).each { |kid| @album.album_krews.create!(krew_id: kid) }
+    (audience_ids - existing).each { |kid| @album.album_krews.create!(krew_id: kid) }
+
+    @album.album_krews.where(krew_id: contributor_ids).update_all(for_contribution: true) if contributor_ids.any?
+    @album.album_krews.where.not(krew_id: contributor_ids).update_all(for_contribution: false)
+  end
+
+  # Sync the specific-people contribution roster (the "invited" list).
+  def sync_contributors!
+    account_ids = contributor_account_ids_param
+    @album.album_contributors.where.not(account_id: account_ids).destroy_all
+    existing = @album.album_contributors.pluck(:account_id)
+    (account_ids - existing).each { |aid| @album.album_contributors.create!(account_id: aid) }
   end
 
   def authorize_owner!

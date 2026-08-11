@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_10_030000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_11_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -231,10 +231,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_10_030000) do
     t.index ["target_type", "target_id"], name: "index_admin_action_logs_on_target_type_and_target_id"
   end
 
+  create_table "album_contributors", force: :cascade do |t|
+    t.bigint "album_id", null: false
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_album_contributors_on_account_id"
+    t.index ["album_id", "account_id"], name: "index_album_contributors_on_album_and_account", unique: true
+    t.index ["album_id"], name: "index_album_contributors_on_album_id"
+  end
+
   create_table "album_krews", force: :cascade do |t|
     t.bigint "album_id", null: false
     t.bigint "krew_id", null: false
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.boolean "for_contribution", default: false, null: false
     t.index ["album_id", "krew_id"], name: "index_album_krews_on_album_and_krew", unique: true
     t.index ["album_id"], name: "index_album_krews_on_album_id"
     t.index ["krew_id"], name: "index_album_krews_on_krew_id"
@@ -2149,6 +2160,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_10_030000) do
   add_foreign_key "account_warnings", "reports", on_delete: :cascade
   add_foreign_key "accounts", "accounts", column: "moved_to_account_id", on_delete: :nullify
   add_foreign_key "admin_action_logs", "accounts", on_delete: :cascade
+  add_foreign_key "album_contributors", "accounts", on_delete: :cascade
+  add_foreign_key "album_contributors", "albums", on_delete: :cascade
   add_foreign_key "album_krews", "albums", on_delete: :cascade
   add_foreign_key "album_krews", "krews", on_delete: :cascade
   add_foreign_key "album_photos", "accounts", column: "contributor_id", on_delete: :cascade

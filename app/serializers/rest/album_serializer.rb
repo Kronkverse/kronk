@@ -11,6 +11,14 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   attribute :is_owner
   attribute :can_contribute
 
+  # Additive contribution roster (docs/spaces/albutts.md). `contribution_open`
+  # is the base (anyone who can see may add); when false, the roster is the
+  # union of `invited_contributor_ids` (specific people) and the members of
+  # `contributor_krew_ids`. `krews` (below) is the full audience-krew set.
+  attribute :contribution_open
+  attribute :contributor_krew_ids
+  attribute :invited_contributor_ids
+
   belongs_to :owner, serializer: REST::AccountSerializer
   has_many   :photos, serializer: REST::AlbumPhotoSerializer
   has_many   :krews, serializer: REST::KrewSerializer, if: :krews?
@@ -59,5 +67,19 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   # regardless of reach tier.
   def krews?
     object.album_krews.exists?
+  end
+
+  def contribution_open
+    object.contribution_open?
+  end
+
+  # The subset of the album's krews that also grant contribution.
+  def contributor_krew_ids
+    object.album_krews.where(for_contribution: true).pluck(:krew_id).map(&:to_s)
+  end
+
+  # Specific accounts on the contribution roster (the "invited" people).
+  def invited_contributor_ids
+    object.album_contributors.pluck(:account_id).map(&:to_s)
   end
 end

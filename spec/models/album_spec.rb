@@ -42,4 +42,42 @@ RSpec.describe Album do
       expect(described_class.visible_to(member)).to include(a)
     end
   end
+
+  describe '#contributable_by? (additive roster)' do
+    # Public so visible_to? never gets in the way — these assertions are about
+    # the contribution roster, not the audience gate.
+    def public_album(contribution)
+      described_class.create!(owner: owner, title: 'T', visibility: :public,
+                              contribution: contribution)
+    end
+
+    it 'lets anyone who can see it contribute when open' do
+      expect(public_album(:open).contributable_by?(stranger)).to be true
+    end
+
+    it 'is owner-only when restricted with an empty roster' do
+      a = public_album(:closed)
+      expect(a.contributable_by?(owner)).to be true
+      expect(a.contributable_by?(stranger)).to be false
+    end
+
+    it 'lets an invited person contribute' do
+      a = public_album(:invited)
+      a.album_contributors.create!(account: member)
+      expect(a.contributable_by?(member)).to be true
+      expect(a.contributable_by?(stranger)).to be false
+    end
+
+    it 'lets a member of a contributor krew contribute' do
+      a = public_album(:closed)
+      a.album_krews.create!(krew: krew, for_contribution: true)
+      expect(a.contributable_by?(member)).to be true
+    end
+
+    it 'does not let a member of a see-only krew contribute' do
+      a = public_album(:closed)
+      a.album_krews.create!(krew: krew, for_contribution: false)
+      expect(a.contributable_by?(member)).to be false
+    end
+  end
 end
