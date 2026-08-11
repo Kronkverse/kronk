@@ -21,7 +21,7 @@ import { ScopeMark } from 'mastodon/components/scope_mark';
 // their members on top. Call sites that don't support krew just omit those
 // props and get a plain reach picker.
 
-export type ReachValue = 'self_only' | 'mates' | 'orbit' | 'public' | 'krew';
+export type ReachValue = 'self_only' | 'mates' | 'orbit' | 'public';
 
 export interface KrewOption {
   id: string;
@@ -35,7 +35,6 @@ const messages = defineMessages({
   mates: { id: 'reach.mates', defaultMessage: 'Mates' },
   orbit: { id: 'reach.orbit', defaultMessage: 'Orbit' },
   kronk: { id: 'reach.kronk', defaultMessage: 'Kronkverse' },
-  krew: { id: 'reach.krew', defaultMessage: 'Krew' },
   meHint: { id: 'reach.me_hint', defaultMessage: 'Only you' },
   matesHint: {
     id: 'reach.mates_hint',
@@ -46,7 +45,6 @@ const messages = defineMessages({
     defaultMessage: 'Your mates, and theirs',
   },
   kronkHint: { id: 'reach.kronk_hint', defaultMessage: 'Everyone on Kronk' },
-  krewHint: { id: 'reach.krew_hint', defaultMessage: 'The krews you pick' },
   krewsRow: { id: 'reach.krews.row', defaultMessage: 'Krews' },
   krewsRowHint: {
     id: 'reach.krews.row_hint',
@@ -76,17 +74,10 @@ const REACH_META: Record<ReachValue, Meta> = {
   mates: { mark: 'mates', labelId: 'mates', hintId: 'matesHint' },
   orbit: { mark: 'orbit', labelId: 'orbit', hintId: 'orbitHint' },
   public: { mark: 'kronk', labelId: 'kronk', hintId: 'kronkHint' },
-  krew: { mark: 'krews', labelId: 'krew', hintId: 'krewHint' },
 };
 
-// Narrow -> wide, Krew trailing.
-const ORDER: readonly ReachValue[] = [
-  'self_only',
-  'mates',
-  'orbit',
-  'public',
-  'krew',
-];
+// Narrow -> wide.
+const ORDER: readonly ReachValue[] = ['self_only', 'mates', 'orbit', 'public'];
 
 interface Props {
   value: ReachValue;

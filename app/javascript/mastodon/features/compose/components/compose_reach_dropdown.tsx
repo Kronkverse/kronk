@@ -18,10 +18,8 @@ import { useAppSelector, useAppDispatch } from 'mastodon/store';
 // Mastodon's unlisted/private/direct are not offered — the Kronk ladder is the
 // whole menu.
 
-// Reach tiers only — `krew` is retired as a rung (it's the additive submenu).
+// Reach tiers only — `krew` is the additive submenu, not a rung.
 const LADDER: readonly ReachValue[] = ['self_only', 'mates', 'orbit', 'public'];
-
-const HIDE_KREW_RUNG: readonly ReachValue[] = ['krew'];
 
 interface Props {
   disabled?: boolean;
@@ -74,7 +72,6 @@ export const ComposeReachDropdown: React.FC<Props> = ({ disabled = false }) => {
       value={value}
       onChange={handleChange}
       disabled={disabled}
-      hide={HIDE_KREW_RUNG}
       krews={krews}
       selectedKrewIds={selectedKrewIds}
       onToggleKrew={handleToggleKrew}

@@ -655,7 +655,6 @@ export const CreateEventForm: React.FC<Props> = ({
             <ReachDropdown
               value={visibility}
               onChange={handleVisibilityChange}
-              hide={['krew']}
             />
           </div>
         )}

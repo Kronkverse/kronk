@@ -10,13 +10,7 @@
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import type { MessageDescriptor } from 'react-intl';
-import {
-  FormattedMessage,
-  FormattedRelativeTime,
-  defineMessages,
-  useIntl,
-} from 'react-intl';
+import { FormattedMessage, FormattedRelativeTime, useIntl } from 'react-intl';
 
 import { useHistory, useParams } from 'react-router-dom';
 
@@ -31,42 +25,16 @@ import {
   apiRequestPut,
   apiRequestDelete,
 } from 'mastodon/api';
-import { KornerKrewPicker } from 'mastodon/components/korner_krew_picker';
-import { KornerVisibilityPicker } from 'mastodon/components/korner_visibility_picker';
 import { KronkStarfield } from 'mastodon/components/kronk_starfield';
 import { VoicePlayer } from 'mastodon/components/media';
+import type { ReachValue } from 'mastodon/components/reach_dropdown';
+import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { me } from 'mastodon/initial_state';
 
 import { MomentsComposer } from './composer';
 import type { TextOverlay } from './text_overlay';
 import { OverlayLayer } from './text_overlay';
-
-// `self_only` is no longer offered by the composer (see composer.tsx
-// + config/korners/moments.yaml) but is retained here so existing
-// rows with visibility=self_only still render a sensible chip during
-// their 24h expiry window. Safe to drop this case after that window.
-const audienceLabels = defineMessages({
-  public: { id: 'moments.audience.public', defaultMessage: 'Anyone' },
-  orbit: { id: 'moments.audience.orbit', defaultMessage: 'Orbit' },
-  mates: { id: 'moments.audience.mates', defaultMessage: 'Mates' },
-  self_only: { id: 'moments.audience.self_only', defaultMessage: 'Only me' },
-  krew: { id: 'moments.audience.krew', defaultMessage: 'Krew' },
-});
-
-const audienceLabel = (visibility: string): MessageDescriptor => {
-  switch (visibility) {
-    case 'public':
-      return audienceLabels.public;
-    case 'orbit':
-      return audienceLabels.orbit;
-    case 'self_only':
-      return audienceLabels.self_only;
-    case 'krew':
-      return audienceLabels.krew;
-    default:
-      return audienceLabels.mates;
-  }
-};
 
 interface AccountJSON {
   id: string;
@@ -283,26 +251,32 @@ const MomentViewer = () => {
   // Re-scope one's own Moment after the fact (Stage 3). Optimistic; the
   // stack entry's visibility updates immediately, rolls back on error.
   const changeVisibilityAsync = useCallback(
-    async (next: string, krewId: string | null) => {
+    async (next: string, krew: MomentJSON['krew']) => {
       if (!moment || visibilityPending) return;
       setVisibilityPending(true);
       const previous = moment.visibility;
+      const previousKrew = moment.krew;
       setStack((prev) => {
         const copy = [...prev];
         const found = copy[index];
-        if (found) copy[index] = { ...found, visibility: next };
+        if (found) copy[index] = { ...found, visibility: next, krew };
         return copy;
       });
       try {
         await apiRequestPut(`v1/moments/${moment.id}`, {
           visibility: next,
-          krew_id: krewId,
+          krew_id: krew?.id ?? null,
         });
       } catch {
         setStack((prev) => {
           const copy = [...prev];
           const found = copy[index];
-          if (found) copy[index] = { ...found, visibility: previous };
+          if (found)
+            copy[index] = {
+              ...found,
+              visibility: previous,
+              krew: previousKrew,
+            };
           return copy;
         });
       } finally {
@@ -313,8 +287,8 @@ const MomentViewer = () => {
   );
 
   const changeVisibility = useCallback(
-    (next: string, krewId: string | null) => {
-      void changeVisibilityAsync(next, krewId);
+    (next: string, krew: MomentJSON['krew']) => {
+      void changeVisibilityAsync(next, krew);
     },
     [changeVisibilityAsync],
   );
@@ -461,7 +435,7 @@ interface ViewerBodyProps {
   onFroth: () => void;
   onReply: () => void;
   isOwner: boolean;
-  onChangeVisibility: (next: string, krewId: string | null) => void;
+  onChangeVisibility: (next: string, krew: MomentJSON['krew']) => void;
   visibilityPending: boolean;
   onAddAnother: () => void;
   intl: ReturnType<typeof useIntl>;
@@ -489,38 +463,31 @@ const ViewerBody = ({
   intl,
 }: ViewerBodyProps) => {
   const isVideo = moment.media_attachment.type === 'video';
-  const [editingVisibility, setEditingVisibility] = useState(false);
-  const [choosingKrew, setChoosingKrew] = useState(false);
+  const availableKrews = useAvailableKrews();
 
-  const toggleEditingVisibility = useCallback(() => {
-    setEditingVisibility((v) => !v);
-    // Opening a krew Moment goes straight to the krew list (to change it);
-    // any other scope shows just the scope picker until krew is chosen.
-    setChoosingKrew(moment.visibility === 'krew');
-  }, [moment.visibility]);
-
-  // Non-krew scopes commit immediately; picking `krew` reveals the krew
-  // sub-picker and waits for a krew before committing.
-  const pickScope = useCallback(
-    (next: string) => {
-      if (next === 'krew') {
-        setChoosingKrew(true);
-      } else {
-        onChangeVisibility(next, null);
-        setEditingVisibility(false);
-        setChoosingKrew(false);
-      }
+  // Reach and krew are independent (docs/rebuild/krew_axis_migration.md):
+  // changing the reach tier keeps the krew, and toggling the krew keeps the
+  // reach tier. A Moment holds a single krew.
+  const handleReachChange = useCallback(
+    (next: ReachValue) => {
+      onChangeVisibility(next, moment.krew);
     },
-    [onChangeVisibility],
+    [onChangeVisibility, moment.krew],
   );
 
-  const pickKrew = useCallback(
-    (krewId: string) => {
-      onChangeVisibility('krew', krewId);
-      setEditingVisibility(false);
-      setChoosingKrew(false);
+  const handleToggleKrew = useCallback(
+    (id: string) => {
+      if (moment.krew?.id === id) {
+        onChangeVisibility(moment.visibility, null);
+        return;
+      }
+      const picked = availableKrews.find((k) => k.id === id);
+      onChangeVisibility(
+        moment.visibility,
+        picked ? { id: picked.id, name: picked.name } : null,
+      );
     },
-    [onChangeVisibility],
+    [onChangeVisibility, moment.krew, moment.visibility, availableKrews],
   );
 
   // Progress: 0 at post time → 1 at expiry (24h). Clamped.
@@ -619,16 +586,18 @@ const ViewerBody = ({
               )}
             </span>
             {isOwner && (
-              <button
-                type='button'
-                className='moments-viewer__visibility'
-                onClick={toggleEditingVisibility}
-                disabled={visibilityPending}
-                aria-expanded={editingVisibility}
-              >
-                {intl.formatMessage(audienceLabel(moment.visibility))}
-                <span aria-hidden> ▾</span>
-              </button>
+              <div className='moments-viewer__visibility'>
+                <ReachDropdown
+                  value={moment.visibility as ReachValue}
+                  onChange={handleReachChange}
+                  hide={['self_only']}
+                  disabled={visibilityPending}
+                  krews={availableKrews}
+                  selectedKrewIds={moment.krew ? [moment.krew.id] : []}
+                  onToggleKrew={handleToggleKrew}
+                  krewSingleSelect
+                />
+              </div>
             )}
           </div>
           <button
@@ -640,30 +609,6 @@ const ViewerBody = ({
             <CloseIcon />
           </button>
         </header>
-
-        {isOwner && editingVisibility && (
-          <div className='moments-viewer__visibility-panel'>
-            <span className='moments-viewer__visibility-panel-label'>
-              <FormattedMessage
-                id='moments.viewer.who_sees'
-                defaultMessage='Who can see this'
-              />
-            </span>
-            <KornerVisibilityPicker
-              slug='moments'
-              value={moment.visibility}
-              onChange={pickScope}
-              disabled={visibilityPending}
-            />
-            {choosingKrew && (
-              <KornerKrewPicker
-                value={moment.krew?.id ?? null}
-                onChange={pickKrew}
-                disabled={visibilityPending}
-              />
-            )}
-          </div>
-        )}
 
         <div className='moments-viewer__media-wrap'>
           {isVideo ? (

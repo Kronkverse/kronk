@@ -13,9 +13,8 @@ export type StatusVisibility =
   | 'private'
   // | 'limited' // This is never exposed to the API (they become `private`)
   | 'direct'
-  // Kronk krew-scoped audience — the union of members across the
-  // targeted Krews. Local-only; no federation. Requires krew_ids.
-  | 'krew'
+  // Krew is an orthogonal, additive audience axis carried by `krews` — no
+  // longer a visibility value (docs/rebuild/krew_axis_migration.md).
   // Kronk reach ladder (docs/kronk_feed_and_reach.md §2) — local-only:
   //   mates     — the author's mutual connections
   //   orbit     — mates of mates (one hop out)
@@ -133,10 +132,9 @@ export interface ApiStatusJSON {
   quote?: ApiQuoteJSON;
   quote_approval?: ApiQuotePolicyJSON;
 
-  // Krews this status is scoped to. Populated for visibility='krew'
-  // posts (and any status the author explicitly attached to Krews
-  // via the composer). Rich references so the timeline badge can
-  // render the Krew name inline. Empty array otherwise.
+  // Krews this status is targeted at (the additive audience axis). Rich
+  // references so the timeline badge can render the Krew name inline. Empty
+  // array for a status that targets no krews.
   krews?: { id: string; slug: string; name: string }[];
 
   post_type?: 'normal' | 'question' | 'answer' | 'proposal';
@@ -207,7 +205,6 @@ export function isStatusVisibility(
     'unlisted',
     'private',
     'direct',
-    'krew',
     'mates',
     'orbit',
     'self_only',

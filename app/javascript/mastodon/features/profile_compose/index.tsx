@@ -759,11 +759,7 @@ const Inspector: React.FC<{
         <p className='kcompose__insp-hint'>
           <FormattedMessage {...messages.inspectorWhoHint} />
         </p>
-        <ReachDropdown
-          value={card.visibility}
-          onChange={handleVisSelect}
-          hide={['krew']}
-        />
+        <ReachDropdown value={card.visibility} onChange={handleVisSelect} />
       </div>
 
       <div className='kcompose__danger'>
