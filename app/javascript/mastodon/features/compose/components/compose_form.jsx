@@ -32,7 +32,6 @@ import { ComposeReachDropdown } from './compose_reach_dropdown';
 import { ComposeVoiceRecorder } from './compose_voice_recorder';
 import { EditIndicator } from './edit_indicator';
 import { KategoryPicker } from './kategory_picker';
-import { KrewTargets } from './krew_targets';
 import { NavigationBar } from './navigation_bar';
 import { PollForm } from "./poll_form";
 import { ComposeQuotedStatus } from './quoted_post';
@@ -319,10 +318,6 @@ class ComposeForm extends ImmutablePureComponent {
             <KategoryPicker />
             <ComposeReachDropdown disabled={this.props.isEditing} />
           </div>
-
-          {/* Krew multi-select — renders only when reach is a Krew (writes
-              compose.krew_ids). */}
-          <KrewTargets />
 
           {this.props.spoiler && (
             <div className='spoiler-input'>

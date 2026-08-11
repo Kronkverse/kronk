@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
+import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import ExpandMoreIcon from '@/material-icons/400-24px/expand_more.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import type { MarkKind } from 'mastodon/components/scope_mark';
@@ -11,10 +12,22 @@ import { ScopeMark } from 'mastodon/components/scope_mark';
 // ReachDropdown — the "who can see this?" control as a compact dropdown that
 // sits in the composer header (where a post's audience shows in the feed). Same
 // ring-mark glyphs + vocabulary as the feed scope: Me / Mates / Orbit /
-// Kronkverse + Krew. Pure controlled input (value / onChange); the krew sub-picker + any side
-// effects live at the call site.
+// Kronkverse. Pure controlled input (value / onChange).
+//
+// Krew is an ORTHOGONAL, additive audience axis (not a reach tier — see
+// docs/rebuild/krew_axis_migration.md). When a call site passes `krews` +
+// `onToggleKrew`, the menu grows a "Krews ›" row that flies out into a
+// multi-select submenu; ticking krews does NOT change the reach tier, it adds
+// their members on top. Call sites that don't support krew just omit those
+// props and get a plain reach picker.
 
 export type ReachValue = 'self_only' | 'mates' | 'orbit' | 'public' | 'krew';
+
+export interface KrewOption {
+  id: string;
+  name: string;
+  hint?: string;
+}
 
 const messages = defineMessages({
   aria: { id: 'reach.aria', defaultMessage: 'Who can see this?' },
@@ -34,6 +47,22 @@ const messages = defineMessages({
   },
   kronkHint: { id: 'reach.kronk_hint', defaultMessage: 'Everyone on Kronk' },
   krewHint: { id: 'reach.krew_hint', defaultMessage: 'The krews you pick' },
+  krewsRow: { id: 'reach.krews.row', defaultMessage: 'Krews' },
+  krewsRowHint: {
+    id: 'reach.krews.row_hint',
+    defaultMessage: 'Add any — seen on top of your reach',
+  },
+  krewsTitle: { id: 'reach.krews.title', defaultMessage: 'Add krews' },
+  krewsEmpty: { id: 'reach.krews.empty', defaultMessage: 'No krews yet.' },
+  krewsSubHint: {
+    id: 'reach.krews.sub_hint',
+    defaultMessage:
+      'Members of these krews see the post even if your reach wouldn’t include them.',
+  },
+  krewCount: {
+    id: 'reach.krews.count',
+    defaultMessage: '· {count, plural, one {# krew} other {# krews}}',
+  },
 });
 
 interface Meta {
@@ -68,6 +97,13 @@ interface Props {
   // audience-of-one there is a private journal, not the feature (spec:
   // docs/spaces/moments.md § Reach). Defaults to no filtering.
   hide?: readonly ReachValue[];
+  // Additive krew axis (optional). Provide both to grow the "Krews ›"
+  // submenu; `krews` is the viewer's selectable krews, `selectedKrewIds` the
+  // current picks, `onToggleKrew` adds/removes one. Krew selection is
+  // independent of `value` — it does not change the reach tier.
+  krews?: readonly KrewOption[];
+  selectedKrewIds?: readonly string[];
+  onToggleKrew?: (id: string) => void;
 }
 
 const ReachMenuItem: React.FC<{
@@ -103,18 +139,55 @@ const ReachMenuItem: React.FC<{
   );
 };
 
+const KrewSubmenuItem: React.FC<{
+  krew: KrewOption;
+  checked: boolean;
+  onToggle: (id: string) => void;
+}> = ({ krew, checked, onToggle }) => {
+  const handleClick = useCallback(() => {
+    onToggle(krew.id);
+  }, [onToggle, krew.id]);
+
+  return (
+    <button
+      type='button'
+      role='menuitemcheckbox'
+      aria-checked={checked}
+      onClick={handleClick}
+      className={`reach-dropdown__krew${checked ? ' reach-dropdown__krew--checked' : ''}`}
+    >
+      <span className='reach-dropdown__krew-box'>
+        <Icon id='' icon={CheckIcon} className='reach-dropdown__krew-check' />
+      </span>
+      <span className='reach-dropdown__item-text'>
+        <span className='reach-dropdown__item-label'>{krew.name}</span>
+        {krew.hint && (
+          <span className='reach-dropdown__item-hint'>{krew.hint}</span>
+        )}
+      </span>
+    </button>
+  );
+};
+
 export const ReachDropdown: React.FC<Props> = ({
   value,
   onChange,
   disabled = false,
   hide,
+  krews,
+  selectedKrewIds,
+  onToggleKrew,
 }) => {
   const hideSet = new Set<ReachValue>(hide ?? []);
   const visibleOrder = ORDER.filter((o) => !hideSet.has(o));
   const intl = useIntl();
   const [open, setOpen] = useState(false);
+  const [subOpen, setSubOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const current = REACH_META[value];
+
+  const krewEnabled = krews !== undefined && onToggleKrew !== undefined;
+  const selectedKrews = selectedKrewIds ?? [];
 
   // Close on outside click / Escape while open.
   useEffect(() => {
@@ -135,6 +208,11 @@ export const ReachDropdown: React.FC<Props> = ({
     };
   }, [open]);
 
+  // Collapse the submenu whenever the menu closes.
+  useEffect(() => {
+    if (!open) setSubOpen(false);
+  }, [open]);
+
   const toggle = useCallback(() => {
     if (!disabled) setOpen((o) => !o);
   }, [disabled]);
@@ -142,9 +220,26 @@ export const ReachDropdown: React.FC<Props> = ({
   const handleSelect = useCallback(
     (v: ReachValue) => {
       onChange(v);
-      setOpen(false);
+      // With the additive krew submenu present the user may still want to add
+      // krews, so keep the menu open; a plain reach picker closes on choice.
+      if (!krewEnabled) setOpen(false);
     },
-    [onChange],
+    [onChange, krewEnabled],
+  );
+
+  const toggleSub = useCallback(() => {
+    setSubOpen((s) => !s);
+  }, []);
+
+  const openSub = useCallback(() => {
+    setSubOpen(true);
+  }, []);
+
+  const handleToggleKrew = useCallback(
+    (id: string) => {
+      onToggleKrew?.(id);
+    },
+    [onToggleKrew],
   );
 
   return (
@@ -166,6 +261,13 @@ export const ReachDropdown: React.FC<Props> = ({
         <span className='reach-dropdown__button-label'>
           {intl.formatMessage(messages[current.labelId])}
         </span>
+        {krewEnabled && selectedKrews.length > 0 && (
+          <span className='reach-dropdown__button-krewcount'>
+            {intl.formatMessage(messages.krewCount, {
+              count: selectedKrews.length,
+            })}
+          </span>
+        )}
         <Icon id='' icon={ExpandMoreIcon} className='reach-dropdown__chevron' />
       </button>
 
@@ -181,6 +283,71 @@ export const ReachDropdown: React.FC<Props> = ({
               onSelect={handleSelect}
             />
           ))}
+
+          {krewEnabled && (
+            <div className='reach-dropdown__sub-anchor'>
+              <div className='reach-dropdown__divider' />
+              <button
+                type='button'
+                className={`reach-dropdown__item reach-dropdown__krews-row${subOpen ? ' reach-dropdown__krews-row--open' : ''}`}
+                aria-haspopup='menu'
+                aria-expanded={subOpen}
+                onClick={toggleSub}
+                onMouseEnter={openSub}
+              >
+                <ScopeMark
+                  kind='krews'
+                  size={24}
+                  className='reach-dropdown__item-mark'
+                />
+                <span className='reach-dropdown__item-text'>
+                  <span className='reach-dropdown__item-label'>
+                    {intl.formatMessage(messages.krewsRow)}
+                  </span>
+                  <span className='reach-dropdown__item-hint'>
+                    {intl.formatMessage(messages.krewsRowHint)}
+                  </span>
+                </span>
+                {selectedKrews.length > 0 && (
+                  <span className='reach-dropdown__krew-count'>
+                    {selectedKrews.length}
+                  </span>
+                )}
+                <Icon
+                  id=''
+                  icon={ChevronRightIcon}
+                  className='reach-dropdown__caret'
+                />
+              </button>
+
+              {subOpen && (
+                <div className='reach-dropdown__submenu' role='menu'>
+                  <div className='reach-dropdown__submenu-title'>
+                    {intl.formatMessage(messages.krewsTitle)}
+                  </div>
+                  {krews.length === 0 ? (
+                    <p className='reach-dropdown__submenu-empty'>
+                      {intl.formatMessage(messages.krewsEmpty)}
+                    </p>
+                  ) : (
+                    krews.map((krew) => (
+                      <KrewSubmenuItem
+                        key={krew.id}
+                        krew={krew}
+                        checked={selectedKrews.includes(krew.id)}
+                        onToggle={handleToggleKrew}
+                      />
+                    ))
+                  )}
+                  {krews.length > 0 && (
+                    <p className='reach-dropdown__submenu-hint'>
+                      {intl.formatMessage(messages.krewsSubHint)}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

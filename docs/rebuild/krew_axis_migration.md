@@ -1,7 +1,8 @@
 # Krew orthogonal-axis migration — status & handoff
 
-**Status: 2 of 4 stages shipped + the shared concern extracted. Status (3/4)
-and the composers/feed (4/4) remain.** Last updated 2026-08-10.
+**Status: the backend is complete — Moments, Album, and Status are all krew-
+orthogonal end-to-end (stages 1–3 merged). Only the composer UI remains
+(stage 4, in progress).** Last updated 2026-08-11.
 
 This is a living tracker for an in-progress, multi-stage change to core
 visibility. The decision itself lives in [`decisions.md`](./decisions.md)
@@ -90,15 +91,19 @@ their own dialect. A later unification is possible but not attempted here.
 
 ## Progress
 
-| Stage | What                                                                       | PR    | State          |
-| ----- | -------------------------------------------------------------------------- | ----- | -------------- |
-| 1/4   | **Moments** — krew orthogonal, migration, accept-both                      | #1312 | ✅ merged      |
-| —     | **Extract `Reachable`** + Moment adopts it                                 | #1316 | ✅ merged      |
-| 2/4   | **Album** — adopts `Reachable`, krew orthogonal, migration                 | #1319 | ✅ merged      |
-| 3/4   | **Status** — StatusPolicy + feed/timeline + federation                     | —     | ⬜ not started |
-| 4/4   | **Composers + feed** — reach picker drops krew; separate krew multi-select | —     | ⬜ not started |
+| Stage | What                                                                   | PR    | State          |
+| ----- | ---------------------------------------------------------------------- | ----- | -------------- |
+| 1/4   | **Moments** — krew orthogonal, migration, accept-both                  | #1312 | ✅ merged      |
+| —     | **Extract `Reachable`** + Moment adopts it                             | #1316 | ✅ merged      |
+| 2/4   | **Album** — adopts `Reachable`, krew orthogonal, migration             | #1319 | ✅ merged      |
+| 3/4   | **Status** — StatusPolicy + fan-out + federation, migration            | #1325 | ✅ merged      |
+| 4a/4  | **Main composer** — additive krew submenu in the reach dropdown        | #1331 | 🔨 in review   |
+| 4b/4  | **Moments + Albutts composers** — adopt the additive submenu           | —     | ⬜ not started |
+| 4c/4  | **Remove `krew` from the shared `ReachValue`/`StatusVisibility` type** | —     | ⬜ not started |
 
-The two "korner content" models (Moment, Album) are done and share one rule.
+All three content models (Moment, Album, Status) are done: krew is an additive
+axis end-to-end on the backend, and legacy `visibility=krew` is accept-both
+everywhere. What's left is purely composer UI.
 
 ---
 
@@ -125,61 +130,56 @@ visibility = <krew>`, wrapped in `safety_assured`. The krew association is
 
 ## Remaining work
 
-### 3/4 — Status (the hard one)
+The backend is done (stages 1–3). What's left is composer UI — teaching each
+composer to send a reach tier **plus** an independent set of krews.
 
-Status's visibility is **not** a simple model scope — it's spread across code
-that governs the main feed and federation, so it will _not_ slot into
-`Reachable` cleanly. Thread the additive-krew change through, carefully:
+### The composer UX (decided)
 
-- `app/models/concerns/status/visibility.rb` — the enum
-  (`… krew: 5, mates: 6, orbit: 7, self_only: 8`, plus legacy Mastodon
-  `public/unlisted/private/direct/limited`). Retire the `krew` value → migrate
-  krew statuses to `self_only`, keeping `statuses_krews`.
-- `app/policies/status_policy.rb` — `krew_scoped?` (`record.krew_visibility?`),
-  `viewer_in_targeted_krew?` (`record.krews`), and `selectable_reach_visibility?`
-  / the show branch. Make krew **additive**: a viewer in a targeted krew passes
-  regardless of the reach tier, then fall through to the tier check.
-- `app/models/status.rb` — `has_and_belongs_to_many :krews, join_table:
-:statuses_krews` (multi krew — same shape as Album).
-- **Feed / timeline SQL** — wherever krew-visibility is filtered into home /
-  list / public timelines (FeedManager + any `krew_visibility` SQL). This is the
-  performance-critical, leak-sensitive part; test it hard.
-- **Federation** — krew (like the other Kronk-only tiers) is non-distributable;
-  confirm a self_only+krew status still never federates.
-- Accept-both in the statuses controller (legacy `visibility=krew` → self_only,
-  keep krew_ids).
+The audience control is a **single visibility dropdown**. It lists the reach
+tiers (Me / Mates / Orbit / Kronkverse, single-select) and a **“Krews ›”** row
+that flies out into a **multi-select** submenu. Ticking krews does **not**
+change the reach tier — it adds their members on top (“Mates _and_ Studio” is
+one post). This lives in the shared `components/reach_dropdown.tsx` behind
+optional props (`krews`, `selectedKrewIds`, `onToggleKrew`); a call site that
+omits them gets an unchanged plain reach picker.
 
-Note: `StatusPolicy` uses the `record.krew_visibility?` predicate name — after
-the enum change, switch these to "does this status target any krew?"
-(`record.krews.exists?`), not the retired enum predicate.
+### 4a — Main composer (PR #1331, in review)
 
-### 4/4 — Composers + feed UI
+- `components/reach_dropdown.tsx` — the additive krew submenu (above).
+- `hooks/useAvailableKrews.ts` — one place to fetch the viewer's postable krews.
+- `features/compose/components/compose_reach_dropdown.tsx` — hides the krew
+  rung, wires the submenu to `compose.krew_ids`, drops the old
+  clear-krew-on-leave coupling. (`submitCompose` already sent `visibility` +
+  `krew_ids` separately, so no store/submit change.)
+- Removes the old gated `KrewTargets` chip row.
 
-- `components/reach_dropdown.tsx` — drop the `krew` rung from the ladder; it
-  becomes reach-only (self_only/mates/orbit/public — labelled …/Kronkverse).
-- A **separate, always-available krew multi-select** shown alongside the reach
-  control (not gated on picking "krew"). This is where "Mates **and** krew X"
-  finally appears in the UI. Wire it in the composers that currently send
-  `visibility=krew`: main compose (`krew_targets.tsx`), Moments
-  (`KornerKrewPicker`), Albutts (`ScopePicker` — it already has a Krews axis),
-  etc.
-- `lib/kronk/audience_scope.rb` + the home-feed scope filtering — make sure the
-  Home audience ladder and any krew filtering agree with the additive model.
-- Retire the frontend's `'krew'` visibility value everywhere it's still sent as
-  a reach tier.
+### 4b — Moments + Albutts composers
+
+- **Moments** (`features/moments/composer.tsx`, `viewer.tsx`) — Moment's data
+  model is **single-krew** (`krew_id`, not a join), so its submenu is
+  single-select; drop the `visibility === 'krew'` gate + the clear-on-leave.
+- **Albutts** (`components/scope_picker.tsx`) — already a two-axis picker with a
+  Krews axis; conform its krew selection to the additive submenu shape.
+- Any other `hide={['krew']}` call site is already reach-only and needs nothing.
+
+### 4c — Retire `krew` as a type value
+
+Once no composer sends `visibility='krew'`, remove `krew` from `ReachValue`
+(`reach_dropdown.tsx`) and `StatusVisibility` (`api_types/statuses.ts`), plus
+the now-dead `visibility_button.tsx` / the edit-only `visibility_modal.tsx`
+krew branch. Backend accept-both can stay as a permanent safety net.
 
 ---
 
 ## Risks & open items
 
-- **Leak surface (Status/feed).** The 3/4 change touches the code that decides
-  what shows in the main feed. A single check that still treats krew as "the
-  whole audience" instead of "additive" is a leak or a disappearance. Verify
-  every krew check-point (policy, feed SQL, search) agrees.
-- **`album_krews` serves two axes.** On Album, the krew join now feeds both the
+- **`album_krews` serves two axes.** On Album, the krew join feeds both the
   additive-visibility krew _and_ the `contribution == 'krew'` roster (the picker
   auto-mirrors them). Left as-is for now; a cleaner separation is a possible
   follow-up.
-- **Frontend/back coordination.** Accept-both keeps each backend stage safe on
-  its own, but the composer stage (4/4) is where the old `visibility=krew` send
-  path is finally retired — do it after Status lands.
+- **Frontend/back coordination.** Accept-both keeps every backend stage safe on
+  its own; the frontend stops sending `visibility='krew'` composer-by-composer
+  (4a → 4b), and the type isn't removed (4c) until all of them have.
+- **Public/Kronkverse + krews is redundant** (everyone already sees a public
+  post). The submenu currently still allows it; harmless, but a later polish
+  could disable the krew row at the widest reach tiers.
