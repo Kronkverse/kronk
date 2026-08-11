@@ -253,3 +253,13 @@ body:has(.kronk-stage) {
     font-weight: 500;
   }
 }
+
+// Chrome-less loading fallback for Hub / korner routes (StageLoading in
+// features/ui/components/column_loading.tsx). Fills the Stage cell and centres
+// a spinner while the route's lazy bundle downloads — replacing the legacy
+// <ColumnHeader> that used to flash at the top of /hub/* pages during load.
+.kronk-stage--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
