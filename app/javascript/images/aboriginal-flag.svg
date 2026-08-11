@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width="900" height="600" role="img" aria-label="Australian Aboriginal Flag">
+  <!--
+    Australian Aboriginal Flag.
+    Designed 1971 by Harold Thomas, a Luritja man of Central Australia.
+    Proclaimed a Flag of Australia, 14 July 1995, under the Flags Act 1953.
+    Copyright held by the Commonwealth of Australia since January 2022;
+    free for public use. Harold Thomas retains his moral rights.
+    Must be reproduced completely and accurately, and presented in a
+    dignified manner. Do not recolour, crop, distort, or overlay.
+
+    Proportions 2:3 as proclaimed. Field divided into equal halves.
+    Disc diameter 60% of the hoist, centred.
+  -->
+  <rect width="900" height="300" fill="#000000"/>
+  <rect y="300" width="900" height="300" fill="#E03C31"/>
+  <circle cx="450" cy="300" r="180" fill="#FFC72C"/>
+</svg>
