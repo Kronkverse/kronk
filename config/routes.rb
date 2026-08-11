@@ -276,6 +276,11 @@ Rails.application.routes.draw do
   get '/huddle', to: redirect('/hub/huddle')
   get '/nudges', to: 'home#index'
   get '/nudges/*path', to: 'home#index', format: false
+  # /awawb — a still page reached from the middle Membrane pillar.
+  # The SPA route is declared in features/ui/index.jsx; Rails needs
+  # this stub so a hard-nav / refresh to /awawb serves the SPA HTML
+  # instead of the Rails 404 (previously "Umm you broke it…").
+  get '/awawb', to: 'home#index'
 
   # Legacy top-level korner paths — 301 redirect to their /hub/<slug>
   # counterparts. Client-side navigation continues to use whichever URL
