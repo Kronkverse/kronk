@@ -57,6 +57,20 @@ class AutoGrooveInviterWorker
     # recently, so their MergeWorker fires normally and pulls the
     # invitee's early posts as they arrive.
     RegenerationWorker.perform_async(invitee.id)
+
+    # Seed the invitee's landing scope to Kronkverse (Tal 2026-08-11).
+    # A brand-new Kronker's first view should be the widest tier —
+    # the platform-wide feed — so they see what's happening across
+    # Kronk, not a narrower Orbit / Mates slice that would show only
+    # their inviter. Persisted via `kronk.feed_scope` so Home reads
+    # it on first paint (settings key `kommunity` maps to the
+    # `Kronkverse` face label; see docs/kronk_feed_and_reach.md §2).
+    # Guarded on blank so a late worker run can't stomp a user-set
+    # choice.
+    if user.settings['kronk.feed_scope'].blank?
+      user.settings.update('kronk.feed_scope' => 'kommunity')
+      user.save!
+    end
   rescue Mastodon::NotPermittedError, ActiveRecord::RecordNotFound => e
     Rails.logger.warn("AutoGrooveInviterWorker: user #{user_id} could not mate inviter: #{e.class} #{e.message}")
   end
