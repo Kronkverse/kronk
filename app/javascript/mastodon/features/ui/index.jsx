@@ -314,13 +314,13 @@ class SwitchingColumnsArea extends PureComponent {
                 lens sub-paths (/hub/booth/musik, /artists, …); the component
                 reads the lens from the URL. Set detail is matched above. */}
             <WrappedRoute path={["/booth", "/hub/booth"]} component={Booth} content={children} />
-            {signedIn && <WrappedRoute path='/settings' exact component={SettingsHub} content={children} />}
-            {signedIn && <WrappedRoute path='/settings/you' exact component={SettingsYou} content={children} />}
+            {signedIn && <WrappedRoute path='/settings' exact stage component={SettingsHub} content={children} />}
+            {signedIn && <WrappedRoute path='/settings/you' exact stage component={SettingsYou} content={children} />}
             {signedIn && <WrappedRoute path='/hub/settings' exact component={SettingsKorners} content={children} />}
-            {signedIn && <WrappedRoute path='/settings/appearance' exact component={AppearanceSettings} content={children} />}
-            {signedIn && <WrappedRoute path='/settings/posting' exact component={PostingSettings} content={children} />}
-            {signedIn && <WrappedRoute path='/settings/notifications' exact component={NotificationsSettings} content={children} />}
-            {signedIn && <WrappedRoute path='/settings/privacy' exact component={PrivacySettings} content={children} />}
+            {signedIn && <WrappedRoute path='/settings/appearance' exact stage component={AppearanceSettings} content={children} />}
+            {signedIn && <WrappedRoute path='/settings/posting' exact stage component={PostingSettings} content={children} />}
+            {signedIn && <WrappedRoute path='/settings/notifications' exact stage component={NotificationsSettings} content={children} />}
+            {signedIn && <WrappedRoute path='/settings/privacy' exact stage component={PrivacySettings} content={children} />}
             {signedIn && <WrappedRoute path="/settings/profile_sections" component={ProfileSectionsSettings} content={children} />}
             {/* Shelved profile — the 2026-08-01 rebuild replaces the
                 old SectionedProfile at `/@:acct` and `/@:acct/profile`.
@@ -415,7 +415,7 @@ class SwitchingColumnsArea extends PureComponent {
                 Stub until the timeline unresolveds are settled. Must sit
                 before the /@:acct/:statusId wildcard so `mates` isn't
                 treated as a status id. */}
-            <WrappedRoute path='/@:acct/mates' component={MatesTab} content={children} />
+            <WrappedRoute path='/@:acct/mates' stage component={MatesTab} content={children} />
             <WrappedRoute path='/@:acct/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/@:acct/:statusId/reblogs' component={Reblogs} content={children} />
             <WrappedRoute path='/@:acct/:statusId/favourites' component={Favourites} content={children} />

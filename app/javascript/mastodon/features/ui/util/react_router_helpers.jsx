@@ -44,6 +44,10 @@ export class WrappedRoute extends Component {
       PropTypes.string,
       PropTypes.arrayOf(PropTypes.string),
     ]),
+    // Set on routes whose component renders a <Stage> (not a <Column>) so the
+    // lazy-load fallback is the chrome-less stage skeleton. Not needed for
+    // routes already under /hub — those are detected from the path.
+    stage: PropTypes.bool,
   };
 
   static defaultProps = {
@@ -91,13 +95,20 @@ export class WrappedRoute extends Component {
   };
 
   renderLoading = () => {
-    const { multiColumn, path } = this.props;
+    const { multiColumn, path, stage } = this.props;
 
     // Hub / korner routes render into a <Stage>, not a <Column>. Their
     // lazy-load fallback must be the chrome-less stage skeleton — otherwise
-    // the legacy <ColumnHeader> bar flashes at the top until the bundle
-    // mounts and the Stage replaces it.
-    if (typeof path === 'string' && path.startsWith('/hub')) {
+    // the legacy <ColumnHeader> bar flashes at the top until the bundle mounts
+    // and the Stage replaces it. A route is Stage-shaped if it opts in via
+    // `stage`, or any of its paths is under /hub (which also covers array-path
+    // routes like Booth/Kalendar/Questions and their non-hub aliases).
+    const paths = Array.isArray(path) ? path : [path];
+    const isStage =
+      stage ||
+      paths.some((p) => typeof p === 'string' && p.startsWith('/hub'));
+
+    if (isStage) {
       return <StageLoading />;
     }
 
