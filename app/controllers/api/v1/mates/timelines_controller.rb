@@ -25,6 +25,12 @@
 #     anyway; harden with a policy check when the wider visibility
 #     scope work lands per the 5 unresolveds in KRONK_KOMMUNITY.md)
 class Api::V1::Mates::TimelinesController < Api::BaseController
+  # `full_asset_url` (used in `build_members` to emit each account's
+  # avatar URL, PR #1334) lives in RoutingHelper — Api::BaseController
+  # doesn't include it, so every controller that reaches for asset
+  # URLs pulls it in explicitly. Presence does the same.
+  include RoutingHelper
+
   before_action -> { doorkeeper_authorize! :read, :'read:follows' }
   before_action :require_user!
   before_action :set_subject
