@@ -15,11 +15,12 @@ import { useCallback, useMemo } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
+import { useAvailableKrews } from '../hooks/useAvailableKrews';
+
 import type { AccountLite } from './account_multi_select';
 import { AccountMultiSelect } from './account_multi_select';
 import { KrewMultiSelect } from './krew_multi_select';
 import type { KrewOption } from './reach_dropdown';
-import { useAvailableKrews } from '../hooks/useAvailableKrews';
 
 // ────────────────────────────────────────────────────────────────
 // Vocabulary (matches docs/kronk_scope_picker.md). `krew` stays in the
