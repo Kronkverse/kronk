@@ -61,6 +61,14 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 const messages = defineMessages({
   title: { id: 'me_hub.title', defaultMessage: 'Me' },
+  // Shown in the space header when a signed-in account is available:
+  // "@handle" reads more personally than the literal "Me" (Tal
+  // 2026-08-11). Falls back to the generic `title` in the tab-title
+  // + aria-label paths where the raw handle wouldn't add clarity.
+  titleHandle: {
+    id: 'me_hub.title_handle',
+    defaultMessage: '@{handle}',
+  },
   tagline: {
     id: 'me_hub.tagline',
     defaultMessage: 'Your Kronk, at a glance.',
@@ -269,7 +277,14 @@ export const MeHub: React.FC<MeHubProps> = () => {
             (Standard L11). */}
         <header className='space-header me-hub__title' data-frame-header=''>
           <h1 className='space-header__title'>
-            <FormattedMessage {...messages.title} />
+            {username ? (
+              <FormattedMessage
+                {...messages.titleHandle}
+                values={{ handle: username }}
+              />
+            ) : (
+              <FormattedMessage {...messages.title} />
+            )}
           </h1>
           <p className='space-header__tagline'>
             <FormattedMessage {...messages.tagline} />
