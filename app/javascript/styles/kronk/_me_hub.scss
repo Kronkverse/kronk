@@ -21,35 +21,44 @@ body:has(.me-hub) .columns-area__panels__main {
 }
 
 .me-hub {
-  // Two-row grid so the title top-anchors like every other space
-  // header, while the wheel + hint pair centers vertically in the
-  // remaining space. Previously used a single flex-column with
-  // `justify-content: center`, which put the title in the middle
-  // of the viewport — off from the standard title location.
+  // The wheel is meant to sit at the visual centre of the full
+  // viewport, not just at the centre of the *row below the title*.
+  // Previous approach was a two-row grid (auto + 1fr) that centred
+  // the wheel inside its own row — which meant title+padding at the
+  // top ate a chunk of vertical space, and the wheel sank BELOW
+  // viewport centre (Tal 2026-08-11: "still a huge gap between the
+  // circle and the title, not central at all").
+  // New shape: single flex container that centres the wheel-stack
+  // on the whole me-hub, with the title lifted OUT of the flex flow
+  // and absolutely top-anchored. That way the header still reads
+  // where every other space header reads, and the wheel is
+  // genuinely at viewport centre regardless of title/tagline height.
   // Background is transparent so the global <KronkKosmos> ambient
-  // canvas (mounted at Frame level, z-0) shows through — this used
-  // to paint `--kosmos-void` + a local `<MeHubStars>` field, both
-  // of which hid the actual Kronk sky. Now the /me hub matches the
-  // Kommunity/Inflow treatment and the same night sky reads across
-  // every space.
+  // canvas (mounted at Frame level, z-0) shows through — the /me
+  // hub matches the Kommunity/Inflow treatment.
   position: relative;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  padding: clamp(1rem, 2.5vh, 1.75rem) 1rem clamp(1.5rem, 4vh, 2.5rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 1rem;
   min-height: 100vh;
   background: transparent;
   color: var(--text-primary);
   overflow: hidden;
 }
 
-// Row 1: title block. Uses the shared `.space-header` classes for
-// typography; this scope just centers horizontally and neutralises
-// the border/padding `.space-header` sometimes carries in other
-// contexts.
+// Title lifted out of the flex flow so the wheel below can centre
+// against the whole viewport height instead of "viewport minus
+// title area". Absolute-positioned across the top; horizontally
+// centred by left/right/margin trick that respects the container's
+// padding.
 .me-hub__title {
-  position: relative;
+  position: absolute;
+  top: clamp(1rem, 2.5vh, 1.75rem);
+  left: 0;
+  right: 0;
   z-index: 1;
-  justify-self: center;
   text-align: center;
   margin: 0;
   padding: 0;
@@ -57,20 +66,15 @@ body:has(.me-hub) .columns-area__panels__main {
   background: transparent;
 }
 
-// Row 2: wheel + hint pair. Vertically centered in the space below
-// the title so the wheel sits in the middle of the viewport, not
-// tucked up against the header. `padding-top`'s min-space keeps a
-// visible breather between title and wheel on short viewports; the
-// `1fr` grid row + `justify-content: center` do the rest.
+// Wheel + hint pair. Sits at the flex-column centre of `.me-hub`
+// (viewport-centre thanks to `justify-content: center` above).
 .me-hub__stack {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 1.5rem;
-  padding-top: clamp(1rem, 3vh, 2.25rem);
 }
 
 // The wheel is a square whose side = 2 × (radius + bubble width).
