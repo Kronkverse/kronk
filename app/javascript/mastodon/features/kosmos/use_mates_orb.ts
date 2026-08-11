@@ -29,30 +29,35 @@ export interface OrbData {
   follows: [string, string][];
 }
 
-// Bundled fallback — used while the live fetch is in flight and if it
-// fails. Preserves the visual (density + rhythm are correct from real
-// degrees); only the specific chord identities differ from live data.
+// Bundled fallback — used only if the live fetch fails. Preserves the
+// visual (density + rhythm are correct from real degrees); only the
+// specific chord identities differ from live data.
 const FALLBACK: OrbData = orbData as OrbData;
 
 // Fetches the live Kommunity orb (top-N local accounts + real follow
-// edges) from `GET /api/v1/kommunity/orb`. Falls back to the bundled
-// synthesised JSON on network failure so the sphere always has
-// something to draw. Fires once per mount; the server caches for 5
-// minutes so repeated mounts across the app share one computation.
-export const useMatesOrb = (): OrbData => {
-  const [data, setData] = useState<OrbData>(FALLBACK);
+// edges) from `GET /api/v1/kommunity/orb`. Returns `null` while the
+// first fetch is in flight so the sphere doesn't paint the bundled
+// 150-node fallback for a frame before swapping to the (usually much
+// smaller) live set — Tal 2026-08-11: "when the page first loads, it
+// shows a glimpse of the full orb". Falls back to the bundled JSON
+// on network failure so the sphere always eventually renders.
+// Fires once per mount; the server caches, and busts on User /
+// Follow after_commit hooks — see OrbController.bust_cache!
+export const useMatesOrb = (): OrbData | null => {
+  const [data, setData] = useState<OrbData | null>(null);
   useEffect(() => {
     let cancelled = false;
     apiRequestGet<OrbData>('v1/kommunity/orb')
       .then((live) => {
         if (cancelled) return;
         // A well-formed but empty response (fresh instance, nobody in
-        // the DB yet) would blank the sphere — keep the fallback
-        // rhythm alive until there's at least one real member.
-        if (live.accounts.length > 0) setData(live);
+        // the DB yet) would blank the sphere — fall back to the
+        // bundled rhythm so there's always something to draw.
+        setData(live.accounts.length > 0 ? live : FALLBACK);
       })
       .catch(() => {
-        // Silent — the bundled fallback is already on screen.
+        if (cancelled) return;
+        setData(FALLBACK);
       });
     return () => {
       cancelled = true;

@@ -127,6 +127,13 @@ class User < ApplicationRecord
   after_create_commit :fire_email_confirmation_reminder
   after_create_commit :enqueue_inviter_groove, if: :invited?
   after_update_commit :clear_email_confirmation_reminders, if: :saved_change_to_confirmed_at?
+  # A fresh signup / confirmation / destroy shifts the Kommunity orb's
+  # membership set (matches the OrbController's stale-filter subquery
+  # `User.where.not(confirmed_at: nil).select(:account_id)`), so bust
+  # the cached projection on any User commit — the next viewer of
+  # /hub/kommunity picks up the change instead of waiting on the
+  # 5-min TTL.
+  after_commit :bust_kommunity_orb_cache
 
   normalizes :locale, with: ->(locale) { I18n.available_locales.exclude?(locale.to_sym) ? nil : locale }
   normalizes :time_zone, with: ->(time_zone) { ActiveSupport::TimeZone[time_zone].nil? ? nil : time_zone }
@@ -598,5 +605,9 @@ class User < ApplicationRecord
 
   def trigger_webhooks
     TriggerWebhookWorker.perform_async('account.created', 'Account', account_id)
+  end
+
+  def bust_kommunity_orb_cache
+    Api::V1::Kommunity::OrbController.bust_cache!
   end
 end

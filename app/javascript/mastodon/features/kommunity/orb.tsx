@@ -153,6 +153,12 @@ export const KronkOrb = () => {
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return undefined;
+    // No data yet — the first fetch is still in flight. Skip the
+    // whole THREE.js scene build; the effect re-runs when `orb`
+    // populates. Prevents the pre-#1338 "glimpse of the bundled
+    // 150-node fallback" flash before the (usually smaller) live
+    // set arrives.
+    if (!orb) return undefined;
 
     const palette = readOrbPalette();
     const layout = buildOrbLayout(orb, palette);

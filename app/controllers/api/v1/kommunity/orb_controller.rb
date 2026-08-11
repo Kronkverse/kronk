@@ -13,10 +13,15 @@
 # (`orb_synthesised.json`), which the client uses on failure. See
 # `app/javascript/mastodon/features/kosmos/use_mates_orb.ts`.
 #
-# Response is cached for CACHE_TTL — the orb is a whole-instance
-# projection, so repeated hits from many viewers should share one
-# computation. 5 minutes matches the pace at which follow / signup
-# events would meaningfully change the shape of the sphere.
+# Response is cached under CACHE_KEY — the orb is a whole-instance
+# projection, so repeated hits from many viewers share one
+# computation. Cache is invalidated on the model side (see
+# `User#bust_kommunity_orb_cache` and `Follow#bust_kommunity_orb_cache`)
+# whenever the community set OR the follow graph between orb members
+# changes — so a fresh signup or a new follow shows up on the next
+# fetch, not five minutes later (Tal 2026-08-11: "I just created a
+# new user, and I don't think they were added to the orb"). The TTL
+# is kept as a belt-and-suspenders ceiling.
 class Api::V1::Kommunity::OrbController < Api::BaseController
   include RoutingHelper
 
@@ -29,6 +34,13 @@ class Api::V1::Kommunity::OrbController < Api::BaseController
   SOCKET_COUNT = 150
   CACHE_KEY    = 'kommunity:orb:v1'
   CACHE_TTL    = 5.minutes
+
+  # Called by model after_commit hooks to invalidate the cached
+  # projection. Kept at controller scope so callers only need the one
+  # constant + method name to invalidate the right key.
+  def self.bust_cache!
+    Rails.cache.delete(CACHE_KEY)
+  end
 
   def show
     data = Rails.cache.fetch(CACHE_KEY, expires_in: CACHE_TTL) { build_orb }
