@@ -2,13 +2,18 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import AboriginalFlagIcon from '@/material-icons/400-24px/aboriginal_flag.svg?react';
+import aboriginalFlag from '@/images/aboriginal-flag.svg';
 
 // AWAWB — a still page. Reached from the middle pillar of the top
 // Membrane (see hub_switcher.tsx); the icon there is the Aboriginal
 // flag glyph. This page places the flag itself in the centre with
 // two lines flanking it — "Always was." above, "Always will be."
 // below. Nothing else. The stillness is the point.
+//
+// Uses the full tri-colour flag (black/red halves + yellow sun) as
+// a static image asset — imported as an `<img>` src so the internal
+// fills survive (Kronk chrome would otherwise recolour a
+// currentColor SVG icon).
 
 const messages = defineMessages({
   title: {
@@ -25,10 +30,10 @@ const Awawb: React.FC = () => {
       <p className='awawb-page__line awawb-page__line--top'>
         <FormattedMessage id='awawb.line_top' defaultMessage='Always was.' />
       </p>
-      <AboriginalFlagIcon
+      <img
         className='awawb-page__flag'
-        role='img'
-        aria-label={intl.formatMessage(messages.title)}
+        src={aboriginalFlag}
+        alt={intl.formatMessage(messages.title)}
       />
       <p className='awawb-page__line awawb-page__line--bottom'>
         <FormattedMessage
