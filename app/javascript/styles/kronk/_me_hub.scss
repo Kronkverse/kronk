@@ -21,43 +21,52 @@ body:has(.me-hub) .columns-area__panels__main {
 }
 
 .me-hub {
-  // The wheel is meant to sit at the visual centre of the full
-  // viewport, not just at the centre of the *row below the title*.
-  // Previous approach was a two-row grid (auto + 1fr) that centred
-  // the wheel inside its own row — which meant title+padding at the
-  // top ate a chunk of vertical space, and the wheel sank BELOW
-  // viewport centre (Tal 2026-08-11: "still a huge gap between the
-  // circle and the title, not central at all").
-  // New shape: single flex container that centres the wheel-stack
-  // on the whole me-hub, with the title lifted OUT of the flex flow
-  // and absolutely top-anchored. That way the header still reads
-  // where every other space header reads, and the wheel is
-  // genuinely at viewport centre regardless of title/tagline height.
+  // One flex column that centres the whole title+wheel+hint block
+  // as a single composition. Two earlier attempts each fixed one axis
+  // but broke the other:
+  //   * two-row grid (auto+1fr) → title top-anchored, wheel sank
+  //     below viewport centre (the wheel centred *inside its row*,
+  //     which starts below the title).
+  //   * flex + absolute-positioned title → wheel centred against the
+  //     column, but the title floated alone at the top with a
+  //     visually detached 190-px gap to the wheel (Tal 2026-08-11:
+  //     "still a huge gap between the circle and the title, not
+  //     central at all").
+  // The right composition is: title, wheel, hint as three flex
+  // children with a snug gap between them, and the whole trio
+  // centred as one block. Reads as an intentional dial with a name
+  // above it instead of a header pinned to a distant wheel.
   // Background is transparent so the global <KronkKosmos> ambient
-  // canvas (mounted at Frame level, z-0) shows through — the /me
-  // hub matches the Kommunity/Inflow treatment.
+  // canvas (mounted at Frame level, z-0) shows through — matches
+  // the Kommunity/Inflow treatment.
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 0 1rem;
-  min-height: 100vh;
+  gap: 1.5rem;
+  padding: 1.5rem 1rem;
+
+  // The Kronk Frame grid reserves a 4.25rem row for the fixed
+  // top-band (see _kronk_frame.scss `grid-template-rows: 4.25rem 1fr`
+  // and `.kronk-frame__stage { grid-row: 2 / -1 }`). Stage height =
+  // viewport - 4.25rem. `min-height: 100vh` would extend beyond the
+  // visible stage and bias the centred block down. Subtract the
+  // top-band track so vertical centring lines up with what the user
+  // actually sees.
+  min-height: calc(100vh - 4.25rem);
+  min-height: calc(100dvh - 4.25rem);
   background: transparent;
   color: var(--text-primary);
   overflow: hidden;
 }
 
-// Title lifted out of the flex flow so the wheel below can centre
-// against the whole viewport height instead of "viewport minus
-// title area". Absolute-positioned across the top; horizontally
-// centred by left/right/margin trick that respects the container's
-// padding.
+// Title now flows naturally at the top of the centred block (no
+// longer top-anchored via `position: absolute`). Zero its default
+// space-header padding/border so the flex `gap` alone controls
+// spacing to the wheel below.
 .me-hub__title {
-  position: absolute;
-  top: clamp(1rem, 2.5vh, 1.75rem);
-  left: 0;
-  right: 0;
+  position: relative;
   z-index: 1;
   text-align: center;
   margin: 0;
@@ -66,8 +75,8 @@ body:has(.me-hub) .columns-area__panels__main {
   background: transparent;
 }
 
-// Wheel + hint pair. Sits at the flex-column centre of `.me-hub`
-// (viewport-centre thanks to `justify-content: center` above).
+// Wheel + hint pair. Nested flex column so the hint sits closer to
+// the wheel than the wheel sits to the title (visual weight).
 .me-hub__stack {
   position: relative;
   z-index: 1;
