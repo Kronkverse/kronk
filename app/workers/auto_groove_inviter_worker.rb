@@ -39,6 +39,24 @@ class AutoGrooveInviterWorker
     # sees the inviter's feed instantly").
     FollowService.new.call(invitee, inviter, bypass_locked: true)
     FollowService.new.call(inviter, invitee, bypass_locked: true) unless inviter.following?(invitee)
+
+    # `FollowService` enqueues a `MergeWorker` for both directions,
+    # but that worker's `merge_into_home` early-returns unless the
+    # target user is `signed_in_recently?` — which a brand-new
+    # invitee never is (they haven't signed in at all). Result: the
+    # follow lands but the invitee's home stays empty when they
+    # first arrive (Tal 2026-08-11).
+    #
+    # Force-populate through `RegenerationWorker` instead — it
+    # routes through `PrecomputeFeedService` → `populate_home`,
+    # which has no activity gate and iterates `invitee.following`
+    # (the inviter, now on the graph). One extra background job
+    # per invited signup; noise is negligible.
+    #
+    # The inviter's side needs no help — they *are* signed in
+    # recently, so their MergeWorker fires normally and pulls the
+    # invitee's early posts as they arrive.
+    RegenerationWorker.perform_async(invitee.id)
   rescue Mastodon::NotPermittedError, ActiveRecord::RecordNotFound => e
     Rails.logger.warn("AutoGrooveInviterWorker: user #{user_id} could not mate inviter: #{e.class} #{e.message}")
   end
