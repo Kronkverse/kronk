@@ -6,7 +6,7 @@ import { Switch, Route, useLocation } from 'react-router-dom';
 import StackTrace from 'stacktrace-js';
 
 import BundleColumnError from '../components/bundle_column_error';
-import { ColumnLoading } from '../components/column_loading';
+import { ColumnLoading, StageLoading } from '../components/column_loading';
 import BundleContainer from '../containers/bundle_container';
 
 // Small wrapper to pass multiColumn to the route components
@@ -40,6 +40,10 @@ export class WrappedRoute extends Component {
     content: PropTypes.node,
     multiColumn: PropTypes.bool,
     componentParams: PropTypes.object,
+    path: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.arrayOf(PropTypes.string),
+    ]),
   };
 
   static defaultProps = {
@@ -87,7 +91,15 @@ export class WrappedRoute extends Component {
   };
 
   renderLoading = () => {
-    const { multiColumn } = this.props;
+    const { multiColumn, path } = this.props;
+
+    // Hub / korner routes render into a <Stage>, not a <Column>. Their
+    // lazy-load fallback must be the chrome-less stage skeleton — otherwise
+    // the legacy <ColumnHeader> bar flashes at the top until the bundle
+    // mounts and the Stage replaces it.
+    if (typeof path === 'string' && path.startsWith('/hub')) {
+      return <StageLoading />;
+    }
 
     return <ColumnLoading multiColumn={multiColumn} />;
   };
