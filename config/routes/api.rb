@@ -217,6 +217,10 @@ namespace :api, format: false do
       # local accounts the viewer is allowed to see per each account's
       # `kommunity_discoverability`, paginated by activity.
       get 'discover', to: 'discover#index'
+      # Orb — top-N local accounts + follow edges between them.
+      # Powers the <KronkOrb> Fibonacci sphere; response is cached
+      # server-side (see OrbController::CACHE_TTL).
+      get 'orb', to: 'orb#show'
     end
 
     resources :reports, only: [:create]
