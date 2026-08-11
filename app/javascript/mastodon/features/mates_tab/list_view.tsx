@@ -1,18 +1,15 @@
-// Mates list view — the default face of /@:acct/mates. A plain
-// contact list, in the Signal / iPhone Contacts style: one row per
-// person, avatar left, name + handle stacked, subtle divider between
-// rows. No filter chips, no in-page search (the Ж-menu / floating
-// bubble owns platform-wide search), no dates, no relationship
-// badges — just a scannable roster of everyone in this subject's
-// community. Tap a row → their profile.
+// Mates list view — the only face of /@:acct/mates now that the
+// timeline retired (Tal 2026-08-11). A clean contact list: one row
+// per person, real avatar left, name + handle stacked, "Mates since
+// {date}" (or "Joined {date}" for the inviter / invitees who aren't
+// mutuals) below. Tap a row → their profile.
 //
-// Data source: the same `useMatesTimeline` fetch that powers the
-// event-timeline view. The outer `<MatesTab>` shell owns the fetch,
-// so both views share it.
+// Data source: the same `useMatesTimeline` fetch that used to power
+// both views. The outer `<MatesTab>` shell owns the fetch.
 
 import { useMemo } from 'react';
 
-import { defineMessages, FormattedMessage } from 'react-intl';
+import { defineMessages, FormattedDate, useIntl } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
@@ -21,16 +18,26 @@ import type { MatesTimelineData, TimelineMember } from './use_mates_timeline';
 interface Row {
   key: string;
   member: TimelineMember;
-  // Kept only to sort — most-recent connection first (mate bond date
-  // when we have one; otherwise the other member's join date, which
-  // covers the inviter + invitees). Not rendered.
-  sortDate: string;
+  // The mutual-follow bond date when it exists; the second-party join
+  // date otherwise (covers inviter + invitees). Rendered under the
+  // handle as "Mates since …" / "Joined …" and also used to sort the
+  // list newest-first.
+  sinceDate: string;
+  isMate: boolean;
 }
 
 const messages = defineMessages({
   empty: {
     id: 'mates_tab.list.empty',
     defaultMessage: 'No community yet — invite someone to get things started.',
+  },
+  matesSince: {
+    id: 'mates_tab.list.mates_since',
+    defaultMessage: 'Mates since {date}',
+  },
+  joined: {
+    id: 'mates_tab.list.joined',
+    defaultMessage: 'Joined {date}',
   },
 });
 
@@ -56,10 +63,12 @@ export const MatesListView: React.FC<MatesListViewProps> = ({
   data,
   subject,
 }) => {
-  // Flat list of every non-subject member in the community — mates,
-  // inviter, invitees, all treated identically for display. Sorted by
-  // "how recently did this connection happen" so the newest additions
-  // sit at the top.
+  const intl = useIntl();
+
+  // Flat list of every non-subject member — mates, inviter, invitees.
+  // Sorted by "how recently did this connection happen" (mate bond
+  // date if mutual, join date otherwise) so newest additions sit on
+  // top.
   const rows = useMemo<Row[]>(() => {
     const out: Row[] = [];
     data.members.forEach((m) => {
@@ -68,18 +77,20 @@ export const MatesListView: React.FC<MatesListViewProps> = ({
       out.push({
         key: m.id,
         member: m,
-        sortDate: bondDate ?? m.joined_at,
+        sinceDate: bondDate ?? m.joined_at,
+        isMate: bondDate !== null,
       });
     });
     return out.sort(
-      (a, b) => new Date(b.sortDate).getTime() - new Date(a.sortDate).getTime(),
+      (a, b) =>
+        new Date(b.sinceDate).getTime() - new Date(a.sinceDate).getTime(),
     );
   }, [data.members, data.mates, subject.id]);
 
   if (rows.length === 0) {
     return (
       <div className='mates-list__empty'>
-        <FormattedMessage {...messages.empty} />
+        {intl.formatMessage(messages.empty)}
       </div>
     );
   }
@@ -87,16 +98,37 @@ export const MatesListView: React.FC<MatesListViewProps> = ({
   return (
     <ul className='mates-list'>
       {rows.map((r) => (
-        <RowItem key={r.key} member={r.member} />
+        <RowItem
+          key={r.key}
+          member={r.member}
+          sinceDate={r.sinceDate}
+          isMate={r.isMate}
+        />
       ))}
     </ul>
   );
 };
 
-const RowItem: React.FC<{ member: TimelineMember }> = ({ member }) => {
+interface RowItemProps {
+  member: TimelineMember;
+  sinceDate: string;
+  isMate: boolean;
+}
+
+const RowItem: React.FC<RowItemProps> = ({ member, sinceDate, isMate }) => {
+  const intl = useIntl();
   const initial =
     member.display_name.trim().charAt(0).toUpperCase() ||
     member.handle.charAt(0).toUpperCase();
+  const dateNode = (
+    <FormattedDate
+      value={sinceDate}
+      year='numeric'
+      month='short'
+      day='numeric'
+    />
+  );
+
   return (
     <li className='mates-list__row'>
       <Link
@@ -105,11 +137,28 @@ const RowItem: React.FC<{ member: TimelineMember }> = ({ member }) => {
         aria-label={`${member.display_name} — @${member.handle}`}
       >
         <span className='mates-list__avatar' aria-hidden>
-          {initial}
+          {member.avatar ? (
+            <img
+              className='mates-list__avatar-img'
+              src={member.avatar}
+              alt=''
+              loading='lazy'
+            />
+          ) : (
+            initial
+          )}
         </span>
         <span className='mates-list__body'>
           <span className='mates-list__name'>{member.display_name}</span>
           <span className='mates-list__handle'>@{member.handle}</span>
+          <span className='mates-list__since'>
+            {intl.formatMessage(
+              isMate ? messages.matesSince : messages.joined,
+              {
+                date: dateNode,
+              },
+            )}
+          </span>
         </span>
       </Link>
     </li>
