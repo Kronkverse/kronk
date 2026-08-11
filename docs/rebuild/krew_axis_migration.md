@@ -1,8 +1,10 @@
 # Krew orthogonal-axis migration — status & handoff
 
-**Status: the backend is complete — Moments, Album, and Status are all krew-
-orthogonal end-to-end (stages 1–3 merged). Only the composer UI remains
-(stage 4, in progress).** Last updated 2026-08-11.
+**Status: complete.** Krew is an orthogonal, additive audience axis end-to-end
+— Moments, Album, and Status models; every composer (main, Moments, Albutts)
+and the Moments edit path; and the shared `ReachValue`/`StatusVisibility` types
+no longer carry `krew`. Albutts contribution became additive too (people ∪
+krews). The final cleanup is in review (#1347). Last updated 2026-08-11.
 
 This is a living tracker for an in-progress, multi-stage change to core
 visibility. The decision itself lives in [`decisions.md`](./decisions.md)
@@ -91,22 +93,23 @@ their own dialect. A later unification is possible but not attempted here.
 
 ## Progress
 
-| Stage | What                                                                   | PR    | State          |
-| ----- | ---------------------------------------------------------------------- | ----- | -------------- |
-| 1/4   | **Moments** — krew orthogonal, migration, accept-both                  | #1312 | ✅ merged      |
-| —     | **Extract `Reachable`** + Moment adopts it                             | #1316 | ✅ merged      |
-| 2/4   | **Album** — adopts `Reachable`, krew orthogonal, migration             | #1319 | ✅ merged      |
-| 3/4   | **Status** — StatusPolicy + fan-out + federation, migration            | #1325 | ✅ merged      |
-| 4a/4  | **Main composer** — additive krew submenu in the reach dropdown        | #1331 | ✅ merged      |
-| 4b/4  | **Moments composer** — single-krew additive submenu                    | #1332 | ✅ merged      |
-| 4c/4  | **Albutts** — additive contribution roster (backend)                   | #1339 | ✅ merged      |
-| 4c/4  | **Albutts** `ScopePicker` — additive audience + contribution (UI)      | #1343 | 🔨 in review   |
-| 4d/4  | **Moments edit** (`viewer.tsx`) — additive on the edit path            | —     | ⬜ not started |
-| 4e/4  | **Remove `krew` from the shared `ReachValue`/`StatusVisibility` type** | —     | ⬜ not started |
+| Stage | What                                                                   | PR    | State        |
+| ----- | ---------------------------------------------------------------------- | ----- | ------------ |
+| 1/4   | **Moments** — krew orthogonal, migration, accept-both                  | #1312 | ✅ merged    |
+| —     | **Extract `Reachable`** + Moment adopts it                             | #1316 | ✅ merged    |
+| 2/4   | **Album** — adopts `Reachable`, krew orthogonal, migration             | #1319 | ✅ merged    |
+| 3/4   | **Status** — StatusPolicy + fan-out + federation, migration            | #1325 | ✅ merged    |
+| 4a/4  | **Main composer** — additive krew submenu in the reach dropdown        | #1331 | ✅ merged    |
+| 4b/4  | **Moments composer** — single-krew additive submenu                    | #1332 | ✅ merged    |
+| 4c/4  | **Albutts** — additive contribution roster (backend)                   | #1339 | ✅ merged    |
+| 4c/4  | **Albutts** `ScopePicker` — additive audience + contribution (UI)      | #1343 | ✅ merged    |
+| 4d/4  | **Moments edit** (`viewer.tsx`) — additive on the edit path            | #1347 | 🔨 in review |
+| 4e/4  | **Remove `krew` from the shared `ReachValue`/`StatusVisibility` type** | #1347 | 🔨 in review |
 
-All three content models (Moment, Album, Status) are done: krew is an additive
-axis end-to-end on the backend, and legacy `visibility=krew` is accept-both
-everywhere. What's left is purely composer UI.
+Every stage has landed (4d + 4e in the final cleanup PR). Krew is an additive
+axis end-to-end — models, feeds, federation, every composer, and the shared
+types — and legacy `visibility=krew` remains accept-both everywhere as a
+permanent safety net.
 
 ---
 
@@ -131,10 +134,10 @@ visibility = <krew>`, wrapped in `safety_assured`. The krew association is
 
 ---
 
-## Remaining work
+## How it was built (per stage)
 
-The backend is done (stages 1–3). What's left is composer UI — teaching each
-composer to send a reach tier **plus** an independent set of krews.
+Each composer learned to send a reach tier **plus** an independent set of krews.
+The stages below are the historical record; all are merged (4d/4e in review).
 
 ### The composer UX (decided)
 
