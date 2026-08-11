@@ -8,6 +8,18 @@
 // `transform: rotate(--spoke-angle) translate(0, -radius)
 //            rotate(calc(-1 * --spoke-angle))`.
 
+// The classic Mastodon column stack caps `.columns-area__panels
+// __panels__main` at 720px + auto margins, which is right for
+// reading feeds but leaves the wheel sitting in a narrow strip on
+// the left of the Stage (right-band eats the right 7.75rem, so the
+// 720 column ends up visually offset). Retire the cap on /me so
+// the wheel centres across the full Stage cell — Tal 2026-08-11:
+// "why is the circle of options not central to the page?".
+body:has(.me-hub) .columns-area__panels,
+body:has(.me-hub) .columns-area__panels__main {
+  max-width: none;
+}
+
 .me-hub {
   // Two-row grid so the title top-anchors like every other space
   // header, while the wheel + hint pair centers vertically in the
