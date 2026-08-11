@@ -104,6 +104,10 @@ interface Props {
   krews?: readonly KrewOption[];
   selectedKrewIds?: readonly string[];
   onToggleKrew?: (id: string) => void;
+  // Single-krew korners (e.g. Moments, whose model holds one `krew_id`) render
+  // the submenu as a radio list — picking one clears the rest. Multi-select by
+  // default; the call site still enforces the constraint in `onToggleKrew`.
+  krewSingleSelect?: boolean;
 }
 
 const ReachMenuItem: React.FC<{
@@ -142,8 +146,9 @@ const ReachMenuItem: React.FC<{
 const KrewSubmenuItem: React.FC<{
   krew: KrewOption;
   checked: boolean;
+  single: boolean;
   onToggle: (id: string) => void;
-}> = ({ krew, checked, onToggle }) => {
+}> = ({ krew, checked, single, onToggle }) => {
   const handleClick = useCallback(() => {
     onToggle(krew.id);
   }, [onToggle, krew.id]);
@@ -151,12 +156,14 @@ const KrewSubmenuItem: React.FC<{
   return (
     <button
       type='button'
-      role='menuitemcheckbox'
+      role={single ? 'menuitemradio' : 'menuitemcheckbox'}
       aria-checked={checked}
       onClick={handleClick}
       className={`reach-dropdown__krew${checked ? ' reach-dropdown__krew--checked' : ''}`}
     >
-      <span className='reach-dropdown__krew-box'>
+      <span
+        className={`reach-dropdown__krew-box${single ? ' reach-dropdown__krew-box--radio' : ''}`}
+      >
         <Icon id='' icon={CheckIcon} className='reach-dropdown__krew-check' />
       </span>
       <span className='reach-dropdown__item-text'>
@@ -177,6 +184,7 @@ export const ReachDropdown: React.FC<Props> = ({
   krews,
   selectedKrewIds,
   onToggleKrew,
+  krewSingleSelect = false,
 }) => {
   const hideSet = new Set<ReachValue>(hide ?? []);
   const visibleOrder = ORDER.filter((o) => !hideSet.has(o));
@@ -335,6 +343,7 @@ export const ReachDropdown: React.FC<Props> = ({
                         key={krew.id}
                         krew={krew}
                         checked={selectedKrews.includes(krew.id)}
+                        single={krewSingleSelect}
                         onToggle={handleToggleKrew}
                       />
                     ))
