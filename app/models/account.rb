@@ -203,7 +203,21 @@ class Account < ApplicationRecord
   scope :kommunity_discoverable_to, lambda { |viewer|
     return none if viewer.nil?
 
-    base = local.without_suspended.without_silenced.where.not(id: viewer.id)
+    # Drop stale accounts before the discoverability gate — moved
+    # accounts (redirects, shouldn't surface as themselves),
+    # memorialized accounts, and orphans whose User row was destroyed.
+    # `where(id: User.where.not(confirmed_at: nil).select(:account_id))`
+    # keeps only accounts backed by a confirmed User row, which
+    # simultaneously drops unconfirmed signups + true orphans
+    # (Tal 2026-08-11: "some users mentioned on the 'Discover' page
+    # who i think are no longer accounts"). The base scope already
+    # dropped suspended + silenced; extending here.
+    base = local.without_suspended
+                .without_silenced
+                .without_memorial
+                .where(moved_to_account_id: nil)
+                .where(id: User.where.not(confirmed_at: nil).select(:account_id))
+                .where.not(id: viewer.id)
     base = base.where.not(id: viewer.excluded_from_timeline_account_ids)
 
     everyone_scope = base.kommunity_discoverable_by_everyone
