@@ -251,6 +251,29 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
       if (!id) return;
       const node = tree[id];
       if (!node) return;
+      // Aggregator limbs (Hub, Kronk — limbs directly under root that
+      // don't own a Space page of their own) are browse containers,
+      // not pickable targets: proposing changes to "the Hub" as an
+      // abstraction isn't meaningful, and the current toggle-branch
+      // behaviour collapses the very list the user was reading (Tal
+      // 2026-08-12). Tapping one just re-opens + re-centres + eases
+      // the zoom out so all its children fit. Applied in both modes
+      // since the ambiguity is the same — there's no meta page for
+      // an aggregator limb either.
+      const isAggregatorLimb =
+        node.parent === ROOT_ID &&
+        !node.space &&
+        !node.korner &&
+        !node.url &&
+        node.kids.length > 0;
+      if (isAggregatorLimb) {
+        focusRef.current = id;
+        setSelected(null);
+        setOpen((o) => (o.has(id) ? o : toggleBranch(o, tree, id, ROOT_ID)));
+        flashZoomTransition();
+        setZoom((z) => Math.min(z, 0.75));
+        return;
+      }
       // A korner (or a space-pillar like Nudges) is a space, not a branch to
       // drill: open its Space page (the why / who / open-proposals view) rather
       // than expanding its internal pages. The tree is for browsing; the Space page
@@ -297,7 +320,7 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
         setSelected((s) => (s === id ? null : id));
       }
     },
-    [tree, history, pick],
+    [tree, history, pick, flashZoomTransition],
   );
 
   const openComposer = useCallback(() => {
