@@ -60,7 +60,11 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
     border: 1px solid
       color-mix(in oklab, var(--kronk-purple-accent) 22%, transparent);
     background: color-mix(in oklab, var(--kronk-purple-accent) 8%, transparent);
-    color: color-mix(in oklab, #fff 72%, var(--kronk-purple-accent));
+    color: color-mix(
+      in oklab,
+      var(--semantic-text-on-accent) 72%,
+      var(--kronk-purple-accent)
+    );
     text-decoration: none;
     position: relative;
     transition:
@@ -77,10 +81,10 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
       top: 50%;
       transform: translateY(-50%);
       padding: 0.35rem 0.7rem;
-      background: #000;
+      background: rgb(0 0 0);
       border: 1px solid var(--kronk-purple-accent);
       border-radius: var(--radius-medium);
-      color: #fff;
+      color: var(--semantic-text-on-accent);
       font-family: var(--font-display);
       font-size: 0.85rem;
       font-weight: 600;
@@ -111,13 +115,13 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
         transparent
       );
       border-color: var(--kronk-purple-accent);
-      color: #fff;
+      color: var(--semantic-text-on-accent);
       transform: translateX(2px);
       outline: none;
 
       .korner-sidebar__glyph {
         background: var(--kronk-purple-accent);
-        color: #fff;
+        color: var(--semantic-text-on-accent);
       }
     }
 
@@ -128,7 +132,7 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
         transparent
       );
       border-color: var(--kronk-purple-accent);
-      color: #fff;
+      color: var(--semantic-text-on-accent);
       box-shadow: inset 0 0 0 1px
         color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
 
@@ -148,7 +152,7 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
 
       .korner-sidebar__glyph {
         background: var(--kronk-purple-accent);
-        color: #fff;
+        color: var(--semantic-text-on-accent);
       }
     }
 
@@ -180,7 +184,11 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
     // near-white with a subtle purple tint, so shapes read at a
     // glance without competing with the hover/active saturated fill.
     background: color-mix(in oklab, var(--kronk-purple-deep) 55%, transparent);
-    color: color-mix(in oklab, #fff 82%, var(--kronk-purple-bright));
+    color: color-mix(
+      in oklab,
+      var(--semantic-text-on-accent) 82%,
+      var(--kronk-purple-bright)
+    );
     transition:
       background var(--dur-fast) var(--ease-out),
       color var(--dur-fast) var(--ease-out);
@@ -213,7 +221,7 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
     padding: 0 4px;
     border-radius: var(--radius-round); // 999px pill
     background: var(--kronk-purple-accent);
-    color: #fff;
+    color: var(--semantic-text-on-accent);
     font-size: 10px;
     font-weight: 700;
     line-height: 1;
