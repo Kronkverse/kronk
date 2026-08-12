@@ -45,16 +45,19 @@ feed_projection:
 notifications:
   types:
     - name: huddle_starting
+      planned: true # no producer yet — L10 tracks this as a warning
       subject_type: huddle_session
       default_push: true
       aggregation: none
       interactive: true # nudge — T-5min for scheduled sessions
     - name: huddle_participant_joined
+      planned: true # no producer yet — L10 tracks this as a warning
       subject_type: huddle_session
       default_push: false # host-only, potentially noisy
       aggregation: { window: 5m, key: huddle_session_id }
       interactive: false # notice
     - name: huddle_ended
+      planned: true # no producer yet — L10 tracks this as a warning
       subject_type: huddle_session
       default_push: false
       aggregation: none

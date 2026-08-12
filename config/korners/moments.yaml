@@ -95,16 +95,19 @@ feed_projection:
 notifications:
   types:
     - name: moments.froth
+      planned: true # no producer yet — L10 tracks this as a warning
       subject_type: moment
       default_push: false # ambient signal
       aggregation: per_moment # N froths → one notification
       interactive: false
     - name: moments.reply_started
+      planned: true # no producer yet — L10 tracks this as a warning
       subject_type: moment
       default_push: true
       aggregation: none
       interactive: true # opens the Nudges thread
     - name: moments.mention
+      planned: true # no producer yet — L10 tracks this as a warning
       subject_type: moment
       default_push: true
       aggregation: none

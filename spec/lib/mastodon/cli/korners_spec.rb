@@ -140,6 +140,69 @@ RSpec.describe Mastodon::CLI::Korners do
       )
       expect(cli.send(:detect_conformance_issues, manifest)).to all(satisfy { |line| line.exclude?('L10') })
     end
+
+    it 'points an unregistered type at both escape hatches' do
+      issues = issues_for([{ 'name' => 'totally_made_up' }]).join
+
+      expect(issues).to match(/delivery: nudge/).and match(/planned: true/)
+    end
+
+    # `delivery: nudge` — the notification is carried on the Kronk::KornerEvents
+    # bus rather than the legacy Notification store, so requiring registration
+    # would report correct wiring as broken.
+    context 'with delivery: nudge' do
+      it 'accepts an event that is both published and consumed' do
+        # albutts.album.new_photo: published by AlbumPhoto, consumed by the
+        # hand-wired subscriber in nudges_event_bus.rb.
+        issues = issues_for([{ 'name' => 'album_new_photo', 'delivery' => 'nudge', 'event' => 'albutts.album.new_photo' }])
+
+        expect(issues).to all(satisfy { |line| line.exclude?('L10') })
+      end
+
+      it 'flags delivery: nudge with no event named' do
+        expect(issues_for([{ 'name' => 'x', 'delivery' => 'nudge' }]))
+          .to include(a_string_matching(/no `event:`/))
+      end
+
+      it 'flags an event nothing publishes' do
+        expect(issues_for([{ 'name' => 'x', 'delivery' => 'nudge', 'event' => 'nobody.publishes.this' }]))
+          .to include(a_string_matching(/nothing publishes/))
+      end
+
+      # huddle.started IS published by HuddleSession but nothing listens for it.
+      # This is the "fires into the void" case and the reason the consumed half
+      # of the check exists — without it, declaring a published-but-unheard
+      # event would read as conformant.
+      it 'flags an event that is published but consumed by nobody' do
+        expect(issues_for([{ 'name' => 'x', 'delivery' => 'nudge', 'event' => 'huddle.started' }]))
+          .to include(a_string_matching(/nothing consumes/))
+      end
+    end
+
+    # `planned: true` — declared so the settings UI can offer the push toggle,
+    # but nothing delivers it yet. Warning, never gating (mirrors L4 cards).
+    context 'with planned: true' do
+      def planned_warnings_for(notifications)
+        manifest = Kronk::KornerRegistry::Manifest.new(
+          slug: 'testkorner', enforced: true, notifications: notifications
+        )
+        cli.send(:detect_planned_notification_warnings, manifest)
+      end
+
+      it 'does not gate' do
+        expect(issues_for([{ 'name' => 'totally_made_up', 'planned' => true }]))
+          .to all(satisfy { |line| line.exclude?('L10') })
+      end
+
+      it 'warns instead' do
+        expect(planned_warnings_for([{ 'name' => 'totally_made_up', 'planned' => true }]))
+          .to include(a_string_matching(/declared planned/))
+      end
+
+      it 'stays silent for an entry that is not planned' do
+        expect(planned_warnings_for([{ 'name' => 'proposal_status_changed' }])).to be_empty
+      end
+    end
   end
 
   # L11 (Korner Standard §3): the mounted feature file must not
