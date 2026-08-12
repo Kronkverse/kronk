@@ -83,6 +83,7 @@ module.exports = {
         'app/javascript/styles/mastodon/_kommons.scss',
         'app/javascript/styles/mastodon/_kommons_lattice.scss',
         'app/javascript/styles/mastodon/_kommons_tree.scss',
+        'app/javascript/styles/mastodon/_kommunity.scss',
         'app/javascript/styles/mastodon/_krew.scss',
         'app/javascript/styles/mastodon/_map.scss',
         'app/javascript/styles/mastodon/_moments.scss',
