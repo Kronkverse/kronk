@@ -89,10 +89,15 @@ export const layoutLattice = (
     // A→Z can follow one column then the other.
     //
     // Left column sits at the standard depth+1 (where a tidy-tree
-    // parent would place all its kids); right column skips a column
-    // to depth+3 so a Hand in the left half (Kommons, Huddle, etc.)
-    // can still expand its Fingers into the intervening depth+2
-    // column without colliding with the right-column cards.
+    // parent would place all its kids); right column sits at
+    // depth+2, one column-pitch further right (Tal 2026-08-13:
+    // "bring the two sides a bit closer together"). This keeps
+    // both columns and the trunk that runs between them inside a
+    // sensible viewport horizontal budget. Trade-off: a Hand in
+    // the left half (Kommons, Huddle) that expands its Fingers
+    // will drop them at depth+2 too, i.e. on top of the right
+    // column — rare because users typically navigate to a Hand's
+    // Space page rather than expand it inline from the Directory.
     //
     // Hub itself sits **below** the whole block so its trunk visually
     // rises upward past every card (Tal's 2026-08-13 design refinement:
@@ -107,7 +112,7 @@ export const layoutLattice = (
       const leftKids = kids.slice(0, half);
       const rightKids = kids.slice(half);
       const leftDepth = depth + 1;
-      const rightDepth = depth + 3;
+      const rightDepth = depth + 2;
 
       const startY = cursorY;
       const leftYs = leftKids.map((k, i) => {

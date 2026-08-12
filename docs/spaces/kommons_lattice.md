@@ -124,8 +124,11 @@ out just to fit it in view, at which point the cards read as text-too-small (Tal
 screenshot). At that point Hub's kids split across two adjacent columns, alphabetically arranged
 column-major (first half top-to-bottom in the left column, second half top-to-bottom in the right)
 so a reader scanning A→Z can follow one column then the other. Left column stays at `depth+1`; the
-right column sits at `depth+3`, skipping `depth+2` so a Hand in the left half (Kommons, Huddle) can
-still expand its Fingers into that intervening column without colliding with the right column.
+right column sits at `depth+2` (2026-08-13 — was `depth+3` briefly during initial prototyping;
+brought closer per Tal to keep both columns and the trunk inside a sensible viewport horizontal
+budget). Trade-off: a Hand in the left half (Kommons, Huddle) that expands its Fingers will drop
+them at `depth+2` too, i.e. on top of the right column — rare because users typically navigate to
+a Hand's Space page rather than expand it inline from the Directory.
 
 **Hub itself sits below the whole block** (2026-08-13 refinement — Tal: "come out the right hand
 side of the pill, then turn 90° up, then split into left and right sides"). The trunk visually
@@ -133,6 +136,13 @@ rises upward from Hub's right edge past every card; wires branch off to each sid
 the left or right of the trunk. To keep parents that consume Hub's midpoint (Kronk) visually sane
 even though Hub itself is at the block bottom, `walk('hub')` returns the block centre — not
 `pos.hub.y` — for the parent's midpoint calc.
+
+**Focus-on-tap centres the kid block, not Hub itself.** The standard scroll-to-focus (§5) biases
+the acted-on node toward 35% from the viewport's left edge — appropriate when the node's kids grow
+into the next column. Hub with the split layout puts kids on both sides of the trunk, so biasing
+on Hub itself leaves the right column off-screen. Hub's focus handler computes the kid block's
+bounding-box centre and scrolls the viewport to sit that centre in the middle — both columns land
+in view together.
 
 Wires route through a shared vertical trunk in the middle of the gap between the two columns, with
 horizontal branches to each card on either side — the visual is a spine, not a fan of independent

@@ -79,19 +79,44 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
   // After a click changes the layout, ease the plane to bring the acted-on node
   // into view — biased toward the newly grown column, so you see what appeared,
   // not just what you pressed (§5). Scroll targets scale with the zoom.
+  //
+  // Hub is a special case: with the two-column split, biasing on Hub's own
+  // position leaves the right column off-screen (Tal 2026-08-13). When the
+  // focus is Hub and it's open, centre the viewport on the kid block's
+  // bounding box instead so both columns land in view.
   useEffect(() => {
     const id = focusRef.current;
     focusRef.current = null;
     const el = scrollRef.current;
     const p = id ? pos[id] : undefined;
-    if (!el || !p) return;
+    if (!el || !p || !id) return;
+
+    const kids = tree[id]?.kids ?? [];
+    if (id === 'hub' && open.has(id) && kids.length > 0) {
+      const kidPositions = kids.map((k) => pos[k]).filter((kp) => kp);
+      if (kidPositions.length > 0) {
+        const minX = Math.min(...kidPositions.map((kp) => kp?.x ?? 0));
+        const maxX = Math.max(...kidPositions.map((kp) => kp?.x ?? 0));
+        const minY = Math.min(...kidPositions.map((kp) => kp?.y ?? 0));
+        const maxY = Math.max(...kidPositions.map((kp) => kp?.y ?? 0));
+        const centerX = (minX + maxX + COL_W) / 2 + PLANE_PAD.x;
+        const centerY = (minY + maxY + ROW_H) / 2 + PLANE_PAD.y;
+        el.scrollTo({
+          left: Math.max(0, centerX * zoom - el.clientWidth / 2),
+          top: Math.max(0, centerY * zoom - el.clientHeight / 2),
+          behavior: 'smooth',
+        });
+        return;
+      }
+    }
+
     const wantX = p.x + PLANE_PAD.x - 60 + COL_PITCH * 0.35;
     el.scrollTo({
       left: Math.max(0, wantX * zoom - el.clientWidth * 0.35),
       top: Math.max(0, (p.y + PLANE_PAD.y) * zoom - el.clientHeight / 2),
       behavior: 'smooth',
     });
-  }, [pos, zoom]);
+  }, [pos, zoom, tree, open]);
 
   const path = useMemo(() => activePath(open, tree, ROOT_ID), [open, tree]);
   const wires = useMemo(
