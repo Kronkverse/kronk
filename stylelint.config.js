@@ -54,19 +54,48 @@ module.exports = {
     // _tokens.scss is the token source and is expressly exempt.
     {
       files: [
+        // Frame / chrome / shared surfaces
         'app/javascript/styles/mastodon/_kronk_chrome.scss',
         'app/javascript/styles/mastodon/_kronk_org_page.scss',
+        'app/javascript/styles/mastodon/_kronk_search.scss',
         'app/javascript/styles/mastodon/_hub_page.scss',
         'app/javascript/styles/mastodon/_nudges_activity.scss',
+        'app/javascript/styles/mastodon/_nudges_messenger.scss',
         'app/javascript/styles/mastodon/_korner_stub.scss',
         'app/javascript/styles/mastodon/_you_portal.scss',
         'app/javascript/styles/mastodon/_compose_kronk.scss',
+        'app/javascript/styles/mastodon/_kcompose.scss',
+        'app/javascript/styles/mastodon/_kprofile.scss',
         'app/javascript/styles/mastodon/_sectioned_profile.scss',
         'app/javascript/styles/mastodon/_groups.scss',
         'app/javascript/styles/mastodon/_korner_settings.scss',
         'app/javascript/styles/mastodon/_korner_sidebar.scss',
         'app/javascript/styles/mastodon/_feed_settings.scss',
         'app/javascript/styles/mastodon/_styleguide.scss',
+
+        // Korner surfaces (one entry per /hub/<slug> partial)
+        'app/javascript/styles/mastodon/_albutts.scss',
+        'app/javascript/styles/mastodon/_booth.scss',
+        'app/javascript/styles/mastodon/_booth_native.scss',
+        'app/javascript/styles/mastodon/_huddle_rooms.scss',
+        'app/javascript/styles/mastodon/_kalendar_spiral.scss',
+        'app/javascript/styles/mastodon/_klot.scss',
+        'app/javascript/styles/mastodon/_kommons.scss',
+        'app/javascript/styles/mastodon/_kommons_lattice.scss',
+        'app/javascript/styles/mastodon/_kommons_tree.scss',
+        'app/javascript/styles/mastodon/_krew.scss',
+        'app/javascript/styles/mastodon/_map.scss',
+        'app/javascript/styles/mastodon/_moments.scss',
+        'app/javascript/styles/mastodon/_questions.scss',
+        'app/javascript/styles/mastodon/_wachuneed.scss',
+
+        // Feed-card partials (Korner Standard L7: card SCSS must be governed)
+        'app/javascript/styles/mastodon/_status_albutts_card.scss',
+        'app/javascript/styles/mastodon/_status_booth_card.scss',
+        'app/javascript/styles/mastodon/_status_kommons_card.scss',
+        'app/javascript/styles/mastodon/_status_korner_card.scss',
+        'app/javascript/styles/mastodon/_status_trek_card.scss',
+        'app/javascript/styles/mastodon/_status_wachuneed_card.scss',
       ],
       rules: {
         // Raw hex codes are banned. Colours must come from tokens.
