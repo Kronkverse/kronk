@@ -292,7 +292,7 @@ $krew-column-width: 720px;
   }
 
   &__error {
-    color: var(--semantic-danger, #d33);
+    color: var(--semantic-warning-red);
   }
 }
 
@@ -488,15 +488,15 @@ $krew-column-width: 720px;
       background: transparent;
       border-color: color-mix(
         in oklab,
-        var(--semantic-danger, #d33) 40%,
+        var(--semantic-warning-red) 40%,
         transparent
       );
-      color: var(--semantic-danger, #d33);
+      color: var(--semantic-warning-red);
 
       &:hover {
         background: color-mix(
           in oklab,
-          var(--semantic-danger, #d33) 12%,
+          var(--semantic-warning-red) 12%,
           transparent
         );
       }
@@ -597,10 +597,10 @@ $krew-column-width: 720px;
     border-radius: var(--radius-medium);
     background: color-mix(
       in oklab,
-      var(--semantic-danger, #d33) 12%,
+      var(--semantic-warning-red) 12%,
       transparent
     );
-    color: var(--semantic-danger, #d33);
+    color: var(--semantic-warning-red);
     text-align: center;
   }
 
@@ -803,8 +803,8 @@ $krew-column-width: 720px;
     cursor: pointer;
 
     &:hover {
-      color: var(--semantic-danger, #d33);
-      border-color: var(--semantic-danger, #d33);
+      color: var(--semantic-warning-red);
+      border-color: var(--semantic-warning-red);
     }
   }
 
@@ -831,10 +831,10 @@ $krew-column-width: 720px;
     border-radius: var(--radius-medium);
     background: color-mix(
       in oklab,
-      var(--semantic-danger, #d33) 12%,
+      var(--semantic-warning-red) 12%,
       transparent
     );
-    color: var(--semantic-danger, #d33);
+    color: var(--semantic-warning-red);
     font-size: 0.9rem;
     text-align: center;
   }
