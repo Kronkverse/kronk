@@ -110,7 +110,6 @@ import {
   NudgesLegacyArchive,
   Krews,
   KrewDetail,
-  KrewNew,
   Klot,
   KlotSettings,
   Kommunity,
@@ -337,12 +336,17 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={KalendarSpiral} content={children} />}
             {signedIn && <WrappedRoute path="/hub/inflow" component={InflowVeil} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
-            {/* Krews (§KRONK_KREWS). Route order matters: /hub/krew/new
-                and /hub/krew/discover (the Discover SpaceNav view) must
-                resolve before /hub/krew/:id or they get treated as a krew
-                id lookup. Detail accepts either the numeric id or the slug
-                (controller#set_krew disambiguates). */}
-            {signedIn && <WrappedRoute path='/hub/krew/new' exact component={KrewNew} content={children} />}
+            {/* Krews (§KRONK_KREWS). Route order matters: /hub/krew/composer,
+                /hub/krew/new (legacy alias), and /hub/krew/discover (the
+                Discover SpaceNav view) must resolve before /hub/krew/:id or
+                they get treated as a krew id lookup. Detail accepts either
+                the numeric id or the slug (controller#set_krew disambiguates).
+                The composer is a `<ComposeShell>` overlay mounted by the
+                Krews directory — matches the Albutts + Moments pattern
+                (docs/rebuild/decisions.md 2026-08-12). /hub/krew/new is
+                preserved as a legacy alias for pre-shell bookmarks. */}
+            {signedIn && <WrappedRoute path='/hub/krew/composer' exact component={Krews} componentParams={{ autoOpenComposer: true }} content={children} />}
+            {signedIn && <WrappedRoute path='/hub/krew/new' exact component={Krews} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/discover' exact component={Krews} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/:id' component={KrewDetail} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew' component={Krews} content={children} />}

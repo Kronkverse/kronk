@@ -72,7 +72,11 @@ listens: []
 
 compose:
   label: 'Gather a Krew'
-  route: '/hub/krew/new'
+  # The Ж bubble opens the shared `<ComposeShell>` overlay on top of
+  # the Krews directory (matching the Albutts + Moments pattern —
+  # docs/rebuild/decisions.md 2026-08-12). `/hub/krew/new` still
+  # resolves to the same overlay as a legacy alias.
+  route: '/hub/krew/composer'
 
 hub_teaser:
   static: 'Shareable, multi-poster spaces.'

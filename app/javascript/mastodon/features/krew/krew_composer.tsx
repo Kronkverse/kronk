@@ -1,27 +1,30 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
-
-import { useHistory, Link } from 'react-router-dom';
+import { defineMessages, useIntl } from 'react-intl';
 
 import { apiCreateKrew } from 'mastodon/api/krew';
 import type {
+  ApiKrewJSON,
   KrewAccess,
   KrewKornerSlug,
   KrewRequirementInput,
 } from 'mastodon/api/krew';
-import { Stage } from 'mastodon/components/stage';
+import { ComposeShell } from 'mastodon/components/compose_shell';
 
-// Start a Krew (/hub/krew/new) per KRONK_KREWS §7.4. Phase 4c wires
-// the Korner multi-select + requirement builder into the create
-// payload; the backend picks them up in a single transaction. Invite
-// members is deferred until the Nudges routing for it is designed
-// (§3 has no approval queue, so the invited-list is a Nudge-send
-// rather than a pending-membership row).
+// Start a Krew (/hub/krew/composer) — the standard `<ComposeShell>`
+// overlay mounted on top of the Krews directory. Was the full-page
+// `KrewNew` at /hub/krew/new until 2026-08-12; /hub/krew/new is now
+// a legacy alias resolving to the same overlay (see the ui/index.jsx
+// routes + docs/rebuild/decisions.md 2026-08-12 entry).
+//
+// Phase 4c wires the Korner multi-select + requirement builder into
+// the create payload; the backend picks them up in a single
+// transaction. Invite members is deferred until the Nudges routing
+// for it is designed (§3 has no approval queue, so the invited-list
+// is a Nudge-send rather than a pending-membership row).
 
 const messages = defineMessages({
-  title: { id: 'krew.new.title', defaultMessage: 'Gather a Krew' },
-  back: { id: 'krew.new.back', defaultMessage: '← Cancel' },
+  label: { id: 'krew.new.title', defaultMessage: 'Gather a Krew' },
   intro: {
     id: 'krew.new.intro',
     defaultMessage:
@@ -162,9 +165,16 @@ const serialiseRequirement = (
   }
 };
 
-export const KrewNew = () => {
+interface Props {
+  onCancel: () => void;
+  // Fires after a successful create. Parent decides where to navigate
+  // — the Krews directory sends the caller to the freshly-gathered
+  // Krew's page.
+  onCreated: (krew: ApiKrewJSON) => void;
+}
+
+export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const intl = useIntl();
-  const history = useHistory();
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -207,11 +217,11 @@ export const KrewNew = () => {
   const handleKornerToggle = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
   >((e) => {
-    const slug = e.currentTarget.value as KrewKornerSlug;
+    const kornerSlug = e.currentTarget.value as KrewKornerSlug;
     setKorners((prev) =>
       e.currentTarget.checked
-        ? Array.from(new Set([...prev, slug]))
-        : prev.filter((s) => s !== slug),
+        ? Array.from(new Set([...prev, kornerSlug]))
+        : prev.filter((s) => s !== kornerSlug),
     );
   }, []);
 
@@ -236,225 +246,204 @@ export const KrewNew = () => {
     setRequirements((prev) => prev.filter((row) => row.key !== key));
   }, []);
 
-  const canSubmit = name.trim().length > 0 && effectiveSlug.length > 0 && !busy;
+  const canSubmit = name.trim().length > 0 && effectiveSlug.length > 0;
 
-  const submit = useCallback(async () => {
+  const submit = useCallback(() => {
     setError(null);
     setBusy(true);
-    try {
-      const reqPayload =
-        access === 'requirement_gated'
-          ? requirements
-              .map(serialiseRequirement)
-              .filter((r): r is KrewRequirementInput => r !== null)
-          : undefined;
+    void (async () => {
+      try {
+        const reqPayload =
+          access === 'requirement_gated'
+            ? requirements
+                .map(serialiseRequirement)
+                .filter((r): r is KrewRequirementInput => r !== null)
+            : undefined;
 
-      const created = await apiCreateKrew({
-        slug: effectiveSlug,
-        name: name.trim(),
-        description: description.trim() || undefined,
-        access,
-        korner_attachments: korners.length > 0 ? korners : undefined,
-        requirements:
-          reqPayload && reqPayload.length > 0 ? reqPayload : undefined,
-      });
-      history.push(`/hub/krew/${created.slug}`);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : String(e));
-      setBusy(false);
-    }
+        const created = await apiCreateKrew({
+          slug: effectiveSlug,
+          name: name.trim(),
+          description: description.trim() || undefined,
+          access,
+          korner_attachments: korners.length > 0 ? korners : undefined,
+          requirements:
+            reqPayload && reqPayload.length > 0 ? reqPayload : undefined,
+        });
+        onCreated(created);
+        // Note: on success, the parent unmounts us — no need to reset
+        // state or clear `busy` here.
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : String(e));
+        setBusy(false);
+      }
+    })();
   }, [
     access,
     description,
     effectiveSlug,
-    history,
     korners,
     name,
+    onCreated,
     requirements,
   ]);
 
-  const handleSubmit = useCallback<React.FormEventHandler<HTMLFormElement>>(
-    (e) => {
-      e.preventDefault();
-      void submit();
-    },
-    [submit],
-  );
-
   return (
-    <Stage label={intl.formatMessage(messages.title)}>
-      <div className='scrollable krew-new'>
-        <Link to='/hub/krew' className='krew-detail__back'>
-          {intl.formatMessage(messages.back)}
-        </Link>
+    <ComposeShell
+      korner='krew'
+      label={intl.formatMessage(messages.label)}
+      subtitle={intl.formatMessage(messages.intro)}
+      submitLabel={intl.formatMessage(messages.create)}
+      submittingLabel={intl.formatMessage(messages.creating)}
+      submitting={busy}
+      canSubmit={canSubmit}
+      onSubmit={submit}
+      onCancel={onCancel}
+    >
+      <div className='krew-composer'>
+        <fieldset className='krew-composer__fieldset'>
+          <legend className='krew-composer__legend'>
+            {intl.formatMessage(messages.identity)}
+          </legend>
 
-        <header className='krew-page__hero'>
-          <h1 className='krew-page__hero-title'>
-            <FormattedMessage {...messages.title} />
-          </h1>
-          <p className='krew-page__hero-lede'>
-            {intl.formatMessage(messages.intro)}
+          <label className='krew-composer__field'>
+            <span className='krew-composer__field-label'>
+              {intl.formatMessage(messages.name)}
+            </span>
+            <input
+              type='text'
+              value={name}
+              onChange={handleNameChange}
+              placeholder={intl.formatMessage(messages.namePlaceholder)}
+              required
+              className='krew-composer__input'
+            />
+          </label>
+
+          <label className='krew-composer__field'>
+            <span className='krew-composer__field-label'>
+              {intl.formatMessage(messages.slug)}
+            </span>
+            <input
+              type='text'
+              value={effectiveSlug}
+              onChange={handleSlugChange}
+              pattern='[a-z][a-z0-9-]*'
+              className='krew-composer__input'
+            />
+            <small className='krew-composer__field-hint'>
+              {intl.formatMessage(messages.slugHint)}
+            </small>
+          </label>
+
+          <label className='krew-composer__field'>
+            <span className='krew-composer__field-label'>
+              {intl.formatMessage(messages.description)}
+            </span>
+            <textarea
+              value={description}
+              onChange={handleDescriptionChange}
+              placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
+              rows={3}
+              className='krew-composer__input'
+            />
+          </label>
+        </fieldset>
+
+        <fieldset className='krew-composer__fieldset'>
+          <legend className='krew-composer__legend'>
+            {intl.formatMessage(messages.korners)}
+          </legend>
+          <p className='krew-composer__note'>
+            {intl.formatMessage(messages.kornersHint)}
           </p>
-        </header>
-
-        <form onSubmit={handleSubmit} className='krew-new__form'>
-          <fieldset className='krew-new__fieldset'>
-            <legend className='krew-new__legend'>
-              {intl.formatMessage(messages.identity)}
-            </legend>
-
-            <label className='krew-new__field'>
-              <span className='krew-new__field-label'>
-                {intl.formatMessage(messages.name)}
-              </span>
-              <input
-                type='text'
-                value={name}
-                onChange={handleNameChange}
-                placeholder={intl.formatMessage(messages.namePlaceholder)}
-                required
-                className='krew-new__input'
-              />
-            </label>
-
-            <label className='krew-new__field'>
-              <span className='krew-new__field-label'>
-                {intl.formatMessage(messages.slug)}
-              </span>
-              <input
-                type='text'
-                value={effectiveSlug}
-                onChange={handleSlugChange}
-                pattern='[a-z][a-z0-9-]*'
-                className='krew-new__input'
-              />
-              <small className='krew-new__field-hint'>
-                {intl.formatMessage(messages.slugHint)}
-              </small>
-            </label>
-
-            <label className='krew-new__field'>
-              <span className='krew-new__field-label'>
-                {intl.formatMessage(messages.description)}
-              </span>
-              <textarea
-                value={description}
-                onChange={handleDescriptionChange}
-                placeholder={intl.formatMessage(
-                  messages.descriptionPlaceholder,
-                )}
-                rows={3}
-                className='krew-new__input'
-              />
-            </label>
-          </fieldset>
-
-          <fieldset className='krew-new__fieldset'>
-            <legend className='krew-new__legend'>
-              {intl.formatMessage(messages.korners)}
-            </legend>
-            <p className='krew-new__note'>
-              {intl.formatMessage(messages.kornersHint)}
-            </p>
-            <div className='krew-new__korner-grid'>
-              {KORNER_OPTIONS.map((k) => (
-                <label
-                  key={k}
-                  className={`krew-new__korner-chip ${korners.includes(k) ? 'krew-new__korner-chip--active' : ''}`}
-                >
-                  <input
-                    type='checkbox'
-                    value={k}
-                    checked={korners.includes(k)}
-                    onChange={handleKornerToggle}
-                    className='krew-new__korner-chip-input'
-                  />
-                  <span className='krew-new__korner-chip-name'>{k}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <fieldset className='krew-new__fieldset'>
-            <legend className='krew-new__legend'>
-              {intl.formatMessage(messages.access)}
-            </legend>
-
-            <label className='krew-new__radio'>
-              <input
-                type='radio'
-                name='access'
-                value='open'
-                checked={access === 'open'}
-                onChange={handleAccessChange}
-              />
-              <span>{intl.formatMessage(messages.accessOpen)}</span>
-            </label>
-
-            <label className='krew-new__radio'>
-              <input
-                type='radio'
-                name='access'
-                value='invite_only'
-                checked={access === 'invite_only'}
-                onChange={handleAccessChange}
-              />
-              <span>{intl.formatMessage(messages.accessInviteOnly)}</span>
-            </label>
-
-            <label className='krew-new__radio'>
-              <input
-                type='radio'
-                name='access'
-                value='requirement_gated'
-                checked={access === 'requirement_gated'}
-                onChange={handleAccessChange}
-              />
-              <span>{intl.formatMessage(messages.accessGated)}</span>
-            </label>
-          </fieldset>
-
-          {access === 'requirement_gated' && (
-            <fieldset className='krew-new__fieldset'>
-              <legend className='krew-new__legend'>
-                {intl.formatMessage(messages.requirements)}
-              </legend>
-              <p className='krew-new__note'>
-                {intl.formatMessage(messages.requirementsHint)}
-              </p>
-              {requirements.map((row) => (
-                <RequirementRow
-                  key={row.key}
-                  row={row}
-                  onChange={updateRequirement}
-                  onRemove={handleRemoveRequirement}
-                  intl={intl}
-                />
-              ))}
-              <button
-                type='button'
-                onClick={handleAddRequirement}
-                className='krew-new__add-req'
+          <div className='krew-composer__korner-grid'>
+            {KORNER_OPTIONS.map((k) => (
+              <label
+                key={k}
+                className={`krew-composer__korner-chip ${korners.includes(k) ? 'krew-composer__korner-chip--active' : ''}`}
               >
-                {intl.formatMessage(messages.addRequirement)}
-              </button>
-            </fieldset>
-          )}
+                <input
+                  type='checkbox'
+                  value={k}
+                  checked={korners.includes(k)}
+                  onChange={handleKornerToggle}
+                  className='krew-composer__korner-chip-input'
+                />
+                <span className='krew-composer__korner-chip-name'>{k}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
-          {error && <p className='krew-new__error'>{error}</p>}
+        <fieldset className='krew-composer__fieldset'>
+          <legend className='krew-composer__legend'>
+            {intl.formatMessage(messages.access)}
+          </legend>
 
-          <button
-            type='submit'
-            disabled={!canSubmit}
-            className='krew-page__cta krew-new__submit'
-          >
-            {busy
-              ? intl.formatMessage(messages.creating)
-              : intl.formatMessage(messages.create)}
-          </button>
-        </form>
+          <label className='krew-composer__radio'>
+            <input
+              type='radio'
+              name='access'
+              value='open'
+              checked={access === 'open'}
+              onChange={handleAccessChange}
+            />
+            <span>{intl.formatMessage(messages.accessOpen)}</span>
+          </label>
+
+          <label className='krew-composer__radio'>
+            <input
+              type='radio'
+              name='access'
+              value='invite_only'
+              checked={access === 'invite_only'}
+              onChange={handleAccessChange}
+            />
+            <span>{intl.formatMessage(messages.accessInviteOnly)}</span>
+          </label>
+
+          <label className='krew-composer__radio'>
+            <input
+              type='radio'
+              name='access'
+              value='requirement_gated'
+              checked={access === 'requirement_gated'}
+              onChange={handleAccessChange}
+            />
+            <span>{intl.formatMessage(messages.accessGated)}</span>
+          </label>
+        </fieldset>
+
+        {access === 'requirement_gated' && (
+          <fieldset className='krew-composer__fieldset'>
+            <legend className='krew-composer__legend'>
+              {intl.formatMessage(messages.requirements)}
+            </legend>
+            <p className='krew-composer__note'>
+              {intl.formatMessage(messages.requirementsHint)}
+            </p>
+            {requirements.map((row) => (
+              <RequirementRow
+                key={row.key}
+                row={row}
+                onChange={updateRequirement}
+                onRemove={handleRemoveRequirement}
+                intl={intl}
+              />
+            ))}
+            <button
+              type='button'
+              onClick={handleAddRequirement}
+              className='krew-composer__add-req'
+            >
+              {intl.formatMessage(messages.addRequirement)}
+            </button>
+          </fieldset>
+        )}
+
+        {error && <p className='krew-composer__error'>{error}</p>}
       </div>
-    </Stage>
+    </ComposeShell>
   );
 };
 
@@ -497,15 +486,15 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
   );
 
   return (
-    <div className='krew-new__req-row'>
-      <label className='krew-new__field'>
-        <span className='krew-new__field-label'>
+    <div className='krew-composer__req-row'>
+      <label className='krew-composer__field'>
+        <span className='krew-composer__field-label'>
           {intl.formatMessage(messages.reqKind)}
         </span>
         <select
           value={row.kind}
           onChange={handleKindChange}
-          className='krew-new__input'
+          className='krew-composer__input'
         >
           <option value='attending_event'>
             {intl.formatMessage(messages.reqKindAttendingEvent)}
@@ -520,8 +509,8 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
       </label>
 
       {row.kind === 'attending_event' && (
-        <label className='krew-new__field'>
-          <span className='krew-new__field-label'>
+        <label className='krew-composer__field'>
+          <span className='krew-composer__field-label'>
             {intl.formatMessage(messages.reqEventId)}
           </span>
           <input
@@ -529,14 +518,14 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
             data-field='event_id'
             value={row.event_id}
             onChange={handleFieldChange}
-            className='krew-new__input'
+            className='krew-composer__input'
           />
         </label>
       )}
 
       {row.kind === 'located_in' && (
-        <label className='krew-new__field'>
-          <span className='krew-new__field-label'>
+        <label className='krew-composer__field'>
+          <span className='krew-composer__field-label'>
             {intl.formatMessage(messages.reqRegion)}
           </span>
           <input
@@ -544,14 +533,14 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
             data-field='region'
             value={row.region}
             onChange={handleFieldChange}
-            className='krew-new__input'
+            className='krew-composer__input'
           />
         </label>
       )}
 
       {row.kind === 'vouched_by_member' && (
-        <label className='krew-new__field'>
-          <span className='krew-new__field-label'>
+        <label className='krew-composer__field'>
+          <span className='krew-composer__field-label'>
             {intl.formatMessage(messages.reqVouchParams)}
           </span>
           <textarea
@@ -560,7 +549,7 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
             onChange={handleFieldChange}
             rows={2}
             placeholder='{"min": 1}'
-            className='krew-new__input'
+            className='krew-composer__input'
           />
         </label>
       )}
@@ -569,7 +558,7 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
         type='button'
         data-key={row.key}
         onClick={onRemove}
-        className='krew-new__req-remove'
+        className='krew-composer__req-remove'
       >
         {intl.formatMessage(messages.removeRow)}
       </button>

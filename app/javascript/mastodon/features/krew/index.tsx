@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 
 import { apiGetKrews } from 'mastodon/api/krew';
 import type { ApiKrewJSON } from 'mastodon/api/krew';
 import { Stage } from 'mastodon/components/stage';
+
+import { KrewComposer } from './krew_composer';
 
 // Krews landing (/hub/krew). Two lenses per KRONK_KREWS §7.1:
 //   Yours     — the current account's memberships, ordered by
@@ -110,8 +112,18 @@ const KrewRow: React.FC<{ krew: ApiKrewJSON }> = ({ krew }) => {
   );
 };
 
-export const Krews = () => {
+interface KrewsProps {
+  // When true (the `/hub/krew/composer` or legacy `/hub/krew/new`
+  // route), the `<KrewComposer>` overlay opens automatically on
+  // mount. The Ж floating bubble sends the user there via the
+  // manifest's `compose.route`. Same pattern as Albutts +
+  // Moments — Krews stays mounted as the composer's background.
+  autoOpenComposer?: boolean;
+}
+
+export const Krews: React.FC<KrewsProps> = ({ autoOpenComposer }) => {
   const intl = useIntl();
+  const history = useHistory();
   // The lens is the SpaceNav view — derived from the URL so the shared
   // AutoSpaceViewPicker drives it. `/hub/krew` = Yours (default),
   // `/hub/krew/discover` = Discover. No in-page tab state.
@@ -122,6 +134,7 @@ export const Krews = () => {
   const [krews, setKrews] = useState<ApiKrewJSON[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
 
   const refetch = useCallback(async (nextLens: Lens) => {
     setLoading(true);
@@ -140,6 +153,22 @@ export const Krews = () => {
   useEffect(() => {
     void refetch(lens);
   }, [lens, refetch]);
+
+  const closeComposer = useCallback(() => {
+    setComposerOpen(false);
+    // If we arrived via the composer route (`/composer` or legacy
+    // `/new`), drop back to the plain directory URL so the composer
+    // doesn't reopen on refresh.
+    if (autoOpenComposer) history.replace('/hub/krew');
+  }, [autoOpenComposer, history]);
+
+  const handleCreated = useCallback(
+    (created: ApiKrewJSON) => {
+      setComposerOpen(false);
+      history.push(`/hub/krew/${created.slug}`);
+    },
+    [history],
+  );
 
   const emptyMessages = useMemo(
     () =>
@@ -182,6 +211,10 @@ export const Krews = () => {
           </ul>
         )}
       </div>
+
+      {composerOpen && (
+        <KrewComposer onCancel={closeComposer} onCreated={handleCreated} />
+      )}
     </Stage>
   );
 };
