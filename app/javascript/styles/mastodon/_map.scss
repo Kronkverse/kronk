@@ -908,35 +908,17 @@
 }
 
 // Map — Logger lens. A form to record a trek by hand or import a GPS file.
-.map-logger {
+// Trek composer — fields inside the shared `<ComposeShell>` at
+// /hub/map/composer (opened by the Ж bubble). The shell provides
+// its own panel + backdrop + footer bar, so this stack owns only
+// the vertical rhythm of the fields inside `.compose-shell__body`.
+// Was the standalone `.map-logger` container until 2026-08-12;
+// dropped the outer positioning + saved-state banner (success now
+// closes the modal and hands off to My treks).
+.trek-composer {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 16px;
   gap: 16px;
-
-  &__saved {
-    padding: 12px 14px;
-    border-radius: var(--radius-medium);
-    border: 1px solid var(--border-default);
-    background: rgb(124 92 255 / 10%);
-    color: var(--text-primary);
-    font-size: 14px;
-
-    a {
-      color: var(--kronk-purple-bright);
-      font-weight: 600;
-    }
-  }
-
-  &__form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    max-width: 520px;
-  }
 
   &__field {
     display: flex;

@@ -1,30 +1,30 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { Link } from 'react-router-dom';
-
 import { apiCreateTrek, apiPublishTrek } from 'mastodon/api/map_treks';
-import type { TrekActivity, TrekReach } from 'mastodon/api/map_treks';
-import { Button } from 'mastodon/components/button';
+import type {
+  ApiTrekJSON,
+  TrekActivity,
+  TrekReach,
+} from 'mastodon/api/map_treks';
+import { ComposeShell } from 'mastodon/components/compose_shell';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 
 import { parseTrackFile } from './gpx';
 import type { ParsedTrack } from './gpx';
 
-// Map — Logger lens. Records a trek by hand (activity + numbers) or by
-// importing a GPS file (GPX/TCX). The file is parsed in the browser and only
-// [lng,lat] points plus the derived distance/time/climb are sent — any
-// heart-rate / cadence / power / device fields are never read.
+// Map — trek composer. Records a trek by hand (activity + numbers) or
+// by importing a GPS file (GPX/TCX). The file is parsed in the browser
+// and only [lng,lat] points plus the derived distance/time/climb are
+// sent — heart-rate / cadence / power / device fields are never read.
 //
-// "Log it" posts the trek to the feed at the chosen reach (Mates by default),
-// like composing a post; choosing "Private draft" keeps it unshared (publish
-// later from the Treks lens). Either way the route's start/finish are trimmed
-// before saving.
-
-// A share target: one of the reach ladder values, or 'draft' (unshared).
-type ShareTarget = TrekReach | 'draft';
+// Was the full-page LoggerView at /hub/map/logger until 2026-08-12.
+// Now the standard `<ComposeShell>` at /hub/map/composer (with
+// /hub/map/logger preserved as a legacy alias), matching the pilot
+// Albutts + Moments composers — one place across the site (per
+// docs/rebuild/decisions.md).
 
 const ACTIVITIES: TrekActivity[] = [
   'run',
@@ -36,6 +36,10 @@ const ACTIVITIES: TrekActivity[] = [
 ];
 
 const messages = defineMessages({
+  // Shell chrome
+  label: { id: 'map.logger.composer_label', defaultMessage: 'Log a trek' },
+  // Field labels reuse the original `map.logger.*` id space so any
+  // pre-existing translations survive the surface swap.
   activity: { id: 'map.logger.activity', defaultMessage: 'Activity' },
   title: { id: 'map.logger.title', defaultMessage: 'Title' },
   titlePlaceholder: {
@@ -44,15 +48,9 @@ const messages = defineMessages({
   },
   distance: { id: 'map.logger.distance', defaultMessage: 'Distance (km)' },
   time: { id: 'map.logger.time', defaultMessage: 'Time (minutes)' },
-  save: { id: 'map.logger.save', defaultMessage: 'Log it' },
   saving: { id: 'map.logger.saving', defaultMessage: 'Logging…' },
   post: { id: 'map.logger.post', defaultMessage: 'Post it' },
   saveDraft: { id: 'map.logger.save_draft', defaultMessage: 'Save draft' },
-  shareLabel: { id: 'map.logger.share', defaultMessage: 'Post to' },
-  reachMates: { id: 'map.treks.reach.mates', defaultMessage: 'Mates' },
-  reachPublic: { id: 'map.treks.reach.public', defaultMessage: 'Public' },
-  reachOrbit: { id: 'map.treks.reach.orbit', defaultMessage: 'Orbit' },
-  reachSelf: { id: 'map.treks.reach.self', defaultMessage: 'Just me' },
   draft: { id: 'map.logger.draft', defaultMessage: 'Private draft' },
   run: { id: 'map.activity.run', defaultMessage: 'Run' },
   walk: { id: 'map.activity.walk', defaultMessage: 'Walk' },
@@ -62,20 +60,15 @@ const messages = defineMessages({
   paddle: { id: 'map.activity.paddle', defaultMessage: 'Paddle' },
 });
 
-// Where "Log it" sends the trek. Mates is the default reach (§2.4); 'draft'
-// keeps it unshared. `label` keys into `messages` (React Intl static ids).
-const SHARE_OPTIONS: { value: ShareTarget; label: keyof typeof messages }[] = [
-  { value: 'mates', label: 'reachMates' },
-  { value: 'public', label: 'reachPublic' },
-  { value: 'orbit', label: 'reachOrbit' },
-  { value: 'self_only', label: 'reachSelf' },
-  { value: 'draft', label: 'draft' },
-];
+interface Props {
+  onCancel: () => void;
+  // Fires after a successful create (+ publish, if not draft). Parent
+  // decides where to navigate — MapV2 sends the caller to My treks
+  // where the freshly-logged trek shows up.
+  onCreated: (trek: ApiTrekJSON) => void;
+}
 
-const shareLabelKey = (value: ShareTarget): keyof typeof messages =>
-  SHARE_OPTIONS.find((o) => o.value === value)?.label ?? 'reachMates';
-
-export const LoggerView: React.FC = () => {
+export const TrekComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const intl = useIntl();
   const [activity, setActivity] = useState<TrekActivity>('run');
   const [title, setTitle] = useState('');
@@ -84,13 +77,13 @@ export const LoggerView: React.FC = () => {
   const [parsed, setParsed] = useState<ParsedTrack | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Reach + a separate "save as draft" toggle (draft keeps the trek unshared).
-  // Standard ReachDropdown for the reach; krew is hidden (TrekReach has none).
+  // Reach + a separate "save as draft" toggle. Reach lives in the
+  // shell's `headerAction` slot (same treatment Moments uses); the
+  // draft checkbox stays in the body since it's the "publish or not"
+  // switch, orthogonal to who-can-see.
   const [reach, setReach] = useState<TrekReach>('mates');
   const [isDraft, setIsDraft] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [savedTitle, setSavedTitle] = useState<string | null>(null);
-  const [savedShare, setSavedShare] = useState<ShareTarget>('mates');
   const [dragging, setDragging] = useState(false);
 
   const onActivity = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -188,91 +181,84 @@ export const LoggerView: React.FC = () => {
     setFileName(null);
   }, []);
 
-  const submit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!title.trim()) {
-        setError('Give your trek a title.');
-        return;
-      }
-      const distance_m = parsed
-        ? parsed.distance_m
-        : Math.round(parseFloat(distanceKm) * 1000);
-      if (!parsed && !(distance_m > 0)) {
-        setError('Enter a distance, or import a GPS file.');
-        return;
-      }
-      const moving_sec = parsed
-        ? parsed.moving_sec
-        : Math.round((parseFloat(timeMin) || 0) * 60);
+  // A trek is submittable once it has a title AND either a parsed GPS
+  // track (which supplies distance) OR a hand-entered distance > 0.
+  // Time is optional (0 renders as "—").
+  const distanceMeters = parsed
+    ? parsed.distance_m
+    : Math.round(parseFloat(distanceKm) * 1000) || 0;
+  const canSubmit = title.trim().length > 0 && distanceMeters > 0;
 
-      setSaving(true);
-      setError(null);
-      void apiCreateTrek({
-        activity_type: activity,
-        title: title.trim(),
-        points: parsed?.points,
-        distance_m,
-        moving_sec,
-        elevation_gain: parsed?.elevation_gain ?? undefined,
+  const submit = useCallback(() => {
+    if (!title.trim()) {
+      setError('Give your trek a title.');
+      return;
+    }
+    if (distanceMeters <= 0) {
+      setError('Enter a distance, or import a GPS file.');
+      return;
+    }
+    const moving_sec = parsed
+      ? parsed.moving_sec
+      : Math.round((parseFloat(timeMin) || 0) * 60);
+
+    setSaving(true);
+    setError(null);
+    void apiCreateTrek({
+      activity_type: activity,
+      title: title.trim(),
+      points: parsed?.points,
+      distance_m: distanceMeters,
+      moving_sec,
+      elevation_gain: parsed?.elevation_gain ?? undefined,
+    })
+      .then((trek) => {
+        // Draft keeps it unshared; otherwise publish at the chosen reach.
+        const finish = isDraft
+          ? Promise.resolve(trek)
+          : apiPublishTrek(trek.id, reach).then(() => trek);
+        return finish.then(onCreated);
       })
-        .then((trek) => {
-          // Draft keeps it unshared; otherwise publish at the chosen reach.
-          const published = isDraft
-            ? Promise.resolve()
-            : apiPublishTrek(trek.id, reach);
-          return published.then(() => {
-            setSavedShare(isDraft ? 'draft' : reach);
-            setSavedTitle(trek.title);
-            setActivity('run');
-            setTitle('');
-            setDistanceKm('');
-            setTimeMin('');
-            setParsed(null);
-            setFileName(null);
-          });
-        })
-        .catch(() => {
-          setError('Could not log that trek. Try again.');
-        })
-        .finally(() => {
-          setSaving(false);
-        });
-    },
-    [activity, title, distanceKm, timeMin, parsed, reach, isDraft],
-  );
+      .catch(() => {
+        setError('Could not log that trek. Try again.');
+        setSaving(false);
+      });
+    // Note: on success, the parent unmounts us — no need to reset
+    // state or clear `saving` here.
+  }, [
+    activity,
+    title,
+    distanceMeters,
+    timeMin,
+    parsed,
+    reach,
+    isDraft,
+    onCreated,
+  ]);
+
+  // ReachDropdown lives in the shell header (matches Moments) so it
+  // reads as chrome, not a body field. Hidden when the trek is being
+  // saved as a draft — reach is meaningless without a publish.
+  const reachControl = !isDraft ? (
+    <ReachDropdown value={reach} onChange={onReach} disabled={saving} />
+  ) : undefined;
 
   return (
-    <div className='map-logger'>
-      {savedTitle && (
-        <div className='map-logger__saved' role='status'>
-          {savedShare === 'draft' ? (
-            <FormattedMessage
-              id='map.logger.saved'
-              defaultMessage='Logged “{title}” as a private draft.'
-              values={{ title: savedTitle }}
-            />
-          ) : (
-            <FormattedMessage
-              id='map.logger.posted'
-              defaultMessage='Posted “{title}” to your feed · {reach}.'
-              values={{
-                title: savedTitle,
-                reach: intl.formatMessage(messages[shareLabelKey(savedShare)]),
-              }}
-            />
-          )}{' '}
-          <Link to='/hub/map/treks'>
-            <FormattedMessage
-              id='map.logger.view_treks'
-              defaultMessage='View in Treks'
-            />
-          </Link>
-        </div>
+    <ComposeShell
+      korner='map'
+      label={intl.formatMessage(messages.label)}
+      submitLabel={intl.formatMessage(
+        isDraft ? messages.saveDraft : messages.post,
       )}
-
-      <form className='map-logger__form' onSubmit={submit}>
-        <label className='map-logger__field'>
+      submittingLabel={intl.formatMessage(messages.saving)}
+      submitting={saving}
+      canSubmit={canSubmit}
+      onSubmit={submit}
+      onCancel={onCancel}
+      headerAction={reachControl}
+    >
+      <div className='trek-composer'>
+        <label className='trek-composer__field'>
           <span>{intl.formatMessage(messages.activity)}</span>
           <select value={activity} onChange={onActivity}>
             {ACTIVITIES.map((a) => (
@@ -283,7 +269,7 @@ export const LoggerView: React.FC = () => {
           </select>
         </label>
 
-        <label className='map-logger__field'>
+        <label className='trek-composer__field'>
           <span>{intl.formatMessage(messages.title)}</span>
           <input
             type='text'
@@ -295,14 +281,14 @@ export const LoggerView: React.FC = () => {
         </label>
 
         <div
-          className={`map-logger__import${dragging ? ' is-dragging' : ''}`}
+          className={`trek-composer__import${dragging ? ' is-dragging' : ''}`}
           onDragOver={onDragOver}
           onDragEnter={onDragEnter}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
         >
-          <label className='map-logger__file'>
-            <span className='map-logger__file-cta'>
+          <label className='trek-composer__file'>
+            <span className='trek-composer__file-cta'>
               <FormattedMessage
                 id='map.logger.import'
                 defaultMessage='Drag a GPS file here, or choose one (GPX or TCX)'
@@ -314,14 +300,14 @@ export const LoggerView: React.FC = () => {
               onChange={onFile}
             />
           </label>
-          <p className='map-logger__hint'>
+          <p className='trek-composer__hint'>
             <FormattedMessage
               id='map.logger.import_hint'
               defaultMessage='Read on your device — only the route and distance are sent, never heart-rate or device data. The start and finish are trimmed before saving.'
             />
           </p>
           {parsed && fileName && (
-            <p className='map-logger__parsed'>
+            <p className='trek-composer__parsed'>
               <FormattedMessage
                 id='map.logger.parsed'
                 defaultMessage='{file}: {points} points · {km} km'
@@ -341,8 +327,8 @@ export const LoggerView: React.FC = () => {
           )}
         </div>
 
-        <div className='map-logger__row'>
-          <label className='map-logger__field'>
+        <div className='trek-composer__row'>
+          <label className='trek-composer__field'>
             <span>{intl.formatMessage(messages.distance)}</span>
             <input
               type='number'
@@ -353,7 +339,7 @@ export const LoggerView: React.FC = () => {
               disabled={parsed !== null}
             />
           </label>
-          <label className='map-logger__field'>
+          <label className='trek-composer__field'>
             <span>{intl.formatMessage(messages.time)}</span>
             <input
               type='number'
@@ -366,28 +352,13 @@ export const LoggerView: React.FC = () => {
           </label>
         </div>
 
-        <div className='map-logger__field'>
-          <span>{intl.formatMessage(messages.shareLabel)}</span>
-          <ReachDropdown value={reach} onChange={onReach} disabled={isDraft} />
-        </div>
-
-        <label className='map-logger__draft'>
+        <label className='trek-composer__draft'>
           <input type='checkbox' checked={isDraft} onChange={onDraftToggle} />
           <span>{intl.formatMessage(messages.draft)}</span>
         </label>
 
-        {error && <p className='map-logger__error'>{error}</p>}
-
-        <Button type='submit' disabled={saving}>
-          {intl.formatMessage(
-            saving
-              ? messages.saving
-              : isDraft
-                ? messages.saveDraft
-                : messages.post,
-          )}
-        </Button>
-      </form>
-    </div>
+        {error && <p className='trek-composer__error'>{error}</p>}
+      </div>
+    </ComposeShell>
   );
 };
