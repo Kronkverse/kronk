@@ -144,6 +144,15 @@ on Hub itself leaves the right column off-screen. Hub's focus handler computes t
 bounding-box centre and scrolls the viewport to sit that centre in the middle — both columns land
 in view together.
 
+**Tap toggles drill-down / step-out.** An aggregator limb (Hub, Kronk — no Space page of its own)
+tap flips between:
+
+- **closed → open + focus this limb**: drill down. Focus effect centres on the kid block per the
+  paragraph above.
+- **open → close + focus its parent**: step back out (2026-08-13 — Tal: "no way to return to the
+  previous level of the tree if I decide the space I want to propose about isn't on the hub, but
+  on nudges"). Focus effect scrolls to the parent so its sibling limbs come back into view.
+
 Wires route through a shared vertical trunk in the middle of the gap between the two columns, with
 horizontal branches to each card on either side — the visual is a spine, not a fan of independent
 elbows (see §2, "Hub trunk branch").
