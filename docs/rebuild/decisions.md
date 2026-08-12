@@ -17,6 +17,89 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-12 — Compose surfaces standardise on `<ComposeShell>`
+
+Every korner's "create a new thing" surface is a shared `<ComposeShell>`
+overlay opened via the Ж bubble at a canonical `/hub/<slug>/composer` URL.
+Piloted with Albutts (PR #1213, 2026-08-07) and Moments; extended today to
+Map's trek composer (was a full-page `/hub/map/logger` form inside Map's
+Stage — presenting complaint: "opens uncentered"). The remaining korners
+still on bespoke surfaces (Krew, Kuestions, Kommons, Booth, plus the TBDs
+Kalendar / Martketplace / Huddle) migrate PR-by-PR against this shape.
+
+### The shell owns
+
+- **Portal mount to `document.body`.** Every composer floats over the app,
+  above the Stage's own scroll, always centred, dim backdrop behind.
+- **Canonical URL `/hub/<slug>/composer`.** URL is the source of truth for
+  open/closed — the FAB is a `<Link>`, the back button closes, refresh
+  keeps the composer open. Each korner's manifest points its
+  `compose.route` here.
+- **Chrome slots.** Korner icon (from `useKornerIcon(slug)`) + label +
+  optional subtitle in the header; optional `switcher` chip pair for
+  multi-composer korners (Albutts: Album/Contribute; Maps eventually
+  Post/Place); optional `headerAction` slot that reach controls slot into
+  (Moments + trek composer both put `<ReachDropdown>` here).
+- **Cancel + primary submit footer.** Body owns `canSubmit` +
+  `submitting`; the shell disables the CTA and swaps `submitLabel` for
+  `submittingLabel` mid-flight. Escape + backdrop-click both cancel
+  (disabled while submitting so an in-flight create can't be
+  double-cancelled).
+- **Success unmounts.** The body's `onCreated` hands control back to the
+  parent, which navigates to the new thing (Albutts → album detail; trek
+  composer → My treks). No inline "saved!" banner inside the shell.
+
+### What NOT to do
+
+- No bespoke modals (`<Modal>`, `dispatch(openModal(...))`, or hand-rolled
+  overlays) for korner create actions. Compose = shell.
+- No full-page compose surfaces mounted as one of a korner's `views:`.
+  Compose is not a browse face — it's an overlay on top of one.
+- No local `ComposeFab`. The Ж bubble in the site chrome is the only entry
+  point; it reads `compose.route` from the manifest. Albutts dropped its
+  local FAB in PR #1358 (2026-08-09) after the Ж shipped.
+- No compose-inline reach control in the body when the shell's
+  `headerAction` will do. Reach is chrome.
+
+### The Ж bubble is the only entry point
+
+Each korner's manifest declares:
+
+```yaml
+compose:
+  label: 'Log a trek' # what the Ж bubble tooltip / a11y label says
+  route: '/hub/map/composer' # canonical shell URL
+```
+
+Legacy pre-shell URLs (Albutts: `/new`; Map: `/logger`) resolve to the same
+overlay so bookmarks + in-flight tabs don't 404 during the migration.
+Retire the aliases once the analytics say nobody hits them.
+
+### Migration order
+
+1. **Map / trek composer** — done today, this decision.
+2. **Krew, Kuestions** — cheap wins. Single composer each, simple form,
+   already URL-addressable.
+3. **Kommons, Booth** — larger surfaces. Booth has two composers
+   (upload / share), a good second reference for the `switcher` slot.
+4. **Kalendar / Martketplace / Huddle** — declare `compose.route` in the
+   manifest but no shell-shaped composer yet. Do first-implementation
+   against this decision rather than shipping a bespoke one.
+
+Non-korner composers (Nudges messenger, profile shelves' Tell composer,
+Kommons tree's create-node composer) are out of scope — they're inline
+panels inside larger surfaces, not "create a new thing at a korner URL"
+actions.
+
+### Enforcement
+
+For now: this decision plus code review. A future `bin/tootctl korners
+doctor` layer (L-something) can grep for `openModal` / bespoke portal
+usage inside `features/*/composer*` and flag drift, once the migration is
+past the halfway mark.
+
+---
+
 ## 2026-08-09 — Cross-site standardisation decisions
 
 From a site-wide standardisation audit (six read-only sweeps: composers,
