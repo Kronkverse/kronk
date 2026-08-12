@@ -727,21 +727,20 @@
 }
 
 // ── Ask flow ─────────────────────────────────────────────────────
-.kuestions-ask {
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg, 16px);
-  padding: 22px;
-  margin-bottom: 18px;
-}
+// Kuestion composer body — fields inside the shared `<ComposeShell>`
+// at /hub/kuestions/composer (opened by the Ж bubble). The shell
+// provides the panel, backdrop, and Cancel/Submit footer, so this
+// stack owns only the field visuals + the two-stage dot indicator.
+// Was the standalone `.kuestions-ask` container (rendered inside the
+// full-page Ask panel at /hub/kuestions/ask) until 2026-08-12.
 
-.kuestions-ask__stage-dots {
+.kuestions-composer__stage-dots {
   display: flex;
   gap: 6px;
   margin-bottom: 16px;
 }
 
-.kuestions-ask__dot {
+.kuestions-composer__dot {
   width: 24px;
   height: 3px;
   border-radius: var(--radius-small);
@@ -749,11 +748,11 @@
   transition: background var(--dur-fast) var(--ease-out);
 }
 
-.kuestions-ask__dot--on {
+.kuestions-composer__dot--on {
   background: var(--kronk-purple-bright);
 }
 
-.kuestions-ask__field-label {
+.kuestions-composer__field-label {
   display: block;
   color: var(--text-secondary);
   font-size: 12px;
@@ -762,7 +761,7 @@
   text-transform: uppercase;
 }
 
-.kuestions-ask__textarea {
+.kuestions-composer__textarea {
   width: 100%;
   min-height: 120px;
   resize: vertical;
@@ -779,21 +778,21 @@
   }
 }
 
-.kuestions-ask__charcount {
+.kuestions-composer__charcount {
   color: var(--text-muted);
   font-size: 11px;
   text-align: right;
   margin-top: 6px;
 }
 
-.kuestions-ask__fmt-grid {
+.kuestions-composer__fmt-grid {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-bottom: 16px;
 }
 
-.kuestions-ask__fmt-opt {
+.kuestions-composer__fmt-opt {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -815,32 +814,32 @@
   }
 }
 
-.kuestions-ask__fmt-opt--active {
+.kuestions-composer__fmt-opt--active {
   border-color: var(--kronk-purple-bright);
   background: rgb(114 65 255 / 10%);
 }
 
-.kuestions-ask__fmt-title {
+.kuestions-composer__fmt-title {
   font-weight: 500;
 }
 
-.kuestions-ask__fmt-body {
+.kuestions-composer__fmt-body {
   color: var(--text-muted);
   font-size: 12px;
 }
 
-.kuestions-ask__mc {
+.kuestions-composer__mc {
   margin-top: 4px;
   margin-bottom: 12px;
 }
 
-.kuestions-ask__mc-list {
+.kuestions-composer__mc-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.kuestions-ask__mc-input {
+.kuestions-composer__mc-input {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -861,7 +860,7 @@
   }
 }
 
-.kuestions-ask__mc-remove {
+.kuestions-composer__mc-remove {
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -878,7 +877,7 @@
   }
 }
 
-.kuestions-ask__mc-add {
+.kuestions-composer__mc-add {
   margin-top: 8px;
   padding: 6px 12px;
   border: 1px dashed var(--border-default);
@@ -894,7 +893,7 @@
   }
 }
 
-.kuestions-ask__review {
+.kuestions-composer__review {
   margin-top: 8px;
   padding: 12px 14px;
   background: rgb(114 65 255 / 8%);
@@ -902,7 +901,7 @@
   border-radius: var(--radius-md);
 }
 
-.kuestions-ask__review-q {
+.kuestions-composer__review-q {
   color: var(--text-primary);
   font-family: Georgia, var(--font-display);
   font-size: 15px;
@@ -910,16 +909,36 @@
   margin-bottom: 6px;
 }
 
-.kuestions-ask__review-fmt {
+.kuestions-composer__review-fmt {
   color: var(--text-muted);
   font-size: 12px;
 }
 
-.kuestions-ask__actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  margin-top: 16px;
+// (`.kuestions-composer__actions` retired — the shell's
+// Cancel/Submit footer bar replaces it.)
+
+// Stage-1 back button — inline in the composer body so the shell's
+// Cancel keeps its "close the whole overlay" semantics; this only
+// steps one stage backward.
+.kuestions-composer__back {
+  align-self: flex-start;
+  padding: 6px 10px;
+  margin-bottom: 12px;
+  background: transparent;
+  border: 0;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--kronk-purple-bright);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
 }
 
 // ── Today panel ─────────────────────────────────────────────────

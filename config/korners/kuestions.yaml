@@ -94,21 +94,25 @@ settings:
 
 compose:
   label: 'Ask a Kuestion'
-  # Reuses the same Kuestions shell — the component opens on the Ask
-  # panel when the pathname ends `/ask`. Deep-linkable so the Ж menu's
-  # Post can drop the user straight into the composer regardless of
-  # which panel they were on last.
-  route: '/hub/kuestions/ask'
+  # The Ж bubble opens the shared `<ComposeShell>` overlay on top of
+  # the current Kuestions panel (docs/rebuild/decisions.md
+  # 2026-08-12). `/hub/kuestions/ask` still resolves to the same
+  # overlay so pre-shell bookmarks + muscle memory keep working —
+  # the underlying panel there is the Yours (past asks) view.
+  route: '/hub/kuestions/composer'
 
 # SpaceNav view switcher (first entry = default, bare /hub/kuestions).
 # `icon` is a Material Symbol name; the frontend resolves it via
 # `useKornerIcon.tsx#MATERIAL_TO_ICON`. Labels ride on aria-label +
 # tooltip when an icon is present. Icon picks locked 2026-08-05.
+# The old "Ask" tab (composer + past asks) split 2026-08-12: composer
+# moved to the shell overlay, past asks stayed as a proper panel and
+# got its own tab label — "Yours".
 views:
   - { key: deck, label: Deck, icon: stacks }
   - { key: today, label: Today, icon: choice }
   - { key: answered, label: Answered, icon: fmd_bad }
-  - { key: ask, label: Ask, icon: not_listed_location }
+  - { key: yours, label: Yours, icon: not_listed_location }
 
 launch:
   blurb: 'Kuestions — ask, answer, unlock.'
