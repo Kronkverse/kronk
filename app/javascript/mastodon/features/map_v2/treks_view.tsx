@@ -25,7 +25,6 @@ import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { StatusTrekCard } from 'mastodon/components/status_trek_card';
-import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 
 import { BASEMAP_URL, basemapLayers, ensurePmtilesProtocol } from './basemap';
 import { TrekComments } from './trek_comments';
@@ -305,11 +304,10 @@ const TrekDetail: React.FC<{
 // the URL segment; this view reads it back. `mine` renders on
 // /hub/map/my-treks (the default treks face — legacy /hub/map/treks
 // resolves to it too, see index.tsx); `mates` renders on
-// /hub/map/mates-treks. Keeping the drum keyed to this value plays
-// the same quarter-turn between the two treks faces that /home +
-// Albutts + Kommons ship.
-const SCOPE_KEYS = ['mine', 'mates'] as const;
-type TrekScope = (typeof SCOPE_KEYS)[number];
+// /hub/map/mates-treks. The top-level rotator drum in <MapV2> spans
+// all three faces (mates presence + both treks lists); this value
+// only controls which list TreksView shows.
+type TrekScope = 'mine' | 'mates';
 
 const resolveTrekScope = (pathname: string): TrekScope =>
   pathname === '/hub/map/mates-treks' ? 'mates' : 'mine';
@@ -368,20 +366,6 @@ export const TreksView: React.FC = () => {
     };
   }, [selectedId, treks]);
 
-  // FeedDrum + swipe fall through this handler when the user rotates
-  // between the two treks faces (drum handles left/right swipe; the
-  // manifest rotator handles chevron / tap-title). Maps the scope key
-  // back to the top-level URL segment that the Frame rotator uses,
-  // so both entry points converge on the same URL.
-  const changeScope = useCallback(
-    (nextKey: string) => {
-      const target =
-        nextKey === 'mates' ? '/hub/map/mates-treks' : '/hub/map/my-treks';
-      if (target !== location.pathname) history.push(target);
-    },
-    [history, location.pathname],
-  );
-
   const back = useCallback(() => {
     // Return to the treks face the caller was on (default `my-treks`
     // if we don't know — the detail URL doesn't carry the scope).
@@ -428,35 +412,29 @@ export const TreksView: React.FC = () => {
   return (
     <div className='trek-list'>
       {/* No local title — the Frame's rotating space title
-          (manifest `header.rotator: true`) provides it for both
-          treks faces. Same drum treatment as /home + Albutts +
-          Kommons — a quarter-turn on scope change so the two treks
-          faces feel like sides of one object. The drum keys off
-          `scope`, so its getSnapshotBeforeUpdate captures the
-          outgoing list right as `changeScope` pushes the new URL. */}
-      <FeedDrum
-        reach={scope}
-        order={[...SCOPE_KEYS]}
-        onScopeChange={changeScope}
-      >
-        {visible.length === 0 ? (
-          <p className='trek-list__empty'>{emptyCopy}</p>
-        ) : (
-          // Cards match the feed's `StatusTrekCard` shape one-for-one
-          // (route glimpse + stats), so a trek reads the same whether
-          // you meet it in Home or here. Tapping opens the detail via
-          // `to={/hub/map/treks/:id}` (baked into StatusTrekCard).
-          // Draft treks render the same way; the detail view exposes
-          // the publish / delete affordances.
-          <ul className='trek-list__items'>
-            {visible.map((trek) => (
-              <li key={trek.id}>
-                <StatusTrekCard trek={trek} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </FeedDrum>
+          (manifest `header.rotator: true`) provides it. The
+          quarter-turn cube-edge drum used to live here around the
+          treks list only; it was lifted up to <MapV2> so the drum
+          spans all three faces (mates / my-treks / mates-treks),
+          which is why swiping between any pair now feels like sides
+          of the same object. */}
+      {visible.length === 0 ? (
+        <p className='trek-list__empty'>{emptyCopy}</p>
+      ) : (
+        // Cards match the feed's `StatusTrekCard` shape one-for-one
+        // (route glimpse + stats), so a trek reads the same whether
+        // you meet it in Home or here. Tapping opens the detail via
+        // `to={/hub/map/treks/:id}` (baked into StatusTrekCard).
+        // Draft treks render the same way; the detail view exposes
+        // the publish / delete affordances.
+        <ul className='trek-list__items'>
+          {visible.map((trek) => (
+            <li key={trek.id}>
+              <StatusTrekCard trek={trek} />
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };

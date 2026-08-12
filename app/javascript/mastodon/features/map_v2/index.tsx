@@ -6,6 +6,7 @@ import { Helmet } from 'react-helmet';
 import { useHistory, useLocation } from 'react-router-dom';
 
 import { Stage } from 'mastodon/components/stage';
+import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 
 import { MatesView } from './mates_view';
 import { TrekComposer } from './trek_composer';
@@ -47,6 +48,11 @@ const VIEWS = [
 ] as const;
 type MapView = (typeof VIEWS)[number];
 const DEFAULT_VIEW: MapView = 'mates';
+
+// The three top-level browse faces the rotator (and FeedDrum) cycle
+// between. Must stay in sync with the manifest `views:` order in
+// config/korners/map.yaml — the drum picks direction by index.
+const ROTATOR_FACES = ['mates', 'my-treks', 'mates-treks'] as const;
 
 const HUB_ROUTE_RE = /^\/hub\/map(?:\/([a-z0-9-]+))?/;
 const TREK_DETAIL_RE = /^\/hub\/map\/treks\/\d+$/;
@@ -90,6 +96,23 @@ const MapV2: React.FC<{ multiColumn?: boolean }> = () => {
     history.push('/hub/map/my-treks');
   }, [history]);
 
+  // FeedDrum's swipe/keyboard handler → map a rotator face key back to
+  // its URL segment (the mates face is the korner default so it lives
+  // at bare /hub/map; the treks faces get segments).
+  const onFaceChange = useCallback(
+    (nextKey: string) => {
+      const target = nextKey === 'mates' ? '/hub/map' : `/hub/map/${nextKey}`;
+      if (target !== location.pathname) history.push(target);
+    },
+    [history, location.pathname],
+  );
+
+  // The rotator's current face — bare /hub/map or /hub/map/composer or
+  // /hub/map/treks/:id all park the drum on the Mates face (default);
+  // /hub/map/{my-treks,mates-treks} live on their own.
+  const drumFace: (typeof ROTATOR_FACES)[number] =
+    view === 'my-treks' || view === 'mates-treks' ? view : 'mates';
+
   return (
     <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
@@ -97,7 +120,26 @@ const MapV2: React.FC<{ multiColumn?: boolean }> = () => {
         <meta name='robots' content='noindex' />
       </Helmet>
 
-      {onTreks ? <TreksView /> : <MatesView />}
+      {/* One drum wraps all three faces so the mates ↔ treks turn plays
+          the same quarter-turn as my-treks ↔ mates-treks (was: only the
+          treks pair rotated; mates↔treks hard-swapped). Previously the
+          drum was scoped inside TreksView which unmounts on the mates
+          side — the outgoing snapshot was never captured. Lifting it
+          here keeps a single drum instance mounted across all three
+          faces so each transition gets the cube-edge turn.
+
+          The mates face renders a MapLibre <canvas>; the drum's
+          cloneNode-based snapshot won't preserve WebGL pixels, so the
+          outgoing map face reads as a dark rotating plane under the
+          drum's veil during the ~900 ms turn — coherent with the
+          drum's rotation feel even without live map imagery. */}
+      <FeedDrum
+        reach={drumFace}
+        order={[...ROTATOR_FACES]}
+        onScopeChange={onFaceChange}
+      >
+        {onTreks ? <TreksView /> : <MatesView />}
+      </FeedDrum>
 
       {view === 'composer' && (
         <TrekComposer onCancel={closeComposer} onCreated={onTrekCreated} />
