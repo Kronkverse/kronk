@@ -9,9 +9,20 @@
 # Nudges listener now takes a manifest edit + a source-side publish
 # (in the emitting model) — no touch to this file.
 #
-# Special cases that don't fit the Mate-routed template stay
-# hand-wired below (currently: `krews.member.joined` targets the
-# Krew conversation itself, bypassing the Mates gate).
+# A listen entry may set `directed: true` for a Tier-1 "directed at U"
+# event (docs/kronk_nudges.md § Relevance engine), which fires regardless
+# of Mate status — that is what lets the mate-request routes be declared
+# rather than hand-wired.
+#
+# Special cases that don't fit the Mate-routed template stay hand-wired
+# below. Currently three, each for a specific reason the manifest cannot
+# express yet:
+#   * `krews.member.joined` / `krews.member.left` — target the Krew
+#     conversation itself, not a 1:1 Mate chat.
+#   * `albutts.album.new_photo` — fans out to MANY recipients (every
+#     fellow contributor), while a manifest entry routes to the single
+#     `recipient_account_id` in the payload. Multi-recipient fan-out is
+#     the Tier-2/3 gap in docs/rebuild/nudges_bus_state.md.
 
 # Interpolate {token} placeholders in a string from a symbol-keyed
 # payload. Returns the string unchanged if no tokens matched. Unknown
@@ -64,7 +75,13 @@ Rails.application.config.after_initialize do
         interaction: entry['interaction'] || 'passive',
         cta_label: NUDGES_TEMPLATE.call(entry['cta_label'], payload),
         cta_route: NUDGES_TEMPLATE.call(entry['cta_route'], payload),
-        aggregate_window: aggregate_window
+        aggregate_window: aggregate_window,
+        # Tier-1 "directed at U" events fire regardless of Mate status
+        # (docs/kronk_nudges.md § Relevance engine). Without this, every
+        # manifest-declared listen was implicitly `directed: false`, so a
+        # directed nudge could only be expressed by hand-wiring a subscriber
+        # below — which is why the mate-request routes used to live there.
+        directed: entry['directed'] == true
       )
     end
   end
@@ -150,44 +167,8 @@ Rails.application.config.after_initialize do
   # pipeline (Favourite / Notification records), so no bespoke
   # subscribe is needed here.
 
-  # ── Hand-wired: mates.request.sent + mates.request.accepted ─────
-  # A mate request is inherently non-Mate — the two accounts are
-  # not mutual yet, that's the whole point — so the standard
-  # `Nudges::EventRouter` (which requires Mates) would drop these
-  # as `:non_mate_dropped`. Route them straight onto the Mate
-  # conversation between the pair (which `mate_between!` creates
-  # on demand and reuses once they accept), so the requester's
-  # invite lands in the target's messenger, and the accept lands
-  # back in the requester's.
-  Kronk::KornerEvents.subscribe('mates.request.sent') do |payload|
-    actor     = Account.find_by(id: payload[:actor_account_id])
-    recipient = Account.find_by(id: payload[:recipient_account_id])
-    next unless actor && recipient
-
-    convo = Nudges::Conversation.mate_between!(actor, recipient)
-    convo.events.create!(
-      actor_account: actor,
-      source_korner_slug: 'mates',
-      verb: 'mate_requested',
-      interaction: Nudges::Event::INTERACTIVE,
-      cta_label: 'Respond',
-      cta_route: '/mate_requests'
-    )
-  end
-
-  Kronk::KornerEvents.subscribe('mates.request.accepted') do |payload|
-    actor     = Account.find_by(id: payload[:actor_account_id])
-    recipient = Account.find_by(id: payload[:recipient_account_id])
-    next unless actor && recipient
-
-    convo = Nudges::Conversation.mate_between!(actor, recipient)
-    convo.events.create!(
-      actor_account: actor,
-      source_korner_slug: 'mates',
-      verb: 'mate_accepted',
-      interaction: Nudges::Event::INTERACTIVE,
-      cta_label: 'Say hi',
-      cta_route: "/nudges/#{actor.id}"
-    )
-  end
+  # mates.request.sent + mates.request.accepted are now manifest-declared
+  # `listens:` entries with `directed: true` (see config/korners/nudges.yaml).
+  # They were hand-wired here only because the bus loop did not forward
+  # `directed:` to Nudges::EventRouter, so the Mate gate dropped them.
 end
