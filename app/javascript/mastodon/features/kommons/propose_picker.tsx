@@ -22,7 +22,7 @@ const messages = defineMessages({
 // Step one of proposing: pick the page your proposal is about. Browse the
 // Kommons map (in pick mode — selecting a node opens the Proposer scoped to it)
 // or search for the page by name. Every result / node routes to
-// /hub/kommons/propose?node=<id>, so the proposal lands on that page.
+// /hub/kommons/composer?node=<id>, so the proposal lands on that page.
 const ProposePicker: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const history = useHistory();
@@ -65,7 +65,7 @@ const ProposePicker: React.FC<{ multiColumn?: boolean }> = () => {
       // into pathname otherwise (see components/router.tsx).
       if (id)
         history.push({
-          pathname: '/hub/kommons/propose',
+          pathname: '/hub/kommons/composer',
           search: `?node=${id}`,
         });
     },

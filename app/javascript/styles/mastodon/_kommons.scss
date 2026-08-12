@@ -3254,33 +3254,20 @@
 }
 
 // ── Propose page (/hub/kommons/propose) ────────────────────────────────
+// Kommons composer body — fields inside the shared `<ComposeShell>` at
+// /hub/kommons/composer (opened by the Ж bubble → picker chain, or
+// scoped straight in from a Space page's Ж shortcut). The shell owns
+// the panel, backdrop, header (label + subtitle) and Cancel/Submit
+// footer, so this stack owns only the field visuals. Was the
+// standalone `.propose-page` full-page form until 2026-08-12
+// — the outer stage-geometry (max-width, margin, padding) is retired
+// since the shell provides it, and the `__hero` / `__title` /
+// `__intro` blocks (which fed the local <header>) are retired since
+// the shell renders label + subtitle in its own header.
 .propose-page {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 20px 16px 48px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-
-  &__hero {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  &__title {
-    margin: 0;
-    font-family: var(--font-display, inherit);
-    font-size: 26px;
-    font-weight: 700;
-  }
-
-  &__intro {
-    margin: 0;
-    color: var(--text-muted, rgba(255, 255, 255, 70%));
-    font-size: 15px;
-    line-height: 1.5;
-  }
 
   &__field {
     display: flex;
@@ -3432,30 +3419,8 @@
     font-size: 14px;
   }
 
-  &__actions {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  &__submit {
-    padding: 10px 22px;
-    border-radius: var(--radius-round);
-    border: 0;
-    background: var(--accent);
-    color: var(--text-on-accent);
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    &:not(:disabled):hover {
-      filter: brightness(1.08);
-    }
-  }
+  // (`.propose-page__actions` / `.propose-page__submit` retired — the
+  // ComposeShell footer bar owns Cancel + primary submit now.)
 }
 
 // Node meta page — inline lifecycle badge next to the URL.
