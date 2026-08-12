@@ -101,11 +101,87 @@ interface Offender {
   snippet: string;
 }
 
+// Blank out comments before scanning, so the guard reads CODE only.
+//
+// Why: this check used to match the literal `<input type="file">` written
+// inside a PROSE COMMENT — the doc comment in `features/me_hub/index.tsx`
+// that explains the avatar upload flow — and report it as an offender,
+// because a comment has no `className` to test against SCSS. The real
+// input a few hundred lines below IS hidden
+// (`.me-hub-avatar-preview__file-input { display: none }`), so the code was
+// correct and the guard was wrong. A check that trips over its own
+// documentation is permanently red, and a permanently red check catches
+// nothing — it just gets ignored.
+//
+// Offsets are preserved (comment bytes become spaces, newlines kept) so the
+// reported `file:line` still points at the true source line. String and
+// template literals are copied verbatim, so a URL like 'https://…' is never
+// mistaken for the start of a line comment.
+const stripComments = (src: string): string => {
+  let out = '';
+  let i = 0;
+  const n = src.length;
+
+  while (i < n) {
+    const ch = src.charAt(i);
+    const next = src.charAt(i + 1);
+
+    // `// …` to end of line
+    if (ch === '/' && next === '/') {
+      while (i < n && src.charAt(i) !== '\n') {
+        out += ' ';
+        i += 1;
+      }
+      continue;
+    }
+
+    // `/* … */`, which also covers JSX `{/* … */}`
+    if (ch === '/' && next === '*') {
+      let closed = false;
+      while (i < n) {
+        if (src.charAt(i) === '*' && src.charAt(i + 1) === '/') {
+          out += '  ';
+          i += 2;
+          closed = true;
+          break;
+        }
+        out += src.charAt(i) === '\n' ? '\n' : ' ';
+        i += 1;
+      }
+      if (!closed) break; // unterminated comment: nothing left that is code
+      continue;
+    }
+
+    // string / template literal — copy through, honouring escapes
+    if (ch === '"' || ch === "'" || ch === '`') {
+      const quote = ch;
+      out += ch;
+      i += 1;
+      while (i < n) {
+        if (src.charAt(i) === '\\') {
+          out += src.slice(i, i + 2);
+          i += 2;
+          continue;
+        }
+        out += src.charAt(i);
+        i += 1;
+        if (src.charAt(i - 1) === quote) break;
+      }
+      continue;
+    }
+
+    out += ch;
+    i += 1;
+  }
+
+  return out;
+};
+
 const findOffenders = (): Offender[] => {
   const offenders: Offender[] = [];
 
   for (const file of walk(FRONTEND_ROOT)) {
-    const src = readFileSync(file, 'utf8');
+    const src = stripComments(readFileSync(file, 'utf8'));
     if (!/type=(['"])file\1/.test(src)) continue;
 
     inputRegex.lastIndex = 0;
@@ -187,5 +263,49 @@ describe('raw file inputs', () => {
       );
     }
     expect(offenders).toEqual([]);
+  });
+});
+
+// Covers the stripper directly, because the bug it fixes was invisible from
+// the guard above: the guard simply reported a file:line that looked real.
+describe('stripComments', () => {
+  it('blanks a file input written inside a line comment', () => {
+    const src =
+      '// Upload flow: `<input type="file">` from the button\nconst a = 1;\n';
+
+    expect(stripComments(src)).not.toMatch(/type="file"/);
+  });
+
+  it('blanks a file input inside a block or JSX comment', () => {
+    expect(stripComments('/* <input type="file" /> */')).not.toMatch(
+      /type="file"/,
+    );
+    expect(stripComments('{/* <input type="file" /> */}')).not.toMatch(
+      /type="file"/,
+    );
+  });
+
+  it('keeps real code, including a genuine file input', () => {
+    const src = '<input type="file" className="x" />';
+
+    expect(stripComments(src)).toBe(src);
+  });
+
+  // The reported file:line must stay truthful, so offsets cannot shift.
+  it('preserves length and line numbering', () => {
+    const src = '// comment\nconst a = 1;\n/* two\nlines */\nconst b = 2;\n';
+    const stripped = stripComments(src);
+
+    expect(stripped).toHaveLength(src.length);
+    expect(stripped.split('\n')).toHaveLength(src.split('\n').length);
+    expect(stripped.split('\n')[1]).toBe('const a = 1;');
+  });
+
+  // A URL inside a string must not be read as the start of a comment, or
+  // everything after it on the line would be blanked.
+  it('does not treat // inside a string as a comment', () => {
+    const src = "const u = 'https://kronk.info/a';\nconst v = 2;\n";
+
+    expect(stripComments(src)).toBe(src);
   });
 });
