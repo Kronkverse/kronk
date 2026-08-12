@@ -1,80 +1,13 @@
 // Feed settings surface (/home/settings). Sibling of KornerSettings but
 // for the framework's home feed. Scope picker + tune-in list.
+// Header + back-nav are Frame-owned (Korner Standard L12) —
+// .space-header renders the title/tagline, AutoSettingsBadge renders
+// the "← All settings" pill in SpaceNav.
 
 .feed-settings {
   padding: 1.5rem;
   max-width: 42rem;
   margin: 0 auto;
-
-  &__back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.35rem 0.65rem;
-    margin-bottom: 1rem;
-    border-radius: var(--radius-round);
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: 0.85rem;
-
-    svg {
-      width: 1rem;
-      height: 1rem;
-      fill: currentColor;
-    }
-
-    &:hover {
-      color: var(--kronk-purple-accent);
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 10%,
-        transparent
-      );
-    }
-  }
-
-  &__header {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1.25rem;
-    border-bottom: 1px solid var(--border-default);
-  }
-
-  &__glyph {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 3rem;
-    height: 3rem;
-    border-radius: var(--radius-medium);
-    background: var(--kronk-purple-accent);
-    color: var(--surface-primary);
-    box-shadow: 0 4px 12px -4px
-      color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
-
-    svg {
-      width: 1.65rem;
-      height: 1.65rem;
-      fill: currentColor;
-    }
-  }
-
-  &__title {
-    margin: 0;
-    color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 1.8rem;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-  }
-
-  &__subtitle {
-    margin: 0.15rem 0 0;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-  }
 
   &__error {
     padding: 0.85rem 1rem;
