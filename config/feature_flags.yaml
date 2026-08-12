@@ -21,6 +21,13 @@ default:
   # Kronk::AudienceScope narrows the feed to the requested tier. Off by
   # default; flip on to test the ring end-to-end on shadow.
   feed_scope_enforced: false
+  # Own-content nudges: froth / reply / mention on YOUR post publish a
+  # Kronk::KornerEvents event that routes into the author's messenger
+  # (Kronk::StatusNudges). Dual-runs alongside the legacy Notification store —
+  # the legacy notification fires either way, this only adds the nudge — so the
+  # two can be compared on real traffic before anything is cut over. See
+  # docs/rebuild/notification_retirement_plan.md phase 2.
+  status_nudges: false
 
 # Shadow runs RAILS_ENV=production off rebuild/2.0.0, so this block turns the
 # Home audience ladder ON for shadow testing. Real production is deployed from
@@ -28,6 +35,9 @@ default:
 # back by removing this block.
 production:
   feed_scope_enforced: true
+  # On for shadow (which runs RAILS_ENV=production off rebuild/2.0.0) so the
+  # dual-run happens somewhere real. `main` does not carry this block.
+  status_nudges: true
 # Uncomment and populate as more per-env overrides are needed.
 # development: {}
 # test: {}

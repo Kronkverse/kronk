@@ -128,6 +128,41 @@ listens:
     source_type: BoothSet
     source_id_key: booth_set_id
     interaction: passive
+  # ── Own-content nudges (decisions.md 2026-08-12) ──────────────────
+  # Something happened to YOUR post. One recipient — the author — so these are
+  # Tier-1 DIRECTED: they fire regardless of Mate status, because a stranger
+  # frothing your post is still about your content. Published by
+  # Kronk::StatusNudges behind the `status_nudges` flag, dual-running against
+  # the legacy Notification store. `status.reblogged` is deliberately absent:
+  # #1407 retired Boost from the action bar, so nothing local can boost.
+  - event: status.frothed
+    source_korner: feed
+    verb: frothed
+    directed: true
+    source_type: Status
+    source_id_key: status_id
+    interaction: passive
+    # A flurry of froths on one post collapses into a single re-floating nudge
+    # rather than one per froth.
+    aggregation: { window: 10m }
+  - event: status.replied
+    source_korner: feed
+    verb: replied
+    directed: true
+    source_type: Status
+    source_id_key: status_id
+    interaction: interactive
+    cta_label: 'View reply'
+    cta_route: '/@{actor_acct}/{status_id}'
+  - event: status.mentioned
+    source_korner: feed
+    verb: mentioned
+    directed: true
+    source_type: Status
+    source_id_key: status_id
+    interaction: interactive
+    cta_label: 'View post'
+    cta_route: '/@{actor_acct}/{status_id}'
   # Mate requests are Tier-1 DIRECTED (docs/kronk_nudges.md § Relevance
   # engine): the pair are by definition not Mates yet, so the Mate gate
   # would drop them as `:non_mate_dropped`. `directed: true` bypasses it.

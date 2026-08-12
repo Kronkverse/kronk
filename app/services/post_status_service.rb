@@ -95,6 +95,26 @@ class PostStatusService < BaseService
       @status.save!
       attach_status_to_krews!
     end
+
+    publish_reply_nudge!
+  end
+
+  # Someone replied to a post — the parent's author is the one recipient.
+  # Published AFTER the transaction commits: a subscriber that fires inside it
+  # would nudge about a status a rollback then discards.
+  def publish_reply_nudge!
+    return if @in_reply_to.nil?
+
+    Kronk::StatusNudges.publish(
+      'status.replied',
+      actor_account_id: @status.account_id,
+      recipient_account_id: @in_reply_to.account_id,
+      status_id: @status.id,
+      in_reply_to_id: @in_reply_to.id,
+      # The CTA links to the REPLY, which the actor authored — so the handle in
+      # the path is the actor's, not the recipient's.
+      actor_acct: @status.account.acct
+    )
   end
 
   # Attach the new Status to any Krews the caller targeted. Membership

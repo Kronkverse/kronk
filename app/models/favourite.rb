@@ -72,6 +72,17 @@ class Favourite < ApplicationRecord
         question_id: status.question.id,
         status_id: status.id
       )
+    else
+      # A plain post — no korner-owned association. Until 2026-08-12 this
+      # short-circuited, so frothing an ordinary post notified nobody through
+      # the bus. Froth is now one of only two reaction actions on the bar
+      # (#1407 retired Boost + Bookmark), so it is the froth that matters most.
+      Kronk::StatusNudges.publish(
+        'status.frothed',
+        actor_account_id: account_id,
+        recipient_account_id: status.account_id,
+        status_id: status.id
+      )
     end
   end
 
