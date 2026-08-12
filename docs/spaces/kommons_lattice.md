@@ -125,9 +125,10 @@ screenshot). At that point Hub's kids split across two adjacent columns, alphabe
 column-major (first half top-to-bottom in the left column, second half top-to-bottom in the right)
 so a reader scanning A→Z can follow one column then the other. Left column stays at `depth+1`; the
 right column sits at `depth+3`, skipping `depth+2` so a Hand in the left half (Kommons, Huddle) can
-still expand its Fingers into that intervening column without colliding with the right column. The
-wire router treats hub-far-kid wires as a shared trunk at Hub's own `y` so the many right-column
-wires don't cross through the intervening left-column cards (see §2).
+still expand its Fingers into that intervening column without colliding with the right column. Wires
+route through a shared vertical trunk in the middle of the gap between the two columns, with
+horizontal branches to each card on either side — the visual is a spine, not a fan of independent
+elbows (see §2, "Hub trunk branch").
 
 ---
 
@@ -156,6 +157,29 @@ The `r` clamp matters: without it, closely-stacked siblings produce corners that
 as wobble.
 
 `stroke-linecap: round`, `stroke-linejoin: round`.
+
+### Hub trunk branch (split-column mode)
+
+When Hub is in the two-column split (see §1), every hub-kid wire routes through a single vertical
+trunk at `trunkX = (nearCol.right + farCol.left) / 2` — the middle of the gap between the two card
+columns. Each wire is `Hub → right to trunk → up/down along trunk → left/right to card`:
+
+```
+x1     = parent.x + COLW,  y1 = parent.y + ROWH/2
+y2     = child.y + ROWH/2
+isLeft = child.x < trunkX
+x2     = isLeft ? child.x + COLW : child.x        # right edge for left-col, left edge for right-col
+r      = min(11, |y2 - y1| / 2, COLGAP * 0.4)
+s      = y2 > y1 ? 1 : -1
+dir    = isLeft ? -1 : +1                         # side of the trunk the final segment exits
+
+M x1,y1  L trunkX-r,y1  Q trunkX,y1 trunkX,y1+s·r
+         L trunkX,y2-s·r  Q trunkX,y2 trunkX+dir·r,y2  L x2,y2
+```
+
+All hub-kid wires overlap on the trunk portion, so visually they read as one vertical spine with
+cards fanning out to both sides — the "branch goes up from the hub and splits into two" shape from
+Tal's design sketch (2026-08-12).
 
 ### States
 
