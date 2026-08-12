@@ -116,6 +116,19 @@ korners.
 Reference figures: at boot, 4 rows (1 + 3). Hub open → 18 rows, Hub centred at y 476 with korners
 spanning 112–840. Hub + Booth open → 24 rows across 4 columns.
 
+### Hub two-column split (once the kid list is long enough)
+
+Under the tidy-tree rule Hub's kids stack in a single column at `depth+1`. Beyond a threshold
+(currently 15 kids — production has ~17), that block gets tall enough to force the viewport to zoom
+out just to fit it in view, at which point the cards read as text-too-small (Tal 2026-08-12
+screenshot). At that point Hub's kids split across two adjacent columns, alphabetically arranged
+column-major (first half top-to-bottom in the left column, second half top-to-bottom in the right)
+so a reader scanning A→Z can follow one column then the other. Left column stays at `depth+1`; the
+right column sits at `depth+3`, skipping `depth+2` so a Hand in the left half (Kommons, Huddle) can
+still expand its Fingers into that intervening column without colliding with the right column. The
+wire router treats hub-far-kid wires as a shared trunk at Hub's own `y` so the many right-column
+wires don't cross through the intervening left-column cards (see §2).
+
 ---
 
 ## 2. Connectors (wires)

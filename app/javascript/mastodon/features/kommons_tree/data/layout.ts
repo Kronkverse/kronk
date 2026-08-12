@@ -162,6 +162,20 @@ export const buildTree = (nodes: KommonsNode[]): Tree => {
     tree.hub?.kids.push(n.id);
   }
 
+  // Hub is the biggest bucket in the tree — every korner plus Hub's own
+  // pages. Alphabetise its kids so users can find one by name (before
+  // this the order was manifest-registration order, which meant nothing
+  // to a caller). Applied here rather than at layout time because it
+  // affects any consumer of the tree, not just the Lattice.
+  const hubKids = tree.hub?.kids;
+  if (hubKids) {
+    hubKids.sort((a, b) => {
+      const la = tree[a]?.label ?? a;
+      const lb = tree[b]?.label ?? b;
+      return la.localeCompare(lb, undefined, { sensitivity: 'base' });
+    });
+  }
+
   rollUp(tree, ROOT_ID);
   return tree;
 };

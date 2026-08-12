@@ -7,7 +7,7 @@
 import type { Tree } from '../../kommons_tree/data/layout';
 
 import type { LatticeLayout, LatticePos } from './layout';
-import { COL_GAP, COL_W, ROW_H } from './layout';
+import { COL_GAP, COL_PITCH, COL_W, ROW_H } from './layout';
 
 export interface LatticeWire {
   id: string;
@@ -20,6 +20,15 @@ export interface LatticeWire {
 // From the parent's right edge to the child's left edge, turning at the
 // horizontal midpoint of the column gap. The radius is clamped so closely
 // stacked siblings don't produce corners that overshoot and read as wobble.
+//
+// When the child sits more than one column-pitch away (Hub's split-column
+// kids — see `layoutLattice`), the standard midpoint puts the vertical
+// turn near the parent, which then forces a long horizontal segment at
+// the child's y that crosses through the intervening column's cards. In
+// that case, turn just before the child column instead: the horizontal
+// segment runs at the parent's y (i.e. Hub's centre) and every far-kid
+// wire visually shares it as a thin trunk, then each fans up or down to
+// its own row — no crossing through intervening cards.
 const elbow = (parent: LatticePos, child: LatticePos): string => {
   const x1 = parent.x + COL_W;
   const y1 = parent.y + ROW_H / 2;
@@ -29,7 +38,8 @@ const elbow = (parent: LatticePos, child: LatticePos): string => {
   // Degenerate to a straight line when nearly level — the quadratics collapse.
   if (Math.abs(y2 - y1) < 1) return `M ${x1},${y1} L ${x2},${y2}`;
 
-  const mx = x1 + COL_GAP * 0.5;
+  const far = x2 - x1 > COL_PITCH;
+  const mx = far ? x2 - COL_GAP * 0.5 : x1 + COL_GAP * 0.5;
   const r = Math.min(11, Math.abs(y2 - y1) / 2, COL_GAP * 0.4);
   const s = y2 > y1 ? 1 : -1;
 
