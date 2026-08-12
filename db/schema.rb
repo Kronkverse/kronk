@@ -265,7 +265,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_11_010000) do
     t.index ["contributor_id"], name: "index_album_photos_on_contributor_id"
     t.index ["media_attachment_id"], name: "index_album_photos_on_media_attachment_id"
     t.index ["status_id"], name: "index_album_photos_on_status_id", where: "(status_id IS NOT NULL)"
-    t.check_constraint "(media_attachment_id IS NOT NULL) <> (external_url IS NOT NULL)", name: "album_photos_exactly_one_media_source"
   end
 
   create_table "albums", force: :cascade do |t|
@@ -1246,6 +1245,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_11_010000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "muted", default: false, null: false
+    t.bigint "last_read_event_id"
     t.index ["account_id"], name: "index_nudges_conversation_memberships_on_account_id"
     t.index ["conversation_id", "account_id"], name: "index_nudges_convo_memberships_on_pair", unique: true
     t.index ["conversation_id"], name: "index_nudges_conversation_memberships_on_conversation_id"
@@ -1283,6 +1283,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_11_010000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "krew_id"
+    t.bigint "last_read_event_id_a"
+    t.bigint "last_read_event_id_b"
     t.index ["account_a_id", "account_b_id"], name: "index_nudges_convos_on_mate_pair", unique: true, where: "(((kind)::text = 'mate'::text) AND (account_a_id IS NOT NULL) AND (account_b_id IS NOT NULL))"
     t.index ["account_a_id"], name: "index_nudges_conversations_on_account_a_id"
     t.index ["account_b_id"], name: "index_nudges_conversations_on_account_b_id"
