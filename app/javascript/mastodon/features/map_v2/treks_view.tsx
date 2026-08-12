@@ -24,8 +24,6 @@ import { Button } from 'mastodon/components/button';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
-import { ScopeTitle } from 'mastodon/components/scope_title';
-import type { ScopeTitleFace } from 'mastodon/components/scope_title';
 import { StatusTrekCard } from 'mastodon/components/status_trek_card';
 import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 
@@ -38,16 +36,6 @@ import { TrekFroth } from './trek_froth';
 // trimmed route on the shared Kronk basemap plus the stats.
 
 const messages = defineMessages({
-  yours: { id: 'map.treks.yours', defaultMessage: 'Yours' },
-  yoursTagline: {
-    id: 'map.treks.yours_tagline',
-    defaultMessage: 'Treks you have logged',
-  },
-  mates: { id: 'map.treks.mates', defaultMessage: 'Mates' },
-  matesTagline: {
-    id: 'map.treks.mates_tagline',
-    defaultMessage: 'Treks your mates have shared',
-  },
   emptyYours: {
     id: 'map.treks.empty_yours',
     defaultMessage: "You haven't logged any treks yet.",
@@ -55,10 +43,6 @@ const messages = defineMessages({
   emptyMates: {
     id: 'map.treks.empty_mates',
     defaultMessage: 'None of your mates have shared a trek yet.',
-  },
-  scopeAria: {
-    id: 'map.treks.scope_aria',
-    defaultMessage: 'Change whose treks you see',
   },
   back: { id: 'map.treks.back', defaultMessage: 'Back' },
   publish: { id: 'map.treks.publish', defaultMessage: 'Publish' },
@@ -316,39 +300,25 @@ const TrekDetail: React.FC<{
   );
 };
 
-// The selected trek's id lives in the URL (/hub/map/treks/:id) so the feed
-// card can deep-link straight to a trek's detail in the Map space. Trek IDs
-// are numeric (AR primary keys), so the regex requires digits — that keeps
-// the ID slot from clashing with the scope segments (`mine` / `mates`)
-// introduced by the rotator below.
-const TREK_ID_RE = /^\/hub\/map\/treks\/(\d+)$/;
-
-// Whose treks are being listed. Mirrors the /home + Albutts scope-rotator
-// pattern: URL is the source of truth so refresh + share + deep-link
-// preserve the current face.
-//
-//   /hub/map/treks          → mine (default, matches manifest `views:` idea
-//                             that the bare path is the default face)
-//   /hub/map/treks/mine     → mine (explicit — also renders on this path)
-//   /hub/map/treks/mates    → mates
-//
-// A local rotator (not `header.rotator: true` in the manifest) because Map
-// already spends its manifest `views:` on the outer lens picker
-// (Mates map surface vs Treks list) — the Yours/Mates axis is a second-
-// order scope inside the Treks lens, not a lens itself. Standard L11's
-// one-title-per-space rule is satisfied by the Frame-provided Map header
-// staying static; `frameHeader` is set on the ScopeTitle below so the
-// Stage parasite check treats this scope-rotator as intentional chrome
-// rather than a stray `<h1>`.
+// Whose treks are being listed. The face is chosen by the Frame's
+// rotating space title (manifest `header.rotator: true`) which pushes
+// the URL segment; this view reads it back. `mine` renders on
+// /hub/map/my-treks (the default treks face — legacy /hub/map/treks
+// resolves to it too, see index.tsx); `mates` renders on
+// /hub/map/mates-treks. Keeping the drum keyed to this value plays
+// the same quarter-turn between the two treks faces that /home +
+// Albutts + Kommons ship.
 const SCOPE_KEYS = ['mine', 'mates'] as const;
 type TrekScope = (typeof SCOPE_KEYS)[number];
 
-const TREK_SCOPE_RE = /^\/hub\/map\/treks\/(mine|mates)$/;
+const resolveTrekScope = (pathname: string): TrekScope =>
+  pathname === '/hub/map/mates-treks' ? 'mates' : 'mine';
 
-const resolveTrekScope = (pathname: string): TrekScope => {
-  const match = TREK_SCOPE_RE.exec(pathname);
-  return match ? (match[1] as TrekScope) : 'mine';
-};
+// The selected trek's id lives in the URL (/hub/map/treks/:id) so the feed
+// card can deep-link straight to a trek's detail in the Map space. Trek IDs
+// are numeric (AR primary keys); the regex requires digits so it can't
+// swallow a scope segment.
+const TREK_ID_RE = /^\/hub\/map\/treks\/(\d+)$/;
 
 export const TreksView: React.FC = () => {
   const intl = useIntl();
@@ -398,25 +368,29 @@ export const TreksView: React.FC = () => {
     };
   }, [selectedId, treks]);
 
+  // FeedDrum + swipe fall through this handler when the user rotates
+  // between the two treks faces (drum handles left/right swipe; the
+  // manifest rotator handles chevron / tap-title). Maps the scope key
+  // back to the top-level URL segment that the Frame rotator uses,
+  // so both entry points converge on the same URL.
   const changeScope = useCallback(
     (nextKey: string) => {
-      // Bare `/hub/map/treks` doubles as the default (`mine`) so shared
-      // links to the landing keep the same URL shape as every other
-      // korner's default view.
       const target =
-        nextKey === 'mine' ? '/hub/map/treks' : `/hub/map/treks/${nextKey}`;
+        nextKey === 'mates' ? '/hub/map/mates-treks' : '/hub/map/my-treks';
       if (target !== location.pathname) history.push(target);
     },
     [history, location.pathname],
   );
 
   const back = useCallback(() => {
-    history.push('/hub/map/treks');
+    // Return to the treks face the caller was on (default `my-treks`
+    // if we don't know — the detail URL doesn't carry the scope).
+    history.push('/hub/map/my-treks');
   }, [history]);
 
   const onDetailChange = useCallback(
     (t: ApiTrekJSON | null) => {
-      if (t === null) history.push('/hub/map/treks');
+      if (t === null) history.push('/hub/map/my-treks');
       refresh();
     },
     [history, refresh],
@@ -447,38 +421,19 @@ export const TreksView: React.FC = () => {
 
   const visible = treks.filter((t) => (scope === 'mine' ? t.self : !t.self));
 
-  const faces: ScopeTitleFace[] = [
-    {
-      key: 'mine',
-      label: intl.formatMessage(messages.yours),
-      desc: intl.formatMessage(messages.yoursTagline),
-    },
-    {
-      key: 'mates',
-      label: intl.formatMessage(messages.mates),
-      desc: intl.formatMessage(messages.matesTagline),
-    },
-  ];
-
   const emptyCopy = intl.formatMessage(
     scope === 'mine' ? messages.emptyYours : messages.emptyMates,
   );
 
   return (
     <div className='trek-list'>
-      <ScopeTitle
-        faces={faces}
-        value={scope}
-        onChange={changeScope}
-        ariaLabel={intl.formatMessage(messages.scopeAria)}
-        frameHeader
-      />
-
-      {/* Same drum treatment as /home + Albutts + Kommons — a quarter-turn
-          on scope change so the two faces feel like sides of one object,
-          not sibling panels. The drum keys off `scope`, so its
-          getSnapshotBeforeUpdate captures the outgoing list right as
-          `changeScope` pushes the new URL. */}
+      {/* No local title — the Frame's rotating space title
+          (manifest `header.rotator: true`) provides it for both
+          treks faces. Same drum treatment as /home + Albutts +
+          Kommons — a quarter-turn on scope change so the two treks
+          faces feel like sides of one object. The drum keys off
+          `scope`, so its getSnapshotBeforeUpdate captures the
+          outgoing list right as `changeScope` pushes the new URL. */}
       <FeedDrum
         reach={scope}
         order={[...SCOPE_KEYS]}
