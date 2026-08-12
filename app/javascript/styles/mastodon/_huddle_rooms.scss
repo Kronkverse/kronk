@@ -28,7 +28,7 @@
 
 .huddle-rooms__new {
   padding: 6px 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   border: 1px solid var(--accent);
   background: transparent;
   color: var(--accent);
@@ -43,7 +43,7 @@
 
   &:hover:not(:disabled) {
     background: var(--accent);
-    color: var(--text-on-accent, #fff);
+    color: var(--semantic-text-on-accent);
   }
 }
 
@@ -80,7 +80,7 @@
 
 .huddle-rooms__error {
   margin: 0;
-  color: var(--warning-red, #ef4444);
+  color: var(--semantic-warning-red);
   font-size: 12px;
 }
 
@@ -93,7 +93,7 @@
 .huddle-rooms__cancel,
 .huddle-rooms__submit {
   padding: 8px 16px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.06em;
@@ -110,7 +110,7 @@
 .huddle-rooms__submit {
   border: none;
   background: var(--accent);
-  color: var(--text-on-accent, #fff);
+  color: var(--semantic-text-on-accent);
 
   &:disabled {
     opacity: 0.5;
