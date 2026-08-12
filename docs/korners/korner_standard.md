@@ -1,5 +1,18 @@
 # The Korner Standard
 
+> **Freshness.** §3's doctor-coverage table and issue counts last checked
+> **2026-08-12**. Re-check with:
+>
+> ```
+> grep -n 'def detect_' lib/mastodon/cli/korners.rb     # what the doctor actually gates
+> grep -n 'BUCKETS =' app/lib/kronk/node_registry.rb    # L6's valid bucket list
+> bin/tootctl korners doctor                            # current issue counts
+> ```
+>
+> If any disagrees, **correct this doc in your current PR** — §3 is the table
+> people trust to know what is machine-checked, and it has been wrong before.
+> See `decisions.md` 2026-08-12 (decision 6).
+
 > **Status:** v1 (2026-07-16, two open decisions resolved — see foot). The normative definition of what makes a korner **slide in smoothly** to Kronk's infrastructure. Derived from the 2026-07-16 recreation audit (the dimensions where real korners broke) + the aesthetic standard (`docs/kronk_aesthetic_system.md` §6). Companion docs: `docs/kronk_korner_spec.md` (manifest field reference) and `docs/korners/adding_a_korner.md` (the build walkthrough — follows this standard).
 >
 > **How to read it:** §1 is the lifecycle gate — _what's required when_. §2 is the ten layers — _the checklist_. §3 is the conformance matrix — _what `korners doctor` enforces automatically vs. what a human signs off_. A korner is done when it passes every layer required for its lifecycle stage.
@@ -208,12 +221,15 @@ weeks because nothing ran the doctor — see the CI note below.
 **The doctor now runs in CI, but does not gate (2026-08-12).**
 `.github/workflows/korners-doctor.yml` runs `bin/tootctl korners doctor` on every PR. It is
 **`continue-on-error`, not named `lint`, and not a required check**, because the doctor currently
-reports **17 real issues** on `rebuild/2.0.0` (measured at `1cfa53b4a6`): 8 L10 notification types
-declared but never registered (albutts 2, huddle 3, moments 3), 7 `kronk.*` nodes whose URLs match
-no route, huddle's legacy root-level `security:` block, and 1 remaining L7 stylelint-governance gap
-(`_kommunity.scss` — #1362 governed the other 11). Making it gate before that debt is cleared would
-freeze the merge queue — the same mistake as requiring `lint` ahead of its own backlog. The path
-forward is: clear the 17, drop `continue-on-error`, then make it required.
+reports **16 issues + 4 warnings** on `rebuild/2.0.0` (measured at `9a95e6c8`): 8 L10 notification
+types declared but never registered (albutts 2, huddle 3, moments 3), 7 `kronk.*` nodes whose URLs
+match no route, and huddle's legacy root-level `security:` block. **L7 is clear** — #1362 governed
+11 korner partials and #1381 the last one (`_kommunity.scss`), making L7 the first layer green end
+to end. The warnings are huddle's `planned` feed card plus three bespoke composers not yet wrapped
+in `<ComposeShell>` (`kommons_tree`, `nudges_messenger`, `profile_shelves/tell_composer` — the check
+#1374 added alongside the compose standard). Making it gate before the 16 are cleared would freeze
+the merge queue — the same mistake as requiring `lint` ahead of its own backlog. The path forward
+is: clear the 16, drop `continue-on-error`, then make it required.
 
 On the 8 L10 findings specifically: **do not read them as types to register.** They are declared
 against the Mastodon `Notification` store, which `docs/kronk_nudges.md` § _Self-delivering

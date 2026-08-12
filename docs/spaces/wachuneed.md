@@ -1,5 +1,16 @@
 # Wachuneed (`wachuneed`)
 
+> **Freshness.** Slug/mount last checked **2026-08-12** (the rename is still
+> half-done). Re-check with:
+>
+> ```
+> ls config/korners/ | grep -iE 'wachuneed|martketplace'      # which manifest exists
+> grep -n 'wachuneed\|martketplace' config/routes.rb          # note which way the 301 points
+> ```
+>
+> If the rename has since completed, **correct this doc in your current PR**.
+> See `decisions.md` 2026-08-12 (decision 6).
+
 **Manifest:** `config/korners/martketplace.yaml` (`slug: martketplace`) · **Mount:** `/hub/martketplace` · **Status:** in-flight (Phase 10.3) — scaffolding shipped, UI + flow work pending
 
 > **Slug history — the rename is only half-done (verified 2026-08-12).** The

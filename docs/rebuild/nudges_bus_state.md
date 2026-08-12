@@ -1,5 +1,17 @@
 # Nudges delivery — state of play and the path to one mechanism
 
+> **Freshness.** Inventory below last checked **2026-08-12** against `8bef674`.
+> Re-check with:
+>
+> ```
+> grep -cE '^\s+- event:' config/korners/nudges.yaml     # manifest listeners (12 at time of writing)
+> grep -rn 'KornerEvents.publish' app/ lib/              # publishers (note: some pass the name on the NEXT line)
+> grep -n 'KornerEvents.subscribe' config/initializers/*.rb  # hand-wired
+> ```
+>
+> If it disagrees, **correct this doc in your current PR** — do not park it in a
+> note. See `decisions.md` 2026-08-12 (decision 6).
+
 **Status: assessment, no code changed.** Written 2026-08-12 from the code at
 `rebuild/2.0.0` tip `8bef674`, after the korner-doctor audit (#1357 / #1361)
 surfaced eight korner notification declarations that can never fire. The
@@ -69,13 +81,16 @@ declarative half of stage 2.
 | `kuestions.question.frothed`  | kuestions    | `frothed`        | passive                      |
 | `booth.set.frothed`           | booth        | `frothed`        | passive                      |
 
-**Hand-wired subscribers (5)** in the same initializer, below the manifest loop:
-`krews.member.joined`, `krews.member.left`, `albutts.album.new_photo`,
-`mates.request.sent`, `mates.request.accepted`.
+Plus **`mates.request.sent` and `mates.request.accepted`**, added as declared
+listeners with `directed: true` by #1367 — 12 in total. They were hand-wired
+until the bus loop learned to forward `directed:` (gap 1 below, now closed).
 
-Only the first two are genuine special cases (they target the Krew conversation
-itself rather than a 1:1, so the Mate gate can't apply). The other three are
-hand-wired because of the two structural gaps below — not because they need to
+**Hand-wired subscribers (3)** in the same initializer, below the manifest loop:
+`krews.member.joined`, `krews.member.left`, `albutts.album.new_photo`.
+
+The first two are genuine special cases (they target the Krew conversation
+itself rather than a 1:1, so the Mate gate can't apply). The third is
+hand-wired because of structural gap 2 below — not because it needs to
 be. The initializer's own docstring says a new listener should take "a manifest
 edit + a source-side publish — no touch to this file", so three of these are
 drift from its stated contract.
@@ -92,17 +107,15 @@ notification types have no source event to route.
 
 ## The two structural gaps
 
-**1 — `directed:` is not plumbed from the manifest.** `Nudges::EventRouter`
-accepts `directed:` and correctly bypasses the Mate gate for it (spec § _Relevance
-engine_ Tier 1: "Fires always — no Mate, follow, or tune-in test"). But the
-manifest→deliver mapping in `nudges_event_bus.rb` never passes it, so every
-manifest-declared listener is `directed: false` and subject to the Mate gate.
-Consequence: **a Tier-1 directed nudge cannot be declared in a manifest** — it
-has to be hand-wired. That is exactly why `mates.request.sent` and
-`mates.request.accepted` sit in the hand-wired block.
-
-This is a small, contained fix: accept `directed: true` on a listens entry and
-pass it through.
+**1 — `directed:` was not plumbed from the manifest. CLOSED by #1367.**
+`Nudges::EventRouter` always accepted `directed:` and correctly bypassed the
+Mate gate for it (spec § _Relevance engine_ Tier 1: "Fires always — no Mate,
+follow, or tune-in test"), but the manifest→deliver mapping in
+`nudges_event_bus.rb` never passed it, so every manifest-declared listener was
+implicitly `directed: false`. A Tier-1 directed nudge therefore could not be
+declared in a manifest at all — which is why the mate-request routes had to be
+hand-wired. The bus loop now forwards `directed: entry['directed'] == true`,
+and those two routes are declared listens. Gap 2 remains open.
 
 **2 — the manifest path delivers to exactly one recipient.** The subscriber
 reads `payload[:recipient_account_id]` and routes to that one account. That
@@ -168,9 +181,10 @@ once in the live one.
 Smallest and safest first. Stages 1–3 are mechanical and low-risk; stage 4 is
 the design step and should not be started before it is agreed.
 
-1. **Plumb `directed:` through the manifest** (gap 1), then move
-   `mates.request.sent` / `mates.request.accepted` from hand-wired to declared.
-   Shrinks the hand-wired block to the two genuine Krew special cases.
+1. ~~**Plumb `directed:` through the manifest** (gap 1), then move
+   `mates.request.sent` / `mates.request.accepted` from hand-wired to
+   declared.~~ **Done — #1367.** The hand-wired block is down to three, of which
+   only `albutts.album.new_photo` is there for a reason stage 4 would remove.
 2. **Decide Huddle's four events and `krew.post.created`.** Each is either a
    manifest entry (verb, interaction, CTA, aggregation) or an explicit decision
    that it is not nudge-worthy — publishing an event nobody consumes is the

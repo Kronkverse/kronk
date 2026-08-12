@@ -1,5 +1,16 @@
 # Kronk — Mates, Reach & Feed Projection
 
+> **Freshness.** §2 claims last checked **2026-08-12**. Re-check with:
+>
+> ```
+> grep -A4 'enum :visibility' app/models/concerns/status/visibility.rb   # is krew a visibility value?
+> grep -n feed_scope_enforced config/feature_flags.yaml                  # are the tiers enforced, and where?
+> ```
+>
+> If either disagrees, **correct this doc in your current PR** — `Status::Visibility`
+> and `Reachable` both cite §2 as their spec, so a stale §2 misleads at the point
+> of reading the code. See `decisions.md` 2026-08-12 (decision 6).
+
 > **Status.** Design spec, decided in a workshop with Tal on 2026-07-24. This is the
 > normative model for how korners post to the feed, who sees what, and the social graph it
 > rides on. It **extends and, where they conflict, supersedes** the feed-projection notes in

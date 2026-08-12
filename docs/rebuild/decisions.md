@@ -17,6 +17,104 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-12 — Checks must be trustworthy before we add more
+
+From a doc-vs-code audit that turned into six bug fixes. The individual fixes
+are in #1357, #1361, #1367, #1369, #1372, #1381, #1392; this entry records the
+pattern behind them, because fixing them one at a time will not stop the next
+one.
+
+### The pattern
+
+Every problem found was **a second copy of the truth that nothing compared back
+to the original**:
+
+- Normative docs describing an audience model the code had already replaced
+  (`kronk_feed_and_reach.md` §2 still said a post reaches a tier _or_ a krew,
+  after krew became additive — and `Status::Visibility` cites that section as
+  its spec).
+- `db/schema.rb` disagreeing with its own migrations in **both** directions:
+  missing three columns one migration adds, and still carrying an
+  `album_photos` constraint another migration drops. A DB built from it crashed
+  on every unread count and rejected every album-photo insert.
+- The korner doctor's L1 icon check grepping for the korner **slug** in a map
+  keyed by Material Symbols **name** — so it failed for all 13 non-core
+  enforced korners regardless of whether the icon was wired, and could never
+  have caught the cross-wiring §3 credits it with.
+- The `file_input_aesthetic` guard matching the literal `<input type="file">`
+  inside a **prose comment** documenting the upload flow — failing on its own
+  documentation while the real input was correctly hidden.
+- Manifest `notifications.types` validated against the `Notification` store
+  that `kronk_nudges.md` § _Self-delivering delivery_ already retired, so L10
+  actively points korner authors at the dying mechanism.
+
+### Why it stayed invisible: red is the normal colour
+
+`test` had 43 distinct failures. `Historical data migration test` failed on
+**every PR**. The doctor renders red. When everything is red, no single red
+carries information — so a real regression is indistinguishable from the
+background. That is how a broken from-scratch database build survived weeks,
+and why 13 bogus icon failures went unremarked.
+
+This compounds: because the suite is untrustworthy, only `lint` can gate
+(2026-08-02); because only `lint` gates, the suite drifts further. That trade
+was right for a shadow-only branch, but this is where the bill arrives.
+
+### Decisions
+
+1. **Get CI to zero, then gate it.** Clear the remaining spec failures (#1369
+   and #1372 took 7 of 43; the largest remaining cluster is 8 in
+   `registrations_controller_spec`), shard the rspec suite so it is fast enough
+   to gate, then make `test` required. Sharding was already named as the
+   durable answer in the 2026-08-02 entry; until this lands, nothing else here
+   really sticks.
+2. **Every guard ships with a proof it can fail.** A new check must come with a
+   known-bad input that makes it go red. Both the icon check and the file-input
+   guard die at birth under this rule, and it costs almost nothing. Applies to
+   `korners doctor` checks, repo-scanning tests, and stylelint governance
+   entries alike — a green run on a file whose rules never matched is worse
+   than no check, because it reports safety it never established.
+3. **Reconcile generated artefacts in CI.** Add a job that rebuilds
+   `db/schema.rb` from the migration history and fails on a diff. That one job
+   catches both of today's schema bugs mechanically, forever. It is only
+   possible now that #1372 makes the history replayable.
+4. **Prefer generating over restating.** Hand-maintained tables of what the
+   code already knows — the doctor's layer coverage in `korner_standard.md` §3,
+   the wired-event inventory in `nudges_bus_state.md`, korner lists — are
+   accurate the day they are typed and rot from then on. Where a fact is
+   derivable, emit it from the code (a task, or the doctor's own output) rather
+   than transcribing it.
+5. **Every hand-written factual claim carries the command that checks it.**
+   The `> **Current state (date)**` callouts already date claims; the addition
+   is to name the one-liner that re-verifies them, so staleness is cheap to
+   detect instead of requiring an audit to discover.
+6. **Drift-prone docs ask the reader to fix them, on the spot.** A short
+   `> **Freshness**` block at the top of each such doc gives the date it was
+   last checked, the command that re-checks it, and an instruction: if the
+   command disagrees with the doc, **correct the doc in your current PR**.
+   Rationale over the alternatives — a scheduled sweep produces a report nobody
+   owns, and a passive "verify against code" note (already in this file's
+   header) is advice without an owner or a moment. Correction-at-point-of-read
+   has both: whoever is reading is already in a PR with the context loaded, and
+   it self-prioritises by traffic, since a doc nobody reads harms nobody until
+   it is read. The block must stay **short and copy-pasteable** — a wall of
+   preamble gets skipped, which is the failure mode to design against. Prefer
+   naming a command CI already runs, so the check itself stays exercised
+   (decision 2 applies to these commands too: a rotted verification command is
+   the same bug one level up).
+
+   Applies to normative/derived docs. **Not** to closed records
+   (`krew_axis_migration.md`) or dated snapshots (`remaining_work_*.md`), which
+   are meant to describe a past moment and are not stale for doing so.
+
+### Non-goals
+
+This is not a call for more checks. The point is the opposite: an untrustworthy
+check is a liability, so the existing ones get fixed and gated before new ones
+are added.
+
+---
+
 ## 2026-08-12 — Compose surfaces standardise on `<ComposeShell>`
 
 Every korner's "create a new thing" surface is a shared `<ComposeShell>`
