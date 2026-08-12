@@ -93,10 +93,12 @@ actions.
 
 ### Enforcement
 
-For now: this decision plus code review. A future `bin/tootctl korners
-doctor` layer (L-something) can grep for `openModal` / bespoke portal
-usage inside `features/*/composer*` and flag drift, once the migration is
-past the halfway mark.
+`bin/tootctl korners doctor` scans every `*composer*.tsx` under
+`features/**/` and warns when a file misses the shell (no
+`ComposeShell` import, direct `createPortal`, `openModal` dispatch,
+or a local `<ComposeFab>` render). Warning-level so a WIP composer
+can land — promote to `issues` once the standard is proven stable
+and any legit exceptions are documented.
 
 ---
 

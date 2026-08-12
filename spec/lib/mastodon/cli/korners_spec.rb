@@ -208,4 +208,89 @@ RSpec.describe Mastodon::CLI::Korners do
       expect(cli.send(:detect_frame_parasites, core_manifest)).to be_empty
     end
   end
+
+  # Composer conformance (docs/rebuild/decisions.md 2026-08-12): every
+  # `*composer*.tsx` under `features/**/` must wrap in the shared
+  # `<ComposeShell>` and not roll its own portal, openModal dispatch,
+  # or local <ComposeFab>. These pin the pattern-matching body of the
+  # check on synthetic source — decoupled from the real feature tree.
+  describe 'composer conformance detection' do
+    subject(:cli) { described_class.new }
+
+    def warnings_for(source, rel_path = 'app/javascript/mastodon/features/testkorner/testkorner_composer.tsx')
+      cli.send(:composer_conformance_warnings, source, rel_path)
+    end
+
+    it 'passes a clean ComposeShell-wrapped composer' do
+      source = <<~JSX
+        import { ComposeShell } from 'mastodon/components/compose_shell';
+        export const TestkornerComposer: React.FC = () => (
+          <ComposeShell korner='testkorner' label='Do the thing' submitLabel='Do' onSubmit={fn} onCancel={fn}>
+            <div>fields</div>
+          </ComposeShell>
+        );
+      JSX
+      expect(warnings_for(source)).to be_empty
+    end
+
+    it 'flags a composer with no ComposeShell import' do
+      source = "export const Composer = () => (<div className='my-composer'><form /></div>);"
+      expect(warnings_for(source)).to include(a_string_matching(/no ComposeShell import/))
+    end
+
+    it 'flags a composer that calls createPortal directly' do
+      source = <<~JSX
+        import { createPortal } from 'react-dom';
+        import { ComposeShell } from 'mastodon/components/compose_shell';
+        export const Composer = () => createPortal(<ComposeShell />, document.body);
+      JSX
+      expect(warnings_for(source)).to include(a_string_matching(/createPortal directly/))
+    end
+
+    it 'flags a composer that dispatches openModal' do
+      source = <<~JSX
+        import { ComposeShell } from 'mastodon/components/compose_shell';
+        export const Composer = () => {
+          dispatch(openModal({ modalType: 'FOO' }));
+          return <ComposeShell />;
+        };
+      JSX
+      expect(warnings_for(source)).to include(a_string_matching(/dispatches openModal/))
+    end
+
+    it 'flags a composer that renders a local <ComposeFab>' do
+      source = <<~JSX
+        import { ComposeShell } from 'mastodon/components/compose_shell';
+        import { ComposeFab } from 'mastodon/components/compose_fab';
+        export const Composer = () => (
+          <>
+            <ComposeFab korner='testkorner' />
+            <ComposeShell />
+          </>
+        );
+      JSX
+      expect(warnings_for(source)).to include(a_string_matching(/local <ComposeFab>/))
+    end
+
+    it 'does not flag createPortal / openModal / ComposeFab when only quoted in a block comment' do
+      source = <<~JSX
+        import { ComposeShell } from 'mastodon/components/compose_shell';
+        /* Historical: was createPortal + openModal + <ComposeFab />. */
+        export const Composer = () => (<ComposeShell />);
+      JSX
+      expect(warnings_for(source)).to be_empty
+    end
+
+    it 'does not flag ComposeFab appearing only as a plain word (no JSX)' do
+      # `ComposeFab` in prose (a doc comment reference to the primitive)
+      # should not be mistaken for a render. The check gates on the JSX
+      # angle-bracket form.
+      source = <<~JSX
+        import { ComposeShell } from 'mastodon/components/compose_shell';
+        // ComposeFab lives at components/compose_fab.tsx — no local render.
+        export const Composer = () => (<ComposeShell />);
+      JSX
+      expect(warnings_for(source)).to be_empty
+    end
+  end
 end

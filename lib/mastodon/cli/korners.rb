@@ -155,6 +155,7 @@ module Mastodon
 
         detect_orphan_listens(manifests).each { |line| issues << line }
         detect_node_issues.each { |line| issues << line }
+        detect_composer_conformance_warnings.each { |line| warnings << line }
 
         [issues, warnings]
       end
@@ -380,6 +381,48 @@ module Mastodon
       # (or the tagline quoted inside a comment) don't false-positive.
       def strip_jsx_comments(src)
         src.gsub(%r{/\*[\s\S]*?\*/}, '').gsub(%r{^\s*//[^\n]*$}, '')
+      end
+
+      # Composer conformance — the 2026-08-12 standard: every korner's
+      # "create a new thing" surface goes through the shared
+      # `<ComposeShell>` primitive at a canonical `/hub/<slug>/composer`
+      # URL (see `docs/rebuild/decisions.md`). Doctor scans every
+      # `*composer*.tsx` under `features/**/` and flags files that
+      # missed the standard — bespoke portal, `openModal` dispatch,
+      # local `<ComposeFab>`, or no `ComposeShell` import at all.
+      #
+      # Warning-level so a WIP composer can land without blocking the
+      # rest of the doctor; promote to `issues` once the standard is
+      # settled and any legit exceptions are handled. Pre-fork Mastodon
+      # `features/compose/` (the classic feed-post composer) is
+      # excluded — it's not a korner composer and predates the shell.
+      def detect_composer_conformance_warnings
+        warnings = []
+        Rails.root.glob('app/javascript/mastodon/features/**/*composer*.tsx').each do |file|
+          rel_path = file.to_s.sub("#{Rails.root}/", '') # rubocop:disable Rails/FilePath -- stripping Rails.root prefix, not building a path
+          next if rel_path.include?('/features/compose/')
+
+          composer_conformance_warnings(File.read(file), rel_path).each { |line| warnings << line }
+        end
+        warnings.sort
+      end
+
+      # Pure pattern-matching body — same shape as
+      # `frame_parasite_warnings` above so it can be exercised on
+      # synthetic source in specs without staging a real file tree.
+      def composer_conformance_warnings(raw_source, rel_path)
+        warnings = []
+        source = strip_jsx_comments(raw_source)
+
+        warnings << "compose: #{rel_path} — no ComposeShell import (bespoke composer — wrap in <ComposeShell>)" unless source.include?('ComposeShell')
+
+        warnings << "compose: #{rel_path} — uses createPortal directly (bespoke portal — wrap in <ComposeShell>)" if source.include?('createPortal')
+
+        warnings << "compose: #{rel_path} — dispatches openModal (bespoke modal — wrap in <ComposeShell>)" if source.match?(/\bopenModal\s*\(/)
+
+        warnings << "compose: #{rel_path} — renders local <ComposeFab> (retire; Ж bubble is the site-wide entry)" if source.match?(%r{<ComposeFab[\s/>]})
+
+        warnings
       end
 
       # Read a repo source file once (memoised); '' if absent. Lets the
