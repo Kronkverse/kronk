@@ -182,7 +182,7 @@
 .kommons-tree__badge {
   display: inline-block;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -253,7 +253,7 @@
     color: var(--text-primary);
     background: var(--surface-hover, rgba(255, 255, 255, 5%));
     padding: 2px 6px;
-    border-radius: 3px;
+    border-radius: var(--radius-small);
   }
 }
 
@@ -392,7 +392,7 @@
 .kommons-tree__connection-kind {
   display: inline-block;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -579,7 +579,7 @@
   background: transparent;
   color: var(--accent);
   border: 1px solid var(--accent);
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   padding: 8px 20px;
   font-size: 14px;
   font-weight: 600;
