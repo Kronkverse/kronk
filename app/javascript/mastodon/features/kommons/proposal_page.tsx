@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useHistory, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import api from 'mastodon/api';
 import { Stage } from 'mastodon/components/stage';
@@ -22,7 +22,6 @@ const messages = defineMessages({
 // navigation.
 const ProposalPage: React.FC<{ multiColumn?: boolean }> = () => {
   const { proposalId } = useParams<{ proposalId: string }>();
-  const history = useHistory();
   const intl = useIntl();
 
   const [proposal, setProposal] = useState<Proposal | null>(null);
@@ -49,10 +48,6 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = () => {
       active = false;
     };
   }, [proposalId]);
-
-  const handleBack = useCallback(() => {
-    history.push('/hub/kommons');
-  }, [history]);
 
   const handleVoteUpdate = useCallback((updated: Proposal) => {
     setProposal(updated);
@@ -84,11 +79,7 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = () => {
         )}
 
         {!loading && proposal && (
-          <ProposalDetail
-            proposal={proposal}
-            onBack={handleBack}
-            onVoteUpdate={handleVoteUpdate}
-          />
+          <ProposalDetail proposal={proposal} onVoteUpdate={handleVoteUpdate} />
         )}
       </div>
     </Stage>
