@@ -82,7 +82,7 @@ listens: []
 # /hub/map/logger as a full-page form; that URL is preserved as a
 # legacy alias in `features/map_v2/index.tsx` for any stale bookmark.
 views:
-  - { key: mates, label: Mates, tagline: 'Where your mates are right now' }
+  - { key: mates, label: Map, tagline: 'Where your mates are right now' }
   - { key: my-treks, label: 'My treks', tagline: 'Treks you have logged' }
   - {
       key: mates-treks,
