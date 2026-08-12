@@ -21,7 +21,6 @@ import { Stage } from 'mastodon/components/stage';
 
 const messages = defineMessages({
   title: { id: 'krew.detail.title', defaultMessage: 'Krew' },
-  back: { id: 'krew.detail.back', defaultMessage: '← Back to Krews' },
   loading: { id: 'krew.detail.loading', defaultMessage: 'Loading…' },
   members: {
     id: 'krew.members_count',
@@ -215,9 +214,8 @@ export const KrewDetail = () => {
   return (
     <Stage label={krew?.name ?? intl.formatMessage(messages.title)}>
       <div className='scrollable krew-detail'>
-        <Link to='/hub/krew' className='krew-detail__back'>
-          {intl.formatMessage(messages.back)}
-        </Link>
+        {/* No local ← Back — the Frame's SpaceBadge in the SpaceNav
+            slot already returns to /hub/krew. */}
 
         {error && <p className='krew-detail__error'>{error}</p>}
 
