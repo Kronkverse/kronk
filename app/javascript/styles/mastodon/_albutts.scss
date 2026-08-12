@@ -73,7 +73,7 @@
 
 .albutts-btn {
   border: 1px solid transparent;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   padding: 8px 18px;
   font-size: 13px;
   font-weight: 600;
@@ -82,7 +82,7 @@
 
   &--primary {
     background: var(--accent);
-    color: #fff;
+    color: var(--semantic-text-on-accent);
   }
 
   &--ghost {
@@ -128,7 +128,7 @@
 .albutts-card {
   display: flex;
   flex-direction: column;
-  border-radius: 12px;
+  border-radius: var(--radius-medium);
   overflow: hidden;
   background: var(--surface-variant-background-color);
   color: inherit;
@@ -191,7 +191,7 @@
     aspect-ratio: 4 / 3;
     background-size: cover;
     background-position: center;
-    border-radius: 10px;
+    border-radius: var(--radius-medium);
     background-color: color-mix(in oklab, var(--accent), transparent 80%);
   }
 
@@ -251,7 +251,7 @@
   display: flex;
   flex-direction: column;
   background: var(--surface-variant-background-color);
-  border-radius: 10px;
+  border-radius: var(--radius-medium);
   overflow: hidden;
 
   &__trigger {
@@ -314,7 +314,7 @@
   display: grid;
   grid-template-rows: auto 1fr auto;
   background: rgb(0 0 0 / 92%);
-  color: #fff;
+  color: var(--semantic-text-on-accent);
 
   // `.modal-root__container` (the wrapping element) sets
   // `pointer-events: none` and `user-select: none` to let clicks fall
@@ -332,7 +332,7 @@
     gap: 16px;
 
     .icon-button {
-      color: #fff;
+      color: var(--semantic-text-on-accent);
     }
   }
 
@@ -397,7 +397,7 @@
     max-width: 720px;
 
     .icon-button {
-      color: #fff;
+      color: var(--semantic-text-on-accent);
       opacity: 0.5;
 
       &:hover {
@@ -420,7 +420,7 @@
     cursor: pointer;
 
     &:hover {
-      color: #fff;
+      color: var(--semantic-text-on-accent);
       border-color: var(--accent);
       border-style: solid;
     }
@@ -440,7 +440,7 @@
     border: 1px solid rgb(255 255 255 / 20%);
     border-radius: var(--radius-medium);
     background: rgb(0 0 0 / 40%);
-    color: #fff;
+    color: var(--semantic-text-on-accent);
     font-family: var(--font-body);
     font-size: 13px;
     line-height: 1.4;
@@ -494,15 +494,15 @@
 
     &:hover:not(:disabled) {
       border-color: rgb(255 255 255 / 60%);
-      color: #fff;
+      color: var(--semantic-text-on-accent);
     }
   }
 
   &__nav {
     background: rgb(255 255 255 / 8%);
-    color: #fff;
+    color: var(--semantic-text-on-accent);
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     width: 44px;
     height: 44px;
     display: flex;
@@ -566,8 +566,8 @@
   gap: 6px;
   background: transparent;
   border: 1px solid rgb(255 255 255 / 20%);
-  border-radius: 999px;
-  color: #fff;
+  border-radius: var(--radius-round);
+  color: var(--semantic-text-on-accent);
   padding: 5px 14px;
   cursor: pointer;
   font-size: 13px;
@@ -578,9 +578,20 @@
     height: 18px;
   }
 
+  // Froth-active is a heart-affection pink, not an error red. Synthesise
+  // from tokens: --semantic-warning-red lightened toward white via oklab
+  // mix so the swatch keeps the warm-pink read without a bespoke hex.
   &--active {
-    color: #e0567a;
-    border-color: #e0567a;
+    color: color-mix(
+      in oklab,
+      var(--semantic-warning-red) 55%,
+      var(--semantic-text-on-accent) 45%
+    );
+    border-color: color-mix(
+      in oklab,
+      var(--semantic-warning-red) 55%,
+      var(--semantic-text-on-accent) 45%
+    );
   }
 
   &__count {
@@ -667,7 +678,7 @@
     font: inherit;
 
     &:hover {
-      color: #fff;
+      color: var(--semantic-text-on-accent);
     }
   }
 
@@ -686,9 +697,9 @@
     width: 100%;
     resize: vertical;
     background: rgb(255 255 255 / 6%);
-    color: #fff;
+    color: var(--semantic-text-on-accent);
     border: 1px solid rgb(255 255 255 / 15%);
-    border-radius: 8px;
+    border-radius: var(--radius-medium);
     padding: 10px 12px;
     font: inherit;
     font-size: 14px;
@@ -739,7 +750,7 @@
     width: 100%;
     background: var(--surface-variant-background-color);
     border: 1px solid transparent;
-    border-radius: 8px;
+    border-radius: var(--radius-medium);
     padding: 10px 12px;
     font-size: 14px;
     font-family: inherit;
@@ -862,7 +873,7 @@
     flex: 0 0 72px;
     width: 72px;
     height: 72px;
-    border-radius: 8px;
+    border-radius: var(--radius-medium);
     overflow: hidden;
     background: color-mix(in oklab, var(--accent), transparent 88%);
   }
@@ -930,20 +941,20 @@
     min-width: 18px;
     height: 18px;
     padding: 0 4px;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     font-size: 12px;
     line-height: 18px;
     text-align: center;
     font-weight: 700;
-    color: #fff;
+    color: var(--semantic-text-on-accent);
     background: rgb(0 0 0 / 55%);
 
     &--done {
-      background: #3aa9a0;
+      background: var(--semantic-success-green);
     }
 
     &--failed {
-      background: #e0567a;
+      background: var(--semantic-warning-red);
     }
 
     &--uploading {
@@ -987,7 +998,7 @@
 
   &__error {
     margin-top: 10px;
-    color: #e0567a;
+    color: var(--semantic-warning-red);
     font-size: 13px;
   }
 
