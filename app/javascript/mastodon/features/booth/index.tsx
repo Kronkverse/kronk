@@ -15,11 +15,11 @@ import {
   artistStatLabel,
 } from './components/booth_artist_chip';
 import type { BoothArtist } from './components/booth_artist_chip';
+import { BoothComposer } from './components/booth_composer';
 import { BoothDock } from './components/booth_dock';
 import { BoothGridCard } from './components/booth_grid_card';
 import { EditForm } from './components/edit_form';
 import { ShareForm } from './components/share_form';
-import { UploadForm } from './components/upload_form';
 import type { BoothSet } from './types';
 
 // The Booth — Musik (grid of sets) + Artists (roster + per-artist
@@ -127,14 +127,18 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
       });
   }, []);
 
-  // The Ж menu's Post button (booth.yaml compose → /hub/booth/new) is the
-  // single entry to the composer — there is no in-page create button. The
-  // upload overlay is open exactly when the URL is /hub/booth/new; closing
-  // it (cancel or success) returns to /hub/booth.
+  // The Ж menu's Post button (booth.yaml compose → /hub/booth/composer)
+  // is the single entry to the composer — there is no in-page create
+  // button. The upload overlay is open exactly when the URL is the
+  // canonical `/composer` or the legacy `/new` alias; closing it
+  // (cancel or success) returns to /hub/booth.
   useEffect(() => {
-    const onNew = signedIn && location.pathname.startsWith('/hub/booth/new');
-    setShowUpload(onNew);
-    if (onNew) {
+    const onComposer =
+      signedIn &&
+      (location.pathname.startsWith('/hub/booth/composer') ||
+        location.pathname.startsWith('/hub/booth/new'));
+    setShowUpload(onComposer);
+    if (onComposer) {
       setEditingSet(null);
       setSharingSet(null);
     }
@@ -253,8 +257,8 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
 
       <div className='booth-native'>
         {showUpload && (
-          <UploadForm
-            onSuccess={handleUploadSuccess}
+          <BoothComposer
+            onCreated={handleUploadSuccess}
             onCancel={handleCancelUpload}
           />
         )}
