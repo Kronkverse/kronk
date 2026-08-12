@@ -6,11 +6,17 @@
 .klot {
   // Ring viz shows in every phase; keep the palette here as design
   // tokens so a future palette shift lands in one place.
+  // These are Klot's own phase-semantic palette (menstrual/follicular/
+  // ovulatory/luteal/moon) — a self-contained bespoke ramp that reads
+  // AS the cycle, not as Kronk's chrome. Keeping them as hex is design
+  // intent, not drift; the token system's chrome tokens don't apply.
+  // stylelint-disable color-no-hex -- Klot phase-semantic palette (see comment above)
   --klot-menstrual: #c25e7e;
   --klot-follicular: #6e86e0;
   --klot-ovulatory: #e6b25a;
   --klot-luteal: #9578c9;
   --klot-moon: #f3efda;
+  // stylelint-enable color-no-hex
   --klot-accent: var(--klot-follicular);
 
   max-width: 560px;
@@ -33,7 +39,7 @@
   }
 
   &__error {
-    color: var(--warning-red, #d33);
+    color: var(--semantic-warning-red);
   }
 
   &__sovereignty {
@@ -188,7 +194,7 @@
   }
 
   &--danger {
-    border-left: 3px solid var(--warning-red, #d33);
+    border-left: 3px solid var(--semantic-warning-red);
   }
 
   &__title {
@@ -274,10 +280,14 @@
     // action. Same shape as the primary button but red-tinted so it
     // reads as destructive on scan.
     &--danger {
-      background: var(--warning-red, #d33);
+      background: var(--semantic-warning-red);
 
       &:hover:not(:disabled) {
-        background: color-mix(in oklab, var(--warning-red, #d33) 80%, #000);
+        background: color-mix(
+          in oklab,
+          var(--semantic-warning-red) 80%,
+          rgb(0 0 0)
+        );
       }
     }
   }
