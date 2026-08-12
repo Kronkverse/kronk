@@ -10,10 +10,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import type { MessageDescriptor } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link } from 'react-router-dom';
 
-import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
-import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import {
   apiRequestGet,
   apiRequestPut,
@@ -21,8 +18,7 @@ import {
   apiRequestDelete,
 } from 'mastodon/api';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 import { SettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
@@ -30,8 +26,11 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // Feed settings surface (spec §Feed). Sibling of KornerSettings but for
 // the framework-level home feed itself — scope, tune-in list, per-post
-// display defaults. Reachable from /home/settings and via a gear on the
-// feed column header.
+// display defaults. Mounted at /home/settings (the feed limb owns its
+// own settings — see kronk_nodes.yaml `settings.feed`) and reached via
+// the Ж menu / a gear on the feed column header. Chrome adheres to
+// Korner Standard L12: Stage + .space-header, with AutoSettingsBadge
+// providing back-nav in the Frame's SpaceNav slot.
 
 const messages = defineMessages({
   title: { id: 'feed_settings.title', defaultMessage: 'Feed settings' },
@@ -188,9 +187,7 @@ const FeedDisplayRow: React.FC<{
   );
 };
 
-export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
-  multiColumn,
-}) => {
+export const FeedSettings: React.FC = () => {
   const intl = useIntl();
   const korners = useAllKorners();
 
@@ -328,46 +325,25 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <Column>
-      <ColumnHeader
-        title={intl.formatMessage(messages.title)}
-        icon='feed'
-        iconComponent={HomeIcon}
-        multiColumn={multiColumn}
-        showBackButton
-      />
-
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
       <div className='scrollable feed-settings'>
-        <Link to='/home' className='feed-settings__back'>
-          <ArrowBackIcon />
-          <FormattedMessage
-            id='feed_settings.back'
-            defaultMessage='Back to feed'
-          />
-        </Link>
-
-        <header className='feed-settings__header'>
-          <span className='feed-settings__glyph' aria-hidden='true'>
-            <HomeIcon />
-          </span>
-          <div>
-            <h1 className='feed-settings__title'>
-              <FormattedMessage
-                id='feed_settings.hero_title'
-                defaultMessage='Feed'
-              />
-            </h1>
-            <p className='feed-settings__subtitle'>
-              <FormattedMessage
-                id='feed_settings.hero_intro'
-                defaultMessage='Choose what fills your home column. Scope decides who; tune-ins decide what.'
-              />
-            </p>
-          </div>
+        <header className='space-header' data-frame-header=''>
+          <h1 className='space-header__title'>
+            <FormattedMessage
+              id='feed_settings.hero_title'
+              defaultMessage='Feed'
+            />
+          </h1>
+          <p className='space-header__tagline'>
+            <FormattedMessage
+              id='feed_settings.hero_intro'
+              defaultMessage='Choose what fills your home column. Scope decides who; tune-ins decide what.'
+            />
+          </p>
         </header>
 
         {error && <p className='feed-settings__error'>{error}</p>}
@@ -501,6 +477,6 @@ export const FeedSettings: React.FC<{ multiColumn?: boolean }> = ({
           </div>
         </section>
       </div>
-    </Column>
+    </Stage>
   );
 };
