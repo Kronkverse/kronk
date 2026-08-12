@@ -106,12 +106,12 @@ describe('layoutLattice', () => {
     expect(depths).toEqual([0, 1, 2, 3]);
   });
 
-  // Hub kids overflow → two-column split (Tal 2026-08-12): once the
-  // kid list crosses the split threshold, the block splits across two
-  // adjacent columns so it doesn't force the viewport to zoom cards
-  // down to unreadable. The right column sits at depth+3 (skipping
-  // depth+2) so a Hand in the left half can still expand its Fingers
-  // without colliding with the right column.
+  // Hub kids overflow → two-column split (Tal 2026-08-12/13): once
+  // the kid list crosses the split threshold, the block splits across
+  // two adjacent columns so it doesn't force the viewport to zoom
+  // cards down to unreadable. Left column at depth+1, right column at
+  // depth+2 (2026-08-13 — was depth+3 initially; brought closer per
+  // Tal's viewport-fit ask).
   it('splits Hub into two columns once the kid list is long enough', () => {
     const t: Tree = {};
     const kornerCount = 16; // > threshold
@@ -121,10 +121,10 @@ describe('layoutLattice', () => {
     for (const k of kornerIds) t[k] = node(k, [], 'hub');
     const { pos } = layoutLattice(t, new Set(['kronk', 'hub']), 'kronk');
 
-    // Two distinct depths for the kids — the standard depth+1 (=2) and
-    // the skipped-column depth+3 (=4).
+    // Two adjacent depths for the kids — the standard depth+1 (=2)
+    // and depth+2 (=3), one column-pitch apart.
     const kidDepths = new Set(kornerIds.map((k) => pos[k]?.depth));
-    expect(kidDepths).toEqual(new Set([2, 4]));
+    expect(kidDepths).toEqual(new Set([2, 3]));
 
     const half = Math.ceil(kornerCount / 2);
     // Alphabetical (i.e. array-order for the synthetic ids) is preserved
@@ -132,8 +132,8 @@ describe('layoutLattice', () => {
     // right column.
     expect(pos.k0?.depth).toBe(2); // first kid → left
     expect(pos[kornerIds[half - 1] ?? '']?.depth).toBe(2); // last of first half → left
-    expect(pos[kornerIds[half] ?? '']?.depth).toBe(4); // first of second half → right
-    expect(pos[kornerIds[kornerCount - 1] ?? '']?.depth).toBe(4); // last kid → right
+    expect(pos[kornerIds[half] ?? '']?.depth).toBe(3); // first of second half → right
+    expect(pos[kornerIds[kornerCount - 1] ?? '']?.depth).toBe(3); // last kid → right
 
     // Both columns start at the same y and stack sequentially.
     expect(pos.k0?.y).toBe(0);
