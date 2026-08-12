@@ -4,9 +4,7 @@ import { FormattedMessage, FormattedDate } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
-import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
 import api from 'mastodon/api';
-import { Icon } from 'mastodon/components/icon';
 import { me } from 'mastodon/initial_state';
 
 import type { Proposal } from '../types';
@@ -27,9 +25,8 @@ const TITLE_MAX = 240;
 
 export const ProposalDetail: React.FC<{
   proposal: Proposal;
-  onBack: () => void;
   onVoteUpdate: (updated: Proposal) => void;
-}> = ({ proposal, onBack, onVoteUpdate }) => {
+}> = ({ proposal, onVoteUpdate }) => {
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(proposal.title);
   const [editBody, setEditBody] = useState(proposal.body);
@@ -147,10 +144,10 @@ export const ProposalDetail: React.FC<{
   return (
     <div className='kommons-detail'>
       <div className='kommons-detail__page'>
-        <button className='kommons-detail__back' onClick={onBack}>
-          <Icon id='arrow-back' icon={ArrowBackIcon} />
-          <FormattedMessage id='governance.back' defaultMessage='All seeds' />
-        </button>
+        {/* No local ← All seeds — the Frame's SpaceBadge in the SpaceNav
+            slot returns to /hub/kommons (the korner root). Users who
+            want the seed list specifically can rotate at the root.
+            (Tal 2026-08-12.) */}
 
         {delivering ? (
           <form

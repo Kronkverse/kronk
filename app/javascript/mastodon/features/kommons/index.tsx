@@ -16,7 +16,6 @@ import type { KommonsNode } from 'mastodon/features/kommons_tree/data/nodes';
 import { KoinGlance } from './components/koin_glance';
 import type { Wallet } from './components/koin_glance';
 import { ProposalCard } from './components/proposal_card';
-import { ProposalDetail } from './components/proposal_detail';
 import { KommonsComposer } from './kommons_composer';
 import type { Proposal } from './types';
 
@@ -144,8 +143,6 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [sort, setSort] = useState<SortType>('most_backed');
   const [loading, setLoading] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [balanceRefresh, setBalanceRefresh] = useState(0);
 
   // Directory face — lazy-loaded on first entry, cached after.
   const [directoryNodes, setDirectoryNodes] = useState<KommonsNode[] | null>(
@@ -192,13 +189,6 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
     };
   }, [face, directoryNodes]);
 
-  // Face change should clear any open proposal detail so the caller
-  // lands on the new face's content, not on an unrelated proposal
-  // from the old face still open in state.
-  useEffect(() => {
-    setSelectedId(null);
-  }, [face]);
-
   useEffect(() => {
     let active = true;
     api()
@@ -211,18 +201,6 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
     return () => {
       active = false;
     };
-  }, [balanceRefresh]);
-
-  const handleVoteUpdate = useCallback((updated: Proposal) => {
-    setProposals((prev) =>
-      prev.map((p) => (p.id === updated.id ? updated : p)),
-    );
-    // Backing / completing moves Koin — nudge the wallet to refetch.
-    setBalanceRefresh((n) => n + 1);
-  }, []);
-
-  const handleBack = useCallback(() => {
-    setSelectedId(null);
   }, []);
 
   const handleSortChange = useCallback(
@@ -232,9 +210,17 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
     [],
   );
 
-  const handleSelectProposal = useCallback((id: string) => {
-    setSelectedId(id);
-  }, []);
+  // Opening a proposal navigates to its own route (`/hub/kommons/p/:id`)
+  // so `proposal_page` renders it in a standalone Stage. Same as any
+  // deep-link — and the Frame's SpaceBadge on that route returns to
+  // `/hub/kommons`. Was previously a state-only overlay with a local
+  // back button, which competed with SpaceBadge (Tal 2026-08-12).
+  const handleSelectProposal = useCallback(
+    (id: string) => {
+      history.push(`/hub/kommons/p/${id}`);
+    },
+    [history],
+  );
 
   // FeedDrum turns the content on scope change, same quarter-turn
   // `/home` uses. Kommons rotates via the AutoSpaceHeader above; this
@@ -250,8 +236,6 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
     [history],
   );
 
-  const selected = proposals.find((p) => p.id === selectedId) ?? null;
-
   return (
     <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
@@ -259,45 +243,37 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
       </Helmet>
 
       <div className='kommons-page'>
-        {selectedId && selected ? (
-          <ProposalDetail
-            proposal={selected}
-            onBack={handleBack}
-            onVoteUpdate={handleVoteUpdate}
-          />
-        ) : (
-          <>
-            {/* Single toolbar row — count + sort only apply to
-                proposal faces; Koin glance stays visible on every
-                face because it identifies the caller's stake in the
-                surface. */}
-            <div className='kommons-page__toolbar'>
-              <span className='kommons-page__count'>
-                {isProposalFace &&
-                  !loading &&
-                  intl.formatMessage(messages.count, {
-                    count: proposals.length,
-                  })}
-              </span>
-              <span className='kommons-page__toolbar-grow' />
-              {wallet && <KoinGlance wallet={wallet} />}
-              {isProposalFace && (
-                <select
-                  className='kommons-page__sort'
-                  value={sort}
-                  onChange={handleSortChange}
-                  aria-label={intl.formatMessage(sortMessages.most_backed)}
-                >
-                  {SORT_ORDER.map((key) => (
-                    <option key={key} value={key}>
-                      {intl.formatMessage(sortMessages[key])}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
+        {/* Single toolbar row — count + sort only apply to
+            proposal faces; Koin glance stays visible on every
+            face because it identifies the caller's stake in the
+            surface. */}
+        <div className='kommons-page__toolbar'>
+          <span className='kommons-page__count'>
+            {isProposalFace &&
+              !loading &&
+              intl.formatMessage(messages.count, {
+                count: proposals.length,
+              })}
+          </span>
+          <span className='kommons-page__toolbar-grow' />
+          {wallet && <KoinGlance wallet={wallet} />}
+          {isProposalFace && (
+            <select
+              className='kommons-page__sort'
+              value={sort}
+              onChange={handleSortChange}
+              aria-label={intl.formatMessage(sortMessages.most_backed)}
+            >
+              {SORT_ORDER.map((key) => (
+                <option key={key} value={key}>
+                  {intl.formatMessage(sortMessages[key])}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
 
-            {/* FeedDrum turns the content on scope change — same
+        {/* FeedDrum turns the content on scope change — same
                 quarter-turn `/home` + Albutts use, so the top of the
                 spindle (AutoSpaceHeader rotator) and the bottom
                 (this content) read as one solid object. Loading /
@@ -305,50 +281,48 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
                 across scope changes (snapshot cloning needs a live
                 DOM). Directory + proposal faces share the drum so
                 the Directory → Open turn plays too. */}
-            <FeedDrum
-              reach={face}
-              order={[...FACE_KEYS]}
-              onScopeChange={handleScopeChange}
-            >
-              {face === 'directory' ? (
-                directoryError ? (
-                  <div className='kommons-page__empty'>
-                    {intl.formatMessage(directoryMessages.loadError)}
-                  </div>
-                ) : directoryNodes === null ? (
-                  <div className='kommons-page__empty'>
-                    {intl.formatMessage(directoryMessages.loading)}
-                  </div>
-                ) : (
-                  <div className='kommons-lattice'>
-                    <Lattice nodes={directoryNodes} />
-                  </div>
-                )
-              ) : loading && proposals.length === 0 ? (
-                <div className='kommons-page__empty'>
-                  <FormattedMessage
-                    id='governance.loading'
-                    defaultMessage='Loading proposals…'
-                  />
-                </div>
-              ) : proposals.length === 0 ? (
-                <div className='kommons-page__empty'>
-                  {intl.formatMessage(emptyMessages[face])}
-                </div>
-              ) : (
-                <div className='kommons-page__list'>
-                  {proposals.map((proposal) => (
-                    <ProposalCard
-                      key={proposal.id}
-                      proposal={proposal}
-                      onSelect={handleSelectProposal}
-                    />
-                  ))}
-                </div>
-              )}
-            </FeedDrum>
-          </>
-        )}
+        <FeedDrum
+          reach={face}
+          order={[...FACE_KEYS]}
+          onScopeChange={handleScopeChange}
+        >
+          {face === 'directory' ? (
+            directoryError ? (
+              <div className='kommons-page__empty'>
+                {intl.formatMessage(directoryMessages.loadError)}
+              </div>
+            ) : directoryNodes === null ? (
+              <div className='kommons-page__empty'>
+                {intl.formatMessage(directoryMessages.loading)}
+              </div>
+            ) : (
+              <div className='kommons-lattice'>
+                <Lattice nodes={directoryNodes} />
+              </div>
+            )
+          ) : loading && proposals.length === 0 ? (
+            <div className='kommons-page__empty'>
+              <FormattedMessage
+                id='governance.loading'
+                defaultMessage='Loading proposals…'
+              />
+            </div>
+          ) : proposals.length === 0 ? (
+            <div className='kommons-page__empty'>
+              {intl.formatMessage(emptyMessages[face])}
+            </div>
+          ) : (
+            <div className='kommons-page__list'>
+              {proposals.map((proposal) => (
+                <ProposalCard
+                  key={proposal.id}
+                  proposal={proposal}
+                  onSelect={handleSelectProposal}
+                />
+              ))}
+            </div>
+          )}
+        </FeedDrum>
       </div>
 
       {composerOpen && (

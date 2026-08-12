@@ -50,10 +50,6 @@ const messages = defineMessages({
     id: 'booth.artists_empty',
     defaultMessage: 'No artists yet — publish a set to appear here.',
   },
-  backToArtists: {
-    id: 'booth.back_to_artists',
-    defaultMessage: 'All artists',
-  },
 });
 
 function lensFromPath(pathname: string): Lens {
@@ -180,10 +176,6 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
     },
     [history],
   );
-  const handleBackToArtists = useCallback(() => {
-    history.push('/hub/booth/artists');
-  }, [history]);
-
   const handleEdit = useCallback((set: BoothSet) => {
     setSharingSet(null);
     setShowUpload(false);
@@ -358,13 +350,10 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
 
         {!overlayOpen && lens === 'artists' && activeArtist && (
           <div className='booth-artist-detail'>
-            <button
-              type='button'
-              className='booth-artist-detail__back'
-              onClick={handleBackToArtists}
-            >
-              {`← ${intl.formatMessage(messages.backToArtists)}`}
-            </button>
+            {/* No local ← Back — the Frame's SpaceBadge in the SpaceNav
+                slot returns to /hub/booth (the korner root). Users who
+                want the artists list specifically can rotate one face
+                at the root. (Tal 2026-08-12.) */}
             <div className='booth-artist-detail__hero'>
               <span className='booth-artist-detail__avatar' aria-hidden='true'>
                 {artistInitial(activeArtist)}
