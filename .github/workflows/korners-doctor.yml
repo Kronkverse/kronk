@@ -1,0 +1,107 @@
+name: Korners Doctor
+
+# Runs `bin/tootctl korners doctor` — the Korner Standard conformance checker
+# (docs/korners/korner_standard.md §3). Until 2026-08-12 nothing ran it, so
+# "the doctor is green" was enforced nowhere and a broken check (the L1 icon
+# lookup) sat unnoticed for weeks.
+#
+# NON-BLOCKING ON PURPOSE. `continue-on-error: true`, the job is not named
+# `lint`, and it is deliberately NOT a required check: the doctor currently
+# reports 27 real issues on `rebuild/2.0.0` (L7 stylelint-governance gaps,
+# L10 notification types declared but never registered, huddle's legacy
+# security block, and 7 `kronk.*` nodes whose URLs match no route). Making it
+# gate before that debt is cleared would freeze the merge queue — exactly what
+# happened when `lint` was made required ahead of its own backlog.
+#
+# The intended path: clear the 27, then drop `continue-on-error` so the job
+# fails red, then make it a required check so conformance can't regress.
+#
+# No `merge_group:` trigger — since it doesn't gate, running it in the queue
+# would be wasted Actions minutes (same reasoning as test-ruby.yml).
+
+on:
+  pull_request:
+  push:
+    branches:
+      - 'main'
+      - 'rebuild/2.0.0'
+  workflow_dispatch:
+
+env:
+  BUNDLE_CLEAN: true
+  BUNDLE_FROZEN: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  korners-doctor:
+    name: korners-doctor
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10ms
+          --health-timeout 3s
+          --health-retries 50
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10ms
+          --health-timeout 3s
+          --health-retries 50
+        ports:
+          - 6379:6379
+
+    env:
+      DB_HOST: localhost
+      DB_USER: postgres
+      DB_PASS: postgres
+      RAILS_ENV: test
+      BUNDLE_WITH: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby environment
+        uses: ./.github/actions/setup-ruby
+
+      # The doctor reads the frontend as plain text (icon map, card registry,
+      # route mounts), so it needs no compiled assets and no yarn install —
+      # only a schema, for the L2 table-drift check.
+      - name: Load database schema
+        run: bin/rails db:setup
+
+      - name: Run korners doctor
+        run: |
+          set +e
+          bin/tootctl korners doctor 2>&1 | tee doctor.log
+          status=${PIPESTATUS[0]}
+
+          {
+            echo '## Korner Standard conformance'
+            echo
+            if [ "$status" -eq 0 ]; then
+              echo 'Doctor is green — every enforced korner passes its required layers.'
+            else
+              echo 'Doctor reports issues (non-blocking — see the workflow header).'
+            fi
+            echo
+            echo '```'
+            cat doctor.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          exit "$status"
