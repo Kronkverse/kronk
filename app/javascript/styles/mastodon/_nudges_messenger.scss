@@ -1185,8 +1185,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in oklab, #000 60%, transparent);
-  color: #fff;
+  background: rgb(0 0 0 / 60%);
+  color: var(--semantic-text-on-accent);
   border: none;
   border-radius: var(--radius-round);
   cursor: pointer;
@@ -1198,7 +1198,7 @@
   }
 
   &:hover {
-    background: color-mix(in oklab, #000 80%, transparent);
+    background: rgb(0 0 0 / 80%);
   }
 }
 
