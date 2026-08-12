@@ -208,11 +208,20 @@ weeks because nothing ran the doctor — see the CI note below.
 **The doctor now runs in CI, but does not gate (2026-08-12).**
 `.github/workflows/korners-doctor.yml` runs `bin/tootctl korners doctor` on every PR. It is
 **`continue-on-error`, not named `lint`, and not a required check**, because the doctor currently
-reports **27 real issues** on `rebuild/2.0.0`: 12 L7 stylelint-governance gaps, 8 L10 notification
-types declared but never registered (albutts 2, huddle 3, moments 3), huddle's legacy root-level
-`security:` block, and 7 `kronk.*` nodes whose URLs match no route. Making it gate before that debt
-is cleared would freeze the merge queue — the same mistake as requiring `lint` ahead of its own
-backlog. The path forward is: clear the 27, drop `continue-on-error`, then make it required.
+reports **17 real issues** on `rebuild/2.0.0` (measured at `1cfa53b4a6`): 8 L10 notification types
+declared but never registered (albutts 2, huddle 3, moments 3), 7 `kronk.*` nodes whose URLs match
+no route, huddle's legacy root-level `security:` block, and 1 remaining L7 stylelint-governance gap
+(`_kommunity.scss` — #1362 governed the other 11). Making it gate before that debt is cleared would
+freeze the merge queue — the same mistake as requiring `lint` ahead of its own backlog. The path
+forward is: clear the 17, drop `continue-on-error`, then make it required.
+
+On the 8 L10 findings specifically: **do not read them as types to register.** They are declared
+against the Mastodon `Notification` store, which `docs/kronk_nudges.md` § _Self-delivering
+delivery (decision B)_ has already designated legacy-only. Registering them would turn the check
+green and deliver nothing — `proposal_challenged` and `task_assigned` are already registered and
+render nowhere, which is the state registration alone produces. L10 is currently enforcing
+conformance against the retiring mechanism and wants repointing at the Nudges event bus. See
+[`../rebuild/nudges_bus_state.md`](../rebuild/nudges_bus_state.md).
 
 **L2 caveat — the gate is narrower than the layer.** `detect_drift` only checks that some table matches the manifest's `db_namespace` prefix and that any declared `Status` association exists. It does **not** verify a real model + table + `schema.rb` entry _per resource_ (the full L2 definition in §2). So a korner can declare three resources, ship one namespaced table, and pass L2. The per-resource model/table/schema checks remain human sign-off until the drift check is deepened.
 
