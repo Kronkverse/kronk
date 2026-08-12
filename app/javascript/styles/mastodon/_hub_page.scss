@@ -9,9 +9,11 @@
 // tokenised because the tile is theme-invariant (dark aesthetic in
 // both light + dark themes). Glyph colors ARE tokenised — see
 // var(--tile-glyph-on/off) below.
+// stylelint-disable color-no-hex -- theme-invariant tile chrome (design intent, see comment above)
 $tile-border: #34314f;
 $tile-shadow-1: #1e1c2e;
 $tile-shadow-2: #17151f;
+// stylelint-enable color-no-hex
 
 .hub-page {
   // box-sizing: border-box comes from the shared `.kronk-stage *` rule
@@ -60,6 +62,10 @@ $tile-shadow-2: #17151f;
   }
 
   // ── tile ────────────────────────────────────────────────────────
+  // stylelint-disable color-no-hex, declaration-property-value-disallowed-list -- Tile chrome is intentionally
+  //   (a) theme-invariant (see $tile-border comment) and
+  //   (b) chunky-cornered at 20px, bigger than --radius-large (16px).
+  //   Both hex + the bespoke radius are design intent, not drift.
   &__tile {
     position: relative;
     aspect-ratio: 1 / 1;
@@ -92,6 +98,7 @@ $tile-shadow-2: #17151f;
         inset 0 -2px 5px rgb(0 0 0 / 35%);
     }
   }
+  // stylelint-enable color-no-hex, declaration-property-value-disallowed-list
 
   &__tile-link {
     position: absolute;
@@ -102,6 +109,7 @@ $tile-shadow-2: #17151f;
     justify-content: center;
     gap: 10px;
     padding: 8px;
+    // stylelint-disable-next-line declaration-property-value-disallowed-list -- matches the tile's chunky 20px radius (see comment above &__tile)
     border-radius: 20px;
     color: var(--text-primary);
     text-decoration: none;
@@ -181,7 +189,7 @@ $tile-shadow-2: #17151f;
     padding: 0 5px;
     border-radius: var(--radius-round); // 999px pill
     background: var(--kronk-purple-accent);
-    color: #fff;
+    color: var(--semantic-text-on-accent);
     font-size: 11px;
     font-weight: 700;
     line-height: 1;
@@ -196,13 +204,17 @@ $tile-shadow-2: #17151f;
     left: 50%;
     bottom: calc(100% + 8px);
     transform: translateX(-50%);
-    background: #20202e;
+    background: color-mix(
+      in oklab,
+      var(--semantic-surface-primary) 60%,
+      var(--kronk-purple-deep) 40%
+    );
     border: 1px solid var(--border-default);
     color: var(--text-secondary);
     font-size: 11.5px;
     line-height: 1.4;
     padding: 7px 10px;
-    border-radius: 8px;
+    border-radius: var(--radius-medium);
     width: 170px;
     text-align: center;
     opacity: 0;
@@ -241,7 +253,7 @@ $tile-shadow-2: #17151f;
     right: 7px;
     width: 22px;
     height: 22px;
-    border-radius: 7px;
+    border-radius: var(--radius-small);
     display: grid;
     place-items: center;
     opacity: 0;
@@ -275,7 +287,8 @@ $tile-shadow-2: #17151f;
   // korner tile in its own right. Lifts on hover like the others.
   &__tile--propose {
     background: transparent;
-    border: 1.5px dashed color-mix(in oklab, var(--accent), #fff 8%);
+    border: 1.5px dashed
+      color-mix(in oklab, var(--accent), var(--semantic-text-on-accent) 8%);
     box-shadow: none;
     opacity: 0.85;
 
@@ -287,7 +300,11 @@ $tile-shadow-2: #17151f;
     }
 
     .hub-page__tile-glyph {
-      color: color-mix(in oklab, var(--accent), #fff 12%);
+      color: color-mix(
+        in oklab,
+        var(--accent),
+        var(--semantic-text-on-accent) 12%
+      );
       filter: none;
     }
 
@@ -297,12 +314,17 @@ $tile-shadow-2: #17151f;
     }
 
     .hub-page__tile-name {
-      color: color-mix(in oklab, var(--accent), #fff 4%);
+      color: color-mix(
+        in oklab,
+        var(--accent),
+        var(--semantic-text-on-accent) 4%
+      );
       font-weight: 500;
     }
   }
 
   // ── off state (coming-soon) ─────────────────────────────────────
+  // stylelint-disable color-no-hex -- same theme-invariant tile chrome as above, off-state variant.
   &__tile--off {
     background: linear-gradient(160deg, #26253a, #1f1e2d);
     border-color: #2a2840;
@@ -319,6 +341,7 @@ $tile-shadow-2: #17151f;
         0 3px 7px -4px rgb(0 0 0 / 60%),
         inset 0 1px 0 rgb(255 255 255 / 5%);
     }
+    // stylelint-enable color-no-hex
 
     .hub-page__tile-glyph {
       color: var(--tile-glyph-off);
@@ -326,7 +349,7 @@ $tile-shadow-2: #17151f;
     }
 
     &:hover .hub-page__tile-glyph {
-      color: #6d68a0;
+      color: var(--kronk-purple-muted);
       filter: none;
     }
 
