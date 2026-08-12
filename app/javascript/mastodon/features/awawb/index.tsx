@@ -2,7 +2,7 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import aboriginalFlag from '@/images/aboriginal-flag.svg';
+import aboriginalFlag from '@/images/aboriginal-flag.png';
 
 // AWAWB — a still page. Reached from the middle pillar of the top
 // Membrane (see hub_switcher.tsx); the icon there is the Aboriginal
@@ -11,9 +11,8 @@ import aboriginalFlag from '@/images/aboriginal-flag.svg';
 // below. Nothing else. The stillness is the point.
 //
 // Uses the full tri-colour flag (black/red halves + yellow sun) as
-// a static image asset — imported as an `<img>` src so the internal
-// fills survive (Kronk chrome would otherwise recolour a
-// currentColor SVG icon).
+// a static PNG so it renders exactly as designed — no chrome
+// currentColor override.
 
 const messages = defineMessages({
   title: {
