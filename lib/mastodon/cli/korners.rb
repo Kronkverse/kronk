@@ -225,9 +225,22 @@ module Mastodon
           issues << 'L1 legacy root-level security shape — migrate to a nested `security:` block'
         end
 
-        # L1 — icon wired in the slug->icon map. Korner-only: the map exists to
-        # give Hub grid tiles an icon, and a core space has no tile.
-        issues << "L1 icon not wired in useKornerIcon (no '#{slug}' key in SLUG_TO_ICON)" if !manifest.core? && !korner_source('app/javascript/mastodon/hooks/useKornerIcon.tsx').match?(/['"]?#{Regexp.escape(slug)}['"]?\s*:/)
+        # L1 — the manifest's icon resolves to a real component. Korner-only:
+        # the map exists to give Hub grid tiles an icon, and a core space has
+        # no tile. `useKornerIcon.tsx` is keyed by **Material Symbols name**
+        # (MATERIAL_TO_ICON), not by slug, so the manifest's `icon.material`
+        # value is what has to be present. (This check used to grep the file
+        # for the slug against a `SLUG_TO_ICON` map that does not exist, so it
+        # failed for every korner regardless of wiring.)
+        unless manifest.core?
+          material = manifest.icon.is_a?(Hash) ? manifest.icon['material'] : nil
+
+          if material.blank?
+            issues << 'L1 no `icon.material` in the manifest (nothing for useKornerIcon to resolve)'
+          elsif material_icon_names.exclude?(material)
+            issues << "L1 icon '#{material}' not wired in useKornerIcon (no '#{material}' key in MATERIAL_TO_ICON — import the SVG and add a row)"
+          end
+        end
 
         # L5 — the space's mount resolves. Korners default to /hub/<slug>,
         # where a missing mount means a Hub tile that 404s. A core space
@@ -375,6 +388,21 @@ module Mastodon
         (@korner_source_cache ||= {})[relative_path] ||= begin
           path = Rails.root.join(relative_path)
           File.exist?(path) ? File.read(path) : ''
+        end
+      end
+
+      # Material Symbols names wired into `useKornerIcon.tsx`'s
+      # MATERIAL_TO_ICON map — the only place a manifest's `icon.material`
+      # can resolve to a component. Parsed from the source rather than
+      # duplicated here, so the check can't drift from the map.
+      #
+      # MATERIAL_TO_ICON_FILLED is deliberately ignored: it's an optional
+      # subset (only glyphs shipping a `-fill.svg`) and missing entries fall
+      # back to the outline, so absence from it is not a conformance failure.
+      def material_icon_names
+        @material_icon_names ||= begin
+          body = korner_source('app/javascript/mastodon/hooks/useKornerIcon.tsx')[/^const MATERIAL_TO_ICON\b[^=]*=\s*\{\n(.*?)^\};$/m, 1].to_s
+          body.scan(/^\s*['"]?([a-z0-9_]+)['"]?\s*:/).flatten
         end
       end
 
