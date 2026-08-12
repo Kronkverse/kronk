@@ -82,7 +82,7 @@
     var(--kronk-purple-accent),
     var(--kronk-purple-bright)
   );
-  color: var(--on-accent, #fff);
+  color: var(--semantic-text-on-accent);
   border: 0;
   border-radius: var(--radius-round);
   font-family: var(--font-display);

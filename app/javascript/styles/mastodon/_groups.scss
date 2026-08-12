@@ -476,8 +476,8 @@
     cursor: pointer;
 
     &:hover {
-      color: var(--semantic-danger, #d33);
-      border-color: var(--semantic-danger, #d33);
+      color: var(--semantic-warning-red);
+      border-color: var(--semantic-warning-red);
     }
   }
 
