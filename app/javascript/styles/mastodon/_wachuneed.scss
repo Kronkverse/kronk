@@ -364,9 +364,9 @@
   &__compose-error {
     margin: 0;
     padding: 0.65rem 0.85rem;
-    border: 1px solid var(--warning-red, #d33);
+    border: 1px solid var(--semantic-warning-red);
     border-radius: var(--radius-medium);
-    color: var(--warning-red, #d33);
+    color: var(--semantic-warning-red);
     font-size: 0.9rem;
   }
 

@@ -219,7 +219,7 @@
 
     &--danger {
       background: var(--warning-red);
-      color: #fff;
+      color: var(--semantic-text-on-accent);
       border-radius: var(--radius-medium);
     }
   }
