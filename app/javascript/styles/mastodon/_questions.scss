@@ -91,7 +91,7 @@
   border: 0;
   border-radius: var(--radius-md);
   background: var(--kronk-purple-bright);
-  color: var(--text-on-accent, #fff);
+  color: var(--semantic-text-on-accent);
   font: inherit;
   font-weight: 500;
   cursor: pointer;
@@ -132,9 +132,13 @@
 .kuestions-deck__card {
   position: absolute;
   inset: 0;
-  background: linear-gradient(168deg, #22222e 0%, var(--surface-elevated) 62%);
+  background: linear-gradient(
+    168deg,
+    var(--semantic-surface-primary) 0%,
+    var(--semantic-surface-elevated) 62%
+  );
   border: 1px solid var(--border-subtle);
-  border-radius: 16px;
+  border-radius: var(--radius-large);
   box-shadow: 0 18px 40px -18px rgb(0 0 0 / 70%);
   padding: 22px 22px 20px;
   display: flex;
@@ -170,7 +174,7 @@
   top: 22px;
   padding: 4px 10px;
   border: 2px solid;
-  border-radius: 6px;
+  border-radius: var(--radius-small);
   font-weight: 700;
   font-size: 12px;
   letter-spacing: 0.1em;
@@ -182,8 +186,8 @@
 
 .kuestions-deck__stamp--skip {
   left: 22px;
-  color: #f87171;
-  border-color: #f87171;
+  color: var(--semantic-warning-red);
+  border-color: var(--semantic-warning-red);
   transform: rotate(-15deg);
 }
 
@@ -221,7 +225,7 @@
   padding: 3px 8px;
   background: rgb(114 65 255 / 10%);
   border: 1px solid var(--border-subtle);
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   color: var(--text-secondary);
   font-size: 11px;
   white-space: nowrap;
@@ -297,8 +301,8 @@
   }
 
   &:first-child {
-    color: #f87171;
-    border-color: #f87171;
+    color: var(--semantic-warning-red);
+    border-color: var(--semantic-warning-red);
     background: rgb(248 113 113 / 8%);
   }
 
@@ -313,8 +317,8 @@
 }
 
 .kuestions-deck__ctl--answer {
-  color: #4ade80;
-  border-color: #4ade80;
+  color: var(--semantic-decision-agree);
+  border-color: var(--semantic-decision-agree);
   background: rgb(74 222 128 / 8%);
 }
 
@@ -366,7 +370,7 @@
 .kuestions-sheet__grab {
   width: 44px;
   height: 4px;
-  border-radius: 2px;
+  border-radius: var(--radius-small);
   background: var(--border-default);
   margin: 0 auto 16px;
 }
@@ -462,8 +466,8 @@
 }
 
 .kuestions-sheet__choice--yes {
-  color: #4ade80;
-  border-color: #4ade80;
+  color: var(--semantic-decision-agree);
+  border-color: var(--semantic-decision-agree);
   background: rgb(74 222 128 / 8%);
 }
 
@@ -472,8 +476,8 @@
 }
 
 .kuestions-sheet__choice--no {
-  color: #f87171;
-  border-color: #f87171;
+  color: var(--semantic-warning-red);
+  border-color: var(--semantic-warning-red);
   background: rgb(248 113 113 / 8%);
 }
 
@@ -512,7 +516,7 @@
   height: 28px;
   border-radius: 50%;
   background: rgb(48 141 76 / 15%);
-  color: #308d4c;
+  color: var(--semantic-success-green);
   flex: 0 0 auto;
 }
 
@@ -578,7 +582,7 @@
 .kuestions-reveal__mine-tag {
   padding: 2px 8px;
   background: rgb(114 65 255 / 12%);
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   color: var(--kronk-purple-bright);
   font-size: 11px;
 }
@@ -671,7 +675,7 @@
 .kuestions-reveal__agg-bar {
   height: 8px;
   background: rgb(114 65 255 / 10%);
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   overflow: hidden;
 }
 
@@ -740,7 +744,7 @@
 .kuestions-ask__dot {
   width: 24px;
   height: 3px;
-  border-radius: 2px;
+  border-radius: var(--radius-small);
   background: var(--border-subtle);
   transition: background var(--dur-fast) var(--ease-out);
 }
@@ -921,7 +925,11 @@
 // ── Today panel ─────────────────────────────────────────────────
 .kuestions-today__card {
   position: relative;
-  background: linear-gradient(168deg, #22222e 0%, var(--surface-elevated) 62%);
+  background: linear-gradient(
+    168deg,
+    var(--semantic-surface-primary) 0%,
+    var(--semantic-surface-elevated) 62%
+  );
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg, 16px);
   padding: 22px;
@@ -947,7 +955,7 @@
   gap: 8px;
   background: rgb(114 65 255 / 10%);
   border: 1px solid var(--border-default);
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   padding: 6px 12px;
   font-size: 12px;
   color: var(--text-secondary);
@@ -1028,7 +1036,7 @@
   }
 
   span {
-    color: #4ade80;
+    color: var(--semantic-decision-agree);
     font-weight: 700;
   }
 }
@@ -1081,7 +1089,7 @@
   flex: 0 0 auto;
   width: 40px;
   height: 22px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   background: var(--border-subtle);
   border: 1px solid var(--border-default);
   cursor: pointer;
@@ -1124,7 +1132,7 @@
   gap: 6px;
   padding: 4px 10px;
   background: rgb(114 65 255 / 10%);
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   color: var(--text-muted);
   font-size: 11px;
   margin-bottom: 8px;
@@ -1215,7 +1223,7 @@
 
 .kuestions-answered__unlocked {
   flex: 0 0 auto;
-  color: #4ade80;
+  color: var(--semantic-decision-agree);
   font-size: 12px;
   font-weight: 500;
 }
