@@ -24,7 +24,10 @@ import { Button } from 'mastodon/components/button';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
+import { ScopeTitle } from 'mastodon/components/scope_title';
+import type { ScopeTitleFace } from 'mastodon/components/scope_title';
 import { StatusTrekCard } from 'mastodon/components/status_trek_card';
+import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 
 import { BASEMAP_URL, basemapLayers, ensurePmtilesProtocol } from './basemap';
 import { TrekComments } from './trek_comments';
@@ -36,8 +39,27 @@ import { TrekFroth } from './trek_froth';
 
 const messages = defineMessages({
   yours: { id: 'map.treks.yours', defaultMessage: 'Yours' },
+  yoursTagline: {
+    id: 'map.treks.yours_tagline',
+    defaultMessage: 'Treks you have logged',
+  },
   mates: { id: 'map.treks.mates', defaultMessage: 'Mates' },
-  empty: { id: 'map.treks.empty', defaultMessage: 'No treks yet.' },
+  matesTagline: {
+    id: 'map.treks.mates_tagline',
+    defaultMessage: 'Treks your mates have shared',
+  },
+  emptyYours: {
+    id: 'map.treks.empty_yours',
+    defaultMessage: "You haven't logged any treks yet.",
+  },
+  emptyMates: {
+    id: 'map.treks.empty_mates',
+    defaultMessage: 'None of your mates have shared a trek yet.',
+  },
+  scopeAria: {
+    id: 'map.treks.scope_aria',
+    defaultMessage: 'Change whose treks you see',
+  },
   back: { id: 'map.treks.back', defaultMessage: 'Back' },
   publish: { id: 'map.treks.publish', defaultMessage: 'Publish' },
   unpublish: { id: 'map.treks.unpublish', defaultMessage: 'Make private' },
@@ -295,17 +317,47 @@ const TrekDetail: React.FC<{
 };
 
 // The selected trek's id lives in the URL (/hub/map/treks/:id) so the feed
-// card can deep-link straight to a trek's detail in the Map space.
-const TREK_ID_RE = /^\/hub\/map\/treks\/([^/]+)/;
+// card can deep-link straight to a trek's detail in the Map space. Trek IDs
+// are numeric (AR primary keys), so the regex requires digits — that keeps
+// the ID slot from clashing with the scope segments (`mine` / `mates`)
+// introduced by the rotator below.
+const TREK_ID_RE = /^\/hub\/map\/treks\/(\d+)$/;
+
+// Whose treks are being listed. Mirrors the /home + Albutts scope-rotator
+// pattern: URL is the source of truth so refresh + share + deep-link
+// preserve the current face.
+//
+//   /hub/map/treks          → mine (default, matches manifest `views:` idea
+//                             that the bare path is the default face)
+//   /hub/map/treks/mine     → mine (explicit — also renders on this path)
+//   /hub/map/treks/mates    → mates
+//
+// A local rotator (not `header.rotator: true` in the manifest) because Map
+// already spends its manifest `views:` on the outer lens picker
+// (Mates map surface vs Treks list) — the Yours/Mates axis is a second-
+// order scope inside the Treks lens, not a lens itself. Standard L11's
+// one-title-per-space rule is satisfied by the Frame-provided Map header
+// staying static; `frameHeader` is set on the ScopeTitle below so the
+// Stage parasite check treats this scope-rotator as intentional chrome
+// rather than a stray `<h1>`.
+const SCOPE_KEYS = ['mine', 'mates'] as const;
+type TrekScope = (typeof SCOPE_KEYS)[number];
+
+const TREK_SCOPE_RE = /^\/hub\/map\/treks\/(mine|mates)$/;
+
+const resolveTrekScope = (pathname: string): TrekScope => {
+  const match = TREK_SCOPE_RE.exec(pathname);
+  return match ? (match[1] as TrekScope) : 'mine';
+};
 
 export const TreksView: React.FC = () => {
   const intl = useIntl();
   const history = useHistory();
   const location = useLocation();
   const [treks, setTreks] = useState<ApiTrekJSON[] | null>(null);
-  const [filterMine, setFilterMine] = useState(true);
   const [detail, setDetail] = useState<ApiTrekJSON | null>(null);
 
+  const scope = resolveTrekScope(location.pathname);
   const selectedId = TREK_ID_RE.exec(location.pathname)?.[1] ?? null;
 
   const refresh = useCallback(() => {
@@ -346,12 +398,18 @@ export const TreksView: React.FC = () => {
     };
   }, [selectedId, treks]);
 
-  const showMine = useCallback(() => {
-    setFilterMine(true);
-  }, []);
-  const showMates = useCallback(() => {
-    setFilterMine(false);
-  }, []);
+  const changeScope = useCallback(
+    (nextKey: string) => {
+      // Bare `/hub/map/treks` doubles as the default (`mine`) so shared
+      // links to the landing keep the same URL shape as every other
+      // korner's default view.
+      const target =
+        nextKey === 'mine' ? '/hub/map/treks' : `/hub/map/treks/${nextKey}`;
+      if (target !== location.pathname) history.push(target);
+    },
+    [history, location.pathname],
+  );
+
   const back = useCallback(() => {
     history.push('/hub/map/treks');
   }, [history]);
@@ -387,44 +445,63 @@ export const TreksView: React.FC = () => {
     );
   }
 
-  const visible = treks.filter((t) => t.self === filterMine);
+  const visible = treks.filter((t) => (scope === 'mine' ? t.self : !t.self));
+
+  const faces: ScopeTitleFace[] = [
+    {
+      key: 'mine',
+      label: intl.formatMessage(messages.yours),
+      desc: intl.formatMessage(messages.yoursTagline),
+    },
+    {
+      key: 'mates',
+      label: intl.formatMessage(messages.mates),
+      desc: intl.formatMessage(messages.matesTagline),
+    },
+  ];
+
+  const emptyCopy = intl.formatMessage(
+    scope === 'mine' ? messages.emptyYours : messages.emptyMates,
+  );
 
   return (
     <div className='trek-list'>
-      <div className='trek-list__filter'>
-        <button
-          type='button'
-          className={filterMine ? 'is-active' : ''}
-          onClick={showMine}
-        >
-          {intl.formatMessage(messages.yours)}
-        </button>
-        <button
-          type='button'
-          className={filterMine ? '' : 'is-active'}
-          onClick={showMates}
-        >
-          {intl.formatMessage(messages.mates)}
-        </button>
-      </div>
+      <ScopeTitle
+        faces={faces}
+        value={scope}
+        onChange={changeScope}
+        ariaLabel={intl.formatMessage(messages.scopeAria)}
+        frameHeader
+      />
 
-      {visible.length === 0 ? (
-        <p className='trek-list__empty'>{intl.formatMessage(messages.empty)}</p>
-      ) : (
-        // Cards match the feed's `StatusTrekCard` shape one-for-one
-        // (route glimpse + stats), so a trek reads the same whether
-        // you meet it in Home or here. Tapping opens the detail via
-        // `to={/hub/map/treks/:id}` (baked into StatusTrekCard).
-        // Draft treks render the same way; the detail view exposes
-        // the publish / delete affordances.
-        <ul className='trek-list__items'>
-          {visible.map((trek) => (
-            <li key={trek.id}>
-              <StatusTrekCard trek={trek} />
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* Same drum treatment as /home + Albutts + Kommons — a quarter-turn
+          on scope change so the two faces feel like sides of one object,
+          not sibling panels. The drum keys off `scope`, so its
+          getSnapshotBeforeUpdate captures the outgoing list right as
+          `changeScope` pushes the new URL. */}
+      <FeedDrum
+        reach={scope}
+        order={[...SCOPE_KEYS]}
+        onScopeChange={changeScope}
+      >
+        {visible.length === 0 ? (
+          <p className='trek-list__empty'>{emptyCopy}</p>
+        ) : (
+          // Cards match the feed's `StatusTrekCard` shape one-for-one
+          // (route glimpse + stats), so a trek reads the same whether
+          // you meet it in Home or here. Tapping opens the detail via
+          // `to={/hub/map/treks/:id}` (baked into StatusTrekCard).
+          // Draft treks render the same way; the detail view exposes
+          // the publish / delete affordances.
+          <ul className='trek-list__items'>
+            {visible.map((trek) => (
+              <li key={trek.id}>
+                <StatusTrekCard trek={trek} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </FeedDrum>
     </div>
   );
 };
