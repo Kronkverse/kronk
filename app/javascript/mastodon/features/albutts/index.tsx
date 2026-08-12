@@ -12,7 +12,6 @@ import {
   useRouteMatch,
 } from 'react-router-dom';
 
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import {
   apiCreateAlbum,
   apiGetAlbum,
@@ -20,7 +19,6 @@ import {
 } from 'mastodon/api/albutts';
 import type { AlbumsScope } from 'mastodon/api/albutts';
 import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
-import { ComposeFab } from 'mastodon/components/compose_fab';
 import { Stage } from 'mastodon/components/stage';
 import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 import { useIdentity } from 'mastodon/identity_context';
@@ -55,10 +53,6 @@ const messages = defineMessages({
     id: 'albutts.contributors',
     defaultMessage:
       '{count, plural, one {# contributor} other {# contributors}}',
-  },
-  fab: {
-    id: 'albutts.fab.label',
-    defaultMessage: 'New album',
   },
 });
 
@@ -261,20 +255,6 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
 
       {composerOpen && (
         <AlbumComposer onCancel={closeComposer} onCreated={handleCreated} />
-      )}
-
-      {/* Every korner surface that supports posting gets one floating
-          compose bubble in a consistent bottom-right position. The
-          FAB is a Link — pushing to /composer opens the ComposeShell,
-          and back-button closes it. Hidden while the composer itself
-          is open so it doesn't sit on top of the shell. */}
-      {!composerOpen && (
-        <ComposeFab
-          to='/hub/albutts/composer'
-          label={intl.formatMessage(messages.fab)}
-          icon={AddIcon}
-          iconId='add'
-        />
       )}
     </div>
   );
