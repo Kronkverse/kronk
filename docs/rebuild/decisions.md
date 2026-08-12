@@ -17,6 +17,55 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-12 — Notifications: own-content first, federation and moderation deferred
+
+Three calls that scope the retirement of the legacy `Notification` store. The
+sweep behind them is `docs/rebuild/notification_retirement_plan.md`.
+
+**Federation is deferred.** Kronk will not federate for a while, so notification
+work plans as **local-only**. This resolves the contradiction the sweep found:
+`kronk_nudges.md` § Non-negotiables says "No federation. Nudges is local-only",
+while the store being retired carries federated activity (a remote account
+favouriting or following you, via the ActivityPub handlers). With federation
+deferred those paths are **dormant, not broken** — so they are left in place
+rather than removed. They live in upstream files, cost nothing while dormant, and
+leaving them keeps re-federation cheap. Revisit when federation is real.
+
+**Moderation is deferred.** Community moderation covers the near future, so no
+system/moderation channel is built now. `moderation_warning`,
+`severed_relationships`, `admin.*`, `annual_report` and
+`email_confirmation_reminder` keep reading the legacy store, and `/nudges/legacy`
+plus the Kronk system pane stay for them. Consequence to hold: **the store is
+not dropped**, and "retire the legacy system" means _stop writing what we have
+replaced_, not _delete the table_. Dropping it is the last few percent of value
+and the largest share of the risk.
+
+**The goal: notify a user when anything happens with their content** — replies,
+reactions, nudges, mate requests, and so on.
+
+### Why this unblocks the work
+
+The sweep concluded nothing could start before **multi-recipient fan-out**. That
+was correct for the spec's full relevance engine and wrong for this goal.
+"Something happened to _my_ content" has exactly one recipient — the owner — and
+is Tier-1 **directed** in the spec's terms, which the manifest path has delivered
+since #1367 plumbed `directed:` through. Fan-out is only required for the
+_discovery_ tiers (Tier-2 "someone I follow did a thing", Tier-3 "something
+happened in a korner I tuned into"), and those are a separate feature.
+
+So the remaining work is **additive publishers plus manifest entries** on
+machinery that already exists: five `status.*` events (`frothed`, `replied`,
+`mentioned`, `reblogged`, `quoted`), none of which is published today —
+`Favourite` publishes only korner-scoped froths and has no plain-status branch.
+No new delivery architecture, and two phases can start immediately.
+
+Supersedes the "nothing can start before fan-out" framing in the first draft of
+the plan, and narrows the "retires with the bell" scope in
+`docs/kronk_nudges.md` § _Self-delivering delivery_ to the types we have
+actually replaced.
+
+---
+
 ## 2026-08-12 — Checks must be trustworthy before we add more
 
 From a doc-vs-code audit that turned into six bug fixes. The individual fixes

@@ -1,7 +1,7 @@
 # Retiring the legacy notification system — sweep and plan
 
-> **Freshness.** Inventory below last checked **2026-08-12** against
-> `9a95e6c8`. Re-check with:
+> **Freshness.** Inventory last checked **2026-08-12** against `9a95e6c8`.
+> Re-check with:
 >
 > ```
 > grep -rl Notification app/ lib/ --include=*.rb | grep -v spec | wc -l   # backend surface
@@ -12,23 +12,20 @@
 > If it disagrees, **correct this doc in your current PR** —
 > `decisions.md` 2026-08-12 (decision 6).
 
-**Status: plan, nothing built.** A sweep of what "the old system" actually
-covers, what already runs on the new one, and the order to move the rest. Four
-categories have **no answer yet**, and two of them conflict with a stated
-non-negotiable — those are decisions for Tal, flagged as such below. This
-document does not resolve them.
+**Status: plan, nothing built.** Revised 2026-08-12 after Tal answered the three
+open questions the first draft raised. Those answers **remove the blocker** the
+draft had identified, and shrink the job substantially. See §2.
 
 Context: `docs/kronk_nudges.md` § _Self-delivering delivery_ made the Mastodon
-`Notification` store legacy-only, retiring "with the bell" at 2.1.x.
-`docs/rebuild/nudges_bus_state.md` covers the korner half. This plan is the
-whole surface.
+`Notification` store legacy-only. `docs/rebuild/nudges_bus_state.md` covers the
+korner half; this plan is the whole surface.
 
 ---
 
 ## 1. What the old system actually is
 
-Not just korner notifications. `Notification` is core Mastodon and carries the
-entire social, moderation and federated notification set.
+Not a Kronk subsystem. `Notification` is core Mastodon, carrying the social,
+moderation and federated notification sets.
 
 **22 registered types — 17 legacy, 5 Kronk-native:**
 
@@ -37,149 +34,116 @@ entire social, moderation and federated notification set.
 | **legacy (17)** | `mention`, `status`, `reblog`, `follow`, `follow_request`, `favourite`, `poll`, `update`, `quote`, `quoted_update`, `severed_relationships`, `moderation_warning`, `annual_report`, `admin.sign_up`, `admin.report`, `event_invitation`, `media_tag` |
 | **native (5)**  | `nudge`, `proposal_status_changed`, `proposal_challenged`, `task_assigned`, `email_confirmation_reminder`                                                                                                                                            |
 
-**Backend surface — 79 Ruby files** (excluding specs): services 20,
-controllers 16, models 13, workers 9, lib 9, serializers 8, mailers 1.
+**Backend — 79 Ruby files** (excluding specs): services 20, controllers 16,
+models 13, workers 9, lib 9, serializers 8, mailers 1. **Frontend — 126 files**;
+`features/notifications_v2/` alone is 25.
 
-**Frontend — 126 files** reference notifications; `features/notifications_v2/`
-alone is 25 files / ~128K.
+**Producers.** Mostly not Kronk code: `LocalNotificationWorker` →
+`NotifyService`, called from the ActivityPub activity handlers (`Like`, `Follow`,
+`Announce`, `QuoteRequest`), `FeedInsertWorker`, `PollExpirationNotifyWorker`,
+`BlockDomainService`, `FollowMigrationService`; moderation from
+`Admin::AccountAction` / `Admin::StatusBatchAction`. Kronk-written:
+`Kronk::KornerNotifier` and `Kronk::ProposalStates`.
 
-**Who creates them.** Almost none of it is Kronk code:
+**Consumers:** in-app, `Web::PushSubscription`, `NotificationMailer`,
+`Api::V1::Nudges::LegacyArchiveController` (`/nudges/legacy`), and
+`nudges_messenger/kronk_system.ts` (`KRONK_SYSTEM_TYPES`).
 
-- `LocalNotificationWorker` → `NotifyService`, called from **ActivityPub
-  activity handlers** (`Like`, `Follow`, `Announce`, `QuoteRequest`),
-  `FeedInsertWorker`, `PollExpirationNotifyWorker`, `BlockDomainService`,
-  `FollowMigrationService`
-- **moderation**: `Admin::AccountAction`, `Admin::StatusBatchAction` →
-  `moderation_warning`
-- **Kronk-written, direct-create**: `Kronk::KornerNotifier` (used by
-  `proposals_controller`, `tasks_controller`) and `Kronk::ProposalStates`
+## 2. Decisions taken (Tal, 2026-08-12)
 
-**Other consumers:** `Web::PushSubscription` (browser push),
-`NotificationMailer` (email digests), `Api::V1::Nudges::LegacyArchiveController`
-(the `/nudges/legacy` tab), `Api::V1::Nudges::ActivityController` (excludes
-`LEGACY_TYPES`), `nudges_messenger/kronk_system.ts` (`KRONK_SYSTEM_TYPES`).
+The first draft flagged four unanswered categories and a hard prerequisite.
+Three answers landed, and they change the shape of the work:
 
-## 2. What already runs on the new system
+1. **Federation is deferred** — Kronk will not federate for a while, so plan as
+   local-only.
+2. **Moderation is deferred** — community moderation for the near future; a
+   system/moderation channel is a later problem.
+3. **The goal, stated plainly:** a user is notified when **anything happens with
+   their content** — replies, reactions, nudges, mate requests, and so on.
 
-The bus works and is not the problem: `Kronk::KornerEvents` →
-nudges manifest `listens:` → `Nudges::EventRouter` → `Nudges::Event`, with
-aggregation, Tier-1 `directed:`, event-aware unread and an account-level live
-stream all built. **12 manifest-declared listeners** across kommons, kalendar,
-wachuneed, kuestions, booth and mates; 3 hand-wired. See
-`nudges_bus_state.md`.
+### Why (3) removes the blocker
 
-## 3. The four categories with no answer
+The draft said nothing could start before **multi-recipient fan-out**. That was
+right for the spec's full relevance engine and **wrong for this goal**.
+"Something happened to _my_ content" has exactly one recipient: the owner. It is
+Tier-1 **directed** in the spec's terms — fires regardless of Mate status — and
+the manifest path already delivers that, single-recipient, since #1367 plumbed
+`directed:` through.
 
-These are why "remove all legacy code" is not a porting job. Each needs a
-decision before any code.
+Fan-out is only needed for the _discovery_ tiers — Tier-2 "someone I follow did
+a thing" and Tier-3 "something happened in a korner I tuned into". Those are a
+different feature, and they are **out of scope here**.
 
-### 3.1 Federated activity — conflicts with a non-negotiable
+So the work is **additive publishers plus manifest entries**, on machinery that
+already exists. No new delivery architecture.
 
-`kronk_nudges.md` § Non-negotiables states **"No federation. Nudges is
-local-only."** But the notifications being retired include federated ones: a
-remote account favourites your post, follows you, or boosts you, and an
-ActivityPub handler calls `LocalNotificationWorker`. If `Notification` goes and
-Nudges is local-only, **those events have nowhere to land at all.**
+## 3. What has to be built
 
-Three ways out, all requiring a call:
+Every one of these is a directed, single-recipient nudge to the content owner.
 
-1. Relax the non-negotiable — Nudges accepts remote actors (they can't be Mates,
-   so every remote event is Tier-1 directed or nothing).
-2. Keep a minimal `Notification` store for federated activity only, and accept
-   that "remove the old system" means "shrink it to the federation edge".
-3. Decide federated social activity does not notify in Kronk, and say so
-   explicitly. This is a product decision with real consequences.
+| Event to publish                                                           | Fires when                   | Exists?                                                                                                            |
+| -------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `status.frothed`                                                           | someone froths your post     | **no** — `Favourite` publishes only korner-scoped froths (booth / kommons / kuestions), nothing for a plain status |
+| `status.replied`                                                           | someone replies to your post | **no**                                                                                                             |
+| `status.mentioned`                                                         | someone mentions you         | **no**                                                                                                             |
+| `status.reblogged`                                                         | someone boosts your post     | **no**                                                                                                             |
+| `status.quoted`                                                            | someone quotes your post     | **no**                                                                                                             |
+| mate request / accept                                                      | —                            | **yes**, declared with `directed: true` (#1367)                                                                    |
+| korner activity (backed, commented, answered, offered, RSVP'd, new photo…) | —                            | **yes**, 12 manifest listeners                                                                                     |
 
-**Nothing can be removed safely until this is answered**, because it determines
-whether the store shrinks or disappears.
+`Favourite` is the model to copy: it already publishes on create and branches by
+what the status is backed by. Plain statuses need the fallback branch it lacks.
 
-### 3.2 Moderation and system messages — unaddressed by the spec
+**Not in scope, by §2:** federated activity, moderation/admin/system messages,
+`poll`, `annual_report`, and the Tier-2/3 discovery tiers.
 
-`moderation_warning`, `severed_relationships`, `admin.sign_up`, `admin.report`,
-`annual_report`, `email_confirmation_reminder`. These are not person-to-person,
-and a Nudges conversation is Mate or Krew. The current answer is the synthetic
-pinned "Kronk" conversation (`KRONK_SYSTEM_TYPES`), which **reads the
-Notification store** — so it is not a destination, it is a view of the thing
-being removed.
+## 4. What "remove the legacy code" should mean here
 
-A moderation warning must be undeliverable-by-mistake and un-mutable. That is a
-different contract from a nudge, which is dialed by preference and quiet hours.
-**Decision needed:** a third conversation kind (`system`) with its own rules, or
-a separate surface outside Nudges entirely.
+**Recommendation: stop writing to the store; do not drop it yet.**
 
-### 3.3 Push and email
+- **Leave the ActivityPub handler calls alone.** They are dormant while Kronk
+  doesn't federate, they cost nothing dormant, and they live in upstream files —
+  the repo's own code rules say don't modify upstream unnecessarily, and leaving
+  them keeps re-federation cheap when it comes.
+- **Keep a residue reading the store** for the deferred categories:
+  `moderation_warning`, `severed_relationships`, `admin.*`, `annual_report`,
+  `email_confirmation_reminder`. Per §2.2 these have no new home, and inventing
+  one now is exactly the work Tal deferred. The `/nudges/legacy` tab and the
+  Kronk system pane stay until moderation is faced.
+- **Do remove what we own and have replaced:** `Kronk::KornerNotifier` and the
+  three Kommons native types once their events run on the bus, plus each
+  migrated social type's write path.
 
-`Web::PushSubscription` and `NotificationMailer` both read `Notification`.
-Nudges has no push path of its own, and no digest. The spec covers per-type
-push _toggles_ but not the delivery mechanism. **Decision needed:** does Nudges
-grow push + email, or do those keep a store to read from?
+Dropping the table is the last few percent of the value and carries the most
+risk. It waits for the moderation decision.
 
-### 3.4 The whole social set
+## 5. Order
 
-`mention`, `favourite`, `reblog`, `follow`, `poll`, `quote` and friends are the
-bulk of what users actually receive. The spec does intend these as nudges (§
-Surfaces 3 renders boosts and mentions inline, and § Open decisions debates
-whether bare favourites aggregate). But it is a large build, and it is gated on
-the prerequisite below.
+| #   | Phase                                                                                                                                                                                             | Blocked by |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| 1   | **Render what already fires.** `proposal_challenged` and `task_assigned` are registered, fire, and display nowhere. Small, independent, and road-tests the surface before anything depends on it. | —          |
+| 2   | **Publish the five `status.*` social events** and declare them as `directed: true` listens. Behind a flag, dual-running against `Notification` so the two can be compared on real traffic.        | —          |
+| 3   | **Render them** in the conversation stream (froth/reply/mention/boost/quote as inline nudges, per spec § Surfaces 3). Decide whether bare froths aggregate — the spec leaves it open.             | 2          |
+| 4   | **Cut the legacy write path** for the migrated types once dual-run is clean. Retire `Kronk::KornerNotifier`; drop the 3 Kommons native types.                                                     | 3          |
+| 5   | **Korner notifications fully onto `delivery: nudge`**, retiring the last `planned:` entries as their features land.                                                                               | 2          |
+| 6   | _Later, after the deferred decisions:_ moderation/system channel, push + email, Tier-2/3 fan-out, and only then the store itself.                                                                 | §2.1, §2.2 |
 
-## 4. The hard prerequisite: multi-recipient fan-out
-
-The manifest path delivers to **exactly one** `recipient_account_id`. Every
-category above needs more:
-
-- a favourite on a status with many watchers
-- a moderation warning to one account, but a domain block severing many
-- Tier-2 ("people you chose") and Tier-3 ("somewhere you tuned in") from the
-  spec's own relevance engine, which have **no mechanism at all**
-
-This is gap 2 in `nudges_bus_state.md` and it blocks everything in §3. It also
-needs its own decision — recipient sets computed inline or in a job — because a
-Tier-3 event on a popular korner could fan to most of the instance.
-
-**Nothing else on this page should start before fan-out exists.**
-
-## 5. Proposed order
-
-Each phase leaves the system working. No phase deletes a store before its
-replacement carries traffic.
-
-| #   | Phase                                                                                                                                                                                                           | Blocked by |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| 0   | **Answer §3.1–3.3 and the fan-out question.** Write the answers into `decisions.md`.                                                                                                                            | —          |
-| 1   | **Build multi-recipient fan-out** + Tier-2/3 relevance from the manifest. Spec Build stage 2.                                                                                                                   | 0          |
-| 2   | **Render what already fires.** `proposal_challenged` and `task_assigned` are registered, fire, and display nowhere. Fixing that is small, independent, and worth doing first as a real test of the system pane. | —          |
-| 3   | **Migrate korner notifications** to `delivery: nudge`, retire `Kronk::KornerNotifier`, drop the 3 kommons native types.                                                                                         | 1          |
-| 4   | **Migrate the social set** (§3.4) behind a flag, dual-running against `Notification` so behaviour can be compared before the old path is cut.                                                                   | 1          |
-| 5   | **System/moderation channel** per the §3.2 decision.                                                                                                                                                            | 0, 1       |
-| 6   | **Push + email** per §3.3.                                                                                                                                                                                      | 0, 1       |
-| 7   | **Cut the legacy read paths** — `/nudges/legacy`, `LEGACY_TYPES`, `KRONK_SYSTEM_TYPES`, `notifications_v2/`. This is the "retires with the bell" step and the first point where anything is deleted.            | 2–6        |
-| 8   | **Remove the store** — or shrink it to the federation edge, per §3.1. Migration for existing rows: decide archive vs drop.                                                                                      | 7          |
-
-**Phase 2 is the only one that can start today.** Everything else waits on
-phase 0 or 1.
+**Phases 1 and 2 can both start now.**
 
 ## 6. Sequencing traps
 
-- **Do not delete `notifications.types` from manifests.** It drives the
-  per-korner push toggles (`Api::V1::KornersController#push_preferences`) and
-  the aggregation windows (`Nudges::Aggregator.window_for`, matched by `name`).
-  This nearly happened; see `korner_standard.md` §L10.
-- **Do not remove types from `Notification::PROPERTIES` while rows reference
-  them.** `type` is an enum-ish string column; orphaned rows break serialization
-  on read, including in the legacy archive people are still using.
-- **`notifications_v2/` is not dead code** — it renders the legacy tab. It dies
-  in phase 7, not before.
-- **Dual-run before cutting.** Phase 4 exists so the two systems can be compared
-  on real traffic. A social notification silently not firing is invisible until
-  a user complains.
-- **The suite is red.** 43 distinct spec failures on `rebuild/2.0.0` means a
-  regression in this work would not stand out. Clearing CI (decisions.md
-  2026-08-12, decision 1) is worth more than it looks before touching 79 files.
-
-## 7. Honest sizing
-
-79 backend files, 126 frontend files, 22 types, 5 delivery consumers (in-app,
-push, email, legacy archive, system pane), and one stated non-negotiable that
-currently contradicts the goal. This is a multi-milestone programme, not a
-sweep-and-delete. The plan above is written so it can stop after any phase and
-still leave a coherent system.
+- **Don't delete `notifications.types` from manifests** — it drives the
+  per-korner push toggles (`Api::V1::KornersController#push_preferences`) and the
+  aggregation windows (`Nudges::Aggregator.window_for`, matched by `name`). This
+  nearly happened; see #1404.
+- **Don't remove types from `PROPERTIES` while rows reference them** — orphaned
+  rows break serialization on read, including the archive still in use.
+- **`notifications_v2/` is not dead code** — it renders the legacy tab, which
+  §4 keeps for the deferred categories.
+- **Dual-run before cutting (phase 2 → 4).** A social notification silently not
+  firing is invisible until a user complains.
+- **Froth is `Favourite`, not a bespoke model.** Moments moved off its private
+  froth model on 2026-08-09 (`decisions.md`); publish from `Favourite` so every
+  content type is covered once.
+- **The suite is red** — 43 distinct failures on `rebuild/2.0.0`, so a regression
+  here would not stand out (`decisions.md` decision 1).
