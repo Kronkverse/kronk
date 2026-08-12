@@ -139,9 +139,12 @@ describe('layoutLattice', () => {
     expect(pos.k0?.y).toBe(0);
     expect(pos[kornerIds[half] ?? '']?.y).toBe(0);
 
-    // Hub centres on the whole block (min y → max y of all kids).
+    // Hub sits BELOW the whole block, one ROW_PITCH clear of the
+    // bottom kid — the trunk rises upward past every card, per
+    // Tal 2026-08-13. (Was midpoint of the block in the initial
+    // split.)
     const kidYs = kornerIds.map((k) => pos[k]?.y ?? Number.NaN);
-    expect(pos.hub?.y).toBe((Math.min(...kidYs) + Math.max(...kidYs)) / 2);
+    expect(pos.hub?.y).toBe(Math.max(...kidYs) + ROW_PITCH);
   });
 });
 

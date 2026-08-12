@@ -93,6 +93,15 @@ export const layoutLattice = (
     // to depth+3 so a Hand in the left half (Kommons, Huddle, etc.)
     // can still expand its Fingers into the intervening depth+2
     // column without colliding with the right-column cards.
+    //
+    // Hub itself sits **below** the whole block so its trunk visually
+    // rises upward past every card (Tal's 2026-08-13 design refinement:
+    // "come out the right hand side of the pill, then turn 90° up,
+    // then split into left and right sides" — direction is up, not the
+    // up-and-down spine hub would generate if it centred on the block).
+    // The returned midpoint stays the block centre — parents that use
+    // it (Kronk → limbs) get a visually sensible midpoint instead of
+    // dragging way down past the block bottom.
     if (id === 'hub' && kids.length >= HUB_SPLIT_THRESHOLD) {
       const half = Math.ceil(kids.length / 2);
       const leftKids = kids.slice(0, half);
@@ -111,14 +120,20 @@ export const layoutLattice = (
         pos[k] = { x: rightDepth * COL_PITCH, y, depth: rightDepth };
         return y;
       });
-      cursorY =
+      const kidBottom =
         startY + Math.max(leftKids.length, rightKids.length) * ROW_PITCH;
 
-      // Centre Hub itself on the whole block (top row → bottom row).
+      // Hub row goes below the block; the following ROW_PITCH keeps
+      // whatever renders next (nothing today — hub is the last limb)
+      // safely clear.
+      pos[id] = { x: depth * COL_PITCH, y: kidBottom, depth };
+      cursorY = kidBottom + ROW_PITCH;
+
+      // Return the block midpoint (not hub.y) so Kronk's own midpoint
+      // computation stays close to feed / profile / hub's centre of
+      // mass — otherwise Kronk would drag down past the block bottom.
       const allYs = [...leftYs, ...rightYs];
-      const y = (Math.min(...allYs) + Math.max(...allYs)) / 2;
-      pos[id] = { x: depth * COL_PITCH, y, depth };
-      return y;
+      return (Math.min(...allYs) + Math.max(...allYs)) / 2;
     }
 
     const ys = kids.map((k) => walk(k, depth + 1));

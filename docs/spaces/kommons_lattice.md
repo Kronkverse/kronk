@@ -125,8 +125,16 @@ screenshot). At that point Hub's kids split across two adjacent columns, alphabe
 column-major (first half top-to-bottom in the left column, second half top-to-bottom in the right)
 so a reader scanning A→Z can follow one column then the other. Left column stays at `depth+1`; the
 right column sits at `depth+3`, skipping `depth+2` so a Hand in the left half (Kommons, Huddle) can
-still expand its Fingers into that intervening column without colliding with the right column. Wires
-route through a shared vertical trunk in the middle of the gap between the two columns, with
+still expand its Fingers into that intervening column without colliding with the right column.
+
+**Hub itself sits below the whole block** (2026-08-13 refinement — Tal: "come out the right hand
+side of the pill, then turn 90° up, then split into left and right sides"). The trunk visually
+rises upward from Hub's right edge past every card; wires branch off to each side to reach cards on
+the left or right of the trunk. To keep parents that consume Hub's midpoint (Kronk) visually sane
+even though Hub itself is at the block bottom, `walk('hub')` returns the block centre — not
+`pos.hub.y` — for the parent's midpoint calc.
+
+Wires route through a shared vertical trunk in the middle of the gap between the two columns, with
 horizontal branches to each card on either side — the visual is a spine, not a fan of independent
 elbows (see §2, "Hub trunk branch").
 
