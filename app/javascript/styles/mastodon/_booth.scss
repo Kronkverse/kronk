@@ -3,8 +3,17 @@
 // The Booth — DJ set hosting space
 // Theme accent via --accent (set by booth/index.tsx)
 
-$booth-bg: var(--background-color, #17101f);
-$booth-card-bg: var(--surface-background-color, #1e1433);
+// Booth's surface + card colors ride on the shared semantic tokens
+// so a theme edit propagates. Card retains a subtle purple tint via
+// color-mix() with the deep-purple palette entry, so the DJ-set
+// cards read distinctly from the flat surface behind them without
+// hardcoding a bespoke booth colour.
+$booth-bg: var(--semantic-surface-primary);
+$booth-card-bg: color-mix(
+  in oklab,
+  var(--semantic-surface-elevated) 70%,
+  var(--kronk-purple-primary) 30%
+);
 $booth-accent: var(--accent);
 
 // ─── Hero title ───────────────────────────────────────────────────────────────
@@ -46,9 +55,9 @@ $booth-accent: var(--accent);
   align-items: center;
   gap: 8px;
   background: var(--accent);
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   padding: 10px 16px;
   font-size: 14px;
   font-weight: 600;
@@ -79,7 +88,7 @@ $booth-accent: var(--accent);
 .booth__now-playing {
   background: color-mix(in srgb, var(--accent) 15%, $ui-base-color);
   border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  border-radius: 12px;
+  border-radius: var(--radius-medium);
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -90,7 +99,7 @@ $booth-accent: var(--accent);
   width: 100%;
   aspect-ratio: 1;
   max-height: 200px;
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   overflow: hidden;
   background: color-mix(in srgb, var(--accent) 20%, $ui-base-color);
 
@@ -145,7 +154,7 @@ $booth-accent: var(--accent);
   background: none;
   border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
   color: color-mix(in srgb, var(--accent) 80%, $primary-text-color);
-  border-radius: 20px;
+  border-radius: var(--radius-large);
   padding: 6px 14px;
   font-size: 13px;
   font-weight: 500;
@@ -181,7 +190,7 @@ $booth-accent: var(--accent);
   display: flex;
   gap: 12px;
   padding: 12px;
-  border-radius: 10px;
+  border-radius: var(--radius-medium);
   background: $ui-base-color;
   border: 1px solid $ui-base-lighter-color;
   cursor: pointer;
@@ -212,7 +221,7 @@ $booth-accent: var(--accent);
   width: 64px;
   height: 64px;
   flex-shrink: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-small);
   overflow: hidden;
   background: color-mix(in srgb, var(--accent) 20%, $ui-base-color);
 
@@ -243,7 +252,7 @@ $booth-accent: var(--accent);
   svg {
     width: 48px;
     height: 48px;
-    fill: #fff;
+    fill: var(--semantic-text-on-accent);
     filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 60%));
   }
 
@@ -274,7 +283,7 @@ $booth-accent: var(--accent);
   cursor: pointer;
   color: $secondary-text-color;
   padding: 4px;
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -307,7 +316,7 @@ $booth-accent: var(--accent);
   right: 0;
   background: $ui-base-color;
   border: 1px solid $ui-base-lighter-color;
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 40%);
   min-width: 120px;
   z-index: 10;
@@ -331,7 +340,7 @@ $booth-accent: var(--accent);
   }
 
   &--danger {
-    color: #fca5a5;
+    color: var(--semantic-warning-red);
 
     &:hover {
       background: rgba(239, 68, 68, 12%);
@@ -360,7 +369,7 @@ $booth-accent: var(--accent);
   .booth-card__menu-item {
     flex: 1;
     padding: 6px 10px;
-    border-radius: 5px;
+    border-radius: var(--radius-small);
     font-size: 13px;
     text-align: center;
     border: 1px solid $ui-base-lighter-color;
@@ -448,7 +457,7 @@ $booth-accent: var(--accent);
 .booth-card__genre {
   background: color-mix(in srgb, var(--accent) 20%, transparent);
   color: color-mix(in srgb, var(--accent) 80%, $primary-text-color);
-  border-radius: 10px;
+  border-radius: var(--radius-medium);
   padding: 1px 8px;
   font-size: 11px;
   font-weight: 500;
@@ -477,7 +486,7 @@ $booth-accent: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   transition: opacity 0.15s;
 
   &:hover {
@@ -498,7 +507,7 @@ $booth-accent: var(--accent);
   cursor: pointer;
   color: $secondary-text-color;
   padding: 6px;
-  border-radius: 6px;
+  border-radius: var(--radius-small);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -533,7 +542,7 @@ $booth-accent: var(--accent);
   width: 100%;
   height: 5px;
   background: color-mix(in srgb, var(--accent) 20%, $ui-base-lighter-color);
-  border-radius: 3px;
+  border-radius: var(--radius-small);
   cursor: pointer;
   position: relative;
 
@@ -550,7 +559,7 @@ $booth-accent: var(--accent);
 .booth-player__progress-fill {
   height: 100%;
   background: var(--accent);
-  border-radius: 3px;
+  border-radius: var(--radius-small);
   pointer-events: none;
   transition: width 0.25s linear;
 }
@@ -589,7 +598,7 @@ $booth-accent: var(--accent);
   min-width: 80px;
   background: $ui-base-color;
   border: 1px solid $ui-base-lighter-color;
-  border-radius: 20px;
+  border-radius: var(--radius-large);
   color: $primary-text-color;
   font-size: 13px;
   padding: 6px 12px;
@@ -628,7 +637,7 @@ $booth-accent: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   min-width: 30px;
   min-height: 30px;
 
@@ -648,7 +657,7 @@ $booth-accent: var(--accent);
 .booth-inline-player {
   background: color-mix(in srgb, var(--accent) 12%, $ui-base-color);
   border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  border-radius: 12px;
+  border-radius: var(--radius-medium);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -698,7 +707,7 @@ $booth-accent: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   backdrop-filter: blur(4px);
   transition: background 0.15s;
 
@@ -742,7 +751,7 @@ $booth-accent: var(--accent);
 .booth-inline-player__genre {
   background: color-mix(in srgb, var(--accent) 20%, transparent);
   color: color-mix(in srgb, var(--accent) 80%, $primary-text-color);
-  border-radius: 10px;
+  border-radius: var(--radius-medium);
   padding: 2px 9px;
   font-size: 11px;
   font-weight: 500;
@@ -774,7 +783,7 @@ $booth-accent: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   transition: opacity 0.15s;
 
   &:hover {
@@ -794,7 +803,7 @@ $booth-accent: var(--accent);
   cursor: pointer;
   color: $secondary-text-color;
   padding: 6px;
-  border-radius: 6px;
+  border-radius: var(--radius-small);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -846,14 +855,14 @@ $booth-accent: var(--accent);
   &:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
-    border-radius: 3px;
+    border-radius: var(--radius-small);
   }
 }
 
 .booth-waveform__bar {
   flex: 1;
   min-width: 0;
-  border-radius: 1px;
+  border-radius: var(--radius-small);
   background: color-mix(in srgb, var(--accent) 30%, $ui-base-lighter-color);
   transition: background 0.1s;
 
@@ -866,7 +875,11 @@ $booth-accent: var(--accent);
   background: color-mix(in srgb, var(--accent) 45%, $ui-base-lighter-color);
 
   &--played {
-    background: color-mix(in srgb, var(--accent) 100%, #fff 10%);
+    background: color-mix(
+      in srgb,
+      var(--accent) 100%,
+      var(--semantic-text-on-accent) 10%
+    );
     filter: brightness(1.1);
   }
 }
@@ -897,7 +910,7 @@ $booth-accent: var(--accent);
   width: 100%;
   aspect-ratio: 1;
   max-height: 280px;
-  border-radius: 12px;
+  border-radius: var(--radius-medium);
   overflow: hidden;
   background: color-mix(in srgb, var(--accent) 20%, $ui-base-color);
 
@@ -951,7 +964,7 @@ $booth-accent: var(--accent);
   display: inline-block;
   background: color-mix(in srgb, var(--accent) 20%, transparent);
   color: color-mix(in srgb, var(--accent) 80%, $primary-text-color);
-  border-radius: 12px;
+  border-radius: var(--radius-medium);
   padding: 2px 10px;
   font-size: 12px;
   font-weight: 500;
@@ -977,7 +990,7 @@ $booth-accent: var(--accent);
 .booth-upload-form {
   background: color-mix(in srgb, var(--accent) 10%, $ui-base-color);
   border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-  border-radius: 12px;
+  border-radius: var(--radius-medium);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -994,8 +1007,8 @@ $booth-accent: var(--accent);
 .booth-upload-form__error {
   background: rgba(239, 68, 68, 15%);
   border: 1px solid rgba(239, 68, 68, 40%);
-  color: #fca5a5;
-  border-radius: 6px;
+  color: var(--semantic-warning-red);
+  border-radius: var(--radius-small);
   padding: 10px 14px;
   font-size: 14px;
 }
@@ -1015,7 +1028,7 @@ $booth-accent: var(--accent);
   textarea {
     background: $ui-base-color;
     border: 1px solid $ui-base-lighter-color;
-    border-radius: 6px;
+    border-radius: var(--radius-small);
     color: $primary-text-color;
     font-size: 14px;
     padding: 8px 10px;
@@ -1083,7 +1096,7 @@ $booth-accent: var(--accent);
   background: none;
   border: 1px solid $ui-base-lighter-color;
   color: $secondary-text-color;
-  border-radius: 6px;
+  border-radius: var(--radius-small);
   padding: 8px 16px;
   font-size: 14px;
   cursor: pointer;
@@ -1105,8 +1118,8 @@ $booth-accent: var(--accent);
 .booth-upload-form__submit {
   background: var(--accent);
   border: none;
-  color: #fff;
-  border-radius: 6px;
+  color: var(--semantic-text-on-accent);
+  border-radius: var(--radius-small);
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 600;
@@ -1131,7 +1144,7 @@ $booth-accent: var(--accent);
 
 .booth-upload-form__file-error {
   font-size: 12px;
-  color: #fca5a5;
+  color: var(--semantic-warning-red);
   margin-top: 2px;
 }
 
@@ -1158,14 +1171,14 @@ $booth-accent: var(--accent);
   width: 100%;
   height: 6px;
   background: color-mix(in srgb, var(--accent) 20%, $ui-base-lighter-color);
-  border-radius: 3px;
+  border-radius: var(--radius-small);
   overflow: hidden;
 }
 
 .booth-upload-form__progress-fill {
   height: 100%;
   background: var(--accent);
-  border-radius: 3px;
+  border-radius: var(--radius-small);
   transition: width 0.3s ease;
 }
 
@@ -1179,8 +1192,8 @@ $booth-accent: var(--accent);
   align-self: flex-start;
   background: none;
   border: 1px solid rgba(239, 68, 68, 40%);
-  color: #fca5a5;
-  border-radius: 6px;
+  color: var(--semantic-warning-red);
+  border-radius: var(--radius-small);
   padding: 6px 14px;
   font-size: 13px;
   cursor: pointer;
@@ -1202,7 +1215,7 @@ $booth-accent: var(--accent);
   img {
     width: 56px;
     height: 56px;
-    border-radius: 6px;
+    border-radius: var(--radius-small);
     object-fit: cover;
     display: block;
   }
@@ -1211,8 +1224,8 @@ $booth-accent: var(--accent);
 .booth-edit-form__remove-cover {
   background: none;
   border: 1px solid rgba(239, 68, 68, 40%);
-  color: #fca5a5;
-  border-radius: 6px;
+  color: var(--semantic-warning-red);
+  border-radius: var(--radius-small);
   padding: 4px 10px;
   font-size: 12px;
   cursor: pointer;
@@ -1232,7 +1245,7 @@ $booth-accent: var(--accent);
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 6px;
+  border-radius: var(--radius-small);
   overflow: hidden;
   cursor: ns-resize;
   background: color-mix(in srgb, var(--accent) 20%, $ui-base-color);
@@ -1271,7 +1284,7 @@ $booth-accent: var(--accent);
     width: 32px;
     height: 6px;
     background: rgba(255, 255, 255, 90%);
-    border-radius: 3px;
+    border-radius: var(--radius-small);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 40%);
   }
 
@@ -1290,10 +1303,10 @@ $booth-accent: var(--accent);
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 55%);
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   font-size: 11px;
   padding: 3px 8px;
-  border-radius: 10px;
+  border-radius: var(--radius-medium);
   pointer-events: none;
   backdrop-filter: blur(4px);
   white-space: nowrap;
@@ -1328,7 +1341,7 @@ $booth-accent: var(--accent);
   flex-shrink: 0;
   width: 48px;
   height: 48px;
-  border-radius: 6px;
+  border-radius: var(--radius-small);
   overflow: hidden;
   background: color-mix(in srgb, var(--accent) 30%, $ui-base-color);
 
@@ -1415,7 +1428,7 @@ $booth-accent: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   flex-shrink: 0;
   transition: opacity 0.15s;
 
@@ -1436,7 +1449,7 @@ $booth-accent: var(--accent);
   cursor: pointer;
   color: $secondary-text-color;
   padding: 4px;
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1470,7 +1483,7 @@ $booth-accent: var(--accent);
   width: 100%;
   height: 4px;
   background: color-mix(in srgb, var(--accent) 20%, $ui-base-lighter-color);
-  border-radius: 2px;
+  border-radius: var(--radius-small);
   cursor: pointer;
   position: relative;
 
@@ -1487,7 +1500,7 @@ $booth-accent: var(--accent);
 .booth-bottom-player__progress-fill {
   height: 100%;
   background: var(--accent);
-  border-radius: 2px;
+  border-radius: var(--radius-small);
   pointer-events: none;
   transition: width 0.25s linear;
 }
@@ -1520,7 +1533,7 @@ $booth-accent: var(--accent);
   cursor: pointer;
   color: $secondary-text-color;
   padding: 4px;
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1556,7 +1569,7 @@ $booth-accent: var(--accent);
   padding: 6px 8px;
   background: $ui-base-color;
   border: 1px solid $ui-base-lighter-color;
-  border-radius: 6px;
+  border-radius: var(--radius-small);
   cursor: text;
   transition: border-color 0.15s;
 
@@ -1571,7 +1584,7 @@ $booth-accent: var(--accent);
   gap: 4px;
   background: color-mix(in srgb, var(--accent) 25%, transparent);
   color: color-mix(in srgb, var(--accent) 85%, $primary-text-color);
-  border-radius: 12px;
+  border-radius: var(--radius-medium);
   padding: 2px 6px 2px 10px;
   font-size: 12px;
   font-weight: 500;
@@ -1622,7 +1635,7 @@ $booth-accent: var(--accent);
   right: 0;
   background: $ui-base-color;
   border: 1px solid $ui-base-lighter-color;
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 35%);
   z-index: 20;
   overflow: hidden;
@@ -1662,7 +1675,7 @@ $booth-accent: var(--accent);
   flex: 1;
   background: $ui-base-color;
   border: 1px solid lighten($ui-base-color, 8%);
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   color: $primary-text-color;
   font-size: 14px;
   padding: 8px 10px;
@@ -1689,7 +1702,7 @@ $booth-accent: var(--accent);
   font-size: 11px;
   font-weight: 600;
   padding: 3px 7px;
-  border-radius: 10px;
+  border-radius: var(--radius-medium);
   background: color-mix(in srgb, var(--accent) 20%, $ui-base-color);
   color: color-mix(in srgb, var(--accent) 80%, $primary-text-color);
   border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
@@ -1708,7 +1721,7 @@ $booth-accent: var(--accent);
   padding: 0;
   cursor: pointer;
   color: $secondary-text-color;
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   transition:
     color 0.15s,
     background 0.15s;
@@ -1731,7 +1744,7 @@ $booth-accent: var(--accent);
   right: 0;
   background: $ui-base-color;
   border: 1px solid lighten($ui-base-color, 10%);
-  border-radius: 6px;
+  border-radius: var(--radius-small);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 40%);
   z-index: 100;
   max-height: 240px;
@@ -1783,7 +1796,7 @@ $booth-accent: var(--accent);
 .booth-share-form__preview {
   background: $ui-base-color;
   border: 1px solid lighten($ui-base-color, 6%);
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   color: $secondary-text-color;
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 12px;
@@ -1800,9 +1813,9 @@ $booth-accent: var(--accent);
   left: 50%;
   transform: translateX(-50%);
   background: var(--accent);
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   padding: 10px 18px;
-  border-radius: 24px;
+  border-radius: var(--radius-large);
   font-size: 14px;
   font-weight: 500;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 30%);
@@ -1817,7 +1830,7 @@ $booth-accent: var(--accent);
   left: 0;
   right: 0;
   z-index: 100;
-  background: color-mix(in srgb, #0f0918 92%, transparent);
+  background: color-mix(in oklab, var(--kronk-purple-deep) 92%, transparent);
   backdrop-filter: blur(10px);
   border-top: 1px solid lighten($ui-base-color, 8%);
   display: flex;
@@ -1854,7 +1867,7 @@ $booth-accent: var(--accent);
   flex-shrink: 0;
   width: 40px;
   height: 40px;
-  border-radius: 4px;
+  border-radius: var(--radius-small);
   overflow: hidden;
   background: color-mix(in srgb, var(--accent) 20%, $ui-base-color);
   display: flex;
