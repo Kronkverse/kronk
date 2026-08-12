@@ -767,28 +767,6 @@
     justify-content: center;
   }
 
-  &__filter {
-    display: flex;
-    gap: 8px;
-
-    button {
-      flex: 0 0 auto;
-      padding: 6px 14px;
-      border-radius: 999px;
-      border: 1px solid var(--border-default);
-      background: transparent;
-      color: var(--text-secondary);
-      font-size: 14px;
-      cursor: pointer;
-
-      &.is-active {
-        background: var(--kronk-purple, #7c5cff);
-        border-color: transparent;
-        color: #fff;
-      }
-    }
-  }
-
   &__empty {
     color: var(--text-secondary);
     font-size: 14px;
