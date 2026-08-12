@@ -64,10 +64,14 @@ body:has(.me-hub) .columns-area__panels__main {
   background: transparent;
 }
 
-// Row 2: wheel + hint pair, centred vertically inside the 1fr
-// remainder. Because `.me-hub`'s min-height now matches the visible
-// Stage (viewport - 4.25rem top-band), "centre of row 2" is also
-// visually near the centre of the space below the title.
+// Row 2: wheel + hint pair. Was centred vertically inside the 1fr
+// remainder, but Tal 2026-08-12: "let's halve the gap between title
+// and the top option of 'Profile'". Bias upward with a padding-bottom
+// on the stack — the wheel is centred inside the stack, and stack
+// stretches to fill row 2, so padding-bottom shrinks the effective
+// centring area and shifts the wheel up by half of that padding.
+// clamp keeps it responsive: ~6rem on short viewports, growing to
+// ~14rem on tall desktop viewports (where the empty gap was worst).
 .me-hub__stack {
   position: relative;
   z-index: 1;
@@ -76,6 +80,7 @@ body:has(.me-hub) .columns-area__panels__main {
   align-items: center;
   justify-content: center;
   gap: 1.5rem;
+  padding-bottom: clamp(6rem, 18vh, 14rem);
 }
 
 // The wheel is a square whose side = 2 × (radius + bubble width).
