@@ -1,5 +1,18 @@
 # The Korner Standard
 
+> **Freshness.** §3's doctor-coverage table and issue counts last checked
+> **2026-08-12**. Re-check with:
+>
+> ```
+> grep -n 'def detect_' lib/mastodon/cli/korners.rb     # what the doctor actually gates
+> grep -n 'BUCKETS =' app/lib/kronk/node_registry.rb    # L6's valid bucket list
+> bin/tootctl korners doctor                            # current issue counts
+> ```
+>
+> If any disagrees, **correct this doc in your current PR** — §3 is the table
+> people trust to know what is machine-checked, and it has been wrong before.
+> See `decisions.md` 2026-08-12 (decision 6).
+
 > **Status:** v1 (2026-07-16, two open decisions resolved — see foot). The normative definition of what makes a korner **slide in smoothly** to Kronk's infrastructure. Derived from the 2026-07-16 recreation audit (the dimensions where real korners broke) + the aesthetic standard (`docs/kronk_aesthetic_system.md` §6). Companion docs: `docs/kronk_korner_spec.md` (manifest field reference) and `docs/korners/adding_a_korner.md` (the build walkthrough — follows this standard).
 >
 > **How to read it:** §1 is the lifecycle gate — _what's required when_. §2 is the ten layers — _the checklist_. §3 is the conformance matrix — _what `korners doctor` enforces automatically vs. what a human signs off_. A korner is done when it passes every layer required for its lifecycle stage.

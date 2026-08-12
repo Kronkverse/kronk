@@ -88,6 +88,24 @@ was right for a shadow-only branch, but this is where the bill arrives.
    The `> **Current state (date)**` callouts already date claims; the addition
    is to name the one-liner that re-verifies them, so staleness is cheap to
    detect instead of requiring an audit to discover.
+6. **Drift-prone docs ask the reader to fix them, on the spot.** A short
+   `> **Freshness**` block at the top of each such doc gives the date it was
+   last checked, the command that re-checks it, and an instruction: if the
+   command disagrees with the doc, **correct the doc in your current PR**.
+   Rationale over the alternatives — a scheduled sweep produces a report nobody
+   owns, and a passive "verify against code" note (already in this file's
+   header) is advice without an owner or a moment. Correction-at-point-of-read
+   has both: whoever is reading is already in a PR with the context loaded, and
+   it self-prioritises by traffic, since a doc nobody reads harms nobody until
+   it is read. The block must stay **short and copy-pasteable** — a wall of
+   preamble gets skipped, which is the failure mode to design against. Prefer
+   naming a command CI already runs, so the check itself stays exercised
+   (decision 2 applies to these commands too: a rotted verification command is
+   the same bug one level up).
+
+   Applies to normative/derived docs. **Not** to closed records
+   (`krew_axis_migration.md`) or dated snapshots (`remaining_work_*.md`), which
+   are meant to describe a past moment and are not stale for doing so.
 
 ### Non-goals
 
