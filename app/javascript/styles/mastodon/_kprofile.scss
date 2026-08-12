@@ -14,16 +14,25 @@
 @use 'mixins' as *;
 
 .kprofile {
-  --k-canvas: var(--background-color, #0a0812);
-  --k-surface: var(--surface-variant-background-color, #141020);
-  --k-text: var(--text-primary, #ece9f5);
-  --k-dim: var(--text-secondary-color, #9a95c4);
-  --k-faint: var(--text-tertiary-color, #6f6a95);
+  // KProfileHeader's palette rides on the shared semantic tokens
+  // (same pattern as .kcompose in _kcompose.scss). --k-surface keeps
+  // a distinct purple-tinted read via a color-mix() blend so a theme
+  // edit still propagates.
+  --k-canvas: var(--semantic-surface-primary);
+  --k-surface: color-mix(
+    in oklab,
+    var(--semantic-surface-primary) 65%,
+    var(--kronk-purple-deep) 35%
+  );
+  --k-text: var(--semantic-text-primary);
+  --k-dim: var(--semantic-text-secondary);
+  --k-faint: var(--semantic-text-muted);
   --k-line: rgba(136, 105, 229, 24%);
 
-  // Kronk purple-accent as fallback (hue 285°), not the legacy Mastodon indigo #8c8dff
-  --k-accent: var(--accent, #4414cc);
-  --k-serif: var(--font-display, 'Liberation Serif', Georgia, serif);
+  // Kronk purple-accent (hue 285°). `--accent` and `--font-display`
+  // are always defined globally; drop the legacy hex/family fallbacks.
+  --k-accent: var(--accent);
+  --k-serif: var(--font-display);
 
   // Positive stacking so the header sits above the starfield (body
   // bg-image + panel bg-images from _stars.scss).
@@ -54,7 +63,11 @@
   border-radius: 34%;
   border: 3px solid var(--k-canvas);
   box-shadow: 0 10px 30px rgb(0 0 0 / 50%);
-  background: linear-gradient(150deg, #3a2c66, #181233);
+  background: linear-gradient(
+    150deg,
+    var(--kronk-purple-primary),
+    var(--kronk-purple-deep)
+  );
   flex: 0 0 auto;
   object-fit: cover;
   display: block;
@@ -89,7 +102,7 @@
   color: var(--k-text);
   background: transparent;
   border: 1px solid var(--k-line);
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   text-decoration: none;
   flex: 0 0 auto;
   transition:
@@ -122,7 +135,7 @@
   padding: 2px 8px;
   background: var(--k-surface);
   border: 1px solid var(--k-line);
-  border-radius: 12px;
+  border-radius: var(--radius-medium);
   font-size: 12px;
   color: var(--k-text);
 }
@@ -135,7 +148,7 @@
 .kprofile__bio {
   margin: 12px 0 0;
   max-width: 640px;
-  color: #d7d3ee;
+  color: var(--semantic-text-primary);
 
   p {
     margin: 0;
