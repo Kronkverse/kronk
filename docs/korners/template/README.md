@@ -27,11 +27,11 @@ Your `index.tsx` renders **only content** — it reads the URL to pick which vie
 2. `cp -r docs/korners/template app/javascript/mastodon/features/<slug>`, rename files, and update strings.
 3. Rename `<slug>` in `mykorner.yaml`, `index.tsx`, etc. — the slug is one lowercase word (Standard L1).
 4. Wire the async chunk (`app/javascript/mastodon/features/ui/util/async-components.js`) and the route (`app/javascript/mastodon/features/ui/index.jsx`), per §5 in `docs/korners/adding_a_korner.md`.
-5. Run `bin/tootctl korners doctor` — expect it to be green with no L11 warnings.
-   **Known false positive (2026-08-12):** if your korner is `enforced: true` you will
-   also get `L1 icon not wired in useKornerIcon (no '<slug>' key in SLUG_TO_ICON)`
-   even when the icon is wired correctly — that check greps for the slug, but the map
-   is keyed by Material Symbols name. Every enforced korner currently reports it.
-   See the L1 caveat in `docs/korners/korner_standard.md` §3.
+5. Run `bin/tootctl korners doctor` — expect **your korner** to be clean, with no L11
+   warnings. Note the doctor reports the whole platform, and there are currently 27
+   pre-existing issues on other korners (see the CI note in
+   `docs/korners/korner_standard.md` §3), so read the lines naming your slug rather
+   than the total. Your `icon.material` must be a key in `MATERIAL_TO_ICON` in
+   `hooks/useKornerIcon.tsx` — add a row (and the SVG import) if you picked a new glyph.
 
 The rest of the walkthrough (models, controllers, serializers, feed projection, tests) is in `docs/korners/adding_a_korner.md`.
