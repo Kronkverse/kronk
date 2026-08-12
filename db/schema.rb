@@ -265,7 +265,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_11_010000) do
     t.index ["contributor_id"], name: "index_album_photos_on_contributor_id"
     t.index ["media_attachment_id"], name: "index_album_photos_on_media_attachment_id"
     t.index ["status_id"], name: "index_album_photos_on_status_id", where: "(status_id IS NOT NULL)"
-    t.check_constraint "(media_attachment_id IS NOT NULL) <> (external_url IS NOT NULL)", name: "album_photos_exactly_one_media_source"
   end
 
   create_table "albums", force: :cascade do |t|
