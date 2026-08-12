@@ -99,7 +99,6 @@ import {
   KommonsProposal,
   KommonsSpace,
   KommonsNodeMeta,
-  KommonsPropose,
   KommonsProposePicker,
   KronkSearch,
   YouPortal,
@@ -393,7 +392,13 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/hub/kommons/space/:slug" component={KommonsSpace} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/node/:nodeId" component={KommonsNodeMeta} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/pick" component={KommonsProposePicker} content={children} />}
-            {signedIn && <WrappedRoute path="/hub/kommons/propose" component={KommonsPropose} content={children} />}
+            {/* Composer lives in the Ж bubble → picker → shell flow. Canonical
+                URL is `/hub/kommons/composer`; `/hub/kommons/propose` is
+                preserved as a legacy alias for pre-shell links. Both mount
+                <Kommons autoOpenComposer /> so the directory sits behind the
+                overlay (docs/rebuild/decisions.md 2026-08-12). */}
+            {signedIn && <WrappedRoute path="/hub/kommons/composer" component={Kommons} componentParams={{ autoOpenComposer: true }} content={children} />}
+            {signedIn && <WrappedRoute path="/hub/kommons/propose" component={Kommons} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <Redirect from="/governance" to="/hub/kommons" exact />}
             {signedIn && <WrappedRoute path="/hub/kommons" component={Kommons} content={children} />}
             {signedIn && <WrappedRoute path={["/questions/:id", "/hub/kuestions/:id", "/questions", "/hub/kuestions"]} component={Questions} content={children} />}

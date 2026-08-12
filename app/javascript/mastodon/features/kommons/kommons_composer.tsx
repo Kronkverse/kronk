@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { Helmet } from 'react-helmet';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 import api from 'mastodon/api';
 import {
@@ -11,11 +10,41 @@ import {
   apiCreateProposalTask,
   apiGetKommonsNodes,
 } from 'mastodon/api/kommons_nodes';
-import { Stage } from 'mastodon/components/stage';
+import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useKorner } from 'mastodon/hooks/useKorner';
+
+// Kommons — open a proposal. The shared `<ComposeShell>` overlay at
+// `/hub/kommons/composer` (legacy `/hub/kommons/propose` still
+// resolves to the same overlay). Was the full-page `ProposePage`
+// mounted inside a `<Stage>` until 2026-08-12.
+//
+// Scope query params (?space=<slug> or ?node=<id>) come from the
+// picker at `/hub/kommons/pick` — the Ж bubble opens the picker
+// first, which then routes here with the chosen scope. Unscoped
+// proposals (no ?space / ?node) land unattached to any node.
 
 const messages = defineMessages({
   title: { id: 'propose.title', defaultMessage: 'Open a Proposal' },
+  titleScoped: {
+    id: 'propose.title_scoped',
+    defaultMessage: 'Propose a change to {space}',
+  },
+  titleNewKorner: {
+    id: 'propose.title_new_korner',
+    defaultMessage: 'Propose a new Korner',
+  },
+  intro: {
+    id: 'propose.intro',
+    defaultMessage:
+      'A proposal is how Kronk changes. Say what should be different and why — others can back it, question it, and help build it.',
+  },
+  introNewKorner: {
+    id: 'propose.intro_new_korner',
+    defaultMessage:
+      'A Korner is a space in Kronk — Kalendar, Kommons, Booth. Say what this new space is for, who it serves, and what one action it makes possible. Others can back the idea; a shipped proposal ends with a new manifest under config/korners/.',
+  },
+  submit: { id: 'propose.submit', defaultMessage: 'Open it' },
+  submitting: { id: 'propose.submitting', defaultMessage: 'Opening…' },
   titlePlaceholder: {
     id: 'propose.title_placeholder',
     defaultMessage: 'A short, clear title',
@@ -36,13 +65,22 @@ const messages = defineMessages({
   removeDoc: { id: 'propose.remove_doc', defaultMessage: 'Remove document' },
 });
 
-// Plant a proposal (Kommons' native "compose"). Reached from the Ж menu or a
-// Space page's button. When opened with ?space=<slug> it scopes the proposal
-// to that space, anchoring it to the space's index node so it lands on the
-// Space page and the Kommons tree. Without a space it's an unscoped proposal.
-const ProposePage: React.FC<{ multiColumn?: boolean }> = () => {
+interface Props {
+  onCancel: () => void;
+  // Fires after a successful create — parent decides where to navigate
+  // (the Kommons directory sends the caller to the fresh proposal's
+  // detail page).
+  onCreated: (proposalId: string) => void;
+}
+
+// Plant a proposal (Kommons' native "compose"). Reached from the Ж menu
+// (via the picker at /pick, which scopes then routes here) or from a
+// Space page's button. When opened with ?space=<slug> it scopes the
+// proposal to that space, anchoring it to the space's index node so it
+// lands on the Space page and the Kommons tree. Without a space it's an
+// unscoped proposal.
+export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const intl = useIntl();
-  const history = useHistory();
   const location = useLocation();
 
   // Scope: `?space=<slug>` targets a korner (anchors to its index node);
@@ -223,144 +261,119 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = () => {
     setDocs((prev) => prev.filter((_, idx) => idx !== i));
   }, []);
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!canSubmit) return;
-      setSubmitting(true);
-      setError(null);
-      const cleanSteps = steps.map((s) => s.trim()).filter(Boolean);
-      // Korner Composer path — compose the structured fields into a
-      // proposal title + summary + body so a shipped proposal has all
-      // the manifest-shape hints the eventual `config/korners/<slug>.yaml`
-      // will need (name, slug, glyph, icon, purpose). Freeform proposals
-      // send whatever the user typed.
-      const payload = isNewKorner
-        ? (() => {
-            const nameTrimmed = kornerName.trim();
-            const slugTrimmed = kornerSlug.trim();
-            const iconTrimmed = kornerIcon.trim();
-            const glyphTrimmed = kornerGlyph.trim();
-            const purposeTrimmed = kornerPurpose.trim();
-            const structured = [
-              `**Name**: ${nameTrimmed}`,
-              `**Slug**: \`${slugTrimmed}\``,
-              glyphTrimmed ? `**Glyph**: ${glyphTrimmed}` : null,
-              iconTrimmed ? `**Icon**: \`${iconTrimmed}\`` : null,
-              `**Purpose**: ${purposeTrimmed}`,
-              '',
-              '---',
-              '',
-              body.trim(),
-            ]
-              .filter((line): line is string => line !== null)
-              .join('\n');
-            return {
-              title: `New Korner: ${nameTrimmed}`,
-              body: structured,
-              summary: purposeTrimmed,
-            };
-          })()
-        : {
-            title: title.trim(),
-            body: body.trim(),
-            ...(summary.trim() ? { summary: summary.trim() } : {}),
+  const handleSubmit = useCallback(() => {
+    if (!canSubmit) return;
+    setSubmitting(true);
+    setError(null);
+    const cleanSteps = steps.map((s) => s.trim()).filter(Boolean);
+    // Korner Composer path — compose the structured fields into a
+    // proposal title + summary + body so a shipped proposal has all
+    // the manifest-shape hints the eventual `config/korners/<slug>.yaml`
+    // will need (name, slug, glyph, icon, purpose). Freeform proposals
+    // send whatever the user typed.
+    const payload = isNewKorner
+      ? (() => {
+          const nameTrimmed = kornerName.trim();
+          const slugTrimmed = kornerSlug.trim();
+          const iconTrimmed = kornerIcon.trim();
+          const glyphTrimmed = kornerGlyph.trim();
+          const purposeTrimmed = kornerPurpose.trim();
+          const structured = [
+            `**Name**: ${nameTrimmed}`,
+            `**Slug**: \`${slugTrimmed}\``,
+            glyphTrimmed ? `**Glyph**: ${glyphTrimmed}` : null,
+            iconTrimmed ? `**Icon**: \`${iconTrimmed}\`` : null,
+            `**Purpose**: ${purposeTrimmed}`,
+            '',
+            '---',
+            '',
+            body.trim(),
+          ]
+            .filter((line): line is string => line !== null)
+            .join('\n');
+          return {
+            title: `New Korner: ${nameTrimmed}`,
+            body: structured,
+            summary: purposeTrimmed,
           };
-      apiCreateKommonsProposal({
-        ...payload,
-        // Anchor to the scoped node so it lands on that page's meta page and
-        // the tree. Unscoped proposals carry no node.
-        ...(targetNodeId ? { node_id: targetNodeId } : {}),
+        })()
+      : {
+          title: title.trim(),
+          body: body.trim(),
+          ...(summary.trim() ? { summary: summary.trim() } : {}),
+        };
+    apiCreateKommonsProposal({
+      ...payload,
+      // Anchor to the scoped node so it lands on that page's meta page and
+      // the tree. Unscoped proposals carry no node.
+      ...(targetNodeId ? { node_id: targetNodeId } : {}),
+    })
+      .then(async (created) => {
+        // Steps become Tasks; staged design docs upload as attachments. The
+        // attachment route is nested under a persisted proposal, so it must
+        // run after create. Best-effort — a failure here doesn't lose the
+        // proposal, which already exists.
+        for (const step of cleanSteps) {
+          await apiCreateProposalTask(created.id, step);
+        }
+        for (const file of docs) {
+          const form = new FormData();
+          form.append('file', file);
+          form.append('kind', 'reference');
+          await api().post(`/api/v1/proposals/${created.id}/attachments`, form);
+        }
+        onCreated(created.id);
+        // Parent unmounts us on success — no need to reset state.
+        return undefined;
       })
-        .then(async (created) => {
-          // Steps become Tasks; staged design docs upload as attachments. The
-          // attachment route is nested under a persisted proposal, so it must
-          // run after create. Best-effort — a failure here doesn't lose the
-          // proposal, which already exists.
-          for (const step of cleanSteps) {
-            await apiCreateProposalTask(created.id, step);
-          }
-          for (const file of docs) {
-            const form = new FormData();
-            form.append('file', file);
-            form.append('kind', 'reference');
-            await api().post(
-              `/api/v1/proposals/${created.id}/attachments`,
-              form,
-            );
-          }
-          history.push(`/hub/kommons/p/${created.id}`);
-          return undefined;
-        })
-        .catch((err: unknown) => {
-          setError(
-            err instanceof Error
-              ? err.message
-              : 'Could not plant the proposal.',
-          );
-          setSubmitting(false);
-        });
-    },
-    [
-      canSubmit,
-      title,
-      body,
-      summary,
-      steps,
-      docs,
-      targetNodeId,
-      history,
-      isNewKorner,
-      kornerName,
-      kornerSlug,
-      kornerGlyph,
-      kornerIcon,
-      kornerPurpose,
-    ],
+      .catch((err: unknown) => {
+        setError(
+          err instanceof Error ? err.message : 'Could not plant the proposal.',
+        );
+        setSubmitting(false);
+      });
+  }, [
+    canSubmit,
+    title,
+    body,
+    summary,
+    steps,
+    docs,
+    targetNodeId,
+    onCreated,
+    isNewKorner,
+    kornerName,
+    kornerSlug,
+    kornerGlyph,
+    kornerIcon,
+    kornerPurpose,
+  ]);
+
+  // Shell chrome — the header label + subtitle switch based on scope
+  // (new-korner / scoped-to-space / unscoped). Both are computed here
+  // as strings so ComposeShell can render them into its own header.
+  const shellLabel = isNewKorner
+    ? intl.formatMessage(messages.titleNewKorner)
+    : scoped
+      ? intl.formatMessage(messages.titleScoped, { space: scopeName })
+      : intl.formatMessage(messages.title);
+  const shellSubtitle = intl.formatMessage(
+    isNewKorner ? messages.introNewKorner : messages.intro,
   );
 
   return (
-    <Stage label={intl.formatMessage(messages.title)}>
-      <Helmet>
-        <title>{intl.formatMessage(messages.title)}</title>
-      </Helmet>
-
-      <form className='propose-page' onSubmit={handleSubmit}>
-        <header className='propose-page__hero'>
-          <h1 className='propose-page__title'>
-            {isNewKorner ? (
-              <FormattedMessage
-                id='propose.heading_new_korner'
-                defaultMessage='Propose a new Korner'
-              />
-            ) : scoped ? (
-              <FormattedMessage
-                id='propose.heading_scoped'
-                defaultMessage='Propose a change to {space}'
-                values={{ space: scopeName }}
-              />
-            ) : (
-              <FormattedMessage
-                id='propose.heading'
-                defaultMessage='Open a Proposal'
-              />
-            )}
-          </h1>
-          <p className='propose-page__intro'>
-            {isNewKorner ? (
-              <FormattedMessage
-                id='propose.intro_new_korner'
-                defaultMessage='A Korner is a space in Kronk — Kalendar, Kommons, Booth. Say what this new space is for, who it serves, and what one action it makes possible. Others can back the idea; a shipped proposal ends with a new manifest under config/korners/.'
-              />
-            ) : (
-              <FormattedMessage
-                id='propose.intro'
-                defaultMessage='A proposal is how Kronk changes. Say what should be different and why — others can back it, question it, and help build it.'
-              />
-            )}
-          </p>
-        </header>
-
+    <ComposeShell
+      korner='kommons'
+      label={shellLabel}
+      subtitle={shellSubtitle}
+      submitLabel={intl.formatMessage(messages.submit)}
+      submittingLabel={intl.formatMessage(messages.submitting)}
+      submitting={submitting}
+      canSubmit={canSubmit}
+      onSubmit={handleSubmit}
+      onCancel={onCancel}
+    >
+      <div className='propose-page'>
         {isNewKorner ? (
           // Korner Composer fields — manifest-shape hints captured as
           // first-class inputs. Title / summary are composed from these
@@ -658,19 +671,7 @@ const ProposePage: React.FC<{ multiColumn?: boolean }> = () => {
         </fieldset>
 
         {error && <p className='propose-page__error'>{error}</p>}
-
-        <div className='propose-page__actions'>
-          <button
-            type='submit'
-            className='propose-page__submit'
-            disabled={!canSubmit}
-          >
-            <FormattedMessage id='propose.submit' defaultMessage='Open it' />
-          </button>
-        </div>
-      </form>
-    </Stage>
+      </div>
+    </ComposeShell>
   );
 };
-
-export { ProposePage };

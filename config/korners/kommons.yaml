@@ -134,9 +134,12 @@ launch: # retrospective — Kommons predates launch cards
 # scopes the proposal to that space (the bubble appends ?space=<slug>).
 compose:
   label: 'Open a Proposal'
-  # Unscoped entry: the target picker (choose which page the proposal is about).
-  # On a space/meta page the Ж menu skips this and scopes straight to the
-  # Proposer — see kronk_menu.tsx.
+  # Unscoped entry: the target picker (choose which page the proposal is
+  # about). The picker routes to the shared `<ComposeShell>` overlay at
+  # `/hub/kommons/composer?node=<id>` (canonical); `/hub/kommons/propose`
+  # still resolves to the same overlay for pre-shell links + the
+  # scoped-from-a-space `kronk_menu.tsx` shortcut. See
+  # docs/rebuild/decisions.md 2026-08-12.
   route: '/hub/kommons/pick'
 
 feature_flag: # not-implemented — Kommons is unconditionally mounted on main

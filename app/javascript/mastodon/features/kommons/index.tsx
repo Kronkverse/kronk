@@ -17,6 +17,7 @@ import { KoinGlance } from './components/koin_glance';
 import type { Wallet } from './components/koin_glance';
 import { ProposalCard } from './components/proposal_card';
 import { ProposalDetail } from './components/proposal_detail';
+import { KommonsComposer } from './kommons_composer';
 import type { Proposal } from './types';
 
 const messages = defineMessages({
@@ -104,12 +105,40 @@ const directoryMessages = defineMessages({
 // filters) so the FeedDrum can rotate between them without a route
 // swap unmounting the drum mid-turn. Directory face embeds the shared
 // `<Lattice>` component; proposal faces render the ProposalCard list.
-const Kommons: React.FC<{ multiColumn?: boolean }> = () => {
+interface KommonsProps {
+  multiColumn?: boolean;
+  // When true (the `/hub/kommons/composer` or legacy
+  // `/hub/kommons/propose` route), the `<KommonsComposer>` overlay
+  // opens automatically on mount. The picker (`/hub/kommons/pick`)
+  // routes here with the chosen scope via ?space= or ?node= query
+  // params, which the composer reads independently.
+  autoOpenComposer?: boolean;
+}
+
+const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
   const intl = useIntl();
   const history = useHistory();
   const { pathname } = useLocation();
   const face = faceFromPath(pathname);
   const isProposalFace = face !== 'directory';
+  const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
+
+  const closeComposer = useCallback(() => {
+    setComposerOpen(false);
+    // If we arrived via `/composer` or the legacy `/propose`, drop
+    // back to the bare Kommons directory so the composer doesn't
+    // reopen on refresh. Query params (?space, ?node) drop too —
+    // opening the composer again is a fresh scope selection.
+    if (autoOpenComposer) history.replace('/hub/kommons');
+  }, [autoOpenComposer, history]);
+
+  const handleCreated = useCallback(
+    (proposalId: string) => {
+      setComposerOpen(false);
+      history.push(`/hub/kommons/p/${proposalId}`);
+    },
+    [history],
+  );
 
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [wallet, setWallet] = useState<Wallet | null>(null);
@@ -321,6 +350,10 @@ const Kommons: React.FC<{ multiColumn?: boolean }> = () => {
           </>
         )}
       </div>
+
+      {composerOpen && (
+        <KommonsComposer onCancel={closeComposer} onCreated={handleCreated} />
+      )}
     </Stage>
   );
 };

@@ -255,10 +255,6 @@ export function KommonsNodeMeta () {
   return import("../../kommons/node_meta_page").then(m => ({ default: m.NodeMetaPage }));
 }
 
-export function KommonsPropose () {
-  return import("../../kommons/propose_page").then(m => ({ default: m.ProposePage }));
-}
-
 export function KommonsProposePicker () {
   return import("../../kommons/propose_picker").then(m => ({ default: m.ProposePicker }));
 }
