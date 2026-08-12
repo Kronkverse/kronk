@@ -379,8 +379,26 @@ module Mastodon
 
       # Strip `/* … */` blocks and line comments so commented `<h1>` notes
       # (or the tagline quoted inside a comment) don't false-positive.
+      #
+      # Line comments are stripped WHEREVER they appear, not only where one
+      # starts a line. The earlier `^\s*//` form let a trailing comment
+      # survive, so `const y = 1; // was createPortal here` tripped the
+      # composer check on its own explanation — the same class of bug as the
+      # file-input guard matching its own docstring.
+      #
+      # The `(?<!:)` guard keeps `https://…` inside a string intact. Without
+      # it, everything after such a URL on that line would be discarded,
+      # which could hide a real violation sitting after it — a false negative
+      # traded for a false positive, which is the worse direction. A `//`
+      # inside a non-URL string literal (or a regex literal) is still
+      # stripped; both callers only look for JSX/identifier patterns, so the
+      # realistic cost is nil and the alternative is a full JS tokeniser.
+      #
+      # Both callers report a file path with no line number, so collapsing
+      # newlines inside block comments is harmless here. Revisit if a caller
+      # ever wants line numbers.
       def strip_jsx_comments(src)
-        src.gsub(%r{/\*[\s\S]*?\*/}, '').gsub(%r{^\s*//[^\n]*$}, '')
+        src.gsub(%r{/\*[\s\S]*?\*/}, '').gsub(%r{(?<!:)//[^\n]*}, '')
       end
 
       # Composer conformance — the 2026-08-12 standard: every korner's
