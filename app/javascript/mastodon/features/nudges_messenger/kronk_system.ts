@@ -11,16 +11,22 @@
 // groups already loaded into `state.notificationGroups` (fetched at app
 // boot) — no new API or backend.
 //
-// Add types here as they gain a renderer (task_assigned,
-// proposal_challenged are the next candidates).
+// Add types here as they gain a renderer. `proposal_challenged` and
+// `task_assigned` joined on 2026-08-12: both were registered and firing since
+// #391 with nothing displaying them, so they were invisible to users. See
+// docs/rebuild/notification_retirement_plan.md phase 1.
 
 import type {
   NotificationGroupEmailConfirmationReminder,
+  NotificationGroupProposalChallenged,
   NotificationGroupProposalComplete,
+  NotificationGroupTaskAssigned,
 } from 'mastodon/models/notification_group';
 
 export const KRONK_SYSTEM_TYPES = [
   'proposal_status_changed',
+  'proposal_challenged',
+  'task_assigned',
   'email_confirmation_reminder',
 ] as const;
 
@@ -32,6 +38,8 @@ export const KRONK_CONVERSATION_ID = 'kronk';
 // tuple + this union together when a new type gains a card.
 export type KronkSystemGroup =
   | NotificationGroupProposalComplete
+  | NotificationGroupProposalChallenged
+  | NotificationGroupTaskAssigned
   | NotificationGroupEmailConfirmationReminder;
 
 const SYSTEM_TYPE_SET = new Set<string>(KRONK_SYSTEM_TYPES);

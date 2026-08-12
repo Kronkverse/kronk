@@ -7,6 +7,7 @@ import type {
   ApiNotificationJSON,
   ApiEventInvitationJSON,
   ApiProposalCompleteJSON,
+  ApiTaskAssignedJSON,
   NotificationType,
   NotificationWithStatusType,
 } from 'mastodon/api_types/notifications';
@@ -57,6 +58,20 @@ type ProposalCompleteData = ApiProposalCompleteJSON;
 export interface NotificationGroupProposalComplete
   extends BaseNotification<'proposal_status_changed'> {
   proposal: ProposalCompleteData | null;
+}
+
+// A block vote challenging a proposal you authored. Same payload as
+// proposal_status_changed; separate type so the pane can word it differently.
+export interface NotificationGroupProposalChallenged
+  extends BaseNotification<'proposal_challenged'> {
+  proposal: ProposalCompleteData | null;
+}
+
+// A task on a proposal assigned to you. Links to the parent proposal — tasks
+// have no route of their own.
+export interface NotificationGroupTaskAssigned
+  extends BaseNotification<'task_assigned'> {
+  task: ApiTaskAssignedJSON | null;
 }
 
 // Kronk-native self-notice — surfaces in the Kronk system pane of the
@@ -154,6 +169,8 @@ export type NotificationGroup =
   | NotificationGroupNudge
   | NotificationGroupMediaTag
   | NotificationGroupProposalComplete
+  | NotificationGroupProposalChallenged
+  | NotificationGroupTaskAssigned
   | NotificationGroupEmailConfirmationReminder;
 
 function createReportFromJSON(reportJSON: ApiReportJSON): Report {
@@ -250,10 +267,18 @@ export function createNotificationGroupFromJSON(
         sampleAccountIds,
       };
     case 'proposal_status_changed':
+    case 'proposal_challenged':
       return {
         ...group,
         partial: false,
         proposal: group.proposal,
+        sampleAccountIds,
+      };
+    case 'task_assigned':
+      return {
+        ...group,
+        partial: false,
+        task: group.task,
         sampleAccountIds,
       };
     case 'nudge':
@@ -358,10 +383,17 @@ export function createNotificationGroupFromNotificationJSON(
         eventInvitation: notification.event_invitation,
       };
     case 'proposal_status_changed':
+    case 'proposal_challenged':
       return {
         ...group,
         type: notification.type,
         proposal: notification.proposal,
+      };
+    case 'task_assigned':
+      return {
+        ...group,
+        type: notification.type,
+        task: notification.task,
       };
     case 'nudge':
       return {

@@ -18,7 +18,8 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
   belongs_to :generated_annual_report, key: :annual_report, if: :annual_report_event?, serializer: REST::AnnualReportEventSerializer
 
   attribute :event_invitation, if: :event_invitation_type?
-  attribute :proposal, if: :proposal_status_changed_type?
+  attribute :proposal, if: :proposal_payload_type?
+  attribute :task, if: :task_assigned_type?
   attribute :nudge_streak, if: :nudge_type?
   attribute :nudge_message, if: :nudge_type?
   attribute :nudge_reactions, if: :nudge_type?
@@ -56,8 +57,16 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
     object.type == :event_invitation
   end
 
-  def proposal_status_changed_type?
-    object.type == :proposal_status_changed
+  # `proposal_challenged` carries a Proposal as its activity too, so it reuses
+  # the same id + title payload. Without this it was registered and firing with
+  # nothing serialised, so the client had nothing to render — see
+  # docs/rebuild/notification_retirement_plan.md phase 1.
+  def proposal_payload_type?
+    [:proposal_status_changed, :proposal_challenged].include?(object.type)
+  end
+
+  def task_assigned_type?
+    object.type == :task_assigned
   end
 
   def nudge_type?
@@ -153,9 +162,9 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
     }
   end
 
-  # proposal_status_changed carries the Proposal as its polymorphic
-  # `activity`; expose the id + title so the client can render the
-  # "ready to finalise" line and link to the proposal.
+  # proposal_status_changed and proposal_challenged both carry the Proposal as
+  # their polymorphic `activity`; expose the id + title so the client can render
+  # the line and link to the proposal.
   def proposal
     proposal = object.notification&.activity
     return nil unless proposal.is_a?(Proposal)
@@ -163,6 +172,19 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
     {
       proposal_id: proposal.id.to_s,
       proposal_title: proposal.title,
+    }
+  end
+
+  # task_assigned carries the Task. The client links to the parent proposal
+  # (tasks have no standalone route), so the proposal id travels with it.
+  def task
+    task = object.notification&.activity
+    return nil unless task.is_a?(Task)
+
+    {
+      task_id: task.id.to_s,
+      task_title: task.title,
+      proposal_id: task.proposal_id.to_s,
     }
   end
 

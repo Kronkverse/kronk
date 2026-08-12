@@ -26,6 +26,8 @@ export const allNotificationTypes: NotificationType[] = [
   'nudge',
   'media_tag',
   'proposal_status_changed',
+  'proposal_challenged',
+  'task_assigned',
   'email_confirmation_reminder',
 ];
 
@@ -52,6 +54,8 @@ export type NotificationType =
   | 'nudge'
   | 'media_tag'
   | 'proposal_status_changed'
+  | 'proposal_challenged'
+  | 'task_assigned'
   | 'email_confirmation_reminder';
 
 export interface BaseNotificationJSON {
@@ -188,6 +192,38 @@ interface ProposalStatusChangedNotificationJSON extends BaseNotificationJSON {
   proposal: ApiProposalCompleteJSON;
 }
 
+// proposal_challenged carries the same Proposal payload — a block vote on a
+// proposal you authored. Registered and firing since #391; nothing rendered it
+// until now (notification_retirement_plan.md phase 1).
+interface ProposalChallengedNotificationGroupJSON
+  extends BaseNotificationGroupJSON {
+  type: 'proposal_challenged';
+  proposal: ApiProposalCompleteJSON;
+}
+
+interface ProposalChallengedNotificationJSON extends BaseNotificationJSON {
+  type: 'proposal_challenged';
+  proposal: ApiProposalCompleteJSON;
+}
+
+// task_assigned carries the Task, plus its parent proposal id: tasks have no
+// standalone route, so the client links to the proposal.
+export interface ApiTaskAssignedJSON {
+  task_id: string;
+  task_title: string;
+  proposal_id: string;
+}
+
+interface TaskAssignedNotificationGroupJSON extends BaseNotificationGroupJSON {
+  type: 'task_assigned';
+  task: ApiTaskAssignedJSON;
+}
+
+interface TaskAssignedNotificationJSON extends BaseNotificationJSON {
+  type: 'task_assigned';
+  task: ApiTaskAssignedJSON;
+}
+
 export interface NudgeMessageJSON {
   body: string | null;
   media_url: string | null;
@@ -250,6 +286,8 @@ export type ApiNotificationJSON =
   | NudgeNotificationJSON
   | MediaTagNotificationJSON
   | ProposalStatusChangedNotificationJSON
+  | ProposalChallengedNotificationJSON
+  | TaskAssignedNotificationJSON
   | EmailConfirmationReminderNotificationJSON;
 
 export type ApiNotificationGroupJSON =
@@ -263,6 +301,8 @@ export type ApiNotificationGroupJSON =
   | NudgeNotificationGroupJSON
   | MediaTagNotificationGroupJSON
   | ProposalStatusChangedNotificationGroupJSON
+  | ProposalChallengedNotificationGroupJSON
+  | TaskAssignedNotificationGroupJSON
   | EmailConfirmationReminderNotificationGroupJSON;
 
 export interface ApiNotificationGroupsResultJSON {
