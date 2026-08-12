@@ -20,9 +20,33 @@ class ProcessMentionsService < BaseService
       scan_text!
       assign_mentions!
     end
+
+    publish_mention_nudges!
   end
 
   private
+
+  # One nudge per LOCAL mentioned account. Published after the transaction
+  # commits, and only for mentions that survived the block/domain filtering in
+  # #assign_mentions! — a blocked mention is dropped there, and must not notify.
+  # Silent mentions are skipped: they exist precisely so someone does not get
+  # told.
+  def publish_mention_nudges!
+    return unless @save_records
+
+    @current_mentions.each do |mention|
+      next if mention.silent?
+      next unless mention.account&.local?
+
+      Kronk::StatusNudges.publish(
+        'status.mentioned',
+        actor_account_id: @status.account_id,
+        recipient_account_id: mention.account_id,
+        status_id: @status.id,
+        actor_acct: @status.account.acct
+      )
+    end
+  end
 
   def scan_text!
     @status.text = @status.text.gsub(Account::MENTION_RE) do |match|

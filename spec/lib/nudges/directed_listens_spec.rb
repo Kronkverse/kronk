@@ -59,11 +59,21 @@ RSpec.describe 'Nudges directed listens config' do # rubocop:disable RSpec/Descr
       expect(listen_for('kommons.proposal.frothed')['directed']).to be_nil
     end
 
+    # Enumerated deliberately rather than counted: `directed` bypasses the Mate
+    # gate, so every addition should be a conscious edit here. Mate requests are
+    # directed because the pair are not Mates yet; the status.* events because
+    # something happened to the recipient's own content.
     it 'leaves the Mate gate on for every listen that does not opt in' do
       declared = Kronk::KornerRegistry.find('nudges').listens.select { |e| e.is_a?(Hash) }
       directed = declared.select { |e| e['directed'] == true }.pluck('event')
 
-      expect(directed).to contain_exactly('mates.request.sent', 'mates.request.accepted')
+      expect(directed).to contain_exactly(
+        'mates.request.sent',
+        'mates.request.accepted',
+        'status.frothed',
+        'status.replied',
+        'status.mentioned'
+      )
     end
   end
 end
