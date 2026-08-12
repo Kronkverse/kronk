@@ -9,12 +9,15 @@ import { LoggerView } from './logger_view';
 import { MatesView } from './mates_view';
 import { TreksView } from './treks_view';
 
-// Map — three-lens surface (Mates / Treks / Logger). The Frame provides the
-// space title, tagline and the SpaceViewPicker pill from the manifest.
+// Map — three browse faces (Mates / My treks / Mates' treks) plus the
+// Logger compose surface. The Frame provides the rotating space title
+// from the manifest (`header.rotator: true`), so this component just
+// dispatches the current URL to the right view.
 //
-// All three lenses are native now: Mates and Treks are MapLibre GL surfaces
-// backed by their own APIs; Logger records a trek by hand or by importing a
-// GPS file (parsed in the browser). The prototype iframe is retired.
+// All lenses are native: Mates and both treks surfaces are MapLibre GL
+// / list surfaces backed by their own APIs; Logger records a trek by
+// hand or by importing a GPS file (parsed in the browser). The
+// prototype iframe is retired.
 //
 // Kommons proposal #116969555027300161.
 
@@ -22,18 +25,35 @@ const messages = defineMessages({
   title: { id: 'map.title', defaultMessage: 'Map' },
 });
 
-// mates/treks are the browse lenses in the Frame's view picker (manifest
-// `views:`). `logger` is NOT a picker view — it's the korner's compose
-// action (manifest `compose.route`), opened from the Ж menu bubble — but it
-// still resolves here so /hub/map/logger renders the Logger.
-const VIEWS = ['mates', 'treks', 'logger'] as const;
+// The browse faces (`mates` / `my-treks` / `mates-treks`) come from the
+// manifest `views:` list; the Frame's `<AutoSpaceHeader>` rotator steps
+// between them. `logger` is NOT a browse face — it's the korner's
+// compose action (manifest `compose.route`), opened from the Ж menu
+// bubble — but it still resolves here so /hub/map/logger renders the
+// Logger. `treks-detail` is the deep-link surface at
+// /hub/map/treks/:id (feed cards link here) and is detected by regex
+// rather than a URL segment so trek IDs (numeric) can't clash with
+// the scope segments.
+const VIEWS = [
+  'mates',
+  'my-treks',
+  'mates-treks',
+  'logger',
+  'treks-detail',
+] as const;
 type MapView = (typeof VIEWS)[number];
 const DEFAULT_VIEW: MapView = 'mates';
 
 const HUB_ROUTE_RE = /^\/hub\/map(?:\/([a-z0-9-]+))?/;
+const TREK_DETAIL_RE = /^\/hub\/map\/treks\/\d+$/;
 
 const resolveView = (pathname: string): MapView => {
+  if (TREK_DETAIL_RE.test(pathname)) return 'treks-detail';
   const segment = HUB_ROUTE_RE.exec(pathname)?.[1];
+  // Legacy bare /hub/map/treks (the retired outer picker landed here)
+  // still resolves — treat it as the default treks face so old
+  // bookmarks and any stale in-app links don't break.
+  if (segment === 'treks') return 'my-treks';
   return (VIEWS as readonly string[]).includes(segment ?? '')
     ? (segment as MapView)
     : DEFAULT_VIEW;
@@ -44,6 +64,13 @@ const MapV2: React.FC<{ multiColumn?: boolean }> = () => {
   const location = useLocation();
   const view = resolveView(location.pathname);
 
+  // Both scope faces + the deep-link detail all render through the
+  // same TreksView instance so it stays mounted across scope changes
+  // — that's what lets FeedDrum snapshot the outgoing list before
+  // the URL swap.
+  const onTreks =
+    view === 'my-treks' || view === 'mates-treks' || view === 'treks-detail';
+
   return (
     <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
@@ -52,7 +79,7 @@ const MapV2: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       {view === 'mates' && <MatesView />}
-      {view === 'treks' && <TreksView />}
+      {onTreks && <TreksView />}
       {view === 'logger' && <LoggerView />}
     </Stage>
   );

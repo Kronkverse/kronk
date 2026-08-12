@@ -65,20 +65,30 @@ settings:
 emits: []
 listens: []
 
-# Two browse lenses on the same surface — the Frame-provided pill nav
-# switches between them via /hub/map and /hub/map/treks. Logging a trek
-# is a create action, not a browse lens: it hangs off the compose bubble
-# (below) and opens at /hub/map/logger, the same way New event opens the
-# Kalendar composer.
+# Three browse faces on one rotating title (Standard L11). Was
+# previously two lenses (Mates / Treks) behind a dropdown, with an
+# inner Yours/Mates filter inside the Treks list — that meant Map
+# rendered its own static space title *plus* the Treks lens rendered
+# a second rotating title beneath it (2026-08-12 Tal: "there should
+# only ever be one title"). Folding the Yours/Mates axis up into
+# top-level faces + promoting the whole korner to `header.rotator`
+# collapses the two chromes back to one: the space title itself
+# rotates through Mates → My treks → Mates' treks, matching the
+# /home + Albutts + Kommons pattern one-for-one.
+#
+# Logging a trek is a create action, not a browse face: it hangs off
+# the compose bubble (below) and opens at /hub/map/logger, the same
+# way New event opens the Kalendar composer.
 views:
-  - { key: mates, label: Mates }
-  - { key: treks, label: Treks }
+  - { key: mates, label: Mates, tagline: 'Where your mates are right now' }
+  - { key: my-treks, label: 'My treks', tagline: 'Treks you have logged' }
+  - {
+      key: mates-treks,
+      label: "Mates' treks",
+      tagline: 'Treks your mates have shared',
+    }
 header:
-  # Mates (a live map surface) and Treks (a list of recorded trips)
-  # are separate workflows — render the switcher as a compact
-  # dropdown so the two feel like distinct pages, not scopes over
-  # the same material.
-  picker: menu
+  rotator: true
 
 # The Ж menu's compose bubble while inside Map. Map's native create
 # action is logging a trek, so the bubble opens the Logger.
