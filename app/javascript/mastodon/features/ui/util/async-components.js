@@ -323,10 +323,6 @@ export function KrewDetail () {
   return import("../../krew/krew_detail").then(m => ({ default: m.KrewDetail }));
 }
 
-export function KrewNew () {
-  return import("../../krew/krew_new").then(m => ({ default: m.KrewNew }));
-}
-
 export function Klot () {
   return import("../../klot").then(m => ({ default: m.Klot }));
 }
