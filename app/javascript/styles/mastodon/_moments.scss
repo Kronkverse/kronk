@@ -93,7 +93,7 @@
 .moments-viewer__progress-seg {
   flex: 1;
   height: 2px;
-  border-radius: 2px;
+  border-radius: var(--radius-small);
   background: rgb(255 255 255 / 24%);
   overflow: hidden;
 
@@ -135,7 +135,7 @@
 .moments-viewer__display-name {
   font-family: var(--font-display);
   font-size: 14px;
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -157,7 +157,7 @@
   border-radius: var(--radius-round);
   border: 1px solid rgb(255 255 255 / 35%);
   background: rgb(255 255 255 / 12%);
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.06em;
@@ -196,7 +196,7 @@
 // The shared krew picker's base styling is for a surface bg; recolour it
 // for the viewer's dark overlay.
 .moments-viewer__visibility-panel .korner-krew-picker__option {
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   border-color: rgb(255 255 255 / 25%);
 
   &:hover:not(:disabled) {
@@ -204,7 +204,7 @@
   }
 
   &.korner-krew-picker__option--active {
-    border-color: #fff;
+    border-color: var(--semantic-text-on-accent);
     background: rgb(255 255 255 / 14%);
   }
 }
@@ -220,7 +220,7 @@
   border-radius: 50%;
   border: 0;
   background: rgb(0 0 0 / 40%);
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -305,7 +305,7 @@
 
 .moments-viewer__caption {
   padding: 6px 4px 2px;
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   font-family: var(--font-body);
   font-size: 14px;
   line-height: 1.5;
@@ -326,7 +326,7 @@
   border-radius: var(--radius-round);
   border: 1px solid rgb(255 255 255 / 22%);
   background: rgb(255 255 255 / 8%);
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   font-family: var(--font-mono);
   font-size: 11px;
   cursor: pointer;
@@ -606,7 +606,7 @@
   gap: 6px;
   padding: 16px 10px 8px;
   background: linear-gradient(to top, rgb(0 0 0 / 62%), transparent);
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   pointer-events: none;
 }
 
@@ -935,7 +935,7 @@
   top: 10px;
   z-index: 3;
   background: rgb(0 0 0 / 45%);
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   border-radius: var(--radius-round);
   font-size: 11px;
   font-weight: 600;
@@ -959,7 +959,7 @@
   border-radius: var(--radius-round);
   cursor: pointer;
   background: rgb(0 0 0 / 45%);
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   display: grid;
   place-items: center;
 
@@ -990,7 +990,7 @@
   padding: 0 4px;
   border-radius: var(--radius-round);
   background: var(--kronk-purple-bright);
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   font-size: 10px;
   font-weight: 600;
   line-height: 16px;
@@ -1009,7 +1009,7 @@
   border-radius: var(--radius-round);
   cursor: pointer;
   background: rgb(0 0 0 / 40%);
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   display: grid;
   place-items: center;
 
@@ -1051,7 +1051,7 @@
 
   &--on {
     width: 18px;
-    background: #fff;
+    background: var(--semantic-text-on-accent);
   }
 }
 
@@ -1117,7 +1117,7 @@
   border: 0;
   border-radius: var(--radius-round);
   background: rgb(0 0 0 / 60%);
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -1262,13 +1262,13 @@
 
   &--light {
     background: rgb(255 255 255 / 82%);
-    color: var(--kronk-purple-deep, #191b22) !important;
+    color: var(--kronk-purple-deep) !important;
     text-shadow: none;
   }
 
   &--accent {
     background: var(--kronk-purple-accent);
-    color: #fff !important;
+    color: var(--semantic-text-on-accent) !important;
     text-shadow: none;
   }
 }
@@ -1296,7 +1296,7 @@
   aspect-ratio: 3 / 4;
   border-radius: var(--radius-medium);
   overflow: hidden;
-  background: var(--kosmos-void, #191b22);
+  background: var(--kosmos-void);
   container-type: size;
 }
 
@@ -1372,8 +1372,8 @@
   position: fixed;
   inset: 0;
   z-index: 80;
-  background: var(--kosmos-void, #0b0b12);
-  color: #fff;
+  background: var(--kosmos-void);
+  color: var(--semantic-text-on-accent);
   display: flex;
   flex-direction: column;
   user-select: none;
@@ -1393,7 +1393,7 @@
 .moments-text-editor__done {
   height: 36px;
   padding: 0 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   border: 0;
   font-family: var(--font-mono);
   font-size: 12px;
@@ -1533,10 +1533,10 @@
   top: 50%;
   transform: translate(-50%, -50%);
   padding: 12px 22px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   border: 1px solid rgb(255 255 255 / 30%);
   background: rgb(255 255 255 / 8%);
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.06em;
@@ -1571,7 +1571,7 @@
 
 .moments-text-editor__add {
   padding: 10px 22px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   border: 0;
   background: var(--accent);
   color: var(--text-on-accent);
@@ -1593,7 +1593,7 @@
 
 .moments-text-editor__nav {
   padding: 8px 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   border: 1px solid rgb(255 255 255 / 25%);
   background: transparent;
   color: rgb(255 255 255 / 80%);
@@ -1631,10 +1631,10 @@
 .moments-text-editor__font {
   width: 34px;
   height: 34px;
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   border: 1px solid rgb(255 255 255 / 22%);
   background: transparent;
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   cursor: pointer;
   font-size: 16px;
   font-weight: 700;
@@ -1660,10 +1660,10 @@
 .moments-text-editor__backing {
   width: 34px;
   height: 34px;
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   border: 1px solid rgb(255 255 255 / 22%);
   background: transparent;
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   cursor: pointer;
   font-weight: 700;
 
@@ -1677,7 +1677,7 @@
 
   &--light {
     background: rgb(255 255 255 / 85%);
-    color: #000;
+    color: var(--kronk-purple-deep);
   }
 
   &--accent {
@@ -1706,7 +1706,7 @@
 
 .moments-text-editor__edit {
   padding: 6px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   border: 1px solid rgb(255 255 255 / 30%);
   background: transparent;
   color: rgb(255 255 255 / 85%);
@@ -1720,7 +1720,7 @@
 .moments-text-editor__delete {
   width: 34px;
   height: 34px;
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   border: 1px solid rgb(239 68 68 / 60%);
   background: transparent;
   color: rgb(239 68 68 / 95%);
