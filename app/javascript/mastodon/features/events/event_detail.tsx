@@ -5,7 +5,6 @@ import { FormattedDate, FormattedTime, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useParams, Link, useHistory } from 'react-router-dom';
 
-import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
@@ -339,13 +338,8 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
           />
         )}
 
-        <Link to='/hub/kalendar' className='event-detail__back'>
-          <Icon id='arrow_back' icon={ArrowBackIcon} />
-          <FormattedMessage
-            id='events.back'
-            defaultMessage='Back to ₭alendar'
-          />
-        </Link>
+        {/* No local ← Back to ₭alendar — the Frame's SpaceBadge in
+            the SpaceNav slot already returns to /hub/kalendar. */}
 
         <div className='event-detail__header'>
           {isLive && <div className='event-detail__live-banner'>LIVE NOW</div>}

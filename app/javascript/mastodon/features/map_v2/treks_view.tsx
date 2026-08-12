@@ -43,7 +43,6 @@ const messages = defineMessages({
     id: 'map.treks.empty_mates',
     defaultMessage: 'None of your mates have shared a trek yet.',
   },
-  back: { id: 'map.treks.back', defaultMessage: 'Back' },
   publish: { id: 'map.treks.publish', defaultMessage: 'Publish' },
   unpublish: { id: 'map.treks.unpublish', defaultMessage: 'Make private' },
   remove: { id: 'map.treks.delete', defaultMessage: 'Delete' },
@@ -161,9 +160,8 @@ const TrekRouteMap: React.FC<{ route: [number, number][] }> = ({ route }) => {
 
 const TrekDetail: React.FC<{
   trek: ApiTrekJSON;
-  onBack: () => void;
   onChange: (t: ApiTrekJSON | null) => void;
-}> = ({ trek, onBack, onChange }) => {
+}> = ({ trek, onChange }) => {
   const intl = useIntl();
 
   const [reach, setReach] = useState<TrekReach>('mates');
@@ -189,10 +187,9 @@ const TrekDetail: React.FC<{
 
   return (
     <div className='trek-detail'>
-      <button type='button' className='trek-detail__back' onClick={onBack}>
-        ← {intl.formatMessage(messages.back)}
-      </button>
-
+      {/* No local ← Back — the Frame's SpaceBadge in the SpaceNav slot
+          returns to /hub/map (the korner root). Users who want the
+          treks list specifically can rotate one face at the root. */}
       <h2 className='trek-detail__title'>
         {ACTIVITY_GLYPH[trek.activity_type]} {trek.title || trek.activity_type}
       </h2>
@@ -366,12 +363,6 @@ export const TreksView: React.FC = () => {
     };
   }, [selectedId, treks]);
 
-  const back = useCallback(() => {
-    // Return to the treks face the caller was on (default `my-treks`
-    // if we don't know — the detail URL doesn't carry the scope).
-    history.push('/hub/map/my-treks');
-  }, [history]);
-
   const onDetailChange = useCallback(
     (t: ApiTrekJSON | null) => {
       if (t === null) history.push('/hub/map/my-treks');
@@ -384,9 +375,7 @@ export const TreksView: React.FC = () => {
   // the list load completes.
   if (selectedId) {
     if (detail) {
-      return (
-        <TrekDetail trek={detail} onBack={back} onChange={onDetailChange} />
-      );
+      return <TrekDetail trek={detail} onChange={onDetailChange} />;
     }
     return (
       <div className='trek-list trek-list--loading'>
