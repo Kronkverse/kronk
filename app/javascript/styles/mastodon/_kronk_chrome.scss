@@ -155,7 +155,7 @@ body.admin {
   padding: 0;
   border: 0;
   border-radius: var(--radius-round);
-  color: #fff;
+  color: var(--semantic-text-on-accent);
   background: linear-gradient(
     135deg,
     var(--kronk-purple-accent),
@@ -220,7 +220,7 @@ body.admin {
     padding: 0 0.28rem;
     border-radius: var(--radius-round);
     background: var(--kronk-purple-bright);
-    color: #fff;
+    color: var(--semantic-text-on-accent);
     font-size: 0.62rem;
     font-weight: 700;
     line-height: 1.05rem;
@@ -333,7 +333,7 @@ body.admin {
     position: absolute;
     top: 0;
     height: 2px;
-    border-radius: 2px;
+    border-radius: var(--radius-small);
     background: var(--kronk-purple-bright);
     box-shadow:
       0 0 10px 1px var(--kronk-purple-bright),
@@ -375,7 +375,7 @@ body.admin {
     top: 0;
     height: 2px;
     width: 60px;
-    border-radius: 2px;
+    border-radius: var(--radius-small);
     background: linear-gradient(
       to right,
       transparent,
@@ -399,7 +399,7 @@ body.admin {
     align-items: center;
     justify-content: space-around;
     padding: 0.5rem 0.25rem env(safe-area-inset-bottom, 0);
-    background: #000;
+    background: rgb(0 0 0);
     border-top: 1.5px solid var(--kronk-purple-accent);
     box-shadow: 0 -6px 20px -6px rgb(0 0 0 / 55%);
 
@@ -413,11 +413,15 @@ body.admin {
       text-align: center;
       text-decoration: none;
       border-radius: var(--radius-medium);
-      color: color-mix(in oklab, #fff 75%, var(--kronk-purple-accent));
+      color: color-mix(
+        in oklab,
+        var(--semantic-text-on-accent) 75%,
+        var(--kronk-purple-accent)
+      );
 
       &--active {
         background: var(--kronk-purple-accent);
-        color: #fff;
+        color: var(--semantic-text-on-accent);
       }
     }
 
@@ -700,7 +704,7 @@ body:has(.korner-sub-bar) {
     border-radius: 50%;
     border: none;
     background: var(--kronk-purple-accent);
-    color: #fff;
+    color: var(--semantic-text-on-accent);
     font-size: 1.35rem;
     font-family: var(--font-display);
     cursor: pointer;
@@ -709,7 +713,8 @@ body:has(.korner-sub-bar) {
     box-shadow:
       0 4px 12px -2px
         color-mix(in oklab, var(--kronk-purple-accent) 65%, transparent),
-      inset 0 1px 0 color-mix(in oklab, #fff 30%, transparent);
+      inset 0 1px 0
+        color-mix(in oklab, var(--semantic-text-on-accent) 30%, transparent);
     transition:
       transform var(--dur-medium) var(--ease-spring),
       background var(--dur-medium) var(--ease-out);
@@ -845,13 +850,21 @@ body:has(.korner-sub-bar) {
         color: var(--surface-primary);
 
         .kronk-menu__item-glyph {
-          background: color-mix(in oklab, #fff 20%, transparent);
+          background: color-mix(
+            in oklab,
+            var(--semantic-text-on-accent) 20%,
+            transparent
+          );
           color: var(--surface-primary);
         }
       }
 
       .kronk-menu__item-glyph {
-        background: color-mix(in oklab, #fff 20%, transparent);
+        background: color-mix(
+          in oklab,
+          var(--semantic-text-on-accent) 20%,
+          transparent
+        );
         color: var(--surface-primary);
       }
     }
