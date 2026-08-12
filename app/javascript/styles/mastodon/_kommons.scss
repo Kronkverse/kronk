@@ -164,7 +164,7 @@
     height: 6px;
     border-radius: var(--radius-round);
     overflow: hidden;
-    background: color-mix(in srgb, #000 22%, transparent);
+    background: rgb(0 0 0 / 22%);
   }
 
   &__fill {
@@ -293,7 +293,7 @@
     border-color: var(--kronk-purple-bright);
     background: color-mix(in srgb, var(--surface-elevated) 85%, transparent);
     transform: translateY(-2px);
-    box-shadow: 0 10px 30px -12px color-mix(in srgb, #000 60%, transparent);
+    box-shadow: 0 10px 30px -12px rgb(0 0 0 / 60%);
   }
 
   &:active {
@@ -530,7 +530,7 @@
 
 .kommons-status-pill {
   display: inline-block;
-  border-radius: 20px;
+  border-radius: var(--radius-large);
   padding: 2px 10px;
   font-size: 11px;
   font-weight: 600;
@@ -558,7 +558,7 @@
 // ─── Tab banners for challenged / delivered ─────────────────────────────────────
 
 .kommons-tab-proposal__banner {
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   padding: 12px 14px;
   margin: 12px 0;
   font-size: 13px;
@@ -665,7 +665,7 @@
 .kommons-vote-bar {
   display: flex;
   height: 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-small);
   overflow: hidden;
   background: var(--border-default);
   margin: 8px 0;
@@ -893,7 +893,7 @@
   align-items: center;
   gap: 5px;
   padding: 3px 9px;
-  border-radius: 7px;
+  border-radius: var(--radius-small);
   background: var(--surface-elevated, rgba(255, 255, 255, 5%));
   border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
   color: var(--text-primary);
@@ -988,7 +988,7 @@
     max-width: 480px;
     background: var(--surface-primary);
     border: 1px solid var(--border-default);
-    border-radius: 12px;
+    border-radius: var(--radius-medium);
     padding: 24px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 30%);
   }
@@ -1012,7 +1012,7 @@
     width: 100%;
     padding: 10px 12px;
     border: 1px solid var(--border-default);
-    border-radius: 8px;
+    border-radius: var(--radius-medium);
     background: var(--surface-primary);
     color: var(--text-primary);
     font-size: 14px;
@@ -1051,7 +1051,7 @@
   &__cancel {
     padding: 9px 20px;
     border: 1px solid var(--border-default);
-    border-radius: 8px;
+    border-radius: var(--radius-medium);
     background: transparent;
     color: var(--text-secondary);
     cursor: pointer;
@@ -1072,7 +1072,7 @@
   &__submit {
     padding: 9px 20px;
     border: 1px solid color-mix(in srgb, var(--decision-block) 50%, transparent);
-    border-radius: 8px;
+    border-radius: var(--radius-medium);
     background: color-mix(in srgb, var(--decision-block) 12%, transparent);
     color: var(--decision-block);
     cursor: pointer;
@@ -1200,7 +1200,7 @@
 .kommons-challenge {
   border: 1px solid var(--border-default);
   border-left: 3px solid var(--decision-block);
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   padding: 14px 16px;
   background: color-mix(in srgb, var(--decision-block) 3%, transparent);
 }
@@ -1272,7 +1272,7 @@
 
 .kommons-condition {
   border: 1px solid var(--border-default);
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   padding: 12px;
   background: var(--surface-primary);
   transition:
@@ -1612,7 +1612,7 @@
   padding: 18px;
   background: var(--surface-primary);
   border: 1px solid var(--border-default);
-  border-radius: 12px;
+  border-radius: var(--radius-medium);
 }
 
 .kommons-composer__type-selector {
@@ -1701,7 +1701,7 @@
   padding: 9px 12px;
   background: var(--input-background-color, var(--surface-primary));
   border: 1px solid var(--border-default);
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   font-family: inherit;
   font-size: 14px;
   color: var(--text-primary);
@@ -1808,7 +1808,7 @@
 .kommons-composer__cancel {
   padding: 8px 16px;
   border: 1px solid var(--border-default);
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   background: transparent;
   color: var(--text-secondary);
   font-size: 13px;
@@ -1829,7 +1829,7 @@
 .kommons-composer__submit {
   padding: 8px 22px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   background: var(--accent);
   color: var(--text-on-accent);
   font-size: 13px;
@@ -2007,7 +2007,7 @@
 }
 
 .kommons-tab-proposal__banner {
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   padding: 12px 14px;
   margin: 0 0 20px;
   font-size: 13px;
@@ -2046,7 +2046,7 @@
 
 .kommons-vote-bar {
   height: 5px;
-  border-radius: 3px;
+  border-radius: var(--radius-small);
   background: rgba(0, 0, 0, 8%);
   overflow: hidden;
   display: flex;
@@ -2058,7 +2058,7 @@
 }
 
 .kommons-vote-bar__seg {
-  border-radius: 3px;
+  border-radius: var(--radius-small);
   transition: width 0.3s;
 
   &--agree {
@@ -2136,7 +2136,7 @@
 .kommons-vbtn {
   flex: 1;
   padding: 10px 8px;
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -2193,7 +2193,7 @@
 .kommons-statement-area {
   width: 100%;
   border: 0.5px solid var(--border-default);
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   padding: 10px 12px;
   font-size: 13px;
   font-family: inherit;
@@ -2345,7 +2345,7 @@
   margin: 0 0 12px;
   padding: 14px;
   border: 1px solid var(--border-default);
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   background: color-mix(in srgb, var(--accent) 3%, transparent);
 }
 
@@ -2546,7 +2546,7 @@
   padding: 24px;
   background: var(--surface-primary);
   border: 1px solid var(--border-default);
-  border-radius: 14px;
+  border-radius: var(--radius-large);
   margin-bottom: 20px;
   position: relative;
   display: flex;
@@ -2584,7 +2584,7 @@
   color: var(--decision-block);
   background: color-mix(in srgb, var(--decision-block) 8%, transparent);
   border: 1px solid color-mix(in srgb, var(--decision-block) 35%, transparent);
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   padding: 10px 14px;
   font-size: 13px;
   margin: 0;
@@ -2700,7 +2700,7 @@
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--border-default);
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   background: var(--input-background-color, var(--surface-primary));
   color: var(--text-primary);
   font-size: 14px;
@@ -2772,7 +2772,7 @@
 .kommons-form__remove-btn {
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-medium);
   padding: 6px;
   color: var(--text-secondary);
   cursor: pointer;
@@ -2900,7 +2900,7 @@
   gap: 6px;
   background: transparent;
   border: 2px solid transparent;
-  border-radius: 12px;
+  border-radius: var(--radius-medium);
   padding: 16px;
   cursor: pointer;
   color: var(--text-primary);
@@ -2964,7 +2964,7 @@
   gap: 10px;
   background: transparent;
   border: 2px solid var(--border-default);
-  border-radius: 12px;
+  border-radius: var(--radius-medium);
   padding: 28px 32px;
   cursor: pointer;
   color: var(--text-primary);
@@ -4009,7 +4009,7 @@
   }
 
   &__avatar img {
-    border-radius: 8px;
+    border-radius: var(--radius-medium);
     display: block;
   }
 
