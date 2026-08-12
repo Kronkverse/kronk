@@ -10,6 +10,8 @@ import {
 
 import { Link } from 'react-router-dom';
 
+import ChoiceIcon from '@/material-icons/400-24px/choice.svg?react';
+import ConstructionIcon from '@/material-icons/400-24px/construction.svg?react';
 import DoneAllIcon from '@/material-icons/400-24px/done_all.svg?react';
 import KronkCoinIcon from '@/material-icons/400-24px/kronk_coin.svg?react';
 import MailIcon from '@/material-icons/400-24px/mail-fill.svg?react';
@@ -18,7 +20,9 @@ import { markNotificationsAsRead } from 'mastodon/actions/notification_groups';
 import { Icon } from 'mastodon/components/icon';
 import type {
   NotificationGroupEmailConfirmationReminder,
+  NotificationGroupProposalChallenged,
   NotificationGroupProposalComplete,
+  NotificationGroupTaskAssigned,
 } from 'mastodon/models/notification_group';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
@@ -159,6 +163,166 @@ const EmailConfirmationReminderMessage: React.FC<
   );
 };
 
+// Shared card chrome for every system message: an icon + title that links
+// somewhere, a one-line meta state, and a timestamp. Factored out when
+// proposal_challenged and task_assigned were added rather than copying the
+// markup a third time.
+interface SystemCardProps {
+  to: string;
+  visited: boolean;
+  onClick: () => void;
+  iconId: string;
+  icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  title: string;
+  meta: React.ReactNode;
+  timestamp: string | null;
+}
+
+const SystemCard: React.FC<SystemCardProps> = ({
+  to,
+  visited,
+  onClick,
+  iconId,
+  icon,
+  title,
+  meta,
+  timestamp,
+}) => (
+  <div
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.5rem',
+      maxWidth: '32rem',
+    }}
+  >
+    <Link
+      to={to}
+      className={`notification-event-card${visited ? ' notification-event-card--visited' : ''}`}
+      onClick={onClick}
+    >
+      <div className='notification-event-card__info'>
+        <div className='notification-event-card__title'>
+          <Icon id={iconId} icon={icon} />
+          {title}
+        </div>
+        <div className='notification-event-card__meta'>{meta}</div>
+      </div>
+    </Link>
+    {timestamp && (
+      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+        <FormattedTime
+          value={timestamp}
+          timeZone={TIMEZONE}
+          hour='2-digit'
+          minute='2-digit'
+        />
+        {' · '}
+        <FormattedDate
+          value={timestamp}
+          timeZone={TIMEZONE}
+          day='numeric'
+          month='short'
+        />
+        {' AEST'}
+      </span>
+    )}
+  </div>
+);
+
+// A block vote challenged a proposal you authored. Same Proposal payload as
+// ProposalCompleteMessage but a different call to action: the proposer needs to
+// respond to the objection, not finalise the work.
+interface ProposalChallengedMessageProps {
+  group: NotificationGroupProposalChallenged;
+  visited: boolean;
+  onVisit: (proposalId: string) => void;
+}
+
+const ProposalChallengedMessage: React.FC<ProposalChallengedMessageProps> = ({
+  group,
+  visited,
+  onVisit,
+}) => {
+  const proposal = group.proposal;
+  const handleClick = useCallback(() => {
+    if (proposal) onVisit(proposal.proposal_id);
+  }, [proposal, onVisit]);
+
+  if (!proposal) return null;
+
+  return (
+    <SystemCard
+      to={`/hub/kommons/p/${proposal.proposal_id}`}
+      visited={visited}
+      onClick={handleClick}
+      iconId='choice'
+      icon={ChoiceIcon}
+      title={proposal.proposal_title}
+      timestamp={group.latest_page_notification_at}
+      meta={
+        visited ? (
+          <FormattedMessage
+            id='notification.proposal_challenged.followed_up'
+            defaultMessage='Followed up'
+          />
+        ) : (
+          <FormattedMessage
+            id='notification.proposal_challenged.blocked'
+            defaultMessage='Challenged by a block vote'
+          />
+        )
+      }
+    />
+  );
+};
+
+// A task on a proposal was assigned to you. Tasks have no route of their own,
+// so this links to the parent proposal.
+interface TaskAssignedMessageProps {
+  group: NotificationGroupTaskAssigned;
+  visited: boolean;
+  onVisit: (proposalId: string) => void;
+}
+
+const TaskAssignedMessage: React.FC<TaskAssignedMessageProps> = ({
+  group,
+  visited,
+  onVisit,
+}) => {
+  const task = group.task;
+  const handleClick = useCallback(() => {
+    if (task) onVisit(task.proposal_id);
+  }, [task, onVisit]);
+
+  if (!task) return null;
+
+  return (
+    <SystemCard
+      to={`/hub/kommons/p/${task.proposal_id}`}
+      visited={visited}
+      onClick={handleClick}
+      iconId='construction'
+      icon={ConstructionIcon}
+      title={task.task_title}
+      timestamp={group.latest_page_notification_at}
+      meta={
+        visited ? (
+          <FormattedMessage
+            id='notification.task_assigned.followed_up'
+            defaultMessage='Followed up'
+          />
+        ) : (
+          <FormattedMessage
+            id='notification.task_assigned.assigned'
+            defaultMessage='Assigned to you'
+          />
+        )
+      }
+    />
+  );
+};
+
 interface ProposalCompleteMessageProps {
   group: NotificationGroupProposalComplete;
   visited: boolean;
@@ -178,58 +342,28 @@ const ProposalCompleteMessage: React.FC<ProposalCompleteMessageProps> = ({
   if (!proposal) return null;
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.5rem',
-        maxWidth: '32rem',
-      }}
-    >
-      <Link
-        to={`/hub/kommons/p/${proposal.proposal_id}`}
-        className={`notification-event-card${visited ? ' notification-event-card--visited' : ''}`}
-        onClick={handleClick}
-      >
-        <div className='notification-event-card__info'>
-          <div className='notification-event-card__title'>
-            <Icon id='done_all' icon={DoneAllIcon} />
-            {proposal.proposal_title}
-          </div>
-          <div className='notification-event-card__meta'>
-            {visited ? (
-              <FormattedMessage
-                id='notification.proposal_complete.followed_up'
-                defaultMessage='Followed up'
-              />
-            ) : (
-              <FormattedMessage
-                id='notification.proposal_complete.ready'
-                defaultMessage='Ready to finalise'
-              />
-            )}
-          </div>
-        </div>
-      </Link>
-      {group.latest_page_notification_at && (
-        <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-          <FormattedTime
-            value={group.latest_page_notification_at}
-            timeZone={TIMEZONE}
-            hour='2-digit'
-            minute='2-digit'
+    <SystemCard
+      to={`/hub/kommons/p/${proposal.proposal_id}`}
+      visited={visited}
+      onClick={handleClick}
+      iconId='done_all'
+      icon={DoneAllIcon}
+      title={proposal.proposal_title}
+      timestamp={group.latest_page_notification_at}
+      meta={
+        visited ? (
+          <FormattedMessage
+            id='notification.proposal_complete.followed_up'
+            defaultMessage='Followed up'
           />
-          {' · '}
-          <FormattedDate
-            value={group.latest_page_notification_at}
-            timeZone={TIMEZONE}
-            day='numeric'
-            month='short'
+        ) : (
+          <FormattedMessage
+            id='notification.proposal_complete.ready'
+            defaultMessage='Ready to finalise'
           />
-          {' AEST'}
-        </span>
-      )}
-    </div>
+        )
+      }
+    />
   );
 };
 
@@ -369,24 +503,52 @@ export const KronkSystemView: React.FC = () => {
           </p>
         )}
         {sorted.map((group) => {
-          if (group.type === 'email_confirmation_reminder') {
-            return (
-              <EmailConfirmationReminderMessage
-                key={group.group_key}
-                group={group}
-              />
-            );
+          switch (group.type) {
+            case 'email_confirmation_reminder':
+              return (
+                <EmailConfirmationReminderMessage
+                  key={group.group_key}
+                  group={group}
+                />
+              );
+            case 'proposal_challenged':
+              return (
+                <ProposalChallengedMessage
+                  key={group.group_key}
+                  group={group}
+                  visited={
+                    group.proposal
+                      ? visited.has(group.proposal.proposal_id)
+                      : false
+                  }
+                  onVisit={handleVisit}
+                />
+              );
+            case 'task_assigned':
+              return (
+                <TaskAssignedMessage
+                  key={group.group_key}
+                  group={group}
+                  visited={
+                    group.task ? visited.has(group.task.proposal_id) : false
+                  }
+                  onVisit={handleVisit}
+                />
+              );
+            case 'proposal_status_changed':
+              return (
+                <ProposalCompleteMessage
+                  key={group.group_key}
+                  group={group}
+                  visited={
+                    group.proposal
+                      ? visited.has(group.proposal.proposal_id)
+                      : false
+                  }
+                  onVisit={handleVisit}
+                />
+              );
           }
-          return (
-            <ProposalCompleteMessage
-              key={group.group_key}
-              group={group}
-              visited={
-                group.proposal ? visited.has(group.proposal.proposal_id) : false
-              }
-              onVisit={handleVisit}
-            />
-          );
         })}
       </div>
 
