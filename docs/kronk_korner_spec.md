@@ -430,7 +430,7 @@ Open, plantable moves need no proposal; anything touching shared structure — s
 
 Forks that change the spine of this document:
 
-1. **Manifest enforcement.** Partially resolved: `bin/tootctl korners doctor` now validates and gates conformance (L1/L3/L4/L5/L10) for `enforced` korners, so uniformity is machine-checked. The remaining fork is whether the platform should _hard-refuse to mount_ a space with no valid manifest, or keep the doctor as a boot/CI gate followed by discipline.
+1. **Manifest enforcement.** Partially resolved: `bin/tootctl korners doctor` now validates and gates conformance (L1/L5/L7/L10 in `detect_conformance_issues`, L3/L4 in `detect_feed_card_issues`, L6 in `detect_node_issues` + orphan-listens, L2 via the drift check, and L11 Frame-parasite as a warning) for `enforced` korners, so uniformity is machine-checked. The remaining fork is whether the platform should _hard-refuse to mount_ a space with no valid manifest, or keep the doctor as a boot/CI gate followed by discipline.
 2. **App `render_target` default** (§9.1). Native-per-space vs hosted-shell vs hybrid. Recommended: hybrid, leaning hosted. Also sets the cost of iOS.
 3. **Subscription default posture** (§8.6). Platform-wide, do new spaces default opt-in (off) or opt-out (on)? Per-space override via `subscription.default` is assumed either way. Recommended: opt-in.
 

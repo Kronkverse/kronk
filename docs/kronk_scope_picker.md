@@ -1,6 +1,19 @@
 # Kronk Scope Picker — the standard "who's this for / who can add?" primitive
 
-Status: DRAFT (2026-08-05). Design doc; nothing shipped yet.
+Status: DRAFT (2026-08-05). Design doc; nothing shipped under this name.
+
+> **Premise partly superseded (2026-08-12).** This draft models krew as one
+> value in a single-select visibility list.
+> Since it was written, the platform decided and shipped the
+> opposite: **krew is an orthogonal, additive axis**, never a `visibility`
+> value — see [Feed & Reach §2.2](kronk_feed_and_reach.md) and
+> [`rebuild/krew_axis_migration.md`](rebuild/krew_axis_migration.md). The
+> two-axis split this doc argues for therefore _happened_, but by a different
+> route, and the enum tables below (§ visibility options, § contribution
+> options, the `krewIds?` shape, the `album_krews` sketch) no longer match the
+> code. Albutts' `ScopePicker` shipped in #1343 as an additive
+> audience + contribution roster. Read this for the vocabulary argument, not
+> for the data model.
 
 ## Why this doc exists
 

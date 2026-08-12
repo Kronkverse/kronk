@@ -72,8 +72,10 @@ One scale, widest to tightest:
 
 > **Implemented (2026-07-25; Just-me semantics tightened 2026-07-29).**
 > The reach tiers are Status visibility values: `mates` (6),
-> `orbit` (7), `self_only` (8) — added alongside `krew` (5) in
-> `Status::Visibility`, all local-only. `Kronk` maps to the existing
+> `orbit` (7), `self_only` (8) in `Status::Visibility`, all local-only.
+> (`krew` held slot 5 until 2026-08-11, when it stopped being a
+> visibility value at all — see §2.2. The slot is left empty rather
+> than renumbered, because renumbering rewrites every row.) `Kronk` maps to the existing
 > `public` visibility. Read enforcement lives in `StatusPolicy#show?`
 > and `AccountStatusesFilter#permitted_visibilities`; write fan-out
 > in `FanOutOnWriteService` (`mates`/`orbit` → Mates' home feeds;
@@ -95,9 +97,20 @@ The same scale is used for **two things**:
 
 **Krew is not on the distance scale.** It is a _group target_: you post **into** a chosen Krew,
 and **its members see the post regardless of whether they are your Mates** (Krew membership is
-independent of the Mates graph). A post's audience is therefore either **a distance tier**
-(Mates/Orbit/Kronk) **or** **one or more Krews** (when the surface allows it — §2.4). Krew rides
-the existing `statuses_krews` scoping primitive.
+independent of the Mates graph). Krew rides the existing `statuses_krews` scoping primitive.
+
+> **Krew is an orthogonal, additive axis (implemented 2026-08-10/11).** A post
+> carries **exactly one** reach tier **and**, independently, **any set of
+> krews** — the two are not alternatives. A post's audience is
+> _reach-tier audience_ **∪** _members of the krews it targets_, so
+> "Mates **and** Krew X" is expressible. `krew` is therefore **not** a
+> `visibility` value on any model (Status, Moment, Album). The shared rule
+> lives once in `app/models/concerns/reachable.rb`; read enforcement is
+> `StatusPolicy#show?`, write fan-out is `FanOutOnWriteService`. Rows that
+> were `visibility = krew` migrated to `self_only` **keeping their krew
+> link**, which preserves their audience exactly. Full history and staging:
+> [`rebuild/krew_axis_migration.md`](rebuild/krew_axis_migration.md);
+> decision: [`rebuild/decisions.md`](rebuild/decisions.md) 2026-08-09.
 
 ### 2.3 Per-user feed settings
 
@@ -113,21 +126,40 @@ Two controls live in **feed settings**:
 > stored values migrate on next write. The picker lives on `/home/settings`; the Home
 > column reads the setting once on mount and renders one feed accordingly (alpha.332
 > retreated the inline chip row from the Home column — it lived under the ColumnHeader
-> briefly in alpha.330–.331 and was rolled back). The picker is still **display-only**
-> for Mates vs Orbit — both drive the mastodon home timeline — until
-> `Kronk::FeatureFlags.feed_scope_enforced` lands; Kommunity drives the local timeline.
+> briefly in alpha.330–.331 and was rolled back); Kommunity drives the local timeline.
 > Krew as a feed target on the Home column is not currently wired. Standard-post-reach
 > as a second job on this setting remains open.
+>
+> **Update (2026-08-12) — the tiers are enforced on shadow.**
+> `Kronk::FeatureFlags.feed_scope_enforced` has landed, and
+> `Api::V1::Timelines::HomeController` narrows the feed through
+> `Kronk::AudienceScope` when it is on. In `config/feature_flags.yaml` the flag
+> is `false` under `default:` but **`true` under `production:`** — and shadow
+> runs `RAILS_ENV=production` off `rebuild/2.0.0`, so on **shadow** Mates vs
+> Orbit are genuinely narrowed and the picker is no longer display-only. Real
+> production deploys from `main`, which does not carry that block, so the tiers
+> remain unenforced there.
 
 ### 2.4 Korner-card reach
 
 - Each korner declares a **default reach** in its manifest — this is the **ceiling** (maximum
   radiation) for that korner's cards. e.g. Kommons / Kuestions / mARTketplace → **Kronk**; more
   personal korners → **Mates**.
-- The author may **narrow** a card's reach per post (Kronk → Orbit → Mates → a Krew) but **may
-  not widen** beyond the korner's declared default. The default is the ceiling.
-- **Krew-targeting** is a **per-korner manifest flag** (`krew_targetable`). When on, the author
-  may post the card into a specific Krew (subject to the narrow-not-widen rule).
+- The author may **narrow** a card's reach per post (Kronk → Orbit → Mates → Just me) but **may
+  not widen** beyond the korner's declared default. The default is the ceiling. Krew is **not**
+  a rung on that ladder — it is the separate additive axis of §2.2, so targeting a krew neither
+  narrows nor widens the tier.
+- **Krew-targeting** is available wherever the composer offers the krew submenu; today that is the
+  main composer, Moments (single-krew) and Albutts. It is additive, so the narrow-not-widen rule
+  applies to the tier only.
+
+> **Not built (as of 2026-08-12).** This section is design intent, not shipped
+> behaviour: no korner manifest declares a default reach (there is no
+> `default_reach`/`reach:` key in `config/korners/*.yaml`), the ceiling is not
+> enforced anywhere, and the `krew_targetable` flag named in earlier drafts of
+> this section **does not exist in the codebase** — krew-targeting is decided
+> per composer in the frontend instead. Treat the ceiling rule as unimplemented
+> until a manifest key and a check exist.
 
 ---
 

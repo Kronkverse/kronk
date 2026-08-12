@@ -66,7 +66,7 @@ A korner's `lifecycle` (in its node) and its manifest `enforced` flag are **prom
 
 ### L6 — Skeleton & nodes
 
-- ⚙︎ `nodes:` block: valid `bucket` (`feed|profile|hub|nudges`), `parent` is a registered slug, `lifecycle` set.
+- ⚙︎ `nodes:` block: valid `bucket` (`feed|profile|hub|nudges|settings|kronk` — `Kronk::NodeRegistry::BUCKETS`), `parent` is a registered slug, `lifecycle` set. A node with an unknown bucket is dropped from the registry with a logged warning, so it is invisible to the L6 checks below — the log is where it surfaces.
 - ⚙︎ Each node's `route_name` resolves to a Rails named route **or** `spa: true`. _(Audit: `feed.nudges` failed this — fixed in #335.)_
 - ⚙︎ No node-id collisions (across korners + `kronk_nodes.yaml`); all link targets (`settings_for`, `listens`, `projects_to`, …) resolve.
 
@@ -185,7 +185,7 @@ Everything marked ⚙︎ above is **machine-checkable**, and the extended `korne
 | Check                                                                                                                                   | Layer | Catches                                                             |
 | --------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------- |
 | slug is a word · == filename · unique                                                                                                   | L1    | `in-flow`                                                           |
-| icon wired in `useKornerIcon`, matches manifest                                                                                         | L1    | huddle/nudges cross-wiring                                          |
+| icon wired in `useKornerIcon`, matches manifest ⚠︎ **check is mis-implemented — see caveat below**                                     | L1    | huddle/nudges cross-wiring                                          |
 | `db_namespace` prefix has matching tables · `Status` association exists                                                                 | L2    | namespace/association drift                                         |
 | serializer exposes projection attr                                                                                                      | L3    | Wachuneed/In Flow non-functional projection                         |
 | card component exists **and** is registered                                                                                             | L4    | groups/in_flow phantom cards                                        |
@@ -195,6 +195,19 @@ Everything marked ⚙︎ above is **machine-checkable**, and the extended `korne
 | every declared `notifications.types` entry is a registered type; `subject_type` resolves                                                | L10   | Kommons' five declared, zero built                                  |
 | Frame parasites — `<h1>`, `role='tablist'` when manifest has `views:`, inlined tagline copy in the mounted feature file                 | L11   | Klot pre-alpha.225 doubled hero + tab row (**warning**, not gating) |
 | Settings page reaches Frame chrome — `/hub/<slug>/settings` mounted, renders `<Stage>` + `.space-header`, SettingsBadge covers back-nav | L12   | route-ordering swallowed `/hub/klot/settings` (fixed alpha.254)     |
+
+**L1 caveat — the icon check looks for the wrong key (found 2026-08-12, not yet fixed).** The
+layer as written above (§L1) is correct: a manifest's `icon:` must map to a component in
+`hooks/useKornerIcon.tsx`. The _check_ doesn't test that. It greps the file for the korner's
+**slug** as a key — `no '<slug>' key in SLUG_TO_ICON` — but there is no `SLUG_TO_ICON` map in that
+file: the map is **`MATERIAL_TO_ICON`, keyed by Material Symbols name** (the manifest's
+`icon.material` value), not by slug. So the check fails for **every non-core enforced korner**
+(all 13: albutts, booth, huddle, inflow, kalendar, klot, kommons, kommunity, krew, kuestions, map,
+martketplace, moments) regardless of whether the icon is wired correctly, and it would never catch
+the cross-wiring it claims to. It has gone unnoticed because **`korners doctor` is not run in
+CI** — no workflow in `.github/workflows/` invokes it, so "the doctor is green" is not currently
+enforced anywhere. Fixing it means resolving the manifest's `icon.material` value and checking
+_that_ against `MATERIAL_TO_ICON`'s keys.
 
 **L2 caveat — the gate is narrower than the layer.** `detect_drift` only checks that some table matches the manifest's `db_namespace` prefix and that any declared `Status` association exists. It does **not** verify a real model + table + `schema.rb` entry _per resource_ (the full L2 definition in §2). So a korner can declare three resources, ship one namespaced table, and pass L2. The per-resource model/table/schema checks remain human sign-off until the drift check is deepened.
 
