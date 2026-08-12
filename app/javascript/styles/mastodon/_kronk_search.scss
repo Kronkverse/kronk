@@ -35,7 +35,7 @@
   width: 100%;
   padding: 10px 12px 10px 40px;
   background: var(--surface-input, rgba(255, 255, 255, 4%));
-  color: var(--text-primary, #fff);
+  color: var(--semantic-text-primary);
   border: 1px solid var(--surface-border, rgba(255, 255, 255, 12%));
   border-radius: var(--radius-sm, 6px);
   font-size: 15px;
@@ -53,7 +53,7 @@
 .kronk-search__submit {
   padding: 10px 16px;
   background: var(--accent);
-  color: var(--on-accent, #fff);
+  color: var(--semantic-text-on-accent);
   border: 0;
   border-radius: var(--radius-sm, 6px);
   font-weight: 600;
@@ -73,7 +73,7 @@
   padding: 4px 10px;
   background: var(--surface-hover, rgba(255, 255, 255, 4%));
   border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
-  border-radius: 999px;
+  border-radius: var(--radius-round);
   font-size: 13px;
 }
 
@@ -106,7 +106,7 @@
 }
 
 .kronk-search__error {
-  color: var(--danger, #e57373);
+  color: var(--semantic-warning-red);
 }
 
 // ── Recent list ────────────────────────────────────────────────────
@@ -161,7 +161,7 @@
   background: transparent;
   border: 0;
   padding: 8px 10px;
-  color: var(--text-primary, #fff);
+  color: var(--semantic-text-primary);
   cursor: pointer;
   border-radius: var(--radius-sm, 4px);
   font-size: 14px;
@@ -181,7 +181,7 @@
   line-height: 1;
 
   &:hover {
-    color: var(--danger, #e57373);
+    color: var(--semantic-warning-red);
   }
 }
 
@@ -227,7 +227,7 @@
   gap: 8px;
 
   strong {
-    color: var(--text-primary, #fff);
+    color: var(--semantic-text-primary);
   }
 }
 
@@ -243,7 +243,7 @@
 
 .kronk-search__status-body {
   margin: 4px 0 0;
-  color: var(--text-primary, #fff);
+  color: var(--semantic-text-primary);
   font-size: 14px;
   line-height: 1.4;
 }
