@@ -292,5 +292,29 @@ RSpec.describe Mastodon::CLI::Korners do
       JSX
       expect(warnings_for(source)).to be_empty
     end
+
+    # The block-comment case above was covered from the start; a TRAILING line
+    # comment was not, and used to survive `strip_jsx_comments` (which only
+    # matched `^\s*//`). So the check fired on a developer's own note about
+    # what they had removed.
+    it 'does not flag a violation quoted in a trailing line comment' do
+      source = <<~JSX
+        import { ComposeShell } from 'mastodon/components/compose_shell';
+        export const Composer = () => (<ComposeShell />); // was createPortal + openModal + <ComposeFab />
+      JSX
+      expect(warnings_for(source)).to be_empty
+    end
+
+    # Guards the guard: stripping line comments must not eat the rest of a
+    # line after a URL in a string, or a real violation sitting after one
+    # would go unreported — a false negative, which is the worse failure.
+    it 'still flags a violation that follows a URL on the same line' do
+      source = <<~JSX
+        import { ComposeShell } from 'mastodon/components/compose_shell';
+        import { ComposeFab } from 'mastodon/components/compose_fab';
+        export const Composer = () => (<><a href='https://kronk.info/help' /><ComposeFab /><ComposeShell /></>);
+      JSX
+      expect(warnings_for(source)).to include(a_string_matching(/local <ComposeFab>/))
+    end
   end
 end
