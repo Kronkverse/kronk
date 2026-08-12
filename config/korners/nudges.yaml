@@ -128,6 +128,28 @@ listens:
     source_type: BoothSet
     source_id_key: booth_set_id
     interaction: passive
+  # Mate requests are Tier-1 DIRECTED (docs/kronk_nudges.md § Relevance
+  # engine): the pair are by definition not Mates yet, so the Mate gate
+  # would drop them as `:non_mate_dropped`. `directed: true` bypasses it.
+  # These were hand-wired subscribers below until the bus loop learned to
+  # forward `directed:`; routing them through EventRouter like every other
+  # listen also gains the self-nudge guard for free. The conversation is
+  # created on demand by EventRouter#ensure_conversation, which calls the
+  # same `Nudges::Conversation.mate_between!` the hand-wired code did.
+  - event: mates.request.sent
+    source_korner: mates
+    verb: mate_requested
+    directed: true
+    interaction: interactive
+    cta_label: 'Respond'
+    cta_route: '/mate_requests'
+  - event: mates.request.accepted
+    source_korner: mates
+    verb: mate_accepted
+    directed: true
+    interaction: interactive
+    cta_label: 'Say hi'
+    cta_route: '/nudges/{actor_account_id}'
   # groups.member.joined is NOT here — routes into the Krew conversation
   # directly (no Mates gate) and stays hand-wired in
   # config/initializers/nudges_event_bus.rb.
