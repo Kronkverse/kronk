@@ -70,7 +70,11 @@ settings:
 
 compose:
   label: 'Upload a set'
-  route: '/hub/booth/new'
+  # The Ж bubble opens the shared `<ComposeShell>` overlay on top of
+  # the Booth landing (docs/rebuild/decisions.md 2026-08-12).
+  # `/hub/booth/new` still resolves to the same overlay as a legacy
+  # alias so pre-shell bookmarks + Ж-menu targets keep working.
+  route: '/hub/booth/composer'
 
 # SpaceNav view switcher (first entry = default, bare /hub/booth).
 # Only the surfaces that actually render live here — Events, Live and
