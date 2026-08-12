@@ -109,9 +109,24 @@ _(Appended after L9 to avoid renumbering existing references. Layer order is not
 
 A korner that generates activity a user would want to know about declares it, and the framework delivers it. The failure this closes: Kommons declares five notification types in its manifest and **none of them exist** — no type registration, no worker, no service. The manifest described a subsystem nobody built, and nothing caught it.
 
-- ⚙︎ Every entry in the manifest's `notifications.types` has a matching registered type. A declared type with no registration is the notification equivalent of a dead `/hub/<slug>` mount.
-- ⚙︎ Each declared type names a real `subject_type` resolving to a model the korner owns.
-- ⚙︎ Types are registered as **native** (non-legacy) entries in `Notification::PROPERTIES`. Kronk-native types already exist there (`nudge`); korner types join them rather than extending the 15 legacy Mastodon types, which are on a retirement path.
+- ⚙︎ Every entry in the manifest's `notifications.types` is **deliverable by some mechanism**, or honestly marked as not built. A declared notification nothing can deliver is the notification equivalent of a dead `/hub/<slug>` mount. Each entry says which:
+  - **`delivery: notification`** (the default) — a registered **native** (non-legacy) type in `Notification::PROPERTIES`. Kronk-native types already exist there (`nudge`); korner types join them rather than extending the 15 legacy Mastodon types, which are on a retirement path.
+  - **`delivery: nudge` + `event: <name>`** — routed on the Nudges bus (`Kronk::KornerEvents` → the nudges manifest's `listens:` → `Nudges::EventRouter`). The doctor requires the named event to be **both published and consumed**, so "fires into the void" is still caught. This is the path new korner activity should take.
+  - **`planned: true`** — declared so the korner's settings UI can already offer the push toggle, but nothing delivers it yet. A **warning**, never gating — the same treatment L4 gives a `planned` feed card.
+- ⚙︎ Each declared type names a real `subject_type` resolving to a model the korner owns (checked for `delivery: notification` entries).
+
+> **Why `notifications.types` is not itself legacy.** `docs/kronk_nudges.md`
+> § _Self-delivering delivery_ made the Mastodon `Notification` store
+> legacy-only, so it would be easy to read this block as retiring with it. It is
+> not: it also drives the **per-korner push toggles**
+> (`Api::V1::KornersController` → `push_preferences` / `notifications_schema`)
+> and the **aggregation windows** read by `Nudges::Aggregator.window_for`, which
+> matches entries by `name`. The block declares _what a korner can notify you
+> about_; `delivery:` says what carries it. Removing an entry removes a user's
+> push toggle and, where declared, its aggregation window — see
+> `albutts.album_new_photo`, whose 15-minute window is live config for a
+> bus-delivered notification.
+
 - ◇ Every state transition a user is waiting on fires a notification. If a korner asks someone to act — confirm, respond, close — the ask is delivered, not left to be discovered on a return visit.
 - ◇ `default_push` is honest: on for things a user is being asked to act on, off for things that merely happened. Noisy defaults train people to switch the korner off.
 

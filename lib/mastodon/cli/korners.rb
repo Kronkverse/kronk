@@ -143,6 +143,7 @@ module Mastodon
 
           detect_conformance_issues(manifest).each { |line| issues << "#{manifest.slug}: #{line}" }
           detect_frame_parasites(manifest).each { |line| warnings << "#{manifest.slug}: #{line}" }
+          detect_planned_notification_warnings(manifest).each { |line| warnings << "#{manifest.slug}: #{line}" }
 
           card_issues, card_warnings = detect_feed_card_issues(manifest)
           card_issues.each { |line| issues << "#{manifest.slug}: #{line}" }
@@ -271,27 +272,65 @@ module Mastodon
           end
         end
 
-        # L10 — every notification type the manifest declares is actually a
-        # registered `Notification` type, and its subject resolves to a model.
-        # This is the check the doctor historically lacked: a korner could
-        # declare a whole notification subsystem (Kommons declared five) of
-        # which only some — or none — were ever built, and nothing caught it.
-        # A declared-but-unregistered type never fires, so the manifest is
-        # promising a surface that does not exist.
+        # L10 — every notification a manifest declares must be DELIVERABLE by
+        # some mechanism, or be honestly marked as not built yet.
+        #
+        # The original rule asserted "declared ⇒ registered in
+        # Notification::PROPERTIES". That was right when the Mastodon
+        # notification store was the only delivery path, and is wrong now:
+        # `docs/kronk_nudges.md` § _Self-delivering delivery_ made that store
+        # legacy-only, and korner activity is migrating to the Nudges event bus
+        # (`Kronk::KornerEvents` → the nudges manifest's `listens:` →
+        # `Nudges::EventRouter`). Under the old rule a notification correctly
+        # delivered by the bus was reported as broken, while the check pointed
+        # authors at the mechanism being retired.
+        #
+        # Note the field itself is NOT legacy: it also drives the per-korner
+        # push toggles in `Api::V1::KornersController` (`push_preferences` /
+        # `notifications_schema`) and the aggregation windows read by
+        # `Nudges::Aggregator.window_for`. It declares "what this korner can
+        # notify you about", independent of what delivers it. So each entry
+        # says how it is delivered:
+        #
+        #   delivery: notification  (default) — a registered Notification type
+        #   delivery: nudge + event: <name>   — routed on the bus; the event
+        #                                       must be both published and
+        #                                       consumed, so "fires into the
+        #                                       void" is still caught
+        #   planned: true                     — declared, not built; a WARNING,
+        #                                       mirroring L4's `planned` cards
         Array(manifest.notifications).each do |entry|
           type_name = entry.is_a?(Hash) ? entry['name'] : entry
           next if type_name.blank?
 
-          unless ::Notification::TYPES.include?(type_name.to_sym)
-            issues << "L10 notification type '#{type_name}' is not registered in Notification::PROPERTIES (declared but never built — it can never fire)"
-            next
+          hash = entry.is_a?(Hash) ? entry : {}
+
+          # `planned` is surfaced as a warning by
+          # #detect_planned_notification_warnings, not gated here.
+          next if hash['planned']
+
+          case hash['delivery'].to_s
+          when 'nudge'
+            event = hash['event'].to_s
+            if event.blank?
+              issues << "L10 notification type '#{type_name}' declares `delivery: nudge` but no `event:` — name the Kronk::KornerEvents event that carries it"
+            elsif !bus_event_published?(event)
+              issues << "L10 notification type '#{type_name}' names bus event '#{event}', which nothing publishes"
+            elsif !bus_event_consumed?(event)
+              issues << "L10 notification type '#{type_name}' names bus event '#{event}', which is published but nothing consumes — it fires into the void"
+            end
+          else
+            unless ::Notification::TYPES.include?(type_name.to_sym)
+              issues << "L10 notification type '#{type_name}' is not registered in Notification::PROPERTIES (declared but never built — it can never fire). If the Nudges bus delivers it, declare `delivery: nudge` + `event:`; if it is not built yet, `planned: true`"
+              next
+            end
+
+            subject_type = hash['subject_type']
+            next if subject_type.blank?
+
+            model = subject_type.to_s.camelize.safe_constantize
+            issues << "L10 notification type '#{type_name}' subject_type '#{subject_type}' resolves to no model" unless model.is_a?(Class) && model < ActiveRecord::Base
           end
-
-          subject_type = entry['subject_type'] if entry.is_a?(Hash)
-          next if subject_type.blank?
-
-          model = subject_type.to_s.camelize.safe_constantize
-          issues << "L10 notification type '#{type_name}' subject_type '#{subject_type}' resolves to no model" unless model.is_a?(Class) && model < ActiveRecord::Base
         end
 
         issues
@@ -325,6 +364,61 @@ module Mastodon
         return [] unless file
 
         frame_parasite_warnings(manifest, File.read(file), rel_path)
+      end
+
+      # L10 `planned:` notifications — declared so the korner's settings UI can
+      # already offer the push toggle, but nothing delivers them yet. Reported
+      # as warnings (never gating), the same treatment L4 gives a `planned`
+      # feed card: an honest promise is tracked, a silent one is not.
+      def detect_planned_notification_warnings(manifest)
+        Array(manifest.notifications).filter_map do |entry|
+          next unless entry.is_a?(Hash) && entry['planned']
+
+          name = entry['name']
+          next if name.blank?
+
+          "L10 notification '#{name}' declared planned — no delivery built yet"
+        end
+      end
+
+      # Is this Kronk::KornerEvents event published anywhere? Matches the
+      # quoted event name near a `publish(` call; the name is sometimes on the
+      # line after the call, so this scans a small window rather than one line.
+      def bus_event_published?(event)
+        bus_source.scan(/KornerEvents\.publish\(\s*['"]([a-z0-9_]+(?:\.[a-z0-9_]+)+)['"]/).flatten.include?(event)
+      end
+
+      # Is it consumed? Either declared in the nudges manifest's `listens:`
+      # block, or hand-wired via an explicit subscribe. An event that is
+      # published but consumed by nobody is the failure this catches.
+      def bus_event_consumed?(event)
+        return true if Array(Kronk::KornerRegistry.find('nudges')&.listens).any? { |e| e.is_a?(Hash) && e['event'].to_s == event }
+
+        bus_source.include?("subscribe('#{event}'") || bus_source.include?("subscribe(\"#{event}\"")
+      end
+
+      # Ruby sources that can publish or subscribe to bus events, concatenated
+      # once. Models/services publish; initializers subscribe.
+      #
+      # Whole-line `#` comments are stripped first, or the scans match
+      # DOCUMENTATION rather than code: `lib/kronk/korner_events.rb` carries a
+      # usage example reading `KornerEvents.subscribe('huddle.started')`, which
+      # made `huddle.started` look consumed when in fact nothing consumes it.
+      # That is the same failure as the korner icon check and the file-input
+      # guard — a check tripping over prose about the thing instead of the thing
+      # — and it surfaced only because the spec insisted this branch be shown
+      # going red (decisions.md 2026-08-12, decision 2).
+      #
+      # Only whole-line comments are removed. A trailing `# …` after real code
+      # is left alone: `#` also opens string interpolation, and stripping from
+      # it would corrupt live source. A documented example sits on its own
+      # line, so whole-line stripping is sufficient here.
+      def bus_source
+        @bus_source ||= Rails.root.glob('{app,lib,config/initializers}/**/*.rb').sum('') do |f|
+          File.read(f).gsub(/^[ \t]*#.*$/, '')
+        rescue
+          ''
+        end
       end
 
       # The pattern-matching body of L11, separated from I/O so it can

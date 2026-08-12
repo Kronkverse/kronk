@@ -63,11 +63,20 @@ feed_projection:
 notifications:
   types:
     - name: contribution_rights_granted
+      planned: true # no producer yet — L10 tracks this as a warning
       subject_type: album
       default_push: false # one-off; not push-worthy
       aggregation: none
       interactive: false # notice
+    # Delivered on the Nudges bus, not the legacy Notification store: the
+    # `albutts.album.new_photo` event is published by AlbumPhoto and fanned to
+    # every fellow contributor by the hand-wired subscriber in
+    # config/initializers/nudges_event_bus.rb. The `aggregation` window below
+    # is live config — Nudges::Aggregator.window_for reads it by this `name`,
+    # so do not remove it.
     - name: album_new_photo
+      delivery: nudge
+      event: albutts.album.new_photo
       subject_type: album
       default_push: false # bursty on events; off by default
       aggregation: { window: 15m, key: album_id }
