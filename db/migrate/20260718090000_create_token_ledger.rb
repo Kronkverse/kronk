@@ -67,8 +67,7 @@ class CreateTokenLedger < ActiveRecord::Migration[8.0]
   def grant_starting_balances!
     now = Time.now.utc
 
-    Account.reset_column_information
-    Account.where(domain: nil).where.not(username: 'mastodon.internal').in_batches(of: 1_000) do |batch|
+    accounts.where(domain: nil).where.not(username: 'mastodon.internal').in_batches(of: 1_000) do |batch|
       ids = batch.pluck(:id)
       next if ids.empty?
 
@@ -83,7 +82,26 @@ class CreateTokenLedger < ActiveRecord::Migration[8.0]
   def execute_insert(table, rows)
     return if rows.empty?
 
-    model = Class.new(ActiveRecord::Base) { self.table_name = table.to_s }
-    model.insert_all(rows)
+    execute_insert_model(table).insert_all(rows)
+  end
+
+  # Deliberately NOT the application `Account` model. A migration must not
+  # depend on the current model class: `Account` declares
+  # `enum :kommunity_discoverability`, whose backing column is added by a
+  # LATER migration, so touching `Account` at this point in history raises
+  #
+  #   Undeclared attribute type for enum 'kommunity_discoverability' in Account
+  #
+  # and kills a from-scratch `db:migrate` here — the failure behind
+  # `Historical data migration test` on every PR. A bare AR class bound to the
+  # table sees only the columns as they exist at this migration, so it can
+  # never be broken by a future model declaration. Same pattern as
+  # #execute_insert_model.
+  def accounts
+    @accounts ||= execute_insert_model(:accounts)
+  end
+
+  def execute_insert_model(table)
+    Class.new(ActiveRecord::Base) { self.table_name = table.to_s }
   end
 end
