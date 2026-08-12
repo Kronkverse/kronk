@@ -211,12 +211,14 @@ and rejected as unnecessary vocabulary.
 Matching what shipped in `hub_switcher.tsx` — Me / Home / Nudges, with Hub on
 the korner rail.
 
-**Consequence, not yet applied:** `Kronk::NodeRegistry::BUCKETS` accepts only
-`feed|profile|hub`, and `build_node` returns `nil` for anything else — so a
-node declaring `bucket: nudges` is _silently dropped_, with no error, and the
-doctor cannot report it because the node never enters the registry.
-`docs/korners/korner_standard.md` Layer 6 (§L6) already documents four
-buckets including `nudges`; the standard is right and the code is behind.
+**Consequence, applied.** `Kronk::NodeRegistry::BUCKETS` is now
+`feed|profile|hub|nudges|settings|kronk` — `nudges` is accepted, and the
+`settings` and `kronk` namespaces became buckets too. `build_node` still
+returns `nil` for an unknown bucket, but no longer silently: it logs
+`Kronk::NodeRegistry: dropped <source> node '<id>' — <reason>` naming the
+offending value, so a bad bucket is visible even though the node never enters
+the registry (the doctor's L6 checks read the registry, so they can only see
+nodes that survive validation).
 
 ### The Skeleton is plumbing, not only a map
 

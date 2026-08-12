@@ -1,11 +1,26 @@
 # Wachuneed (`wachuneed`)
 
-**Manifest:** `config/korners/wachuneed.yaml` · **Mount:** `/hub/wachuneed` · **Status:** in-flight (Phase 10.3) — scaffolding shipped, UI + flow work pending
+**Manifest:** `config/korners/martketplace.yaml` (`slug: martketplace`) · **Mount:** `/hub/martketplace` · **Status:** in-flight (Phase 10.3) — scaffolding shipped, UI + flow work pending
 
-> Slug history: renamed from `marketplace` on 2026-07-21. The middle
-> category also renamed from `marketplace` → `goods` so the trio
-> (creations / goods / services) no longer collides with the old korner
-> name.
+> **Slug history — the rename is only half-done (verified 2026-08-12).** The
+> display name became "Wachuneed" and the middle category renamed
+> `marketplace` → `goods` (so the trio creations / goods / services no longer
+> collides with the old korner name). But **the slug itself was never renamed**:
+> the manifest is still `config/korners/martketplace.yaml` with
+> `slug: martketplace` (the original typo), the canonical mount is
+> `/hub/martketplace`, and `/hub/wachuneed` is a **301 redirect _to_ it**
+> (`config/routes.rb`), not the other way round. The code is split down the
+> middle — `wachuneed` in the newer user-facing layer
+> (`_wachuneed.scss`, `status_wachuneed_card.tsx`,
+> `REST::WachuneedListingSummarySerializer`, `wachuneed_view.tsx`) and
+> `martketplace` in the structural layer (manifest + slug, `features/martketplace/`,
+> `Api::V1::Martketplace::ListingsController`, routes, mount).
+>
+> Renaming the slug for real means the manifest file + `slug:`, the L1 icon key
+> in `useKornerIcon`, the L5 mount in `features/ui/index.jsx`, the feature dir,
+> the controller namespace, the routes (inverting the redirect), and
+> `reserved_slugs.yaml` — a single coordinated PR, since Standard L1 requires
+> slug and filename to match and L5 requires the mount to resolve.
 
 ## Purpose
 

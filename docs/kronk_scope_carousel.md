@@ -5,6 +5,15 @@ _How we'd build the "rotating stand" selector for **what you see** and **who see
 > **Status:** delivery investigation — not yet built. The visual design is being
 > prototyped separately ("The Prism"). Related: [Scope Picker](kronk_scope_picker.md),
 > [Feed & Reach](kronk_feed_and_reach.md).
+>
+> **Fragmentation partly fixed since this was written (2026-08-12).** The
+> "who-can-see" row below counts krew as one option among the reach tiers and
+> the composers as four separate UIs. Both have moved: **krew is now an
+> orthogonal additive axis**, not a reach option
+> ([Feed & Reach §2.2](kronk_feed_and_reach.md)), and the main composer,
+> Moments and Albutts were unified onto the shared `reach_dropdown.tsx`
+> (with a `krewSingleSelect` mode) in #1331/#1332/#1343. The carousel's case
+> still stands, but the "before" picture it argues against is out of date.
 
 ## The one-line answer
 

@@ -4,10 +4,11 @@
 — Moments, Album, and Status models; every composer (main, Moments, Albutts)
 and the Moments edit path; and the shared `ReachValue`/`StatusVisibility` types
 no longer carry `krew`. Albutts contribution became additive too (people ∪
-krews). The final cleanup is in review (#1347). Last updated 2026-08-11.
+krews). The final cleanup (#1347) merged 2026-08-11 — every stage has landed.
+Last updated 2026-08-12.
 
-This is a living tracker for an in-progress, multi-stage change to core
-visibility. The decision itself lives in [`decisions.md`](./decisions.md)
+This is the closed record of a multi-stage change to core visibility. The
+decision itself lives in [`decisions.md`](./decisions.md)
 (2026-08-09 "Krew is an orthogonal axis"); this document is the _how_ and the
 _where we are_.
 
@@ -93,18 +94,18 @@ their own dialect. A later unification is possible but not attempted here.
 
 ## Progress
 
-| Stage | What                                                                   | PR    | State        |
-| ----- | ---------------------------------------------------------------------- | ----- | ------------ |
-| 1/4   | **Moments** — krew orthogonal, migration, accept-both                  | #1312 | ✅ merged    |
-| —     | **Extract `Reachable`** + Moment adopts it                             | #1316 | ✅ merged    |
-| 2/4   | **Album** — adopts `Reachable`, krew orthogonal, migration             | #1319 | ✅ merged    |
-| 3/4   | **Status** — StatusPolicy + fan-out + federation, migration            | #1325 | ✅ merged    |
-| 4a/4  | **Main composer** — additive krew submenu in the reach dropdown        | #1331 | ✅ merged    |
-| 4b/4  | **Moments composer** — single-krew additive submenu                    | #1332 | ✅ merged    |
-| 4c/4  | **Albutts** — additive contribution roster (backend)                   | #1339 | ✅ merged    |
-| 4c/4  | **Albutts** `ScopePicker` — additive audience + contribution (UI)      | #1343 | ✅ merged    |
-| 4d/4  | **Moments edit** (`viewer.tsx`) — additive on the edit path            | #1347 | 🔨 in review |
-| 4e/4  | **Remove `krew` from the shared `ReachValue`/`StatusVisibility` type** | #1347 | 🔨 in review |
+| Stage | What                                                                   | PR    | State     |
+| ----- | ---------------------------------------------------------------------- | ----- | --------- |
+| 1/4   | **Moments** — krew orthogonal, migration, accept-both                  | #1312 | ✅ merged |
+| —     | **Extract `Reachable`** + Moment adopts it                             | #1316 | ✅ merged |
+| 2/4   | **Album** — adopts `Reachable`, krew orthogonal, migration             | #1319 | ✅ merged |
+| 3/4   | **Status** — StatusPolicy + fan-out + federation, migration            | #1325 | ✅ merged |
+| 4a/4  | **Main composer** — additive krew submenu in the reach dropdown        | #1331 | ✅ merged |
+| 4b/4  | **Moments composer** — single-krew additive submenu                    | #1332 | ✅ merged |
+| 4c/4  | **Albutts** — additive contribution roster (backend)                   | #1339 | ✅ merged |
+| 4c/4  | **Albutts** `ScopePicker` — additive audience + contribution (UI)      | #1343 | ✅ merged |
+| 4d/4  | **Moments edit** (`viewer.tsx`) — additive on the edit path            | #1347 | ✅ merged |
+| 4e/4  | **Remove `krew` from the shared `ReachValue`/`StatusVisibility` type** | #1347 | ✅ merged |
 
 Every stage has landed (4d + 4e in the final cleanup PR). Krew is an additive
 axis end-to-end — models, feeds, federation, every composer, and the shared
@@ -137,7 +138,7 @@ visibility = <krew>`, wrapped in `safety_assured`. The krew association is
 ## How it was built (per stage)
 
 Each composer learned to send a reach tier **plus** an independent set of krews.
-The stages below are the historical record; all are merged (4d/4e in review).
+The stages below are the historical record; all are merged.
 
 ### The composer UX (decided)
 
@@ -159,7 +160,7 @@ omits them gets an unchanged plain reach picker.
   `krew_ids` separately, so no store/submit change.)
 - Removes the old gated `KrewTargets` chip row.
 
-### 4b — Moments composer (PR #1332, in review)
+### 4b — Moments composer (PR #1332, merged)
 
 - `reach_dropdown.tsx` gains an optional `krewSingleSelect` mode — the submenu
   renders as a **radio** list for single-krew korners.
@@ -184,7 +185,7 @@ long-stubbed `invited` roster.
   krew is always also an audience krew) + a new `album_contributors` join
   (people). `contributable_by?` = visible AND (owner OR open OR invited-person
   OR contributor-krew-member). Behaviour-preserving migration + accept-both.
-- **Frontend (#1343, in review).** `ScopePicker` rebuilt: reach chips + an
+- **Frontend (#1343, merged).** `ScopePicker` rebuilt: reach chips + an
   audience-krew multiselect; a contribution open/restricted toggle revealing
   contributor-krew + contributor-people pickers. New reusable
   `AccountMultiSelect` + `KrewMultiSelect`. `api/albutts` now sends the roster

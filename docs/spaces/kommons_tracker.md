@@ -69,13 +69,13 @@ backlog — the tracker's initial content.
 
 ### ③ Framework gaps — the korner platform
 
-| Proposal                                   | Anchor               | Tasks                                                                               |
-| ------------------------------------------ | -------------------- | ----------------------------------------------------------------------------------- |
-| **Launch card producer (§8.7)**            | `kronk.how_it_works` | declared in 10 manifests, parsed, but nothing emits it — build the producer/service |
-| **Korner tombstones / 410 Gone (§5.6)**    | `kronk.how_it_works` | `deleted_at` + 410 resolution for korner objects, not just AP Statuses              |
-| **Complete "every space gets a manifest"** | `kronk.how_it_works` | core-space manifests done; finish node-ownership migration off `kronk_nodes.yaml`   |
-| **L7 stylelint-governance doctor check**   | `kronk.how_it_works` | spec lists it ⚙︎; doctor implements L1/L3/L4/L5/L10 only                           |
-| **Make `render_target` live (§9.1)**       | `kronk.how_it_works` | inert today; app-shell path unbuilt — also open decision §13.2                      |
+| Proposal                                                              | Anchor               | Tasks                                                                                                                                                                      |
+| --------------------------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Launch card producer (§8.7)**                                       | `kronk.how_it_works` | declared in 10 manifests, parsed, but nothing emits it — build the producer/service                                                                                        |
+| **Korner tombstones / 410 Gone (§5.6)**                               | `kronk.how_it_works` | `deleted_at` + 410 resolution for korner objects, not just AP Statuses                                                                                                     |
+| **Complete "every space gets a manifest"**                            | `kronk.how_it_works` | core-space manifests done; finish node-ownership migration off `kronk_nodes.yaml`                                                                                          |
+| ~~**L7 stylelint-governance doctor check**~~ — **closed, don't seed** | `kronk.how_it_works` | Shipped: `detect_conformance_issues` gates L7 (korner-owned SCSS must be in the stylelint governance list). Doctor coverage is now L1/L2/L3/L4/L5/L6/L7/L10 + L11 warnings |
+| **Make `render_target` live (§9.1)**                                  | `kronk.how_it_works` | inert today; app-shell path unbuilt — also open decision §13.2                                                                                                             |
 
 ### ④ Per-korner UI — backend shipped, surface unbuilt
 
