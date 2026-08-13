@@ -19,12 +19,14 @@ name: Kommunity
 purpose: 'To let people see Kronk as a whole — a living topology of who is connected to whom, drawn from the follow graph.'
 tagline: 'The community, seen from inside.'
 icon:
-  # Preferred was `diversity_3` (Material Symbols) but that SVG isn't
-  # shipped in the repo and external asset ingestion is blocked. Using
-  # `globe` (already imported for the public-visibility icon and a
-  # strong semantic match for the whole-community orb) as a stand-in.
-  # Swap to diversity_3 once the SVG lands in app/javascript/material-icons/.
-  material: globe
+  # 中 (zhōng) — "middle". A Kronk-drawn glyph, not a Material Symbol;
+  # it ships in app/javascript/material-icons/400-24px/zhong.svg and is
+  # wired into MATERIAL_TO_ICON in hooks/useKornerIcon.tsx, which is the
+  # one place any korner icon is resolved.
+  #
+  # Replaces a `globe` stand-in that stood in for an unavailable
+  # `diversity_3`. Both were placeholders; this is the intended mark.
+  material: zhong
 render_target: native
 version: 2.0.0
 
