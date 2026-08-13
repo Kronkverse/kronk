@@ -1,0 +1,94 @@
+@use 'variables' as *;
+
+// KornerDetail — the shell every korner's detail page mounts inside
+// (see `app/javascript/mastodon/components/korner_detail.tsx`). Sits
+// inside the `.stage-column` archetype, which owns the centred
+// reading-column geometry + vertical scroll; this file only styles
+// the shell's internal slots.
+
+.korner-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+
+  // The .stage-column__inner max-width is 38.75rem (620px) — right
+  // for lists. Detail pages want a hair more room for hero images
+  // and dense info blocks, so opt out of that inner cap by taking the
+  // full stage-column width.
+  max-width: 42rem;
+  margin: 0 auto;
+
+  &__hero {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-large);
+    background-position: center;
+    background-size: cover;
+    background-color: var(--surface-elevated);
+    margin-bottom: 0.25rem;
+  }
+
+  &__banner {
+    align-self: flex-start;
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-round);
+    background: color-mix(in oklab, #c75d6e 20%, transparent);
+    border: 1px solid color-mix(in oklab, #c75d6e 55%, transparent);
+    color: color-mix(in oklab, #c75d6e 95%, white);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    line-height: 1.15;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+  }
+
+  &__title-icon {
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--kronk-purple-bright);
+  }
+
+  &__title-text {
+    min-width: 0;
+  }
+
+  &__subtitle {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  &__meta {
+    // KornerMeta is already muted + wrapping — just give it a small
+    // top gap from the title/subtitle.
+    margin-top: 0.1rem;
+  }
+
+  &__actions {
+    // KornerActionBar owns internal layout; here we just add a hair
+    // of top space so it doesn't crash into the meta line.
+    margin-top: 0.35rem;
+  }
+
+  &__body {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
