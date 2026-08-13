@@ -48,6 +48,12 @@ module Mates
       Kronk::KornerEvents.publish(
         'mates.request.sent',
         actor_account_id: @source.id,
+        # `actor_acct` templates the nudge's `cta_route` in
+        # config/korners/nudges.yaml — the CTA deep-links to the
+        # requester's profile (`/@{actor_acct}`), which is where the
+        # accept/reject affordances live (Tal 2026-08-13: "the link
+        # should be to their profile instead of /mate_requests").
+        actor_acct: @source.acct,
         recipient_account_id: @target.id,
         follow_request_id: request.id
       )

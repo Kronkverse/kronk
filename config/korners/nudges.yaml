@@ -176,8 +176,13 @@ listens:
     verb: mate_requested
     directed: true
     interaction: interactive
-    cta_label: 'Respond'
-    cta_route: '/mate_requests'
+    cta_label: 'View profile'
+    # Deep-link to the requester's profile — where the accept / reject
+    # affordances live for a pending mate request. (Previously
+    # `/mate_requests` — Tal 2026-08-13: "the link should be to their
+    # profile instead"). `actor_acct` is added to the payload by
+    # `Mates::RequestService#notify!`.
+    cta_route: '/@{actor_acct}'
   - event: mates.request.accepted
     source_korner: mates
     verb: mate_accepted
