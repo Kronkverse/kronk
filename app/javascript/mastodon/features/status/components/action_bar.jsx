@@ -16,6 +16,7 @@ import { PERMISSION_MANAGE_USERS, PERMISSION_MANAGE_FEDERATION } from 'mastodon/
 
 import { IconButton } from '../../../components/icon_button';
 import { Dropdown } from 'mastodon/components/dropdown_menu';
+import { NudgeButton } from '@/mastodon/components/status/nudge_button';
 import { me } from '../../../initial_state';
 
 const messages = defineMessages({
@@ -283,6 +284,9 @@ class ActionBar extends PureComponent {
       <div className='detailed-status__action-bar'>
         <div className='detailed-status__button'><IconButton title={intl.formatMessage(messages.reply)} icon={status.get('in_reply_to_account_id') === status.getIn(['account', 'id']) ? 'reply' : replyIcon} iconComponent={status.get('in_reply_to_account_id') === status.getIn(['account', 'id']) ? ReplyIcon : replyIconComponent}  onClick={this.handleReplyClick} /></div>
         <div className='detailed-status__button'><IconButton className='star-icon' animate active={status.get('favourited')} title={favouriteTitle} icon='star' iconComponent={status.get('favourited') ? HeartIcon : HeartBorderIcon} onClick={this.handleFavouriteClick} /></div>
+        <div className='detailed-status__button'>
+          <NudgeButton status={status} />
+        </div>
 
         <div className='detailed-status__action-bar-dropdown'>
           <Dropdown icon='ellipsis-h' iconComponent={MoreHorizIcon} status={status} items={menu} direction='left' title={intl.formatMessage(messages.more)} />

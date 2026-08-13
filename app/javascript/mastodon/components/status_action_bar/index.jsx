@@ -9,7 +9,6 @@ import ImmutablePureComponent from 'react-immutable-pure-component';
 import { connect } from 'react-redux';
 
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
-import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import ReplyIcon from '@/material-icons/400-24px/reply.svg?react';
 import ReplyAllIcon from '@/material-icons/400-24px/reply_all.svg?react';
 import HeartIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
@@ -22,6 +21,7 @@ import { Dropdown } from 'mastodon/components/dropdown_menu';
 import { me, quickBoosting } from '../../initial_state';
 
 import { IconButton } from '../icon_button';
+import { NudgeButton } from '../status/nudge_button';
 import { RemoveQuoteHint } from './remove_quote_hint';
 
 const messages = defineMessages({
@@ -53,7 +53,6 @@ const messages = defineMessages({
   unblock: { id: 'account.unblock', defaultMessage: 'Unblock @{name}' },
   filter: { id: 'status.filter', defaultMessage: 'Filter this post' },
   openOriginalPage: { id: 'account.open_original_page', defaultMessage: 'Open original page' },
-  nudge: { id: 'status.nudge', defaultMessage: 'Nudge @{name}' },
   revokeQuote: { id: 'status.revoke_quote', defaultMessage: "Remove my post from @{name}'s post" },
   quotePolicyChange: { id: 'status.quote_policy_change', defaultMessage: 'Change who can quote' },
 });
@@ -221,21 +220,6 @@ class StatusActionBar extends ImmutablePureComponent {
     navigator.clipboard.writeText(url);
   };
 
-  handleNudgeClick = () => {
-    const { status } = this.props;
-    const accountId = status.getIn(['account', 'id']);
-    const statusUrl = status.get('url');
-    const rawBody = (status.get('content') ?? '').replace(/<[^>]*>/g, '');
-    const statusBody = rawBody.length > 80 ? `${rawBody.slice(0, 80)}…` : rawBody;
-    this.props.history.push(`/nudges/${accountId}`, {
-      attachStatusUrl: statusUrl,
-      attachStatusBody: statusBody || null,
-      attachStatusAuthorName: status.getIn(['account', 'display_name']) || status.getIn(['account', 'username']),
-      attachStatusAuthorAcct: status.getIn(['account', 'acct']),
-      attachStatusAuthorAvatar: status.getIn(['account', 'avatar']),
-    });
-  };
-
   render () {
     const { status, relationship, quotedAccountId, contextType, intl, withDismiss, withCounters, scrollKey } = this.props;
     const { signedIn, permissions } = this.props.identity;
@@ -369,11 +353,9 @@ class StatusActionBar extends ImmutablePureComponent {
         <div className='status__action-bar__button-wrapper'>
           <IconButton className='status__action-bar__button star-icon' animate active={status.get('favourited')} title={favouriteTitle} icon='star' iconComponent={status.get('favourited') ? HeartIcon : HeartBorderIcon} onClick={this.handleFavouriteClick} counter={withCounters ? status.get('favourites_count') : undefined} />
         </div>
-        {signedIn && !writtenByMe && (
-          <div className='status__action-bar__button-wrapper'>
-            <IconButton className='status__action-bar__button' title={intl.formatMessage(messages.nudge, { name: account.get('username') })} icon='partner_exchange' iconComponent={PartnerExchangeIcon} onClick={this.handleNudgeClick} />
-          </div>
-        )}
+        <div className='status__action-bar__button-wrapper'>
+          <NudgeButton status={status} className='status__action-bar__button' />
+        </div>
         <RemoveQuoteHint className='status__action-bar__button-wrapper' canShowHint={shouldShowQuoteRemovalHint}>
           {(dismissQuoteHint) => (
             <Dropdown
