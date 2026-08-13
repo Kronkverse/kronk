@@ -78,14 +78,15 @@ const Kalendar: React.FC<{ multiColumn?: boolean }> = () => {
 
       {/* `<FeedDrum>` was designed for the /home column-scroll feed,
           which is document-scrolled and gets its height from content.
-          Kalendar's faces (iframe + list) need to fill Stage instead
-          — so wrap the drum in a flex-column shell (`.kalendar-shell`)
-          whose CSS also stretches `.feed-drum` and `.feed-drum__live`
-          when they're mounted inside it. Without this the iframe
-          collapses to its default 150px height and the list has no
-          scroll container (Tal 2026-08-13: "the view is all too
-          small"). */}
-      <div className='kalendar-shell'>
+          Kalendar's faces (iframe + list) need to fill Stage instead.
+          `.stage-fill` is the shared Stage archetype for that shape
+          (see `_kronk_stage.scss` — it grows to fill the Stage cell
+          AND stretches its `.feed-drum` / `.feed-drum__live` children
+          so the iframe/list get real vertical space). Was the local
+          `.kalendar-shell` when this landed 2026-08-13 (Tal: "the
+          view is all too small"); systemised into the shared archetype
+          same day so Map, Kommunity etc. can adopt-not-copy it. */}
+      <div className='stage-fill'>
         <FeedDrum
           reach={view}
           order={[...VIEWS]}

@@ -274,3 +274,103 @@ body:has(.kronk-stage) {
   align-items: center;
   justify-content: center;
 }
+
+// ── Stage archetypes ────────────────────────────────────────────────
+// Three shared shapes for a korner's Stage-child. Every korner picks
+// one (or writes its own if none fit) so `-shell` classes stop being
+// reinvented per korner. All three respect the platform rule of
+// vertical scroll only — no horizontal scroll, no half-view peek.
+//   .stage-fill    — full-bleed: content paints edge-to-edge inside
+//                    Stage, no side padding, no max-width. For
+//                    canvases + rotators + immersive views (Kalendar
+//                    Spiral, Kalendar rotator, Map, Kommunity orb,
+//                    Inflow veil). Grows to fill the Stage rectangle;
+//                    its own child is expected to `flex: 1 1 auto` too.
+//   .stage-column  — capped reading column: a centred, max-width
+//                    column with consistent horizontal padding. For
+//                    list-shape faces (Kalendar list, Kommons
+//                    proposals list, Kuestions panels, Krew list,
+//                    Mate list — anywhere content reads top-to-bottom).
+//   .stage-grid    — responsive tile grid: capped-width, centred, a
+//                    grid of equally-sized tiles that reflow at
+//                    narrow widths. For tile landings (Hub, Albutts,
+//                    Booth gallery). `minmax(min(140px, 100%), 1fr)`
+//                    is deliberate — tiles shrink below their nominal
+//                    min-width when the container is narrower than
+//                    140px, so a 260-wide phone Stage doesn't force a
+//                    horizontal scrollbar.
+
+// Fill — descend into the Stage cell as a flex child that grows to
+// fill it. Whatever mounts inside (iframe, live rotator, MapLibre
+// canvas) should also declare `flex: 1 1 auto` so the fill chain
+// reaches the bottom. Overflow is Stage's job — `.stage-fill` does
+// not add its own. See `.kalendar-shell` (retired, replaced by this)
+// for the pattern that motivated it.
+.stage-fill {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+
+  // Common children of a fill archetype (currently the /home-style
+  // FeedDrum used by Kalendar's rotator) are sized by their own
+  // content by default. Force them to inherit the fill chain so an
+  // iframe or scroll list inside actually reaches the Stage floor.
+  > .feed-drum,
+  > .feed-drum > .feed-drum__live {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+// Column — a centred reading column that owns its own vertical scroll
+// so a long list doesn't push the Stage's own scroll (or worse,
+// promote the body's scrollbar back on). Horizontal overflow is
+// explicitly hidden — `overflow-y: auto` on its own promotes
+// overflow-x to `auto` per the CSS spec, and Kronk phone views must
+// never side-scroll.
+.stage-column {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem 1.25rem 3rem;
+  display: flex;
+  justify-content: center;
+
+  &__inner {
+    width: 100%;
+    max-width: 38.75rem; // 620px — matches Mastodon's classic reading column
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+// Grid — capped-width, centred, responsive tile grid. `minmax(min(140px,
+// 100%), 1fr)` lets a single narrow column drop below 140px on
+// phones (where 140px would overflow a 260-wide Stage) while
+// preserving the 140px minimum everywhere else. Combined with
+// explicit `overflow-x: hidden`, this keeps the grid vertical-only.
+.stage-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem 1.25rem 3rem;
+  display: flex;
+  justify-content: center;
+
+  &__inner {
+    width: 100%;
+    max-width: 45rem; // 720px — a comfortable tile-grid reading area
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
+    gap: 0.75rem;
+  }
+}
