@@ -6,8 +6,6 @@ import { defineMessages, injectIntl } from 'react-intl';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import { connect } from 'react-redux';
 
-import BookmarkIcon from '@/material-icons/400-24px/bookmark-fill.svg?react';
-import BookmarkBorderIcon from '@/material-icons/400-24px/bookmark.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import ReplyIcon from '@/material-icons/400-24px/reply.svg?react';
 import ReplyAllIcon from '@/material-icons/400-24px/reply_all.svg?react';
@@ -19,7 +17,6 @@ import { PERMISSION_MANAGE_USERS, PERMISSION_MANAGE_FEDERATION } from 'mastodon/
 import { IconButton } from '../../../components/icon_button';
 import { Dropdown } from 'mastodon/components/dropdown_menu';
 import { me, quickBoosting } from '../../../initial_state';
-import { BoostButton } from '@/mastodon/components/status/boost_button';
 import { quoteItemState, selectStatusState } from '@/mastodon/components/status/boost_button_utils';
 
 const messages = defineMessages({
@@ -29,8 +26,6 @@ const messages = defineMessages({
   reply: { id: 'status.reply', defaultMessage: 'Reply' },
   favourite: { id: 'status.favourite', defaultMessage: 'Froth' },
   removeFavourite: { id: 'status.remove_favourite', defaultMessage: 'Remove froth' },
-  bookmark: { id: 'status.bookmark', defaultMessage: 'Bookmark' },
-  removeBookmark: { id: 'status.remove_bookmark', defaultMessage: 'Remove bookmark' },
   more: { id: 'status.more', defaultMessage: 'More' },
   mute: { id: 'status.mute', defaultMessage: 'Mute @{name}' },
   muteConversation: { id: 'status.mute_conversation', defaultMessage: 'Mute conversation' },
@@ -73,7 +68,6 @@ class ActionBar extends PureComponent {
     onReply: PropTypes.func.isRequired,
     onReblog: PropTypes.func.isRequired,
     onFavourite: PropTypes.func.isRequired,
-    onBookmark: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
     onRevokeQuote: PropTypes.func,
     onQuotePolicyChange: PropTypes.func,
@@ -101,10 +95,6 @@ class ActionBar extends PureComponent {
 
   handleFavouriteClick = () => {
     this.props.onFavourite(this.props.status);
-  };
-
-  handleBookmarkClick = (e) => {
-    this.props.onBookmark(this.props.status, e);
   };
 
   handleDeleteClick = () => {
@@ -307,17 +297,12 @@ class ActionBar extends PureComponent {
       replyIconComponent = ReplyAllIcon;
     }
 
-    const bookmarkTitle = intl.formatMessage(status.get('bookmarked') ? messages.removeBookmark : messages.bookmark);
     const favouriteTitle = intl.formatMessage(status.get('favourited') ? messages.removeFavourite : messages.favourite);
 
     return (
       <div className='detailed-status__action-bar'>
         <div className='detailed-status__button'><IconButton title={intl.formatMessage(messages.reply)} icon={status.get('in_reply_to_account_id') === status.getIn(['account', 'id']) ? 'reply' : replyIcon} iconComponent={status.get('in_reply_to_account_id') === status.getIn(['account', 'id']) ? ReplyIcon : replyIconComponent}  onClick={this.handleReplyClick} /></div>
-        <div className='detailed-status__button'>
-          <BoostButton status={status} />
-        </div>
         <div className='detailed-status__button'><IconButton className='star-icon' animate active={status.get('favourited')} title={favouriteTitle} icon='star' iconComponent={status.get('favourited') ? HeartIcon : HeartBorderIcon} onClick={this.handleFavouriteClick} /></div>
-        <div className='detailed-status__button'><IconButton className='bookmark-icon' disabled={!signedIn} active={status.get('bookmarked')} title={bookmarkTitle} icon='bookmark' iconComponent={status.get('bookmarked') ? BookmarkIcon : BookmarkBorderIcon} onClick={this.handleBookmarkClick} /></div>
 
         <div className='detailed-status__action-bar-dropdown'>
           <Dropdown icon='ellipsis-h' iconComponent={MoreHorizIcon} status={status} items={menu} direction='left' title={intl.formatMessage(messages.more)} />

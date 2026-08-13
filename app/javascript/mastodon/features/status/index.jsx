@@ -36,8 +36,6 @@ import {
 } from '../../actions/domain_blocks';
 import {
   toggleFavourite,
-  bookmark,
-  unbookmark,
   toggleReblog,
   pin,
   unpin,
@@ -239,14 +237,6 @@ class Status extends ImmutablePureComponent {
           url: status.get('uri'),
         },
       }));
-    }
-  };
-
-  handleBookmarkClick = (status) => {
-    if (status.get('bookmarked')) {
-      this.props.dispatch(unbookmark(status));
-    } else {
-      this.props.dispatch(bookmark(status));
     }
   };
 
@@ -598,7 +588,6 @@ class Status extends ImmutablePureComponent {
                   onReply={this.handleReplyClick}
                   onFavourite={this.handleFavouriteClick}
                   onReblog={this.handleReblogClick}
-                  onBookmark={this.handleBookmarkClick}
                   onDelete={this.handleDeleteClick}
                   onRevokeQuote={this.handleRevokeQuoteClick}
                   onQuotePolicyChange={this.handleQuotePolicyChange}
