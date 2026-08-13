@@ -335,6 +335,14 @@ class SwitchingColumnsArea extends PureComponent {
                 the numeric-id detail route from swallowing the `list`
                 segment ahead of it. */}
             {signedIn && <WrappedRoute path={["/kalendar/:id(\\d+)", "/hub/kalendar/:id(\\d+)"]} component={EventDetail} content={children} />}
+            {/* Composer + legacy alias must resolve before the bare
+                /hub/kalendar route (which mounts the Spiral face);
+                same order-sensitive pattern as Krews + Albutts. The
+                composer is a `<ComposeShell>` overlay mounted by
+                Kalendar itself — first-implementation against the
+                shared shape (docs/rebuild/decisions.md 2026-08-12). */}
+            {signedIn && <WrappedRoute path='/hub/kalendar/composer' exact component={Kalendar} componentParams={{ autoOpenComposer: true }} content={children} />}
+            {signedIn && <WrappedRoute path='/hub/kalendar/new' exact component={Kalendar} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar/list", "/hub/kalendar"]} component={Kalendar} content={children} />}
             {signedIn && <WrappedRoute path="/hub/inflow" component={InflowVeil} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
