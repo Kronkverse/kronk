@@ -15,6 +15,8 @@ import RepeatIcon from '@/material-icons/400-24px/repeat.svg?react';
 import StarIcon from '@/material-icons/400-24px/star.svg?react';
 import api from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
+import { KornerActionBar } from 'mastodon/components/korner_action_bar';
+import { KornerPill } from 'mastodon/components/korner_pill';
 import { Stage } from 'mastodon/components/stage';
 
 import { CreateEventForm } from './components/create_event_form';
@@ -441,34 +443,41 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
           </a>
         )}
 
-        <div className='event-detail__actions'>
+        <KornerActionBar className='event-detail__actions'>
           {isPublic && (
-            <button
-              className={`event-detail__action-btn ${showInvite ? 'event-detail__action-btn--active' : ''}`}
+            <KornerPill
+              label={
+                <FormattedMessage id='events.invite' defaultMessage='Invite' />
+              }
+              icon={PersonAddIcon}
+              iconId='person_add'
+              active={showInvite}
               onClick={handleToggleInvite}
-            >
-              <Icon id='person_add' icon={PersonAddIcon} />
-              <FormattedMessage id='events.invite' defaultMessage='Invite' />
-            </button>
+            />
           )}
           {event.is_owner && (
             <>
-              <button
-                className='event-detail__action-btn'
+              <KornerPill
+                label={
+                  <FormattedMessage id='events.edit' defaultMessage='Edit' />
+                }
+                icon={EditIcon}
+                iconId='edit'
                 onClick={handleStartEdit}
-              >
-                <Icon id='edit' icon={EditIcon} />
-                <FormattedMessage id='events.edit' defaultMessage='Edit' />
-              </button>
-              <button
-                className='event-detail__action-btn event-detail__action-btn--danger'
+              />
+              <KornerPill
+                label={
+                  <FormattedMessage
+                    id='events.delete'
+                    defaultMessage='Delete'
+                  />
+                }
+                variant='destructive'
                 onClick={handleDeleteVoid}
-              >
-                <FormattedMessage id='events.delete' defaultMessage='Delete' />
-              </button>
+              />
             </>
           )}
-        </div>
+        </KornerActionBar>
 
         {showInvite && (
           <div className='event-detail__invite'>
