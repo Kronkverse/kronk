@@ -59,7 +59,7 @@ checked (`decisions.md` 2026-08-13).
 
 ### 2. See work on shadow
 
-You don't push to `staging` any more. Merged PRs land on shadow automatically because `rebuild/2.0.0` auto-deploys. To preview a PR before it merges, open the PR against `rebuild/2.0.0` and let the merge queue (see §3) run it against the current tip; the queue's status checks give you the same "does it build / does it pass tests" signal that a shadow deploy used to. If a specific PR really needs to be seen live on shadow before it merges (rare — e.g. visual regressions the CI can't catch), a maintainer can trigger the `Auto-Deploy Staging` workflow manually from the GitHub Actions tab after pushing the branch to `staging`. Shadow will revert to the rebuild tip on the next merge.
+You don't push to `staging` any more. Merged PRs land on shadow automatically because `rebuild/2.0.0` auto-deploys. To preview a PR before it merges, open the PR against `rebuild/2.0.0` and let the merge queue (see §3) run it against the current tip; the queue's status checks give you the same "does it build / does it pass tests" signal that a shadow deploy used to. If a specific PR really needs to be seen live on shadow before it merges (rare — e.g. visual regressions the CI can't catch), a maintainer can trigger the `Auto-Deploy Staging` workflow manually from the GitHub Actions tab after pushing the branch to `staging`. Shadow will revert to the rebuild tip on the next merge into `rebuild/2.0.0`. Both that workflow and `Deploy a branch to shadow (manual)` are **dispatch-only on purpose** — see the note in §2 about what happened when one of them ran on a push.
 
 #### Shadow gotchas (read before debugging a "failed" deploy)
 
@@ -67,7 +67,7 @@ A deploy usually **succeeded** even when it looks like it didn't:
 
 - **Don't trust the version string as a deploy signal.** `https://shadow.kronk.info/api/v1/instance` reports `version` from an env var (`MASTODON_VERSION_PRERELEASE`) and is cached — not from the deployed code. Verify a deploy by the **actual route/feature** (does your new page render?) or the deployed git ref, never the version endpoint. (The deploy now re-stamps this and clears the cache, so it should track the code going forward.)
 - **The DB is a symlink between two databases.** Shadow has a classic DB and an isolated rebuild DB; the active one is chosen by a symlink that is now **persistent across deploys**. If you "can't log in," the DB is likely pointed at the wrong one — see the infra runbook.
-- **Pushing to `main` resets shadow.** A push to `main` redeploys the production line onto shadow, reverting it off the rebuild. After any `main` merge, the next merge into `rebuild/2.0.0` restores it.
+- **Pushing to `main` no longer touches shadow** (fixed 2026-08-13). It used to: two workflows redeployed the production line onto shadow on every main push, and because shadow keeps its database symlink on the **rebuild** DB, that left production code on a rebuild schema and every page 500'd. `auto-deploy-rebuild.yml` is now the only workflow that reaches shadow without a human. If shadow ever comes back showing the production line, suspect a `push:` trigger has been added to one of the manual deploy workflows.
 
 ### 3. Open a PR, land it via the merge queue
 
