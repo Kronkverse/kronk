@@ -385,6 +385,40 @@
   .space-header {
     animation: scope-title-in var(--dur-medium, 240ms) var(--ease-out, ease);
   }
+
+  // A thin position strip across the bottom of the title space — one segment
+  // per face, the filled one marking where the rotator sits. Width matches
+  // `.space-header`'s own 34rem so the strip lines up with the title block
+  // rather than spanning the full Stage.
+
+  // Deliberately quiet: 2px, a low-contrast track, and the accent only on the
+  // thumb. It is a readout, not an affordance — the chevrons and the title
+  // itself remain the way you move between views.
+  &__progress {
+    position: relative;
+    height: 2px;
+    max-width: 34rem;
+    margin: 0 auto;
+    border-radius: var(--radius-round, 999px);
+    background: var(--border-subtle, var(--surface-secondary));
+    overflow: hidden;
+  }
+
+  &__progress-thumb {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    border-radius: inherit;
+    background: var(--accent);
+
+    // The slide is the point: it shows direction of travel, so a rotate from
+    // face 1 to 2 reads differently from 2 back to 1.
+    transition: transform var(--dur-medium, 240ms) var(--ease-out, ease);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
 }
 
 @keyframes scope-title-in {
