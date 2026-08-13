@@ -1,0 +1,111 @@
+@use 'variables' as *;
+
+// KornerActionBar + KornerPill — the row of pill actions that sits
+// under a korner content title (see
+// `app/javascript/mastodon/components/korner_action_bar.tsx` +
+// `korner_pill.tsx`). Layout on the bar, styling on the pill.
+
+.korner-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+
+  &--align-start {
+    justify-content: flex-start;
+  }
+
+  &--align-end {
+    justify-content: flex-end;
+  }
+
+  &--align-center {
+    justify-content: center;
+  }
+
+  &--align-between {
+    justify-content: space-between;
+  }
+}
+
+.korner-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-round);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  &__icon {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+  }
+
+  &__label {
+    white-space: nowrap;
+  }
+
+  // Default — the neutral action. Muted background, purple text +
+  // border on hover.
+  &--default {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+
+    &:hover:not(:disabled) {
+      border-color: var(--kronk-purple-accent);
+      color: var(--kronk-purple-bright);
+    }
+
+    &.korner-pill--active {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 15%,
+        transparent
+      );
+      border-color: var(--kronk-purple-accent);
+      color: var(--kronk-purple-bright);
+    }
+  }
+
+  // Primary — the loud CTA. Filled purple.
+  &--primary {
+    background: var(--kronk-purple-accent);
+    border: 1px solid var(--kronk-purple-accent);
+    color: var(--kronk-purple-bright);
+
+    &:hover:not(:disabled) {
+      background: var(--kronk-purple-bright);
+      color: var(--surface-primary);
+    }
+  }
+
+  // Destructive — the delete/leave/cancel action. Same warn-red as
+  // ConfirmDialog's destructive CTA so a delete button on the page +
+  // its confirmation match.
+  &--destructive {
+    background: transparent;
+    border: 1px solid color-mix(in oklab, #c75d6e 60%, transparent);
+    color: color-mix(in oklab, #c75d6e 90%, white);
+
+    &:hover:not(:disabled) {
+      background: color-mix(in oklab, #c75d6e 90%, black);
+      border-color: color-mix(in oklab, #c75d6e 90%, black);
+      color: #fff;
+    }
+  }
+}
