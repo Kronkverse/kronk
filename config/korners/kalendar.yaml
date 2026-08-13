@@ -98,6 +98,19 @@ compose:
   label: 'New event'
   route: '/hub/kalendar/new'
 
+# Two rotating faces (Tal 2026-08-13). The Kalendar Spiral prototype
+# is the default face; the list-view surfaces upcoming events one
+# after another for callers who want the linear read. The Frame's
+# `<AutoSpaceHeader>` cycles the space title through these; the
+# `Kalendar` component (`features/kalendar/index.tsx`) mounts the
+# matching body per URL segment. Bare `/hub/kalendar` is the Spiral;
+# `/hub/kalendar/list` is the list.
+views:
+  - { key: spiral, label: Spiral, tagline: 'The year at a glance' }
+  - { key: list, label: List, tagline: 'Upcoming events, one after another' }
+header:
+  rotator: true
+
 launch:
   blurb: 'Kalendar — the shared calendar for Kronk.'
   cta: 'Tap in'

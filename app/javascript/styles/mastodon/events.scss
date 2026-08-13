@@ -29,6 +29,25 @@ $ev-interested-color: #b8945f;
   max-width: 540px;
 }
 
+// Kalendar list-view — the "list" face of the rotator (see
+// `features/kalendar/list_view.tsx`). Stack the reused `<EventCard>`s
+// vertically with breathing room, and give the loading / empty
+// states a muted centred read.
+.kalendar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+
+  &--loading,
+  &--empty {
+    color: var(--text-muted, var(--secondary-text-color));
+    font-size: 14px;
+    text-align: center;
+    padding: 32px 20px;
+  }
+}
+
 .events-page {
   padding: 20px;
 

@@ -86,7 +86,7 @@ import {
   Live,
   LiveRoom,
   EventDetail,
-  KalendarSpiral,
+  Kalendar,
   Hub,
   Booth,
   Martketplace,
@@ -325,13 +325,17 @@ class SwitchingColumnsArea extends PureComponent {
                 inbound links that were minted during the parallel
                 development window. */}
             <WrappedRoute path={['/@:acct/profile', '/@:acct/shelves']} exact component={ProfileShelves} content={children} />
-            {/* Kalendar Rebuild (proposal #116969253949249128) — the Spiral
-                is now the Kalendar. Bare /hub/kalendar renders KalendarSpiral;
-                the old Events list component retires. /hub/kalendar/:id
-                still opens EventDetail (individual events keep their own
-                pages until the Spiral wires day-picking into them). */}
-            {signedIn && <WrappedRoute path={["/kalendar/:id", "/hub/kalendar/:id"]} component={EventDetail} content={children} />}
-            {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={KalendarSpiral} content={children} />}
+            {/* Kalendar (Rebuild proposal #116969253949249128) — the Spiral
+                and the List are two faces of one rotator korner (Tal
+                2026-08-13). Bare `/hub/kalendar` renders the Spiral;
+                `/hub/kalendar/list` renders the upcoming-events list. Both
+                are the `Kalendar` component, which resolves the current
+                URL segment to a face internally. `/hub/kalendar/:id` still
+                opens EventDetail — the `:id(\\d+)` regex constraint keeps
+                the numeric-id detail route from swallowing the `list`
+                segment ahead of it. */}
+            {signedIn && <WrappedRoute path={["/kalendar/:id(\\d+)", "/hub/kalendar/:id(\\d+)"]} component={EventDetail} content={children} />}
+            {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar/list", "/hub/kalendar"]} component={Kalendar} content={children} />}
             {signedIn && <WrappedRoute path="/hub/inflow" component={InflowVeil} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
             {/* Krews (§KRONK_KREWS). Route order matters: /hub/krew/composer,
