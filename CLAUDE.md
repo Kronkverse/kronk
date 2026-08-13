@@ -37,6 +37,26 @@ git checkout -b feature/my-change origin/rebuild/2.0.0
 
 Use `feature/`, `fix/`, or `docs/` prefixes. Keep branches small — one feature or fix per branch. You are a **collaborator** on `Kronkverse/kronk` — push directly, no personal fork needed. (On the mainframe dev server, push/fetch auth is handled for you — see the infra runbook; you do not need a personal token.)
 
+**Every branch starts from the integration tip. Do not stack PRs.** A stacked
+PR — one branched off another open PR instead of `rebuild/2.0.0` — cannot survive
+its parent merging. The parent lands as a **squash**, so the child still carries
+the parent's original commits, the merge queue's rebase collides, and the child
+is **silently ejected from the queue**: still open, still green, simply not
+merging. Nothing tells you. Someone has to notice and rebase it, once per parent,
+every time.
+
+This cost real time on 2026-08-13: a four-deep stack was ejected twice, needing
+manual re-rebasing both rounds, and each round looked like "queued" until someone
+checked (`decisions.md` 2026-08-13).
+
+- **Base each PR on `origin/rebuild/2.0.0`** and accept a little duplication in
+  review over serialised, self-ejecting merges.
+- **If work genuinely cannot compile without earlier work**, that is one PR, not
+  two. Split by _reviewable unit_, not by commit tidiness.
+- **If you stack anyway** (rare, and say so in the PR body), you own re-rebasing
+  after each parent merges — and **"I queued it" is not "it landed."** Re-check
+  `gh pr view <N> --json state` after the parent lands.
+
 ### 2. See work on shadow
 
 You don't push to `staging` any more. Merged PRs land on shadow automatically because `rebuild/2.0.0` auto-deploys. To preview a PR before it merges, open the PR against `rebuild/2.0.0` and let the merge queue (see §3) run it against the current tip; the queue's status checks give you the same "does it build / does it pass tests" signal that a shadow deploy used to. If a specific PR really needs to be seen live on shadow before it merges (rare — e.g. visual regressions the CI can't catch), a maintainer can trigger the `Auto-Deploy Staging` workflow manually from the GitHub Actions tab after pushing the branch to `staging`. Shadow will revert to the rebuild tip on the next merge.

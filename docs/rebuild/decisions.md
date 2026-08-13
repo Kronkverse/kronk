@@ -17,6 +17,47 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-13 — No stacked PRs: every branch starts from the integration tip
+
+Tal's call, from watching it fail twice in one session. The contributor rule now
+lives in `CLAUDE.md` §1; this entry records the reasoning so it is not
+rediscovered.
+
+**A stacked PR cannot survive its parent merging.** Branch B off open PR A, and
+when A lands the merge queue squashes it. B still carries A's _original_
+commits, so the rebase collides, and B is **ejected from the queue**: still open,
+still green, simply not merging, with no notification. It has to be rebased by
+hand, once per parent, every round.
+
+**What it cost.** A four-deep stack (#1415 → #1417 → #1418 → #1420 → #1426, plus
+the icon work on top) was ejected **twice**. Each round needed the whole tail
+re-rebased, re-pushed, re-linted and re-queued, and each round the PRs _looked_
+queued in the meantime. The ejections were only noticed because someone went to
+queue the next PR and found the queue empty with the earlier ones still open.
+Rebasing was safe every time — git dropped the already-landed commits and every
+file came back byte-identical to the version that had passed lint — but "safe"
+still meant three manual interventions that independent branches would not have
+needed at all.
+
+**The trade being made.** Stacking buys a tidier review diff: each PR shows only
+its own change. Independent branches sometimes show overlapping context and
+occasionally need a conflict resolved at merge time. That is a much smaller cost
+than serialised merges that eject themselves silently — especially with a
+lint-only gate, where an ejected PR gives off no signal at all.
+
+**Decisions.**
+
+1. **Base every branch on `origin/rebuild/2.0.0`.** Accept duplication in review.
+2. **If work cannot compile without earlier work, it is one PR.** Split by
+   reviewable unit, not commit tidiness.
+3. **Stacking is a documented exception**, declared in the PR body, and whoever
+   stacks owns the re-rebasing.
+4. **"Queued" is not "landed."** Re-check state after any parent merges. This
+   applies to agents especially: reporting a PR as done on the strength of having
+   queued it was wrong twice today.
+
+---
+
 ## 2026-08-13 — Stage layer publishes three archetype classes (`.stage-fill`, `.stage-column`, `.stage-grid`)
 
 Every korner mounts into the same Stage rectangle, but until now each
