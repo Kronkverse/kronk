@@ -22,6 +22,23 @@ storage:
   db_namespace: huddle_ # tables: huddle_sessions, huddle_participants
   media_prefix: spaces/huddle/
 
+security:
+  permissions:
+    - read:huddles
+    - write:huddles # opening a Room, joining a session
+  # Huddles are open or Krew-scoped — there are no free-form private
+  # ones (docs/spaces/huddle.md § Three categories). Main and Rooms are
+  # `public`: anyone can join, no membership, no invite, no gating. Krew
+  # Huddles are `krew`: visible and joinable only to that Krew's members.
+  visibility_scopes: [public, krew]
+  # Korner-level maintenance only. It is deliberately NOT the in-session
+  # role: Huddle has no host, and every participant in a session holds the
+  # same moderation powers (docs/spaces/huddle.md § Moderation — flat and
+  # distributed).
+  maintainers:
+    - moderator
+  federates: false
+
 # Ж-menu compose action. Any signed-in user can open a new open
 # Room (see docs/spaces/huddle.md § Three categories); the create
 # affordance lives on the floating Kronk menu per the Korner
@@ -99,7 +116,7 @@ launch:
 enforced: true # live surface at /hub/huddle (Phase 1). Session API +
 # the huddle_card feed adapter land in Phase 2; Status.has_one
 # :huddle_session and the huddle_ tables already exist.
-federates: false
+# `federates` now lives in the `security:` block above (same value).
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 nodes:
