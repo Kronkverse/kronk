@@ -394,22 +394,49 @@
   // Deliberately quiet: 2px, a low-contrast track, and the accent only on the
   // thumb. It is a readout, not an affordance — the chevrons and the title
   // itself remain the way you move between views.
+
+  // The wire — the same treatment the Membrane pillars use
+  // (`.hub-switcher__wire`): a hairline that fades out at both ends so it
+  // reads as a lit filament rather than a boxed-in track. Kept identical on
+  // purpose (Tal 2026-08-13) so the rotator and the top nav speak the same
+  // visual language for "where am I in a set".
+
+  // NOT `overflow: hidden` — the pool's glow has to spill past the wire, as it
+  // does on the Membrane.
   &__progress {
     position: relative;
     height: 2px;
     max-width: 34rem;
     margin: 0 auto;
-    border-radius: var(--radius-round, 999px);
-    background: var(--border-subtle, var(--surface-secondary));
-    overflow: hidden;
+    background: linear-gradient(
+      to right,
+      transparent 0,
+      var(--border-subtle) 8px,
+      var(--border-subtle) calc(100% - 8px),
+      transparent 100%
+    );
   }
 
+  // The pool — a soft rounded bar riding the wire under the current face,
+  // glowing like the Membrane's. Width and offset come from the component
+  // (one nth per face), the glide from the transition.
   &__progress-thumb {
     position: absolute;
-    inset-block: 0;
+    top: 0;
     left: 0;
-    border-radius: inherit;
-    background: var(--accent);
+    height: 2px;
+    border-radius: var(--radius-small);
+    background: var(--kronk-purple-bright);
+    box-shadow:
+      0 0 10px 1px var(--kronk-purple-bright),
+      0 0 20px 3px
+        color-mix(in oklab, var(--kronk-purple-bright) 50%, transparent);
+    pointer-events: none;
+
+    // `will-change`, not a `translateZ(0)` hack: the component sets `transform`
+    // inline to position the pool, so any transform declared here would be
+    // overridden and the hint silently lost.
+    will-change: transform;
 
     // The slide is the point: it shows direction of travel, so a rotate from
     // face 1 to 2 reads differently from 2 back to 1.
