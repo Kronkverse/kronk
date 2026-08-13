@@ -157,18 +157,24 @@ body:has(.kronk-stage) {
   padding: 1.5rem max(6rem, 3vw) 0.5rem;
   text-align: center;
 
-  // On routes where `<AutoSpaceHeader>` returns null (a detail sub-page
-  // or a segment not in the manifest's `views:` — e.g. Kommons' /pick,
-  // Map's trek detail), the center slot is empty and the row collapses
-  // to just its own padding. But the SpaceBadge (left) and
-  // AutoSpaceViewPicker (right) are absolutely positioned at
-  // `top: 1.75rem`, so they overhang below the row's own height and
-  // the content that follows starts too high — the badge visually
-  // sits on top of the page title (Tal 2026-08-12: Kommons /pick
-  // "< Kommons" back badge overwriting "Where does your proposal
-  // live?"). Reserve enough height for the absolute pills so the
-  // content below always clears them.
-  min-height: 4.5rem;
+  // On routes where `<AutoSpaceHeader>` returns null but a pill is
+  // still rendered (a detail sub-page or a segment not in the
+  // manifest's `views:` — e.g. Kommons' /pick, Map's trek detail),
+  // the center collapses to just padding, but the SpaceBadge (left)
+  // and AutoSpaceViewPicker (right) are absolutely positioned at
+  // `top: 1.75rem` and would overhang below the row's own height,
+  // sitting on top of the page's own title (Tal 2026-08-12: Kommons
+  // /pick "< Kommons" badge overwriting "Where does your proposal
+  // live?"). Reserve enough vertical space when — and only when — a
+  // slot is actually populated. On bare landings where every slot is
+  // empty (e.g. /hub — Tal 2026-08-13: "/hub title too low"), the
+  // row stays at its natural padding so the local hero starts up
+  // close to the top of Stage.
+  &:has(.space-header-row__left > *),
+  &:has(.space-header-row__center > *),
+  &:has(.space-header-row__right > *) {
+    min-height: 4.5rem;
+  }
 
   &__left {
     position: absolute;
