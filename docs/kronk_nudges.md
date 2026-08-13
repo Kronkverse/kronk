@@ -39,7 +39,7 @@ alignment pass:
   **and `auto_read_on_open`** (retained per Tal 2026-07-21;
   brief-deviation intentional, opening a conversation still marks
   read by default).
-- **Pillar icon.** Deferred — the manifest's `icon: partner_exchange`
+- **Pillar icon.** The manifest's `icon: raven`
   currently conflicts with Huddle (which also maps to
   `PartnerExchangeIcon` in `useKornerIcon`). Every enforced korner
   needs a unique icon per that hook's contract. Nudges keeps
@@ -117,7 +117,7 @@ Relevance is **computed from data we already keep**, not a separate who-gets-wha
 
 ## Surfaces
 
-**1 — Pillar entry.** `HubSwitcher` grows 3-way → 4-way; mobile bottom tab bar grows 3 → 4. Icon: `partner_exchange`. Tap deep-links to `/nudges`. The unread dotbadge migrates off the `Ж` menu's Nudges entry (which retires) and onto the pillar, **sourced from the nudges data itself** (see _Self-delivering delivery_ below) — **not** the Mastodon notifications store the earlier draft pointed it at. Manifest gains `hub_visible: false` (grid filter reads this) **and** `pillar: true` (nav reads this) — both, so the two concerns never collapse into one overloaded field.
+**1 — Pillar entry.** `HubSwitcher` grows 3-way → 4-way; mobile bottom tab bar grows 3 → 4. Icon: resolved from the manifest's `icon.material` (`raven`) via `kornerIcon('nudges')` — never hardcoded, so changing the manifest changes every Nudge affordance at once. Tap deep-links to `/nudges`. The unread dotbadge migrates off the `Ж` menu's Nudges entry (which retires) and onto the pillar, **sourced from the nudges data itself** (see _Self-delivering delivery_ below) — **not** the Mastodon notifications store the earlier draft pointed it at. Manifest gains `hub_visible: false` (grid filter reads this) **and** `pillar: true` (nav reads this) — both, so the two concerns never collapse into one overloaded field.
 
 **2 — Messenger shell** at `/nudges`. One continuous surface split by a divider: sidebar (search + conversation list) on the left, open conversation on the right. `/nudges/:conversationId` deep-links straight to a conversation.
 
@@ -158,7 +158,7 @@ Post-share cards render a shared Status as a proper card, not a raw link. Reacti
 
 **Korner → colour/space map** (fixed by domain): Sun → Orbit; Mercury → Murmur; Neptune → Kalendar/gathering; Jupiter → Kommons; Pluto → Market. Colours from the `2026-07-14` planet ramp.
 
-**Manifest** — `enforced: false`; `hub_visible: false`; `pillar: true`; `icon: partner_exchange`; `emits:` / `listens:` blocks; per-korner Tier-3 default-loudness declarations (per activity type); settings block as in Surface 5.
+**Manifest** — `enforced: false`; `hub_visible: false`; `pillar: true`; `icon: raven`; `emits:` / `listens:` blocks; per-korner Tier-3 default-loudness declarations (per activity type); settings block as in Surface 5.
 
 **Relevance state (new, per user)** — a per-recipient **event `seen_at`** (so unread counts nudges, not only messages) and a **preference + mute record** (per-korner / per-type overrides + per-thread/object mutes). Everything else the relevance engine needs is derived (§ _Relevance engine_).
 

@@ -26,8 +26,6 @@ import HomeActiveIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import InfoIcon from '@/material-icons/400-24px/info.svg?react';
 import MenuIcon from '@/material-icons/400-24px/menu.svg?react';
-import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
-import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import PublicActiveIcon from '@/material-icons/400-24px/public-fill.svg?react';
@@ -47,6 +45,7 @@ import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { Search } from 'mastodon/features/compose/components/search';
 import { ColumnLink } from 'mastodon/features/ui/components/column_link';
 import { useBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
 import { transientSingleColumn } from 'mastodon/is_mobile';
@@ -114,16 +113,16 @@ const NudgesLink: React.FC = () => {
       to='/nudges'
       icon={
         <IconWithBadge
-          id='partner_exchange'
-          icon={PartnerExchangeIcon}
+          id='nudge'
+          icon={kornerIcon('nudges')}
           count={count}
           className='column-link__icon'
         />
       }
       activeIcon={
         <IconWithBadge
-          id='partner_exchange'
-          icon={PartnerExchangeActiveIcon}
+          id='nudge'
+          icon={kornerIcon('nudges', undefined, true)}
           count={count}
           className='column-link__icon'
         />

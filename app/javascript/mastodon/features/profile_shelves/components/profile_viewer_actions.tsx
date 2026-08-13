@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
-import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import { initBlockModal } from 'mastodon/actions/blocks';
 import { openModal } from 'mastodon/actions/modal';
@@ -14,6 +13,7 @@ import { CopyIconButton } from 'mastodon/components/copy_icon_button';
 import { Dropdown } from 'mastodon/components/dropdown_menu';
 import { FollowButton } from 'mastodon/components/follow_button';
 import { IconButton } from 'mastodon/components/icon_button';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
 import type { MenuItem } from 'mastodon/models/dropdown_menu';
@@ -208,8 +208,8 @@ export const ProfileViewerActions: React.FC<ProfileViewerActionsProps> = ({
 
       {!relationship?.blocking && !relationship?.blocked_by && (
         <IconButton
-          icon='partner_exchange'
-          iconComponent={PartnerExchangeIcon}
+          icon='nudge'
+          iconComponent={kornerIcon('nudges')}
           active={nudgeSent}
           disabled={!canNudge}
           title={nudgeTitle}
