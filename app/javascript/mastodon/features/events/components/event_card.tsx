@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 
 import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
 import { Icon } from 'mastodon/components/icon';
+import { KornerMeta } from 'mastodon/components/korner_meta';
 
 interface Event {
   id: string;
@@ -82,38 +83,40 @@ export const EventCard: React.FC<Props> = ({ event, onRsvp }) => {
           )}
           {event.title}
         </Link>
-        <div className='event-card__meta'>
-          <FormattedDate value={event.start_time} weekday='short' />{' '}
-          <FormattedTime value={event.start_time} />
-          {event.end_time && (
+        <KornerMeta
+          className='event-card__meta'
+          items={[
             <>
-              {' – '}
-              <FormattedTime value={event.end_time} />
-            </>
-          )}
-          {event.location_name && <> &middot; {event.location_name}</>}
-          {event.going_count > 0 && (
-            <>
-              {' '}
-              &middot; <strong>{event.going_count}</strong> going
-            </>
-          )}
-          {event.interested_count > 0 && (
-            <>
-              {' '}
-              &middot; <strong>{event.interested_count}</strong> maybe
-            </>
-          )}
-          {event.account && (
-            <>
-              {' '}
-              &middot; by{' '}
-              <span className='event-card__host'>
-                @{event.account.username}
-              </span>
-            </>
-          )}
-        </div>
+              <FormattedDate value={event.start_time} weekday='short' />{' '}
+              <FormattedTime value={event.start_time} />
+              {event.end_time && (
+                <>
+                  {' – '}
+                  <FormattedTime value={event.end_time} />
+                </>
+              )}
+            </>,
+            event.location_name,
+            event.going_count > 0 && (
+              <>
+                <strong>{event.going_count}</strong> going
+              </>
+            ),
+            event.interested_count > 0 && (
+              <>
+                <strong>{event.interested_count}</strong> maybe
+              </>
+            ),
+            event.account && (
+              <>
+                by{' '}
+                <span className='event-card__host'>
+                  @{event.account.username}
+                </span>
+              </>
+            ),
+          ]}
+        />
       </div>
 
       {event.rsvp_enabled && (

@@ -277,19 +277,11 @@ $ev-interested-color: #b8945f;
     flex-shrink: 0;
   }
 
-  &__meta {
-    font-size: 12px;
-    color: var(--secondary-text-color);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    strong {
-      color: var(--primary-text-color);
-      font-weight: 600;
-    }
-  }
-
+  // Meta line — now rendered via the shared `<KornerMeta>` primitive
+  // (see `_kronk_meta.scss`). The primitive owns layout + separator +
+  // muted colour + strong emphasis. Event-card only keeps `__host`
+  // for the accent tint on the "by @user" segment; everything else
+  // came out of this block on the migration.
   &__host {
     color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
   }
