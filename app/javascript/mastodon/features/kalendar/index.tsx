@@ -1,9 +1,12 @@
+import { useCallback } from 'react';
+
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useLocation } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 
 import { Stage } from 'mastodon/components/stage';
+import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 
 import { KalendarListView } from './list_view';
 
@@ -13,7 +16,10 @@ import { KalendarListView } from './list_view';
 // (see `config/korners/kalendar.yaml`), and the Frame's
 // `<AutoSpaceHeader>` renders the rotating title itself — this
 // component just resolves the current URL segment to one of the
-// faces and mounts the corresponding body.
+// faces and mounts the corresponding body inside a shared
+// `<FeedDrum>` so the swap plays the same quarter-turn as /home,
+// Albutts, Kommons, and Map (Tal follow-up: "this doesn't rotate
+// like the feed does").
 //
 // Faces:
 //   - `spiral` (default, bare `/hub/kalendar`) — the shipped Kalendar
@@ -46,8 +52,22 @@ const resolveView = (pathname: string): KalendarView => {
 const Kalendar: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const location = useLocation();
+  const history = useHistory();
   const view = resolveView(location.pathname);
   const title = intl.formatMessage(messages.title);
+
+  // FeedDrum drives its wrap direction from `order`; navigating a
+  // step is a URL push (same handler shape the AutoSpaceHeader uses).
+  // The default face (index 0) rides on the bare `/hub/kalendar` URL;
+  // every other face gets a segment suffix.
+  const handleScopeChange = useCallback(
+    (next: string) => {
+      const target =
+        next === DEFAULT_VIEW ? '/hub/kalendar' : `/hub/kalendar/${next}`;
+      if (target !== location.pathname) history.push(target);
+    },
+    [history, location.pathname],
+  );
 
   return (
     <Stage label={title}>
@@ -56,14 +76,20 @@ const Kalendar: React.FC<{ multiColumn?: boolean }> = () => {
         <meta name='robots' content='noindex' />
       </Helmet>
 
-      {view === 'spiral' && (
-        <iframe
-          title={title}
-          src='/kalendar-spiral-preview.html'
-          className='korner-iframe'
-        />
-      )}
-      {view === 'list' && <KalendarListView />}
+      <FeedDrum
+        reach={view}
+        order={[...VIEWS]}
+        onScopeChange={handleScopeChange}
+      >
+        {view === 'spiral' && (
+          <iframe
+            title={title}
+            src='/kalendar-spiral-preview.html'
+            className='korner-iframe'
+          />
+        )}
+        {view === 'list' && <KalendarListView />}
+      </FeedDrum>
     </Stage>
   );
 };
