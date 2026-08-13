@@ -1,6 +1,7 @@
+import type { CSSProperties, ComponentType, SVGProps } from 'react';
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 
-import { FormattedMessage, useIntl, defineMessages } from 'react-intl';
+import { useIntl, defineMessages } from 'react-intl';
 
 import { Link, useLocation } from 'react-router-dom';
 
@@ -27,6 +28,10 @@ const messages = defineMessages({
   new_chat: { id: 'kronk_menu.new_chat', defaultMessage: 'New chat' },
   search: { id: 'kronk_menu.search', defaultMessage: 'Search' },
   settings: { id: 'kronk_menu.settings', defaultMessage: 'Settings' },
+  ring_label: {
+    id: 'kronk_menu.ring_label',
+    defaultMessage: 'Kronk actions',
+  },
   settings_korner: {
     id: 'kronk_menu.settings_korner',
     defaultMessage: '{name} settings',
@@ -63,6 +68,58 @@ const POS_KEY = 'kronk:menu-pos';
 const DRAG_THRESHOLD = 6; // px of movement before a press becomes a drag
 const EDGE = 12; // px kept clear of the viewport edge
 const BTN = 56; // nominal button size for anchor/centre math
+
+// ---- moon-fan config ----
+// Each moon sits at (radius, bearing) from the Ж centre. The arc fans AWAY
+// from whichever corner the Ж is parked in, opening into the viewport. 50°
+// between moons gives generous breathing room for 3 items (100° total span)
+// and centres tightly for 2. Radius keeps moons clear of the trigger without
+// feeling detached: ~88px puts 36px moons at 88 - 18 - 21 = ~49px of visible
+// gap from the 42px trigger.
+const MOON_RADIUS_PX = 88;
+const MOON_STEP_DEG = 50;
+
+// Compass bearings (0° = up, 90° = right, 180° = down, 270° = left) for the
+// centre of the arc-fan, per anchor corner. The fan opens into the diagonally
+// opposite quadrant.
+const arcCentreBearing = (anchor: string): number => {
+  switch (anchor) {
+    case 'bottom-left':
+      return 45; // NE
+    case 'bottom-right':
+      return 315; // NW
+    case 'top-left':
+      return 135; // SE
+    case 'top-right':
+      return 225; // SW
+    default:
+      return 315;
+  }
+};
+
+// Per-moon transform inputs. The SCSS composes them into a spiral: the moon
+// starts at the arc centre with radius 0 and rotates to its own bearing while
+// extending outward to full radius. Because delta is signed and small (±25°
+// for the outer items at 50° step), CSS interpolation traces the shortest arc
+// — outer moons swoop CCW / CW around the trigger, meeting the centre moon in
+// the middle. The Ж itself spins 720° concurrently (see _kronk_chrome.scss).
+const moonStyle = (
+  index: number,
+  count: number,
+  anchor: string,
+): CSSProperties => {
+  const centre = arcCentreBearing(anchor);
+  const span = (count - 1) * MOON_STEP_DEG;
+  const startBearing = centre - span / 2;
+  const bearing = startBearing + index * MOON_STEP_DEG;
+  const delta = bearing - centre;
+  return {
+    '--moon-centre': `${centre}deg`,
+    '--moon-delta': `${delta}deg`,
+    '--moon-radius': `${MOON_RADIUS_PX}px`,
+    '--moon-index': index,
+  } as CSSProperties;
+};
 
 interface Pos {
   x: number;
@@ -224,8 +281,45 @@ export const KronkMenu = () => {
   } | null>(null);
   const suppressClick = useRef(false);
 
+  const intl = useIntl();
   const settings = useSettingsTarget();
   const post = usePostTarget();
+
+  interface MoonItem {
+    key: string;
+    href: string;
+    label: string;
+    Icon: ComponentType<SVGProps<SVGSVGElement>>;
+    external: boolean;
+  }
+
+  const items: MoonItem[] = useMemo(() => {
+    const list: MoonItem[] = [];
+    if (post) {
+      list.push({
+        key: 'post',
+        href: post.href,
+        label: post.label,
+        Icon: EditIcon,
+        external: false,
+      });
+    }
+    list.push({
+      key: 'search',
+      href: '/hub/search',
+      label: intl.formatMessage(messages.search),
+      Icon: SearchIcon,
+      external: false,
+    });
+    list.push({
+      key: 'settings',
+      href: settings.href,
+      label: settings.label,
+      Icon: SettingsIcon,
+      external: settings.external,
+    });
+    return list;
+  }, [post, settings, intl]);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -344,61 +438,58 @@ export const KronkMenu = () => {
         <span aria-hidden='true'>Ж</span>
       </button>
 
-      {open && (
-        <div className='kronk-menu__panel' role='menu'>
-          {post && (
-            <Link
-              className='kronk-menu__item kronk-menu__item--primary'
-              to={post.href}
-              role='menuitem'
-              onClick={close}
-            >
-              <span className='kronk-menu__item-glyph' aria-hidden='true'>
-                <EditIcon />
-              </span>
-              <span className='kronk-menu__item-label'>{post.label}</span>
-            </Link>
-          )}
-          <Link
-            className='kronk-menu__item'
-            to='/hub/search'
-            role='menuitem'
-            onClick={close}
-          >
-            <span className='kronk-menu__item-glyph' aria-hidden='true'>
-              <SearchIcon />
+      {/*
+        The ring is always rendered so both open and close transition. Each
+        moon carries its own bearing/delta/radius as CSS custom properties;
+        the SCSS spiral composition uses them to place the moon at its
+        resting position while --kronk-menu--open is set, and returns it to
+        the trigger centre when it isn't. aria-hidden + pointer-events keep
+        it inert when closed.
+      */}
+      <ul
+        className='kronk-menu__ring'
+        role='menu'
+        aria-hidden={!open}
+        aria-label={intl.formatMessage(messages.ring_label)}
+      >
+        {items.map((it, i) => {
+          const style = moonStyle(i, items.length, anchor);
+          const inner = (
+            <span className='kronk-menu__moon-glyph' aria-hidden='true'>
+              <it.Icon />
             </span>
-            <span className='kronk-menu__item-label'>
-              <FormattedMessage {...messages.search} />
-            </span>
-          </Link>
-          {settings.external ? (
-            <a
-              className='kronk-menu__item'
-              href={settings.href}
-              role='menuitem'
-              onClick={close}
-            >
-              <span className='kronk-menu__item-glyph' aria-hidden='true'>
-                <SettingsIcon />
-              </span>
-              <span className='kronk-menu__item-label'>{settings.label}</span>
-            </a>
-          ) : (
-            <Link
-              className='kronk-menu__item'
-              to={settings.href}
-              role='menuitem'
-              onClick={close}
-            >
-              <span className='kronk-menu__item-glyph' aria-hidden='true'>
-                <SettingsIcon />
-              </span>
-              <span className='kronk-menu__item-label'>{settings.label}</span>
-            </Link>
-          )}
-        </div>
-      )}
+          );
+          return (
+            <li key={it.key} className='kronk-menu__ring-slot' style={style}>
+              {it.external ? (
+                <a
+                  className='kronk-menu__moon'
+                  href={it.href}
+                  role='menuitem'
+                  aria-label={it.label}
+                  title={it.label}
+                  tabIndex={open ? 0 : -1}
+                  onClick={close}
+                >
+                  {inner}
+                </a>
+              ) : (
+                <Link
+                  className='kronk-menu__moon'
+                  to={it.href}
+                  role='menuitem'
+                  aria-label={it.label}
+                  title={it.label}
+                  tabIndex={open ? 0 : -1}
+                  onClick={close}
+                >
+                  {inner}
+                </Link>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 };

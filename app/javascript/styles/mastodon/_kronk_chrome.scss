@@ -564,13 +564,19 @@ body.admin {
     cursor: pointer;
     touch-action: none; // let pointer-drag reposition without page scroll
     user-select: none;
+    z-index: 1; // above the moon ring so it stays clickable during transitions
     box-shadow:
       0 4px 12px -2px
         color-mix(in oklab, var(--kronk-purple-accent) 65%, transparent),
       inset 0 1px 0
         color-mix(in oklab, var(--semantic-text-on-accent) 30%, transparent);
+
+    // The spin: 660ms of "wound-up then release" easing so the Ж twists
+    // through 2 full turns as the moons spiral out, and unwinds the same
+    // way on close. 720° lands back at 0° visually so there's no snap
+    // when the animation reverses.
     transition:
-      transform var(--dur-medium) var(--ease-spring),
+      transform 660ms cubic-bezier(0.34, 1.25, 0.64, 1),
       background var(--dur-medium) var(--ease-out);
 
     &:hover,
@@ -583,7 +589,7 @@ body.admin {
 
   &--open &__trigger {
     background: var(--kronk-purple-bright);
-    transform: rotate(45deg);
+    transform: rotate(720deg) scale(1.05);
   }
 
   // While the user is dragging the button: lift above everything and
@@ -598,173 +604,107 @@ body.admin {
     }
   }
 
-  // The panel opens away from whichever corner the (movable) button sits
-  // in. Default (no data-anchor = parked top-right): opens down-left.
-  &[data-anchor^='bottom'] &__panel {
-    top: auto;
-    bottom: calc(100% + 0.75rem);
-    transform-origin: bottom right;
+  // The moon ring — a fan of icon-only bubbles that spiral out of the Ж
+  // on open. Each moon sits centred on the trigger by default (list-level
+  // reset + slot-level positioning) and receives its bearing/delta/radius
+  // from inline CSS custom properties set by kronk_menu.tsx. The SCSS
+  // composes them into a chained rotate/translate/rotate spiral so items
+  // orbit into place along curved paths rather than sliding on straight
+  // chords — outer moons swoop around the arc's centre bubble, meeting it
+  // as the fan blooms open.
+  &__ring {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    pointer-events: none; // slot layers pass through; moons re-enable on open
   }
 
-  &[data-anchor$='left'] &__panel {
-    right: auto;
+  &__ring-slot {
+    position: absolute;
+
+    // Centre the moon's origin on the trigger's centre so all spiral
+    // rotations pivot around Ж. The moon inside is sized 2.25rem (36px),
+    // so a negative margin of half that pulls its box back to (0,0).
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+  }
+
+  &__moon {
+    position: absolute;
     left: 0;
-    transform-origin: bottom left;
-  }
-
-  &__badge {
-    position: absolute;
-    top: -0.15rem;
-    right: -0.15rem;
-    min-width: 1.35rem;
-    height: 1.35rem;
-    padding: 0 0.4rem;
-    border-radius: var(--radius-round);
-    background: var(--surface-primary);
-    color: var(--kronk-purple-accent);
-    border: 2px solid var(--surface-primary);
-    font-size: 0.7rem;
-    font-weight: 700;
+    top: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 6px rgb(0 0 0 / 25%);
-  }
-
-  &__panel {
-    position: absolute;
-    top: calc(100% + 0.75rem);
-    right: 0;
-    min-width: 15rem;
-    padding: 0.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    background: color-mix(
-      in oklab,
-      var(--surface-elevated) 92%,
-      var(--kronk-purple-deep)
-    );
-    border: 1px solid
-      color-mix(in oklab, var(--kronk-purple-accent) 20%, var(--border-default));
-    border-radius: var(--radius-large);
-    box-shadow:
-      0 20px 48px -12px rgb(0 0 0 / 50%),
-      0 4px 16px -4px
-        color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent),
-      inset 0 1px 0
-        color-mix(in oklab, var(--kronk-purple-accent) 8%, transparent);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    animation: kronk-menu-in var(--dur-medium) var(--ease-spring);
-    transform-origin: top right;
-  }
-
-  &__item {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    padding: 0.7rem 0.85rem;
-    color: var(--text-primary);
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: -1.125rem 0 0 -1.125rem;
+    border-radius: 50%;
     text-decoration: none;
-    border-radius: var(--radius-medium);
-    font-size: 0.95rem;
-    font-weight: 500;
-    position: relative;
+    background: var(--kronk-purple-accent);
+    color: var(--semantic-text-on-accent);
+    border: 1px solid
+      color-mix(in oklab, var(--semantic-text-on-accent) 22%, transparent);
+    box-shadow:
+      0 6px 14px -4px
+        color-mix(in oklab, var(--kronk-purple-accent) 65%, transparent),
+      inset 0 1px 0
+        color-mix(in oklab, var(--semantic-text-on-accent) 30%, transparent);
+    pointer-events: none;
+    opacity: 0;
+
+    // COLLAPSED state: rotated to the arc centre, radius 0, scaled down.
+    // The middle rotate() carries a delta of 0 here — CSS interpolates it
+    // to var(--moon-delta) on open, which is what steers the swoop.
+    transform: rotate(var(--moon-centre, 0deg)) rotate(0deg) translateY(0)
+      rotate(0deg) rotate(calc(-1 * var(--moon-centre, 0deg))) scale(0.35);
     transition:
-      background var(--dur-fast) var(--ease-out),
-      transform var(--dur-fast) var(--ease-out),
-      color var(--dur-fast) var(--ease-out);
-
-    &:hover,
-    &:focus-visible {
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 15%,
-        transparent
-      );
-      transform: translateX(2px);
-      outline: none;
-
-      .kronk-menu__item-glyph {
-        background: var(--kronk-purple-accent);
-        color: var(--surface-primary);
-      }
-    }
-
-    &--primary {
-      background: var(--kronk-purple-accent);
-      color: var(--surface-primary);
-      box-shadow: 0 2px 8px -2px
-        color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
-
-      &:hover,
-      &:focus-visible {
-        background: var(--kronk-purple-bright);
-        color: var(--surface-primary);
-
-        .kronk-menu__item-glyph {
-          background: color-mix(
-            in oklab,
-            var(--semantic-text-on-accent) 20%,
-            transparent
-          );
-          color: var(--surface-primary);
-        }
-      }
-
-      .kronk-menu__item-glyph {
-        background: color-mix(
-          in oklab,
-          var(--semantic-text-on-accent) 20%,
-          transparent
-        );
-        color: var(--surface-primary);
-      }
-    }
-  }
-
-  &__item-glyph {
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.1rem;
-    height: 2.1rem;
-    border-radius: var(--radius-medium);
-    background: color-mix(
-      in oklab,
-      var(--kronk-purple-accent) 12%,
-      transparent
-    );
-    color: var(--kronk-purple-accent);
-    transition:
-      background var(--dur-fast) var(--ease-out),
-      color var(--dur-fast) var(--ease-out);
+      transform 520ms cubic-bezier(0.34, 1.4, 0.64, 1)
+        calc(var(--moon-index, 0) * 65ms),
+      opacity 300ms ease-out calc(var(--moon-index, 0) * 65ms + 30ms);
 
     svg {
-      width: 1.1rem;
-      height: 1.1rem;
+      width: 1.2rem;
+      height: 1.2rem;
       fill: currentColor;
     }
   }
 
-  &__item-label {
-    flex: 1 1 auto;
+  &--open &__ring {
+    pointer-events: none; // ring itself stays transparent to pointer events
   }
 
-  &__item-badge {
-    min-width: 1.35rem;
-    height: 1.35rem;
-    padding: 0 0.4rem;
-    border-radius: var(--radius-round);
-    background: var(--kronk-purple-accent);
-    color: var(--surface-primary);
-    font-size: 0.7rem;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+  &--open &__moon {
+    pointer-events: auto;
+    opacity: 1;
+
+    // OPEN state: rotate to the moon's own bearing (centre + delta),
+    // extend outward by --moon-radius, counter-rotate so the icon stays
+    // upright, scale to full size. Because delta is signed and small
+    // (±25° for outer moons at 50° step), CSS takes the shortest path —
+    // outer moons swoop CCW / CW around the centre moon as they extend.
+    transform: rotate(var(--moon-centre, 0deg)) rotate(var(--moon-delta, 0deg))
+      translateY(calc(-1 * var(--moon-radius, 0px)))
+      rotate(calc(-1 * var(--moon-delta, 0deg)))
+      rotate(calc(-1 * var(--moon-centre, 0deg))) scale(1);
+
+    // Hover / focus is scoped to the open state so specificity beats the
+    // resting open transform above (both otherwise share weight, and
+    // source order would swallow the hover scale).
+    &:hover,
+    &:focus-visible {
+      background: var(--kronk-purple-bright);
+      outline: none;
+      transform: rotate(var(--moon-centre, 0deg))
+        rotate(var(--moon-delta, 0deg))
+        translateY(calc(-1 * var(--moon-radius, 0px)))
+        rotate(calc(-1 * var(--moon-delta, 0deg)))
+        rotate(calc(-1 * var(--moon-centre, 0deg))) scale(1.1);
+    }
   }
 }
 
