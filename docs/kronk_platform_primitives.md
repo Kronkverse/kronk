@@ -31,12 +31,13 @@ same PR.
 | `<KornerShell>` (legacy)                                                            | Older per-korner wrapper. Retires as each korner moves onto Stage + archetypes.                                               | `components/korner_shell.tsx`. **Do not use for new korners.**                                                                                                    |
 | `<KronkStarfield>`                                                                  | Shared ambient purple starfield backdrop.                                                                                     | `components/kronk_starfield.tsx` + `styles/mastodon/_stars.scss`.                                                                                                 |
 
-## Compose
+## Compose + confirmation
 
-| Primitive                     | What it does                                                                                                                                          | Where                                                                                                                     |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `<ComposeShell>`              | The floating composer overlay every korner's `/hub/<slug>/composer` renders inside. Portal, dim backdrop, korner-icon header, Cancel + Submit footer. | `components/compose_shell.tsx` + `styles/mastodon/_compose_shell.scss`. Decision: `docs/rebuild/decisions.md` 2026-08-12. |
-| `<ComposeFab>` (the Ж bubble) | The single site-chrome entry point for any composer. Reads `compose.route` from manifests — no local FABs.                                            | `components/compose_fab.tsx`.                                                                                             |
+| Primitive                                     | What it does                                                                                                                                                                                                                                                                                               | Where                                                                                                                     |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `<ComposeShell>`                              | The floating composer overlay every korner's `/hub/<slug>/composer` renders inside. Portal, dim backdrop, korner-icon header, Cancel + Submit footer.                                                                                                                                                      | `components/compose_shell.tsx` + `styles/mastodon/_compose_shell.scss`. Decision: `docs/rebuild/decisions.md` 2026-08-12. |
+| `<ComposeFab>` (the Ж bubble)                 | The single site-chrome entry point for any composer. Reads `compose.route` from manifests — no local FABs.                                                                                                                                                                                                 | `components/compose_fab.tsx`.                                                                                             |
+| `<ConfirmDialog>` + `useConfirmDialog()` hook | The "are you sure?" primitive — delete / leave / cancel flows. Portal-mounted with a dim backdrop and destructive-CTA variant so the visual grammar matches `<ComposeShell>` (make vs confirm are variants of the same modal system). Hook returns `[dialog, confirm]` — `confirm(opts)` is Promise-based. | `components/confirm_dialog.tsx` + `hooks/useConfirmDialog.tsx` + `styles/mastodon/_kronk_confirm.scss`.                   |
 
 ## Audience / Reach
 
@@ -49,11 +50,11 @@ same PR.
 
 ## Feed & status projection
 
-| Primitive                                                                                    | What it does                                                                                                                     | Where                                                                             |
-| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `<StatusKornerCard>`                                                                         | The shared per-korner feed card frame. Every korner-projected status **should** render inside this — see "half-done" note below. | `components/status_korner_card.tsx` + `styles/mastodon/_status_korner_card.scss`. |
-| Per-korner status cards — `Status{Albutts,Booth,Event,Kommons,Kuestions,Trek,Wachuneed}Card` | Legacy per-korner cards. Being folded into `StatusKornerCard` — Kalendar manifest documents this as a live migration goal.       | `components/status_*_card.tsx`.                                                   |
-| `<KornerCards>`, `<StatusSpaceBar>`, `<StatusKrewBadge>`                                     | Sub-parts of status/feed chrome.                                                                                                 | `components/korner_cards.tsx`, `status_space_bar.tsx`, `status_krew_badge.tsx`.   |
+| Primitive                                                                                    | What it does                                                                                                                                                                                             | Where                                                                             |
+| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `<StatusKornerCard>`                                                                         | The shared per-korner feed card frame. Every korner-projected status renders inside this — outer container, badge row, whole-card click-through, keyboard handling.                                      | `components/status_korner_card.tsx` + `styles/mastodon/_status_korner_card.scss`. |
+| Per-korner status cards — `Status{Albutts,Booth,Event,Kommons,Kuestions,Trek,Wachuneed}Card` | Per-korner card bodies. **All seven wrap `<StatusKornerCard>` today** — the shell owns the badge + outer chrome, each card body handles korner-specific layout (RSVP buttons, vote counts, media grids). | `components/status_*_card.tsx`.                                                   |
+| `<KornerCards>`, `<StatusSpaceBar>`, `<StatusKrewBadge>`                                     | Sub-parts of status/feed chrome.                                                                                                                                                                         | `components/korner_cards.tsx`, `status_space_bar.tsx`, `status_krew_badge.tsx`.   |
 
 ## Korner framework
 
@@ -83,6 +84,27 @@ same PR.
 | `useAvailableKrews`              | Composer-side hook (see Audience above).              | `hooks/useAvailableKrews.ts`.                                                          |
 | `<KornerKrewPicker>`             | Korner-scoped picker for scoping to specific Krews.   | `components/korner_krew_picker.tsx`.                                                   |
 
+## Detail pages
+
+| Primitive        | What it does                                                                                                                                                                                                               | Where                                                                  |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `<KornerDetail>` | The shell every korner's detail page mounts inside. Slots: `hero`, `banner`, `title` + `titleIcon`, `subtitle`, `meta`, `actions`, `children`. Mounts inside the `.stage-column` archetype with a detail-scoped 42rem cap. | `components/korner_detail.tsx` + `styles/mastodon/_kronk_detail.scss`. |
+| `<KornerMeta>`   | The middle-dot metadata line under a title (`Tue 7pm · The Pier · 4 going · by @jane`). Falsy items filtered so conditionals can be inlined; owns the layout + separator + muted colour + `<strong>` emphasis.             | `components/korner_meta.tsx` + `styles/mastodon/_kronk_meta.scss`.     |
+
+## Actions
+
+| Primitive           | What it does                                                                                                                                                                                                     | Where                                                                          |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `<KornerActionBar>` | Flex-row layout for the row of pill actions under content (Invite / Edit / Delete on event detail, Join / Leave on Krew). Wraps on narrow phones. `align`: `start` / `end` / `center` / `between`.               | `components/korner_action_bar.tsx` + `styles/mastodon/_kronk_action_bar.scss`. |
+| `<KornerPill>`      | Rounded pill button, icon slot + label + `default` / `primary` / `destructive` variants + `active` toggle state. Destructive matches `<ConfirmDialog>`'s warn-red so a delete-then-confirm reads as one gesture. | `components/korner_pill.tsx`.                                                  |
+
+## State indicators
+
+| Primitive        | What it does                                                                                                                                                                                                    | Where                                                                  |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `<EmptyState>`   | The rest-state pattern for a korner surface with no content ("Nothing coming up yet."). Muted centred title + optional body + optional trailing CTA. No icon slot (SpaceBadge already carries the korner icon). | `components/empty_state.tsx` + `styles/mastodon/_kronk_states.scss`.   |
+| `<LoadingState>` | The transient counterpart. Wraps Mastodon's `<LoadingIndicator>` with Kronk-standard layout + an optional label; spinner sits inline (not absolute-centred) so the primitive drops into any container.          | `components/loading_state.tsx` + `styles/mastodon/_kronk_states.scss`. |
+
 ## Inter-korner communication
 
 | Primitive                                      | What it does                                                         | Where                                                                                                                                 |
@@ -106,20 +128,21 @@ None of these are worth reorganising the tree over (upstream-merge cost), but th
 
 ## Candidates for future standardisation
 
-Written down for review, not committed. Each row is duplication that already
-exists across korners — a shared primitive would delete N per-korner
-implementations. Rough order = pain × frequency.
+The 2026-08-13 primitives sweep shipped five of the seven originally
+listed here (`<EmptyState>` + `<LoadingState>`, `<KornerMeta>`,
+`<ConfirmDialog>`, `<KornerActionBar>` + `<KornerPill>`,
+`<KornerDetail>`) — each with a reference adopter in Kalendar or
+event_detail. **StatusKornerCard sweep** turned out to be
+already-done on inspection (all seven per-korner cards wrap the shell
+today; the Kalendar manifest comment implying otherwise was stale and
+was fixed in the same sweep). What's left:
 
-| Candidate                              | What each korner writes today                                                                                                                                                                                                             | Roughly what the shared version looks like                                                                                                                                                                |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`<KornerDetail>` shell**             | `event_detail.tsx`, `krew_detail.tsx`, `album_detail.tsx`, `proposal_page.tsx`, `space_page.tsx`, `booth_set_page.tsx` all re-implement: title strip + meta line + action bar + body sections + related-activity tail.                    | A wrapper that provides those slots + the standard back-nav + the standard scroll shape. Body content stays korner-specific.                                                                              |
-| **StatusKornerCard sweep**             | 7 legacy per-korner cards (`StatusEventCard`, `StatusAlbuttsCard`, `StatusBoothCard`, `StatusKommonsCard`, `StatusKuestionsCard`, `StatusTrekCard`, `StatusWachuneedCard`). Kalendar manifest calls this out as an outstanding migration. | Fold each into `StatusKornerCard` with a per-korner content slot. Half of the standardisation is already done — this is completing it, not designing something new.                                       |
-| **`<EmptyState>` + `<LoadingState>`**  | `.kalendar-list__state`, `.krew-page__loading`, `.krew-page__error`, `.event-composer__error`, and probably one per Albutts / Booth / Kommons.                                                                                            | Two tiny primitives with an optional CTA slot. Cheap; universal.                                                                                                                                          |
-| **`<ConfirmDialog>`**                  | Every "delete this?" / "leave the Krew?" / "cancel your RSVP?" reaches for `dispatch(openModal(...))` or a hand-rolled `<Modal>`. Post-ComposeShell, this is the next-most-frequent bespoke overlay.                                      | A tiny modal primitive with title + body + destructive-CTA + cancel. Same shape everywhere so the destructive interaction reads as one thing.                                                             |
-| **Korner action bar**                  | The row of pill buttons under a title (RSVP / Vote / Join / Attend / Play). Visual pattern is identical; semantics differ; each korner writes both.                                                                                       | A `<KornerActionBar>` layout + a shared pill-button variant. Actions stay korner-specific; the strip stops being re-styled.                                                                               |
-| **`<KornerTile>` / `<KornerListRow>`** | Booth tiles, Albutts covers, Hub tiles, Krew cards, Mate rows, Kalendar list rows — very similar rectangles, each with its own SCSS.                                                                                                      | Two archetype-scoped card primitives: `<KornerTile>` for `.stage-grid` children, `<KornerListRow>` for `.stage-column` children. Body-content slot; padding, radius, hover state come from the primitive. |
-| **Detail metadata line**               | `<by @user · 2h ago · @location>` under a title. Every detail page and every card writes its own version.                                                                                                                                 | A single `<KornerMeta>` component. Cheap.                                                                                                                                                                 |
+| Candidate                              | What each korner writes today                                                                                                        | Roughly what the shared version looks like                                                                                                                                                                | Status                                                                                                                      |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **`<KornerTile>` / `<KornerListRow>`** | Booth tiles, Albutts covers, Hub tiles, Krew cards, Mate rows, Kalendar list rows — very similar rectangles, each with its own SCSS. | Two archetype-scoped card primitives: `<KornerTile>` for `.stage-grid` children, `<KornerListRow>` for `.stage-column` children. Body-content slot; padding, radius, hover state come from the primitive. | **Deferred** — Hub's tile has too much hub-specific chrome to be a clean reference adopter; revisit when a second surfaces. |
 
-None of these are urgent. The pattern for landing them is the same as the
-Stage archetypes + ComposeShell: **write the primitive, migrate one reference
-adopter, leave the shipped korners for follow-up PR-by-PR sweeps.**
+Backfill migrations that _could_ happen but aren't urgent: shipped
+korners still writing their own `-shell` / `-actions` / `-empty` /
+`-loading` / `-meta` / `-detail` blocks (Krew, Kommons, Albutts,
+Booth, Kuestions, etc.) can adopt the corresponding primitive one
+korner per PR, same pattern this sweep used.
