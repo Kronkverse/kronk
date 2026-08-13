@@ -31,6 +31,7 @@ import SpiralIcon from '@/material-icons/400-24px/spiral.svg?react';
 import StacksIcon from '@/material-icons/400-24px/stacks.svg?react';
 import TauntIcon from '@/material-icons/400-24px/taunt.svg?react';
 import TravelExploreIcon from '@/material-icons/400-24px/travel_explore.svg?react';
+import ZhongIcon from '@/material-icons/400-24px/zhong.svg?react';
 import type { IconProp } from 'mastodon/components/icon';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { store } from 'mastodon/store';
@@ -69,6 +70,8 @@ const MATERIAL_TO_ICON: Record<string, IconProp> = {
   stacks: StacksIcon,
   taunt: TauntIcon,
   travel_explore: TravelExploreIcon,
+  // 中 (zhōng) — "middle". Kronk-custom glyph, not a Material Symbol.
+  zhong: ZhongIcon,
 };
 
 // Filled variants — a subset of MATERIAL_TO_ICON. Populated only for
