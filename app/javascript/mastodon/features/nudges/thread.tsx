@@ -8,7 +8,6 @@ import { useParams, useLocation } from 'react-router-dom';
 import AddPhotoIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import ArrowUpwardIcon from '@/material-icons/400-24px/arrow_upward-fill.svg?react';
 import CelebrationIcon from '@/material-icons/400-24px/celebration-fill.svg?react';
-import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import { importFetchedAccounts } from 'mastodon/actions/importer';
 import { decrementNudgeCount } from 'mastodon/actions/notification_groups';
 import api from 'mastodon/api';
@@ -25,6 +24,7 @@ import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
 import { VoicePlayer, VoiceRecorder } from 'mastodon/components/media';
 import type { VoiceRecorderChange } from 'mastodon/components/media';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import type { Account } from 'mastodon/models/account';
 import type { NotificationGroupNudge } from 'mastodon/models/notification_group';
 import { selectUnreadNudgesCount } from 'mastodon/selectors/notifications';
@@ -727,8 +727,8 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   return (
     <Column bindToDocument={!multiColumn} ref={columnRef} label={title}>
       <ColumnHeader
-        icon='partner_exchange'
-        iconComponent={PartnerExchangeIcon}
+        icon='nudge'
+        iconComponent={kornerIcon('nudges')}
         title={title}
         onClick={handleHeaderClick}
         multiColumn={multiColumn}
@@ -749,7 +749,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               <span
                 className={`nudge-thread-banner__streak${streakBumped ? ' nudge-thread-banner__streak--bump' : ''}`}
               >
-                <Icon icon={PartnerExchangeIcon} id='partner_exchange' />
+                <Icon icon={kornerIcon('nudges')} id='nudge' />
                 {streak}
               </span>
             )}
@@ -931,7 +931,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               {hasContent ? (
                 <Icon icon={ArrowUpwardIcon} id='arrow_upward' />
               ) : (
-                <Icon icon={PartnerExchangeIcon} id='partner_exchange' />
+                <Icon icon={kornerIcon('nudges')} id='nudge' />
               )}
             </button>
           </div>

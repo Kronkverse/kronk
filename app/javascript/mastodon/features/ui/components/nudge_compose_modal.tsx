@@ -3,7 +3,6 @@ import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import MicIcon from '@/material-icons/400-24px/mic.svg?react';
-import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import StopIcon from '@/material-icons/400-24px/stop.svg?react';
 import { apiNudgeAccount } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
@@ -12,6 +11,7 @@ import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
 import { Icon } from 'mastodon/components/icon';
 import { uploadMediaBlob } from 'mastodon/components/media';
 import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useAppSelector } from 'mastodon/store';
 
 const MAX_WORDS = 100;
@@ -271,7 +271,7 @@ export const NudgeComposeModal: React.FC<{
   return (
     <div className='modal-root__modal nudge-compose-modal'>
       <div className='nudge-compose-modal__header'>
-        <Icon icon={PartnerExchangeIcon} id='partner_exchange' />
+        <Icon icon={kornerIcon('nudges')} id='nudge' />
         <h2>
           <FormattedMessage
             id='nudge_compose.title'

@@ -4,8 +4,8 @@ import { useIntl, defineMessages } from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 
-import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import { IconButton } from 'mastodon/components/icon_button';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
 
@@ -78,8 +78,8 @@ export const NudgeButton: React.FC<NudgeButtonProps> = ({
     <IconButton
       className={className}
       title={intl.formatMessage(messages.nudge, { name: username ?? '' })}
-      icon='partner_exchange'
-      iconComponent={PartnerExchangeIcon}
+      icon='nudge'
+      iconComponent={kornerIcon('nudges')}
       onClick={handleClick}
     />
   );

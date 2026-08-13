@@ -5,7 +5,6 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { Link, useHistory } from 'react-router-dom';
 
-import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import { importFetchedAccounts } from 'mastodon/actions/importer';
 import { openModal } from 'mastodon/actions/modal';
 import {
@@ -26,6 +25,7 @@ import { ColumnHeader } from 'mastodon/components/column_header';
 import { DisplayName } from 'mastodon/components/display_name';
 import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import type { NotificationGroupNudge } from 'mastodon/models/notification_group';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
@@ -152,8 +152,8 @@ const NudgeAlert: React.FC<{
       onKeyDown={handleKeyDown}
     >
       <Icon
-        id='partner_exchange'
-        icon={PartnerExchangeActiveIcon}
+        id='nudge'
+        icon={kornerIcon('nudges', undefined, true)}
         className='nudge-alert__icon'
       />
       <span className='nudge-alert__text'>
@@ -247,7 +247,7 @@ const ConversationRow: React.FC<{
           </span>
           {partner.streak > 1 && (
             <span className='nudge-conv-row__streak'>
-              <Icon icon={PartnerExchangeActiveIcon} id='partner_exchange' />
+              <Icon icon={kornerIcon('nudges', undefined, true)} id='nudge' />
               {partner.streak}
             </span>
           )}
@@ -310,7 +310,7 @@ const SuggestionRow: React.FC<{ suggestion: ApiNudgeSuggestion }> = ({
           </Button>
         ) : (
           <Button compact onClick={handleNudge}>
-            <Icon icon={PartnerExchangeActiveIcon} id='partner_exchange' />
+            <Icon icon={kornerIcon('nudges', undefined, true)} id='nudge' />
           </Button>
         )}
       </div>
@@ -464,8 +464,8 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
       label={intl.formatMessage(messages.title)}
     >
       <ColumnHeader
-        icon='partner_exchange'
-        iconComponent={PartnerExchangeActiveIcon}
+        icon='nudge'
+        iconComponent={kornerIcon('nudges', undefined, true)}
         title={intl.formatMessage(messages.title)}
         onClick={handleHeaderClick}
         multiColumn={multiColumn}
@@ -607,8 +607,8 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
           suggestions.length === 0 && (
             <div className='nudge-empty-state'>
               <Icon
-                icon={PartnerExchangeActiveIcon}
-                id='partner_exchange'
+                icon={kornerIcon('nudges', undefined, true)}
+                id='nudge'
                 className='nudge-empty-state__icon'
               />
               <p className='nudge-empty-state__title'>

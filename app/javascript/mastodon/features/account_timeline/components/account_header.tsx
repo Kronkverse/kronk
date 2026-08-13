@@ -14,7 +14,6 @@ import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import NotificationsActiveIcon from '@/material-icons/400-24px/notifications_active-fill.svg?react';
-import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import {
   followAccount,
@@ -46,6 +45,7 @@ import { ShortNumber } from 'mastodon/components/short_number';
 import { AccountNote } from 'mastodon/features/account/components/account_note';
 import { DomainPill } from 'mastodon/features/account/components/domain_pill';
 import FollowRequestNoteContainer from 'mastodon/features/account/containers/follow_request_note_container';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useIdentity } from 'mastodon/identity_context';
 import { autoPlayGif, me, domain as localDomain } from 'mastodon/initial_state';
 import type { Account } from 'mastodon/models/account';
@@ -706,8 +706,8 @@ export const AccountHeader: React.FC<{
         : intl.formatMessage(messages.nudge, { name: account.username });
     nudgeBtn = (
       <IconButton
-        icon='partner_exchange'
-        iconComponent={PartnerExchangeIcon}
+        icon='nudge'
+        iconComponent={kornerIcon('nudges')}
         active={nudgeSent}
         disabled={!canNudge}
         title={nudgeTitle}

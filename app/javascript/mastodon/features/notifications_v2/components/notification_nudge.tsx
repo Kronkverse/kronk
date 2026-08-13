@@ -4,11 +4,11 @@ import { FormattedMessage } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
-import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import { openModal } from 'mastodon/actions/modal';
 import { decrementNudgeCount } from 'mastodon/actions/notification_groups';
 import { apiGetNudgeThread } from 'mastodon/api/accounts';
 import { Button } from 'mastodon/components/button';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import type {
   NotificationGroupNudge,
   NudgeMessageData,
@@ -230,8 +230,8 @@ export const NotificationNudge: React.FC<{
   return (
     <NotificationGroupWithStatus
       type='nudge'
-      icon={PartnerExchangeIcon}
-      iconId='partner_exchange'
+      icon={kornerIcon('nudges')}
+      iconId='nudge'
       accountIds={notification.sampleAccountIds}
       timestamp={notification.latest_page_notification_at}
       count={notification.notifications_count}
