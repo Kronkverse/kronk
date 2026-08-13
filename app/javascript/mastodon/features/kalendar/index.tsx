@@ -76,20 +76,31 @@ const Kalendar: React.FC<{ multiColumn?: boolean }> = () => {
         <meta name='robots' content='noindex' />
       </Helmet>
 
-      <FeedDrum
-        reach={view}
-        order={[...VIEWS]}
-        onScopeChange={handleScopeChange}
-      >
-        {view === 'spiral' && (
-          <iframe
-            title={title}
-            src='/kalendar-spiral-preview.html'
-            className='korner-iframe'
-          />
-        )}
-        {view === 'list' && <KalendarListView />}
-      </FeedDrum>
+      {/* `<FeedDrum>` was designed for the /home column-scroll feed,
+          which is document-scrolled and gets its height from content.
+          Kalendar's faces (iframe + list) need to fill Stage instead
+          — so wrap the drum in a flex-column shell (`.kalendar-shell`)
+          whose CSS also stretches `.feed-drum` and `.feed-drum__live`
+          when they're mounted inside it. Without this the iframe
+          collapses to its default 150px height and the list has no
+          scroll container (Tal 2026-08-13: "the view is all too
+          small"). */}
+      <div className='kalendar-shell'>
+        <FeedDrum
+          reach={view}
+          order={[...VIEWS]}
+          onScopeChange={handleScopeChange}
+        >
+          {view === 'spiral' && (
+            <iframe
+              title={title}
+              src='/kalendar-spiral-preview.html'
+              className='korner-iframe'
+            />
+          )}
+          {view === 'list' && <KalendarListView />}
+        </FeedDrum>
+      </div>
     </Stage>
   );
 };
