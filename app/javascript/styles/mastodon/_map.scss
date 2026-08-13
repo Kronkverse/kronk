@@ -822,8 +822,14 @@
   }
 
   &__map {
+    // 3:1 matches the feed glimpse (status_trek_card.tsx viewBox) so the same
+    // route reads the same shape on both surfaces. min-height keeps the map
+    // usable on narrow viewports where 3:1 would otherwise collapse below
+    // ~130px — MapLibre needs enough vertical room to place the fitBounds
+    // padding + attribution without swallowing the route.
     width: 100%;
-    height: 280px;
+    aspect-ratio: 3 / 1;
+    min-height: 200px;
     border-radius: var(--radius-medium);
     overflow: hidden;
   }
