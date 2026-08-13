@@ -1,7 +1,15 @@
 # frozen_string_literal: true
 
 class StatusLengthValidator < ActiveModel::Validator
-  MAX_CHARS = 5000
+  # Kronk runs a much longer post than upstream Mastodon's 500: long-form
+  # writing is a thing people come here to do. Raised 5000 → 15000 on
+  # 2026-08-13 because 5000 was cutting real posts off mid-piece.
+  #
+  # Clients read this through `/api/v1/instance` and `/api/v2/instance`
+  # (`configuration.statuses.max_characters`), so the web composer's counter
+  # follows automatically. Anything that hardcodes its own cap does not —
+  # see the note in the PR that raised this.
+  MAX_CHARS = 15_000
   URL_PLACEHOLDER_CHARS = 23
   URL_PLACEHOLDER = 'x' * 23
 
