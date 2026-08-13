@@ -157,6 +157,28 @@ export const ScopeTitle: React.FC<Props> = ({
       >
         <Icon id='chevron-right' icon={ChevronRightIcon} />
       </button>
+
+      {/* Position strip across the bottom of the title space: one segment per
+          face, the filled one showing where the rotator currently sits. It
+          answers "how many views are there, and which am I on?" — which the
+          chevrons alone don't, since they give no sense of extent.
+
+          Hidden from assistive tech on purpose: it is a visual restatement of
+          the title, which already announces the current view via the label's
+          aria-label. Announcing it twice would be noise.
+
+          Skipped entirely at one face — there is no position to show. */}
+      {n > 1 && (
+        <div className='scope-title__progress' aria-hidden='true'>
+          <div
+            className='scope-title__progress-thumb'
+            style={{
+              width: `${100 / n}%`,
+              transform: `translateX(${idx * 100}%)`,
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };
