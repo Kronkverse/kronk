@@ -94,25 +94,31 @@ export const KalendarListView: React.FC = () => {
 
   if (events === null) {
     return (
-      <div className='kalendar-list kalendar-list--loading'>
-        <FormattedMessage {...messages.loading} />
+      <div className='stage-column'>
+        <div className='kalendar-list__state'>
+          <FormattedMessage {...messages.loading} />
+        </div>
       </div>
     );
   }
 
   if (events.length === 0) {
     return (
-      <div className='kalendar-list kalendar-list--empty'>
-        {intl.formatMessage(messages.empty)}
+      <div className='stage-column'>
+        <div className='kalendar-list__state'>
+          {intl.formatMessage(messages.empty)}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className='kalendar-list'>
-      {events.map((event) => (
-        <EventCard key={event.id} event={event} onRsvp={handleRsvpVoid} />
-      ))}
+    <div className='stage-column'>
+      <div className='stage-column__inner'>
+        {events.map((event) => (
+          <EventCard key={event.id} event={event} onRsvp={handleRsvpVoid} />
+        ))}
+      </div>
     </div>
   );
 };

@@ -17,6 +17,57 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-13 — Stage layer publishes three archetype classes (`.stage-fill`, `.stage-column`, `.stage-grid`)
+
+Every korner mounts into the same Stage rectangle, but until now each
+one wrote its own outer flex/scroll/max-width wrapper — `.kalendar-shell`,
+`.kuestions-shell`, `.hub-page__board`, `.booth-native`, `.albutts-*-grid`
+etc. — with subtly different padding, subtly different overflow rules,
+and subtly different responsive behaviour. Kalendar shipping its own
+`.kalendar-shell` on 2026-08-13 (the FeedDrum-in-Stage sizing fix) was the
+tipping point: it was the third or fourth "shell" class that did the
+same job as an earlier one.
+
+`_kronk_stage.scss` now publishes three shared archetypes. A korner's
+Stage-child picks one, or writes its own if none fit:
+
+- **`.stage-fill`** — full-bleed: fills the Stage rectangle, no side
+  padding, no max-width. For canvases and rotators (Kalendar Spiral,
+  the Kalendar rotator itself, Map, Kommunity orb, Inflow veil).
+- **`.stage-column`** — capped reading column, centred, `max-width: 38.75rem`
+  (matches Mastodon's classic reading width), vertical scroll only.
+  For list-shape faces (Kalendar list, Kommons proposals, Kuestions
+  panels, Krew list, Mate list).
+- **`.stage-grid`** — capped-width responsive tile grid,
+  `minmax(min(140px, 100%), 1fr)` (the `min(…)` clamp lets tiles
+  shrink below their nominal 140px on narrow phone Stages instead of
+  forcing a horizontal scrollbar). For tile landings (Hub, Albutts,
+  Booth gallery).
+
+**Vertical-scroll only.** Both scrolling archetypes (`.stage-column`
+and `.stage-grid`) declare `overflow-x: hidden` explicitly. Per the
+CSS spec, `overflow-y: auto` with default `overflow-x: visible` gets
+promoted to `overflow-x: auto` in Chromium — so setting `hidden`
+explicitly is what actually keeps them vertical-only on phone. Kronk
+phone views never side-scroll (Tal, 2026-08-13: "the thing i very
+specifically do not want is the half/view, side scroll of the phone
+screen, only vertical scroll").
+
+**Migration is opt-in, not forced.** This decision introduces the
+classes and converts Kalendar (both faces) as the reference adopter.
+Shipped korners that already have working shells (Kuestions, Hub,
+Albutts, Booth, Krew, Kommons) keep them. Follow-up sweeps convert
+one at a time so per-korner idiosyncrasies (Kuestions' star-field
+backdrop, Hub's tile-icon chrome, Booth's size-variant gallery) get
+audited on their own PR rather than in a single sprawling refactor.
+
+New korners land on an archetype by default. If the manifest reviewer
+sees a fresh `-shell` class doing what an archetype already does, that
+is the reason to say "use `.stage-fill` / `.stage-column` / `.stage-grid`
+instead" during intake.
+
+**Supersedes:** the Kalendar `.kalendar-shell` (already retired here).
+
 ## 2026-08-12 — Notifications: own-content first, federation and moderation deferred
 
 Three calls that scope the retirement of the legacy `Notification` store. The

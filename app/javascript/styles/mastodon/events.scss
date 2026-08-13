@@ -29,54 +29,18 @@ $ev-interested-color: #b8945f;
   max-width: 540px;
 }
 
-// Kalendar rotator shell — stretches the drum to fill Stage so the
-// two faces (iframe + list) get real vertical space. `<FeedDrum>` is
-// otherwise sized by its own content — perfect for the /home
-// document-scrolled feed it was built for, wrong for a Stage-hosted
-// face where the child (iframe or scroll-list) needs to fill the
-// rectangle. Fixed 2026-08-13 after the FeedDrum landed the Kalendar
-// iframe collapsed to its default ~150px height.
-.kalendar-shell {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-
-  > .feed-drum {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    min-height: 0;
-  }
-
-  > .feed-drum > .feed-drum__live {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    min-height: 0;
-  }
-}
-
-// Kalendar list-view — the "list" face of the rotator (see
-// `features/kalendar/list_view.tsx`). Stack the reused `<EventCard>`s
-// vertically with breathing room, and give the loading / empty
-// states a muted centred read. `overflow-y: auto` so the drum's
-// fixed rectangle contains the scroll instead of overflowing Stage.
-.kalendar-list {
-  overflow-y: auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 20px;
-
-  &--loading,
-  &--empty {
-    color: var(--text-muted, var(--secondary-text-color));
-    font-size: 14px;
-    text-align: center;
-    padding: 32px 20px;
-  }
+// Kalendar rotator shell + list — retired 2026-08-13. Both faces
+// (Spiral iframe, upcoming list) now sit on the shared Stage archetypes
+// (`.stage-fill` around the rotator, `.stage-column` inside the list
+// face). See `_kronk_stage.scss` for the archetype definitions.
+// `.kalendar-list__state` is the only leftover — a muted, centred
+// read for the "Loading…" / "Nothing coming up yet." rows inside the
+// list face's `.stage-column`.
+.kalendar-list__state {
+  color: var(--text-muted, var(--secondary-text-color));
+  font-size: 14px;
+  text-align: center;
+  padding: 32px 20px;
 }
 
 .events-page {
