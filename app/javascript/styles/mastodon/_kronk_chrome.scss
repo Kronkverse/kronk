@@ -268,8 +268,22 @@ body.admin {
       border-radius: var(--radius-small);
     }
 
+    // Selection: a tinted tile with a filled glyph — the same method the
+    // korner sidebar uses for its active item (`.korner-sidebar__item--active`),
+    // minus that rail's left-edge stripe, which is directional and has no
+    // meaning on a horizontal row. Replaces the gliding pool of light
+    // (Tal 2026-08-13: one method of selection across both nav surfaces).
     &--active {
-      color: var(--text-primary);
+      color: var(--semantic-text-on-accent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 28%,
+        transparent
+      );
+      border-color: var(--kronk-purple-accent);
+      border-radius: var(--radius-small);
+      box-shadow: inset 0 0 0 1px
+        color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
     }
   }
 
@@ -323,47 +337,6 @@ body.admin {
       var(--border-subtle) calc(100% - 8px),
       transparent 100%
     );
-  }
-
-  // The pool — a soft rounded bar riding on the wire under the active
-  // pillar. `left` and `width` are set inline from JS; the transition
-  // does the glide. `is-ready` gates the transition so first mount and
-  // resize snap without animating in from zero.
-  &__pool {
-    position: absolute;
-    top: 0;
-    height: 2px;
-    border-radius: var(--radius-small);
-    background: var(--kronk-purple-bright);
-    box-shadow:
-      0 0 10px 1px var(--kronk-purple-bright),
-      0 0 20px 3px
-        color-mix(in oklab, var(--kronk-purple-bright) 50%, transparent);
-    pointer-events: none;
-    transform: translateZ(0); // separate compositor layer for the glow
-
-    // Radial halo behind the core — reads as light spilling off the
-    // wire onto the surface below.
-    &::before {
-      content: '';
-      position: absolute;
-      inset: -8px -18px;
-      background: radial-gradient(
-        ellipse at center,
-        color-mix(in oklab, var(--kronk-purple-bright) 28%, transparent) 0%,
-        transparent 70%
-      );
-      border-radius: var(--radius-round);
-      pointer-events: none;
-    }
-  }
-
-  // Enable the glide only after the first measurement lands.
-  &.is-ready &__pool {
-    transition:
-      left var(--dur-slow) var(--ease-out),
-      width var(--dur-slow) var(--ease-out);
-    animation: hub-switcher-land 700ms var(--ease-out);
   }
 
   // Arrival signal — a bright glint travels the length of the wire
@@ -442,20 +415,6 @@ body.admin {
   }
 }
 
-@keyframes hub-switcher-land {
-  0% {
-    filter: brightness(1);
-  }
-
-  40% {
-    filter: brightness(1.8);
-  }
-
-  100% {
-    filter: brightness(1);
-  }
-}
-
 @keyframes hub-switcher-arrival {
   0% {
     left: 0;
@@ -477,11 +436,6 @@ body.admin {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hub-switcher.is-ready .hub-switcher__pool {
-    transition: none;
-    animation: none;
-  }
-
   .hub-switcher.is-arriving .hub-switcher__wire::after {
     animation: none;
     display: none;
