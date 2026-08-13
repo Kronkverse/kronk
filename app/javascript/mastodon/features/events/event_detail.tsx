@@ -16,6 +16,7 @@ import StarIcon from '@/material-icons/400-24px/star.svg?react';
 import api from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
+import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { Stage } from 'mastodon/components/stage';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
@@ -344,36 +345,33 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
 
       {confirmDialog}
 
-      <div className='event-detail'>
-        {event.image_url && (
-          <div
-            className='event-detail__cover'
-            style={{ backgroundImage: `url(${event.image_url})` }}
-          />
-        )}
-
-        {/* No local ← Back to ₭alendar — the Frame's SpaceBadge in
-            the SpaceNav slot already returns to /hub/kalendar. */}
-
-        <div className='event-detail__header'>
-          {isLive && <div className='event-detail__live-banner'>LIVE NOW</div>}
-          <h1 className='event-detail__title'>
-            {event.event_type === 'huddle' && (
-              <Icon id='videocam' icon={VideocamIcon} />
-            )}
-            {event.event_type === 'event' && (
-              <Icon id='calendar_month' icon={CalendarMonthIcon} />
-            )}{' '}
-            {event.title}
-          </h1>
-          <div className='event-detail__host'>
+      <KornerDetail
+        className='event-detail'
+        hero={
+          event.image_url ? (
+            <div
+              className='event-detail__cover'
+              style={{ backgroundImage: `url(${event.image_url})` }}
+            />
+          ) : null
+        }
+        banner={isLive ? 'LIVE NOW' : null}
+        title={event.title}
+        titleIcon={
+          event.event_type === 'huddle' ? VideocamIcon : CalendarMonthIcon
+        }
+        titleIconId={
+          event.event_type === 'huddle' ? 'videocam' : 'calendar_month'
+        }
+        subtitle={
+          <>
             Hosted by{' '}
             <Link to={`/@${event.account.username}`}>
               @{event.account.username}
             </Link>
-          </div>
-        </div>
-
+          </>
+        }
+      >
         <div className='event-detail__info'>
           <div className='event-detail__info-row'>
             <Icon id='calendar_month' icon={CalendarMonthIcon} />
@@ -579,7 +577,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
             </div>
           )}
         </div>
-      </div>
+      </KornerDetail>
     </Stage>
   );
 };
