@@ -75,6 +75,9 @@ RSpec.describe Mastodon::CLI::Korners do
       expect(match?('/@:user/:id', '/@:acct/:statusId')).to be true
     end
 
+    # Also the guard on the catch-all case below: a bare route param matches a
+    # *literal* node segment, but not a node segment that carries a literal
+    # prefix of its own. The node is more specific than the route it claims.
     it 'still requires the literal part of a segment to agree' do
       expect(match?('/@:user', '/:id')).to be false
     end
@@ -98,6 +101,55 @@ RSpec.describe Mastodon::CLI::Korners do
 
     it 'rejects a renamed route' do
       expect(match?('/explore-renamed', '/explore')).to be false
+    end
+
+    # `get '/kronk/:page'` serves how-it-works, values, governance,
+    # contributors, rules, announcements and contact. Those seven nodes were
+    # reported as drift for as long as this check has existed, because a
+    # literal segment could not match a bare param.
+    it 'matches a literal segment against a catch-all route param' do
+      expect(match?('/kronk/how-it-works', '/kronk/:page')).to be true
+      expect(match?('/kronk/announcements', '/kronk/:page')).to be true
+    end
+
+    it 'does not let a catch-all in one namespace cover another' do
+      expect(match?('/hub/how-it-works', '/kronk/:page')).to be false
+    end
+  end
+
+  # Restores what the catch-all fix above would otherwise have cost. Once
+  # `/kronk/:page` matches any slug, the route check can no longer tell
+  # `/kronk/values` from `/kronk/vlaues` — both route, and the typo renders
+  # KronkController's 404 body. For an org node, the page exists if its
+  # markdown does.
+  describe 'org space content backing' do
+    subject(:cli) { described_class.new }
+
+    def missing?(url, lifecycle: 'live', bucket: 'kronk')
+      node = instance_double(Kronk::NodeRegistry::Node, url: url, lifecycle: lifecycle, bucket: bucket)
+      cli.send(:org_page_missing?, node)
+    end
+
+    it 'accepts an org node whose markdown ships' do
+      expect(missing?('/kronk/values')).to be false
+    end
+
+    it 'resolves the bare /kronk url to about.md' do
+      # The route supplies `defaults: { page: 'about' }`.
+      expect(missing?('/kronk')).to be false
+    end
+
+    it 'reports an org node with no markdown behind it' do
+      expect(missing?('/kronk/nonexistent-page')).to be true
+    end
+
+    it 'ignores nodes outside the org bucket' do
+      # /hub/* is mounted by React, not read off disk.
+      expect(missing?('/hub/kalendar', bucket: 'hub')).to be false
+    end
+
+    it 'ignores a node that does not claim to be live yet' do
+      expect(missing?('/kronk/nonexistent-page', lifecycle: 'soon')).to be false
     end
   end
 

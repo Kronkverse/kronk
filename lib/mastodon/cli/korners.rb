@@ -614,6 +614,8 @@ module Mastodon
 
           issues << "node '#{node.id}': url '#{node.url}' matches no Rails route and no React Router path" if node_url_drifted?(node)
 
+          issues << "node '#{node.id}': no content/kronk/#{org_page_key(node)}.md — /kronk/:page serves any slug, so this node 404s" if org_page_missing?(node)
+
           ::Kronk::NodeRegistry.links_for(node.id).each do |link|
             next if node_ids.include?(link['to'])
 
@@ -622,6 +624,29 @@ module Mastodon
         end
 
         issues
+      end
+
+      # The `/kronk/*` org space is served by one catch-all route reading
+      # markdown out of `content/kronk/`, so the route check above can no
+      # longer tell a real page from a typo — `/kronk/:page` matches both, and
+      # `KronkController` renders "No content at …" with a 404 for the typo.
+      #
+      # This is the coverage the catch-all fix would otherwise have cost:
+      # for an org node, the page exists if its markdown file does.
+      # `/kronk` and `/kronk/about` both resolve to about.md — the bare route
+      # passes `defaults: { page: 'about' }`.
+      def org_page_key(node)
+        node.url.to_s.delete_prefix('/kronk').delete_prefix('/').presence || 'about'
+      end
+
+      def org_page_missing?(node)
+        return false unless node.lifecycle.to_s == 'live'
+        return false unless node.bucket == 'kronk'
+
+        key = org_page_key(node)
+        return false if key.include?(':') # a parameterised org node, if one ever lands
+
+        !Rails.root.join('content', 'kronk', "#{key}.md").exist?
       end
 
       def rails_route_exists?(name)
@@ -696,11 +721,43 @@ module Mastodon
         p.each_with_index.all? { |seg, i| segment_matches?(u[i], seg) }
       end
 
+      # A segment is a literal prefix plus an optional `:param` tail:
+      # `settings`, `:page`, `@:acct`. Three cases, and the middle one is the
+      # fix:
+      #
+      # 1. Both sides parameterised (`@:user` vs `@:acct`, `:id` vs `:statusId`)
+      #    — the params name the same thing differently, so only the literal
+      #    prefix has to agree. `/@:user` still does not match a bare `/:id`:
+      #    the node is more specific than the route, which is drift.
+      # 2. **Literal node segment against a bare route param** — a match. The
+      #    route serves any value there, and a fixed page is one of them.
+      # 3. Neither parameterised — plain comparison.
+      #
+      # Case 2 was previously impossible: the old version compared
+      # `split(':').first` on both sides, which for a bare `:page` is `''`, so
+      # no literal could ever equal it. Every page served by a catch-all route
+      # therefore read as drift — `/kronk/:page` serves how-it-works, values,
+      # governance, contributors, rules, announcements and contact, and all
+      # seven were false positives. They were also the only thing between this
+      # job and green, and a check that is always red teaches people to ignore
+      # it.
+      #
+      # Route params are not tested against their constraint regex, so a match
+      # means "something is mounted at this shape", not "this page renders".
+      # That is the drift question; rendering is what request specs are for.
       def segment_matches?(node_seg, route_seg)
+        node_seg = node_seg.to_s
+        route_seg = route_seg.to_s
+
         return true if route_seg.start_with?('*')
 
-        if node_seg.include?(':') || route_seg.include?(':')
-          node_seg.split(':').first.to_s.casecmp?(route_seg.split(':').first.to_s)
+        node_prefix = node_seg.split(':').first.to_s
+        route_prefix = route_seg.split(':').first.to_s
+
+        if node_seg.include?(':') && route_seg.include?(':')
+          node_prefix.casecmp?(route_prefix)
+        elsif route_seg.include?(':')
+          node_seg.downcase.start_with?(route_prefix.downcase)
         else
           node_seg.casecmp?(route_seg)
         end
