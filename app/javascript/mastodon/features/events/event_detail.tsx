@@ -18,6 +18,7 @@ import { Icon } from 'mastodon/components/icon';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { Stage } from 'mastodon/components/stage';
+import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
 import { CreateEventForm } from './components/create_event_form';
 
@@ -173,15 +174,24 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
     [event],
   );
 
+  const [confirmDialog, confirm] = useConfirmDialog();
+
   const handleDelete = useCallback(async () => {
-    if (!event || !confirm('Delete this event?')) return;
+    if (!event) return;
+    const ok = await confirm({
+      title: 'Delete this event?',
+      message: "It will disappear from everyone's Kalendar and from the feed.",
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!ok) return;
     try {
       await api().delete(`/api/v1/events/${event.id}`);
       history.push('/kalendar');
     } catch (err) {
       console.error('Failed to delete:', err);
     }
-  }, [event, history]);
+  }, [event, confirm, history]);
 
   const handleEventUpdated = useCallback((updated: Event) => {
     setEvent(updated);
@@ -331,6 +341,8 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
       <Helmet>
         <title>{event.title}</title>
       </Helmet>
+
+      {confirmDialog}
 
       <div className='event-detail'>
         {event.image_url && (
