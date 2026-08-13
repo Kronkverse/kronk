@@ -49,6 +49,15 @@ RSpec.describe 'Nudges directed listens config' do # rubocop:disable RSpec/Descr
     it 'templates the accept CTA off a key the publisher provides' do
       expect(listen_for('mates.request.accepted')['cta_route']).to eq('/nudges/{actor_account_id}')
     end
+
+    # The request CTA deep-links to the requester's profile — where
+    # the accept / reject buttons live for a pending mate request
+    # (Tal 2026-08-13). `actor_acct` is added to the payload by
+    # `Mates::RequestService#notify!` alongside `actor_account_id`.
+    it 'templates the request CTA to the requester profile' do
+      expect(listen_for('mates.request.sent')['cta_route']).to eq('/@{actor_acct}')
+      expect(listen_for('mates.request.sent')['cta_label']).to eq('View profile')
+    end
   end
 
   # The bus loop reads `entry['directed'] == true`, so anything absent or
