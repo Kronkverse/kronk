@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -36,8 +29,13 @@ import { useAppSelector } from 'mastodon/store';
 //   Hub     → /hub
 //   Nudges  → /nudges (activity; carries the unread badge)
 //
-// Top variant renders the Membrane: icon pillars + a 1px wire + a
-// gliding pool of light under the active pillar. Icons are read from
+// Top variant renders the Membrane: icon pillars + a hairline wire.
+//
+// Selection is shown by the ACTIVE PILLAR ITSELF — a tinted tile with a
+// filled glyph, the same method the korner sidebar uses (Tal 2026-08-13),
+// so one language covers both navigation surfaces. The gliding pool of
+// light that used to mark it is gone; the wire remains only as the channel
+// for the nudge-arrival glint. Icons are read from
 // each pillar's corresponding manifest via `kornerIcon` — editing
 // `icon.material` in profile.yaml / feed.yaml / hub.yaml / nudges.yaml
 // updates the top nav in place. Text labels stay on the pillars as
@@ -218,82 +216,7 @@ const MembraneTop = ({
   myAvatar,
 }: MembraneTopProps) => {
   const rowRef = useRef<HTMLDivElement>(null);
-  const pillarRefs = useRef<Record<PillarKey, HTMLAnchorElement | null>>({
-    me: null,
-    home: null,
-    awawb: null,
-    hub: null,
-    nudges: null,
-  });
-  const [pool, setPool] = useState<{ left: number; width: number } | null>(
-    null,
-  );
-  const [ready, setReady] = useState(false);
-  const [glintKey, setGlintKey] = useState(0);
   const [arriving, setArriving] = useState(false);
-
-  const registerPillar = useCallback(
-    (key: PillarKey) => (node: HTMLAnchorElement | null) => {
-      pillarRefs.current[key] = node;
-    },
-    [],
-  );
-
-  const measure = useCallback(() => {
-    if (!activeKey) {
-      setPool(null);
-      return;
-    }
-    const pillar = pillarRefs.current[activeKey];
-    const row = rowRef.current;
-    if (!pillar || !row) return;
-    const pRect = pillar.getBoundingClientRect();
-    const rRect = row.getBoundingClientRect();
-    const width = Math.max(40, pRect.width - 20);
-    const centre = pRect.left - rRect.left + pRect.width / 2;
-    setPool({ left: centre - width / 2, width });
-  }, [activeKey]);
-
-  useLayoutEffect(() => {
-    measure();
-  }, [measure]);
-
-  // Suppress the glide on first mount + on resize — measure the pool in
-  // place before enabling the transition. requestAnimationFrame ensures
-  // fonts have laid out.
-  useLayoutEffect(() => {
-    setReady(false);
-    const raf = requestAnimationFrame(() => {
-      measure();
-      requestAnimationFrame(() => {
-        setReady(true);
-      });
-    });
-    return () => {
-      cancelAnimationFrame(raf);
-    };
-  }, [measure]);
-
-  useEffect(() => {
-    const onResize = () => {
-      setReady(false);
-      measure();
-      requestAnimationFrame(() => {
-        setReady(true);
-      });
-    };
-    window.addEventListener('resize', onResize);
-    return () => {
-      window.removeEventListener('resize', onResize);
-    };
-  }, [measure]);
-
-  // Landing glint: on every pillar change, re-key the pool so its glint
-  // animation re-runs (CSS keyframe with `animation-name` triggers via
-  // fresh element via key).
-  useEffect(() => {
-    setGlintKey((k) => k + 1);
-  }, [activeKey]);
 
   // Arrival signal — glint travels along the wire toward Nudges when a
   // Nudge arrives. Fires on genuine increase in unreadNudges only.
@@ -315,7 +238,7 @@ const MembraneTop = ({
 
   return (
     <nav
-      className={`hub-switcher hub-switcher--top${ready ? ' is-ready' : ''}${arriving ? ' is-arriving' : ''}`}
+      className={`hub-switcher hub-switcher--top${arriving ? ' is-arriving' : ''}`}
       aria-label={ariaLabel}
     >
       <div className='hub-switcher__row' role='tablist' ref={rowRef}>
@@ -332,7 +255,6 @@ const MembraneTop = ({
               title={label}
               className='hub-switcher__pillar'
               activeClassName='hub-switcher__pillar--active'
-              innerRef={registerPillar(pillar.key)}
             >
               {pillar.key === 'me' && myAvatar ? (
                 <img
@@ -366,15 +288,11 @@ const MembraneTop = ({
           );
         })}
       </div>
-      <div className='hub-switcher__wire' aria-hidden>
-        {pool && (
-          <span
-            key={glintKey}
-            className='hub-switcher__pool'
-            style={{ left: `${pool.left}px`, width: `${pool.width}px` }}
-          />
-        )}
-      </div>
+      {/* The wire stays, but no longer marks selection — that is the pillar
+          tile's job now (Tal 2026-08-13). It remains because it is the channel
+          for the nudge-arrival glint (`.is-arriving`), which travels its length
+          toward the Nudges pillar. */}
+      <div className='hub-switcher__wire' aria-hidden />
     </nav>
   );
 };
