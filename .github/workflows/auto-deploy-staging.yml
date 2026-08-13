@@ -1,9 +1,23 @@
 name: Auto-Deploy Staging
 
+# Retired 2026-07-30 on the rebuild branch; the same retirement is applied
+# here 2026-08-13. Shadow auto-deploys `rebuild/2.0.0` via
+# `auto-deploy-rebuild.yml` — a push to `staging` no longer deploys, so
+# parallel WIP branches don't fight over the single shadow environment.
+#
+# Kept as a `workflow_dispatch` shim for the rare case where a maintainer
+# needs to override shadow to a specific branch: push it to `staging`,
+# then trigger this manually.
+#
+# Why the push trigger had to go here too: `backmerge-staging.yml` pushed
+# main into `staging` on every main push, which tripped this workflow and
+# deployed the production line onto shadow — a second route to the same
+# breakage `staging-sync.yml` caused directly. Shadow keeps its
+# `.env.production` symlink on the **rebuild** database, so production-line
+# code lands on a rebuild schema and every page 500s. That back-merge
+# workflow is deleted in the same change as this comment.
 on:
-  push:
-    branches:
-      - staging
+  workflow_dispatch:
 
 jobs:
   deploy:
