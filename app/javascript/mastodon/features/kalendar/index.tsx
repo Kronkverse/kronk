@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -8,6 +8,8 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { Stage } from 'mastodon/components/stage';
 import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 
+import { EventComposer } from './event_composer';
+import type { CreatedEvent } from './event_composer';
 import { KalendarListView } from './list_view';
 
 // Kalendar — the two-face rotator korner (Tal 2026-08-13: "I want the
@@ -49,12 +51,23 @@ const resolveView = (pathname: string): KalendarView => {
     : DEFAULT_VIEW;
 };
 
-const Kalendar: React.FC<{ multiColumn?: boolean }> = () => {
+// When mounted on `/hub/kalendar/composer` (or the legacy alias
+// `/hub/kalendar/new`), the router passes `autoOpenComposer: true`
+// so the `<EventComposer>` overlay opens on top of the Spiral face.
+// Same treatment as Krews / Albutts / Moments (see
+// docs/rebuild/decisions.md 2026-08-12 for the shared shape).
+interface KalendarProps {
+  multiColumn?: boolean;
+  autoOpenComposer?: boolean;
+}
+
+const Kalendar: React.FC<KalendarProps> = ({ autoOpenComposer }) => {
   const intl = useIntl();
   const location = useLocation();
   const history = useHistory();
   const view = resolveView(location.pathname);
   const title = intl.formatMessage(messages.title);
+  const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
 
   // FeedDrum drives its wrap direction from `order`; navigating a
   // step is a URL push (same handler shape the AutoSpaceHeader uses).
@@ -67,6 +80,21 @@ const Kalendar: React.FC<{ multiColumn?: boolean }> = () => {
       if (target !== location.pathname) history.push(target);
     },
     [history, location.pathname],
+  );
+
+  const closeComposer = useCallback(() => {
+    setComposerOpen(false);
+    // If we arrived via /composer or /new, drop back to the plain
+    // Spiral URL so the composer doesn't reopen on refresh.
+    if (autoOpenComposer) history.replace('/hub/kalendar');
+  }, [autoOpenComposer, history]);
+
+  const handleCreated = useCallback(
+    (created: CreatedEvent) => {
+      setComposerOpen(false);
+      history.push(`/hub/kalendar/${created.id}`);
+    },
+    [history],
   );
 
   return (
@@ -102,6 +130,10 @@ const Kalendar: React.FC<{ multiColumn?: boolean }> = () => {
           {view === 'list' && <KalendarListView />}
         </FeedDrum>
       </div>
+
+      {composerOpen && (
+        <EventComposer onCancel={closeComposer} onCreated={handleCreated} />
+      )}
     </Stage>
   );
 };

@@ -96,7 +96,13 @@ settings:
 
 compose:
   label: 'New event'
-  route: '/hub/kalendar/new'
+  # `<ComposeShell>` overlay mounted by the Kalendar directory on the
+  # `autoOpenComposer` route. `/hub/kalendar/new` continues to resolve
+  # as a legacy alias for pre-shell bookmarks (registered in the SPA's
+  # WrappedRoute list alongside this URL) so old links keep opening
+  # the composer. See docs/rebuild/decisions.md 2026-08-12 for the
+  # shared-shape contract.
+  route: '/hub/kalendar/composer'
 
 # Two rotating faces (Tal 2026-08-13). The Kalendar Spiral prototype
 # is the default face; the list-view surfaces upcoming events one
