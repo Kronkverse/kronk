@@ -7,40 +7,55 @@ import classNames from 'classnames';
 
 import Overlay from 'react-overlays/Overlay';
 
-import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
+import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
-import PublicIcon from '@/material-icons/400-24px/public.svg?react';
-import QuietTimeIcon from '@/material-icons/400-24px/quiet_time.svg?react';
+import OrbitIcon from '@/material-icons/400-24px/orbit.svg?react';
+import ZheIcon from '@/material-icons/400-24px/zhe.svg?react';
 import { DropdownSelector } from 'mastodon/components/dropdown_selector';
 import { Icon }  from 'mastodon/components/icon';
 
+// Kronk reach ladder (docs/kronk_feed_and_reach.md — Kronkverse /
+// Orbit / Mates / Just-me), rendered here as the classic privacy-
+// dropdown widget still consumed by BoostModal. The primary compose
+// audience picker is <ComposeReachDropdown>, which already offers
+// only the Kronk-native tiers; this dropdown was the last surface
+// still exposing the Mastodon primitives (unlisted / private /
+// direct) — retired in Phase 1B (2026-08-12) as part of the Path B
+// visibility rollout.
+//
+// Values arriving from the DB / boost target that still carry a
+// retired visibility (unlisted / private / direct / limited) are
+// display-aliased to the closest Kronk-native tier so the dropdown
+// never renders empty — see `resolveValueOption` below.
+
 export const messages = defineMessages({
-  public_short: { id: 'privacy.public.short', defaultMessage: 'Kronkverse' },
-  public_long: { id: 'privacy.public.long', defaultMessage: 'Anyone on and off kronk' },
+  kronkverse_short: { id: 'privacy.kronkverse.short', defaultMessage: 'Kronkverse' },
+  kronkverse_long: { id: 'privacy.kronkverse.long', defaultMessage: 'Everyone on Kronk' },
   orbit_short: { id: 'privacy.orbit.short', defaultMessage: 'Orbit' },
   orbit_long: { id: 'privacy.orbit.long', defaultMessage: 'Your Mates and their Mates' },
   mates_short: { id: 'privacy.mates.short', defaultMessage: 'Mates' },
   mates_long: { id: 'privacy.mates.long', defaultMessage: 'Only your Mates (mutual connections)' },
   self_only_short: { id: 'privacy.self_only.short', defaultMessage: 'Just me' },
   self_only_long: { id: 'privacy.self_only.long', defaultMessage: 'On your own timeline only — no one else sees it' },
-  unlisted_short: { id: 'privacy.unlisted.short', defaultMessage: 'Quiet public' },
-  unlisted_long: { id: 'privacy.unlisted.long', defaultMessage: 'Hidden from Kronk search results, trending, and public timelines' },
-  private_short: { id: 'privacy.private.short', defaultMessage: 'Followers' },
-  private_long: { id: 'privacy.private.long', defaultMessage: 'Only your followers' },
-  direct_short: { id: 'privacy.direct.short', defaultMessage: 'Specific people' },
-  direct_long: { id: 'privacy.direct.long', defaultMessage: 'Everyone mentioned in the post' },
-  krew_short: { id: 'privacy.krew.short', defaultMessage: 'Krew' },
-  krew_long: { id: 'privacy.krew.long', defaultMessage: 'Only members of the Krews you select' },
   change_privacy: { id: 'privacy.change', defaultMessage: 'Change post privacy' },
-  unlisted_extra: { id: 'privacy.unlisted.additional', defaultMessage: 'This behaves exactly like public, except the post will not appear in live feeds or hashtags, explore, or Kronk search, even if you are opted-in account-wide.' },
 });
+
+// Retired Mastodon-primitive values still land here from legacy DB
+// rows or boost targets whose author's default_privacy hasn't
+// migrated; alias each to the closest Kronk-native tier for display.
+// Matches the alias table in components/visibility_icon.tsx.
+const LEGACY_VALUE_ALIAS = {
+  unlisted: 'self_only',
+  private: 'mates',
+  direct: 'mates',
+  limited: 'mates',
+};
 
 class PrivacyDropdown extends PureComponent {
 
   static propTypes = {
     value: PropTypes.string.isRequired,
     onChange: PropTypes.func.isRequired,
-    noDirect: PropTypes.bool,
     container: PropTypes.func,
     disabled: PropTypes.bool,
     intl: PropTypes.object.isRequired,
@@ -96,17 +111,13 @@ class PrivacyDropdown extends PureComponent {
   UNSAFE_componentWillMount () {
     const { intl: { formatMessage } } = this.props;
 
+    // Kronk reach ladder, widest → narrowest.
     this.options = [
-      { icon: 'globe', iconComponent: PublicIcon, value: 'public', text: formatMessage(messages.public_short), meta: formatMessage(messages.public_long) },
-      { icon: 'unlock', iconComponent: QuietTimeIcon,  value: 'unlisted', text: formatMessage(messages.unlisted_short), meta: formatMessage(messages.unlisted_long), extra: formatMessage(messages.unlisted_extra) },
-      { icon: 'lock', iconComponent: LockIcon, value: 'private', text: formatMessage(messages.private_short), meta: formatMessage(messages.private_long) },
+      { icon: 'zhe', iconComponent: ZheIcon, value: 'public', text: formatMessage(messages.kronkverse_short), meta: formatMessage(messages.kronkverse_long) },
+      { icon: 'orbit', iconComponent: OrbitIcon, value: 'orbit', text: formatMessage(messages.orbit_short), meta: formatMessage(messages.orbit_long) },
+      { icon: 'group', iconComponent: GroupIcon, value: 'mates', text: formatMessage(messages.mates_short), meta: formatMessage(messages.mates_long) },
+      { icon: 'lock', iconComponent: LockIcon, value: 'self_only', text: formatMessage(messages.self_only_short), meta: formatMessage(messages.self_only_long) },
     ];
-
-    if (!this.props.noDirect) {
-      this.options.push(
-        { icon: 'at', iconComponent: AlternateEmailIcon, value: 'direct', text: formatMessage(messages.direct_short), meta: formatMessage(messages.direct_long) },
-      );
-    }
   }
 
   setTargetRef = c => {
@@ -125,7 +136,12 @@ class PrivacyDropdown extends PureComponent {
     const { value, container, disabled, intl } = this.props;
     const { open, placement } = this.state;
 
-    const valueOption = this.options.find(item => item.value === value);
+    // Legacy Mastodon-primitive values still hit us from BoostModal
+    // when the caller's default_privacy hasn't been migrated yet
+    // (Phase 2 lands the DB fold). Alias to the nearest Kronk-native
+    // tier so the dropdown always has a valid selected option.
+    const resolvedValue = LEGACY_VALUE_ALIAS[value] ?? value;
+    const valueOption = this.options.find(item => item.value === resolvedValue) ?? this.options[0];
 
     return (
       <div ref={this.setTargetRef} onKeyDown={this.handleKeyDown}>
@@ -149,7 +165,7 @@ class PrivacyDropdown extends PureComponent {
               <div className={`dropdown-animation privacy-dropdown__dropdown ${placement}`}>
                 <DropdownSelector
                   items={this.options}
-                  value={value}
+                  value={resolvedValue}
                   onClose={this.handleClose}
                   onChange={this.handleChange}
                 />

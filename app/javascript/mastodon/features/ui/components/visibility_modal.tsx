@@ -16,10 +16,10 @@ import { IconButton } from '@/mastodon/components/icon_button';
 import { messages as privacyMessages } from '@/mastodon/features/compose/components/privacy_dropdown';
 import { createAppSelector, useAppSelector } from '@/mastodon/store';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
-import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
+import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import OrbitIcon from '@/material-icons/400-24px/orbit.svg?react';
-import PublicIcon from '@/material-icons/400-24px/public.svg?react';
+import ZheIcon from '@/material-icons/400-24px/zhe.svg?react';
 
 import type { BaseConfirmationModalProps } from './confirmation_modals/confirmation_modal';
 
@@ -158,10 +158,10 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
         items.push(
           {
             value: 'public',
-            text: intl.formatMessage(privacyMessages.public_short),
-            meta: intl.formatMessage(privacyMessages.public_long),
-            icon: 'globe',
-            iconComponent: PublicIcon,
+            text: intl.formatMessage(privacyMessages.kronkverse_short),
+            meta: intl.formatMessage(privacyMessages.kronkverse_long),
+            icon: 'zhe',
+            iconComponent: ZheIcon,
           },
           {
             value: 'orbit',
@@ -175,7 +175,7 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
             text: intl.formatMessage(privacyMessages.mates_short),
             meta: intl.formatMessage(privacyMessages.mates_long),
             icon: 'group',
-            iconComponent: Diversity2Icon,
+            iconComponent: GroupIcon,
           },
         );
       }

@@ -103,7 +103,6 @@ export const BoostModal: React.FC<{
         <div className='safety-action-modal__actions'>
           {!status.get('reblogged') && (
             <PrivacyDropdown
-              noDirect
               value={privacy}
               container={findContainer}
               onChange={onPrivacyChange}
