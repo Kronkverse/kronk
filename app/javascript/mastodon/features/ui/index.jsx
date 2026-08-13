@@ -25,7 +25,6 @@ import { BoothMiniPlayer } from 'mastodon/features/booth/components/booth_mini_p
 import { HuddlePip } from 'mastodon/features/huddle_pip';
 import { PictureInPicture } from 'mastodon/features/picture_in_picture';
 import { HubSwitcher } from './components/hub_switcher';
-import { KornerSubBar } from './components/korner_sub_bar';
 import { KornerSidebar } from './components/korner_sidebar';
 import { KronkFrame } from 'mastodon/components/kronk_frame';
 import { KronkKosmos } from 'mastodon/features/kosmos/kronk_kosmos';
@@ -814,10 +813,8 @@ class UI extends PureComponent {
           {/* KronkFrame — foundational page layout (docs/kronk_frame.md).
               Chrome components render inside their named slots as flow
               children instead of self-anchoring with position: fixed.
-              KornerSubBar stays as a Frame sibling because it's route-
-              conditional (Stage routes retire it, Column routes keep
-              it) and isn't tied to a single slot. KronkMenu (Ж) is the
-              OVERLAY layer — deliberately outside the grid. */}
+              KronkMenu (Ж) is the OVERLAY layer — deliberately outside
+              the grid. */}
           <KronkFrame>
             <KronkFrame.TopBand>
               <KronkWordmark />
@@ -855,7 +852,6 @@ class UI extends PureComponent {
           <NudgeArrivalToast />
           <AlertsController />
 
-          <KornerSubBar />
           {/* Top-right Invite button retired 2026-08-05 — /me hub
               carries the Invite spoke now (features/me_hub/index.tsx),
               so the persistent chrome affordance is redundant. Rails-

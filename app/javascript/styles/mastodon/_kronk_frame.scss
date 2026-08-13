@@ -6,7 +6,7 @@
 // container queries scoped to `.kronk-frame`. Only the Stage cell
 // has content (via KronkFrame.Stage wrapping SwitchingColumnsArea in
 // ui/index.jsx); the band slots exist but are empty. Existing chrome
-// (KronkWordmark, HubSwitcher, KornerSidebar, KornerSubBar) still
+// (KronkWordmark, HubSwitcher, KornerSidebar) still
 // renders position: fixed outside the Frame. Later PRs migrate them
 // into the slots. Because chrome is still fixed, the visual output
 // of this PR is intentionally identical to before — the grid does

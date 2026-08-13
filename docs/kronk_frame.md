@@ -235,9 +235,11 @@ reimplement its own back-out pill or view tabs.
    call — but reserved-slot classes must be used for the space badge,
    view picker, and sidebar tiles.
 
-4. **Never render a KornerSubBar breadcrumb on a Stage route.** The
-   space badge replaces it; the SubBand row from earlier iterations
-   is retired.
+4. **No korner-level breadcrumb pill.** The
+   `<SpaceBadge>` handles back-to-Hub; the KornerSubBar breadcrumb
+   pill was retired 2026-08-13 (last web korner still had it and it
+   flashed in before Stage-mounted korners loaded — Tal). The
+   SubBand row from earlier iterations is also retired.
 
 5. **Space title and tagline are Frame-owned, not korner-owned.**
    Two slots carry them: the top-left `<SpaceBadge>` pill (SpaceNav,
@@ -276,18 +278,16 @@ migrates:
 
 - the slot strips stay `position: fixed` (rule 2 target unmet), though
   only ~5 such declarations remain across the Frame/chrome SCSS;
-- the `.columns-area` padding dance is reshaped, not gone — a
-  `padding-top` remains to clear the still-fixed `KornerSubBar`;
-- `KornerSubBar` is still rendered (as a Frame sibling) but is
-  **route-conditional** — Stage routes retire it, the remaining
-  `<Column>` routes keep it — so rule 4 holds on every migrated route
-  and only the unmigrated ones still show it;
+- the `.columns-area` padding dance is reshaped, not gone — its
+  `padding-top` used to clear the fixed `KornerSubBar` breadcrumb,
+  which was retired 2026-08-13; the padding itself may follow when
+  the remaining Column routes migrate;
 - `_kronk_stage.scss` uses a `:has(.kronk-stage) { container-type:
 normal }` escape hatch so a Stage's fixed children anchor to the
   viewport rather than the classic columns-area containing block.
 
-The end state (fixed retired, `.columns-area` gone, SubBar gone) is
-reachable only once the remaining Column-based pages are migrated.
+The end state (fixed retired, `.columns-area` gone) is reachable
+only once the remaining Column-based pages are migrated.
 
 ## Historical
 

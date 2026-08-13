@@ -491,14 +491,8 @@ body.admin {
 // Column padding-top hack retired in alpha.180 — KronkFrame.Stage
 // now starts at grid row 2 (offset by the row-1 TopBand track),
 // giving classic Mastodon content its top clearance for free.
-// The KornerSubBar (still position: fixed) needs its own clearance
-// when it's present, since it stacks below the TopBand at ~4.25rem.
-body:has(.korner-sub-bar) {
-  .columns-area,
-  .column {
-    padding-top: 2.5rem;
-  }
-}
+// (The `body:has(.korner-sub-bar)` clearance was retired 2026-08-13
+// along with the KornerSubBar itself.)
 
 // Center the main timeline on the page. Classic Mastodon leaves the
 // timeline flush-left with a fixed right pane; Kronk chrome hides the
@@ -555,108 +549,14 @@ body:has(.korner-sub-bar) {
   // (`max-width: none` on the columns-area chain) supersedes it.)
 }
 
-// Sub-bar that appears when inside a /hub/<slug> route. Positioned
-// beneath the HubSwitcher on desktop (which sits at 0.75rem + ~2.5rem
-// height) so they stack vertically without fighting for centre-top.
-// On mobile the HubSwitcher becomes a bottom tab bar, so the sub-bar
-// can move back to the top-left.
-.korner-sub-bar {
-  position: fixed;
-  top: 4.25rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 24;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.3rem 0.75rem;
-  border-radius: var(--radius-round);
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-default);
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-
-  @media (width <= 629px) {
-    top: 0.75rem;
-    left: 0.75rem;
-    transform: none;
-  }
-
-  &__back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.2rem;
-    color: var(--text-secondary);
-    text-decoration: none;
-    padding: 0.1rem 0.35rem;
-    border-radius: var(--radius-small);
-
-    &:hover {
-      color: var(--text-primary);
-      background: var(--kronk-purple-deep);
-    }
-  }
-
-  &__back-icon {
-    width: 1rem;
-    height: 1rem;
-    fill: currentColor;
-  }
-
-  &__divider {
-    color: var(--text-muted);
-    opacity: 0.6;
-  }
-
-  &__crumb {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    color: var(--text-primary);
-    font-weight: 500;
-  }
-
-  &__glyph {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.1rem;
-    height: 1.1rem;
-    color: var(--kronk-purple-accent);
-
-    svg {
-      width: 1.1rem;
-      height: 1.1rem;
-      fill: currentColor;
-    }
-  }
-
-  // Settings gear at the right of the sub-bar. Matches the affordance
-  // on Hub-grid tiles (`.hub-page__tile-gear`) so "gear you can click
-  // for settings" reads identically from either entry point. Sweep 3
-  // chrome consistency.
-  &__settings {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 0.35rem;
-    padding: 0.15rem;
-    border-radius: var(--radius-small);
-    color: var(--text-secondary);
-    text-decoration: none;
-
-    &:hover {
-      color: var(--text-primary);
-      background: var(--kronk-purple-deep);
-    }
-  }
-
-  &__settings-icon {
-    width: 1rem;
-    height: 1rem;
-    fill: currentColor;
-  }
-}
+// `.korner-sub-bar` block retired 2026-08-13 alongside the React
+// component. Every korner surface now provides its own header
+// (`<Stage>` + `<SpaceHeaderRow>` for native korners; Krew's own
+// hero for the last web korner), so the fixed breadcrumb pill was
+// duplicating chrome — and flashing in briefly on non-korner →
+// korner navigation before the space finished mounting (Tal
+// 2026-08-13: "it pops up in a number of spaces before the space
+// fully loads").
 
 // Shared "← back" chrome for in-korner surfaces. Retires the
 // Kommons-specific `.kommons-plant__back` class as part of Sweep 3
