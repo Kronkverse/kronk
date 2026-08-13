@@ -81,19 +81,24 @@ const MOON_STEP_DEG = 50;
 
 // Compass bearings (0° = up, 90° = right, 180° = down, 270° = left) for the
 // centre of the arc-fan, per anchor corner. The fan opens into the diagonally
-// opposite quadrant.
+// opposite quadrant but is biased 20° AWAY from the horizontal — closer to
+// north for bottom anchors and closer to south for top anchors. On the
+// diagonal (45° NE) the outer moons drifted toward east, which Tal read as
+// "too far clockwise" on the default (bottom-left) anchor; pulling the
+// centre back to 25° NNE lifts the arc toward the top of the viewport and
+// mirrors symmetrically for the other three corners.
 const arcCentreBearing = (anchor: string): number => {
   switch (anchor) {
     case 'bottom-left':
-      return 45; // NE
+      return 25; // NNE (was 45° NE)
     case 'bottom-right':
-      return 315; // NW
+      return 335; // NNW (was 315° NW)
     case 'top-left':
-      return 135; // SE
+      return 155; // SSE (was 135° SE)
     case 'top-right':
-      return 225; // SW
+      return 205; // SSW (was 225° SW)
     default:
-      return 315;
+      return 335;
   }
 };
 
