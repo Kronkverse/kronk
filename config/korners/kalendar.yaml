@@ -60,7 +60,7 @@ emits:
 listens: []
 
 feed_projection:
-  card: event_card # StatusEventCard; not yet ported onto StatusKornerCard
+  card: event_card # StatusEventCard, wraps the shared <StatusKornerCard>
   title_from: title
   summary_from: location # combines with start_time in the card layout
   links_to: /kalendar/<id> # existing; §4 migration → /hub/kalendar/events/<id>
