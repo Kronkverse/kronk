@@ -19,9 +19,9 @@
 //            just opened a mysterious gutter down the left side that
 //            "boxed in" the space instead of letting it meet the
 //            wordmark's column.
-// If the KornerSubBar is present it stacks below the switcher — Stage
-// pushes down another notch via a `body:has(.korner-sub-bar)`
-// override so the space's top edge clears the pill.
+// (The old `body:has(.korner-sub-bar)` clearance rule is gone — the
+// KornerSubBar breadcrumb was retired 2026-08-13; every korner owns
+// its own header via `<SpaceHeaderRow>` inside Stage now.)
 // Content is expected to fill the Stage. Per-space backdrops (stars,
 // gradients) attach to the space's root INSIDE Stage; the Stage
 // itself has no chrome of its own so nothing "boxes in" the content.
@@ -130,14 +130,6 @@ body:has(.kronk-stage) {
   container-type: normal;
   max-width: none;
 }
-
-// KornerSubBar's Stage-route hide used to live here as
-// `body:has(.kronk-stage) .korner-sub-bar { display: none }` — but
-// that raced with the Stage's async chunk mount and left the pill
-// flashing in during navigation. The gate now lives in the React
-// component itself (`korner.render_target === 'native' → null`),
-// which fires before the Stage mounts. Kept as a comment so future
-// readers don't reintroduce the CSS.
 
 // KornerExit / SpaceTabs / .space-title retired 2026-07-23. Replaced
 // by <SpaceBadge> + <AutoSpaceViewPicker> in KronkFrame.SpaceNav
