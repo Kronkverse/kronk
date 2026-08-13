@@ -417,10 +417,6 @@ class Status extends ImmutablePureComponent {
     this.handleFavouriteClick(this.props.status);
   };
 
-  handleHotkeyBoost = () => {
-    this.handleReblogClick(this.props.status);
-  };
-
   handleHotkeyQuote = () => {
     this.props.dispatch(quoteComposeById(this.props.status.get('id')));
   };
@@ -541,7 +537,6 @@ class Status extends ImmutablePureComponent {
     const handlers = {
       reply: this.handleHotkeyReply,
       favourite: this.handleHotkeyFavourite,
-      boost: this.handleHotkeyBoost,
       quote: this.handleHotkeyQuote,
       mention: this.handleHotkeyMention,
       openProfile: this.handleHotkeyOpenProfile,
