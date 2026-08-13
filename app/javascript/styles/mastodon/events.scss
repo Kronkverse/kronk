@@ -32,16 +32,9 @@ $ev-interested-color: #b8945f;
 // Kalendar rotator shell + list — retired 2026-08-13. Both faces
 // (Spiral iframe, upcoming list) now sit on the shared Stage archetypes
 // (`.stage-fill` around the rotator, `.stage-column` inside the list
-// face). See `_kronk_stage.scss` for the archetype definitions.
-// `.kalendar-list__state` is the only leftover — a muted, centred
-// read for the "Loading…" / "Nothing coming up yet." rows inside the
-// list face's `.stage-column`.
-.kalendar-list__state {
-  color: var(--text-muted, var(--secondary-text-color));
-  font-size: 14px;
-  text-align: center;
-  padding: 32px 20px;
-}
+// face). The loading / empty rows moved to the shared `<LoadingState>`
+// / `<EmptyState>` primitives (see `_kronk_states.scss`) same-day.
+// See `_kronk_stage.scss` for the archetype definitions.
 
 .events-page {
   padding: 20px;

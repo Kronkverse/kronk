@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+import { defineMessages, useIntl } from 'react-intl';
 
 import api from 'mastodon/api';
+import { EmptyState } from 'mastodon/components/empty_state';
+import { LoadingState } from 'mastodon/components/loading_state';
 
 import { EventCard } from '../events/components/event_card';
 
@@ -95,9 +97,7 @@ export const KalendarListView: React.FC = () => {
   if (events === null) {
     return (
       <div className='stage-column'>
-        <div className='kalendar-list__state'>
-          <FormattedMessage {...messages.loading} />
-        </div>
+        <LoadingState label={intl.formatMessage(messages.loading)} />
       </div>
     );
   }
@@ -105,9 +105,7 @@ export const KalendarListView: React.FC = () => {
   if (events.length === 0) {
     return (
       <div className='stage-column'>
-        <div className='kalendar-list__state'>
-          {intl.formatMessage(messages.empty)}
-        </div>
+        <EmptyState title={intl.formatMessage(messages.empty)} />
       </div>
     );
   }
