@@ -69,9 +69,11 @@ const paceLabel = (secPerKm: number) => {
 // A single polyline glimpse of the (already privacy-trimmed) route. We project
 // [lng, lat] into an aspect-corrected box — 1° of longitude is cos(lat) shorter
 // than 1° of latitude — then fit-and-centre it into the viewBox. Deliberately
-// lightweight: no MapLibre per feed card, just the shape of the outing.
-const VB_W = 320;
-const VB_H = 120;
+// lightweight: no MapLibre per feed card, just the shape of the outing. The
+// 3:1 viewBox matches the trek detail map (_map.scss .trek-detail__map) so a
+// route reads the same shape in the feed as on its detail page.
+const VB_W = 300;
+const VB_H = 100;
 const PAD = 10;
 
 const routePoints = (route: [number, number][]): string | null => {
