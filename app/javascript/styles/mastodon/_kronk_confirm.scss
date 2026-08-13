@@ -1,0 +1,129 @@
+@use 'variables' as *;
+
+// ConfirmDialog — the "are you sure?" primitive (see
+// `app/javascript/mastodon/components/confirm_dialog.tsx`). Portal
+// mount with a dim backdrop and a small centred panel. Visually
+// echoes `<ComposeShell>` (same rounded panel, same dim, same
+// escape/backdrop-cancel behaviour) so the two feel like variants of
+// one modal system — one for "make a thing," one for "confirm a
+// thing." Where ComposeShell is a wide sheet with a form body,
+// ConfirmDialog is a small alert box with two buttons.
+
+.confirm-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 55%);
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+
+    // Native <button> reset — the backdrop is a button so keyboard users
+    // can dismiss without a mouse, but it shouldn't paint itself.
+    &:focus-visible {
+      outline: 2px solid var(--kronk-purple-accent);
+      outline-offset: -4px;
+    }
+  }
+
+  &__panel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 25rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-large);
+    padding: 1.5rem 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: 0 12px 36px rgb(0 0 0 / 40%);
+  }
+
+  &__title {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    line-height: 1.3;
+    font-weight: 500;
+  }
+
+  &__message {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 0.25rem;
+  }
+
+  &__cancel,
+  &__confirm {
+    padding: 0.55rem 1rem;
+    border-radius: var(--radius-medium);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+  }
+
+  &__cancel {
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+
+    &:hover:not(:disabled) {
+      border-color: var(--border-strong, var(--border-default));
+      color: var(--text-primary);
+    }
+  }
+
+  &__confirm {
+    background: var(--kronk-purple-accent);
+    border: 1px solid var(--kronk-purple-accent);
+    color: var(--kronk-purple-bright);
+
+    &:hover:not(:disabled) {
+      background: var(--kronk-purple-bright);
+      color: var(--surface-primary);
+    }
+
+    // Destructive variant — reddens the primary CTA so a delete /
+    // leave / cancel action reads as "this ends something" instead of
+    // "this creates something."
+    &--destructive {
+      background: color-mix(in oklab, #c75d6e 90%, black);
+      border-color: color-mix(in oklab, #c75d6e 90%, black);
+      color: #fff;
+
+      &:hover:not(:disabled) {
+        background: #c75d6e;
+        border-color: #c75d6e;
+      }
+    }
+  }
+}
