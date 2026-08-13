@@ -137,12 +137,14 @@ the left or right of the trunk. To keep parents that consume Hub's midpoint (Kro
 even though Hub itself is at the block bottom, `walk('hub')` returns the block centre — not
 `pos.hub.y` — for the parent's midpoint calc.
 
-**Focus-on-tap centres the kid block, not Hub itself.** The standard scroll-to-focus (§5) biases
-the acted-on node toward 35% from the viewport's left edge — appropriate when the node's kids grow
-into the next column. Hub with the split layout puts kids on both sides of the trunk, so biasing
-on Hub itself leaves the right column off-screen. Hub's focus handler computes the kid block's
-bounding-box centre and scrolls the viewport to sit that centre in the middle — both columns land
-in view together.
+**Focus-on-tap centres the bounding box of Hub + its kids.** The standard scroll-to-focus (§5)
+biases the acted-on node toward 35% from the viewport's left edge — appropriate when the node's
+kids grow into the next column. Hub with the split layout puts kids on both sides of the trunk, so
+biasing on Hub itself leaves the right column off-screen. Hub's focus handler instead computes the
+bounding box of Hub **and** all its visible kids, and scrolls the viewport so that box's centre
+sits in the middle. Including Hub in the box keeps the Hub pill on screen — the tap-again-to-
+collapse affordance needs Hub to be reachable (Tal 2026-08-13: "I can hardly actually see the hub
+to tap it").
 
 **Tap toggles drill-down / step-out.** An aggregator limb (Hub, Kronk — no Space page of its own)
 tap flips between:
