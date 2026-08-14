@@ -102,15 +102,15 @@ const MOON_STEP_DEG = 50;
 const arcCentreBearing = (anchor: string): number => {
   switch (anchor) {
     case 'bottom-left':
-      return 40; // NE, lifted 5° toward N from 45°
+      return 70; // ENE, +30° CW from 40° (Post moon further from left edge)
     case 'bottom-right':
-      return 320; // NW, lifted 5° toward N from 315°
+      return 290; // WNW, -30° CCW mirror (Post moon further from right edge)
     case 'top-left':
-      return 110; // E-of-SE, lifted 25° toward horizontal from 135°
+      return 140; // SSE, +30° CW mirror
     case 'top-right':
-      return 250; // W-of-SW, lifted 25° toward horizontal from 225°
+      return 220; // SSW, -30° CCW mirror
     default:
-      return 320;
+      return 290;
   }
 };
 
