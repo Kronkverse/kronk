@@ -14,6 +14,7 @@ import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import RepeatIcon from '@/material-icons/400-24px/repeat.svg?react';
 import StarIcon from '@/material-icons/400-24px/star.svg?react';
 import api from 'mastodon/api';
+import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Icon } from 'mastodon/components/icon';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
@@ -545,6 +546,19 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
             </>
           )}
         </KornerActionBar>
+
+        {/* KornerAttachments (docs/kronk_korner_attachments.md §4.2).
+            Reads from the `/api/v1/attachments?source=kalendar/<id>`
+            endpoint; the manifest's `attaches:` list drives which
+            target korners the "Attach…" button offers (Phase 3:
+            Albutts spawn + Booth link). Renders nothing when there
+            are no attachments and the viewer can't add any, so a
+            non-owner reading a plain event sees no chrome added. */}
+        <AttachmentSection
+          korner='kalendar'
+          recordId={event.id}
+          canManage={event.is_owner}
+        />
 
         {showInvite && (
           <div className='event-detail__invite'>
