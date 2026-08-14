@@ -1,7 +1,7 @@
 // Kronk dial — concentric-wheel picker. Two rings (outer = category,
-// inner = lens) rotate under a fixed pie-wedge needle at 3 o'clock.
-// SVG geometry lives in the component (kronk_dial.tsx); this file
-// owns colour, motion, and layout tokens only.
+// inner = lens) rotate under a fixed inward-pointing needle mark at
+// 3 o'clock. SVG geometry lives in the component (kronk_dial.tsx);
+// this file owns colour, motion, and layout tokens only.
 
 .kronk-dial {
   --kronk-dial-size: 22rem;
@@ -11,9 +11,9 @@
     transparent
   );
   --kronk-dial-tick: color-mix(in oklab, var(--text-muted) 55%, transparent);
+  --kronk-dial-divider: color-mix(in oklab, var(--text-muted) 30%, transparent);
   --kronk-dial-label: var(--text-secondary);
   --kronk-dial-label-active: var(--text-primary);
-  --snap-transition: 260ms; // JS overrides while dragging (→ 0ms)
 
   position: relative;
   width: var(--kronk-dial-size);
@@ -83,6 +83,16 @@
   stroke-linecap: round;
 }
 
+// Boundary dividers — one per slice, drawn at the slice EDGE (halfway
+// between slice centres). Gives each label its own visual "slot" so
+// the ring reads as segmented rather than a floating text swarm on a
+// dashed circle.
+.kronk-dial__slice-divider {
+  stroke: var(--kronk-dial-divider);
+  stroke-width: 0.5;
+  stroke-linecap: round;
+}
+
 .kronk-dial__outer-slice {
   color: var(--kronk-dial-label);
   transition: color var(--dur-medium) var(--ease-out);
@@ -140,17 +150,20 @@
   }
 }
 
-// ── Needle wedge + centre hub — non-rotating overlay. ────────────
+// ── Needle mark + centre hub — non-rotating overlay. ────────────
+// The previous pie-wedge selector was replaced (Tal 2026-08-14: "the
+// purple selector space is pretty ugly and obtrusive") with a small
+// inward-pointing triangle at 3 o'clock. The active slice always
+// rotates under this mark, and the `--active` outer-slice styling
+// brightens the label + tick beneath it as a secondary cue — no
+// heavy background fill needed.
 
 .kronk-dial__needle {
   pointer-events: none;
 }
 
-.kronk-dial__wedge {
-  fill: color-mix(in oklab, var(--kronk-purple-accent) 82%, transparent);
-  filter: drop-shadow(
-    0 0 6px color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent)
-  );
+.kronk-dial__needle-mark {
+  fill: var(--kronk-purple-bright);
 }
 
 .kronk-dial__hub {
