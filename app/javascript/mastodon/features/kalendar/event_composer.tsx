@@ -2,6 +2,8 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
+import axios from 'axios';
+
 import api from 'mastodon/api';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { MapPinPicker } from 'mastodon/components/map_pin_picker';
@@ -139,6 +141,33 @@ const combineLocal = (date: string, time: string): string | null => {
   const parsed = new Date(`${date}T${time}`);
   if (Number.isNaN(parsed.getTime())) return null;
   return parsed.toISOString();
+};
+
+// Pull a useful message out of an axios error. Rails returns 4xx
+// bodies in one of a few shapes — `{ error: "…" }` (single message),
+// `{ errors: { field: [msg, …], … } }` (ActiveRecord validation),
+// or `{ error: { … } }` (nested). Falls back to axios's default
+// message so we always show *something* helpful instead of the
+// generic "Request failed with status code 422" that hides the
+// actual field problem (Tal 2026-08-14: hit Post it, saw only
+// that generic string).
+const extractApiError = (e: unknown): string => {
+  if (axios.isAxiosError(e)) {
+    const data = e.response?.data as
+      | { error?: string | Record<string, unknown>; errors?: unknown }
+      | undefined;
+    if (data && typeof data.error === 'string') return data.error;
+    if (data?.errors && typeof data.errors === 'object') {
+      const entries = Object.entries(data.errors as Record<string, unknown>);
+      const parts = entries.map(([field, msgs]) => {
+        const list = Array.isArray(msgs) ? msgs.join(', ') : String(msgs);
+        return `${field}: ${list}`;
+      });
+      if (parts.length > 0) return parts.join('; ');
+    }
+    return e.message;
+  }
+  return e instanceof Error ? e.message : String(e);
 };
 
 interface Props {
@@ -336,7 +365,7 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         onCreated(res.data);
         // Parent unmounts on success — no need to reset state.
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : String(e));
+        setError(extractApiError(e));
         setBusy(false);
       }
     })();
