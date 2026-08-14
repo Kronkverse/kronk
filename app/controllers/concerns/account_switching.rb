@@ -15,8 +15,10 @@
 module AccountSwitching
   extend ActiveSupport::Concern
 
-  # How many accounts one browser may hold signed in at once (MVP).
-  MAX_SWITCHER_ACCOUNTS = 2
+  # How many accounts one browser may hold signed in at once. When a further
+  # account authenticates, the oldest OTHER account is evicted (the active one
+  # is always kept) — see `record_authed_account`.
+  MAX_SWITCHER_ACCOUNTS = 5
 
   private
 
