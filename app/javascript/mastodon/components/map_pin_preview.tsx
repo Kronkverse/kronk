@@ -72,6 +72,23 @@ export const MapPinPreview: React.FC<Props> = ({
       },
     });
 
+    // Defensive resize once the style loads. If the container was
+    // measured at 0×0 during React's first paint (rare but possible
+    // inside a freshly-mounted flex column that hasn't finished
+    // laying out), MapLibre would initialise a zero-viewport map
+    // and never fetch tiles even after the container grew. A resize
+    // triggered on `load` recomputes the viewport off the container's
+    // actual dimensions at paint time — cheap, idempotent when the
+    // size was already correct (Tal 2026-08-14: preview rendered
+    // container + pin dot but no tiles).
+    // `map.once` returns a Promise in newer MapLibre types when no
+    // callback is passed; with a callback it registers a one-time
+    // listener. `void` keeps the floating-promise rule quiet without
+    // changing behaviour — same pattern the pin picker uses.
+    void map.once('load', () => {
+      map.resize();
+    });
+
     mapRef.current = map;
     return () => {
       map.remove();
