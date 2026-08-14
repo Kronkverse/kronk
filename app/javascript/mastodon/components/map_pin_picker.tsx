@@ -5,6 +5,8 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import * as maplibregl from 'maplibre-gl';
 
+import { apiGeocodeSearch } from 'mastodon/api/map';
+import type { ApiGeocodeResultJSON } from 'mastodon/api/map';
 import {
   basemapLayers,
   BASEMAP_URL,
@@ -16,9 +18,11 @@ import {
 // MapPinPicker — a portal-mounted picker overlay that shows the shared
 // Kronk basemap with a movable centre crosshair. Three ways to place
 // the pin:
-//   1. Type in the search box (uses OSM's Nominatim geocoder — same
-//      data source Kronk's basemap is built from — to look up any
-//      named place, address, or landmark).
+//   1. Type in the search box (uses Kronk's server-side Nominatim
+//      proxy at `/api/v1/map/geocode` — same endpoint the Map
+//      korner's `<PlaceControl>` uses, so results match what a user
+//      sees when they search from the Map itself and the server can
+//      set a proper User-Agent + cache repeat queries).
 //   2. "Centre on me" — browser geolocation eases the map to the
 //      user's current position at street-level zoom.
 //   3. Click / tap anywhere on the map — the crosshair moves there
@@ -89,19 +93,11 @@ interface Props {
 const LOCAL_ZOOM = 14;
 
 // Nominatim's own recommendation: no more than 1 request per second
-// per client. Debouncing at 400ms typing pause + only firing on
-// meaningful input keeps us well under.
+// per client (enforced upstream + cached in Kronk's proxy). Debouncing
+// at 400ms typing pause + only firing on meaningful input keeps us
+// well under, and the server-side cache absorbs repeat queries.
 const SEARCH_DEBOUNCE_MS = 400;
 const SEARCH_MIN_LENGTH = 3;
-const SEARCH_LIMIT = 6;
-const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
-
-interface NominatimResult {
-  lat: string;
-  lon: string;
-  display_name: string;
-  place_id: number;
-}
 
 export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
   const intl = useIntl();
@@ -109,9 +105,9 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [locating, setLocating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<NominatimResult[] | null>(
-    null,
-  );
+  const [searchResults, setSearchResults] = useState<
+    ApiGeocodeResultJSON[] | null
+  >(null);
   const [searching, setSearching] = useState(false);
   const [resultsOpen, setResultsOpen] = useState(false);
 
@@ -198,12 +194,15 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
     };
   }, [initial, centreOnMe]);
 
-  // Debounced geocoder query. Fires SEARCH_DEBOUNCE_MS after typing
-  // stops when the query is long enough to be meaningful. Uses
-  // Nominatim (OSM's public geocoder) — same data source as the
-  // basemap — so results are consistent with what the map shows.
-  // Aborts an in-flight request when the query changes so late
-  // responses don't clobber the latest results.
+  // Debounced geocoder query via Kronk's server-side proxy at
+  // `/api/v1/map/geocode` (see `mastodon/api/map.ts`). Same endpoint
+  // the Map korner's `<PlaceControl>` uses — same results, same
+  // caching, and Kronk's server sets the identifying User-Agent that
+  // Nominatim's usage policy expects (browsers can't set that
+  // header, which is why the initial direct-Nominatim implementation
+  // returned no matches — Nominatim silently blocks unidentified
+  // browser UAs). Aborts in-flight requests when the query changes
+  // so late responses don't clobber the latest results.
   useEffect(() => {
     const trimmed = searchQuery.trim();
     if (trimmed.length < SEARCH_MIN_LENGTH) {
@@ -211,29 +210,25 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
       setSearching(false);
       return;
     }
-    const controller = new AbortController();
+    let cancelled = false;
     const timer = window.setTimeout(() => {
       setSearching(true);
-      const url = `${NOMINATIM_URL}?q=${encodeURIComponent(trimmed)}&format=json&limit=${SEARCH_LIMIT}&addressdetails=0`;
-      fetch(url, {
-        signal: controller.signal,
-        headers: { Accept: 'application/json' },
-      })
-        .then((r) => r.json() as Promise<NominatimResult[]>)
+      apiGeocodeSearch(trimmed)
         .then((data) => {
+          if (cancelled) return;
           setSearchResults(data);
           setSearching(false);
           setResultsOpen(true);
         })
-        .catch((e: unknown) => {
-          if (e instanceof DOMException && e.name === 'AbortError') return;
+        .catch(() => {
+          if (cancelled) return;
           setSearchResults([]);
           setSearching(false);
         });
     }, SEARCH_DEBOUNCE_MS);
     return () => {
+      cancelled = true;
       window.clearTimeout(timer);
-      controller.abort();
     };
   }, [searchQuery]);
 
@@ -248,13 +243,11 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
     if (searchResults && searchResults.length > 0) setResultsOpen(true);
   }, [searchResults]);
 
-  const pickResult = useCallback((r: NominatimResult) => {
+  const pickResult = useCallback((r: ApiGeocodeResultJSON) => {
     const map = mapRef.current;
     if (!map) return;
-    const lat = parseFloat(r.lat);
-    const lng = parseFloat(r.lon);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-    map.easeTo({ center: [lng, lat], zoom: LOCAL_ZOOM, duration: 600 });
+    if (!Number.isFinite(r.lat) || !Number.isFinite(r.lng)) return;
+    map.easeTo({ center: [r.lng, r.lat], zoom: LOCAL_ZOOM, duration: 600 });
     setResultsOpen(false);
   }, []);
 
@@ -324,7 +317,10 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
     return (
       <ul className='map-pin-picker__results' role='listbox'>
         {searchResults.map((r, i) => (
-          <li key={r.place_id} role='none'>
+          // Result rows have no stable server id — use lat+lng+label
+          // as the key, which is stable across renders of the same
+          // search response and unique within one result set.
+          <li key={`${r.lat},${r.lng},${r.label}`} role='none'>
             <button
               type='button'
               role='option'
@@ -333,7 +329,7 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
               data-idx={i}
               onClick={handleResultClick}
             >
-              {r.display_name}
+              {r.label}
             </button>
           </li>
         ))}
