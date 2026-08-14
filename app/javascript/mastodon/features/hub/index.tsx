@@ -153,13 +153,12 @@ const Hub: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const korners = useKorners();
 
-  // Default order: most-tuned-in first, ties broken alphabetically.
-  // Coming-soon tiles (enforced: false + no portal) fall to the end so
-  // the grid reads live-first, promised-next.
-  const sorted = korners.slice().sort((a, b) => {
-    const diff = (b.tune_in_count ?? 0) - (a.tune_in_count ?? 0);
-    return diff !== 0 ? diff : a.name.localeCompare(b.name);
-  });
+  // Default order: alphabetical by name (Tal 2026-08-14). Was
+  // tune-in-count DESC with alphabetical as a tie-breaker; that
+  // meant the grid reshuffled as tune-ins landed and offered no
+  // stable way to find a korner by name. Coming-soon tiles still
+  // fall to the end so the grid reads live-first, promised-next.
+  const sorted = korners.slice().sort((a, b) => a.name.localeCompare(b.name));
   // Portal korners (e.g. YOU) ship at `enforced: false` because they
   // own no Kronk-side resources — but they have a real landing page and
   // are functionally live. Promote them out of the "Coming soon" bucket.
