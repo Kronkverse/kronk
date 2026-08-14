@@ -263,32 +263,21 @@ export const KronkDial: React.FC<Props> = ({
     ],
   );
 
-  // Static geometry — recomputed only when the ring shape changes.
+  // Static geometry — slice / bubble angles only. Positions are
+  // computed inline via SVG `rotate(θ) translate(R 0)` composition,
+  // so the useMemo only needs the angular assignment.
   const outerSlices = useMemo(
-    () =>
-      outer.map((slice, i) => {
-        const angle = i * outerStep;
-        const [lx, ly] = polar(R_OUTER_LABEL, angle);
-        const [tx1, ty1] = polar(R_OUTER_TICK_START, angle);
-        const [tx2, ty2] = polar(R_OUTER_TICK_END, angle);
-        return {
-          slice,
-          index: i,
-          angle,
-          label: { x: lx, y: ly },
-          tick: { x1: tx1, y1: ty1, x2: tx2, y2: ty2 },
-        };
-      }),
+    () => outer.map((slice, i) => ({ slice, index: i, angle: i * outerStep })),
     [outer, outerStep],
   );
 
   const innerBubbles = useMemo(
     () =>
-      (inner ?? []).map((bubble, i) => {
-        const angle = i * innerStep;
-        const [x, y] = polar(R_INNER_BUBBLE, angle);
-        return { bubble, index: i, angle, x, y };
-      }),
+      (inner ?? []).map((bubble, i) => ({
+        bubble,
+        index: i,
+        angle: i * innerStep,
+      })),
     [inner, innerStep],
   );
 
@@ -380,12 +369,19 @@ export const KronkDial: React.FC<Props> = ({
         className='kronk-dial__svg'
         viewBox={`${-VIEW_BOX / 2} ${-VIEW_BOX / 2} ${VIEW_BOX} ${VIEW_BOX}`}
       >
-        {/* Outer ring — labels + tick marks. Wrapped in a rotating
-            group so a drag or index change spins the whole thing;
-            each slice sits at its own angle inside that group. */}
+        {/* Outer ring — labels + tick marks. The rotating group uses
+            SVG's own `transform` ATTRIBUTE (no `deg` suffix, no CSS
+            transform-box gymnastics — CSS transforms on <g> with
+            transform-box: view-box are unreliable across browsers,
+            which sent labels flying in #1483's first pass). Each
+            slice lives in a nested <g> that first rotates to its
+            slot then translates OUT along the +x axis, so the label
+            sits at (R, 0) in its local frame. A final counter-rotate
+            on the text box keeps glyphs upright regardless of wheel
+            spin. */}
         <g
           className='kronk-dial__outer'
-          style={{ transform: `rotate(${outerRotation}deg)` }}
+          transform={`rotate(${outerRotation.toFixed(3)})`}
           onPointerDown={handlePointerDown('outer')}
           onPointerMove={handlePointerMove}
           onPointerUp={settleDrag}
@@ -399,13 +395,12 @@ export const KronkDial: React.FC<Props> = ({
             cy={CENTRE}
             fill='none'
           />
-          {outerSlices.map(({ slice, angle, label, tick, index }) => {
+          {outerSlices.map(({ slice, angle, index }) => {
             const isActive = index === outerIndex;
-            // Text needs to sit upright at any wheel rotation — the
-            // outer group's transform rotates the label, so counter-
-            // rotate here by (-outerRotation - angle) so the glyph
-            // ends up horizontal.
-            const counterRotation = -outerRotation - angle;
+            // Total upright counter-rotation applied at the label
+            // position: cancel the parent wheel spin AND this slice's
+            // local rotation so the glyph lands horizontal.
+            const uprightRotation = -(outerRotation + angle);
             return (
               <g
                 key={slice.key}
@@ -414,36 +409,42 @@ export const KronkDial: React.FC<Props> = ({
                     ? 'kronk-dial__outer-slice kronk-dial__outer-slice--active'
                     : 'kronk-dial__outer-slice'
                 }
+                transform={`rotate(${angle.toFixed(3)})`}
               >
+                {/* Tick line: from R_OUTER_TICK_START to R_OUTER_TICK_END
+                    along the +x axis of the rotated frame. */}
                 <line
-                  x1={tick.x1}
-                  y1={tick.y1}
-                  x2={tick.x2}
-                  y2={tick.y2}
+                  x1={R_OUTER_TICK_START}
+                  y1={0}
+                  x2={R_OUTER_TICK_END}
+                  y2={0}
                   className='kronk-dial__tick'
                 />
-                <text
-                  x={label.x}
-                  y={label.y}
-                  className='kronk-dial__outer-label'
-                  transform={`rotate(${angle} ${label.x} ${label.y}) rotate(${counterRotation} ${label.x} ${label.y})`}
-                  textAnchor='middle'
-                  dominantBaseline='middle'
-                >
-                  {slice.label}
-                </text>
-                {typeof slice.count === 'number' && (
-                  <text
-                    x={label.x}
-                    y={label.y + 8}
-                    className='kronk-dial__outer-count'
-                    transform={`rotate(${angle} ${label.x} ${label.y}) rotate(${counterRotation} ${label.x} ${label.y})`}
-                    textAnchor='middle'
-                    dominantBaseline='middle'
-                  >
-                    {slice.count}
-                  </text>
-                )}
+                {/* Label group: translate out to the label radius, then
+                    counter-rotate the whole nested <g> so the two <text>
+                    elements sit upright without needing per-glyph
+                    rotation math. */}
+                <g transform={`translate(${R_OUTER_LABEL} 0)`}>
+                  <g transform={`rotate(${uprightRotation.toFixed(3)})`}>
+                    <text
+                      className='kronk-dial__outer-label'
+                      textAnchor='middle'
+                      dominantBaseline='middle'
+                    >
+                      {slice.label}
+                    </text>
+                    {typeof slice.count === 'number' && (
+                      <text
+                        y={7}
+                        className='kronk-dial__outer-count'
+                        textAnchor='middle'
+                        dominantBaseline='middle'
+                      >
+                        {slice.count}
+                      </text>
+                    )}
+                  </g>
+                </g>
               </g>
             );
           })}
@@ -454,15 +455,16 @@ export const KronkDial: React.FC<Props> = ({
         {inner && (
           <g
             className='kronk-dial__inner'
-            style={{ transform: `rotate(${innerRotation}deg)` }}
+            transform={`rotate(${innerRotation.toFixed(3)})`}
             onPointerDown={handlePointerDown('inner')}
             onPointerMove={handlePointerMove}
             onPointerUp={settleDrag}
             onPointerCancel={settleDrag}
           >
-            {innerBubbles.map(({ bubble, x, y, index }) => {
+            {innerBubbles.map(({ bubble, angle, index }) => {
               const isActive = index === innerIndex;
               const BubbleIcon = bubble.Icon;
+              const uprightRotation = -(innerRotation + angle);
               return (
                 <g
                   key={bubble.key}
@@ -471,14 +473,12 @@ export const KronkDial: React.FC<Props> = ({
                       ? 'kronk-dial__bubble kronk-dial__bubble--active'
                       : 'kronk-dial__bubble'
                   }
-                  transform={`translate(${x} ${y})`}
+                  transform={`rotate(${angle.toFixed(3)}) translate(${R_INNER_BUBBLE} 0)`}
                 >
                   <circle r={BUBBLE_R} />
-                  <g
-                    // Bubble icons should stay upright — counter-
-                    // rotate against the ring's live rotation.
-                    transform={`rotate(${-innerRotation})`}
-                  >
+                  {/* Icons stay upright — counter-rotate against the
+                      wheel spin + this bubble's own angle. */}
+                  <g transform={`rotate(${uprightRotation.toFixed(3)})`}>
                     <BubbleIcon width={16} height={16} x={-8} y={-8} />
                   </g>
                 </g>

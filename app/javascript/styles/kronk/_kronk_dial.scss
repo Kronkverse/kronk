@@ -58,10 +58,13 @@
 
 .kronk-dial__outer,
 .kronk-dial__inner {
-  transform-origin: center;
-  transform-box: view-box;
+  // Rotation lives on the SVG `transform` attribute (not CSS) — the
+  // `transform-box: view-box` shim was unreliable across engines and
+  // sent labels flying in #1483's first pass. Snap-back animation
+  // moves to JS-driven state (see rAF interpolation in the
+  // component) rather than CSS transition, since CSS can't animate
+  // SVG attribute transforms.
   cursor: grab;
-  transition: transform var(--snap-transition) var(--ease-out);
 
   &:active {
     cursor: grabbing;
