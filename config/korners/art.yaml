@@ -1,0 +1,53 @@
+# Art — a house for every kind of making. Scaffolded 2026-08-14 to
+# host the concentric-dial browser Tal designed (medium × lens picker);
+# still deciding whether Art is one korner with many disciplines or a
+# umbrella whose dial component is reused by per-discipline korners.
+# Kept intentionally light (`enforced: false`) until that shape is
+# settled — no tables, no notifications, no feed projection yet.
+
+slug: art
+name: Art
+purpose: 'To explore and share every form of creative work.'
+tagline: 'A house for every kind of making.'
+icon:
+  material: palette
+render_target: native
+version: 0.0.0
+
+resources: [] # no korner-owned tables yet — dial + content plumbing lands next
+
+security:
+  # Public-first browsing surface; per-piece scopes will come with the
+  # composer flow. Kept as the four standard scopes so a future
+  # composer can promote/demote a piece without a schema change.
+  visibility_scopes:
+    - public
+    - orbit
+    - mates
+    - self_only
+
+hub_teaser:
+  static: 'A house for every kind of making.'
+
+launch:
+  blurb: 'Art — spin the dial to find work by medium, lens, artist, or krew.'
+  cta: 'Post a piece'
+
+# The Ж menu (floating bubble) picks this up automatically: while the
+# viewer is anywhere under /hub/art, the bubble's Post action reads
+# `label` + `route` here and navigates to the composer. Route is a
+# placeholder until the composer ships — matches the pattern other
+# scaffolded korners use.
+compose:
+  label: 'Post a piece'
+  route: '/hub/art/composer'
+
+enforced: false # scaffold — L1-L11 gate flipped on once the dial browser + composer land
+
+# ── Directory nodes ──────────────────────────────────────────────
+nodes:
+  - id: art.index
+    label: Art
+    url: /hub/art
+    lifecycle: soon
+    spa: true

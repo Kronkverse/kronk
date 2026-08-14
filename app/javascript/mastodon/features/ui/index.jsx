@@ -116,6 +116,7 @@ import {
   Moments,
   MomentViewer,
   Albutts,
+  Art,
   KornerSettings,
   ProfileCompose,
   FeedSettings,
@@ -374,6 +375,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/moments/:id' component={MomentViewer} content={children} />
             <WrappedRoute path='/hub/moments' exact component={Moments} content={children} />
             <WrappedRoute path='/hub/albutts' component={Albutts} content={children} />
+            <WrappedRoute path='/hub/art' component={Art} content={children} />
             <Redirect from='/hub/kompass' to='/hub/map' />
             <WrappedRoute path='/hub/map' component={MapV2} content={children} />
             {/* /new must sit before the wildcard so the composer route

@@ -1,0 +1,73 @@
+// Art korner landing — scaffold. Vertical stack: manifest-driven
+// space header → concentric dial (kronk_dial) → selection callout
+// (medium crumb / big-serif title / count). Content list lives
+// below once a piece backend exists; kept out for now.
+
+.art-hub {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 1.5rem;
+  padding: clamp(1rem, 2.5vh, 1.75rem) 1rem clamp(1.5rem, 4vh, 2.5rem);
+  min-height: calc(100vh - 4.25rem);
+  min-height: calc(100dvh - 4.25rem);
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.art-hub__title {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.art-hub__dial {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.art-hub__callout {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding-bottom: clamp(1rem, 4vh, 3rem);
+}
+
+.art-hub__callout-crumb {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+
+  span {
+    padding: 0 0.4rem;
+    opacity: 0.6;
+  }
+}
+
+.art-hub__callout-title {
+  margin: 0 0 0.3rem;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.art-hub__callout-count {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

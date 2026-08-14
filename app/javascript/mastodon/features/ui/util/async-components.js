@@ -364,6 +364,10 @@ export function Albutts () {
   return import("../../albutts");
 }
 
+export function Art () {
+  return import("../../art");
+}
+
 export function MapStub () {
   return import("../../korner_stub").then(m => ({ default: m.MapStub }));
 }
