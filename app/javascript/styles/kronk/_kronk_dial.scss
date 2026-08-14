@@ -1,7 +1,9 @@
 // Kronk dial — concentric-wheel picker. Two rings (outer = category,
-// inner = lens) rotate under a fixed inward-pointing needle mark at
-// 3 o'clock. SVG geometry lives in the component (kronk_dial.tsx);
-// this file owns colour, motion, and layout tokens only.
+// inner = lens) rotate under a fixed pie-wedge selector at 3 o'clock;
+// the active slice's label + count emerge from the wedge tip as an
+// external callout. SVG geometry lives in the component
+// (kronk_dial.tsx); this file owns colour, motion, and layout tokens
+// only. Matches Tal's picker mockup (2026-08-14).
 
 .kronk-dial {
   --kronk-dial-size: 22rem;
@@ -10,12 +12,6 @@
     var(--kronk-purple-accent) 22%,
     transparent
   );
-
-  // Both tokens landed too faint against the dark Kosmos background in
-  // #1497 — the color-mix opacity buckets (30% / 55%) rendered as
-  // essentially invisible. Bumped so the slice "slots" actually read,
-  // and the centre pips read as a lighter accent within each slot.
-  --kronk-dial-tick: color-mix(in oklab, var(--text-muted) 80%, transparent);
   --kronk-dial-divider: color-mix(
     in oklab,
     var(--kronk-purple-accent) 35%,
@@ -86,35 +82,33 @@
   stroke-dasharray: 1.6 3;
 }
 
-.kronk-dial__tick {
-  stroke: var(--kronk-dial-tick);
-  stroke-width: 0.7;
+// Fine dial-face pips — uniform ring behind the labels, giving the
+// wheel a compass-face texture. Much lighter than the slice-divider
+// walls so they read as background pattern, not competing content.
+.kronk-dial__face-tick {
+  stroke: color-mix(in oklab, var(--text-muted) 45%, transparent);
+  stroke-width: 0.4;
   stroke-linecap: round;
 }
 
 // Boundary dividers — one per slice, drawn at the slice EDGE (halfway
 // between slice centres). Gives each label its own visual "slot" so
 // the ring reads as segmented rather than a floating text swarm on a
-// dashed circle. Stroke-width slightly heavier than the centre tick
-// so the wall reads as a wall, not a pip.
+// dashed circle. Stroke-width heavier than the face pips so the wall
+// reads as a wall, not a texture mark.
 .kronk-dial__slice-divider {
   stroke: var(--kronk-dial-divider);
   stroke-width: 1.1;
   stroke-linecap: round;
 }
 
+// Outer-slice label group — the active slice is rendered externally
+// at the wedge tip (see `.kronk-dial__callout` below), so the on-ring
+// labels here are all the non-active slices. Colour reads as
+// secondary text so the active callout dominates as the "shown"
+// value.
 .kronk-dial__outer-slice {
   color: var(--kronk-dial-label);
-  transition: color var(--dur-medium) var(--ease-out);
-
-  &--active {
-    color: var(--kronk-dial-label-active);
-
-    .kronk-dial__tick {
-      stroke: var(--kronk-purple-accent);
-      stroke-width: 1.2;
-    }
-  }
 }
 
 .kronk-dial__outer-label {
@@ -160,20 +154,35 @@
   }
 }
 
-// ── Needle mark + centre hub — non-rotating overlay. ────────────
-// The previous pie-wedge selector was replaced (Tal 2026-08-14: "the
-// purple selector space is pretty ugly and obtrusive") with a small
-// inward-pointing triangle at 3 o'clock. The active slice always
-// rotates under this mark, and the `--active` outer-slice styling
-// brightens the label + tick beneath it as a secondary cue — no
-// heavy background fill needed.
+// ── Wedge selector + external callout + centre hub ──────────────
+// The wedge is a pie slice at 3 o'clock that extends from just
+// outside the hub OUT past the outer perimeter — it punches through
+// the ring instead of sitting behind it. The active slice's label +
+// count emerge from its tip as an external callout. Matches Tal's
+// picker mockup (2026-08-14); replaces the ill-fated needle-only
+// approach that was too subtle to signal the selection.
 
-.kronk-dial__needle {
+.kronk-dial__wedge {
+  fill: color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
   pointer-events: none;
 }
 
-.kronk-dial__needle-mark {
-  fill: var(--kronk-purple-bright);
+.kronk-dial__callout {
+  pointer-events: none;
+}
+
+.kronk-dial__callout-label {
+  font-family: var(--font-display);
+  font-size: 6px;
+  font-weight: 500;
+  fill: var(--text-primary);
+  letter-spacing: 0.04em;
+}
+
+.kronk-dial__callout-count {
+  font-family: var(--font-mono);
+  font-size: 3.5px;
+  fill: var(--text-muted);
 }
 
 .kronk-dial__hub {
@@ -239,10 +248,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kronk-dial__outer,
-  .kronk-dial__inner,
-  .kronk-dial__bubble circle,
-  .kronk-dial__outer-slice {
+  .kronk-dial__bubble circle {
     transition-duration: 1ms;
   }
 }
