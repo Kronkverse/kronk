@@ -22,6 +22,12 @@ class Api::V1::Attachments::CandidatesController < Api::BaseController
   DEFAULT_LIMIT = 20
   MAX_LIMIT = 50
 
+  # Column allow-list is closed (title / name / display_name) and the query
+  # arrives via Arel's `matches` builder — no string interpolation reaches
+  # the SQL, which sidesteps both a real injection risk and Brakeman's
+  # weak-confidence flag on `where("#{col} ILIKE ?", ...)`.
+  SEARCHABLE_COLUMNS = %w(title name display_name).freeze
+
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }
   before_action :require_user!
 
@@ -58,15 +64,17 @@ class Api::V1::Attachments::CandidatesController < Api::BaseController
     column = search_column(klass)
     return scope.none unless column
 
-    scope.where("#{scope.model.quoted_table_name}.#{column} ILIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(query)}%") # rubocop:disable I18n/RailsI18n/DecorateString -- SQL fragment, not user-facing text
+    escaped = ActiveRecord::Base.sanitize_sql_like(query)
+    scope.where(klass.arel_table[column].matches("%#{escaped}%"))
   end
 
-  # Pick the first present title-ish column. Kronk's korner records tend to
-  # carry one of these three (Event/Album/BoothSet=title, Krew=name,
-  # Account=display_name). Returns nil when none exist — the endpoint then
-  # 422s the query rather than silently returning nothing.
+  # Pick the first present title-ish column from the closed allow-list.
+  # Kronk's korner records tend to carry one of these three (Event/Album/
+  # BoothSet=title, Krew=name, Account=display_name). Returns nil when
+  # none exist — the endpoint then 422s the query rather than silently
+  # returning nothing.
   def search_column(klass)
-    %w(title name display_name).find { |c| klass.columns_hash.key?(c) }
+    SEARCHABLE_COLUMNS.find { |c| klass.columns_hash.key?(c) }
   end
 
   def serialize(slug, record)
