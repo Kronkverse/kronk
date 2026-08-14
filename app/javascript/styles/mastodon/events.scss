@@ -2510,6 +2510,137 @@ $ev-interested-color: #b8945f;
     color: var(--text-primary);
   }
 
+  // Invitee picker — search + result rows + selected chips. Chip
+  // pattern reuses the muted-purple treatment from other Kronk
+  // pickers; sizing tighter so several stack cleanly.
+  &__invitees {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  &__invitee-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  &__invitee-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.4rem 0.25rem 0.25rem;
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 15%,
+      transparent
+    );
+    border: 1px solid var(--kronk-purple-accent);
+    border-radius: var(--radius-round);
+    color: var(--kronk-purple-bright);
+    font-size: 0.8rem;
+  }
+
+  &__invitee-avatar {
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  &__invitee-name {
+    font-weight: 500;
+  }
+
+  &__invitee-acct {
+    color: var(--text-muted, var(--secondary-text-color));
+    font-size: 0.75rem;
+    margin-inline-start: auto;
+  }
+
+  &__invitee-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.1rem;
+    height: 1.1rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--kronk-purple-bright);
+    font-size: 0.9rem;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 50%;
+
+    &:hover {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 40%,
+        transparent
+      );
+      color: #fff;
+    }
+  }
+
+  &__invitee-search {
+    position: relative;
+  }
+
+  &__invitee-results {
+    position: absolute;
+    top: calc(100% + 0.3rem);
+    left: 0;
+    right: 0;
+    z-index: 5;
+    max-height: 15rem;
+    overflow-y: auto;
+    padding: 0.25rem 0;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    box-shadow: 0 12px 32px rgb(0 0 0 / 40%);
+  }
+
+  &__invitee-state {
+    padding: 0.75rem 0.85rem;
+    color: var(--text-muted, var(--secondary-text-color));
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  &__invitee-result {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.85rem;
+    border: 0;
+    background: transparent;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out);
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      outline: none;
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 15%,
+        transparent
+      );
+      color: var(--kronk-purple-bright);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+  }
+
   &__error {
     margin: 0;
     padding: 0.6rem 0.85rem;
