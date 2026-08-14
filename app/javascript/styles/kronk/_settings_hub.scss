@@ -1,0 +1,243 @@
+// /settings — radial hub styling that mirrors /me. Central gear
+// glyph with a ring of section spokes around it; sizes and hover
+// motion match `_me_hub.scss` so the two hubs read as a pair. The
+// korner list keeps its familiar card grid, docked below the wheel.
+
+// Same reason as /me: the classic Mastodon column stack caps
+// `.columns-area__panels__main` at 720px which leaves the wheel
+// visually offset left of the Stage's real centre once the right-
+// band eats the right 7.75rem. Retire the cap on /settings so the
+// wheel centres across the full Stage cell.
+body:has(.settings-hub) .columns-area__panels,
+body:has(.settings-hub) .columns-area__panels__main {
+  max-width: none;
+}
+
+.settings-hub {
+  // Three-row grid: header top-anchored, wheel in the middle of
+  // the remaining Stage space, korner list docked below. The
+  // 4.25rem subtraction matches the Frame's top-band reservation
+  // (see _kronk_frame.scss:37) so the wheel centres on the
+  // visible Stage rather than on the full viewport.
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 1.5rem;
+  padding: clamp(1rem, 2.5vh, 1.75rem) 1rem clamp(1.5rem, 4vh, 2.5rem);
+  min-height: calc(100vh - 4.25rem);
+  min-height: calc(100dvh - 4.25rem);
+  background: transparent;
+  color: var(--text-primary);
+}
+
+// Row 1: title block. Top-anchored, horizontally centred; padding /
+// border zeroed so the shared `.space-header` classes don't leak
+// their default framing here.
+.settings-hub__title {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+// Row 2: wheel stack. Centred vertically within the 1fr row so the
+// wheel sits at the middle of the Stage no matter how many
+// korners live below it.
+.settings-hub__stack {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+// The wheel — same geometry contract as /me so the two hubs feel
+// matched. `--hub-radius` = distance from centre to each spoke's
+// centre; the wheel is a square whose side = 2 × (radius + bubble).
+.settings-hub__wheel {
+  --hub-radius: 11rem;
+  --hub-bubble: 4rem;
+  --hub-center: 7rem;
+
+  position: relative;
+  z-index: 1;
+  width: calc(2 * (var(--hub-radius) + var(--hub-bubble)));
+  height: calc(2 * (var(--hub-radius) + var(--hub-bubble)));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  // Compact on narrow screens — same responsive drop as /me.
+  @media (width <= 480px) {
+    --hub-radius: 7.5rem;
+    --hub-bubble: 3rem;
+    --hub-center: 5.5rem;
+  }
+}
+
+// Dashed connector — purely decorative, anchored dead-centre. Its
+// diameter matches 2 × radius so the ring visually threads through
+// each spoke bubble's centre point.
+.settings-hub__ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(2 * var(--hub-radius));
+  height: calc(2 * var(--hub-radius));
+  transform: translate(-50%, -50%);
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-round);
+  pointer-events: none;
+}
+
+// Centre bubble — the gear glyph. Same silhouette as /me's avatar
+// bubble so the two hubs share a visual vocabulary. Not interactive
+// (the wheel is the affordance); left as a plain `<div>` in TSX.
+.settings-hub__center {
+  position: relative;
+  z-index: 2;
+  width: var(--hub-center);
+  height: var(--hub-center);
+  border-radius: var(--radius-round);
+  background: var(--surface-elevated);
+  border: 2px solid var(--kronk-purple-accent);
+  display: grid;
+  place-items: center;
+  color: var(--kronk-purple-accent);
+  padding: 0;
+}
+
+.settings-hub__center-glyph {
+  width: 3rem;
+  height: 3rem;
+  fill: currentcolor;
+}
+
+// Each spoke: absolute-positioned at the ring's radius, angled by
+// `--spoke-angle`. The double-rotate keeps the bubble+label upright
+// while the outer transform positions them around the ring.
+.settings-hub__spoke {
+  --spoke-angle: 0deg;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(var(--spoke-angle))
+    translate(0, calc(-1 * var(--hub-radius)))
+    rotate(calc(-1 * var(--spoke-angle)));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.75rem;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--dur-medium) var(--ease-out);
+  z-index: 1;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    outline: none;
+    color: var(--text-primary);
+
+    .settings-hub__spoke-bubble {
+      border-color: var(--kronk-purple-accent);
+      background: var(--surface-primary);
+      transform: scale(1.05);
+      box-shadow: 0 0 24px -8px var(--kronk-purple-bright);
+    }
+  }
+
+  // "Coming soon" sections: rendered but inert. Dashed border +
+  // dimmed colour so the wheel keeps its shape while the section
+  // is unbuilt; the button is `disabled` so keyboard skips it.
+  &--placeholder {
+    cursor: default;
+    color: var(--text-muted);
+
+    .settings-hub__spoke-bubble {
+      opacity: 0.5;
+      border-style: dashed;
+    }
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text-muted);
+
+      .settings-hub__spoke-bubble {
+        transform: none;
+        box-shadow: none;
+        background: var(--surface-elevated);
+        border-color: var(--border-subtle);
+      }
+    }
+  }
+}
+
+.settings-hub__spoke-bubble {
+  width: var(--hub-bubble);
+  height: var(--hub-bubble);
+  border-radius: var(--radius-round);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  display: grid;
+  place-items: center;
+  color: var(--text-secondary);
+  transition:
+    background var(--dur-medium) var(--ease-out),
+    border-color var(--dur-medium) var(--ease-out),
+    box-shadow var(--dur-medium) var(--ease-out),
+    transform var(--dur-medium) var(--ease-out);
+}
+
+.settings-hub__spoke-icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  fill: currentcolor;
+}
+
+.settings-hub__spoke-label {
+  font-size: 0.75rem;
+  max-width: 5.5rem;
+  line-height: 1.2;
+}
+
+// Row 3: korner list docked below the wheel. Same kard shape the
+// old flat layout used (see _settings_nav.scss), just re-parented
+// beneath the wheel with a section header.
+.settings-hub__korners {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 44rem;
+  margin: 0 auto;
+}
+
+.settings-hub__section-title {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+  padding-left: 0.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-hub__spoke,
+  .settings-hub__spoke-bubble {
+    transition-duration: 1ms;
+  }
+}
