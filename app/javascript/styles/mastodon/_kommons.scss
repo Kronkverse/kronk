@@ -4011,7 +4011,10 @@
 .kommons-settings {
   max-width: 40rem;
   margin: 0 auto;
-  padding: 1rem 1.25rem 4rem;
+
+  // No top padding — the first-child `.space-header` owns the top gap
+  // (Korner Standard L12); a top pad here would stack and drop the title.
+  padding: 0 1.25rem 4rem;
 
   &__loading {
     color: var(--text-muted);
