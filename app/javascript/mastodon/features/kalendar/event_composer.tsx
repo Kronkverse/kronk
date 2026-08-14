@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
@@ -142,6 +142,31 @@ const messages = defineMessages({
     defaultMessage:
       "Only people you invite will see it. Won't show up in feeds.",
   },
+  invitePeople: {
+    id: 'kalendar.new.invite_people',
+    defaultMessage: 'Invite people',
+  },
+  inviteHint: {
+    id: 'kalendar.new.invite_hint',
+    defaultMessage:
+      'They get a nudge with the event. Optional for public / mates events; required for invite-only.',
+  },
+  inviteeSearchPlaceholder: {
+    id: 'kalendar.new.invitee_search_placeholder',
+    defaultMessage: 'Search @handle or name',
+  },
+  inviteeSearching: {
+    id: 'kalendar.new.invitee_searching',
+    defaultMessage: 'Searching…',
+  },
+  inviteeNoResults: {
+    id: 'kalendar.new.invitee_no_results',
+    defaultMessage: 'No matches.',
+  },
+  inviteeRemove: {
+    id: 'kalendar.new.invitee_remove',
+    defaultMessage: 'Remove {name}',
+  },
 });
 
 type EventType = 'event' | 'huddle';
@@ -179,6 +204,18 @@ interface MediaResponse {
   id: string;
   preview_url?: string | null;
   url?: string | null;
+}
+
+// Search hit + selected-invitee shape from the account search API.
+// Kept in the composer scope (rather than pulled from a shared
+// AccountSerializer type) because we only need the four fields for
+// the picker chip + dropdown row.
+interface InviteeAccount {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar: string;
+  acct: string;
 }
 
 // Combine a date input ("YYYY-MM-DD") + time input ("HH:MM") into an
@@ -335,6 +372,19 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   // create_status_for_event!). Backing schema: PR #1480's
   // `events.invite_only` column.
   const [inviteOnly, setInviteOnly] = useState(false);
+  // Invitees (Tal 2026-08-14: "invite into composer"). Accounts the
+  // user has picked from the search results. Stored as a Map keyed
+  // by id so we can render chips with names/avatars (search results
+  // turn over each keystroke — we can't rely on them for chip
+  // metadata). On submit, event is created first, then
+  // `POST /events/:id/invite` fires with the accumulated ids. See
+  // handleInviteeSelect / handleInviteeRemove.
+  const [invitees, setInvitees] = useState<Map<string, InviteeAccount>>(
+    () => new Map(),
+  );
+  const [inviteeQuery, setInviteeQuery] = useState('');
+  const [inviteeResults, setInviteeResults] = useState<InviteeAccount[]>([]);
+  const [inviteeSearching, setInviteeSearching] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -431,6 +481,79 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     setKrewIds((prev) =>
       prev.includes(id) ? prev.filter((k) => k !== id) : [...prev, id],
     );
+  }, []);
+
+  // Debounced account search for the invitee picker. Same endpoint
+  // the event-detail Invite panel already uses (`GET /api/v1/accounts/
+  // search`), 300ms debounce + 6-result cap, cancel-on-change via a
+  // scoped flag so late responses don't clobber the latest results.
+  useEffect(() => {
+    const trimmed = inviteeQuery.trim();
+    if (trimmed.length === 0) {
+      setInviteeResults([]);
+      setInviteeSearching(false);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      setInviteeSearching(true);
+      api()
+        .get<InviteeAccount[]>('/api/v1/accounts/search', {
+          params: { q: trimmed, limit: 6, resolve: false },
+        })
+        .then((res) => {
+          if (cancelled) return;
+          setInviteeResults(res.data);
+          setInviteeSearching(false);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setInviteeResults([]);
+          setInviteeSearching(false);
+        });
+    }, 300);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [inviteeQuery]);
+
+  const onInviteeQueryChange = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((e) => {
+    setInviteeQuery(e.target.value);
+  }, []);
+
+  const handleInviteeSelect = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >((e) => {
+    const id = e.currentTarget.dataset.accountId;
+    if (!id) return;
+    const account = JSON.parse(
+      e.currentTarget.dataset.account ?? 'null',
+    ) as InviteeAccount | null;
+    if (!account) return;
+    setInvitees((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Map(prev);
+      next.set(id, account);
+      return next;
+    });
+    setInviteeQuery('');
+    setInviteeResults([]);
+  }, []);
+
+  const handleInviteeRemove = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >((e) => {
+    const id = e.currentTarget.dataset.accountId;
+    if (!id) return;
+    setInvitees((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Map(prev);
+      next.delete(id);
+      return next;
+    });
   }, []);
 
   const onInviteOnlyToggle = useCallback<
@@ -574,9 +697,29 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     // out under the invite-only toggle.
     if (!inviteOnly && krewIds.length > 0) payload.krew_ids = krewIds;
 
+    const inviteeIds = Array.from(invitees.keys());
+
     void (async () => {
       try {
         const res = await api().post<CreatedEvent>('/api/v1/events', payload);
+        // If the user picked invitees during composition, invite them
+        // now — one request with all ids so the server does the fan-
+        // out of nudges as a single unit. Failure here doesn't roll
+        // the event back: the event exists, the author can still
+        // invite from the detail page. Surface the error so they
+        // notice rather than silently swallowing it.
+        if (inviteeIds.length > 0) {
+          try {
+            await api().post(`/api/v1/events/${res.data.id}/invite`, {
+              account_ids: inviteeIds,
+            });
+          } catch (inviteErr: unknown) {
+            // Log through to the error strip. We still call
+            // onCreated so the user lands on the event they made;
+            // the invite panel on the detail page lets them retry.
+            setError(extractApiError(inviteErr));
+          }
+        }
         onCreated(res.data);
         // Parent unmounts on success — no need to reset state.
       } catch (e: unknown) {
@@ -589,6 +732,7 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     endIso,
     eventType,
     imageMediaId,
+    invitees,
     inviteOnly,
     krewIds,
     locationName,
@@ -916,6 +1060,106 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
             {intl.formatMessage(messages.inviteOnlyHint)}
           </small>
         </label>
+
+        {/* Invitee picker — accounts get a nudge with the event on
+            submit. Optional for public/mates events; the natural
+            partner to the invite-only toggle above. Same account
+            search API the event-detail Invite panel uses; the two
+            surfaces stay in shape. */}
+        <div className='event-composer__invitees'>
+          <span className='event-composer__field-label'>
+            {intl.formatMessage(messages.invitePeople)}
+          </span>
+          <small className='event-composer__field-hint'>
+            {intl.formatMessage(messages.inviteHint)}
+          </small>
+          {invitees.size > 0 && (
+            <div className='event-composer__invitee-chips'>
+              {Array.from(invitees.values()).map((account) => (
+                <span key={account.id} className='event-composer__invitee-chip'>
+                  {account.avatar && (
+                    <img
+                      src={account.avatar}
+                      alt=''
+                      className='event-composer__invitee-avatar'
+                    />
+                  )}
+                  <span className='event-composer__invitee-name'>
+                    {account.display_name || account.username}
+                  </span>
+                  <button
+                    type='button'
+                    className='event-composer__invitee-remove'
+                    data-account-id={account.id}
+                    onClick={handleInviteeRemove}
+                    aria-label={intl.formatMessage(messages.inviteeRemove, {
+                      name: account.display_name || account.username,
+                    })}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          <div className='event-composer__invitee-search'>
+            <input
+              type='search'
+              value={inviteeQuery}
+              onChange={onInviteeQueryChange}
+              placeholder={intl.formatMessage(
+                messages.inviteeSearchPlaceholder,
+              )}
+              className='event-composer__input'
+              autoComplete='off'
+            />
+            {inviteeQuery.trim().length > 0 && (
+              <div className='event-composer__invitee-results' role='listbox'>
+                {inviteeSearching && (
+                  <div className='event-composer__invitee-state'>
+                    <FormattedMessage {...messages.inviteeSearching} />
+                  </div>
+                )}
+                {!inviteeSearching && inviteeResults.length === 0 && (
+                  <div className='event-composer__invitee-state'>
+                    <FormattedMessage {...messages.inviteeNoResults} />
+                  </div>
+                )}
+                {!inviteeSearching &&
+                  inviteeResults.map((account) => {
+                    const already = invitees.has(account.id);
+                    return (
+                      <button
+                        key={account.id}
+                        type='button'
+                        role='option'
+                        aria-selected={already}
+                        className='event-composer__invitee-result'
+                        data-account-id={account.id}
+                        data-account={JSON.stringify(account)}
+                        onClick={handleInviteeSelect}
+                        disabled={already}
+                      >
+                        {account.avatar && (
+                          <img
+                            src={account.avatar}
+                            alt=''
+                            className='event-composer__invitee-avatar'
+                          />
+                        )}
+                        <span className='event-composer__invitee-name'>
+                          {account.display_name || account.username}
+                        </span>
+                        <span className='event-composer__invitee-acct'>
+                          @{account.acct}
+                        </span>
+                      </button>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        </div>
 
         {error && (
           <p className='event-composer__error' role='alert'>
