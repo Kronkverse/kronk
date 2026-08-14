@@ -36,6 +36,7 @@ import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
 
 import { ArrangeStage } from './components/arrange_stage';
+import { ProfileIdentityEditor } from './components/identity_editor';
 import { ProfileHeader } from './components/profile_header';
 import { ProfileViewerActions } from './components/profile_viewer_actions';
 import { ShelvesStack } from './components/shelves_stack';
@@ -302,12 +303,15 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
           {intl.formatMessage(messages.loading)}
         </div>
       ) : mode === 'arrange' && isOwner && account ? (
-        <ArrangeStage
-          cards={cards ?? []}
-          sections={sections ?? []}
-          ownerAccountId={account.id}
-          onChange={handleArrangeChange}
-        />
+        <div className='profile-shelves__arrange'>
+          <ProfileIdentityEditor />
+          <ArrangeStage
+            cards={cards ?? []}
+            sections={sections ?? []}
+            ownerAccountId={account.id}
+            onChange={handleArrangeChange}
+          />
+        </div>
       ) : nothingShown ? (
         <div className='profile-shelves__empty'>
           {isOwner ? (

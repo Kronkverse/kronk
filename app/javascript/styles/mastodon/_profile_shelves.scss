@@ -985,3 +985,72 @@
     font-size: 13px;
   }
 }
+
+// Arrange mode — the owner's edit surface. Reached from the "Arrange"
+// toggle (no separate button/route); stacks the identity editor above the
+// card/shelf arranger.
+.profile-shelves__arrange {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4, 16px);
+  padding: 0 var(--sp-4, 16px);
+}
+
+// Identity editor (name, bio, avatar, cover, profile fields). Consolidated
+// here from the retired /@:acct/edit composer — single home for editing
+// your public identity.
+.profile-identity-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4, 16px);
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3, 12px);
+    margin-top: var(--sp-2, 8px);
+  }
+
+  &__status {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+
+  &__status--error {
+    color: var(--warning-red);
+  }
+
+  &__fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2, 8px);
+  }
+
+  &__fields-label {
+    margin: 0;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+  }
+
+  &__fields-hint {
+    margin: 0 0 var(--sp-1, 4px);
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+
+  &__field-row {
+    display: flex;
+    gap: var(--sp-2, 8px);
+
+    input {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    // Label narrower than content — a field is "Label: longer content".
+    input:first-child {
+      flex: 0 0 33%;
+    }
+  }
+}
