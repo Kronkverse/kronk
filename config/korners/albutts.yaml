@@ -107,10 +107,28 @@ emits:
   # Status-backed; the standard Status notification pipeline handles
   # them now.
 listens:
-  # When a Kalendar event with `spawn_album: true` is created, an
-  # Albutt is auto-created + linked. RSVP grants contribution rights.
+  # `kalendar.event.created` is no longer wired as a bus subscriber —
+  # the spawn is driven by the KornerAttachment factory registered in
+  # `config/initializers/attachment_factories/kalendar_albutts.rb` and
+  # fired by `Kronk::AttachmentSource` on the source Event's create.
+  # Left as a `listens` entry here for historical discoverability so a
+  # `git log -S 'kalendar.event.created' --` can trace the migration.
+  #
+  # Keeping the entry is also what makes the doctor's orphan-listener
+  # check happy: the event is still emitted by Kalendar for Huddle, and
+  # dropping this row would flag albutts as no longer consuming it,
+  # obscuring the fact that we chose to migrate the consumer.
   - name: kalendar.event.created
-    behaviour: 'if event.spawn_album → create Albutt linked to event_id'
+    behaviour: 'migrated to attaches/accepts (KornerAttachment factory) 2026-08-14'
+
+# Cross-korner attachments (docs/kronk_korner_attachments.md). Albutts
+# accepts spawn attachments from Kalendar — the source-side manifest at
+# `kalendar.yaml` declares the outbound `attaches` entry with matching
+# kind, and `bin/tootctl korners doctor` enforces the bidirectional
+# consent at CI time.
+accepts:
+  - from: kalendar
+    kind: spawn
 
 hub_teaser:
   static: 'Shared albums, credit forward.'

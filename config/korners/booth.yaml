@@ -36,6 +36,15 @@ emits:
   - booth.set.frothed
 listens: []
 
+# Cross-korner attachments (docs/kronk_korner_attachments.md). Booth
+# accepts `link` attachments from Kalendar so a DJ can bind a recorded
+# set to the event where they played. The reverse-direction FK
+# (`booth_sets.event_id`) is preserved as a passive mirror during the
+# transition; the KornerAttachment row is now the authoritative link.
+accepts:
+  - from: kalendar
+    kind: link
+
 feed_projection:
   card: booth_card # StatusBoothCard — landed on feature/korner-cards
   title_from: title

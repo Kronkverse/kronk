@@ -2,6 +2,14 @@
 
 class Event < ApplicationRecord
   include Searchable
+  # KornerAttachment source (docs/kronk_korner_attachments.md). The
+  # manifest at `config/korners/kalendar.yaml` declares two `attaches:`
+  # entries — spawn → albutts (field:spawn_album) + link → booth.
+  # `Kronk::AttachmentSource` fires the spawn factory on create and
+  # cascades the join rows on destroy.
+  include Kronk::AttachmentSource
+
+  self.attachment_source_slug = 'kalendar'
 
   searchable_as :kalendar_events
 

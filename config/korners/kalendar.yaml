@@ -59,6 +59,23 @@ emits:
       - status
 listens: []
 
+# Cross-korner attachments (docs/kronk_korner_attachments.md).
+# Kalendar events are the source for two connections today:
+#   spawn → Albutts: on create, when `spawn_album` is set, materialise a
+#     companion Album via the registered factory + write the join row.
+#     Cascade-delete: destroying the event destroys its spawned album.
+#   link  → Booth:   a booth set can be linked to an event by the user
+#     (existing behaviour, now surfaced via <AttachmentPicker>).
+attaches:
+  - to: albutts
+    kind: spawn
+    trigger: field:spawn_album
+    lifecycle: cascade
+  - to: booth
+    kind: link
+    trigger: user
+    lifecycle: keep
+
 feed_projection:
   card: event_card # StatusEventCard, wraps the shared <StatusKornerCard>
   title_from: title
