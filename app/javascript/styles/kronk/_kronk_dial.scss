@@ -10,8 +10,17 @@
     var(--kronk-purple-accent) 22%,
     transparent
   );
-  --kronk-dial-tick: color-mix(in oklab, var(--text-muted) 55%, transparent);
-  --kronk-dial-divider: color-mix(in oklab, var(--text-muted) 30%, transparent);
+
+  // Both tokens landed too faint against the dark Kosmos background in
+  // #1497 — the color-mix opacity buckets (30% / 55%) rendered as
+  // essentially invisible. Bumped so the slice "slots" actually read,
+  // and the centre pips read as a lighter accent within each slot.
+  --kronk-dial-tick: color-mix(in oklab, var(--text-muted) 80%, transparent);
+  --kronk-dial-divider: color-mix(
+    in oklab,
+    var(--kronk-purple-accent) 35%,
+    var(--text-secondary)
+  );
   --kronk-dial-label: var(--text-secondary);
   --kronk-dial-label-active: var(--text-primary);
 
@@ -79,17 +88,18 @@
 
 .kronk-dial__tick {
   stroke: var(--kronk-dial-tick);
-  stroke-width: 0.5;
+  stroke-width: 0.7;
   stroke-linecap: round;
 }
 
 // Boundary dividers — one per slice, drawn at the slice EDGE (halfway
 // between slice centres). Gives each label its own visual "slot" so
 // the ring reads as segmented rather than a floating text swarm on a
-// dashed circle.
+// dashed circle. Stroke-width slightly heavier than the centre tick
+// so the wall reads as a wall, not a pip.
 .kronk-dial__slice-divider {
   stroke: var(--kronk-dial-divider);
-  stroke-width: 0.5;
+  stroke-width: 1.1;
   stroke-linecap: round;
 }
 
