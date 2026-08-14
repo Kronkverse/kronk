@@ -1,6 +1,11 @@
 import { useEffect, useRef } from 'react';
 
 import * as maplibregl from 'maplibre-gl';
+// MapLibre CSS — see `map_pin_picker.tsx` for the full rationale.
+// Required so the attribution control (bottom-right compact button)
+// renders styled when this preview appears standalone (composer
+// mounts the preview without visiting the Map korner first).
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 import {
   basemapLayers,

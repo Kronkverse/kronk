@@ -678,6 +678,13 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
                   value={endDate}
                   onChange={onEndDate}
                   onClick={openPickerOnClick}
+                  // Constrain end ≥ start (Tal 2026-08-14: "make it
+                  // impossible to select an end date before the start
+                  // date"). The `min` attribute greys out earlier
+                  // dates in the native picker + blocks form
+                  // submission via `checkValidity` — no separate
+                  // client-side validator needed.
+                  min={startDate || undefined}
                   className='event-composer__input'
                 />
                 <input
@@ -687,6 +694,11 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
                   onChange={onEndTime}
                   onClick={openPickerOnClick}
                   step={SNAP_MINUTES * 60}
+                  // Same-day event: end time can't be before start
+                  // time. Only apply the min when the dates match —
+                  // otherwise a next-day end at 08:00 would be
+                  // blocked by a start of 19:00.
+                  min={endDate && endDate === startDate ? startTime : undefined}
                   className='event-composer__input'
                 />
               </div>
