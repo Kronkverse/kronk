@@ -1,6 +1,5 @@
 import type {
   ComponentType,
-  CSSProperties,
   PointerEvent as ReactPointerEvent,
   SVGProps,
 } from 'react';
@@ -10,16 +9,19 @@ import KeyboardArrowDownIcon from '@/material-icons/400-24px/keyboard_arrow_down
 
 // KronkDial — a concentric-wheel picker. Two rings (outer = category /
 // medium, inner = lens / view mode) rotate independently under a fixed
-// pie-wedge "needle" pinned at 3 o'clock. The centre hub shows the
-// currently-shown outer slice + a chevron affordance for a drop-down
-// alternative. Built for the Art korner (Tal 2026-08-14 screencast)
+// inward-pointing needle mark pinned at 3 o'clock. The centre hub shows
+// the currently-shown outer slice + a chevron affordance for a drop-
+// down alternative. Built for the Art korner (Tal 2026-08-14 screencast)
 // but intentionally decoupled from any specific domain so it can be
 // reused by per-discipline korners later.
 //
 // Rotation:
 //   * Pointer-down inside the wheel captures the pointer, then
 //     each move rotates the whole SVG by (currentAngle − startAngle)
-//     around its centre. Pointer-up snaps to the nearest slice.
+//     around its centre. Pointer-up starts a rAF-driven snap tween
+//     to the nearest slice (SNAP_MS ease-out cubic) — the ring's
+//     onChange fires only when the tween lands, so the parent's
+//     index update aligns with the tween's endpoint (no jump).
 //   * `touch-action: none` on the wheel means touch-drag ROTATES
 //     rather than scrolls the page; anywhere else on the surface
 //     keeps native scroll behaviour (Tal 2026-08-14).
@@ -32,8 +34,10 @@ import KeyboardArrowDownIcon from '@/material-icons/400-24px/keyboard_arrow_down
 //     Ж menu's moon fan and the /me hub wheel already ship —
 //     `rotate(θ) translate(0,-r)` per slice — but in a single
 //     coordinate system rather than one transform per DOM element.
-//   * The needle wedge sits in a non-rotating overlay layer, so the
-//     rings spin under it (physical-dial mental model).
+//   * The needle mark sits in a non-rotating overlay layer, so the
+//     rings spin under it (physical-dial mental model). Slice
+//     boundary dividers (one per slice, at the slice EDGE) rotate
+//     with the wheel and give each label a visible "slot".
 
 // ── Public types ─────────────────────────────────────────────────
 
@@ -87,24 +91,12 @@ const R_OUTER_TICK_START = 72;
 const R_OUTER_TICK_END = 80;
 const R_INNER_BUBBLE = 48; // centre of each inner-ring bubble
 const R_HUB = 26; // centre hub radius
-const R_WEDGE_INNER = 34; // inner boundary of the fixed needle wedge
-const R_WEDGE_OUTER = 78; // outer boundary
 const BUBBLE_R = 12; // per-bubble radius
-
-// The needle pins to 3 o'clock (positive x-axis in SVG's y-down world
-// = 0° in atan2 terms). We rotate the wheel so the selected slice
-// lands under the needle: `rotation = -index * (360 / count)`.
-const NEEDLE_BEARING = 0;
 
 // Snap-back animation duration (drag release → nearest slice).
 const SNAP_MS = 260;
 
 // ── Helpers ──────────────────────────────────────────────────────
-
-const polar = (radius: number, angleDeg: number): [number, number] => {
-  const rad = (angleDeg * Math.PI) / 180;
-  return [radius * Math.cos(rad), radius * Math.sin(rad)];
-};
 
 // Fold any real number into [0, 360). The atan2 output is in
 // (-180, 180]; the dial's rotation state uses (-∞, ∞) so momentum-
@@ -147,6 +139,20 @@ export const KronkDial: React.FC<Props> = ({
     null,
   );
   const svgRef = useRef<SVGSVGElement | null>(null);
+
+  // rAF-driven snap-back animation state. On drag release we tween
+  // the ring's live rotation to the target slice's rotation over
+  // SNAP_MS with an ease-out cubic; `onOuterChange` / `onInnerChange`
+  // fires only when the tween completes, so the parent's `outerIndex`
+  // update (and its `baseRotation` recomputation) aligns exactly with
+  // the tween's endpoint — no visual jump.
+  const [snapAnim, setSnapAnim] = useState<{
+    ring: 'outer' | 'inner';
+    from: number;
+    to: number;
+    toIndex: number;
+  } | null>(null);
+  const [snapRotation, setSnapRotation] = useState(0);
 
   const pointToAngle = useCallback((clientX: number, clientY: number) => {
     const svg = svgRef.current;
@@ -196,6 +202,13 @@ export const KronkDial: React.FC<Props> = ({
       const ring = dragTarget;
       const step = ring === 'outer' ? outerStep : innerStep;
       const count = ring === 'outer' ? outerCount : innerCount;
+      const currentIndex = ring === 'outer' ? outerIndex : innerIndex;
+      const baseRotation =
+        ring === 'outer' ? baseOuterRotation : baseInnerRotation;
+      // Where the wheel VISUALLY sits at pointer-up: base + live drag.
+      const currentRotation = baseRotation + dragOffset;
+
+      let nextIndex = currentIndex;
       if (step > 0 && count > 0) {
         // A CW drag increases the offset; each `step` degrees of drag
         // rotates the wheel one slice. The offset is measured against
@@ -205,17 +218,29 @@ export const KronkDial: React.FC<Props> = ({
         const next = normDeg(
           (dragOrigin.current.targetIndex - stepsMoved) * step,
         );
-        const nextIndex = Math.round(next / step) % count;
-        if (ring === 'outer' && nextIndex !== outerIndex) {
-          onOuterChange(nextIndex);
-        } else if (
-          ring === 'inner' &&
-          nextIndex !== innerIndex &&
-          onInnerChange
-        ) {
-          onInnerChange(nextIndex);
-        }
+        nextIndex = Math.round(next / step) % count;
       }
+      const targetRotation = -nextIndex * step;
+
+      // Tween from where the wheel visually is → the target slot's
+      // rotation. If they're already within a fraction of a degree
+      // (e.g. a click without meaningful drag on the exact slice),
+      // skip the animation to avoid burning a frame on nothing.
+      if (Math.abs(currentRotation - targetRotation) > 0.1) {
+        setSnapRotation(currentRotation);
+        setSnapAnim({
+          ring,
+          from: currentRotation,
+          to: targetRotation,
+          toIndex: nextIndex,
+        });
+      } else if (nextIndex !== currentIndex) {
+        // No visible travel needed, but the index still changed —
+        // fire the change now.
+        if (ring === 'outer') onOuterChange(nextIndex);
+        else if (onInnerChange) onInnerChange(nextIndex);
+      }
+
       dragOrigin.current = null;
       setDragTarget(null);
       setDragOffset(0);
@@ -229,10 +254,37 @@ export const KronkDial: React.FC<Props> = ({
       dragOffset,
       outerIndex,
       innerIndex,
+      baseOuterRotation,
+      baseInnerRotation,
       onOuterChange,
       onInnerChange,
     ],
   );
+
+  // Run the snap tween. Ease-out cubic over SNAP_MS. When it lands,
+  // fire the ring's onChange so the parent's index update carries the
+  // wheel to exactly where the tween left it — no jump.
+  useEffect(() => {
+    if (!snapAnim) return;
+    const startTime = performance.now();
+    let rafId = 0;
+    const tick = () => {
+      const t = Math.min((performance.now() - startTime) / SNAP_MS, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setSnapRotation(snapAnim.from + (snapAnim.to - snapAnim.from) * eased);
+      if (t < 1) {
+        rafId = requestAnimationFrame(tick);
+      } else {
+        if (snapAnim.ring === 'outer') onOuterChange(snapAnim.toIndex);
+        else if (onInnerChange) onInnerChange(snapAnim.toIndex);
+        setSnapAnim(null);
+      }
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(rafId);
+    };
+  }, [snapAnim, onOuterChange, onInnerChange]);
 
   // Keyboard nav — ←/→ walk the outer ring, ↑/↓ walk the inner.
   const handleKeyDown = useCallback(
@@ -281,39 +333,36 @@ export const KronkDial: React.FC<Props> = ({
     [inner, innerStep],
   );
 
-  // Total rotations — base offset + live drag while active.
+  // Effective rotation per ring, in precedence order:
+  //   1. active snap-back tween (rAF-driven ease-out)
+  //   2. live drag (pointer tracks 1:1)
+  //   3. base rotation (derived from the ring's index)
   const outerRotation =
-    baseOuterRotation + (dragTarget === 'outer' ? dragOffset : 0);
+    snapAnim?.ring === 'outer'
+      ? snapRotation
+      : baseOuterRotation + (dragTarget === 'outer' ? dragOffset : 0);
   const innerRotation =
-    baseInnerRotation + (dragTarget === 'inner' ? dragOffset : 0);
-
-  const dialStyle: CSSProperties = {
-    // While dragging, kill the snap transition so the wheel tracks
-    // the pointer 1:1; when the drag ends, the transition re-enables
-    // and the wheel eases to the snap position.
-    '--snap-transition': dragTarget ? '0ms' : `${SNAP_MS}ms`,
-  } as CSSProperties;
+    snapAnim?.ring === 'inner'
+      ? snapRotation
+      : baseInnerRotation + (dragTarget === 'inner' ? dragOffset : 0);
 
   const centerBubble = inner?.[innerIndex];
   const Center = CenterIcon ?? centerBubble?.Icon;
 
-  // The needle wedge — a pie slice centred on 3 o'clock, drawn once
-  // in the non-rotating overlay layer.
-  const wedgePath = useMemo(() => {
-    const halfSpan = (outerStep || 30) / 2;
-    const [x1, y1] = polar(R_WEDGE_OUTER, NEEDLE_BEARING - halfSpan);
-    const [x2, y2] = polar(R_WEDGE_OUTER, NEEDLE_BEARING + halfSpan);
-    const [xi1, yi1] = polar(R_WEDGE_INNER, NEEDLE_BEARING - halfSpan);
-    const [xi2, yi2] = polar(R_WEDGE_INNER, NEEDLE_BEARING + halfSpan);
-    return [
-      `M ${xi1} ${yi1}`,
-      `L ${x1} ${y1}`,
-      `A ${R_WEDGE_OUTER} ${R_WEDGE_OUTER} 0 0 1 ${x2} ${y2}`,
-      `L ${xi2} ${yi2}`,
-      `A ${R_WEDGE_INNER} ${R_WEDGE_INNER} 0 0 0 ${xi1} ${yi1}`,
-      'Z',
-    ].join(' ');
-  }, [outerStep]);
+  // Needle — a small inward-pointing triangle at 3 o'clock, sitting
+  // at the outer ring's edge. Replaces the pie-wedge selector Tal
+  // read as "ugly and obtrusive" (2026-08-14); the compass metaphor
+  // is enough — the active slice always rotates under this mark,
+  // and the outer-slice `--active` styling brightens the tick + label
+  // right beneath it as a secondary cue.
+  const needlePath = useMemo(() => {
+    const tip = R_OUTER_TICK_END; // point sits at the outer perimeter
+    const back = R_OUTER_TICK_END + 5; // base sits 5 units outside
+    const wing = 3.5; // half-width of the base
+    return [`M ${tip} 0`, `L ${back} ${-wing}`, `L ${back} ${wing}`, 'Z'].join(
+      ' ',
+    );
+  }, []);
 
   // Ensure pointer-move / pointer-up outside the SVG still settle
   // the drag — the SVG captures the pointer on down, but if capture
@@ -358,7 +407,6 @@ export const KronkDial: React.FC<Props> = ({
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <div
       className='kronk-dial'
-      style={dialStyle}
       role='group'
       aria-label={outerAriaLabel}
       onKeyDown={handleKeyDown}
@@ -395,6 +443,21 @@ export const KronkDial: React.FC<Props> = ({
             cy={CENTRE}
             fill='none'
           />
+          {/* Boundary dividers — thin radial lines at each slice
+              EDGE (halfway between slice centres), giving each
+              label its own visual "slot" so it no longer reads as
+              floating loose in the ring. Rotates with the wheel. */}
+          {outerSlices.map(({ slice, angle }) => (
+            <line
+              key={`edge-${slice.key}`}
+              x1={R_OUTER_TICK_START}
+              y1={0}
+              x2={R_OUTER_TICK_END}
+              y2={0}
+              className='kronk-dial__slice-divider'
+              transform={`rotate(${(angle - outerStep / 2).toFixed(3)})`}
+            />
+          ))}
           {outerSlices.map(({ slice, angle, index }) => {
             const isActive = index === outerIndex;
             // Total upright counter-rotation applied at the label
@@ -487,10 +550,10 @@ export const KronkDial: React.FC<Props> = ({
           </g>
         )}
 
-        {/* Fixed overlay layer — needle wedge + centre hub sit outside
+        {/* Fixed overlay layer — needle mark + centre hub sit outside
             the rotating groups so they don't spin. */}
         <g className='kronk-dial__needle' aria-hidden>
-          <path d={wedgePath} className='kronk-dial__wedge' />
+          <path d={needlePath} className='kronk-dial__needle-mark' />
         </g>
         <g className='kronk-dial__hub' aria-hidden>
           <circle r={R_HUB} className='kronk-dial__hub-bg' />
