@@ -80,24 +80,32 @@
     }
   }
 
+  // Crosshair — pinned to the map's centre. Now larger (44px, hits the
+  // WCAG touch-target minimum + reads clearly against Kronk's dense
+  // purple basemap that lacks labels) with a stronger contrast pair
+  // (bright violet lines shadowed with black so it stands off both
+  // the purple land and the cornflower water). A centre ring
+  // reinforces "aim here" so the pin point is unambiguous even after
+  // a click-to-pin recentre. Pointer-events off — clicks pass through
+  // to the map underneath (click-to-pin depends on this).
   &__crosshair {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 28px;
-    height: 28px;
-    margin: -14px 0 0 -14px;
+    width: 44px;
+    height: 44px;
+    margin: -22px 0 0 -22px;
     pointer-events: none;
     z-index: 2;
 
-    // Two crossed lines + a centre ring — the classic "aim here" glyph.
-    // Rendered from CSS so it never has to load an asset.
     &::before,
     &::after {
       content: '';
       position: absolute;
       background: var(--kronk-purple-bright);
-      box-shadow: 0 0 0 1px rgb(0 0 0 / 55%);
+      box-shadow:
+        0 0 0 1px rgb(0 0 0 / 70%),
+        0 0 6px rgb(0 0 0 / 50%);
     }
 
     &::before {
@@ -105,8 +113,8 @@
       top: 50%;
       left: 0;
       right: 0;
-      height: 2px;
-      margin-top: -1px;
+      height: 3px;
+      margin-top: -1.5px;
     }
 
     &::after {
@@ -114,8 +122,66 @@
       top: 0;
       bottom: 0;
       left: 50%;
-      width: 2px;
-      margin-left: -1px;
+      width: 3px;
+      margin-left: -1.5px;
+    }
+
+    // Centre ring — sits on top of the cross, marks the exact pin
+    // point. Rendered as its own inline SVG-free element via a nested
+    // pseudo on the map layer (see below).
+  }
+
+  // Centre ring — separate stacking layer so the cross's pseudos
+  // don't collide. Placed here rather than as a child of the
+  // crosshair so it inherits pointer-events: none from the parent.
+  &__map::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    margin: -6px 0 0 -6px;
+    border: 2px solid var(--kronk-purple-bright);
+    border-radius: 50%;
+    background: rgb(0 0 0 / 30%);
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 70%),
+      0 0 6px rgb(0 0 0 / 50%);
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  // "Centre on me" button — bottom-left of the map area, floating over
+  // the map itself. Small chip, purple-bordered so it reads as a
+  // Kronk control rather than a MapLibre native one.
+  &__locate {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    z-index: 4;
+    padding: 0.35rem 0.75rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--kronk-purple-accent);
+    border-radius: var(--radius-round);
+    color: var(--kronk-purple-bright);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 40%);
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    &:hover:not(:disabled) {
+      background: var(--kronk-purple-accent);
+      color: var(--surface-primary);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
     }
   }
 
@@ -141,21 +207,26 @@
       border-color var(--dur-fast) var(--ease-out);
   }
 
+  // Cancel — clearer outline + primary-text colour (rather than muted)
+  // so it reads as an active affordance instead of disabled state
+  // (Tal shadow screenshot 2026-08-14: buttons "look inactive").
   &__cancel {
     background: transparent;
-    border: 1px solid var(--border-default);
-    color: var(--text-secondary);
+    border: 1px solid var(--border-strong, var(--border-default));
+    color: var(--text-primary);
 
     &:hover {
-      border-color: var(--border-strong, var(--border-default));
-      color: var(--text-primary);
+      border-color: var(--kronk-purple-accent);
+      color: var(--kronk-purple-bright);
     }
   }
 
+  // Confirm — filled + bright text so the primary action clearly
+  // dominates its outlined cancel neighbour.
   &__confirm {
     background: var(--kronk-purple-accent);
     border: 1px solid var(--kronk-purple-accent);
-    color: var(--kronk-purple-bright);
+    color: #fff;
 
     &:hover {
       background: var(--kronk-purple-bright);
