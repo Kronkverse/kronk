@@ -15,6 +15,15 @@
 # that still read from the FK column continue to work during the
 # transition. A follow-up PR drops the column once every reader has
 # migrated to the KornerAttachment join.
+
+# lib/ isn't autoloaded by default in Rails 8, so this initializer has
+# to explicitly `require` the registry it registers into. Rails runs
+# the initializer body eagerly at boot, ahead of any autoload chance
+# for `Kronk::AttachmentFactories` — the deploy blew up on the
+# resulting NameError before this line landed (2026-08-14 shadow
+# deploy trace, blocking every subsequent PR from reaching shadow).
+require 'kronk/attachment_factories'
+
 Rails.application.config.after_initialize do
   Kronk::AttachmentFactories.register(
     source: 'kalendar',
