@@ -203,6 +203,7 @@ Rails.application.routes.draw do
   get '/settings/notifications', to: 'home#index'
   get '/settings/privacy', to: 'home#index'
   get '/settings/account', to: 'home#index'
+  get '/settings/data', to: 'home#index'
 
   # /me — the "Me" hub (SPA, `features/me_hub/`, shipped in #1159).
   # Needs a Rails-side mount to `home#index` so the SPA shell renders
