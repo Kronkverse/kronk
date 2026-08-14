@@ -563,4 +563,56 @@ RSpec.describe Mastodon::CLI::Korners do
       expect(warnings_for(source)).to include(a_string_matching(/local <ComposeFab>/))
     end
   end
+
+  # Cross-korner attachments (docs/kronk_korner_attachments.md): every
+  # `attaches` entry on korner A pointing at B/kind K must have a matching
+  # `accepts` entry on B (from: A or '*'). Synthetic manifests so the check
+  # pins behaviour rather than the current opt-in state of shipped korners.
+  describe 'attachment consent' do
+    subject(:cli) { described_class.new }
+
+    def manifest(slug, attaches: [], accepts: [])
+      Kronk::KornerRegistry::Manifest.new(slug: slug, attaches: attaches, accepts: accepts)
+    end
+
+    def issues_for(*manifests)
+      cli.send(:detect_attachment_consent_issues, manifests)
+    end
+
+    it 'passes when both sides agree' do
+      source = manifest('a', attaches: [{ 'to' => 'b', 'kind' => 'spawn' }])
+      target = manifest('b', accepts: [{ 'from' => 'a', 'kind' => 'spawn' }])
+      expect(issues_for(source, target)).to be_empty
+    end
+
+    it 'flags a source that attaches to a target that does not accept' do
+      source = manifest('a', attaches: [{ 'to' => 'b', 'kind' => 'spawn' }])
+      target = manifest('b', accepts: [])
+      expect(issues_for(source, target)).to include(a_string_matching(/a: attaches to 'b'.*does not accept/))
+    end
+
+    it 'flags a source pointing at a missing target manifest' do
+      source = manifest('a', attaches: [{ 'to' => 'nowhere', 'kind' => 'spawn' }])
+      expect(issues_for(source)).to include(a_string_matching(/names target 'nowhere'/))
+    end
+
+    it 'accepts a target wildcard on the accepting side' do
+      source = manifest('a', attaches: [{ 'to' => 'b', 'kind' => 'link' }])
+      target = manifest('b', accepts: [{ 'from' => '*', 'kind' => 'link' }])
+      expect(issues_for(source, target)).to be_empty
+    end
+
+    it 'ignores a wildcard target on the source side' do
+      # A wildcard target has nothing to cross-check — every accepting
+      # korner will independently satisfy or not.
+      source = manifest('a', attaches: [{ 'to' => '*', 'kind' => 'reference' }])
+      expect(issues_for(source)).to be_empty
+    end
+
+    it 'requires the kind to match' do
+      source = manifest('a', attaches: [{ 'to' => 'b', 'kind' => 'spawn' }])
+      target = manifest('b', accepts: [{ 'from' => 'a', 'kind' => 'link' }])
+      expect(issues_for(source, target)).to include(a_string_matching(/does not accept/))
+    end
+  end
 end

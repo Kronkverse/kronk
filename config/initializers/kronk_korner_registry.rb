@@ -46,6 +46,16 @@ module Kronk
       # Inter-korner (§6)
       :emits,
       :listens,
+      # Cross-korner attachments (docs/kronk_korner_attachments.md).
+      # `attaches:` = "I can be the source of these attachments" —
+      # array of { to: <slug|'*'>, kind: 'spawn'|'link'|'reference',
+      # trigger: 'field:<name>'|'event:<bus-event>'|'user',
+      # lifecycle: 'cascade'|'keep' }.
+      # `accepts:` = "I can be the target of these attachments" —
+      # array of { from: <slug|'*'>, kind: 'spawn'|'link'|'reference' }.
+      # Bidirectional consent enforced by `bin/tootctl korners doctor`.
+      :attaches,
+      :accepts,
       # Hub landing (§4.7)
       :hub_teaser,
       # SpaceNav views (§4 SpaceNav) — the per-korner view switcher the
@@ -176,6 +186,24 @@ module Kronk
         @reserved_slugs ||= load_reserved_slugs
       end
 
+      # Resolve a manifest slug to its primary AR class. Uses the
+      # manifest's primary resource (the one flagged `primary: true`
+      # under `resources:`), singularises + classifies its name, and
+      # constantises. Returns nil if the manifest, its primary
+      # resource, or the resulting class is missing — callers gate on
+      # that (KornerAttachment#records_exist, factory registration).
+      # See docs/kronk_korner_attachments.md §2.3.
+      def model_for(slug)
+        manifest = find(slug)
+        return nil unless manifest
+
+        primary = Array(manifest.resources).find { |r| r.is_a?(Hash) && r['primary'] == true }
+        name = primary&.dig('name')
+        return nil if name.blank?
+
+        name.to_s.singularize.classify.safe_constantize
+      end
+
       def reload!
         @all = nil
         @reserved_slugs = nil
@@ -222,6 +250,8 @@ module Kronk
           compose: extract_compose(yaml),
           emits: Array(yaml['emits']),
           listens: Array(yaml['listens']),
+          attaches: Array(yaml['attaches']),
+          accepts: Array(yaml['accepts']),
           hub_teaser: yaml['hub_teaser'].is_a?(Hash) ? yaml['hub_teaser'] : nil,
           views: extract_views(yaml),
           header: extract_header(yaml),
