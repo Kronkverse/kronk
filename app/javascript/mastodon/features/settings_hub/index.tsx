@@ -10,10 +10,11 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { Icon } from 'mastodon/components/icon';
+import { SpaceHeader } from 'mastodon/components/space_header';
 import { Stage } from 'mastodon/components/stage';
 import { useSettingsSections } from 'mastodon/features/settings/nav';
 import type { SectionDef } from 'mastodon/features/settings/nav';
-import { useKorners } from 'mastodon/hooks/useKorner';
+import { useKorner, useKorners } from 'mastodon/hooks/useKorner';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // Settings Hub — the "All settings" destination. Mirrors /me's radial
@@ -24,11 +25,11 @@ import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 // re-parented under the new hub.
 
 const messages = defineMessages({
+  // The title/tagline for the page itself come from the core-space
+  // manifest (config/korners/settings.yaml) via <SpaceHeader> — this
+  // fallback covers the sub-second window before the registry
+  // resolves. Every other space title on Kronk works this way.
   title: { id: 'settings_hub.title', defaultMessage: 'Settings' },
-  intro: {
-    id: 'settings_hub.intro',
-    defaultMessage: 'Everything about you, and every korner you are in.',
-  },
   centerLabel: {
     id: 'settings_hub.center_label',
     defaultMessage: 'Settings',
@@ -121,7 +122,10 @@ export const SettingsHub: React.FC<{ multiColumn?: boolean }> = () => {
     .slice()
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const title = intl.formatMessage(messages.title);
+  // Title comes from the manifest via SpaceHeader; the intl fallback
+  // is only for the <title>/aria-label pre-registry-resolve window.
+  const settingsSpace = useKorner('settings');
+  const title = settingsSpace?.name ?? intl.formatMessage(messages.title);
   const centerLabel = intl.formatMessage(messages.centerLabel);
 
   const handleNavigate = useCallback(
@@ -138,20 +142,12 @@ export const SettingsHub: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       <div className='settings-hub' role='navigation' aria-label={title}>
-        {/* Space title. /settings isn't a `/hub/<slug>` route so the
-            manifest-driven <AutoSpaceHeader> doesn't fire; we hand-
-            render one using the same `.space-header` classes +
-            `data-frame-header` attribute so it inherits the shared
-            styling and passes the Frame-parasite <h1> exception. */}
-        <header
-          className='space-header settings-hub__title'
-          data-frame-header=''
-        >
-          <h1 className='space-header__title'>{title}</h1>
-          <p className='space-header__tagline'>
-            {intl.formatMessage(messages.intro)}
-          </p>
-        </header>
+        {/* Space header. `/settings` is a core space (manifest at
+            config/korners/settings.yaml, `core: true`), so
+            <AutoSpaceHeader> skips it and we render <SpaceHeader>
+            directly with our own slug. Title + tagline come from the
+            manifest, matching every other space header on Kronk. */}
+        <SpaceHeader slug='settings' className='settings-hub__title' />
 
         <div className='settings-hub__stack'>
           <div className='settings-hub__wheel'>
