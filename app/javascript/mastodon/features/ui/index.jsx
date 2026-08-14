@@ -130,6 +130,7 @@ import {
   NotificationsSettings,
   PrivacySettings,
   AccountSettings,
+  DataSettings,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
 import { focusColumn, getFocusedItemIndex, focusItemSibling } from './util/focusUtils';
@@ -321,6 +322,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/settings/notifications' exact stage component={NotificationsSettings} content={children} />}
             {signedIn && <WrappedRoute path='/settings/privacy' exact stage component={PrivacySettings} content={children} />}
             {signedIn && <WrappedRoute path='/settings/account' exact stage component={AccountSettings} content={children} />}
+            {signedIn && <WrappedRoute path='/settings/data' exact stage component={DataSettings} content={children} />}
             {signedIn && <WrappedRoute path="/settings/profile_sections" component={ProfileSectionsSettings} content={children} />}
             {/* Shelved profile — the 2026-08-01 rebuild replaces the
                 old SectionedProfile at `/@:acct` and `/@:acct/profile`.

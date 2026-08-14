@@ -231,13 +231,15 @@ nodes:
   - id: settings.data
     bucket: settings
     label: Data
-    # Rails-served export page — the classic surface for account
-    # data (posts, follows, blocks, mutes, lists as CSV +
-    # ActivityPub JSON). Imports live at /settings/imports and are
-    # a sibling item in the same sidebar cluster.
-    url: /settings/export
-    lifecycle: soon
-    spa: false
+    # Kronk-native landing (2026-08-14). Presents export (archive + CSV
+    # downloads) and import in Kronk chrome; the operations themselves —
+    # the backup job, CSV file responses, and multipart import+confirm —
+    # stay on the classic Rails pages behind links (no JSON API, and the
+    # machinery works). Was `soon`/`spa:false` pointing straight at the
+    # classic /settings/export.
+    url: /settings/data
+    lifecycle: live
+    spa: true
 
   # ── HUB (landing only — per-korner nodes live in their manifests) ─
   - id: hub.landing
