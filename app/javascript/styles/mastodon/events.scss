@@ -288,36 +288,44 @@ $ev-interested-color: #b8945f;
 
   &__rsvp {
     display: inline-flex;
-    border: 0.5px solid var(--background-border-color);
+    border: 0.5px solid var(--border-default);
     border-radius: 8px;
     overflow: hidden;
     flex-shrink: 0;
   }
 
+  // Compact 3-way segmented control for the list-card RSVP row.
+  // Kept as segmented (not gapped pills) because the compact card
+  // layout benefits from the tighter footprint. Kronk-palette
+  // active state matches the detail + feed variants.
   &__rsvp-seg {
-    padding: 5px 11px;
-    font-size: 12px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
     font-weight: 500;
-    color: var(--secondary-text-color);
+    color: var(--text-secondary);
     background: transparent;
     border: none;
     cursor: pointer;
     line-height: 1.4;
     transition:
-      background 0.15s ease,
-      color 0.15s ease;
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
 
     & + & {
-      border-left: 0.5px solid var(--background-border-color);
+      border-left: 0.5px solid var(--border-default);
     }
 
     &:hover:not(.active) {
-      background: color-mix(in srgb, var(--accent) 8%, transparent);
-      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 10%,
+        transparent
+      );
+      color: var(--kronk-purple-bright);
     }
 
     &.active {
-      background: var(--accent);
+      background: var(--kronk-purple-accent);
       color: #fff;
     }
   }
@@ -1039,46 +1047,70 @@ $ev-interested-color: #b8945f;
 
   &__rsvp {
     display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
   }
 
+  // RSVP picker (detail-page shape). Three pill chips in a row; only
+  // one is active at a time. Kronk-palette hierarchy:
+  //   Going       — filled Kronk-purple-accent, white text; loudest
+  //                 (this is "I'll be there").
+  //   Interested  — outlined + tinted; softer commitment.
+  //   Can't go    — outlined + muted; the polite decline.
+  // Legacy sage-green / warm-sand active colours retired 2026-08-14
+  // — they predated the Kronk-purple identity and read as
+  // out-of-family next to the composer + rest of the detail page.
   &__rsvp-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 9px 18px;
-    border: 1px solid var(--background-border-color);
-    border-radius: 10px;
+    gap: 0.4rem;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
     background: transparent;
-    color: var(--secondary-text-color);
+    color: var(--text-secondary);
     cursor: pointer;
-    font-size: 13px;
+    font-size: 0.9rem;
     font-weight: 500;
-    transition: all 0.2s ease;
+    line-height: 1.2;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
 
-    &:hover {
-      border-color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
-      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
-      background: color-mix(in srgb, var(--accent) 8%, transparent);
+    &:hover:not(.active--going, .active--interested, .active--not-going) {
+      border-color: var(--kronk-purple-accent);
+      color: var(--kronk-purple-bright);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 8%,
+        transparent
+      );
     }
 
     &.active--going {
-      background: $ev-going-color;
-      border-color: $ev-going-color;
+      background: var(--kronk-purple-accent);
+      border-color: var(--kronk-purple-accent);
       color: #fff;
+      box-shadow: 0 2px 8px
+        color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
     }
 
     &.active--interested {
-      background: $ev-interested-color;
-      border-color: $ev-interested-color;
-      color: #fff;
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      border-color: var(--kronk-purple-accent);
+      color: var(--kronk-purple-bright);
     }
 
     &.active--not-going {
-      background: var(--background-border-color);
-      border-color: var(--background-border-color);
-      color: var(--primary-text-color);
+      background: color-mix(in oklab, var(--text-muted) 12%, transparent);
+      border-color: var(--border-default);
+      color: var(--text-muted);
     }
   }
 
@@ -1349,35 +1381,47 @@ $ev-interested-color: #b8945f;
     margin-inline-start: auto;
   }
 
+  // Feed-card RSVP — smaller variant of the detail-page picker,
+  // same colour hierarchy (Going = filled Kronk-purple-accent;
+  // Interested = soft tinted). Kept compact so the card body isn't
+  // dominated by the RSVP row.
   &__rsvp-btn {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 12px;
-    border: 1px solid var(--background-border-color);
-    border-radius: 8px;
+    gap: 0.3rem;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
     background: transparent;
-    color: var(--secondary-text-color);
+    color: var(--text-secondary);
     cursor: pointer;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 500;
-    transition: all 0.2s ease;
+    line-height: 1.2;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
 
-    &:hover {
-      border-color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
-      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
+    &:hover:not(.active--going, .active--interested) {
+      border-color: var(--kronk-purple-accent);
+      color: var(--kronk-purple-bright);
     }
 
     &.active--going {
-      background: $ev-going-color;
-      border-color: $ev-going-color;
+      background: var(--kronk-purple-accent);
+      border-color: var(--kronk-purple-accent);
       color: #fff;
     }
 
     &.active--interested {
-      background: $ev-interested-color;
-      border-color: $ev-interested-color;
-      color: #fff;
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      border-color: var(--kronk-purple-accent);
+      color: var(--kronk-purple-bright);
     }
   }
 
