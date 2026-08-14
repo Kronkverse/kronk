@@ -14,6 +14,11 @@ module User::Activity
   included do
     scope :signed_in_recently, -> { where(current_sign_in_at: ACTIVE_DURATION.ago..) }
     scope :not_signed_in_recently, -> { where(current_sign_in_at: ...ACTIVE_DURATION.ago) }
+    # Has EVER completed a sign-in (Devise sets current_sign_in_at on the
+    # first successful login). Weaker than `signed_in_recently` — used to
+    # exclude accounts that confirmed their email but never actually came
+    # back to use the platform. Kommunity Discover / Orb use this.
+    scope :ever_signed_in, -> { where.not(current_sign_in_at: nil) }
   end
 
   def signed_in_recently?
