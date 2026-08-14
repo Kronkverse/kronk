@@ -3,7 +3,9 @@
 // Token-driven; no --space-* scale yet so spacing is literal.
 
 .appearance-settings {
-  padding: 20px;
+  // No top padding — the first-child `.space-header` owns the top gap
+  // (Korner Standard L12); a top pad here would stack and drop the title.
+  padding: 0 20px 20px;
   max-width: 680px;
   margin: 0 auto;
 

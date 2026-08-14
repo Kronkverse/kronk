@@ -244,7 +244,7 @@ export const ProfileSectionsSettings = () => {
 
       <div
         className='scrollable profile-sections-settings'
-        style={{ padding: '1rem' }}
+        style={{ padding: '0 1rem 1rem' }}
       >
         <header className='space-header' data-frame-header=''>
           <h1 className='space-header__title'>
