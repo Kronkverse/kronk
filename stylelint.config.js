@@ -73,6 +73,17 @@ module.exports = {
         'app/javascript/styles/mastodon/_feed_settings.scss',
         'app/javascript/styles/mastodon/_styleguide.scss',
 
+        // Shared platform primitives (Korner Standard L7: the SCSS for
+        // shared components must be governed too, or token drift lands in
+        // the very pieces every korner reuses — see
+        // docs/kronk_platform_primitives.md).
+        'app/javascript/styles/mastodon/_kronk_action_bar.scss',
+        'app/javascript/styles/mastodon/_kronk_confirm.scss',
+        'app/javascript/styles/mastodon/_kronk_detail.scss',
+        'app/javascript/styles/mastodon/_kronk_meta.scss',
+        'app/javascript/styles/mastodon/_kronk_states.scss',
+        'app/javascript/styles/mastodon/_compose_shell.scss',
+
         // Korner surfaces (one entry per /hub/<slug> partial)
         'app/javascript/styles/mastodon/_albutts.scss',
         'app/javascript/styles/mastodon/_booth.scss',

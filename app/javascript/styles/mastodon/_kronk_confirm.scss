@@ -116,13 +116,13 @@
     // leave / cancel action reads as "this ends something" instead of
     // "this creates something."
     &--destructive {
-      background: color-mix(in oklab, #c75d6e 90%, black);
-      border-color: color-mix(in oklab, #c75d6e 90%, black);
-      color: #fff;
+      background: color-mix(in oklab, var(--destructive) 90%, black);
+      border-color: color-mix(in oklab, var(--destructive) 90%, black);
+      color: white;
 
       &:hover:not(:disabled) {
-        background: #c75d6e;
-        border-color: #c75d6e;
+        background: var(--destructive);
+        border-color: var(--destructive);
       }
     }
   }
