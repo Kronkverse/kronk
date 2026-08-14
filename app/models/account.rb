@@ -206,17 +206,20 @@ class Account < ApplicationRecord
     # Drop stale accounts before the discoverability gate — moved
     # accounts (redirects, shouldn't surface as themselves),
     # memorialized accounts, and orphans whose User row was destroyed.
-    # `where(id: User.where.not(confirmed_at: nil).select(:account_id))`
-    # keeps only accounts backed by a confirmed User row, which
-    # simultaneously drops unconfirmed signups + true orphans
-    # (Tal 2026-08-11: "some users mentioned on the 'Discover' page
-    # who i think are no longer accounts"). The base scope already
-    # dropped suspended + silenced; extending here.
+    # The User subquery gates on FOUR conditions in one hop:
+    #   • confirmed_at present   — email confirmed
+    #   • approved: true         — cleared admin approval (when enforced)
+    #   • disabled: false        — not admin-disabled
+    #   • current_sign_in_at set — has completed at least one login
+    # The last is the fix for Tal 2026-08-14: Discover still surfaced
+    # people who had registered + confirmed email but never actually
+    # logged in — recognisable as default-avatar rows on the grid. The
+    # base scope already dropped suspended + silenced; extending here.
     base = local.without_suspended
                 .without_silenced
                 .without_memorial
                 .where(moved_to_account_id: nil)
-                .where(id: User.where.not(confirmed_at: nil).select(:account_id))
+                .where(id: User.confirmed.approved.enabled.ever_signed_in.select(:account_id))
                 .where.not(id: viewer.id)
     base = base.where.not(id: viewer.excluded_from_timeline_account_ids)
 
