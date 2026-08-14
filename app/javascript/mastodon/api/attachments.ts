@@ -59,3 +59,26 @@ export const apiCreateAttachment = (input: CreateAttachmentInput) =>
 
 export const apiDeleteAttachment = (id: string) =>
   apiRequestDelete(`v1/attachments/${id}`);
+
+// Candidate rows for `<AttachmentPicker>` — the shape mirrors
+// `AttachmentEndpointPreview` (spec §3.1) but is always populated
+// (no `missing` variant). The server ILIKEs `q` against title/name/
+// display_name on the target korner's primary AR class and scopes to
+// what the current account can see.
+export interface AttachmentCandidateJSON {
+  slug: string;
+  id: string;
+  title: string | null;
+  url: string;
+}
+
+export const apiSearchAttachmentCandidates = (
+  targetKorner: string,
+  query: string,
+  limit = 20,
+) =>
+  apiRequestGet<AttachmentCandidateJSON[]>('v1/attachments/candidates', {
+    korner: targetKorner,
+    q: query,
+    limit,
+  });

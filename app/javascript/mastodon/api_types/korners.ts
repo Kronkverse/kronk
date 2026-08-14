@@ -103,6 +103,20 @@ export interface ApiKornerJSON {
   compose?: ApiKornerComposeJSON | null;
   emits?: string[];
   listens?: string[];
+  // Cross-korner attachments — `attaches:` names the (target, kind)
+  // pairs this korner may source; `accepts:` names the (source, kind)
+  // pairs it accepts as target. `'*'` wildcards allowed on either
+  // side. See `docs/kronk_korner_attachments.md` §2.2.
+  attaches?: {
+    to: string;
+    kind: 'spawn' | 'link' | 'reference';
+    trigger?: string;
+    lifecycle?: 'cascade' | 'keep';
+  }[];
+  accepts?: {
+    from: string;
+    kind: 'spawn' | 'link' | 'reference';
+  }[];
   hub_teaser?: Record<string, unknown> | null;
   // SpaceNav view switcher — ordered; the first entry is the default
   // view (bare `/hub/<slug>`), the rest map to `/hub/<slug>/<key>`.
