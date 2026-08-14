@@ -2245,12 +2245,10 @@ $ev-interested-color: #b8945f;
 
   &__cover-input {
     // Native file input is ugly; the wrapping label is the visible
-    // control. Hide the input but keep it accessible.
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    pointer-events: none;
+    // control (see moments/composer.tsx for the established pattern
+    // — enforced by the file_input_aesthetic test). Clicking the
+    // label triggers the native OS file picker.
+    display: none;
   }
 
   &__cover-preview {

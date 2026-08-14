@@ -112,8 +112,21 @@ class Api::V1::EventsController < Api::BaseController
 
   private
 
+  # `params[:id]` may arrive as a numeric id (legacy `/hub/kalendar/12345`
+  # URLs — bookmarks, embed frames, older invitation nudges) or as a
+  # slug (post-2026-08-14 URLs like `/hub/kalendar/cold-plunge`).
+  # Numeric strings resolve by id; anything else resolves by the
+  # unique `slug` column. Rejects an unknown identifier with the
+  # standard ActiveRecord::RecordNotFound so the controller returns
+  # 404 without leaking whether the row existed under a different
+  # scheme.
   def set_event
-    @event = Event.find(params[:id])
+    identifier = params[:id].to_s
+    @event = if identifier.match?(/\A\d+\z/)
+               Event.find(identifier)
+             else
+               Event.find_by!(slug: identifier)
+             end
   end
 
   def authorize_event_owner!

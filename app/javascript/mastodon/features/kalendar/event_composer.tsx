@@ -146,10 +146,14 @@ const messages = defineMessages({
 
 type EventType = 'event' | 'huddle';
 
-// The server returns the full event record; we only need the id here so
-// the caller can navigate to `/hub/kalendar/<id>`.
+// The server returns the full event record; we only need the URL
+// identifier here so the caller can navigate to
+// `/hub/kalendar/<slug>`. Slug is preferred (human-readable, added
+// 2026-08-14); id is kept for older events lacking a slug + as a
+// safety fallback if the server ever ships without one.
 export interface CreatedEvent {
   id: string;
+  slug?: string;
 }
 
 interface CreatePayload {

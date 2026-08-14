@@ -43,6 +43,7 @@ const messages = defineMessages({
 
 interface EventData {
   id: string;
+  slug?: string;
   title: string;
   description: string;
   start_time: string;
@@ -111,17 +112,17 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
   );
 
   const handleCardClick = useCallback(() => {
-    history.push(`/kalendar/${event.id}`);
-  }, [history, event.id]);
+    history.push(`/kalendar/${event.slug ?? event.id}`);
+  }, [history, event.id, event.slug]);
 
   const handleCardKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        history.push(`/kalendar/${event.id}`);
+        history.push(`/kalendar/${event.slug ?? event.id}`);
       }
     },
-    [history, event.id],
+    [history, event.id, event.slug],
   );
 
   const badgeLabel = isLive

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class REST::EventSerializer < ActiveModel::Serializer
-  attributes :id, :title, :description, :start_time, :end_time,
+  attributes :id, :slug, :title, :description, :start_time, :end_time,
              :location_name, :location_url, :event_type, :huddle_url,
              :rsvp_enabled, :max_attendees, :recurrence_rule,
              :cancelled, :going_count, :interested_count,

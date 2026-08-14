@@ -10,6 +10,7 @@ import { KornerMeta } from 'mastodon/components/korner_meta';
 
 interface Event {
   id: string;
+  slug?: string;
   title: string;
   start_time: string;
   end_time: string | null;
@@ -62,7 +63,10 @@ export const EventCard: React.FC<Props> = ({ event, onRsvp }) => {
 
   return (
     <div className={`event-card ${live ? 'event-card--live' : ''}`}>
-      <Link to={`/kalendar/${event.id}`} className='event-card__date'>
+      <Link
+        to={`/kalendar/${event.slug ?? event.id}`}
+        className='event-card__date'
+      >
         <span className='event-card__date-day'>
           <FormattedDate value={event.start_time} day='numeric' />
         </span>
@@ -72,7 +76,10 @@ export const EventCard: React.FC<Props> = ({ event, onRsvp }) => {
       </Link>
 
       <div className='event-card__content'>
-        <Link to={`/kalendar/${event.id}`} className='event-card__title'>
+        <Link
+          to={`/kalendar/${event.slug ?? event.id}`}
+          className='event-card__title'
+        >
           {live && <span className='event-card__live-badge'>LIVE</span>}
           {event.event_type === 'huddle' && !live && (
             <Icon

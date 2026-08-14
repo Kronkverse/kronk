@@ -333,20 +333,29 @@ class SwitchingColumnsArea extends PureComponent {
                 2026-08-13). Bare `/hub/kalendar` renders the Spiral;
                 `/hub/kalendar/list` renders the upcoming-events list. Both
                 are the `Kalendar` component, which resolves the current
-                URL segment to a face internally. `/hub/kalendar/:id` still
-                opens EventDetail — the `:id(\\d+)` regex constraint keeps
-                the numeric-id detail route from swallowing the `list`
-                segment ahead of it. */}
-            {signedIn && <WrappedRoute path={["/kalendar/:id(\\d+)", "/hub/kalendar/:id(\\d+)"]} component={EventDetail} content={children} />}
-            {/* Composer + legacy alias must resolve before the bare
-                /hub/kalendar route (which mounts the Spiral face);
-                same order-sensitive pattern as Krews + Albutts. The
-                composer is a `<ComposeShell>` overlay mounted by
-                Kalendar itself — first-implementation against the
-                shared shape (docs/rebuild/decisions.md 2026-08-12). */}
+                URL segment to a face internally.
+
+                `/hub/kalendar/:idOrSlug` opens EventDetail — accepts
+                either a numeric id (legacy `/hub/kalendar/12345`
+                URLs from bookmarks / older invitation nudges) or a
+                slug (`/hub/kalendar/cold-plunge`, generated from the
+                event title 2026-08-14). The controller's `set_event`
+                disambiguates by regex. Reserved static segments
+                (`composer`, `new`, `list`) match their own routes
+                below because those `exact`-flagged routes come
+                first in the list; react-router's first-match wins. */}
             {signedIn && <WrappedRoute path='/hub/kalendar/composer' exact component={Kalendar} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <WrappedRoute path='/hub/kalendar/new' exact component={Kalendar} componentParams={{ autoOpenComposer: true }} content={children} />}
-            {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar/list", "/hub/kalendar"]} component={Kalendar} content={children} />}
+            {/* List face — matched here as its own `exact` route (rather
+                than as part of the pattern array on the bare Kalendar
+                match below) so the detail `/:idOrSlug` route on the
+                next line doesn't swallow the "list" segment first.
+                Kept in sync with Event::RESERVED_SLUGS so a title
+                slugified to "list" gets a `-1` suffix and never
+                shadows this path. */}
+            {signedIn && <WrappedRoute path='/hub/kalendar/list' exact component={Kalendar} content={children} />}
+            {signedIn && <WrappedRoute path={["/kalendar/:id", "/hub/kalendar/:id"]} exact component={EventDetail} content={children} />}
+            {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={Kalendar} content={children} />}
             {signedIn && <WrappedRoute path="/hub/inflow" component={InflowVeil} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
             {/* Krews (§KRONK_KREWS). Route order matters: /hub/krew/composer,
