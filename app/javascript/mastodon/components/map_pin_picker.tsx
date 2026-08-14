@@ -387,6 +387,20 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
               <FormattedMessage {...messages.centreOnMe} />
             )}
           </button>
+          {/* Floating primary confirm chip on the map itself. After
+              the user searches / geolocates / clicks-to-pin, their
+              attention is on the map — the footer confirm is out of
+              visual focus (Tal 2026-08-14: "no way to select it
+              once i've centered the cross on the location"). Two
+              paths to confirm, same action; keyboard users still
+              land on the footer via tab order. */}
+          <button
+            type='button'
+            className='map-pin-picker__floating-confirm'
+            onClick={handlePin}
+          >
+            <FormattedMessage {...messages.confirm} />
+          </button>
         </div>
         <footer className='map-pin-picker__footer'>
           <button

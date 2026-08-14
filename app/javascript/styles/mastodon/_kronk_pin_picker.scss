@@ -231,6 +231,46 @@
     z-index: 3;
   }
 
+  // Floating confirm chip — bottom-right of the map, opposite the
+  // "Centre on me" chip. Big, filled, primary purple so the confirm
+  // action is impossible to miss once the crosshair sits on the
+  // right spot (Tal 2026-08-14: the footer button was out of
+  // visual focus after moving the map). Mirrors the footer confirm
+  // — same handler, same intent — just placed where the user is
+  // already looking.
+  &__floating-confirm {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    z-index: 4;
+    padding: 0.6rem 1.25rem;
+    background: var(--kronk-purple-accent);
+    border: 1px solid var(--kronk-purple-accent);
+    border-radius: var(--radius-round);
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow:
+      0 4px 12px rgb(0 0 0 / 40%),
+      0 0 0 3px color-mix(in oklab, var(--kronk-purple-accent) 25%, transparent);
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      background: var(--kronk-purple-bright);
+      color: var(--surface-primary);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
   // "Centre on me" button — bottom-left of the map area, floating over
   // the map itself. Small chip, purple-bordered so it reads as a
   // Kronk control rather than a MapLibre native one.
