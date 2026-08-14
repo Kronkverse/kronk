@@ -2255,6 +2255,11 @@ $ev-interested-color: #b8945f;
     align-items: center;
     justify-content: center;
     gap: 0.25rem;
+
+    // A <button> now (was a <label>) so it's keyboard-focusable and drives
+    // the display:none file input via ref — reset the native button chrome.
+    width: 100%;
+    font: inherit;
     aspect-ratio: 16 / 9;
     padding: 1rem;
     border: 1px dashed
@@ -2288,10 +2293,12 @@ $ev-interested-color: #b8945f;
   }
 
   &__cover-input {
-    // Native file input is ugly; the wrapping label is the visible
-    // control (see moments/composer.tsx for the established pattern
-    // — enforced by the file_input_aesthetic test). Clicking the
-    // label triggers the native OS file picker.
+    // Hidden; the sibling &__cover-add button is the visible, focusable
+    // control and opens this input via ref (file-input aesthetic guard —
+    // display:none is the sanctioned way, see the moments composer).
+    // Keeping the input keyboard-reachable is why the trigger is a
+    // <button>, not the old <label> (a display:none input inside a label
+    // can't be tabbed to).
     display: none;
   }
 

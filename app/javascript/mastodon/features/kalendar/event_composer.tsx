@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
@@ -518,6 +518,14 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     setImageUploading(false);
   }, [imagePreviewUrl]);
 
+  // The cover file input is display:none (per the file-input aesthetic
+  // guard); a focusable <button> drives it via this ref, keeping the
+  // control keyboard-reachable — matching features/moments/composer.tsx.
+  const coverInputRef = useRef<HTMLInputElement | null>(null);
+  const onCoverAddClick = useCallback(() => {
+    coverInputRef.current?.click();
+  }, []);
+
   const openPinPicker = useCallback(() => {
     setPinPickerOpen(true);
   }, []);
@@ -644,20 +652,27 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
               </button>
             </div>
           ) : (
-            <label className='event-composer__cover-add'>
+            <>
+              <button
+                type='button'
+                className='event-composer__cover-add'
+                onClick={onCoverAddClick}
+              >
+                <span>
+                  <FormattedMessage {...messages.addCover} />
+                </span>
+                <small>
+                  <FormattedMessage {...messages.cover} />
+                </small>
+              </button>
               <input
+                ref={coverInputRef}
                 type='file'
                 accept='image/*'
                 onChange={onImageChange}
                 className='event-composer__cover-input'
               />
-              <span>
-                <FormattedMessage {...messages.addCover} />
-              </span>
-              <small>
-                <FormattedMessage {...messages.cover} />
-              </small>
-            </label>
+            </>
           )}
           {imageError && (
             <p className='event-composer__error' role='alert'>
