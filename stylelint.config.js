@@ -83,6 +83,7 @@ module.exports = {
         'app/javascript/styles/mastodon/_kronk_meta.scss',
         'app/javascript/styles/mastodon/_kronk_states.scss',
         'app/javascript/styles/mastodon/_compose_shell.scss',
+        'app/javascript/styles/mastodon/_account_settings.scss',
 
         // Korner surfaces (one entry per /hub/<slug> partial)
         'app/javascript/styles/mastodon/_albutts.scss',

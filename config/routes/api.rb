@@ -262,6 +262,8 @@ namespace :api, format: false do
       resource :feed, only: [:show, :update], controller: :feed
       resource :notifications, only: [:show, :update], controller: :notifications
       resource :privacy, only: [:show, :update], controller: :privacy
+      resources :sessions, only: [:index, :destroy]
+      resources :login_activities, only: [:index]
     end
     resources :korners, only: [:index, :show], constraints: { id: %r{[^/]+} } do
       member do
