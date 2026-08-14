@@ -78,6 +78,7 @@ module.exports = {
         // the very pieces every korner reuses — see
         // docs/kronk_platform_primitives.md).
         'app/javascript/styles/mastodon/_kronk_action_bar.scss',
+        'app/javascript/styles/mastodon/_kronk_attachment.scss',
         'app/javascript/styles/mastodon/_kronk_confirm.scss',
         'app/javascript/styles/mastodon/_kronk_detail.scss',
         'app/javascript/styles/mastodon/_kronk_meta.scss',
