@@ -2304,4 +2304,61 @@ $ev-interested-color: #b8945f;
     color: var(--text-primary);
     font-size: 0.85rem;
   }
+
+  // Pin-on-map row — sits under the map-link input field. Small
+  // secondary button that opens `<MapPinPicker>`; once a pin is set,
+  // a muted "Pinned at LAT, LNG" readout appears next to a Clear
+  // affordance so the user can undo without editing the URL by hand.
+  &__pin-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.3rem;
+  }
+
+  &__pin-btn {
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--kronk-purple-accent);
+    border-radius: var(--radius-round);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 10%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      background: var(--kronk-purple-accent);
+      color: var(--surface-primary);
+    }
+  }
+
+  &__pin-coords {
+    color: var(--text-muted, var(--secondary-text-color));
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__pin-clear {
+    padding: 0.35rem 0.6rem;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted, var(--secondary-text-color));
+    font-family: inherit;
+    font-size: 0.75rem;
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+  }
 }
