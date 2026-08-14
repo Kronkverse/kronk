@@ -219,15 +219,15 @@ nodes:
   - id: settings.account
     bucket: settings
     label: Account & security
-    # Points at 2FA methods as the entry — the classic sidebar nav
-    # highlights this same path for the whole "Account & Security"
-    # cluster (config/navigation.rb :two_factor_authentication
-    # highlights on 2FA + OTP + security keys + /auth + delete +
-    # migration + aliases + login_activities + /disputes). Landing
-    # here gives the user Devise's real navigation.
-    url: /settings/two_factor_authentication_methods
-    lifecycle: soon
-    spa: false
+    # Kronk-native landing (Phase 1, 2026-08-14). Renders signed-in
+    # devices + recent sign-ins natively and links out to the classic
+    # Devise flows (change email/password, 2FA, migration, delete) that
+    # are not yet rebuilt — see docs/rebuild/settings_inventory.md and the
+    # Account & Security scope. Was `soon`/`spa:false` pointing at the 2FA
+    # classic route while nothing native existed.
+    url: /settings/account
+    lifecycle: live
+    spa: true
   - id: settings.data
     bucket: settings
     label: Data

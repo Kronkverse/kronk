@@ -404,6 +404,10 @@ export function NotificationsSettings () {
   return import("../../notifications_settings").then(m => ({ default: m.NotificationsSettings }));
 }
 
+export function AccountSettings () {
+  return import("../../account_settings").then(m => ({ default: m.AccountSettings }));
+}
+
 export function PrivacySettings () {
   return import("../../privacy_settings").then(m => ({ default: m.PrivacySettings }));
 }
