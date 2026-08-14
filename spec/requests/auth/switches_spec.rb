@@ -39,14 +39,18 @@ RSpec.describe 'Account switcher' do
       expect(roster.to_json).to_not match(/session_id|token/)
     end
 
-    it 'caps the set at two, evicting the oldest' do
-      login(user_a)
-      login(user_b, add: true)
-      login(user_c, add: true)
+    it 'caps the set at MAX_SWITCHER_ACCOUNTS, evicting the oldest' do
+      max = AccountSwitching::MAX_SWITCHER_ACCOUNTS
+      users = Array.new(max + 1) do |i|
+        Fabricate(:user, email: "cap#{i}@example.com", password: password, confirmed_at: Time.now.utc, approved: true)
+      end
+
+      users.each_with_index { |user, i| login(user, add: i.positive?) }
 
       ids = roster.pluck('id')
-      expect(ids).to contain_exactly(user_b.id.to_s, user_c.id.to_s)
-      expect(ids).to_not include(user_a.id.to_s)
+      expect(ids.size).to eq(max)
+      expect(ids).to_not include(users.first.id.to_s) # oldest evicted
+      expect(ids).to include(users.last.id.to_s) # newest kept
     end
   end
 

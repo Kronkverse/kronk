@@ -22,7 +22,50 @@
     gap: 6px;
   }
 
-  // One account row — a div for the current account, a button for switch targets.
+  // Current-account indicator — a compact strip (small avatar + "signed in
+  // as" + handle), set off from the switch list by a divider. Deliberately
+  // NOT an &__account row: it names who you are, it isn't a switch target.
+  &__current {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 2px 4px 10px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  &__current-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: 0 0 auto;
+    background: var(--surface-elevated);
+  }
+
+  &__current-identity {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__current-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  &__current-acct {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // One switch target — a button; tap to become that account.
   &__account {
     display: flex;
     align-items: center;
@@ -35,11 +78,6 @@
     color: var(--text-primary);
     text-align: start;
     font: inherit;
-  }
-
-  &__account--current {
-    background: var(--surface-variant-background-color);
-    border-color: var(--kronk-purple-muted);
   }
 
   &__account--switch {
@@ -89,18 +127,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  &__badge {
-    flex: 0 0 auto;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: var(--kronk-purple-accent);
-    color: var(--text-on-accent);
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
   }
 
   // Accent primary action.

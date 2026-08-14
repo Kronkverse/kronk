@@ -20,7 +20,10 @@ import { logOut } from 'mastodon/utils/log_out';
 // the client only ever sees this non-secret roster.
 
 const messages = defineMessages({
-  current: { id: 'account_switcher.current', defaultMessage: 'Current' },
+  signedInAs: {
+    id: 'account_switcher.signed_in_as',
+    defaultMessage: 'Signed in as',
+  },
   add: { id: 'account_switcher.add', defaultMessage: 'Add account' },
   logout: { id: 'account_switcher.logout', defaultMessage: 'Log out' },
   switch_to: {
@@ -74,35 +77,42 @@ export const AccountSwitcherItems: React.FC<Props> = ({ onNavigate }) => {
     void logOut();
   }, []);
 
-  // Other authenticated accounts to switch to (the roster minus self). The
-  // current account is rendered separately from the Redux store, so it always
-  // shows even for sessions that predate the switcher (empty server roster).
-  const others = accounts.filter((account) => account.id !== me);
+  // Other authenticated accounts to switch to (the roster minus the active
+  // one). Filter on the server's own `active` flag — NOT `id !== me`: the
+  // roster's `id` is a USER id while `me` is an ACCOUNT id, so that comparison
+  // never matched and the current account leaked into the switch list as a
+  // duplicate row (Tal 2026-08-14).
+  const others = accounts.filter((account) => !account.active);
 
   return (
     <div className='account-switcher'>
-      <div className='account-switcher__accounts'>
-        {currentAccount && (
-          <div className='account-switcher__account account-switcher__account--current'>
-            <img
-              className='account-switcher__avatar'
-              src={currentAccount.avatar}
-              alt=''
-            />
-            <span className='account-switcher__identity'>
-              <span className='account-switcher__name'>
-                {currentAccount.display_name || currentAccount.username}
-              </span>
-              <span className='account-switcher__acct'>
-                @{currentAccount.acct}
-              </span>
+      {/* The current account is a compact indicator, not a switch row — it
+          answers "who am I signed in as" without looking like a second copy
+          of an account also in the list below. Sourced from the Redux store
+          so it shows even for sessions that predate the switcher (empty
+          server roster). */}
+      {currentAccount && (
+        <div
+          className='account-switcher__current'
+          title={`@${currentAccount.acct}`}
+        >
+          <img
+            className='account-switcher__current-avatar'
+            src={currentAccount.avatar}
+            alt=''
+          />
+          <span className='account-switcher__current-identity'>
+            <span className='account-switcher__current-label'>
+              {intl.formatMessage(messages.signedInAs)}
             </span>
-            <span className='account-switcher__badge'>
-              {intl.formatMessage(messages.current)}
+            <span className='account-switcher__current-acct'>
+              @{currentAccount.acct}
             </span>
-          </div>
-        )}
+          </span>
+        </div>
+      )}
 
+      <div className='account-switcher__accounts'>
         {others.map((account) => (
           <button
             key={account.id}
