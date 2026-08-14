@@ -349,17 +349,22 @@ export const KronkDial: React.FC<Props> = ({
   const centerBubble = inner?.[innerIndex];
   const Center = CenterIcon ?? centerBubble?.Icon;
 
-  // Needle — a small inward-pointing triangle at 3 o'clock, sitting
-  // at the outer ring's edge. Replaces the pie-wedge selector Tal
-  // read as "ugly and obtrusive" (2026-08-14); the compass metaphor
-  // is enough — the active slice always rotates under this mark,
-  // and the outer-slice `--active` styling brightens the tick + label
-  // right beneath it as a secondary cue.
+  // Needle — a small outward-pointing triangle at 3 o'clock, sitting
+  // in the empty band between the centre hub and the outer tick ring
+  // (R_HUB=26 → R_OUTER_TICK_START=72). Points from R=60 out to
+  // R=68, so its tip aims at the outer perimeter without ever
+  // touching the label text at R=88 (Tal 2026-08-14: needle
+  // overlapped the JOURNALS label when placed at the outer edge).
+  // Replaces the pie-wedge selector Tal read as "ugly and
+  // obtrusive"; the compass metaphor is enough — the active slice
+  // always rotates under this mark, and the outer-slice `--active`
+  // styling brightens the tick + label right beneath it as a
+  // secondary cue.
   const needlePath = useMemo(() => {
-    const tip = R_OUTER_TICK_END; // point sits at the outer perimeter
-    const back = R_OUTER_TICK_END + 5; // base sits 5 units outside
-    const wing = 3.5; // half-width of the base
-    return [`M ${tip} 0`, `L ${back} ${-wing}`, `L ${back} ${wing}`, 'Z'].join(
+    const base = 60; // back of the triangle (nearer the hub)
+    const tip = 68; // point (nearer the outer ring; still inside label R)
+    const wing = 3; // half-width of the base
+    return [`M ${tip} 0`, `L ${base} ${-wing}`, `L ${base} ${wing}`, 'Z'].join(
       ' ',
     );
   }, []);
