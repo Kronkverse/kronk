@@ -4,6 +4,14 @@ import { createPortal } from 'react-dom';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import * as maplibregl from 'maplibre-gl';
+// MapLibre's own CSS ships the zoom/attribution/geolocate control
+// styles. Without it, `map.addControl(new NavigationControl(...))`
+// renders as unstyled DOM (Tal 2026-08-14: zoom buttons "half
+// hidden in some strange section under the map" — that section was
+// the naked <button> stack with no MapLibre CSS to style + position
+// them). Imported here so the picker works on its own regardless of
+// whether the Map korner has been visited first.
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { apiGeocodeSearch } from 'mastodon/api/map';
 import type { ApiGeocodeResultJSON } from 'mastodon/api/map';
