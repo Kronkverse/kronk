@@ -57,6 +57,14 @@ semantic:
   text-secondary: { dark: '#9c9cc9', light: '#45455f' }
   text-muted: { dark: '#606085', light: '#7a7194' }
   warning-red: { dark: '#ef4444', light: '#c53030' }
+  # Destructive-action red — the delete / leave / cancel CTA colour shared
+  # by <ConfirmDialog>, <KornerPill variant="destructive"> and the
+  # <KornerDetail> danger affordances, so a delete-then-confirm reads as one
+  # gesture. A muted rose, deliberately softer than the vivid `warning-red`
+  # alert colour; kept theme-invariant for now (the primitives used one value
+  # in both themes). Open question for a follow-up: whether this should merge
+  # with `warning-red` into a single destructive red.
+  destructive: { dark: '#c75d6e', light: '#c75d6e' }
   success-green: { dark: '#4b9160', light: '#276749' }
   # Governance/Kommons decision outcomes — vibrant state indicators, distinct from success-green
   decision-agree: { dark: '#22c55e', light: '#16a34a' }

@@ -33,9 +33,9 @@
     align-self: flex-start;
     padding: 0.35rem 0.75rem;
     border-radius: var(--radius-round);
-    background: color-mix(in oklab, #c75d6e 20%, transparent);
-    border: 1px solid color-mix(in oklab, #c75d6e 55%, transparent);
-    color: color-mix(in oklab, #c75d6e 95%, white);
+    background: color-mix(in oklab, var(--destructive) 20%, transparent);
+    border: 1px solid color-mix(in oklab, var(--destructive) 55%, transparent);
+    color: color-mix(in oklab, var(--destructive) 95%, white);
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.08em;

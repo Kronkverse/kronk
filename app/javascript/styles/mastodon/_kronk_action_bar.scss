@@ -99,13 +99,13 @@
   // its confirmation match.
   &--destructive {
     background: transparent;
-    border: 1px solid color-mix(in oklab, #c75d6e 60%, transparent);
-    color: color-mix(in oklab, #c75d6e 90%, white);
+    border: 1px solid color-mix(in oklab, var(--destructive) 60%, transparent);
+    color: color-mix(in oklab, var(--destructive) 90%, white);
 
     &:hover:not(:disabled) {
-      background: color-mix(in oklab, #c75d6e 90%, black);
-      border-color: color-mix(in oklab, #c75d6e 90%, black);
-      color: #fff;
+      background: color-mix(in oklab, var(--destructive) 90%, black);
+      border-color: color-mix(in oklab, var(--destructive) 90%, black);
+      color: white;
     }
   }
 }
