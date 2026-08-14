@@ -2438,6 +2438,29 @@ $ev-interested-color: #b8945f;
     font-size: 0.9rem;
   }
 
+  // Toggle block — a checkbox + label + hint arranged vertically so
+  // the "why would I turn this on?" line reads under the switch.
+  // Used for the invite-only toggle; the RSVP toggle stays on the
+  // simpler inline `&__checkbox` shape since it's self-explanatory.
+  &__toggle-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__toggle-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+  }
+
+  &__toggle-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
   &__error {
     margin: 0;
     padding: 0.6rem 0.85rem;

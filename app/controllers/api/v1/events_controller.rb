@@ -171,10 +171,19 @@ class Api::V1::EventsController < Api::BaseController
                    params[:visibility] || current_account.user&.setting_default_privacy || 'public'
                  end
 
+    # Krew is an additive audience axis (docs/kronk_feed_and_reach.md §2.2):
+    # a post carries exactly one reach tier AND, independently, any set
+    # of krews — the two are not alternatives. Members of the targeted
+    # krews see the event on top of whatever the reach picks up.
+    # Silently dropped on invite_only events since fan-out is disabled
+    # for `self_only` visibility anyway.
+    krew_ids = Array(params[:krew_ids]).map(&:to_i).reject(&:zero?).uniq
+
     @status = PostStatusService.new.call(
       current_account,
       text: status_text,
       visibility: visibility,
+      krew_ids: krew_ids,
       application: doorkeeper_token.application
     )
 
