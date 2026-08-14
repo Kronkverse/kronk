@@ -1,9 +1,13 @@
+import type { CSSProperties } from 'react';
+import { useCallback } from 'react';
+
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
+import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
@@ -12,16 +16,12 @@ import type { SectionDef } from 'mastodon/features/settings/nav';
 import { useKorners } from 'mastodon/hooks/useKorner';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 
-// Settings Hub — the "All settings" destination. Every settings page
-// (personal + per-korner) reaches back here via the SettingsBadge in
-// SpaceNav, and here you can jump to any of them. Chrome mirrors the
-// korner surfaces (Stage + SpaceHeader-styled title/description) so
-// the settings surface reads as its own space rather than a subsection
-// of Mastodon's classic settings.
-//
-// Layout is flat: two sections (Personal + Korners), each a card grid.
-// The old two-kard drill-down (You / Korners) is retired — the hub
-// itself is the map.
+// Settings Hub — the "All settings" destination. Mirrors /me's radial
+// wheel so the two hubs feel like a matched pair: central gear glyph
+// with a ring of section spokes around it (Profile, Account, Appearance,
+// etc.). Korner tune-in / notifications live in a docked list below
+// the wheel — the same visual affordance the flat kard grid used, just
+// re-parented under the new hub.
 
 const messages = defineMessages({
   title: { id: 'settings_hub.title', defaultMessage: 'Settings' },
@@ -29,9 +29,9 @@ const messages = defineMessages({
     id: 'settings_hub.intro',
     defaultMessage: 'Everything about you, and every korner you are in.',
   },
-  sectionPersonal: {
-    id: 'settings_hub.section.personal',
-    defaultMessage: 'Personal',
+  centerLabel: {
+    id: 'settings_hub.center_label',
+    defaultMessage: 'Settings',
   },
   sectionKorners: {
     id: 'settings_hub.section.korners',
@@ -41,141 +41,162 @@ const messages = defineMessages({
     id: 'settings_hub.korner_card_desc',
     defaultMessage: 'Tune-in, notifications, defaults.',
   },
-  comingSoon: {
-    id: 'settings_hub.coming_soon',
-    defaultMessage: 'Coming soon',
-  },
 });
 
-interface KardProps {
-  to: string;
-  glyph: React.ReactNode;
-  title: string;
-  desc: string;
-  disabled?: boolean;
-  disabledLabel?: string;
+// Distribute N spokes evenly around the wheel starting from top (0°),
+// increasing clockwise. Matches the compass convention /me uses.
+const angleForIndex = (index: number, count: number): number =>
+  count === 0 ? 0 : (index * 360) / count;
+
+interface SpokeProps {
+  section: SectionDef;
+  label: string;
+  angle: number;
+  onNavigate: (to: string | undefined) => void;
 }
 
-const Kard: React.FC<KardProps> = ({
-  to,
-  glyph,
-  title,
-  desc,
-  disabled,
-  disabledLabel,
-}) => {
-  const body = (
-    <>
-      <span className='settings-nav__kard-glyph' aria-hidden='true'>
-        {glyph}
-      </span>
-      <span className='settings-nav__kard-body'>
-        <span className='settings-nav__kard-title'>{title}</span>
-        <span className='settings-nav__kard-desc'>{desc}</span>
-        {disabled && disabledLabel && (
-          <span className='settings-nav__kard-meta'>{disabledLabel}</span>
-        )}
-      </span>
-      {!disabled && (
-        <ChevronRightIcon
-          className='settings-nav__kard-chevron'
-          aria-hidden='true'
-        />
-      )}
-    </>
-  );
-
-  if (disabled) {
-    return (
-      <span
-        className='settings-nav__kard settings-nav__kard--disabled'
-        aria-disabled='true'
-      >
-        {body}
-      </span>
-    );
-  }
-
-  return (
-    <Link to={to} className='settings-nav__kard'>
-      {body}
-    </Link>
-  );
-};
-
-const PersonalKard: React.FC<{ section: SectionDef }> = ({ section }) => {
-  const intl = useIntl();
-  const soon = !section.to;
+const Spoke: React.FC<SpokeProps> = ({ section, label, angle, onNavigate }) => {
+  const disabled = !section.to;
   const SectionIcon = section.Icon;
+  const handleClick = useCallback(() => {
+    if (!disabled) onNavigate(section.to);
+  }, [disabled, onNavigate, section.to]);
+
+  const style = {
+    '--spoke-angle': `${angle}deg`,
+  } as CSSProperties;
+
+  const className = disabled
+    ? 'settings-hub__spoke settings-hub__spoke--placeholder'
+    : 'settings-hub__spoke';
+
   return (
-    <Kard
-      to={section.to ?? '#'}
-      glyph={<SectionIcon />}
-      title={intl.formatMessage(section.name)}
-      desc={intl.formatMessage(section.desc)}
-      disabled={soon}
-      disabledLabel={soon ? intl.formatMessage(messages.comingSoon) : undefined}
-    />
+    <button
+      type='button'
+      className={className}
+      style={style}
+      onClick={handleClick}
+      disabled={disabled}
+      aria-disabled={disabled || undefined}
+    >
+      <span className='settings-hub__spoke-bubble' aria-hidden>
+        <SectionIcon className='settings-hub__spoke-icon' aria-hidden='true' />
+      </span>
+      <span className='settings-hub__spoke-label'>{label}</span>
+    </button>
   );
 };
 
-const KornerKard: React.FC<{ korner: ApiKornerJSON }> = ({ korner }) => {
+interface KornerKardProps {
+  korner: ApiKornerJSON;
+}
+
+const KornerKard: React.FC<KornerKardProps> = ({ korner }) => {
   const intl = useIntl();
   const spec = kornerIcon(korner.slug, korner);
   return (
-    <Kard
-      to={`/hub/${korner.slug}/settings`}
-      glyph={<Icon id={korner.icon?.material ?? korner.slug} icon={spec} />}
-      title={korner.name}
-      desc={intl.formatMessage(messages.kornerCardDesc)}
-    />
+    <Link to={`/hub/${korner.slug}/settings`} className='settings-nav__kard'>
+      <span className='settings-nav__kard-glyph' aria-hidden='true'>
+        <Icon id={korner.icon?.material ?? korner.slug} icon={spec} />
+      </span>
+      <span className='settings-nav__kard-body'>
+        <span className='settings-nav__kard-title'>{korner.name}</span>
+        <span className='settings-nav__kard-desc'>
+          {intl.formatMessage(messages.kornerCardDesc)}
+        </span>
+      </span>
+      <ChevronRightIcon
+        className='settings-nav__kard-chevron'
+        aria-hidden='true'
+      />
+    </Link>
   );
 };
 
 export const SettingsHub: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
+  const history = useHistory();
   const personal = useSettingsSections();
   const korners = useKorners()
     .slice()
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  const title = intl.formatMessage(messages.title);
+  const centerLabel = intl.formatMessage(messages.centerLabel);
+
+  const handleNavigate = useCallback(
+    (to?: string) => {
+      if (to) history.push(to);
+    },
+    [history],
+  );
+
   return (
-    <Stage label={intl.formatMessage(messages.title)}>
+    <Stage label={title}>
       <Helmet>
-        <title>{intl.formatMessage(messages.title)}</title>
+        <title>{title}</title>
       </Helmet>
 
-      <div className='scrollable settings-nav'>
-        <header className='space-header' data-frame-header=''>
-          <h1 className='space-header__title'>
-            {intl.formatMessage(messages.title)}
-          </h1>
+      <div className='settings-hub' role='navigation' aria-label={title}>
+        {/* Space title. /settings isn't a `/hub/<slug>` route so the
+            manifest-driven <AutoSpaceHeader> doesn't fire; we hand-
+            render one using the same `.space-header` classes +
+            `data-frame-header` attribute so it inherits the shared
+            styling and passes the Frame-parasite <h1> exception. */}
+        <header
+          className='space-header settings-hub__title'
+          data-frame-header=''
+        >
+          <h1 className='space-header__title'>{title}</h1>
           <p className='space-header__tagline'>
             {intl.formatMessage(messages.intro)}
           </p>
         </header>
 
-        <section className='settings-nav__section'>
-          <h2 className='settings-nav__section-title'>
-            {intl.formatMessage(messages.sectionPersonal)}
-          </h2>
-          <div className='settings-nav__kards'>
-            {personal.map((section) => (
-              <PersonalKard key={section.key} section={section} />
-            ))}
-          </div>
-        </section>
+        <div className='settings-hub__stack'>
+          <div className='settings-hub__wheel'>
+            {/* Dashed connector ring — decorative, purely visual link
+                between the spokes. `aria-hidden` because it carries
+                no meaning for AT. */}
+            <div className='settings-hub__ring' aria-hidden />
 
-        <section className='settings-nav__section'>
-          <h2 className='settings-nav__section-title'>
-            {intl.formatMessage(messages.sectionKorners)}
-          </h2>
-          <div className='settings-nav__kards'>
-            {korners.map((korner) => (
-              <KornerKard key={korner.slug} korner={korner} />
+            {/* Centre: gear glyph. Not interactive (the wheel is the
+                affordance); the sections around it are the buttons. */}
+            <div
+              className='settings-hub__center'
+              role='img'
+              aria-label={centerLabel}
+            >
+              <SettingsIcon
+                className='settings-hub__center-glyph'
+                aria-hidden='true'
+              />
+            </div>
+
+            {personal.map((section, i) => (
+              <Spoke
+                key={section.key}
+                section={section}
+                label={intl.formatMessage(section.name)}
+                angle={angleForIndex(i, personal.length)}
+                onNavigate={handleNavigate}
+              />
             ))}
           </div>
-        </section>
+        </div>
+
+        {korners.length > 0 && (
+          <section className='settings-hub__korners'>
+            <h2 className='settings-hub__section-title'>
+              {intl.formatMessage(messages.sectionKorners)}
+            </h2>
+            <div className='settings-nav__kards'>
+              {korners.map((korner) => (
+                <KornerKard key={korner.slug} korner={korner} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </Stage>
   );
