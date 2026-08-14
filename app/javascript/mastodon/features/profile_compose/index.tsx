@@ -12,6 +12,8 @@ import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 
+import { ProfileHeaderEditor } from './header_editor';
+
 // Profile Composer at /@:acct/edit. Owner-only — visitors get bounced
 // back to /@:acct. Left pane: card palette (step 3). Centre: the live
 // canvas of placed cards, each with an inline visibility dial (step 4).
@@ -42,10 +44,9 @@ const messages = defineMessages({
   modeMe: { id: 'profile_compose.mode.me', defaultMessage: 'Me' },
   modeWork: { id: 'profile_compose.mode.work', defaultMessage: 'My Work' },
   modeHeader: { id: 'profile_compose.mode.header', defaultMessage: 'Header' },
-  headerStub: {
-    id: 'profile_compose.header_stub',
-    defaultMessage:
-      'Cover image, avatar and display name — editing lands in the next step.',
+  headerHelp: {
+    id: 'profile_compose.header_help',
+    defaultMessage: 'Your public identity — how you appear across Kronk.',
   },
 
   paletteHeading: {
@@ -501,7 +502,7 @@ export const ProfileCompose = () => {
 
             {mode === 'header' ? (
               <p className='kcompose__pane-sub'>
-                <FormattedMessage {...messages.headerStub} />
+                <FormattedMessage {...messages.headerHelp} />
               </p>
             ) : (
               visibleGroups.map((group) => (
@@ -536,9 +537,7 @@ export const ProfileCompose = () => {
               ))}
             </nav>
             {mode === 'header' ? (
-              <p className='kcompose__pane-sub'>
-                <FormattedMessage {...messages.headerStub} />
-              </p>
+              <ProfileHeaderEditor />
             ) : modeCards.length === 0 ? (
               <p className='kcompose__pane-sub'>
                 <FormattedMessage {...messages.canvasEmpty} />

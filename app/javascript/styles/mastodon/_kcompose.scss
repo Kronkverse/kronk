@@ -534,3 +534,29 @@
     }
   }
 }
+
+// Header tab of the profile composer — the identity editor
+// (features/profile_compose/header_editor.tsx). The avatar / cover upload
+// block reuses `.onboarding__profile` + `.app-form__*-input` (already styled
+// in components.scss); this only owns the wrapper spacing and the save row.
+.profile-header-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 0.5rem;
+  }
+
+  &__status {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+
+  &__status--error {
+    color: var(--warning-red);
+  }
+}
