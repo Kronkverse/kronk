@@ -122,7 +122,7 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
         history.push(`/kalendar/${event.slug ?? event.id}`);
       }
     },
-    [history, event.id],
+    [history, event.id, event.slug],
   );
 
   const badgeLabel = isLive
