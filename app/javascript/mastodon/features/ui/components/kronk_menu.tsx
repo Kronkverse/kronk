@@ -80,25 +80,36 @@ const MOON_RADIUS_PX = 88;
 const MOON_STEP_DEG = 50;
 
 // Compass bearings (0° = up, 90° = right, 180° = down, 270° = left) for the
-// centre of the arc-fan, per anchor corner. The fan opens into the diagonally
-// opposite quadrant but is biased 20° AWAY from the horizontal — closer to
-// north for bottom anchors and closer to south for top anchors. On the
-// diagonal (45° NE) the outer moons drifted toward east, which Tal read as
-// "too far clockwise" on the default (bottom-left) anchor; pulling the
-// centre back to 25° NNE lifts the arc toward the top of the viewport and
-// mirrors symmetrically for the other three corners.
+// centre of the arc-fan, per anchor corner. Every anchor is biased UPWARD
+// (toward the top of the viewport) from its raw diagonal so the fan reads
+// as lifted rather than corner-mirrored:
+//
+//   • Bottom anchors: small tilt toward N — 45°/315° drift 5° toward the
+//     vertical axis. A larger shift would push the innermost moon past the
+//     left/right viewport edge because item bearing = centre ± 50° with
+//     radius 88px lands the outermost moon at |dx|=88·sin(centre-50).
+//   • Top anchors: bigger tilt toward the horizontal — the raw SE / SW
+//     diagonals sit the fan low over the feed content; pulling toward E
+//     (or W) at ~110° / 250° spreads the moons across from up-right to
+//     down-right (mirrored on the right anchor) with the middle moon
+//     essentially level with Ж.
+//
+// The first pass (#1446) mirrored "toward the top" as "toward S" for top
+// anchors, which pushed the fan DOWN and shoved the outermost moon off
+// the left edge. This corrects both direction (top anchors) and magnitude
+// (bottom anchors stayed within the safe range for a 50° step).
 const arcCentreBearing = (anchor: string): number => {
   switch (anchor) {
     case 'bottom-left':
-      return 25; // NNE (was 45° NE)
+      return 40; // NE, lifted 5° toward N from 45°
     case 'bottom-right':
-      return 335; // NNW (was 315° NW)
+      return 320; // NW, lifted 5° toward N from 315°
     case 'top-left':
-      return 155; // SSE (was 135° SE)
+      return 110; // E-of-SE, lifted 25° toward horizontal from 135°
     case 'top-right':
-      return 205; // SSW (was 225° SW)
+      return 250; // W-of-SW, lifted 25° toward horizontal from 225°
     default:
-      return 335;
+      return 320;
   }
 };
 
