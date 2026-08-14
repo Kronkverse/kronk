@@ -97,6 +97,18 @@ const messages = defineMessages({
   },
   create: { id: 'kalendar.new.create', defaultMessage: 'Post it' },
   creating: { id: 'kalendar.new.creating', defaultMessage: 'Posting…' },
+  needTitleAndStart: {
+    id: 'kalendar.new.need_title_and_start',
+    defaultMessage: 'Add a title and pick a start date + time to post.',
+  },
+  needTitle: {
+    id: 'kalendar.new.need_title',
+    defaultMessage: 'Add a title to post.',
+  },
+  needStart: {
+    id: 'kalendar.new.need_start',
+    defaultMessage: 'Pick a start date + time to post.',
+  },
 });
 
 type EventType = 'event' | 'huddle';
@@ -173,7 +185,23 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     [endDate, endTime],
   );
 
-  const canSubmit = title.trim().length > 0 && startIso !== null && !busy;
+  const hasTitle = title.trim().length > 0;
+  const hasStart = startIso !== null;
+  const canSubmit = hasTitle && hasStart && !busy;
+  // Pick a single hint that spells out what's blocking submit. Shown
+  // whenever the ComposeShell's primary CTA is disabled, so the
+  // "hit Post it, nothing happens" trap (Tal 2026-08-14) is answered
+  // in-place: greyed button + a line below the form saying exactly
+  // why. Not shown while a submit is in flight (busy).
+  const submitBlockerMessage = busy
+    ? null
+    : !hasTitle && !hasStart
+      ? messages.needTitleAndStart
+      : !hasTitle
+        ? messages.needTitle
+        : !hasStart
+          ? messages.needStart
+          : null;
 
   const onTitle = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (e) => {
@@ -539,6 +567,12 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
               defaultMessage="Couldn't create the event: {error}"
               values={{ error }}
             />
+          </p>
+        )}
+
+        {submitBlockerMessage && (
+          <p className='event-composer__submit-hint'>
+            <FormattedMessage {...submitBlockerMessage} />
           </p>
         )}
       </div>
