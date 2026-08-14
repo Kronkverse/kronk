@@ -111,6 +111,26 @@ const messages = defineMessages({
     id: 'kalendar.new.need_start',
     defaultMessage: 'Pick a start date + time to post.',
   },
+  cover: {
+    id: 'kalendar.new.cover',
+    defaultMessage: 'Cover image (optional)',
+  },
+  addCover: {
+    id: 'kalendar.new.add_cover',
+    defaultMessage: 'Choose an image',
+  },
+  uploadingCover: {
+    id: 'kalendar.new.uploading_cover',
+    defaultMessage: 'Uploading…',
+  },
+  removeCover: {
+    id: 'kalendar.new.remove_cover',
+    defaultMessage: 'Remove image',
+  },
+  coverUploadFailed: {
+    id: 'kalendar.new.cover_upload_failed',
+    defaultMessage: "Couldn't upload the image: {error}",
+  },
 });
 
 type EventType = 'event' | 'huddle';
@@ -131,6 +151,17 @@ interface CreatePayload {
   event_type: EventType;
   rsvp_enabled: boolean;
   visibility: ReachValue;
+  image_id?: string;
+}
+
+// Shape returned by POST /api/v2/media. Only the ID is required to
+// attach the media to a Status/Event; the preview_url is used inline
+// for the in-composer thumbnail so the user sees exactly what they
+// just uploaded.
+interface MediaResponse {
+  id: string;
+  preview_url?: string | null;
+  url?: string | null;
 }
 
 // Combine a date input ("YYYY-MM-DD") + time input ("HH:MM") into an
@@ -254,6 +285,17 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [pinPickerOpen, setPinPickerOpen] = useState(false);
   const [eventType, setEventType] = useState<EventType>('event');
   const [rsvpEnabled, setRsvpEnabled] = useState(true);
+  // Cover image — uploaded to /api/v2/media as soon as the user
+  // picks a file (Tal 2026-08-14: "adding an image is possible upon
+  // edit, but not in the initial creation"). The returned media id
+  // + preview URL live here; on submit we pass the id in the create
+  // payload (the controller handles `image_id`). Object-URL preview
+  // shown immediately so the thumbnail appears before the upload
+  // completes.
+  const [imageMediaId, setImageMediaId] = useState<string | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
   // Default to public: events are "shared time" (Kalendar manifest
   // purpose) and the manifest ships `default_event_visibility: public`.
   // Self-only is hidden — an event only you can see isn't an event.
@@ -272,7 +314,7 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
 
   const hasTitle = title.trim().length > 0;
   const hasStart = startIso !== null;
-  const canSubmit = hasTitle && hasStart && !busy;
+  const canSubmit = hasTitle && hasStart && !busy && !imageUploading;
   // Pick a single hint that spells out what's blocking submit. Shown
   // whenever the ComposeShell's primary CTA is disabled, so the
   // "hit Post it, nothing happens" trap (Tal 2026-08-14) is answered
@@ -374,6 +416,61 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     [],
   );
 
+  // Cover image upload — fires the moment the user picks a file so
+  // the id is ready by the time they hit Post it. Shows an immediate
+  // object-URL preview so the thumbnail appears without waiting for
+  // the server round-trip; the object URL is revoked once the server
+  // returns a real `preview_url`.
+  const onImageChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => {
+      const file = e.currentTarget.files?.[0];
+      // Reset the input so the same file can be re-picked after a clear
+      // (browsers otherwise ignore an unchanged value).
+      e.currentTarget.value = '';
+      if (!file) return;
+      setImageError(null);
+      setImageUploading(true);
+      const objectUrl = URL.createObjectURL(file);
+      setImagePreviewUrl(objectUrl);
+      const form = new FormData();
+      form.append('file', file);
+      void (async () => {
+        try {
+          const res = await api().post<MediaResponse>('/api/v2/media', form, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+          setImageMediaId(res.data.id);
+          // Swap the object URL for the server's preview_url once it's
+          // available so we don't leak the blob and the thumbnail
+          // matches what viewers will see. Fall back to keeping the
+          // object URL if the server didn't ship a preview yet
+          // (paperclip previews are async).
+          if (res.data.preview_url) {
+            URL.revokeObjectURL(objectUrl);
+            setImagePreviewUrl(res.data.preview_url);
+          }
+          setImageUploading(false);
+        } catch (err: unknown) {
+          URL.revokeObjectURL(objectUrl);
+          setImagePreviewUrl(null);
+          setImageError(extractApiError(err));
+          setImageUploading(false);
+        }
+      })();
+    },
+    [],
+  );
+
+  const onImageRemove = useCallback(() => {
+    if (imagePreviewUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setImageMediaId(null);
+    setImagePreviewUrl(null);
+    setImageError(null);
+    setImageUploading(false);
+  }, [imagePreviewUrl]);
+
   const openPinPicker = useCallback(() => {
     setPinPickerOpen(true);
   }, []);
@@ -414,6 +511,7 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     if (trimmedLocationName) payload.location_name = trimmedLocationName;
     const trimmedLocationUrl = locationUrl.trim();
     if (trimmedLocationUrl) payload.location_url = trimmedLocationUrl;
+    if (imageMediaId) payload.image_id = imageMediaId;
 
     void (async () => {
       try {
@@ -429,6 +527,7 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     description,
     endIso,
     eventType,
+    imageMediaId,
     locationName,
     locationUrl,
     onCreated,
@@ -461,6 +560,54 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       headerAction={reachControl}
     >
       <div className='event-composer'>
+        <div className='event-composer__cover'>
+          {imagePreviewUrl ? (
+            <div className='event-composer__cover-preview'>
+              <img
+                src={imagePreviewUrl}
+                alt=''
+                className='event-composer__cover-image'
+              />
+              {imageUploading && (
+                <span className='event-composer__cover-badge'>
+                  <FormattedMessage {...messages.uploadingCover} />
+                </span>
+              )}
+              <button
+                type='button'
+                className='event-composer__cover-remove'
+                onClick={onImageRemove}
+                aria-label={intl.formatMessage(messages.removeCover)}
+              >
+                ×
+              </button>
+            </div>
+          ) : (
+            <label className='event-composer__cover-add'>
+              <input
+                type='file'
+                accept='image/*'
+                onChange={onImageChange}
+                className='event-composer__cover-input'
+              />
+              <span>
+                <FormattedMessage {...messages.addCover} />
+              </span>
+              <small>
+                <FormattedMessage {...messages.cover} />
+              </small>
+            </label>
+          )}
+          {imageError && (
+            <p className='event-composer__error' role='alert'>
+              <FormattedMessage
+                {...messages.coverUploadFailed}
+                values={{ error: imageError }}
+              />
+            </p>
+          )}
+        </div>
+
         <label className='event-composer__field'>
           <span className='event-composer__field-label'>
             {intl.formatMessage(messages.eventTitle)}
