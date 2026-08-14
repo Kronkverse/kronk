@@ -121,7 +121,15 @@ namespace :api, format: false do
     # KornerAttachment REST surface (docs/kronk_korner_attachments.md §3.1).
     # Distinct from the proposal-nested `attachments` resource below — this
     # is the cross-korner join primitive, keyed by manifest slug + id.
-    resources :attachments, controller: 'attachments', only: [:index, :create, :destroy]
+    resources :attachments, controller: 'attachments', only: [:index, :create, :destroy] do
+      collection do
+        # Shared candidates search — a picker asks "what could I
+        # attach a Kalendar event to?" and gets a list of Album /
+        # Booth Set / whatever rows the current user can see + own.
+        # Powers `<AttachmentPicker>` (spec §4.3).
+        get :candidates, to: 'attachments/candidates#index'
+      end
+    end
 
     resources :events, only: [:index, :show, :create, :update, :destroy] do
       member do

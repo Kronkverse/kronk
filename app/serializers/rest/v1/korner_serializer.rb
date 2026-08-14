@@ -15,6 +15,8 @@ class REST::V1::KornerSerializer < ActiveModel::Serializer
              :settings,
              :emits,
              :listens,
+             :attaches,
+             :accepts,
              :hub_teaser,
              :launch,
              :portal,

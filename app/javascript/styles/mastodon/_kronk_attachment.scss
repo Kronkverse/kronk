@@ -10,13 +10,51 @@
 .attachment-section {
   margin-block-start: 1rem;
 
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-block-end: 0.5rem;
+  }
+
   &__heading {
-    margin: 0 0 0.5rem;
+    margin: 0;
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--secondary-text-color);
     text-transform: uppercase;
     letter-spacing: 0.04em;
+  }
+
+  &__attach {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid
+      color-mix(
+        in oklab,
+        var(--surface-elevated),
+        var(--kronk-purple-accent) 30%
+      );
+    background: transparent;
+    color: var(--kronk-purple-accent);
+    border-radius: var(--radius-round);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition:
+      background 120ms ease,
+      color 120ms ease;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--surface-elevated),
+        var(--kronk-purple-accent) 15%
+      );
+    }
   }
 
   &__list {
@@ -99,5 +137,202 @@
       );
       color: var(--primary-text-color);
     }
+  }
+}
+
+// AttachmentPicker — the modal behind AttachmentSection's "Attach…"
+// button (see `components/attachment_picker.tsx`, spec §4.3). Piggybacks
+// on the ComposeShell / ConfirmDialog modal grammar: portal-mounted,
+// full-viewport, semi-transparent backdrop dismisses, panel rides on
+// var(--surface-primary) with rounded corners + shadow.
+
+.attachment-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    border: none;
+    background: rgb(0 0 0 / 55%);
+    cursor: pointer;
+  }
+
+  &__panel {
+    position: relative;
+    inline-size: min(28rem, 100%);
+    max-block-size: min(32rem, 80vh);
+    background: var(--surface-primary);
+    border-radius: var(--radius-large);
+    box-shadow: 0 20px 60px rgb(0 0 0 / 35%);
+    padding: 1rem 1.25rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    overflow: hidden;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+
+  &__close {
+    inline-size: 2rem;
+    block-size: 2rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--secondary-text-color);
+    border-radius: var(--radius-round);
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--surface-primary),
+        var(--kronk-purple-accent) 12%
+      );
+      color: var(--primary-text-color);
+    }
+  }
+
+  &__empty {
+    margin: 0;
+    padding: 1rem;
+    background: var(--surface-elevated);
+    border-radius: var(--radius-medium);
+    color: var(--secondary-text-color);
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    select {
+      padding: 0.4rem 0.6rem;
+      border-radius: var(--radius-medium);
+      border: 1px solid
+        color-mix(
+          in oklab,
+          var(--surface-primary),
+          var(--kronk-purple-accent) 20%
+        );
+      background: var(--surface-primary);
+      color: var(--primary-text-color);
+      font-size: 0.95rem;
+    }
+  }
+
+  &__field-label {
+    font-size: 0.8rem;
+    color: var(--secondary-text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__search {
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-medium);
+    border: 1px solid
+      color-mix(
+        in oklab,
+        var(--surface-primary),
+        var(--kronk-purple-accent) 20%
+      );
+    background: var(--surface-primary);
+    color: var(--primary-text-color);
+    font-size: 0.95rem;
+
+    &:focus-visible {
+      outline: 2px solid var(--kronk-purple-accent);
+      outline-offset: 1px;
+    }
+  }
+
+  &__results {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    overflow-y: auto;
+    min-block-size: 4rem;
+  }
+
+  &__status {
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    color: var(--secondary-text-color);
+  }
+
+  &__result {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    background: transparent;
+    color: inherit;
+    text-align: start;
+    border-radius: var(--radius-medium);
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background 120ms ease;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--surface-primary),
+        var(--kronk-purple-accent) 10%
+      );
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+
+  &__result-icon {
+    inline-size: 1.15rem;
+    block-size: 1.15rem;
+    color: var(--kronk-purple-accent);
+    flex: 0 0 auto;
+  }
+
+  &__result-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1 1 auto;
+  }
+
+  &__error {
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    color: var(--warning-red);
+    font-size: 0.85rem;
   }
 }
