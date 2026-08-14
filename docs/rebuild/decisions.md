@@ -17,6 +17,40 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-14 — Account & Security: the "connected apps" / capability surface is coming-soon
+
+Context: scoping the Account & Security settings rebuild. Phase 1 shipped the
+native landing + signed-in devices + recent sign-ins (#1482). While scoping the
+rest of "Group A" — the _authorised apps_ surface (see and revoke what has a
+token to act on your account) — we hit the real question: **Kronk has no
+third-party app ecosystem yet**, so that surface is near-empty today. Its first
+genuine entry would be a **pod client**, and the designated first one is **YOU**
+(`docs/spaces/you.md`) via the **Anthemos membrane** — the consent layer of
+recipient-scoped, revocable capability grants.
+
+**Decision (Tal): park it as coming-soon, don't build it now.** The user-facing
+"connected apps" / capability consent+revoke surface is the same thing the
+membrane needs, and the membrane is deferred (blocked on Anthemos). Building an
+empty grant-management screen before there is anything to grant is effort for a
+dormant capability — same reasoning that deferred aliases (federation) earlier.
+
+What this means concretely:
+
+- **Not built now:** a "Connected apps" surface, log-in-with-Kronk for YOU, and
+  projecting YOU signals onto the Kronk profile (the "✓ Anthemos" chip in
+  `docs/prototypes/kronk-profile-redesign.html`). These stay in
+  `docs/spaces/you.md` § Deferred.
+- **When it lands:** the consent/revoke UI is an Account & Security surface (it
+  belongs next to signed-in devices), and YOU is its first real entry — so the
+  settings thread and the membrane thread meet there. The doc's
+  "secure only once / provisional until Anthemos-verified" pattern is the licence
+  to ship a provisional slice first.
+- **Account & Security continues** with the surfaces that serve _live_ needs —
+  Data export/import next — not the app/capability surfaces that wait on
+  Anthemos.
+
+Supersedes nothing; records a deferral so it is not rediscovered.
+
 ## 2026-08-13 — No stacked PRs: every branch starts from the integration tip
 
 Tal's call, from watching it fail twice in one session. The contributor rule now
