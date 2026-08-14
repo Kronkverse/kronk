@@ -143,6 +143,58 @@ const combineLocal = (date: string, time: string): string | null => {
   return parsed.toISOString();
 };
 
+// Format a JS Date as the browser's local `<input type="date">` value.
+const dateInputValue = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+const timeInputValue = (d: Date): string => {
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
+};
+
+// Round `d` up to the next SNAP-minute boundary — so 14:23 → 14:25 with
+// a 5-min snap. Matches the `<input type="time" step>` snap Tal asked
+// for (2026-08-14) so the auto-filled default sits on the same grid
+// the picker offers.
+const SNAP_MINUTES = 5;
+const roundUpToSnap = (d: Date): Date => {
+  const out = new Date(d);
+  const mins = out.getMinutes();
+  const remainder = mins % SNAP_MINUTES;
+  if (remainder !== 0 || out.getSeconds() > 0 || out.getMilliseconds() > 0) {
+    out.setMinutes(mins + (SNAP_MINUTES - remainder));
+  }
+  out.setSeconds(0, 0);
+  return out;
+};
+
+// Default start = now, rounded up to the next 5-min slot.
+// Default end   = start + 2 hours.
+// Both split into their date + time inputs so the user can tweak either
+// half without recomputing the other. Computed once at mount via lazy
+// useState so refreshing the composer doesn't drift the defaults every
+// render.
+interface DefaultTimes {
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+}
+const computeDefaultTimes = (): DefaultTimes => {
+  const start = roundUpToSnap(new Date());
+  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+  return {
+    startDate: dateInputValue(start),
+    startTime: timeInputValue(start),
+    endDate: dateInputValue(end),
+    endTime: timeInputValue(end),
+  };
+};
+
 // Pull a useful message out of an axios error. Rails returns 4xx
 // bodies in one of a few shapes — `{ error: "…" }` (single message),
 // `{ errors: { field: [msg, …], … } }` (ActiveRecord validation),
@@ -180,10 +232,14 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [endTime, setEndTime] = useState('');
+  // Auto-fill start = now (rounded to next 5-min slot), end = +2h —
+  // Tal 2026-08-14. Lazy initialiser so `new Date()` runs once at
+  // mount; the user can still tweak either half.
+  const defaults = useMemo(() => computeDefaultTimes(), []);
+  const [startDate, setStartDate] = useState(defaults.startDate);
+  const [startTime, setStartTime] = useState(defaults.startTime);
+  const [endDate, setEndDate] = useState(defaults.endDate);
+  const [endTime, setEndTime] = useState(defaults.endTime);
   const [locationName, setLocationName] = useState('');
   const [locationUrl, setLocationUrl] = useState('');
   // Pinned coordinates from the MapPinPicker. When set, `location_url`
@@ -458,6 +514,7 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
                   onChange={onStartTime}
                   onClick={openPickerOnClick}
                   required
+                  step={SNAP_MINUTES * 60}
                   className='event-composer__input'
                 />
               </div>
@@ -481,6 +538,7 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
                   value={endTime}
                   onChange={onEndTime}
                   onClick={openPickerOnClick}
+                  step={SNAP_MINUTES * 60}
                   className='event-composer__input'
                 />
               </div>

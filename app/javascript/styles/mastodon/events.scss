@@ -2225,6 +2225,33 @@ $ev-interested-color: #b8945f;
       box-shadow: 0 0 0 3px
         color-mix(in oklab, var(--kronk-purple-accent) 25%, transparent);
     }
+
+    // Kronk-tint the native date + time inputs' calendar / clock
+    // picker glyph (Chromium — the small icon at the right edge).
+    // `color-scheme: dark` tells the browser to render the popup in
+    // its dark palette; the icon is a mask, so `filter` recolours it
+    // to the Kronk purple bright. `accent-color` tints the calendar
+    // grid's today/selected highlights when the popup opens. Firefox
+    // ignores the pseudo but honours `color-scheme` + `accent-color`
+    // (Tal 2026-08-14: "both the time and the date should be in
+    // kronk colours").
+    &[type='date'],
+    &[type='time'] {
+      color-scheme: dark;
+      accent-color: var(--kronk-purple-accent);
+
+      &::-webkit-calendar-picker-indicator {
+        // Base icon is white; tint toward Kronk-purple-bright.
+        filter: invert(65%) sepia(65%) saturate(600%) hue-rotate(220deg)
+          brightness(105%);
+        cursor: pointer;
+        opacity: 0.85;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
   }
 
   &__fieldset {
