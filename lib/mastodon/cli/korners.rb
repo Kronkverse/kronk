@@ -131,6 +131,7 @@ module Mastodon
         say '  L1 identity+manifest   L2 data+tables    L3/L4 feed card    L5 mount'
         say '  L6 nodes+links         L7 SCSS governed  L10 notifications'
         say '  L11 no chrome parasites (warn)    compose wraps <ComposeShell> (warn)'
+        say '  L11 core-space header pulls from manifest (warn)'
         say ''
         say 'NOT machine-checkable — review against the spec section:'
         say '  L8   settings page exists at /hub/<slug>/settings      korner_standard.md §L8'
@@ -167,9 +168,14 @@ module Mastodon
         end
 
         manifests.each do |manifest|
-          # Core spaces are exempt — see the note at the matching check in
+          # Core spaces have their own header check (see below); the rest of
+          # the per-korner conformance / parasite / feed-card / notifications
+          # gates don't apply — see the note at the matching check in
           # config/initializers/kronk_korner_registry.rb.
-          next if manifest.core?
+          if manifest.core?
+            detect_core_space_header_drift(manifest).each { |line| warnings << "#{manifest.slug}: #{line}" }
+            next
+          end
 
           issues << "#{manifest.slug}: slug is reserved for platform use" if reserved.include?(manifest.slug)
 
@@ -396,6 +402,48 @@ module Mastodon
         return [] unless file
 
         frame_parasite_warnings(manifest, File.read(file), rel_path)
+      end
+
+      # Core-space header drift — the counterpart to L11 for core spaces.
+      # Core spaces don't go through <AutoSpaceHeader> (their landing
+      # components render outside the /hub/<slug> route the auto-header
+      # scopes to), so the risk is the opposite of the korner one:
+      # instead of DOUBLING the Frame-provided header, a core space can
+      # HAND-ROLL one that silently drifts from its manifest. Settings
+      # landed on shadow with hand-rolled "Everything about you, and
+      # every korner you are in." while the manifest carried
+      # `purpose: "To put the controls for your Kronk experience..."`
+      # (Tal 2026-08-14: "the title for settings doesn't seem standard").
+      #
+      # The check: if the mount source renders a `.space-header__title`
+      # inline but doesn't import <SpaceHeader> or <AutoSpaceHeader>,
+      # the title is being hand-rolled instead of being pulled from the
+      # manifest. Warning-only for now; promote to an issue once every
+      # core-space landing runs through <SpaceHeader>.
+      def detect_core_space_header_drift(manifest)
+        return [] unless manifest.core?
+
+        file, rel_path = resolve_mount_source(manifest)
+        return [] unless file
+
+        core_space_header_warnings(manifest, File.read(file), rel_path)
+      end
+
+      # Pure body of the core-space header check, separated from I/O so
+      # it can be exercised on synthetic source (same pattern as
+      # `frame_parasite_warnings` for the korner-side L11).
+      def core_space_header_warnings(manifest, raw_source, rel_path)
+        source = strip_jsx_comments(raw_source)
+
+        return [] unless source.include?('space-header__title')
+
+        imports_space_header =
+          source.match?(%r{from ['"]mastodon/components/space_header['"]}) ||
+          source.match?(%r{from ['"]mastodon/components/auto_space_header['"]})
+
+        return [] if imports_space_header
+
+        ["L11 core space hand-rolls `.space-header__title` in #{rel_path} — title/tagline should come from the manifest via <SpaceHeader slug='#{manifest.slug}' /> so an edit to config/korners/#{manifest.slug}.yaml propagates without a client change"]
       end
 
       # L10 `planned:` notifications — declared so the korner's settings UI can

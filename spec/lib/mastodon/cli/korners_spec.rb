@@ -324,6 +324,78 @@ RSpec.describe Mastodon::CLI::Korners do
     end
   end
 
+  # The core-space counterpart to L11 (see korners.rb
+  # `core_space_header_warnings`). Core-space landing components don't
+  # go through <AutoSpaceHeader>, so the risk is the opposite of the
+  # korner one: instead of DOUBLING the Frame's title, a core space can
+  # HAND-ROLL one that drifts from its manifest. These specs pin the
+  # pattern-matching body of the check on synthetic source.
+  describe 'core-space header drift detection' do
+    subject(:cli) { described_class.new }
+
+    let(:manifest) do
+      Kronk::KornerRegistry::Manifest.new(
+        slug: 'testcore', core: true, views: []
+      )
+    end
+
+    def warnings_for(source, manifest_override = manifest)
+      cli.send(:core_space_header_warnings, manifest_override, source, 'features/testcore/index.tsx')
+    end
+
+    it 'flags a hand-rolled space-header__title without a SpaceHeader import' do
+      source = <<~JSX
+        export const K = () => (
+          <div>
+            <header className='space-header'>
+              <h1 className='space-header__title'>Testcore</h1>
+              <p className='space-header__tagline'>Hardcoded.</p>
+            </header>
+          </div>
+        );
+      JSX
+      expect(warnings_for(source)).to include(a_string_matching(/L11 core space hand-rolls/))
+    end
+
+    it 'is silent when the component imports SpaceHeader' do
+      source = <<~JSX
+        import { SpaceHeader } from 'mastodon/components/space_header';
+        export const K = () => (
+          <div><SpaceHeader slug='testcore' /></div>
+        );
+      JSX
+      expect(warnings_for(source)).to be_empty
+    end
+
+    it 'is silent when the component imports AutoSpaceHeader' do
+      source = <<~JSX
+        import { AutoSpaceHeader } from 'mastodon/components/auto_space_header';
+        export const K = () => (
+          <div><AutoSpaceHeader /></div>
+        );
+      JSX
+      expect(warnings_for(source)).to be_empty
+    end
+
+    it 'is silent when the source never mentions space-header__title' do
+      source = '<div>plain content</div>'
+      expect(warnings_for(source)).to be_empty
+    end
+
+    it 'ignores hits inside block comments' do
+      source = <<~JSX
+        /* <h1 className='space-header__title'>example</h1> */
+        <div />
+      JSX
+      expect(warnings_for(source)).to be_empty
+    end
+
+    it 'returns [] for a non-core manifest via detect_core_space_header_drift' do
+      non_core = Kronk::KornerRegistry::Manifest.new(slug: 'testkorner', views: [])
+      expect(cli.send(:detect_core_space_header_drift, non_core)).to be_empty
+    end
+  end
+
   # Composer conformance (docs/rebuild/decisions.md 2026-08-12): every
   # `*composer*.tsx` under `features/**/` must wrap in the shared
   # `<ComposeShell>` and not roll its own portal, openModal dispatch,
