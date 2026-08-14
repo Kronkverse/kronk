@@ -19,7 +19,15 @@ $tile-shadow-2: #17151f;
   // box-sizing: border-box comes from the shared `.kronk-stage *` rule
   // (see _kronk_stage.scss) — so this page's side padding is included
   // in width: 100% and never overflows the Stage.
-  padding: 2.25rem 1.5rem 5rem;
+  // No top padding: the Hub is a `core:` space, so `<AutoSpaceHeader>`
+  // returns null for it and the Hub renders its own `<SpaceHeader>` as
+  // the first child here. `.space-header` already carries its own
+  // `padding-top: 1.75rem` (see _kronk_stage.scss), so any top padding
+  // on this wrapper stacks on top of it and pushes the title below
+  // where every other space sits its title (Tal 2026-08-14: "the title
+  // on the Hub page sits further down than the standard"). Side and
+  // bottom padding stay; the header owns the top gap.
+  padding: 0 1.5rem 5rem;
   max-width: 62.5rem;
   margin: 0 auto;
   width: 100%;
