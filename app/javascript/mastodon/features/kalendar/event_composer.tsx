@@ -11,6 +11,7 @@ import type { PinnedLocation } from 'mastodon/components/map_pin_picker';
 import { MapPinPreview } from 'mastodon/components/map_pin_preview';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
+import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 
 // Kalendar — event composer. First implementation, mounted directly
 // against the shared `<ComposeShell>` standard rather than a bespoke
@@ -132,6 +133,15 @@ const messages = defineMessages({
     id: 'kalendar.new.cover_upload_failed',
     defaultMessage: "Couldn't upload the image: {error}",
   },
+  inviteOnly: {
+    id: 'kalendar.new.invite_only',
+    defaultMessage: 'Invite-only event',
+  },
+  inviteOnlyHint: {
+    id: 'kalendar.new.invite_only_hint',
+    defaultMessage:
+      "Only people you invite will see it. Won't show up in feeds.",
+  },
 });
 
 type EventType = 'event' | 'huddle';
@@ -153,6 +163,8 @@ interface CreatePayload {
   rsvp_enabled: boolean;
   visibility: ReachValue;
   image_id?: string;
+  invite_only?: boolean;
+  krew_ids?: string[];
 }
 
 // Shape returned by POST /api/v2/media. Only the ID is required to
@@ -299,8 +311,26 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [imageError, setImageError] = useState<string | null>(null);
   // Default to public: events are "shared time" (Kalendar manifest
   // purpose) and the manifest ships `default_event_visibility: public`.
-  // Self-only is hidden — an event only you can see isn't an event.
+  // Self-only is hidden from the ReachDropdown — the "Invite-only"
+  // toggle below covers the "small audience" case with a clearer
+  // mental model (docs/kronk_feed_and_reach.md §2 puts invite-only
+  // on a different axis from the Mates → Orbit → Kronkverse
+  // distance ladder).
   const [reach, setReach] = useState<ReachValue>('public');
+  // Krew is an orthogonal additive audience axis (see the reach doc
+  // §2.2): members of a targeted krew see the event on top of
+  // whatever the reach picks up. `useAvailableKrews` returns the
+  // viewer's selectable krews; the picker lives inside the
+  // ReachDropdown's expandable Krews row.
+  const availableKrews = useAvailableKrews();
+  const [krewIds, setKrewIds] = useState<string[]>([]);
+  // Invite-only mode — the event isn't feed-visible to anyone; only
+  // the author + accounts explicitly invited can see it. When on,
+  // the reach + krews above become moot (server forces
+  // `visibility=self_only` regardless — see EventsController#
+  // create_status_for_event!). Backing schema: PR #1480's
+  // `events.invite_only` column.
+  const [inviteOnly, setInviteOnly] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -391,6 +421,18 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   );
   const onReach = useCallback((value: ReachValue) => {
     setReach(value);
+  }, []);
+
+  const onToggleKrew = useCallback((id: string) => {
+    setKrewIds((prev) =>
+      prev.includes(id) ? prev.filter((k) => k !== id) : [...prev, id],
+    );
+  }, []);
+
+  const onInviteOnlyToggle = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((e) => {
+    setInviteOnly(e.currentTarget.checked);
   }, []);
 
   // Force the native date/time picker open on click. Chromium supports
@@ -513,6 +555,12 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     const trimmedLocationUrl = locationUrl.trim();
     if (trimmedLocationUrl) payload.location_url = trimmedLocationUrl;
     if (imageMediaId) payload.image_id = imageMediaId;
+    if (inviteOnly) payload.invite_only = true;
+    // Krews are silently dropped server-side when invite_only is on
+    // (no fan-out for `self_only` visibility) but there's no reason
+    // to send them either — matches the UI where the picker greys
+    // out under the invite-only toggle.
+    if (!inviteOnly && krewIds.length > 0) payload.krew_ids = krewIds;
 
     void (async () => {
       try {
@@ -529,6 +577,8 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     endIso,
     eventType,
     imageMediaId,
+    inviteOnly,
+    krewIds,
     locationName,
     locationUrl,
     onCreated,
@@ -542,8 +592,14 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     <ReachDropdown
       value={reach}
       onChange={onReach}
-      disabled={busy}
+      // Disabled while a submit is in flight, AND while invite-only
+      // is on (the reach / krews are moot then — the event is
+      // gated by the invitation list, not fed to any timeline).
+      disabled={busy || inviteOnly}
       hide={['self_only']}
+      krews={availableKrews}
+      selectedKrewIds={krewIds}
+      onToggleKrew={onToggleKrew}
     />
   );
 
@@ -819,6 +875,27 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
             onChange={onRsvpToggle}
           />
           <span>{intl.formatMessage(messages.rsvpEnabled)}</span>
+        </label>
+
+        {/* Invite-only toggle — flips the event to `invite_only=true`.
+            When on, the reach dropdown + krew picker are disabled
+            (fan-out is off; only invitees see the event). The hint
+            spells out the trade-off so the user knows what they're
+            signing up for. */}
+        <label className='event-composer__toggle-block'>
+          <span className='event-composer__toggle-row'>
+            <input
+              type='checkbox'
+              checked={inviteOnly}
+              onChange={onInviteOnlyToggle}
+            />
+            <span className='event-composer__toggle-label'>
+              {intl.formatMessage(messages.inviteOnly)}
+            </span>
+          </span>
+          <small className='event-composer__field-hint'>
+            {intl.formatMessage(messages.inviteOnlyHint)}
+          </small>
         </label>
 
         {error && (
