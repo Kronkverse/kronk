@@ -73,10 +73,10 @@ const BTN = 56; // nominal button size for anchor/centre math
 // Each moon sits at (radius, bearing) from the Ж centre. The arc fans AWAY
 // from whichever corner the Ж is parked in, opening into the viewport. 50°
 // between moons gives generous breathing room for 3 items (100° total span)
-// and centres tightly for 2. Radius keeps moons clear of the trigger without
-// feeling detached: ~88px puts 36px moons at 88 - 18 - 21 = ~49px of visible
-// gap from the 42px trigger.
-const MOON_RADIUS_PX = 88;
+// and centres tightly for 2. Radius scales with the larger Ж (56px) + moon
+// (46px) sizes: 104px puts a ~52px clear gap between Ж edge and moon edge —
+// matching the proportional gap the earlier 88 / 42 / 36 layout carried.
+const MOON_RADIUS_PX = 104;
 const MOON_STEP_DEG = 50;
 
 // Compass bearings (0° = up, 90° = right, 180° = down, 270° = left) for the

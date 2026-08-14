@@ -553,13 +553,13 @@ body.admin {
 
   &__trigger {
     position: relative;
-    width: 2.65rem;
-    height: 2.65rem;
+    width: 3.5rem;
+    height: 3.5rem;
     border-radius: 50%;
     border: none;
     background: var(--kronk-purple-accent);
     color: var(--semantic-text-on-accent);
-    font-size: 1.35rem;
+    font-size: 1.75rem;
     font-family: var(--font-display);
     cursor: pointer;
     touch-action: none; // let pointer-drag reposition without page scroll
@@ -625,7 +625,7 @@ body.admin {
     position: absolute;
 
     // Centre the moon's origin on the trigger's centre so all spiral
-    // rotations pivot around Ж. The moon inside is sized 2.25rem (36px),
+    // rotations pivot around Ж. The moon inside is sized 2.9rem (46px),
     // so a negative margin of half that pulls its box back to (0,0).
     left: 50%;
     top: 50%;
@@ -640,9 +640,9 @@ body.admin {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    margin: -1.125rem 0 0 -1.125rem;
+    width: 2.9rem;
+    height: 2.9rem;
+    margin: -1.45rem 0 0 -1.45rem;
     border-radius: 50%;
     text-decoration: none;
     background: var(--kronk-purple-accent);
@@ -668,8 +668,8 @@ body.admin {
       opacity 300ms ease-out calc(var(--moon-index, 0) * 65ms + 30ms);
 
     svg {
-      width: 1.2rem;
-      height: 1.2rem;
+      width: 1.5rem;
+      height: 1.5rem;
       fill: currentColor;
     }
   }
