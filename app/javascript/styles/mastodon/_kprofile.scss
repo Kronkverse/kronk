@@ -14,8 +14,8 @@
 @use 'mixins' as *;
 
 .kprofile {
-  // KProfileHeader's palette rides on the shared semantic tokens
-  // (same pattern as .kcompose in _kcompose.scss). --k-surface keeps
+  // KProfileHeader's palette rides on the shared semantic tokens.
+  // --k-surface keeps
   // a distinct purple-tinted read via a color-mix() blend so a theme
   // edit still propagates.
   --k-canvas: var(--semantic-surface-primary);

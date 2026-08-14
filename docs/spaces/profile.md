@@ -19,8 +19,10 @@ column.
 Declared in `config/kronk_nodes.yaml` under the `profile` bucket:
 
 - **`profile.view`** — public profile view (`/@:acct`).
-- **`profile.edit`** — profile editor (owner only).
-- **`profile.sections`** — sectioned-profile surface / composer.
+- **`profile.edit`** — profile editor (owner only). Editing is Arrange mode
+  on the shelved profile; the `/@:acct/edit` URL redirects to `/@:acct/shelves`
+  (the standalone composer was retired).
+- **`profile.sections`** — sectioned-profile / shelved-profile surface.
 - **`profile.media`** — media gallery (`/@:acct/media`).
 - **`profile.connections`** — followers/following (moving to _mates_
   vocabulary; see memory `reference_kronk_vocab_mates.md`).

@@ -93,17 +93,16 @@ nodes:
         kind: related
         description: The sectioned view is the primary render of this profile.
 
-  # `soon`, not `live`: features/profile_compose renders
-  # `profile_compose.header_stub` — "Cover image, avatar and display name —
-  # editing lands in the next step." Display name, bio, avatar, header and
-  # metadata fields are still only editable on the classic Rails page. A
-  # `live` node here told the settings nav, the Directory and anyone
-  # filing feedback that a working composer existed.
+  # Editing your profile is now Arrange mode on the shelved profile — the
+  # standalone /@:acct/edit composer was retired (identity editor folded into
+  # Arrange). The /edit URL still resolves (bookmarks, the settings-nav entry)
+  # but redirects into the shelved profile at /@:user/shelves, where Arrange
+  # edits display name, bio, avatar, header and metadata fields.
   - id: profile.edit
     bucket: profile
-    label: Profile composer
+    label: Profile editor
     url: /@:user/edit
-    lifecycle: soon
+    lifecycle: live
     spa: true
     links:
       - to: settings.profile

@@ -189,7 +189,7 @@ Use this for any "managed list of things the user can remove" surface rather tha
 ### 4.3 Navigation & chrome
 
 - **`hub_switcher.tsx`** — the four-way platform nav (Me / Home / Hub / Nudges). The **top variant** renders the **Membrane** (spec: `KRONK_MEMBRANE_NAV.md`): flat text pillars + a 1px wire + a purple pool of light that glides under the active pillar, styled via `.hub-switcher--top` in `_kronk_chrome.scss`. The **bottom variant** renders the mobile tab-bar: icon+label tabs, styled via `.hub-switcher--bottom`.
-- **`kronk_menu.tsx` / settings `nav.tsx`** — the "K" menu and settings navigation. Section rows route to their destination; the profile section routes to `/@:acct/edit`.
+- **`kronk_menu.tsx` / settings `nav.tsx`** — the "K" menu and settings navigation. Section rows route to their destination; the profile section routes to `/@:acct/shelves` (editing is Arrange mode on the shelved profile — the standalone `/@:acct/edit` composer was retired).
 
 ### 4.4 Governance / kommons cards
 

@@ -17,6 +17,47 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-14 — Profile editing consolidated into Arrange mode; `/@:acct/edit` composer retired
+
+**Decision.** There is one profile-editing surface: **Arrange mode on the
+shelved profile** (`/@:acct/shelves`, owner-only). The standalone
+`/@:acct/edit` composer (`features/profile_compose/`) is retired.
+
+**Why.** We had two editors. The shelved profile's Arrange mode edited
+cards/shelves but had **no** identity editing; the `/@:acct/edit` composer was
+reachable by nothing but its own route (orphaned) yet had grown a duplicate
+identity editor (display name, bio, avatar, header, fields). Arrange is
+already the owner's edit entry point, so identity editing belongs there.
+
+**What shipped.**
+
+- **PR A** — identity editor folded into Arrange (`profile_shelves/components/
+identity_editor.tsx`), rendered above `ArrangeStage`. Saves via a direct
+  partial `update_credentials` (not the `updateAccount` action, which
+  force-writes `discoverable`/`indexable` and would clobber privacy).
+- **PR B** — retired the composer: deleted `features/profile_compose/` +
+  `_kcompose.scss`, removed the SPA route + async component, and made
+  `/@:acct/edit` a `<Redirect>` to `/@:acct/shelves`. The settings-nav
+  "Profile" row now points at `/@:acct/shelves`.
+
+**Node graph.** `profile.edit` is **kept** (relabelled "Profile editor",
+`lifecycle: live`, url still `/@:user/edit` — which now resolves to the
+redirect). Kept rather than deleted so its inbound refs stay valid with zero
+cascade: the `settings.profile` `settings_for` link and two
+`kommons_tracker.yaml` items (`privacy-to-profile`, `profile-composer-complete`)
+still point at a real node.
+
+**Landmine noted.** The `profile_composer` feature flag is **not** the
+composer — it gates the `profile_cards` API endpoints that Arrange depends on.
+It stays enabled; only its comment was corrected. Renaming it was deliberately
+avoided (churn).
+
+**Follow-up (PR C).** Onboarding's profile step (`onboarding/profile.tsx`) is
+still a separate identity editor (it has extras: a discoverability toggle +
+next-flow navigation). Dedupe it onto a shared component later.
+
+---
+
 ## 2026-08-14 — Cross-korner connections: one `korner_attachments` table + manifest-declared consent
 
 Kronk already has three cross-korner connections (Kalendar Event → Albutts
