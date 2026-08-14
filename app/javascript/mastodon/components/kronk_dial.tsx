@@ -88,30 +88,44 @@ interface Props {
 // height) — SVG scales the coord system to fit.
 
 const VIEW_BOX = 200;
-const CENTRE = 0; // view-box is centred via viewBox="-100 -100 200 200"
-const R_OUTER_LABEL = 88; // label baseline on the outer arc
-const R_OUTER_TICK_START = 72;
-const R_OUTER_TICK_END = 80;
-const R_INNER_BUBBLE = 48; // centre of each inner-ring bubble
-const R_HUB = 26; // centre hub radius
-const BUBBLE_R = 12; // per-bubble radius
-const BUBBLE_R_ACTIVE = 14; // active bubble is slightly larger
+
+// Volvelle geometry — three concentric discs plus a central pivot,
+// each with a visible boundary so the whole thing reads as a stack
+// of rotating rings (Tal 2026-08-14: "this is a volvelle, we want
+// that to be obvious"). Radii below define the shared physical
+// boundaries between rings; the ring FILLS use these to draw
+// annular bands (layered filled circles: outermost first, each
+// smaller one paints over the last's interior).
+const R_HUB = 30; // centre pivot: 0..R_HUB
+const R_INNER_RING_OUTER = 62; // inner ring band: R_HUB..R_INNER_RING_OUTER
+const R_OUTER_RING_OUTER = 88; // outer ring band: R_INNER_RING_OUTER..R_OUTER_RING_OUTER
+
+// Content radii inside the rings — bubbles centred in the inner
+// band, labels near the outer edge of the outer band, dividers
+// spanning the outer band's full width, fine pips near its inner
+// edge so labels have room.
+const R_INNER_BUBBLE = 47; // centre of each inner-ring bubble (inside inner band)
+const BUBBLE_R = 12;
+const BUBBLE_R_ACTIVE = 14;
+const R_OUTER_LABEL = 80; // label baseline (inside outer band)
+const R_OUTER_TICK_START = 63; // slice divider inner (just inside outer band)
+const R_OUTER_TICK_END = 87; // slice divider outer (just inside outer band edge)
 
 // Fine dial-face pips (uniform ring of small ticks — the "compass"
-// texture behind the labelled slices). Count keeps them dense enough
-// to read as texture but sparse enough not to overwhelm the labels.
+// texture behind the labelled slices).
 const DIAL_FACE_TICKS = 72; // one every 5°
-const R_FACE_TICK_INNER = 78;
-const R_FACE_TICK_OUTER = 82;
+const R_FACE_TICK_INNER = 65;
+const R_FACE_TICK_OUTER = 70;
 
-// The wedge selector — a pie slice at 3 o'clock that extends from
-// just outside the hub out past the outer perimeter, so it "punches
-// through" the ring rather than sitting behind it. The callout
-// ("Essays / 94") emerges from the wedge tip in the fixed overlay.
-const R_WEDGE_INNER = 32;
-const R_WEDGE_OUTER = 84;
-const R_CALLOUT_LABEL = 95;
-const R_CALLOUT_COUNT = 95;
+// The wedge selector — a pie slice at 3 o'clock that spans BOTH ring
+// bands (from just outside the hub out to the outer perimeter), so
+// the volvelle reads as "the wheel points at this slice". The
+// callout ("Essays / 94") emerges from the wedge tip in the fixed
+// overlay just past the perimeter.
+const R_WEDGE_INNER = 30;
+const R_WEDGE_OUTER = 88;
+const R_CALLOUT_LABEL = 94;
+const R_CALLOUT_COUNT = 94;
 
 // Snap-back animation duration (drag release → nearest slice).
 const SNAP_MS = 260;
@@ -447,6 +461,23 @@ export const KronkDial: React.FC<Props> = ({
         className='kronk-dial__svg'
         viewBox={`${-VIEW_BOX / 2} ${-VIEW_BOX / 2} ${VIEW_BOX} ${VIEW_BOX}`}
       >
+        {/* Volvelle ring backgrounds — layered filled circles that
+            paint the concentric ring-bands as physical discs (Tal
+            2026-08-14: "clearly defined rings"). Order matters:
+            outermost first so each inner disc paints over the
+            previous's interior, leaving visible annuli. Fixed base
+            layer, rotates with nothing. */}
+        <circle
+          r={R_OUTER_RING_OUTER}
+          className='kronk-dial__ring-outer'
+          aria-hidden='true'
+        />
+        <circle
+          r={R_INNER_RING_OUTER}
+          className='kronk-dial__ring-inner'
+          aria-hidden='true'
+        />
+
         {/* Outer ring — labels + tick marks. The rotating group uses
             SVG's own `transform` ATTRIBUTE (no `deg` suffix, no CSS
             transform-box gymnastics — CSS transforms on <g> with
@@ -483,15 +514,6 @@ export const KronkDial: React.FC<Props> = ({
               />
             );
           })}
-
-          {/* Dashed ring — the outer perimeter marker. */}
-          <circle
-            className='kronk-dial__outer-ring'
-            r={R_OUTER_TICK_END}
-            cx={CENTRE}
-            cy={CENTRE}
-            fill='none'
-          />
 
           {/* Boundary dividers — thin radial lines at each slice
               EDGE (halfway between slice centres). Rotates with the
@@ -632,7 +654,7 @@ export const KronkDial: React.FC<Props> = ({
         )}
         <g className='kronk-dial__hub' aria-hidden>
           <circle r={R_HUB} className='kronk-dial__hub-bg' />
-          {Center && <Center width={22} height={22} x={-11} y={-11} />}
+          {Center && <Center width={26} height={26} x={-13} y={-13} />}
         </g>
       </svg>
 
