@@ -34,9 +34,12 @@ class Event < ApplicationRecord
   has_many :rsvps, class_name: 'EventRsvp', inverse_of: :event, dependent: :destroy
   has_many :invitations, class_name: 'EventInvitation', inverse_of: :event, dependent: :destroy
   has_many :occurrences, class_name: 'Event', foreign_key: 'parent_event_id', inverse_of: :parent_event, dependent: :destroy
-  # Kalendar → Albutts: if the event was created with `spawn_album`, this is
-  # the Albutt bound to it. Wired in Slice 3 of the Albutts build.
-  has_one :spawned_album, class_name: 'Album', dependent: :nullify, inverse_of: :event
+  # `has_one :spawned_album` retired 2026-08-14 alongside the
+  # `albums.event_id` FK drop — the Kalendar → Albutts link now lives
+  # in `korner_attachments` (docs/kronk_korner_attachments.md Phase 5).
+  # `Kronk::AttachmentSource#cleanup_kronk_attachments` handles the
+  # cascade-delete on Event#destroy that `dependent: :nullify` used to
+  # provide, so no Album is orphaned.
 
   has_many :going_accounts, -> { where(event_rsvps: { status: :going }) }, through: :rsvps, source: :account
   has_many :interested_accounts, -> { where(event_rsvps: { status: :interested }) }, through: :rsvps, source: :account
