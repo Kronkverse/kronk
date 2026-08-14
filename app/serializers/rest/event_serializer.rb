@@ -5,7 +5,8 @@ class REST::EventSerializer < ActiveModel::Serializer
              :location_name, :location_url, :event_type, :huddle_url,
              :rsvp_enabled, :max_attendees, :recurrence_rule,
              :cancelled, :going_count, :interested_count,
-             :image_url, :spawn_album, :created_at, :updated_at
+             :image_url, :spawn_album, :invite_only,
+             :created_at, :updated_at
 
   belongs_to :account, serializer: REST::AccountSerializer
 
