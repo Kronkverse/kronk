@@ -366,6 +366,13 @@ Rails.application.routes.draw do
   # instead of 404ing (the client router then resolves the lens).
   get '/hub/map', to: 'home#index'
   get '/hub/map/*path', to: 'home#index', format: false
+  # Art (2026-08-14): scaffold korner hosting the concentric dial. The
+  # SPA route (features/art/index.tsx) is registered in ui/index.jsx;
+  # these Rails-side mounts serve the SPA shell so a direct load or
+  # hard-reload of /hub/art (or a future sub-path) boots the app
+  # instead of 404ing at the Rails layer.
+  get '/hub/art', to: 'home#index'
+  get '/hub/art/*path', to: 'home#index', format: false
   # Kompass was renamed to Map (its original Kommons-proposal name);
   # keep the old path working with a permanent redirect.
   get '/hub/kompass', to: redirect('/hub/map')
