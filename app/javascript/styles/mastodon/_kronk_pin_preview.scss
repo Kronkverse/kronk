@@ -13,14 +13,17 @@
   overflow: hidden;
   background: var(--surface-elevated);
 
+  // The map container just fills its aspect-ratio parent. Was
+  // `position: absolute; inset: 0` on both this and the nested
+  // `.maplibregl-map` — that pattern rendered the container at the
+  // right size but the MapLibre canvas stayed blank (Tal 2026-08-14
+  // screenshot). `.maplibregl-map` ships with `position: relative`
+  // by default (from `maplibre-gl.css`); overriding it to absolute
+  // was breaking its own internal sizing pipeline. Simpler + safer:
+  // a plain block-level fill that inherits MapLibre's own positioning.
   &__map {
-    position: absolute;
-    inset: 0;
-
-    .maplibregl-map {
-      position: absolute;
-      inset: 0;
-    }
+    width: 100%;
+    height: 100%;
   }
 
   // Pin dot — same visual language as `<MapPinPicker>`'s crosshair /
