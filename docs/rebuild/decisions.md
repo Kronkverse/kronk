@@ -17,6 +17,53 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-14 — Cross-korner connections: one `korner_attachments` table + manifest-declared consent
+
+Kronk already has three cross-korner connections (Kalendar Event → Albutts
+Album via `album.event_id` + a bespoke subscriber; Kalendar Event → Booth
+Set via `booth_set.event_id`; Kalendar Event → Huddle Session via
+`event.huddle_session_id` + `huddle` listening for `kalendar.event.created`).
+Every pair is a new column, a new subscriber, a new UI. That doesn't scale
+to the next five pairs (Kommons → Kalendar for a "voting deadline event,"
+Booth → Martketplace for "buy the DJ's release," Nudges → any-korner for
+reminders, …).
+
+**Decision:** ship one generic primitive — `korner_attachments`, a join
+table keyed by manifest slug + record id — and let every future cross-
+korner connection be a **config change (manifest fields) + a UI wiring**,
+not a schema migration.
+
+Shape:
+
+- **`korner_attachments`** — `(source_slug, source_id, target_slug, target_id,
+kind, metadata, created_by, created_at)`. `kind` is one of `spawn` (auto-
+  created by a source trigger, cascade-delete), `link` (user-added,
+  independent lifecycle), `reference` (passive mention). Not Rails
+  polymorphic — slug strings are the primary keys of the manifest, which is
+  already the registry.
+- **`attaches:` / `accepts:` manifest fields** — every korner declares what
+  it may attach to + what it accepts from. `bin/tootctl korners doctor`
+  enforces bidirectional consent. Matches how `emits:` / `listens:`
+  already work.
+- **Shared React primitives** — `useAttachments`, `<AttachmentSection>`,
+  `<AttachmentPicker>` (new rows on `docs/kronk_platform_primitives.md`
+  at Phase 2). New korners get the UX for free.
+- **Migration path:** 5 phases (§5 of the spec doc), starting with the
+  schema and API (no UI), then primitives plus one adopter, then backfill
+  of the existing bespoke pairs. FK columns stay as a passive mirror for
+  one release cycle after the join is authoritative — makes rollback cheap.
+
+**Motivation:** Tal 2026-08-14 — "How can we ensure this is open ended for
+other korners to connect into at a later date? I want to create the
+plumbing, then the standard fittings for building korners moving forward
+which can be used and reused."
+
+**Full spec:** [`docs/kronk_korner_attachments.md`](../kronk_korner_attachments.md).
+
+**Supersedes:** the intent behind the bespoke `album.event_id` +
+`booth_set.event_id` + `event.spawn_album` + `albutts_event_bus.rb`
+pattern. Those stay in place until Phase 3 backfills them into the join.
+
 ## 2026-08-14 — Account & Security: the "connected apps" / capability surface is coming-soon
 
 Context: scoping the Account & Security settings rebuild. Phase 1 shipped the
