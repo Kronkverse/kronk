@@ -999,6 +999,14 @@ $ev-interested-color: #b8945f;
     gap: 6px;
   }
 
+  // Map preview under the info rows — rendered when the event's
+  // location_url parses as an OSM URL with coords (i.e. someone
+  // used the composer's Pin on map). Small top margin so it doesn't
+  // hug the last info row.
+  &__map-preview {
+    margin-top: 6px;
+  }
+
   &__info-row {
     display: flex;
     align-items: center;
