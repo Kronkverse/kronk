@@ -6,12 +6,12 @@
 // only. Matches Tal's picker mockup (2026-08-14).
 
 .kronk-dial {
-  --kronk-dial-size: 22rem;
-  --kronk-dial-outer-ring: color-mix(
-    in oklab,
-    var(--kronk-purple-accent) 22%,
-    transparent
-  );
+  // Bumped to give the volvelle real page presence (Tal 2026-08-14:
+  // "make the whole thing larger so it fits more of the page"). At
+  // 30rem the dial occupies ~half a typical Stage width; on narrow
+  // viewports it drops to 22rem so it still fits without horizontal
+  // scroll.
+  --kronk-dial-size: 30rem;
   --kronk-dial-divider: color-mix(
     in oklab,
     var(--kronk-purple-accent) 35%,
@@ -33,11 +33,8 @@
     border-radius: 50%;
   }
 
-  // Compact on narrow screens — same drop pattern the /me and
-  // settings hubs use. The SVG scales inside the width/height, so
-  // no per-slice adjustments needed.
   @media (width <= 480px) {
-    --kronk-dial-size: 17rem;
+    --kronk-dial-size: 22rem;
   }
 }
 
@@ -59,7 +56,7 @@
   }
 }
 
-// ── Outer ring — dashed perimeter + labels + tick marks. ─────────
+// ── Rotating outer disc — labels + face pips + slice dividers. ──
 
 .kronk-dial__outer,
 .kronk-dial__inner {
@@ -76,17 +73,38 @@
   }
 }
 
-.kronk-dial__outer-ring {
-  stroke: var(--kronk-dial-outer-ring);
-  stroke-width: 0.6;
-  stroke-dasharray: 1.6 3;
+// Volvelle ring bands — layered filled circles that read as
+// concentric physical discs. Outer band is slightly darker, inner
+// band slightly lighter, so the wheel steps down in tone as you
+// move outward — mimics a paper/brass volvelle with tinted layers.
+// Each ring carries a subtle purple-tinted stroke as its visible
+// boundary, so the rings read as three discrete surfaces even
+// against the dark Kosmos background.
+.kronk-dial__ring-outer {
+  fill: color-mix(
+    in oklab,
+    var(--surface-primary) 65%,
+    var(--kronk-purple-deep)
+  );
+  stroke: color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent);
+  stroke-width: 0.9;
 }
 
-// Fine dial-face pips — uniform ring behind the labels, giving the
-// wheel a compass-face texture. Much lighter than the slice-divider
-// walls so they read as background pattern, not competing content.
+.kronk-dial__ring-inner {
+  fill: color-mix(
+    in oklab,
+    var(--surface-elevated) 75%,
+    var(--kronk-purple-deep)
+  );
+  stroke: color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent);
+  stroke-width: 0.8;
+}
+
+// Fine dial-face pips — uniform ring near the inner edge of the
+// outer band, giving the wheel a compass-face texture. Much lighter
+// than the slice-divider walls so they read as background pattern.
 .kronk-dial__face-tick {
-  stroke: color-mix(in oklab, var(--text-muted) 45%, transparent);
+  stroke: color-mix(in oklab, var(--text-muted) 55%, transparent);
   stroke-width: 0.4;
   stroke-linecap: round;
 }
@@ -163,7 +181,11 @@
 // approach that was too subtle to signal the selection.
 
 .kronk-dial__wedge {
-  fill: color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
+  // Slightly stronger fill now that the wedge sits on top of tinted
+  // ring bands — the previous 55% blended with the outer band's
+  // purple-deep tint. 70% keeps the wedge clearly readable as the
+  // selector cursor without dominating.
+  fill: color-mix(in oklab, var(--kronk-purple-accent) 70%, transparent);
   pointer-events: none;
 }
 
@@ -191,9 +213,13 @@
 }
 
 .kronk-dial__hub-bg {
+  // The pivot at the centre of the volvelle — noticeably bordered
+  // so it reads as the "rivet" holding the concentric discs
+  // together. Bright accent stroke against the darkest fill in the
+  // stack.
   fill: var(--surface-elevated);
   stroke: var(--kronk-purple-accent);
-  stroke-width: 1.2;
+  stroke-width: 1.6;
 }
 
 // The chevron-labelled affordance below the hub — sits inside the
