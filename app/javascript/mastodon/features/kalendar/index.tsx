@@ -92,7 +92,9 @@ const Kalendar: React.FC<KalendarProps> = ({ autoOpenComposer }) => {
   const handleCreated = useCallback(
     (created: CreatedEvent) => {
       setComposerOpen(false);
-      history.push(`/hub/kalendar/${created.id}`);
+      // Slug is preferred (human-readable URL, added 2026-08-14);
+      // `id` is the fallback for older events lacking a slug.
+      history.push(`/hub/kalendar/${created.slug ?? created.id}`);
     },
     [history],
   );
