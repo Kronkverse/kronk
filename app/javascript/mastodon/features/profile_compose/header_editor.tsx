@@ -6,11 +6,12 @@ import classNames from 'classnames';
 
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+import { importFetchedAccount } from 'mastodon/actions/importer';
 import api from 'mastodon/api';
 import { Button } from 'mastodon/components/button';
 import { Icon } from 'mastodon/components/icon';
 import { me } from 'mastodon/initial_state';
-import { useAppSelector } from 'mastodon/store';
+import { useAppSelector, useAppDispatch } from 'mastodon/store';
 import { unescapeHTML } from 'mastodon/utils/html';
 
 // The "Header" tab of the profile composer — your public identity: display
@@ -72,6 +73,7 @@ const MAX_FIELDS = 4;
 
 export const ProfileHeaderEditor: React.FC = () => {
   const intl = useIntl();
+  const dispatch = useAppDispatch();
   const account = useAppSelector((state) =>
     me ? state.accounts.get(me) : undefined,
   );
@@ -164,14 +166,17 @@ export const ProfileHeaderEditor: React.FC = () => {
 
     void api()
       .patch('/api/v1/accounts/update_credentials', data)
-      .then(() => {
+      .then((response) => {
+        // Push the updated account into the store so every surface showing
+        // it (nav avatar, profile header, cards) refreshes without a reload.
+        dispatch(importFetchedAccount(response.data));
         setStatus('saved');
         return undefined;
       })
       .catch(() => {
         setStatus('error');
       });
-  }, [displayName, note, avatar, header, fields]);
+  }, [dispatch, displayName, note, avatar, header, fields]);
 
   return (
     <div className='profile-header-editor'>
