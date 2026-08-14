@@ -86,13 +86,13 @@ export const AccountSwitcherItems: React.FC<Props> = ({ onNavigate }) => {
 
   return (
     <div className='account-switcher'>
-      {/* The current account is a compact indicator, not a switch row — it
-          answers "who am I signed in as" without looking like a second copy
-          of an account also in the list below. Sourced from the Redux store
-          so it shows even for sessions that predate the switcher (empty
-          server roster). */}
+      {/* The current account is a one-line caption, NOT a switch row — a
+          tiny inline avatar and "Signed in as @you" on a single muted
+          baseline, so it reads as status text and can't be mistaken for a
+          tappable account card. Sourced from the Redux store so it shows
+          even for sessions that predate the switcher (empty server roster). */}
       {currentAccount && (
-        <div
+        <p
           className='account-switcher__current'
           title={`@${currentAccount.acct}`}
         >
@@ -101,15 +101,13 @@ export const AccountSwitcherItems: React.FC<Props> = ({ onNavigate }) => {
             src={currentAccount.avatar}
             alt=''
           />
-          <span className='account-switcher__current-identity'>
-            <span className='account-switcher__current-label'>
-              {intl.formatMessage(messages.signedInAs)}
-            </span>
+          <span className='account-switcher__current-text'>
+            {intl.formatMessage(messages.signedInAs)}{' '}
             <span className='account-switcher__current-acct'>
               @{currentAccount.acct}
             </span>
           </span>
-        </div>
+        </p>
       )}
 
       <div className='account-switcher__accounts'>
