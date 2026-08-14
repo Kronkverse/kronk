@@ -1,0 +1,103 @@
+@use 'variables' as *;
+
+// AttachmentSection — the "Attached" block rendered on any korner
+// detail page (see `components/attachment_section.tsx`, spec
+// `docs/kronk_korner_attachments.md` §4.2). Owns layout + row chrome;
+// the target korner's own icon rides on `.attachment-section__row-icon`
+// via `useKornerIcon`, so a Krew's icon reads differently to a Booth
+// set's without any per-korner CSS here.
+
+.attachment-section {
+  margin-block-start: 1rem;
+
+  &__heading {
+    margin: 0 0 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--secondary-text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+    transition: background 120ms ease;
+
+    &:hover {
+      background: var(
+        --surface-hover,
+        color-mix(
+          in oklab,
+          var(--surface-elevated),
+          var(--kronk-purple-accent) 8%
+        )
+      );
+    }
+  }
+
+  &__row-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  &__row-icon {
+    inline-size: 1.15rem;
+    block-size: 1.15rem;
+    flex: 0 0 auto;
+    color: var(--kronk-purple-accent);
+  }
+
+  &__row-title {
+    font-size: 0.95rem;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__remove {
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--secondary-text-color);
+    border-radius: var(--radius-round);
+    cursor: pointer;
+    transition:
+      background 120ms ease,
+      color 120ms ease;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--surface-elevated),
+        var(--kronk-purple-accent) 15%
+      );
+      color: var(--primary-text-color);
+    }
+  }
+}
