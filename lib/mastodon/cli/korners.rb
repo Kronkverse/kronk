@@ -132,6 +132,7 @@ module Mastodon
         say '  L6 nodes+links         L7 SCSS governed  L10 notifications'
         say '  L11 no chrome parasites (warn)    compose wraps <ComposeShell> (warn)'
         say '  L11 core-space header pulls from manifest (warn)'
+        say '  L5  /hub/<slug> is mounted in routes.rb (warn)'
         say ''
         say 'NOT machine-checkable — review against the spec section:'
         say '  L8   settings page exists at /hub/<slug>/settings      korner_standard.md §L8'
@@ -182,6 +183,7 @@ module Mastodon
           detect_conformance_issues(manifest).each { |line| issues << "#{manifest.slug}: #{line}" }
           detect_frame_parasites(manifest).each { |line| warnings << "#{manifest.slug}: #{line}" }
           detect_planned_notification_warnings(manifest).each { |line| warnings << "#{manifest.slug}: #{line}" }
+          detect_missing_hub_route(manifest).each { |line| warnings << "#{manifest.slug}: #{line}" }
 
           card_issues, card_warnings = detect_feed_card_issues(manifest)
           card_issues.each { |line| issues << "#{manifest.slug}: #{line}" }
@@ -402,6 +404,59 @@ module Mastodon
         return [] unless file
 
         frame_parasite_warnings(manifest, File.read(file), rel_path)
+      end
+
+      # Hub-route mount check — asserts a matching `routes.rb` entry
+      # for each korner's /hub/<slug> path. Every SPA-served korner in
+      # the rebuild needs an explicit Rails-side mount to `home#index`
+      # (or its own controller) so a direct load / hard reload of
+      # /hub/<slug> boots the SPA shell instead of falling through to
+      # Rails' 404. It's easy to remember on the client side (register
+      # the route in ui/index.jsx + async-components.js) and easy to
+      # forget on the Rails side — Art (2026-08-14) shipped without
+      # the mount pair and every direct load returned the Kronk 404
+      # page. This closes that trap.
+      #
+      # The check is static: greps routes.rb for a matching line. That
+      # matches the pattern the L11 checks use (no Rails routing table
+      # access needed) and works from the doctor at any lifecycle
+      # stage — soon/enforced/portal all get the same guard. Skipped
+      # for core spaces (their mount paths differ; feed=/home,
+      # settings=/settings, etc.) and for portal korners (their mount
+      # is an external URL, no Rails route required).
+      def detect_missing_hub_route(manifest)
+        return [] if manifest.core?
+        return [] if manifest.portal?
+
+        mount = manifest.mount_path
+        return [] unless mount.is_a?(String) && mount.start_with?('/hub/')
+
+        missing_hub_route_warnings(mount, routes_source)
+      end
+
+      # Pure body of the hub-route check, separated from I/O so specs
+      # can pin the matcher on synthetic route text.
+      def missing_hub_route_warnings(mount, routes)
+        escaped = Regexp.escape(mount)
+        # Accept the two shapes routes.rb uses: the bare mount and
+        # the /*path wildcard, on any HTTP verb, to any controller /
+        # action, with the path quoted single OR double.
+        pattern = %r{(?:get|post|match|resources?)\s+['"]#{escaped}(?:/\*[a-z_]+)?['"]}
+        return [] if routes.match?(pattern)
+
+        [
+          "L5 no routes.rb mount for '#{mount}' — a direct load of #{mount} will Rails-404 before the SPA shell can pick up the client route. Add: `get '#{mount}', to: 'home#index'` + `get '#{mount}/*path', to: 'home#index', format: false`",
+        ]
+      end
+
+      # Cached read of config/routes.rb so the per-manifest scans don't
+      # each hit disk. Also strips whole-line `#` comments to avoid
+      # matching a route declaration that's been commented out.
+      def routes_source
+        @routes_source ||= begin
+          path = Rails.root.join('config', 'routes.rb')
+          path.file? ? path.read.gsub(/^[ \t]*#.*$/, '') : ''
+        end
       end
 
       # Core-space header drift — the counterpart to L11 for core spaces.
