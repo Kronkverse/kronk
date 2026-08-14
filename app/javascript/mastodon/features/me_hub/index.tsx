@@ -4,7 +4,7 @@
 // the middle. Follows Tal's 2026-08-05 mockup.
 //
 // Not a full-featured settings surface — the shortcuts here are the
-// six that mattered enough to earn a spoke:
+// seven that mattered enough to earn a spoke:
 //
 //   * Profile   → /@{username}          (public profile view)
 //   * Timeline  → /@{username}/posts    (their own posts stream,
@@ -19,9 +19,11 @@
 //                                        follow-up when multi-account
 //                                        infrastructure lands)
 //   * Sign out  → /auth/sign_out (Rails-served, DELETE)
+//   * Settings  → /settings (the main settings hub — took over one of
+//                                        the two `?` placeholder slots)
 //
-// Two `?` slots on the ring are visible placeholders — the mockup
-// shows them; keeping them makes the future extension obvious.
+// One `?` slot on the ring is still a visible placeholder — the mockup
+// shows it; keeping it makes the future extension obvious.
 //
 // Center avatar opens a lightweight avatar-preview overlay (own
 // component, no Redux modal) — the intent being "see your face at
@@ -47,6 +49,7 @@ import KeyIcon from '@/material-icons/400-24px/key.svg?react';
 import LogoutIcon from '@/material-icons/400-24px/logout.svg?react';
 import PersonIcon from '@/material-icons/400-24px/person.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
+import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import SwapIcon from '@/material-icons/400-24px/sync_alt.svg?react';
 import { importFetchedAccount } from 'mastodon/actions/importer';
 import { openModal } from 'mastodon/actions/modal';
@@ -79,6 +82,7 @@ const messages = defineMessages({
   invite: { id: 'me_hub.invite', defaultMessage: 'Invite' },
   switchAccount: { id: 'me_hub.switch', defaultMessage: 'Switch' },
   signOut: { id: 'me_hub.sign_out', defaultMessage: 'Sign out' },
+  settings: { id: 'me_hub.settings', defaultMessage: 'Settings' },
   placeholder: { id: 'me_hub.placeholder', defaultMessage: 'Coming soon' },
   centerHint: {
     id: 'me_hub.center_hint',
@@ -208,7 +212,13 @@ export const MeHub: React.FC<MeHubProps> = () => {
       angle: 225,
       action: 'invite',
     },
-    { key: 'ph-w', labelId: 'placeholder', icon: null, angle: 270 },
+    {
+      key: 'settings',
+      labelId: 'settings',
+      icon: SettingsIcon,
+      angle: 270,
+      to: '/settings',
+    },
     {
       key: 'timeline',
       labelId: 'timeline',
