@@ -133,6 +133,7 @@ module Mastodon
         say '  L11 no chrome parasites (warn)    compose wraps <ComposeShell> (warn)'
         say '  L11 core-space header pulls from manifest (warn)'
         say '  L5  /hub/<slug> is mounted in routes.rb (warn)'
+        say '  --  cross-korner attachments: attaches/accepts bidirectional consent'
         say ''
         say 'NOT machine-checkable — review against the spec section:'
         say '  L8   settings page exists at /hub/<slug>/settings      korner_standard.md §L8'
@@ -195,6 +196,7 @@ module Mastodon
         end
 
         detect_orphan_listens(manifests).each { |line| issues << line }
+        detect_attachment_consent_issues(manifests).each { |line| issues << line }
         detect_node_issues.each { |line| issues << line }
         detect_composer_conformance_warnings.each { |line| warnings << line }
 
@@ -895,6 +897,38 @@ module Mastodon
           node_seg.downcase.start_with?(route_prefix.downcase)
         else
           node_seg.casecmp?(route_seg)
+        end
+      end
+
+      # Cross-korner attachment consent (docs/kronk_korner_attachments.md).
+      # For every `attaches: [{ to: B, kind: K }, ...]` entry on korner A,
+      # korner B must have a matching `accepts: [{ from: A, kind: K }]`
+      # entry (with `'*'` on either side satisfying). Missing consent means
+      # KornerAttachment#save will fail at runtime — surface it at doctor
+      # time so a config-only PR can't slip past. Mirrors the emits/listens
+      # orphan check above.
+      def detect_attachment_consent_issues(manifests)
+        by_slug = manifests.index_by(&:slug)
+
+        manifests.flat_map do |source|
+          Array(source.attaches).filter_map do |entry|
+            next unless entry.is_a?(Hash)
+
+            target_slug = entry['to'].to_s
+            kind        = entry['kind'].to_s
+            next if target_slug.empty? || kind.empty?
+            next if target_slug == '*' # source declares a wildcard target; nothing to cross-check
+
+            target = by_slug[target_slug]
+            next "#{source.slug}: `attaches` names target '#{target_slug}' with no manifest" unless target
+
+            accepts = Array(target.accepts).any? do |a|
+              a.is_a?(Hash) && a['kind'].to_s == kind && (a['from'].to_s == source.slug || a['from'].to_s == '*')
+            end
+            next if accepts
+
+            "#{source.slug}: attaches to '#{target_slug}' (kind: #{kind}) but '#{target_slug}' does not accept it — add `- from: #{source.slug}, kind: #{kind}` to #{target_slug}.yaml `accepts:`"
+          end
         end
       end
 

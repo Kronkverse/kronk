@@ -118,6 +118,11 @@ namespace :api, format: false do
       end
     end
 
+    # KornerAttachment REST surface (docs/kronk_korner_attachments.md §3.1).
+    # Distinct from the proposal-nested `attachments` resource below — this
+    # is the cross-korner join primitive, keyed by manifest slug + id.
+    resources :attachments, controller: 'attachments', only: [:index, :create, :destroy]
+
     resources :events, only: [:index, :show, :create, :update, :destroy] do
       member do
         post :rsvp
