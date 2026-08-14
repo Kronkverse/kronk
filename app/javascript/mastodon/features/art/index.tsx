@@ -7,7 +7,6 @@ import { Helmet } from 'react-helmet';
 import AppsIcon from '@/material-icons/400-24px/apps.svg?react';
 import ArticleIcon from '@/material-icons/400-24px/article-fill.svg?react';
 import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
-import EditIcon from '@/material-icons/400-24px/edit-fill.svg?react';
 import MicIcon from '@/material-icons/400-24px/mic.svg?react';
 import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library-fill.svg?react';
@@ -95,7 +94,6 @@ const ArtHub: React.FC = () => {
             inner={SAMPLE_INNER}
             innerIndex={innerIndex}
             onInnerChange={setInnerIndex}
-            centerIcon={EditIcon}
             outerAriaLabel={intl.formatMessage(messages.outerAria)}
             innerAriaLabel={intl.formatMessage(messages.innerAria)}
           />

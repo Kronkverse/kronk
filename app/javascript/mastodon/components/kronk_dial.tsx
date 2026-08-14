@@ -9,15 +9,16 @@ import KeyboardArrowDownIcon from '@/material-icons/400-24px/keyboard_arrow_down
 
 // KronkDial — a concentric-wheel picker. Two rings (outer = category /
 // medium, inner = lens / view mode) rotate independently under a fixed
-// inward-pointing needle mark pinned at 3 o'clock. The centre hub shows
-// the currently-shown outer slice + a chevron affordance for a drop-
-// down alternative. Built for the Art korner (Tal 2026-08-14 screencast)
-// but intentionally decoupled from any specific domain so it can be
-// reused by per-discipline korners later.
+// pie-wedge selector pinned at 3 o'clock; the active slice's label +
+// count emerge from the wedge tip as an external callout. Fine dial-
+// face pips ring the perimeter as a compass-face texture; boundary
+// dividers wall off each slice. Built for the Art korner (Tal
+// 2026-08-14 screencast + HTML mockup) but intentionally decoupled
+// from any specific domain so it can be reused elsewhere.
 //
 // Rotation:
-//   * Pointer-down inside the wheel captures the pointer, then
-//     each move rotates the whole SVG by (currentAngle − startAngle)
+//   * Pointer-down inside the wheel captures the pointer, then each
+//     move rotates the whole SVG by (currentAngle − startAngle)
 //     around its centre. Pointer-up starts a rAF-driven snap tween
 //     to the nearest slice (SNAP_MS ease-out cubic) — the ring's
 //     onChange fires only when the tween lands, so the parent's
@@ -29,15 +30,17 @@ import KeyboardArrowDownIcon from '@/material-icons/400-24px/keyboard_arrow_down
 //     the inner wheel one bubble. Hidden `<select>` mirrors provide
 //     screen-reader-navigable equivalents.
 //
-// Composition:
-//   * Everything is SVG so the ring geometry uses the same math the
-//     Ж menu's moon fan and the /me hub wheel already ship —
-//     `rotate(θ) translate(0,-r)` per slice — but in a single
-//     coordinate system rather than one transform per DOM element.
-//   * The needle mark sits in a non-rotating overlay layer, so the
-//     rings spin under it (physical-dial mental model). Slice
-//     boundary dividers (one per slice, at the slice EDGE) rotate
-//     with the wheel and give each label a visible "slot".
+// Composition (SVG throughout — native `transform` attributes on <g>
+// elements; the CSS-transform-with-view-box approach was unreliable
+// across engines, #1487):
+//   * Each rotating ring is a <g transform="rotate(θ)">
+//   * Each slice sits at `rotate(sliceAngle) translate(R 0)` in its
+//     own nested <g>
+//   * Non-active labels are drawn TANGENT to the ring (rotate 90°
+//     from radial) with a 180° flip for bottom-half labels so glyph
+//     tops always point roughly upward — the standard "readable-
+//     around-a-dial" trick. The active slice is skipped here — it
+//     appears at the wedge tip in the fixed overlay.
 
 // ── Public types ─────────────────────────────────────────────────
 
@@ -92,6 +95,23 @@ const R_OUTER_TICK_END = 80;
 const R_INNER_BUBBLE = 48; // centre of each inner-ring bubble
 const R_HUB = 26; // centre hub radius
 const BUBBLE_R = 12; // per-bubble radius
+const BUBBLE_R_ACTIVE = 14; // active bubble is slightly larger
+
+// Fine dial-face pips (uniform ring of small ticks — the "compass"
+// texture behind the labelled slices). Count keeps them dense enough
+// to read as texture but sparse enough not to overwhelm the labels.
+const DIAL_FACE_TICKS = 72; // one every 5°
+const R_FACE_TICK_INNER = 78;
+const R_FACE_TICK_OUTER = 82;
+
+// The wedge selector — a pie slice at 3 o'clock that extends from
+// just outside the hub out past the outer perimeter, so it "punches
+// through" the ring rather than sitting behind it. The callout
+// ("Essays / 94") emerges from the wedge tip in the fixed overlay.
+const R_WEDGE_INNER = 32;
+const R_WEDGE_OUTER = 84;
+const R_CALLOUT_LABEL = 95;
+const R_CALLOUT_COUNT = 95;
 
 // Snap-back animation duration (drag release → nearest slice).
 const SNAP_MS = 260;
@@ -349,25 +369,30 @@ export const KronkDial: React.FC<Props> = ({
   const centerBubble = inner?.[innerIndex];
   const Center = CenterIcon ?? centerBubble?.Icon;
 
-  // Needle — a small outward-pointing triangle at 3 o'clock, sitting
-  // in the empty band between the centre hub and the outer tick ring
-  // (R_HUB=26 → R_OUTER_TICK_START=72). Points from R=60 out to
-  // R=68, so its tip aims at the outer perimeter without ever
-  // touching the label text at R=88 (Tal 2026-08-14: needle
-  // overlapped the JOURNALS label when placed at the outer edge).
-  // Replaces the pie-wedge selector Tal read as "ugly and
-  // obtrusive"; the compass metaphor is enough — the active slice
-  // always rotates under this mark, and the outer-slice `--active`
-  // styling brightens the tick + label right beneath it as a
-  // secondary cue.
-  const needlePath = useMemo(() => {
-    const base = 60; // back of the triangle (nearer the hub)
-    const tip = 68; // point (nearer the outer ring; still inside label R)
-    const wing = 3; // half-width of the base
-    return [`M ${tip} 0`, `L ${base} ${-wing}`, `L ${base} ${wing}`, 'Z'].join(
-      ' ',
-    );
-  }, []);
+  // Wedge selector — a pie slice at 3 o'clock spanning one slice's
+  // angular width, extending from just outside the hub OUT past the
+  // outer perimeter so it "punches through" the ring. Replaces the
+  // previous tiny needle mark. The active slice's label + count
+  // emerge from the wedge's tip via the fixed callout in the overlay
+  // layer below — matches the picker mockup Tal designed
+  // (2026-08-14 HTML mockup: wedge + external label callout).
+  const wedgePath = useMemo(() => {
+    const half = ((outerStep || 30) / 2) * (Math.PI / 180);
+    const cosA = Math.cos(half);
+    const sinA = Math.sin(half);
+    const rOuter = R_WEDGE_OUTER;
+    const rInner = R_WEDGE_INNER;
+    return [
+      `M ${(rInner * cosA).toFixed(2)} ${(-rInner * sinA).toFixed(2)}`,
+      `L ${(rOuter * cosA).toFixed(2)} ${(-rOuter * sinA).toFixed(2)}`,
+      `A ${rOuter} ${rOuter} 0 0 1 ${(rOuter * cosA).toFixed(2)} ${(rOuter * sinA).toFixed(2)}`,
+      `L ${(rInner * cosA).toFixed(2)} ${(rInner * sinA).toFixed(2)}`,
+      `A ${rInner} ${rInner} 0 0 0 ${(rInner * cosA).toFixed(2)} ${(-rInner * sinA).toFixed(2)}`,
+      'Z',
+    ].join(' ');
+  }, [outerStep]);
+
+  const activeOuterSlice = outer[outerIndex];
 
   // Ensure pointer-move / pointer-up outside the SVG still settle
   // the drag — the SVG captures the pointer on down, but if capture
@@ -440,7 +465,26 @@ export const KronkDial: React.FC<Props> = ({
           onPointerUp={settleDrag}
           onPointerCancel={settleDrag}
         >
-          {/* Dashed ring — the outer perimeter marker. Non-interactive. */}
+          {/* Fine dial-face pips — full compass ring of uniform ticks
+              that reads as texture behind the labelled slices.
+              Rotates with the wheel so the whole dial face spins as
+              one physical object. */}
+          {Array.from({ length: DIAL_FACE_TICKS }, (_, i) => {
+            const tickAngle = (i * 360) / DIAL_FACE_TICKS;
+            return (
+              <line
+                key={`face-${i}`}
+                x1={R_FACE_TICK_INNER}
+                y1={0}
+                x2={R_FACE_TICK_OUTER}
+                y2={0}
+                className='kronk-dial__face-tick'
+                transform={`rotate(${tickAngle.toFixed(3)})`}
+              />
+            );
+          })}
+
+          {/* Dashed ring — the outer perimeter marker. */}
           <circle
             className='kronk-dial__outer-ring'
             r={R_OUTER_TICK_END}
@@ -448,10 +492,10 @@ export const KronkDial: React.FC<Props> = ({
             cy={CENTRE}
             fill='none'
           />
+
           {/* Boundary dividers — thin radial lines at each slice
-              EDGE (halfway between slice centres), giving each
-              label its own visual "slot" so it no longer reads as
-              floating loose in the ring. Rotates with the wheel. */}
+              EDGE (halfway between slice centres). Rotates with the
+              wheel so each label sits inside its visible "slot". */}
           {outerSlices.map(({ slice, angle }) => (
             <line
               key={`edge-${slice.key}`}
@@ -463,55 +507,45 @@ export const KronkDial: React.FC<Props> = ({
               transform={`rotate(${(angle - outerStep / 2).toFixed(3)})`}
             />
           ))}
+
+          {/* Labels — TANGENT to the ring (rotate 90° so baseline runs
+              perpendicular to radial). Bottom-half labels get an extra
+              180° flip so glyph tops always point roughly upward — the
+              standard "readable-around-a-dial" trick. The active slice
+              is skipped here: its label + count appear externally at
+              the wedge tip in the fixed overlay below, following the
+              mockup Tal designed (2026-08-14). */}
           {outerSlices.map(({ slice, angle, index }) => {
-            const isActive = index === outerIndex;
-            // Total upright counter-rotation applied at the label
-            // position: cancel the parent wheel spin AND this slice's
-            // local rotation so the glyph lands horizontal.
-            const uprightRotation = -(outerRotation + angle);
+            if (index === outerIndex) return null;
+            const worldAngle = normDeg(outerRotation + angle);
+            const bottomHalf = worldAngle > 0 && worldAngle < 180;
+            const tangentRotation = bottomHalf ? 270 : 90;
             return (
               <g
-                key={slice.key}
-                className={
-                  isActive
-                    ? 'kronk-dial__outer-slice kronk-dial__outer-slice--active'
-                    : 'kronk-dial__outer-slice'
-                }
+                key={`label-${slice.key}`}
+                className='kronk-dial__outer-slice'
                 transform={`rotate(${angle.toFixed(3)})`}
               >
-                {/* Tick line: from R_OUTER_TICK_START to R_OUTER_TICK_END
-                    along the +x axis of the rotated frame. */}
-                <line
-                  x1={R_OUTER_TICK_START}
-                  y1={0}
-                  x2={R_OUTER_TICK_END}
-                  y2={0}
-                  className='kronk-dial__tick'
-                />
-                {/* Label group: translate out to the label radius, then
-                    counter-rotate the whole nested <g> so the two <text>
-                    elements sit upright without needing per-glyph
-                    rotation math. */}
-                <g transform={`translate(${R_OUTER_LABEL} 0)`}>
-                  <g transform={`rotate(${uprightRotation.toFixed(3)})`}>
+                <g
+                  transform={`translate(${R_OUTER_LABEL} 0) rotate(${tangentRotation})`}
+                >
+                  <text
+                    className='kronk-dial__outer-label'
+                    textAnchor='middle'
+                    dominantBaseline='middle'
+                  >
+                    {slice.label}
+                  </text>
+                  {typeof slice.count === 'number' && (
                     <text
-                      className='kronk-dial__outer-label'
+                      y={7}
+                      className='kronk-dial__outer-count'
                       textAnchor='middle'
                       dominantBaseline='middle'
                     >
-                      {slice.label}
+                      {slice.count}
                     </text>
-                    {typeof slice.count === 'number' && (
-                      <text
-                        y={7}
-                        className='kronk-dial__outer-count'
-                        textAnchor='middle'
-                        dominantBaseline='middle'
-                      >
-                        {slice.count}
-                      </text>
-                    )}
-                  </g>
+                  )}
                 </g>
               </g>
             );
@@ -533,6 +567,12 @@ export const KronkDial: React.FC<Props> = ({
               const isActive = index === innerIndex;
               const BubbleIcon = bubble.Icon;
               const uprightRotation = -(innerRotation + angle);
+              // Active bubble punches larger (visual weight matches
+              // "this is the shown lens") — geometry stays radial so
+              // it grows outward without shifting the ring layout.
+              const r = isActive ? BUBBLE_R_ACTIVE : BUBBLE_R;
+              const iconSize = isActive ? 20 : 16;
+              const iconOffset = -iconSize / 2;
               return (
                 <g
                   key={bubble.key}
@@ -543,11 +583,16 @@ export const KronkDial: React.FC<Props> = ({
                   }
                   transform={`rotate(${angle.toFixed(3)}) translate(${R_INNER_BUBBLE} 0)`}
                 >
-                  <circle r={BUBBLE_R} />
+                  <circle r={r} />
                   {/* Icons stay upright — counter-rotate against the
                       wheel spin + this bubble's own angle. */}
                   <g transform={`rotate(${uprightRotation.toFixed(3)})`}>
-                    <BubbleIcon width={16} height={16} x={-8} y={-8} />
+                    <BubbleIcon
+                      width={iconSize}
+                      height={iconSize}
+                      x={iconOffset}
+                      y={iconOffset}
+                    />
                   </g>
                 </g>
               );
@@ -555,11 +600,36 @@ export const KronkDial: React.FC<Props> = ({
           </g>
         )}
 
-        {/* Fixed overlay layer — needle mark + centre hub sit outside
-            the rotating groups so they don't spin. */}
-        <g className='kronk-dial__needle' aria-hidden>
-          <path d={needlePath} className='kronk-dial__needle-mark' />
-        </g>
+        {/* Fixed overlay layer — wedge + external callout + centre hub
+            sit outside the rotating groups so they don't spin. The
+            wedge punches through the ring at 3 o'clock; the callout
+            emerges from its tip carrying the active slice's label +
+            count; the hub anchors the whole composition. */}
+        <path d={wedgePath} className='kronk-dial__wedge' aria-hidden='true' />
+        {activeOuterSlice && (
+          <g className='kronk-dial__callout' aria-hidden='true'>
+            <text
+              x={R_CALLOUT_LABEL}
+              y={-2}
+              className='kronk-dial__callout-label'
+              textAnchor='start'
+              dominantBaseline='middle'
+            >
+              {activeOuterSlice.label}
+            </text>
+            {typeof activeOuterSlice.count === 'number' && (
+              <text
+                x={R_CALLOUT_COUNT}
+                y={6}
+                className='kronk-dial__callout-count'
+                textAnchor='start'
+                dominantBaseline='middle'
+              >
+                {activeOuterSlice.count}
+              </text>
+            )}
+          </g>
+        )}
         <g className='kronk-dial__hub' aria-hidden>
           <circle r={R_HUB} className='kronk-dial__hub-bg' />
           {Center && <Center width={22} height={22} x={-11} y={-11} />}
