@@ -13,7 +13,6 @@ import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library-fill.svg?react';
 import type { DialBubble, DialSlice } from 'mastodon/components/kronk_dial';
 import { KronkDial } from 'mastodon/components/kronk_dial';
-import { SpaceHeader } from 'mastodon/components/space_header';
 import { Stage } from 'mastodon/components/stage';
 
 // Art korner landing — scaffold. Renders the concentric dial
@@ -80,9 +79,13 @@ const ArtHub: React.FC = () => {
       </Helmet>
 
       <div className='art-hub'>
-        {/* Space header pulls name + tagline from the manifest via
-            <SpaceHeader> — same pattern /me + /settings use. */}
-        <SpaceHeader slug='art' className='art-hub__title' />
+        {/* Space title + tagline are provided by the Frame-level
+            <AutoSpaceHeader> (fired by <Stage>) — reading them from
+            config/korners/art.yaml. No manual <SpaceHeader> here or
+            we'd double-render the header. Applies to every korner
+            landing that lives at /hub/<slug>; core spaces (/me,
+            /settings) are the ones that hand-roll SpaceHeader
+            because Auto returns null for `core: true` manifests. */}
 
         <div className='art-hub__dial'>
           <KronkDial

@@ -1,29 +1,26 @@
-// Art korner landing — scaffold. Vertical stack: manifest-driven
-// space header → concentric dial (kronk_dial) → selection callout
-// (medium crumb / big-serif title / count). Content list lives
-// below once a piece backend exists; kept out for now.
+// Art korner landing — scaffold. Two rows: concentric dial
+// (kronk_dial) → selection callout (medium crumb / big-serif title
+// / count). The space title + tagline live ABOVE this container as
+// Frame chrome (AutoSpaceHeader, fired by <Stage>) reading from
+// the manifest — hand-rendered <SpaceHeader> would double-render
+// the header. Content list lives below the callout once a piece
+// backend exists; kept out for now.
 
 .art-hub {
+  // The min-height subtracts the 4.25rem top-band (Frame reserves
+  // it, see _kronk_frame.scss:37) AND the ~5rem AutoSpaceHeader
+  // takes above the Stage's scrollable area — so the dial centres
+  // in the visible remainder rather than pushing the callout off-
+  // screen at the bottom.
   position: relative;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: 1fr auto;
   gap: 1.5rem;
   padding: clamp(1rem, 2.5vh, 1.75rem) 1rem clamp(1.5rem, 4vh, 2.5rem);
-  min-height: calc(100vh - 4.25rem);
-  min-height: calc(100dvh - 4.25rem);
+  min-height: calc(100vh - 9.25rem);
+  min-height: calc(100dvh - 9.25rem);
   background: transparent;
   color: var(--text-primary);
-}
-
-.art-hub__title {
-  position: relative;
-  z-index: 1;
-  justify-self: center;
-  text-align: center;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
 }
 
 .art-hub__dial {
