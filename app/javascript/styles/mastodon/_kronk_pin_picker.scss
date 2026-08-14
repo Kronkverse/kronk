@@ -1,0 +1,165 @@
+@use 'variables' as *;
+
+// MapPinPicker — portal-mounted map picker with a centre crosshair.
+// See `app/javascript/mastodon/components/map_pin_picker.tsx`. Visual
+// grammar echoes `<ComposeShell>` (rounded panel, dim backdrop,
+// header + body + footer) so opening the picker from a composer
+// reads as a related modal.
+
+.map-pin-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 55%);
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--kronk-purple-accent);
+      outline-offset: -4px;
+    }
+  }
+
+  &__panel {
+    position: relative;
+    z-index: 1;
+    width: min(720px, 100%);
+    height: min(80vh, 640px);
+    background: var(--surface-primary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-large);
+    box-shadow: 0 24px 80px -12px rgb(0 0 0 / 60%);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  &__header {
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--border-default);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__title {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 500;
+  }
+
+  &__hint {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  &__map {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+
+    // MapLibre's canvas fills the container; the crosshair sits on top
+    // as a pointer-events: none overlay so pans + zooms still work
+    // through it.
+    .maplibregl-map {
+      position: absolute;
+      inset: 0;
+    }
+  }
+
+  &__crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 28px;
+    height: 28px;
+    margin: -14px 0 0 -14px;
+    pointer-events: none;
+    z-index: 2;
+
+    // Two crossed lines + a centre ring — the classic "aim here" glyph.
+    // Rendered from CSS so it never has to load an asset.
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      background: var(--kronk-purple-bright);
+      box-shadow: 0 0 0 1px rgb(0 0 0 / 55%);
+    }
+
+    &::before {
+      // horizontal
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 2px;
+      margin-top: -1px;
+    }
+
+    &::after {
+      // vertical
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      margin-left: -1px;
+    }
+  }
+
+  &__footer {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--border-default);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+  }
+
+  &__cancel,
+  &__confirm {
+    padding: 0.55rem 1rem;
+    border-radius: var(--radius-medium);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+  }
+
+  &__cancel {
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+
+    &:hover {
+      border-color: var(--border-strong, var(--border-default));
+      color: var(--text-primary);
+    }
+  }
+
+  &__confirm {
+    background: var(--kronk-purple-accent);
+    border: 1px solid var(--kronk-purple-accent);
+    color: var(--kronk-purple-bright);
+
+    &:hover {
+      background: var(--kronk-purple-bright);
+      color: var(--surface-primary);
+    }
+  }
+}

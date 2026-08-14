@@ -4,6 +4,8 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import api from 'mastodon/api';
 import { ComposeShell } from 'mastodon/components/compose_shell';
+import { MapPinPicker } from 'mastodon/components/map_pin_picker';
+import type { PinnedLocation } from 'mastodon/components/map_pin_picker';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 
@@ -61,7 +63,7 @@ const messages = defineMessages({
   mapLinkHint: {
     id: 'kalendar.new.map_link_hint',
     defaultMessage:
-      'A link to the location on a map. Pin-on-map picker coming next.',
+      'A map link people can open in any browser — type one, or use Pin on map below.',
   },
   mapLinkPlaceholder: {
     id: 'kalendar.new.map_link_placeholder',
@@ -71,6 +73,18 @@ const messages = defineMessages({
   startTime: { id: 'kalendar.new.start_time', defaultMessage: 'Time' },
   endDate: { id: 'kalendar.new.end_date', defaultMessage: 'End date' },
   endTime: { id: 'kalendar.new.end_time', defaultMessage: 'End time' },
+  pinOnMap: {
+    id: 'kalendar.new.pin_on_map',
+    defaultMessage: 'Pin on map',
+  },
+  pinnedAt: {
+    id: 'kalendar.new.pinned_at',
+    defaultMessage: 'Pinned at {lat}, {lng}',
+  },
+  clearPin: {
+    id: 'kalendar.new.clear_pin',
+    defaultMessage: 'Clear pin',
+  },
   type: { id: 'kalendar.new.type', defaultMessage: 'Kind' },
   typeEvent: { id: 'kalendar.new.type_event', defaultMessage: 'In-person' },
   typeHuddle: {
@@ -131,6 +145,16 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [endTime, setEndTime] = useState('');
   const [locationName, setLocationName] = useState('');
   const [locationUrl, setLocationUrl] = useState('');
+  // Pinned coordinates from the MapPinPicker. When set, `location_url`
+  // is derived from these (an OpenStreetMap link that any browser can
+  // open); when cleared, the URL field goes back to whatever the user
+  // typed. Storing coordinates separately from the derived URL lets
+  // the "Clear pin" affordance restore the URL to empty without
+  // touching the user's manual typing.
+  const [pinnedLocation, setPinnedLocation] = useState<PinnedLocation | null>(
+    null,
+  );
+  const [pinPickerOpen, setPinPickerOpen] = useState(false);
   const [eventType, setEventType] = useState<EventType>('event');
   const [rsvpEnabled, setRsvpEnabled] = useState(true);
   // Default to public: events are "shared time" (Kalendar manifest
@@ -236,6 +260,28 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     },
     [],
   );
+
+  const openPinPicker = useCallback(() => {
+    setPinPickerOpen(true);
+  }, []);
+  const cancelPinPicker = useCallback(() => {
+    setPinPickerOpen(false);
+  }, []);
+  // Format an OSM URL for the pinned point. Zoom is clamped for
+  // sensible sharing (17 is street-level, higher zooms don't add
+  // clarity for "meet here" purposes).
+  const handlePin = useCallback((pin: PinnedLocation) => {
+    setPinnedLocation(pin);
+    const displayZoom = Math.min(17, Math.max(12, Math.round(pin.zoom)));
+    setLocationUrl(
+      `https://www.openstreetmap.org/?mlat=${pin.lat.toFixed(5)}&mlon=${pin.lng.toFixed(5)}#map=${displayZoom}/${pin.lat.toFixed(5)}/${pin.lng.toFixed(5)}`,
+    );
+    setPinPickerOpen(false);
+  }, []);
+  const clearPin = useCallback(() => {
+    setPinnedLocation(null);
+    setLocationUrl('');
+  }, []);
 
   const submit = useCallback(() => {
     if (!startIso) return;
@@ -444,6 +490,35 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
               <small className='event-composer__field-hint'>
                 {intl.formatMessage(messages.mapLinkHint)}
               </small>
+              <div className='event-composer__pin-row'>
+                <button
+                  type='button'
+                  className='event-composer__pin-btn'
+                  onClick={openPinPicker}
+                >
+                  <FormattedMessage {...messages.pinOnMap} />
+                </button>
+                {pinnedLocation && (
+                  <>
+                    <span className='event-composer__pin-coords'>
+                      <FormattedMessage
+                        {...messages.pinnedAt}
+                        values={{
+                          lat: pinnedLocation.lat.toFixed(4),
+                          lng: pinnedLocation.lng.toFixed(4),
+                        }}
+                      />
+                    </span>
+                    <button
+                      type='button'
+                      className='event-composer__pin-clear'
+                      onClick={clearPin}
+                    >
+                      <FormattedMessage {...messages.clearPin} />
+                    </button>
+                  </>
+                )}
+              </div>
             </label>
           </fieldset>
         )}
@@ -467,6 +542,14 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           </p>
         )}
       </div>
+
+      {pinPickerOpen && (
+        <MapPinPicker
+          initial={pinnedLocation ?? undefined}
+          onCancel={cancelPinPicker}
+          onPin={handlePin}
+        />
+      )}
     </ComposeShell>
   );
 };
