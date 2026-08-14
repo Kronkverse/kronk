@@ -1,12 +1,31 @@
-name: Sync Staging with Main
+name: Deploy a branch to shadow (manual)
 
+# Manual only. **Do not add a `push:` trigger to this workflow.**
+#
+# It used to run on every push to `main`, which meant a merge to main — or
+# a production deploy, which merges first — silently overwrote the shadow
+# environment with the production line. That breaks shadow rather than
+# just changing it: shadow's `.env.production` symlink stays pointed at the
+# **rebuild** database (`.deploy-env-mode` = `rebuild`, and this workflow
+# does not touch it), so production-line code ends up querying a rebuild
+# schema. On 2026-08-13 that produced a hard 500 on every shadow page —
+# `PG::UndefinedTable: relation "terms_of_services" does not exist`, a
+# table the rebuild dropped when the org space moved terms into
+# `content/kronk/terms.md`.
+#
+# It had been doing this on every main push since at least 2026-07-12,
+# unnoticed because the run always finished **red** for an unrelated
+# reason (see below) — so nobody read the part of the log where it had
+# already succeeded at overwriting shadow.
+#
+# Shadow auto-deploys `rebuild/2.0.0` via `auto-deploy-rebuild.yml`. That
+# is the only automatic path to shadow, and it should stay that way while
+# the rebuild is the thing being shown there.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
       branch:
-        description: 'Branch to deploy (default: staging)'
+        description: 'Branch to deploy to shadow'
         required: false
         default: staging
 
@@ -14,14 +33,21 @@ jobs:
   sync-staging:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy branch to staging
+      - name: Deploy branch to shadow
         env:
           DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
-          BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.branch || 'main' }}
+          BRANCH: ${{ inputs.branch || 'staging' }}
         run: |
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/key
           chmod 600 ~/.ssh/key
+          # One command, and it must be one of the four the deploy key
+          # accepts. The key is ForceCommand-locked to
+          # `deploy|deploy-pr|stop|status`, so anything else fails with
+          # "Unknown action: <word>". A second SSH running `cd … &&
+          # rails db:migrate` used to live here and could never have
+          # worked — it is what made every run red. It was also
+          # redundant: `deploy` already runs migrations, stamps the
+          # version label and clears the instance cache.
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "deploy $BRANCH"
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "cd /home/mastodon/staging && RAILS_ENV=production bundle exec rails db:migrate"
           rm -f ~/.ssh/key
