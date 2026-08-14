@@ -396,6 +396,65 @@ RSpec.describe Mastodon::CLI::Korners do
     end
   end
 
+  # The /hub/<slug> Rails mount check (see korners.rb
+  # `missing_hub_route_warnings`). Every SPA-served korner needs an
+  # explicit routes.rb entry mounting its /hub/<slug> on home#index
+  # (or a controller). Missing the mount 404s at Rails before the
+  # SPA can pick up the client route — the Art (2026-08-14) failure.
+  describe 'hub-route mount detection' do
+    subject(:cli) { described_class.new }
+
+    def warnings_for(routes, mount = '/hub/testkorner')
+      cli.send(:missing_hub_route_warnings, mount, routes)
+    end
+
+    it 'flags a mount with no routes.rb entry' do
+      routes = "get '/hub/other', to: 'home#index'"
+      expect(warnings_for(routes)).to include(a_string_matching(%r{L5 no routes.rb mount for '/hub/testkorner'}))
+    end
+
+    it 'is silent when the bare mount is declared' do
+      routes = "get '/hub/testkorner', to: 'home#index'"
+      expect(warnings_for(routes)).to be_empty
+    end
+
+    it 'is silent when only the /*path wildcard mount is declared' do
+      routes = "get '/hub/testkorner/*path', to: 'home#index', format: false"
+      expect(warnings_for(routes)).to be_empty
+    end
+
+    it 'accepts double-quoted path declarations' do
+      routes = %(get "/hub/testkorner", to: "home#index")
+      expect(warnings_for(routes)).to be_empty
+    end
+
+    it 'accepts a controller other than home#index' do
+      routes = "get '/hub/testkorner', to: 'testkorner#index'"
+      expect(warnings_for(routes)).to be_empty
+    end
+
+    it 'is not fooled by a substring match on another slug' do
+      # `/hub/testkorneractually` should not satisfy `/hub/testkorner`.
+      routes = "get '/hub/testkorneractually', to: 'home#index'"
+      expect(warnings_for(routes)).to include(a_string_matching(/L5 no routes.rb mount/))
+    end
+
+    it 'skips core spaces via detect_missing_hub_route' do
+      core_manifest = Kronk::KornerRegistry::Manifest.new(
+        slug: 'testcore', core: true
+      )
+      expect(cli.send(:detect_missing_hub_route, core_manifest)).to be_empty
+    end
+
+    it 'skips portal korners via detect_missing_hub_route' do
+      portal_manifest = Kronk::KornerRegistry::Manifest.new(
+        slug: 'testportal',
+        portal: { 'url' => 'https://example.com/' }
+      )
+      expect(cli.send(:detect_missing_hub_route, portal_manifest)).to be_empty
+    end
+  end
+
   # Composer conformance (docs/rebuild/decisions.md 2026-08-12): every
   # `*composer*.tsx` under `features/**/` must wrap in the shared
   # `<ComposeShell>` and not roll its own portal, openModal dispatch,
