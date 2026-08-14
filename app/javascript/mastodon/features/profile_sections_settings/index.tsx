@@ -2,6 +2,8 @@ import { useEffect, useCallback, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
+import { Helmet } from 'react-helmet';
+
 import {
   DndContext,
   closestCenter,
@@ -29,8 +31,7 @@ import {
   apiUpdateProfileSection,
 } from 'mastodon/api/profile_sections';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useProfileSections } from 'mastodon/hooks/useProfileSections';
 import { useAppDispatch } from 'mastodon/store';
@@ -109,6 +110,10 @@ interface KategoryJSON {
 
 const messages = defineMessages({
   title: { id: 'profile_sections.title', defaultMessage: 'Profile sections' },
+  intro: {
+    id: 'profile_sections.intro',
+    defaultMessage: 'Choose and order what shows on your profile.',
+  },
 });
 
 export const ProfileSectionsSettings = () => {
@@ -232,10 +237,24 @@ export const ProfileSectionsSettings = () => {
   );
 
   return (
-    <Column bindToDocument label={intl.formatMessage(messages.title)}>
-      <ColumnHeader title={intl.formatMessage(messages.title)} showBackButton />
+    <Stage label={intl.formatMessage(messages.title)}>
+      <Helmet>
+        <title>{intl.formatMessage(messages.title)}</title>
+      </Helmet>
 
-      <div className='scrollable' style={{ padding: '1rem' }}>
+      <div
+        className='scrollable profile-sections-settings'
+        style={{ padding: '1rem' }}
+      >
+        <header className='space-header' data-frame-header=''>
+          <h1 className='space-header__title'>
+            {intl.formatMessage(messages.title)}
+          </h1>
+          <p className='space-header__tagline'>
+            {intl.formatMessage(messages.intro)}
+          </p>
+        </header>
+
         <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
           <FormattedMessage
             id='profile_sections.help'
@@ -346,6 +365,6 @@ export const ProfileSectionsSettings = () => {
           )}
         </div>
       </div>
-    </Column>
+    </Stage>
   );
 };
