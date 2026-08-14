@@ -66,6 +66,85 @@
     line-height: 1.4;
   }
 
+  &__search {
+    position: relative;
+    margin-top: 0.5rem;
+  }
+
+  &__search-input {
+    width: 100%;
+    padding: 0.55rem 0.85rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: border-color var(--dur-fast) var(--ease-out);
+
+    &:focus {
+      outline: none;
+      border-color: var(--kronk-purple-accent);
+      box-shadow: 0 0 0 3px
+        color-mix(in oklab, var(--kronk-purple-accent) 25%, transparent);
+    }
+
+    &::placeholder {
+      color: var(--text-muted, var(--secondary-text-color));
+    }
+  }
+
+  // Absolute-positioned so it overlays the map area without shifting
+  // the header height when it opens/closes.
+  &__results {
+    position: absolute;
+    top: calc(100% + 0.3rem);
+    left: 0;
+    right: 0;
+    z-index: 5;
+    max-height: 15rem;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.25rem 0;
+    list-style: none;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    box-shadow: 0 12px 32px rgb(0 0 0 / 40%);
+
+    &--state {
+      padding: 0.75rem 0.85rem;
+      color: var(--text-muted, var(--secondary-text-color));
+      font-size: 0.85rem;
+      text-align: center;
+    }
+  }
+
+  &__result {
+    width: 100%;
+    padding: 0.55rem 0.85rem;
+    border: 0;
+    background: transparent;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      outline: none;
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 15%,
+        transparent
+      );
+      color: var(--kronk-purple-bright);
+    }
+  }
+
   &__map {
     position: relative;
     flex: 1 1 auto;
