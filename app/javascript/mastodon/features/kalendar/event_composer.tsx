@@ -45,22 +45,32 @@ const messages = defineMessages({
   starts: { id: 'kalendar.new.starts', defaultMessage: 'Starts' },
   ends: { id: 'kalendar.new.ends', defaultMessage: 'Ends (optional)' },
   where: { id: 'kalendar.new.where', defaultMessage: 'Where' },
-  locationName: {
-    id: 'kalendar.new.location_name',
-    defaultMessage: 'Location',
+  address: {
+    id: 'kalendar.new.address',
+    defaultMessage: 'Address',
   },
-  locationNamePlaceholder: {
-    id: 'kalendar.new.location_name_placeholder',
-    defaultMessage: 'A pub, a park, an address.',
+  addressPlaceholder: {
+    id: 'kalendar.new.address_placeholder',
+    defaultMessage:
+      "A pub, a park, an address — write however you'd text a friend.",
   },
-  locationUrl: {
-    id: 'kalendar.new.location_url',
-    defaultMessage: 'Location link (optional)',
+  mapLink: {
+    id: 'kalendar.new.map_link',
+    defaultMessage: 'Map link (optional)',
   },
-  locationUrlPlaceholder: {
-    id: 'kalendar.new.location_url_placeholder',
+  mapLinkHint: {
+    id: 'kalendar.new.map_link_hint',
+    defaultMessage:
+      'A link to the location on a map. Pin-on-map picker coming next.',
+  },
+  mapLinkPlaceholder: {
+    id: 'kalendar.new.map_link_placeholder',
     defaultMessage: 'https://…',
   },
+  startDate: { id: 'kalendar.new.start_date', defaultMessage: 'Date' },
+  startTime: { id: 'kalendar.new.start_time', defaultMessage: 'Time' },
+  endDate: { id: 'kalendar.new.end_date', defaultMessage: 'End date' },
+  endTime: { id: 'kalendar.new.end_time', defaultMessage: 'End time' },
   type: { id: 'kalendar.new.type', defaultMessage: 'Kind' },
   typeEvent: { id: 'kalendar.new.type_event', defaultMessage: 'In-person' },
   typeHuddle: {
@@ -203,6 +213,30 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     setReach(value);
   }, []);
 
+  // Force the native date/time picker open on click. Chromium supports
+  // `HTMLInputElement.showPicker()` since v99 — without this, some
+  // browsers only open the picker when the user clicks the tiny
+  // calendar/clock icon at the right edge of the input, which is a
+  // frustrating hit target inside a narrow composer field (Tal
+  // 2026-08-14: "the date selecter doesn't drop down"). Guarded on
+  // `showPicker` existing so older browsers fall back to their
+  // default click-to-focus behaviour without erroring.
+  const openPickerOnClick = useCallback(
+    (e: React.MouseEvent<HTMLInputElement>) => {
+      if (typeof e.currentTarget.showPicker === 'function') {
+        try {
+          e.currentTarget.showPicker();
+        } catch {
+          // showPicker throws NotAllowedError if called without a user
+          // gesture — the click event IS the gesture so this shouldn't
+          // fire, but swallowing keeps the composer resilient to
+          // vendor-specific edge cases.
+        }
+      }
+    },
+    [],
+  );
+
   const submit = useCallback(() => {
     if (!startIso) return;
     setError(null);
@@ -300,46 +334,54 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
             {intl.formatMessage(messages.when)}
           </legend>
           <div className='event-composer__row'>
-            <label className='event-composer__field event-composer__field--half'>
+            <span className='event-composer__field event-composer__field--half'>
               <span className='event-composer__field-label'>
                 {intl.formatMessage(messages.starts)}
               </span>
               <div className='event-composer__datetime'>
                 <input
                   type='date'
+                  aria-label={intl.formatMessage(messages.startDate)}
                   value={startDate}
                   onChange={onStartDate}
+                  onClick={openPickerOnClick}
                   required
                   className='event-composer__input'
                 />
                 <input
                   type='time'
+                  aria-label={intl.formatMessage(messages.startTime)}
                   value={startTime}
                   onChange={onStartTime}
+                  onClick={openPickerOnClick}
                   required
                   className='event-composer__input'
                 />
               </div>
-            </label>
-            <label className='event-composer__field event-composer__field--half'>
+            </span>
+            <span className='event-composer__field event-composer__field--half'>
               <span className='event-composer__field-label'>
                 {intl.formatMessage(messages.ends)}
               </span>
               <div className='event-composer__datetime'>
                 <input
                   type='date'
+                  aria-label={intl.formatMessage(messages.endDate)}
                   value={endDate}
                   onChange={onEndDate}
+                  onClick={openPickerOnClick}
                   className='event-composer__input'
                 />
                 <input
                   type='time'
+                  aria-label={intl.formatMessage(messages.endTime)}
                   value={endTime}
                   onChange={onEndTime}
+                  onClick={openPickerOnClick}
                   className='event-composer__input'
                 />
               </div>
-            </label>
+            </span>
           </div>
         </fieldset>
 
@@ -378,31 +420,30 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
             </legend>
             <label className='event-composer__field'>
               <span className='event-composer__field-label'>
-                {intl.formatMessage(messages.locationName)}
+                {intl.formatMessage(messages.address)}
               </span>
               <input
                 type='text'
                 value={locationName}
                 onChange={onLocationName}
-                placeholder={intl.formatMessage(
-                  messages.locationNamePlaceholder,
-                )}
+                placeholder={intl.formatMessage(messages.addressPlaceholder)}
                 className='event-composer__input'
               />
             </label>
             <label className='event-composer__field'>
               <span className='event-composer__field-label'>
-                {intl.formatMessage(messages.locationUrl)}
+                {intl.formatMessage(messages.mapLink)}
               </span>
               <input
                 type='url'
                 value={locationUrl}
                 onChange={onLocationUrl}
-                placeholder={intl.formatMessage(
-                  messages.locationUrlPlaceholder,
-                )}
+                placeholder={intl.formatMessage(messages.mapLinkPlaceholder)}
                 className='event-composer__input'
               />
+              <small className='event-composer__field-hint'>
+                {intl.formatMessage(messages.mapLinkHint)}
+              </small>
             </label>
           </fieldset>
         )}

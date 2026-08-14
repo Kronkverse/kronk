@@ -2202,6 +2202,12 @@ $ev-interested-color: #b8945f;
     font-weight: 500;
   }
 
+  &__field-hint {
+    color: var(--text-muted, var(--secondary-text-color));
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
   &__input {
     width: 100%;
     padding: 0.55rem 0.75rem;
