@@ -94,6 +94,7 @@ module Mastodon
           else
             say 'No drift detected.'
           end
+          print_standard_coverage
           exit(0) # rubocop:disable Rails/Exit -- tootctl CLI exit code is the CI signal
         end
 
@@ -103,10 +104,41 @@ module Mastodon
         summary += ", #{warnings.length} #{warnings.length == 1 ? 'warning' : 'warnings'}" if warnings.any?
         summary += '.'
         say summary
+        print_standard_coverage
         exit(1) # rubocop:disable Rails/Exit -- tootctl CLI exit code is the CI signal
       end
 
       private
+
+      # Printed on every doctor run so the Standard's layers are never
+      # invisible just because the doctor can't machine-check them. The
+      # failure this closes: the doctor only gates a subset (L1/L2/L3-4/L5/
+      # L6/L7/L10/L11-parasites/compose), so a clean run reads as "conforms
+      # to the whole Standard" when it only means "no detectable drift". This
+      # names every layer and points at where its spec lives — including the
+      # ones a human has to verify (settings pages, title PLACEMENT, primitive
+      # adoption). Deliberately advisory, like the doctor itself.
+      def print_standard_coverage
+        say ''
+        say "── Standard coverage #{'─' * 39}"
+        say 'The doctor gates the machine-checkable layers below. A clean run means'
+        say 'no detectable drift — NOT full conformance. Verify the rest by hand.'
+        say ''
+        say 'Full spec:  docs/korners/korner_standard.md'
+        say 'Primitives: docs/kronk_platform_primitives.md'
+        say ''
+        say 'Checked above:'
+        say '  L1 identity+manifest   L2 data+tables    L3/L4 feed card    L5 mount'
+        say '  L6 nodes+links         L7 SCSS governed  L10 notifications'
+        say '  L11 no chrome parasites (warn)    compose wraps <ComposeShell> (warn)'
+        say ''
+        say 'NOT machine-checkable — review against the spec section:'
+        say '  L8   settings page exists at /hub/<slug>/settings      korner_standard.md §L8'
+        say '  L9   model/projection spec, no phantom doc refs        §L9'
+        say '  L11  title/tagline PLACEMENT — sits at standard height  §L11 + docs/kronk_frame.md'
+        say '  L12  settings render in <Stage> at that same height    §L12'
+        say '  --   adopt the shared primitives, do not hand-roll     kronk_platform_primitives.md'
+      end
 
       def detect_drift(manifest)
         drift = []
