@@ -2305,6 +2305,26 @@ $ev-interested-color: #b8945f;
     font-size: 0.85rem;
   }
 
+  // Submit-blocker hint — the "why is Post it greyed out?" answer.
+  // Muted but clearly non-error (no red background). Sits at the
+  // bottom of the composer body next to the error slot so the user
+  // sees it whether they're scrolled to the top or bottom of the
+  // form. Aligned right so it reads as "attached to the submit
+  // button in the shell footer above/below it."
+  &__submit-hint {
+    margin: 0;
+    padding: 0.5rem 0.85rem;
+    border-radius: var(--radius-medium);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 10%,
+      transparent
+    );
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-align: right;
+  }
+
   // Pin-on-map row — sits under the map-link input field. Small
   // secondary button that opens `<MapPinPicker>`; once a pin is set,
   // a muted "Pinned at LAT, LNG" readout appears next to a Clear
