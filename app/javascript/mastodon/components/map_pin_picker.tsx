@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
@@ -14,23 +14,25 @@ import {
 } from 'mastodon/features/map_v2/basemap';
 
 // MapPinPicker — a portal-mounted picker overlay that shows the shared
-// Kronk basemap with a movable centre crosshair. On open the picker
-// asks the browser for the user's geolocation and centres/zooms
-// there; falling back to the AU-wide HOME_CENTER when permission is
-// denied. Clicking anywhere on the map re-centres the crosshair
-// there ("click to pin"); the user can still pan/zoom by hand. The
-// "Centre on me" button re-runs geolocation on demand. Same modal
-// grammar as `<ComposeShell>` / `<ConfirmDialog>` — portal, dim
-// backdrop, Escape + backdrop-click cancel — so opening the picker
-// from inside another shell reads as a related modal.
+// Kronk basemap with a movable centre crosshair. Three ways to place
+// the pin:
+//   1. Type in the search box (uses OSM's Nominatim geocoder — same
+//      data source Kronk's basemap is built from — to look up any
+//      named place, address, or landmark).
+//   2. "Centre on me" — browser geolocation eases the map to the
+//      user's current position at street-level zoom.
+//   3. Click / tap anywhere on the map — the crosshair moves there
+//      (zoom preserved).
+//
+// Same modal grammar as `<ComposeShell>` / `<ConfirmDialog>` —
+// portal, dim backdrop, Escape + backdrop-click cancel — so opening
+// the picker from inside another shell reads as a related modal.
 //
 // Known limitation (2026-08-14): the Kronk basemap deliberately
 // drops symbol (label) layers — no place / road / suburb names —
-// because rendering them needs externally-hosted glyphs. Fine for
-// the Treks lens; a real gap in a pin picker where "am I over
-// Melbourne or Sydney?" is the question. Geolocation + click-to-pin
-// works around it (if you're at the spot, you don't need labels to
-// find it). Labels are a follow-up call about glyph hosting.
+// because rendering them needs externally-hosted glyphs. The search
+// box + geolocation + click-to-pin cover the "how do I find
+// somewhere?" gap that would otherwise create.
 
 const messages = defineMessages({
   title: {
@@ -40,7 +42,7 @@ const messages = defineMessages({
   hint: {
     id: 'map_pin_picker.hint',
     defaultMessage:
-      'Click the map where you are, or drag to pan. Then tap Pin.',
+      'Search a place, use your current location, or tap the map.',
   },
   cancel: { id: 'map_pin_picker.cancel', defaultMessage: 'Cancel' },
   confirm: { id: 'map_pin_picker.confirm', defaultMessage: 'Pin here' },
@@ -51,6 +53,18 @@ const messages = defineMessages({
   centreOnMeBusy: {
     id: 'map_pin_picker.centre_on_me_busy',
     defaultMessage: 'Locating…',
+  },
+  searchPlaceholder: {
+    id: 'map_pin_picker.search_placeholder',
+    defaultMessage: 'Search a place, address, or landmark',
+  },
+  searching: {
+    id: 'map_pin_picker.searching',
+    defaultMessage: 'Searching…',
+  },
+  noResults: {
+    id: 'map_pin_picker.no_results',
+    defaultMessage: 'No matches. Try a different search.',
   },
 });
 
@@ -74,22 +88,38 @@ interface Props {
 // the pin is meaningless.
 const LOCAL_ZOOM = 14;
 
+// Nominatim's own recommendation: no more than 1 request per second
+// per client. Debouncing at 400ms typing pause + only firing on
+// meaningful input keeps us well under.
+const SEARCH_DEBOUNCE_MS = 400;
+const SEARCH_MIN_LENGTH = 3;
+const SEARCH_LIMIT = 6;
+const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
+
+interface NominatimResult {
+  lat: string;
+  lon: string;
+  display_name: string;
+  place_id: number;
+}
+
 export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
   const intl = useIntl();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [locating, setLocating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<NominatimResult[] | null>(
+    null,
+  );
+  const [searching, setSearching] = useState(false);
+  const [resultsOpen, setResultsOpen] = useState(false);
 
-  // Ask the browser for the user's position and centre the map on it.
-  // Silent on failure — the map already has a fallback centre and the
-  // user can pan/click to pin manually. Kept as a stable callback so
-  // the "Centre on me" button + the on-open effect share it.
   const centreOnMe = useCallback(() => {
     const map = mapRef.current;
     // Navigator.geolocation is always defined per the DOM types; the
     // error callback below handles the case where the user denies
-    // permission or the request times out (or a very old browser
-    // doesn't actually implement it).
+    // permission or the request times out.
     if (!map) return;
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
@@ -158,15 +188,7 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
 
     mapRef.current = map;
 
-    // Only geolocate on the first open when the caller didn't hand us
-    // an `initial` pin (an already-pinned location wins over "where am
-    // I now"). Wait for the style to be ready so the eased camera
-    // animates against real tiles.
     if (!initial) {
-      // `map.once` returns a Promise in the newer MapLibre types when
-      // no callback is passed, but with a callback it registers a
-      // one-time listener; explicit `void` keeps the floating-promise
-      // rule quiet without changing behaviour.
       void map.once('load', centreOnMe);
     }
 
@@ -176,12 +198,148 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
     };
   }, [initial, centreOnMe]);
 
+  // Debounced geocoder query. Fires SEARCH_DEBOUNCE_MS after typing
+  // stops when the query is long enough to be meaningful. Uses
+  // Nominatim (OSM's public geocoder) — same data source as the
+  // basemap — so results are consistent with what the map shows.
+  // Aborts an in-flight request when the query changes so late
+  // responses don't clobber the latest results.
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length < SEARCH_MIN_LENGTH) {
+      setSearchResults(null);
+      setSearching(false);
+      return;
+    }
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setSearching(true);
+      const url = `${NOMINATIM_URL}?q=${encodeURIComponent(trimmed)}&format=json&limit=${SEARCH_LIMIT}&addressdetails=0`;
+      fetch(url, {
+        signal: controller.signal,
+        headers: { Accept: 'application/json' },
+      })
+        .then((r) => r.json() as Promise<NominatimResult[]>)
+        .then((data) => {
+          setSearchResults(data);
+          setSearching(false);
+          setResultsOpen(true);
+        })
+        .catch((e: unknown) => {
+          if (e instanceof DOMException && e.name === 'AbortError') return;
+          setSearchResults([]);
+          setSearching(false);
+        });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [searchQuery]);
+
+  const onSearchChange = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((e) => {
+    setSearchQuery(e.target.value);
+    setResultsOpen(true);
+  }, []);
+
+  const onSearchFocus = useCallback(() => {
+    if (searchResults && searchResults.length > 0) setResultsOpen(true);
+  }, [searchResults]);
+
+  const pickResult = useCallback((r: NominatimResult) => {
+    const map = mapRef.current;
+    if (!map) return;
+    const lat = parseFloat(r.lat);
+    const lng = parseFloat(r.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    map.easeTo({ center: [lng, lat], zoom: LOCAL_ZOOM, duration: 600 });
+    setResultsOpen(false);
+  }, []);
+
+  const handleResultClick = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >(
+    (e) => {
+      const idx = Number(e.currentTarget.dataset.idx);
+      if (!Number.isFinite(idx)) return;
+      const r = searchResults?.[idx];
+      if (r) pickResult(r);
+    },
+    [searchResults, pickResult],
+  );
+
+  const handleSearchKey = useCallback<
+    React.KeyboardEventHandler<HTMLInputElement>
+  >(
+    (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const first = searchResults?.[0];
+        if (first) pickResult(first);
+      } else if (e.key === 'Escape') {
+        // Let Escape close the results dropdown before it closes the
+        // picker — matches the standard "one Escape = one dismissal"
+        // pattern users expect from search dropdowns.
+        if (resultsOpen) {
+          e.stopPropagation();
+          setResultsOpen(false);
+        }
+      }
+    },
+    [searchResults, resultsOpen, pickResult],
+  );
+
   const handlePin = useCallback(() => {
     const map = mapRef.current;
     if (!map) return;
     const centre = map.getCenter();
     onPin({ lng: centre.lng, lat: centre.lat, zoom: map.getZoom() });
   }, [onPin]);
+
+  const dropdown = useMemo(() => {
+    if (!resultsOpen) return null;
+    if (searching) {
+      return (
+        <div
+          className='map-pin-picker__results map-pin-picker__results--state'
+          role='listbox'
+        >
+          <FormattedMessage {...messages.searching} />
+        </div>
+      );
+    }
+    if (searchResults === null) return null;
+    if (searchResults.length === 0) {
+      return (
+        <div
+          className='map-pin-picker__results map-pin-picker__results--state'
+          role='listbox'
+        >
+          <FormattedMessage {...messages.noResults} />
+        </div>
+      );
+    }
+    return (
+      <ul className='map-pin-picker__results' role='listbox'>
+        {searchResults.map((r, i) => (
+          <li key={r.place_id} role='none'>
+            <button
+              type='button'
+              role='option'
+              aria-selected='false'
+              className='map-pin-picker__result'
+              data-idx={i}
+              onClick={handleResultClick}
+            >
+              {r.display_name}
+            </button>
+          </li>
+        ))}
+      </ul>
+    );
+  }, [resultsOpen, searching, searchResults, handleResultClick]);
 
   return createPortal(
     <div
@@ -204,6 +362,20 @@ export const MapPinPicker: React.FC<Props> = ({ initial, onCancel, onPin }) => {
           <p className='map-pin-picker__hint'>
             <FormattedMessage {...messages.hint} />
           </p>
+          <div className='map-pin-picker__search'>
+            <input
+              type='search'
+              className='map-pin-picker__search-input'
+              value={searchQuery}
+              onChange={onSearchChange}
+              onFocus={onSearchFocus}
+              onKeyDown={handleSearchKey}
+              placeholder={intl.formatMessage(messages.searchPlaceholder)}
+              aria-label={intl.formatMessage(messages.searchPlaceholder)}
+              autoComplete='off'
+            />
+            {dropdown}
+          </div>
         </header>
         <div className='map-pin-picker__map' ref={containerRef}>
           <span className='map-pin-picker__crosshair' aria-hidden='true' />
