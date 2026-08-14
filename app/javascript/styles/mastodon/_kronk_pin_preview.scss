@@ -1,0 +1,47 @@
+@use 'variables' as *;
+
+// MapPinPreview — read-only mini-map used in the event composer
+// (and later on the event detail page) to preview a pinned location.
+// See `components/map_pin_preview.tsx`. Fixed 16:9 aspect so the
+// preview reads as "a map thumbnail" rather than a full interactive
+// canvas; the pin dot sits on the fixed centre.
+
+.map-pin-preview {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+  background: var(--surface-elevated);
+
+  &__map {
+    position: absolute;
+    inset: 0;
+
+    .maplibregl-map {
+      position: absolute;
+      inset: 0;
+    }
+  }
+
+  // Pin dot — same visual language as `<MapPinPicker>`'s crosshair /
+  // centre ring, scaled down since this preview is a thumbnail.
+  // pointer-events off so the MapLibre canvas underneath still
+  // receives whatever the parent decides to do with it (in a preview,
+  // nothing — the map is `interactive: false`).
+  &__pin {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    border-radius: 50%;
+    background: var(--kronk-purple-bright);
+    border: 2px solid #fff;
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 70%),
+      0 0 8px rgb(0 0 0 / 50%);
+    pointer-events: none;
+    z-index: 2;
+  }
+}

@@ -2515,4 +2515,10 @@ $ev-interested-color: #b8945f;
       color: var(--text-primary);
     }
   }
+
+  // Composer-scoped MapPinPreview — small top margin so the
+  // thumbnail floats below the pin coords/clear row.
+  &__pin-preview {
+    margin-top: 0.5rem;
+  }
 }

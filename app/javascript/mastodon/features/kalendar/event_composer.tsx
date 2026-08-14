@@ -8,6 +8,7 @@ import api from 'mastodon/api';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { MapPinPicker } from 'mastodon/components/map_pin_picker';
 import type { PinnedLocation } from 'mastodon/components/map_pin_picker';
+import { MapPinPreview } from 'mastodon/components/map_pin_preview';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 
@@ -781,6 +782,20 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
                   </>
                 )}
               </div>
+              {pinnedLocation && (
+                // Re-key on lat/lng so a new pin remounts the preview
+                // — MapPinPreview intentionally doesn't `easeTo` on
+                // prop change (see its comment about avoiding subtle
+                // animations); remount is the explicit "show a new
+                // pin" trigger.
+                <MapPinPreview
+                  key={`${pinnedLocation.lat},${pinnedLocation.lng}`}
+                  lng={pinnedLocation.lng}
+                  lat={pinnedLocation.lat}
+                  zoom={pinnedLocation.zoom}
+                  className='event-composer__pin-preview'
+                />
+              )}
             </label>
           </fieldset>
         )}
