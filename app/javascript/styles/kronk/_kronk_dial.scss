@@ -74,30 +74,39 @@
 }
 
 // Volvelle ring bands — layered filled circles that read as
-// concentric physical discs. Outer band is slightly darker, inner
-// band slightly lighter, so the wheel steps down in tone as you
-// move outward — mimics a paper/brass volvelle with tinted layers.
-// Each ring carries a subtle purple-tinted stroke as its visible
-// boundary, so the rings read as three discrete surfaces even
-// against the dark Kosmos background.
+// concentric physical discs, each stepping UP in brightness as you
+// move outward (the first pass mixed with kronk-purple-DEEP which
+// left the discs indistinguishable from the Kosmos background;
+// swapped to kronk-purple-ACCENT so the discs read as tinted
+// surface, not void). Each ring carries a brighter purple stroke as
+// its visible boundary.
 .kronk-dial__ring-outer {
   fill: color-mix(
     in oklab,
-    var(--surface-primary) 65%,
-    var(--kronk-purple-deep)
+    var(--surface-elevated) 72%,
+    var(--kronk-purple-accent)
   );
-  stroke: color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent);
-  stroke-width: 0.9;
+  stroke: color-mix(in oklab, var(--kronk-purple-accent) 70%, transparent);
+  stroke-width: 1;
 }
 
 .kronk-dial__ring-inner {
   fill: color-mix(
     in oklab,
-    var(--surface-elevated) 75%,
-    var(--kronk-purple-deep)
+    var(--surface-elevated) 55%,
+    var(--kronk-purple-accent)
   );
-  stroke: color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent);
-  stroke-width: 0.8;
+  stroke: color-mix(in oklab, var(--kronk-purple-accent) 70%, transparent);
+  stroke-width: 0.9;
+}
+
+// Hit region — invisible annulus per rotating ring so pointer-drag
+// registers anywhere on the band, not just on the painted geometry
+// of labels / bubbles. `pointer-events: all` fires on transparent
+// fills too (unlike `visible*` variants that need painted pixels).
+.kronk-dial__hit-region {
+  fill: transparent;
+  pointer-events: all;
 }
 
 // Fine dial-face pips — uniform ring near the inner edge of the

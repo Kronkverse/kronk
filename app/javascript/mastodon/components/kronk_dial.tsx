@@ -92,30 +92,33 @@ const VIEW_BOX = 200;
 // Volvelle geometry — three concentric discs plus a central pivot,
 // each with a visible boundary so the whole thing reads as a stack
 // of rotating rings (Tal 2026-08-14: "this is a volvelle, we want
-// that to be obvious"). Radii below define the shared physical
-// boundaries between rings; the ring FILLS use these to draw
-// annular bands (layered filled circles: outermost first, each
-// smaller one paints over the last's interior).
+// that to be obvious"). Radii define the shared physical boundaries
+// between rings; the ring FILLS use these to draw annular bands
+// (layered filled circles: outermost first, each smaller one paints
+// over the last's interior).
+//
+// Outer band widened 2026-08-15 (from 62-88 to 58-92) so upright
+// labels fit inside horizontally — the tangent-labels approach made
+// bottom-half labels flip, which read as jitter during rotation.
 const R_HUB = 30; // centre pivot: 0..R_HUB
-const R_INNER_RING_OUTER = 62; // inner ring band: R_HUB..R_INNER_RING_OUTER
-const R_OUTER_RING_OUTER = 88; // outer ring band: R_INNER_RING_OUTER..R_OUTER_RING_OUTER
+const R_INNER_RING_OUTER = 58; // inner ring band: R_HUB..R_INNER_RING_OUTER
+const R_OUTER_RING_OUTER = 92; // outer ring band: R_INNER_RING_OUTER..R_OUTER_RING_OUTER
 
 // Content radii inside the rings — bubbles centred in the inner
-// band, labels near the outer edge of the outer band, dividers
-// spanning the outer band's full width, fine pips near its inner
-// edge so labels have room.
-const R_INNER_BUBBLE = 47; // centre of each inner-ring bubble (inside inner band)
+// band, labels centred in the outer band, dividers spanning the
+// outer band's full width, fine pips near its inner edge.
+const R_INNER_BUBBLE = 44; // centre of each inner-ring bubble (inside inner band)
 const BUBBLE_R = 12;
 const BUBBLE_R_ACTIVE = 14;
-const R_OUTER_LABEL = 80; // label baseline (inside outer band)
-const R_OUTER_TICK_START = 63; // slice divider inner (just inside outer band)
-const R_OUTER_TICK_END = 87; // slice divider outer (just inside outer band edge)
+const R_OUTER_LABEL = 76; // label centre (mid-band 58→92)
+const R_OUTER_TICK_START = 59; // slice divider inner (just inside outer band)
+const R_OUTER_TICK_END = 91; // slice divider outer (just inside outer band edge)
 
 // Fine dial-face pips (uniform ring of small ticks — the "compass"
 // texture behind the labelled slices).
 const DIAL_FACE_TICKS = 72; // one every 5°
-const R_FACE_TICK_INNER = 65;
-const R_FACE_TICK_OUTER = 70;
+const R_FACE_TICK_INNER = 61;
+const R_FACE_TICK_OUTER = 65;
 
 // The wedge selector — a pie slice at 3 o'clock that spans BOTH ring
 // bands (from just outside the hub out to the outer perimeter), so
@@ -123,9 +126,28 @@ const R_FACE_TICK_OUTER = 70;
 // callout ("Essays / 94") emerges from the wedge tip in the fixed
 // overlay just past the perimeter.
 const R_WEDGE_INNER = 30;
-const R_WEDGE_OUTER = 88;
-const R_CALLOUT_LABEL = 94;
-const R_CALLOUT_COUNT = 94;
+const R_WEDGE_OUTER = 92;
+const R_CALLOUT_LABEL = 98;
+const R_CALLOUT_COUNT = 98;
+
+// Hit-region annulus paths — invisible transparent-fill shapes
+// with `pointer-events: all`, one per rotating ring, so drag
+// registers anywhere on the ring band (not just on the painted
+// label / bubble geometry). Composed via even-odd fill-rule: a
+// path with an outer circle followed by an inner circle "carves"
+// a ring shape whose interior counts as hit. Tal 2026-08-14: "drag
+// only works on the words or icons, not the empty space".
+const annulusPath = (rOuter: number, rInner: number): string =>
+  [
+    `M ${rOuter} 0`,
+    `A ${rOuter} ${rOuter} 0 1 1 ${-rOuter} 0`,
+    `A ${rOuter} ${rOuter} 0 1 1 ${rOuter} 0`,
+    'Z',
+    `M ${rInner} 0`,
+    `A ${rInner} ${rInner} 0 1 1 ${-rInner} 0`,
+    `A ${rInner} ${rInner} 0 1 1 ${rInner} 0`,
+    'Z',
+  ].join(' ');
 
 // Snap-back animation duration (drag release → nearest slice).
 const SNAP_MS = 260;
@@ -496,6 +518,18 @@ export const KronkDial: React.FC<Props> = ({
           onPointerUp={settleDrag}
           onPointerCancel={settleDrag}
         >
+          {/* Hit region — invisible annulus spanning the whole outer
+              band so drag registers anywhere on it (empty gaps,
+              labels, dividers). Without this, SVG only hit-tests the
+              painted geometry — narrow ticks and thin dividers —
+              which felt "sticky" on any empty space between labels. */}
+          <path
+            d={annulusPath(R_OUTER_RING_OUTER, R_INNER_RING_OUTER)}
+            className='kronk-dial__hit-region'
+            fillRule='evenodd'
+            aria-hidden='true'
+          />
+
           {/* Fine dial-face pips — full compass ring of uniform ticks
               that reads as texture behind the labelled slices.
               Rotates with the wheel so the whole dial face spins as
@@ -530,18 +564,16 @@ export const KronkDial: React.FC<Props> = ({
             />
           ))}
 
-          {/* Labels — TANGENT to the ring (rotate 90° so baseline runs
-              perpendicular to radial). Bottom-half labels get an extra
-              180° flip so glyph tops always point roughly upward — the
-              standard "readable-around-a-dial" trick. The active slice
-              is skipped here: its label + count appear externally at
-              the wedge tip in the fixed overlay below, following the
-              mockup Tal designed (2026-08-14). */}
+          {/* Labels — UPRIGHT (horizontal in world space). Sit inside
+              the widened outer band; each rotates to its slot then
+              counter-rotates by the full wheel angle so the text
+              stays horizontal regardless of wheel spin (Tal
+              2026-08-15: "words fit within the ring, horizontally").
+              Active slice's label is rendered externally at the
+              wedge tip in the fixed overlay — skipped here. */}
           {outerSlices.map(({ slice, angle, index }) => {
             if (index === outerIndex) return null;
-            const worldAngle = normDeg(outerRotation + angle);
-            const bottomHalf = worldAngle > 0 && worldAngle < 180;
-            const tangentRotation = bottomHalf ? 270 : 90;
+            const uprightRotation = -(outerRotation + angle);
             return (
               <g
                 key={`label-${slice.key}`}
@@ -549,7 +581,7 @@ export const KronkDial: React.FC<Props> = ({
                 transform={`rotate(${angle.toFixed(3)})`}
               >
                 <g
-                  transform={`translate(${R_OUTER_LABEL} 0) rotate(${tangentRotation})`}
+                  transform={`translate(${R_OUTER_LABEL} 0) rotate(${uprightRotation.toFixed(3)})`}
                 >
                   <text
                     className='kronk-dial__outer-label'
@@ -585,6 +617,15 @@ export const KronkDial: React.FC<Props> = ({
             onPointerUp={settleDrag}
             onPointerCancel={settleDrag}
           >
+            {/* Hit region — same trick as the outer ring; drag
+                anywhere on the inner band (bubbles OR the gaps
+                between them) triggers rotation. */}
+            <path
+              d={annulusPath(R_INNER_RING_OUTER, R_HUB)}
+              className='kronk-dial__hit-region'
+              fillRule='evenodd'
+              aria-hidden='true'
+            />
             {innerBubbles.map(({ bubble, angle, index }) => {
               const isActive = index === innerIndex;
               const BubbleIcon = bubble.Icon;
