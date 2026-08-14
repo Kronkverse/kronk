@@ -48,6 +48,30 @@ class Event < ApplicationRecord
   scope :not_cancelled, -> { where(cancelled: false) }
   scope :root_events, -> { where(parent_event_id: nil) }
 
+  # SQL-side counterpart to Event#visible_to? for list queries
+  # (e.g. `EventsController#index`). Anonymous callers get nothing —
+  # every read endpoint requires a login anyway. Row-level rule:
+  #
+  #   NOT invite_only  → visible (author + status-reach check
+  #                      handled at row rendering time, if we ever
+  #                      tighten non-invite-only reads)
+  #   invite_only      → visible iff caller is author OR has an
+  #                      invitation row
+  #
+  # The subquery on event_invitations avoids materialising a join
+  # (LEFT OUTER + DISTINCT would work but is slower on Postgres for
+  # events with a lot of invitees).
+  scope :visible_to, lambda { |account|
+    return none if account.nil?
+
+    invited_event_ids = EventInvitation.where(account: account).select(:event_id)
+    where(invite_only: false).or(
+      where(account: account)
+    ).or(
+      where(id: invited_event_ids)
+    )
+  }
+
   after_create_commit :publish_kalendar_event_created
 
   # kalendar.event.created — declared under Kalendar's `emits:` in the
@@ -86,6 +110,34 @@ class Event < ApplicationRecord
 
   def invited?(account)
     invitations.exists?(account: account)
+  end
+
+  # Access rule (Tal 2026-08-14: "Events should have the option to
+  # be only visible to those who are invited, private events
+  # essentially"):
+  #
+  # - Author can always see their own event.
+  # - Invitees (anyone in `event_invitations`) can always see the
+  #   event, regardless of the reach on its associated Status.
+  # - When `invite_only` is set, those two are the ONLY viewers —
+  #   the underlying Status is `self_only`, so nothing fans out to
+  #   feeds; the event is discovered via the invitation nudge.
+  # - When `invite_only` is not set, non-author non-invitee viewers
+  #   fall back to whatever the Status permits. If there's no
+  #   Status (e.g. `post_to_feed=false` was passed on create), the
+  #   event is effectively author + invitees only, same as
+  #   invite_only.
+  #
+  # Anonymous access is off — every event endpoint requires a login
+  # (see EventsController#require_user!).
+  def visible_to?(account)
+    return false if account.nil?
+    return true if account_id == account.id
+    return true if invited?(account)
+    return false if invite_only?
+    return false if status.nil?
+
+    StatusPolicy.new(account, status).show?
   end
 
   def recurring?

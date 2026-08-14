@@ -5,9 +5,17 @@ class Api::V1::EventsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy, :rsvp, :invite]
   before_action :require_user!
   before_action :set_event, except: [:index, :create]
+  # Enforce Event#visible_to? on every non-index read + on RSVP.
+  # `rsvp` needs the check too — otherwise a non-invitee arriving at
+  # `POST /events/:id/rsvp` could shove themselves into a private
+  # event. Owner-only actions (`update`, `destroy`, `invite`,
+  # `my_invitees`) already gate through `authorize_event_owner!`,
+  # which is a stricter check than `visible_to?` — no double-gate
+  # needed there.
+  before_action :authorize_event_visible!, only: [:show, :attendees, :rsvp]
 
   def index
-    @events = filtered_events.includes(:account, :image, :status).limit(40)
+    @events = filtered_events.visible_to(current_account).includes(:account, :image, :status).limit(40)
     render json: @events, each_serializer: REST::EventSerializer
   end
 
@@ -112,6 +120,13 @@ class Api::V1::EventsController < Api::BaseController
     raise Mastodon::NotPermittedError unless @event.account_id == current_account.id
   end
 
+  # Read gate for `show` / `attendees` / `rsvp`. `visible_to?` is the
+  # single source of truth (author + invitees + Status reach when
+  # not invite_only) — see Event#visible_to? for the rule.
+  def authorize_event_visible!
+    raise Mastodon::NotPermittedError unless @event.visible_to?(current_account)
+  end
+
   def set_image!
     @event.image = current_account.media_attachments.find(params[:image_id])
   end
@@ -121,7 +136,7 @@ class Api::V1::EventsController < Api::BaseController
       :title, :description, :start_time, :end_time,
       :location_name, :location_url, :event_type,
       :rsvp_enabled, :max_attendees, :recurrence_rule,
-      :spawn_album
+      :spawn_album, :invite_only
     )
   end
 
@@ -143,7 +158,18 @@ class Api::V1::EventsController < Api::BaseController
   def create_status_for_event!(event)
     status_text = event.title
 
-    visibility = params[:visibility] || current_account.user&.setting_default_privacy || 'public'
+    # invite_only events force `self_only` on the underlying Status
+    # so nothing fans out to feeds — access is gated by
+    # Event#visible_to? via the invitations join table, not by
+    # StatusPolicy on the timeline. Non-invite-only events use the
+    # caller's requested visibility, falling back to their default
+    # privacy setting or 'public' (Kronkverse — the platform is
+    # unfederated so 'public' means the whole Kronk instance).
+    visibility = if event.invite_only?
+                   'self_only'
+                 else
+                   params[:visibility] || current_account.user&.setting_default_privacy || 'public'
+                 end
 
     @status = PostStatusService.new.call(
       current_account,
