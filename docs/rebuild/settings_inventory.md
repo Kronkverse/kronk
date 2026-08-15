@@ -52,11 +52,12 @@ Ordered by how much is lost.
    surface to Rails until a Kronk one is built. This is the largest single
    piece of the settings job.
 3. **Profile identity fields** — display name, bio, avatar, header, metadata
-   fields, bot flag. All classic-only. The `profile.edit` node is
-   `lifecycle: live` at `/@:user/edit`, but `features/profile_compose/`
-   renders `profile_compose.header_stub`: _"Cover image, avatar and display
-   name — editing lands in the next step."_ **The registry advertises a live
-   surface that cannot do the thing it names.**
+   fields. **Resolved:** the SPA identity editor (display name, bio, avatar,
+   header, fields) now lives in Arrange mode on the shelved profile
+   (`features/profile_shelves/components/identity_editor.tsx`). The standalone
+   `features/profile_compose/` composer was retired; `/@:user/edit` redirects
+   to `/@:user/shelves`. The `profile.edit` node stays `lifecycle: live` and
+   now genuinely resolves to a working editor.
 4. **`default_quote_policy`** — now in the API: it is present in
    `PostingController::FIELDS` (an enum of `public|followers|nobody`) and
    serialized in the controller's payload. What the API still does **not**

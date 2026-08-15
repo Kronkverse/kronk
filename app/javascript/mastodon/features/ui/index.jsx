@@ -118,7 +118,6 @@ import {
   Albutts,
   Art,
   KornerSettings,
-  ProfileCompose,
   FeedSettings,
   Connections,
   StyleGuide,
@@ -437,7 +436,10 @@ class SwitchingColumnsArea extends PureComponent {
                 remains available at /@:acct/posts for people who prefer
                 the flat feed. */}
             <WrappedRoute path={['/@:acct', '/accounts/:id']} exact component={ProfileShelves} content={children} />
-            {signedIn && <WrappedRoute path='/@:acct/edit' exact component={ProfileCompose} content={children} />}
+            {/* The standalone /@:acct/edit composer is retired — identity
+                editing is now Arrange mode on the shelved profile. Bounce
+                old /edit links (and the settings-nav entry) to it. */}
+            <Redirect from='/@:acct/edit' to='/@:acct/shelves' exact />
             <WrappedRoute path={['/@:acct/posts', '/accounts/:id/posts']} component={AccountTimeline} content={children} />
             <WrappedRoute path={['/@:acct/featured', '/accounts/:id/featured']} component={AccountFeatured} content={children} />
             <WrappedRoute path='/@:acct/tagged/:tagged?' exact component={AccountTimeline} content={children} />

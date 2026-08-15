@@ -376,10 +376,6 @@ export function KornerSettings () {
   return import("../../korner_settings").then(m => ({ default: m.KornerSettings }));
 }
 
-export function ProfileCompose () {
-  return import("../../profile_compose").then(m => ({ default: m.ProfileCompose }));
-}
-
 export function FeedSettings () {
   return import("../../feed_settings").then(m => ({ default: m.FeedSettings }));
 }

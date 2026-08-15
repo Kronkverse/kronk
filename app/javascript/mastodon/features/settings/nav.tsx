@@ -178,11 +178,12 @@ export const useSettingsSections = (): SectionDef[] => {
 
     let to: string | undefined;
     if (node.lifecycle === 'live') {
-      // Profile "settings" is the composer (owner-only /@:acct/edit).
+      // Editing your profile is Arrange mode on your shelved profile
+      // (owner-only). The standalone /@:acct/edit composer was retired.
       to =
         p.id === 'settings.profile'
           ? myAcct
-            ? `/@${myAcct}/edit`
+            ? `/@${myAcct}/shelves`
             : undefined
           : node.url;
     }

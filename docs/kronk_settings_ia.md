@@ -52,7 +52,7 @@ What reaches you, and what you filter out.
 
 Your identity, what you publish, and your account — all the "about me and my app" settings, as **sections** of one surface.
 
-- **Composer** — display name, bio, avatar, header, fields, **sections** (`/@:acct/edit`) · **built**
+- **Identity editor** — display name, bio, avatar, header, fields, **sections** — folded into Arrange mode on the shelved profile (`/@:acct/shelves`); the standalone `/@:acct/edit` composer was retired · **built**
 - **Posting defaults** — visibility, language, sensitive-by-default, quote policy · **built as a standalone Posting section (Slice A); target: a section here**
 - **Discoverability** — searchable, suggest-to-others, index by search engines · outgoing projection
 - **Account & Security** — email, password, 2FA, sessions, login activity, authorized apps, aliases, migration, deactivate/delete · **classic monolith** (folds in)
