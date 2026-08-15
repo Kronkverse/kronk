@@ -20,7 +20,10 @@ class BoothSet < ApplicationRecord
   end
 
   belongs_to :account
-  belongs_to :event, optional: true
+  # `belongs_to :event` retired 2026-08-15 alongside the
+  # `booth_sets.event_id` FK drop (Phase 5b). The Kalendar → Booth
+  # link now lives on `korner_attachments` — look up the source event
+  # via `KornerAttachment.to_target('booth', id).where(kind: 'link').first&.source_record`.
   belongs_to :audio_attachment, class_name: 'MediaAttachment', optional: true
   belongs_to :cover_attachment, class_name: 'MediaAttachment', optional: true
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :booth_set

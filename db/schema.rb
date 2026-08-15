@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_15_041537) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_15_044339) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -405,13 +405,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_15_041537) do
     t.datetime "updated_at", null: false
     t.string "genres", default: [], null: false, array: true
     t.integer "cover_offset_y", default: 50, null: false
-    t.bigint "event_id"
     t.bigint "shared_status_id"
     t.bigint "status_id"
     t.index ["account_id"], name: "index_booth_sets_on_account_id"
     t.index ["audio_attachment_id"], name: "index_booth_sets_on_audio_attachment_id"
     t.index ["cover_attachment_id"], name: "index_booth_sets_on_cover_attachment_id"
-    t.index ["event_id"], name: "index_booth_sets_on_event_id"
     t.index ["shared_status_id"], name: "index_booth_sets_on_shared_status_id", unique: true
     t.index ["status_id"], name: "index_booth_sets_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
   end
@@ -2206,7 +2204,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_15_041537) do
   add_foreign_key "bookmarks", "accounts", on_delete: :cascade
   add_foreign_key "bookmarks", "statuses", on_delete: :cascade
   add_foreign_key "booth_sets", "accounts", on_delete: :cascade
-  add_foreign_key "booth_sets", "events"
   add_foreign_key "booth_sets", "media_attachments", column: "audio_attachment_id", on_delete: :nullify
   add_foreign_key "booth_sets", "media_attachments", column: "cover_attachment_id", on_delete: :nullify
   add_foreign_key "budget_items", "proposals", on_delete: :cascade, validate: false
