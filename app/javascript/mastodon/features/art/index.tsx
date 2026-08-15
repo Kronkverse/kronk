@@ -4,21 +4,27 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import AppsIcon from '@/material-icons/400-24px/apps.svg?react';
 import ArticleIcon from '@/material-icons/400-24px/article-fill.svg?react';
-import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
 import MicIcon from '@/material-icons/400-24px/mic.svg?react';
+import MusicNoteIcon from '@/material-icons/400-24px/music_note-fill.svg?react';
 import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library-fill.svg?react';
 import type { DialBubble, DialSlice } from 'mastodon/components/kronk_dial';
 import { KronkDial } from 'mastodon/components/kronk_dial';
 import { Stage } from 'mastodon/components/stage';
 
-// Art korner landing — scaffold. Renders the concentric dial
-// (kronk_dial) with placeholder slices so Tal can iterate on the
-// picker shape before we decide whether Art is one korner with many
-// disciplines or an umbrella that reuses the dial across per-
-// discipline korners (2026-08-14 screencast).
+// Art korner landing — scaffold. Renders the concentric volvelle
+// (kronk_dial) with placeholder data organised as MEDIA: each inner
+// ring bubble is a discipline "house" (Writing, Photography, Music,
+// Voice, Gallery) and carries its own set of outer-ring slices +
+// its own crumb ("WRITING · THE LIBRARY"). Rotating the inner ring
+// picks a house; the outer ring re-populates with THAT house's
+// shelves. The callout below reads the two coordinates together.
+//
+// Tal 2026-08-15: "when I switch to a different inner ring, the
+// outer ring stays the same? clearly it should change." The two
+// rings weren't independent axes — the outer's content depends on
+// the current inner slice.
 //
 // No content plumbing yet — drags rotate the wheel and update the
 // "shown" callout below, but there's no piece grid underneath. That
@@ -28,61 +34,120 @@ const messages = defineMessages({
   title: { id: 'art.title', defaultMessage: 'Art' },
   outerAria: {
     id: 'art.dial.outer_aria',
-    defaultMessage: 'Choose a medium',
+    defaultMessage: 'Choose a shelf within this house',
   },
   innerAria: {
     id: 'art.dial.inner_aria',
-    defaultMessage: 'Choose a view',
+    defaultMessage: 'Choose a house',
   },
   centerAction: {
     id: 'art.dial.center_action',
     defaultMessage: 'Scroll to the content below',
   },
-  toBrowse: { id: 'art.to_browse', defaultMessage: '{count} to browse' },
 });
 
-// Placeholder slices — mirror the "Writing · The Library" set Tal's
-// screencast showed. Real slices will come from a manifest / API
-// once the shape is settled.
-const SAMPLE_OUTER: DialSlice[] = [
-  { key: 'journals', label: 'Journals', count: 26 },
-  { key: 'chapters', label: 'Chapters', count: 121 },
-  { key: 'poems', label: 'Poems', count: 55 },
-  { key: 'essays', label: 'Essays', count: 94 },
-  { key: 'volumes', label: 'Volumes', count: 11 },
-  { key: 'authors', label: 'Authors', count: 24 },
-  { key: 'letters', label: 'Letters', count: 19 },
+// A "house" — one inner-ring bubble + its associated outer-ring
+// shelves + the crumb that reads above the active shelf label.
+interface ArtHouse {
+  bubble: DialBubble;
+  crumb: string;
+  slices: DialSlice[];
+}
+
+const HOUSES: ArtHouse[] = [
+  {
+    bubble: { key: 'writing', label: 'Writing', Icon: ArticleIcon },
+    crumb: 'WRITING · THE LIBRARY',
+    slices: [
+      { key: 'journals', label: 'Journals' },
+      { key: 'chapters', label: 'Chapters' },
+      { key: 'poems', label: 'Poems' },
+      { key: 'essays', label: 'Essays' },
+      { key: 'volumes', label: 'Volumes' },
+      { key: 'authors', label: 'Authors' },
+      { key: 'letters', label: 'Letters' },
+    ],
+  },
+  {
+    bubble: { key: 'photography', label: 'Photography', Icon: PhotoCameraIcon },
+    crumb: 'PHOTOGRAPHY · THE DARKROOM',
+    slices: [
+      { key: 'rolls', label: 'Rolls' },
+      { key: 'frames', label: 'Frames' },
+      { key: 'series', label: 'Series' },
+      { key: 'photographers', label: 'Photographers' },
+      { key: 'prints', label: 'Prints' },
+    ],
+  },
+  {
+    bubble: { key: 'music', label: 'Music', Icon: MusicNoteIcon },
+    crumb: 'MUSIC · THE STUDIO',
+    slices: [
+      { key: 'tracks', label: 'Tracks' },
+      { key: 'albums', label: 'Albums' },
+      { key: 'sessions', label: 'Sessions' },
+      { key: 'composers', label: 'Composers' },
+      { key: 'sets', label: 'Sets' },
+    ],
+  },
+  {
+    bubble: { key: 'voice', label: 'Voice', Icon: MicIcon },
+    crumb: 'VOICE · THE ROUNDTABLE',
+    slices: [
+      { key: 'readings', label: 'Readings' },
+      { key: 'voices', label: 'Voices' },
+      { key: 'threads', label: 'Threads' },
+      { key: 'talks', label: 'Talks' },
+    ],
+  },
+  {
+    bubble: { key: 'gallery', label: 'Gallery', Icon: PhotoLibraryIcon },
+    crumb: 'VISUAL ART · THE GALLERY',
+    slices: [
+      { key: 'pieces', label: 'Pieces' },
+      { key: 'series', label: 'Series' },
+      { key: 'studies', label: 'Studies' },
+      { key: 'artists', label: 'Artists' },
+    ],
+  },
 ];
 
-// Placeholder lens bubbles — one per Kronk creative medium so the
-// inner ring reads as "how you're looking at it" rather than "what
-// the thing is". Uses icons the repo already ships (palette / brush
-// aren't in the material set yet).
-const SAMPLE_INNER: DialBubble[] = [
-  { key: 'grid', label: 'Grid', Icon: AppsIcon },
-  { key: 'waveform', label: 'Waveform', Icon: BarChartIcon },
-  { key: 'article', label: 'Article', Icon: ArticleIcon },
-  { key: 'gallery', label: 'Gallery', Icon: PhotoLibraryIcon },
-  { key: 'camera', label: 'Camera', Icon: PhotoCameraIcon },
-  { key: 'voice', label: 'Voice', Icon: MicIcon },
-];
+const BUBBLES: DialBubble[] = HOUSES.map((h) => h.bubble);
 
 const ArtHub: React.FC = () => {
   const intl = useIntl();
+  const [innerIndex, setInnerIndex] = useState(0); // start on Writing
   const [outerIndex, setOuterIndex] = useState(0);
-  const [innerIndex, setInnerIndex] = useState(2); // 'article' — matches Writing default
-
-  const outerSlice = SAMPLE_OUTER[outerIndex];
-  const title = intl.formatMessage(messages.title);
 
   // The centre hub is wired to scroll the viewer down to the content
   // area below the dial (Tal 2026-08-15). Once a real piece list
-  // lives here the ref moves to it; for now it lands on the callout,
-  // which is the only thing below the dial in the current scaffold.
+  // lives here the ref moves to it; for now it lands on the callout.
   const contentRef = useRef<HTMLDivElement | null>(null);
   const handleCenterClick = useCallback(() => {
     contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
+
+  // When the inner ring picks a new house, reset the outer selection
+  // to that house's first slice — otherwise we'd carry over an index
+  // that means a different shelf (or none at all) in the new set.
+  const handleInnerChange = useCallback((next: number) => {
+    setInnerIndex(next);
+    setOuterIndex(0);
+  }, []);
+
+  const title = intl.formatMessage(messages.title);
+  // HOUSES is a non-empty compile-time constant, but TS's
+  // noUncheckedIndexedAccess still types the read as `T | undefined`
+  // — early-guard so `currentHouse` narrows to `ArtHouse` for the
+  // rest of render. Guard sits AFTER all hook calls so rules-of-
+  // hooks still holds regardless of what index innerIndex carries.
+  const currentHouse = HOUSES[innerIndex] ?? HOUSES[0];
+  if (!currentHouse) return null;
+  const outerSlices = currentHouse.slices;
+  // Clamp so switching to a house with fewer slices doesn't leave
+  // outerIndex pointing off the end of the new list.
+  const safeOuterIndex = Math.min(outerIndex, outerSlices.length - 1);
+  const activeSlice = outerSlices[safeOuterIndex] ?? outerSlices[0];
 
   return (
     <Stage label={title}>
@@ -93,20 +158,16 @@ const ArtHub: React.FC = () => {
       <div className='art-hub'>
         {/* Space title + tagline are provided by the Frame-level
             <AutoSpaceHeader> (fired by <Stage>) — reading them from
-            config/korners/art.yaml. No manual <SpaceHeader> here or
-            we'd double-render the header. Applies to every korner
-            landing that lives at /hub/<slug>; core spaces (/me,
-            /settings) are the ones that hand-roll SpaceHeader
-            because Auto returns null for `core: true` manifests. */}
+            config/korners/art.yaml. */}
 
         <div className='art-hub__dial'>
           <KronkDial
-            outer={SAMPLE_OUTER}
-            outerIndex={outerIndex}
+            outer={outerSlices}
+            outerIndex={safeOuterIndex}
             onOuterChange={setOuterIndex}
-            inner={SAMPLE_INNER}
+            inner={BUBBLES}
             innerIndex={innerIndex}
-            onInnerChange={setInnerIndex}
+            onInnerChange={handleInnerChange}
             onCenterClick={handleCenterClick}
             centerActionLabel={intl.formatMessage(messages.centerAction)}
             outerAriaLabel={intl.formatMessage(messages.outerAria)}
@@ -114,24 +175,13 @@ const ArtHub: React.FC = () => {
           />
         </div>
 
-        {/* Selection callout — the big-serif title + count Tal's
-            screencast showed under the dial. Reads live from the
-            currently-selected outer slice. */}
-        {outerSlice && (
-          <div className='art-hub__callout' ref={contentRef}>
-            <p className='art-hub__callout-crumb'>
-              WRITING <span aria-hidden>·</span> THE LIBRARY
-            </p>
-            <h2 className='art-hub__callout-title'>{outerSlice.label}</h2>
-            {typeof outerSlice.count === 'number' && (
-              <p className='art-hub__callout-count'>
-                {intl.formatMessage(messages.toBrowse, {
-                  count: outerSlice.count,
-                })}
-              </p>
-            )}
-          </div>
-        )}
+        {/* Selection callout — reads the two coordinates together.
+            Crumb comes from the current house; title comes from the
+            current shelf within it. */}
+        <div className='art-hub__callout' ref={contentRef}>
+          <p className='art-hub__callout-crumb'>{currentHouse.crumb}</p>
+          <h2 className='art-hub__callout-title'>{activeSlice?.label}</h2>
+        </div>
       </div>
     </Stage>
   );
