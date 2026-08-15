@@ -5,6 +5,9 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import axios from 'axios';
 
 import api from 'mastodon/api';
+import { apiCreateAttachment } from 'mastodon/api/attachments';
+import { ComposeAttachBar } from 'mastodon/components/compose_attach_bar';
+import type { PendingAttachment } from 'mastodon/components/compose_attach_bar';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { MapPinPicker } from 'mastodon/components/map_pin_picker';
 import type { PinnedLocation } from 'mastodon/components/map_pin_picker';
@@ -142,14 +145,9 @@ const messages = defineMessages({
     defaultMessage:
       "Only people you invite will see it. Won't show up in feeds.",
   },
-  spawnAlbum: {
-    id: 'kalendar.new.spawn_album',
-    defaultMessage: 'Create a companion album',
-  },
-  spawnAlbumHint: {
-    id: 'kalendar.new.spawn_album_hint',
-    defaultMessage:
-      'An Albutt bound to the event so attendees can add photos afterwards.',
+  attachHeading: {
+    id: 'kalendar.new.attach_heading',
+    defaultMessage: 'Attach',
   },
   invitePeople: {
     id: 'kalendar.new.invite_people',
@@ -382,13 +380,20 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   // create_status_for_event!). Backing schema: PR #1480's
   // `events.invite_only` column.
   const [inviteOnly, setInviteOnly] = useState(false);
-  // spawn_album — checkbox drives the Kalendar → Albutts spawn
-  // attachment (docs/kronk_korner_attachments.md). Server-side, when
-  // this is truthy, `Kronk::AttachmentSource#fire_kronk_spawn_attachments`
-  // fires the registered factory (spawns the Album + writes the join
-  // row) after the Event's create_commit. Off by default; the user
-  // opts in per event.
-  const [spawnAlbum, setSpawnAlbum] = useState(false);
+  // pendingAttachments — the compose-time attach intents captured by
+  // `<ComposeAttachBar>` (docs/kronk_korner_attachments.md). Two
+  // shapes coexist:
+  //   * spawn/field: `{ targetSlug, kind: 'spawn' }` with no
+  //     targetId. On submit we derive the field payload (e.g.
+  //     `spawn_album: true`) and let `Kronk::AttachmentSource`
+  //     materialise the target via its registered factory + write
+  //     the join row on Event.create_commit.
+  //   * link: `{ targetSlug, targetId, kind: 'link', title }`. On
+  //     submit, after the Event POST returns, we sequentially POST
+  //     each row to /api/v1/attachments.
+  const [pendingAttachments, setPendingAttachments] = useState<
+    PendingAttachment[]
+  >([]);
   // Invitees (Tal 2026-08-14: "invite into composer"). Accounts the
   // user has picked from the search results. Stored as a Map keyed
   // by id so we can render chips with names/avatars (search results
@@ -579,10 +584,21 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     setInviteOnly(e.currentTarget.checked);
   }, []);
 
-  const onSpawnAlbumToggle = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >((e) => {
-    setSpawnAlbum(e.currentTarget.checked);
+  const onAttachAdd = useCallback((attachment: PendingAttachment) => {
+    setPendingAttachments((prev) => [...prev, attachment]);
+  }, []);
+
+  const onAttachRemove = useCallback((attachment: PendingAttachment) => {
+    setPendingAttachments((prev) =>
+      prev.filter(
+        (p) =>
+          !(
+            p.targetSlug === attachment.targetSlug &&
+            p.targetId === attachment.targetId &&
+            p.kind === attachment.kind
+          ),
+      ),
+    );
   }, []);
 
   // Force the native date/time picker open on click. Chromium supports
@@ -714,7 +730,19 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     if (trimmedLocationUrl) payload.location_url = trimmedLocationUrl;
     if (imageMediaId) payload.image_id = imageMediaId;
     if (inviteOnly) payload.invite_only = true;
-    if (spawnAlbum) payload.spawn_album = true;
+    // spawn/field attachments — every pending row with kind='spawn'
+    // and no targetId collapses into the source record's own field
+    // (currently only `spawn_album`; wired via the manifest's
+    // `attaches.trigger: field:spawn_album` entry). The
+    // `Kronk::AttachmentSource` concern picks it up after create_commit,
+    // fires the registered factory, and writes the join row.
+    if (
+      pendingAttachments.some(
+        (p) => p.targetSlug === 'albutts' && p.kind === 'spawn',
+      )
+    ) {
+      payload.spawn_album = true;
+    }
     // Krews are silently dropped server-side when invite_only is on
     // (no fan-out for `self_only` visibility) but there's no reason
     // to send them either — matches the UI where the picker greys
@@ -722,6 +750,12 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     if (!inviteOnly && krewIds.length > 0) payload.krew_ids = krewIds;
 
     const inviteeIds = Array.from(invitees.keys());
+    // Link/reference attachments — captured at compose time via the
+    // AttachBar's picker, sent one at a time after the event exists.
+    // Skipped for spawn/field (server does those via the factory).
+    const linkAttachments = pendingAttachments.filter(
+      (p) => p.kind !== 'spawn' && p.targetId,
+    );
 
     void (async () => {
       try {
@@ -744,6 +778,23 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
             setError(extractApiError(inviteErr));
           }
         }
+        // Fire pending link attachments. Same soft-failure story as
+        // invitees — the event exists, the user can retry from the
+        // detail page's <AttachmentSection>.
+        for (const pending of linkAttachments) {
+          if (!pending.targetId) continue;
+          try {
+            await apiCreateAttachment({
+              source_slug: 'kalendar',
+              source_id: res.data.id,
+              target_slug: pending.targetSlug,
+              target_id: pending.targetId,
+              kind: 'link',
+            });
+          } catch (attachErr: unknown) {
+            setError(extractApiError(attachErr));
+          }
+        }
         onCreated(res.data);
         // Parent unmounts on success — no need to reset state.
       } catch (e: unknown) {
@@ -762,9 +813,9 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     locationName,
     locationUrl,
     onCreated,
+    pendingAttachments,
     reach,
     rsvpEnabled,
-    spawnAlbum,
     startIso,
     title,
   ]);
@@ -1086,28 +1137,27 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           </small>
         </label>
 
-        {/* spawn_album toggle — drives the Kalendar → Albutts spawn
-            attachment (docs/kronk_korner_attachments.md). Server-side,
-            the AttachmentSource concern fires the registered factory
-            on Event.create_commit — an Album materialises and a
-            korner_attachments row binds it to the event. The album
-            shows up in the event detail page's AttachmentSection
-            straight away. */}
-        <label className='event-composer__toggle-block'>
-          <span className='event-composer__toggle-row'>
-            <input
-              type='checkbox'
-              checked={spawnAlbum}
-              onChange={onSpawnAlbumToggle}
-            />
-            <span className='event-composer__toggle-label'>
-              {intl.formatMessage(messages.spawnAlbum)}
-            </span>
-          </span>
-          <small className='event-composer__field-hint'>
-            {intl.formatMessage(messages.spawnAlbumHint)}
-          </small>
-        </label>
+        {/* Compose-time attach surface — one `+` button per
+            attachable target korner declared in the source
+            manifest's `attaches:` list (docs/kronk_korner_attachments.md).
+            Field-triggered spawn (e.g. Albutts) toggles in place;
+            link-triggered targets (Booth, Huddle) open a picker.
+            All picks land in `pendingAttachments` and commit on
+            submit — spawn as `spawn_album: true` in the create
+            payload, link as sequential POSTs to /api/v1/attachments
+            once the event has an id. */}
+        <fieldset className='event-composer__fieldset'>
+          <legend className='event-composer__legend'>
+            {intl.formatMessage(messages.attachHeading)}
+          </legend>
+          <ComposeAttachBar
+            sourceSlug='kalendar'
+            pending={pendingAttachments}
+            onAdd={onAttachAdd}
+            onRemove={onAttachRemove}
+            disabled={busy}
+          />
+        </fieldset>
 
         {/* Invitee picker — accounts get a nudge with the event on
             submit. Optional for public/mates events; the natural
