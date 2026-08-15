@@ -122,13 +122,12 @@ const R_FACE_TICK_OUTER = 65;
 
 // The wedge selector — a pie slice at 3 o'clock that spans BOTH ring
 // bands (from just outside the hub out to the outer perimeter), so
-// the volvelle reads as "the wheel points at this slice". The
-// callout ("Essays / 94") emerges from the wedge tip in the fixed
-// overlay just past the perimeter.
+// the volvelle reads as "the wheel points at this slice". The active
+// slice's label paints ON TOP of the wedge (see the fixed-overlay
+// render) — no external callout; Tal 2026-08-15 asked for the word
+// to stay on the ring rather than disappearing into a select zone.
 const R_WEDGE_INNER = 30;
 const R_WEDGE_OUTER = 92;
-const R_CALLOUT_LABEL = 98;
-const R_CALLOUT_COUNT = 98;
 
 // Hit-region annulus paths — invisible transparent-fill shapes
 // with `pointer-events: all`, one per rotating ring, so drag
@@ -566,13 +565,16 @@ export const KronkDial: React.FC<Props> = ({
 
           {/* Labels — UPRIGHT (horizontal in world space). Sit inside
               the widened outer band; each rotates to its slot then
-              counter-rotates by the full wheel angle so the text
-              stays horizontal regardless of wheel spin (Tal
-              2026-08-15: "words fit within the ring, horizontally").
-              Active slice's label is rendered externally at the
-              wedge tip in the fixed overlay — skipped here. */}
-          {outerSlices.map(({ slice, angle, index }) => {
-            if (index === outerIndex) return null;
+              counter-rotates by the full wheel angle so text stays
+              horizontal regardless of wheel spin (Tal 2026-08-15:
+              "words fit within the ring, horizontally"). The active
+              slice IS rendered on the ring here — the previous
+              "hide under wedge" approach made words appear to
+              vanish as they entered the select zone (Tal
+              2026-08-15). It's the FIXED-overlay copy below that
+              paints on top of the wedge, so the word reads on both
+              layers seamlessly. */}
+          {outerSlices.map(({ slice, angle }) => {
             const uprightRotation = -(outerRotation + angle);
             return (
               <g
@@ -590,16 +592,6 @@ export const KronkDial: React.FC<Props> = ({
                   >
                     {slice.label}
                   </text>
-                  {typeof slice.count === 'number' && (
-                    <text
-                      y={7}
-                      className='kronk-dial__outer-count'
-                      textAnchor='middle'
-                      dominantBaseline='middle'
-                    >
-                      {slice.count}
-                    </text>
-                  )}
                 </g>
               </g>
             );
@@ -663,35 +655,27 @@ export const KronkDial: React.FC<Props> = ({
           </g>
         )}
 
-        {/* Fixed overlay layer — wedge + external callout + centre hub
-            sit outside the rotating groups so they don't spin. The
-            wedge punches through the ring at 3 o'clock; the callout
-            emerges from its tip carrying the active slice's label +
-            count; the hub anchors the whole composition. */}
+        {/* Fixed overlay layer — wedge + active-slice label + centre
+            hub sit outside the rotating groups so they don't spin.
+            The wedge punches through the ring at 3 o'clock; the
+            active label paints ON TOP of the wedge (bright text-on-
+            accent colour) so the word stays visible when the wheel
+            spins it under the select zone (Tal 2026-08-15: "I don't
+            like how the word on the outer rim disappears when it
+            gets to the select zone"). Its twin on the rotating ring
+            takes over the moment the wheel rotates away. */}
         <path d={wedgePath} className='kronk-dial__wedge' aria-hidden='true' />
         {activeOuterSlice && (
-          <g className='kronk-dial__callout' aria-hidden='true'>
-            <text
-              x={R_CALLOUT_LABEL}
-              y={-2}
-              className='kronk-dial__callout-label'
-              textAnchor='start'
-              dominantBaseline='middle'
-            >
-              {activeOuterSlice.label}
-            </text>
-            {typeof activeOuterSlice.count === 'number' && (
-              <text
-                x={R_CALLOUT_COUNT}
-                y={6}
-                className='kronk-dial__callout-count'
-                textAnchor='start'
-                dominantBaseline='middle'
-              >
-                {activeOuterSlice.count}
-              </text>
-            )}
-          </g>
+          <text
+            x={R_OUTER_LABEL}
+            y={0}
+            className='kronk-dial__active-label'
+            textAnchor='middle'
+            dominantBaseline='middle'
+            aria-hidden='true'
+          >
+            {activeOuterSlice.label}
+          </text>
         )}
         <g className='kronk-dial__hub' aria-hidden>
           <circle r={R_HUB} className='kronk-dial__hub-bg' />

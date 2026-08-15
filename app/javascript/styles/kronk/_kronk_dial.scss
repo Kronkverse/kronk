@@ -1,9 +1,9 @@
 // Kronk dial — concentric-wheel picker. Two rings (outer = category,
 // inner = lens) rotate under a fixed pie-wedge selector at 3 o'clock;
-// the active slice's label + count emerge from the wedge tip as an
-// external callout. SVG geometry lives in the component
-// (kronk_dial.tsx); this file owns colour, motion, and layout tokens
-// only. Matches Tal's picker mockup (2026-08-14).
+// the active slice's label paints on top of the wedge in bright
+// text-on-accent so it stays visible as the wheel spins under.
+// SVG geometry lives in the component (kronk_dial.tsx); this file
+// owns colour, motion, and layout tokens only.
 
 .kronk-dial {
   // Bumped to give the volvelle real page presence (Tal 2026-08-14:
@@ -129,11 +129,11 @@
   stroke-linecap: round;
 }
 
-// Outer-slice label group — the active slice is rendered externally
-// at the wedge tip (see `.kronk-dial__callout` below), so the on-ring
-// labels here are all the non-active slices. Colour reads as
-// secondary text so the active callout dominates as the "shown"
-// value.
+// Outer-slice label group — every slice's label paints on the ring
+// (including the active one, so the word stays visible as the wheel
+// rotates it into the select zone). The fixed-overlay
+// `.kronk-dial__active-label` paints the same word on top of the
+// wedge with a brighter fill so it reads on the purple.
 .kronk-dial__outer-slice {
   color: var(--kronk-dial-label);
 }
@@ -145,14 +145,13 @@
   text-transform: uppercase;
 }
 
-.kronk-dial__outer-count {
-  font-size: 3.5px;
-  font-family: var(--font-mono);
-  fill: var(--text-muted);
-}
-
 // ── Inner ring — icon bubbles. ───────────────────────────────────
-
+// Icons stay white (`--semantic-text-on-accent`) in both states —
+// active AND inactive — so every lens reads legibly against its
+// bubble fill (Tal 2026-08-15: "icons are too dark, bring them out
+// white; follow Kronk protocol for aesthetics"). Kronk aesthetic
+// token = --semantic-text-on-accent for glyphs on purple / dark
+// surfaces.
 .kronk-dial__bubble {
   circle {
     fill: var(--surface-elevated);
@@ -167,12 +166,9 @@
       stroke var(--dur-medium) var(--ease-out);
   }
 
-  color: var(--text-secondary);
-  transition: color var(--dur-medium) var(--ease-out);
+  color: var(--semantic-text-on-accent);
 
   &--active {
-    color: var(--semantic-text-on-accent);
-
     circle {
       fill: var(--kronk-purple-accent);
       stroke: var(--kronk-purple-bright);
@@ -181,39 +177,32 @@
   }
 }
 
-// ── Wedge selector + external callout + centre hub ──────────────
-// The wedge is a pie slice at 3 o'clock that extends from just
-// outside the hub OUT past the outer perimeter — it punches through
-// the ring instead of sitting behind it. The active slice's label +
-// count emerge from its tip as an external callout. Matches Tal's
-// picker mockup (2026-08-14); replaces the ill-fated needle-only
-// approach that was too subtle to signal the selection.
+// ── Wedge selector + active label + centre hub ─────────────────
+// The wedge is a pie slice at 3 o'clock that spans both ring bands
+// so the volvelle reads as "the wheel points at this slice". The
+// active label paints on top of the wedge in bright text-on-accent
+// so the word stays visible as the wheel spins it into the select
+// zone (Tal 2026-08-15).
 
 .kronk-dial__wedge {
-  // Slightly stronger fill now that the wedge sits on top of tinted
-  // ring bands — the previous 55% blended with the outer band's
-  // purple-deep tint. 70% keeps the wedge clearly readable as the
-  // selector cursor without dominating.
   fill: color-mix(in oklab, var(--kronk-purple-accent) 70%, transparent);
   pointer-events: none;
 }
 
-.kronk-dial__callout {
-  pointer-events: none;
-}
-
-.kronk-dial__callout-label {
-  font-family: var(--font-display);
-  font-size: 6px;
+// Active slice label — painted in the fixed overlay on top of the
+// wedge (Tal 2026-08-15: "I don't like how the word on the outer
+// rim disappears when it gets to the select zone"). The rotating-
+// ring copy paints the same word on the lighter ring surface below;
+// this overlay copy takes over the moment the wheel spins the slice
+// into the select zone. `--semantic-text-on-accent` per Kronk
+// protocol for glyphs on the purple wedge.
+.kronk-dial__active-label {
+  font-size: 5px;
   font-weight: 500;
-  fill: var(--text-primary);
   letter-spacing: 0.04em;
-}
-
-.kronk-dial__callout-count {
-  font-family: var(--font-mono);
-  font-size: 3.5px;
-  fill: var(--text-muted);
+  text-transform: uppercase;
+  fill: var(--semantic-text-on-accent);
+  pointer-events: none;
 }
 
 .kronk-dial__hub {
