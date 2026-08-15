@@ -54,6 +54,18 @@
     font-family: var(--font-display);
     fill: currentcolor;
   }
+
+  // Nested SVG icons (rendered raw via `<BubbleIcon />` etc. — not
+  // wrapped in the shared `<Icon>` component that carries the
+  // global `.icon` class with its currentColor rule) inherit no
+  // fill from CSS `color` by default because the material SVGs
+  // ship with no `fill` attribute on their <path>s. Bind them to
+  // currentColor here so bubble + hub icons pick up the parent's
+  // `color` token (Tal 2026-08-15: "icons are too dark, bring
+  // them out white").
+  svg path {
+    fill: currentcolor;
+  }
 }
 
 // ── Rotating outer disc — labels + face pips + slice dividers. ──
