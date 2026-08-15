@@ -650,13 +650,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_15_044339) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "image_id"
-    t.bigint "huddle_session_id"
     t.boolean "spawn_album", default: false, null: false
     t.boolean "invite_only", default: false, null: false
     t.string "slug", null: false
     t.index ["account_id"], name: "index_events_on_account_id"
     t.index ["slug"], name: "index_events_on_slug", unique: true
-    t.index ["huddle_session_id"], name: "index_events_on_huddle_session_id"
     t.index ["image_id"], name: "index_events_on_image_id"
     t.index ["parent_event_id"], name: "index_events_on_parent_event_id"
     t.index ["status_id"], name: "index_events_on_status_id"
@@ -2230,7 +2228,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_15_044339) do
   add_foreign_key "event_rsvps", "events", on_delete: :cascade
   add_foreign_key "events", "accounts", on_delete: :cascade
   add_foreign_key "events", "events", column: "parent_event_id", on_delete: :cascade
-  add_foreign_key "events", "huddle_sessions", on_delete: :nullify
   add_foreign_key "events", "media_attachments", column: "image_id", on_delete: :nullify
   add_foreign_key "events", "statuses", on_delete: :nullify
   add_foreign_key "fasp_backfill_requests", "fasp_providers"

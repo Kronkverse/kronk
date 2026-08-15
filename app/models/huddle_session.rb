@@ -28,7 +28,10 @@ class HuddleSession < ApplicationRecord
 
   belongs_to :host_account, class_name: 'Account'
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :huddle_session
-  has_one    :event, dependent: :nullify
+  # `has_one :event` retired 2026-08-15 alongside the
+  # `events.huddle_session_id` FK drop (Phase 6b). The link now lives
+  # in `korner_attachments` — look up the linked event via
+  # `KornerAttachment.to_target('huddle', id).where(kind: 'link').first&.source_record`.
   has_many   :huddle_participants, dependent: :destroy
   has_many   :participants, through: :huddle_participants, source: :account
 

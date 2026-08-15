@@ -45,7 +45,7 @@ emits:
       - event_id
       - account_id
       - event_type
-      - huddle_session_id
+      - spawn_album
   # notification.event_invitation dispatches via the Mastodon
   # notification system rather than the korner event bus; documented
   # here for discoverability of Kalendar's outbound signals.
