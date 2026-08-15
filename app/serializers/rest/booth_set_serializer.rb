@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 
 class REST::BoothSetSerializer < ActiveModel::Serializer
-  attributes :id, :title, :description, :artist_name, :event_id, :event_name, :event_date,
+  # `event_id` retired 2026-08-15 (Phase 5b — FK drop). The Kalendar
+  # → Booth link now lives on `korner_attachments`; clients that want
+  # the linked event look it up via /api/v1/attachments?target=booth/<id>.
+  attributes :id, :title, :description, :artist_name, :event_name, :event_date,
              :genres, :duration_seconds, :play_count, :audio_url, :cover_url,
              :cover_offset_y, :published, :created_at, :updated_at
 
@@ -12,10 +15,6 @@ class REST::BoothSetSerializer < ActiveModel::Serializer
 
   def id
     object.id.to_s
-  end
-
-  def event_id
-    object.event_id&.to_s
   end
 
   def event_date

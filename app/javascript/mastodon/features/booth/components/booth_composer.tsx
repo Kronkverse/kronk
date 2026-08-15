@@ -9,8 +9,6 @@ import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 
 import type { BoothSet } from '../types';
 
-import { EventCombobox } from './event_combobox';
-import type { EventSelection } from './event_combobox';
 import { GenreTagInput } from './genre_tag_input';
 
 // Booth — upload a set. The shared `<ComposeShell>` overlay opened
@@ -130,7 +128,10 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const intl = useIntl();
   const [title, setTitle] = useState('');
   const [artistName, setArtistName] = useState('');
-  const [eventId, setEventId] = useState<string | null>(null);
+  // event_id retired 2026-08-15 (Phase 5b). Booth uploaders keep the
+  // free-text event_name + event_date fields for context ("played at
+  // Bob's Birthday, 2026-06-15"). Linking to a real Kalendar event
+  // now happens from the event side via <AttachmentPicker>.
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [genres, setGenres] = useState<string[]>([]);
@@ -207,22 +208,12 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     [],
   );
 
-  const handleEventLink = useCallback((data: EventSelection) => {
-    setEventId(data.id);
-    setEventName(data.name);
-    setEventDate(data.date);
-  }, []);
-
-  const handleEventNameChange = useCallback((name: string) => {
-    setEventId(null);
-    setEventName(name);
-  }, []);
-
-  const handleEventClear = useCallback(() => {
-    setEventId(null);
-    setEventName('');
-    setEventDate('');
-  }, []);
+  const handleEventNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setEventName(e.target.value);
+    },
+    [],
+  );
 
   const handleEventDateChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -322,7 +313,6 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           audio_id: audioId,
           genres,
         };
-        if (eventId) payload.event_id = eventId;
         if (eventName) payload.event_name = eventName;
         if (eventDate) payload.event_date = eventDate;
         if (description) payload.description = description;
@@ -356,7 +346,6 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   }, [
     title,
     artistName,
-    eventId,
     eventName,
     eventDate,
     genres,
@@ -447,27 +436,24 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
               />
             </label>
 
-            <div className='booth-upload-form__field'>
+            <label className='booth-upload-form__field'>
               <span>{intl.formatMessage(messages.event)}</span>
-              <EventCombobox
-                eventId={eventId}
-                eventName={eventName}
-                onLink={handleEventLink}
-                onNameChange={handleEventNameChange}
-                onClear={handleEventClear}
+              <input
+                type='text'
+                value={eventName}
+                onChange={handleEventNameChange}
+                maxLength={200}
               />
-            </div>
+            </label>
 
-            {!eventId && (
-              <label className='booth-upload-form__field'>
-                <span>{intl.formatMessage(messages.eventDate)}</span>
-                <input
-                  type='date'
-                  value={eventDate}
-                  onChange={handleEventDateChange}
-                />
-              </label>
-            )}
+            <label className='booth-upload-form__field'>
+              <span>{intl.formatMessage(messages.eventDate)}</span>
+              <input
+                type='date'
+                value={eventDate}
+                onChange={handleEventDateChange}
+              />
+            </label>
 
             <div className='booth-upload-form__field'>
               <span>{intl.formatMessage(messages.genre)}</span>

@@ -104,7 +104,12 @@ class Api::V1::BoothSetsController < Api::BaseController
   end
 
   def booth_set_params
-    params.permit(:title, :description, :artist_name, :event_id, :event_name, :event_date,
+    # `event_id` retired 2026-08-15 alongside the FK drop (Phase 5b).
+    # The Kalendar → Booth link now lives in `korner_attachments` — an
+    # event owner attaches a booth set via `<AttachmentPicker>` from
+    # the event side. `event_name` + `event_date` remain as free-text
+    # context on the set itself.
+    params.permit(:title, :description, :artist_name, :event_name, :event_date,
                   :duration_seconds, :published, :cover_offset_y, genres: [])
   end
 end

@@ -7,8 +7,6 @@ import api from 'mastodon/api';
 import type { BoothSet } from '../types';
 
 import { CoverPositionEditor } from './cover_position_editor';
-import { EventCombobox } from './event_combobox';
-import type { EventSelection } from './event_combobox';
 import { GenreTagInput } from './genre_tag_input';
 
 const messages = defineMessages({
@@ -70,7 +68,9 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
   const intl = useIntl();
   const [title, setTitle] = useState(set.title);
   const [artistName, setArtistName] = useState(set.artist_name);
-  const [eventId, setEventId] = useState<string | null>(set.event_id);
+  // event_id retired 2026-08-15 (Phase 5b). Free-text event_name +
+  // event_date stay as context. Real linking happens via
+  // <AttachmentPicker> from the event side.
   const [eventName, setEventName] = useState(set.event_name ?? '');
   const [eventDate, setEventDate] = useState(set.event_date ?? '');
   const [genres, setGenres] = useState<string[]>(set.genres);
@@ -104,22 +104,12 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
     [],
   );
 
-  const handleEventLink = useCallback((data: EventSelection) => {
-    setEventId(data.id);
-    setEventName(data.name);
-    setEventDate(data.date);
-  }, []);
-
-  const handleEventNameChange = useCallback((name: string) => {
-    setEventId(null);
-    setEventName(name);
-  }, []);
-
-  const handleEventClear = useCallback(() => {
-    setEventId(null);
-    setEventName('');
-    setEventDate('');
-  }, []);
+  const handleEventNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setEventName(e.target.value);
+    },
+    [],
+  );
 
   const handleEventDateChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,10 +155,9 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
             artist_name: artistName,
             genres,
             cover_offset_y: coverOffsetY,
-            event_id: eventId ?? '',
+            event_name: eventName,
+            event_date: eventDate,
           };
-          if (eventName) payload.event_name = eventName;
-          if (eventDate) payload.event_date = eventDate;
           if (description) payload.description = description;
 
           if (removeCover) {
@@ -191,7 +180,6 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
     [
       title,
       artistName,
-      eventId,
       eventName,
       eventDate,
       genres,
@@ -236,29 +224,26 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
         />
       </label>
 
-      <div className='booth-upload-form__field'>
+      <label className='booth-upload-form__field'>
         <span>{intl.formatMessage(messages.event)}</span>
-        <EventCombobox
-          eventId={eventId}
-          eventName={eventName}
-          onLink={handleEventLink}
-          onNameChange={handleEventNameChange}
-          onClear={handleEventClear}
+        <input
+          type='text'
+          value={eventName}
+          onChange={handleEventNameChange}
+          maxLength={200}
           disabled={saving}
         />
-      </div>
+      </label>
 
-      {!eventId && (
-        <label className='booth-upload-form__field'>
-          <span>{intl.formatMessage(messages.eventDate)}</span>
-          <input
-            type='date'
-            value={eventDate}
-            onChange={handleEventDateChange}
-            disabled={saving}
-          />
-        </label>
-      )}
+      <label className='booth-upload-form__field'>
+        <span>{intl.formatMessage(messages.eventDate)}</span>
+        <input
+          type='date'
+          value={eventDate}
+          onChange={handleEventDateChange}
+          disabled={saving}
+        />
+      </label>
 
       <div className='booth-upload-form__field'>
         <span>{intl.formatMessage(messages.genre)}</span>
