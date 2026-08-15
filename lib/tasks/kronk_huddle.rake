@@ -4,11 +4,13 @@
 # event_type='huddle' and creates matching HuddleSession rows carrying
 # the huddle-specific fields (huddle_url → session_url, start_time →
 # scheduled_start, end_time → scheduled_end, account_id →
-# host_account_id). The parent Event gets events.huddle_session_id
-# populated so Kalendar → Huddle linkage lands cleanly.
+# host_account_id). The Kalendar → Huddle link is written as a
+# `korner_attachments` row (source: kalendar, target: huddle, kind:
+# link) — the primitive from `docs/kronk_korner_attachments.md`
+# replaces the retired `events.huddle_session_id` FK (Phase 6b).
 #
-# Idempotent — skips Events whose linked HuddleSession already exists.
-# Supports dry-run.
+# Idempotent — skips Events whose linked HuddleSession already exists
+# via the KornerAttachment row. Supports dry-run.
 #
 # Usage:
 #   RAILS_ENV=production bundle exec rake kronk:huddle:backfill
@@ -30,7 +32,8 @@ namespace :kronk do
       log.call("starting (dry_run=#{dry_run})")
 
       Event.where(event_type: :huddle).find_each do |event|
-        if event.huddle_session_id.present? && HuddleSession.exists?(id: event.huddle_session_id)
+        if KornerAttachment.from_source('kalendar', event.id)
+                           .exists?(target_slug: 'huddle', kind: 'link')
           report[:skipped_existing] += 1
           next
         end
@@ -61,7 +64,14 @@ namespace :kronk do
         else
           ActiveRecord::Base.transaction do
             session = HuddleSession.create!(attrs)
-            event.update_columns(huddle_session_id: session.id)
+            KornerAttachment.create!(
+              source_slug: 'kalendar',
+              source_id: event.id,
+              target_slug: 'huddle',
+              target_id: session.id,
+              kind: 'link',
+              created_by_account: event.account
+            )
           end
         end
 
@@ -70,10 +80,10 @@ namespace :kronk do
       end
 
       puts ''
-      puts "HuddleSessions created:              #{report[:created]}"
-      puts "Events linked (huddle_session_id):   #{report[:linked]}"
-      puts "Skipped (already backfilled):        #{report[:skipped_existing]}"
-      puts "Skipped (invalid — no huddle_url):   #{report[:skipped_invalid]}"
+      puts "HuddleSessions created:                    #{report[:created]}"
+      puts "Events linked (korner_attachments row):    #{report[:linked]}"
+      puts "Skipped (already backfilled):              #{report[:skipped_existing]}"
+      puts "Skipped (invalid — no huddle_url):         #{report[:skipped_invalid]}"
       puts ''
       puts dry_run ? 'DRY RUN — no rows written.' : 'Backfill complete.'
       puts ''
