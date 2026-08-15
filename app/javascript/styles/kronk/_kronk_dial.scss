@@ -222,6 +222,25 @@
   color: var(--kronk-purple-accent);
 }
 
+// Interactive hub — used when the caller passes `onCenterClick`
+// (e.g. Art hub scrolls to the content list below the dial). The
+// whole hub group becomes clickable + keyboard-navigable; hover /
+// focus brighten the stroke to signal affordance.
+.kronk-dial__hub--interactive {
+  pointer-events: auto;
+  cursor: pointer;
+
+  &:hover .kronk-dial__hub-bg,
+  &:focus-visible .kronk-dial__hub-bg {
+    stroke: var(--kronk-purple-bright);
+    stroke-width: 2;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
 .kronk-dial__hub-bg {
   // The pivot at the centre of the volvelle — noticeably bordered
   // so it reads as the "rivet" holding the concentric discs
@@ -230,6 +249,9 @@
   fill: var(--surface-elevated);
   stroke: var(--kronk-purple-accent);
   stroke-width: 1.6;
+  transition:
+    stroke var(--dur-medium) var(--ease-out),
+    stroke-width var(--dur-medium) var(--ease-out);
 }
 
 // The chevron-labelled affordance below the hub — sits inside the
