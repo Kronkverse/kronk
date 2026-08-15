@@ -1054,3 +1054,150 @@
     }
   }
 }
+
+// Profile creator — the simple mobile-first selection list (SectionSelector).
+// One column of option rows: reorder arrows, label, on/off switch. Sits
+// inside `.profile-shelves__arrange` (below the identity editor).
+.profile-creator {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2, 8px);
+
+  &__title {
+    margin: 0;
+    font-size: 1.125rem;
+    color: var(--text-primary);
+  }
+
+  &__lede {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+
+  &__group-heading {
+    margin: var(--sp-3, 12px) 0 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2, 8px);
+  }
+
+  &__empty {
+    margin: 0;
+    padding: var(--sp-2, 8px) 0;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3, 12px);
+    min-height: 52px;
+    padding: var(--sp-2, 8px) var(--sp-3, 12px);
+    background: var(--surface-elevated, #292938);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium, 10px);
+  }
+
+  &__reorder {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__move {
+    width: 34px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-small, 6px);
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    &:not(:disabled):hover {
+      color: var(--text-primary);
+      border-color: var(--accent);
+    }
+  }
+
+  &__label {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  &__name {
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__source {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+  }
+
+  // On/off switch — a 46×28 pill with a sliding knob. `aria-checked`
+  // drives the on colour so the control is its own source of truth.
+  &__switch {
+    flex: 0 0 auto;
+    position: relative;
+    width: 46px;
+    height: 28px;
+    padding: 0;
+    background: var(--surface-primary, #191b22);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-round, 999px);
+    cursor: pointer;
+    transition:
+      background 0.15s,
+      border-color 0.15s;
+
+    &[aria-checked='true'] {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+  }
+
+  &__switch-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.15s;
+
+    .profile-creator__switch[aria-checked='true'] & {
+      transform: translateX(18px);
+    }
+  }
+}

@@ -35,10 +35,10 @@ import { Icon } from 'mastodon/components/icon';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
 
-import { ArrangeStage } from './components/arrange_stage';
 import { ProfileIdentityEditor } from './components/identity_editor';
 import { ProfileHeader } from './components/profile_header';
 import { ProfileViewerActions } from './components/profile_viewer_actions';
+import { SectionSelector } from './components/section_selector';
 import { ShelvesStack } from './components/shelves_stack';
 
 // Shelved profile — the rebuild of the sectioned profile per
@@ -305,10 +305,9 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
       ) : mode === 'arrange' && isOwner && account ? (
         <div className='profile-shelves__arrange'>
           <ProfileIdentityEditor />
-          <ArrangeStage
+          <SectionSelector
             cards={cards ?? []}
             sections={sections ?? []}
-            ownerAccountId={account.id}
             onChange={handleArrangeChange}
           />
         </div>
