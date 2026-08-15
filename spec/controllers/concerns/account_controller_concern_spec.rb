@@ -17,10 +17,10 @@ RSpec.describe AccountControllerConcern do
   end
 
   context 'when account is unconfirmed' do
-    it 'returns http not found' do
+    it 'is visible (email confirmation is voluntary in Kronk)' do
       account = Fabricate(:user, confirmed_at: nil).account
       get 'success', params: { account_username: account.username }
-      expect(response).to have_http_status(404)
+      expect(response).to have_http_status(200)
     end
   end
 
