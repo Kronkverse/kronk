@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_14_081317) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_14_234249) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -273,14 +273,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_14_081317) do
     t.bigint "owner_id", null: false
     t.bigint "cover_media_attachment_id"
     t.integer "visibility", default: 0, null: false
-    t.bigint "event_id"
     t.bigint "status_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "contribution", default: 0, null: false
     t.index ["contribution"], name: "index_albums_on_contribution"
     t.index ["cover_media_attachment_id"], name: "index_albums_on_cover_media_attachment_id"
-    t.index ["event_id"], name: "index_albums_on_event_id"
     t.index ["owner_id"], name: "index_albums_on_owner_id"
     t.index ["status_id"], name: "index_albums_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
     t.index ["visibility"], name: "index_albums_on_visibility"
@@ -877,6 +875,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_14_081317) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["ip"], name: "index_ip_blocks_on_ip", unique: true
+  end
+
+  create_table "korner_attachments", force: :cascade do |t|
+    t.string "source_slug", null: false
+    t.bigint "source_id", null: false
+    t.string "target_slug", null: false
+    t.bigint "target_id", null: false
+    t.string "kind", null: false
+    t.jsonb "metadata"
+    t.bigint "created_by_account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_account_id"], name: "index_korner_attachments_on_created_by_account_id"
+    t.index ["source_slug", "source_id", "target_slug", "target_id", "kind"], name: "index_korner_attachments_on_endpoints_and_kind", unique: true
+    t.index ["source_slug", "source_id"], name: "index_korner_attachments_on_source"
+    t.index ["target_slug", "target_id"], name: "index_korner_attachments_on_target"
   end
 
   create_table "korner_content_views", force: :cascade do |t|
@@ -2173,7 +2187,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_14_081317) do
   add_foreign_key "album_photos", "albums", on_delete: :cascade
   add_foreign_key "album_photos", "media_attachments", on_delete: :nullify
   add_foreign_key "albums", "accounts", column: "owner_id", on_delete: :cascade
-  add_foreign_key "albums", "events", on_delete: :nullify
   add_foreign_key "albums", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
   add_foreign_key "albums", "statuses", on_delete: :nullify
   add_foreign_key "announcement_mutes", "accounts", on_delete: :cascade
@@ -2246,6 +2259,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_14_081317) do
   add_foreign_key "identities", "users", name: "fk_bea040f377", on_delete: :cascade
   add_foreign_key "instance_moderation_notes", "accounts", on_delete: :cascade
   add_foreign_key "invites", "users", on_delete: :cascade
+  add_foreign_key "korner_attachments", "accounts", column: "created_by_account_id", on_delete: :cascade
   add_foreign_key "korner_content_views", "accounts", on_delete: :cascade
   add_foreign_key "korner_seen_markers", "accounts", on_delete: :cascade
   add_foreign_key "korner_tune_outs", "accounts", on_delete: :cascade
