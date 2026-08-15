@@ -103,8 +103,20 @@ emits:
   - huddle.room.retired
 
 listens:
-  - kalendar.event.created # if a Kalendar event references a huddle_session_id,
-    # Huddle can attach event metadata to the session
+  # `kalendar.event.created` is a historical marker — Huddle no longer
+  # subscribes to it. The Kalendar → Huddle link lives in
+  # `korner_attachments` as of Phase 6 (docs/kronk_korner_attachments.md
+  # 2026-08-15); the primitive replaces the ad-hoc "attach event
+  # metadata to session" pattern that the bus event was going to power.
+  - kalendar.event.created
+
+# Cross-korner attachments (docs/kronk_korner_attachments.md). Huddle
+# accepts `link` attachments from Kalendar — a scheduled event points
+# at the Huddle Session it opens into. `events.huddle_session_id` FK is
+# the passive mirror during the transition (Phase 6b drops it).
+accepts:
+  - from: kalendar
+    kind: link
 
 hub_teaser:
   static: 'Live rooms, open the door and drop in.'

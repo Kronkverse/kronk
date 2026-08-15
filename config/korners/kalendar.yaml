@@ -75,6 +75,18 @@ attaches:
     kind: link
     trigger: user
     lifecycle: keep
+  # Kalendar → Huddle joins the primitive at Phase 6 (2026-08-15).
+  # A Kalendar event can point at the Huddle session it happens in
+  # (or vice versa — a scheduled huddle IS an event). Direction is
+  # kalendar → huddle because Event is the user-facing "when + where"
+  # surface; a HuddleSession is the room it opens into.
+  #
+  # `events.huddle_session_id` FK stays for one release cycle as a
+  # passive mirror; Phase 6b drops it once every reader migrates.
+  - to: huddle
+    kind: link
+    trigger: user
+    lifecycle: keep
 
 feed_projection:
   card: event_card # StatusEventCard, wraps the shared <StatusKornerCard>
