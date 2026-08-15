@@ -7,6 +7,145 @@
 // via `useKornerIcon`, so a Krew's icon reads differently to a Booth
 // set's without any per-korner CSS here.
 
+// ComposeAttachBar — the compose-time attach surface (see
+// `components/compose_attach_bar.tsx`). A row of `+` buttons per
+// attachable target korner, plus a chip strip for pending
+// attachments. The picker modal it opens reuses `.attachment-picker`
+// styles (below), so this block only owns the bar + chips.
+
+.compose-attach-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  &__target {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.7rem;
+    border: 1px dashed
+      color-mix(
+        in oklab,
+        var(--surface-primary),
+        var(--kronk-purple-accent) 30%
+      );
+    background: transparent;
+    color: var(--primary-text-color);
+    border-radius: var(--radius-round);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition:
+      background 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease;
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--surface-primary),
+        var(--kronk-purple-accent) 10%
+      );
+      border-color: var(--kronk-purple-accent);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    &--active {
+      background: color-mix(
+        in oklab,
+        var(--surface-primary),
+        var(--kronk-purple-accent) 20%
+      );
+      border-style: solid;
+      border-color: var(--kronk-purple-accent);
+    }
+  }
+
+  &__plus {
+    inline-size: 0.9rem;
+    block-size: 0.9rem;
+    color: var(--kronk-purple-accent);
+  }
+
+  &__target-icon {
+    inline-size: 1rem;
+    block-size: 1rem;
+    color: var(--kronk-purple-accent);
+  }
+
+  &__chips {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.35rem 0.3rem 0.6rem;
+    background: var(--surface-elevated);
+    border-radius: var(--radius-round);
+    font-size: 0.85rem;
+    max-inline-size: 20rem;
+  }
+
+  &__chip-icon {
+    inline-size: 0.95rem;
+    block-size: 0.95rem;
+    color: var(--kronk-purple-accent);
+    flex: 0 0 auto;
+  }
+
+  &__chip-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__chip-remove {
+    inline-size: 1.4rem;
+    block-size: 1.4rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--secondary-text-color);
+    border-radius: var(--radius-round);
+    cursor: pointer;
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--surface-elevated),
+        var(--kronk-purple-accent) 15%
+      );
+      color: var(--primary-text-color);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+}
+
 .attachment-section {
   margin-block-start: 1rem;
 
