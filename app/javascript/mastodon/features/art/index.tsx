@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -33,6 +33,10 @@ const messages = defineMessages({
   innerAria: {
     id: 'art.dial.inner_aria',
     defaultMessage: 'Choose a view',
+  },
+  centerAction: {
+    id: 'art.dial.center_action',
+    defaultMessage: 'Scroll to the content below',
   },
   toBrowse: { id: 'art.to_browse', defaultMessage: '{count} to browse' },
 });
@@ -71,6 +75,15 @@ const ArtHub: React.FC = () => {
   const outerSlice = SAMPLE_OUTER[outerIndex];
   const title = intl.formatMessage(messages.title);
 
+  // The centre hub is wired to scroll the viewer down to the content
+  // area below the dial (Tal 2026-08-15). Once a real piece list
+  // lives here the ref moves to it; for now it lands on the callout,
+  // which is the only thing below the dial in the current scaffold.
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const handleCenterClick = useCallback(() => {
+    contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
   return (
     <Stage label={title}>
       <Helmet>
@@ -94,6 +107,8 @@ const ArtHub: React.FC = () => {
             inner={SAMPLE_INNER}
             innerIndex={innerIndex}
             onInnerChange={setInnerIndex}
+            onCenterClick={handleCenterClick}
+            centerActionLabel={intl.formatMessage(messages.centerAction)}
             outerAriaLabel={intl.formatMessage(messages.outerAria)}
             innerAriaLabel={intl.formatMessage(messages.innerAria)}
           />
@@ -103,7 +118,7 @@ const ArtHub: React.FC = () => {
             screencast showed under the dial. Reads live from the
             currently-selected outer slice. */}
         {outerSlice && (
-          <div className='art-hub__callout'>
+          <div className='art-hub__callout' ref={contentRef}>
             <p className='art-hub__callout-crumb'>
               WRITING <span aria-hidden>·</span> THE LIBRARY
             </p>

@@ -74,6 +74,14 @@ interface Props {
   // dedicated centre icon isn't supplied.
   centerIcon?: ComponentType<SVGProps<SVGSVGElement>>;
 
+  // Centre hub action — when supplied, the hub becomes an
+  // interactive button (role, tabIndex, keyboard). Used by the Art
+  // hub to scroll the viewer down to the content below the dial
+  // (Tal 2026-08-15). Label is required so the button announces
+  // meaningfully to screen readers.
+  onCenterClick?: () => void;
+  centerActionLabel?: string;
+
   // Accessibility labels for the two ring `<select>` mirrors —
   // required so a screen-reader user can name what the dial picks.
   outerAriaLabel: string;
@@ -171,6 +179,8 @@ export const KronkDial: React.FC<Props> = ({
   innerIndex = 0,
   onInnerChange,
   centerIcon: CenterIcon,
+  onCenterClick,
+  centerActionLabel,
   outerAriaLabel,
   innerAriaLabel,
 }) => {
@@ -446,6 +456,20 @@ export const KronkDial: React.FC<Props> = ({
     };
   }, [dragTarget]);
 
+  // Keyboard fallback for the centre-hub button. SVG doesn't nest an
+  // HTML <button>, so we hand-roll the ENTER / SPACE handling that a
+  // native button would give us for free.
+  const handleCenterKey = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (!onCenterClick) return;
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        onCenterClick();
+      }
+    },
+    [onCenterClick],
+  );
+
   const handleOuterSelectChange = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
       const next = outer.findIndex((s) => s.key === event.target.value);
@@ -677,7 +701,25 @@ export const KronkDial: React.FC<Props> = ({
             {activeOuterSlice.label}
           </text>
         )}
-        <g className='kronk-dial__hub' aria-hidden>
+        {/* Centre hub — decorative by default; interactive when
+            `onCenterClick` is set (Tal 2026-08-15: hub becomes a
+            "scroll to the content below" button on the Art hub).
+            Uses SVG role="button" + tabIndex + keyboard-fallback so
+            it's fully AT-navigable without wrapping in an HTML
+            <button> (which SVG doesn't nest cleanly). */}
+        <g
+          className={
+            onCenterClick
+              ? 'kronk-dial__hub kronk-dial__hub--interactive'
+              : 'kronk-dial__hub'
+          }
+          role={onCenterClick ? 'button' : undefined}
+          aria-label={onCenterClick ? centerActionLabel : undefined}
+          aria-hidden={onCenterClick ? undefined : true}
+          tabIndex={onCenterClick ? 0 : undefined}
+          onClick={onCenterClick}
+          onKeyDown={onCenterClick ? handleCenterKey : undefined}
+        >
           <circle r={R_HUB} className='kronk-dial__hub-bg' />
           {Center && <Center width={26} height={26} x={-13} y={-13} />}
         </g>
