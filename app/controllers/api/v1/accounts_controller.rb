@@ -15,7 +15,9 @@ class Api::V1::AccountsController < Api::BaseController
   before_action :set_account, except: [:index, :create, :nudge_history, :nudge_partners, :nudge_pending_count]
   before_action :set_accounts, only: [:index]
   before_action :check_account_approval, except: [:index, :create, :nudge_history, :nudge_partners, :nudge_pending_count]
-  before_action :check_account_confirmation, except: [:index, :create, :nudge_history, :nudge_partners, :nudge_pending_count]
+  # No confirmation gate — email confirmation is voluntary in Kronk (see
+  # AccountOwnedConcern + User#functional_or_moved?). Unconfirmed local
+  # members are shown, matching the lookup endpoint the SPA already uses.
   before_action :check_enabled_registrations, only: [:create]
   before_action :check_accounts_limit, only: [:index]
   before_action :check_following_self, only: [:follow, :mate]
@@ -356,10 +358,6 @@ class Api::V1::AccountsController < Api::BaseController
 
   def check_account_approval
     raise(ActiveRecord::RecordNotFound) if @account.local? && @account.user_pending?
-  end
-
-  def check_account_confirmation
-    raise(ActiveRecord::RecordNotFound) if @account.local? && !@account.user_confirmed?
   end
 
   def check_accounts_limit
