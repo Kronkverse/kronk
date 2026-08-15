@@ -142,6 +142,15 @@ const messages = defineMessages({
     defaultMessage:
       "Only people you invite will see it. Won't show up in feeds.",
   },
+  spawnAlbum: {
+    id: 'kalendar.new.spawn_album',
+    defaultMessage: 'Create a companion album',
+  },
+  spawnAlbumHint: {
+    id: 'kalendar.new.spawn_album_hint',
+    defaultMessage:
+      'An Albutt bound to the event so attendees can add photos afterwards.',
+  },
   invitePeople: {
     id: 'kalendar.new.invite_people',
     defaultMessage: 'Invite people',
@@ -194,6 +203,7 @@ interface CreatePayload {
   image_id?: string;
   invite_only?: boolean;
   krew_ids?: string[];
+  spawn_album?: boolean;
 }
 
 // Shape returned by POST /api/v2/media. Only the ID is required to
@@ -372,6 +382,13 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   // create_status_for_event!). Backing schema: PR #1480's
   // `events.invite_only` column.
   const [inviteOnly, setInviteOnly] = useState(false);
+  // spawn_album — checkbox drives the Kalendar → Albutts spawn
+  // attachment (docs/kronk_korner_attachments.md). Server-side, when
+  // this is truthy, `Kronk::AttachmentSource#fire_kronk_spawn_attachments`
+  // fires the registered factory (spawns the Album + writes the join
+  // row) after the Event's create_commit. Off by default; the user
+  // opts in per event.
+  const [spawnAlbum, setSpawnAlbum] = useState(false);
   // Invitees (Tal 2026-08-14: "invite into composer"). Accounts the
   // user has picked from the search results. Stored as a Map keyed
   // by id so we can render chips with names/avatars (search results
@@ -562,6 +579,12 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     setInviteOnly(e.currentTarget.checked);
   }, []);
 
+  const onSpawnAlbumToggle = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((e) => {
+    setSpawnAlbum(e.currentTarget.checked);
+  }, []);
+
   // Force the native date/time picker open on click. Chromium supports
   // `HTMLInputElement.showPicker()` since v99 — without this, some
   // browsers only open the picker when the user clicks the tiny
@@ -691,6 +714,7 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     if (trimmedLocationUrl) payload.location_url = trimmedLocationUrl;
     if (imageMediaId) payload.image_id = imageMediaId;
     if (inviteOnly) payload.invite_only = true;
+    if (spawnAlbum) payload.spawn_album = true;
     // Krews are silently dropped server-side when invite_only is on
     // (no fan-out for `self_only` visibility) but there's no reason
     // to send them either — matches the UI where the picker greys
@@ -740,6 +764,7 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     onCreated,
     reach,
     rsvpEnabled,
+    spawnAlbum,
     startIso,
     title,
   ]);
@@ -1058,6 +1083,29 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           </span>
           <small className='event-composer__field-hint'>
             {intl.formatMessage(messages.inviteOnlyHint)}
+          </small>
+        </label>
+
+        {/* spawn_album toggle — drives the Kalendar → Albutts spawn
+            attachment (docs/kronk_korner_attachments.md). Server-side,
+            the AttachmentSource concern fires the registered factory
+            on Event.create_commit — an Album materialises and a
+            korner_attachments row binds it to the event. The album
+            shows up in the event detail page's AttachmentSection
+            straight away. */}
+        <label className='event-composer__toggle-block'>
+          <span className='event-composer__toggle-row'>
+            <input
+              type='checkbox'
+              checked={spawnAlbum}
+              onChange={onSpawnAlbumToggle}
+            />
+            <span className='event-composer__toggle-label'>
+              {intl.formatMessage(messages.spawnAlbum)}
+            </span>
+          </span>
+          <small className='event-composer__field-hint'>
+            {intl.formatMessage(messages.spawnAlbumHint)}
           </small>
         </label>
 
