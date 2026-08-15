@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, createRef } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 
 import { useIntl, defineMessages, FormattedMessage } from 'react-intl';
 
@@ -8,15 +8,13 @@ import { useHistory } from 'react-router-dom';
 
 import Toggle from 'react-toggle';
 
-import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
-import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import PersonIcon from '@/material-icons/400-24px/person.svg?react';
 import { updateAccount } from 'mastodon/actions/accounts';
 import { closeOnboarding } from 'mastodon/actions/onboarding';
+import { AvatarHeaderInput } from 'mastodon/components/avatar_header_input';
 import { Button } from 'mastodon/components/button';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { Icon } from 'mastodon/components/icon';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
@@ -62,8 +60,6 @@ export const Profile: React.FC<{
   );
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<ApiAccountErrors>();
-  const avatarFileRef = createRef<HTMLInputElement>();
-  const headerFileRef = createRef<HTMLInputElement>();
   const dispatch = useAppDispatch();
   const intl = useIntl();
   const history = useHistory();
@@ -163,53 +159,16 @@ export const Profile: React.FC<{
 
       <div className='scrollable scrollable--flex'>
         <div className='simple_form app-form'>
-          <div className='onboarding__profile'>
-            <label
-              className={classNames('app-form__header-input', {
-                selected: !!headerPreview,
-                invalid: !!errors?.header,
-              })}
-              title={intl.formatMessage(messages.uploadHeader)}
-            >
-              <input
-                type='file'
-                hidden
-                ref={headerFileRef}
-                accept='image/*'
-                onChange={handleHeaderChange}
-              />
-
-              {headerPreview && <img src={headerPreview} alt='' />}
-
-              <Icon
-                id=''
-                icon={headerPreview ? EditIcon : AddPhotoAlternateIcon}
-              />
-            </label>
-
-            <label
-              className={classNames('app-form__avatar-input', {
-                selected: !!avatarPreview,
-                invalid: !!errors?.avatar,
-              })}
-              title={intl.formatMessage(messages.uploadAvatar)}
-            >
-              <input
-                type='file'
-                hidden
-                ref={avatarFileRef}
-                accept='image/*'
-                onChange={handleAvatarChange}
-              />
-
-              {avatarPreview && <img src={avatarPreview} alt='' />}
-
-              <Icon
-                id=''
-                icon={avatarPreview ? EditIcon : AddPhotoAlternateIcon}
-              />
-            </label>
-          </div>
+          <AvatarHeaderInput
+            avatarPreview={avatarPreview}
+            headerPreview={headerPreview}
+            onAvatarChange={handleAvatarChange}
+            onHeaderChange={handleHeaderChange}
+            avatarTitle={intl.formatMessage(messages.uploadAvatar)}
+            headerTitle={intl.formatMessage(messages.uploadHeader)}
+            avatarInvalid={!!errors?.avatar}
+            headerInvalid={!!errors?.header}
+          />
 
           <div className='fields-group'>
             <div

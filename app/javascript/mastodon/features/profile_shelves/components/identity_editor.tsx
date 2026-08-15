@@ -1,15 +1,11 @@
-import { useState, useMemo, useCallback, createRef } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 
 import { useIntl, defineMessages, FormattedMessage } from 'react-intl';
 
-import classNames from 'classnames';
-
-import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
-import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { importFetchedAccount } from 'mastodon/actions/importer';
 import api from 'mastodon/api';
+import { AvatarHeaderInput } from 'mastodon/components/avatar_header_input';
 import { Button } from 'mastodon/components/button';
-import { Icon } from 'mastodon/components/icon';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 import { unescapeHTML } from 'mastodon/utils/html';
@@ -95,9 +91,6 @@ export const ProfileIdentityEditor: React.FC = () => {
     return existing.slice(0, MAX_FIELDS);
   });
 
-  const avatarFileRef = createRef<HTMLInputElement>();
-  const headerFileRef = createRef<HTMLInputElement>();
-
   const handleDisplayNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setDisplayName(e.target.value);
@@ -180,41 +173,14 @@ export const ProfileIdentityEditor: React.FC = () => {
 
   return (
     <div className='profile-identity-editor'>
-      <div className='onboarding__profile'>
-        <label
-          className={classNames('app-form__header-input', {
-            selected: !!headerPreview,
-          })}
-          title={intl.formatMessage(messages.uploadHeader)}
-        >
-          <input
-            type='file'
-            hidden
-            ref={headerFileRef}
-            accept='image/*'
-            onChange={handleHeaderChange}
-          />
-          {headerPreview && <img src={headerPreview} alt='' />}
-          <Icon id='' icon={headerPreview ? EditIcon : AddPhotoAlternateIcon} />
-        </label>
-
-        <label
-          className={classNames('app-form__avatar-input', {
-            selected: !!avatarPreview,
-          })}
-          title={intl.formatMessage(messages.uploadAvatar)}
-        >
-          <input
-            type='file'
-            hidden
-            ref={avatarFileRef}
-            accept='image/*'
-            onChange={handleAvatarChange}
-          />
-          {avatarPreview && <img src={avatarPreview} alt='' />}
-          <Icon id='' icon={avatarPreview ? EditIcon : AddPhotoAlternateIcon} />
-        </label>
-      </div>
+      <AvatarHeaderInput
+        avatarPreview={avatarPreview}
+        headerPreview={headerPreview}
+        onAvatarChange={handleAvatarChange}
+        onHeaderChange={handleHeaderChange}
+        avatarTitle={intl.formatMessage(messages.uploadAvatar)}
+        headerTitle={intl.formatMessage(messages.uploadHeader)}
+      />
 
       <div className='fields-group'>
         <div className='input with_block_label'>
